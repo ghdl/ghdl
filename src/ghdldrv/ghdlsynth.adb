@@ -173,6 +173,17 @@ package body Ghdlsynth is
          Cmd.Top_Encoding := Name_Hash;
       elsif Option = "--top-name=asis" then
          Cmd.Top_Encoding := Name_Asis;
+      elsif Option'Last >= 16 and then Option (1 .. 16) = "--keep-hierarchy"
+      then
+         if Option'Last = 16
+           or else Option (17 .. Option'Last) = "=yes"
+         then
+            Synth.Flags.Flag_Keep_Hierarchy := True;
+         elsif Option (17 .. Option'Last) = "=no" then
+            Synth.Flags.Flag_Keep_Hierarchy := False;
+         else
+            Res := Option_Unknown;
+         end if;
       elsif Option'Last > 17
         and then Option (1 .. 17) = "--vendor-library="
       then
@@ -201,20 +212,25 @@ package body Ghdlsynth is
          Cmd.Disp_Inline := False;
       elsif Option = "--disp-noid" then
          Cmd.Disp_Id := False;
-      elsif Option = "--out=raw" then
-         Cmd.Oformat := Format_Raw;
-      elsif Option = "--out=dump" then
-         Cmd.Oformat := Format_Dump;
-      elsif Option = "--out=dot" then
-         Cmd.Oformat := Format_Dot;
-      elsif Option = "--out=none" then
-         Cmd.Oformat := Format_None;
-      elsif Option = "--out=vhdl" then
-         Cmd.Oformat := Format_Vhdl;
-      elsif Option = "--out=raw-vhdl" then
-         Cmd.Oformat := Format_Raw_Vhdl;
-      elsif Option = "--out=verilog" then
-         Cmd.Oformat := Format_Verilog;
+      elsif Option'Length > 6 and then Option (1 .. 6) = "--out=" then
+         if Option (7 .. Option'Last) = "raw" then
+            Cmd.Oformat := Format_Raw;
+         elsif Option (7 .. Option'Last) = "dump" then
+            Cmd.Oformat := Format_Dump;
+         elsif Option (7 .. Option'Last) = "dot" then
+            Cmd.Oformat := Format_Dot;
+         elsif Option (7 .. Option'Last) = "none" then
+            Cmd.Oformat := Format_None;
+         elsif Option (7 .. Option'Last) = "vhdl" then
+            Cmd.Oformat := Format_Vhdl;
+         elsif Option (7 .. Option'Last) = "raw-vhdl" then
+            Cmd.Oformat := Format_Raw_Vhdl;
+         elsif Option (7 .. Option'Last) = "verilog" then
+            Cmd.Oformat := Format_Verilog;
+         else
+            Res := Option_Unknown;
+         end if;
+         return;
       elsif Option = "-di" then
          Flag_Debug_Noinference := True;
       elsif Option = "-dc" then
