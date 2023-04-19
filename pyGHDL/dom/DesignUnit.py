@@ -63,10 +63,18 @@ from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
-from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetPackageMemberSymbol, GetContextSymbol
-from pyGHDL.dom._Translate import GetGenericsFromChainedNodes, GetPortsFromChainedNodes
+from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
+from pyGHDL.dom._Translate import GetGenericsFromChainedNodes, GetPortsFromChainedNodes, GetName
 from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetConcurrentStatementsFromChainedNodes
-from pyGHDL.dom.Symbol import EntitySymbol, ContextReferenceSymbol, LibraryReferenceSymbol, PackageSymbol
+from pyGHDL.dom.Names import SimpleName, AllName
+from pyGHDL.dom.Symbol import (
+    EntitySymbol,
+    ContextReferenceSymbol,
+    LibraryReferenceSymbol,
+    PackageSymbol,
+    PackageMemberReferenceSymbol,
+    AllPackageMembersReferenceSymbol,
+)
 
 
 @export
@@ -84,9 +92,15 @@ class UseClause(VHDLModel_UseClause, DOMMixin):
 
     @classmethod
     def parse(cls, useNode: Iir):
-        uses = [GetPackageMemberSymbol(nodes.Get_Selected_Name(useNode))]
+        nameNode = nodes.Get_Selected_Name(useNode)
+        name = GetName(nameNode)
+        symbolType = AllPackageMembersReferenceSymbol if isinstance(name, AllName) else PackageMemberReferenceSymbol
+        uses = [symbolType(nameNode, name)]
         for use in utils.chain_iter(nodes.Get_Use_Clause_Chain(useNode)):
-            uses.append(GetPackageMemberSymbol(nodes.Get_Selected_Name(use)))
+            nameNode = nodes.Get_Selected_Name(use)
+            name = GetName(nameNode)
+            symbolType = AllPackageMembersReferenceSymbol if isinstance(name, AllName) else PackageMemberReferenceSymbol
+            uses.append(symbolType(nameNode, name))
 
         return cls(useNode, uses)
 
@@ -99,9 +113,11 @@ class ContextReference(VHDLModel_ContextReference, DOMMixin):
 
     @classmethod
     def parse(cls, contextNode: Iir):
-        contexts = [GetContextSymbol(nodes.Get_Selected_Name(contextNode))]
+        nameNode = nodes.Get_Selected_Name(contextNode)
+        contexts = [ContextReferenceSymbol(nameNode, GetName(nameNode))]
         for context in utils.chain_iter(nodes.Get_Context_Reference_Chain(contextNode)):
-            contexts.append(GetContextSymbol(nodes.Get_Selected_Name(context)))
+            nameNode = nodes.Get_Selected_Name(context)
+            contexts.append(ContextReferenceSymbol(nameNode, GetName(nameNode)))
 
         return cls(contextNode, contexts)
 
@@ -158,7 +174,7 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         name = GetNameOfNode(architectureNode)
         documentation = GetDocumentationOfNode(architectureNode)
         entityNameNode = nodes.Get_Entity_Name(architectureNode)
-        entitySymbol = EntitySymbol(entityNameNode, GetNameOfNode(entityNameNode))
+        entitySymbol = EntitySymbol(entityNameNode, GetName(entityNameNode))
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(architectureNode), "architecture", name
         )
@@ -241,11 +257,11 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
 
     @classmethod
     def parse(cls, packageBodyNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion]):
-        packageName = GetNameOfNode(packageBodyNode)
-        packageSymbol = PackageSymbol(packageBodyNode, packageName)
+        packageIdentifier = GetNameOfNode(packageBodyNode)
+        packageSymbol = PackageSymbol(packageBodyNode, SimpleName(packageBodyNode, packageIdentifier))
         documentation = GetDocumentationOfNode(packageBodyNode)
         declaredItems = GetDeclaredItemsFromChainedNodes(
-            nodes.Get_Declaration_Chain(packageBodyNode), "package", packageName
+            nodes.Get_Declaration_Chain(packageBodyNode), "package", packageIdentifier
         )
 
         # FIXME: read use clauses
@@ -305,7 +321,7 @@ class Context(VHDLModel_Context, DOMMixin):
             kind = GetIirKindOfNode(item)
             if kind is nodes.Iir_Kind.Library_Clause:
                 libraryIdentifier = GetNameOfNode(item)
-                names.append(LibraryReferenceSymbol(item, libraryIdentifier))
+                names.append(LibraryReferenceSymbol(item, SimpleName(item, libraryIdentifier)))
                 if nodes.Get_Has_Identifier_List(item):
                     continue
 

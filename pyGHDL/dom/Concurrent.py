@@ -70,12 +70,6 @@ from pyVHDLModel.Concurrent import (
 from pyGHDL.libghdl import Iir, utils
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, DOMException, Position
-from pyGHDL.dom._Utils import (
-    GetNameOfNode,
-    GetEntityInstantiationSymbol,
-    GetComponentInstantiationSymbol,
-    GetConfigurationInstantiationSymbol,
-)
 from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Symbol import (
     ArchitectureSymbol,
@@ -121,9 +115,9 @@ class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
 
     @classmethod
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ComponentInstantiation":
-        from pyGHDL.dom._Translate import GetGenericMapAspect, GetPortMapAspect
+        from pyGHDL.dom._Translate import GetName, GetGenericMapAspect, GetPortMapAspect
 
-        componentSymbol = GetComponentInstantiationSymbol(instantiatedUnit)
+        componentSymbol = ComponentInstantiationSymbol(instantiatedUnit, GetName(instantiatedUnit))
         genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
         portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
 
@@ -146,15 +140,15 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
 
     @classmethod
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "EntityInstantiation":
-        from pyGHDL.dom._Translate import GetGenericMapAspect, GetPortMapAspect
+        from pyGHDL.dom._Translate import GetName, GetGenericMapAspect, GetPortMapAspect
 
-        entityId = nodes.Get_Entity_Name(instantiatedUnit)
-        entitySymbol = GetEntityInstantiationSymbol(entityId)
+        entityName = nodes.Get_Entity_Name(instantiatedUnit)
+        entitySymbol = EntityInstantiationSymbol(entityName, GetName(entityName))
 
         architectureSymbol = None
         architectureId = nodes.Get_Architecture(instantiatedUnit)
         if architectureId != nodes.Null_Iir:
-            architectureSymbol = ArchitectureSymbol(GetNameOfNode(architectureId), entitySymbol)
+            architectureSymbol = ArchitectureSymbol(GetName(architectureId), entitySymbol)
 
         genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
         portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
@@ -177,10 +171,10 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
 
     @classmethod
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ConfigurationInstantiation":
-        from pyGHDL.dom._Translate import GetGenericMapAspect, GetPortMapAspect
+        from pyGHDL.dom._Translate import GetName, GetGenericMapAspect, GetPortMapAspect
 
-        configurationId = nodes.Get_Configuration_Name(instantiatedUnit)
-        configurationSymbol = GetConfigurationInstantiationSymbol(configurationId)
+        configurationName = nodes.Get_Configuration_Name(instantiatedUnit)
+        configurationSymbol = ConfigurationInstantiationSymbol(configurationName, GetName(configurationName))
 
         genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
         portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
@@ -230,13 +224,17 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
 
     @classmethod
     def parse(cls, processNode: Iir, label: str, hasSensitivityList: bool) -> "ProcessStatement":
-        from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetSequentialStatementsFromChainedNodes
+        from pyGHDL.dom._Translate import (
+            GetName,
+            GetDeclaredItemsFromChainedNodes,
+            GetSequentialStatementsFromChainedNodes,
+        )
 
         sensitivityList = None
         if hasSensitivityList:
             sensitivityList = []
             for item in utils.list_iter(nodes.Get_Sensitivity_List(processNode)):
-                sensitivityList.append(GetNameOfNode(item))
+                sensitivityList.append(GetName(item))
 
         declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(processNode), "process", label)
         statements = GetSequentialStatementsFromChainedNodes(
@@ -490,7 +488,7 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
         from pyGHDL.dom._Translate import (
             GetExpressionFromNode,
             GetRangeFromNode,
-            GetNameFromNode,
+            GetName,
         )
 
         expression = GetExpressionFromNode(nodes.Get_Expression(generateNode))
@@ -524,7 +522,7 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
                     nodes.Iir_Kind.Attribute_Name,
                     nodes.Iir_Kind.Parenthesis_Name,
                 ):
-                    rng = GetNameFromNode(choiceRange)
+                    rng = GetName(choiceRange)
                 else:
                     pos = Position.parse(alternative)
                     raise DOMException(
@@ -580,12 +578,12 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "ForGenerateStatement":
-        from pyGHDL.dom._Utils import GetIirKindOfNode
+        from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
             GetRangeFromNode,
-            GetNameFromNode,
+            GetName,
         )
 
         spec = nodes.Get_Parameter_Specification(generateNode)
@@ -599,7 +597,7 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
             nodes.Iir_Kind.Attribute_Name,
             nodes.Iir_Kind.Parenthesis_Name,
         ):
-            rng = GetNameFromNode(discreteRange)
+            rng = GetName(discreteRange)
         else:
             pos = Position.parse(generateNode)
             raise DOMException(
@@ -651,10 +649,10 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentSimpleSignalAssignment":
-        from pyGHDL.dom._Translate import GetNameFromNode
+        from pyGHDL.dom._Translate import GetName
 
         target = nodes.Get_Target(assignmentNode)
-        targetName = GetNameFromNode(target)
+        targetName = GetName(target)
 
         waveform = []
         for wave in utils.chain_iter(nodes.Get_Waveform_Chain(assignmentNode)):
@@ -677,12 +675,12 @@ class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
 
     @classmethod
     def parse(cls, concurrentCallNode: Iir, label: str) -> "ConcurrentProcedureCall":
-        from pyGHDL.dom._Translate import GetNameFromNode, GetParameterMapAspect
+        from pyGHDL.dom._Translate import GetName, GetParameterMapAspect
 
         callNode = nodes.Get_Procedure_Call(concurrentCallNode)
 
         prefix = nodes.Get_Prefix(callNode)
-        procedureName = GetNameFromNode(prefix)
+        procedureName = GetName(prefix)
         parameterAssociations = GetParameterMapAspect(nodes.Get_Parameter_Association_Chain(callNode))
 
         return cls(concurrentCallNode, label, procedureName, parameterAssociations)

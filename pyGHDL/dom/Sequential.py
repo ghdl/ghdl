@@ -58,7 +58,6 @@ from pyVHDLModel.Sequential import SequentialAssertStatement as VHDLModel_Sequen
 from pyGHDL.libghdl import Iir, utils
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
-from pyGHDL.dom._Utils import GetNameOfNode
 from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Concurrent import WaveformElement, ParameterAssociationItem  # TODO: move out from concurrent?
 
@@ -247,7 +246,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
         from pyGHDL.dom._Translate import (
             GetExpressionFromNode,
             GetRangeFromNode,
-            GetNameFromNode,
+            GetName,
         )
 
         expression = GetExpressionFromNode(nodes.Get_Expression(caseNode))
@@ -281,7 +280,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
                     nodes.Iir_Kind.Attribute_Name,
                     nodes.Iir_Kind.Parenthesis_Name,
                 ):
-                    rng = GetNameFromNode(choiceRange)
+                    rng = GetName(choiceRange)
                 else:
                     pos = Position.parse(alternative)
                     raise DOMException(
@@ -336,11 +335,11 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
 
     @classmethod
     def parse(cls, loopNode: Iir, label: str) -> "ForLoopStatement":
-        from pyGHDL.dom._Utils import GetIirKindOfNode
+        from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
             GetRangeFromNode,
-            GetNameFromNode,
+            GetName,
         )
 
         spec = nodes.Get_Parameter_Specification(loopNode)
@@ -354,7 +353,7 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
             nodes.Iir_Kind.Attribute_Name,
             nodes.Iir_Kind.Parenthesis_Name,
         ):
-            rng = GetNameFromNode(discreteRange)
+            rng = GetName(discreteRange)
         else:
             pos = Position.parse(loopNode)
             raise DOMException(
@@ -381,10 +380,10 @@ class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignmen
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialSimpleSignalAssignment":
-        from pyGHDL.dom._Translate import GetNameFromNode
+        from pyGHDL.dom._Translate import GetName
 
         target = nodes.Get_Target(assignmentNode)
-        targetName = GetNameFromNode(target)
+        targetName = GetName(target)
 
         waveform = []
         for wave in utils.chain_iter(nodes.Get_Waveform_Chain(assignmentNode)):
@@ -407,12 +406,12 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
 
     @classmethod
     def parse(cls, callNode: Iir, label: str) -> "SequentialProcedureCall":
-        from pyGHDL.dom._Translate import GetNameFromNode, GetParameterMapAspect
+        from pyGHDL.dom._Translate import GetName, GetParameterMapAspect
 
         cNode = nodes.Get_Procedure_Call(callNode)
 
         prefix = nodes.Get_Prefix(cNode)
-        procedureName = GetNameFromNode(prefix)
+        procedureName = GetName(prefix)
         parameterAssociations = GetParameterMapAspect(nodes.Get_Parameter_Association_Chain(cNode))
 
         return cls(callNode, procedureName, parameterAssociations, label)
