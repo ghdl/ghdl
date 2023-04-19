@@ -2,15 +2,11 @@
 
 . ../../testenv.sh
 
-for t in comp04 comp05 comp06; do
-#    analyze $t.vhdl tb_$t.vhdl
-#    elab_simulate tb_$t
-#    clean
-
-    synth $t.vhdl -e $t > syn_$t.vhdl
-    analyze syn_$t.vhdl #tb_$t.vhdl
-#    elab_simulate tb_$t --ieee-asserts=disable-at-0
-    clean
+for keep in yes no; do
+    GHDL_SYNTH_FLAGS=--keep-hierarchy=$keep
+    for unit in comp04 comp05 comp06; do
+	synth_tb $unit
+    done
 done
 
 echo "Test successful"
