@@ -718,6 +718,9 @@ package body Synth.Vhdl_Aggr is
          when Type_Vector
            | Type_Array =>
             return Synth_Aggregate_Array (Syn_Inst, Aggr, Aggr_Type);
+         when Type_Slice =>
+            return Synth_Aggregate_Array
+              (Syn_Inst, Aggr, Aggr_Type.Slice_Base);
          when Type_Record
            |  Type_Unbounded_Record =>
             return Synth_Aggregate_Record (Syn_Inst, Aggr, Aggr_Type);

@@ -422,8 +422,8 @@ package body Elab.Vhdl_Objtypes is
                                Arr_El => El_Type)));
    end Create_Vector_Type;
 
-   function Create_Slice_Type (Len : Uns32; El_Type : Type_Acc)
-                              return Type_Acc
+   function Create_Slice_Type
+     (Base_Type : Type_Acc; Len : Uns32; El_Type : Type_Acc) return Type_Acc
    is
       subtype Slice_Type_Type is Type_Type (Type_Slice);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Slice_Type_Type);
@@ -437,6 +437,8 @@ package body Elab.Vhdl_Objtypes is
                                   Is_Bnd_Static => False,
                                   Sz => Size_Type (Len) * El_Type.Sz,
                                   W => Len * El_Type.W,
+                                  Slice_Base => Base_Type,
+                                  Slice_Len => Len,
                                   Slice_El => El_Type)));
    end Create_Slice_Type;
 

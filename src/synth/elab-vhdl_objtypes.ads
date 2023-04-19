@@ -187,6 +187,8 @@ package Elab.Vhdl_Objtypes is
          when Type_Float =>
             Frange : Float_Range_Type;
          when Type_Slice =>
+            Slice_Base : Type_Acc;
+            Slice_Len : Uns32;
             Slice_El : Type_Acc;
          when Type_Array
             | Type_Array_Unbounded
@@ -282,8 +284,8 @@ package Elab.Vhdl_Objtypes is
                                 El_Type : Type_Acc) return Type_Acc;
    function Create_Unbounded_Vector (El_Type : Type_Acc; Idx : Type_Acc)
                                     return Type_Acc;
-   function Create_Slice_Type (Len : Uns32; El_Type : Type_Acc)
-                              return Type_Acc;
+   function Create_Slice_Type
+     (Base_Type : Type_Acc; Len : Uns32; El_Type : Type_Acc) return Type_Acc;
    function Create_Array_Type (Bnd : Bound_Type;
                                Static_Bnd : Boolean;
                                Last : Boolean;

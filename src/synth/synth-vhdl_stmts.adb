@@ -182,6 +182,7 @@ package body Synth.Vhdl_Stmts is
       Sl_Voff : Net;
       Sl_Off : Value_Offsets;
       Err : Boolean;
+      Arr_Typ : Type_Acc;
    begin
       if Dest_Base.Val /= null then
          Strip_Const (Dest_Base);
@@ -218,7 +219,8 @@ package body Synth.Vhdl_Stmts is
               (Get_Build (Syn_Inst), Dest_Dyn.Voff, Sl_Voff);
             Set_Location (Dest_Dyn.Voff, Pfx);
          end if;
-         Dest_Typ := Create_Slice_Type (Res_Bnd.Len, El_Typ);
+         Arr_Typ := Create_Array_Type (Res_Bnd, False, True, El_Typ);
+         Dest_Typ := Create_Slice_Type (Arr_Typ, Res_Bnd.Len, El_Typ);
       end if;
    end Synth_Assignment_Prefix_Slice_Name;
 
