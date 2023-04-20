@@ -853,17 +853,32 @@ package body Trans.Chap7 is
    function Is_A_Derived_Type (Atype : Iir; Parent_Type : Iir) return Boolean
    is
       Ptype : Iir;
+      T : Iir;
    begin
-      --  If ATYPE is a parent type of EXPR_TYPE, then all the constrained
-      --  are inherited and there is nothing to check.
-      Ptype := Atype;
+      --  Optimize: if PARENT_TYPE is an alias of its parent (or if it
+      --  just add a resolution function), use its parent type instead.
+      --  This mainly optimize conversions between std_ulogic_vector and
+      --  std_logic_vector.
+      Ptype := Parent_Type;
+      while Get_Kind (Ptype) = Iir_Kind_Array_Subtype_Definition
+        and then Get_Index_Constraint_List (Ptype) = Null_Iir_Flist
+        and then Get_Array_Element_Constraint (Ptype) = Null_Iir
       loop
-         if Ptype = Parent_Type then
+         T := Get_Parent_Type (Ptype);
+         exit when T = Null_Iir;
+         Ptype := T;
+      end loop;
+
+      --  If ATYPE is a parent type of PARENT_TYPE, then all the constrained
+      --  are inherited and there is nothing to check.
+      T := Atype;
+      loop
+         if T = Ptype then
             return True;
          end if;
-         exit when (Get_Kind (Ptype)
+         exit when (Get_Kind (T)
                     not in Iir_Kinds_Composite_Subtype_Definition);
-         Ptype := Get_Parent_Type (Ptype);
+         T := Get_Parent_Type (T);
       end loop;
       return False;
    end Is_A_Derived_Type;
