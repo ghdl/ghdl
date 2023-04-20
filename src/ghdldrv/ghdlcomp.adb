@@ -202,6 +202,7 @@ package body Ghdlcomp is
    begin
       Hooks.Compile_Init.all (False);
 
+      Flags.Flag_Elaborate := True;
       Flags.Flag_Elaborate_With_Outdated := True;
       Flags.Flag_Only_Elab_Warnings := False;
 
