@@ -16,6 +16,6 @@ begin
         reg <= (others => '0');
 
         -- This is the line that causes the error
-        reg(to_integer(unsigned(sel)) + 1 downto to_integer(unsigned(sel))) <= (others => '1');
+        reg(to_integer(unsigned(sel) * 2) + 1 downto to_integer(unsigned(sel)) * 2) <= (others => '1');
     end process;
 end architecture arch;
