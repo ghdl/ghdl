@@ -512,6 +512,9 @@ package body Synth.Vhdl_Expr is
             return Reshape_Value ((Val.Typ, Val.Val.C_Val), Ntype);
          when Value_Memory =>
             return (Ntype, Val.Val);
+         when Value_Signal =>
+            --  For external names.
+            return (Ntype, Create_Value_Signal (Val.Val.S, Val.Val.Init));
          when others =>
             raise Internal_Error;
       end case;
@@ -983,13 +986,23 @@ package body Synth.Vhdl_Expr is
       end if;
       case Get_Kind (Res) is
          when Iir_Kind_Component_Instantiation_Statement =>
-            if Is_Entity_Instantiation (Res) then
-               return Synth_Pathname
-                 (Loc_Inst, Name, Get_Sub_Instance (Cur_Inst, Res), Suffix);
-            else
-               --  TODO: skip component.
-               raise Internal_Error;
-            end if;
+            declare
+               Sub_Inst : Synth_Instance_Acc;
+               Comp_Inst : Synth_Instance_Acc;
+            begin
+               if Is_Entity_Instantiation (Res) then
+                  Sub_Inst := Get_Sub_Instance (Cur_Inst, Res);
+               else
+                  Comp_Inst := Get_Sub_Instance (Cur_Inst, Res);
+                  Sub_Inst := Get_Component_Instance (Comp_Inst);
+                  if Cur_Inst = null then
+                     Error_Msg_Synth
+                       (Loc_Inst, Path, "component for %i is not bound", +Res);
+                     return No_Valtyp;
+                  end if;
+               end if;
+               return Synth_Pathname (Loc_Inst, Name, Sub_Inst, Suffix);
+            end;
          when others =>
             Error_Kind ("synth_pathname(2)", Res);
       end case;
