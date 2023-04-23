@@ -840,6 +840,7 @@ package body Synth.Vhdl_Expr is
       Scope : constant Node := Get_Source_Scope (Cur_Inst);
       Obj : Node;
       Res : Valtyp;
+      Name_Typ : Type_Acc;
    begin
       --  Object simple name.
       case Get_Kind (Scope) is
@@ -893,6 +894,9 @@ package body Synth.Vhdl_Expr is
               (Loc_Inst, Path, "external name and object have different type");
             return No_Valtyp;
          end if;
+
+         Name_Typ := Synth_Subtype_Indication
+           (Loc_Inst, Get_Subtype_Indication (Name));
       end;
 
       --  LRM08 8.7 External names
@@ -912,7 +916,35 @@ package body Synth.Vhdl_Expr is
       --  bounds and direction as the subtype of the object denoted by the
       --  external name.
 
-      --  TODO.
+      case Name_Typ.Kind is
+         when Type_Bit
+           | Type_Logic
+           | Type_Discrete =>
+            if Name_Typ.Drange /= Res.Typ.Drange then
+               Error_Msg_Synth
+                 (Loc_Inst, Name, "bounds mismatch between name and object");
+            end if;
+         when Type_Float =>
+            if Name_Typ.Frange /= Res.Typ.Frange then
+               Error_Msg_Synth
+                 (Loc_Inst, Name, "bounds mismatch between name and object");
+            end if;
+         when Type_Vector
+           | Type_Unbounded_Vector
+           | Type_Array
+           | Type_Array_Unbounded
+           | Type_Unbounded_Array
+           | Type_Unbounded_Record
+           | Type_Record =>
+            Res := Synth_Subtype_Conversion
+              (Loc_Inst, Res, Name_Typ, True, Name);
+         when Type_Protected
+           | Type_File
+           | Type_Access =>
+            null;
+         when Type_Slice =>
+            raise Internal_Error;
+      end case;
 
       return Res;
    end Synth_Pathname_Object;
