@@ -923,6 +923,10 @@ package body Vhdl.Configuration is
                null;
          end case;
 
+         if Nbr_Errors /= 0 then
+            return Walk_Abort;
+         end if;
+
          return Walk_Continue;
       end Add_Entity_Cb;
 
@@ -1061,6 +1065,9 @@ package body Vhdl.Configuration is
 
          --  1. Add all design entities in the name table.
          Status := Walk_Design_Units (Lib, Add_Entity_Cb'Access);
+         if Status = Walk_Abort then
+            return;
+         end if;
          pragma Assert (Status = Walk_Continue);
 
          --  2. Walk architecture and configurations, and mark instantiated
@@ -1117,6 +1124,10 @@ package body Vhdl.Configuration is
    begin
       --  FROM is a library or a design file.
       Top.Mark_Instantiated_Units (From, Loc);
+      if Nbr_Errors > 0 then
+         return Null_Iir;
+      end if;
+
       Top.Find_First_Top_Entity (From);
 
       if Top.Nbr_Top_Entities = 1 then
