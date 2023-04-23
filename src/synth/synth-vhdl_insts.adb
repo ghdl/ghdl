@@ -1130,6 +1130,7 @@ package body Synth.Vhdl_Insts is
    procedure Synth_Flat_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc;
       Stmt : Node;
+      Assocs : Node;
       Sub_Inst : Synth_Instance_Acc;
       Entity : Node;
       Arch : Node)
@@ -1190,7 +1191,7 @@ package body Synth.Vhdl_Insts is
       begin
          Mark_Expr_Pool (Marker);
 
-         Assoc := Get_Port_Map_Aspect_Chain (Stmt);
+         Assoc := Get_Port_Map_Aspect_Chain (Assocs);
          Assoc_Inter := Get_Port_Chain (Entity);
          while Is_Valid (Assoc) loop
             if Get_Whole_Association_Flag (Assoc) then
@@ -1240,15 +1241,11 @@ package body Synth.Vhdl_Insts is
          Synth_Direct_Instantiation_Statement
            (Syn_Inst, Stmt, Sub_Inst, Ent, Arch, Config);
       else
-         --  Dependencies
-         --  Set files root dir
-         --  Create name prefix
-         --  Build ports
-         --   For in: net
-         --   For out/inout: wires
-         --  Connect
+         --  TODO: Dependencies, Set files root dir
+         pragma Assert (Is_Expr_Pool_Empty);
+
          Synth_Flat_Instantiation_Statement
-           (Syn_Inst, Stmt, Sub_Inst, Ent, Arch);
+           (Syn_Inst, Stmt, Stmt, Sub_Inst, Ent, Arch);
       end if;
    end Synth_Design_Instantiation_Statement;
 
@@ -1315,12 +1312,12 @@ package body Synth.Vhdl_Insts is
       pragma Assert (Is_Expr_Pool_Empty);
       pragma Assert (Get_Kind (Aspect) = Iir_Kind_Entity_Aspect_Entity);
 
-      Push_Phi;
-
       Inst_Name := New_Sname_User (Get_Identifier (Stmt),
                                    Get_Sname (Syn_Inst));
 
       Set_Extra (Comp_Inst, Syn_Inst, Inst_Name);
+
+      Current_Pool := Process_Pool'Access;
 
       --  Create objects for the inputs and the outputs of the component,
       --  assign inputs (that's nets) and create wires for outputs.
@@ -1359,56 +1356,73 @@ package body Synth.Vhdl_Insts is
          end loop;
       end;
 
+      Current_Pool := Expr_Pool'Access;
+
       Sub_Inst := Get_Component_Instance (Comp_Inst);
       Arch := Get_Source_Scope (Sub_Inst);
       Sub_Config := Get_Instance_Config (Sub_Inst);
-      if Get_Kind (Arch) = Iir_Kind_Foreign_Module then
-         M := Synth_Foreign_Module
-           (Global_Base_Instance, Get_Instance_Foreign (Sub_Inst),
-            Sub_Inst, Arch);
 
-         Inst := New_Instance (Get_Instance_Module (Syn_Inst), M, Inst_Name);
-         Set_Location (Inst, Stmt);
+      if Flag_Keep_Hierarchy then
+         Push_Phi;
 
-         Synth_Instantiate_Module_Ports
-           (Comp_Inst, Inst, Sub_Inst, Arch,
-            Get_Port_Map_Aspect_Chain (Bind));
+         if Get_Kind (Arch) = Iir_Kind_Foreign_Module then
+            M := Synth_Foreign_Module
+              (Global_Base_Instance, Get_Instance_Foreign (Sub_Inst),
+               Sub_Inst, Arch);
+
+            Inst := New_Instance
+              (Get_Instance_Module (Syn_Inst), M, Inst_Name);
+            Set_Location (Inst, Stmt);
+
+            Synth_Instantiate_Module_Ports
+              (Comp_Inst, Inst, Sub_Inst, Arch,
+               Get_Port_Map_Aspect_Chain (Bind));
+         else
+            Ent := Get_Entity (Arch);
+
+            --  Elaborate generic + map aspect for the entity instance.
+            Set_Extra (Sub_Inst, Comp_Inst,
+                       New_Sname_User (Get_Identifier (Ent), No_Sname));
+
+            --  Search if corresponding module has already been used.
+            --  If not create a new module
+            --   * create a name from the generics and the library
+            --   * create inputs/outputs
+            --   * add it to the list of module to be synthesized.
+            Inst_Obj := Interning_Get ((Decl => Ent,
+                                        Arch => Arch,
+                                        Config => Sub_Config,
+                                        Syn_Inst => Sub_Inst,
+                                        Encoding => Name_Hash));
+
+            --  TODO: free sub_inst.
+
+            Inst := New_Instance (Get_Instance_Module (Syn_Inst),
+                                  Inst_Obj.M, Inst_Name);
+            Set_Location (Inst, Stmt);
+
+            Synth_Instantiate_Module_Ports
+              (Comp_Inst, Inst, Inst_Obj.Syn_Inst, Inst_Obj.Decl,
+               Get_Port_Map_Aspect_Chain (Bind));
+            Synth_Instantiate_Module_Generics (Inst, Inst_Obj);
+         end if;
+
+         pragma Unreferenced (M);
+
       else
-         Ent := Get_Entity (Arch);
+         Synth_Flat_Instantiation_Statement
+           (Comp_Inst, Component, Bind,
+            Get_Component_Instance (Comp_Inst), Get_Entity (Arch), Arch);
 
-         --  Elaborate generic + map aspect for the entity instance.
-         Set_Extra (Sub_Inst, Comp_Inst,
-                    New_Sname_User (Get_Identifier (Ent), No_Sname));
-
-         --  Search if corresponding module has already been used.
-         --  If not create a new module
-         --   * create a name from the generics and the library
-         --   * create inputs/outputs
-         --   * add it to the list of module to be synthesized.
-         Inst_Obj := Interning_Get ((Decl => Ent,
-                                     Arch => Arch,
-                                     Config => Sub_Config,
-                                     Syn_Inst => Sub_Inst,
-                                     Encoding => Name_Hash));
-
-         --  TODO: free sub_inst.
-
-         Inst := New_Instance (Get_Instance_Module (Syn_Inst),
-                               Inst_Obj.M, Inst_Name);
-         Set_Location (Inst, Stmt);
-
-         Synth_Instantiate_Module_Ports
-           (Comp_Inst, Inst, Inst_Obj.Syn_Inst, Inst_Obj.Decl,
-            Get_Port_Map_Aspect_Chain (Bind));
-         Synth_Instantiate_Module_Generics (Inst, Inst_Obj);
+         Push_Phi;
       end if;
-
-      pragma Unreferenced (M);
 
       --  Connect out from component to instance.
       --  Instantiate the module
-      --  Elaborate ports + map aspect for the inputs (component then entity)
-      --  Elaborate ports + map aspect for the outputs (entity then component)
+      --  Elaborate ports + map aspect for the inputs
+      --    (component then entity)
+      --  Elaborate ports + map aspect for the outputs
+      --    (entity then component)
       declare
          Assoc : Node;
          Assoc_Inter : Node;
