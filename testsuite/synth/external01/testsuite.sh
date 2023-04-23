@@ -7,4 +7,6 @@ GHDL_SYNTH_FLAGS=--keep-hierarchy=no
 
 synth_only external01
 
+synth_failure externalerr01.vhdl -e
+
 echo "Test successful"
