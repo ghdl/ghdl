@@ -241,3 +241,9 @@ class Test011_closediag(JSONTest):
 
     def test_Request_Response(self):
         self._RequestResponse("cmds.json", "replies.json")
+
+class Test012_library(JSONTest):
+    subdir = Path("012library")
+
+    def test_Request_Response(self):
+        self._RequestResponse("cmds.json", "replies.json")
