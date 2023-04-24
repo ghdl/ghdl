@@ -284,13 +284,14 @@ package body Libraries is
 
    procedure Purge_Design_File (Design_File : Iir_Design_File)
    is
+      Library : constant Iir := Get_Library (Design_File);
       Prev, File, Next : Iir_Design_File;
       Unit : Iir_Design_Unit;
 
       File_Name : constant Name_Id := Get_Design_File_Filename (Design_File);
       Dir_Name : constant Name_Id := Get_Design_File_Directory (Design_File);
    begin
-      File := Get_Design_File_Chain (Work_Library);
+      File := Get_Design_File_Chain (Library);
       Prev := Null_Iir;
       loop
          if File = Null_Iir then
@@ -308,7 +309,7 @@ package body Libraries is
 
       --  Remove from library.
       if Prev = Null_Iir then
-         Set_Design_File_Chain (Work_Library, Next);
+         Set_Design_File_Chain (Library, Next);
       else
          Set_Chain (Prev, Next);
       end if;
