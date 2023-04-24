@@ -114,7 +114,10 @@ package Libraries is
 
    --  Get or create a library from an identifier.
    --  LOC is used only to report errors.
-   function Get_Library (Ident : Name_Id; Loc : Location_Type)
+   --  If FORCE is true, then the library is created even if it doesn't exist.
+   function Get_Library (Ident: Name_Id;
+                         Loc : Location_Type;
+                         Force : Boolean := False)
                         return Iir_Library_Declaration;
 
    --  Add or replace an design unit in the work library.

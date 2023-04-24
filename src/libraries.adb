@@ -758,7 +758,9 @@ package body Libraries is
    end Get_Library_No_Create;
 
    -- Get or create a library from an identifier.
-   function Get_Library (Ident: Name_Id; Loc : Location_Type)
+   function Get_Library (Ident: Name_Id;
+                         Loc : Location_Type;
+                         Force : Boolean := False)
                         return Iir_Library_Declaration
    is
       Library: Iir_Library_Declaration;
@@ -777,7 +779,9 @@ package body Libraries is
       Set_Library_Directory (Library, Null_Identifier);
       Set_Identifier (Library, Ident);
       if Load_Library (Library) = False then
-         Error_Msg_Sem (+Loc, "cannot find resource library %i", +Ident);
+         if not Force then
+            Error_Msg_Sem (+Loc, "cannot find resource library %i", +Ident);
+         end if;
       end if;
       Set_Visible_Flag (Library, True);
 
