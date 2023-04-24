@@ -64,6 +64,13 @@ Library declaration for the work library.
 Use the property ``.value`` to access the variable's value.
 """
 
+Work_Library_Name: NameId = c_int32.in_dll(libghdl, "libraries__work_library_name")
+"""
+Name of the 'WORK' library, usually 'work'.
+
+Use the property ``.value`` to access the variable's value.
+"""
+
 
 @export
 @BindToLibGHDL("libraries__get_libraries_chain")
@@ -134,6 +141,19 @@ def Get_Library_No_Create(Ident: NameId) -> Iir_Library_Declaration:
 
 
 @export
+@BindToLibGHDL("libraries__get_library")
+def Get_Library(Ident: NameId, Loc: LocationType, Force: bool) -> Iir_Library_Declaration:
+    """
+    Get the library named :obj:`Ident`.
+
+    :param Ident: Library to look for.
+    :param Loc: Location in case of errors.
+    :return:      Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if it doesn't exist.
+    """
+    return 0
+
+
+@export
 @BindToLibGHDL("libraries__find_primary_unit")
 def Find_Primary_Unit(Library: Iir_Library_Declaration, Name: NameId) -> Iir_Design_Unit:
     """
@@ -144,3 +164,14 @@ def Find_Primary_Unit(Library: Iir_Library_Declaration, Name: NameId) -> Iir_Des
     :return:        undocumented
     """
     return 0
+
+
+@export
+@BindToLibGHDL("libraries__load_work_library")
+def Load_Work_Library(Empty: bool) -> None:
+    """
+    Load the work library whose name is ``Work_Library_Name``.
+
+    :param Empty: If set, just create it.
+    """
+    return
