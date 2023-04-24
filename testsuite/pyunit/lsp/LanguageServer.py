@@ -46,7 +46,7 @@ def show_diffs(name, ref, res):
         for i in range(max(len(ref), len(res))):
             if i >= len(res):
                 print(f"{name}[{i}]: missing element:")
-                print(f" {res[i]}")
+                print(f" {ref[i]}")
             elif i >= len(ref):
                 print(f"{name}[{i}]: extra elements")
             else:
