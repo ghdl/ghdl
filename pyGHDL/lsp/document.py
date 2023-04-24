@@ -29,10 +29,11 @@ class Document(object):
 
     initial_gap_size = 4096
 
-    def __init__(self, uri, sfe=None, version=None):
+    def __init__(self, uri, sfe=None, lib=None, version=None):
         self.uri = uri
         self.version = version
         self._fe = sfe
+        self.library = lib
         self.gap_size = Document.initial_gap_size
         self._tree = nodes.Null_Iir
 
@@ -128,7 +129,12 @@ class Document(object):
         files_map_editor.Check_Buffer_Content(self._fe, ctypes.c_char_p(text_bytes), len(text_bytes))
 
     @staticmethod
-    def add_to_library(tree):
+    def add_to_library(tree, library):
+        # Set the target library
+        if library is None:
+            library = 'work'
+        libraries.Work_Library_Name.value = name_table.Get_Identifier(library)
+        libraries.Load_Work_Library(False)
         # Detach the chain of units.
         unit = nodes.Get_First_Design_Unit(tree)
         nodes.Set_First_Design_Unit(tree, nodes.Null_Iir)
@@ -153,8 +159,9 @@ class Document(object):
         tree = sem_lib.Load_File(self._fe)
         if tree == nodes.Null_Iir:
             return
-        self._tree = Document.add_to_library(tree)
-        log.debug("add_to_library(%u) -> %u", tree, self._tree)
+        self._tree = Document.add_to_library(tree, self.library)
+        log.debug("add_to_library(%u, '%s') -> %u",
+                  tree, self.library, self._tree)
         if self._tree == nodes.Null_Iir:
             return
         nodes.Set_Design_File_Source(self._tree, self._fe)
