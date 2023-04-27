@@ -1248,8 +1248,10 @@ package body Libraries is
 
       if Design_File /= Null_Iir
         and then New_Lib_Checksum /= No_File_Checksum_Id
-        and then not Files_Map.Is_Eq (New_Lib_Checksum,
-                                      Get_File_Checksum (Design_File))
+        and then
+        (Get_File_Checksum (Design_File) = No_File_Checksum_Id
+           or else not Files_Map.Is_Eq (New_Lib_Checksum,
+                                        Get_File_Checksum (Design_File)))
       then
          --  FIXME: this test is not enough: what about reanalyzing
          --   unmodified files (this works only because the order is not
