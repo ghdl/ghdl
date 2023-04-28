@@ -1062,20 +1062,14 @@ package body Trans.Chap4 is
             Res.Already_Resolved := True;
          end if;
       end if;
-      case Get_Info (Targ_Type).Type_Mode is
-         when Type_Mode_Records =>
-            Res.Value := Stabilize (Data.Value);
-            if Data.Has_Val then
-               Res.Init_Val := Stabilize (Data.Init_Val);
-            end if;
-         when Type_Mode_Arrays =>
-            Res.Value := Chap3.Get_Composite_Base (Data.Value);
-            if Data.Has_Val then
-               Res.Init_Val := Chap3.Get_Composite_Base (Data.Init_Val);
-            end if;
-         when others =>
-            raise Internal_Error;
-      end case;
+
+      --  Stabilize for records as the values will be read for each element.
+      if Get_Info (Targ_Type).Type_Mode in Type_Mode_Records then
+         Res.Value := Stabilize (Data.Value);
+         if Data.Has_Val then
+            Res.Init_Val := Stabilize (Data.Init_Val);
+         end if;
+      end if;
       return Res;
    end Elab_Signal_Prepare_Composite;
 
@@ -1097,14 +1091,14 @@ package body Trans.Chap4 is
       N_Init_Val : Mnode;
    begin
       if Data.Has_Val then
-         N_Init_Val := Chap3.Index_Base (Data.Init_Val, Targ_Type,
-                                         New_Obj_Value (Index));
+         N_Init_Val := Chap6.Translate_Indexed_Name_By_Offset
+           (Data.Init_Val, Targ_Type, Index);
       else
          N_Init_Val := Mnode_Null;
       end if;
       return Elab_Signal_Data'
-        (Value => Chap3.Index_Base (Data.Value, Targ_Type,
-                                    New_Obj_Value (Index)),
+        (Value =>  Chap6.Translate_Indexed_Name_By_Offset
+           (Data.Value, Targ_Type, Index),
          Init_Val => N_Init_Val,
          Has_Val => Data.Has_Val,
          If_Stmt => null,

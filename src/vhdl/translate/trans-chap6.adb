@@ -506,18 +506,26 @@ package body Trans.Chap6 is
    function Translate_Indexed_Name_By_Offset
      (Prefix : Mnode; Prefix_Type : Iir; Offset : O_Dnode) return Mnode
    is
+      Pfx_Tinfo : constant Type_Info_Acc := Get_Type_Info (Prefix);
       El_Type  : constant Iir := Get_Element_Subtype (Prefix_Type);
       El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
       Kind     : constant Object_Kind_Type := Get_Object_Kind (Prefix);
+      Pfx : Mnode;
       Fat_Res : Mnode;
       Base : Mnode;
       Bounds : Mnode;
    begin
-      Base := Chap3.Index_Array (Prefix, Prefix_Type, New_Obj_Value (Offset));
+      if Is_Unbounded_Type (Pfx_Tinfo) then
+         Pfx := Stabilize (Prefix);
+      else
+         Pfx := Prefix;
+      end if;
+
+      Base := Chap3.Index_Array (Pfx, Prefix_Type, New_Obj_Value (Offset));
 
       if Is_Unbounded_Type (El_Tinfo) then
          Fat_Res := Create_Temp (El_Tinfo, Kind);
-         Bounds := Chap3.Get_Composite_Bounds (Prefix);
+         Bounds := Chap3.Get_Composite_Bounds (Pfx);
          Bounds := Chap3.Array_Bounds_To_Element_Bounds (Bounds, Prefix_Type);
 
          --  Assignment to M2Lp works as this is not a copy.
