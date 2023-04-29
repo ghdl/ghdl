@@ -132,7 +132,7 @@ class Document(object):
     def add_to_library(tree, library):
         # Set the target library
         if library is None:
-            library = 'work'
+            library = "work"
         libraries.Work_Library_Name.value = name_table.Get_Identifier(library)
         libraries.Load_Work_Library(False)
         # Detach the chain of units.
@@ -160,8 +160,7 @@ class Document(object):
         if tree == nodes.Null_Iir:
             return
         self._tree = Document.add_to_library(tree, self.library)
-        log.debug("add_to_library(%u, '%s') -> %u",
-                  tree, self.library, self._tree)
+        log.debug("add_to_library(%u, '%s') -> %u", tree, self.library, self._tree)
         if self._tree == nodes.Null_Iir:
             return
         nodes.Set_Design_File_Source(self._tree, self._fe)
