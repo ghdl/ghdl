@@ -75,8 +75,11 @@ package Trans.Chap7 is
                                      Expr_Type : Iir;
                                      Atype     : Iir;
                                      Is_Sig    : Object_Kind_Type;
-                                     Loc       : Iir)
-                                    return O_Enode;
+                                     Loc       : Iir) return O_Enode;
+
+   --  Return true iff ATYPE is derived from PARENT_TYPE
+   --  (or to say the same, if PARENT_TYPE is a parent of ATYPE).
+   function Is_A_Derived_Type (Atype : Iir; Parent_Type : Iir) return Boolean;
 
    function Translate_Type_Conversion
      (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)

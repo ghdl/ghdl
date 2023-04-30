@@ -2472,31 +2472,52 @@ package body Trans.Chap8 is
                Kind : Iir_Kind;
             begin
                if Is_Fully_Constrained_Type (Ftype) then
+                  --  No bounds as the parameter is not a fat pointer.
                   return False;
                end if;
-               if Act_Type /= Null_Iir
-                 and then Get_Type_Staticness (Act_Type) = Locally
+               if Act_Type /= Null_Iir then
+                  if not Chap7.Is_A_Derived_Type (Act_Type, Ftype) then
+                     --  But if an implicit subtype conversion is needed,
+                     --  the bounds need to be saved.
+                     return True;
+                  end if;
+                  if Get_Type_Staticness (Act_Type) = Locally then
+                     --  Actual bounds are statically built.
+                     return False;
+                  end if;
+               end if;
+
+               if Actual = Null_Iir then
+                  --  No actual, and default value is not locally static.
+                  return True;
+               end if;
+
+               if Get_Expr_Staticness (Actual) = Locally then
+                  --  Actual is static (so are its bounds).
+                  return False;
+               end if;
+
+               Kind := Get_Kind (Actual);
+               if (Kind = Iir_Kind_Function_Call
+                     or else Kind in Iir_Kinds_Dyadic_Operator
+                     or else Kind in Iir_Kinds_Monadic_Operator)
+                 and then Is_Fully_Constrained_Type (Get_Type (Actual))
                then
+                  --  Actual is the result of an unconstrained function call.
+                  --  The result bounds are already allocated on stack2.
                   return False;
                end if;
-               if Actual /= Null_Iir then
-                  if Get_Expr_Staticness (Actual) = Locally then
-                     return False;
+
+               if Is_Object_Name (Actual) then
+                  --  The life of an object name is longer than the life
+                  --  of a call.
+                  if Kind = Iir_Kind_Slice_Name then
+                     --  Unless the name is a slice!
+                     return True;
                   end if;
-                  Kind := Get_Kind (Actual);
-                  if (Kind = Iir_Kind_Function_Call
-                        or else Kind in Iir_Kinds_Dyadic_Operator
-                        or else Kind in Iir_Kinds_Monadic_Operator)
-                    and then Is_Fully_Constrained_Type (Get_Type (Actual))
-                  then
-                     return False;
-                  end if;
-                  if Is_Object_Name (Actual)
-                    and then Kind /= Iir_Kind_Slice_Name
-                  then
-                     return False;
-                  end if;
+                  return False;
                end if;
+
                return True;
             end Need_Bounds_Field;
 

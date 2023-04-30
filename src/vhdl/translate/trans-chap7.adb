@@ -1304,8 +1304,7 @@ package body Trans.Chap7 is
                                      Expr_Type : Iir;
                                      Atype     : Iir;
                                      Is_Sig    : Object_Kind_Type;
-                                     Loc       : Iir)
-                                    return O_Enode is
+                                     Loc       : Iir) return O_Enode is
    begin
       --  Same type: nothing to do.
       if Atype = Expr_Type then
