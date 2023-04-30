@@ -78,6 +78,7 @@ package Errorout is
 
       --  An all/others specification does not apply, because there is no such
       --  named entities.
+      --  Attribute specification of class type to an anonymous type.
       Warnid_Specs,
 
       --  Incorrect use of universal value.

@@ -242,6 +242,8 @@ package body Vhdl.Sem_Specs is
       Attr_Decl : Iir;
 
       Attr_Chain_Parent : Iir;
+
+      Is_Anon_Type : Boolean;
    begin
       --  LRM93 5.1
       --  It is an error if the class of those names is not the same as that
@@ -250,22 +252,31 @@ package body Vhdl.Sem_Specs is
         and then Get_Entity_Class_Kind (Decl) /= Attr_Class
       then
          if Check_Class then
-            Error_Msg_Sem
-              (+Attr, "%n is not of class %t", (+Decl, +Attr_Class));
-            if Get_Kind (Decl) = Iir_Kind_Subtype_Declaration
+            --  If -frelaxed, specifying an attribute of class 'type' to
+            --  an anonynous type declaration is allowed.
+            Is_Anon_Type := Get_Kind (Decl) = Iir_Kind_Subtype_Declaration
               and then Get_Entity_Class (Attr) = Tok_Type
               and then Get_Type (Decl) /= Null_Iir
               and then Get_Base_Type (Get_Type (Decl)) /= Null_Iir
-              and then Get_Kind
-              (Get_Type_Declarator (Get_Base_Type (Get_Type (Decl))))
-              = Iir_Kind_Anonymous_Type_Declaration
-            then
+              and then (Get_Kind (Get_Type_Declarator
+                                   (Get_Base_Type (Get_Type (Decl))))
+                          = Iir_Kind_Anonymous_Type_Declaration);
+
+            if Is_Anon_Type then
                --  The type declaration declares an anonymous type
                --  and a named subtype.
-               Error_Msg_Sem
-                 (+Decl,
+               Report_Start_Group;
+               Error_Msg_Sem_Relaxed
+                 (Attr, Warnid_Specs,
+                  "%n is not of class %t", (+Decl, +Attr_Class));
+               Error_Msg_Sem_Relaxed
+                 (Decl, Warnid_Specs,
                   "%i declares both an anonymous type and a named subtype",
-                  +Decl);
+                  (1 => +Decl));
+               Report_End_Group;
+            else
+               Error_Msg_Sem
+                 (+Attr, "%n is not of class %t", (+Decl, +Attr_Class));
             end if;
          end if;
          return;
