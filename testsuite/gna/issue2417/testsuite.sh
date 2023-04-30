@@ -3,11 +3,11 @@
 . ../../testenv.sh
 
 export GHDL_STD_FLAGS=--std=08
-analyze repro1.vhdl
-elab_simulate repro1
 
-analyze repro2.vhdl
-elab_simulate repro2
+for t in repro1 repro2 repro3 repro4 repro5 repro6; do
+    analyze $t.vhdl
+    elab_simulate $t
+done
 
 clean
 
