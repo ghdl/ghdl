@@ -1085,7 +1085,7 @@ package body Vhdl.Evaluation is
       Res_Mt := Eval_Static_Predefined_Function_Call
         (null, Left_Mt, Right_Mt, Res_Typ, Orig);
 
-      Res := Convert_Memtyp_To_Node (Res_Mt, Res_Type, Orig);
+      Res := Convert_Memtyp_To_Node (Res_Mt, Get_Base_Type (Res_Type), Orig);
       Release_Expr_Pool (Marker);
 
       return Res;
