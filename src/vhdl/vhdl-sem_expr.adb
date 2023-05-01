@@ -3863,15 +3863,21 @@ package body Vhdl.Sem_Expr is
       Expr_Staticness : Iir_Staticness;
 
       Info : Array_Aggr_Info renames Infos (Dim);
+
+      Is_Sub_Range : Boolean;
    begin
       --  Analyze choices (for aggregate but not for strings).
       if Get_Kind (Aggr) = Iir_Kind_Aggregate then
          --  By default, consider the aggregate can be statically built.
          Set_Aggregate_Expand_Flag (Aggr, True);
 
+         --  True if the aggregate (and not the context) defines its range.
+         Is_Sub_Range :=
+           not (Constrained and then Get_Index_Constraint_Flag (A_Type));
+
          Assoc_Chain := Get_Association_Choices_Chain (Aggr);
          Sem_Choices_Range (Assoc_Chain, Index_Type, Low, High,
-                            Get_Location (Aggr), not Constrained, False);
+                            Get_Location (Aggr), Is_Sub_Range, False);
          Set_Association_Choices_Chain (Aggr, Assoc_Chain);
 
          --  Update infos.

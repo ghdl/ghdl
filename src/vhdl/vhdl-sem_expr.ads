@@ -205,9 +205,8 @@ package Vhdl.Sem_Expr is
    --  Check that the values of CHOICE_CHAIN are a continuous range, and
    --  extract the lower LOW and upper HIGH bound (useful to create the
    --  corresponding subtype).  The values must be of type SUB_TYPE, and if
-   --  IS_SUB_RANGE True, they must be within SUB_TYPE.
+   --  IS_SUB_RANGE is False, they must be within SUB_TYPE.
    --  The choices must be locally static.
-   --  If REORDER_CHOICES is true, CHOICE_CHAIN is ordered.
    procedure Sem_Check_Continuous_Choices (Choice_Chain : Iir;
                                            Choice_Type : Iir;
                                            Low : out Iir;
