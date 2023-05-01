@@ -14,14 +14,13 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 with Ada.Unchecked_Deallocation;
-with GNAT.OS_Lib;
+
 with GNAT.SHA1;
-with GNAT.Directory_Operations;
+
 with Logging; use Logging;
+with Filesystem;
 with Name_Table; use Name_Table;
 with Str_Table;
-with Ada.Calendar;
-with Ada.Calendar.Time_Zones;
 
 package body Files_Map is
 
@@ -44,7 +43,7 @@ package body Files_Map is
    begin
       if Home_Dir = Null_Identifier then
          declare
-            Dir : constant String := GNAT.Directory_Operations.Get_Current_Dir;
+            Dir : constant String := Filesystem.Get_Current_Directory;
          begin
             Home_Dir := Get_Identifier (Dir);
          end;
@@ -438,23 +437,19 @@ package body Files_Map is
 
    function Get_Os_Time_Stamp return Time_Stamp_Id
    is
-      use Ada.Calendar;
-      use Ada.Calendar.Time_Zones;
+      use Filesystem;
       use Str_Table;
 
-      Now : constant Time := Clock;
-      Now_UTC : constant Time := Now - Duration (UTC_Time_Offset (Now) * 60);
-      Year : Year_Number;
-      Month : Month_Number;
-      Day : Day_Number;
-      Sec : Day_Duration;
-      S : Integer;
+      Year : Year_Range;
+      Month : Month_Range;
+      Day : Day_Range;
+      Sec : Sec_Range;
+      Ms : Ms_Range;
       S1 : Integer;
-      M : Integer;
       Res: Time_Stamp_Id;
    begin
       --  Use UTC time (like file time stamp).
-      Split (Now_UTC, Year, Month, Day, Sec);
+      Split_Now_Utc (Year, Month, Day, Sec, Ms);
 
       Res := Time_Stamp_Id (Create_String8);
       Append_String8_Char (Digit_To_Char (Year / 1000));
@@ -465,31 +460,20 @@ package body Files_Map is
       Append_String8_Char (Digit_To_Char (Month / 1));
       Append_String8_Char (Digit_To_Char (Day / 10));
       Append_String8_Char (Digit_To_Char (Day / 1));
-      S := Integer (Sec);
-      if Day_Duration (S) > Sec then
-         --  We need a truncation.
-         S := S - 1;
-      end if;
-      S1 := S / 3600;
+      S1 := Sec / 3600;
       Append_String8_Char (Digit_To_Char (S1 / 10));
       Append_String8_Char (Digit_To_Char (S1));
-      S1 := (S / 60) mod 60;
+      S1 := (Sec / 60) mod 60;
       Append_String8_Char (Digit_To_Char (S1 / 10));
       Append_String8_Char (Digit_To_Char (S1));
-      S1 := S mod 60;
+      S1 := Sec mod 60;
       Append_String8_Char (Digit_To_Char (S1 / 10));
       Append_String8_Char (Digit_To_Char (S1));
 
       Append_String8_Char ('.');
-      Sec := Sec - Day_Duration (S);
-      M := Integer (Sec * 1000);
-      if M = 1000 then
-         --  We need truncation.
-         M := 999;
-      end if;
-      Append_String8_Char (Digit_To_Char (M / 100));
-      Append_String8_Char (Digit_To_Char (M / 10));
-      Append_String8_Char (Digit_To_Char (M));
+      Append_String8_Char (Digit_To_Char (Ms / 100));
+      Append_String8_Char (Digit_To_Char (Ms / 10));
+      Append_String8_Char (Digit_To_Char (Ms));
       return Res;
    end Get_Os_Time_Stamp;
 
@@ -497,7 +481,7 @@ package body Files_Map is
    is
       Filename : constant String := Image (Name);
    begin
-      if not GNAT.OS_Lib.Is_Absolute_Path (Filename) then
+      if not Filesystem.Is_Absolute_Path (Filename) then
          return Image (Directory) & Filename;
       else
          return Filename;
@@ -771,7 +755,7 @@ package body Files_Map is
    function Read_Source_File (Directory : Name_Id; Name: Name_Id)
                              return Source_File_Entry
    is
-      use GNAT.OS_Lib;
+      use Filesystem;
       Fd : File_Descriptor;
 
       Res : Source_File_Entry;
@@ -791,13 +775,12 @@ package body Files_Map is
       --  Open the file (punt on non regular files).
       declare
          Filename : constant String := Get_Pathname (Directory, Name);
-         Filename0 : constant String := Filename & ASCII.NUL;
       begin
          if not Is_Regular_File (Filename) then
             return No_Source_File_Entry;
          end if;
-         Fd := Open_Read (Filename0'Address, Binary);
-         if Fd = Invalid_FD then
+         Open_Read (Fd, Filename);
+         if Is_Error (Fd) then
             return No_Source_File_Entry;
          end if;
       end;
@@ -823,9 +806,8 @@ package body Files_Map is
 
       Buffer := Get_File_Source (Res);
 
-      if Read (Fd, Buffer (Source_Ptr_Org)'Address, Integer (Length))
-        /= Integer (Length)
-      then
+      Read (Fd, Buffer (Source_Ptr_Org)'Address, Long_Integer (Length));
+      if Is_Error (Fd) then
          Close (Fd);
          raise Internal_Error;
       end if;
