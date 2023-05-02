@@ -2275,7 +2275,7 @@ package body Vhdl.Sem_Assocs is
            and then not Is_Fully_Constrained_Type (Get_Type (In_Conv))
          then
             Error_Msg_Sem
-              (+Get_Type_Mark (In_Conv),
+              (+In_Conv,
                "type of actual conversion must be fully constrained");
          end if;
          if (Get_Mode (Inter) in Iir_Out_Modes
@@ -2297,7 +2297,7 @@ package body Vhdl.Sem_Assocs is
                   Msgid := Msgid_Error;
                end if;
                Report_Msg
-                 (Msgid, Semantic, +Get_Type_Mark (Out_Conv),
+                 (Msgid, Semantic, +Out_Conv,
                   "type of formal conversion must be fully constrained");
             end;
          end if;
