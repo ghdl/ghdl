@@ -13,6 +13,7 @@ analyze aggr_repro4.vhdl
 elab_simulate aggr_repro4
 
 analyze_failure top.vhdl
+analyze_failure top3.vhdl
 
 export GHDL_STD_FLAGS=--std=93c
 analyze aggr_repro2.vhdl
