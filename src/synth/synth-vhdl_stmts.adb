@@ -2945,6 +2945,35 @@ package body Synth.Vhdl_Stmts is
       return Res;
    end Synth_Protected_Call_Instance;
 
+   --  Copy the result of a function EXPR to the expr_pool, so that if a local
+   --  value is returned, it is saved before the local instance is destroyed.
+   function Unshare_Result (Expr : Valtyp) return Valtyp
+   is
+      Res : Valtyp;
+   begin
+      if Expr.Val.Kind = Value_Alias then
+         --  If the result is an alias, extract the value (on the right pool).
+         declare
+            Val : constant Value_Acc := Expr.Val.A_Obj;
+            Mt : Memtyp;
+         begin
+            case Val.Kind is
+               when Value_Memory =>
+                  Mt := Get_Value_Memtyp ((Expr.Val.A_Typ, Val));
+                  Res := Create_Value_Memory (Expr.Typ, Expr_Pool'Access);
+                  Copy_Memory (Res.Val.Mem, Mt.Mem + Expr.Val.A_Off.Mem_Off,
+                               Expr.Typ.Sz);
+                  return Res;
+               when others =>
+                  --  Is it possible ?
+                  raise Internal_Error;
+            end case;
+         end;
+      else
+         return Unshare (Expr, Expr_Pool'Access);
+      end if;
+   end Unshare_Result;
+
    function Synth_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
                                    Call : Node;
                                    Init : Association_Iterator_Init)
@@ -3021,9 +3050,10 @@ package body Synth.Vhdl_Stmts is
       Free_Instance (Sub_Inst);
 
       if Res /= No_Valtyp then
-         --  Protect return value from being deallocated.
-         --  The result can be a local variable.
-         Res := Unshare (Res, Expr_Pool'Access);
+         --  Copy a result of the function call.
+         --  The result can be a local variable which will be released.
+         --  It can also be an alias of a local variable.
+         Res := Unshare_Result (Res);
          --  The type can have been created in the function.
          Ret_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Imp));
          Res.Typ := Unshare_Type_Expr (Res.Typ, Ret_Typ);
