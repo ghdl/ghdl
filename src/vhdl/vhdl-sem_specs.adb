@@ -251,35 +251,43 @@ package body Vhdl.Sem_Specs is
       if Attr_Class /= Tok_Invalid
         and then Get_Entity_Class_Kind (Decl) /= Attr_Class
       then
-         if Check_Class then
-            --  If -frelaxed, specifying an attribute of class 'type' to
-            --  an anonynous type declaration is allowed.
-            Is_Anon_Type := Get_Kind (Decl) = Iir_Kind_Subtype_Declaration
-              and then Get_Entity_Class (Attr) = Tok_Type
-              and then Get_Type (Decl) /= Null_Iir
-              and then Get_Base_Type (Get_Type (Decl)) /= Null_Iir
-              and then (Get_Kind (Get_Type_Declarator
-                                   (Get_Base_Type (Get_Type (Decl))))
-                          = Iir_Kind_Anonymous_Type_Declaration);
-
-            if Is_Anon_Type then
-               --  The type declaration declares an anonymous type
-               --  and a named subtype.
-               Report_Start_Group;
-               Error_Msg_Sem_Relaxed
-                 (Attr, Warnid_Specs,
-                  "%n is not of class %t", (+Decl, +Attr_Class));
-               Error_Msg_Sem_Relaxed
-                 (Decl, Warnid_Specs,
-                  "%i declares both an anonymous type and a named subtype",
-                  (1 => +Decl));
-               Report_End_Group;
-            else
-               Error_Msg_Sem
-                 (+Attr, "%n is not of class %t", (+Decl, +Attr_Class));
-            end if;
+         if not Check_Class then
+            return;
          end if;
-         return;
+
+         --  If -frelaxed, specifying an attribute of class 'type' to
+         --  an anonynous type declaration is allowed.
+         Is_Anon_Type := Get_Kind (Decl) = Iir_Kind_Subtype_Declaration
+           and then Get_Entity_Class (Attr) = Tok_Type
+           and then Get_Type (Decl) /= Null_Iir
+           and then Get_Base_Type (Get_Type (Decl)) /= Null_Iir
+           and then (Get_Kind (Get_Type_Declarator
+                                 (Get_Base_Type (Get_Type (Decl))))
+                       = Iir_Kind_Anonymous_Type_Declaration);
+
+         if Is_Anon_Type then
+            --  The type declaration declares an anonymous type
+            --  and a named subtype.
+            Report_Start_Group;
+            Error_Msg_Sem_Relaxed
+              (Attr, Warnid_Specs,
+               "%n is not of class %t", (+Decl, +Attr_Class));
+            Error_Msg_Sem_Relaxed
+              (Decl, Warnid_Specs,
+               "%i declares both an anonymous type and a named subtype",
+               (1 => +Decl));
+            Report_End_Group;
+
+            --  If -frelaxed, this is not an error and the named entity is
+            --  specified with the attribute.
+            if not Flag_Relaxed_Rules then
+               return;
+            end if;
+         else
+            Error_Msg_Sem
+              (+Attr, "%n is not of class %t", (+Decl, +Attr_Class));
+            return;
+         end if;
       end if;
 
       --  LRM93 5.1
