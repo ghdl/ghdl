@@ -1855,6 +1855,13 @@ package body Vhdl.Sem_Types is
       end if;
       if El_Def = Null_Iir then
          El_Def := Get_Element_Subtype (Type_Mark);
+      else
+         if Def /= Null_Iir
+           and then Get_Kind (Def) = Iir_Kind_Array_Subtype_Definition
+         then
+            --  Update array_element_constraint.
+            Set_Array_Element_Constraint (Def, El_Def);
+         end if;
       end if;
       Set_Element_Subtype (Res, El_Def);
 
