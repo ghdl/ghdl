@@ -3387,9 +3387,9 @@ package body Trans.Chap4 is
                               Dest_Sig   : out Mnode)
    is
       Out_Type : constant Iir := Get_Type (Sig_Out);
-      Out_Info : constant Type_Info_Acc := Get_Info (Out_Type);
+      Out_Tinfo : constant Type_Info_Acc := Get_Info (Out_Type);
       In_Type : constant Iir := Get_Type (Sig_In);
-      In_Info : constant Type_Info_Acc := Get_Info (In_Type);
+      In_Tinfo : constant Type_Info_Acc := Get_Info (In_Type);
       Src_Sig  : Mnode;
       Src_Val  : Mnode;
       Dest_Val : Mnode;
@@ -3447,29 +3447,67 @@ package body Trans.Chap4 is
 
       Assign_Obj_Ptr (Lop2M (New_Selected_Acc_Value (New_Obj (Var_Data),
                                                      Info.In_Sig_Field),
-                             In_Info, Mode_Signal),
+                             In_Tinfo, Mode_Signal),
                       Src_Sig);
       Assign_Obj_Ptr (Lop2M (New_Selected_Acc_Value (New_Obj (Var_Data),
                                                      Info.In_Val_Field),
-                             In_Info, Mode_Value),
+                             In_Tinfo, Mode_Value),
                       Src_Val);
 
       --  Create a copy of SIG_OUT.
-      Dest_Sig := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
-                                                Info.Out_Sig_Field),
-                        Out_Info, Mode_Signal);
-      Chap4.Allocate_Complex_Object (Out_Type, Alloc_System, Dest_Sig);
-      Dest_Val := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
-                                                Info.Out_Val_Field),
-                        Out_Info, Mode_Value);
-      Chap4.Allocate_Complex_Object (Out_Type, Alloc_System, Dest_Val);
+      if Out_Tinfo.Type_Mode in Type_Mode_Unbounded then
+         --  The only reason why the output is unbounded is type conversion
+         --  between two unbounded ports.
+         --  Need to implicitly convert.
+         pragma Assert (In_Tinfo.Type_Mode in Type_Mode_Unbounded);
+         Dest_Sig := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
+                                                   Info.Out_Sig_Field),
+                           Out_Tinfo, Mode_Signal);
+         Stabilize (Dest_Sig);
+         --  Allocate bounds.
+         New_Assign_Stmt
+           (M2Lp (Chap3.Get_Composite_Bounds (Dest_Sig)),
+            Gen_Alloc (Alloc_System,
+                       New_Lit (New_Sizeof (Out_Tinfo.B.Bounds_Type,
+                                            Ghdl_Index_Type)),
+                       Out_Tinfo.B.Bounds_Ptr_Type));
+         --  Convert bounds.
+         Chap7.Translate_Type_Conversion_Array_Bounds
+           (Chap3.Get_Composite_Bounds (Dest_Sig),
+            Chap3.Get_Composite_Bounds (Src_Sig),
+            Out_Type, In_Type, Conv);
+         --  Allocate sig base
+         Chap3.Allocate_Unbounded_Composite_Base
+           (Alloc_System, Dest_Sig, Out_Type);
+         --  Copy val bounds.
+         Dest_Val := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
+                                                   Info.Out_Val_Field),
+                           Out_Tinfo, Mode_Value);
+         Stabilize (Dest_Val);
+         New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Dest_Val)),
+                          M2Addr (Chap3.Get_Composite_Bounds (Dest_Sig)));
+         --  Allocate val base.
+         Chap3.Allocate_Unbounded_Composite_Base
+           (Alloc_System, Dest_Val, Out_Type);
+      else
+         --  Allocate sig and val.
+         Dest_Sig := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
+                                                   Info.Out_Sig_Field),
+                           Out_Tinfo, Mode_Signal);
+         Chap4.Allocate_Complex_Object (Out_Type, Alloc_System, Dest_Sig);
+         Dest_Val := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
+                                                   Info.Out_Val_Field),
+                           Out_Tinfo, Mode_Value);
+         Chap4.Allocate_Complex_Object (Out_Type, Alloc_System, Dest_Val);
+      end if;
+
       --  Note: NDEST will be assigned by ELAB_SIGNAL.
       Dest_Sig := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
                                                 Info.Out_Sig_Field),
-                        Out_Info, Mode_Signal);
+                        Out_Tinfo, Mode_Signal);
       Dest_Val := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
                                                 Info.Out_Val_Field),
-                        Out_Info, Mode_Value);
+                        Out_Tinfo, Mode_Value);
       Data := Elab_Signal_Data'(Value => Dest_Val,
                                 Has_Val => False,
                                 Already_Resolved => True,
@@ -3480,7 +3518,7 @@ package body Trans.Chap4 is
 
       Dest_Sig := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
                                                 Info.Out_Sig_Field),
-                        Out_Info, Mode_Signal);
+                        Out_Tinfo, Mode_Signal);
       Dest_Sig := Stabilize (Dest_Sig, True);
 
       --  Register.

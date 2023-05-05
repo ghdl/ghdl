@@ -288,7 +288,7 @@ package Trans.Chap3 is
 
    --  Allocate the base of an unbounded composite, whose length is
    --  determined from the bounds (already set).
-   --  RES_PTR is a pointer to the fat pointer (must be a stable variable: it
+   --  RES is the fat pointer (must be a stable variable: it
    --  can be referenced several times).
    --  ARR_TYPE is the type of the composite.
    procedure Allocate_Unbounded_Composite_Base (Alloc_Kind : Allocation_Kind;
