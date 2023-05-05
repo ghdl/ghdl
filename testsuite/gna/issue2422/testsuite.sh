@@ -22,6 +22,9 @@ elab_simulate aggr_repro2
 analyze top.vhdl
 elab_simulate top
 
+analyze top4.vhdl
+elab_simulate top4
+
 clean
 
 echo "Test successful"
