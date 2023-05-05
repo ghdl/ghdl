@@ -582,23 +582,27 @@ package body Trans.Chap5 is
             Chap3.Create_Composite_Subtype (Actual_Type);
             Bounds := Chap3.Get_Composite_Type_Bounds (Actual_Type);
             Tinfo := Get_Info (Actual_Type);
-            if Save
-              and then
-                Chap3.Get_Composite_Type_Layout_Alloc (Tinfo) = Alloc_Stack
+            if not Save
+              or else
+              Chap3.Get_Composite_Type_Layout_Alloc (Tinfo) /= Alloc_Stack
             then
-               --  We need a copy.
-               Bounds_Copy := Alloc_Bounds (Actual_Type, Alloc_System);
-               Chap3.Copy_Bounds (Bounds_Copy, Bounds, Actual_Type);
-               return Bounds_Copy;
-            else
                return Bounds;
             end if;
          else
             --  Actual type is unconstrained, but as this is an object reads
             --  bounds from the object.
-            return Chap3.Get_Composite_Bounds
+            --  Note: could be an expression too.
+            Bounds := Chap3.Get_Composite_Bounds
               (Chap6.Translate_Name (Actual, Mode_Value));
+            if not Save or else Is_Object_Name (Actual) then
+               return Bounds;
+            end if;
          end if;
+
+         --  We need a copy.
+         Bounds_Copy := Alloc_Bounds (Actual_Type, Alloc_System);
+         Chap3.Copy_Bounds (Bounds_Copy, Bounds, Actual_Type);
+         return Bounds_Copy;
       end Get_Actual_Bounds;
 
       In_Conv_Type : Iir;
