@@ -879,7 +879,6 @@ package body Vhdl.Sem_Scopes is
                -- FIXME: this should have been handled at the start of
                -- this subprogram.
                raise Internal_Error;
-               return;
             end if;
 
             --  LRM08 12.3 Visibility

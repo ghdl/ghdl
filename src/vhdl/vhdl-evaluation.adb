@@ -850,7 +850,6 @@ package body Vhdl.Evaluation is
             when others =>
                Error_Kind ("convert_node_to_typ", N);
          end case;
-         return null;
       end Convert_Node_To_Typ;
 
       function Convert_Node_To_Memtyp (N : Iir; Typ : Type_Acc) return Memtyp
@@ -4311,7 +4310,6 @@ package body Vhdl.Evaluation is
          when others =>
             Error_Kind ("eval_int_in_range", Bound);
       end case;
-      return True;
    end Eval_Int_In_Range;
 
    function Eval_Phys_In_Range (Val : Int64; Bound : Iir) return Boolean
@@ -4336,7 +4334,6 @@ package body Vhdl.Evaluation is
          when others =>
             Error_Kind ("eval_phys_in_range", Bound);
       end case;
-      return True;
    end Eval_Phys_In_Range;
 
    function Eval_Fp_In_Range (Val : Fp64; Bound : Iir) return Boolean
@@ -4351,7 +4348,6 @@ package body Vhdl.Evaluation is
          when others =>
             Error_Kind ("eval_fp_in_range", Bound);
       end case;
-      return True;
    end Eval_Fp_In_Range;
 
    function Eval_In_Range (Val : Iir; Dir : Direction_Type; L, R : Iir)
