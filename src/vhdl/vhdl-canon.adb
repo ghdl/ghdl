@@ -920,7 +920,6 @@ package body Vhdl.Canon is
 
          when others =>
             Error_Kind ("canon_expression", Expr);
-            null;
       end case;
    end Canon_Expression;
 
