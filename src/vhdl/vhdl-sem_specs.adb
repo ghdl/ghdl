@@ -97,7 +97,6 @@ package body Vhdl.Sem_Specs is
          when others =>
             Error_Kind ("get_entity_class_kind", Decl);
       end case;
-      return Tok_Invalid;
    end Get_Entity_Class_Kind;
 
    --  Return the node containing the attribute_value_chain field for DECL.
