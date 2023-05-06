@@ -310,7 +310,6 @@ package body Grt.Change_Generics is
       Vhpi_Iterator (VhpiDecls, Root, It, Error);
       if Error /= AvhpiErrorOk then
          Internal_Error ("override_generic(1)");
-         return;
       end if;
 
       --  Look for the generic.
@@ -319,7 +318,6 @@ package body Grt.Change_Generics is
          exit when Error = AvhpiErrorIteratorEnd;
          if Error /= AvhpiErrorOk then
             Internal_Error ("override_generic(2)");
-            return;
          end if;
          exit when Vhpi_Get_Kind (Decl) /= VhpiGenericDeclK;
          if Name_Compare (Decl, Over.Name.all) then
@@ -354,7 +352,6 @@ package body Grt.Change_Generics is
       Vhpi_Iterator (VhpiDecls, Root, It, Error);
       if Error /= AvhpiErrorOk then
          Internal_Error ("override_generic(1)");
-         return;
       end if;
 
       --  Look for the generic.
@@ -363,7 +360,6 @@ package body Grt.Change_Generics is
          exit when Error = AvhpiErrorIteratorEnd;
          if Error /= AvhpiErrorOk then
             Internal_Error ("override_generic(2)");
-            return;
          end if;
          exit when Vhpi_Get_Kind (Decl) /= VhpiGenericDeclK;
 
