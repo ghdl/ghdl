@@ -181,7 +181,6 @@ package body Grt.Psl is
          Error_S ("cannot open ");
          Error_E (Report_Filename (Report_Filename'First
                                      .. Report_Filename'Last - 1));
-         return;
       end if;
 
       Put_Line (F, "{ ""details"" : [");
