@@ -48,6 +48,7 @@ jobs:
 
       - name: '🚧 Build package'
         run: |
+          gnatls -v
           cd scripts/msys2-${{ matrix.pkg }}
           makepkg-mingw --noconfirm --noprogressbar -sCLf
           for item in src pkg; do

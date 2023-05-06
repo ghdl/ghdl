@@ -53,6 +53,7 @@ jobs:
           pip3 install pefile
           mkdir builddir
           cd builddir
+          gnatls -v
           ../configure --prefix='/GHDL' LDFLAGS="-static -Wl,--stack=8388608" --enable-libghdl
           make
           mkdir -p 'GHDL'
