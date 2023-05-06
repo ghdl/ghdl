@@ -315,27 +315,22 @@ package body Grt.Vital_Annotate is
       Up := True;
       if Error /= AvhpiErrorOk then
          Internal_Error ("vhpiSubtype - port");
-         return;
       end if;
       Vhpi_Handle_By_Index (VhpiConstraints, Port_Type, 1, Port_Range, Error);
       if Error /= AvhpiErrorOk then
          Internal_Error ("vhpiIndexConstraints - port");
-         return;
       end if;
       Vhpi_Get (VhpiLeftBoundP, Port_Range, Left, Error);
       if Error /= AvhpiErrorOk then
          Internal_Error ("vhpiLeftBoundP - port");
-         return;
       end if;
       Vhpi_Get (VhpiRightBoundP, Port_Range, Right, Error);
       if Error /= AvhpiErrorOk then
          Internal_Error ("vhpiRightBoundP - port");
-         return;
       end if;
       Vhpi_Get (VhpiIsUpP, Port_Range, Up, Error);
       if Error /= AvhpiErrorOk then
          Internal_Error ("vhpiIsUpP - port");
-         return;
       end if;
       if Up then
          Len := Ghdl_Index_Type (Right - Left) + 1;
@@ -396,7 +391,6 @@ package body Grt.Vital_Annotate is
       Vhpi_Handle (VhpiBaseType, Gen, Gen_Basetype, Error);
       if Error /= AvhpiErrorOk then
          Internal_Error ("vhpiBaseType");
-         return;
       end if;
       if Vhpi_Compare_Handles (Gen_Basetype, VitalDelayType01)
         or else Vhpi_Compare_Handles (Gen_Basetype, VitalDelayType01Z)
@@ -442,7 +436,6 @@ package body Grt.Vital_Annotate is
               (VhpiIndexedNames, Gen, Integer (Pos), Gen_El, Error);
             if Error /= AvhpiErrorOk then
                Internal_Error ("vhpiIndexedNames - gen_el");
-               return;
             end if;
             Ok := Write_Td_Delay_Generic (Context, Gen_El);
          end;
@@ -491,7 +484,6 @@ package body Grt.Vital_Annotate is
                Error_S ("cannot find instance '");
                Diag_C (Arg (S .. E - 1));
                Error_E ("' for sdf annotation");
-               return;
             end if;
             Sdf_Top := New_Top;
          end if;
@@ -502,7 +494,6 @@ package body Grt.Vital_Annotate is
          Error_S ("no filename in sdf option '");
          Diag_C (Arg);
          Error_E ("'");
-         return;
       end if;
       if not Sdf.Parse_Sdf_File (Arg (E + 1 .. Arg'Last)) then
          null;
@@ -526,12 +517,10 @@ package body Grt.Vital_Annotate is
       end loop;
       if Status /= AvhpiErrorOk then
          Error ("package ieee.vital_timing not found, SDF annotation aborted");
-         return;
       end if;
       Vhpi_Iterator (VhpiDecls, Pkg, It, Status);
       if Status /= AvhpiErrorOk then
          Error ("cannot iterate on vital_timing");
-         return;
       end if;
       loop
          Vhpi_Scan (It, Decl, Status);
@@ -559,23 +548,18 @@ package body Grt.Vital_Annotate is
       end loop;
       if Vhpi_Get_Kind (VitalDelayType01) = VhpiUndefined then
          Error ("cannot find VitalDelayType01 in ieee.vital_timing");
-         return;
       end if;
       if Vhpi_Get_Kind (VitalDelayType01Z) = VhpiUndefined then
          Error ("cannot find VitalDelayType01Z in ieee.vital_timing");
-         return;
       end if;
       if Vhpi_Get_Kind (VitalDelayType01ZX) = VhpiUndefined then
          Error ("cannot find VitalDelayType01ZX in ieee.vital_timing");
-         return;
       end if;
       if Vhpi_Get_Kind (VitalDelayArrayType01) = VhpiUndefined then
          Error ("cannot find VitalDelayArrayType01 in ieee.vital_timing");
-         return;
       end if;
       if Vhpi_Get_Kind (VitalDelayType) = VhpiUndefined then
          Error ("cannot find VitalDelayType in ieee.vital_timing");
-         return;
       end if;
    end Extract_Vital_Delay_Type;
 
