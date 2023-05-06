@@ -390,7 +390,6 @@ package body Grt.Options is
             Error_S ("missing generic name in '");
             Diag_C (Option);
             Error_E ("'");
-            return;
          end if;
          declare
             Eq_Pos : Natural;

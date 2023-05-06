@@ -1126,7 +1126,6 @@ package body Vhdl.Sem_Psl is
          when others =>
             Error_Kind ("sem_psl_name", Name);
       end case;
-      return Null_Iir;
    end Sem_Psl_Name;
 
    procedure Sem_Hierarchical_Name (Hier_Name : Iir; Unit : Iir)
