@@ -128,7 +128,6 @@ package body Grt.Sdf is
          Error_S ("SDF line ");
          Diag_C (Sdf_Line);
          Error_E (" is too long");
-         return;
       end if;
       Buf (1 .. Len) := Buf (Ident_Start .. Ident_Start + Len - 1);
       Pos := Len + 1;
@@ -993,7 +992,6 @@ package body Grt.Sdf is
          Error_S_Sdf;
          Diag_C ("could not annotate generic ");
          Error_E (Name (1 .. Len));
-         return False;
       end if;
       return True;
    end Handle_Generic;
