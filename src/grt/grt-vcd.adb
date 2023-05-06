@@ -126,7 +126,6 @@ package body Grt.Vcd is
                Error_S ("cannot open ");
                Error_E (Vcd_Filename (Vcd_Filename'First
                                       .. Vcd_Filename'Last - 1));
-               return True;
             end if;
          end if;
          Vcd_Putc := My_Vcd_Putc'Access;

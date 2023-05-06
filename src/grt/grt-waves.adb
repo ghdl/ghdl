@@ -313,7 +313,6 @@ package body Grt.Waves is
             Error_S ("cannot open ");
             Error_E (Wave_Filename (Wave_Filename'First
                                    .. Wave_Filename'Last - 1));
-            return;
          end if;
       end if;
    end Wave_Init;
