@@ -736,7 +736,6 @@ package body Ortho_Code.X86.Insns is
             return Best_Reg;
          when others =>
             Error_Reg ("alloc_reg: unknown reg", O_Enode_Null, Reg);
-            raise Program_Error;
       end case;
    end Alloc_Reg;
 
