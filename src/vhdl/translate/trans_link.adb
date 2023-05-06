@@ -15,8 +15,6 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 with System; use System;
 
-with Ada.Unchecked_Conversion;
-
 with Ghdllocal; use Ghdllocal;
 with Simple_IO; use Simple_IO;
 

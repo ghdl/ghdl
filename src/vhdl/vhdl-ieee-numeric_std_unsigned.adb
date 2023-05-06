@@ -168,7 +168,6 @@ package body Vhdl.Ieee.Numeric_Std_Unsigned is
                null;
             when others =>
                Vhdl.Errors.Error_Kind ("extract_declarations", Decl);
-               raise Error;
          end case;
 
          Decl := Get_Chain (Decl);
