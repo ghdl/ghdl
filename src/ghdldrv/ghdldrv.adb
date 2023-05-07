@@ -1209,6 +1209,10 @@ package body Ghdldrv is
    function Decode_Command (Cmd : Command_Run; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Run) return String;
+   procedure Decode_Option (Cmd : in out Command_Run;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_State);
    procedure Perform_Action (Cmd : in out Command_Run;
                              Args : Argument_List);
 
@@ -1229,6 +1233,21 @@ package body Ghdldrv is
         & ASCII.LF & "  Run design UNIT"
         & ASCII.LF & "  alias: -r";
    end Get_Short_Help;
+
+   procedure Decode_Option (Cmd : in out Command_Run;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_State) is
+   begin
+      Decode_Option (Command_Comp (Cmd), Option, Arg, Res);
+      if Res = Option_Unknown then
+         Error ("unknown command option '" & Option & "'");
+         Error ("if the option is a simulation option, "
+                  & "place it after toplevel unit");
+         --  Avoid any other message.
+         Res := Option_Err;
+      end if;
+   end Decode_Option;
 
    procedure Run_Design
      (Cmd : Command_Comp'Class; Exec : String_Access; Args : Argument_List)
