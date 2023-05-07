@@ -326,9 +326,9 @@ package body Grt.Lib is
          Save_Backtrace (Bt, 1);
          Error_S ("declaration of a too large object (");
          Diag_C (Natural (Size / 1024));
-         Diag_C (" > --max-stack-alloc=");
+         Diag_C (" kB > --max-stack-alloc=");
          Diag_C (Natural (Max_Stack_Allocation / 1024));
-         Diag_C (" KB)");
+         Diag_C (" kB)");
          Error_E_Call_Stack (Bt);
       end if;
    end Ghdl_Check_Stack_Allocation;
