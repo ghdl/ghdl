@@ -581,15 +581,16 @@ package body Trans.Chap5 is
          if Is_Fully_Constrained_Type (Actual_Type) then
             Chap3.Create_Composite_Subtype (Actual_Type);
             Bounds := Chap3.Get_Composite_Type_Bounds (Actual_Type);
-            Tinfo := Get_Info (Actual_Type);
             if not Save then
                return Bounds;
             end if;
+            --  Maybe the bounds are allocated on the stack (eg: it comes from
+            --  a non locally-static slice).  In that case it must be copied.
+            Tinfo := Get_Info (Actual_Type);
             if Chap3.Get_Composite_Type_Layout_Alloc (Tinfo) /= Alloc_Stack
             then
                return Bounds;
             end if;
-            raise Internal_Error;
          else
             --  Actual type is unconstrained, but as this is an object reads
             --  bounds from the object.
