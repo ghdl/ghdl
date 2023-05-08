@@ -789,21 +789,32 @@ package body Vhdl.Sem_Types is
       end if;
    end Update_Record_Constraint;
 
+   --  Get the constraint state from a subtype indication.
+   --  It cannot be directly inferred from the type, the subtype indication
+   --  must be considered in order to handle 'Subtype.
    function Get_Subtype_Indication_Constraint (Ind : Iir) return Iir_Constraint
    is
       Atype : Iir;
    begin
       case Get_Kind (Ind) is
          when Iir_Kind_Subtype_Attribute =>
+            --  Always fully constrained.
             return Fully_Constrained;
          when Iir_Kinds_Denoting_Name =>
+            --  A type (or subtype) name.
             Atype := Get_Named_Entity (Ind);
             if Is_Error (Atype) then
                return Fully_Constrained;
             end if;
             Atype := Get_Type (Atype);
-         when Iir_Kind_Array_Subtype_Definition =>
-            Atype := Ind;
+            if Get_Kind (Atype) in Iir_Kinds_Composite_Type_Definition then
+               return Get_Constraint_State (Atype);
+            else
+               return Fully_Constrained;
+            end if;
+         when Iir_Kind_Array_Subtype_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            return Get_Constraint_State (Ind);
          when Iir_Kinds_Scalar_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition =>
             return Fully_Constrained;
@@ -813,13 +824,10 @@ package body Vhdl.Sem_Types is
          when others =>
             Error_Kind ("get_subtype_indication_constraint", Ind);
       end case;
-      if Get_Kind (Atype) in Iir_Kinds_Composite_Type_Definition then
-         return Get_Constraint_State (Atype);
-      else
-         return Fully_Constrained;
-      end if;
    end Get_Subtype_Indication_Constraint;
 
+   --  Return the constraint state of an array element.
+   --  Just compute it from the element subtype indication.
    function Get_Array_Type_Element_Constraint (Def : Iir)
                                               return Iir_Constraint
    is
@@ -828,6 +836,8 @@ package body Vhdl.Sem_Types is
       return Get_Subtype_Indication_Constraint (El_Ind);
    end Get_Array_Type_Element_Constraint;
 
+   --  Compute the constraint state of an array type.
+   --  Cannot be fully constrained as the array is unbounded.
    function Get_Array_Type_Constraint (Def : Iir) return Iir_Constraint
    is
       El_St : constant Iir := Get_Element_Subtype (Def);
@@ -848,6 +858,7 @@ package body Vhdl.Sem_Types is
       end if;
    end Get_Array_Type_Constraint;
 
+   --  Return the constraint state of the element subtype of an array subtype.
    function Get_Array_Subtype_Element_Constraint (Def : Iir)
                                                  return Iir_Constraint
    is
@@ -855,6 +866,8 @@ package body Vhdl.Sem_Types is
       Parent : Iir;
    begin
       if El_Cons = Null_Iir then
+         --  No element constraint, get the constraint state of the element
+         --  from the parent.
          Parent := Get_Parent_Type (Def);
          case Iir_Kinds_Array_Type_Definition (Get_Kind (Parent)) is
             when Iir_Kind_Array_Type_Definition =>
@@ -874,6 +887,7 @@ package body Vhdl.Sem_Types is
       end if;
    end Get_Array_Subtype_Element_Constraint;
 
+   --  Compute the constraint state of an array subtype.
    function Get_Array_Subtype_Constraint (Def : Iir) return Iir_Constraint
    is
       El_St : constant Iir := Get_Element_Subtype (Def);
