@@ -789,37 +789,119 @@ package body Vhdl.Sem_Types is
       end if;
    end Update_Record_Constraint;
 
-   function Get_Array_Constraint (Def : Iir) return Iir_Constraint
+   function Get_Subtype_Indication_Constraint (Ind : Iir) return Iir_Constraint
    is
-      El_Type : constant Iir := Get_Element_Subtype (Def);
-      Constrained_Index : constant Boolean := Get_Index_Constraint_Flag (Def);
+      Atype : Iir;
    begin
-      if Get_Kind (El_Type) in Iir_Kinds_Composite_Type_Definition then
-         case Get_Constraint_State (El_Type) is
-            when Fully_Constrained =>
-               if Constrained_Index then
-                  return Fully_Constrained;
-               else
-                  return Partially_Constrained;
-               end if;
-            when Partially_Constrained =>
-               return Partially_Constrained;
-            when Unconstrained =>
-               if not Constrained_Index then
-                  return Unconstrained;
-               else
-                  return Partially_Constrained;
-               end if;
+      case Get_Kind (Ind) is
+         when Iir_Kind_Subtype_Attribute =>
+            return Fully_Constrained;
+         when Iir_Kinds_Denoting_Name =>
+            Atype := Get_Named_Entity (Ind);
+            if Is_Error (Atype) then
+               return Fully_Constrained;
+            end if;
+            Atype := Get_Type (Atype);
+         when Iir_Kind_Array_Subtype_Definition =>
+            Atype := Ind;
+         when Iir_Kinds_Scalar_Subtype_Definition
+           | Iir_Kind_Enumeration_Type_Definition =>
+            return Fully_Constrained;
+         when Iir_Kind_Error =>
+            --  Why not ?
+            return Fully_Constrained;
+         when others =>
+            Error_Kind ("get_subtype_indication_constraint", Ind);
+      end case;
+      if Get_Kind (Atype) in Iir_Kinds_Composite_Type_Definition then
+         return Get_Constraint_State (Atype);
+      else
+         return Fully_Constrained;
+      end if;
+   end Get_Subtype_Indication_Constraint;
+
+   function Get_Array_Type_Element_Constraint (Def : Iir)
+                                              return Iir_Constraint
+   is
+      El_Ind : constant Iir := Get_Element_Subtype_Indication (Def);
+   begin
+      return Get_Subtype_Indication_Constraint (El_Ind);
+   end Get_Array_Type_Element_Constraint;
+
+   function Get_Array_Type_Constraint (Def : Iir) return Iir_Constraint
+   is
+      El_St : constant Iir := Get_Element_Subtype (Def);
+   begin
+      --  LRM08 5.1 Types
+      --  A composite subtype is said to be unconstrained if:
+      --  - It is an array subtype with no index constrained and the
+      --    element subtype either is not a composite subtype [...]
+      if Get_Kind (El_St) not in Iir_Kinds_Composite_Type_Definition then
+         return Unconstrained;
+      end if;
+
+      --  [...] or is an constrained composite type
+      if Get_Array_Type_Element_Constraint (Def) = Unconstrained then
+         return Unconstrained;
+      else
+         return Partially_Constrained;
+      end if;
+   end Get_Array_Type_Constraint;
+
+   function Get_Array_Subtype_Element_Constraint (Def : Iir)
+                                                 return Iir_Constraint
+   is
+      El_Cons : constant Iir := Get_Array_Element_Constraint (Def);
+      Parent : Iir;
+   begin
+      if El_Cons = Null_Iir then
+         Parent := Get_Parent_Type (Def);
+         case Iir_Kinds_Array_Type_Definition (Get_Kind (Parent)) is
+            when Iir_Kind_Array_Type_Definition =>
+               return Get_Array_Type_Element_Constraint (Parent);
+            when Iir_Kind_Array_Subtype_Definition =>
+               return Get_Array_Subtype_Element_Constraint (Parent);
          end case;
       else
-         --  Element subtype is not a composite subtype.
-         if Constrained_Index then
+         --  The subtype constrains the element.
+         case Get_Kind (El_Cons) is
+            when Iir_Kind_Array_Subtype_Definition
+              | Iir_Kind_Record_Subtype_Definition =>
+               return Get_Constraint_State (El_Cons);
+            when others =>
+               Error_Kind ("get_array_subtype_element_constraint", El_Cons);
+         end case;
+      end if;
+   end Get_Array_Subtype_Element_Constraint;
+
+   function Get_Array_Subtype_Constraint (Def : Iir) return Iir_Constraint
+   is
+      El_St : constant Iir := Get_Element_Subtype (Def);
+      El_Constraint : Iir_Constraint;
+   begin
+      if Get_Kind (El_St) in Iir_Kinds_Composite_Type_Definition then
+         El_Constraint := Get_Array_Subtype_Element_Constraint (Def);
+         if Get_Index_Constraint_Flag (Def) then
+            if El_Constraint = Fully_Constrained then
+               return Fully_Constrained;
+            else
+               return Partially_Constrained;
+            end if;
+         else
+            if El_Constraint = Unconstrained then
+               return Unconstrained;
+            else
+               return Partially_Constrained;
+            end if;
+         end if;
+      else
+         if Get_Index_Constraint_Flag (Def) then
             return Fully_Constrained;
          else
             return Unconstrained;
          end if;
       end if;
-   end Get_Array_Constraint;
+   end Get_Array_Subtype_Constraint;
 
    function Sem_Enumeration_Type_Definition  (Def: Iir; Decl: Iir) return Iir
    is
@@ -989,7 +1071,7 @@ package body Vhdl.Sem_Types is
       Sem_Unbounded_Array_Indexes (Def);
 
       Sem_Array_Element (Def);
-      Set_Constraint_State (Def, Get_Array_Constraint (Def));
+      Set_Constraint_State (Def, Get_Array_Type_Constraint (Def));
 
       --  According to LRM93 7.4.1, an unconstrained array type is not static.
       Set_Type_Staticness (Def, None);
@@ -1122,16 +1204,17 @@ package body Vhdl.Sem_Types is
       --  According to LRM93 7.4.1, an unconstrained array type
       --  is not static.
       Set_Type_Staticness (Base_Type, None);
-      Set_Type_Staticness (Def, Min (Staticness,
-                                     Get_Type_Staticness (El_Type)));
-
       Set_Type_Declarator (Base_Type, Decl);
       Set_Resolved_Flag (Base_Type, Get_Resolved_Flag (Def));
-      Set_Index_Constraint_Flag (Def, True);
-      Set_Constraint_State (Def, Get_Array_Constraint (Def));
-      Set_Constraint_State (Base_Type, Get_Array_Constraint (Base_Type));
+      Set_Constraint_State (Base_Type, Get_Array_Type_Constraint (Base_Type));
+
+      Set_Type_Staticness (Def, Min (Staticness,
+                                     Get_Type_Staticness (El_Type)));
       Set_Parent_Type (Def, Base_Type);
+      Set_Index_Constraint_Flag (Def, True);
+      Set_Constraint_State (Def, Get_Array_Subtype_Constraint (Def));
       Set_Subtype_Type_Mark (Def, Null_Iir);
+
       return Def;
    end Sem_Constrained_Array_Type_Definition;
 
@@ -1865,7 +1948,7 @@ package body Vhdl.Sem_Types is
       end if;
       Set_Element_Subtype (Res, El_Def);
 
-      Set_Constraint_State (Res, Get_Array_Constraint (Res));
+      Set_Constraint_State (Res, Get_Array_Subtype_Constraint (Res));
       Set_Type_Staticness
         (Res, Min (Get_Type_Staticness (El_Def), Index_Staticness));
 
@@ -2732,7 +2815,7 @@ package body Vhdl.Sem_Types is
          Set_Type_Declarator (Arr, Decl);
          Set_Element_Subtype (Arr, Get_Branch_Type (El_Nat, I));
          Set_Branch_Type_Definition (Def, I, Arr);
-         Set_Constraint_State (Arr, Get_Array_Constraint (Arr));
+         Set_Constraint_State (Arr, Get_Array_Type_Constraint (Arr));
       end loop;
 
       return Def;
