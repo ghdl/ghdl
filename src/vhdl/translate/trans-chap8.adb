@@ -2492,7 +2492,11 @@ package body Trans.Chap8 is
                   return True;
                end if;
 
-               if Get_Expr_Staticness (Actual) = Locally then
+               if Get_Expr_Staticness (Actual) = Locally
+                 and then Kind_In (Actual,
+                                   Iir_Kind_Simple_Aggregate,
+                                   Iir_Kind_Aggregate)
+               then
                   --  Actual is static (so are its bounds).
                   return False;
                end if;
