@@ -1015,8 +1015,10 @@ package body Synth.Vhdl_Oper is
             end;
 
          when Iir_Predefined_Bit_And
-           | Iir_Predefined_Boolean_And
-           | Iir_Predefined_Ieee_1164_Scalar_And =>
+           | Iir_Predefined_Boolean_And =>
+            --  Short circuit.
+            raise Internal_Error;
+         when Iir_Predefined_Ieee_1164_Scalar_And =>
             return Synth_Bit_Dyadic (Id_And);
          when Iir_Predefined_Bit_Xor
            | Iir_Predefined_Boolean_Xor

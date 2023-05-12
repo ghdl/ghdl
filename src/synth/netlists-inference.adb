@@ -84,10 +84,9 @@ package body Netlists.Inference is
          when Edge_Module_Id =>
             return True;
          when Id_And =>
-            --  Assume the condition is canonicalized, ie of the form:
+            --  The condition is canonicalized, ie of the form:
             --  CLK and EXPR.
-            --  FIXME: do it!
-            return Has_Clock (Get_Input_Net (Inst, 0));
+            return Get_Id (Get_Input_Instance (Inst, 0)) in Edge_Module_Id;
          when others =>
             return False;
       end case;
