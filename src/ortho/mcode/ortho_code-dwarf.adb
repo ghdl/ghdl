@@ -1001,6 +1001,7 @@ package body Ortho_Code.Dwarf is
             Emit_Type (Get_Type_Ucarray_Element (Atype));
          when OT_Subarray =>
             Emit_Type (Get_Type_Subarray_Base (Atype));
+            Emit_Type (Get_Type_Subarray_Element (Atype));
          when OT_Record
             | OT_Subrecord
             | OT_Union =>
