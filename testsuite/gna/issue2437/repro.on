@@ -1,0 +1,17 @@
+TYPE index_type IS UNSIGNED (32);
+
+TYPE bit IS BOOLEAN {C_0, C_1};
+
+TYPE bit_vector__BASE IS ARRAY [index_type] OF bit;
+
+TYPE signed_array__BASE IS ARRAY [index_type] OF bit_vector__BASE;
+
+TYPE ARCH__sim__INSTTYPE IS RECORD;
+
+TYPE taps__OT__ET IS SUBARRAY bit_vector__BASE[8];
+
+TYPE taps__OT IS SUBARRAY signed_array__BASE[4] OF taps__OT__ET;
+
+TYPE ARCH__sim__INSTTYPE IS RECORD
+  taps_VAL: taps__OT;
+END RECORD;
