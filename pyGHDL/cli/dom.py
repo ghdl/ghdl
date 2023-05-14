@@ -303,7 +303,9 @@ class Application(LineTerminal, ArgParseMixin):
                     for file in directoryItem.glob("**/*.vhd*"):
                         self.WriteNormal(f"  Reading file '{file!s}'")
                         document = self.addFile(file, libraryName)
-                        self.WriteInfo(f"    libghdl processing time: {document.LibGHDLProcessingTime * 10**6: 5.3f} us")
+                        self.WriteInfo(
+                            f"    libghdl processing time: {document.LibGHDLProcessingTime * 10**6: 5.3f} us"
+                        )
                         self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationTime * 10**6:5.3f} us")
                 elif directoryItem.is_file():
                     if directoryItem.suffix in (".vhd", ".vhdl"):
