@@ -108,7 +108,7 @@ class Design(VHDLModel_Design):
 
         # Finish initialization. This will load the standard package.
         if libghdl_analyze_init_status() != 0:
-            raise LibGHDLException("Error initializing 'libghdl'.")
+            raise DOMException("Error initializing 'pyGHDL.dom'.") from LibGHDLException("Error initializing 'libghdl'.")
 
     def LoadDefaultLibraries(self):
         t1 = time.perf_counter()
@@ -179,8 +179,11 @@ class Document(VHDLModel_Document):
                 self.__domTranslateTime = time.perf_counter() - t1
 
     def __loadFromPath(self):
-        with self._filename.open("r", encoding=ENCODING) as file:
-            self.__loadFromString(file.read())
+        try:
+            with self._filename.open("r", encoding=ENCODING) as file:
+                self.__loadFromString(file.read())
+        except FileNotFoundError as ex:
+            raise DOMException(f"Sourcefile '{self._filename}' not found.") from ex
 
     def __loadFromString(self, sourceCode: str):
         sourcesBytes = sourceCode.encode(ENCODING)
