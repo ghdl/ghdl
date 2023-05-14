@@ -6224,7 +6224,7 @@ package body Vhdl.Nodes is
       pragma Assert (Slice /= Null_Iir);
       pragma Assert (Has_Slice_Subtype (Get_Kind (Slice)),
                      "no field Slice_Subtype");
-      return Get_Field3 (Slice);
+      return Get_Field2 (Slice);
    end Get_Slice_Subtype;
 
    procedure Set_Slice_Subtype (Slice : Iir; Atype : Iir) is
@@ -6232,7 +6232,7 @@ package body Vhdl.Nodes is
       pragma Assert (Slice /= Null_Iir);
       pragma Assert (Has_Slice_Subtype (Get_Kind (Slice)),
                      "no field Slice_Subtype");
-      Set_Field3 (Slice, Atype);
+      Set_Field2 (Slice, Atype);
    end Set_Slice_Subtype;
 
    function Get_Suffix (Target : Iir) return Iir is
@@ -6240,7 +6240,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Suffix (Get_Kind (Target)),
                      "no field Suffix");
-      return Get_Field2 (Target);
+      return Get_Field3 (Target);
    end Get_Suffix;
 
    procedure Set_Suffix (Target : Iir; Suffix : Iir) is
@@ -6248,7 +6248,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Suffix (Get_Kind (Target)),
                      "no field Suffix");
-      Set_Field2 (Target, Suffix);
+      Set_Field3 (Target, Suffix);
    end Set_Suffix;
 
    function Get_Index_Subtype (Attr : Iir) return Iir is

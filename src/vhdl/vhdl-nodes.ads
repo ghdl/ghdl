@@ -4580,9 +4580,9 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Prefix (Field0)
    --
-   --   Get/Set_Suffix (Field2)
+   --   Get/Set_Suffix (Field3)
    --
-   --   Get/Set_Slice_Subtype (Field3)
+   --   Get/Set_Slice_Subtype (Field2)
    --
    --   Get/Set_Type (Field1)
    --
@@ -4603,6 +4603,9 @@ package Vhdl.Nodes is
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Association_Chain (Field2)
+   --
+   --  Temporarly used during parse.
+   --   Get/Set_Suffix (Field3)
    --
    --   Get/Set_Named_Entity (Field4)
    --
@@ -9251,12 +9254,12 @@ package Vhdl.Nodes is
 
    --  The subtype of a slice.  Contrary to the Type field, this is not a
    --  reference.
-   --  Field: Field3
+   --  Field: Field2
    function Get_Slice_Subtype (Slice : Iir) return Iir;
    procedure Set_Slice_Subtype (Slice : Iir; Atype : Iir);
 
-   --  Suffix of a slice or attribute.
-   --  Field: Field2
+   --  Suffix of a slice.
+   --  Field: Field3
    function Get_Suffix (Target : Iir) return Iir;
    procedure Set_Suffix (Target : Iir; Suffix : Iir);
 
