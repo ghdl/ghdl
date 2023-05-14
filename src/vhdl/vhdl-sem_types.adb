@@ -2027,109 +2027,6 @@ package body Vhdl.Sem_Types is
       end if;
    end Reparse_As_Record_Element_Constraint;
 
-   function Reparse_As_Record_Constraint (Def : Iir) return Iir
-   is
-      Res : Iir;
-      Chain, Next_Chain : Iir;
-      El_List : Iir_List;
-      El : Iir;
-   begin
-      pragma Assert (Get_Prefix (Def) = Null_Iir);
-      Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
-      Set_Is_Ref (Res, True);
-      Location_Copy (Res, Def);
-      El_List := Create_Iir_List;
-      Chain := Get_Association_Chain (Def);
-      Free_Iir (Def);
-      while Chain /= Null_Iir loop
-         if Get_Kind (Chain) /= Iir_Kind_Association_Element_By_Expression
-           or else Get_Formal (Chain) /= Null_Iir
-         then
-            Error_Msg_Sem (+Chain, "badly formed record constraint");
-         else
-            El := Reparse_As_Record_Element_Constraint (Get_Actual (Chain));
-            if El /= Null_Iir then
-               Append_Element (El_List, El);
-               Set_Parent (El, Res);
-               Append_Owned_Element_Constraint (Res, El);
-            end if;
-         end if;
-         Next_Chain := Get_Chain (Chain);
-         Free_Iir (Chain);
-         Chain := Next_Chain;
-      end loop;
-      Set_Elements_Declaration_List (Res, List_To_Flist (El_List));
-      return Res;
-   end Reparse_As_Record_Constraint;
-
-   function Reparse_As_Array_Constraint (Def : Iir; Def_Type : Iir) return Iir
-   is
-      Parent : Iir;
-      Name : Iir;
-      Prefix : Iir;
-      Res : Iir;
-      Chain, Chain_Next : Iir;
-      El_List : Iir_List;
-      Def_El_Type : Iir;
-   begin
-      Name := Def;
-      Prefix := Get_Prefix (Name);
-      Parent := Null_Iir;
-      while Prefix /= Null_Iir
-        and then Get_Kind (Prefix) = Iir_Kind_Parenthesis_Name
-      loop
-         Parent := Name;
-         Name := Prefix;
-         Prefix := Get_Prefix (Name);
-      end loop;
-      --  Detach prefix.
-      if Parent /= Null_Iir then
-         Set_Prefix (Parent, Null_Iir);
-      end if;
-
-      Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
-      Location_Copy (Res, Name);
-      Set_Has_Array_Constraint_Flag (Res, True);
-      Chain := Get_Association_Chain (Name);
-      if Get_Kind (Chain) = Iir_Kind_Association_Element_Open then
-         if Get_Chain (Chain) /= Null_Iir then
-            Error_Msg_Sem (+Chain, "'open' must be alone");
-         end if;
-      else
-         El_List := Create_Iir_List;
-         while Chain /= Null_Iir loop
-            if Get_Kind (Chain) /= Iir_Kind_Association_Element_By_Expression
-              or else Get_Formal (Chain) /= Null_Iir
-            then
-               Error_Msg_Sem (+Chain, "bad form of array constraint");
-            else
-               Append_Element (El_List, Get_Actual (Chain));
-            end if;
-            Chain_Next := Get_Chain (Chain);
-            Free_Iir (Chain);
-            Chain := Chain_Next;
-         end loop;
-         Free_Iir (Name);
-         Set_Index_Constraint_List (Res, List_To_Flist (El_List));
-      end if;
-
-      Def_El_Type := Get_Element_Subtype (Def_Type);
-      if Parent /= Null_Iir then
-         case Get_Kind (Def_El_Type) is
-            when Iir_Kinds_Array_Type_Definition =>
-               Set_Array_Element_Constraint
-                 (Res, Reparse_As_Array_Constraint (Def, Def_El_Type));
-               Set_Has_Element_Constraint_Flag (Res, True);
-            when Iir_Kind_Record_Type_Definition =>
-               Set_Array_Element_Constraint
-                 (Res, Reparse_As_Record_Constraint (Def));
-            when others =>
-               Error_Kind ("reparse_as_array_constraint", Def_El_Type);
-         end case;
-      end if;
-      return Res;
-   end Reparse_As_Array_Constraint;
-
    function Sem_Record_Constraint
      (Def : Iir; Type_Mark : Iir; Resolution : Iir) return Iir
    is
@@ -2137,9 +2034,9 @@ package body Vhdl.Sem_Types is
       El_List, Tm_El_List : Iir_Flist;
       El : Iir;
       Tm_El : Iir;
-      Tm_El_Type : Iir;
       El_Type : Iir;
       Res_List : Iir_Flist;
+      Cons_Chain : Iir;
 
       Index_List : Iir_Flist;
       Index_El : Iir;
@@ -2159,7 +2056,7 @@ package body Vhdl.Sem_Types is
             Free_Name (Def);
             Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));
             Set_Constraint_State (Res, Get_Constraint_State (Type_Mark));
-            El_List := Null_Iir_Flist;
+            Cons_Chain := Null_Iir;
 
          when Iir_Kind_Array_Subtype_Definition =>
             --  Record constraints were parsed as array constraints.
@@ -2176,10 +2073,11 @@ package body Vhdl.Sem_Types is
                end if;
                Set_Nth_Element (El_List, I, El);
             end loop;
+            Cons_Chain := Null_Iir;
+            raise Internal_Error;
 
          when Iir_Kind_Record_Subtype_Definition =>
-            El_List := Get_Elements_Declaration_List (Def);
-            Set_Elements_Declaration_List (Res, El_List);
+            Cons_Chain := Get_Owned_Elements_Chain (Def);
 
          when others =>
             Error_Kind ("sem_record_constraint", Def);
@@ -2206,7 +2104,7 @@ package body Vhdl.Sem_Types is
       end if;
 
       Tm_El_List := Get_Elements_Declaration_List (Type_Mark);
-      if El_List /= Null_Iir_Flist or Res_List /= Null_Iir_Flist then
+      if Cons_Chain /= Null_Iir or Res_List /= Null_Iir_Flist then
          --  Constraints (either range or resolution) have been added.
          declare
             Nbr_Els : constant Natural := Get_Nbr_Elements (Tm_El_List);
@@ -2219,57 +2117,31 @@ package body Vhdl.Sem_Types is
             Staticness : Iir_Staticness;
          begin
             --  Fill ELS with record constraints.
-            if El_List /= Null_Iir_Flist then
-               for I in Flist_First .. Flist_Last (El_List) loop
-                  El := Get_Nth_Element (El_List, I);
-                  Tm_El := Find_Name_In_Flist
-                    (Tm_El_List, Get_Identifier (El));
-                  if Tm_El = Null_Iir then
-                     --  Constraint element references an element name that
-                     --  doesn't exist.
-                     Error_Msg_Sem (+El, "%n has no %n", (+Type_Mark, +El));
+            Set_Owned_Elements_Chain (Res, Cons_Chain);
+            El := Cons_Chain;
+            while El /= Null_Iir loop
+               Tm_El := Find_Name_In_Flist (Tm_El_List, Get_Identifier (El));
+               if Tm_El = Null_Iir then
+                  --  Constraint element references an element name that
+                  --  doesn't exist.
+                  Error_Msg_Sem (+El, "%n has no %n", (+Type_Mark, +El));
+               else
+                  Pos := Natural (Get_Element_Position (Tm_El));
+                  if Els (Pos) /= Null_Iir then
+                     Report_Start_Group;
+                     Error_Msg_Sem
+                       (+El, "%n was already constrained", +El);
+                     Error_Msg_Sem
+                       (+Els (Pos), " (location of previous constrained)");
+                     Report_End_Group;
                   else
-                     Pos := Natural (Get_Element_Position (Tm_El));
-                     if Els (Pos) /= Null_Iir then
-                        Report_Start_Group;
-                        Error_Msg_Sem
-                          (+El, "%n was already constrained", +El);
-                        Error_Msg_Sem
-                          (+Els (Pos), " (location of previous constrained)");
-                        Report_End_Group;
-                     else
-                        Els (Pos) := El;
-                        Set_Parent (El, Res);
-                        Append_Owned_Element_Constraint (Res, El);
-                     end if;
-                     Xref_Ref (El, Tm_El);
-                     El_Type := Get_Type (El);
-                     Tm_El_Type := Get_Type (Tm_El);
-                     if Get_Kind (El_Type) = Iir_Kind_Parenthesis_Name then
-                        --  Recurse.
-                        case Get_Kind (Tm_El_Type) is
-                           when Iir_Kinds_Array_Type_Definition =>
-                              El_Type := Reparse_As_Array_Constraint
-                                (El_Type, Tm_El_Type);
-                           when Iir_Kind_Record_Type_Definition
-                             | Iir_Kind_Record_Subtype_Definition =>
-                              El_Type := Reparse_As_Record_Constraint
-                                (El_Type);
-                           when Iir_Kind_Error =>
-                              null;
-                           when others =>
-                              Error_Msg_Sem
-                                (+El_Type,
-                                 "only composite types may be constrained");
-                        end case;
-                        Set_Subtype_Indication (El, El_Type);
-                     end if;
-                     Set_Type (El, El_Type);
+                     Els (Pos) := El;
+                     Set_Parent (El, Res);
                   end if;
-               end loop;
-               --  Record element constraints are now in Els.
-               Destroy_Iir_Flist (El_List);
-            end if;
+                  Xref_Ref (El, Tm_El);
+               end if;
+               El := Get_Chain (El);
+            end loop;
 
             --  Fill Res_Els (handle resolution constraints).
             if Res_List /= Null_Iir_Flist then
@@ -2319,7 +2191,7 @@ package body Vhdl.Sem_Types is
                      Append_Owned_Element_Constraint (Res, El);
                   else
                      El := Els (I);
-                     El_Type := Get_Type (El);
+                     El_Type := Get_Subtype_Indication (El);
                      pragma Assert
                        (Get_Kind (El) = Iir_Kind_Record_Element_Constraint);
                   end if;

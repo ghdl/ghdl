@@ -1564,21 +1564,272 @@ package body Vhdl.Parse is
       return Parse_Any_Name (True, True);
    end Parse_Signature_Name;
 
-   --  Emit an error message if MARK doesn't have the form of a type mark.
-   function Check_Type_Mark (Mark : Iir) return Boolean is
+   --  Convert a parenthesis_name to a subtype indication.
+   --  Here are the related rules from the LRM:
+   --
+   --  LRM08 5.3.2 Array types
+   --  array_constraint ::=
+   --      index_constraint [ array_element_constraint ]
+   --    | ( open ) [ array_element_constraint ]
+   --  array_element_constraint ::= element_constraint
+   --  index_constraint ::= (discrete_range { , discrete_range } )
+   --
+   --  LRM08 5.3.3 Record types
+   --  record_constraint ::=
+   --    ( record_element_constraint { , record_element_constraint } )
+   --  record_element_constraint ::=
+   --     record_element_simple_name element_constraint
+   --
+   --  LRM08 6.3 Subtype declarations
+   --  element_constraint ::=
+   --      array_constraint
+   --    | record_constraint
+   --
+   --  subtype_indication ::=
+   --    [ resolution_indication ] type_mark [ constraint ]
+   --
+   --  resolution_indication ::=
+   --    resolution_function_name | ( element_resolution )
+   --
+   --  constraint ::=
+   --      range_constraint
+   --    | array_constraint
+   --    | record_constraint
+
+   --  Return the first parenthesis_name from NAME, set suffix field to
+   --  link the others.
+   function Rechain_Parenthesis_Name_For_Subtype (Name : Iir) return Iir
+   is
+      Last, Prefix : Iir;
    begin
-      case Get_Kind (Mark) is
+      Last := Name;
+      loop
+         Prefix := Get_Prefix (Last);
+         exit when Get_Kind (Prefix) /= Iir_Kind_Parenthesis_Name;
+
+         Set_Suffix (Prefix, Last);
+         Last := Prefix;
+      end loop;
+      return Last;
+   end Rechain_Parenthesis_Name_For_Subtype;
+
+   --  Transform NAME into record_subtype(s) and array_subtype(s).
+   --  Start from the first name.
+   function Parenthesis_Name_To_Subtype (Name : Iir) return Iir
+   is
+      Suffix : constant Iir := Get_Suffix (Name);
+      First_Assoc : Iir;
+      Assoc, Next_Assoc : Iir;
+      Actual : Iir;
+      Assoc_Index : Iir;
+      Assoc_Element : Iir;
+      Nbr_Assocs : Natural;
+      Res : Iir;
+   begin
+      Assoc_Index := Null_Iir;
+      Assoc_Element := Null_Iir;
+      Nbr_Assocs := 0;
+      First_Assoc := Get_Association_Chain (Name);
+
+      Assoc := First_Assoc;
+      while Assoc /= Null_Iir loop
+         if Get_Formal (Assoc) /= Null_Iir then
+            Error_Msg_Parse (+Assoc, "incorrect constraint for a subtype");
+            Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+            Location_Copy (Res, Assoc);
+            return Res;
+         end if;
+
+         Next_Assoc := Get_Chain (Assoc);
+         Nbr_Assocs := Nbr_Assocs + 1;
+
+         case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
+            when Iir_Kind_Association_Element_Open =>
+               if Assoc /= First_Assoc or else Next_Assoc /= Null_Iir then
+                  Error_Msg_Parse
+                    (+Assoc, "'open' must be alone for an array constraint");
+               end if;
+               --  Free all assocs.
+               Assoc := First_Assoc;
+               while Assoc /= Null_Iir loop
+                  Next_Assoc := Get_Chain (Assoc);
+                  Free_Iir (Assoc);
+                  Assoc := Next_Assoc;
+               end loop;
+
+               Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+               Location_Copy (Res, Name);
+               Set_Has_Array_Constraint_Flag (Res, True);
+
+               Free_Iir (Name);
+
+               if Suffix /= Null_Iir then
+                  Set_Array_Element_Constraint
+                    (Res, Parenthesis_Name_To_Subtype (Suffix));
+                  Set_Has_Element_Constraint_Flag (Res, True);
+               end if;
+
+               return Res;
+            when Iir_Kind_Association_Element_By_Expression =>
+               null;
+            when others =>
+               --  TODO: check it cannot happen.
+               raise Internal_Error;
+         end case;
+
+         Actual := Get_Actual (Assoc);
+         case Get_Kind (Actual) is
+            when Iir_Kinds_Denoting_Name =>
+               Assoc_Index := Actual;
+            when Iir_Kind_Range_Expression
+               | Iir_Kind_Attribute_Name
+               | Iir_Kind_Subtype_Definition =>
+               Assoc_Index := Actual;
+            when Iir_Kind_Parenthesis_Name =>
+               declare
+                  Prefix : constant Iir := Get_Prefix (Actual);
+               begin
+                  --  Handle attributes like xxx'range(y)
+                  if Get_Kind (Prefix) = Iir_Kind_Attribute_Name then
+                     Assoc_Index := Actual;
+                  else
+                     Assoc_Element := Actual;
+                  end if;
+               end;
+            when Iir_Kind_Error =>
+               Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+               Location_Copy (Res, Assoc);
+               return Res;
+            when others =>
+               --  TODO: improve message ?
+               Error_Msg_Parse
+                 (+Actual, "incorrect constraint for a subtype indication");
+               Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+               Location_Copy (Res, Assoc);
+               return Res;
+         end case;
+
+         Assoc := Next_Assoc;
+      end loop;
+
+      if Assoc_Index /= Null_Iir and then Assoc_Element = Null_Iir then
+         declare
+            Cons : Iir_Flist;
+            Idx : Natural;
+         begin
+            --  Convert assocs to discrete_ranges.
+            Assoc := First_Assoc;
+            Cons := Create_Iir_Flist (Nbr_Assocs);
+            Idx := 0;
+            while Assoc /= Null_Iir loop
+               Actual := Get_Actual (Assoc);
+               Set_Nth_Element (Cons, Idx, Actual);
+               Idx := Idx + 1;
+               Next_Assoc := Get_Chain (Assoc);
+               Free_Iir (Assoc);
+               Assoc := Next_Assoc;
+            end loop;
+            pragma Assert (Idx = Nbr_Assocs);
+
+            Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+            Location_Copy (Res, Name);
+
+            Set_Index_Constraint_List (Res, Cons);
+            Set_Has_Array_Constraint_Flag (Res, True);
+            Free_Iir (Name);
+
+            if Suffix /= Null_Iir then
+               Set_Array_Element_Constraint
+                 (Res, Parenthesis_Name_To_Subtype (Suffix));
+               Set_Has_Element_Constraint_Flag (Res, True);
+            end if;
+            return Res;
+         end;
+      elsif Assoc_Index = Null_Iir and then Assoc_Element /= Null_Iir then
+         --  Convert assocs to record_element_constraints of a record_subtype
+         declare
+            Res : Iir;
+            Last_El : Iir;
+            El : Iir;
+            Prefix : Iir;
+         begin
+            Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
+            Location_Copy (Res, Name);
+
+            Assoc := First_Assoc;
+            Last_El := Null_Iir;
+            while Assoc /= Null_Iir loop
+               --  Convert.
+               El := Create_Iir (Iir_Kind_Record_Element_Constraint);
+               Location_Copy (El, Assoc);
+               Actual := Get_Actual (Assoc);
+               --  Actual is a parenthesis name.
+               --  Recurse for element_constraint(s).
+               Actual := Rechain_Parenthesis_Name_For_Subtype (Actual);
+
+               Prefix := Get_Prefix (Actual);
+               if Get_Kind (Prefix) /= Iir_Kind_Simple_Name then
+                  raise Internal_Error;
+               end if;
+               Set_Identifier (El, Get_Identifier (Prefix));
+               Free_Iir (Prefix);
+
+               Actual := Parenthesis_Name_To_Subtype (Actual);
+               Set_Subtype_Indication (El, Actual);
+
+               --  Append.
+               if Last_El = Null_Iir then
+                  Set_Owned_Elements_Chain (Res, El);
+               else
+                  Set_Chain (Last_El, El);
+               end if;
+               Last_El := El;
+
+               Next_Assoc := Get_Chain (Assoc);
+               Free_Iir (Assoc);
+               Assoc := Next_Assoc;
+            end loop;
+
+            if Suffix /= Null_Iir then
+               raise Internal_Error;
+            end if;
+
+            return Res;
+         end;
+      else
+         raise Internal_Error;
+      end if;
+   end Parenthesis_Name_To_Subtype;
+
+   --  Emit an error message if NAME doesn't have the form of a type mark.
+   function Name_To_Type_Mark (Name : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      case Get_Kind (Name) is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name =>
-            return True;
+            return Name;
          when Iir_Kind_Attribute_Name =>
             --  For O'Subtype.
-            return True;
+            return Name;
+         when Iir_Kind_Parenthesis_Name =>
+            --  A constraint.
+            declare
+               Chain : Iir;
+               Prefix : Iir;
+            begin
+               Chain := Rechain_Parenthesis_Name_For_Subtype (Name);
+               Prefix := Get_Prefix (Chain);
+               Res := Parenthesis_Name_To_Subtype (Chain);
+               Set_Subtype_Type_Mark (Res, Prefix);
+               return Res;
+            end;
          when others =>
-            Error_Msg_Parse (+Mark, "type mark must be a name of a type");
-            return False;
+            Error_Msg_Parse (+Name, "type mark must be a name of a type");
+            return Null_Iir;
       end case;
-   end Check_Type_Mark;
+   end Name_To_Type_Mark;
 
    --  precond : next token
    --  postcond: next token
@@ -1592,15 +1843,14 @@ package body Vhdl.Parse is
       Old : Iir;
       pragma Unreferenced (Old);
    begin
-      Res := Parse_Name (Allow_Indexes => False);
+      Res := Parse_Name;
 
-      if Check_Type_Mark (Res) then
+      Res := Name_To_Type_Mark (Res);
+      if Res /= Null_Iir then
          if Check_Paren and then Current_Token = Tok_Left_Paren then
             Error_Msg_Parse ("index constraint not allowed here");
             Old := Parse_Name_Suffix (Res, True);
          end if;
-      else
-         Res := Null_Iir;
       end if;
       return Res;
    end Parse_Type_Mark;
@@ -3485,12 +3735,7 @@ package body Vhdl.Parse is
 
       if Name /= Null_Iir then
          --  The type_mark was already parsed.
-         if Check_Type_Mark (Name) then
-            Type_Mark := Name;
-         else
-            --  Not a type mark.  Ignore it.
-            Type_Mark := Null_Iir;
-         end if;
+         Type_Mark := Name_To_Type_Mark (Name);
       else
          if Current_Token = Tok_Left_Paren then
             Check_Vhdl_At_Least_2008 ("resolution indication");
@@ -3503,6 +3748,8 @@ package body Vhdl.Parse is
          Type_Mark := Parse_Type_Mark (Check_Paren => False);
       end if;
 
+      --  If a name is followed by a name, the first name is the resolution
+      --  indication.
       if Current_Token = Tok_Identifier then
          if Resolution_Indication /= Null_Iir then
             Error_Msg_Parse ("resolution function already indicated");
@@ -3530,7 +3777,14 @@ package body Vhdl.Parse is
 
          when others =>
             Tolerance := Parse_Tolerance_Aspect_Opt;
-            if Resolution_Indication /= Null_Iir
+            if Type_Mark /= Null_Iir
+              and then
+              Get_Kind (Type_Mark) in Iir_Kinds_Composite_Subtype_Definition
+            then
+               Def := Type_Mark;
+               Set_Resolution_Indication (Def, Resolution_Indication);
+               Set_Tolerance (Def, Tolerance);
+            elsif Resolution_Indication /= Null_Iir
               or else Tolerance /= Null_Iir
             then
                --  A subtype needs to be created.
@@ -3642,7 +3896,7 @@ package body Vhdl.Parse is
          Error_Msg_Parse ("nature mark expected in a subnature indication");
          return Null_Iir;
       end if;
-      Res := Parse_Name (Allow_Indexes => False);
+      Res := Parse_Name;
 
       if Current_Token = Tok_Left_Paren then
          Nature_Mark := Res;
@@ -8809,9 +9063,6 @@ package body Vhdl.Parse is
                      Actual := Parse_Expression;
                   else
                      Actual := Parse_Range_Expression (Actual);
-                  end if;
-                  if Nbr_Assocs /= 1 then
-                     Error_Msg_Parse ("multi-dimensional slice is forbidden");
                   end if;
 
                when Tok_Range =>

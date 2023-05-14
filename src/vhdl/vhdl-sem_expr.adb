@@ -5362,6 +5362,8 @@ package body Vhdl.Sem_Expr is
             declare
                Res : Iir;
             begin
+               Error_Msg_Sem
+                 (+Expr, "range expression not allowed as an expression");
                Res := Sem_Simple_Range_Expression (Expr, A_Type);
                return Create_Error_Expr (Res, A_Type);
             end;
