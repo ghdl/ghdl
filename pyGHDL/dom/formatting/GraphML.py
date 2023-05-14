@@ -12,8 +12,11 @@ from pyVHDLModel import (
     DependencyGraphVertexKind,
     DependencyGraphEdgeKind,
     Library as VHDLModel_Library,
-    Document as VHDLModel_Document, ObjectGraphVertexKind, ObjectGraphEdgeKind,
+    Document as VHDLModel_Document,
+    ObjectGraphVertexKind,
+    ObjectGraphEdgeKind,
 )
+
 
 @export
 class Formatter:  # (metaclass=ExtendedType):
