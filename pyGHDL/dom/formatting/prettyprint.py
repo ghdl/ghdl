@@ -230,7 +230,7 @@ class PrettyPrint:
             f"{prefix}  Position: {architecture.Position.Line}:{architecture.Position.Column}\n"
             f"{prefix}  Documentation: {documentationFirstLine}"
         )
-        buffer.append(f"{prefix}  Entity: {architecture.Entity.Identifier}")
+        buffer.append(f"{prefix}  Entity: {architecture.Entity.Name.Identifier}")
         buffer.append(f"{prefix}  Declared:")
         for item in architecture.DeclaredItems:
             for line in self.formatDeclaredItems(item, level + 2):
@@ -444,14 +444,14 @@ class PrettyPrint:
 
     def formatSubtypeIndication(self, subtypeIndication, entity: str, name: str) -> str:
         if isinstance(subtypeIndication, SimpleSubtypeSymbol):
-            return f"{subtypeIndication.Identifier}"
+            return f"{subtypeIndication.Name.Identifier}"
         elif isinstance(subtypeIndication, ConstrainedCompositeSubtypeSymbol):
             constraints = []
             # FIXME: disabled due to problems with symbols
             # for constraint in subtypeIndication.Constraints:
             #     constraints.append(str(constraint))
 
-            return f"{subtypeIndication.Identifier}({', '.join(constraints)})"
+            return f"{subtypeIndication.Name.Identifier}({', '.join(constraints)})"
         else:
             raise PrettyPrintException(
                 f"Unhandled subtype kind '{subtypeIndication.__class__.__name__}' for {entity} '{name}'."
