@@ -36,7 +36,7 @@ from textwrap import dedent
 from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
-from pyGHDL.dom.formatting.GraphML import DependencyGraphFormatter, HierarchyGraphFormatter, CompileOrderGraphFormatter, ObjectGraphFormatter
+from pyGHDL.dom.formatting.GraphML import DependencyGraphFormatter, HierarchyGraphFormatter, CompileOrderGraphFormatter  #, ObjectGraphFormatter
 
 
 if __name__ == "__main__":
@@ -179,9 +179,9 @@ class CompileOrder(Designs):
         compileOrderFormatter = CompileOrderGraphFormatter(design.CompileOrderGraph)
         compileOrderFormatter.WriteGraphML(graphML)
 
-        graphML = Path("objects.graphml")
-        objectGraphFormatter = ObjectGraphFormatter(design.ObjectGraph)
-        objectGraphFormatter.WriteGraphML(graphML)
+        # graphML = Path("objects.graphml")
+        # objectGraphFormatter = ObjectGraphFormatter(design.ObjectGraph)
+        # objectGraphFormatter.WriteGraphML(graphML)
 
         # PP = PrettyPrint()
         # buffer = []

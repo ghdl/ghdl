@@ -13,8 +13,8 @@ from pyVHDLModel import (
     DependencyGraphEdgeKind,
     Library as VHDLModel_Library,
     Document as VHDLModel_Document,
-    ObjectGraphVertexKind,
-    ObjectGraphEdgeKind,
+    # ObjectGraphVertexKind,
+    # ObjectGraphEdgeKind,
 )
 
 
@@ -348,89 +348,89 @@ class CompileOrderGraphFormatter(Formatter):
             )
 
 
-@export
-class ObjectGraphFormatter(Formatter):
-    NODE_COLORS = {
-        ObjectGraphVertexKind.Type: "#999999",
-        ObjectGraphVertexKind.Subtype: "#99ccff",
-        ObjectGraphVertexKind.DeferredConstant: "#ff9900",
-        ObjectGraphVertexKind.Constant: "#ff9900",
-        ObjectGraphVertexKind.Signal: "#cc99ff",
-        ObjectGraphVertexKind.Alias: "#ffff99",
-        # ObjectGraphVertexKind.Architecture: "#ff99cc",
-        # ObjectGraphVertexKind.Configuration: "#ff9900",
-    }
-    EDGE_COLORS = {
-        ObjectGraphEdgeKind.BaseType: "#000000",
-        ObjectGraphEdgeKind.Subtype: "#ff0000",
-        ObjectGraphEdgeKind.ReferenceInExpression: "#000000",
-        # ObjectGraphEdgeKind.UseClause: "#000000",
-        # ObjectGraphEdgeKind.ContextReference: "#000000",
-        # ObjectGraphEdgeKind.EntityImplementation: "#99ccff",
-        # ObjectGraphEdgeKind.PackageImplementation: "#99ccff",
-        # ObjectGraphEdgeKind.EntityInstantiation: "#000000",
-        # ObjectGraphEdgeKind.ComponentInstantiation: "#000000",
-        # ObjectGraphEdgeKind.ConfigurationInstantiation: "#000000",
-    }
-
-    def WriteGraphML(self, path: Path):
-        with path.open("w") as file:
-            file.write(
-                dedent(
-                    f"""\
-            <graphml xmlns="http://graphml.graphdrawing.org/xmlns"
-                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                     xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
-              <key id="nd1" for="node" attr.name="id" attr.type="string"/>
-              <key id="nd2" for="node" attr.name="value" attr.type="string"/>
-              <key id="nd3" for="node" attr.name="kind" attr.type="string"/>
-              <key id="nd4" for="node" attr.name="color" attr.type="string"/>
-
-              <key id="ed3" for="edge" attr.name="kind" attr.type="string"/>
-              <key id="ed4" for="edge" attr.name="color" attr.type="string"/>
-              <graph id="ObjectGraph"
-                     edgedefault="directed"
-                     parse.nodes="{len(self._graph._verticesWithID)}"
-                     parse.edges="{len(self._graph._edgesWithoutID)}"
-                     parse.order="nodesfirst">
-            """
-                )
-            )
-
-            for vertex in self._graph._verticesWithID.values():
-                if vertex["kind"] is ObjectGraphVertexKind.Type:
-                    file.write(
-                        dedent(
-                            """\
-                        {prefix}<node id="{vertex.ID}">
-                        {prefix}  <data key="nd1">{vertex.ID}</data>
-                        {prefix}  <data key="nd2">{vertex.Value.Identifier}</data>
-                        {prefix}  <data key="nd3">{vertex[kind].name}</data>
-                        {prefix}  <data key="nd4">{color}</data>
-                        {prefix}</node>
-                    """
-                        ).format(prefix="    ", vertex=vertex, color=self.NODE_COLORS[vertex["kind"]])
-                    )
-
-            edgeCount = 1
-            for edge in self._graph._edgesWithoutID:
-                file.write(
-                    dedent(
-                        """\
-                    {prefix}<edge id="e{edgeCount}" source="{edge.Source.ID}" target="{edge.Destination.ID}">
-                    {prefix}  <data key="ed3">{edge[kind].name}</data>
-                    {prefix}  <data key="ed4">{color}</data>
-                    {prefix}</edge>
-                """
-                    ).format(prefix="    ", edgeCount=edgeCount, edge=edge, color=self.EDGE_COLORS[edge["kind"]])
-                )
-                edgeCount += 1
-
-            file.write(
-                dedent(
-                    """\
-              </graph>
-            </graphml>
-            """
-                )
-            )
+# @export
+# class ObjectGraphFormatter(Formatter):
+#     NODE_COLORS = {
+#         ObjectGraphVertexKind.Type: "#999999",
+#         ObjectGraphVertexKind.Subtype: "#99ccff",
+#         ObjectGraphVertexKind.DeferredConstant: "#ff9900",
+#         ObjectGraphVertexKind.Constant: "#ff9900",
+#         ObjectGraphVertexKind.Signal: "#cc99ff",
+#         ObjectGraphVertexKind.Alias: "#ffff99",
+#         # ObjectGraphVertexKind.Architecture: "#ff99cc",
+#         # ObjectGraphVertexKind.Configuration: "#ff9900",
+#     }
+#     EDGE_COLORS = {
+#         ObjectGraphEdgeKind.BaseType: "#000000",
+#         ObjectGraphEdgeKind.Subtype: "#ff0000",
+#         ObjectGraphEdgeKind.ReferenceInExpression: "#000000",
+#         # ObjectGraphEdgeKind.UseClause: "#000000",
+#         # ObjectGraphEdgeKind.ContextReference: "#000000",
+#         # ObjectGraphEdgeKind.EntityImplementation: "#99ccff",
+#         # ObjectGraphEdgeKind.PackageImplementation: "#99ccff",
+#         # ObjectGraphEdgeKind.EntityInstantiation: "#000000",
+#         # ObjectGraphEdgeKind.ComponentInstantiation: "#000000",
+#         # ObjectGraphEdgeKind.ConfigurationInstantiation: "#000000",
+#     }
+#
+#     def WriteGraphML(self, path: Path):
+#         with path.open("w") as file:
+#             file.write(
+#                 dedent(
+#                     f"""\
+#             <graphml xmlns="http://graphml.graphdrawing.org/xmlns"
+#                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+#                      xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+#               <key id="nd1" for="node" attr.name="id" attr.type="string"/>
+#               <key id="nd2" for="node" attr.name="value" attr.type="string"/>
+#               <key id="nd3" for="node" attr.name="kind" attr.type="string"/>
+#               <key id="nd4" for="node" attr.name="color" attr.type="string"/>
+#
+#               <key id="ed3" for="edge" attr.name="kind" attr.type="string"/>
+#               <key id="ed4" for="edge" attr.name="color" attr.type="string"/>
+#               <graph id="ObjectGraph"
+#                      edgedefault="directed"
+#                      parse.nodes="{len(self._graph._verticesWithID)}"
+#                      parse.edges="{len(self._graph._edgesWithoutID)}"
+#                      parse.order="nodesfirst">
+#             """
+#                 )
+#             )
+#
+#             for vertex in self._graph._verticesWithID.values():
+#                 if vertex["kind"] is ObjectGraphVertexKind.Type:
+#                     file.write(
+#                         dedent(
+#                             """\
+#                         {prefix}<node id="{vertex.ID}">
+#                         {prefix}  <data key="nd1">{vertex.ID}</data>
+#                         {prefix}  <data key="nd2">{vertex.Value.Identifier}</data>
+#                         {prefix}  <data key="nd3">{vertex[kind].name}</data>
+#                         {prefix}  <data key="nd4">{color}</data>
+#                         {prefix}</node>
+#                     """
+#                         ).format(prefix="    ", vertex=vertex, color=self.NODE_COLORS[vertex["kind"]])
+#                     )
+#
+#             edgeCount = 1
+#             for edge in self._graph._edgesWithoutID:
+#                 file.write(
+#                     dedent(
+#                         """\
+#                     {prefix}<edge id="e{edgeCount}" source="{edge.Source.ID}" target="{edge.Destination.ID}">
+#                     {prefix}  <data key="ed3">{edge[kind].name}</data>
+#                     {prefix}  <data key="ed4">{color}</data>
+#                     {prefix}</edge>
+#                 """
+#                     ).format(prefix="    ", edgeCount=edgeCount, edge=edge, color=self.EDGE_COLORS[edge["kind"]])
+#                 )
+#                 edgeCount += 1
+#
+#             file.write(
+#                 dedent(
+#                     """\
+#               </graph>
+#             </graphml>
+#             """
+#                 )
+#             )
