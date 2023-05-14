@@ -102,6 +102,17 @@ class SourceAttribute(Attribute):
                 help="The directory to parse.",
             ),
         )
+        self._AppendAttribute(
+            func,
+            ArgumentAttribute(
+                "-L",
+                "--library",
+                metavar="lib",
+                dest="DefaultLibrary",
+                type=str,
+                help="Default library for files in the root directory.",
+            ),
+        )
         return func
 
 
@@ -278,21 +289,36 @@ class Application(LineTerminal, ArgParseMixin):
             d: Path = args.Directory.resolve()
             if not d.exists():
                 self.WriteError(f"Directory '{d!s}' does not exist.")
+            elif not d.is_dir():
+                self.WriteError(f"Path '{d!s}' is not a directory.")
 
-            for file in d.glob("**/*.vhd*"):
-                self.WriteNormal(f"Parsing file '{file!s}'")
-                document = self.addFile(file, "pretty")
-                self.WriteInfo(
-                    dedent(
-                        """\
-                          libghdl processing time: {: 5.3f} us
-                          DOM translation time:    {:5.3f} us
-                        """
-                    ).format(
-                        document.LibGHDLProcessingTime * 10**6,
-                        document.DOMTranslationTime * 10**6,
-                    )
-                )
+            if args.DefaultLibrary is None:
+                self.WriteWarning(f"Default library is not set.")
+
+            files = []
+            for directoryItem in d.iterdir():
+                if directoryItem.is_dir():
+                    libraryName = directoryItem.name
+                    self.WriteNormal(f"Scanning library '{libraryName}' ...")
+                    for file in directoryItem.glob("**/*.vhd*"):
+                        self.WriteNormal(f"  Reading file '{file!s}'")
+                        document = self.addFile(file, libraryName)
+                        self.WriteInfo(f"    libghdl processing time: {document.LibGHDLProcessingTime * 10**6: 5.3f} us")
+                        self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationTime * 10**6:5.3f} us")
+                elif directoryItem.is_file():
+                    if directoryItem.suffix in (".vhd", ".vhdl"):
+                        files.append(directoryItem)
+
+            if len(files) > 0 and args.DefaultLibrary is None:
+                self.WriteFatal(f"Files in root directory can't ne read, due to missing default library.")
+            else:
+                libraryName = args.DefaultLibrary
+                self.WriteNormal(f"Processing files in root directory for library '{libraryName}' ...")
+                for file in files:
+                    self.WriteNormal(f"  Reading file '{file!s}'")
+                    document = self.addFile(file, libraryName)
+                    self.WriteInfo(f"    libghdl processing time: {document.LibGHDLProcessingTime * 10**6: 5.3f} us")
+                    self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationTime * 10**6:5.3f} us")
 
         if not self._design.Documents:
             self.WriteFatal("No files processed at all.")
