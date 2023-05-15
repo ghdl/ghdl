@@ -1995,38 +1995,6 @@ package body Vhdl.Sem_Types is
       return Res;
    end Sem_Array_Constraint;
 
-   function Reparse_As_Record_Element_Constraint (Name : Iir) return Iir
-   is
-      Prefix : Iir;
-      Parent : Iir;
-      El : Iir;
-   begin
-      if Get_Kind (Name) /= Iir_Kind_Parenthesis_Name then
-         Error_Msg_Sem (+Name, "record element constraint expected");
-         return Null_Iir;
-      else
-         Prefix := Get_Prefix (Name);
-         Parent := Name;
-         while Get_Kind (Prefix) = Iir_Kind_Parenthesis_Name loop
-            Parent := Prefix;
-            Prefix := Get_Prefix (Prefix);
-         end loop;
-         if Get_Kind (Prefix) /= Iir_Kind_Simple_Name then
-            Error_Msg_Sem
-              (+Prefix, "record element name must be a simple name");
-            return Null_Iir;
-         else
-            El := Create_Iir (Iir_Kind_Record_Element_Constraint);
-            Location_Copy (El, Prefix);
-            Set_Identifier (El, Get_Identifier (Prefix));
-            Set_Type (El, Name);
-            Set_Prefix (Parent, Null_Iir);
-            Free_Name (Prefix);
-            return El;
-         end if;
-      end if;
-   end Reparse_As_Record_Element_Constraint;
-
    function Sem_Record_Constraint
      (Def : Iir; Type_Mark : Iir; Resolution : Iir) return Iir
    is
@@ -2037,51 +2005,35 @@ package body Vhdl.Sem_Types is
       El_Type : Iir;
       Res_List : Iir_Flist;
       Cons_Chain : Iir;
-
-      Index_List : Iir_Flist;
-      Index_El : Iir;
    begin
-      Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
-      Set_Is_Ref (Res, True);
-      Location_Copy (Res, Def);
-      Set_Parent_Type (Res, Type_Mark);
-      if Get_Kind (Type_Mark) = Iir_Kind_Record_Subtype_Definition then
-         Set_Resolution_Indication
-           (Res, Get_Resolution_Indication (Type_Mark));
-      end if;
-
       case Get_Kind (Def) is
          when Iir_Kind_Subtype_Definition =>
             --  Just an alias, without new constraints.
-            Free_Name (Def);
+            Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
+            Location_Copy (Res, Def);
+            Set_Subtype_Type_Mark (Res, Get_Subtype_Type_Mark (Def));
+            Free_Iir (Def);
             Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));
             Set_Constraint_State (Res, Get_Constraint_State (Type_Mark));
             Cons_Chain := Null_Iir;
 
-         when Iir_Kind_Array_Subtype_Definition =>
-            --  Record constraints were parsed as array constraints.
-            --  Reparse.
-            Index_List := Get_Index_Constraint_List (Def);
-            Free_Iir (Def);
-            El_List := Create_Iir_Flist (Get_Nbr_Elements (Index_List));
-            Set_Elements_Declaration_List (Res, El_List);
-            for I in Flist_First .. Flist_Last (Index_List) loop
-               Index_El := Get_Nth_Element (Index_List, I);
-               El := Reparse_As_Record_Element_Constraint (Index_El);
-               if El = Null_Iir then
-                  return Create_Error_Type (Type_Mark);
-               end if;
-               Set_Nth_Element (El_List, I, El);
-            end loop;
-            Cons_Chain := Null_Iir;
-            raise Internal_Error;
-
          when Iir_Kind_Record_Subtype_Definition =>
             Cons_Chain := Get_Owned_Elements_Chain (Def);
+            Res := Def;
 
          when others =>
             Error_Kind ("sem_record_constraint", Def);
       end case;
+
+      --  Record elements are already owned.
+      Set_Is_Ref (Res, True);
+      Set_Parent_Type (Res, Type_Mark);
+
+      --  By default, inherit resoultion.
+      if Get_Kind (Type_Mark) = Iir_Kind_Record_Subtype_Definition then
+         Set_Resolution_Indication
+           (Res, Get_Resolution_Indication (Type_Mark));
+      end if;
 
       --  Handle resolution.
       Res_List := Null_Iir_Flist;

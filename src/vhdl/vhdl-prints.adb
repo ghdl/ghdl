@@ -484,11 +484,9 @@ package body Vhdl.Prints is
       Inner (Ind);
    end Disp_Resolution_Indication;
 
-   procedure Disp_Element_Constraint
-     (Ctxt : in out Ctxt_Class; Def : Iir; Type_Mark : Iir);
+   procedure Disp_Element_Constraint (Ctxt : in out Ctxt_Class; Def : Iir);
 
-   procedure Disp_Discrete_Range
-     (Ctxt : in out Ctxt_Class; Iterator: Iir) is
+   procedure Disp_Discrete_Range (Ctxt : in out Ctxt_Class; Iterator: Iir) is
    begin
       if Get_Kind (Iterator) in Iir_Kinds_Subtype_Definition then
          Disp_Subtype_Indication (Ctxt, Iterator);
@@ -519,7 +517,7 @@ package body Vhdl.Prints is
    end Disp_Array_Sub_Definition_Indexes;
 
    procedure Disp_Array_Element_Constraint
-     (Ctxt : in out Ctxt_Class; Def : Iir; Type_Mark : Iir) is
+     (Ctxt : in out Ctxt_Class; Def : Iir) is
    begin
       if not Get_Has_Array_Constraint_Flag (Def)
         and then not Get_Has_Element_Constraint_Flag (Def)
@@ -538,23 +536,19 @@ package body Vhdl.Prints is
       end if;
 
       if Get_Has_Element_Constraint_Flag (Def) then
-         Disp_Element_Constraint (Ctxt, Get_Array_Element_Constraint (Def),
-                                  Get_Element_Subtype (Type_Mark));
+         Disp_Element_Constraint (Ctxt, Get_Array_Element_Constraint (Def));
       end if;
    end Disp_Array_Element_Constraint;
 
    procedure Disp_Record_Element_Constraint
      (Ctxt : in out Ctxt_Class; Def : Iir)
    is
-      El_List : constant Iir_Flist := Get_Elements_Declaration_List (Def);
       El : Iir;
       Has_El : Boolean := False;
    begin
-      for I in Flist_First .. Flist_Last (El_List) loop
-         El := Get_Nth_Element (El_List, I);
-         if Get_Kind (El) = Iir_Kind_Record_Element_Constraint
-           and then Get_Parent (El) = Def
-         then
+      El := Get_Owned_Elements_Chain (Def);
+      while El /= Null_Iir loop
+         if Get_Kind (El) = Iir_Kind_Record_Element_Constraint then
             if Has_El then
                Disp_Token (Ctxt, Tok_Comma);
             else
@@ -562,9 +556,9 @@ package body Vhdl.Prints is
                Has_El := True;
             end if;
             Disp_Name_Of (Ctxt, El);
-            Disp_Element_Constraint (Ctxt, Get_Type (El),
-                                     Get_Base_Type (Get_Type (El)));
+            Disp_Element_Constraint (Ctxt, Get_Subtype_Indication (El));
          end if;
+         El := Get_Chain (El);
       end loop;
       if Has_El then
          Disp_Token (Ctxt, Tok_Right_Paren);
@@ -572,13 +566,13 @@ package body Vhdl.Prints is
    end Disp_Record_Element_Constraint;
 
    procedure Disp_Element_Constraint
-     (Ctxt : in out Ctxt_Class; Def : Iir; Type_Mark : Iir) is
+     (Ctxt : in out Ctxt_Class; Def : Iir) is
    begin
       case Get_Kind (Def) is
          when Iir_Kind_Record_Subtype_Definition =>
             Disp_Record_Element_Constraint (Ctxt, Def);
          when Iir_Kind_Array_Subtype_Definition =>
-            Disp_Array_Element_Constraint (Ctxt, Def, Type_Mark);
+            Disp_Array_Element_Constraint (Ctxt, Def);
          when others =>
             Error_Kind ("disp_element_constraint", Def);
       end case;
@@ -629,8 +623,9 @@ package body Vhdl.Prints is
 
       case Get_Kind (Def) is
          when Iir_Kind_Array_Subtype_Definition =>
-            Disp_Array_Element_Constraint
-              (Ctxt, Def, Or_Else (Type_Mark, Def));
+            Disp_Array_Element_Constraint (Ctxt, Def);
+         when Iir_Kind_Record_Subtype_Definition =>
+            Disp_Record_Element_Constraint (Ctxt, Def);
          when Iir_Kind_Subtype_Definition =>
             declare
                Rng : constant Iir := Get_Range_Constraint (Def);
@@ -669,13 +664,11 @@ package body Vhdl.Prints is
                      if Des_Ind /= Null_Iir then
                         pragma Assert (Get_Kind (Des_Ind)
                                          = Iir_Kind_Array_Subtype_Definition);
-                        Disp_Array_Element_Constraint
-                          (Ctxt, Des_Ind, Get_Designated_Type (Base_Type));
+                        Disp_Array_Element_Constraint (Ctxt, Des_Ind);
                      end if;
                   end;
                when Iir_Kind_Array_Type_Definition =>
-                  Disp_Array_Element_Constraint
-                    (Ctxt, Def, Or_Else (Type_Mark, Def));
+                  Disp_Array_Element_Constraint (Ctxt, Def);
                when Iir_Kind_Record_Type_Definition =>
                   Disp_Record_Element_Constraint (Ctxt, Def);
                when others =>

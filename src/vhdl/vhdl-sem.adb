@@ -1959,6 +1959,8 @@ package body Vhdl.Sem is
                         "result subtype of a pure function cannot denote an"
                           & " access type");
                   end if;
+               when Iir_Kind_Error =>
+                  null;
                when others =>
                   if  Vhdl_Std >= Vhdl_08
                     and then not Get_Signal_Type_Flag (Return_Type)

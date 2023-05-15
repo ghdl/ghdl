@@ -1564,7 +1564,27 @@ package body Vhdl.Parse is
       return Parse_Any_Name (True, True);
    end Parse_Signature_Name;
 
-   --  Convert a parenthesis_name to a subtype indication.
+   --  Return the first parenthesis_name from NAME, set suffix field to
+   --  link the others.
+   --  Used for conversion of a parenthesis_name to a subtype.
+   function Rechain_Parenthesis_Name_For_Subtype (Name : Iir) return Iir
+   is
+      Last, Prefix : Iir;
+   begin
+      Last := Name;
+      loop
+         Prefix := Get_Prefix (Last);
+         exit when Get_Kind (Prefix) /= Iir_Kind_Parenthesis_Name;
+
+         Set_Suffix (Prefix, Last);
+         Last := Prefix;
+      end loop;
+      return Last;
+   end Rechain_Parenthesis_Name_For_Subtype;
+
+   --  Transform NAME into record_subtype(s) and array_subtype(s).
+   --  Start from the first name.
+   --
    --  Here are the related rules from the LRM:
    --
    --  LRM08 5.3.2 Array types
@@ -1595,26 +1615,6 @@ package body Vhdl.Parse is
    --      range_constraint
    --    | array_constraint
    --    | record_constraint
-
-   --  Return the first parenthesis_name from NAME, set suffix field to
-   --  link the others.
-   function Rechain_Parenthesis_Name_For_Subtype (Name : Iir) return Iir
-   is
-      Last, Prefix : Iir;
-   begin
-      Last := Name;
-      loop
-         Prefix := Get_Prefix (Last);
-         exit when Get_Kind (Prefix) /= Iir_Kind_Parenthesis_Name;
-
-         Set_Suffix (Prefix, Last);
-         Last := Prefix;
-      end loop;
-      return Last;
-   end Rechain_Parenthesis_Name_For_Subtype;
-
-   --  Transform NAME into record_subtype(s) and array_subtype(s).
-   --  Start from the first name.
    function Parenthesis_Name_To_Subtype (Name : Iir) return Iir
    is
       Suffix : constant Iir := Get_Suffix (Name);
@@ -1645,9 +1645,13 @@ package body Vhdl.Parse is
 
          case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
             when Iir_Kind_Association_Element_Open =>
-               if Assoc /= First_Assoc or else Next_Assoc /= Null_Iir then
+               if Next_Assoc /= Null_Iir then
                   Error_Msg_Parse
-                    (+Assoc, "'open' must be alone for an array constraint");
+                    (+Next_Assoc,
+                     "'open' must be alone for an array constraint");
+               elsif Assoc /= First_Assoc then
+                  Error_Msg_Parse
+                    (+Assoc, "all indexes must be constrained");
                end if;
                --  Free all assocs.
                Assoc := First_Assoc;
@@ -1673,7 +1677,8 @@ package body Vhdl.Parse is
             when Iir_Kind_Association_Element_By_Expression =>
                null;
             when others =>
-               --  TODO: check it cannot happen.
+               --  Parse_Associations creates only Open or By_Expression
+               --  associations.
                raise Internal_Error;
          end case;
 
@@ -1769,9 +1774,12 @@ package body Vhdl.Parse is
 
                Prefix := Get_Prefix (Actual);
                if Get_Kind (Prefix) /= Iir_Kind_Simple_Name then
-                  raise Internal_Error;
+                  Error_Msg_Parse
+                    (+Prefix,
+                     "simple name expected for record element constraint");
+               else
+                  Set_Identifier (El, Get_Identifier (Prefix));
                end if;
-               Set_Identifier (El, Get_Identifier (Prefix));
                Free_Iir (Prefix);
 
                Actual := Parenthesis_Name_To_Subtype (Actual);
@@ -1791,13 +1799,20 @@ package body Vhdl.Parse is
             end loop;
 
             if Suffix /= Null_Iir then
-               raise Internal_Error;
+               Error_Msg_Parse
+                 (+Suffix,
+                  "record constraint cannot be followed by a constraint");
             end if;
 
+            Free_Iir (Name);
             return Res;
          end;
       else
-         raise Internal_Error;
+         Error_Msg_Parse
+           (+Assoc_Index, "cannot mix record and array constraints");
+         Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+         Location_Copy (Res, Name);
+         return Res;
       end if;
    end Parenthesis_Name_To_Subtype;
 

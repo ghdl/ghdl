@@ -900,9 +900,6 @@ package body Vhdl.Sem_Names is
       Res : Iir;
       Decl : Iir;
    begin
-      --  The name must not have been analyzed.
-      pragma Assert (Get_Type (Name) = Null_Iir);
-
       if Is_Error (Name) then
          Set_Type (Name, Name);
          return Name;
@@ -911,6 +908,8 @@ package body Vhdl.Sem_Names is
       case Get_Kind (Name) is
          when Iir_Kinds_Name
            | Iir_Kind_Attribute_Name =>
+            --  The name must not have been analyzed.
+            pragma Assert (Get_Type (Name) = Null_Iir);
             null;
          when others =>
             Error_Msg_Sem (+Name, "name expected for a type mark");

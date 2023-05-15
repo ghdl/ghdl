@@ -1891,6 +1891,7 @@ package body Vhdl.Utils is
       Set_Type_Declarator (Res, Null_Iir);
       Set_Resolved_Flag (Res, True);
       Set_Signal_Type_Flag (Res, True);
+      Set_Type (Res, Std_Package.Error_Type);
       return Res;
    end Create_Error_Type;
 
