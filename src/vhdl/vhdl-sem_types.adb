@@ -1937,7 +1937,7 @@ package body Vhdl.Sem_Types is
                Error_Msg_Sem
                  (+Type_Mark, " (type mark is %n)", +Type_Mark);
                Report_End_Group;
-               return Type_Mark;
+               return Create_Error_Type (Def);
          end case;
       end if;
 
@@ -2008,6 +2008,12 @@ package body Vhdl.Sem_Types is
    begin
       case Get_Kind (Def) is
          when Iir_Kind_Subtype_Definition =>
+            if Get_Range_Constraint (Def) /= Null_Iir then
+               Error_Msg_Sem
+                 (+Def, "range constraints cannot be applied to a record");
+               return Create_Error_Type (Def);
+            end if;
+
             --  Just an alias, without new constraints.
             Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
             Location_Copy (Res, Def);
@@ -2020,6 +2026,11 @@ package body Vhdl.Sem_Types is
          when Iir_Kind_Record_Subtype_Definition =>
             Cons_Chain := Get_Owned_Elements_Chain (Def);
             Res := Def;
+
+         when Iir_Kind_Array_Subtype_Definition =>
+            Error_Msg_Sem
+              (+Def, "index constraints cannot be applied to a record");
+            return Create_Error_Type (Def);
 
          when others =>
             Error_Kind ("sem_record_constraint", Def);
@@ -2202,7 +2213,7 @@ package body Vhdl.Sem_Types is
          --  GHDL: subtype_definition may also be used just to add
          --    a resolution function.
          Report_Start_Group;
-         Error_Msg_Sem (+Def, "only scalar types may be constrained by range");
+         Error_Msg_Sem (+Def, "scalar types may only be constrained by range");
          Error_Msg_Sem (+Type_Mark, " (type mark is %n)", +Type_Mark);
          Report_End_Group;
          Res := Copy_Subtype_Indication (Type_Mark);
