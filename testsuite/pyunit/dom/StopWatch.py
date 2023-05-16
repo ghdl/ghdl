@@ -83,7 +83,7 @@ class Designs(TestCase):
     _encoderFiles = _encoderEntityFiles + (
         ("lib_Pretty",    Path("toplevel.Encoder.vhdl")),
     )
-    _displayFiles = _utilityCounterFiles + _displayEntityFiles + _displayPackageFiles + (
+    _displayFiles = _utilityCounterFiles + _displayEntityFiles + (
         ("lib_StopWatch", Path("toplevel.Display.vhdl")),
     )
     _stopwatchFiles = _utilityEntityFiles + _displayEntityFiles + _stopwatchEntityFiles + (

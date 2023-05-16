@@ -191,12 +191,15 @@ class Document(VHDLModel_Document):
         sourcesBytes = sourceCode.encode(ENCODING)
         sourceLength = len(sourcesBytes)
         bufferLength = sourceLength + 128
-        self.__ghdlFileID = name_table.Get_Identifier(str(self._filename))
         dirId = name_table.Null_Identifier
-        self.__ghdlSourceFileEntry = files_map.Reserve_Source_File(dirId, self.__ghdlFileID, bufferLength)
-        files_map_editor.Fill_Text(self.__ghdlSourceFileEntry, ctypes.c_char_p(sourcesBytes), sourceLength)
+        self.__ghdlFileID = name_table.Get_Identifier(str(self._filename))
+        if files_map.Find_Source_File(dirId, self.__ghdlFileID) == files_map.No_Source_File_Entry:
+            self.__ghdlSourceFileEntry = files_map.Reserve_Source_File(dirId, self.__ghdlFileID, bufferLength)
+            files_map_editor.Fill_Text(self.__ghdlSourceFileEntry, ctypes.c_char_p(sourcesBytes), sourceLength)
 
-        CheckForErrors()
+            CheckForErrors()
+        else:
+            raise DOMException(f"Source file '{self._filename}' already loaded.")
 
     def translate(self):
         firstUnit = nodes.Get_First_Design_Unit(self.__ghdlFile)
