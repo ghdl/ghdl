@@ -2894,6 +2894,11 @@ package body Netlists.Memories is
    is
       Inst : Instance;
    begin
+      if Val = Prev_Val then
+         --  Just forwarding, not a memory.
+         return False;
+      end if;
+
       Inst := Get_Net_Parent (Val);
 
       --  Walk until the reaching Prev_Val.
