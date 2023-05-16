@@ -2249,7 +2249,9 @@ package body Vhdl.Sem_Types is
                --  Avoid error propagation.
                A_Range := Get_Range_Constraint (Type_Mark);
                Set_Is_Ref (Res, True);
-            elsif Get_Expr_Staticness (A_Range) = Locally then
+            elsif Get_Expr_Staticness (A_Range) = Locally
+              and then Get_Type_Staticness (Type_Mark) = Locally
+            then
                Check_Range_Compatibility
                  (A_Range, Get_Range_Constraint (Type_Mark));
             end if;
