@@ -14,9 +14,9 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 with Ada.Command_Line;
-with Ada.Command_Line.Response_File;
 
 with Simple_IO;
+with Filesystem;
 with Version;
 with Bug;
 with Types; use Types;
@@ -424,6 +424,85 @@ package body Ghdlmain is
       end if;
    end Convert_Path_To_Unix;
 
+   --  Read a response file and return the list of arguments.
+   --  Return null if the file cannot be read.
+   --  Neither escape nor quotes are handled.
+   function Read_Response_File (Filename : String) return String_List_Access
+   is
+      function Is_Blank (C : Character) return Boolean is
+      begin
+         return C = ' ' or C = ASCII.HT or C = ASCII.CR or C = ASCII.LF;
+      end Is_Blank;
+
+      use Filesystem;
+      Buf : String_Acc;
+      Fd : Filesystem.File_Descriptor;
+      Len : Long_Integer;
+      Res, Nres : String_List_Access;
+      Narg : Natural;
+      F, P : Natural;
+   begin
+      --  Open and read content.
+      Open_Read (Fd, Filename);
+      if Is_Error (Fd) then
+         Error ("cannot open response file '" & Filename & "'");
+         return null;
+      end if;
+      Len := File_Length (Fd);
+      Buf := new String (1 .. Natural (Len));
+      Read (Fd, Buf.all'Address, Len);
+      Close (Fd);
+
+      Narg := 0;
+      Res := new String_List (1 .. 32);
+      P := Buf'First;
+      loop
+         --  Skip spaces, newlines...
+         while P <= Buf'Last and then Is_Blank (Buf (P)) loop
+            P := P + 1;
+         end loop;
+         exit when P > Buf'Last;
+
+         --  Eat non-blank characters.
+         F := P;
+         while P <= Buf'Last and then not Is_Blank (Buf (P)) loop
+            P := P + 1;
+         end loop;
+
+         --  Expand res (if needed).
+         if Narg = Res'Last then
+            Nres := new String_List (1 .. 2 * Narg);
+            Nres (1 .. Narg) := Res.all;
+            Res.all := (others => null);
+            Free (Res);
+            Res := Nres;
+         end if;
+
+         --  Append
+         Narg := Narg + 1;
+         declare
+            --  Make the string 1 based.
+            subtype S is String (1 .. P - F);
+         begin
+            Res (Narg) := new String'(S (Buf (F .. P - 1)));
+         end;
+
+         --  Skip blank.
+         P := P + 1;
+      end loop;
+
+      --  Shrink result.
+      if Res'Last /= Narg then
+         Nres := new String_List (1 .. Narg);
+         Nres.all := Res (1 .. Narg);
+         Res.all := (others => null);
+         Free (Res);
+         Res := Nres;
+      end if;
+
+      return Res;
+   end Read_Response_File;
+
    procedure Main
    is
       use Ada.Command_Line;
@@ -461,38 +540,36 @@ package body Ghdlmain is
             declare
                Rsp_Arg : constant String_Access := Args (Arg_Index);
                Rsp_File : constant String := Rsp_Arg (2 .. Rsp_Arg'Last);
+               Exp_Args : String_List_Access;
+               Exp_Length : Natural;
+               New_Args : String_List_Access;
             begin
-               --  Need a second declare block so that the exception handler
-               --  can use Rsp_File.
-               declare
-                  Exp_Args : constant GNAT.OS_Lib.Argument_List :=
-                    Response_File.Arguments_From (Rsp_File);
-                  Exp_Length : constant Natural := Exp_Args'Length;
-                  New_Args : String_List_Access;
-               begin
-                  New_Args :=
-                    new String_List (1 .. Args'Last + Exp_Length - 1);
-
-                  --  Copy arguments from the response file.
-                  New_Args (1 .. Arg_Index - 1) := Args (1 .. Arg_Index - 1);
-                  New_Args (Arg_Index .. Arg_Index + Exp_Length - 1) :=
-                    Exp_Args;
-                  New_Args (Arg_Index + Exp_Length .. New_Args'Last) :=
-                    Args (Arg_Index + 1 .. Args'Last);
-
-                  --  Free array.  Note: Free deallocates both the array and
-                  --  its elements.  But we need to keep the elements.
-                  Args.all := (others => null);
-                  Args (Arg_Index) := Rsp_Arg;
-                  Free (Args);
-
-                  Args := New_Args;
-                  Arg_Index := Arg_Index + Exp_Length;
-               end;
-            exception
-               when Response_File.File_Does_Not_Exist =>
-                  Error ("cannot open response file '" & Rsp_File & "'");
+               Exp_Args := Read_Response_File (Rsp_File);
+               if Exp_Args = null then
                   raise Option_Error;
+               end if;
+
+               Exp_Length := Exp_Args'Length;
+               New_Args := new String_List (1 .. Args'Last + Exp_Length - 1);
+
+               --  Copy arguments from the response file.
+               New_Args (1 .. Arg_Index - 1) := Args (1 .. Arg_Index - 1);
+               New_Args (Arg_Index .. Arg_Index + Exp_Length - 1) :=
+                 Exp_Args.all;
+               New_Args (Arg_Index + Exp_Length .. New_Args'Last) :=
+                 Args (Arg_Index + 1 .. Args'Last);
+
+               --  Free array.  Note: Free deallocates both the array and
+               --  its elements.  But we need to keep the elements.
+               Args.all := (others => null);
+               Args (Arg_Index) := Rsp_Arg;
+               Free (Args);
+
+               Exp_Args.all := (others => null);
+               Free (Exp_Args);
+
+               Args := New_Args;
+               Arg_Index := Arg_Index + Exp_Length;
             end;
          else
             Arg_Index := Arg_Index + 1;
