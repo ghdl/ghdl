@@ -1417,7 +1417,9 @@ package body Vhdl.Sem_Types is
 
       if Get_Expr_Staticness (A_Range) = Locally then
          Rng := Eval_Range (A_Range);
-         if Get_Kind (Range_Type) in Iir_Kinds_Range_Type_Definition then
+         if Get_Kind (Range_Type) in Iir_Kinds_Range_Type_Definition
+           and then Get_Type_Staticness (Range_Type) = Locally
+         then
             Check_Range_Compatibility (Rng, Range_Type);
          end if;
       else
