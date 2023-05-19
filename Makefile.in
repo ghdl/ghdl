@@ -139,7 +139,7 @@ LIBVHDL_FLAGS_TO_PASS=\
 # Object files from grt for the synthesis.
 GRT_SYNTH_OBJS=grt-cstdio.o grt-cdynload.o
 
-all: Makefile all.$(backend) all.libghdl all.ghw
+all: Makefile default_paths.ads all.$(backend) all.libghdl all.ghw
 
 install: install.$(backend) install.vhdllib install.vpi install.libghdl install.ghw
 #       Generate std.standard package VHDL source
@@ -168,6 +168,9 @@ Makefile: $(srcdir)/Makefile.in ./config.status
 	./config.status
 
 setup.py: $(srcdir)/setup.py.in ./config.status
+	./config.status
+
+default_paths.ads: $(srcdir)/default_paths.ads.in ./config.status
 	./config.status
 
 scripts/gcc/Make-lang.in: $(srcdir)/scripts/gcc/Make-lang.in.in ./config.status
