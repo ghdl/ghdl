@@ -113,6 +113,8 @@ vhdl/default_paths.ads: Makefile
 	echo "     \"@INCDIR_SUFFIX@\";" >> tmp-dpaths.ads
 	echo "   Shared_Library_Extension : constant String :=">> tmp-dpaths.ads
 	echo "     \"$(VHDL_SOEXT)\";" >> tmp-dpaths.ads
+	echo "   Executable_Extension : constant String :=">> tmp-dpaths.ads
+	echo "     \"$(exeext)\";" >> tmp-dpaths.ads
 	echo "   Default_Pie : constant Boolean := False;" >> tmp-dpaths.ads
 	echo "   Backend_Version : constant String :=" >> tmp-dpaths.ads
 	echo "     \"@backend_version@\";" >> tmp-dpaths.ads

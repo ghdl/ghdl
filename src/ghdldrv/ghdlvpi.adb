@@ -14,10 +14,12 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ada.Command_Line; use Ada.Command_Line;
+
+with Types; use Types;
 with Simple_IO; use Simple_IO;
 with Options; use Options;
+with Filesystem; use Filesystem;
 
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal;
@@ -37,8 +39,8 @@ package body Ghdlvpi is
       --  Compute install path
       Ghdllocal.Set_Exec_Prefix_From_Program_Name;
 
-      return Ghdllocal.Exec_Prefix.all & Directory_Separator
-        & Default_Paths.IncDir_Suffix & Directory_Separator
+      return Ghdllocal.Exec_Prefix.all & Get_Directory_Separator
+        & Default_Paths.IncDir_Suffix & Get_Directory_Separator
         & "ghdl";
    end Get_Vpi_Include_Dir;
 
@@ -50,7 +52,8 @@ package body Ghdlvpi is
          Ghdllocal.Set_Exec_Prefix_From_Program_Name;
       end if;
 
-      return Ghdllocal.Exec_Prefix.all & Directory_Separator & LibDir_Suffix;
+      return Ghdllocal.Exec_Prefix.all
+        & Get_Directory_Separator & LibDir_Suffix;
    end Get_Vpi_Lib_Dir;
 
    --  Return the lib directory, but unixify the path (for a unix shell in
@@ -60,9 +63,9 @@ package body Ghdlvpi is
       return Convert_Path_To_Unix (Get_Vpi_Lib_Dir);
    end Get_Vpi_Lib_Dir_Unix;
 
-   function Get_Vpi_Cflags return Argument_List
+   function Get_Vpi_Cflags return String_Acc_Array
    is
-      Extra_Args : Argument_List (1 .. 2);
+      Extra_Args : String_Acc_Array (1 .. 2);
       Nbr : Natural;
    begin
       Extra_Args (1) := new String'("-I" & Get_Vpi_Include_Dir);
@@ -76,9 +79,9 @@ package body Ghdlvpi is
       return Extra_Args (1 .. Nbr);
    end Get_Vpi_Cflags;
 
-   function Get_Vpi_Ldflags return Argument_List
+   function Get_Vpi_Ldflags return String_Acc_Array
    is
-      Extra_Args : Argument_List (1 .. 4);
+      Extra_Args : String_Acc_Array (1 .. 4);
       Nbr : Natural;
    begin
       Extra_Args (1) := new String'("--shared");
@@ -97,7 +100,7 @@ package body Ghdlvpi is
    end Get_Vpi_Ldflags;
 
    --  Display ARGS on a single line.
-   procedure Disp (Args : Argument_List) is
+   procedure Disp (Args : String_Acc_Array) is
    begin
       for I in Args'Range loop
          if I /= Args'First then
@@ -107,12 +110,14 @@ package body Ghdlvpi is
       end loop;
    end Disp;
 
-   procedure Spawn_Compile (User_Args : Argument_List;
-                            Extra_Args : Argument_List;
-                            Verbose : Boolean)
+   procedure Spawn_Compile (User_Args : String_Acc_Array;
+                            Extra_Args : String_Acc_Array;
+                            Verbose : Boolean;
+                            Success : out Boolean)
    is
-      Cargs : Argument_List (1 .. User_Args'Length + Extra_Args'Length);
-      Program_Name : String_Access;
+      Cargs : String_Acc_Array (1 .. User_Args'Length + Extra_Args'Length);
+      Program_Name : String_Acc;
+      Program_Pathname : String_Acc;
       Nbr_Args : Natural;
       Status : Integer;
    begin
@@ -121,15 +126,23 @@ package body Ghdlvpi is
       --  Extract compiler name.
       if User_Args'First > User_Args'Last then
          Error ("missing compiler name");
+         Success := False;
+         return;
       else
          Program_Name := User_Args (User_Args'First);
          if Ghdllocal.Is_Basename (Program_Name.all) then
             --  For a command name (without path component), search on the
             --  path.
-            Program_Name := Locate_Exec_On_Path (Program_Name.all);
+            Program_Pathname := Filesystem.Locate_Executable_On_Path
+              (Program_Name.all);
          else
             --  For a relative or absolute path, use the path directly.
-            null;
+            Program_Pathname := Program_Name;
+         end if;
+         if Program_Pathname = null then
+            Error ("cannot find '" & Program_Name.all & "' on path");
+            Success := False;
+            return;
          end if;
       end if;
 
@@ -147,7 +160,7 @@ package body Ghdlvpi is
 
       --  Display command (if verbose)
       if Verbose then
-         Put (Program_Name.all);
+         Put (Program_Pathname.all);
          for I in Cargs'First .. Nbr_Args loop
             Put (' ');
             Put (Cargs (I).all);
@@ -156,19 +169,22 @@ package body Ghdlvpi is
       end if;
 
       --  Execute command
-      Status := Spawn (Program_Name.all, Cargs (Cargs'First .. Nbr_Args));
+      Status := Filesystem.Spawn
+        (Program_Pathname.all, Cargs (Cargs'First .. Nbr_Args));
       Set_Exit_Status (Exit_Status (Status));
+      Success := True;
    end Spawn_Compile;
 
    --  A command that spawn with extra_args
-   type Extra_Args_Func is access function return Argument_List;
+   type Extra_Args_Func is access function return String_Acc_Array;
    type Command_Spawn_Type is new Command_Str_Type with record
       Flag_Verbose : Boolean := False;
       Extra_Args : Extra_Args_Func;
    end record;
 
    procedure Perform_Action (Cmd : in out Command_Spawn_Type;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
    procedure Decode_Option (Cmd : in out Command_Spawn_Type;
                             Option : String;
                             Arg : String;
@@ -191,9 +207,10 @@ package body Ghdlvpi is
    end Decode_Option;
 
    procedure Perform_Action (Cmd : in out Command_Spawn_Type;
-                             Args : Argument_List) is
+                             Args : String_Acc_Array;
+                             Success : out Boolean) is
    begin
-      Spawn_Compile (Args, Cmd.Extra_Args.all, Cmd.Flag_Verbose);
+      Spawn_Compile (Args, Cmd.Extra_Args.all, Cmd.Flag_Verbose, Success);
    end Perform_Action;
 
 
@@ -202,14 +219,17 @@ package body Ghdlvpi is
       Flags : Extra_Args_Func;
    end record;
    procedure Perform_Action (Cmd : in out Command_Vpi_Flags;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    procedure Perform_Action (Cmd : in out Command_Vpi_Flags;
-                             Args : Argument_List)
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       pragma Unreferenced (Args);
    begin
       Disp (Cmd.Flags.all);
+      Success := True;
    end Perform_Action;
 
    procedure Register_Commands is

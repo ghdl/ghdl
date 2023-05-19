@@ -812,18 +812,6 @@ Acts like the clean command but removes the library too.
 Note that after removing a design library, the files are not known anymore by GHDL.
 
 
-.. index:: cmd library copy
-
-.. option:: --copy <--work=name [options...]>
-
-Make a local copy of an existing library.
-This is very useful if you want to add units to the ``ieee`` library:
-
-.. code-block:: shell
-
-  ghdl --copy --work=ieee --ieee=synopsys
-  ghdl -a --work=ieee numeric_unsigned.vhd
-
 .. _VPI_build_commands:
 
 VPI/VHPI build commands

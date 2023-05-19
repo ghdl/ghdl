@@ -16,6 +16,7 @@
 with Interfaces;
 with System;
 with Ada.Unchecked_Conversion;
+with Ada.Unchecked_Deallocation;
 
 package Types is
    pragma Preelaborate (Types);
@@ -56,6 +57,8 @@ package Types is
    type String_Acc is access String;
    type String_Cst is access constant String;
    type String_Acc_Array is array (Natural range <>) of String_Acc;
+
+   procedure Free is new Ada.Unchecked_Deallocation (String, String_Acc);
 
    --  Fat strings, for compatibility with C.
    type Thin_String_Ptr is access String (Positive);

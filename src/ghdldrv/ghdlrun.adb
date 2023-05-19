@@ -17,11 +17,11 @@ with System; use System;
 
 with Ada.Unchecked_Conversion;
 with Ada.Command_Line;
-with GNAT.OS_Lib; use GNAT.OS_Lib;
 
 with Interfaces;
 with Interfaces.C;
 
+with Types; use Types;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Simple_IO; use Simple_IO;
@@ -103,7 +103,7 @@ package body Ghdlrun is
    end Compile_Init;
 
    procedure Compile_Elab
-     (Cmd_Name : String; Args : Argument_List; Opt_Arg : out Natural)
+     (Cmd_Name : String; Args : String_Acc_Array; Opt_Arg : out Natural)
    is
       Config : Iir;
    begin
@@ -151,7 +151,7 @@ package body Ghdlrun is
 
    --  Set options.
    --  This is a little bit over-kill: from C to Ada and then again to C...
-   procedure Set_Run_Options (Args : Argument_List)
+   procedure Set_Run_Options (Args : String_Acc_Array)
    is
       use Interfaces.C;
       use Grt.Options;
@@ -268,7 +268,8 @@ package body Ghdlrun is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Run_Help) return String;
    procedure Perform_Action (Cmd : in out Command_Run_Help;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Run_Help; Name : String)
                            return Boolean
@@ -289,12 +290,14 @@ package body Ghdlrun is
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Run_Help;
-                             Args : Argument_List)
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       pragma Unreferenced (Cmd);
    begin
       if Args'Length /= 0 then
          Error ("warning: command 'run-help' does not accept any argument");
+         Success := False;
       end if;
       Put_Line ("These options can only be placed at [RUNOPTS]");
       --  Register modules, since they add commands.
@@ -302,6 +305,7 @@ package body Ghdlrun is
       --  Bypass usual help header.
       Grt.Options.Argc := 0;
       Grt.Options.Help;
+      Success := True;
    end Perform_Action;
 
    procedure Register_Commands

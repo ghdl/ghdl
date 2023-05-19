@@ -16,10 +16,10 @@
 with Ada.Characters.Latin_1;
 with Ada.Text_IO; use Ada.Text_IO;
 with GNAT.Directory_Operations;
-with GNAT.OS_Lib; use GNAT.OS_Lib;
 
 with Tables;
 with Types; use Types;
+with Filesystem; use Filesystem;
 with Flags;
 with Name_Table; use Name_Table;
 with Files_Map;
@@ -567,7 +567,7 @@ package body Ghdlprint is
       --  Search for the extension.
       Ext_Pos := 0;
       for I in reverse Name'Range loop
-         exit when Name (I) = Directory_Separator;
+         exit when Name (I) = Get_Directory_Separator;
          if Name (I) = '.' then
             Ext_Pos := I - 1;
             exit;
@@ -586,7 +586,8 @@ package body Ghdlprint is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Chop) return String;
    procedure Perform_Action (Cmd : in out Command_Chop;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Chop; Name : String)
                            return Boolean
@@ -606,7 +607,9 @@ package body Ghdlprint is
         & ASCII.LF & "  alias: --chop";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Chop; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Chop;
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       pragma Unreferenced (Cmd);
       use Ada.Characters.Latin_1;
@@ -722,11 +725,14 @@ package body Ghdlprint is
       Lib : Iir;
       Len : Natural;
    begin
+      --  Default return status.
+      Success := False;
+
       Flags.Bootstrap := True;
       Flags.Flag_Elocations := True;
       --  Load word library.
       if not Libraries.Load_Std_Library then
-         raise Option_Error;
+         return;
       end if;
       Libraries.Load_Work_Library;
 
@@ -736,7 +742,7 @@ package body Ghdlprint is
          Id := Get_Identifier (Args (I).all);
          Design_File := Load_File_Name (Id);
          if Design_File = Null_Iir then
-            raise Compile_Error;
+            return;
          end if;
          Files (I) := Design_File;
          Unit := Get_First_Design_Unit (Design_File);
@@ -750,7 +756,7 @@ package body Ghdlprint is
                Filename (Len + 1) := Ghdllocal.Nul;
                if Is_Regular_File (Filename) then
                   Error ("file '" & Filename (1 .. Len) & "' already exists");
-                  raise Compile_Error;
+                  return;
                end if;
                Put (Filename (1 .. Len));
                Put ("  (for ");
@@ -780,7 +786,7 @@ package body Ghdlprint is
          begin
             --  A design_file must have at least one design unit.
             if Unit = Null_Iir then
-               raise Compile_Error;
+               return;
             end if;
 
             Location_To_File_Pos
@@ -810,7 +816,7 @@ package body Ghdlprint is
                Location_To_File_Pos
                  (Vhdl.Elocations.Get_End_Location (Lib), File_Entry, Lend);
                if Lend < First then
-                  raise Internal_Error;
+                  return;
                end if;
 
                --  Find the ';'.
@@ -855,23 +861,22 @@ package body Ghdlprint is
                --  FIXME: set extension.
                Len := Build_File_Name_Length (Lib);
                declare
-                  Filename : String (1 .. Len + 1);
+                  Filename : String (1 .. Len);
                   Fd : File_Descriptor;
 
-                  Wlen : Integer;
+                  Wlen : Long_Integer;
                begin
                   Build_File_Name (Lib, Filename);
-                  Filename (Len + 1) := Character'Val (0);
-                  Fd := Create_File (Filename, Binary);
-                  if Fd = Invalid_FD then
-                     Error
-                       ("cannot create file '" & Filename (1 .. Len) & "'");
-                     raise Compile_Error;
+                  Open_Write (Fd, Filename);
+                  if Is_Error (Fd) then
+                     Error ("cannot create file '" & Filename & "'");
+                     return;
                   end if;
-                  Wlen := Integer (Lend - First);
-                  if Write (Fd, Buffer (First)'Address, Wlen) /= Wlen then
-                     Error ("cannot write to '" & Filename (1 .. Len) & "'");
-                     raise Compile_Error;
+                  Wlen := Long_Integer (Lend - First);
+                  Write (Fd, Buffer (First)'Address, Wlen);
+                  if Is_Error (Fd) then
+                     Error ("cannot write to '" & Filename & "'");
+                     return;
                   end if;
                   Close (Fd);
                end;
@@ -881,6 +886,8 @@ package body Ghdlprint is
             end loop;
          end;
       end loop;
+
+      Success := True;
    end Perform_Action;
 
    --  Command --lines.
@@ -889,7 +896,8 @@ package body Ghdlprint is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Lines) return String;
    procedure Perform_Action (Cmd : in out Command_Lines;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Lines; Name : String)
                            return Boolean
@@ -909,7 +917,9 @@ package body Ghdlprint is
         & ASCII.LF & "  alias: --lines";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Lines; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Lines;
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       pragma Unreferenced (Cmd);
       use Vhdl.Scanner;
@@ -930,6 +940,8 @@ package body Ghdlprint is
       Log : Natural;
       Str : String (1 .. 10);
    begin
+      Success := False;
+
       Local_Id := Get_Identifier ("");
       for I in Args'Range loop
          --  Load the file.
@@ -937,7 +949,7 @@ package body Ghdlprint is
          Fe := Files_Map.Read_Source_File (Local_Id, Id);
          if Fe = No_Source_File_Entry then
             Error ("cannot open file " & Args (I).all);
-            raise Compile_Error;
+            return;
          end if;
          Set_File (Fe);
 
@@ -1003,6 +1015,8 @@ package body Ghdlprint is
             New_Line;
          end loop;
       end loop;
+
+      Success := True;
    end Perform_Action;
 
    --  Command Reprint.
@@ -1033,7 +1047,8 @@ package body Ghdlprint is
                             Arg : String;
                             Res : out Option_State);
    procedure Perform_Action (Cmd : in out Command_Reprint;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Reprint; Name : String)
                            return Boolean
@@ -1100,7 +1115,8 @@ package body Ghdlprint is
    end Decode_Option;
 
    procedure Perform_Action (Cmd : in out Command_Reprint;
-                             Args : Argument_List)
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       Design_File : Iir_Design_File;
 
@@ -1109,6 +1125,8 @@ package body Ghdlprint is
 
       Id : Name_Id;
    begin
+      Success := False;
+
       if Cmd.Flag_Sem then
          -- Libraries are required for semantic analysis.
          if not Setup_Libraries (True) then
@@ -1134,7 +1152,7 @@ package body Ghdlprint is
          if Design_File = Null_Iir
            or else (Errorout.Nbr_Errors > 0 and not Cmd.Flag_Force)
          then
-            raise Errorout.Compilation_Error;
+            return;
          end if;
 
          Unit := Get_First_Design_Unit (Design_File);
@@ -1167,7 +1185,7 @@ package body Ghdlprint is
          end loop;
 
          if Errorout.Nbr_Errors > 0 then
-            raise Errorout.Compilation_Error;
+            return;
          end if;
 
          if Cmd.Flag_Format then
@@ -1177,6 +1195,8 @@ package body Ghdlprint is
                                     Cmd.First_Line, Cmd.Last_Line);
          end if;
       end loop;
+
+      Success := True;
    end Perform_Action;
 
    --  Command Format
@@ -1189,7 +1209,8 @@ package body Ghdlprint is
                             Arg : String;
                             Res : out Option_State);
    procedure Perform_Action (Cmd : in out Command_Format;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Format; Name : String)
                            return Boolean
@@ -1231,10 +1252,11 @@ package body Ghdlprint is
    end Decode_Option;
 
    procedure Perform_Action (Cmd : in out Command_Format;
-                             Args : Argument_List) is
+                             Args : String_Acc_Array;
+                             Success : out Boolean) is
    begin
       Cmd.Flag_Format := True;
-      Perform_Action (Command_Reprint (Cmd), Args);
+      Perform_Action (Command_Reprint (Cmd), Args, Success);
    end Perform_Action;
 
    --  Command compare tokens.
@@ -1243,7 +1265,8 @@ package body Ghdlprint is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Compare_Tokens) return String;
    procedure Perform_Action (Cmd : in out Command_Compare_Tokens;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Compare_Tokens; Name : String)
                            return Boolean
@@ -1264,7 +1287,8 @@ package body Ghdlprint is
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Compare_Tokens;
-                             Args : Argument_List)
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       pragma Unreferenced (Cmd);
       use Vhdl.Tokens;
@@ -1281,9 +1305,11 @@ package body Ghdlprint is
       Local_Id : Name_Id;
       Tok_Idx : Natural;
    begin
+      Success := False;
+
       if Args'Length < 1 then
          Error ("missing ref file");
-         raise Compile_Error;
+         return;
       end if;
 
       Local_Id := Get_Identifier ("");
@@ -1294,7 +1320,7 @@ package body Ghdlprint is
          Fe := Files_Map.Read_Source_File (Local_Id, Id);
          if Fe = No_Source_File_Entry then
             Error ("cannot open file " & Args (I).all);
-            raise Compile_Error;
+            return;
          end if;
          Set_File (Fe);
 
@@ -1329,9 +1355,7 @@ package body Ghdlprint is
 
       Ref_Tokens.Free;
 
-      if Nbr_Errors /= 0 then
-         raise Compilation_Error;
-      end if;
+      Success := Nbr_Errors = 0;
    end Perform_Action;
 
    --  Command html.
@@ -1373,7 +1397,8 @@ package body Ghdlprint is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_PP_Html) return String;
    procedure Perform_Action (Cmd : in out Command_PP_Html;
-                             Files : Argument_List);
+                             Files : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_PP_Html; Name : String)
                            return Boolean
@@ -1394,7 +1419,8 @@ package body Ghdlprint is
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_PP_Html;
-                             Files : Argument_List)
+                             Files : String_Acc_Array;
+                             Success : out Boolean)
    is
       pragma Unreferenced (Cmd);
 
@@ -1402,6 +1428,8 @@ package body Ghdlprint is
       Fe : Source_File_Entry;
       Local_Id : Name_Id;
    begin
+      Success := False;
+
       Local_Id := Get_Identifier ("");
       Put_Html_Header;
       Put_Line ("  <title>");
@@ -1419,7 +1447,7 @@ package body Ghdlprint is
          Fe := Files_Map.Read_Source_File (Local_Id, Id);
          if Fe = No_Source_File_Entry then
             Error ("cannot open file " & Files (I).all);
-            raise Compile_Error;
+            return;
          end if;
          Put ("  <h1>");
          Put (Files (I).all);
@@ -1429,11 +1457,13 @@ package body Ghdlprint is
          PP_Html_File (Fe);
       end loop;
       Put_Html_Foot;
+
+      Success := True;
    end Perform_Action;
 
    --  Command --xref-html.
    type Command_Xref_Html is new Command_Html with record
-      Output_Dir : String_Access := null;
+      Output_Dir : String_Acc := null;
       Check_Missing : Boolean := False;
    end record;
 
@@ -1447,7 +1477,8 @@ package body Ghdlprint is
    procedure Disp_Long_Help (Cmd : Command_Xref_Html);
 
    procedure Perform_Action (Cmd : in out Command_Xref_Html;
-                             Files_Name : Argument_List);
+                             Files_Name : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Xref_Html; Name : String)
                            return Boolean
@@ -1504,49 +1535,100 @@ package body Ghdlprint is
    begin
       Unit := Get_First_Design_Unit (File);
       while Unit /= Null_Iir loop
-         case Get_Date_State (Unit) is
-            when Date_Extern
-              | Date_Disk =>
-               raise Internal_Error;
-            when Date_Parse =>
-               Vhdl.Sem_Lib.Load_Design_Unit (Unit, Get_Location (Unit));
-               if Errorout.Nbr_Errors /= 0 then
-                  raise Compilation_Error;
-               end if;
-            when Date_Analyze =>
-               null;
-         end case;
+         if Get_Date_State (Unit) /= Date_Analyze then
+            Vhdl.Sem_Lib.Load_Design_Unit (Unit, Get_Location (Unit));
+            if Errorout.Nbr_Errors /= 0 then
+               raise Compilation_Error;
+            end if;
+         end if;
          Unit := Get_Chain (Unit);
       end loop;
    end Analyze_Design_File_Units;
 
-   procedure Perform_Action
-     (Cmd : in out Command_Xref_Html; Files_Name : Argument_List)
+   type File_Data is record
+      Fe : Source_File_Entry;
+      Design_File : Iir;
+      --  Only for xref-html.
+      Output_Filename : String_Acc;
+   end record;
+   type File_Data_Array is array (Natural range <>) of File_Data;
+
+   procedure Xrefs_Parse (Files_Name : String_Acc_Array;
+                          Files : out File_Data_Array;
+                          Success : out Boolean)
    is
-      use GNAT.Directory_Operations;
+      use Files_Map;
 
       Id : Name_Id;
       File : Source_File_Entry;
-
-      type File_Data is record
-         Fe : Source_File_Entry;
-         Design_File : Iir;
-         Output : String_Acc;
-      end record;
-      type File_Data_Array is array (Files_Name'Range) of File_Data;
-
-      Output_Dir : String_Access;
-
-      Files : File_Data_Array;
-      Output : File_Type;
    begin
-      Vhdl.Xrefs.Init;
-      Flags.Flag_Xref := True;
+      Success := False;
 
       --  Load work library.
       if not Setup_Libraries (True) then
          return;
       end if;
+
+      Vhdl.Xrefs.Init;
+      Flags.Flag_Xref := True;
+
+      Flags.Flag_Elaborate_With_Outdated := True;
+
+      --  Parse all files.
+      for I in Files'Range loop
+         Id := Get_Identifier (Files_Name (I).all);
+         File := Read_Source_File (Libraries.Local_Directory, Id);
+         if File = No_Source_File_Entry then
+            Error ("cannot open " & Image (Id));
+            return;
+         end if;
+         Files (I).Fe := File;
+         Files (I).Design_File := Load_File (File);
+         if Files (I).Design_File = Null_Iir then
+            return;
+         end if;
+      end loop;
+
+      --  Analyze all files.
+      if Files'Length > 1 then
+         --  Put units in library.
+         for I in Files'Range loop
+            Libraries.Add_Design_File_Into_Library (Files (I).Design_File);
+         end loop;
+         for I in Files'Range loop
+            Analyze_Design_File_Units (Files (I).Design_File);
+         end loop;
+      else
+         --  Special case to handle redefinition of units
+         declare
+            Unit, Next_Unit : Iir_Design_Unit;
+         begin
+            Unit := Get_First_Design_Unit (Files (Files'First).Design_File);
+            while Unit /= Null_Iir loop
+               Next_Unit := Get_Chain (Unit);
+               Finish_Compilation (Unit, True);
+               Set_Chain (Unit, Null_Iir);
+               Libraries.Add_Design_Unit_Into_Library (Unit);
+               Unit := Next_Unit;
+            end loop;
+         end;
+      end if;
+
+      Success := True;
+   end Xrefs_Parse;
+
+   procedure Perform_Action (Cmd : in out Command_Xref_Html;
+                             Files_Name : String_Acc_Array;
+                             Success : out Boolean)
+   is
+      use GNAT.Directory_Operations;
+
+      Output_Dir : String_Acc;
+
+      Files : File_Data_Array (Files_Name'Range);
+      Output : File_Type;
+   begin
+      Success := False;
 
       Output_Dir := Cmd.Output_Dir;
       if Output_Dir = null then
@@ -1568,33 +1650,10 @@ package body Ghdlprint is
          end;
       end if;
 
-      --  Parse all files.
-      for I in Files'Range loop
-         Id := Get_Identifier (Files_Name (I).all);
-         File := Files_Map.Read_Source_File (Libraries.Local_Directory, Id);
-         if File = No_Source_File_Entry then
-            Error ("cannot open " & Image (Id));
-            return;
-         end if;
-         Files (I).Fe := File;
-         Files (I).Design_File := Load_File (File);
-         if Files (I).Design_File = Null_Iir then
-            return;
-         end if;
-         Files (I).Output := Create_Output_Filename
-           (Base_Name (Files_Name (I).all), I);
-         if Is_Regular_File (Files (I).Output.all) then
-            --  Prevent overwrite.
-            null;
-         end if;
-         --  Put units in library.
-         Libraries.Add_Design_File_Into_Library (Files (I).Design_File);
-      end loop;
-
-      --  Analyze all files.
-      for I in Files'Range loop
-         Analyze_Design_File_Units (Files (I).Design_File);
-      end loop;
+      Xrefs_Parse (Files_Name, Files, Success);
+      if not Success then
+         return;
+      end if;
 
       Vhdl.Xrefs.Sort_By_Location;
 
@@ -1645,14 +1704,17 @@ package body Ghdlprint is
       Filexref_Info.all := (others => (Output => null,
                                        Referenced => False));
       for I in Files'Range loop
-         Filexref_Info (Files (I).Fe).Output := Files (I).Output;
+         Filexref_Info (Files (I).Fe).Output := Files (I).Output_Filename;
       end loop;
 
       for I in Files'Range loop
+         Files (I).Output_Filename := Create_Output_Filename
+           (Base_Name (Files_Name (I).all), I);
+
          if Output_Dir /= null then
             Create (Output, Out_File,
-                    Output_Dir.all & Directory_Separator
-                    & Files (I).Output.all);
+                    Output_Dir.all & Get_Directory_Separator
+                    & Files (I).Output_Filename.all);
 
             Set_Output (Output);
          end if;
@@ -1681,7 +1743,7 @@ package body Ghdlprint is
       --  Create indexes.
       if Output_Dir /= null then
          Create (Output, Out_File,
-                 Output_Dir.all & Directory_Separator & "index.html");
+                 Output_Dir.all & Get_Directory_Separator & "index.html");
          Set_Output (Output);
 
          Put_Html_Header;
@@ -1694,7 +1756,7 @@ package body Ghdlprint is
          for I in Files'Range loop
             Put ("<li>");
             Put ("<a href=""");
-            Put (Files (I).Output.all);
+            Put (Files (I).Output_Filename.all);
             Put (""">");
             Put_Html (Files_Name (I).all);
             Put ("</a>");
@@ -1731,7 +1793,7 @@ package body Ghdlprint is
       then
          declare
             Css_Filename : constant String :=
-              Output_Dir.all & Directory_Separator & "ghdl.css";
+              Output_Dir.all & Get_Directory_Separator & "ghdl.css";
          begin
             if not Is_Regular_File (Css_Filename & Nul) then
                Create (Output, Out_File, Css_Filename);
@@ -1744,8 +1806,11 @@ package body Ghdlprint is
 
       if Missing_Xref and Cmd.Check_Missing then
          Error ("missing xrefs");
-         raise Compile_Error;
+         Success := False;
+         return;
       end if;
+
+      Success := True;
    exception
       when Compilation_Error =>
          Error ("xrefs has failed due to compilation error");
@@ -1760,7 +1825,8 @@ package body Ghdlprint is
    function Get_Short_Help (Cmd : Command_Xref) return String;
 
    procedure Perform_Action (Cmd : in out Command_Xref;
-                             Files_Name : Argument_List);
+                             Files_Name : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Xref; Name : String)
                            return Boolean
@@ -1780,54 +1846,20 @@ package body Ghdlprint is
         & ASCII.LF & "  alias: --xref";
    end Get_Short_Help;
 
-   procedure Perform_Action
-     (Cmd : in out Command_Xref; Files_Name : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Xref;
+                             Files_Name : String_Acc_Array;
+                             Success : out Boolean)
    is
       pragma Unreferenced (Cmd);
 
       use Files_Map;
 
-      Id : Name_Id;
-      File : Source_File_Entry;
-
-      type File_Data is record
-         Fe : Source_File_Entry;
-         Design_File : Iir;
-      end record;
-      type File_Data_Array is array (Files_Name'Range) of File_Data;
-
-      Files : File_Data_Array;
+      Files : File_Data_Array (Files_Name'Range);
    begin
-      --  Load work library.
-      if not Setup_Libraries (True) then
+      Xrefs_Parse (Files_Name, Files, Success);
+      if not Success then
          return;
       end if;
-
-      Vhdl.Xrefs.Init;
-      Flags.Flag_Xref := True;
-
-      --  Parse all files.
-      for I in Files'Range loop
-         Id := Get_Identifier (Files_Name (I).all);
-         File := Read_Source_File (Libraries.Local_Directory, Id);
-         if File = No_Source_File_Entry then
-            Error ("cannot open " & Image (Id));
-            return;
-         end if;
-         Files (I).Fe := File;
-         Files (I).Design_File := Load_File (File);
-         if Files (I).Design_File = Null_Iir then
-            return;
-         end if;
-         --  Put units in library.
-         --  Note: design_units stay while design_file get empty.
-         Libraries.Add_Design_File_Into_Library (Files (I).Design_File);
-      end loop;
-
-      --  Analyze all files.
-      for I in Files'Range loop
-         Analyze_Design_File_Units (Files (I).Design_File);
-      end loop;
 
       Vhdl.Xrefs.Fix_End_Xrefs;
       Vhdl.Xrefs.Sort_By_Node_Location;
@@ -1984,9 +2016,12 @@ package body Ghdlprint is
             New_Line;
          end;
       end loop;
+
+      Success := True;
    exception
       when Compilation_Error =>
          Error ("xrefs has failed due to compilation error");
+         Success := False;
    end Perform_Action;
 
    procedure Register_Commands is

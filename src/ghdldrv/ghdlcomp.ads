@@ -13,7 +13,8 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
-with GNAT.OS_Lib; use GNAT.OS_Lib;
+
+with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Ghdlcomp is
@@ -28,12 +29,11 @@ package Ghdlcomp is
    --  OPT_ARG is the index of the first argument from ARGS to be used as
    --   a run option.
    type Compile_Elab_Acc is access procedure
-     (Cmd_Name : String; Args : Argument_List; Opt_Arg : out Natural);
+     (Cmd_Name : String; Args : String_Acc_Array; Opt_Arg : out Natural);
 
    --  Use ARGS as run options.
    --  Should do all the work.
-   type Set_Run_Options_Acc is access
-     procedure (Args : Argument_List);
+   type Set_Run_Options_Acc is access procedure (Args : String_Acc_Array);
 
    --  Run the simulation.
    --  All the parameters were set through calling Compile_Elab and
@@ -91,7 +91,7 @@ package Ghdlcomp is
    --  * Check top entity
    --  If ALLOW_UNDEF_GENERIC is False, the generics must have a default value.
    procedure Common_Compile_Elab (Cmd_Name : String;
-                                  Args : Argument_List;
+                                  Args : String_Acc_Array;
                                   Allow_Undef_Generic : Boolean;
                                   Opt_Arg : out Natural;
                                   Config : out Iir);
@@ -107,7 +107,7 @@ package Ghdlcomp is
    --  Load, parse and analyze FILE.
    function Compile_Analyze_File (File : String) return Iir;
 
-   procedure Compile_Elaborate (Unit_Name : String_Access);
+   procedure Compile_Elaborate (Unit_Name : String_Acc);
    procedure Compile_Run;
 
    --  Load and parse file (without analysis).  Put units in the work library.

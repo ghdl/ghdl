@@ -14,7 +14,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ghdllocal;
 with Ghdlcomp;
 with Options; use Options;
@@ -58,13 +57,13 @@ package body Libghdl is
    end Compile_Init;
 
    procedure Compile_Elab
-     (Cmd_Name : String; Args : Argument_List; Opt_Arg : out Natural) is
+     (Cmd_Name : String; Args : String_Acc_Array; Opt_Arg : out Natural) is
    begin
       null;
    end Compile_Elab;
 
    --  Set options.
-   procedure Set_Run_Options (Args : Argument_List) is
+   procedure Set_Run_Options (Args : String_Acc_Array) is
    begin
       null;
    end Set_Run_Options;

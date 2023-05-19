@@ -14,7 +14,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with GNAT.OS_Lib; use GNAT.OS_Lib;
+with Types; use Types;
+with Filesystem; use Filesystem;
 
 with Ghdllocal; use Ghdllocal;
 with Ghdlmain; use Ghdlmain;
@@ -43,9 +44,9 @@ package body Ghdllib is
          Ghdllocal.Set_Exec_Prefix_From_Program_Name;
       end if;
 
-      return Ghdllocal.Exec_Prefix.all & Directory_Separator
+      return Ghdllocal.Exec_Prefix.all & Get_Directory_Separator
         & Default_Paths.LibDir_Suffix
-        & Directory_Separator & Get_Libghdl_Name;
+        & Get_Directory_Separator & Get_Libghdl_Name;
    end Get_Libghdl_Path;
 
    function Get_Libghdl_Include_Dir return String is
@@ -53,7 +54,7 @@ package body Ghdllib is
       --  Compute install path
       Ghdllocal.Set_Exec_Prefix_From_Program_Name;
 
-      return Ghdllocal.Exec_Prefix.all & Directory_Separator
+      return Ghdllocal.Exec_Prefix.all & Get_Directory_Separator
         & Default_Paths.IncDir_Suffix;
    end Get_Libghdl_Include_Dir;
 

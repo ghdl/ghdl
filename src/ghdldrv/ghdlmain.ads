@@ -13,7 +13,8 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
-with GNAT.OS_Lib; use GNAT.OS_Lib;
+with Types; use Types;
+
 with Options; use Options;
 
 package Ghdlmain is
@@ -47,13 +48,14 @@ package Ghdlmain is
    procedure Disp_Long_Help (Cmd : Command_Type);
 
    --  Perform the action.
-   procedure Perform_Action (Cmd : in out Command_Type; Args : Argument_List)
-     is abstract;
+   procedure Perform_Action (Cmd : in out Command_Type;
+                             Args : String_Acc_Array;
+                             Success : out Boolean) is abstract;
 
    --  A command that accepts command and help strings.
    type Command_Str_Type is abstract new Command_Type with record
-      Cmd_Str : String_Access;
-      Help_Str : String_Access;
+      Cmd_Str : String_Acc;
+      Help_Str : String_Acc;
    end record;
    function Decode_Command (Cmd : Command_Str_Type; Name : String)
                            return Boolean;
@@ -65,7 +67,8 @@ package Ghdlmain is
       Disp : String_Func;
    end record;
    procedure Perform_Action (Cmd : in out Command_Str_Disp;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    --  Register a command.
    procedure Register_Command (Cmd : Command_Acc);
@@ -86,7 +89,7 @@ package Ghdlmain is
    --  Decode options from ARGS for command CMD after initializing CMD.
    --  Return the index of the first non-option argument.
    procedure Decode_Command_Options (Cmd : in out Command_Type'Class;
-                                     Args : Argument_List;
+                                     Args : String_Acc_Array;
                                      First_Arg : out Natural);
 
    procedure Main;

@@ -14,7 +14,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Types; use Types;
 with Options; use Options;
 with Ghdlmain; use Ghdlmain;
@@ -43,16 +42,16 @@ package Ghdllocal is
    procedure Disp_Long_Help (Cmd : Command_Lib);
 
    --  Value of --PREFIX
-   Switch_Prefix_Path : String_Access := null;
+   Switch_Prefix_Path : String_Acc := null;
 
    --  getenv ("GHDL_PREFIX").  Set by Setup_Libraries.
-   Prefix_Env : String_Access := null;
+   Prefix_Env : String_Acc := null;
 
    --  Installation prefix (deduced from executable path and without bin/).
-   Exec_Prefix : String_Access;
+   Exec_Prefix : String_Acc;
 
    --  Path prefix for libraries.
-   Lib_Prefix_Path : String_Access := null;
+   Lib_Prefix_Path : String_Acc := null;
 
    --  Set with -v option.
    Flag_Verbose : Boolean := False;
@@ -62,6 +61,9 @@ package Ghdllocal is
 
    --  Suffix for asm files.
    Asm_Suffix : constant String := ".s";
+
+   --  Suffix for object files.  Also .o on windows.
+   Obj_Suffix : constant String := ".o";
 
    --  Suffix for llvm byte-code files.
    Llvm_Suffix : constant String := ".bc";
@@ -95,7 +97,7 @@ package Ghdllocal is
    --  If IN_WORK is false, the result is the concatenation of FILE and SUFFIX.
    function Append_Suffix
      (File : String; Suffix : String; In_Work : Boolean := True)
-     return String_Access;
+     return String_Acc;
 
    --  Return TRUE is UNIT can be at the apex of a design hierarchy.
    function Is_Top_Entity (Unit : Iir) return Boolean;
@@ -123,7 +125,7 @@ package Ghdllocal is
    --  Setup library, analyze FILES, and if SAVE_LIBRARY is set save the
    --  work library only
    procedure Analyze_Files
-     (Files : Argument_List; Save_Library : Boolean; Error : out Boolean);
+     (Files : String_Acc_Array; Save_Library : Boolean; Error : out Boolean);
 
    --  Load and parse all libraries and files, starting from the work library.
    --  The work library must already be loaded.
@@ -152,7 +154,7 @@ package Ghdllocal is
    --   otherwise it must be present.
    procedure Extract_Elab_Unit (Cmd_Name : String;
                                 Auto : Boolean;
-                                Args : Argument_List;
+                                Args : String_Acc_Array;
                                 Next_Arg : out Natural;
                                 Lib_Id : out Name_Id;
                                 Prim_Id : out Name_Id;
@@ -168,7 +170,7 @@ package Ghdllocal is
 
    --  Emit a warning if an argument is not a filename (ie looks like an
    --  option).
-   procedure Expect_Filenames (Args : Argument_List);
+   procedure Expect_Filenames (Args : String_Acc_Array);
 
    --  Used by --gen-makefile
    procedure Gen_Makefile_Disp_Header;

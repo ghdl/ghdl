@@ -19,6 +19,7 @@ with Ada.Directories;
 with GNAT.Directory_Operations;
 
 with Simple_IO; use Simple_IO;
+with Filesystem; use Filesystem;
 with Flags;
 with Name_Table;
 with Std_Names;
@@ -183,7 +184,7 @@ package body Ghdllocal is
 
    function Is_Directory_Separator (C : Character) return Boolean is
    begin
-      return C = '/' or else C = Directory_Separator;
+      return C = '/' or else C = Get_Directory_Separator;
    end Is_Directory_Separator;
 
    function Get_Basename_Pos (Pathname : String) return Natural is
@@ -229,9 +230,7 @@ package body Ghdllocal is
       end if;
 
       declare
-         Pathname : String :=
-           Normalize_Pathname (Prog_Path (Last + 1 .. Prog_Path'Last),
-                               Prog_Path (Prog_Path'First .. Last - 1));
+         Pathname : String := Prog_Path;
          Pos : Natural;
       begin
          --  Stop now in case of error.
@@ -329,7 +328,7 @@ package body Ghdllocal is
    is
       use GNAT.Directory_Operations;
       Prog_Path : constant String := Ada.Command_Line.Command_Name;
-      Exec_Path : String_Access;
+      Exec_Path : String_Acc;
    begin
       --  If the command name is an absolute path, deduce prefix from it.
       if Is_Absolute_Path (Prog_Path) then
@@ -342,13 +341,13 @@ package body Ghdllocal is
       if not Is_Basename (Prog_Path) then
          if Is_Executable_File (Prog_Path) then
             Set_Prefix_From_Program_Path
-              (Get_Current_Dir & Directory_Separator & Prog_Path);
+              (Get_Current_Dir & Get_Directory_Separator & Prog_Path);
          end if;
          return;
       end if;
 
       --  Look for program name on the path.
-      Exec_Path := Locate_Exec_On_Path (Prog_Path);
+      Exec_Path := Locate_Executable_On_Path (Prog_Path);
       if Exec_Path /= null then
          Set_Prefix_From_Program_Path (Exec_Path.all);
          Free (Exec_Path);
@@ -384,8 +383,9 @@ package body Ghdllocal is
 
    procedure Add_Library_Name (Name : String)
    is
-      Path : constant String := Get_Machine_Path_Prefix & Directory_Separator
-        & Name & Directory_Separator & Get_Version_Path & Directory_Separator;
+      Path : constant String :=
+        Get_Machine_Path_Prefix & Get_Directory_Separator & Name
+        & Get_Directory_Separator & Get_Version_Path & Get_Directory_Separator;
    begin
       if not Is_Directory (Path) then
          Warning ("ieee library directory '" & Path & "' not found");
@@ -398,7 +398,7 @@ package body Ghdllocal is
       use Flags;
    begin
       --  Get environment variable.
-      Prefix_Env := GNAT.OS_Lib.Getenv ("GHDL_PREFIX");
+      Prefix_Env := Getenv ("GHDL_PREFIX");
       if Prefix_Env = null or else Prefix_Env.all = "" then
          Prefix_Env := null;
       end if;
@@ -423,7 +423,7 @@ package body Ghdllocal is
          else
             if Exec_Prefix /= null then
                Lib_Prefix_Path := new
-                 String'(Exec_Prefix.all & Directory_Separator
+                 String'(Exec_Prefix.all & Get_Directory_Separator
                            & Default_Paths.LibGhdlDir_Suffix);
             end if;
             if Lib_Prefix_Path = null
@@ -432,7 +432,7 @@ package body Ghdllocal is
                Free (Lib_Prefix_Path);
                Lib_Prefix_Path := new
                  String'(Default_Paths.Install_Prefix
-                           & Directory_Separator
+                           & Get_Directory_Separator
                            & Default_Paths.LibGhdlDir_Suffix);
             end if;
          end if;
@@ -456,7 +456,7 @@ package body Ghdllocal is
 
          --  For std: just add the library prefix.
          Libraries.Add_Library_Path
-           (Get_Machine_Path_Prefix & Directory_Separator);
+           (Get_Machine_Path_Prefix & Get_Directory_Separator);
       end if;
       if Load then
          if not Libraries.Load_Std_Library then
@@ -598,7 +598,7 @@ package body Ghdllocal is
 
    function Append_Suffix
      (File : String; Suffix : String; In_Work : Boolean := True)
-     return String_Access
+     return String_Acc
    is
       use Name_Table;
    begin
@@ -622,7 +622,9 @@ package body Ghdllocal is
                             Res : out Option_State);
    procedure Disp_Long_Help (Cmd : Command_Dir);
    function Get_Short_Help (Cmd : Command_Dir) return String;
-   procedure Perform_Action (Cmd : in out Command_Dir; Args : Argument_List);
+   procedure Perform_Action (Cmd : in out Command_Dir;
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Dir; Name : String) return Boolean
    is
@@ -664,12 +666,15 @@ package body Ghdllocal is
         & ASCII.LF & "  alias: --dir";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Dir; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Dir;
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       use Ada.Directories;
       use Flags;
 
-      procedure Disp_Library_By_File(Search_Item : in Directory_Entry_Type) is
+      procedure Disp_Library_By_File (Search_Item : in Directory_Entry_Type)
+      is
          File_Name : constant String :=
             Simple_Name (Directory_Entry => Search_Item);
          Name : constant String := File_Name (1 .. (File_Name'Last - 9));
@@ -681,6 +686,7 @@ package body Ghdllocal is
       Filter : constant Filter_Type := (Ordinary_File => True,
                                         others => False);
    begin
+      Success := False;
       if not Setup_Libraries (True) then
          return;
       end if;
@@ -707,13 +713,17 @@ package body Ghdllocal is
             Disp_Library (Name_Table.Get_Identifier (Args (I).all));
          end loop;
       end if;
+
+      Success := True;
    end Perform_Action;
 
    --  Command Find.
    type Command_Find is new Command_Lib with null record;
    function Decode_Command (Cmd : Command_Find; Name : String) return Boolean;
    function Get_Short_Help (Cmd : Command_Find) return String;
-   procedure Perform_Action (Cmd : in out Command_Find; Args : Argument_List);
+   procedure Perform_Action (Cmd : in out Command_Find;
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Find; Name : String) return Boolean
    is
@@ -750,7 +760,9 @@ package body Ghdllocal is
    end Is_Top_Entity;
 
    --  Disp contents design files FILES.
-   procedure Perform_Action (Cmd : in out Command_Find; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Find;
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       pragma Unreferenced (Cmd);
 
@@ -761,9 +773,11 @@ package body Ghdllocal is
       Lib : Iir;
       Flag_Add : constant Boolean := False;
    begin
+      Success := False;
+
       Flags.Bootstrap := True;
       if not Libraries.Load_Std_Library then
-         raise Option_Error;
+         return;
       end if;
       Libraries.Load_Work_Library;
 
@@ -789,6 +803,8 @@ package body Ghdllocal is
       if Flag_Add then
          Libraries.Save_Work_Library;
       end if;
+
+      Success := True;
    end Perform_Action;
 
    --  Command Import.
@@ -797,7 +813,8 @@ package body Ghdllocal is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Import) return String;
    procedure Perform_Action (Cmd : in out Command_Import;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Import; Name : String)
                            return Boolean
@@ -817,7 +834,9 @@ package body Ghdllocal is
         & ASCII.LF & "  alias: -i";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Import; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Import;
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       pragma Unreferenced (Cmd);
       use Errorout;
@@ -830,6 +849,9 @@ package body Ghdllocal is
       Next_Unit : Iir;
       Lib : Iir;
    begin
+      --  Fails by default.
+      Success := False;
+
       if not Setup_Libraries (True) then
          return;
       end if;
@@ -854,7 +876,7 @@ package body Ghdllocal is
                Design_File := Vhdl.Sem_Lib.Load_File_Name (Id);
 
                if Nbr_Errors > 0 then
-                  raise Compilation_Error;
+                  return;
                end if;
 
                Unit := Get_First_Design_Unit (Design_File);
@@ -921,10 +943,12 @@ package body Ghdllocal is
             end if;
          end;
       end loop;
+
+      Success := True;
    exception
       when Compilation_Error =>
          Error ("importation has failed due to compilation error");
-         raise;
+         Success := False;
    end Perform_Action;
 
    --  Command Check_Syntax.
@@ -939,7 +963,8 @@ package body Ghdllocal is
                             Res : out Option_State);
    function Get_Short_Help (Cmd : Command_Check_Syntax) return String;
    procedure Perform_Action (Cmd : in out Command_Check_Syntax;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Check_Syntax; Name : String)
                            return Boolean
@@ -1018,7 +1043,7 @@ package body Ghdllocal is
    end Analyze_One_File;
 
    procedure Analyze_Files
-     (Files : Argument_List; Save_Library : Boolean; Error : out Boolean)
+     (Files : String_Acc_Array; Save_Library : Boolean; Error : out Boolean)
    is
       Error_1 : Boolean;
    begin
@@ -1040,7 +1065,8 @@ package body Ghdllocal is
    end Analyze_Files;
 
    procedure Perform_Action (Cmd : in out Command_Check_Syntax;
-                             Args : Argument_List)
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       Error : Boolean;
    begin
@@ -1049,7 +1075,9 @@ package body Ghdllocal is
 
       Analyze_Files (Args, False, Error);
       if Error xor Cmd.Flag_Expect_Failure then
-         raise Errorout.Compilation_Error;
+         Success := False;
+      else
+         Success := True;
       end if;
    end Perform_Action;
 
@@ -1057,7 +1085,9 @@ package body Ghdllocal is
    type Command_Clean is new Command_Lib with null record;
    function Decode_Command (Cmd : Command_Clean; Name : String) return Boolean;
    function Get_Short_Help (Cmd : Command_Clean) return String;
-   procedure Perform_Action (Cmd : in out Command_Clean; Args : Argument_List);
+   procedure Perform_Action (Cmd : in out Command_Clean;
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Clean; Name : String) return Boolean
    is
@@ -1080,26 +1110,26 @@ package body Ghdllocal is
    is
       Status : Boolean;
    begin
-      Delete_File (Str'Address, Status);
+      Delete_File (Str, Status);
       if Flag_Verbose and Status then
-         Put_Line ("delete " & Str (Str'First .. Str'Last - 1));
+         Put_Line ("delete " & Str);
       end if;
    end Delete;
 
-   procedure Perform_Action (Cmd : in out Command_Clean; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Clean;
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       pragma Unreferenced (Cmd);
       use Name_Table;
-
-      Obj_Suffix : constant String_Access := Get_Object_Suffix;
-      Exec_Suffix : constant String_Access := Get_Executable_Suffix;
+      use Default_Paths;
 
       procedure Delete_Asm_Obj (Str : String) is
       begin
-         Delete (Str & Obj_Suffix.all & Nul);
-         Delete (Str & Asm_Suffix & Nul);
+         Delete (Str & Obj_Suffix);
+         Delete (Str & Asm_Suffix);
          if Flag_Postprocess then
-            Delete (Str & Post_Suffix & Nul);
+            Delete (Str & Post_Suffix);
          end if;
       end Delete_Asm_Obj;
 
@@ -1109,26 +1139,29 @@ package body Ghdllocal is
          Delete_Asm_Obj (Elab_Prefix & Str);
 
          --  Delete file list.
-         Delete (Str & List_Suffix & Nul);
+         Delete (Str & List_Suffix);
 
          --  Delete executable.
-         Delete (Str & Exec_Suffix.all & Nul);
+         Delete (Str & Executable_Extension);
       end Delete_Top_Unit;
 
       File : Iir_Design_File;
       Design_Unit : Iir_Design_Unit;
       Lib_Unit : Iir;
-      Str : String_Access;
+      Str : String_Acc;
    begin
+      --  Fails by default.
+      Success := False;
+
       if Args'Length /= 0 then
          Error ("command 'clean' does not accept any argument");
-         raise Option_Error;
+         return;
       end if;
 
       Flags.Bootstrap := True;
       --  Load libraries.
       if not Libraries.Load_Std_Library then
-         raise Option_Error;
+         return;
       end if;
       Libraries.Load_Work_Library;
 
@@ -1159,6 +1192,8 @@ package body Ghdllocal is
          end loop;
          File := Get_Chain (File);
       end loop;
+
+      Success := True;
    end Perform_Action;
 
    --  Command --remove: remove object file and library file.
@@ -1167,7 +1202,8 @@ package body Ghdllocal is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Remove) return String;
    procedure Perform_Action (Cmd : in out Command_Remove;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Remove; Name : String) return Boolean
    is
@@ -1186,99 +1222,23 @@ package body Ghdllocal is
         & ASCII.LF & "  alias: --remove";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Remove; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Remove;
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       use Name_Table;
    begin
       if Args'Length /= 0 then
          Error ("command 'remove' does not accept any argument");
-         raise Option_Error;
-      end if;
-      Perform_Action (Command_Clean (Cmd), Args);
-      Delete (Image (Libraries.Work_Directory)
-              & Libraries.Library_To_File_Name (Libraries.Work_Library)
-              & Nul);
-   end Perform_Action;
-
-   --  Command --copy: copy work library to current directory.
-   type Command_Copy is new Command_Lib with null record;
-   function Decode_Command (Cmd : Command_Copy; Name : String) return Boolean;
-   function Get_Short_Help (Cmd : Command_Copy) return String;
-   procedure Perform_Action (Cmd : in out Command_Copy; Args : Argument_List);
-
-   function Decode_Command (Cmd : Command_Copy; Name : String) return Boolean
-   is
-      pragma Unreferenced (Cmd);
-   begin
-      return Name = "copy"
-        or else Name = "--copy";
-   end Decode_Command;
-
-   function Get_Short_Help (Cmd : Command_Copy) return String
-   is
-      pragma Unreferenced (Cmd);
-   begin
-      return "copy"
-        & ASCII.LF & "  Copy work library to current directory"
-        & ASCII.LF & "  alias: --copy";
-   end Get_Short_Help;
-
-   procedure Perform_Action (Cmd : in out Command_Copy; Args : Argument_List)
-   is
-      pragma Unreferenced (Cmd);
-      use Name_Table;
-      use Libraries;
-
-      File : Iir_Design_File;
-      Dir : Name_Id;
-   begin
-      if Args'Length /= 0 then
-         Error ("command 'copy' does not accept any argument");
-         raise Option_Error;
-      end if;
-
-      if not Setup_Libraries (False)
-        or else not Libraries.Load_Std_Library
-      then
+         Success := False;
          return;
       end if;
-      Dir := Work_Directory;
-      Work_Directory := Null_Identifier;
-      Libraries.Load_Work_Library;
-      Work_Directory := Dir;
-
-      Dir := Get_Library_Directory (Libraries.Work_Library);
-      if Dir = Name_Nil or else Dir = Files_Map.Get_Home_Directory then
-         Error ("cannot copy library on itself (use --remove first)");
-         raise Option_Error;
+      Perform_Action (Command_Clean (Cmd), Args, Success);
+      if not Success then
+         return;
       end if;
-
-      File := Get_Design_File_Chain (Libraries.Work_Library);
-      while File /= Null_Iir loop
-         --  Copy object files (if any).
-         declare
-            Basename : constant String :=
-              Get_Base_Name (Image (Get_Design_File_Filename (File)));
-            Src : String_Access;
-            Dst : String_Access;
-            Success : Boolean;
-         begin
-            Src := new String'(Image (Dir) & Basename & Get_Object_Suffix.all);
-            Dst := new String'(Basename & Get_Object_Suffix.all);
-            Copy_File (Src.all, Dst.all, Success, Overwrite, Full);
-            pragma Unreferenced (Success);
-            --  Be silent in case of error.
-            Free (Src);
-            Free (Dst);
-         end;
-         if Get_Design_File_Directory (File) = Name_Nil then
-            Set_Design_File_Directory (File, Dir);
-         end if;
-
-         File := Get_Chain (File);
-      end loop;
-      Libraries.Work_Directory := Name_Nil;
-      Libraries.Save_Work_Library;
+      Delete (Image (Libraries.Work_Directory)
+                & Libraries.Library_To_File_Name (Libraries.Work_Library));
    end Perform_Action;
 
    --  Command --disp-standard.
@@ -1287,7 +1247,8 @@ package body Ghdllocal is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Disp_Standard) return String;
    procedure Perform_Action (Cmd : in out Command_Disp_Standard;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Disp_Standard; Name : String)
                            return Boolean
@@ -1308,19 +1269,23 @@ package body Ghdllocal is
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Disp_Standard;
-                             Args : Argument_List)
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       pragma Unreferenced (Cmd);
    begin
       if Args'Length /= 0 then
          Error ("command 'disp-standard' does not accept any argument");
-         raise Option_Error;
+         Success := False;
+         return;
       end if;
       Flags.Bootstrap := True;
       if not Libraries.Load_Std_Library then
-         raise Option_Error;
+         Success := False;
+         return;
       end if;
       Vhdl.Prints.Disp_Vhdl (Vhdl.Std_Package.Std_Standard_Unit);
+      Success := True;
    end Perform_Action;
 
    --  Command --find-top.
@@ -1329,7 +1294,8 @@ package body Ghdllocal is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Find_Top) return String;
    procedure Perform_Action (Cmd : in out Command_Find_Top;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Find_Top; Name : String)
                            return Boolean
@@ -1350,7 +1316,8 @@ package body Ghdllocal is
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Find_Top;
-                             Args : Argument_List)
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       use Libraries;
       pragma Unreferenced (Cmd);
@@ -1358,6 +1325,7 @@ package body Ghdllocal is
       Top : Iir;
    begin
       if not Setup_Libraries (True) then
+         Success := False;
          return;
       end if;
 
@@ -1368,11 +1336,13 @@ package body Ghdllocal is
            (Work_Library, Name_Table.Get_Identifier (Args (Args'First).all));
          if not Is_Valid (From) then
             Error ("cannot find '" & Args (Args'First).all & "' in library");
-            raise Option_Error;
+            Success := False;
+            return;
          end if;
       else
          Error ("command 'find-top' accepts at most one argument");
-         raise Option_Error;
+         Success := False;
+         return;
       end if;
 
       Top := Vhdl.Configuration.Find_Top_Entity
@@ -1380,8 +1350,10 @@ package body Ghdllocal is
 
       if Top = Null_Iir then
          Error ("no top entity found");
+         Success := False;
       else
          Put_Line (Name_Table.Image (Get_Identifier (Top)));
+         Success := True;
       end if;
    end Perform_Action;
 
@@ -1391,7 +1363,8 @@ package body Ghdllocal is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Bug_Box) return String;
    procedure Perform_Action (Cmd : in out Command_Bug_Box;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Bug_Box; Name : String)
                            return Boolean
@@ -1412,9 +1385,10 @@ package body Ghdllocal is
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Bug_Box;
-                             Args : Argument_List)
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
-      pragma Unreferenced (Cmd, Args);
+      pragma Unreferenced (Cmd, Args, Success);
    begin
       raise Program_Error;
    end Perform_Action;
@@ -1889,7 +1863,7 @@ package body Ghdllocal is
 
    procedure Extract_Elab_Unit (Cmd_Name : String;
                                 Auto : Boolean;
-                                Args : Argument_List;
+                                Args : String_Acc_Array;
                                 Next_Arg : out Natural;
                                 Lib_Id : out Name_Id;
                                 Prim_Id : out Name_Id;
@@ -1931,7 +1905,7 @@ package body Ghdllocal is
       end if;
 
       declare
-         S : constant String_Access := Args (Args'First);
+         S : constant String_Acc := Args (Args'First);
          Dot : Natural;
       begin
          Lib_Id := Null_Identifier;
@@ -1969,7 +1943,7 @@ package body Ghdllocal is
 
       if Args'Length >= 2 then
          declare
-            Sec : constant String_Access := Args (Next_Arg);
+            Sec : constant String_Acc := Args (Next_Arg);
          begin
             if Sec (Sec'First) /= '-'
               and then Sec (Sec'First) /= '+'
@@ -1984,7 +1958,7 @@ package body Ghdllocal is
       end if;
    end Extract_Elab_Unit;
 
-   procedure Expect_Filenames (Args : Argument_List)
+   procedure Expect_Filenames (Args : String_Acc_Array)
    is
       use Errorout;
    begin
@@ -2010,7 +1984,8 @@ package body Ghdllocal is
                             Res : out Option_State);
    function Get_Short_Help (Cmd : Command_Elab_Order) return String;
    procedure Perform_Action (Cmd : in out Command_Elab_Order;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Elab_Order; Name : String)
                            return Boolean
@@ -2054,7 +2029,8 @@ package body Ghdllocal is
    end Is_Makeable_File;
 
    procedure Perform_Action (Cmd : in out Command_Elab_Order;
-                             Args : Argument_List)
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       use Name_Table;
 
@@ -2074,6 +2050,7 @@ package body Ghdllocal is
       if Prim_Id = Null_Identifier
         or else not Setup_Libraries (True)
       then
+         Success := False;
          return;
       end if;
       Files_List := Build_Dependence (Lib_Id, Prim_Id, Sec_Id);
@@ -2097,6 +2074,7 @@ package body Ghdllocal is
          end if;
          Next (Files_It);
       end loop;
+      Success := True;
    end Perform_Action;
 
    --  Used by --gen-makefile
@@ -2163,7 +2141,6 @@ package body Ghdllocal is
       Register_Command (new Command_Find);
       Register_Command (new Command_Clean);
       Register_Command (new Command_Remove);
-      Register_Command (new Command_Copy);
       Register_Command (new Command_Disp_Standard);
       Register_Command (new Command_Elab_Order);
       Register_Command (new Command_Find_Top);

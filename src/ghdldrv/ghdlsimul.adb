@@ -17,11 +17,11 @@ with System;
 
 with Ada.Unchecked_Conversion;
 with Ada.Command_Line;
-with GNAT.OS_Lib; use GNAT.OS_Lib;
 
 with Interfaces;
 with Interfaces.C;
 
+with Types; use Types;
 with Ghdllocal; use Ghdllocal;
 
 with Flags;
@@ -79,7 +79,7 @@ package body Ghdlsimul is
    end Compile_Init;
 
    procedure Compile_Elab
-     (Cmd_Name : String; Args : Argument_List; Opt_Arg : out Natural)
+     (Cmd_Name : String; Args : String_Acc_Array; Opt_Arg : out Natural)
    is
       use Elab.Vhdl_Context;
       Config : Node;
@@ -177,7 +177,7 @@ package body Ghdlsimul is
 
    --  Set options.
    --  This is a little bit over-kill: from C to Ada and then again to C...
-   procedure Set_Run_Options (Args : Argument_List)
+   procedure Set_Run_Options (Args : String_Acc_Array)
    is
       use Interfaces.C;
       use Grt.Options;

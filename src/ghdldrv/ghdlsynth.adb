@@ -14,8 +14,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with GNAT.OS_Lib; use GNAT.OS_Lib;
-
 with Types; use Types;
 with Name_Table;
 with Files_Map;
@@ -95,7 +93,8 @@ package body Ghdlsynth is
                             Arg : String;
                             Res : out Option_State);
    procedure Perform_Action (Cmd : in out Command_Synth;
-                             Args : Argument_List);
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Synth; Name : String)
                            return Boolean
@@ -267,7 +266,7 @@ package body Ghdlsynth is
    end Decode_Option;
 
    --  Return the position of "-e", or ARGS'FIRST -1 if none.
-   function Find_Dash_E (Args : Argument_List) return Integer is
+   function Find_Dash_E (Args : String_Acc_Array) return Integer is
    begin
       for I in Args'Range loop
          if Args (I).all = "-e" then
@@ -306,7 +305,7 @@ package body Ghdlsynth is
    --  Return the top configuration.
    function Ghdl_Synth_Configure (Init : Boolean;
                                   Vendor_Libraries : Name_Id_Array;
-                                  Args : Argument_List;
+                                  Args : String_Acc_Array;
                                   Enable_Translate_Off : Boolean) return Node
    is
       use Errorout;
@@ -484,7 +483,7 @@ package body Ghdlsynth is
    is
       use Vhdl.Configuration;
       use Elab.Vhdl_Objtypes;
-      Args : Argument_List (1 .. Argc);
+      Args : String_Acc_Array (1 .. Argc);
       Res : Module;
       Cmd : Command_Synth;
       First_Arg : Natural;
@@ -554,7 +553,8 @@ package body Ghdlsynth is
    end Ghdl_Synth;
 
    procedure Perform_Action (Cmd : in out Command_Synth;
-                             Args : Argument_List)
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
    is
       Res : Module;
       Inst : Synth_Instance_Acc;
@@ -566,11 +566,8 @@ package body Ghdlsynth is
          Args, True);
 
       if Config = Null_Iir then
-         if Cmd.Expect_Failure then
-            return;
-         else
-            raise Errorout.Compilation_Error;
-         end if;
+         Success := Cmd.Expect_Failure;
+         return;
       end if;
 
       Lib_Unit := Get_Library_Unit (Config);
@@ -589,13 +586,11 @@ package body Ghdlsynth is
       end if;
 
       if Res = No_Module then
-         if Cmd.Expect_Failure then
-            return;
-         else
-            raise Errorout.Compilation_Error;
-         end if;
+         Success := Cmd.Expect_Failure;
+         return;
       elsif Cmd.Expect_Failure then
-         raise Errorout.Compilation_Error;
+         Success := False;
+         return;
       end if;
 
       Disp_Design (Cmd, Format_Vhdl, Res, Config, Inst);
@@ -603,6 +598,8 @@ package body Ghdlsynth is
       if Cmd.Flag_Stats then
          Netlists.Disp_Stats;
       end if;
+
+      Success := True;
    end Perform_Action;
 
    procedure Register_Commands is
