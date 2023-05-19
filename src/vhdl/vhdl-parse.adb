@@ -1808,8 +1808,11 @@ package body Vhdl.Parse is
             return Res;
          end;
       else
-         Error_Msg_Parse
-           (+Assoc_Index, "cannot mix record and array constraints");
+         if Assoc_Index /= Null_Iir then
+            --  Empty association list has already been reported.
+            Error_Msg_Parse
+              (+Assoc_Index, "cannot mix record and array constraints");
+         end if;
          Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
          Location_Copy (Res, Name);
          return Res;
