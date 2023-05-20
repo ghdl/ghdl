@@ -358,8 +358,9 @@ def GetCompositeConstrainedSubtypeFromNode(
 @export
 def GetSubtypeFromNode(subtypeNode: Iir) -> Symbol:
     subtypeName = GetNameOfNode(subtypeNode)
+    symbol = GetSubtypeIndicationFromNode(subtypeNode, "subtype", subtypeName)
 
-    return Subtype(subtypeNode, subtypeName)
+    return Subtype(subtypeNode, subtypeName, symbol)
 
 
 @export
