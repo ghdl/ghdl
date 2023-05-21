@@ -362,7 +362,7 @@ class Application(LineTerminal, ArgParseMixin):
 def main():  # mccabe:disable=MC0001
     """This is the entry point for pyghdl.cli.dom written as a function.
 
-    1. It extracts common flags from the script's arguments list, before :py:class:`~argparse.ArgumentParser` is fully loaded.
+    1. It extracts common flags from the script's arguments list, before :class:`~argparse.ArgumentParser` is fully loaded.
     2. It creates an instance of DOM test application and hands over to a class based execution.
        All is wrapped in a big ``try..except`` block to catch every unhandled exception.
     3. Shutdown the script and return its exit code.
