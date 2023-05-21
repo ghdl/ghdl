@@ -31,6 +31,7 @@ enable_gplcompat=false
 vhdl.libs.v87: std.v87 ieee.v87
 vhdl.libs.v93: std.v93 ieee.v93
 vhdl.libs.v08: std.v08 ieee.v08 $(LIBDST_DIR)/src/ieee2008/LICENSE
+vhdl.libs.v19: std.v19 ieee.v19
 
 STD_SRCS := \
   textio.vhdl \
@@ -95,6 +96,7 @@ IEEE08_BSRCS := \
 
 IEEE87_BSRCS := $(addprefix ieee/v87/,$(IEEE_SRCS)) $(UPF_SRCS)
 IEEE93_BSRCS := $(addprefix ieee/v93/,$(IEEE_SRCS)) $(addprefix ieee/,$(MATH_SRCS)) $(UPF_SRCS)
+IEEE19_BSRCS := $(IEEE08_BSRCS)
 
 VITAL95_BSRCS :=
 VITAL2000_BSRCS :=
@@ -119,9 +121,12 @@ ANALYZE_DEP=$(GHDL)
 STD87_BSRCS := $(addprefix std/v87/,$(STD_SRCS))
 STD93_BSRCS := $(addprefix std/v93/,$(STD_SRCS))
 STD08_BSRCS := $(addprefix std/v08/,$(STD_SRCS)) std/env.vhdl std/env-body.vhdl
+STD19_BSRCS := $(addprefix std/v19/,$(STD_SRCS)) std/env.vhdl std/env-body.vhdl
+
 SYNOPSYS87_BSRCS := $(addprefix synopsys/,$(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS))
 SYNOPSYS93_BSRCS := $(addprefix synopsys/,$(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS))
 SYNOPSYS08_BSRCS := $(addprefix synopsys/,$(SYNOPSYS_BSRCS)) $(addprefix synopsys/v08/,$(SYNOPSYS_V_BSRCS))
+SYNOPSYS19_BSRCS :=
 
 .PREFIXES: .vhdl
 
@@ -135,6 +140,9 @@ SED_V87:= sed -e '/--!V87/s/^/  --/' -e '/--V08/s/^/  --/' \
 SED_V08:= sed -e '/--V87/s/^/  --/' -e '/--!V08/s/^/  --/' \
  -e '/--START-!V08/,/--END-!V08/s/^/--/'
 
+SED_V19:= sed -e '/--V87/s/^/  --/' -e '/--!V19/s/^/  --/' \
+ -e '/--START-!V19/,/--END-!V19/s/^/--/'
+
 STD87_DIR:=$(LIBDST_DIR)/std/v87
 IEEE87_DIR:=$(LIBDST_DIR)/ieee/v87
 
@@ -144,17 +152,23 @@ IEEE93_DIR:=$(LIBDST_DIR)/ieee/v93
 STD08_DIR:=$(LIBDST_DIR)/std/v08
 IEEE08_DIR:=$(LIBDST_DIR)/ieee/v08
 
+STD19_DIR:=$(LIBDST_DIR)/std/v19
+IEEE19_DIR:=$(LIBDST_DIR)/ieee/v19
+
 ANALYZE87:=$(ANALYZE) --std=87
 ANALYZE93:=$(ANALYZE) --std=93
 ANALYZE08:=$(ANALYZE) --std=08
+ANALYZE19:=$(ANALYZE) --std=19
 
 STD87_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(STD87_BSRCS))
 STD93_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(STD93_BSRCS))
 STD08_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(STD08_BSRCS))
+STD19_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(STD19_BSRCS))
 
 IEEE93_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(IEEE93_BSRCS))
 IEEE87_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(IEEE87_BSRCS))
 IEEE08_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(IEEE08_BSRCS))
+IEEE19_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(IEEE08_BSRCS))  # Same
 SYNOPSYS87_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(SYNOPSYS87_BSRCS))
 SYNOPSYS93_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(SYNOPSYS93_BSRCS))
 SYNOPSYS08_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(SYNOPSYS08_BSRCS))
@@ -300,6 +314,48 @@ $(IEEE08_DIR)/ieee-obj08.cf: $(ANALYZE_DEP) $(IEEE08_SRCS) $(SYNOPSYS08_SRCS) $(
 
 $(LIBDST_DIR)/src/synopsys/v08/%.vhdl: $(LIBSRC_DIR)/synopsys/%.vhdl
 	$(SED_V08) < $< > $@
+
+### V19 ###############################################################
+
+$(LIBDST_DIR)/src/std/v19/%.vhdl: $(LIBSRC_DIR)/std/%.vhdl
+	$(MKDIR) -p $(LIBDST_DIR)/src/std/v19
+	$(SED_V19) < $< > $@
+
+$(LIBDST_DIR)/src/std/%.vhdl: $(LIBSRC_DIR)/std/%.vhdl
+	$(CP) $< $@
+
+std.v19: $(STD19_DIR)/std-obj19.cf
+
+$(STD19_DIR)/std-obj19.cf: $(ANALYZE_DEP) $(STD19_SRCS)
+	$(RM) -f $@
+	$(MKDIR) -p $(STD19_DIR)
+	cd $(STD19_DIR); \
+	for i in $(STD19_BSRCS); do \
+	  cmd="$(ANALYZE19) --bootstrap --work=std ../../src/$$i"; \
+	  echo $$cmd; eval $$cmd || exit 1; \
+	done
+
+ANALYZE_IEEE19=$(ANALYZE19) -P../.. --work=ieee
+ANALYZE_VITAL19=$(ANALYZE19) -P../.. --work=ieee -frelaxed-rules
+
+ieee.v19: $(IEEE19_DIR)/ieee-obj19.cf
+
+$(IEEE19_DIR)/ieee-obj19.cf: $(ANALYZE_DEP) $(IEEE19_SRCS) $(SYNOPSYS19_SRCS) $(STD19_DIR)/std-obj19.cf
+	$(RM) -f $@
+	$(MKDIR) -p $(IEEE19_DIR)
+	cd $(IEEE19_DIR); \
+	for i in $(IEEE19_BSRCS); do \
+          cmd="$(ANALYZE_IEEE19) ../../src/$$i"; \
+	  echo $$cmd; eval $$cmd || exit 1; \
+	done; \
+	for i in $(VITAL2000_BSRCS); do \
+          cmd="$(ANALYZE_VITAL19) ../../src/$$i"; \
+	  echo $$cmd; eval $$cmd || exit 1; \
+	done; \
+	for i in $(SYNOPSYS19_BSRCS); do \
+          cmd="$(ANALYZE_IEEE19) -fsynopsys ../../src/$$i"; \
+	  echo $$cmd; eval $$cmd || exit 1; \
+	done
 
 ##############################################################################
 
