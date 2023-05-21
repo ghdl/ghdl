@@ -59,8 +59,8 @@ def CheckForErrors() -> None:
 
     **Behavior:**
 
-    1. read the error buffer and clear it afterwards
-    2. convert it into a list of internal messages for a :exc:`LibGHDLException`
+    1. read the error buffer and clear it afterwards.
+    2. convert it into a list of internal messages for a :exc:`LibGHDLException`.
     3. raise a :exc:`DOMException` with a nested :exc:`LibGHDLException` as a ``__cause__``.
 
     :raises DOMException: If an error occurred in libghdl.

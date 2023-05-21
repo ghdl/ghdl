@@ -30,9 +30,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived type classes from :mod:`pyVHDLModel.Type`.
+"""
 from typing import List, Union, Iterator, Tuple, Iterable
 
-from pyGHDL.dom.Names import SimpleName
+from pyGHDL.dom.Name import SimpleName
 from pyTooling.Decorators import export
 
 from pyVHDLModel.Name import Name
@@ -77,12 +80,31 @@ class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
 
 @export
 class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
+    """
+    Represents an *enumerated type*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.EnumeratedType`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          type integer is (lit_1, lit2, ...);
+    """
+
     def __init__(self, node: Iir, identifier: str, literals: List[EnumerationLiteral]):
         super().__init__(identifier, literals)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "EnumeratedType":
+        """
+        Parses an *enumerated type* IIR and returns an :class:`~pyVHDLModel.Type.EnumeratedType` instance.
+
+        :param typeName:           The identifier of the type.
+        :param typeDefinitionNode: The IIR node to parse.
+        :return:                   The enumerated type instance.
+        """
         literals = []
         enumerationLiterals = nodes.Get_Enumeration_Literal_List(typeDefinitionNode)
         for enumerationLiteral in utils.flist_iter(enumerationLiterals):
@@ -94,6 +116,17 @@ class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
 
 @export
 class IntegerType(VHDLModel_IntegerType, DOMMixin):
+    """
+    Represents an *integer type*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.IntegerType`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          type integer is range -2147483648 to 2147483647;
+    """
     def __init__(self, node: Iir, typeName: str, rng: Union[Range, "Name"]):
         super().__init__(typeName, rng)
         DOMMixin.__init__(self, node)
@@ -101,6 +134,22 @@ class IntegerType(VHDLModel_IntegerType, DOMMixin):
 
 @export
 class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
+    """
+    Represents a *physical type*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.PhysicalType`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          type time is range integer'low to integer'high units
+            fs;
+            ps = 1000 fs;
+            -- ...
+          end units;
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -114,6 +163,13 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "PhysicalType":
+        """
+        Parses an *physical type* IIR and returns an :class:`~pyVHDLModel.Type.PhysicalType` instance.
+
+        :param typeName:           The identifier of the type.
+        :param typeDefinitionNode: The IIR node to parse.
+        :return:                   The physical type instance.
+        """
         from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
         from pyGHDL.dom._Translate import GetRangeFromNode, GetName
 
@@ -148,12 +204,31 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
 
 @export
 class ArrayType(VHDLModel_ArrayType, DOMMixin):
+    """
+    Represents an *array type*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.ArrayType`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          type bit_vector is array(natural range <>) of bit;
+    """
+
     def __init__(self, node: Iir, identifier: str, indices: List, elementSubtype: Symbol):
         super().__init__(identifier, indices, elementSubtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "ArrayType":
+        """
+        Parses an *array type* IIR and returns an :class:`~pyVHDLModel.Type.ArrayType` instance.
+
+        :param typeName:           The identifier of the type.
+        :param typeDefinitionNode: The IIR node to parse.
+        :return:                   The array type instance.
+        """
         from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetSimpleTypeFromNode,
@@ -180,12 +255,34 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
 
 @export
 class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
+    """
+    Represents a *record element*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.RecordTypeElement`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          -- type pt is record
+            element : std_logic;
+            -- ...
+          -- end record;
+    """
+
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol):
         super().__init__(identifiers, subtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, elementDeclarationNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "RecordTypeElement":
+        """
+        Parses a *record element* IIR and returns an :class:`~pyVHDLModel.Type.RecordTypeElement` instance.
+
+        :param elementDeclarationNode: The IIR node to parse.
+        :param furtherIdentifiers:     The list of record element identifiers.
+        :return:                       The record element instance.
+        """
         from pyGHDL.dom._Utils import GetNameOfNode
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
@@ -201,12 +298,33 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
 
 @export
 class RecordType(VHDLModel_RecordType, DOMMixin):
+    """
+    Represents a *record type*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.RecordType`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          type pt is record
+            -- elements
+          end record;
+    """
+
     def __init__(self, node: Iir, identifier: str, elements: List[RecordTypeElement] = None):
         super().__init__(identifier, elements)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "RecordType":
+        """
+        Parses a *record type* IIR and returns an :class:`~pyVHDLModel.Type.RecordType` instance.
+
+        :param typeName:           The identifier of the type.
+        :param typeDefinitionNode: The IIR node to parse.
+        :return:                   The record type instance.
+        """
         from pyGHDL.dom._Utils import GetNameOfNode
 
         elements = []
@@ -245,12 +363,33 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
 
 @export
 class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
+    """
+    Represents a *protected type*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.ProtectedType`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          type pt is protected
+            -- public interface
+          end protected;
+    """
+
     def __init__(self, node: Iir, identifier: str, methods: Union[List, Iterator] = None):
         super().__init__(identifier, methods)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "ProtectedType":
+        """
+        Parses a *protected type* IIR and returns an :class:`~pyVHDLModel.Type.ProtectedType` instance.
+
+        :param typeName:           The identifier of the type.
+        :param typeDefinitionNode: The IIR node to parse.
+        :return:                   The protected type instance.
+        """
         from pyGHDL.dom._Utils import GetIirKindOfNode
 
         # FIXME: change this to a generator
@@ -267,12 +406,32 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
 
 @export
 class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
+    """
+    Represents a *protected type body*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.ProtectedTypeBody`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          type pt is protected body
+            -- implementations
+          end protected body;
+    """
+
     def __init__(self, node: Iir, identifier: str, declaredItems: Union[List, Iterator] = None):
         super().__init__(identifier, declaredItems)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, protectedBodyNode: Iir) -> "ProtectedTypeBody":
+        """
+        Parses a *protected type body* IIR and returns an :class:`~pyVHDLModel.Type.ProtectedTypeBody` instance.
+
+        :param protectedBodyNode: The IIR node to parse.
+        :return:                  The protected type body instance.
+        """
         from pyGHDL.dom._Utils import GetNameOfNode
         from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes
 
@@ -288,12 +447,31 @@ class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
 
 @export
 class AccessType(VHDLModel_AccessType, DOMMixin):
+    """
+    Represents an *access type*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.AccessType`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          type line is access string;
+    """
+
     def __init__(self, node: Iir, identifier: str, designatedSubtype: Symbol):
         super().__init__(identifier, designatedSubtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "AccessType":
+        """
+        Parses an *access type* IIR and returns an :class:`~pyVHDLModel.Type.AccessType` instance.
+
+        :param typeName:           The identifier of the type.
+        :param typeDefinitionNode: The IIR node to parse.
+        :return:                   The access type instance.
+        """
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromIndicationNode
 
         designatedSubtypeIndication = nodes.Get_Designated_Subtype_Indication(typeDefinitionNode)
@@ -304,12 +482,31 @@ class AccessType(VHDLModel_AccessType, DOMMixin):
 
 @export
 class FileType(VHDLModel_FileType, DOMMixin):
+    """
+    Represents a *file type*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.FileType`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          type text is file of string;
+    """
+
     def __init__(self, node: Iir, identifier: str, designatedSubtype: Symbol):
         super().__init__(identifier, designatedSubtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, typeName: str, typeDefinitionNode: Iir) -> "FileType":
+        """
+        Parses a *file type* IIR and returns an :class:`~pyVHDLModel.Type.FileType` instance.
+
+        :param typeName:           The identifier of the type.
+        :param typeDefinitionNode: The IIR node to parse.
+        :return:                   The file type instance.
+        """
         from pyGHDL.dom._Utils import GetNameOfNode
 
         designatedSubtypeMark = nodes.Get_File_Type_Mark(typeDefinitionNode)
@@ -323,6 +520,12 @@ class FileType(VHDLModel_FileType, DOMMixin):
 
 @export
 class Subtype(VHDLModel_Subtype, DOMMixin):
+    """
+    Represents a *subtype*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.Subtype`.
+    """
+
     def __init__(self, node: Iir, subtypeName: str, symbol: Symbol):
         super().__init__(subtypeName, symbol)
         DOMMixin.__init__(self, node)
