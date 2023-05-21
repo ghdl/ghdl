@@ -200,52 +200,74 @@ package body Filesystem is
       return new String'(C_Val (1 .. C_Len));
    end Getenv;
 
-   function Locate_Executable_On_Path (Command : String) return String_Acc
-   is
-      Sep : constant Character := GNAT.OS_Lib.Path_Separator;
-      Path : String_Acc;
-      F, P : Natural;
+   function Locate_Executable_On_Path (Command : String) return String_Acc is
    begin
-      Path := Getenv ("PATH");
-      if Path = null then
-         return null;
-      end if;
-
-      F := Path'First;
-      loop
-         --  Skip until path separator or end of PATH.
-         P := F;
-         while P <= Path'Last and then Path (P) /= Sep loop
-            P := P + 1;
-         end loop;
-
-         if P = F then
-            --  Empty path, so look at the current directory.
-            if GNAT.OS_Lib.Is_Executable_File (Command) then
-               Free (Path);
-               return new String'(Command);
+      if True then
+         declare
+            use GNAT.OS_Lib;
+            Tmp : String_Access;
+            Res : String_Acc;
+         begin
+            Tmp := Locate_Exec_On_Path (Command);
+            if Tmp = null then
+               return null;
             end if;
-         else
-            declare
-               C_Full_Path : String (1 .. (P - F) + 1 + Command'Length + 1);
-            begin
-               C_Full_Path (1 .. P - F) := Path (F .. P - 1);
-               C_Full_Path (P - F + 1) := Get_Directory_Separator;
-               C_Full_Path (P - F + 2 .. C_Full_Path'Last - 1) := Command;
-               C_Full_Path (C_Full_Path'Last) := ASCII.NUL;
-               if GNAT.OS_Lib.Is_Executable_File (C_Full_Path'Address) then
-                  Free (Path);
-                  return new String'(C_Full_Path (1 .. C_Full_Path'Last - 1));
+            Res := new String'(Tmp.all);
+            Free (Tmp);
+            return Res;
+         end;
+      else
+         declare
+            Sep : constant Character := GNAT.OS_Lib.Path_Separator;
+            Path : String_Acc;
+            F, P : Natural;
+         begin
+            Path := Getenv ("PATH");
+            if Path = null then
+               return null;
+            end if;
+
+            F := Path'First;
+            loop
+               --  Skip until path separator or end of PATH.
+               P := F;
+               while P <= Path'Last and then Path (P) /= Sep loop
+                  P := P + 1;
+               end loop;
+
+               if P = F then
+                  --  Empty path, so look at the current directory.
+                  if GNAT.OS_Lib.Is_Executable_File (Command) then
+                     Free (Path);
+                     return new String'(Command);
+                  end if;
+               else
+                  declare
+                     C_Full_Path : String
+                       (1 .. (P - F) + 1 + Command'Length + 1);
+                  begin
+                     C_Full_Path (1 .. P - F) := Path (F .. P - 1);
+                     C_Full_Path (P - F + 1) := Get_Directory_Separator;
+                     C_Full_Path (P - F + 2 .. C_Full_Path'Last - 1) :=
+                       Command;
+                     C_Full_Path (C_Full_Path'Last) := ASCII.NUL;
+                     if GNAT.OS_Lib.Is_Executable_File (C_Full_Path'Address)
+                     then
+                        Free (Path);
+                        return new String'
+                          (C_Full_Path (1 .. C_Full_Path'Last - 1));
+                     end if;
+                  end;
                end if;
-            end;
-         end if;
 
-         if P > Path'Last then
-            return null;
-         end if;
+               if P > Path'Last then
+                  return null;
+               end if;
 
-         --  Skip path separator.
-         F := P + 1;
-      end loop;
+               --  Skip path separator.
+               F := P + 1;
+            end loop;
+         end;
+      end if;
    end Locate_Executable_On_Path;
 end Filesystem;
