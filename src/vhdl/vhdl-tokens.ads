@@ -238,7 +238,7 @@ package Vhdl.Tokens is
       Tok_Rol,
       Tok_Ror,
 
-   --  Added by Vhdl 2000:
+   --  Added by vhdl 2000:
       Tok_Protected,
 
    --  Added by vhdl 2008:
@@ -257,6 +257,10 @@ package Vhdl.Tokens is
       Tok_Vmode,
       Tok_Vprop,
       Tok_Vunit,
+
+   --  Added by vhdl 2019
+      Tok_Private,
+      Tok_View,
 
    --  AMS reserved words
       Tok_Across,

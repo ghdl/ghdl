@@ -190,7 +190,15 @@ package Std_Names is
    subtype Name_Id_Vhdl08_Reserved_Words is
      Name_Id range Name_Assume .. Name_Last_Vhdl08;
 
-   Name_First_Ams_Keyword :  constant Name_Id := Name_Last_Vhdl08 + 1;
+   Name_First_Vhdl19 :       constant Name_Id := Name_Last_Vhdl08 + 1;
+   Name_Private :            constant Name_Id := Name_First_Vhdl19 + 0;
+   Name_View :               constant Name_Id := Name_First_Vhdl19 + 1;
+   Name_Last_Vhdl19 :        constant Name_Id := Name_First_Vhdl19 + 1;
+
+   subtype Name_Id_Vhdl19_Reserved_Words is
+     Name_Id range Name_First_Vhdl19 .. Name_Last_Vhdl19;
+
+   Name_First_Ams_Keyword :  constant Name_Id := Name_Last_Vhdl19 + 1;
    Name_Across :         constant Name_Id := Name_First_Ams_Keyword + 000;
    Name_Break :          constant Name_Id := Name_First_Ams_Keyword + 001;
    Name_Limit :          constant Name_Id := Name_First_Ams_Keyword + 002;
@@ -1042,25 +1050,24 @@ package Std_Names is
    Name_Technology :         constant Name_Id := Name_First_Edif +  8;
    Name_Cell :               constant Name_Id := Name_First_Edif +  9;
    Name_Celltype :           constant Name_Id := Name_First_Edif + 10;
-   Name_View :               constant Name_Id := Name_First_Edif + 11;
-   Name_Viewtype :           constant Name_Id := Name_First_Edif + 12;
-   Name_Direction :          constant Name_Id := Name_First_Edif + 13;
-   Name_Contents :           constant Name_Id := Name_First_Edif + 14;
-   Name_Net :                constant Name_Id := Name_First_Edif + 15;
-   Name_Viewref :            constant Name_Id := Name_First_Edif + 16;
-   Name_Cellref :            constant Name_Id := Name_First_Edif + 17;
-   Name_Libraryref :         constant Name_Id := Name_First_Edif + 18;
-   Name_Portinstance :       constant Name_Id := Name_First_Edif + 19;
-   Name_Joined :             constant Name_Id := Name_First_Edif + 20;
-   Name_Portref :            constant Name_Id := Name_First_Edif + 21;
-   Name_Instanceref :        constant Name_Id := Name_First_Edif + 22;
-   Name_Design :             constant Name_Id := Name_First_Edif + 23;
-   Name_Designator :         constant Name_Id := Name_First_Edif + 24;
-   Name_Owner :              constant Name_Id := Name_First_Edif + 25;
-   Name_Member :             constant Name_Id := Name_First_Edif + 26;
-   Name_Number :             constant Name_Id := Name_First_Edif + 27;
-   Name_Rename :             constant Name_Id := Name_First_Edif + 28;
-   Name_Userdata :           constant Name_Id := Name_First_Edif + 29;
+   Name_Viewtype :           constant Name_Id := Name_First_Edif + 11;
+   Name_Direction :          constant Name_Id := Name_First_Edif + 12;
+   Name_Contents :           constant Name_Id := Name_First_Edif + 13;
+   Name_Net :                constant Name_Id := Name_First_Edif + 14;
+   Name_Viewref :            constant Name_Id := Name_First_Edif + 15;
+   Name_Cellref :            constant Name_Id := Name_First_Edif + 16;
+   Name_Libraryref :         constant Name_Id := Name_First_Edif + 17;
+   Name_Portinstance :       constant Name_Id := Name_First_Edif + 18;
+   Name_Joined :             constant Name_Id := Name_First_Edif + 19;
+   Name_Portref :            constant Name_Id := Name_First_Edif + 20;
+   Name_Instanceref :        constant Name_Id := Name_First_Edif + 21;
+   Name_Design :             constant Name_Id := Name_First_Edif + 22;
+   Name_Designator :         constant Name_Id := Name_First_Edif + 23;
+   Name_Owner :              constant Name_Id := Name_First_Edif + 24;
+   Name_Member :             constant Name_Id := Name_First_Edif + 25;
+   Name_Number :             constant Name_Id := Name_First_Edif + 26;
+   Name_Rename :             constant Name_Id := Name_First_Edif + 27;
+   Name_Userdata :           constant Name_Id := Name_First_Edif + 28;
    Name_Last_Edif :          constant Name_Id := Name_Userdata;
 
    -- Initialize the name table with the values defined here.

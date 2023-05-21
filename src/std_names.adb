@@ -167,6 +167,9 @@ package body Std_Names is
       Def ("vprop",              Name_Vprop);
       Def ("vunit",              Name_Vunit);
 
+      Def ("private",            Name_Private);
+      Def ("view",               Name_View);
+
       Def ("across",     Name_Across);
       Def ("break",      Name_Break);
       Def ("limit",      Name_Limit);
@@ -888,7 +891,6 @@ package body Std_Names is
       Def ("technology",         Name_Technology);
       Def ("cell",               Name_Cell);
       Def ("celltype",           Name_Celltype);
-      Def ("view",               Name_View);
       Def ("viewtype",           Name_Viewtype);
       Def ("direction",          Name_Direction);
       Def ("contents",           Name_Contents);

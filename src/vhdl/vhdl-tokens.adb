@@ -447,6 +447,11 @@ package body Vhdl.Tokens is
          when Tok_Arobase =>
             return "@";
 
+         when Tok_Private =>
+            return "private";
+         when Tok_View =>
+            return "view";
+
          --  PSL keywords
          when Tok_Psl_Clock =>
             return "clock";

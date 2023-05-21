@@ -409,7 +409,12 @@ package body Ghdlprint is
                   when Html_Css =>
                      Put ("</tt>");
                end case;
-            when Tok_Mod .. Tok_Vunit =>
+            when Tok_Mod .. Tok_Not
+              | Tok_Access .. Tok_Nor
+              | Tok_Xnor .. Tok_Ror
+              | Tok_Protected
+              | Tok_Assume .. Tok_Vunit
+              | Tok_Private .. Tok_View =>
                Disp_Reserved;
             when Tok_Semi_Colon =>
                Disp_Spaces;
