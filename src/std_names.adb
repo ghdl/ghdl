@@ -447,6 +447,8 @@ package body Std_Names is
 
       Def ("element",       Name_Element);
 
+      Def ("converse",      Name_Converse);
+
       Def ("contribution",  Name_Contribution);
       Def ("dot",           Name_Dot);
       Def ("integ",         Name_Integ);

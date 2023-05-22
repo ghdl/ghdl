@@ -2386,6 +2386,52 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Is_Ref (Flag12)
 
+   -- Iir_Kind_Simple_Mode_View_Element (Short)
+   -- Iir_Kind_Array_Mode_View_Element (Short)
+   -- Iir_Kind_Record_Mode_View_Element (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --  The selected element.
+   --   Get/Set_Named_Entity (Field4)
+   --
+   -- Only for Iir_Kind_Array_Mode_View_Element:
+   -- Only for Iir_Kind_Record_Mode_View_Element:
+   --   Get/Set_Mode_View_Name (Field5)
+   --
+   -- Only for Iir_Kind_Simple_Mode_View_Element:
+   --   Get/Set_Mode (Flag13,Flag14,Flag15)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Has_Identifier_List (Flag3)
+
+   -- Iir_Kind_Mode_View_Declaration (Short)
+   --
+   --  LRM19 6.5.2 Interface object declarations
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Subtype_Indication (Field5)
+   --
+   --   Get/Set_Elements_Definition_Chain (Field1)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Is_Ref (Flag12)
+
    -- Iir_Kind_Use_Clause (Short)
    --
    --  LRM08 12.4 Use clauses
@@ -5028,6 +5074,9 @@ package Vhdl.Nodes is
       Iir_Kind_Array_Element_Resolution,
       Iir_Kind_Record_Resolution,
       Iir_Kind_Record_Element_Resolution,
+      Iir_Kind_Simple_Mode_View_Element,
+      Iir_Kind_Array_Mode_View_Element,
+      Iir_Kind_Record_Mode_View_Element,
       Iir_Kind_Break_Element,
 
       Iir_Kind_Attribute_Specification,
@@ -5102,6 +5151,7 @@ package Vhdl.Nodes is
       Iir_Kind_Element_Declaration,
       Iir_Kind_Nature_Element_Declaration,
       Iir_Kind_Non_Object_Alias_Declaration,
+      Iir_Kind_Mode_View_Declaration,
 
       Iir_Kind_Psl_Declaration,
       Iir_Kind_Psl_Boolean_Parameter,
@@ -7300,6 +7350,11 @@ package Vhdl.Nodes is
    --Iir_Kind_Step_Limit_Specification
      Iir_Kind_Configuration_Specification;
 
+   subtype Iir_Kinds_Mode_View_Element_Definition is Iir_Kind range
+     Iir_Kind_Simple_Mode_View_Element ..
+   --Iir_Kind_Array_Mode_View_Element
+     Iir_Kind_Record_Mode_View_Element;
+
    --  Nodes and lists.
 
    subtype Iir is Vhdl.Nodes_Priv.Node_Type;
@@ -8473,6 +8528,10 @@ package Vhdl.Nodes is
    function Get_Selected_Name (Target : Iir) return Iir;
    procedure Set_Selected_Name (Target : Iir; Name : Iir);
 
+   --  Field: Field5
+   function Get_Mode_View_Name (Target : Iir) return Iir;
+   procedure Set_Mode_View_Name (Target : Iir; Name : Iir);
+
    --  The type declarator which declares the type definition DEF.  Can also
    --  be a nature declarator for composite nature definition.
    --  Field: Field3 Ref
@@ -8709,6 +8768,11 @@ package Vhdl.Nodes is
    --  Field: Field1 Of_Maybe_Ref (uc)
    function Get_Elements_Declaration_List (Decl : Iir) return Iir_Flist;
    procedure Set_Elements_Declaration_List (Decl : Iir; List : Iir_Flist);
+
+   --  For mode view elements.
+   --  Field: Field1 Chain
+   function Get_Elements_Definition_Chain (Decl : Iir) return Iir;
+   procedure Set_Elements_Definition_Chain (Decl : Iir; Chain : Iir);
 
    --  Field: Field6 Chain
    function Get_Owned_Elements_Chain (Atype : Iir) return Iir;

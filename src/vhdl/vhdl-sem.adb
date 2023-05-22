@@ -2819,6 +2819,8 @@ package body Vhdl.Sem is
                null;
             when Iir_Kind_Terminal_Declaration =>
                null;
+            when Iir_Kind_Mode_View_Declaration =>
+               null;
             when others =>
                pragma Assert (Flags.Flag_Force_Analysis);
                null;

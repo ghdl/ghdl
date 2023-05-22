@@ -231,6 +231,7 @@ package body Vhdl.Elocations_Meta is
            | Iir_Kind_Package_Body
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Component_Declaration
+           | Iir_Kind_Mode_View_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Sensitized_Process_Statement
@@ -262,6 +263,7 @@ package body Vhdl.Elocations_Meta is
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Mode_View_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Sensitized_Process_Statement

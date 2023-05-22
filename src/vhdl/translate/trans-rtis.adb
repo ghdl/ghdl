@@ -2419,6 +2419,9 @@ package body Trans.Rtis is
                --  FIXME: todo
                null;
 
+            when Iir_Kind_Mode_View_Declaration =>
+               null;
+
             when Iir_Kind_Psl_Default_Clock =>
                null;
             when Iir_Kind_Psl_Declaration =>

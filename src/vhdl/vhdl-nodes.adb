@@ -1028,6 +1028,9 @@ package body Vhdl.Nodes is
            | Iir_Kind_Array_Element_Resolution
            | Iir_Kind_Record_Resolution
            | Iir_Kind_Record_Element_Resolution
+           | Iir_Kind_Simple_Mode_View_Element
+           | Iir_Kind_Array_Mode_View_Element
+           | Iir_Kind_Record_Mode_View_Element
            | Iir_Kind_Break_Element
            | Iir_Kind_Disconnection_Specification
            | Iir_Kind_Step_Limit_Specification
@@ -1068,6 +1071,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Element_Declaration
            | Iir_Kind_Nature_Element_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
+           | Iir_Kind_Mode_View_Declaration
            | Iir_Kind_Psl_Boolean_Parameter
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Terminal_Declaration
@@ -3634,6 +3638,22 @@ package body Vhdl.Nodes is
       Set_Field1 (Target, Name);
    end Set_Selected_Name;
 
+   function Get_Mode_View_Name (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Mode_View_Name (Get_Kind (Target)),
+                     "no field Mode_View_Name");
+      return Get_Field5 (Target);
+   end Get_Mode_View_Name;
+
+   procedure Set_Mode_View_Name (Target : Iir; Name : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Mode_View_Name (Get_Kind (Target)),
+                     "no field Mode_View_Name");
+      Set_Field5 (Target, Name);
+   end Set_Mode_View_Name;
+
    function Get_Type_Declarator (Def : Iir) return Iir is
    begin
       pragma Assert (Def /= Null_Iir);
@@ -4451,6 +4471,22 @@ package body Vhdl.Nodes is
                      "no field Elements_Declaration_List");
       Set_Field1 (Decl, Iir_Flist_To_Iir (List));
    end Set_Elements_Declaration_List;
+
+   function Get_Elements_Definition_Chain (Decl : Iir) return Iir is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Elements_Definition_Chain (Get_Kind (Decl)),
+                     "no field Elements_Definition_Chain");
+      return Get_Field1 (Decl);
+   end Get_Elements_Definition_Chain;
+
+   procedure Set_Elements_Definition_Chain (Decl : Iir; Chain : Iir) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Elements_Definition_Chain (Get_Kind (Decl)),
+                     "no field Elements_Definition_Chain");
+      Set_Field1 (Decl, Chain);
+   end Set_Elements_Definition_Chain;
 
    function Get_Owned_Elements_Chain (Atype : Iir) return Iir is
    begin

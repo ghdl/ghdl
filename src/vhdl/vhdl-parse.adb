@@ -4880,6 +4880,173 @@ package body Vhdl.Parse is
       return Res;
    end Parse_Alias_Declaration;
 
+   --  precond : VIEW
+   --  postcond: next token
+   --
+   --  LRM19 6.5.2 Interface object declarations
+   --  mode_view_declaration ::=
+   --      VIEW mode_view_name [ OF /unresolved_/record_subtype_indication ]
+   --          { mode_view_element_definition }
+   --      END VIEW [ /mode_view_/simple_name ]
+   function Parse_Mode_View_Declaration return Iir
+   is
+      Res: Iir;
+      Last : Iir;
+      First, Prev : Iir;
+      El: Iir_Element_Declaration;
+   begin
+      --  TODO: can only be declared in:
+      --  entity, block_declarative_item, package declarations,
+
+      Res := Create_Iir (Iir_Kind_Mode_View_Declaration);
+      Set_Location (Res);
+
+      --  Skip 'view'
+      Scan;
+
+      --  Scan and skip identifier.
+      Scan_Identifier (Res);
+
+      --  Skip 'of'.
+      Expect_Scan (Tok_Of);
+      Set_Subtype_Indication (Res, Parse_Subtype_Indication);
+
+      if Flag_Elocations then
+         Create_Elocations (Res);
+         Set_Is_Location (Res, Get_Token_Location);
+      end if;
+
+      Expect_Scan (Tok_Is);
+
+      Last := Null_Iir;
+      Prev := Null_Iir;
+      if Current_Token /= Tok_End then
+         loop
+            First := Null_Iir;
+            --  Parse identifier_list
+            loop
+               El := Create_Iir (Iir_Kind_Simple_Mode_View_Element);
+               Scan_Identifier (El);
+
+               Set_Parent (El, Res);
+
+               --  Keep the first of the identifier list in case of
+               --  changing the kind.
+               if First = Null_Iir then
+                  First := El;
+                  Prev := Last;
+               end if;
+
+               --  Link.
+               if Last = Null_Iir then
+                  Set_Elements_Definition_Chain (Res, El);
+               else
+                  Set_Chain (Last, El);
+               end if;
+               Last := El;
+
+               exit when Current_Token /= Tok_Comma;
+
+               Set_Has_Identifier_List (El, True);
+
+               --  Skip ','
+               Scan;
+            end loop;
+
+            --  Comments attached to the first element.
+            if Flag_Gather_Comments then
+               Gather_Comments_Line (First);
+            end if;
+
+            --  Scan ':'.
+            Expect_Scan (Tok_Colon);
+
+            case Current_Token is
+               when Tok_In
+                 | Tok_Out
+                 | Tok_Inout
+                 | Tok_Linkage
+                 | Tok_Buffer =>
+                  Set_Mode (First, Parse_Mode);
+               when Tok_View =>
+                  declare
+                     Kind : Iir_Kind;
+                     Name : Iir;
+                     N_El : Iir;
+                     El_Chain : Iir;
+                  begin
+                     --  Skip 'view'.
+                     Scan;
+
+                     if Current_Token = Tok_Left_Paren then
+                        Kind := Iir_Kind_Array_Mode_View_Element;
+
+                        --  Skip '('.
+                        Scan;
+
+                        Name := Parse_Name;
+
+                        --  Skip ')'.
+                        Expect_Scan (Tok_Right_Paren);
+                     else
+                        Kind := Iir_Kind_Record_Mode_View_Element;
+                        Name := Parse_Name;
+                     end if;
+
+                     --  Change kind of the elements.
+                     El := First;
+                     while El /= Null_Iir loop
+                        N_El := Create_Iir (Kind);
+                        Location_Copy (N_El, El);
+                        Set_Identifier (N_El, Get_Identifier (El));
+                        Set_Parent (N_El, Res);
+                        Set_Has_Identifier_List
+                          (N_El, Get_Has_Identifier_List (El));
+
+                        --  Set name on the first.
+                        if El = First then
+                           Set_Mode_View_Name (N_El, Name);
+                        end if;
+
+                        --  Chain.
+                        if Prev = Null_Iir then
+                           Set_Elements_Definition_Chain (Res, N_El);
+                        else
+                           Set_Chain (Prev, N_El);
+                        end if;
+                        Prev := N_El;
+
+                        --  Update last.
+                        Last := N_El;
+
+                        El_Chain := Get_Chain (El);
+                        Free_Iir (El);
+                        El := El_Chain;
+                     end loop;
+                  end;
+               when others =>
+                  null;
+            end case;
+
+            Scan_Semi_Colon_Declaration ("element declaration");
+            exit when Current_Token /= Tok_Identifier;
+         end loop;
+      end if;
+
+      if Flag_Elocations then
+         Set_End_Location (Res, Get_Token_Location);
+      end if;
+
+      --  Skip 'end'
+      Expect_Scan (Tok_End);
+      Expect_Scan (Tok_View);
+      Set_End_Has_Reserved_Id (Res, True);
+
+      Scan_Semi_Colon ("mode view declaration");
+
+      return Res;
+   end Parse_Mode_View_Declaration;
+
    --  precond : FOR
    --  postcond: next token.
    --
@@ -5873,6 +6040,8 @@ package body Vhdl.Parse is
             Decl := Parse_Configuration_Specification;
          when Tok_Attribute =>
             Decl := Parse_Attribute;
+         when Tok_View =>
+            Decl := Parse_Mode_View_Declaration;
          when Tok_Disconnect =>
             --  LRM08 4.7 Package declarations
             --  For package declaration that appears in a subprogram body,

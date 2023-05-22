@@ -646,6 +646,13 @@ package body Vhdl.Errors is
            | Iir_Kind_Noise_Quantity_Declaration =>
             return Disp_Identifier (Node, "quantity declaration");
 
+         when Iir_Kind_Mode_View_Declaration =>
+            return Disp_Identifier (Node, "mode view declaration");
+         when Iir_Kind_Simple_Mode_View_Element
+           | Iir_Kind_Array_Mode_View_Element
+           | Iir_Kind_Record_Mode_View_Element =>
+            return "mode view element";
+
          when Iir_Kind_Attribute_Declaration =>
             return Disp_Identifier (Node, "attribute");
          when Iir_Kind_Attribute_Specification =>

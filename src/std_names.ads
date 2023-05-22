@@ -521,8 +521,14 @@ package Std_Names is
    Name_Last_Vhdl08_Attribute :  constant Name_Id :=
                                              Name_First_Vhdl08_Attribute + 00;
 
+   Name_First_Vhdl19_Attribute : constant Name_Id :=
+                                             Name_Last_Vhdl08_Attribute + 01;
+   Name_Converse :       constant Name_Id := Name_First_Vhdl19_Attribute + 00;
+   Name_Last_Vhdl19_Attribute :  constant Name_Id :=
+                                             Name_First_Vhdl19_Attribute + 00;
+
    Name_First_AMS_Attribute : constant Name_Id :=
-     Name_Last_Vhdl08_Attribute + 1;
+     Name_Last_Vhdl19_Attribute + 1;
    Name_Contribution :   constant Name_Id := Name_First_AMS_Attribute + 000;
    Name_Dot :            constant Name_Id := Name_First_AMS_Attribute + 001;
    Name_Integ :          constant Name_Id := Name_First_AMS_Attribute + 002;

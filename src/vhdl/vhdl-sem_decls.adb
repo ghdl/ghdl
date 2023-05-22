@@ -2316,6 +2316,224 @@ package body Vhdl.Sem_Decls is
       Sem_Scopes.Name_Visible (Decl);
    end Sem_Branch_Quantity_Declaration;
 
+   procedure Sem_Mode_View_Declaration (Decl : Iir)
+   is
+      Vtyp : Iir;
+      Vstyp : Iir;
+      El : Iir;
+      El_Decl : Iir;
+      Vtyp_Els : Iir_Flist;
+      Interp : Name_Interpretation_Type;
+   begin
+      Sem_Scopes.Add_Name (Decl);
+      Sem_Scopes.Name_Visible (Decl);
+      Xref_Decl (Decl);
+
+      --  Analyze subtype indication.
+      Vtyp := Get_Subtype_Indication (Decl);
+      if Vtyp /= Null_Iir then
+         Vtyp := Sem_Subtype_Indication (Vtyp);
+         Set_Subtype_Indication (Decl, Vtyp);
+         if Is_Error (Vtyp) then
+            Vtyp := Null_Iir;
+         end if;
+      end if;
+
+      if Vtyp /= Null_Iir then
+         --  LRM19 6.5.2 Interface object declarations
+         --  A mode view declaration declares a mode view for a composite
+         --  type of subtype.
+         --  [...]
+         --  The subtype indication of a mode view declaration shall denote
+         --  an unresolved record type of subtype.
+         Vstyp := Get_Type_Of_Subtype_Indication (Vtyp);
+
+         if Is_Record_Type (Vstyp) then
+            Vtyp_Els := Get_Elements_Declaration_List (Vstyp);
+         else
+            if not Is_Error (Vstyp) then
+               Error_Msg_Sem
+                 (+Vtyp, "mode view can only be declared for a record");
+            end if;
+            Vtyp_Els := Null_Iir_Flist;
+            Vstyp := Null_Iir;
+         end if;
+
+         --  LRM19 6.5.2 Interface object declarations
+         --  In a mode view declaration, it is an error if either resolution
+         --  function appears in the subtype indication or the subtype is
+         --  a resolved subtype.  However, the elements of a composite may be
+         --  resolved subtypes.
+         --
+         --  GHDL: check this isn't a self-contradiction.
+         if Vstyp /= Null_Iir
+           and then Get_Kind (Vstyp) = Iir_Kind_Record_Subtype_Definition
+         then
+            if Get_Resolution_Indication (Vstyp) /= Null_Iir then
+               Error_Msg_Sem
+                 (+Vtyp, "record of mode view cannot be resolved");
+            end if;
+         end if;
+      else
+         Vstyp := Null_Iir;
+      end if;
+
+      --  LRM19 6.5.2 Interface object declarations
+      --  For each record element simple name of the type or subtype, there
+      --  shall be a record element simlpe name in the mode view declaration
+      --  with the same simple name.
+      --
+      --  LRM19 14.4.2.6 Elaboration of a mode view declaration
+      --  After elaborating a mode view declaration it is an eror if any of
+      --  the subelements of a composite type do not have a mode.
+      --
+      --  GHDL: also check for duplicate.
+
+      --  Analyze simple_name of elements.
+      if Vtyp_Els /= Null_Iir_Flist then
+         --  Create a temporary scope to speed-up search of record elements.
+         Open_Declarative_Region;
+         for I in Flist_First .. Flist_Last (Vtyp_Els) loop
+            El_Decl := Get_Nth_Element (Vtyp_Els, I);
+            Add_Name (El_Decl);
+
+            --  Reuse visible_flag to know if a record element has been
+            --  associated to a mode.
+            Set_Visible_Flag (El_Decl, False);
+         end loop;
+
+         El := Get_Elements_Definition_Chain (Decl);
+         while El /= Null_Iir loop
+            Interp := Get_Interpretation (Get_Identifier (El));
+            if not Valid_Interpretation (Interp) then
+               Error_Msg_Sem (+El, "%i is not declared", +El);
+               El_Decl := Null_Iir;
+            else
+               El_Decl := Get_Declaration (Interp);
+               Xref_Ref (El, El_Decl);
+
+               case Get_Kind (El_Decl) is
+                  when Iir_Kind_Element_Declaration
+                    | Iir_Kind_Record_Element_Constraint =>
+                     if Get_Visible_Flag (El_Decl) then
+                        Error_Msg_Sem
+                          (+El, "element %i has already a mode", +El);
+                     end if;
+                     Set_Named_Entity (El, El_Decl);
+                     Set_Visible_Flag (El_Decl, True);
+                  when others =>
+                     Error_Msg_Sem
+                       (+El, "%i is not an element of the record", +El);
+               end case;
+            end if;
+
+            El := Get_Chain (El);
+         end loop;
+
+         for I in Flist_First .. Flist_Last (Vtyp_Els) loop
+            El_Decl := Get_Nth_Element (Vtyp_Els, I);
+            if not Get_Visible_Flag (El_Decl) then
+               Error_Msg_Sem
+                 (+Decl, "no mode for element %i", +El_Decl);
+               Set_Visible_Flag (El_Decl, True);
+            end if;
+         end loop;
+
+         Close_Declarative_Region;
+      end if;
+
+      --  Analyze names of record and array elements.
+      El := Get_Elements_Definition_Chain (Decl);
+      while El /= Null_Iir loop
+         if Get_Kind (El) = Iir_Kind_Simple_Mode_View_Element then
+            --  LRM19 6.5.2 Interface object declarations
+            --  It is an error if the mode of an element mode indication
+            --  is linkage.
+            if Get_Mode (El) = Iir_Linkage_Mode then
+               Error_Msg_Sem
+                 (+El, "mode of element %i cannot be linkage", +El);
+            end if;
+         else
+            declare
+               El_View : Iir;
+               El_View_Type : Iir;
+               Rec_El : Iir;
+               El_Type : Iir;
+               View_Name : Iir;
+            begin
+               View_Name := Get_Mode_View_Name (El);
+               Sem_Name (View_Name);
+               El_View := Get_Named_Entity (View_Name);
+               if Is_Error (El_View) then
+                  El_View := Null_Iir;
+               elsif Get_Kind (El_View) /= Iir_Kind_Mode_View_Declaration then
+                  Error_Msg_Sem
+                    (+View_Name, "name %i does not designate a mode view",
+                     +View_Name);
+                  El_View := Null_Iir;
+               end if;
+
+               --  LRM19 6.5.2 Interface object declarations
+               --  For an element array mode view indication, the element
+               --  type or subtype of each corresponding record element shall
+               --  be compatible with the type or subtype of the mode view.
+               --  For an element record mode view indication, the type or
+               --  subtype of each corresponding record element shall be
+               --  compatible with the type or subtype of the mode view.
+               --
+               --  GHDL: For definition of compatible, see:
+               --    5.2 Scalar types
+               --    5.3.2.2 Index constraints and discrete ranges
+               --    5.3.3 Record types
+
+               Rec_El := Get_Named_Entity (El);
+               if Rec_El /= Null_Iir then
+                  El_Type := Get_Type (Rec_El);
+                  case Iir_Kinds_Mode_View_Element_Definition
+                    (Get_Kind (El)) is
+                     when Iir_Kind_Simple_Mode_View_Element =>
+                        raise Internal_Error;
+                     when Iir_Kind_Record_Mode_View_Element =>
+                        if not Is_Record_Type (El_Type) then
+                           Error_Msg_Sem
+                             (+View_Name, "view can only be used with "
+                                &" elements of record type");
+                           El_Type := Null_Iir;
+                        end if;
+                     when Iir_Kind_Array_Mode_View_Element =>
+                        if not Is_Array_Type (El_Type) then
+                           Error_Msg_Sem
+                             (+View_Name, "view can only be used with "
+                                &" elements of array type");
+                           El_Type := Null_Iir;
+                        else
+                           El_Type := Get_Element_Subtype (El_Type);
+                        end if;
+                  end case;
+               else
+                  El_Type := Null_Iir;
+               end if;
+
+               if El_View /= Null_Iir and then El_Type /= Null_Iir then
+                  El_View_Type := Get_Type_Of_Subtype_Indication
+                    (Get_Subtype_Indication (El_View));
+                  if Get_Base_Type (El_Type) /= Get_Base_Type (El_View_Type)
+                  then
+                     Error_Msg_Sem
+                       (+View_Name,
+                        "type of view and type of element are not compatible");
+                  end if;
+               end if;
+
+               --  FIXME: check constraint compatibility.
+               --  can only check during elaboration if two ranges are not
+               --  compatible ?
+            end;
+         end if;
+         El := Get_Chain (El);
+      end loop;
+   end Sem_Mode_View_Declaration;
+
    --  Analyze declaration DECL.
    --  PREV_DECL is the previous one (used for declaration like
    --    signal a, b : mytype; ) to get type and default value from the
@@ -2385,6 +2603,8 @@ package body Vhdl.Sem_Decls is
             --  An alias may add new alias declarations. Do not skip
             --  them: check that no existing attribute specifications
             --  apply to them.
+         when Iir_Kind_Mode_View_Declaration =>
+            Sem_Mode_View_Declaration (Decl);
          when Iir_Kind_Use_Clause =>
             Sem_Use_Clause (Decl);
          when Iir_Kind_Configuration_Specification =>

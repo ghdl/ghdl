@@ -248,6 +248,7 @@ package body Vhdl.Utils is
                | Iir_Kind_Interface_Package_Declaration
                | Iir_Kind_Interface_Function_Declaration
                | Iir_Kind_Interface_Procedure_Declaration
+               | Iir_Kind_Mode_View_Declaration
                | Iir_Kind_External_Signal_Name
                | Iir_Kind_External_Constant_Name
                | Iir_Kind_External_Variable_Name =>
@@ -364,6 +365,7 @@ package body Vhdl.Utils is
                | Iir_Kind_Record_Element_Resolution
                | Iir_Kind_Element_Declaration
                | Iir_Kind_Nature_Element_Declaration
+               | Iir_Kinds_Mode_View_Element_Definition
                | Iir_Kind_Psl_Endpoint_Declaration
                | Iir_Kind_Psl_Boolean_Parameter
                | Iir_Kind_Psl_Declaration
@@ -1136,6 +1138,13 @@ package body Vhdl.Utils is
    begin
       return Get_Kind (Def) in Iir_Kinds_Array_Type_Definition;
    end Is_Array_Type;
+
+   function Is_Record_Type (Def : Iir) return Boolean is
+   begin
+      return Kind_In (Def,
+                      Iir_Kind_Record_Type_Definition,
+                      Iir_Kind_Record_Subtype_Definition);
+   end Is_Record_Type;
 
    function Is_Fully_Constrained_Type (Def : Iir) return Boolean is
    begin

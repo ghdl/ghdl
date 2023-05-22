@@ -2028,6 +2028,9 @@ package body Trans.Chap4 is
          when Iir_Kind_Group_Declaration =>
             null;
 
+         when Iir_Kind_Mode_View_Declaration =>
+            null;
+
          when others =>
             Error_Kind ("translate_declaration", Decl);
       end case;
@@ -2829,6 +2832,9 @@ package body Trans.Chap4 is
             when Iir_Kind_Psl_Default_Clock =>
                null;
             when Iir_Kind_Psl_Declaration =>
+               null;
+
+            when Iir_Kind_Mode_View_Declaration =>
                null;
 
             when others =>

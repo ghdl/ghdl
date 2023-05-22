@@ -328,6 +328,16 @@ package Vhdl.Elocations is
    -- Iir_Kind_Across_Quantity_Declaration (None)
    -- Iir_Kind_Through_Quantity_Declaration (None)
 
+   -- Iir_Kind_Simple_Mode_View_Element (None)
+   -- Iir_Kind_Record_Mode_View_Element (None)
+   -- Iir_Kind_Array_Mode_View_Element (None)
+
+   -- Iir_Kind_Mode_View_Declaration (L4)
+   --
+   --   Get/Set_End_Location (Field2)
+   --
+   --   Get/Set_Is_Location (Field4)
+
    -- Iir_Kind_Use_Clause (None)
 
    -- Iir_Kind_Context_Reference (None)

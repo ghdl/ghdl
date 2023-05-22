@@ -200,6 +200,7 @@ package Vhdl.Nodes_Meta is
       Field_Context_Reference_Chain,
       Field_Inherit_Spec_Chain,
       Field_Selected_Name,
+      Field_Mode_View_Name,
       Field_Type_Declarator,
       Field_Complete_Type_Definition,
       Field_Incomplete_Type_Ref_Chain,
@@ -251,6 +252,7 @@ package Vhdl.Nodes_Meta is
       Field_Has_Array_Constraint_Flag,
       Field_Has_Element_Constraint_Flag,
       Field_Elements_Declaration_List,
+      Field_Elements_Definition_Chain,
       Field_Owned_Elements_Chain,
       Field_Designated_Type,
       Field_Designated_Subtype_Indication,
@@ -803,6 +805,7 @@ package Vhdl.Nodes_Meta is
    function Has_Context_Reference_Chain (K : Iir_Kind) return Boolean;
    function Has_Inherit_Spec_Chain (K : Iir_Kind) return Boolean;
    function Has_Selected_Name (K : Iir_Kind) return Boolean;
+   function Has_Mode_View_Name (K : Iir_Kind) return Boolean;
    function Has_Type_Declarator (K : Iir_Kind) return Boolean;
    function Has_Complete_Type_Definition (K : Iir_Kind) return Boolean;
    function Has_Incomplete_Type_Ref_Chain (K : Iir_Kind) return Boolean;
@@ -856,6 +859,7 @@ package Vhdl.Nodes_Meta is
    function Has_Has_Array_Constraint_Flag (K : Iir_Kind) return Boolean;
    function Has_Has_Element_Constraint_Flag (K : Iir_Kind) return Boolean;
    function Has_Elements_Declaration_List (K : Iir_Kind) return Boolean;
+   function Has_Elements_Definition_Chain (K : Iir_Kind) return Boolean;
    function Has_Owned_Elements_Chain (K : Iir_Kind) return Boolean;
    function Has_Designated_Type (K : Iir_Kind) return Boolean;
    function Has_Designated_Subtype_Indication (K : Iir_Kind)

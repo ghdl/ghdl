@@ -3472,6 +3472,9 @@ package body Vhdl.Canon is
          when Iir_Kinds_Quantity_Declaration =>
             null;
 
+         when Iir_Kind_Mode_View_Declaration =>
+            null;
+
          when Iir_Kind_Psl_Default_Clock =>
             null;
 
