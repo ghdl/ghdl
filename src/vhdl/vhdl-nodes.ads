@@ -4985,6 +4985,12 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Name_Staticness (State2)
 
+   -- Iir_Kind_Converse_Attribute (Short)
+   --
+   --   Get/Set_Prefix (Field0)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
    -- Iir_Kind_Behavior_Attribute (Short)
    -- Iir_Kind_Structure_Attribute (Short)
    --  FIXME: to describe (Short)
@@ -5379,6 +5385,7 @@ package Vhdl.Nodes is
       Iir_Kind_Simple_Name_Attribute,
       Iir_Kind_Instance_Name_Attribute,
       Iir_Kind_Path_Name_Attribute,
+      Iir_Kind_Converse_Attribute,
       Iir_Kind_Left_Array_Attribute,           --  array_attribute
       Iir_Kind_Right_Array_Attribute,          --  array_attribute
       Iir_Kind_High_Array_Attribute,           --  array_attribute
@@ -7125,6 +7132,7 @@ package Vhdl.Nodes is
    --Iir_Kind_Simple_Name_Attribute
    --Iir_Kind_Instance_Name_Attribute
    --Iir_Kind_Path_Name_Attribute
+   --Iir_Kind_Converse_Attribute
    --Iir_Kind_Left_Array_Attribute
    --Iir_Kind_Right_Array_Attribute
    --Iir_Kind_High_Array_Attribute

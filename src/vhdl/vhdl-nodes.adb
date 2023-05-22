@@ -1240,6 +1240,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Simple_Name_Attribute
            | Iir_Kind_Instance_Name_Attribute
            | Iir_Kind_Path_Name_Attribute
+           | Iir_Kind_Converse_Attribute
            | Iir_Kind_Left_Array_Attribute
            | Iir_Kind_Right_Array_Attribute
            | Iir_Kind_High_Array_Attribute

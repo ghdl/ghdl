@@ -1920,7 +1920,8 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Interface_Package_Declaration
-           | Iir_Kind_Interface_Type_Declaration =>
+           | Iir_Kind_Interface_Type_Declaration
+           | Iir_Kind_Mode_View_Declaration =>
             Name_Res := Finish_Sem_Denoting_Name (Name, Res);
             Set_Base_Name (Name_Res, Res);
             return Name_Res;
@@ -2046,7 +2047,8 @@ package body Vhdl.Sem_Names is
             return Res;
          when Iir_Kind_Simple_Name_Attribute
            | Iir_Kind_Path_Name_Attribute
-           | Iir_Kind_Instance_Name_Attribute =>
+           | Iir_Kind_Instance_Name_Attribute
+           | Iir_Kind_Converse_Attribute =>
             Free_Iir (Name);
             return Res;
          when Iir_Kinds_External_Name =>
@@ -3814,6 +3816,41 @@ package body Vhdl.Sem_Names is
       return Res;
    end Sem_Array_Attribute_Name;
 
+   function Sem_View_Attribute (Attr : Iir_Attribute_Name) return Iir
+   is
+      use Std_Names;
+      Id : constant Name_Id := Get_Identifier (Attr);
+      Prefix_Name : constant Iir := Get_Prefix (Attr);
+      Prefix: Iir;
+      Res : Iir;
+   begin
+      Prefix := Get_Named_Entity (Prefix_Name);
+
+      --  LRM19 16.2.8 Predefined attributes of named mode views
+      --  Prefix: Any named mode view M of composite type T, or an alias
+      --  thereof.
+      case Get_Kind (Prefix) is
+         when Iir_Kind_Mode_View_Declaration =>
+            null;
+         when others =>
+            Error_Msg_Sem
+              (+Attr, "prefix of %i attribute must denote a mode view", +Attr);
+            return Error_Mark;
+      end case;
+
+      case Id is
+         when Name_Converse =>
+            Res := Create_Iir (Iir_Kind_Converse_Attribute);
+         when others =>
+            raise Internal_Error;
+      end case;
+
+      Location_Copy (Res, Attr);
+      Set_Prefix (Res, Prefix_Name);
+
+      return Res;
+   end Sem_View_Attribute;
+
    --  For 'Subtype
    function Sem_Subtype_Attribute (Attr : Iir_Attribute_Name) return Iir
    is
@@ -4493,6 +4530,13 @@ package body Vhdl.Sem_Names is
          when Name_Element =>
             if Flags.Vhdl_Std >= Vhdl_08 then
                Res := Sem_Array_Attribute_Name (Attr);
+            else
+               Res := Sem_User_Attribute (Attr);
+            end if;
+
+         when Name_Converse =>
+            if Flags.Vhdl_Std >= Vhdl_08 then
+               Res := Sem_View_Attribute (Attr);
             else
                Res := Sem_User_Attribute (Attr);
             end if;

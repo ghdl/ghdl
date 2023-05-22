@@ -1846,6 +1846,8 @@ package body Vhdl.Nodes_Meta is
             return "instance_name_attribute";
          when Iir_Kind_Path_Name_Attribute =>
             return "path_name_attribute";
+         when Iir_Kind_Converse_Attribute =>
+            return "converse_attribute";
          when Iir_Kind_Left_Array_Attribute =>
             return "left_array_attribute";
          when Iir_Kind_Right_Array_Attribute =>
@@ -5384,6 +5386,9 @@ package body Vhdl.Nodes_Meta is
       Field_Prefix,
       Field_Type,
       Field_Base_Name,
+      --  Iir_Kind_Converse_Attribute
+      Field_Name_Staticness,
+      Field_Prefix,
       --  Iir_Kind_Left_Array_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
@@ -5782,15 +5787,16 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_Simple_Name_Attribute => 2396,
       Iir_Kind_Instance_Name_Attribute => 2401,
       Iir_Kind_Path_Name_Attribute => 2406,
-      Iir_Kind_Left_Array_Attribute => 2413,
-      Iir_Kind_Right_Array_Attribute => 2420,
-      Iir_Kind_High_Array_Attribute => 2427,
-      Iir_Kind_Low_Array_Attribute => 2434,
-      Iir_Kind_Length_Array_Attribute => 2441,
-      Iir_Kind_Ascending_Array_Attribute => 2448,
-      Iir_Kind_Range_Array_Attribute => 2455,
-      Iir_Kind_Reverse_Range_Array_Attribute => 2462,
-      Iir_Kind_Attribute_Name => 2471
+      Iir_Kind_Converse_Attribute => 2408,
+      Iir_Kind_Left_Array_Attribute => 2415,
+      Iir_Kind_Right_Array_Attribute => 2422,
+      Iir_Kind_High_Array_Attribute => 2429,
+      Iir_Kind_Low_Array_Attribute => 2436,
+      Iir_Kind_Length_Array_Attribute => 2443,
+      Iir_Kind_Ascending_Array_Attribute => 2450,
+      Iir_Kind_Range_Array_Attribute => 2457,
+      Iir_Kind_Reverse_Range_Array_Attribute => 2464,
+      Iir_Kind_Attribute_Name => 2473
      );
 
    function Get_Fields_First (K : Iir_Kind) return Fields_Index is
@@ -11951,6 +11957,7 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Simple_Name_Attribute
            | Iir_Kind_Instance_Name_Attribute
            | Iir_Kind_Path_Name_Attribute
+           | Iir_Kind_Converse_Attribute
            | Iir_Kind_Left_Array_Attribute
            | Iir_Kind_Right_Array_Attribute
            | Iir_Kind_High_Array_Attribute
@@ -12022,6 +12029,7 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Simple_Name_Attribute
            | Iir_Kind_Instance_Name_Attribute
            | Iir_Kind_Path_Name_Attribute
+           | Iir_Kind_Converse_Attribute
            | Iir_Kind_Left_Array_Attribute
            | Iir_Kind_Right_Array_Attribute
            | Iir_Kind_High_Array_Attribute

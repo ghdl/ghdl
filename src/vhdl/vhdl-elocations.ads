@@ -714,6 +714,8 @@ package Vhdl.Elocations is
    -- Iir_Kind_Instance_Name_Attribute (None)
    -- Iir_Kind_Path_Name_Attribute (None)
 
+   -- Iir_Kind_Converse_Attribute (None)
+
    -- Iir_Kind_Behavior_Attribute (None)
    -- Iir_Kind_Structure_Attribute (None)
    --  FIXME: to describe (None)

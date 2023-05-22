@@ -376,15 +376,16 @@ class Iir_Kind(IntEnum):
     Simple_Name_Attribute = 317
     Instance_Name_Attribute = 318
     Path_Name_Attribute = 319
-    Left_Array_Attribute = 320
-    Right_Array_Attribute = 321
-    High_Array_Attribute = 322
-    Low_Array_Attribute = 323
-    Length_Array_Attribute = 324
-    Ascending_Array_Attribute = 325
-    Range_Array_Attribute = 326
-    Reverse_Range_Array_Attribute = 327
-    Attribute_Name = 328
+    Converse_Attribute = 320
+    Left_Array_Attribute = 321
+    Right_Array_Attribute = 322
+    High_Array_Attribute = 323
+    Low_Array_Attribute = 324
+    Length_Array_Attribute = 325
+    Ascending_Array_Attribute = 326
+    Range_Array_Attribute = 327
+    Reverse_Range_Array_Attribute = 328
+    Attribute_Name = 329
 
 
 @export
@@ -857,6 +858,7 @@ class Iir_Kinds:
         Iir_Kind.Simple_Name_Attribute,
         Iir_Kind.Instance_Name_Attribute,
         Iir_Kind.Path_Name_Attribute,
+        Iir_Kind.Converse_Attribute,
         Iir_Kind.Left_Array_Attribute,
         Iir_Kind.Right_Array_Attribute,
         Iir_Kind.High_Array_Attribute,
@@ -911,6 +913,7 @@ class Iir_Kinds:
         Iir_Kind.Simple_Name_Attribute,
         Iir_Kind.Instance_Name_Attribute,
         Iir_Kind.Path_Name_Attribute,
+        Iir_Kind.Converse_Attribute,
         Iir_Kind.Left_Array_Attribute,
         Iir_Kind.Right_Array_Attribute,
         Iir_Kind.High_Array_Attribute,

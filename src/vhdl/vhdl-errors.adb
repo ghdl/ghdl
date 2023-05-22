@@ -764,6 +764,9 @@ package body Vhdl.Errors is
          when Iir_Kind_Simple_Name_Attribute =>
             return "'simple_name attribute";
 
+         when Iir_Kind_Converse_Attribute =>
+            return "'converse attribute";
+
          when Iir_Kind_For_Loop_Statement =>
             return Disp_Label (Node, "for loop statement");
          when Iir_Kind_While_Loop_Statement =>

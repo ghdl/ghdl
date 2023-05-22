@@ -1817,13 +1817,12 @@ package body Vhdl.Sem_Decls is
    end Add_Aliases_For_Type_Alias;
 
    procedure Sem_Non_Object_Alias_Declaration
-     (Alias : Iir_Non_Object_Alias_Declaration)
+     (Alias : Iir_Non_Object_Alias_Declaration; Named_Entity : Iir)
    is
       use Std_Names;
-      N_Entity : constant Iir := Get_Named_Entity (Get_Name (Alias));
       Id : Name_Id;
    begin
-      case Get_Kind (N_Entity) is
+      case Get_Kind (Named_Entity) is
          when Iir_Kinds_Subprogram_Declaration
            | Iir_Kinds_Interface_Subprogram_Declaration =>
             --  LRM93 4.3.3.2  Non-Object Aliases
@@ -1861,8 +1860,10 @@ package body Vhdl.Sem_Decls is
          when Iir_Kind_Base_Attribute =>
             Error_Msg_Sem (+Alias, "base attribute not allowed in alias");
             return;
+         when Iir_Kind_Converse_Attribute =>
+            null;
          when others =>
-            Error_Kind ("sem_non_object_alias_declaration", N_Entity);
+            Error_Kind ("sem_non_object_alias_declaration", Named_Entity);
       end case;
 
       Id := Get_Identifier (Alias);
@@ -1872,7 +1873,7 @@ package body Vhdl.Sem_Decls is
             --  LRM 4.3.3  Alias declarations
             --  If the alias designator is a character literal, the
             --  name must denote an enumeration literal.
-            if Get_Kind (N_Entity) /= Iir_Kind_Enumeration_Literal then
+            if Get_Kind (Named_Entity) /= Iir_Kind_Enumeration_Literal then
                Error_Msg_Sem
                  (+Alias,
                   "alias of a character must denote an enumeration literal");
@@ -1887,12 +1888,12 @@ package body Vhdl.Sem_Decls is
             --  overloads the operator symbol.  In this latter case,
             --  the operator symbol and the function both must meet the
             --  requirements of 2.3.1.
-            if Get_Kind (N_Entity) /= Iir_Kind_Function_Declaration then
+            if Get_Kind (Named_Entity) /= Iir_Kind_Function_Declaration then
                Error_Msg_Sem
                  (+Alias, "alias of an operator must denote a function");
                return;
             end if;
-            Check_Operator_Requirements (Id, N_Entity);
+            Check_Operator_Requirements (Id, Named_Entity);
          when others =>
             null;
       end case;
@@ -1994,21 +1995,27 @@ package body Vhdl.Sem_Decls is
 
          Free_Iir (Alias);
 
-         if Get_Kind (Name) in Iir_Kinds_Denoting_And_External_Name then
-            Sem_Non_Object_Alias_Declaration (Res);
-         else
-            Error_Msg_Sem
-              (+Name, "name of nonobject alias is not a name");
+         case Get_Kind (Name) is
+            when Iir_Kinds_Denoting_Name
+              | Iir_Kinds_External_Name =>
+               Sem_Non_Object_Alias_Declaration
+                 (Res, Get_Named_Entity (Get_Name (Res)));
+            when Iir_Kind_Converse_Attribute =>
+               --  Maybe other attributes ?
+               Sem_Non_Object_Alias_Declaration (Res, Name);
 
-            --  Create a simple name to an error node.
-            N_Entity := Create_Error (Name);
-            Name := Create_Iir (Iir_Kind_Simple_Name);
-            Location_Copy (Name, N_Entity);
-            Set_Identifier (Name, Get_Identifier (Res));  --  Better idea ?
-            Set_Named_Entity (Name, N_Entity);
-            Set_Base_Name (Name, Name);
-            Set_Name (Res, Name);
-         end if;
+            when others =>
+               Error_Msg_Sem (+Name, "name of nonobject alias is not a name");
+
+               --  Create a simple name to an error node.
+               N_Entity := Create_Error (Name);
+               Name := Create_Iir (Iir_Kind_Simple_Name);
+               Location_Copy (Name, N_Entity);
+               Set_Identifier (Name, Get_Identifier (Res));  --  Better idea ?
+               Set_Named_Entity (Name, N_Entity);
+               Set_Base_Name (Name, Name);
+               Set_Name (Res, Name);
+         end case;
 
          return Res;
       end if;
@@ -2466,11 +2473,23 @@ package body Vhdl.Sem_Decls is
                El_View := Get_Named_Entity (View_Name);
                if Is_Error (El_View) then
                   El_View := Null_Iir;
-               elsif Get_Kind (El_View) /= Iir_Kind_Mode_View_Declaration then
-                  Error_Msg_Sem
-                    (+View_Name, "name %i does not designate a mode view",
-                     +View_Name);
-                  El_View := Null_Iir;
+               else
+                  View_Name := Finish_Sem_Name (View_Name);
+                  Set_Mode_View_Name (El, View_Name);
+
+                  case Get_Kind (El_View) is
+                     when Iir_Kind_Mode_View_Declaration =>
+                        null;
+                     when Iir_Kind_Converse_Attribute =>
+                        --  Use prefix to get the type.
+                        El_View := Get_Named_Entity (Get_Prefix (El_View));
+                     when others =>
+                        Error_Msg_Sem
+                          (+View_Name,
+                           "name %i does not designate a mode view",
+                           +View_Name);
+                        El_View := Null_Iir;
+                  end case;
                end if;
 
                --  LRM19 6.5.2 Interface object declarations
