@@ -1961,6 +1961,54 @@ package body Vhdl.Prints is
       Close_Hbox (Ctxt);
    end Disp_Group_Declaration;
 
+   procedure Disp_Mode_View_Declaration (Ctxt : in out Ctxt_Class; Decl : Iir)
+   is
+      El, First : Iir;
+      Reindent : Boolean;
+   begin
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_View);
+      Disp_Identifier (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Of);
+      Print (Ctxt, Get_Subtype_Indication (Decl));
+      Disp_Token (Ctxt, Tok_Is);
+      Close_Hbox (Ctxt);
+      Start_Vbox (Ctxt);
+      Reindent := True;
+      El := Get_Elements_Definition_Chain (Decl);
+      while El /= Null_Iir loop
+         if Reindent then
+            First := El;
+            Start_Hbox (Ctxt);
+         end if;
+         Disp_Identifier (Ctxt, El);
+         if Get_Has_Identifier_List (El) then
+            Disp_Token (Ctxt, Tok_Comma);
+            Reindent := False;
+         else
+            Disp_Token (Ctxt, Tok_Colon);
+            case Iir_Kinds_Mode_View_Element_Definition (Get_Kind (First)) is
+               when Iir_Kind_Simple_Mode_View_Element =>
+                  Disp_Mode (Ctxt, Get_Mode (First));
+               when Iir_Kind_Array_Mode_View_Element =>
+                  Disp_Token (Ctxt, Tok_View);
+                  Disp_Token (Ctxt, Tok_Left_Paren);
+                  Print (Ctxt, Get_Mode_View_Name (First));
+                  Disp_Token (Ctxt, Tok_Right_Paren);
+               when Iir_Kind_Record_Mode_View_Element =>
+                  Disp_Token (Ctxt, Tok_View);
+                  Print (Ctxt, Get_Mode_View_Name (First));
+            end case;
+            Disp_Token (Ctxt, Tok_Semi_Colon);
+            Close_Hbox (Ctxt);
+            Reindent := True;
+         end if;
+         El := Get_Chain (El);
+      end loop;
+      Close_Vbox (Ctxt);
+      Disp_End_Label (Ctxt, Decl, Tok_View);
+   end Disp_Mode_View_Declaration;
+
    procedure Print_Expr (Ctxt : in out Ctxt_Class;
                          N : PSL_Node;
                          Parent_Prio : Priority := Prio_Lowest)
@@ -2617,6 +2665,9 @@ package body Vhdl.Prints is
                Disp_Package_Instantiation_Declaration (Ctxt, Decl);
             when Iir_Kind_Psl_Default_Clock =>
                Disp_Psl_Default_Clock (Ctxt, Decl);
+
+            when Iir_Kind_Mode_View_Declaration =>
+               Disp_Mode_View_Declaration (Ctxt, Decl);
 
             when Iir_Kind_Suspend_State_Declaration =>
                Start_Hbox (Ctxt);
@@ -4898,6 +4949,9 @@ package body Vhdl.Prints is
             Disp_Name_Attribute (Ctxt, Expr, Name_Low);
          when Iir_Kind_Ascending_Type_Attribute =>
             Disp_Name_Attribute (Ctxt, Expr, Name_Ascending);
+
+         when Iir_Kind_Converse_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Converse);
 
          when Iir_Kind_Nature_Reference_Attribute =>
             Disp_Name_Attribute (Ctxt, Expr, Name_Reference);
