@@ -53,7 +53,28 @@ package body Vhdl.Sem_Specs is
          when Iir_Kind_Function_Declaration =>
             return Tok_Function;
          when Iir_Kind_Type_Declaration =>
-            return Tok_Type;
+            --  For vhdl08 and later, if an array or record is not fully
+            --  unconstrained, the type is anonymous and a subtype is
+            --  implicitely created.
+            if Vhdl_Std < Vhdl_08 then
+               return Tok_Type;
+            end if;
+            declare
+               Atype : constant Iir := Get_Type (Decl);
+            begin
+               case Get_Kind (Atype) is
+                  when Iir_Kind_Record_Type_Definition
+                    | Iir_Kind_Array_Type_Definition =>
+                     null;
+                  when others =>
+                     return Tok_Type;
+               end case;
+               if Get_Constraint_State (Atype) = Unconstrained then
+                  return Tok_Type;
+               else
+                  return Tok_Subtype;
+               end if;
+            end;
          when Iir_Kind_Subtype_Declaration =>
             return Tok_Subtype;
          when Iir_Kind_Constant_Declaration
