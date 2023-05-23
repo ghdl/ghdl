@@ -5128,11 +5128,16 @@ package body Vhdl.Parse is
            | Tok_Group
            | Tok_File =>
             null;
+         when Tok_View =>
+            null;
          when others =>
             Error_Msg_Parse ("%t is not a entity class", +Current_Token);
       end case;
       Res := Current_Token;
+
+      --  Skip entity class.
       Scan;
+
       return Res;
    end Parse_Entity_Class;
 

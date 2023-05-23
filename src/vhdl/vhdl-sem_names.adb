@@ -3412,7 +3412,8 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Component_Declaration
-           | Iir_Kinds_Library_Unit =>
+           | Iir_Kinds_Library_Unit
+           | Iir_Kind_Mode_View_Declaration =>
             --  FIXME: complete
             null;
          when Iir_Kinds_Sequential_Statement

@@ -94,6 +94,8 @@ package body Vhdl.Sem_Specs is
             --  Because an attribute declaration can appear in a declaration
             --  region.
             return Tok_Attribute;
+         when Iir_Kind_Mode_View_Declaration =>
+            return Tok_View;
          when others =>
             Error_Kind ("get_entity_class_kind", Decl);
       end case;
@@ -495,7 +497,8 @@ package body Vhdl.Sem_Specs is
               | Iir_Kind_Enumeration_Literal
               | Iir_Kind_Unit_Declaration
               | Iir_Kind_Group_Template_Declaration
-              | Iir_Kind_Group_Declaration =>
+              | Iir_Kind_Group_Declaration
+              | Iir_Kind_Mode_View_Declaration =>
                Res := Res or Sem_Named_Entity1 (Ent, Ent);
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
