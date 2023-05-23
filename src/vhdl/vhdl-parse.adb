@@ -2102,6 +2102,11 @@ package body Vhdl.Parse is
             if Interface_Mode = Iir_Unknown_Mode then
                Interface_Mode := Iir_In_Mode;
             end if;
+         when Iir_Kind_Interface_View_Declaration =>
+            if Interface_Mode /= Iir_Unknown_Mode then
+               Error_Msg_Parse
+                 ("mode can't be specified for a view interface");
+            end if;
          when Iir_Kind_Interface_Constant_Declaration =>
             if Interface_Mode = Iir_Unknown_Mode then
                Interface_Mode := Iir_In_Mode;

@@ -233,6 +233,7 @@ package Vhdl.Elocations is
    -- Iir_Kind_Subnature_Declaration (None)
 
    -- Iir_Kind_Interface_Signal_Declaration (L3)
+   -- Iir_Kind_Interface_View_Declaration (L3)
    -- Iir_Kind_Interface_Constant_Declaration (L3)
    -- Iir_Kind_Interface_Variable_Declaration (L3)
    -- Iir_Kind_Interface_File_Declaration (L3)

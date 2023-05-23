@@ -185,6 +185,7 @@ package body Elab.Vhdl_Insts is
             when Iir_Kind_Interface_Variable_Declaration
                | Iir_Kind_Interface_File_Declaration
                | Iir_Kind_Interface_Signal_Declaration
+               | Iir_Kind_Interface_View_Declaration
                | Iir_Kind_Interface_Quantity_Declaration
                | Iir_Kind_Interface_Terminal_Declaration =>
                raise Internal_Error;

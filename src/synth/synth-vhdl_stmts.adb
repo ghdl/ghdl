@@ -2124,6 +2124,8 @@ package body Synth.Vhdl_Stmts is
             return Info.Obj;
          when Iir_Kind_Interface_Quantity_Declaration =>
             raise Internal_Error;
+         when Iir_Kind_Interface_View_Declaration =>
+            raise Internal_Error;
       end case;
    end Synth_Subprogram_Association;
 

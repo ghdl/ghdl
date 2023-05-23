@@ -108,7 +108,8 @@ package body Trans.Chap2 is
                Mech := Pass_By_Address;
             end if;
             Info.Interface_Mechanism (Mode_Value) := Mech;
-         when Iir_Kind_Interface_Signal_Declaration =>
+         when Iir_Kind_Interface_Signal_Declaration
+            | Iir_Kind_Interface_View_Declaration =>
             Info.Interface_Mechanism (Mode_Signal) := Mech;
             --  Values are always passed by address.
             if Get_Kind (Spec) = Iir_Kind_Procedure_Declaration then

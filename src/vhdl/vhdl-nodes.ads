@@ -1424,6 +1424,7 @@ package Vhdl.Nodes is
    --   Get/Set_Use_Flag (Flag6)
 
    -- Iir_Kind_Interface_Signal_Declaration (Short)
+   -- Iir_Kind_Interface_View_Declaration (Short)
    -- Iir_Kind_Interface_Constant_Declaration (Short)
    -- Iir_Kind_Interface_Variable_Declaration (Short)
    -- Iir_Kind_Interface_File_Declaration (Short)
@@ -1442,7 +1443,14 @@ package Vhdl.Nodes is
    --   Get/Set_Subtype_Indication (Field5)
    --
    --  Must always be null_iir for iir_kind_interface_file_declaration.
+   -- Only for Iir_Kind_Interface_Signal_Declaration:
+   -- Only for Iir_Kind_Interface_Constant_Declaration:
+   -- Only for Iir_Kind_Interface_Variable_Declaration:
+   -- Only for Iir_Kind_Interface_File_Declaration:
+   -- Only for Iir_Kind_Interface_Quantity_Declaration:
    --   Get/Set_Default_Value (Field4)
+   --
+   --  -- Only for Iir_Kind_Interface_View_Declaration:
    --
    --  The type can be deduced from the subtype indication, but this field is
    --  present for uniformity (and speed).
@@ -5188,6 +5196,7 @@ package Vhdl.Nodes is
       Iir_Kind_Interface_Constant_Declaration, -- object, interface
       Iir_Kind_Interface_Variable_Declaration, -- object, interface
       Iir_Kind_Interface_Signal_Declaration,   -- object, interface
+      Iir_Kind_Interface_View_Declaration,     -- object, interface
       Iir_Kind_Interface_File_Declaration,     -- object, interface
       Iir_Kind_Interface_Quantity_Declaration, -- object, interface
       Iir_Kind_Interface_Terminal_Declaration, --         interface
@@ -6930,6 +6939,7 @@ package Vhdl.Nodes is
      Iir_Kind_Interface_Constant_Declaration ..
    --Iir_Kind_Interface_Variable_Declaration
    --Iir_Kind_Interface_Signal_Declaration
+   --Iir_Kind_Interface_View_Declaration
    --Iir_Kind_Interface_File_Declaration
      Iir_Kind_Interface_Quantity_Declaration;
 
@@ -6941,6 +6951,7 @@ package Vhdl.Nodes is
      Iir_Kind_Interface_Constant_Declaration ..
    --Iir_Kind_Interface_Variable_Declaration
    --Iir_Kind_Interface_Signal_Declaration
+   --Iir_Kind_Interface_View_Declaration
    --Iir_Kind_Interface_File_Declaration
    --Iir_Kind_Interface_Quantity_Declaration
    --Iir_Kind_Interface_Terminal_Declaration
@@ -6971,6 +6982,7 @@ package Vhdl.Nodes is
    --Iir_Kind_Interface_Constant_Declaration
    --Iir_Kind_Interface_Variable_Declaration
    --Iir_Kind_Interface_Signal_Declaration
+   --Iir_Kind_Interface_View_Declaration
    --Iir_Kind_Interface_File_Declaration
      Iir_Kind_Interface_Quantity_Declaration;
 
@@ -6999,6 +7011,7 @@ package Vhdl.Nodes is
    --Iir_Kind_Interface_Constant_Declaration
    --Iir_Kind_Interface_Variable_Declaration
    --Iir_Kind_Interface_Signal_Declaration
+   --Iir_Kind_Interface_View_Declaration
      Iir_Kind_Interface_File_Declaration;
 
    --  Association elements for parameters.

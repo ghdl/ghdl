@@ -461,6 +461,8 @@ package body Vhdl.Errors is
                when others =>
                   return Disp_Identifier (Node, "signal interface");
             end case;
+         when Iir_Kind_Interface_View_Declaration =>
+            return Disp_Identifier (Node, "port");
          when Iir_Kind_Interface_Variable_Declaration =>
             return Disp_Identifier (Node, "variable interface");
          when Iir_Kind_Interface_File_Declaration =>
