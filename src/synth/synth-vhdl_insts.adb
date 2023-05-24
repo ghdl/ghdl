@@ -1669,8 +1669,7 @@ package body Synth.Vhdl_Insts is
 
    procedure Synth_Instance_Design (Syn_Inst : Synth_Instance_Acc;
                                     Entity : Node;
-                                    Arch : Node)
-   is
+                                    Arch : Node) is
    begin
       --  Entity
       Synth_Concurrent_Declarations (Syn_Inst, Get_Declaration_Chain (Entity));
@@ -1688,6 +1687,7 @@ package body Synth.Vhdl_Insts is
       pragma Assert (Is_Expr_Pool_Empty);
 
       --  Architecture
+      Instance_Pool := Process_Pool'Access;
       if not Is_Error (Syn_Inst) then
          Synth_Concurrent_Declarations
            (Syn_Inst, Get_Declaration_Chain (Arch));
