@@ -71,7 +71,9 @@ jobs:
         uses: buildthedocs/btd@v0
         with:
           token: ${{ github.token }}
-          skip-deploy: ${{ github.event_name == 'pull_request' }}
+#          skip-deploy: ${{ github.event_name == 'pull_request' }}
+# git push currently fails
+          skip-deploy: true
 
       #- run: nroff -man doc/_build/man/ghdl.1
 
