@@ -186,6 +186,7 @@ package Vhdl.Nodes_Meta is
       Field_Implicit_Definition,
       Field_Uninstantiated_Subprogram_Name,
       Field_Default_Value,
+      Field_Mode_View_Indication,
       Field_Deferred_Declaration,
       Field_Deferred_Declaration_Flag,
       Field_Shared_Flag,
@@ -791,6 +792,7 @@ package Vhdl.Nodes_Meta is
    function Has_Uninstantiated_Subprogram_Name (K : Iir_Kind)
       return Boolean;
    function Has_Default_Value (K : Iir_Kind) return Boolean;
+   function Has_Mode_View_Indication (K : Iir_Kind) return Boolean;
    function Has_Deferred_Declaration (K : Iir_Kind) return Boolean;
    function Has_Deferred_Declaration_Flag (K : Iir_Kind) return Boolean;
    function Has_Shared_Flag (K : Iir_Kind) return Boolean;

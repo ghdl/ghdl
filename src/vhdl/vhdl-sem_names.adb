@@ -498,6 +498,30 @@ package body Vhdl.Sem_Names is
       return Res;
    end Find_Declarations_In_List;
 
+   function Sem_Mode_View_Name (Name : Iir) return Iir
+   is
+      View : Iir;
+      Res : Iir;
+   begin
+      Sem_Name (Name);
+      View := Get_Named_Entity (Name);
+      if Is_Error (View) then
+         return View;
+      end if;
+
+      Res := Finish_Sem_Name (Name);
+
+      case Get_Kind (View) is
+         when Iir_Kind_Mode_View_Declaration
+           | Iir_Kind_Converse_Attribute =>
+            null;
+         when others =>
+            Error_Msg_Sem (+Res, "mode view name expected");
+            Res := Create_Error_Name (Res);
+      end case;
+      return Res;
+   end Sem_Mode_View_Name;
+
    --  If PREFIX is a function specification that cannot be converted to a
    --  function call (because of lack of association), return FALSE.
    function Maybe_Function_Call (Prefix : Iir) return Boolean
@@ -2182,7 +2206,9 @@ package body Vhdl.Sem_Names is
          if not Keep_Alias
            and then Get_Kind (Res) = Iir_Kind_Non_Object_Alias_Declaration
          then
-            Res := Get_Named_Entity (Get_Name (Res));
+            Res := Get_Name (Res);
+            --  Could be a 'converse attribute.
+            Res := Strip_Denoting_Name (Res);
          end if;
       else
          --  Name is overloaded.

@@ -322,6 +322,8 @@ package body Vhdl.Utils is
                | Iir_Kinds_Subnature_Definition
                | Iir_Kind_Wildcard_Type_Definition
                | Iir_Kind_Subtype_Definition
+               | Iir_Kind_Record_Mode_View_Indication
+               | Iir_Kind_Array_Mode_View_Indication
                | Iir_Kind_Group_Template_Declaration
                | Iir_Kind_Group_Declaration
                | Iir_Kind_Attribute_Implicit_Declaration

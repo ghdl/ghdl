@@ -1053,6 +1053,8 @@ package body Vhdl.Nodes is
            | Iir_Kind_Range_Expression
            | Iir_Kind_Protected_Type_Body
            | Iir_Kind_Wildcard_Type_Definition
+           | Iir_Kind_Record_Mode_View_Indication
+           | Iir_Kind_Array_Mode_View_Indication
            | Iir_Kind_Overload_List
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Context_Declaration
@@ -3412,6 +3414,22 @@ package body Vhdl.Nodes is
                      "no field Default_Value");
       Set_Field4 (Target, Value);
    end Set_Default_Value;
+
+   function Get_Mode_View_Indication (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Mode_View_Indication (Get_Kind (Target)),
+                     "no field Mode_View_Indication");
+      return Get_Field4 (Target);
+   end Get_Mode_View_Indication;
+
+   procedure Set_Mode_View_Indication (Target : Iir; Ind : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Mode_View_Indication (Get_Kind (Target)),
+                     "no field Mode_View_Indication");
+      Set_Field4 (Target, Ind);
+   end Set_Mode_View_Indication;
 
    function Get_Deferred_Declaration (Target : Iir) return Iir is
    begin

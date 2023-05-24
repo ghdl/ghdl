@@ -1873,6 +1873,89 @@ package body Vhdl.Parse is
       return Res;
    end Parse_Type_Mark;
 
+   --  precond:  VIEW
+   --  postcond: next token
+   --
+   --  LRM19 6.5.2 Interface object declarations
+   --  mode_view_indication ::=
+   --      record_mode_view_indication
+   --    | array_mode_view_indication
+   --
+   --  record_mode_view_indication ::=
+   --    VIEW mode_view_name [ OF unresolved_record_subtype_indication ]
+   --
+   --  array_mode_view_indication ::=
+   --    VIEW ( mode_view_name ) [ OF unresolved_array_subtype_indication ]
+   function Parse_Mode_View_Indication return Iir
+   is
+      Res : Iir;
+   begin
+      --  Skip 'view'.
+      Scan;
+
+      if Current_Token = Tok_Left_Paren then
+         Res := Create_Iir (Iir_Kind_Array_Mode_View_Indication);
+         Set_Location (Res);
+
+         --  Skip '('.
+         Scan;
+
+         Set_Name (Res, Parse_Name);
+
+         --  Skip ')'.
+         Expect_Scan (Tok_Right_Paren);
+      else
+         Res := Create_Iir (Iir_Kind_Record_Mode_View_Indication);
+         Set_Location (Res);
+
+         Set_Name (Res, Parse_Name);
+      end if;
+
+      if Current_Token = Tok_Of then
+         --  Skip 'of'.
+         Scan;
+
+         Set_Subtype_Indication (Res, Parse_Subtype_Indication);
+      end if;
+
+      return Res;
+   end Parse_Mode_View_Indication;
+
+   --  Change kind of interfaces, for parse_interface_object_declaration.
+   procedure Rename_Interfaces (First : in out Iir; New_Kind : Iir_Kind)
+   is
+      O_Interface : Iir_Interface_Constant_Declaration;
+      N_Interface : Iir_Interface_Variable_Declaration;
+      Last, Tmp : Iir;
+   begin
+      Last := Null_Iir;
+
+      O_Interface := First;
+      while O_Interface /= Null_Iir loop
+         N_Interface := Create_Iir (New_Kind);
+         Location_Copy (N_Interface, O_Interface);
+         Set_Identifier (N_Interface, Get_Identifier (O_Interface));
+
+         if Flag_Elocations then
+            Create_Elocations (N_Interface);
+            Set_Start_Location (N_Interface, Get_Start_Location (O_Interface));
+            Set_Colon_Location
+              (N_Interface, Get_Colon_Location (O_Interface));
+         end if;
+
+         if Last = Null_Iir then
+            First := N_Interface;
+         else
+            Set_Chain (Last, N_Interface);
+         end if;
+         Last := N_Interface;
+
+         Tmp := Get_Chain (O_Interface);
+         Free_Iir (O_Interface);
+         O_Interface := Tmp;
+      end loop;
+   end Rename_Interfaces;
+
    --  precond : CONSTANT, SIGNAL, VARIABLE. FILE or identifier
    --  postcond: next token (';' or ')')
    --
@@ -1917,6 +2000,7 @@ package body Vhdl.Parse is
       Last : Iir;
       First : Iir;
       Inter: Iir;
+      Next_Inter : Iir;
       Is_Default : Boolean;
       Interface_Mode: Iir_Mode;
       Interface_Type: Iir;
@@ -1948,6 +2032,9 @@ package body Vhdl.Parse is
                   Kind := Iir_Kind_Interface_Signal_Declaration;
             end case;
          when Tok_Constant =>
+            if Ctxt = Port_Interface_List then
+               Error_Msg_Parse ("constant interface not allowed for a port");
+            end if;
             Kind := Iir_Kind_Interface_Constant_Declaration;
          when Tok_Signal =>
             if Ctxt = Generic_Interface_List then
@@ -2043,94 +2130,76 @@ package body Vhdl.Parse is
             Has_Mode := False;
       end case;
 
-      --  LRM93 2.1.1  LRM08 4.2.2.1
-      --  If the mode is INOUT or OUT, and no object class is explicitly
-      --  specified, variable is assumed.
-      if Is_Default
-        and then Ctxt in Parameter_Interface_List
-        and then Interface_Mode in Iir_Out_Modes
-      then
-         --  Convert into variable.
-         declare
-            O_Interface : Iir_Interface_Constant_Declaration;
-            N_Interface : Iir_Interface_Variable_Declaration;
-         begin
-            O_Interface := First;
-            while O_Interface /= Null_Iir loop
-               N_Interface :=
-                 Create_Iir (Iir_Kind_Interface_Variable_Declaration);
-               Location_Copy (N_Interface, O_Interface);
-               Set_Identifier (N_Interface, Get_Identifier (O_Interface));
+      if Current_Token = Tok_View then
+         if Has_Class
+           and then Get_Kind (First) /= Iir_Kind_Interface_Signal_Declaration
+         then
+            Error_Msg_Parse ("view only allowed for interface signal");
+         end if;
+         Rename_Interfaces (First, Iir_Kind_Interface_View_Declaration);
+         Inter := First;
 
-               if Flag_Elocations then
-                  Create_Elocations (N_Interface);
-                  Set_Start_Location
-                    (N_Interface, Get_Start_Location (O_Interface));
-                  Set_Colon_Location
-                    (N_Interface, Get_Colon_Location (O_Interface));
-               end if;
+         if Interface_Mode /= Iir_Unknown_Mode then
+            Error_Msg_Parse ("mode can't be specified for a view");
+         end if;
 
-               if O_Interface = First then
-                  First := N_Interface;
-               else
-                  Set_Chain (Last, N_Interface);
-               end if;
-               Last := N_Interface;
-
-               Inter := Get_Chain (O_Interface);
-               Free_Iir (O_Interface);
-               O_Interface := Inter;
-            end loop;
+         Interface_Type := Parse_Mode_View_Indication;
+      else
+         --  LRM93 2.1.1  LRM08 4.2.2.1
+         --  If the mode is INOUT or OUT, and no object class is explicitly
+         --  specified, variable is assumed.
+         if Is_Default
+           and then Ctxt in Parameter_Interface_List
+           and then Interface_Mode in Iir_Out_Modes
+         then
+            Rename_Interfaces (First, Iir_Kind_Interface_Variable_Declaration);
             Inter := First;
-         end;
-      end if;
+         end if;
 
-      --  Parse mode (and handle default mode).
-      case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
-         when Iir_Kind_Interface_File_Declaration =>
-            if Interface_Mode /= Iir_Unknown_Mode then
-               Error_Msg_Parse
-                 ("mode can't be specified for a file interface");
-            end if;
-            Interface_Mode := Iir_Inout_Mode;
-         when Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Interface_Variable_Declaration =>
-            --  LRM93 4.3.2
-            --  If no mode is explicitly given in an interface declaration
-            --  other than an interface file declaration, mode IN is
-            --  assumed.
-            if Interface_Mode = Iir_Unknown_Mode then
-               Interface_Mode := Iir_In_Mode;
-            end if;
-         when Iir_Kind_Interface_View_Declaration =>
-            if Interface_Mode /= Iir_Unknown_Mode then
-               Error_Msg_Parse
-                 ("mode can't be specified for a view interface");
-            end if;
-         when Iir_Kind_Interface_Constant_Declaration =>
-            if Interface_Mode = Iir_Unknown_Mode then
-               Interface_Mode := Iir_In_Mode;
-            elsif Interface_Mode /= Iir_In_Mode then
-               Error_Msg_Parse ("mode must be 'in' for a constant");
-               Interface_Mode := Iir_In_Mode;
-            end if;
-         when Iir_Kind_Interface_Quantity_Declaration =>
-            case Interface_Mode is
-               when Iir_Unknown_Mode =>
-                  Interface_Mode := Iir_In_Mode;
-               when Iir_In_Mode
-                 | Iir_Out_Mode =>
-                  null;
-               when Iir_Inout_Mode
-                 | Iir_Linkage_Mode
-                 | Iir_Buffer_Mode =>
+         --  Parse mode (and handle default mode).
+         case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
+            when Iir_Kind_Interface_File_Declaration =>
+               if Interface_Mode /= Iir_Unknown_Mode then
                   Error_Msg_Parse
-                    ("mode must be 'in' or 'out' for a quantity");
+                    ("mode can't be specified for a file interface");
+               end if;
+               Interface_Mode := Iir_Inout_Mode;
+            when Iir_Kind_Interface_Signal_Declaration
+              | Iir_Kind_Interface_Variable_Declaration =>
+               --  LRM93 4.3.2
+               --  If no mode is explicitly given in an interface declaration
+               --  other than an interface file declaration, mode IN is
+               --  assumed.
+               if Interface_Mode = Iir_Unknown_Mode then
                   Interface_Mode := Iir_In_Mode;
-            end case;
-      end case;
+               end if;
+            when Iir_Kind_Interface_View_Declaration =>
+               raise Internal_Error;
+            when Iir_Kind_Interface_Constant_Declaration =>
+               if Interface_Mode = Iir_Unknown_Mode then
+                  Interface_Mode := Iir_In_Mode;
+               elsif Interface_Mode /= Iir_In_Mode then
+                  Error_Msg_Parse ("mode must be 'in' for a constant");
+                  Interface_Mode := Iir_In_Mode;
+               end if;
+            when Iir_Kind_Interface_Quantity_Declaration =>
+               case Interface_Mode is
+                  when Iir_Unknown_Mode =>
+                     Interface_Mode := Iir_In_Mode;
+                  when Iir_In_Mode
+                    | Iir_Out_Mode =>
+                     null;
+                  when Iir_Inout_Mode
+                    | Iir_Linkage_Mode
+                    | Iir_Buffer_Mode =>
+                     Error_Msg_Parse
+                       ("mode must be 'in' or 'out' for a quantity");
+                     Interface_Mode := Iir_In_Mode;
+               end case;
+         end case;
 
-      Interface_Type := Parse_Subtype_Indication;
+         Interface_Type := Parse_Subtype_Indication;
+      end if;
 
       --  Signal kind (but only for signal).
       if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
@@ -2141,15 +2210,20 @@ package body Vhdl.Parse is
       end if;
 
       if Current_Token = Tok_Assign then
-         if Get_Kind (Inter) = Iir_Kind_Interface_File_Declaration then
-            Error_Msg_Parse
-              ("default expression not allowed for an interface file");
-         end if;
+         case Get_Kind (Inter) is
+            when Iir_Kind_Interface_File_Declaration =>
+               Error_Msg_Parse
+                 ("default expression not allowed for an interface file");
+            when Iir_Kind_Interface_View_Declaration =>
+               Error_Msg_Parse
+                 ("default expression not allowed for a mode view");
+            when others =>
+               if Flag_Elocations then
+                  Set_Assign_Location (First, Get_Token_Location);
+               end if;
+         end case;
 
          --  Skip ':='
-         if Flag_Elocations then
-            Set_Assign_Location (First, Get_Token_Location);
-         end if;
          Scan;
 
          Default_Value := Parse_Expression;
@@ -2159,23 +2233,31 @@ package body Vhdl.Parse is
 
       --  Subtype_Indication and Default_Value are set only on the first
       --  interface.
-      Set_Subtype_Indication (First, Interface_Type);
-      if Get_Kind (First) /= Iir_Kind_Interface_File_Declaration then
-         Set_Default_Value (First, Default_Value);
-      end if;
+      case Get_Kind (First) is
+         when Iir_Kind_Interface_View_Declaration =>
+            Set_Mode_View_Indication (First, Interface_Type);
+         when Iir_Kind_Interface_File_Declaration =>
+            Set_Subtype_Indication (First, Interface_Type);
+         when others =>
+            Set_Subtype_Indication (First, Interface_Type);
+            Set_Default_Value (First, Default_Value);
+      end case;
 
       Inter := First;
       while Inter /= Null_Iir loop
-         Set_Mode (Inter, Interface_Mode);
+         Next_Inter := Get_Chain (Inter);
          Set_Is_Ref (Inter, Inter /= First);
-         Set_Has_Mode (Inter, Has_Mode);
          Set_Has_Class (Inter, Has_Class);
-         Set_Has_Identifier_List (Inter, Inter /= Last);
+         Set_Has_Identifier_List (Inter, Next_Inter /= Null_Iir);
+         if Get_Kind (Inter) /= Iir_Kind_Interface_View_Declaration then
+            Set_Mode (Inter, Interface_Mode);
+            Set_Has_Mode (Inter, Has_Mode);
+         end if;
          if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
             Set_Guarded_Signal_Flag (Inter, Is_Guarded);
             Set_Signal_Kind (Inter, Signal_Kind);
          end if;
-         Inter := Get_Chain (Inter);
+         Inter := Next_Inter;
       end loop;
 
       return First;
@@ -2713,32 +2795,12 @@ package body Vhdl.Parse is
    procedure Parse_Port_Clause (Parent : Iir)
    is
       Res: Iir;
-      El : Iir;
    begin
       --  Skip 'port'
       pragma Assert (Current_Token = Tok_Port);
       Scan;
 
       Res := Parse_Interface_List (Port_Interface_List, Parent);
-
-      --  Check the interface are signal interfaces.
-      El := Res;
-      while El /= Null_Iir loop
-         case Get_Kind (El) is
-            when Iir_Kind_Interface_Signal_Declaration
-              | Iir_Kind_Interface_Terminal_Declaration
-              | Iir_Kind_Interface_Quantity_Declaration =>
-               null;
-            when others =>
-               if AMS_Vhdl then
-                  Error_Msg_Parse
-                    (+El, "port must be a signal, a terminal or a quantity");
-               else
-                  Error_Msg_Parse (+El, "port must be a signal");
-               end if;
-         end case;
-         El := Get_Chain (El);
-      end loop;
 
       Scan_Semi_Colon ("port clause");
       Set_Port_Chain (Parent, Res);
@@ -5046,6 +5108,7 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_End);
       Expect_Scan (Tok_View);
       Set_End_Has_Reserved_Id (Res, True);
+      Check_End_Name (Res);
 
       Scan_Semi_Colon ("mode view declaration");
 

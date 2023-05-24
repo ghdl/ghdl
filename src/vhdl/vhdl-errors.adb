@@ -341,6 +341,10 @@ package body Vhdl.Errors is
          when Iir_Kind_Foreign_Vector_Type_Definition =>
             return "foreign vector type definition";
 
+         when Iir_Kind_Record_Mode_View_Indication
+            | Iir_Kind_Array_Mode_View_Indication =>
+            return "mode view indication";
+
          when Iir_Kind_Scalar_Nature_Definition =>
             return Disp_Nature (Node, "scalar nature");
          when Iir_Kind_Array_Nature_Definition =>

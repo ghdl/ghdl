@@ -1024,6 +1024,7 @@ package body Vhdl.Sem_Scopes is
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration
+           | Iir_Kind_Mode_View_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
            | Iir_Kinds_Quantity_Declaration

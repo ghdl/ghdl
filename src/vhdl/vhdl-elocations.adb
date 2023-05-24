@@ -271,6 +271,8 @@ package body Vhdl.Elocations is
            | Iir_Kind_Wildcard_Type_Definition
            | Iir_Kind_Foreign_Vector_Type_Definition
            | Iir_Kind_Subtype_Definition
+           | Iir_Kind_Record_Mode_View_Indication
+           | Iir_Kind_Array_Mode_View_Indication
            | Iir_Kind_Scalar_Nature_Definition
            | Iir_Kind_Array_Nature_Definition
            | Iir_Kind_Array_Subnature_Definition

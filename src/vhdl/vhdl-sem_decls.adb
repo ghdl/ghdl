@@ -297,7 +297,8 @@ package body Vhdl.Sem_Decls is
          case Get_Kind (Inter) is
             when Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Interface_Signal_Declaration =>
-               --  LRM 4.3.2  Interface declarations
+               --  LRM93 4.3.2  Interface declarations
+               --  LRM08/LRM19 6.5.2 Interface object declarations
                --  For an interface constant declaration or an interface
                --  signal declaration, the subtype indication must define
                --  a subtype that is neither a file type, an access type,
@@ -408,22 +409,9 @@ package body Vhdl.Sem_Decls is
                Set_Expr_Staticness (Inter, Globally);
             end if;
          when Port_Interface_List =>
-            case Get_Kind (Inter) is
-               when Iir_Kind_Interface_Signal_Declaration
-                 | Iir_Kind_Interface_Terminal_Declaration
-                 | Iir_Kind_Interface_Quantity_Declaration =>
-                  null;
-               when others =>
-                  if AMS_Vhdl then
-                     Error_Msg_Sem
-                       (+Inter,
-                        "port %n must be a signal, a terminal or a quantity",
-                        +Inter);
-                  else
-                     Error_Msg_Sem
-                       (+Inter, "port %n must be a signal", +Inter);
-                  end if;
-            end case;
+            --  Parse already check that ports are signals (or terminals or
+            --  quantities).
+            null;
          when Parameter_Interface_List =>
             if Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
               and then Interface_Kind = Function_Parameter_Interface_List
@@ -476,6 +464,118 @@ package body Vhdl.Sem_Decls is
             end case;
       end case;
    end Sem_Interface_Object_Declaration;
+
+   procedure Sem_Mode_View_Indication (Ind : Iir)
+   is
+      Name : Iir;
+      View : Iir;
+   begin
+      Name := Get_Name (Ind);
+      Name := Sem_Mode_View_Name (Name);
+      Set_Name (Ind, Name);
+
+      if Get_Subtype_Indication (Ind) /= Null_Iir then
+         --  TODO.
+         raise Internal_Error;
+      end if;
+
+      if Is_Error (Name) then
+         Set_Type (Ind, Error_Type);
+         return;
+      end if;
+
+      case Get_Kind (Name) is
+         when Iir_Kinds_Denoting_Name =>
+            View := Get_Named_Entity (Name);
+         when Iir_Kind_Converse_Attribute =>
+            View := Get_Named_Entity (Get_Prefix (Name));
+         when others =>
+            Error_Kind ("sem_mode_view_indication", Ind);
+      end case;
+
+      Set_Type
+        (Ind, Get_Type_Of_Subtype_Indication (Get_Subtype_Indication (View)));
+   end Sem_Mode_View_Indication;
+
+   procedure Sem_Interface_View_Declaration
+     (Inter, Last : Iir; Interface_Kind : Interface_Kind_Type)
+   is
+      A_View : Iir;
+      A_Type : Iir;
+   begin
+      --  Avoid the reanalysed duplicated types.
+      --  This is not an optimization, since the unanalysed type must have
+      --  been freed.
+      A_View := Get_Mode_View_Indication (Inter);
+      if A_View = Null_Iir then
+         if Last = Null_Iir or else not Get_Has_Identifier_List (Last) then
+            --  mode view indication was not parsed.
+            A_View := Create_Error_Type (Null_Iir);
+            Set_Mode_View_Indication (Inter, A_View);
+         else
+            pragma Assert (Get_Is_Ref (Inter));
+            A_Type := Get_Type (Last);
+            Set_Mode_View_Indication (Inter, Get_Mode_View_Indication (Last));
+         end if;
+      else
+         Sem_Mode_View_Indication (A_View);
+         A_Type := Get_Type (A_View);
+      end if;
+
+      Set_Name_Staticness (Inter, Locally);
+      Xref_Decl (Inter);
+
+      Set_Type (Inter, A_Type);
+
+      if not Is_Error (A_Type) then
+         Set_Type_Has_Signal (A_Type);
+
+         --  LRM19 6.5.2 Interface object declarations
+         --  For an interface constant declaration (...) or an interface
+         --  signal declaration, the subtype indication shall define
+         --  a subtype that is neither a file type, an access type,
+         --  nor a protected type.  Moreover, the subtype indication
+         --  must not denote a composite type with a subelement that
+         --  is a file type, an access type, or a protected type.
+         --
+         --  GHDL: this wording is not correct for a mode_view_indication.
+         Check_Signal_Type (Inter);
+      end if;
+
+      Sem_Scopes.Add_Name (Inter);
+
+      --  By default, interface are not static.
+      --  This may be changed just below.
+      Set_Expr_Staticness (Inter, None);
+
+      case Interface_Kind is
+         when Generic_Interface_List =>
+            --  LRM93 1.1.1
+            --  The generic list in the formal generic clause defines
+            --  generic constants whose values may be determined by the
+            --  environment.
+            if Get_Kind (Inter) /= Iir_Kind_Interface_Constant_Declaration then
+               Error_Msg_Sem (+Inter, "generic %n must be a constant", +Inter);
+            else
+               --   LRM93 7.4.2 (Globally static primaries)
+               --   3. a generic constant.
+               Set_Expr_Staticness (Inter, Globally);
+            end if;
+         when Port_Interface_List =>
+            --  Parse already check that ports are signals (or terminals or
+            --  quantities).
+            null;
+         when Parameter_Interface_List =>
+            --  By default, we suppose a subprogram read the activity of
+            --  a signal.
+            --  This will be adjusted when the body is analyzed.
+            if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration
+              and then Get_Mode (Inter) in Iir_In_Modes
+            then
+               Set_Has_Active_Flag (Inter, True);
+            end if;
+      end case;
+   end Sem_Interface_View_Declaration;
 
    procedure Sem_Interface_Terminal_Declaration (Inter, Last : Iir)
    is
@@ -626,8 +726,15 @@ package body Vhdl.Sem_Decls is
       Inter := Interface_Chain;
       while Inter /= Null_Iir loop
          case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
-            when Iir_Kinds_Interface_Object_Declaration =>
+            when Iir_Kind_Interface_Signal_Declaration
+              | Iir_Kind_Interface_Variable_Declaration
+              | Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_File_Declaration
+              | Iir_Kind_Interface_Quantity_Declaration =>
                Sem_Interface_Object_Declaration (Inter, Last, Interface_Kind);
+               Last := Inter;
+            when Iir_Kind_Interface_View_Declaration =>
+               Sem_Interface_View_Declaration (Inter, Last, Interface_Kind);
                Last := Inter;
             when Iir_Kind_Interface_Terminal_Declaration =>
                Sem_Interface_Terminal_Declaration (Inter, Last);

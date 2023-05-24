@@ -1450,7 +1450,8 @@ package Vhdl.Nodes is
    -- Only for Iir_Kind_Interface_Quantity_Declaration:
    --   Get/Set_Default_Value (Field4)
    --
-   --  -- Only for Iir_Kind_Interface_View_Declaration:
+   -- Only for Iir_Kind_Interface_View_Declaration:
+   --   Get/Set_Mode_View_Indication (Field4)
    --
    --  The type can be deduced from the subtype indication, but this field is
    --  present for uniformity (and speed).
@@ -3205,6 +3206,15 @@ package Vhdl.Nodes is
    --   Get/Set_Tolerance (Field7)
    --
    --   Get/Set_Is_Ref (Flag12)
+
+   -- Iir_Kind_Record_Mode_View_Indication (Short)
+   -- Iir_Kind_Array_Mode_View_Indication (Short)
+   --
+   --   Get/Set_Name (Field4)
+   --
+   --   Get/Set_Subtype_Indication (Field5)
+   --
+   --   Get/Set_Type (Field1)
 
    -------------------------
    --  Nature definitions --
@@ -5125,6 +5135,9 @@ package Vhdl.Nodes is
       Iir_Kind_Wildcard_Type_Definition,
       Iir_Kind_Foreign_Vector_Type_Definition,
       Iir_Kind_Subtype_Definition,  -- temporary (must not appear after sem).
+
+      Iir_Kind_Record_Mode_View_Indication,
+      Iir_Kind_Array_Mode_View_Indication,
 
    -- Nature definition
       Iir_Kind_Scalar_Nature_Definition,
@@ -8474,6 +8487,10 @@ package Vhdl.Nodes is
    --  Field: Field4 Maybe_Ref
    function Get_Default_Value (Target : Iir) return Iir;
    procedure Set_Default_Value (Target : Iir; Value : Iir);
+
+   --  Field: Field4 Maybe_Ref
+   function Get_Mode_View_Indication (Target : Iir) return Iir;
+   procedure Set_Mode_View_Indication (Target : Iir; Ind : Iir);
 
    --  The deferred_declaration field points to the deferred constant
    --  declaration for a full constant declaration, or is null_iir for a

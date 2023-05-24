@@ -419,6 +419,9 @@ package Vhdl.Elocations is
 
    -- Iir_Kind_Subtype_Definition (None)
 
+   -- Iir_Kind_Record_Mode_View_Indication (None)
+   -- Iir_Kind_Array_Mode_View_Indication (None)
+
    -------------------------
    --  Nature definitions --
    -------------------------
