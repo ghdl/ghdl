@@ -2139,7 +2139,11 @@ package body Vhdl.Sem_Assocs is
       end if;
 
       if Match = Not_Compatible then
-         if Finish and then not Is_Error (Actual) then
+         if Finish
+           and then not (Is_Error (Actual)
+                           or else Get_Type (Actual) = Null_Iir
+                           or else Is_Error (Get_Type (Actual)))
+         then
             Report_Start_Group;
             Error_Msg_Sem
               (+Assoc, "can't associate %n with %n", (+Actual, +Inter));
