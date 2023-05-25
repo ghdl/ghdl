@@ -2658,6 +2658,9 @@ package body Vhdl.Parse is
    --  LRM08 6.5.6 Interface lists
    --  interface_list ::= interface_element { ';' interface_element }
    --
+   --  LRM19 6.5.6 Interface lists
+   --  interface_list ::= interface_element { ';' interface_element } [ ; ]
+   --
    --  interface_element ::= interface_declaration
    function Parse_Interface_List (Ctxt : Interface_Kind_Type; Parent : Iir)
                                  return Iir
@@ -2723,8 +2726,10 @@ package body Vhdl.Parse is
                   Error_Msg_Parse
                     (Prev_Loc, "empty interface list not allowed");
                else
-                  Error_Msg_Parse
-                    (Prev_Loc, "extra ';' at end of interface list");
+                  if Vhdl_Std < Vhdl_19 then
+                     Error_Msg_Parse
+                       (Prev_Loc, "extra ';' at end of interface list");
+                  end if;
                end if;
 
                --  Skip ')'.
