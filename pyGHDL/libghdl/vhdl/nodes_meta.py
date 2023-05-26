@@ -474,41 +474,42 @@ class fields(IntEnum):
     End_Has_Reserved_Id = 354
     End_Has_Identifier = 355
     End_Has_Postponed = 356
-    Has_Label = 357
-    Has_Begin = 358
-    Has_End = 359
-    Has_Is = 360
-    Has_Pure = 361
-    Has_Body = 362
-    Has_Parameter = 363
-    Has_Component = 364
-    Has_Identifier_List = 365
-    Has_Mode = 366
-    Has_Class = 367
-    Has_Delay_Mechanism = 368
-    Suspend_Flag = 369
-    Stop_Flag = 370
-    Is_Ref = 371
-    Is_Forward_Ref = 372
-    Psl_Property = 373
-    Psl_Sequence = 374
-    Psl_Declaration = 375
-    Psl_Expression = 376
-    Psl_Boolean = 377
-    PSL_Clock = 378
-    PSL_NFA = 379
-    PSL_Nbr_States = 380
-    PSL_Clock_Sensitivity = 381
-    PSL_EOS_Flag = 382
-    PSL_Abort_Flag = 383
-    Count_Expression = 384
-    Clock_Expression = 385
-    Default_Clock = 386
-    Foreign_Node = 387
-    Suspend_State_Index = 388
-    Suspend_State_Chain = 389
-    Suspend_State_Last = 390
-    Suspend_State_Decl = 391
+    Is_Clocked_Process = 357
+    Has_Label = 358
+    Has_Begin = 359
+    Has_End = 360
+    Has_Is = 361
+    Has_Pure = 362
+    Has_Body = 363
+    Has_Parameter = 364
+    Has_Component = 365
+    Has_Identifier_List = 366
+    Has_Mode = 367
+    Has_Class = 368
+    Has_Delay_Mechanism = 369
+    Suspend_Flag = 370
+    Stop_Flag = 371
+    Is_Ref = 372
+    Is_Forward_Ref = 373
+    Psl_Property = 374
+    Psl_Sequence = 375
+    Psl_Declaration = 376
+    Psl_Expression = 377
+    Psl_Boolean = 378
+    PSL_Clock = 379
+    PSL_NFA = 380
+    PSL_Nbr_States = 381
+    PSL_Clock_Sensitivity = 382
+    PSL_EOS_Flag = 383
+    PSL_Abort_Flag = 384
+    Count_Expression = 385
+    Clock_Expression = 386
+    Default_Clock = 387
+    Foreign_Node = 388
+    Suspend_State_Index = 389
+    Suspend_State_Chain = 390
+    Suspend_State_Last = 391
+    Suspend_State_Decl = 392
 
 
 def Get_Boolean(node, field):
@@ -2782,6 +2783,12 @@ def Has_End_Has_Identifier(kind: IirKind) -> bool:
 @export
 @BindToLibGHDL("vhdl__nodes_meta__has_end_has_postponed")
 def Has_End_Has_Postponed(kind: IirKind) -> bool:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes_meta__has_is_clocked_process")
+def Has_Is_Clocked_Process(kind: IirKind) -> bool:
     """"""
 
 

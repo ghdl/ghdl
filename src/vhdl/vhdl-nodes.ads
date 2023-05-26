@@ -3473,6 +3473,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_End_Has_Postponed (Flag10)
    --
+   --   Get/Set_Is_Clocked_Process (Flag14)
+   --
    -- Only for Iir_Kind_Process_Statement:
    --   Get/Set_Suspend_Flag (Flag11)
    --
@@ -9634,6 +9636,12 @@ package Vhdl.Nodes is
    --  Field: Flag10
    function Get_End_Has_Postponed (Decl : Iir) return Boolean;
    procedure Set_End_Has_Postponed (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag: true if "'event", rising_edge or falling_edge is
+   --               detected within the process
+   --  Field: Flag14
+   function Get_Is_Clocked_Process (Decl : Iir) return Boolean;
+   procedure Set_Is_Clocked_Process (Decl : Iir; Flag : Boolean);
 
    --  Layout flag: true if a label is present.
    --  Field: Flag6

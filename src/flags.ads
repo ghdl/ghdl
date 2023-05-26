@@ -122,6 +122,9 @@ package Flags is
    --  If set, performs VITAL checks.
    Flag_Vital_Checks : Boolean := True;
 
+   -- If set, performs checks for best practices on synthesizable code
+   Flag_Check_Synthesis : Boolean := False;
+
    --  Set if analysis is done even after parsing errors.  The analysis code
    --  that handles and tolerates incorrect parse tree should check that this
    --  flag is set.
