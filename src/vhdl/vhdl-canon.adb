@@ -85,7 +85,6 @@ package body Vhdl.Canon is
    procedure Canon_Conditional_Signal_Assignment_Expression (Stmt : Iir);
 
    procedure Canon_Check_Edge_Func(Node : Iir) is
-      Func_Identifier : Name_Id;
    begin
       if not Canoning_Process then
          return;
@@ -93,12 +92,17 @@ package body Vhdl.Canon is
 
       case Get_Kind (Node) is
       when Iir_Kind_Function_Call =>
-         Func_Identifier := Get_Identifier (Get_Implementation (Node));
-         if Name_Table.Image (Func_Identifier) = "rising_edge" or
-            Name_Table.Image (Func_Identifier) = "falling_edge"
-         then
+         case Get_Implicit_Definition(Get_Implementation(Node)) is
+         when Iir_Predefined_Boolean_Rising_Edge
+           | Iir_Predefined_Boolean_Falling_Edge
+           | Iir_Predefined_Bit_Rising_Edge
+           | Iir_Predefined_Bit_Falling_Edge
+           | Iir_Predefined_Ieee_1164_Rising_Edge
+           | Iir_Predefined_Ieee_1164_Falling_Edge =>
             Set_Is_Clocked_Process (Current_Process, True);
-         end if;
+         when others =>
+            null;
+         end case;
 
       when Iir_Kind_Event_Attribute =>
          Set_Is_Clocked_Process (Current_Process, True);
@@ -108,7 +112,6 @@ package body Vhdl.Canon is
          -- values that don't imply we are in a clocked process, do nothing
          -- instead of throwing an error
          null;
-         --Error_Kind ("canon_check_edge_func", Node);
       end case;
 
    end Canon_Check_Edge_Func;
