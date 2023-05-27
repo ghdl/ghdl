@@ -269,12 +269,7 @@ package body Vhdl.Canon is
             Canon_Extract_Sensitivity_Expression
               (Get_Prefix (Expr), Sensitivity_List, False);
 
-         when Iir_Kind_Active_Attribute
-            | Iir_Kind_Last_Event_Attribute
-            | Iir_Kind_Last_Active_Attribute
-            | Iir_Kind_Last_Value_Attribute
-            | Iir_Kind_Driving_Attribute
-            | Iir_Kind_Driving_Value_Attribute =>
+         when Iir_Kinds_Signal_Value_Attribute =>
             --  LRM 8.1
             --  An attribute name: [...]; otherwise, apply this rule to the
             --  prefix of the attribute name.
