@@ -419,7 +419,8 @@ package body Vhdl.Utils is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
-           | Iir_Kind_Interface_Quantity_Declaration =>
+           | Iir_Kind_Interface_Quantity_Declaration
+           | Iir_Kind_Interface_View_Declaration =>
             return Name;
 
          --  An implicit signak GUARD defined by the guard expression of a

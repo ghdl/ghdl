@@ -4913,6 +4913,10 @@ package body Vhdl.Sem_Expr is
                   Error_Msg_Sem (+Expr, "%n cannot be read", +Obj);
                end if;
                return;
+            when Iir_Kind_Interface_View_Declaration =>
+               --  Must be refined by the caller.  We don't know here if there
+               --  is a selected element.
+               return;
             when Iir_Kind_Enumeration_Literal
               | Iir_Kind_Physical_Int_Literal
               | Iir_Kind_Physical_Fp_Literal

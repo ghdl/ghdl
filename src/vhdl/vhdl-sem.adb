@@ -305,6 +305,10 @@ package body Vhdl.Sem is
       Formal_Base := Get_Object_Prefix (Formal);
       Actual_Base := Get_Object_Prefix (Actual);
 
+      if Get_Kind (Formal_Base) = Iir_Kind_Interface_View_Declaration then
+         return True;
+      end if;
+
       --  If the formal is of mode IN, then it has no driving value, and its
       --  effective value is the effective value of the actual.
       --  Always collapse in this case.
@@ -671,7 +675,8 @@ package body Vhdl.Sem is
          Formal_Base := Get_Interface_Of_Formal (Formal);
 
          case Get_Kind (Formal_Base) is
-            when Iir_Kind_Interface_Signal_Declaration =>
+            when Iir_Kind_Interface_Signal_Declaration
+               | Iir_Kind_Interface_View_Declaration =>
                if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
                then
                   N_Assoc := Sem_Signal_Port_Association

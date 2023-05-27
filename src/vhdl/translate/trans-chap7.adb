@@ -5039,6 +5039,7 @@ package body Trans.Chap7 is
             | Iir_Kind_Interface_Constant_Declaration
             | Iir_Kind_Interface_Variable_Declaration
             | Iir_Kind_Interface_Signal_Declaration
+            | Iir_Kind_Interface_View_Declaration
             | Iir_Kind_Interface_File_Declaration
             | Iir_Kind_Indexed_Name
             | Iir_Kind_Slice_Name

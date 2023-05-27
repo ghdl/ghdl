@@ -205,14 +205,19 @@ package body Trans.Chap4 is
         (Create_Var_Identifier (Decl, "_SIG", 0),
          Get_Object_Type (Type_Info, Mode_Signal));
 
-      if Get_Kind (Decl) = Iir_Kind_Interface_Signal_Declaration then
+      if Kind_In (Decl,
+                  Iir_Kind_Interface_Signal_Declaration,
+                  Iir_Kind_Interface_View_Declaration)
+      then
          --  For interfaces, create a pointer so that there is no need to
          --  update a copy if the association is collapsed.
          Info.Signal_Valp := Create_Var
            (Create_Var_Identifier (Decl, "_VALP", 0),
             Get_Object_Ptr_Type (Type_Info, Mode_Value));
 
-         if Get_Default_Value (Decl) /= Null_Iir then
+         if Get_Kind (Decl) /= Iir_Kind_Interface_View_Declaration
+           and then Get_Default_Value (Decl) /= Null_Iir
+         then
             --  Default value for ports.
             Info.Signal_Val := Create_Var
               (Create_Var_Identifier (Decl, "_INIT", 0),
@@ -228,6 +233,8 @@ package body Trans.Chap4 is
          when Iir_Kind_Signal_Declaration
             | Iir_Kind_Interface_Signal_Declaration =>
             Rtis.Generate_Signal_Rti (Decl);
+         when Iir_Kind_Interface_View_Declaration =>
+            null;
          when Iir_Kind_Guard_Signal_Declaration =>
             --  No name created for guard signal.
             null;
@@ -1294,7 +1301,11 @@ package body Trans.Chap4 is
       if Decl = Base_Decl then
          Data.Already_Resolved := False;
          Data.Check_Null := Check_Null;
-         Value := Get_Default_Value (Base_Decl);
+         if Get_Kind (Decl) /= Iir_Kind_Interface_View_Declaration then
+            Value := Get_Default_Value (Base_Decl);
+         else
+            Value := Null_Iir;
+         end if;
          if Value = Null_Iir then
             Data.Has_Val := False;
          else

@@ -1994,6 +1994,9 @@ package body Trans.Rtis is
                Comm := Ghdl_Rtik_Port;
                Var := Info.Signal_Sig;
                Mode := Iir_Mode'Pos (Get_Mode (Decl));
+            when Iir_Kind_Interface_View_Declaration =>
+               Comm := Ghdl_Rtik_Port;
+               Var := Info.Signal_Sig;
             when Iir_Kind_Constant_Declaration =>
                Comm := Ghdl_Rtik_Constant;
                Var := Info.Object_Var;
@@ -2330,7 +2333,8 @@ package body Trans.Rtis is
                   Add_Rti_Node (Info.Object_Rti);
                end;
             when Iir_Kind_Signal_Declaration
-              | Iir_Kind_Interface_Signal_Declaration =>
+              | Iir_Kind_Interface_Signal_Declaration
+              | Iir_Kind_Interface_View_Declaration =>
                declare
                   Info : constant Signal_Info_Acc := Get_Info (Decl);
                begin

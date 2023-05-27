@@ -422,7 +422,12 @@ package body Trans.Chap5 is
                   | Iir_Linkage_Mode =>
                   Mode := Connect_Source;
                when Iir_Unknown_Mode =>
-                  raise Internal_Error;
+                  if Get_Kind (Port) = Iir_Kind_Interface_View_Declaration then
+                     pragma Assert (By_Copy);
+                     Mode := Connect_Source;
+                  else
+                     raise Internal_Error;
+                  end if;
             end case;
 
             if By_Copy then
@@ -495,7 +500,9 @@ package body Trans.Chap5 is
          then
             Formal_Sig := Chap6.Translate_Name (Formal, Mode_Signal);
 
-            if Is_Valid (Get_Default_Value (Port)) then
+            if Get_Kind (Port) = Iir_Kind_Interface_Signal_Declaration
+              and then Is_Valid (Get_Default_Value (Port))
+            then
                Init_Node := Chap6.Get_Port_Init_Value (Formal);
             else
                Init_Node := Mnode_Null;
@@ -766,7 +773,13 @@ package body Trans.Chap5 is
                  | Iir_Kind_Association_Element_By_Name =>
                   if Get_Whole_Association_Flag (Assoc) then
                      if Get_Collapse_Signal_Flag (Assoc) then
-                        Value := Get_Default_Value (Formal_Base);
+                        if Get_Kind (Formal_Base)
+                          /= Iir_Kind_Interface_View_Declaration
+                        then
+                           Value := Get_Default_Value (Formal_Base);
+                        else
+                           Value := Null_Iir;
+                        end if;
                         if Is_Valid (Value) then
                            --  Set default value.
                            Chap9.Destroy_Types (Value);

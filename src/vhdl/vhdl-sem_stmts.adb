@@ -356,6 +356,9 @@ package body Vhdl.Sem_Stmts is
             else
                Sem_Add_Driver (Target_Object, Stmt);
             end if;
+         when Iir_Kind_Interface_View_Declaration =>
+            --  TODO: check prefix.
+            Sem_Add_Driver (Target_Object, Stmt);
          when Iir_Kind_Signal_Declaration =>
             Sem_Add_Driver (Target_Object, Stmt);
             Set_Use_Flag (Target_Prefix, True);
@@ -387,6 +390,9 @@ package body Vhdl.Sem_Stmts is
          Guarded_Target := Unknown;
       elsif Targ_Obj_Kind = Iir_Kind_External_Signal_Name then
          Guarded_Target := Unknown;
+      elsif Targ_Obj_Kind = Iir_Kind_Interface_View_Declaration then
+         --  TODO: Can it be guarded ?
+         return;
       else
          if Get_Guarded_Signal_Flag (Target_Prefix) then
             Guarded_Target := True;
