@@ -262,6 +262,7 @@ package body Vhdl.Canon is
             null;
 
          when Iir_Kinds_Signal_Value_Attribute =>
+            Canon_Check_Edge_Func (Expr);
             --  LRM 8.1
             --  An attribute name: [...]; otherwise, apply this rule to the
             --  prefix of the attribute name.
