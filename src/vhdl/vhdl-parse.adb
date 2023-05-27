@@ -2819,7 +2819,7 @@ package body Vhdl.Parse is
    --
    --  [ LRM93 1.1.1.1, LRM08 6.5.6.2]
    --  generic_list ::= GENERIC_interface_list
-   procedure Parse_Generic_Clause (Parent : Iir)
+   function Parse_Generic_Clause (Parent : Iir) return Iir
    is
       Res: Iir;
    begin
@@ -2828,9 +2828,10 @@ package body Vhdl.Parse is
       Scan;
 
       Res := Parse_Interface_List (Generic_Interface_List, Parent);
-      Set_Generic_Chain (Parent, Res);
 
       Scan_Semi_Colon ("generic clause");
+
+      return Res;
    end Parse_Generic_Clause;
 
    --  precond : a token.
@@ -2864,7 +2865,7 @@ package body Vhdl.Parse is
             end if;
 
             Has_Generic := True;
-            Parse_Generic_Clause (Parent);
+            Set_Generic_Chain (Parent, Parse_Generic_Clause (Parent));
          elsif Current_Token = Tok_Port then
             if Has_Port then
                Error_Msg_Parse ("at most one port clause is allowed");
@@ -9541,7 +9542,7 @@ package body Vhdl.Parse is
       Res := Create_Iir (Iir_Kind_Block_Header);
       Set_Location (Res);
       if Current_Token = Tok_Generic then
-         Parse_Generic_Clause (Res);
+         Set_Generic_Chain (Res, Parse_Generic_Clause (Res));
          if Current_Token = Tok_Generic then
             Set_Generic_Map_Aspect_Chain (Res, Parse_Generic_Map_Aspect);
             Scan_Semi_Colon ("generic map aspect");
@@ -11737,13 +11738,13 @@ package body Vhdl.Parse is
    --  package_header ::=
    --      [ generic_clause               -- LRM08 6.5.6.2
    --      [ generic_map aspect ; ] ]
-   function Parse_Package_Header return Iir
+   function Parse_Package_Header (Pkg : Iir) return Iir
    is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Package_Header);
       Set_Location (Res);
-      Parse_Generic_Clause (Res);
+      Set_Generic_Chain (Res, Parse_Generic_Clause (Pkg));
 
       if Current_Token = Tok_Generic then
          Set_Generic_Map_Aspect_Chain (Res, Parse_Generic_Map_Aspect);
@@ -11782,7 +11783,7 @@ package body Vhdl.Parse is
 
       if Current_Token = Tok_Generic then
          Check_Vhdl_At_Least_2008 ("generic packages");
-         Set_Package_Header (Res, Parse_Package_Header);
+         Set_Package_Header (Res, Parse_Package_Header (Res));
       end if;
 
       Parse_Declarative_Part (Res, Get_Package_Parent (Res));
