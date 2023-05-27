@@ -139,7 +139,7 @@ package body Vhdl.Sem_Lib is
       --       has been converted to processes and are therefore checked too!
       --       We stick with this solution because Canon pass fixes possibly
       --       broken chain of concurent statements for us!
-      if Flags.Flag_Check_Synthesis then
+      if Is_Warning_Enabled(Warnid_Synthesis) then
          Vhdl.Synthesis_Checks.DoSynthesisChecks (Unit);
       end if;
 

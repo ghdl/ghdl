@@ -511,19 +511,6 @@ Options
   Currently, VITAL checks are only partially implemented.
   See section :ref:`VHDL_restrictions_for_VITAL` for more details.
 
-.. option:: --check-synthesis
-
-  Checks analyzed unit for good synthesizable code practices.
-
-  Currently, following checks are executed:
-    - Incomplete sensitivity lists (Missing signals)
-    - Over-specified sensitivity lists (Redundant signals)
-
-  .. ATTENTION::
-    Sensitivity lists of clocked processes (``rising_edge`` / ``falling_edge`` / ``'event``)
-    are not checked! ``--check-synthesis`` checks only sensitivity lists of combinatorial
-    processes and latches!
-
 .. option:: --PREFIX=<PATH>
 
   Use :file:`PATH` as the prefix path to find commands and pre-installed (``std`` and ``ieee``) libraries.
@@ -644,6 +631,20 @@ Some warnings are reported only during analysis, others during elaboration.
 
   These are checks for no wait statements in a procedure called in a
   sensitized process and checks for pure rules of a function.
+
+.. option:: --warn-synthesis
+.. option:: -Wsynthesis
+
+  Check analyzed unit for good synthesizable code practices and emit warnings if bad practices are detected
+
+  Currently, the following checks are executed:
+    - Incomplete sensitivity lists (Missing signals)
+    - Over-specified sensitivity lists (Redundant signals)
+
+  .. ATTENTION::
+    Sensitivity lists of clocked processes (``rising_edge`` / ``falling_edge`` / ``'event``)
+    are not checked! ``-Wsynthesis`` checks only sensitivity lists of combinatorial
+    processes and latches!
 
 .. option:: --warn-body
 .. option:: -Wbody
