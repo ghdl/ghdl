@@ -104,8 +104,13 @@ package body Vhdl.Canon is
          Set_Is_Clocked_Process (Current_Process, True);
 
       when others =>
-         Error_Kind ("canon_check_edge_func", Node);
+         -- There are many, many possible values for Iir_Kind. For all the
+         -- values that don't imply we are in a clocked process, do nothing
+         -- instead of throwing an error
+         null;
+         --Error_Kind ("canon_check_edge_func", Node);
       end case;
+
    end Canon_Check_Edge_Func;
 
    procedure Canon_Extract_Sensitivity_Aggregate
