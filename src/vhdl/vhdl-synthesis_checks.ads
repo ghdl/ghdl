@@ -19,6 +19,6 @@ package Vhdl.Synthesis_Checks is
 
    -- Check for issues which cause simulation synthesis mismatches
    --  - check incomplete and over-specified sensitivity lists
-   procedure DoSynthesisChecks(Unit: Iir_Design_Unit);
+   procedure Do_Synthesis_Checks(Unit: Iir_Design_Unit);
 
 end Vhdl.Synthesis_Checks;

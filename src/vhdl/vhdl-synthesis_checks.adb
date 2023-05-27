@@ -163,9 +163,9 @@ package body Vhdl.Synthesis_Checks is
       end if;
    end Check_Sensitivity_Lists;
 
-   procedure DoSynthesisChecks (Unit: Iir_Design_Unit) is
+   procedure Do_Synthesis_Checks (Unit: Iir_Design_Unit) is
    begin
       Check_Sensitivity_Lists(Unit);
-   end DoSynthesisChecks;
+   end Do_Synthesis_Checks;
 
 end Vhdl.Synthesis_Checks;
