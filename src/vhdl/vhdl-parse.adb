@@ -2797,7 +2797,7 @@ package body Vhdl.Parse is
    --
    --  [ LRM93 1.1.1.2 ]
    --  port_list ::= PORT_interface_list
-   procedure Parse_Port_Clause (Parent : Iir)
+   function Parse_Port_Clause (Parent : Iir) return Iir
    is
       Res: Iir;
    begin
@@ -2808,7 +2808,7 @@ package body Vhdl.Parse is
       Res := Parse_Interface_List (Port_Interface_List, Parent);
 
       Scan_Semi_Colon ("port clause");
-      Set_Port_Chain (Parent, Res);
+      return Res;
    end Parse_Port_Clause;
 
    --  precond : GENERIC
@@ -2876,7 +2876,7 @@ package body Vhdl.Parse is
             end if;
 
             Has_Port := True;
-            Parse_Port_Clause (Parent);
+            Set_Port_Chain (Parent, Parse_Port_Clause (Parent));
          else
             exit;
          end if;
@@ -9536,20 +9536,21 @@ package body Vhdl.Parse is
    --  [ LRM93 9.1 ]
    --  block_header ::= [ generic_clause [ generic_map_aspect ; ] ]
    --                   [ port_clause [ port_map_aspect ; ] ]
-   function Parse_Block_Header return Iir_Block_Header is
+   function Parse_Block_Header (Parent : Iir) return Iir_Block_Header
+   is
       Res : Iir_Block_Header;
    begin
       Res := Create_Iir (Iir_Kind_Block_Header);
       Set_Location (Res);
       if Current_Token = Tok_Generic then
-         Set_Generic_Chain (Res, Parse_Generic_Clause (Res));
+         Set_Generic_Chain (Res, Parse_Generic_Clause (Parent));
          if Current_Token = Tok_Generic then
             Set_Generic_Map_Aspect_Chain (Res, Parse_Generic_Map_Aspect);
             Scan_Semi_Colon ("generic map aspect");
          end if;
       end if;
       if Current_Token = Tok_Port then
-         Parse_Port_Clause (Res);
+         Set_Port_Chain (Res, Parse_Port_Clause (Parent));
          if Current_Token = Tok_Port then
             Set_Port_Map_Aspect_Chain (Res, Parse_Port_Map_Aspect);
             Scan_Semi_Colon ("port map aspect");
@@ -9620,7 +9621,7 @@ package body Vhdl.Parse is
          Scan;
       end if;
       if Current_Token = Tok_Generic or Current_Token = Tok_Port then
-         Set_Block_Header (Res, Parse_Block_Header);
+         Set_Block_Header (Res, Parse_Block_Header (Res));
       end if;
       if Current_Token /= Tok_Begin then
          Parse_Declarative_Part (Res, Res);

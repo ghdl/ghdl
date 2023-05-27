@@ -1006,7 +1006,6 @@ package body Vhdl.Sem_Names is
             when Iir_Kind_Entity_Declaration
               | Iir_Kind_Architecture_Body
               | Iir_Kind_Block_Statement
-              | Iir_Kind_Block_Header
               | Iir_Kind_Component_Declaration
               | Iir_Kinds_Process_Statement
               | Iir_Kind_Generate_Statement_Body
