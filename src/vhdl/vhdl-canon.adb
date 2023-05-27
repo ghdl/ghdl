@@ -261,14 +261,6 @@ package body Vhdl.Canon is
          when Iir_Kinds_Type_Attribute =>
             null;
 
-         when Iir_Kind_Event_Attribute =>
-            Canon_Check_Edge_Func (Expr);
-            --  LRM 8.1
-            --  An attribute name: [...]; otherwise, apply this rule to the
-            --  prefix of the attribute name.
-            Canon_Extract_Sensitivity_Expression
-              (Get_Prefix (Expr), Sensitivity_List, False);
-
          when Iir_Kinds_Signal_Value_Attribute =>
             --  LRM 8.1
             --  An attribute name: [...]; otherwise, apply this rule to the
