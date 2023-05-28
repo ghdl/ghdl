@@ -237,6 +237,7 @@ package body Vhdl.Canon is
               (Get_Prefix (Expr), Sensitivity_List, False);
 
          when Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_View_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kinds_Signal_Attribute

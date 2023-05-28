@@ -4508,6 +4508,22 @@ package body Vhdl.Nodes is
       Set_Field1 (Decl, Chain);
    end Set_Elements_Definition_Chain;
 
+   function Get_Elements_Definition_List (Decl : Iir) return Iir_Flist is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Elements_Definition_List (Get_Kind (Decl)),
+                     "no field Elements_Definition_List");
+      return Iir_To_Iir_Flist (Get_Field4 (Decl));
+   end Get_Elements_Definition_List;
+
+   procedure Set_Elements_Definition_List (Decl : Iir; List : Iir_Flist) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Elements_Definition_List (Get_Kind (Decl)),
+                     "no field Elements_Definition_List");
+      Set_Field4 (Decl, Iir_Flist_To_Iir (List));
+   end Set_Elements_Definition_List;
+
    function Get_Owned_Elements_Chain (Atype : Iir) return Iir is
    begin
       pragma Assert (Atype /= Null_Iir);

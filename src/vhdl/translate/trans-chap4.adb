@@ -231,10 +231,9 @@ package body Trans.Chap4 is
 
       case Get_Kind (Decl) is
          when Iir_Kind_Signal_Declaration
-            | Iir_Kind_Interface_Signal_Declaration =>
+            | Iir_Kind_Interface_Signal_Declaration
+            | Iir_Kind_Interface_View_Declaration =>
             Rtis.Generate_Signal_Rti (Decl);
-         when Iir_Kind_Interface_View_Declaration =>
-            null;
          when Iir_Kind_Guard_Signal_Declaration =>
             --  No name created for guard signal.
             null;
@@ -1150,6 +1149,8 @@ package body Trans.Chap4 is
    is
       Is_Port : constant Boolean :=
         Get_Kind (Decl) = Iir_Kind_Interface_Signal_Declaration;
+      Is_View : constant Boolean :=
+        Get_Kind (Decl) = Iir_Kind_Interface_View_Declaration;
       Sig_Type  : constant Iir := Get_Type (Decl);
       Type_Info : Type_Info_Acc;
       Name_Sig : Mnode;
@@ -1207,7 +1208,7 @@ package body Trans.Chap4 is
             Name_Val := Chap6.Get_Port_Init_Value (Decl);
             Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Val);
          end if;
-      elsif Is_Port then
+      elsif Is_Port or Is_View then
          if not Has_Copy then
             --  A port that isn't collapsed.  Allocate value.
             Name_Val := Chap6.Translate_Name (Decl, Mode_Value);

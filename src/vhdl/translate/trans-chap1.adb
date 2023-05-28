@@ -94,7 +94,11 @@ package body Trans.Chap1 is
          Chap4.Elab_Signal_Declaration_Storage (El, False);
          Chap4.Elab_Signal_Declaration_Object (El, Entity, False);
 
-         Value := Get_Default_Value (El);
+         if Get_Kind (El) /= Iir_Kind_Interface_View_Declaration then
+            Value := Get_Default_Value (El);
+         else
+            Value := Null_Iir;
+         end if;
          if Is_Valid (Value) then
             --  Set default value.
             Chap9.Destroy_Types (Value);

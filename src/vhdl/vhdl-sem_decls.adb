@@ -2436,7 +2436,8 @@ package body Vhdl.Sem_Decls is
       Vstyp : Iir;
       El : Iir;
       El_Decl : Iir;
-      Vtyp_Els : Iir_Flist;
+      Vtyp_Els, Def_List : Iir_Flist;
+      Pos : Natural;
       Interp : Name_Interpretation_Type;
    begin
       Sem_Scopes.Add_Name (Decl);
@@ -2505,15 +2506,14 @@ package body Vhdl.Sem_Decls is
 
       --  Analyze simple_name of elements.
       if Vtyp_Els /= Null_Iir_Flist then
+         Def_List := Create_Iir_Flist (Get_Nbr_Elements (Vtyp_Els));
+         Set_Elements_Definition_List (Decl, Def_List);
+
          --  Create a temporary scope to speed-up search of record elements.
          Open_Declarative_Region;
          for I in Flist_First .. Flist_Last (Vtyp_Els) loop
             El_Decl := Get_Nth_Element (Vtyp_Els, I);
             Add_Name (El_Decl);
-
-            --  Reuse visible_flag to know if a record element has been
-            --  associated to a mode.
-            Set_Visible_Flag (El_Decl, False);
          end loop;
 
          El := Get_Elements_Definition_Chain (Decl);
@@ -2529,12 +2529,14 @@ package body Vhdl.Sem_Decls is
                case Get_Kind (El_Decl) is
                   when Iir_Kind_Element_Declaration
                     | Iir_Kind_Record_Element_Constraint =>
-                     if Get_Visible_Flag (El_Decl) then
+                     Pos := Natural (Get_Element_Position (El_Decl));
+                     if Get_Nth_Element (Def_List, Pos) /= Null_Iir then
                         Error_Msg_Sem
                           (+El, "element %i has already a mode", +El);
+                     else
+                        Set_Nth_Element (Def_List, Pos, El);
                      end if;
                      Set_Named_Entity (El, El_Decl);
-                     Set_Visible_Flag (El_Decl, True);
                   when others =>
                      Error_Msg_Sem
                        (+El, "%i is not an element of the record", +El);
@@ -2545,11 +2547,10 @@ package body Vhdl.Sem_Decls is
          end loop;
 
          for I in Flist_First .. Flist_Last (Vtyp_Els) loop
-            El_Decl := Get_Nth_Element (Vtyp_Els, I);
-            if not Get_Visible_Flag (El_Decl) then
+            if Get_Nth_Element (Def_List, I) = Null_Iir then
+               El_Decl := Get_Nth_Element (Vtyp_Els, I);
                Error_Msg_Sem
                  (+Decl, "no mode for element %i", +El_Decl);
-               Set_Visible_Flag (El_Decl, True);
             end if;
          end loop;
 

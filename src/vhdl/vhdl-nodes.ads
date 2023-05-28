@@ -2429,7 +2429,11 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Subtype_Indication (Field5)
    --
+   --  Chain of elements in source order.
    --   Get/Set_Elements_Definition_Chain (Field1)
+   --
+   --  Flist of elements, indexed by element position.
+   --   Get/Set_Elements_Definition_List (Field4)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
    --
@@ -3215,6 +3219,8 @@ package Vhdl.Nodes is
    --   Get/Set_Subtype_Indication (Field5)
    --
    --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -------------------------
    --  Nature definitions --
@@ -8811,6 +8817,10 @@ package Vhdl.Nodes is
    --  Field: Field1 Chain
    function Get_Elements_Definition_Chain (Decl : Iir) return Iir;
    procedure Set_Elements_Definition_Chain (Decl : Iir; Chain : Iir);
+
+   --  Field: Field4 Of_Ref (uc)
+   function Get_Elements_Definition_List (Decl : Iir) return Iir_Flist;
+   procedure Set_Elements_Definition_List (Decl : Iir; List : Iir_Flist);
 
    --  Field: Field6 Chain
    function Get_Owned_Elements_Chain (Atype : Iir) return Iir;

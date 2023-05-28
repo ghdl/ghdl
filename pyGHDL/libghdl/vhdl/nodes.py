@@ -4524,6 +4524,19 @@ def Set_Elements_Definition_Chain(obj: Iir, value: Iir) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_elements_definition_list")
+def Get_Elements_Definition_List(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_elements_definition_list")
+def Set_Elements_Definition_List(obj: Iir, value: Iir) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_owned_elements_chain")
 def Get_Owned_Elements_Chain(obj: Iir) -> Iir:
     """"""
