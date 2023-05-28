@@ -16,8 +16,8 @@
 with Vhdl.Canon; use Vhdl.Canon;
 with Vhdl.Errors; use Vhdl.Errors;
 with Errorout; use Errorout;
-with Vhdl.Disp_Tree; use Vhdl.Disp_Tree;
 --with Simple_IO; use Simple_IO;
+with Vhdl.Nodes_Meta; use Vhdl.Nodes_Meta;
 
 package body Vhdl.Synthesis_Checks is
 
