@@ -370,6 +370,9 @@ $(STD93_DIR)/std_standard.o: $(GHDL) std.v93
 $(STD08_DIR)/std_standard.o: $(GHDL) std.v08
 	cd $(STD08_DIR); $(ANALYZE_STD) --std=08
 
+$(STD19_DIR)/std_standard.o: $(GHDL) std.v19
+	cd $(STD19_DIR); $(ANALYZE_STD) --std=19
+
 libs.vhdl.standard: $(STD87_DIR)/std_standard.o \
  $(STD93_DIR)/std_standard.o \
  $(STD08_DIR)/std_standard.o
