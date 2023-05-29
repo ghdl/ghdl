@@ -3475,6 +3475,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Is_Clocked_Process (Flag14)
    --
+   --   Get/Set_Allow_Unknown_Subprogram_Body (Flag15)
+   --
    -- Only for Iir_Kind_Process_Statement:
    --   Get/Set_Suspend_Flag (Flag11)
    --
@@ -9642,6 +9644,12 @@ package Vhdl.Nodes is
    --  Field: Flag14
    function Get_Is_Clocked_Process (Decl : Iir) return Boolean;
    procedure Set_Is_Clocked_Process (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag: true if it is allowed for subprograms inside the process to
+   --               have no defined body
+   --  Field: Flag15
+   function Get_Allow_Unknown_Subprogram_Body (Decl : Iir) return Boolean;
+   procedure Set_Allow_Unknown_Subprogram_Body (Decl : Iir; Flag : Boolean);
 
    --  Layout flag: true if a label is present.
    --  Field: Flag6

@@ -6669,6 +6669,19 @@ def Set_Is_Clocked_Process(obj: Iir, value: Boolean) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_allow_unknown_subprogram_body")
+def Get_Allow_Unknown_Subprogram_Body(obj: Iir) -> Boolean:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_allow_unknown_subprogram_body")
+def Set_Allow_Unknown_Subprogram_Body(obj: Iir, value: Boolean) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_has_label")
 def Get_Has_Label(obj: Iir) -> Boolean:
     """"""

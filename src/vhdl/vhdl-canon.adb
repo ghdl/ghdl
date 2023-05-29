@@ -656,7 +656,9 @@ package body Vhdl.Canon is
    end Canon_Extract_Sensitivity_Sequential_Statement_Chain;
 
    procedure Canon_Extract_Sensitivity_From_Callees
-     (Callees_List : Iir_List; Sensitivity_List : Iir_List)
+     (Callees_List : Iir_List;
+      Sensitivity_List : Iir_List;
+      Allow_Unknown_Subprogram_Body : boolean)
    is
       Callee : Iir;
       Orig_Callee : Iir;
@@ -698,7 +700,9 @@ package body Vhdl.Canon is
 
                   --  Extract sensitivity from subprograms called.
                   Canon_Extract_Sensitivity_From_Callees
-                    (Get_Callees_List (Bod), Sensitivity_List);
+                    (Get_Callees_List (Bod),
+                     Sensitivity_List,
+                     Allow_Unknown_Subprogram_Body);
 
                when No_Signal =>
                   null;
@@ -712,7 +716,9 @@ package body Vhdl.Canon is
                   --  or a subprogram calling such a subprogram.
                   --  Only a package can apply to this case.
                   --  Will be checked at elaboration.
-                  pragma Assert (not Flags.Flag_Elaborate);
+                  if not Allow_Unknown_Subprogram_Body then
+                     pragma Assert (not Flags.Flag_Elaborate);
+                  end if;
                   null;
             end case;
          end if;
@@ -735,7 +741,10 @@ package body Vhdl.Canon is
         (Get_Sequential_Statement_Chain (Proc), Res);
 
       --  Signals read indirectly by subprograms called.
-      Canon_Extract_Sensitivity_From_Callees (Get_Callees_List (Proc), Res);
+      Canon_Extract_Sensitivity_From_Callees
+        (Get_Callees_List (Proc),
+         Res,
+         Get_Allow_Unknown_Subprogram_Body(Proc));
 
       Canoning_Process := False;
 

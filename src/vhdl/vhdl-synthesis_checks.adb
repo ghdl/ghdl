@@ -26,11 +26,21 @@ package body Vhdl.Synthesis_Checks is
    --      because it is LRM standard way of defining "what all should trigger
    --      the process".
    function Get_Golden_Sensitivity_List (Proc : Iir) return Iir_List is
+     Golden_Sensitivity_List : Iir_List;
    begin
       -- FIXME: We have to correctly extract golden list for clocked processes!
       --        LRM extraction algorithm takes all RHS signals which is not
       --        desirable in clocked process!
-      return Canon_Extract_Sensitivity_Process (Proc);
+      --
+      -- When the sensitivity list is extracted, the subprgram bodies are not
+      -- known, which results in an assertion failing in vhdl-nodes.adb. The
+      -- solution is enabling a flag so that the assertion is not checked for
+      -- the specific case of extracting the sensitivity list. After extracting
+      -- the sensitivity list, we must disable the flag.
+      Set_Allow_Unknown_Subprogram_Body(Proc, True);
+      Golden_Sensitivity_List := Canon_Extract_Sensitivity_Process (Proc);
+      Set_Allow_Unknown_Subprogram_Body(Proc, False);
+      return Golden_Sensitivity_List;
    end Get_Golden_Sensitivity_List;
 
    -- Checks if each signal from "Golden sensitivity list" are present in

@@ -419,6 +419,7 @@ package Vhdl.Nodes_Meta is
       Field_End_Has_Identifier,
       Field_End_Has_Postponed,
       Field_Is_Clocked_Process,
+      Field_Allow_Unknown_Subprogram_Body,
       Field_Has_Label,
       Field_Has_Begin,
       Field_Has_End,
@@ -1032,6 +1033,8 @@ package Vhdl.Nodes_Meta is
    function Has_End_Has_Identifier (K : Iir_Kind) return Boolean;
    function Has_End_Has_Postponed (K : Iir_Kind) return Boolean;
    function Has_Is_Clocked_Process (K : Iir_Kind) return Boolean;
+   function Has_Allow_Unknown_Subprogram_Body (K : Iir_Kind)
+      return Boolean;
    function Has_Has_Label (K : Iir_Kind) return Boolean;
    function Has_Has_Begin (K : Iir_Kind) return Boolean;
    function Has_Has_End (K : Iir_Kind) return Boolean;

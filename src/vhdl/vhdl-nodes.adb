@@ -7179,6 +7179,22 @@ package body Vhdl.Nodes is
       Set_Flag14 (Decl, Flag);
    end Set_Is_Clocked_Process;
 
+   function Get_Allow_Unknown_Subprogram_Body (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Allow_Unknown_Subprogram_Body (Get_Kind (Decl)),
+                     "no field Allow_Unknown_Subprogram_Body");
+      return Get_Flag15 (Decl);
+   end Get_Allow_Unknown_Subprogram_Body;
+
+   procedure Set_Allow_Unknown_Subprogram_Body (Decl : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Allow_Unknown_Subprogram_Body (Get_Kind (Decl)),
+                     "no field Allow_Unknown_Subprogram_Body");
+      Set_Flag15 (Decl, Flag);
+   end Set_Allow_Unknown_Subprogram_Body;
+
    function Get_Has_Label (Decl : Iir) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);
