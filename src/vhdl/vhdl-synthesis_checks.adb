@@ -26,7 +26,7 @@ package body Vhdl.Synthesis_Checks is
    --      because it is LRM standard way of defining "what all should trigger
    --      the process".
    function Get_Golden_Sensitivity_List (Proc : Iir) return Iir_List is
-     Golden_Sensitivity_List : Iir_List;
+      Golden_Sensitivity_List : Iir_List;
    begin
       -- FIXME: We have to correctly extract golden list for clocked processes!
       --        LRM extraction algorithm takes all RHS signals which is not
