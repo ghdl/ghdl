@@ -3239,7 +3239,8 @@ package body Trans.Chap4 is
       use Trans.Chap5;
       Formal     : constant Iir := Get_Association_Formal (Assoc, Inter);
       Actual     : constant Iir := Get_Actual (Assoc);
-      Block_Info : constant Block_Info_Acc := Get_Info (Base_Block);
+      Block_Info : constant Block_Info_Acc := Get_Info (Block);
+      Base_Block_Info : constant Block_Info_Acc := Get_Info (Base_Block);
       Assoc_Info  : Inertial_Info_Acc;
       Inter_List  : O_Inter_List;
       Entity_Info : Ortho_Info_Acc;
@@ -3253,7 +3254,7 @@ package body Trans.Chap4 is
         (Inter_List, Create_Identifier (Inter, "INERTIAL"),
          O_Storage_Private);
       New_Interface_Decl (Inter_List, Assoc_Info.Inertial_Inst,
-                          Wki_Instance, Block_Info.Block_Decls_Ptr_Type);
+                          Wki_Instance, Base_Block_Info.Block_Decls_Ptr_Type);
       Finish_Subprogram_Decl (Inter_List, Assoc_Info.Inertial_Proc);
 
       --  The body.
@@ -3262,7 +3263,7 @@ package body Trans.Chap4 is
       Push_Local_Factory;
       --  Access for actual.
       Assoc_Info.Inertial_Block := Base_Block;
-      Set_Scope_Via_Param_Ptr (Block_Info.Block_Scope,
+      Set_Scope_Via_Param_Ptr (Base_Block_Info.Block_Scope,
                                Assoc_Info.Inertial_Inst);
 
       Open_Temp;
@@ -3335,7 +3336,7 @@ package body Trans.Chap4 is
 
       Close_Temp;
 
-      Clear_Scope (Block_Info.Block_Scope);
+      Clear_Scope (Base_Block_Info.Block_Scope);
       Pop_Local_Factory;
       Finish_Subprogram_Body;
    end Translate_Inertial_Subprogram;
