@@ -141,14 +141,14 @@ package body Grt.Signals is
         (Sig_Rti.Common.Mode and Ghdl_Rti_Signal_Has_Active) /= 0;
    end Ghdl_Signal_Name_Rti;
 
-   procedure Ghdl_Signal_Set_Mode (Mode : Mode_Signal_Type;
-                                   Kind : Kind_Signal_Type;
-                                   Has_Active : Boolean) is
+   procedure Ghdl_Signal_Set_Mode_Kind (Mode : Mode_Signal_Type;
+                                        Kind : Kind_Signal_Type;
+                                        Has_Active : Boolean) is
    begin
       Sig_Mode := Mode;
       Sig_Kind := Kind;
       Sig_Has_Active := Has_Active;
-   end Ghdl_Signal_Set_Mode;
+   end Ghdl_Signal_Set_Mode_Kind;
 
    function Is_Signal_Guarded (Sig : Ghdl_Signal_Ptr) return Boolean is
    begin

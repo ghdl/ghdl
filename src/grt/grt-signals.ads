@@ -545,9 +545,9 @@ package Grt.Signals is
                                    Ctxt : Ghdl_Rti_Access;
                                    Addr : System.Address);
 
-   procedure Ghdl_Signal_Set_Mode (Mode : Mode_Signal_Type;
-                                   Kind : Kind_Signal_Type;
-                                   Has_Active : Boolean);
+   procedure Ghdl_Signal_Set_Mode_Kind (Mode : Mode_Signal_Type;
+                                        Kind : Kind_Signal_Type;
+                                        Has_Active : Boolean);
 
    --  FIXME: document.
    --  Merge RTI with SIG: adjust the has_active flag of SIG according to RTI.

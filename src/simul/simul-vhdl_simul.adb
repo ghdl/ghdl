@@ -2924,7 +2924,7 @@ package body Simul.Vhdl_Simul is
          Kind := Kind_Signal_No;
       end if;
 
-      Grt.Signals.Ghdl_Signal_Set_Mode (E.Kind, Kind, True);
+      Grt.Signals.Ghdl_Signal_Set_Mode_Kind (E.Kind, Kind, True);
 
       Create_Signal (E.Val, 0, Sig_Type, E.Typ, E.Nbr_Sources.all, False);
    end Create_User_Signal;
