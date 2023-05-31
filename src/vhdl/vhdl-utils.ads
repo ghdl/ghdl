@@ -454,6 +454,17 @@ package Vhdl.Utils is
                                  Res : in out String;
                                  Off : in out Natural);
 
+   --  Return the mode_view_declaration for NAME.
+   --  Also handle 'Converse attributes.
+   procedure Extract_Mode_View_Name
+     (Name : Iir; View : out Iir; Reversed : out Boolean);
+
+   --  Set VIEW to a simple_mode_view_element or a mode_view_declaration that
+   --  applies to NAME.  The base name of NAME must be a view interface.
+   --  Reversed is set if the view is reversed (due to 'Converse).
+   procedure Get_Mode_View_From_Name
+     (Name : Iir; View : out Iir; Reversed : out Boolean);
+
    --  Like Get_Identifier but return a Name_Id for the same casing as it
    --  appears in the source file.
    --  Not useful for analysis as VHDL is case insensitive, but could be

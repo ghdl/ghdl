@@ -2143,6 +2143,70 @@ package body Vhdl.Utils is
       end case;
    end Get_File_Signature;
 
+   procedure Extract_Mode_View_Name
+     (Name : Iir; View : out Iir; Reversed : out Boolean)
+   is
+      Pfx : Iir;
+   begin
+      Pfx := Name;
+      Reversed := False;
+
+      loop
+         case Get_Kind (Pfx) is
+            when Iir_Kinds_Denoting_Name =>
+               Pfx := Get_Named_Entity (Pfx);
+            when Iir_Kind_Mode_View_Declaration
+              | Iir_Kind_Simple_Mode_View_Element =>
+               View := Pfx;
+               exit;
+            when Iir_Kind_Converse_Attribute =>
+               Reversed := not Reversed;
+               Pfx := Get_Prefix (Pfx);
+            when Iir_Kind_Record_Mode_View_Indication
+              | Iir_Kind_Array_Mode_View_Indication =>
+               Pfx := Get_Name (Pfx);
+            when others =>
+               Error_Kind ("extract_mode_view_name", Pfx);
+         end case;
+      end loop;
+   end Extract_Mode_View_Name;
+
+   procedure Get_Mode_View_From_Name
+     (Name : Iir; View : out Iir; Reversed : out Boolean) is
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kinds_Denoting_Name =>
+            Get_Mode_View_From_Name (Get_Named_Entity (Name), View, Reversed);
+         when Iir_Kind_Interface_View_Declaration =>
+            Extract_Mode_View_Name
+              (Get_Mode_View_Indication (Name), View, Reversed);
+         when Iir_Kind_Selected_Element =>
+            Get_Mode_View_From_Name
+              (Get_Prefix (Name), View, Reversed);
+            if Get_Kind (View) = Iir_Kind_Simple_Mode_View_Element then
+               return;
+            end if;
+            pragma Assert (Get_Kind (View) = Iir_Kind_Mode_View_Declaration);
+
+            declare
+               El : constant Iir := Get_Named_Entity (Name);
+               Def_List : Iir_Flist;
+               Pos : Natural;
+               El_Name : Iir;
+               Reversed1 : Boolean;
+            begin
+               Pos := Natural (Get_Element_Position (El));
+               Def_List := Get_Elements_Definition_List (View);
+               El_Name := Get_Nth_Element (Def_List, Pos);
+
+               Extract_Mode_View_Name (El_Name, View, Reversed1);
+               Reversed := Reversed xor Reversed1;
+            end;
+         when others =>
+            Error_Kind ("get_mode_view_from_name", Name);
+      end case;
+   end Get_Mode_View_From_Name;
+
    function Get_Source_Identifier (Decl : Iir) return Name_Id
    is
       use Files_Map;

@@ -346,33 +346,22 @@ package body Vhdl.Sem_Stmts is
    --  for PFX.
    --  MODE_IND can be NULL_IIR in case of error.
    procedure Extract_View_Target_Prefix
-     (Pfx : Iir; Mode_Ind : out Iir; Reversed : out Boolean) is
+     (Name : Iir; Mode_Ind : out Iir; Reversed : out Boolean) is
    begin
-      case Get_Kind (Pfx) is
+      case Get_Kind (Name) is
          when Iir_Kind_Interface_View_Declaration =>
-            Mode_Ind := Get_Mode_View_Indication (Pfx);
             --  Extract the mode view from a mode view indication
-            declare
-               Name : Node;
-            begin
-               Name := Get_Name (Mode_Ind);
-               if Get_Kind (Name) = Iir_Kind_Converse_Attribute then
-                  Reversed := True;
-                  Name := Get_Prefix (Name);
-               else
-                  Reversed := False;
-               end if;
-               Mode_Ind := Get_Named_Entity (Name);
-            end;
+            Extract_Mode_View_Name
+              (Get_Mode_View_Indication (Name), Mode_Ind, Reversed);
          when Iir_Kinds_Denoting_Name =>
             Extract_View_Target_Prefix
-              (Get_Named_Entity (Pfx), Mode_Ind, Reversed);
+              (Get_Named_Entity (Name), Mode_Ind, Reversed);
          when Iir_Kind_Slice_Name
            | Iir_Kind_Indexed_Name =>
-            Extract_View_Target_Prefix (Get_Prefix (Pfx), Mode_Ind, Reversed);
+            Extract_View_Target_Prefix (Get_Prefix (Name), Mode_Ind, Reversed);
             return;
          when Iir_Kind_Selected_Element =>
-            Extract_View_Target_Prefix (Get_Prefix (Pfx), Mode_Ind, Reversed);
+            Extract_View_Target_Prefix (Get_Prefix (Name), Mode_Ind, Reversed);
             if Mode_Ind = Null_Iir then
                return;
             end if;
@@ -384,7 +373,7 @@ package body Vhdl.Sem_Stmts is
               (Get_Kind (Mode_Ind) = Iir_Kind_Mode_View_Declaration);
 
             declare
-               El : constant Iir := Get_Named_Entity (Pfx);
+               El : constant Iir := Get_Named_Entity (Name);
                Def_List : Iir_Flist;
                Pos : Natural;
             begin
@@ -413,7 +402,7 @@ package body Vhdl.Sem_Stmts is
                   raise Internal_Error;
             end case;
          when others =>
-            Error_Kind ("extract_view_target_prefix", Pfx);
+            Error_Kind ("extract_view_target_prefix", Name);
       end case;
    end Extract_View_Target_Prefix;
 
