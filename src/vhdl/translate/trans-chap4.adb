@@ -1393,6 +1393,7 @@ package body Trans.Chap4 is
          end if;
       else
          --  Sub signal.
+         --  Used only in case of conversion for an individual association.
          --  Do not add resolver.
          --  Do not use default value.
          Data.Already_Resolved := True;
