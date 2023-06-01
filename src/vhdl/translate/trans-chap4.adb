@@ -941,6 +941,9 @@ package body Trans.Chap4 is
       Value : Mnode;
       --  Default value of the signal.
       Init_Val         : Mnode;
+      --  Set if the signal is a view.
+      View : Iir;
+      Reversed : Boolean;
       --  If statement for a block of signals.
       If_Stmt          : O_If_Block_Acc;
       --  True if the default value is set.
@@ -1107,6 +1110,8 @@ package body Trans.Chap4 is
            (Data.Value, Targ_Type, Index),
          Init_Val => N_Init_Val,
          Has_Val => Data.Has_Val,
+         View => Data.View,
+         Reversed => Data.Reversed,
          If_Stmt => null,
          Already_Resolved => Data.Already_Resolved,
          Check_Null => Data.Check_Null);
@@ -1118,16 +1123,54 @@ package body Trans.Chap4 is
    is
       pragma Unreferenced (Targ_Type);
       N_Init_Val : Mnode;
+      N_View : Iir;
+      N_Reversed : Boolean;
    begin
       if Data.Has_Val then
          N_Init_Val := Chap6.Translate_Selected_Element (Data.Init_Val, El);
       else
          N_Init_Val := Mnode_Null;
       end if;
+
+      if Data.View /= Null_Iir then
+         pragma Assert (Get_Kind (Data.View) = Iir_Kind_Mode_View_Declaration);
+         N_View := Data.View;
+         N_Reversed := Data.Reversed;
+         Update_Mode_View_Selected_Name (N_View, N_Reversed, El);
+         if Get_Kind (N_View) = Iir_Kind_Simple_Mode_View_Element then
+            declare
+               N_Mode : Iir_Mode;
+               Assoc : O_Assoc_List;
+            begin
+               N_Mode := Get_Mode (N_View);
+               if N_Reversed then
+                  N_Mode := Get_Converse_Mode (N_Mode);
+               end if;
+
+               --  Set the mode.
+               Start_Association (Assoc, Ghdl_Signal_Set_Mode);
+               New_Association (Assoc,
+                                New_Lit
+                                  (New_Unsigned_Literal
+                                     (Ghdl_I32_Type, Iir_Mode'Pos (N_Mode))));
+               New_Procedure_Call (Assoc);
+            end;
+            N_View := Null_Iir;
+         else
+            pragma Assert (Get_Kind (N_View) = Iir_Kind_Mode_View_Declaration);
+            null;
+         end if;
+      else
+         N_View := Null_Iir;
+         N_Reversed := False;
+      end if;
+
       return Elab_Signal_Data'
         (Value => Chap6.Translate_Selected_Element (Data.Value, El),
          Init_Val => N_Init_Val,
          Has_Val => Data.Has_Val,
+         View => N_View,
+         Reversed => N_Reversed,
          If_Stmt => null,
          Already_Resolved => Data.Already_Resolved,
          Check_Null => Data.Check_Null);
@@ -1298,14 +1341,21 @@ package body Trans.Chap4 is
       --  Consistency check: a signal name is a signal.
       pragma Assert (Get_Object_Kind (Name_Sig) = Mode_Signal);
 
+      --  Default: no view.
+      Data.View := Null_Iir;
+      Data.Reversed := False;
+
       Data.Value := Name_Val;
       if Decl = Base_Decl then
          Data.Already_Resolved := False;
          Data.Check_Null := Check_Null;
-         if Get_Kind (Decl) /= Iir_Kind_Interface_View_Declaration then
+         if Get_Kind (Base_Decl) /= Iir_Kind_Interface_View_Declaration then
             Value := Get_Default_Value (Base_Decl);
          else
             Value := Null_Iir;
+            Get_Mode_View_From_Name (Decl, Data.View, Data.Reversed);
+            pragma Assert
+              (Get_Kind (Data.View) = Iir_Kind_Mode_View_Declaration);
          end if;
          if Value = Null_Iir then
             Data.Has_Val := False;
@@ -3529,6 +3579,8 @@ package body Trans.Chap4 is
                         Out_Tinfo, Mode_Value);
       Data := Elab_Signal_Data'(Value => Dest_Val,
                                 Has_Val => False,
+                                View => Null_Iir,
+                                Reversed => False,
                                 Already_Resolved => True,
                                 Init_Val => Mnode_Null,
                                 Check_Null => False,

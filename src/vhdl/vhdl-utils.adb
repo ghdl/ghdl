@@ -2143,6 +2143,23 @@ package body Vhdl.Utils is
       end case;
    end Get_File_Signature;
 
+   function Get_Converse_Mode (Mode : Iir_Mode) return Iir_Mode is
+   begin
+      case Mode is
+         when Iir_In_Mode =>
+            return Iir_Out_Mode;
+         when Iir_Out_Mode
+           | Iir_Buffer_Mode =>
+            return Iir_In_Mode;
+         when Iir_Inout_Mode =>
+            return Iir_Inout_Mode;
+         when Iir_Linkage_Mode
+           | Iir_Unknown_Mode =>
+            --  Not supported
+            return Mode;
+      end case;
+   end Get_Converse_Mode;
+
    procedure Extract_Mode_View_Name
      (Name : Iir; View : out Iir; Reversed : out Boolean)
    is
@@ -2171,6 +2188,28 @@ package body Vhdl.Utils is
       end loop;
    end Extract_Mode_View_Name;
 
+   procedure Update_Mode_View_Selected_Name
+     (View : in out Iir; Reversed : in out Boolean; El : Iir)
+   is
+      pragma Assert (Get_Kind (View) = Iir_Kind_Mode_View_Declaration);
+      Pos : constant Natural := Natural (Get_Element_Position (El));
+      Def_List : constant Iir_Flist := Get_Elements_Definition_List (View);
+      El_Name : Iir;
+      Reversed1 : Boolean;
+   begin
+      El_Name := Get_Nth_Element (Def_List, Pos);
+
+      case Iir_Kinds_Mode_View_Element_Definition (Get_Kind (El_Name)) is
+         when Iir_Kind_Simple_Mode_View_Element =>
+            View := El_Name;
+         when Iir_Kind_Array_Mode_View_Element
+           | Iir_Kind_Record_Mode_View_Element =>
+            Extract_Mode_View_Name
+              (Get_Mode_View_Name (El_Name), View, Reversed1);
+            Reversed := Reversed xor Reversed1;
+      end case;
+   end Update_Mode_View_Selected_Name;
+
    procedure Get_Mode_View_From_Name
      (Name : Iir; View : out Iir; Reversed : out Boolean) is
    begin
@@ -2188,20 +2227,8 @@ package body Vhdl.Utils is
             end if;
             pragma Assert (Get_Kind (View) = Iir_Kind_Mode_View_Declaration);
 
-            declare
-               El : constant Iir := Get_Named_Entity (Name);
-               Def_List : Iir_Flist;
-               Pos : Natural;
-               El_Name : Iir;
-               Reversed1 : Boolean;
-            begin
-               Pos := Natural (Get_Element_Position (El));
-               Def_List := Get_Elements_Definition_List (View);
-               El_Name := Get_Nth_Element (Def_List, Pos);
-
-               Extract_Mode_View_Name (El_Name, View, Reversed1);
-               Reversed := Reversed xor Reversed1;
-            end;
+            Update_Mode_View_Selected_Name
+              (View, Reversed, Get_Named_Entity (Name));
          when others =>
             Error_Kind ("get_mode_view_from_name", Name);
       end case;

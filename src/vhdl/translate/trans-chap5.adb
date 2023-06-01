@@ -399,11 +399,9 @@ package body Trans.Chap5 is
          N_Mode := Data.Mode;
          N_Reversed := Data.Reversed;  --  Unused.
       else
-         pragma Assert (Get_Kind (Data.View) = Iir_Kind_Mode_View_Declaration);
-         N_View := Get_Nth_Element
-           (Get_Elements_Definition_List (N_View), Pos);
-         Extract_Mode_View_Name (N_View, N_View, N_Reversed);
-         N_Reversed := N_Reversed xor Data.Reversed;
+         N_View := Data.View;
+         N_Reversed := Data.Reversed;
+         Update_Mode_View_Selected_Name (N_View, N_Reversed, El);
          if Get_Kind (N_View) = Iir_Kind_Simple_Mode_View_Element then
             N_Mode := Mode_To_Connect (Get_Mode (N_View));
             if N_Reversed then
