@@ -67,6 +67,8 @@ package Trans_Decls is
    Ghdl_Signal_Set_Disconnect : O_Dnode;
    Ghdl_Signal_Disconnect : O_Dnode;
 
+   Ghdl_Signal_Set_Mode : O_Dnode;
+
    Ghdl_Signal_Driving : O_Dnode;
 
    Ghdl_Signal_Direct_Assign : O_Dnode;

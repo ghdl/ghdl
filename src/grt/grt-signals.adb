@@ -150,6 +150,11 @@ package body Grt.Signals is
       Sig_Has_Active := Has_Active;
    end Ghdl_Signal_Set_Mode_Kind;
 
+   procedure Ghdl_Signal_Set_Mode (Mode : Ghdl_I32) is
+   begin
+      Sig_Mode := Mode_Signal_Type'Val (Mode);
+   end Ghdl_Signal_Set_Mode;
+
    function Is_Signal_Guarded (Sig : Ghdl_Signal_Ptr) return Boolean is
    begin
       return Sig.Flags.Sig_Kind /= Kind_Signal_No;
