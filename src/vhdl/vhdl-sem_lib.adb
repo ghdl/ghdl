@@ -137,7 +137,7 @@ package body Vhdl.Sem_Lib is
       -- Note: Calling Synthesis checks after Canon is more computationally
       --       demanding than before. This is because, concurent assignments
       --       has been converted to processes and are therefore checked too!
-      if Is_Warning_Enabled(Warnid_Synthesis) then
+      if Is_Warning_Enabled(Warnid_Sensitivity) then
          Vhdl.Synthesis_Checks.Do_Synthesis_Checks (Unit);
       end if;
 

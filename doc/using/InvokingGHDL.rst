@@ -632,8 +632,8 @@ Some warnings are reported only during analysis, others during elaboration.
   These are checks for no wait statements in a procedure called in a
   sensitized process and checks for pure rules of a function.
 
-.. option:: --warn-synthesis
-.. option:: -Wsynthesis
+.. option:: --warn-sensitivity
+.. option:: -Wsensitivity
 
   Check analyzed unit for good synthesizable code practices and emit warnings if bad practices are detected
 
@@ -643,7 +643,7 @@ Some warnings are reported only during analysis, others during elaboration.
 
   .. ATTENTION::
     Sensitivity lists of clocked processes (``rising_edge`` / ``falling_edge`` / ``'event``)
-    are not checked! ``-Wsynthesis`` checks only sensitivity lists of combinatorial
+    are not checked! ``-Wsensitivity`` checks only sensitivity lists of combinatorial
     processes and latches!
 
 .. option:: --warn-body

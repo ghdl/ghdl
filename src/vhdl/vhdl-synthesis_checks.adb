@@ -94,7 +94,7 @@ package body Vhdl.Synthesis_Checks is
          -- the Gold_List even if only mysignal(5 downto 0) appears in the VHDL
          -- source.
          if Match = False and Has_Identifier(Get_Kind(Gold_Iir)) = True then
-            Warning_Msg_Sem (Warnid_Synthesis, +Proc,
+            Warning_Msg_Sem (Warnid_Sensitivity, +Proc,
                              "Incomplete sensitivity list! Missing signal: %i",
                              +Gold_Iir);
          end if;
@@ -135,7 +135,7 @@ package body Vhdl.Synthesis_Checks is
          end loop;
 
          if Match = False and Has_Identifier(Get_Kind(Real_Iir)) = True then
-            Warning_Msg_Sem (Warnid_Synthesis, +Proc,
+            Warning_Msg_Sem (Warnid_Sensitivity, +Proc,
                              "Over-specified sensitivity list! " &
                              "Redundant signal: %i", +Real_Iir);
          end if;

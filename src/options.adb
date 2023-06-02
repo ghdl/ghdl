@@ -312,7 +312,7 @@ package body Options is
       P ("  -Wbody             warns for not necessary package body");
       P ("  -Wspecs            warns if a all/others spec does not apply");
       P ("  -Wunused           warns if a subprogram is never used");
-      P ("  -Wsynthesis        perform checks for synthesizable code");
+      P ("  -Wsensitivity      warns of incomplete/overspecified sens. lists");
       P ("  -Wall              enables all warnings.");
       P ("  -Werror            turns warnings into errors");
 --    P ("Simulation option:");
