@@ -31,7 +31,7 @@ class Msgid(IntEnum):
     Warnid_Parenthesis = 12
     Warnid_Vital_Generic = 13
     Warnid_Delayed_Checks = 14
-    Warnid_Synthesis = 15
+    Warnid_Sensitivity = 15
     Warnid_Body = 16
     Warnid_Specs = 17
     Warnid_Universal = 18
