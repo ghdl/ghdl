@@ -321,8 +321,9 @@ package body Elab.Vhdl_Annotations is
    procedure Annotate_Interface_Declaration
      (Block_Info : Sim_Info_Acc; Decl : Iir; With_Types : Boolean) is
    begin
-      case Get_Kind (Decl) is
-         when Iir_Kind_Interface_Signal_Declaration =>
+      case Iir_Kinds_Interface_Declaration (Get_Kind (Decl)) is
+         when Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_View_Declaration =>
             if With_Types and then Has_Owned_Subtype_Indication (Decl) then
                Annotate_Type_Definition (Block_Info, Get_Type (Decl));
             end if;
@@ -345,8 +346,9 @@ package body Elab.Vhdl_Annotations is
          when Iir_Kinds_Interface_Subprogram_Declaration =>
             --  Macro-expanded
             null;
-         when others =>
-            Error_Kind ("annotate_interface_list", Decl);
+         when Iir_Kind_Interface_Quantity_Declaration
+           | Iir_Kind_Interface_Terminal_Declaration =>
+            Error_Kind ("annotate_interface_declaration", Decl);
       end case;
    end Annotate_Interface_Declaration;
 
@@ -635,6 +637,15 @@ package body Elab.Vhdl_Annotations is
                --  No annotation for aliases.
                if Get_Kind (Ind) not in Iir_Kinds_Denoting_Name then
                   Annotate_Type_Definition (Block_Info, Get_Type (Decl));
+               end if;
+            end;
+
+         when Iir_Kind_Mode_View_Declaration =>
+            declare
+               Ind : constant Iir := Get_Subtype_Indication (Decl);
+            begin
+               if Get_Kind (Ind) not in Iir_Kinds_Denoting_Name then
+                  Annotate_Type_Definition (Block_Info, Ind);
                end if;
             end;
 

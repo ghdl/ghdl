@@ -2918,7 +2918,9 @@ package body Simul.Vhdl_Simul is
       Sig_Type: constant Iir := Get_Type (E.Decl);
       Kind : Kind_Signal_Type;
    begin
-      if Get_Guarded_Signal_Flag (E.Decl) then
+      if Get_Kind (E.Decl) /= Iir_Kind_Interface_View_Declaration
+        and then Get_Guarded_Signal_Flag (E.Decl)
+      then
          Kind := Iir_Kind_To_Kind_Signal (Get_Signal_Kind (E.Decl));
       else
          Kind := Kind_Signal_No;

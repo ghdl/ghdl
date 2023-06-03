@@ -317,6 +317,11 @@ package body Simul.Vhdl_Elab is
                             No_Sensitivity_Index, No_Signal_Index,
                             No_Connect_Index, No_Driver_Index,
                             No_Disconnect_Index, null));
+         when Iir_Kind_Interface_View_Declaration =>
+            Gather_Signal ((Mode_Signal, Decl, Inst, null, null, null,
+                            No_Sensitivity_Index, No_Signal_Index,
+                            No_Connect_Index, No_Driver_Index,
+                            No_Disconnect_Index, null));
          when Iir_Kind_Configuration_Specification =>
             null;
          when Iir_Kind_Free_Quantity_Declaration
@@ -434,6 +439,7 @@ package body Simul.Vhdl_Elab is
            | Iir_Kind_Protected_Type_Body
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Use_Clause
+           | Iir_Kind_Mode_View_Declaration
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration =>
             null;
@@ -702,6 +708,7 @@ package body Simul.Vhdl_Elab is
       Conn : Connect_Entry;
       List : Iir_List;
       Formal_Ep, Actual_Ep : Sub_Signal_Type;
+      Is_Collapsed : Boolean;
    begin
       Mark_Expr_Pool (Marker);
       Assoc := Assocs;
@@ -726,6 +733,12 @@ package body Simul.Vhdl_Elab is
                Actual_Sig := Actual_Base.Val.S;
                Actual_Ep := (Actual_Sig, Off, Typ);
 
+               Is_Collapsed := Get_Collapse_Signal_Flag (Assoc)
+                 and then Formal_Ep.Offs.Mem_Off = 0
+                 and then Actual_Ep.Offs.Mem_Off = 0
+                 and then Actual_Base.Typ.W = Actual_Ep.Typ.W
+                 and then Formal_Base.Typ.W = Formal_Ep.Typ.W;
+
                Conn :=
                  (Formal => Formal_Ep,
                   Formal_Link => Signals_Table.Table (Formal_Sig).Connect,
@@ -733,30 +746,37 @@ package body Simul.Vhdl_Elab is
                   Actual_Link => Signals_Table.Table (Actual_Sig).Connect,
                   Drive_Formal => False,
                   Drive_Actual => False,
-                  Collapsed => False,
+                  Collapsed => Is_Collapsed,
                   Assoc => Assoc,
                   Assoc_Inst => Assoc_Inst);
 
-               --  LRM08 6.4.2.3 Signal declarations
-               --  [...], each source is either a driver or an OUT, INOUT,
-               --  BUFFER, or LINKAGE port [...]
-               case Get_Mode (Inter) is
-                  when Iir_In_Mode =>
-                     Conn.Drive_Formal := True;
-                     Conn.Drive_Actual := False;
-                  when Iir_Out_Mode
-                    | Iir_Buffer_Mode =>
-                     Conn.Drive_Formal := False;
-                     Conn.Drive_Actual := True;
-                     Increment_Nbr_Sources (Actual_Ep);
-                  when Iir_Inout_Mode
-                    | Iir_Linkage_Mode =>
-                     Conn.Drive_Formal := True;
-                     Conn.Drive_Actual := True;
-                     Increment_Nbr_Sources (Actual_Ep);
-                  when Iir_Unknown_Mode =>
+               if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
+                  --  TODO: increase nbr sources
+                  if not Is_Collapsed then
                      raise Internal_Error;
-               end case;
+                  end if;
+               else
+                  --  LRM08 6.4.2.3 Signal declarations
+                  --  [...], each source is either a driver or an OUT, INOUT,
+                  --  BUFFER, or LINKAGE port [...]
+                  case Get_Mode (Inter) is
+                     when Iir_In_Mode =>
+                        Conn.Drive_Formal := True;
+                        Conn.Drive_Actual := False;
+                     when Iir_Out_Mode
+                       | Iir_Buffer_Mode =>
+                        Conn.Drive_Formal := False;
+                        Conn.Drive_Actual := True;
+                        Increment_Nbr_Sources (Actual_Ep);
+                     when Iir_Inout_Mode
+                       | Iir_Linkage_Mode =>
+                        Conn.Drive_Formal := True;
+                        Conn.Drive_Actual := True;
+                        Increment_Nbr_Sources (Actual_Ep);
+                     when Iir_Unknown_Mode =>
+                        raise Internal_Error;
+                  end case;
+               end if;
 
                Connect_Table.Append (Conn);
 
@@ -764,18 +784,12 @@ package body Simul.Vhdl_Elab is
                Signals_Table.Table (Actual_Sig).Connect := Connect_Table.Last;
 
                --  Collapse
-               if Get_Collapse_Signal_Flag (Assoc)
-                 and then Formal_Ep.Offs.Mem_Off = 0
-                 and then Actual_Ep.Offs.Mem_Off = 0
-                 and then Actual_Base.Typ.W = Actual_Ep.Typ.W
-                 and then Formal_Base.Typ.W = Formal_Ep.Typ.W
-               then
+               if Is_Collapsed then
                   --  Full collapse.
                   pragma Assert (Signals_Table.Table (Formal_Sig).Collapsed_By
                                    = No_Signal_Index);
                   pragma Assert (Formal_Sig > Actual_Sig);
                   Signals_Table.Table (Formal_Sig).Collapsed_By := Actual_Sig;
-                  Connect_Table.Table (Connect_Table.Last).Collapsed := True;
                end if;
             when Iir_Kind_Association_Element_Open
               | Iir_Kind_Association_Element_By_Individual =>

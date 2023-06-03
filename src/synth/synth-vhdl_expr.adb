@@ -1051,6 +1051,7 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_Attribute_Name =>
             return Synth_Name (Syn_Inst, Get_Named_Entity (Name));
          when Iir_Kind_Interface_Signal_Declaration
+            | Iir_Kind_Interface_View_Declaration
             | Iir_Kind_Variable_Declaration
             | Iir_Kind_Interface_Variable_Declaration
             | Iir_Kind_Signal_Declaration
