@@ -384,16 +384,16 @@ package body Vhdl.Elocations is
            | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Signal_Force_Assignment_Statement
            | Iir_Kind_Signal_Release_Assignment_Statement
+           | Iir_Kind_Variable_Assignment_Statement
+           | Iir_Kind_Conditional_Variable_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
-           | Iir_Kind_Wait_Statement
-           | Iir_Kind_Variable_Assignment_Statement
-           | Iir_Kind_Conditional_Variable_Assignment_Statement
-           | Iir_Kind_Return_Statement
            | Iir_Kind_Next_Statement
            | Iir_Kind_Exit_Statement
+           | Iir_Kind_Return_Statement
            | Iir_Kind_Procedure_Call_Statement
+           | Iir_Kind_Wait_Statement
            | Iir_Kind_Break_Statement
            | Iir_Kind_Suspend_State_Statement
            | Iir_Kind_Character_Literal

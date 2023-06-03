@@ -1706,34 +1706,34 @@ package body Vhdl.Nodes_Meta is
             return "signal_force_assignment_statement";
          when Iir_Kind_Signal_Release_Assignment_Statement =>
             return "signal_release_assignment_statement";
+         when Iir_Kind_Variable_Assignment_Statement =>
+            return "variable_assignment_statement";
+         when Iir_Kind_Conditional_Variable_Assignment_Statement =>
+            return "conditional_variable_assignment_statement";
          when Iir_Kind_Null_Statement =>
             return "null_statement";
          when Iir_Kind_Assertion_Statement =>
             return "assertion_statement";
          when Iir_Kind_Report_Statement =>
             return "report_statement";
-         when Iir_Kind_Wait_Statement =>
-            return "wait_statement";
-         when Iir_Kind_Variable_Assignment_Statement =>
-            return "variable_assignment_statement";
-         when Iir_Kind_Conditional_Variable_Assignment_Statement =>
-            return "conditional_variable_assignment_statement";
-         when Iir_Kind_Return_Statement =>
-            return "return_statement";
-         when Iir_Kind_For_Loop_Statement =>
-            return "for_loop_statement";
-         when Iir_Kind_While_Loop_Statement =>
-            return "while_loop_statement";
          when Iir_Kind_Next_Statement =>
             return "next_statement";
          when Iir_Kind_Exit_Statement =>
             return "exit_statement";
-         when Iir_Kind_Case_Statement =>
-            return "case_statement";
+         when Iir_Kind_Return_Statement =>
+            return "return_statement";
          when Iir_Kind_Procedure_Call_Statement =>
             return "procedure_call_statement";
+         when Iir_Kind_Wait_Statement =>
+            return "wait_statement";
          when Iir_Kind_Break_Statement =>
             return "break_statement";
+         when Iir_Kind_For_Loop_Statement =>
+            return "for_loop_statement";
+         when Iir_Kind_While_Loop_Statement =>
+            return "while_loop_statement";
+         when Iir_Kind_Case_Statement =>
+            return "case_statement";
          when Iir_Kind_If_Statement =>
             return "if_statement";
          when Iir_Kind_Suspend_State_Statement =>
@@ -4886,6 +4886,22 @@ package body Vhdl.Nodes_Meta is
       Field_Parent,
       Field_Target,
       Field_Chain,
+      --  Iir_Kind_Variable_Assignment_Statement
+      Field_Label,
+      Field_Is_Ref,
+      Field_Visible_Flag,
+      Field_Parent,
+      Field_Target,
+      Field_Chain,
+      Field_Expression,
+      --  Iir_Kind_Conditional_Variable_Assignment_Statement
+      Field_Label,
+      Field_Is_Ref,
+      Field_Visible_Flag,
+      Field_Parent,
+      Field_Target,
+      Field_Chain,
+      Field_Conditional_Expression_Chain,
       --  Iir_Kind_Null_Statement
       Field_Label,
       Field_Visible_Flag,
@@ -4906,6 +4922,36 @@ package body Vhdl.Nodes_Meta is
       Field_Chain,
       Field_Severity_Expression,
       Field_Report_Expression,
+      --  Iir_Kind_Next_Statement
+      Field_Label,
+      Field_Is_Ref,
+      Field_Visible_Flag,
+      Field_Parent,
+      Field_Condition,
+      Field_Chain,
+      Field_Loop_Label,
+      --  Iir_Kind_Exit_Statement
+      Field_Label,
+      Field_Is_Ref,
+      Field_Visible_Flag,
+      Field_Parent,
+      Field_Condition,
+      Field_Chain,
+      Field_Loop_Label,
+      --  Iir_Kind_Return_Statement
+      Field_Label,
+      Field_Visible_Flag,
+      Field_Parent,
+      Field_Type,
+      Field_Chain,
+      Field_Expression,
+      --  Iir_Kind_Procedure_Call_Statement
+      Field_Label,
+      Field_Suspend_Flag,
+      Field_Visible_Flag,
+      Field_Parent,
+      Field_Procedure_Call,
+      Field_Chain,
       --  Iir_Kind_Wait_Statement
       Field_Label,
       Field_Is_Ref,
@@ -4915,29 +4961,14 @@ package body Vhdl.Nodes_Meta is
       Field_Chain,
       Field_Condition_Clause,
       Field_Sensitivity_List,
-      --  Iir_Kind_Variable_Assignment_Statement
+      --  Iir_Kind_Break_Statement
       Field_Label,
       Field_Is_Ref,
       Field_Visible_Flag,
       Field_Parent,
-      Field_Target,
+      Field_Condition,
       Field_Chain,
-      Field_Expression,
-      --  Iir_Kind_Conditional_Variable_Assignment_Statement
-      Field_Label,
-      Field_Is_Ref,
-      Field_Visible_Flag,
-      Field_Parent,
-      Field_Target,
-      Field_Chain,
-      Field_Conditional_Expression_Chain,
-      --  Iir_Kind_Return_Statement
-      Field_Label,
-      Field_Visible_Flag,
-      Field_Parent,
-      Field_Type,
-      Field_Chain,
-      Field_Expression,
+      Field_Break_Element,
       --  Iir_Kind_For_Loop_Statement
       Field_Label,
       Field_Exit_Flag,
@@ -4962,22 +4993,6 @@ package body Vhdl.Nodes_Meta is
       Field_Condition,
       Field_Chain,
       Field_Sequential_Statement_Chain,
-      --  Iir_Kind_Next_Statement
-      Field_Label,
-      Field_Is_Ref,
-      Field_Visible_Flag,
-      Field_Parent,
-      Field_Condition,
-      Field_Chain,
-      Field_Loop_Label,
-      --  Iir_Kind_Exit_Statement
-      Field_Label,
-      Field_Is_Ref,
-      Field_Visible_Flag,
-      Field_Parent,
-      Field_Condition,
-      Field_Chain,
-      Field_Loop_Label,
       --  Iir_Kind_Case_Statement
       Field_Label,
       Field_Matching_Flag,
@@ -4988,21 +5003,6 @@ package body Vhdl.Nodes_Meta is
       Field_Expression,
       Field_Case_Statement_Alternative_Chain,
       Field_Chain,
-      --  Iir_Kind_Procedure_Call_Statement
-      Field_Label,
-      Field_Suspend_Flag,
-      Field_Visible_Flag,
-      Field_Parent,
-      Field_Procedure_Call,
-      Field_Chain,
-      --  Iir_Kind_Break_Statement
-      Field_Label,
-      Field_Is_Ref,
-      Field_Visible_Flag,
-      Field_Parent,
-      Field_Condition,
-      Field_Chain,
-      Field_Break_Element,
       --  Iir_Kind_If_Statement
       Field_Label,
       Field_Suspend_Flag,
@@ -5758,20 +5758,20 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_Selected_Waveform_Assignment_Statement => 1944,
       Iir_Kind_Signal_Force_Assignment_Statement => 1954,
       Iir_Kind_Signal_Release_Assignment_Statement => 1963,
-      Iir_Kind_Null_Statement => 1967,
-      Iir_Kind_Assertion_Statement => 1974,
-      Iir_Kind_Report_Statement => 1980,
-      Iir_Kind_Wait_Statement => 1988,
-      Iir_Kind_Variable_Assignment_Statement => 1995,
-      Iir_Kind_Conditional_Variable_Assignment_Statement => 2002,
-      Iir_Kind_Return_Statement => 2008,
-      Iir_Kind_For_Loop_Statement => 2019,
-      Iir_Kind_While_Loop_Statement => 2030,
-      Iir_Kind_Next_Statement => 2037,
-      Iir_Kind_Exit_Statement => 2044,
-      Iir_Kind_Case_Statement => 2053,
-      Iir_Kind_Procedure_Call_Statement => 2059,
-      Iir_Kind_Break_Statement => 2066,
+      Iir_Kind_Variable_Assignment_Statement => 1970,
+      Iir_Kind_Conditional_Variable_Assignment_Statement => 1977,
+      Iir_Kind_Null_Statement => 1981,
+      Iir_Kind_Assertion_Statement => 1988,
+      Iir_Kind_Report_Statement => 1994,
+      Iir_Kind_Next_Statement => 2001,
+      Iir_Kind_Exit_Statement => 2008,
+      Iir_Kind_Return_Statement => 2014,
+      Iir_Kind_Procedure_Call_Statement => 2020,
+      Iir_Kind_Wait_Statement => 2028,
+      Iir_Kind_Break_Statement => 2035,
+      Iir_Kind_For_Loop_Statement => 2046,
+      Iir_Kind_While_Loop_Statement => 2057,
+      Iir_Kind_Case_Statement => 2066,
       Iir_Kind_If_Statement => 2076,
       Iir_Kind_Suspend_State_Statement => 2081,
       Iir_Kind_Elsif => 2087,
@@ -8966,20 +8966,20 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Signal_Force_Assignment_Statement
            | Iir_Kind_Signal_Release_Assignment_Statement
+           | Iir_Kind_Variable_Assignment_Statement
+           | Iir_Kind_Conditional_Variable_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
-           | Iir_Kind_Wait_Statement
-           | Iir_Kind_Variable_Assignment_Statement
-           | Iir_Kind_Conditional_Variable_Assignment_Statement
-           | Iir_Kind_Return_Statement
-           | Iir_Kind_For_Loop_Statement
-           | Iir_Kind_While_Loop_Statement
            | Iir_Kind_Next_Statement
            | Iir_Kind_Exit_Statement
-           | Iir_Kind_Case_Statement
+           | Iir_Kind_Return_Statement
            | Iir_Kind_Procedure_Call_Statement
+           | Iir_Kind_Wait_Statement
            | Iir_Kind_Break_Statement
+           | Iir_Kind_For_Loop_Statement
+           | Iir_Kind_While_Loop_Statement
+           | Iir_Kind_Case_Statement
            | Iir_Kind_If_Statement
            | Iir_Kind_Suspend_State_Statement
            | Iir_Kind_External_Constant_Name
@@ -9939,20 +9939,20 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Signal_Force_Assignment_Statement
            | Iir_Kind_Signal_Release_Assignment_Statement
+           | Iir_Kind_Variable_Assignment_Statement
+           | Iir_Kind_Conditional_Variable_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
-           | Iir_Kind_Wait_Statement
-           | Iir_Kind_Variable_Assignment_Statement
-           | Iir_Kind_Conditional_Variable_Assignment_Statement
-           | Iir_Kind_Return_Statement
-           | Iir_Kind_For_Loop_Statement
-           | Iir_Kind_While_Loop_Statement
            | Iir_Kind_Next_Statement
            | Iir_Kind_Exit_Statement
-           | Iir_Kind_Case_Statement
+           | Iir_Kind_Return_Statement
            | Iir_Kind_Procedure_Call_Statement
+           | Iir_Kind_Wait_Statement
            | Iir_Kind_Break_Statement
+           | Iir_Kind_For_Loop_Statement
+           | Iir_Kind_While_Loop_Statement
+           | Iir_Kind_Case_Statement
            | Iir_Kind_If_Statement
            | Iir_Kind_Character_Literal
            | Iir_Kind_Simple_Name
@@ -9997,20 +9997,20 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Signal_Force_Assignment_Statement
            | Iir_Kind_Signal_Release_Assignment_Statement
+           | Iir_Kind_Variable_Assignment_Statement
+           | Iir_Kind_Conditional_Variable_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
-           | Iir_Kind_Wait_Statement
-           | Iir_Kind_Variable_Assignment_Statement
-           | Iir_Kind_Conditional_Variable_Assignment_Statement
-           | Iir_Kind_Return_Statement
-           | Iir_Kind_For_Loop_Statement
-           | Iir_Kind_While_Loop_Statement
            | Iir_Kind_Next_Statement
            | Iir_Kind_Exit_Statement
-           | Iir_Kind_Case_Statement
+           | Iir_Kind_Return_Statement
            | Iir_Kind_Procedure_Call_Statement
+           | Iir_Kind_Wait_Statement
            | Iir_Kind_Break_Statement
+           | Iir_Kind_For_Loop_Statement
+           | Iir_Kind_While_Loop_Statement
+           | Iir_Kind_Case_Statement
            | Iir_Kind_If_Statement =>
             return True;
          when others =>
@@ -10110,20 +10110,20 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Signal_Force_Assignment_Statement
            | Iir_Kind_Signal_Release_Assignment_Statement
+           | Iir_Kind_Variable_Assignment_Statement
+           | Iir_Kind_Conditional_Variable_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
-           | Iir_Kind_Wait_Statement
-           | Iir_Kind_Variable_Assignment_Statement
-           | Iir_Kind_Conditional_Variable_Assignment_Statement
-           | Iir_Kind_Return_Statement
-           | Iir_Kind_For_Loop_Statement
-           | Iir_Kind_While_Loop_Statement
            | Iir_Kind_Next_Statement
            | Iir_Kind_Exit_Statement
-           | Iir_Kind_Case_Statement
+           | Iir_Kind_Return_Statement
            | Iir_Kind_Procedure_Call_Statement
+           | Iir_Kind_Wait_Statement
            | Iir_Kind_Break_Statement
+           | Iir_Kind_For_Loop_Statement
+           | Iir_Kind_While_Loop_Statement
+           | Iir_Kind_Case_Statement
            | Iir_Kind_If_Statement =>
             return True;
          when others =>
@@ -11346,10 +11346,10 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_If_Generate_Else_Clause
            | Iir_Kind_Simultaneous_If_Statement
            | Iir_Kind_Simultaneous_Elsif
-           | Iir_Kind_While_Loop_Statement
            | Iir_Kind_Next_Statement
            | Iir_Kind_Exit_Statement
            | Iir_Kind_Break_Statement
+           | Iir_Kind_While_Loop_Statement
            | Iir_Kind_If_Statement
            | Iir_Kind_Elsif =>
             return True;
@@ -11501,20 +11501,20 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Signal_Force_Assignment_Statement
            | Iir_Kind_Signal_Release_Assignment_Statement
+           | Iir_Kind_Variable_Assignment_Statement
+           | Iir_Kind_Conditional_Variable_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
-           | Iir_Kind_Wait_Statement
-           | Iir_Kind_Variable_Assignment_Statement
-           | Iir_Kind_Conditional_Variable_Assignment_Statement
-           | Iir_Kind_Return_Statement
-           | Iir_Kind_For_Loop_Statement
-           | Iir_Kind_While_Loop_Statement
            | Iir_Kind_Next_Statement
            | Iir_Kind_Exit_Statement
-           | Iir_Kind_Case_Statement
+           | Iir_Kind_Return_Statement
            | Iir_Kind_Procedure_Call_Statement
+           | Iir_Kind_Wait_Statement
            | Iir_Kind_Break_Statement
+           | Iir_Kind_For_Loop_Statement
+           | Iir_Kind_While_Loop_Statement
+           | Iir_Kind_Case_Statement
            | Iir_Kind_If_Statement
            | Iir_Kind_Suspend_State_Statement
            | Iir_Kind_Elsif
@@ -13022,10 +13022,10 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Process_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
+           | Iir_Kind_Procedure_Call_Statement
            | Iir_Kind_For_Loop_Statement
            | Iir_Kind_While_Loop_Statement
            | Iir_Kind_Case_Statement
-           | Iir_Kind_Procedure_Call_Statement
            | Iir_Kind_If_Statement =>
             return True;
          when others =>
@@ -13107,13 +13107,13 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Signal_Force_Assignment_Statement
            | Iir_Kind_Signal_Release_Assignment_Statement
-           | Iir_Kind_Wait_Statement
            | Iir_Kind_Variable_Assignment_Statement
            | Iir_Kind_Conditional_Variable_Assignment_Statement
-           | Iir_Kind_While_Loop_Statement
            | Iir_Kind_Next_Statement
            | Iir_Kind_Exit_Statement
+           | Iir_Kind_Wait_Statement
            | Iir_Kind_Break_Statement
+           | Iir_Kind_While_Loop_Statement
            | Iir_Kind_If_Statement
            | Iir_Kind_Elsif
            | Iir_Kind_External_Constant_Name
