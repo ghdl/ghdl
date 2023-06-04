@@ -16,7 +16,7 @@
 ---------------------------------------------------------------------
 ---------------------------------------------------------------------
 
-entity foo2 is
+entity foo3 is
 	generic
     (  g_rst_polar : bit := '1'
 	 ; g_sync_rst  : boolean    := false
@@ -28,8 +28,8 @@ entity foo2 is
 	; i_bit : In	bit
 	; o_bit :   Out	bit
     );
-end foo2;
-architecture behavioral of foo2 is
+end foo3;
+architecture behavioral of foo3 is
 
 	type t_state is
 	(  IDLE
@@ -54,10 +54,7 @@ begin
 	is
 		variable v_a : t_reg;
 
-		procedure Black_Magic is
-		begin
-			v_a.bit_o := '0';
-		end Black_Magic;
+		procedure Black_Magic;
 
 		procedure handle_bit is
 		begin
@@ -68,6 +65,11 @@ begin
 				v_a.state := bar;
 			end if;
 		end handle_bit;
+
+		procedure Black_Magic is
+		begin
+			v_a.bit_o := '0';
+		end Black_Magic;
 	begin
 		v_a := r;
 		case r.state is
