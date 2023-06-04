@@ -86,6 +86,9 @@ from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationM
 
 @export
 class Design(VHDLModel_Design):
+    _loadDefaultLibraryTime: float
+    _analyzeTime: float
+
     @InheritDocString(VHDLModel_Design)
     def __init__(self, name: str = None):
         super().__init__(name)
