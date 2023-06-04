@@ -34,6 +34,7 @@ Document object model (DOM) for :mod:`pyGHDL.libghdl` based on :doc:`pyVHDLModel
 from pathlib import Path
 
 from pyTooling.Decorators import export
+from pyTooling.MetaClasses import ExtendedType
 
 from pyGHDL import GHDLBaseException
 from pyGHDL.libghdl import files_map, name_table
@@ -86,7 +87,7 @@ class Position:
 
 
 @export
-class DOMMixin:
+class DOMMixin(metaclass=ExtendedType, mixin=True):
     _iirNode: Iir
     _position: Position = None
 
