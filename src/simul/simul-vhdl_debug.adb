@@ -127,15 +127,9 @@ package body Simul.Vhdl_Debug is
       New_Line;
       Put ("     formal: ");
       Disp_Conn_Endpoint (C.Formal);
-      if C.Drive_Formal then
-         Put (" [drive]");
-      end if;
       New_Line;
       Put ("     actual: ");
       Disp_Conn_Endpoint (C.Actual);
-      if C.Drive_Actual then
-         Put (" [drive]");
-      end if;
       New_Line;
    end Disp_Conn_Entry;
 
@@ -375,7 +369,6 @@ package body Simul.Vhdl_Debug is
       use Elab.Memtype;
       S : Signal_Entry renames Signals_Table.Table (Idx);
       Nbr_Drv : Int32;
-      Nbr_Conn_Drv : Int32;
       Nbr_Sens : Int32;
       Sens : Sensitivity_Index_Type;
       Driver : Driver_Index_Type;
@@ -432,27 +425,6 @@ package body Simul.Vhdl_Debug is
 
       if Opts.Conn then
          if S.Kind in Mode_Signal_User then
-            Nbr_Conn_Drv := 0;
-            Conn := S.Connect;
-            while Conn /= No_Connect_Index loop
-               declare
-                  C : Connect_Entry renames Connect_Table.Table (Conn);
-               begin
-                  if C.Formal.Base = Idx then
-                     if C.Drive_Formal then
-                        Nbr_Conn_Drv := Nbr_Conn_Drv + 1;
-                     end if;
-                     Conn := C.Formal_Link;
-                  else
-                     pragma Assert (C.Actual.Base = Idx);
-                     if C.Drive_Actual then
-                        Nbr_Conn_Drv := Nbr_Conn_Drv + 1;
-                     end if;
-                     Conn := C.Actual_Link;
-                  end if;
-               end;
-            end loop;
-
             Nbr_Drv := 0;
             Driver := S.Drivers;
             while Driver /= No_Driver_Index loop
@@ -461,8 +433,6 @@ package body Simul.Vhdl_Debug is
             end loop;
             Put ("  nbr drivers: ");
             Put_Int32 (Nbr_Drv);
-            Put (", nbr conn srcs: ");
-            Put_Int32 (Nbr_Conn_Drv);
             Put (", ");
          else
             Put ("  ");

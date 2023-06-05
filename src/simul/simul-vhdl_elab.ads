@@ -98,11 +98,6 @@ package Simul.Vhdl_Elab is
       --  Next connection for the actual.
       Actual_Link : Connect_Index_Type;
 
-      --  Whether it is a source for the actual or/and the actual.
-      --  The correct word is 'source'.
-      Drive_Formal : Boolean;
-      Drive_Actual : Boolean;
-
       --  If true, the connection is fully collapsed: formal is the same
       --  signal as actual.
       Collapsed : Boolean;

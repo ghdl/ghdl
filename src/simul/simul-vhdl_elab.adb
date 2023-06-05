@@ -744,8 +744,6 @@ package body Simul.Vhdl_Elab is
                   Formal_Link => Signals_Table.Table (Formal_Sig).Connect,
                   Actual => Actual_Ep,
                   Actual_Link => Signals_Table.Table (Actual_Sig).Connect,
-                  Drive_Formal => False,
-                  Drive_Actual => False,
                   Collapsed => Is_Collapsed,
                   Assoc => Assoc,
                   Assoc_Inst => Assoc_Inst);
@@ -759,23 +757,9 @@ package body Simul.Vhdl_Elab is
                   --  LRM08 6.4.2.3 Signal declarations
                   --  [...], each source is either a driver or an OUT, INOUT,
                   --  BUFFER, or LINKAGE port [...]
-                  case Get_Mode (Inter) is
-                     when Iir_In_Mode =>
-                        Conn.Drive_Formal := True;
-                        Conn.Drive_Actual := False;
-                     when Iir_Out_Mode
-                       | Iir_Buffer_Mode =>
-                        Conn.Drive_Formal := False;
-                        Conn.Drive_Actual := True;
-                        Increment_Nbr_Sources (Actual_Ep);
-                     when Iir_Inout_Mode
-                       | Iir_Linkage_Mode =>
-                        Conn.Drive_Formal := True;
-                        Conn.Drive_Actual := True;
-                        Increment_Nbr_Sources (Actual_Ep);
-                     when Iir_Unknown_Mode =>
-                        raise Internal_Error;
-                  end case;
+                  if Get_Mode (Inter) /= Iir_In_Mode then
+                     Increment_Nbr_Sources (Actual_Ep);
+                  end if;
                end if;
 
                Connect_Table.Append (Conn);
@@ -809,8 +793,6 @@ package body Simul.Vhdl_Elab is
                   Formal_Link => Signals_Table.Table (Formal_Ep.Base).Connect,
                   Actual => Actual_Ep,
                   Actual_Link => No_Connect_Index,
-                  Drive_Formal => True, --  Always an IN interface
-                  Drive_Actual => False,
                   Collapsed => False,
                   Assoc => Assoc,
                   Assoc_Inst => Assoc_Inst);

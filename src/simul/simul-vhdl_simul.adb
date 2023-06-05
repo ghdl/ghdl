@@ -3514,9 +3514,33 @@ package body Simul.Vhdl_Simul is
       end case;
    end Add_Conversion;
 
-   procedure Create_Connect (C : Connect_Entry) is
+   procedure Create_Connect (C : Connect_Entry)
+   is
+      Formal : constant Iir := Signals_Table.Table (C.Formal.Base).Decl;
+      Drive_Actual : Boolean;
+      Drive_Formal : Boolean;
    begin
-      if C.Drive_Actual then
+      if Get_Kind (Formal) = Iir_Kind_Interface_View_Declaration then
+         raise Internal_Error;
+      else
+         case Get_Mode (Formal) is
+            when Iir_In_Mode =>
+               Drive_Formal := True;
+               Drive_Actual := False;
+            when Iir_Out_Mode
+              | Iir_Buffer_Mode =>
+               Drive_Formal := False;
+               Drive_Actual := True;
+            when Iir_Inout_Mode
+              | Iir_Linkage_Mode =>
+               Drive_Formal := True;
+               Drive_Actual := True;
+            when Iir_Unknown_Mode =>
+               raise Internal_Error;
+         end case;
+      end if;
+
+      if Drive_Actual then
          declare
             Out_Conv : constant Node := Get_Formal_Conversion (C.Assoc);
             Csig : Memory_Ptr;
@@ -3552,7 +3576,7 @@ package body Simul.Vhdl_Simul is
          end;
       end if;
 
-      if C.Drive_Formal then
+      if Drive_Formal then
          declare
             In_Conv : constant Node := Get_Actual_Conversion (C.Assoc);
             Csig : Memory_Ptr;
