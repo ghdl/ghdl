@@ -3514,31 +3514,26 @@ package body Simul.Vhdl_Simul is
       end case;
    end Add_Conversion;
 
-   procedure Create_Connect (C : Connect_Entry)
+   procedure Create_Connect (C : Connect_Entry; Mode : Iir_Mode)
    is
-      Formal : constant Iir := Signals_Table.Table (C.Formal.Base).Decl;
       Drive_Actual : Boolean;
       Drive_Formal : Boolean;
    begin
-      if Get_Kind (Formal) = Iir_Kind_Interface_View_Declaration then
-         raise Internal_Error;
-      else
-         case Get_Mode (Formal) is
-            when Iir_In_Mode =>
-               Drive_Formal := True;
-               Drive_Actual := False;
-            when Iir_Out_Mode
-              | Iir_Buffer_Mode =>
-               Drive_Formal := False;
-               Drive_Actual := True;
-            when Iir_Inout_Mode
-              | Iir_Linkage_Mode =>
-               Drive_Formal := True;
-               Drive_Actual := True;
-            when Iir_Unknown_Mode =>
-               raise Internal_Error;
-         end case;
-      end if;
+      case Mode is
+         when Iir_In_Mode =>
+            Drive_Formal := True;
+            Drive_Actual := False;
+         when Iir_Out_Mode
+           | Iir_Buffer_Mode =>
+            Drive_Formal := False;
+            Drive_Actual := True;
+         when Iir_Inout_Mode
+           | Iir_Linkage_Mode =>
+            Drive_Formal := True;
+            Drive_Actual := True;
+         when Iir_Unknown_Mode =>
+            raise Internal_Error;
+      end case;
 
       if Drive_Actual then
          declare
@@ -3608,6 +3603,48 @@ package body Simul.Vhdl_Simul is
       end if;
    end Create_Connect;
 
+   procedure Create_View_Connect
+     (View : Iir; Reversed : Boolean; C : Connect_Entry) is
+   begin
+      if Get_Kind (View) = Iir_Kind_Simple_Mode_View_Element then
+         declare
+            Sub_Mode : Iir_Mode;
+         begin
+            Sub_Mode := Get_Mode (View);
+            if Reversed then
+               Sub_Mode := Get_Converse_Mode (Sub_Mode);
+            end if;
+            Create_Connect (C, Sub_Mode);
+         end;
+      else
+         declare
+            Typ : constant Type_Acc :=
+              Signals_Table.Table (C.Formal.Base).Typ;
+            Sub_View : Iir;
+            Sub_Reversed : Boolean;
+            Sub_Connect : Connect_Entry;
+         begin
+            for I in 1 .. Typ.Rec.Len loop
+               Update_Mode_View_By_Pos
+                 (Sub_View, Sub_Reversed, View, Reversed, Natural (I - 1));
+               Sub_Connect :=
+                 (Formal => (Base => C.Formal.Base,
+                             Offs => C.Formal.Offs + Typ.Rec.E (I).Offs,
+                             Typ => Typ.Rec.E (I).Typ),
+                  Formal_Link => C.Formal_Link,
+                  Actual => (Base => C.Actual.Base,
+                             Offs => C.Actual.Offs + Typ.Rec.E (I).Offs,
+                             Typ => Typ.Rec.E (I).Typ),
+                  Actual_Link => C.Actual_Link,
+                  Collapsed => C.Collapsed,
+                  Assoc => C.Assoc,
+                  Assoc_Inst => C.Assoc_Inst);
+               Create_View_Connect (Sub_View, Sub_Reversed, Sub_Connect);
+            end loop;
+         end;
+      end if;
+   end Create_View_Connect;
+
    procedure Signal_Associate_Cst (Sig : Memory_Ptr;
                                    Typ : Type_Acc;
                                    Val : Memory_Ptr) is
@@ -3668,7 +3705,25 @@ package body Simul.Vhdl_Simul is
          begin
             if not C.Collapsed then
                if C.Actual.Base /= No_Signal_Index then
-                  Create_Connect (C);
+                  declare
+                     Inter : constant Iir :=
+                       Signals_Table.Table (C.Formal.Base).Decl;
+                     View : Iir;
+                     Reversed : Boolean;
+                  begin
+                     if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration
+                     then
+                        pragma Assert
+                          (Get_Formal_Conversion (C.Assoc) = Null_Iir);
+                        pragma Assert
+                          (Get_Actual_Conversion (C.Assoc) = Null_Iir);
+                        Get_Mode_View_From_Name
+                          (Get_Formal (C.Assoc), View, Reversed);
+                        Create_View_Connect (View, Reversed, C);
+                     else
+                        Create_Connect (C, Get_Mode (Inter));
+                     end if;
+                  end;
                elsif Get_Expr_Staticness (Get_Actual (C.Assoc)) >= Globally
                then
                   Mark_Expr_Pool (Marker);

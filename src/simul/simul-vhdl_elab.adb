@@ -688,6 +688,33 @@ package body Simul.Vhdl_Elab is
       end loop;
    end Increment_Nbr_Sources;
 
+   procedure Increment_View_Nbr_Sources
+     (View : Iir; Reversed : Boolean; Actual_Ep : Sub_Signal_Type) is
+   begin
+      if Get_Kind (View) = Iir_Kind_Simple_Mode_View_Element then
+         if Get_Mode (View) /= Iir_In_Mode xor Reversed then
+            Increment_Nbr_Sources (Actual_Ep);
+         end if;
+      else
+         declare
+            Typ : constant Type_Acc := Actual_Ep.Typ;
+            Sub_View : Iir;
+            Sub_Reversed : Boolean;
+            Sub_Ep : Sub_Signal_Type;
+         begin
+            pragma Assert (Typ.Kind = Type_Record);
+            for I in 1 .. Typ.Rec.Len loop
+               Update_Mode_View_By_Pos
+                 (Sub_View, Sub_Reversed, View, Reversed, Natural (I - 1));
+               Sub_Ep := (Base => Actual_Ep.Base,
+                          Offs => Actual_Ep.Offs + Typ.Rec.E (I).Offs,
+                          Typ => Typ.Rec.E (I).Typ);
+               Increment_View_Nbr_Sources (Sub_View, Sub_Reversed, Sub_Ep);
+            end loop;
+         end;
+      end if;
+   end Increment_View_Nbr_Sources;
+
    procedure Gather_Connections (Port_Inst : Synth_Instance_Acc;
                                  Ports : Node;
                                  Assoc_Inst : Synth_Instance_Acc;
@@ -750,9 +777,13 @@ package body Simul.Vhdl_Elab is
 
                if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
                   --  TODO: increase nbr sources
-                  if not Is_Collapsed then
-                     raise Internal_Error;
-                  end if;
+                  declare
+                     View : Iir;
+                     Reversed : Boolean;
+                  begin
+                     Get_Mode_View_From_Name (Formal, View, Reversed);
+                     Increment_View_Nbr_Sources (View, Reversed, Actual_Ep);
+                  end;
                else
                   --  LRM08 6.4.2.3 Signal declarations
                   --  [...], each source is either a driver or an OUT, INOUT,

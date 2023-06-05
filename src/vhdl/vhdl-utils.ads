@@ -469,6 +469,13 @@ package Vhdl.Utils is
    procedure Update_Mode_View_Selected_Name
      (View : in out Iir; Reversed : in out Boolean; El : Iir);
 
+   --  Likewise, but using element indexed by POS.
+   procedure Update_Mode_View_By_Pos (Sub_View : out Iir;
+                                      Sub_Reversed : out Boolean;
+                                      View : Iir;
+                                      Reversed : Boolean;
+                                      Pos : Natural);
+
    --  Set VIEW to a simple_mode_view_element or a mode_view_declaration that
    --  applies to NAME.  The base name of NAME must be a view interface.
    --  Reversed is set if the view is reversed (due to 'Converse).

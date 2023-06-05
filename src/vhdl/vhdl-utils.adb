@@ -2188,26 +2188,39 @@ package body Vhdl.Utils is
       end loop;
    end Extract_Mode_View_Name;
 
+   procedure Update_Mode_View_By_Pos (Sub_View : out Iir;
+                                      Sub_Reversed : out Boolean;
+                                      View : Iir;
+                                      Reversed : Boolean;
+                                      Pos : Natural)
+   is
+      Def_List : constant Iir_Flist := Get_Elements_Definition_List (View);
+      El_Name : constant Iir := Get_Nth_Element (Def_List, Pos);
+      Reversed1 : Boolean;
+   begin
+      case Iir_Kinds_Mode_View_Element_Definition (Get_Kind (El_Name)) is
+         when Iir_Kind_Simple_Mode_View_Element =>
+            Sub_View := El_Name;
+            Sub_Reversed := Reversed;
+         when Iir_Kind_Array_Mode_View_Element
+           | Iir_Kind_Record_Mode_View_Element =>
+            Extract_Mode_View_Name
+              (Get_Mode_View_Name (El_Name), Sub_View, Reversed1);
+            Sub_Reversed := Reversed xor Reversed1;
+      end case;
+   end Update_Mode_View_By_Pos;
+
    procedure Update_Mode_View_Selected_Name
      (View : in out Iir; Reversed : in out Boolean; El : Iir)
    is
       pragma Assert (Get_Kind (View) = Iir_Kind_Mode_View_Declaration);
       Pos : constant Natural := Natural (Get_Element_Position (El));
-      Def_List : constant Iir_Flist := Get_Elements_Definition_List (View);
-      El_Name : Iir;
-      Reversed1 : Boolean;
+      Sub_View : Iir;
+      Sub_Reversed : Boolean;
    begin
-      El_Name := Get_Nth_Element (Def_List, Pos);
-
-      case Iir_Kinds_Mode_View_Element_Definition (Get_Kind (El_Name)) is
-         when Iir_Kind_Simple_Mode_View_Element =>
-            View := El_Name;
-         when Iir_Kind_Array_Mode_View_Element
-           | Iir_Kind_Record_Mode_View_Element =>
-            Extract_Mode_View_Name
-              (Get_Mode_View_Name (El_Name), View, Reversed1);
-            Reversed := Reversed xor Reversed1;
-      end case;
+      Update_Mode_View_By_Pos (Sub_View, Sub_Reversed, View, Reversed, Pos);
+      View := Sub_View;
+      Reversed := Sub_Reversed;
    end Update_Mode_View_Selected_Name;
 
    procedure Get_Mode_View_From_Name
