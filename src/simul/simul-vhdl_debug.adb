@@ -424,7 +424,7 @@ package body Simul.Vhdl_Debug is
       end if;
 
       if Opts.Conn then
-         if S.Kind in Mode_Signal_User then
+         if S.Kind = Signal_User then
             Nbr_Drv := 0;
             Driver := S.Drivers;
             while Driver /= No_Driver_Index loop
@@ -453,7 +453,7 @@ package body Simul.Vhdl_Debug is
          New_Line;
       end if;
 
-      if Opts.Sources and then S.Kind in Mode_Signal_User then
+      if Opts.Sources and then S.Kind = Signal_User then
          Put ("  nbr sources (drv + conn : total):");
          New_Line;
          for I in 0 .. S.Typ.W - 1 loop
@@ -470,7 +470,7 @@ package body Simul.Vhdl_Debug is
       end if;
 
       if Opts.Conn then
-         if S.Kind in Mode_Signal_User then
+         if S.Kind = Signal_User then
             Driver := S.Drivers;
             while Driver /= No_Driver_Index loop
                declare

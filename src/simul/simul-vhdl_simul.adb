@@ -88,6 +88,13 @@ package body Simul.Vhdl_Simul is
    procedure Set_Quantities_Values (Y : F64_C_Arr_Ptr; Yp: F64_C_Arr_Ptr);
    pragma Export (C, Set_Quantities_Values, "grt__analog_solver__set_values");
 
+   --  Mapping.
+   type Iir_Kind_To_Kind_Signal_Type is
+     array (Iir_Signal_Kind) of Kind_Signal_Type;
+   Iir_Kind_To_Kind_Signal : constant Iir_Kind_To_Kind_Signal_Type :=
+     (Iir_Register_Kind  => Kind_Signal_Register,
+      Iir_Bus_Kind       => Kind_Signal_Bus);
+
    function Sig_Index (Base : Memory_Ptr; Idx : Uns32) return Memory_Ptr is
    begin
       return Base + Size_Type (Idx) * Sig_Size;
@@ -2814,6 +2821,48 @@ package body Simul.Vhdl_Simul is
       end case;
    end Create_Scalar_Signal;
 
+   function Get_Signal_Mode (E : Signal_Entry) return Mode_Signal_Type is
+   begin
+      case E.Kind is
+         when Signal_User =>
+            case Get_Kind (E.Decl) is
+               when Iir_Kind_Signal_Declaration =>
+                  return Mode_Signal;
+               when Iir_Kind_Interface_Signal_Declaration =>
+                  case Get_Mode (E.Decl) is
+                     when Iir_In_Mode =>
+                        return Mode_In;
+                     when Iir_Out_Mode =>
+                        return Mode_Out;
+                     when Iir_Linkage_Mode =>
+                        return Mode_Linkage;
+                     when Iir_Inout_Mode =>
+                        return Mode_Inout;
+                     when Iir_Buffer_Mode =>
+                        return Mode_Buffer;
+                     when Iir_Unknown_Mode =>
+                        raise Internal_Error;
+                  end case;
+               when others =>
+                  raise Internal_Error;
+            end case;
+         when Signal_Quiet =>
+            return Mode_Quiet;
+         when Signal_Stable =>
+            return Mode_Stable;
+         when Signal_Transaction =>
+            return Mode_Transaction;
+         when Signal_Delayed =>
+            return Mode_Delayed;
+         when Signal_Above =>
+            return Mode_Above;
+         when Signal_Guard =>
+            return Mode_Guard;
+         when Signal_None =>
+            raise Internal_Error;
+      end case;
+   end Get_Signal_Mode;
+
    procedure Create_User_Signal (E : Signal_Entry)
    is
       procedure Create_Signal (Val : Memory_Ptr;
@@ -2926,7 +2975,7 @@ package body Simul.Vhdl_Simul is
          Kind := Kind_Signal_No;
       end if;
 
-      Grt.Signals.Ghdl_Signal_Set_Mode_Kind (E.Kind, Kind, True);
+      Grt.Signals.Ghdl_Signal_Set_Mode_Kind (Get_Signal_Mode (E), Kind, True);
 
       Create_Signal (E.Val, 0, Sig_Type, E.Typ, E.Nbr_Sources.all, False);
    end Create_User_Signal;
@@ -3130,31 +3179,31 @@ package body Simul.Vhdl_Simul is
    begin
       E.Sig := Alloc_Signal_Memory (E.Typ, Global_Pool'Access);
       case E.Kind is
-         when Mode_Guard =>
+         when Signal_Guard =>
             Create_Guard_Signal (Idx);
-         when Mode_Quiet =>
+         when Signal_Quiet =>
             S := Grt.Signals.Ghdl_Create_Quiet_Signal
               (To_Ghdl_Value_Ptr (To_Address (E.Val)), E.Time);
             Write_Sig (E.Sig, S);
             Register_Prefix (E.Pfx.Typ, To_Memory_Ptr (E.Pfx));
-         when Mode_Stable =>
+         when Signal_Stable =>
             S := Grt.Signals.Ghdl_Create_Stable_Signal
               (To_Ghdl_Value_Ptr (To_Address (E.Val)), E.Time);
             Write_Sig (E.Sig, S);
             Register_Prefix (E.Pfx.Typ, To_Memory_Ptr (E.Pfx));
-         when Mode_Transaction =>
+         when Signal_Transaction =>
             S := Grt.Signals.Ghdl_Create_Transaction_Signal
               (To_Ghdl_Value_Ptr (To_Address (E.Val)));
             Write_Sig (E.Sig, S);
             Register_Prefix (E.Pfx.Typ, To_Memory_Ptr (E.Pfx));
-         when Mode_Delayed =>
+         when Signal_Delayed =>
             Create_Delayed_Signal (E.Sig, E.Val, To_Memory_Ptr (E.Pfx),
                                    E.Typ, E.Time);
-         when Mode_Above =>
+         when Signal_Above =>
             raise Internal_Error;
-         when Mode_Signal_User =>
+         when Signal_User =>
             Create_User_Signal (Signals_Table.Table (Idx));
-         when Mode_Conv_In | Mode_Conv_Out | Mode_End =>
+         when Signal_None =>
             raise Internal_Error;
       end case;
    end Create_Signal;

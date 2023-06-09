@@ -158,7 +158,7 @@ package body Simul.Vhdl_Elab is
       end if;
       E.Sig := null;
 
-      if E.Kind in Mode_Signal_User then
+      if E.Kind = Signal_User then
          if E.Typ.W > 0 then
             E.Nbr_Sources := new Nbr_Sources_Array (0 .. E.Typ.W - 1);
             --  Avoid aggregate to avoid stack overflow.
@@ -176,8 +176,9 @@ package body Simul.Vhdl_Elab is
          end if;
       end if;
 
-      pragma Assert (E.Kind /= Mode_End);
-      pragma Assert (Signals_Table.Table (Val.Val.S).Kind = Mode_End);
+      pragma Assert (E.Kind /= Signal_None);
+      pragma Assert (Signals_Table.Table (Val.Val.S).Kind = Signal_None);
+
       Signals_Table.Table (Val.Val.S) := E;
    end Gather_Signal;
 
@@ -283,42 +284,17 @@ package body Simul.Vhdl_Elab is
       case Get_Kind (Decl) is
          when Iir_Kind_Interface_Signal_Declaration =>
             --  Driver.
-            case Get_Mode (Decl) is
-               when Iir_Unknown_Mode =>
-                  raise Internal_Error;
-               when Iir_Linkage_Mode =>
-                  Gather_Signal ((Mode_Linkage, Decl, Inst, null, null, null,
-                                  No_Sensitivity_Index, No_Signal_Index,
-                                  No_Connect_Index, No_Driver_Index,
-                                  No_Disconnect_Index, null));
-               when Iir_Buffer_Mode =>
-                  Gather_Signal ((Mode_Buffer, Decl, Inst, null, null, null,
-                                  No_Sensitivity_Index, No_Signal_Index,
-                                  No_Connect_Index, No_Driver_Index,
-                                  No_Disconnect_Index, null));
-               when Iir_Out_Mode =>
-                  Gather_Signal ((Mode_Out, Decl, Inst, null, null, null,
-                                  No_Sensitivity_Index, No_Signal_Index,
-                                  No_Connect_Index, No_Driver_Index,
-                                  No_Disconnect_Index, null));
-               when Iir_Inout_Mode =>
-                  Gather_Signal ((Mode_Inout, Decl, Inst, null, null, null,
-                                  No_Sensitivity_Index, No_Signal_Index,
-                                  No_Connect_Index, No_Driver_Index,
-                                  No_Disconnect_Index, null));
-               when Iir_In_Mode =>
-                  Gather_Signal ((Mode_In, Decl, Inst, null, null, null,
-                                  No_Sensitivity_Index, No_Signal_Index,
-                                  No_Connect_Index, No_Driver_Index,
-                                  No_Disconnect_Index, null));
-            end case;
+            Gather_Signal ((Signal_User, Decl, Inst, null, null, null,
+                            No_Sensitivity_Index, No_Signal_Index,
+                            No_Connect_Index, No_Driver_Index,
+                            No_Disconnect_Index, null));
          when Iir_Kind_Signal_Declaration =>
-            Gather_Signal ((Mode_Signal, Decl, Inst, null, null, null,
+            Gather_Signal ((Signal_User, Decl, Inst, null, null, null,
                             No_Sensitivity_Index, No_Signal_Index,
                             No_Connect_Index, No_Driver_Index,
                             No_Disconnect_Index, null));
          when Iir_Kind_Interface_View_Declaration =>
-            Gather_Signal ((Mode_Signal, Decl, Inst, null, null, null,
+            Gather_Signal ((Signal_User, Decl, Inst, null, null, null,
                             No_Sensitivity_Index, No_Signal_Index,
                             No_Connect_Index, No_Driver_Index,
                             No_Disconnect_Index, null));
@@ -352,7 +328,7 @@ package body Simul.Vhdl_Elab is
                end loop;
             end;
          when Iir_Kind_Above_Attribute =>
-            Gather_Signal ((Mode_Above, Decl, Inst, null, null, null,
+            Gather_Signal ((Signal_Above, Decl, Inst, null, null, null,
                             No_Sensitivity_Index, No_Signal_Index,
                             No_Connect_Index));
          when Iir_Kind_Quiet_Attribute =>
@@ -362,7 +338,7 @@ package body Simul.Vhdl_Elab is
             begin
                T := Compute_Attribute_Time (Inst, Decl);
                Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
-               Gather_Signal ((Mode_Quiet, Decl, Inst, null, null, null,
+               Gather_Signal ((Signal_Quiet, Decl, Inst, null, null, null,
                                No_Sensitivity_Index, No_Signal_Index,
                                No_Connect_Index, T, Pfx));
             end;
@@ -373,7 +349,7 @@ package body Simul.Vhdl_Elab is
             begin
                T := Compute_Attribute_Time (Inst, Decl);
                Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
-               Gather_Signal ((Mode_Stable, Decl, Inst, null, null, null,
+               Gather_Signal ((Signal_Stable, Decl, Inst, null, null, null,
                                No_Sensitivity_Index, No_Signal_Index,
                                No_Connect_Index, T, Pfx));
             end;
@@ -382,9 +358,10 @@ package body Simul.Vhdl_Elab is
                Pfx : Sub_Signal_Type;
             begin
                Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
-               Gather_Signal ((Mode_Transaction, Decl, Inst, null, null, null,
-                               No_Sensitivity_Index, No_Signal_Index,
-                               No_Connect_Index, 0, Pfx));
+               Gather_Signal
+                 ((Signal_Transaction, Decl, Inst, null, null, null,
+                   No_Sensitivity_Index, No_Signal_Index,
+                   No_Connect_Index, 0, Pfx));
             end;
          when Iir_Kind_Delayed_Attribute =>
             declare
@@ -393,7 +370,7 @@ package body Simul.Vhdl_Elab is
             begin
                T := Compute_Attribute_Time (Inst, Decl);
                Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
-               Gather_Signal ((Mode_Delayed, Decl, Inst, null, null, null,
+               Gather_Signal ((Signal_Delayed, Decl, Inst, null, null, null,
                                No_Sensitivity_Index, No_Signal_Index,
                                No_Connect_Index, T, Pfx));
             end;
@@ -1031,7 +1008,7 @@ package body Simul.Vhdl_Elab is
                Guard : constant Node := Get_Guard_Decl (N);
             begin
                if Guard /= Null_Node then
-                  Gather_Signal ((Mode_Guard, Guard, Inst, null, null, null,
+                  Gather_Signal ((Signal_Guard, Guard, Inst, null, null, null,
                                   No_Sensitivity_Index, No_Signal_Index,
                                   No_Connect_Index));
                end if;
@@ -1075,7 +1052,7 @@ package body Simul.Vhdl_Elab is
       Signals_Table.Set_Last (Get_Nbr_Signal);
       for I in Signals_Table.First .. Signals_Table.Last loop
          Signals_Table.Table (I) :=
-           (Mode_End, Null_Node, null, null, null, null,
+           (Signal_None, Null_Node, null, null, null, null,
             No_Sensitivity_Index, No_Signal_Index, No_Connect_Index);
       end loop;
 
@@ -1110,7 +1087,7 @@ package body Simul.Vhdl_Elab is
               Get_Kind (E.Decl) = Iir_Kind_Interface_Signal_Declaration
               and then Get_Mode (E.Decl) in Iir_Out_Modes;
          begin
-            if E.Kind in Mode_Signal_User then
+            if E.Kind = Signal_User then
                for J in 1 .. E.Typ.W loop
                   declare
                      Ns : Nbr_Sources_Type renames E.Nbr_Sources (J - 1);
@@ -1124,7 +1101,7 @@ package body Simul.Vhdl_Elab is
                      end if;
                      if E.Collapsed_By /= No_Signal_Index
                        and then (Signals_Table.Table (E.Collapsed_By).Kind
-                                   in Mode_Signal_User)
+                                   = Signal_User)
                      then
                         --  Add to the parent.
                         declare

@@ -1057,15 +1057,15 @@ package body Synth.Vhdl_Stmts is
          exit when Ce = Null_Node;
       end loop;
 
-      if Last /= No_Net then
-         if Cond_Tri /= True then
-            --  There is at least one Mux2, and its input-1 is not connected.
-            --  Implement missing assignment as a self-assignment.
-            Val := Synth_Read (Inst, Targ, Stmt);
-            Connect (Get_Input (Get_Net_Parent (Last), 1),
-                     Get_Net (Ctxt, Val));
-         end if;
+      if Last /= No_Net and then Cond_Tri /= True then
+         --  There is at least one Mux2, and its input-1 is not connected.
+         --  Implement missing assignment as a self-assignment.
+         Val := Synth_Read (Inst, Targ, Stmt);
+         Connect (Get_Input (Get_Net_Parent (Last), 1),
+                  Get_Net (Ctxt, Val));
+      end if;
 
+      if First /= No_Valtyp then
          Synth_Assignment (Inst, Targ, First, Stmt);
       end if;
 
