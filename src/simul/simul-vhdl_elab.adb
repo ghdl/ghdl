@@ -1086,6 +1086,7 @@ package body Simul.Vhdl_Elab is
                for J in 1 .. E.Typ.W loop
                   declare
                      Ns : Nbr_Sources_Type renames E.Nbr_Sources (J - 1);
+                     Collapsed_By : Signal_Index_Type;
                   begin
                      --  Total number of sources.  (It was set to 1 to know
                      --  if it is resolved).
@@ -1094,21 +1095,27 @@ package body Simul.Vhdl_Elab is
                      if Ns.Total = 0 and then Is_Out then
                         Ns.Total := 1;
                      end if;
-                     if E.Collapsed_By /= No_Signal_Index
-                       and then (Signals_Table.Table (E.Collapsed_By).Kind
+
+                     --  Propagate nbr sources to the non-collapsed signal.
+                     Collapsed_By := E.Collapsed_By;
+                     while Collapsed_By /= No_Signal_Index
+                       and then (Signals_Table.Table (Collapsed_By).Kind
                                    = Signal_User)
-                     then
+                     loop
                         --  Add to the parent.
                         declare
                            C_Ns : Nbr_Sources_Type renames
-                             Signals_Table.Table (E.Collapsed_By)
+                             Signals_Table.Table (Collapsed_By)
                              .Nbr_Sources (J - 1);
                         begin
                            --  Remove 1 for out connection.
                            C_Ns.Total :=
                              C_Ns.Total + Ns.Total - Boolean'Pos (Is_Out);
                         end;
-                     end if;
+
+                        Collapsed_By :=
+                          Signals_Table.Table (Collapsed_By).Collapsed_By;
+                     end loop;
                   end;
                end loop;
             end if;
