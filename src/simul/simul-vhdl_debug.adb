@@ -774,18 +774,53 @@ package body Simul.Vhdl_Debug is
       Elab.Debugger.Prepare_Continue;
    end Run_Proc;
 
+   procedure Disp_Process (Idx : Process_Index_Type)
+   is
+      Proc : Proc_Record_Type renames Processes_Table.Table (Idx);
+   begin
+      Put_Uns32 (Uns32 (Idx));
+      Put (": ");
+      Disp_Instance_Path (Proc.Inst);
+      Put ("  (");
+      Put (Vhdl.Errors.Disp_Location (Proc.Proc));
+      Put_Line (")");
+   end Disp_Process;
+
    procedure Ps_Proc (Line : String)
    is
-      pragma Unreferenced (Line);
+      P, L : Positive;
+      Idx : Process_Index_Type;
+      Val : Uns32;
+      Valid : Boolean;
    begin
-      for I in Processes_Table.First .. Processes_Table.Last loop
-         Put_Uns32 (Uns32 (I));
-         Put (": ");
-         Disp_Instance_Path (Processes_Table.Table (I).Inst);
-         Put ("  (");
-         Put (Vhdl.Errors.Disp_Location (Processes_Table.Table (I).Proc));
-         Put_Line (")");
-      end loop;
+      Idx := No_Process_Index;
+
+      P := Skip_Blanks (Line);
+      if P <= Line'Last then
+         L := Get_Word (Line, P);
+         if Line (P .. L) = "-h" then
+            Put_Line ("ps [PROC]");
+            return;
+         elsif Line (P) in '0' .. '9' then
+            To_Num (Line (P .. L), Val, Valid);
+            if not Valid or else Val > Uns32 (Processes_Table.Last) then
+               Put_Line ("invalid process index");
+               return;
+            end if;
+            Idx := Process_Index_Type (Val);
+         else
+            Put_Line ("unknown option");
+            return;
+         end if;
+      end if;
+
+      if Idx = No_Process_Index then
+         for I in Processes_Table.First .. Processes_Table.Last loop
+            Disp_Process (I);
+         end loop;
+      else
+         Disp_Process (Idx);
+      end if;
    end Ps_Proc;
 
    procedure Trace_Proc (Line : String)
