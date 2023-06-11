@@ -282,18 +282,10 @@ package body Simul.Vhdl_Elab is
    procedure Gather_Processes_Decl (Inst : Synth_Instance_Acc; Decl : Node) is
    begin
       case Get_Kind (Decl) is
-         when Iir_Kind_Interface_Signal_Declaration =>
+         when Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Interface_View_Declaration =>
             --  Driver.
-            Gather_Signal ((Signal_User, Decl, Inst, null, null, null,
-                            No_Sensitivity_Index, No_Signal_Index,
-                            No_Connect_Index, No_Driver_Index,
-                            No_Disconnect_Index, null));
-         when Iir_Kind_Signal_Declaration =>
-            Gather_Signal ((Signal_User, Decl, Inst, null, null, null,
-                            No_Sensitivity_Index, No_Signal_Index,
-                            No_Connect_Index, No_Driver_Index,
-                            No_Disconnect_Index, null));
-         when Iir_Kind_Interface_View_Declaration =>
             Gather_Signal ((Signal_User, Decl, Inst, null, null, null,
                             No_Sensitivity_Index, No_Signal_Index,
                             No_Connect_Index, No_Driver_Index,
