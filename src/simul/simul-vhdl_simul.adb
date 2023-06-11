@@ -2753,7 +2753,11 @@ package body Simul.Vhdl_Simul is
 
       --  Create the type.
       Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length (R.Idx_Typ.Drange, Len);
-      Arr_Typ := Create_Array_Type (Bnd, False, True, El_Typ);
+      if El_Typ.Kind in Type_Nets then
+         Arr_Typ := Create_Vector_Type (Bnd, False, El_Typ);
+      else
+         Arr_Typ := Create_Array_Type (Bnd, False, True, El_Typ);
+      end if;
 
       --  Allocate the array.
       Arr := Create_Memory (Arr_Typ);
