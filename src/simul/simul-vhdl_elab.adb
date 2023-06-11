@@ -444,7 +444,6 @@ package body Simul.Vhdl_Elab is
                                  Loc : Node)
    is
       S : Signal_Entry renames Signals_Table.Table (Sig.Base);
-      Resolved : constant Boolean := Get_Resolved_Flag (Get_Type (S.Decl));
       Need_It : Boolean;
    begin
       pragma Assert (Sig.Typ.Wkind = Wkind_Sim);
@@ -462,10 +461,8 @@ package body Simul.Vhdl_Elab is
          begin
             if Ns.Last_Proc /= Proc_Idx then
                --  New driver.
-               if not Need_It
-                 and then Ns.Nbr_Drivers > 0
+               if (Ns.Nbr_Conns + Ns.Nbr_Drivers) > 0
                  and then Ns.Total = 0
-                 and then not Resolved
                then
                   Error_Msg_Elab (Loc, "too many drivers for %n", +S.Decl);
                end if;
@@ -642,27 +639,33 @@ package body Simul.Vhdl_Elab is
 
    --  Increment the number of sources for EP.
    --  (Called for actual of an non-in association).
-   procedure Increment_Nbr_Sources (Ep : Sub_Signal_Type) is
+   procedure Increment_Nbr_Sources (Ep : Sub_Signal_Type; Loc : Node)
+   is
+      S : Signal_Entry renames Signals_Table.Table (Ep.Base);
    begin
       if Ep.Typ.W = 0 then
          return;
       end if;
       for I in Ep.Offs.Net_Off .. Ep.Offs.Net_Off + Ep.Typ.W - 1 loop
          declare
-            N : Uns32 renames
-              Signals_Table.Table (Ep.Base).Nbr_Sources (I).Nbr_Conns;
+            Src : Nbr_Sources_Type renames S.Nbr_Sources (I);
          begin
-            N := N + 1;
+            Src.Nbr_Conns := Src.Nbr_Conns + 1;
+            if (Src.Nbr_Conns + Src.Nbr_Drivers) > 1
+              and then Src.Total = 0
+            then
+               Error_Msg_Elab (Loc, "too many drivers for %n", +S.Decl);
+            end if;
          end;
       end loop;
    end Increment_Nbr_Sources;
 
    procedure Increment_View_Nbr_Sources
-     (View : Iir; Reversed : Boolean; Actual_Ep : Sub_Signal_Type) is
+     (View : Node; Reversed : Boolean; Actual_Ep : Sub_Signal_Type) is
    begin
       if Get_Kind (View) = Iir_Kind_Simple_Mode_View_Element then
          if Get_Mode (View) /= Iir_In_Mode xor Reversed then
-            Increment_Nbr_Sources (Actual_Ep);
+            Increment_Nbr_Sources (Actual_Ep, View);
          end if;
       else
          declare
@@ -758,7 +761,7 @@ package body Simul.Vhdl_Elab is
                   --  [...], each source is either a driver or an OUT, INOUT,
                   --  BUFFER, or LINKAGE port [...]
                   if Get_Mode (Inter) /= Iir_In_Mode then
-                     Increment_Nbr_Sources (Actual_Ep);
+                     Increment_Nbr_Sources (Actual_Ep, Assoc);
                   end if;
                end if;
 
