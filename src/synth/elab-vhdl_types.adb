@@ -456,7 +456,7 @@ package body Elab.Vhdl_Types is
          when Iir_Kind_Record_Type_Definition =>
             Typ := Synth_Record_Type_Definition (Syn_Inst, null, Def);
          when Iir_Kind_Protected_Type_Declaration =>
-            --  TODO...
+            Typ := Protected_Type;
             Elab.Vhdl_Decls.Elab_Declarations
               (Syn_Inst, Get_Declaration_Chain (Def));
          when Iir_Kind_Incomplete_Type_Definition =>

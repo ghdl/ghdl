@@ -57,6 +57,12 @@ package body Elab.Vhdl_Annotations is
                                        Ref => Obj,
                                        Scope => Block_Info,
                                        Slot => Block_Info.Nbr_Objects);
+         when Kind_Protected =>
+            Info := new Sim_Info_Type'(Kind => Kind_Protected,
+                                       Ref => Obj,
+                                       Scope => Block_Info,
+                                       Slot => Block_Info.Nbr_Objects,
+                                       Nbr_Objects => 0);
          when Kind_Object =>
             Info := new Sim_Info_Type'(Kind => Kind_Object,
                                        Ref => Obj,
@@ -90,7 +96,6 @@ package body Elab.Vhdl_Annotations is
          when Kind_Block
            | Kind_Process
            | Kind_Frame
-           | Kind_Protected
            | Kind_Package
            | Kind_Extra =>
             raise Internal_Error;
@@ -134,7 +139,6 @@ package body Elab.Vhdl_Annotations is
                                                   Prot: Iir)
    is
       Decl : Iir;
-      Prot_Info: Sim_Info_Acc;
    begin
       --  First the interfaces type (they are elaborated in their context).
       Decl := Get_Declaration_Chain (Prot);
@@ -155,12 +159,7 @@ package body Elab.Vhdl_Annotations is
       --  Note: if this protected type declaration appears in a generic
       --  package declaration that is shared, the instances will always get
       --  Nbr_Objects as 0...
-      Prot_Info := new Sim_Info_Type'(Kind => Kind_Protected,
-                                      Ref => Prot,
-                                      Scope => Block_Info,
-                                      Slot => Invalid_Object_Slot,
-                                      Nbr_Objects => 0);
-      Set_Ann (Prot, Prot_Info);
+      Create_Object_Info (Block_Info, Prot, Kind_Protected);
 
       Decl := Get_Declaration_Chain (Prot);
       while Decl /= Null_Iir loop
