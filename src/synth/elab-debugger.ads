@@ -17,6 +17,7 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Types; use Types;
+with Debuggers; use Debuggers;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
@@ -57,9 +58,6 @@ package Elab.Debugger is
    procedure Get_Debug_Loc (Inst : out Synth_Instance_Acc;
                             Loc : out Node);
 
-   type Menu_Procedure is access procedure (Line : String);
-   type Cst_String_Acc is access constant String;
-
    --  Append a command to the main menu.
    procedure Append_Menu_Command (Name : Cst_String_Acc;
                                   Help : Cst_String_Acc;
@@ -76,12 +74,10 @@ package Elab.Debugger is
    --  Utilities for menu commands.
 
    --  Return the position of the first non-blank character.
-   function Skip_Blanks (S : String) return Positive;
    function Skip_Blanks (S : String; F : Positive) return Positive;
 
    --  Return the position of the last character of the word (the last
    --  non-blank character).
-   function Get_Word (S : String) return Positive;
    function Get_Word (S : String; F : Positive) return Positive;
 
    --  Convert STR to number RES, set VALID to true iff the conversion is ok.

@@ -25,6 +25,7 @@ with Types; use Types;
 with Name_Table; use Name_Table;
 with Simple_IO; use Simple_IO;
 with Utils_IO; use Utils_IO;
+with Debuggers; use Debuggers;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -781,6 +782,7 @@ package body Simul.Vhdl_Debug is
       Put_Uns32 (Uns32 (Idx));
       Put (": ");
       Disp_Instance_Path (Proc.Inst);
+      --  TODO: display label for non-process.
       Put ("  (");
       Put (Vhdl.Errors.Disp_Location (Proc.Proc));
       Put_Line (")");

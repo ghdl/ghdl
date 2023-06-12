@@ -22,6 +22,7 @@ with Files_Map;
 with Libraries;
 with Std_Names;
 with Errorout;
+with Debuggers; use Debuggers;
 
 with Elab.Debugger; use Elab.Debugger;
 with Elab.Memtype; use Elab.Memtype;
