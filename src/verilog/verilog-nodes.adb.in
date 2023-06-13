@@ -1,0 +1,628 @@
+--  This is in fact -*- Ada -*-
+--  Verilog template file for nodes
+--  Copyright (C) 2023 Tristan Gingold
+--
+--  This program is free software: you can redistribute it and/or modify
+--  it under the terms of the GNU General Public License as published by
+--  the Free Software Foundation, either version 2 of the License, or
+--  (at your option) any later version.
+--
+--  This program is distributed in the hope that it will be useful,
+--  but WITHOUT ANY WARRANTY; without even the implied warranty of
+--  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--  GNU General Public License for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with this program.  If not, see <gnu.org/licenses>.
+
+with Ada.Unchecked_Conversion;
+with Tables;
+with Verilog.Nodes_Meta; use Verilog.Nodes_Meta;
+with Verilog.Nutils; use Verilog.Nutils;
+
+package body Verilog.Nodes is
+   type Format_Type is
+     (
+      Format_Short,
+      Format_Medium
+     );
+
+   -- Common fields are:
+   --   Flag1 : Boolean
+   --   Flag2 : Boolean
+   --   Flag3 : Boolean
+   --   Flag4 : Boolean
+   --   Flag5 : Boolean
+   --   Flag6 : Boolean
+   --   Flag7 : Boolean
+   --   Flag8 : Boolean
+   --   Flag9 : Boolean
+   --   Flag10 : Boolean
+   --   Flag11 : Boolean
+   --   Flag12 : Boolean
+   --   Flag13 : Boolean
+   --   Flag14 : Boolean
+   --   Flag19 : Boolean
+   --   Nkind : Kind_Type
+   --   State1 : Bit2_Type
+   --   Field0 : Node
+   --   Field1 : Node
+   --   Field2 : Node
+   --   Field3 : Node
+   --   Field4 : Node
+   --   Field5 : Node
+   --   Field6 : Node
+
+   -- Fields of Format_Short:
+
+   -- Fields of Format_Medium:
+   --   Odigit1 : Bit3_Type
+   --   Odigit2 : Bit3_Type
+   --   State3 : Bit2_Type
+   --   State4 : Bit2_Type
+   --   Field7 : Node (Field0)
+   --   Field8 : Node
+   --   Field9 : Node
+   --   Field10 : Node
+   --   Field11 : Node
+   --   Field12 : Node
+   --   Field13 : Node
+
+   type State_Type is range 0 ..3;
+
+   type Node_Record is record
+      Kind : Nkind;      --  9 bits
+      Flag1 : Boolean;
+      Flag2 : Boolean;
+      Flag3 : Boolean;
+      Flag4 : Boolean;
+      Flag5 : Boolean;
+      Flag6 : Boolean;
+      Flag7 : Boolean;
+      Flag8 : Boolean;
+      Flag9 : Boolean;
+      Flag10 : Boolean;
+      Flag11 : Boolean;
+      Flag12 : Boolean;
+      Flag13 : Boolean;
+      Flag14 : Boolean;
+      Flag15 : Boolean;
+      Flag16 : Boolean;
+      Flag17 : Boolean;
+      Flag18 : Boolean;
+      Flag19 : Boolean;
+      Flag20 : Boolean;
+      Flag21 : Boolean;
+      State1 : State_Type;  -- 2 bits
+
+      Field0 : Node;
+      Field1 : Node;
+      Field2 : Node;
+      Field3 : Node;
+      Field4 : Node;
+      Field5 : Node;
+      Field6 : Node;
+   end record;
+   pragma Pack (Node_Record);
+   for Node_Record'Size use 8 * 32;
+
+   package Nodet is new Tables
+     (Table_Component_Type => Node_Record,
+      Table_Index_Type => Node,
+      Table_Low_Bound => 2,
+      Table_Initial => 1024);
+
+   Init_Node : constant Node_Record :=
+     (Kind => N_Error,
+      Flag1 | Flag2 | Flag3 | Flag4 | Flag5 | Flag6 | Flag7 | Flag8 => False,
+      Flag9 | Flag10 | Flag11 | Flag12 | Flag13 | Flag14 | Flag15 => False,
+      Flag16 | Flag17 | Flag18 | Flag19 | Flag20 | Flag21 => False,
+      State1 => 0,
+      Field0 | Field1 | Field2 | Field3 | Field4 | Field5 | Field6 => 0);
+
+   Free_Nodes : Node := Null_Node;
+
+
+   function Get_Last_Node return Node is
+   begin
+      return Nodet.Last;
+   end Get_Last_Node;
+
+   function Node_To_Uns32 is new Ada.Unchecked_Conversion
+     (Source => Node, Target => Uns32);
+   function Uns32_To_Node is new Ada.Unchecked_Conversion
+     (Source => Uns32, Target => Node);
+
+   function Node_To_Int32 is new Ada.Unchecked_Conversion
+     (Source => Node, Target => Int32);
+   function Int32_To_Node is new Ada.Unchecked_Conversion
+     (Source => Int32, Target => Node);
+
+   function Node_To_Width_Type is new Ada.Unchecked_Conversion
+     (Source => Node, Target => Width_Type);
+   function Width_Type_To_Node is new Ada.Unchecked_Conversion
+     (Source => Width_Type, Target => Node);
+
+   function Node_To_Tsize_Type is new Ada.Unchecked_Conversion
+     (Source => Node, Target => Tsize_Type);
+   function Tsize_Type_To_Node is new Ada.Unchecked_Conversion
+     (Source => Tsize_Type, Target => Node);
+
+   function Node_To_Bn_Index is new Ada.Unchecked_Conversion
+     (Source => Node, Target => Bn_Index);
+   function Bn_Index_To_Node is new Ada.Unchecked_Conversion
+     (Source => Bn_Index, Target => Node);
+
+   function Node_To_Location_Type (N : Node) return Location_Type is
+   begin
+      return Location_Type (N);
+   end Node_To_Location_Type;
+
+   function Location_Type_To_Node (L : Location_Type) return Node is
+   begin
+      return Node (L);
+   end Location_Type_To_Node;
+
+
+   function Drive_Strength_To_Int32 (D0, D1 : Drive_Strength_Type)
+                                    return Int32
+   is
+   begin
+      return Drive_Strength_Type'Pos (D1) * 16 + Drive_Strength_Type'Pos (D0);
+   end Drive_Strength_To_Int32;
+
+   function Get_Drive_Strength_0 (V : Int32) return Drive_Strength_Type is
+   begin
+      return Drive_Strength_Type'Val (V mod 16);
+   end Get_Drive_Strength_0;
+
+   function Get_Drive_Strength_1 (V : Int32) return Drive_Strength_Type is
+   begin
+      return Drive_Strength_Type'Val ((V / 16) mod 16);
+   end Get_Drive_Strength_1;
+
+   procedure Set_Kind (N : Node; K : Nkind) is
+   begin
+      Nodet.Table (N).Kind := K;
+   end Set_Kind;
+
+   function Get_Kind (N : Node) return Nkind is
+   begin
+      pragma Assert (N /= Null_Node, "get_kind: null node");
+      return Nodet.Table (N).Kind;
+   end Get_Kind;
+
+   procedure Mutate_Instance (N : Node; Kind : Nkind) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Get_Kind (N) = N_Module_Instance);
+      pragma Assert (Kind in Nkinds_Instance);
+      Set_Kind (N, Kind);
+   end Mutate_Instance;
+
+   procedure Mutate_Port (N : Node; Kind : Nkind) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Get_Kind (N) in Nkinds_Net_Port);
+      pragma Assert (Kind = N_Interface_Port or Kind = N_Modport_Port);
+      Set_Kind (N, Kind);
+   end Mutate_Port;
+
+   procedure Mutate_Dotted_Name (N : Node; Kind : Nkind) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Nkind_In (Get_Kind (N), N_Dotted_Name, N_Hierarchical));
+      pragma Assert (Kind = N_Hierarchical
+                       or else Kind = N_Interface_Item
+                       or else Kind = N_Modport_Item
+                       or else Kind = N_Member_Name
+                       or else Kind = N_Property_Name
+                       or else Kind = N_Method_Name
+                       or else Kind = N_Class_Qualified_Name);
+      Set_Kind (N, Kind);
+   end Mutate_Dotted_Name;
+
+   procedure Mutate_Name (N : Node; Kind : Nkind) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Get_Kind (N) = N_Name);
+      pragma Assert (Kind = N_This_Name);
+      Set_Kind (N, Kind);
+   end Mutate_Name;
+
+   procedure Set_Flag1 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag1 := Flag;
+   end Set_Flag1;
+
+   function Get_Flag1 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag1;
+   end Get_Flag1;
+
+
+   procedure Set_Flag2 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag2 := Flag;
+   end Set_Flag2;
+
+   function Get_Flag2 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag2;
+   end Get_Flag2;
+
+
+   procedure Set_Flag3 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag3 := Flag;
+   end Set_Flag3;
+
+   function Get_Flag3 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag3;
+   end Get_Flag3;
+
+
+   procedure Set_Flag4 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag4 := Flag;
+   end Set_Flag4;
+
+   function Get_Flag4 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag4;
+   end Get_Flag4;
+
+
+   procedure Set_Flag5 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag5 := Flag;
+   end Set_Flag5;
+
+   function Get_Flag5 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag5;
+   end Get_Flag5;
+
+
+   procedure Set_Flag6 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag6 := Flag;
+   end Set_Flag6;
+
+   function Get_Flag6 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag6;
+   end Get_Flag6;
+
+
+   procedure Set_Flag7 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag7 := Flag;
+   end Set_Flag7;
+
+   function Get_Flag7 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag7;
+   end Get_Flag7;
+
+
+   procedure Set_Flag8 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag8 := Flag;
+   end Set_Flag8;
+
+   function Get_Flag8 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag8;
+   end Get_Flag8;
+
+
+   procedure Set_Flag9 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag9 := Flag;
+   end Set_Flag9;
+
+   function Get_Flag9 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag9;
+   end Get_Flag9;
+
+
+   procedure Set_Flag10 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag10 := Flag;
+   end Set_Flag10;
+
+   function Get_Flag10 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag10;
+   end Get_Flag10;
+
+
+   procedure Set_Flag11 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag11 := Flag;
+   end Set_Flag11;
+
+   function Get_Flag11 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag11;
+   end Get_Flag11;
+
+
+   procedure Set_Flag12 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag12 := Flag;
+   end Set_Flag12;
+
+   function Get_Flag12 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag12;
+   end Get_Flag12;
+
+
+   procedure Set_Flag13 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag13 := Flag;
+   end Set_Flag13;
+
+   function Get_Flag13 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag13;
+   end Get_Flag13;
+
+
+   procedure Set_Flag14 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag14 := Flag;
+   end Set_Flag14;
+
+   function Get_Flag14 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag14;
+   end Get_Flag14;
+
+
+   procedure Set_Flag19 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag19 := Flag;
+   end Set_Flag19;
+
+   function Get_Flag19 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag19;
+   end Get_Flag19;
+
+
+   procedure Set_State1 (N : Node; S : State_Type) is
+   begin
+      Nodet.Table (N).State1 := S;
+   end Set_State1;
+
+   function Get_State1 (N : Node) return State_Type is
+   begin
+      return Nodet.Table (N).State1;
+   end Get_State1;
+
+
+   procedure Set_Field0 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N).Field0 := V;
+   end Set_Field0;
+
+   function Get_Field0 (N : Node) return Node is
+   begin
+      return Nodet.Table (N).Field0;
+   end Get_Field0;
+
+
+   procedure Set_Field1 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N).Field1 := V;
+   end Set_Field1;
+
+   function Get_Field1 (N : Node) return Node is
+   begin
+      return Nodet.Table (N).Field1;
+   end Get_Field1;
+
+
+   procedure Set_Field2 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N).Field2 := V;
+   end Set_Field2;
+
+   function Get_Field2 (N : Node) return Node is
+   begin
+      return Nodet.Table (N).Field2;
+   end Get_Field2;
+
+
+   function Get_Field3 (N : Node) return Node is
+   begin
+      return Nodet.Table (N).Field3;
+   end Get_Field3;
+
+   procedure Set_Field3 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N).Field3 := V;
+   end Set_Field3;
+
+
+   function Get_Field4 (N : Node) return Node is
+   begin
+      return Nodet.Table (N).Field4;
+   end Get_Field4;
+
+   procedure Set_Field4 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N).Field4 := V;
+   end Set_Field4;
+
+
+   function Get_Field5 (N : Node) return Node is
+   begin
+      return Nodet.Table (N).Field5;
+   end Get_Field5;
+
+   procedure Set_Field5 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N).Field5 := V;
+   end Set_Field5;
+
+
+   function Get_Field6 (N : Node) return Node is
+   begin
+      return Nodet.Table (N).Field6;
+   end Get_Field6;
+
+   procedure Set_Field6 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N).Field6 := V;
+   end Set_Field6;
+
+
+   procedure Set_Field7 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N + 1).Field0 := V;
+   end Set_Field7;
+
+   function Get_Field7 (N : Node) return Node is
+   begin
+      return Nodet.Table (N + 1).Field0;
+   end Get_Field7;
+
+
+   procedure Set_Field8 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N + 1).Field1 := V;
+   end Set_Field8;
+
+   function Get_Field8 (N : Node) return Node is
+   begin
+      return Nodet.Table (N + 1).Field1;
+   end Get_Field8;
+
+
+   procedure Set_Field9 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N + 1).Field2 := V;
+   end Set_Field9;
+
+   function Get_Field9 (N : Node) return Node is
+   begin
+      return Nodet.Table (N + 1).Field2;
+   end Get_Field9;
+
+
+   procedure Set_Field10 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N + 1).Field3 := V;
+   end Set_Field10;
+
+   function Get_Field10 (N : Node) return Node is
+   begin
+      return Nodet.Table (N + 1).Field3;
+   end Get_Field10;
+
+
+   procedure Set_Field11 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N + 1).Field4 := V;
+   end Set_Field11;
+
+   function Get_Field11 (N : Node) return Node is
+   begin
+      return Nodet.Table (N + 1).Field4;
+   end Get_Field11;
+
+
+   procedure Set_Field12 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N + 1).Field5 := V;
+   end Set_Field12;
+
+   function Get_Field12 (N : Node) return Node is
+   begin
+      return Nodet.Table (N + 1).Field5;
+   end Get_Field12;
+
+
+   function Get_Format (Kind : Nkind) return Format_Type;
+
+   function Create_Node (Kind : Nkind) return Node
+   is
+      Res : Node;
+   begin
+      case Get_Format (Kind) is
+         when Format_Medium =>
+            Nodet.Increment_Last;
+            Res := Nodet.Last;
+            Nodet.Increment_Last;
+            Nodet.Table (Res) := Init_Node;
+            Nodet.Table (Res + 1) := Init_Node;
+         when Format_Short =>
+            if Free_Nodes /= Null_Node then
+               Res := Free_Nodes;
+               Free_Nodes := Get_Field1 (Res);
+            else
+               Nodet.Increment_Last;
+               Res := Nodet.Last;
+            end if;
+      end case;
+      Nodet.Table (Res) := Init_Node;
+      Set_Kind (Res, Kind);
+      return Res;
+   end Create_Node;
+
+   procedure Free_Node (N : Node)
+   is
+      Kind : Nkind;
+   begin
+      if N = Null_Node then
+         return;
+      end if;
+      Kind := Get_Kind (N);
+      pragma Assert (Kind /= N_Error);
+
+      --  TODO: format medium.
+      case Get_Format (Kind) is
+         when Format_Medium =>
+            Set_Kind (N, N_Error);
+            Set_Field1 (N, Free_Nodes);
+            Free_Nodes := N;
+
+            Set_Kind (N + 1, N_Error);
+            Set_Field1 (N + 1, Free_Nodes);
+            Free_Nodes := N + 1;
+         when Format_Short =>
+            Set_Kind (N, N_Error);
+            Set_Field1 (N, Free_Nodes);
+            Free_Nodes := N;
+      end case;
+   end Free_Node;
+
+   function Get_Location (N : Node) return Location_Type is
+   begin
+      return Node_To_Location_Type (Get_Field0 (N));
+   end Get_Location;
+
+   procedure Set_Location (N : Node; Loc : Location_Type) is
+   begin
+      Set_Field0 (N, Location_Type_To_Node (Loc));
+   end Set_Location;
+
+   function Boolean_To_Lifetime_Type (F : Boolean) return Lifetime_Type is
+   begin
+      return Lifetime_Type'Val (Boolean'Pos (F));
+   end Boolean_To_Lifetime_Type;
+
+   function Lifetime_Type_To_Boolean (L : Lifetime_Type) return Boolean is
+   begin
+      return Boolean'Val (Lifetime_Type'Pos (L));
+   end Lifetime_Type_To_Boolean;
+
+   --  Subprograms
+
+end Verilog.Nodes;
