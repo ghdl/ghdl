@@ -163,15 +163,20 @@ package body Vhdl.Sem_Expr is
                then
                   return Fully_Compatible;
                end if;
-               if Get_Kind (Right) = Iir_Kind_Array_Type_Definition then
-                  El_Type := Get_Base_Type (Get_Element_Subtype (Right));
-                  if El_Type = Std_Logic_Type
-                    or else El_Type = Std_Ulogic_Type
-                    or else El_Type = Bit_Type_Definition
-                  then
+               case Get_Kind (Right) is
+                  when Iir_Kind_Array_Type_Definition =>
+                     El_Type := Get_Base_Type (Get_Element_Subtype (Right));
+                     if El_Type = Std_Logic_Type
+                       or else El_Type = Std_Ulogic_Type
+                       or else El_Type = Bit_Type_Definition
+                     then
+                        return Fully_Compatible;
+                     end if;
+                  when Iir_Kind_Integer_Type_Definition =>
                      return Fully_Compatible;
-                  end if;
-               end if;
+                  when others =>
+                     null;
+               end case;
             end;
          when others =>
             null;

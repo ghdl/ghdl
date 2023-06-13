@@ -1347,6 +1347,8 @@ package body Vhdl.Utils is
            | Iir_Kind_Element_Attribute
            | Iir_Kind_Subtype_Attribute =>
             return False;
+         when Iir_Kind_Foreign_Vector_Type_Definition =>
+            return True;
          when others =>
             Error_Kind ("is_proper_subtype_indication", Def);
       end case;
