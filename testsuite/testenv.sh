@@ -153,6 +153,15 @@ synth_tb()
   clean
 }
 
+verilog_synth_tb()
+{
+    t=$1
+    shift
+
+    synth --out=verilog $t.v $* -e > syn_$t.v
+}
+
+
 # Check if a C compiler is installed on this system
 c_compiler_is_available ()
 {
