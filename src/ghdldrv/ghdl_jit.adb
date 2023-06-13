@@ -21,6 +21,7 @@ with Ghdlvpi;
 with Ghdlxml;
 with Ghdllib;
 with Ghdlsynth_Maybe;
+with Ghdlverilog;
 with Ortho_Jit;
 
 procedure Ghdl_Jit is
@@ -34,6 +35,7 @@ begin
    Ghdlprint.Register_Commands;
    Ghdlvpi.Register_Commands;
    Ghdlxml.Register_Commands;
+   Ghdlverilog.Register_Commands;
    Ghdlsynth_Maybe.Register_Commands;
    Ghdllib.Register_Commands;
    Ghdlmain.Register_Commands;
