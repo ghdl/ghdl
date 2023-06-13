@@ -183,6 +183,8 @@ package Types is
       Language_Verilog
      );
 
+   Runtime_Error : exception;
+
    --  Result of a comparaison of two numeric values.
    type Order_Type is (Less, Equal, Greater);
 
