@@ -14,12 +14,12 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Ada.Text_IO; use Ada.Text_IO;
 with Types; use Types;
 with Files_Map;
 with Name_Table;
 with Errorout;
 with Debuggers; use Debuggers;
+with Simple_IO; use Simple_IO;
 with Grt.Readline;
 with Grt.Types; use Grt.Types;
 

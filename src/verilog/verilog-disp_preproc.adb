@@ -14,12 +14,13 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Ada.Text_IO; use Ada.Text_IO;
 with Types; use Types;
 with Name_Table;
 with Str_Table;
 with Files_Map;
 with Errorout; use Errorout;
+with Simple_IO; use Simple_IO;
+
 with Verilog.Errors; use Verilog.Errors;
 with Verilog.Tokens; use Verilog.Tokens;
 with Verilog.Scans; use Verilog.Scans;

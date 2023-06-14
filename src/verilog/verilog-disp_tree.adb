@@ -14,11 +14,12 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Ada.Text_IO; use Ada.Text_IO;
 with Types; use Types;
 with Name_Table;
 with Str_Table;
 with Files_Map;
+with Simple_IO; use Simple_IO;
+
 with Verilog.Types; use Verilog.Types;
 with Verilog.Nodes_Meta;
 

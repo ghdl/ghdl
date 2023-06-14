@@ -14,8 +14,10 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Simple_IO;
+
 with Verilog.Errors; use Verilog.Errors;
-with Ada.Text_IO;
+
 
 package body Verilog.Bignums is
    Digit_Mask : constant Uns32 := not 0;
@@ -126,7 +128,7 @@ package body Verilog.Bignums is
    --  Disp LV.
    procedure Dlv (Lv : Logvec_Ptr; Width : Width_Type)
    is
-      use Ada.Text_IO;
+      use Simple_IO;
       Last : constant Digit_Index := To_Last (Width);
    begin
       for I in reverse 0 .. Last loop
