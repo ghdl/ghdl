@@ -15,21 +15,19 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Types; use Types;
+with Name_Table; use Name_Table;
+with Simple_IO; use Simple_IO;
+with Utils_IO; use Utils_IO;
+
 with PSL.Errors; use PSL.Errors;
 with PSL.Prints;
-with Ada.Text_IO; use Ada.Text_IO;
-with Name_Table; use Name_Table;
 
 package body PSL.Tprint is
    procedure Disp_Expr (N : Node) is
    begin
       case Get_Kind (N) is
          when N_Number =>
-            declare
-               Str : constant String := Uns32'Image (Get_Value (N));
-            begin
-               Put (Str (2 .. Str'Last));
-            end;
+            Put_Uns32 (Get_Value (N));
          when others =>
             Error_Kind ("disp_expr", N);
       end case;

@@ -14,10 +14,11 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Ada.Text_IO;
+with Types; use Types;
+with Simple_IO;
+
 with PSL.Types; use PSL.Types;
 with PSL.Prints;
-with Types; use Types;
 
 package body PSL.CSE is
    function Is_X_And_Not_X (A, B : Node) return Boolean is
@@ -47,7 +48,7 @@ package body PSL.CSE is
 
    procedure Dump_Hash_Table (Level : Natural := 0)
    is
-      use Ada.Text_IO;
+      use Simple_IO;
       Cnt : Natural;
       Total : Natural;
       N : Node;

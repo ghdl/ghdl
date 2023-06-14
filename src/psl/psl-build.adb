@@ -15,8 +15,9 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Tables;
-with Ada.Text_IO; use Ada.Text_IO;
+with Simple_IO; use Simple_IO;
 with Types; use Types;
+
 with PSL.Types; use PSL.Types;
 with PSL.Errors; use PSL.Errors;
 with PSL.CSE; use PSL.CSE;
