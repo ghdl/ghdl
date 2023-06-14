@@ -611,7 +611,6 @@ package body Synth.Verilog_Exprs is
             Etype : constant Node := Get_Expr_Type (E);
             Ewidth : constant Width_Type := Get_Type_Width (Etype);
             Change : Boolean;
-            pragma Unreferenced (Change);
          begin
             pragma Assert (Off >= Ewidth);
             Off := Off - Ewidth;
@@ -747,7 +746,6 @@ package body Synth.Verilog_Exprs is
             pragma Assert (Inner_Wd * Width_Type (Count) = Wd);
             Off : Width_Type;
             Change : Boolean;
-            pragma Unreferenced (Change);
          begin
             Res := (Kind => Value_Memory, Typ => Rtyp, Mem => null);
             Res.Mem := Allocate_Memory (Inst, Rtyp);
