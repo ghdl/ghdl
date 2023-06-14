@@ -21,6 +21,7 @@ with Ghdlvpi;
 with Ghdlxml;
 with Ghdllib;
 with Ghdlsynth_Maybe;
+with Ghdlverilog;
 with Default_Paths;
 
 procedure Ghdl_Gcc is
@@ -32,6 +33,7 @@ begin
    Ghdldrv.Backend := Ghdldrv.Backend_Gcc;
    Ghdldrv.Register_Commands;
    Ghdlsynth_Maybe.Register_Commands;
+   Ghdlverilog.Register_Commands;
    Ghdllocal.Register_Commands;
    Ghdlprint.Register_Commands;
    Ghdlvpi.Register_Commands;
