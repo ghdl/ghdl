@@ -49,7 +49,6 @@ package body Verilog.Sv_Maps is
          when others =>
             Error_Kind ("sv_maps.compare", Typ);
       end case;
-      return Equal;
    end Compare;
 
    procedure Assign (Dest : in out Data_Ptr; Val : Data_Ptr; Typ : Node)
@@ -74,12 +73,11 @@ package body Verilog.Sv_Maps is
             Res := Malloc (Ssize);
             Executions.Execute_Simple_Copy (Res, Val, Typ);
             return Res;
-         when N_Bit_Type =>
-            To_Bit_Ptr (Res'Address).all := To_Bit_Ptr (Val).all;
+--         when N_Bit_Type =>
+--            To_Bit_Ptr (Res'Address).all := To_Bit_Ptr (Val).all;
          when others =>
             Error_Kind ("sv_maps.allocate", Typ);
       end case;
-      return No_Data_Ptr;
    end Allocate;
 
    function Read_Value (Val : Data_Ptr; Typ : Node) return Data_Ptr is
@@ -91,7 +89,6 @@ package body Verilog.Sv_Maps is
          when others =>
             Error_Kind ("sv_maps.read_value", Typ);
       end case;
-      return No_Data_Ptr;
    end Read_Value;
 
    procedure Set_Map (Map : Sv_Map; Idx : Data_Ptr; Val : Data_Ptr)
