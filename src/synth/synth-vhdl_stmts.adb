@@ -2764,8 +2764,7 @@ package body Synth.Vhdl_Stmts is
          Phi_Assign_Net (Ctxt, C.W_Val, C.Ret_Init, 0);
       end if;
 
-      Set_Wire_Gate
-        (C.W_En, Build_Control_Signal (Sub_Inst, 1, Imp));
+      Set_Wire_Gate (C.W_En, Build_Control_Signal (Sub_Inst, 1, Imp));
       Phi_Assign_Static (C.W_En, Bit1);
 
       Set_Wire_Gate
