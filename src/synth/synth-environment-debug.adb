@@ -94,7 +94,7 @@ package body Synth.Environment.Debug is
             Put_Line ("   ??? (unknown)");
          when True =>
             Put_Line ("   static:");
---            Debug_Memtyp (Rec.Val.Val);
+            Dump_Static (Rec.Val.Val);
          when False =>
             Dump_Partial_Assign (Rec.Val.Asgns);
       end case;

@@ -60,5 +60,8 @@ package Synth.Verilog_Environment is
       Warning_No_Assignment => Warning_No_Assignment,
       Error_Multiple_Assignments => Error_Multiple_Assignments);
 
-   package Debug is new Env.Debug;
+   procedure Dump_Memtyp (Val : Memtyp) is null;
+
+   package Debug is new Env.Debug
+     (Dump_Static => Dump_Memtyp);
 end Synth.Verilog_Environment;
