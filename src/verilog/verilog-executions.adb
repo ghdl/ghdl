@@ -1690,7 +1690,6 @@ package body Verilog.Executions is
                declare
                   Eval : Storage_Type (0 .. Esize - 1);
                   Change : Boolean;
-                  pragma Unreferenced (Change);
                begin
                   Execute_Expression (Frame, Eval'Address, E);
                   pragma Assert (Off >= Ewidth);
@@ -1864,7 +1863,6 @@ package body Verilog.Executions is
       Tmp : Storage_Type (0 .. Ssize - 1);
       Expr_Type : Node;
       Change : Boolean;
-      pragma Unreferenced (Change);
    begin
       Execute_Expression (Frame, Tmp'Address, Expr);
       case Get_Kind (Dtype) is
@@ -2315,7 +2313,6 @@ package body Verilog.Executions is
                        Get_Storage_Size (Etype);
                      Eval : Storage_Type (0 .. Esize - 1);
                      Change : Boolean;
-                     pragma Unreferenced (Change);
                   begin
                      Execute_Expression (Frame, Eval'Address, E);
                      pragma Assert (Off >= Ewidth);
@@ -2500,8 +2497,6 @@ package body Verilog.Executions is
             end;
          when others =>
             Error_Kind ("execute_expression_int32", Expr_Type);
-            Val := 0;
-            Is_Undef := True;
       end case;
    end Execute_Expression_Int32;
 
