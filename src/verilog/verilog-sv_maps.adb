@@ -17,7 +17,6 @@
 with Verilog.Errors; use Verilog.Errors;
 with Verilog.Allocates; use Verilog.Allocates;
 with Verilog.Executions;
-with Verilog.Bignums; use Verilog.Bignums;
 with Verilog.Sv_Strings;
 
 package body Verilog.Sv_Maps is
