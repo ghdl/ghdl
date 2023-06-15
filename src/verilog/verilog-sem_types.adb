@@ -1015,7 +1015,6 @@ package body Verilog.Sem_Types is
          when others =>
             Error_Kind ("is_same_value", V1);
       end case;
-      return False;
    end Is_Same_Value;
 
    --  Class
