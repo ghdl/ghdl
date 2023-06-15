@@ -1475,7 +1475,6 @@ package body Verilog.Vpi is
          when others =>
             Error_Kind ("vpi_handle_by_index", N);
       end case;
-      return null;
    end Vpi_Handle_By_Index;
 
    function Vpi_Iterate (Typ : PLI_INT32_Obj; Ref : VpiHandle)
