@@ -312,6 +312,7 @@ package body Netlists.Folds is
    is
       N : Net;
    begin
+      --  a -> b  <=>  (not a) or b
       N := Build_Monadic (Ctxt, Id_Not, A);
       Set_Location (N, Loc);
       N := Build_Dyadic (Ctxt, Id_Or, N, B);
