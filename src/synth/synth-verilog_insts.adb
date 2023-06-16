@@ -1017,8 +1017,6 @@ package body Synth.Verilog_Insts is
                return Back_Elab_Vector_Type (T, Logic_Type);
             when N_Bit_Packed_Array_Cst =>
                return Back_Elab_Vector_Type (T, Bit_Type);
-            when N_Predefined_Typedef =>
-               return Back_Elab_Type (Get_Expr_Type (T));
             when others =>
                Error_Kind ("back_elab_type", T);
          end case;
@@ -1071,7 +1069,7 @@ package body Synth.Verilog_Insts is
          while Item /= Null_Node loop
             case Get_Kind (Item) is
                when N_Input | N_Output | N_Inout =>
-                  Back_Elab_Decl (Get_Data_Type (Item), Vhd_Inst, Ports);
+                  Back_Elab_Decl (Get_Type_Data_Type (Item), Vhd_Inst, Ports);
                   Ports := Vhdl.Nodes.Get_Chain (Ports);
                when others =>
                   null;
