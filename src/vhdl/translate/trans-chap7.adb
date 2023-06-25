@@ -777,7 +777,8 @@ package body Trans.Chap7 is
       case Get_Kind (Expr) is
          when Iir_Kind_Range_Expression =>
             return Translate_Range_Expression_Length (Expr);
-         when Iir_Kind_Range_Array_Attribute =>
+         when Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Reverse_Range_Array_Attribute =>
             return Chap14.Translate_Length_Array_Attribute (Expr, Null_Iir);
          when others =>
             Error_Kind ("translate_range_length", Expr);
