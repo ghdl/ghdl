@@ -663,7 +663,10 @@ package body Vhdl.Configuration is
       case Get_Kind (Lib_Unit) is
          when Iir_Kind_Entity_Declaration =>
             --  Use WORK as location (should use a command line location ?)
-            Load_Design_Unit (Unit, Work_Library);
+            Load_Design_Unit (Unit, Command_Line_Location);
+            if Nbr_Errors /= 0 then
+               return Null_Iir;
+            end if;
             Lib_Unit := Get_Library_Unit (Unit);
             if Secondary_Id /= Null_Identifier then
                Unit := Find_Secondary_Unit (Unit, Secondary_Id);
@@ -686,7 +689,7 @@ package body Vhdl.Configuration is
                   Unit := Get_Design_Unit (Arch_Unit);
                end;
             end if;
-            Load_Design_Unit (Unit, Lib_Unit);
+            Load_Design_Unit (Unit, Command_Line_Location);
             if Nbr_Errors /= 0 then
                return Null_Iir;
             end if;

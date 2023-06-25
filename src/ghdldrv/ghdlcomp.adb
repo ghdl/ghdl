@@ -431,6 +431,7 @@ package body Ghdlcomp is
 
             --  Save the library (and do not elaborate) if there is neither
             --  '-e' nor '-r'.
+            --  This is like import: the unit may not be correct.
             if Elab_Arg = Natural'Last then
                Libraries.Save_Work_Library;
                Success := True;
