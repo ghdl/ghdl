@@ -110,10 +110,6 @@ package Ghdlcomp is
    procedure Compile_Elaborate (Unit_Name : String_Acc);
    procedure Compile_Run;
 
-   --  Load and parse file (without analysis).  Put units in the work library.
-   type Load_File_Acc is access procedure (File : String);
-
    --  Hook for verilog.
    Init_Verilog_Options : Compile_Init_Acc;
-   Load_Verilog_File : Load_File_Acc;
 end Ghdlcomp;

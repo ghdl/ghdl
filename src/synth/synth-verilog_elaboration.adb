@@ -211,7 +211,7 @@ package body Synth.Verilog_Elaboration is
    is
       Scope : Scope_Acc;
    begin
-      pragma Assert (Get_Kind (Module) = N_Module);
+      pragma Assert (Get_Kind (Module) in Nkinds_Module);
       Scope := new Scope_Type'(Kind => Scope_Instance,
                                Decl => Module,
                                Size => 0,
@@ -579,6 +579,10 @@ package body Synth.Verilog_Elaboration is
    is
       Scope : constant Scope_Acc := Get_Scope (Inst);
    begin
+      if Get_Kind (Module) = N_Foreign_Module then
+         return;
+      end if;
+
       Allocate_Chain (Scope, Get_Ports_Chain (Module));
       Allocate_Chain (Scope, Get_Items_Chain (Module));
 

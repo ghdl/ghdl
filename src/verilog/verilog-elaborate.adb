@@ -62,7 +62,8 @@ package body Verilog.Elaborate is
                   Set_Declaration (Name, Module);
                   --  Mutate the instance node.
                   case Get_Kind (Module) is
-                     when N_Module =>
+                     when N_Module
+                       | N_Foreign_Module =>
                         Set_Instantiated_Flag (Module, True);
                      when N_Interface_Declaration =>
                         Mutate_Instance (Stmt, N_Interface_Instance);
@@ -130,6 +131,7 @@ package body Verilog.Elaborate is
          while El /= Null_Node loop
             case Get_Kind (El) is
                when N_Module
+                 | N_Foreign_Module
                  | N_Primitive
                  | N_Program_Declaration
                  | N_Interface_Declaration =>
@@ -141,6 +143,8 @@ package body Verilog.Elaborate is
          end loop;
          Src := Get_Chain (Src);
       end loop;
+
+      --  TODO: add also foreign modules.
 
       --  Mark instantiated modules and programs, and resolve instantiation
       Src := Units;

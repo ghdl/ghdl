@@ -15,5 +15,14 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 package Ghdlverilog is
+   --  Load a verilog file.
+   procedure Load_Verilog_File (Filename : String);
+
+   --  Export all loaded verilog units to vhdl.
+   procedure Export_Verilog_Units;
+
+   --  Export all vhdl entities in work library to verilog.
+   procedure Export_Vhdl_Units;
+
    procedure Register_Commands;
 end Ghdlverilog;

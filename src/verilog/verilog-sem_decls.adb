@@ -879,6 +879,10 @@ package body Verilog.Sem_Decls is
             declare
                M : constant Node := Get_Instance (Decl);
             begin
+               if Get_Kind (M) = N_Foreign_Module then
+                  return;
+               end if;
+
                Sem_Decl_Type_Chain (Get_Parameter_Port_Chain (M));
                Sem_Decl_Type_Chain (Get_Ports_Chain (M));
                Sem_Decl_Type_Chain (Get_Items_Chain (M));

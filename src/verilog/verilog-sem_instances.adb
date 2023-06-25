@@ -14,7 +14,9 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Types; use Types;
 with Tables;
+
 with Verilog.Nutils;
 with Verilog.Nodes_Meta; use Verilog.Nodes_Meta;
 
@@ -28,13 +30,21 @@ package body Verilog.Sem_Instances is
       Table_Low_Bound => 2,
       Table_Initial => 1024);
 
-   procedure Set_Clone_Table_Size
+   procedure Expand_Clone_Table
    is
       Last : constant Node := Nodes.Get_Last_Node;
+      First : constant Node := Clonet.Last + 1;
+   begin
+      Clonet.Set_Last (Last);
+      for I in First .. Last loop
+         Clonet.Table (I) := Null_Node;
+      end loop;
+   end Expand_Clone_Table;
+
+   procedure Set_Clone_Table_Size is
    begin
       Clonet.Init;
-      Clonet.Set_Last (Last);
-      Clonet.Table (Clonet.First .. Last) := (others => Null_Node);
+      Expand_Clone_Table;
    end Set_Clone_Table_Size;
 
    procedure Clear_Clone_Table is
@@ -257,15 +267,31 @@ package body Verilog.Sem_Instances is
       Module, New_Module : Node;
    begin
       Module := Get_Declaration (Get_Module (Inst));
-      pragma Assert (Get_Kind (Module) = N_Module);
+
+      if Get_Kind (Module) = N_Foreign_Module
+        and then Get_Ports_Chain (Module) = Null_Node
+        and then Get_Parameter_Port_Chain (Module) = Null_Node
+      then
+         Complete_Foreign_Module (Module);
+
+         --  New nodes may have been created.
+         Expand_Clone_Table;
+      end if;
 
       pragma Debug (Clear_Clone_Table);
       New_Module := Clone_Node (Module);
       Fix_Ref_Node (New_Module);
       Set_Instance (Inst, New_Module);
 
-      --  Recurse.
-      Instantiate_Instances (Get_Items_Chain (New_Module));
+      case Get_Kind (Module) is
+         when N_Module =>
+            --  Recurse.
+            Instantiate_Instances (Get_Items_Chain (New_Module));
+         when N_Foreign_Module =>
+            null;
+         when others =>
+            raise Internal_Error;
+      end case;
    end Instantiate_Instance;
 
    procedure Instantiate_Design (Chain : Node) is

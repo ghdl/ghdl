@@ -22,6 +22,7 @@ with Name_Table;
 with Std_Names;
 with Interning;
 with Errorout; use Errorout;
+with Libraries;
 
 with Netlists; use Netlists;
 with Netlists.Utils; use Netlists.Utils;
@@ -41,8 +42,10 @@ with Verilog.Sem_Names;
 with Verilog.Bignums;
 
 with Vhdl.Nodes;
+with Vhdl.Errors;
 with Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values;
+with Elab.Vhdl_Errors;
 
 with Synthesis;
 with Synth.Errors; use Synth.Errors;
@@ -179,11 +182,53 @@ package body Synth.Verilog_Insts is
       Build => Build,
       Equal => Equal);
 
+   function Synth_Foreign_Module_Instance
+     (Sub_Inst : Synth_Instance_Acc; Foreign_Module : Node) return Module
+   is
+      pragma Unreferenced (Sub_Inst);
+      use Vhdl.Nodes;
+      Vhd_Unit : constant Vhdl_Node :=
+        Vhdl_Node (Get_Foreign_Node (Foreign_Module));
+      Vhd_Ent : constant Vhdl_Node := Get_Library_Unit (Vhd_Unit);
+      Arch, Config : Vhdl_Node;
+      Vhd_Inst : Elab.Vhdl_Context.Synth_Instance_Acc;
+   begin
+      if Get_Generic_Chain (Vhd_Ent) /= Null_Vhdl_Node then
+         raise Internal_Error;
+      end if;
+
+      --  Create VHDL instance (Cf elab.vhdl_insts.elab_top_unit).
+      Arch := Libraries.Get_Latest_Architecture (Vhd_Ent);
+      if Arch = Null_Vhdl_Node then
+         declare
+            use Vhdl.Errors;
+         begin
+            Elab.Vhdl_Errors.Error_Msg_Elab
+              (+Vhd_Ent, "no architecture for %n", +Vhd_Ent);
+         end;
+         return No_Module;
+      end if;
+      Config := Get_Default_Configuration_Declaration (Arch);
+      Config := Get_Library_Unit (Config);
+
+      Vhd_Inst := Elab.Vhdl_Context.Make_Elab_Instance
+        (Elab.Vhdl_Context.Root_Instance,
+         Null_Vhdl_Node, Arch, Get_Block_Configuration (Config));
+
+      --  Populate it (elab dependencies, elab generic and port types)
+      pragma Unreferenced (Vhd_Inst);
+
+      --  Intern it.
+      raise Internal_Error;
+      return No_Module;
+   end Synth_Foreign_Module_Instance;
+
    procedure Synth_Module_Instance (Parent_Inst : Synth_Instance_Acc; N : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (Parent_Inst);
-      Module : constant Node := Get_Instance (N);
+      Inst_Module : constant Node := Get_Instance (N);
       Obj : Inst_Object;
+      M : Module;
       Inst : Instance;
       Sub_Inst : Synth_Instance_Acc;
       Conn : Node;
@@ -195,16 +240,24 @@ package body Synth.Verilog_Insts is
    begin
       --  Allocate obj_id for parameters/localparam and compute their
       --   expressions.
-      Sub_Inst := Elaborate_Sub_Instance_Params (Parent_Inst, Module);
+      Sub_Inst := Elaborate_Sub_Instance_Params (Parent_Inst, Inst_Module);
 
-      --  Check for existing module with same name and same parameters
-      --    or create a new module and put it in a list.
-      Obj := Insts_Interning.Get (Inst_Params'(M => Module,
-                                               Inst => Sub_Inst));
+      if Get_Kind (Inst_Module) = N_Foreign_Module then
+         --  Create the vhdl instance,
+         --  with the vhdl value of the generics,
+         --  and vhdl types of generics and ports.
+         M := Synth_Foreign_Module_Instance (Sub_Inst, Inst_Module);
+      else
+         --  Check for existing module with same name and same parameters
+         --    or create a new module and put it in a list.
+         Obj := Insts_Interning.Get (Inst_Params'(M => Inst_Module,
+                                                  Inst => Sub_Inst));
+         M := Obj.M;
+      end if;
 
       --  Create new instance, connect.
       Inst := New_Instance
-        (Get_Module (Parent_Inst), Obj.M,
+        (Get_Module (Parent_Inst), M,
          New_Sname_User (Get_Identifier (N), Get_Sname (Parent_Inst)));
       Set_Location (Inst, Get_Location (N));
 

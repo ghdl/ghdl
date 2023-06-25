@@ -1343,7 +1343,8 @@ package body Verilog.Resolve_Names is
            | N_Nature =>
             Add_Decl (Item);
 
-         when N_Module =>
+         when N_Module
+           | N_Foreign_Module =>
             --  Not the same namespace.
             --  TODO: except for nested modules ?
             null;

@@ -19,6 +19,7 @@ with Name_Table;
 with Files_Map;
 with Errorout; use Errorout;
 with Libraries; use Libraries;
+with Std_Names;
 with Ghdlcomp;
 with Ghdlsynth;
 
@@ -39,6 +40,7 @@ with Verilog.Find_Top;
 with Verilog.Elaborate;
 with Verilog.Nutils; use Verilog.Nutils;
 with Verilog.Vpi;
+with Verilog.Sem_Instances;
 with Verilog.Vhdl_Export;
 
 with Synthesis;
@@ -71,7 +73,7 @@ package body Ghdlverilog is
       Init_Chain (First_File, Last_File);
    end Init_Options_Verilog;
 
-   --  Load a verilog file, add the units to the work library.
+   --  Load a verilog file.
    procedure Load_Verilog_File (Filename : String)
    is
       Id : Name_Id;
@@ -101,22 +103,35 @@ package body Ghdlverilog is
       --  Analyze the compilation unit.
       --  FIXME: add support for one compilation unit ?
       Verilog.Sem.Sem_Compilation_Unit (Res);
+   end Load_Verilog_File;
 
-      --  Create a foreign module for VHDL library for each module.
-      declare
-         use Vhdl.Nodes;
-         Design : Vhdl_Node;
-         Unit : Vhdl_Node;
-         N : Vlg_Node;
-         Vhdn : Vhdl_Node;
-         Last : Vhdl_Node;
-      begin
+   --  Create a foreign module for VHDL library for each module.
+   procedure Export_Verilog_Units
+   is
+      use Vhdl.Nodes;
+      File : Vlg_Node;
+      Design : Vhdl_Node;
+      Unit : Vhdl_Node;
+      N : Vlg_Node;
+      Vhdn : Vhdl_Node;
+      Last : Vhdl_Node;
+   begin
+      File := First_File;
+      while File /= Null_Vlg_Node loop
          Design := Create_Iir (Iir_Kind_Design_File);
-         Set_Design_File_Source (Design, Sfe);
-         Set_Design_File_Filename (Design, Id);
-         Set_Design_File_Directory (Design, Dir_Id);
 
-         N := Get_Descriptions (Res);
+         declare
+            use Files_Map;
+            Loc : constant Location_Type := Get_Location (File);
+            Sfe : constant Source_File_Entry := Location_To_File (Loc);
+         begin
+            Set_Location (Design, Loc);
+            Set_Design_File_Source (Design, Sfe);
+            Set_Design_File_Filename (Design, Get_File_Name (Sfe));
+            Set_Design_File_Directory (Design, Get_Directory_Name (Sfe));
+         end;
+
+         N := Get_Descriptions (File);
          Last := Null_Vhdl_Node;
          while N /= Null_Vlg_Node loop
             case Get_Kind (N) is
@@ -149,18 +164,100 @@ package body Ghdlverilog is
          end loop;
          Set_Last_Design_Unit (Design, Last);
          Add_Design_File_Into_Library (Design);
-      end;
-   end Load_Verilog_File;
+
+         File := Get_Chain (File);
+      end loop;
+   end Export_Verilog_Units;
+
+   procedure Export_Vhdl_Units
+   is
+      use Vhdl.Nodes;
+      File, Des_Unit, Unit : Vhdl_Node;
+      Cu, Vlgn, Last : Vlg_Node;
+   begin
+      --  Create a compilation unit containing all foreign modules.
+      Cu := Create_Node (N_Compilation_Unit);
+      Set_Identifier (Cu, Std_Names.Name_D_Unit);
+      Last := Null_Vlg_Node;
+
+      --  Add it to the list of files.
+      Append_Chain (First_File, Last_File, Cu);
+
+      File := Get_Design_File_Chain (Work_Library);
+      while File /= Null_Vhdl_Node loop
+         Des_Unit := Get_First_Design_Unit (File);
+         while Des_Unit /= Null_Vhdl_Node loop
+            Unit := Get_Library_Unit (Des_Unit);
+
+            --  For each entity, cereate a foreign module.
+            if Get_Kind (Unit) = Iir_Kind_Entity_Declaration then
+               Vlgn := Create_Node (N_Foreign_Module);
+               Set_Location (Vlgn, Get_Location (Unit));
+               Set_Identifier (Vlgn, Get_Identifier (Unit));
+               Set_Foreign_Node (Vlgn, Int32 (Des_Unit));
+               Set_Parent (Vlgn, Cu);
+
+               if Last = Null_Vlg_Node then
+                  Set_Descriptions (Cu, Vlgn);
+               else
+                  Set_Chain (Last, Vlgn);
+               end if;
+               Last := Vlgn;
+            end if;
+
+            Des_Unit := Get_Chain (Des_Unit);
+         end loop;
+         File := Get_Chain (File);
+      end loop;
+   end Export_Vhdl_Units;
 
    procedure Verilog_Resolve_Instances is
    begin
       Verilog.Elaborate.Resolve_Instantiations (First_File);
    end Verilog_Resolve_Instances;
 
+   procedure Complete_Verilog_Foreign_Module (N : Node)
+   is
+      use Vhdl.Nodes;
+      Vn : constant Vhdl_Node := Vhdl_Node (Get_Foreign_Node (N));
+      Funit : constant Vhdl_Node := Get_Library_Unit (Vn);
+      Fport : Vhdl_Node;
+      Port, Last : Vlg_Node;
+   begin
+      Set_Ansi_Port_Flag (N, True);
+
+      Last := Null_Vlg_Node;
+      Fport := Get_Port_Chain (Funit);
+      while Fport /= Null_Vhdl_Node loop
+         case Get_Mode (Fport) is
+            when Iir_In_Mode =>
+               Port := Create_Node (N_Input);
+            when Iir_Out_Mode
+              | Iir_Buffer_Mode =>
+               Port := Create_Node (N_Output);
+            when Iir_Inout_Mode =>
+               Port := Create_Node (N_Inout);
+            when others =>
+               raise Internal_Error;
+         end case;
+         Set_Location (Port, Get_Location (Fport));
+         Set_Identifier (Port, Get_Identifier (Fport));
+         Set_Parent (Port, N);
+
+         if Last = Null_Vlg_Node then
+            Set_Ports_Chain (N, Port);
+         else
+            Set_Chain (Last, Port);
+         end if;
+         Last := Port;
+
+         Fport := Get_Chain (Fport);
+      end loop;
+   end Complete_Verilog_Foreign_Module;
+
    procedure Set_Hooks is
    begin
       Ghdlcomp.Init_Verilog_Options := Init_Options_Verilog'Access;
-      Ghdlcomp.Load_Verilog_File := Load_Verilog_File'Access;
       Vhdl.Configuration.Mark_Foreign_Module :=
         Verilog.Find_Top.Mark_Module'Access;
       Vhdl.Configuration.Apply_Foreign_Override :=
@@ -177,6 +274,9 @@ package body Ghdlverilog is
         Verilog.Vhdl_Export.Convert_Unit_To_Vhdl'Access;
       Ghdlsynth.Foreign_Resolve_Instances :=
         Verilog_Resolve_Instances'Access;
+
+      Verilog.Sem_Instances.Complete_Foreign_Module :=
+        Complete_Verilog_Foreign_Module'Access;
    end Set_Hooks;
 
    procedure Register_Commands is

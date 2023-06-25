@@ -1,5 +1,5 @@
 --  Meta description of nodes.
---  Copyright (C) 2014 Tristan Gingold
+--  Copyright (C) 2023 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -64,6 +64,7 @@ package Verilog.Nodes_Meta is
       Field_Package_Import_Chain,
       Field_Parameter_Port_Chain,
       Field_Parameter,
+      Field_Foreign_Node,
       Field_Descriptions,
       Field_Class_Item_Chain,
       Field_Package_Item_Chain,
@@ -516,6 +517,7 @@ package Verilog.Nodes_Meta is
    function Has_Package_Import_Chain (K : Nkind) return Boolean;
    function Has_Parameter_Port_Chain (K : Nkind) return Boolean;
    function Has_Parameter (K : Nkind) return Boolean;
+   function Has_Foreign_Node (K : Nkind) return Boolean;
    function Has_Descriptions (K : Nkind) return Boolean;
    function Has_Class_Item_Chain (K : Nkind) return Boolean;
    function Has_Package_Item_Chain (K : Nkind) return Boolean;

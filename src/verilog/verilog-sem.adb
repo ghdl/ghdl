@@ -549,10 +549,27 @@ package body Verilog.Sem is
       end case;
    end Sem_Port_Connection_Collapse;
 
+   procedure Sem_Foreign_Port_Connection (Port : Node; Conn : Node)
+   is
+      pragma Unreferenced (Port);
+      Expr : Node;
+   begin
+      Expr := Get_Expression (Conn);
+      if Expr /= Null_Node then
+         Expr := Sem_Expression (Expr, Null_Node);
+         Set_Expression (Conn, Expr);
+      end if;
+   end Sem_Foreign_Port_Connection;
+
    procedure Sem_Port_Connection (Port : Node; Conn : Node)
    is
       Expr : Node;
    begin
+      if Get_Kind (Get_Parent (Port)) = N_Foreign_Module then
+         Sem_Foreign_Port_Connection (Port, Conn);
+         return;
+      end if;
+
       case Get_Kind (Port) is
          when Nkinds_Net_Port
            | N_Port =>
@@ -649,6 +666,7 @@ package body Verilog.Sem is
             Set_Connected_Flag (Mod_Port, True);
 
             Set_Port (Inst_Conn, Mod_Port);
+
             Sem_Port_Connection (Mod_Port, Inst_Conn);
 
             Last_Conn := Inst_Conn;

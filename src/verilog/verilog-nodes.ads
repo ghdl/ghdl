@@ -71,6 +71,7 @@ package Verilog.Nodes is
 
       --  Hierarchy.
       N_Compilation_Unit,
+      N_Foreign_Module,
       N_Module,
       N_Primitive,
       N_Interface_Declaration,
@@ -524,6 +525,10 @@ package Verilog.Nodes is
    --N_Output
    --N_Interface_Port
      N_Modport_Port;
+
+   subtype Nkinds_Module is Nkind range
+     N_Foreign_Module ..
+     N_Module;
 
    subtype Nkinds_Tf_Port is Nkind range
      N_Tf_Input ..
@@ -985,6 +990,7 @@ package Verilog.Nodes is
    -- N_Compilation_Unit (Short)
    --  Corresponds to a compilation unit.
    --
+   --  Always Name_D_Unit ($unit).
    --   Get/Set_Identifier (Field1)
    --
    --   Get/Set_Chain (Field2)
@@ -1046,6 +1052,29 @@ package Verilog.Nodes is
    --   Get/Set_Ansi_Port_Flag (Flag4)
    --
    --   Get/Set_Has_End_Name (Flag5)
+
+   -- N_Foreign_Module (Medium)
+   --
+   --   Get/Set_Identifier (Field1)
+   --
+   --   Get/Set_Parameter_Port_Chain (Field3)
+   --
+   --  List of ports or port_declarations.
+   --   Get/Set_Ports_Chain (Field7)
+   --
+   --   Get/Set_Items_Chain (Field8)
+   --
+   --   Get/Set_Scope_Id (Field5)
+   --
+   --   Get/Set_Parent (Field6)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Foreign_Node (Field4)
+   --
+   --   Get/Set_Instantiated_Flag (Flag1)
+   --
+   --   Get/Set_Ansi_Port_Flag (Flag4)
 
    -- N_Primitive (Medium)
    --
@@ -4075,6 +4104,10 @@ package Verilog.Nodes is
    --  Field: Field5 Ref
    function Get_Parameter (N : Node) return Node;
    procedure Set_Parameter (N : Node; Decl : Node);
+
+   --  Field: Field4 (uc)
+   function Get_Foreign_Node (N : Node) return Int32;
+   procedure Set_Foreign_Node (N : Node; Fn : Int32);
 
    --  Field: Field3 Chain
    function Get_Descriptions (N : Node) return Node;

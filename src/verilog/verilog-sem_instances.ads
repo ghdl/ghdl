@@ -27,4 +27,8 @@ package Verilog.Sem_Instances is
 
    function Instantiate_Generate_Block
      (Items : Node; Old_Parent : Node; New_Parent : Node) return Node;
+
+   type Complete_Foreign_Module_Acc is access procedure (N : Node);
+
+   Complete_Foreign_Module : Complete_Foreign_Module_Acc;
 end Verilog.Sem_Instances;
