@@ -35,7 +35,7 @@ from typing import List
 from pyTooling.Decorators import export
 
 from pyVHDLModel.Symbol import Symbol
-from pyVHDLModel.Interface import GenericInterfaceItem, ParameterInterfaceItem
+from pyVHDLModel.Interface import GenericInterfaceItemMixin, ParameterInterfaceItemMixin
 from pyVHDLModel.Subprogram import Procedure as VHDLModel_Procedure, Function as VHDLModel_Function
 
 from pyGHDL.libghdl._types import Iir
@@ -52,8 +52,8 @@ class Function(VHDLModel_Function, DOMMixin):
         node: Iir,
         functionName: str,
         returnType: Symbol,
-        genericItems: List[GenericInterfaceItem] = None,
-        parameterItems: List[ParameterInterfaceItem] = None,
+        genericItems: List[GenericInterfaceItemMixin] = None,
+        parameterItems: List[ParameterInterfaceItemMixin] = None,
         documentation: str = None,
     ):
         super().__init__(functionName, documentation)
@@ -91,8 +91,8 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
         self,
         node: Iir,
         procedureName: str,
-        genericItems: List[GenericInterfaceItem] = None,
-        parameterItems: List[ParameterInterfaceItem] = None,
+        genericItems: List[GenericInterfaceItemMixin] = None,
+        parameterItems: List[ParameterInterfaceItemMixin] = None,
         documentation: str = None,
     ):
         super().__init__(procedureName, documentation)

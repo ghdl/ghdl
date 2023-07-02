@@ -45,7 +45,7 @@ from pyTooling.Decorators import export
 
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Instantiation import PackageInstantiation as VHDLModel_PackageInstantiation
-from pyVHDLModel.Interface import GenericInterfaceItem, PortInterfaceItem
+from pyVHDLModel.Interface import GenericInterfaceItemMixin, PortInterfaceItemMixin
 from pyVHDLModel.Concurrent import ConcurrentStatement
 from pyVHDLModel.DesignUnit import Context as VHDLModel_Context
 from pyVHDLModel.DesignUnit import Package as VHDLModel_Package
@@ -129,8 +129,8 @@ class Entity(VHDLModel_Entity, DOMMixin):
         node: Iir,
         identifier: str,
         contextItems: Iterable[VHDLModel_ContextUnion] = None,
-        genericItems: Iterable[GenericInterfaceItem] = None,
-        portItems: Iterable[PortInterfaceItem] = None,
+        genericItems: Iterable[GenericInterfaceItemMixin] = None,
+        portItems: Iterable[PortInterfaceItemMixin] = None,
         declaredItems: Iterable = None,
         statements: Iterable["ConcurrentStatement"] = None,
         documentation: str = None,
@@ -193,8 +193,8 @@ class Component(VHDLModel_Component, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        genericItems: Iterable[GenericInterfaceItem] = None,
-        portItems: Iterable[PortInterfaceItem] = None,
+        genericItems: Iterable[GenericInterfaceItemMixin] = None,
+        portItems: Iterable[PortInterfaceItemMixin] = None,
         documentation: str = None,
     ):
         super().__init__(identifier, genericItems, portItems, documentation)
@@ -217,7 +217,7 @@ class Package(VHDLModel_Package, DOMMixin):
         node: Iir,
         identifier: str,
         contextItems: Iterable[VHDLModel_ContextUnion] = None,
-        genericItems: Iterable[GenericInterfaceItem] = None,
+        genericItems: Iterable[GenericInterfaceItemMixin] = None,
         declaredItems: Iterable = None,
         documentation: str = None,
     ):

@@ -113,7 +113,7 @@ class ContextReferenceSymbol(VHDLModel_ContextReferenceSymbol, DOMMixin):
 
        .. code-block:: VHDL
 
-          context ieee.ieee_std_context ;
+          context ieee.ieee_std_context;
           --      ^^^^^^^^^^^^^^^^^^^^^
     """
 
