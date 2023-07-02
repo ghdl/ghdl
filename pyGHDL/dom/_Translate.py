@@ -42,7 +42,7 @@ from pyVHDLModel.Base import ModelEntity, Direction, ExpressionUnion
 from pyVHDLModel.Name import Name
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Association import AssociationItem
-from pyVHDLModel.Interface import GenericInterfaceItem, PortInterfaceItem, ParameterInterfaceItem
+from pyVHDLModel.Interface import GenericInterfaceItemMixin, PortInterfaceItemMixin, ParameterInterfaceItemMixin
 from pyVHDLModel.Type import BaseType
 from pyVHDLModel.Sequential import SequentialStatement
 from pyVHDLModel.Concurrent import ConcurrentStatement
@@ -493,7 +493,7 @@ def GetExpressionFromNode(node: Iir) -> ExpressionUnion:
 
 
 @export
-def GetGenericsFromChainedNodes(nodeChain: Iir) -> Generator[GenericInterfaceItem, None, None]:
+def GetGenericsFromChainedNodes(nodeChain: Iir) -> Generator[GenericInterfaceItemMixin, None, None]:
     """
     Translates a chain of generics (IIR nodes) to a sequence of :class:`pyVHDLModel.Interface.GenericInterfaceItem`.
 
@@ -556,7 +556,7 @@ def GetGenericsFromChainedNodes(nodeChain: Iir) -> Generator[GenericInterfaceIte
 
 
 @export
-def GetPortsFromChainedNodes(nodeChain: Iir) -> Generator[PortInterfaceItem, None, None]:
+def GetPortsFromChainedNodes(nodeChain: Iir) -> Generator[PortInterfaceItemMixin, None, None]:
     """
     Translates a chain of ports (IIR nodes) to a sequence of :class:`pyVHDLModel.Interface.PortInterfaceItem`.
 
@@ -601,7 +601,7 @@ def GetPortsFromChainedNodes(nodeChain: Iir) -> Generator[PortInterfaceItem, Non
 
 
 @export
-def GetParameterFromChainedNodes(nodeChain: Iir) -> Generator[ParameterInterfaceItem, None, None]:
+def GetParameterFromChainedNodes(nodeChain: Iir) -> Generator[ParameterInterfaceItemMixin, None, None]:
     """
     Translates a chain of parameters (IIR nodes) to a sequence of :class:`pyVHDLModel.Interface.ParameterInterfaceItem`.
 
