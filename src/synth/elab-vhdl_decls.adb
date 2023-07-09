@@ -53,21 +53,27 @@ package body Elab.Vhdl_Decls is
                             Decl : Node;
                             Typ : Type_Acc)
    is
-      Def : constant Iir := Get_Default_Value (Decl);
+      Def : Iir;
       Expr_Mark : Mark_Type;
       Init : Valtyp;
    begin
       pragma Assert (Typ.Is_Global);
 
-      if Is_Valid (Def) then
-         Mark_Expr_Pool (Expr_Mark);
-         Init := Synth_Expression_With_Type (Syn_Inst, Def, Typ);
-         Init := Exec_Subtype_Conversion (Init, Typ, False, Decl);
-         Init := Unshare (Init, Instance_Pool);
-         Release_Expr_Pool (Expr_Mark);
-      else
+      if Get_Kind (Decl) = Iir_Kind_Interface_View_Declaration then
          Init := No_Valtyp;
+      else
+         Def := Get_Default_Value (Decl);
+         if Is_Valid (Def) then
+            Mark_Expr_Pool (Expr_Mark);
+            Init := Synth_Expression_With_Type (Syn_Inst, Def, Typ);
+            Init := Exec_Subtype_Conversion (Init, Typ, False, Decl);
+            Init := Unshare (Init, Instance_Pool);
+            Release_Expr_Pool (Expr_Mark);
+         else
+            Init := No_Valtyp;
+         end if;
       end if;
+
       Create_Signal (Syn_Inst, Decl, Typ, Init.Val);
    end Create_Signal;
 
@@ -308,7 +314,8 @@ package body Elab.Vhdl_Decls is
             Elab_Anonymous_Type_Definition
               (Syn_Inst, Get_Type_Definition (Decl),
                Get_Subtype_Definition (Decl));
-         when Iir_Kind_Subtype_Declaration =>
+         when Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Mode_View_Declaration =>
             declare
                T : Type_Acc;
             begin

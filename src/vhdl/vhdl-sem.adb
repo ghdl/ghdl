@@ -305,6 +305,10 @@ package body Vhdl.Sem is
       Formal_Base := Get_Object_Prefix (Formal);
       Actual_Base := Get_Object_Prefix (Actual);
 
+      if Get_Kind (Formal_Base) = Iir_Kind_Interface_View_Declaration then
+         return True;
+      end if;
+
       --  If the formal is of mode IN, then it has no driving value, and its
       --  effective value is the effective value of the actual.
       --  Always collapse in this case.
@@ -671,7 +675,8 @@ package body Vhdl.Sem is
          Formal_Base := Get_Interface_Of_Formal (Formal);
 
          case Get_Kind (Formal_Base) is
-            when Iir_Kind_Interface_Signal_Declaration =>
+            when Iir_Kind_Interface_Signal_Declaration
+               | Iir_Kind_Interface_View_Declaration =>
                if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
                then
                   N_Assoc := Sem_Signal_Port_Association
@@ -2112,6 +2117,70 @@ package body Vhdl.Sem is
       Add_Element (List, El);
    end Add_Analysis_Checks_List;
 
+   procedure Clear_Suspend_Flag (N : Iir);
+
+   procedure Clear_Suspend_Flag_Chain (N : Iir)
+   is
+      El : Iir;
+   begin
+      El := N;
+      while El /= Null_Iir loop
+         Clear_Suspend_Flag (El);
+         El := Get_Chain (El);
+      end loop;
+   end Clear_Suspend_Flag_Chain;
+
+   procedure Clear_Suspend_Flag (N : Iir) is
+   begin
+      case Iir_Kinds_Sequential_Statement (Get_Kind (N)) is
+         when Iir_Kind_Procedure_Call_Statement =>
+            Set_Suspend_Flag (N, False);
+         when Iir_Kind_For_Loop_Statement
+           | Iir_Kind_While_Loop_Statement =>
+            Set_Suspend_Flag (N, False);
+            Clear_Suspend_Flag_Chain (Get_Sequential_Statement_Chain (N));
+         when Iir_Kind_Case_Statement =>
+            declare
+               Ch : Iir;
+               Stmts : Iir;
+            begin
+               Set_Suspend_Flag (N, False);
+               Ch := Get_Case_Statement_Alternative_Chain (N);
+               while Ch /= Null_Iir loop
+                  Stmts := Get_Associated_Chain (Ch);
+                  if Stmts /= Null_Iir then
+                     Clear_Suspend_Flag_Chain (Stmts);
+                  end if;
+                  Ch := Get_Chain (Ch);
+               end loop;
+            end;
+         when Iir_Kind_If_Statement =>
+            Set_Suspend_Flag (N, False);
+            Clear_Suspend_Flag_Chain (Get_Sequential_Statement_Chain (N));
+            declare
+               Els : Iir;
+            begin
+               Els := Get_Else_Clause (N);
+               while Els /= Null_Iir loop
+                  Clear_Suspend_Flag_Chain
+                    (Get_Sequential_Statement_Chain (Els));
+                  Els := Get_Else_Clause (Els);
+               end loop;
+            end;
+         when Iir_Kinds_Signal_Assignment_Statement
+           | Iir_Kinds_Variable_Assignment_Statement
+           | Iir_Kind_Null_Statement
+           | Iir_Kind_Assertion_Statement
+           | Iir_Kind_Report_Statement
+           | Iir_Kinds_Next_Exit_Statement
+           | Iir_Kind_Return_Statement
+           | Iir_Kind_Break_Statement =>
+            null;
+         when Iir_Kind_Wait_Statement =>
+            raise Internal_Error;
+      end case;
+   end Clear_Suspend_Flag;
+
    procedure Sem_Subprogram_Body (Subprg : Iir)
    is
       Spec : constant Iir := Get_Subprogram_Specification (Subprg);
@@ -2235,6 +2304,21 @@ package body Vhdl.Sem is
                      Next (Callees_It);
                   end loop;
                end;
+            end if;
+
+            --  There is no wait in this procedure (either directly or
+            --  indirectly).  So can clear the suspend flag.
+            if Get_Suspend_Flag (Subprg)
+              and then Get_Wait_State (Spec) = False
+            then
+               --  Clear spec only if it has never been used.
+               if Get_Chain (Spec) = Subprg then
+                  Set_Suspend_Flag (Spec, False);
+               end if;
+               --  Clear recursively.
+               Set_Suspend_Flag (Subprg, False);
+               Clear_Suspend_Flag_Chain
+                 (Get_Sequential_Statement_Chain (Subprg));
             end if;
 
             --  Do not add to Analysis_Checks_List as procedures can't

@@ -536,8 +536,8 @@ package Grt.Signals is
    --      the RTI for the whole signal (in particular the mode and the
    --      has_active flag)
    --  or
-   --  1b) call Ghdl_Signal_Set_Mode to register the mode and the has_active
-   --      flag.  In that case, the signal has no name.
+   --  1b) call Ghdl_Signal_Set_Mode_Kind to register the mode and the
+   --      has_active flag.  In that case, the signal has no name.
    --
    --  2) call Ghdl_Create_Signal_XXX for each non-composite element
 
@@ -545,9 +545,12 @@ package Grt.Signals is
                                    Ctxt : Ghdl_Rti_Access;
                                    Addr : System.Address);
 
-   procedure Ghdl_Signal_Set_Mode (Mode : Mode_Signal_Type;
-                                   Kind : Kind_Signal_Type;
-                                   Has_Active : Boolean);
+   procedure Ghdl_Signal_Set_Mode_Kind (Mode : Mode_Signal_Type;
+                                        Kind : Kind_Signal_Type;
+                                        Has_Active : Boolean);
+
+   --  Called by translate to set the mode of a view.
+   procedure Ghdl_Signal_Set_Mode (Mode : Ghdl_I32);
 
    --  FIXME: document.
    --  Merge RTI with SIG: adjust the has_active flag of SIG according to RTI.
@@ -873,6 +876,9 @@ package Grt.Signals is
    Nbr_Events: Ghdl_I32;
    function Get_Nbr_Future return Ghdl_I32;
 private
+   pragma Export (C, Ghdl_Signal_Set_Mode,
+                  "__ghdl_signal_set_mode");
+
    pragma Export (C, Ghdl_Signal_Name_Rti,
                   "__ghdl_signal_name_rti");
    pragma Export (C, Ghdl_Signal_Merge_Rti,

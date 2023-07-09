@@ -14,8 +14,9 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Ada.Text_IO;
 with Types; use Types;
+with Simple_IO;
+
 with PSL.Types; use PSL.Types;
 with PSL.Errors; use PSL.Errors;
 with PSL.Prints;
@@ -38,7 +39,7 @@ package body PSL.QM is
 
    procedure Disp_Primes_Set (Ps : Primes_Set)
    is
-      use Ada.Text_IO;
+      use Simple_IO;
       use PSL.Prints;
       Prime : Prime_Type;
       T : Vector_Type;

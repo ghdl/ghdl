@@ -17,6 +17,7 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 generic
+   with procedure Dump_Static (V : Static_Type);
 package Synth.Environment.Debug is
    procedure Put_Wire_Id (Wid : Wire_Id);
    procedure Debug_Wire (Wid : Wire_Id);

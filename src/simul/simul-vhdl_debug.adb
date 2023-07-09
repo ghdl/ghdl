@@ -25,6 +25,7 @@ with Types; use Types;
 with Name_Table; use Name_Table;
 with Simple_IO; use Simple_IO;
 with Utils_IO; use Utils_IO;
+with Debuggers; use Debuggers;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -127,15 +128,9 @@ package body Simul.Vhdl_Debug is
       New_Line;
       Put ("     formal: ");
       Disp_Conn_Endpoint (C.Formal);
-      if C.Drive_Formal then
-         Put (" [drive]");
-      end if;
       New_Line;
       Put ("     actual: ");
       Disp_Conn_Endpoint (C.Actual);
-      if C.Drive_Actual then
-         Put (" [drive]");
-      end if;
       New_Line;
    end Disp_Conn_Entry;
 
@@ -375,7 +370,6 @@ package body Simul.Vhdl_Debug is
       use Elab.Memtype;
       S : Signal_Entry renames Signals_Table.Table (Idx);
       Nbr_Drv : Int32;
-      Nbr_Conn_Drv : Int32;
       Nbr_Sens : Int32;
       Sens : Sensitivity_Index_Type;
       Driver : Driver_Index_Type;
@@ -431,28 +425,7 @@ package body Simul.Vhdl_Debug is
       end if;
 
       if Opts.Conn then
-         if S.Kind in Mode_Signal_User then
-            Nbr_Conn_Drv := 0;
-            Conn := S.Connect;
-            while Conn /= No_Connect_Index loop
-               declare
-                  C : Connect_Entry renames Connect_Table.Table (Conn);
-               begin
-                  if C.Formal.Base = Idx then
-                     if C.Drive_Formal then
-                        Nbr_Conn_Drv := Nbr_Conn_Drv + 1;
-                     end if;
-                     Conn := C.Formal_Link;
-                  else
-                     pragma Assert (C.Actual.Base = Idx);
-                     if C.Drive_Actual then
-                        Nbr_Conn_Drv := Nbr_Conn_Drv + 1;
-                     end if;
-                     Conn := C.Actual_Link;
-                  end if;
-               end;
-            end loop;
-
+         if S.Kind = Signal_User then
             Nbr_Drv := 0;
             Driver := S.Drivers;
             while Driver /= No_Driver_Index loop
@@ -461,8 +434,6 @@ package body Simul.Vhdl_Debug is
             end loop;
             Put ("  nbr drivers: ");
             Put_Int32 (Nbr_Drv);
-            Put (", nbr conn srcs: ");
-            Put_Int32 (Nbr_Conn_Drv);
             Put (", ");
          else
             Put ("  ");
@@ -483,7 +454,7 @@ package body Simul.Vhdl_Debug is
          New_Line;
       end if;
 
-      if Opts.Sources and then S.Kind in Mode_Signal_User then
+      if Opts.Sources and then S.Kind = Signal_User then
          Put ("  nbr sources (drv + conn : total):");
          New_Line;
          for I in 0 .. S.Typ.W - 1 loop
@@ -500,7 +471,7 @@ package body Simul.Vhdl_Debug is
       end if;
 
       if Opts.Conn then
-         if S.Kind in Mode_Signal_User then
+         if S.Kind = Signal_User then
             Driver := S.Drivers;
             while Driver /= No_Driver_Index loop
                declare
@@ -804,18 +775,54 @@ package body Simul.Vhdl_Debug is
       Elab.Debugger.Prepare_Continue;
    end Run_Proc;
 
+   procedure Disp_Process (Idx : Process_Index_Type)
+   is
+      Proc : Proc_Record_Type renames Processes_Table.Table (Idx);
+   begin
+      Put_Uns32 (Uns32 (Idx));
+      Put (": ");
+      Disp_Instance_Path (Proc.Inst);
+      --  TODO: display label for non-process.
+      Put ("  (");
+      Put (Vhdl.Errors.Disp_Location (Proc.Proc));
+      Put_Line (")");
+   end Disp_Process;
+
    procedure Ps_Proc (Line : String)
    is
-      pragma Unreferenced (Line);
+      P, L : Positive;
+      Idx : Process_Index_Type;
+      Val : Uns32;
+      Valid : Boolean;
    begin
-      for I in Processes_Table.First .. Processes_Table.Last loop
-         Put_Uns32 (Uns32 (I));
-         Put (": ");
-         Disp_Instance_Path (Processes_Table.Table (I).Inst);
-         Put ("  (");
-         Put (Vhdl.Errors.Disp_Location (Processes_Table.Table (I).Proc));
-         Put_Line (")");
-      end loop;
+      Idx := No_Process_Index;
+
+      P := Skip_Blanks (Line);
+      if P <= Line'Last then
+         L := Get_Word (Line, P);
+         if Line (P .. L) = "-h" then
+            Put_Line ("ps [PROC]");
+            return;
+         elsif Line (P) in '0' .. '9' then
+            To_Num (Line (P .. L), Val, Valid);
+            if not Valid or else Val > Uns32 (Processes_Table.Last) then
+               Put_Line ("invalid process index");
+               return;
+            end if;
+            Idx := Process_Index_Type (Val);
+         else
+            Put_Line ("unknown option");
+            return;
+         end if;
+      end if;
+
+      if Idx = No_Process_Index then
+         for I in Processes_Table.First .. Processes_Table.Last loop
+            Disp_Process (I);
+         end loop;
+      else
+         Disp_Process (Idx);
+      end if;
    end Ps_Proc;
 
    procedure Trace_Proc (Line : String)

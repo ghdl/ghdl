@@ -20,6 +20,7 @@ with Files_Map;
 with Ghdllocal; use Ghdllocal;
 with Ghdlcomp; use Ghdlcomp;
 with Ghdlmain; use Ghdlmain;
+with Ghdlverilog;
 with Options; use Options;
 with Errorout;
 with Errorout.Console;
@@ -316,6 +317,7 @@ package body Ghdlsynth is
       Lib_Id : Name_Id;
       Prim_Id : Name_Id;
       Sec_Id : Name_Id;
+      Has_Vhdl, Has_Verilog : Boolean;
    begin
       --  If the '-e' switch is present, there is a list of files.
       E_Opt := Find_Dash_E (Args);
@@ -342,6 +344,9 @@ package body Ghdlsynth is
 
       Flags.Flag_Elaborate_With_Outdated := E_Opt >= Args'First;
 
+      Has_Vhdl := False;
+      Has_Verilog := False;
+
       --  Analyze files (if any)
       for I in Args'First .. E_Opt - 1 loop
          declare
@@ -360,15 +365,11 @@ package body Ghdlsynth is
                case Files_Map.Find_Language (Arg) is
                   when Language_Vhdl
                     | Language_Psl =>
+                     Has_Vhdl := True;
                      Ghdlcomp.Compile_Load_Vhdl_File (Arg);
                   when Language_Verilog =>
-                     if Ghdlcomp.Load_Verilog_File = null then
-                        Error_Msg_Option
-                          ("verilog file %i is not supported",
-                           (1 => +Name_Table.Get_Identifier (Arg)));
-                     else
-                        Ghdlcomp.Load_Verilog_File (Arg);
-                     end if;
+                     Has_Verilog := True;
+                     Ghdlverilog.Load_Verilog_File (Arg);
                   when others =>
                      Errorout.Report_Msg
                        (Warnid_Library, Option, No_Source_Coord,
@@ -383,6 +384,15 @@ package body Ghdlsynth is
       if Nbr_Errors > 0 then
          --  No need to configure if there are missing units.
          return Null_Iir;
+      end if;
+
+      if Has_Verilog then
+         --   Always export verilog units to find the top unit.
+         Ghdlverilog.Export_Verilog_Units;
+      end if;
+
+      if Has_Vhdl and Has_Verilog then
+         Ghdlverilog.Export_Vhdl_Units;
       end if;
 
       --  Elaborate

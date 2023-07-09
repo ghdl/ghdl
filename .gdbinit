@@ -20,6 +20,14 @@ define pt1
 call vhdl.disp_tree.disp_iir ($arg0, 1, 1)
 end
 
+define vlg_ptf
+call verilog.disp_tree.disp_tree ($arg0, 0, 0)
+end
+
+define vlg_pt1
+call verilog.disp_tree.disp_tree ($arg0, 0, 2)
+end
+
 define prt
 set lang c
 print (iirs__iir *) $

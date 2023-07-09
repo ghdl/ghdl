@@ -1006,7 +1006,6 @@ package body Vhdl.Sem_Names is
             when Iir_Kind_Entity_Declaration
               | Iir_Kind_Architecture_Body
               | Iir_Kind_Block_Statement
-              | Iir_Kind_Block_Header
               | Iir_Kind_Component_Declaration
               | Iir_Kinds_Process_Statement
               | Iir_Kind_Generate_Statement_Body
@@ -2634,7 +2633,9 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Element_Attribute
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Unit_Declaration
-           | Iir_Kind_Variable_Assignment_Statement =>
+           | Iir_Kind_Variable_Assignment_Statement
+           | Iir_Kind_Component_Declaration
+           | Iir_Kind_Mode_View_Declaration =>
             if not Soft then
                Error_Msg_Sem
                  (+Prefix_Loc, "%n cannot be selected by name", +Prefix);

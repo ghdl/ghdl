@@ -454,6 +454,34 @@ package Vhdl.Utils is
                                  Res : in out String;
                                  Off : in out Natural);
 
+   --  Apply the 'Converse attribute on MODE.
+   --  Follow able of LRM19 16.2.8 Predefined attributes of named mode views
+   function Get_Converse_Mode (Mode : Iir_Mode) return Iir_Mode;
+
+   --  Return the mode_view_declaration for NAME.
+   --  Also handle 'Converse attributes.
+   procedure Extract_Mode_View_Name
+     (Name : Iir; View : out Iir; Reversed : out Boolean);
+
+   --  Adjust VIEW using EL.
+   --  At the call, VIEW is a mode_view_declaration; at the output VIEW
+   --  is either a simple_mode_view_element or a mode_view_declaration.
+   procedure Update_Mode_View_Selected_Name
+     (View : in out Iir; Reversed : in out Boolean; El : Iir);
+
+   --  Likewise, but using element indexed by POS.
+   procedure Update_Mode_View_By_Pos (Sub_View : out Iir;
+                                      Sub_Reversed : out Boolean;
+                                      View : Iir;
+                                      Reversed : Boolean;
+                                      Pos : Natural);
+
+   --  Set VIEW to a simple_mode_view_element or a mode_view_declaration that
+   --  applies to NAME.  The base name of NAME must be a view interface.
+   --  Reversed is set if the view is reversed (due to 'Converse).
+   procedure Get_Mode_View_From_Name
+     (Name : Iir; View : out Iir; Reversed : out Boolean);
+
    --  Like Get_Identifier but return a Name_Id for the same casing as it
    --  appears in the source file.
    --  Not useful for analysis as VHDL is case insensitive, but could be

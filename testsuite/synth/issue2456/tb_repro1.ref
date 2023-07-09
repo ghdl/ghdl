@@ -1,0 +1,3 @@
+elaborate and simulate tb_repro1
+syn_repro1.vhdl:33:3:@0ms:(assertion error): Assertion violation
+syn_repro1.vhdl:33:3:@2ns:(assertion error): Assertion violation

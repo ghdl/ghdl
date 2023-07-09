@@ -559,8 +559,12 @@ package body Synth.Environment is
             --  FIXME: Asgn_Rec may become invalid due to allocation by
             --  Phi_Assign.  So we read what is needed before calling
             --  Phi_Assign.
+            --  All the wires that have been created before mark *and* all
+            --  the enable wires need to be propagated.
             Next_Asgn := Asgn_Rec.Chain;
-            if Wid <= Mark then
+            if Wid <= Mark
+              or else Wire_Id_Table.Table (Wid).Kind = Wire_Enable
+            then
                case Asgn_Rec.Val.Is_Static is
                   when Unknown =>
                      raise Internal_Error;
@@ -1753,6 +1757,8 @@ package body Synth.Environment is
       end if;
 
       --  Cached value.
+      --  There is only one Enable wire per phi, which is set iff the phi is
+      --  executed.
       Wid := Phis_Table.Table (Last).En;
       if Wid = No_Wire_Id then
          Wid := Alloc_Wire (Wire_Enable, Decl);
@@ -1764,8 +1770,10 @@ package body Synth.Environment is
          Set_Wire_Gate (Wid, N);
 
          --  Initialize to '0'.
-         --  This is really cheating, as it is like assigning in the first
-         --  phi.
+         --  This is the default value which correspond to the enable value
+         --  when the path is not taken.
+         --  Note : this is really cheating, as it is like assigning in the
+         --  first phi.
          Assign_Table.Append ((Phi => No_Phi_Id + 1,
                                Id => Wid,
                                Prev => No_Seq_Assign,
@@ -1777,6 +1785,7 @@ package body Synth.Environment is
 
          --  Assign to '1'.
          Phi_Assign_Static (Wid, Val_1);
+
          return N;
       else
          return Get_Current_Value (Ctxt, Wid);

@@ -303,20 +303,20 @@ class Iir_Kind(IntEnum):
     Selected_Waveform_Assignment_Statement = 244
     Signal_Force_Assignment_Statement = 245
     Signal_Release_Assignment_Statement = 246
-    Null_Statement = 247
-    Assertion_Statement = 248
-    Report_Statement = 249
-    Wait_Statement = 250
-    Variable_Assignment_Statement = 251
-    Conditional_Variable_Assignment_Statement = 252
-    Return_Statement = 253
-    For_Loop_Statement = 254
-    While_Loop_Statement = 255
-    Next_Statement = 256
-    Exit_Statement = 257
-    Case_Statement = 258
-    Procedure_Call_Statement = 259
-    Break_Statement = 260
+    Variable_Assignment_Statement = 247
+    Conditional_Variable_Assignment_Statement = 248
+    Null_Statement = 249
+    Assertion_Statement = 250
+    Report_Statement = 251
+    Next_Statement = 252
+    Exit_Statement = 253
+    Return_Statement = 254
+    Procedure_Call_Statement = 255
+    Wait_Statement = 256
+    Break_Statement = 257
+    For_Loop_Statement = 258
+    While_Loop_Statement = 259
+    Case_Statement = 260
     If_Statement = 261
     Suspend_State_Statement = 262
     Elsif = 263
@@ -1097,21 +1097,29 @@ class Iir_Kinds:
         Iir_Kind.Selected_Waveform_Assignment_Statement,
         Iir_Kind.Signal_Force_Assignment_Statement,
         Iir_Kind.Signal_Release_Assignment_Statement,
+        Iir_Kind.Variable_Assignment_Statement,
+        Iir_Kind.Conditional_Variable_Assignment_Statement,
         Iir_Kind.Null_Statement,
         Iir_Kind.Assertion_Statement,
         Iir_Kind.Report_Statement,
-        Iir_Kind.Wait_Statement,
-        Iir_Kind.Variable_Assignment_Statement,
-        Iir_Kind.Conditional_Variable_Assignment_Statement,
-        Iir_Kind.Return_Statement,
-        Iir_Kind.For_Loop_Statement,
-        Iir_Kind.While_Loop_Statement,
         Iir_Kind.Next_Statement,
         Iir_Kind.Exit_Statement,
-        Iir_Kind.Case_Statement,
+        Iir_Kind.Return_Statement,
         Iir_Kind.Procedure_Call_Statement,
+        Iir_Kind.Wait_Statement,
         Iir_Kind.Break_Statement,
+        Iir_Kind.For_Loop_Statement,
+        Iir_Kind.While_Loop_Statement,
+        Iir_Kind.Case_Statement,
         Iir_Kind.If_Statement,
+    ]
+
+    Signal_Assignment_Statement = [
+        Iir_Kind.Simple_Signal_Assignment_Statement,
+        Iir_Kind.Conditional_Signal_Assignment_Statement,
+        Iir_Kind.Selected_Waveform_Assignment_Statement,
+        Iir_Kind.Signal_Force_Assignment_Statement,
+        Iir_Kind.Signal_Release_Assignment_Statement,
     ]
 
     Sequential_Statement_Ext = [
@@ -1120,20 +1128,20 @@ class Iir_Kinds:
         Iir_Kind.Selected_Waveform_Assignment_Statement,
         Iir_Kind.Signal_Force_Assignment_Statement,
         Iir_Kind.Signal_Release_Assignment_Statement,
+        Iir_Kind.Variable_Assignment_Statement,
+        Iir_Kind.Conditional_Variable_Assignment_Statement,
         Iir_Kind.Null_Statement,
         Iir_Kind.Assertion_Statement,
         Iir_Kind.Report_Statement,
-        Iir_Kind.Wait_Statement,
-        Iir_Kind.Variable_Assignment_Statement,
-        Iir_Kind.Conditional_Variable_Assignment_Statement,
-        Iir_Kind.Return_Statement,
-        Iir_Kind.For_Loop_Statement,
-        Iir_Kind.While_Loop_Statement,
         Iir_Kind.Next_Statement,
         Iir_Kind.Exit_Statement,
-        Iir_Kind.Case_Statement,
+        Iir_Kind.Return_Statement,
         Iir_Kind.Procedure_Call_Statement,
+        Iir_Kind.Wait_Statement,
         Iir_Kind.Break_Statement,
+        Iir_Kind.For_Loop_Statement,
+        Iir_Kind.While_Loop_Statement,
+        Iir_Kind.Case_Statement,
         Iir_Kind.If_Statement,
         Iir_Kind.Suspend_State_Statement,
     ]
@@ -4520,6 +4528,19 @@ def Get_Elements_Definition_Chain(obj: Iir) -> Iir:
 @export
 @BindToLibGHDL("vhdl__nodes__set_elements_definition_chain")
 def Set_Elements_Definition_Chain(obj: Iir, value: Iir) -> None:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__get_elements_definition_list")
+def Get_Elements_Definition_List(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_elements_definition_list")
+def Set_Elements_Definition_List(obj: Iir, value: Iir) -> None:
     """"""
 
 

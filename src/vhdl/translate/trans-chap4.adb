@@ -205,14 +205,19 @@ package body Trans.Chap4 is
         (Create_Var_Identifier (Decl, "_SIG", 0),
          Get_Object_Type (Type_Info, Mode_Signal));
 
-      if Get_Kind (Decl) = Iir_Kind_Interface_Signal_Declaration then
+      if Kind_In (Decl,
+                  Iir_Kind_Interface_Signal_Declaration,
+                  Iir_Kind_Interface_View_Declaration)
+      then
          --  For interfaces, create a pointer so that there is no need to
          --  update a copy if the association is collapsed.
          Info.Signal_Valp := Create_Var
            (Create_Var_Identifier (Decl, "_VALP", 0),
             Get_Object_Ptr_Type (Type_Info, Mode_Value));
 
-         if Get_Default_Value (Decl) /= Null_Iir then
+         if Get_Kind (Decl) /= Iir_Kind_Interface_View_Declaration
+           and then Get_Default_Value (Decl) /= Null_Iir
+         then
             --  Default value for ports.
             Info.Signal_Val := Create_Var
               (Create_Var_Identifier (Decl, "_INIT", 0),
@@ -226,7 +231,8 @@ package body Trans.Chap4 is
 
       case Get_Kind (Decl) is
          when Iir_Kind_Signal_Declaration
-            | Iir_Kind_Interface_Signal_Declaration =>
+            | Iir_Kind_Interface_Signal_Declaration
+            | Iir_Kind_Interface_View_Declaration =>
             Rtis.Generate_Signal_Rti (Decl);
          when Iir_Kind_Guard_Signal_Declaration =>
             --  No name created for guard signal.
@@ -935,6 +941,9 @@ package body Trans.Chap4 is
       Value : Mnode;
       --  Default value of the signal.
       Init_Val         : Mnode;
+      --  Set if the signal is a view.
+      View : Iir;
+      Reversed : Boolean;
       --  If statement for a block of signals.
       If_Stmt          : O_If_Block_Acc;
       --  True if the default value is set.
@@ -1101,6 +1110,8 @@ package body Trans.Chap4 is
            (Data.Value, Targ_Type, Index),
          Init_Val => N_Init_Val,
          Has_Val => Data.Has_Val,
+         View => Data.View,
+         Reversed => Data.Reversed,
          If_Stmt => null,
          Already_Resolved => Data.Already_Resolved,
          Check_Null => Data.Check_Null);
@@ -1112,16 +1123,54 @@ package body Trans.Chap4 is
    is
       pragma Unreferenced (Targ_Type);
       N_Init_Val : Mnode;
+      N_View : Iir;
+      N_Reversed : Boolean;
    begin
       if Data.Has_Val then
          N_Init_Val := Chap6.Translate_Selected_Element (Data.Init_Val, El);
       else
          N_Init_Val := Mnode_Null;
       end if;
+
+      if Data.View /= Null_Iir then
+         pragma Assert (Get_Kind (Data.View) = Iir_Kind_Mode_View_Declaration);
+         N_View := Data.View;
+         N_Reversed := Data.Reversed;
+         Update_Mode_View_Selected_Name (N_View, N_Reversed, El);
+         if Get_Kind (N_View) = Iir_Kind_Simple_Mode_View_Element then
+            declare
+               N_Mode : Iir_Mode;
+               Assoc : O_Assoc_List;
+            begin
+               N_Mode := Get_Mode (N_View);
+               if N_Reversed then
+                  N_Mode := Get_Converse_Mode (N_Mode);
+               end if;
+
+               --  Set the mode.
+               Start_Association (Assoc, Ghdl_Signal_Set_Mode);
+               New_Association (Assoc,
+                                New_Lit
+                                  (New_Unsigned_Literal
+                                     (Ghdl_I32_Type, Iir_Mode'Pos (N_Mode))));
+               New_Procedure_Call (Assoc);
+            end;
+            N_View := Null_Iir;
+         else
+            pragma Assert (Get_Kind (N_View) = Iir_Kind_Mode_View_Declaration);
+            null;
+         end if;
+      else
+         N_View := Null_Iir;
+         N_Reversed := False;
+      end if;
+
       return Elab_Signal_Data'
         (Value => Chap6.Translate_Selected_Element (Data.Value, El),
          Init_Val => N_Init_Val,
          Has_Val => Data.Has_Val,
+         View => N_View,
+         Reversed => N_Reversed,
          If_Stmt => null,
          Already_Resolved => Data.Already_Resolved,
          Check_Null => Data.Check_Null);
@@ -1143,6 +1192,8 @@ package body Trans.Chap4 is
    is
       Is_Port : constant Boolean :=
         Get_Kind (Decl) = Iir_Kind_Interface_Signal_Declaration;
+      Is_View : constant Boolean :=
+        Get_Kind (Decl) = Iir_Kind_Interface_View_Declaration;
       Sig_Type  : constant Iir := Get_Type (Decl);
       Type_Info : Type_Info_Acc;
       Name_Sig : Mnode;
@@ -1200,7 +1251,7 @@ package body Trans.Chap4 is
             Name_Val := Chap6.Get_Port_Init_Value (Decl);
             Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Val);
          end if;
-      elsif Is_Port then
+      elsif Is_Port or Is_View then
          if not Has_Copy then
             --  A port that isn't collapsed.  Allocate value.
             Name_Val := Chap6.Translate_Name (Decl, Mode_Value);
@@ -1290,11 +1341,22 @@ package body Trans.Chap4 is
       --  Consistency check: a signal name is a signal.
       pragma Assert (Get_Object_Kind (Name_Sig) = Mode_Signal);
 
+      --  Default: no view.
+      Data.View := Null_Iir;
+      Data.Reversed := False;
+
       Data.Value := Name_Val;
       if Decl = Base_Decl then
          Data.Already_Resolved := False;
          Data.Check_Null := Check_Null;
-         Value := Get_Default_Value (Base_Decl);
+         if Get_Kind (Base_Decl) /= Iir_Kind_Interface_View_Declaration then
+            Value := Get_Default_Value (Base_Decl);
+         else
+            Value := Null_Iir;
+            Get_Mode_View_From_Name (Decl, Data.View, Data.Reversed);
+            pragma Assert
+              (Get_Kind (Data.View) = Iir_Kind_Mode_View_Declaration);
+         end if;
          if Value = Null_Iir then
             Data.Has_Val := False;
          else
@@ -1331,6 +1393,7 @@ package body Trans.Chap4 is
          end if;
       else
          --  Sub signal.
+         --  Used only in case of conversion for an individual association.
          --  Do not add resolver.
          --  Do not use default value.
          Data.Already_Resolved := True;
@@ -3227,7 +3290,8 @@ package body Trans.Chap4 is
       use Trans.Chap5;
       Formal     : constant Iir := Get_Association_Formal (Assoc, Inter);
       Actual     : constant Iir := Get_Actual (Assoc);
-      Block_Info : constant Block_Info_Acc := Get_Info (Base_Block);
+      Block_Info : constant Block_Info_Acc := Get_Info (Block);
+      Base_Block_Info : constant Block_Info_Acc := Get_Info (Base_Block);
       Assoc_Info  : Inertial_Info_Acc;
       Inter_List  : O_Inter_List;
       Entity_Info : Ortho_Info_Acc;
@@ -3241,7 +3305,7 @@ package body Trans.Chap4 is
         (Inter_List, Create_Identifier (Inter, "INERTIAL"),
          O_Storage_Private);
       New_Interface_Decl (Inter_List, Assoc_Info.Inertial_Inst,
-                          Wki_Instance, Block_Info.Block_Decls_Ptr_Type);
+                          Wki_Instance, Base_Block_Info.Block_Decls_Ptr_Type);
       Finish_Subprogram_Decl (Inter_List, Assoc_Info.Inertial_Proc);
 
       --  The body.
@@ -3250,7 +3314,7 @@ package body Trans.Chap4 is
       Push_Local_Factory;
       --  Access for actual.
       Assoc_Info.Inertial_Block := Base_Block;
-      Set_Scope_Via_Param_Ptr (Block_Info.Block_Scope,
+      Set_Scope_Via_Param_Ptr (Base_Block_Info.Block_Scope,
                                Assoc_Info.Inertial_Inst);
 
       Open_Temp;
@@ -3323,7 +3387,7 @@ package body Trans.Chap4 is
 
       Close_Temp;
 
-      Clear_Scope (Block_Info.Block_Scope);
+      Clear_Scope (Base_Block_Info.Block_Scope);
       Pop_Local_Factory;
       Finish_Subprogram_Body;
    end Translate_Inertial_Subprogram;
@@ -3516,6 +3580,8 @@ package body Trans.Chap4 is
                         Out_Tinfo, Mode_Value);
       Data := Elab_Signal_Data'(Value => Dest_Val,
                                 Has_Val => False,
+                                View => Null_Iir,
+                                Reversed => False,
                                 Already_Resolved => True,
                                 Init_Val => Mnode_Null,
                                 Check_Null => False,

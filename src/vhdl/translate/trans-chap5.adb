@@ -192,12 +192,19 @@ package body Trans.Chap5 is
       Connect_Effective,
 
       --  Actual is a value.
-      Connect_Value
+      Connect_Value,
+
+      --  Defined by the view.
+      Connect_View
      );
 
    type Connect_Data is record
       Actual_Sig  : Mnode;
       Actual_Type : Iir;
+
+      --  Mode view (if present) and whether it is reversed.
+      View : Iir;
+      Reversed : Boolean;
 
       --  Mode of the connection.
       Mode : Connect_Mode;
@@ -205,6 +212,37 @@ package body Trans.Chap5 is
       --  If true, formal signal is a copy of the actual.
       By_Copy : Boolean;
    end record;
+
+   function Mode_To_Connect (Mode : Iir_Mode) return Connect_Mode is
+   begin
+      case Mode is
+         when Iir_In_Mode =>
+            return Connect_Effective;
+         when Iir_Inout_Mode =>
+            return Connect_Both;
+         when Iir_Out_Mode
+           | Iir_Buffer_Mode
+           | Iir_Linkage_Mode =>
+            return Connect_Source;
+         when Iir_Unknown_Mode =>
+            raise Internal_Error;
+      end case;
+   end Mode_To_Connect;
+
+   function Reverse_Connect_Mode (Mode : Connect_Mode) return Connect_Mode is
+   begin
+      case Mode is
+         when Connect_Effective =>
+            return Connect_Source;
+         when Connect_Source =>
+            return Connect_Effective;
+         when Connect_Both =>
+            return Connect_Both;
+         when Connect_Value
+           | Connect_View =>
+            raise Internal_Error;
+      end case;
+   end Reverse_Connect_Mode;
 
    --  Connect_effective: FORMAL is set from ACTUAL.
    --  Connect_Source: ACTUAL is set from FORMAL (source of ACTUAL).
@@ -229,6 +267,8 @@ package body Trans.Chap5 is
             Form_Node := Formal_Sig;
          when Connect_Value =>
             null;
+         when Connect_View =>
+            raise Internal_Error;
       end case;
 
       if Data.Mode in Connect_Source .. Connect_Both then
@@ -332,6 +372,8 @@ package body Trans.Chap5 is
       Res := (Actual_Sig => Chap6.Translate_Indexed_Name_By_Offset
                 (Data.Actual_Sig, Data.Actual_Type, Index),
               Actual_Type => Get_Element_Subtype (Data.Actual_Type),
+              View => Data.View,
+              Reversed => Data.Reversed,
               Mode => Data.Mode,
               By_Copy => Data.By_Copy);
       return Res;
@@ -342,16 +384,41 @@ package body Trans.Chap5 is
      return Connect_Data
    is
       pragma Unreferenced (Formal_Type);
+      Pos : constant Natural := Natural (Get_Element_Position (El));
+      Act_Els : constant Iir_Flist :=
+        Get_Elements_Declaration_List (Data.Actual_Type);
+      N_View : Iir;
+      N_Mode : Connect_Mode;
+      N_Reversed : Boolean;
       Res : Connect_Data;
       Fel : Iir;
    begin
-      Fel := Get_Nth_Element
-        (Get_Elements_Declaration_List (Data.Actual_Type),
-         Natural (Get_Element_Position (El)));
+      Fel := Get_Nth_Element (Act_Els, Pos);
+      if Data.View = Null_Iir then
+         N_View := Null_Iir;
+         N_Mode := Data.Mode;
+         N_Reversed := Data.Reversed;  --  Unused.
+      else
+         N_View := Data.View;
+         N_Reversed := Data.Reversed;
+         Update_Mode_View_Selected_Name (N_View, N_Reversed, El);
+         if Get_Kind (N_View) = Iir_Kind_Simple_Mode_View_Element then
+            N_Mode := Mode_To_Connect (Get_Mode (N_View));
+            if N_Reversed then
+               N_Mode := Reverse_Connect_Mode (N_Mode);
+            end if;
+            N_View := Null_Iir;
+         else
+            pragma Assert (Get_Kind (N_View) = Iir_Kind_Mode_View_Declaration);
+            null;
+         end if;
+      end if;
       Res := (Actual_Sig =>
                 Chap6.Translate_Selected_Element (Data.Actual_Sig, Fel),
               Actual_Type => Get_Type (Fel),
-              Mode => Data.Mode,
+              View => N_View,
+              Reversed => N_Reversed,
+              Mode => N_Mode,
               By_Copy => Data.By_Copy);
       return Res;
    end Connect_Update_Data_Record;
@@ -384,6 +451,8 @@ package body Trans.Chap5 is
       Actual_En   : O_Enode;
       Data        : Connect_Data;
       Mode        : Connect_Mode;
+      View        : Iir;
+      Reversed    : Boolean;
    begin
       pragma Assert
         (Get_Kind (Assoc) in Iir_Kinds_Association_Element_By_Actual);
@@ -412,18 +481,24 @@ package body Trans.Chap5 is
             --     association element that associates an actual
             --     with S.
             --  *  [...]
-            case Get_Mode (Port) is
-               when Iir_In_Mode =>
-                  Mode := Connect_Effective;
-               when Iir_Inout_Mode =>
-                  Mode := Connect_Both;
-               when Iir_Out_Mode
-                  | Iir_Buffer_Mode
-                  | Iir_Linkage_Mode =>
-                  Mode := Connect_Source;
-               when Iir_Unknown_Mode =>
-                  raise Internal_Error;
-            end case;
+            if Get_Kind (Port) = Iir_Kind_Interface_View_Declaration then
+               Get_Mode_View_From_Name (Formal, View, Reversed);
+               if Get_Kind (View) = Iir_Kind_Mode_View_Declaration then
+                  Mode := Connect_View;
+               else
+                  pragma Assert
+                    (Get_Kind (View) = Iir_Kind_Simple_Mode_View_Element);
+                  Mode := Mode_To_Connect (Get_Mode (View));
+                  if Reversed then
+                     Mode := Reverse_Connect_Mode (Mode);
+                  end if;
+                  View := Null_Iir;
+               end if;
+            else
+               Mode := Mode_To_Connect (Get_Mode (Port));
+               View := Null_Iir;
+               Reversed := False;
+            end if;
 
             if By_Copy then
                Set_Map_Env (Actual_Env);
@@ -470,7 +545,7 @@ package body Trans.Chap5 is
             Actual_En := Chap7.Translate_Expression (Actual, Formal_Type);
             Actual_Sig := E2M (Actual_En, Get_Info (Formal_Type), Mode_Value);
             Mode := Connect_Value;
---            raise Internal_Error;
+            View := Null_Iir;
          end if;
 
          if Get_Kind (Formal_Type) in Iir_Kinds_Array_Type_Definition then
@@ -485,6 +560,8 @@ package body Trans.Chap5 is
 
          Data := (Actual_Sig => Actual_Sig,
                   Actual_Type => Actual_Type,
+                  View => View,
+                  Reversed => Reversed,
                   Mode => Mode,
                   By_Copy => By_Copy);
          Connect (Formal_Sig, Formal_Type, Data);
@@ -495,13 +572,14 @@ package body Trans.Chap5 is
          then
             Formal_Sig := Chap6.Translate_Name (Formal, Mode_Signal);
 
-            if Is_Valid (Get_Default_Value (Port)) then
+            if Get_Kind (Port) = Iir_Kind_Interface_Signal_Declaration
+              and then Is_Valid (Get_Default_Value (Port))
+            then
                Init_Node := Chap6.Get_Port_Init_Value (Formal);
             else
                Init_Node := Mnode_Null;
             end if;
-            Chap9.Gen_Port_Init_Driving
-              (Formal_Sig, Formal_Type, Init_Node);
+            Chap9.Gen_Port_Init_Driving (Formal_Sig, Formal_Type, Init_Node);
          end if;
       else
          if Get_Actual_Conversion (Assoc) /= Null_Iir then
@@ -510,6 +588,8 @@ package body Trans.Chap5 is
             Formal_Sig := Chap6.Translate_Name (Formal, Mode_Signal);
             Data := (Actual_Sig => Actual_Sig,
                      Actual_Type => Formal_Type,
+                     View => Null_Iir,
+                     Reversed => False,
                      Mode => Connect_Effective,
                      By_Copy => False);
             Connect (Formal_Sig, Formal_Type, Data);
@@ -522,6 +602,8 @@ package body Trans.Chap5 is
             Actual_Sig := Chap6.Translate_Name (Actual, Mode_Signal);
             Data := (Actual_Sig => Actual_Sig,
                      Actual_Type => Actual_Type,
+                     View => Null_Iir,
+                     Reversed => False,
                      Mode => Connect_Source,
                      By_Copy => False);
             Set_Map_Env (Formal_Env);
@@ -766,7 +848,13 @@ package body Trans.Chap5 is
                  | Iir_Kind_Association_Element_By_Name =>
                   if Get_Whole_Association_Flag (Assoc) then
                      if Get_Collapse_Signal_Flag (Assoc) then
-                        Value := Get_Default_Value (Formal_Base);
+                        if Get_Kind (Formal_Base)
+                          /= Iir_Kind_Interface_View_Declaration
+                        then
+                           Value := Get_Default_Value (Formal_Base);
+                        else
+                           Value := Null_Iir;
+                        end if;
                         if Is_Valid (Value) then
                            --  Set default value.
                            Chap9.Destroy_Types (Value);

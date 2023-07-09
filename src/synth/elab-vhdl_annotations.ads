@@ -14,10 +14,12 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Types; use Types;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Elab.Vhdl_Annotations is
-   type Object_Slot_Type is new Natural;
+   type Object_Slot_Type is new Uns32;
 
    --  This slot is not used.
    Invalid_Object_Slot : constant Object_Slot_Type := 0;
@@ -52,6 +54,12 @@ package Elab.Vhdl_Annotations is
       --  Redundant, to be used only for debugging.
       Ref : Iir;
 
+      --  Parent scope.
+      Scope : Sim_Info_Acc;
+
+      --  Index of the object (or invalid if N/A).
+      Slot: Object_Slot_Type;
+
       case Kind is
          when Kind_Block
            | Kind_Frame
@@ -61,37 +69,15 @@ package Elab.Vhdl_Annotations is
             --  Number of objects/signals.
             Nbr_Objects : Object_Slot_Type;
 
-            case Kind is
-               when Kind_Block =>
-                  --  Slot number in the parent (for blocks).
-                  Inst_Slot : Object_Slot_Type;
-
-                  --  Number of children (blocks, generate, instantiation).
-                  Nbr_Instances : Instance_Slot_Type;
-
-               when Kind_Package =>
-                  Pkg_Slot : Object_Slot_Type;
-                  Pkg_Parent : Sim_Info_Acc;
-
-               when others =>
-                  null;
-            end case;
-
          when Kind_Object
            | Kind_Signal
            | Kind_File
            | Kind_Terminal
            | Kind_Quantity
            | Kind_PSL
-           | Kind_Type =>
-            --  Block in which this object is declared in.
-            Obj_Scope : Sim_Info_Acc;
-
-            --  Variable index in the block.
-            Slot: Object_Slot_Type;
-
-         when Kind_Extra =>
-            Extra_Slot : Extra_Slot_Type;
+           | Kind_Type
+           | Kind_Extra =>
+            null;
       end case;
    end record;
 

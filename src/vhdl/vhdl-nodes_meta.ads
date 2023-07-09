@@ -254,6 +254,7 @@ package Vhdl.Nodes_Meta is
       Field_Has_Element_Constraint_Flag,
       Field_Elements_Declaration_List,
       Field_Elements_Definition_Chain,
+      Field_Elements_Definition_List,
       Field_Owned_Elements_Chain,
       Field_Designated_Type,
       Field_Designated_Subtype_Indication,
@@ -864,6 +865,7 @@ package Vhdl.Nodes_Meta is
    function Has_Has_Element_Constraint_Flag (K : Iir_Kind) return Boolean;
    function Has_Elements_Declaration_List (K : Iir_Kind) return Boolean;
    function Has_Elements_Definition_Chain (K : Iir_Kind) return Boolean;
+   function Has_Elements_Definition_List (K : Iir_Kind) return Boolean;
    function Has_Owned_Elements_Chain (K : Iir_Kind) return Boolean;
    function Has_Designated_Type (K : Iir_Kind) return Boolean;
    function Has_Designated_Subtype_Indication (K : Iir_Kind)

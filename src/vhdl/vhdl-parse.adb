@@ -2658,6 +2658,9 @@ package body Vhdl.Parse is
    --  LRM08 6.5.6 Interface lists
    --  interface_list ::= interface_element { ';' interface_element }
    --
+   --  LRM19 6.5.6 Interface lists
+   --  interface_list ::= interface_element { ';' interface_element } [ ; ]
+   --
    --  interface_element ::= interface_declaration
    function Parse_Interface_List (Ctxt : Interface_Kind_Type; Parent : Iir)
                                  return Iir
@@ -2723,8 +2726,10 @@ package body Vhdl.Parse is
                   Error_Msg_Parse
                     (Prev_Loc, "empty interface list not allowed");
                else
-                  Error_Msg_Parse
-                    (Prev_Loc, "extra ';' at end of interface list");
+                  if Vhdl_Std < Vhdl_19 then
+                     Error_Msg_Parse
+                       (Prev_Loc, "extra ';' at end of interface list");
+                  end if;
                end if;
 
                --  Skip ')'.
@@ -2792,7 +2797,7 @@ package body Vhdl.Parse is
    --
    --  [ LRM93 1.1.1.2 ]
    --  port_list ::= PORT_interface_list
-   procedure Parse_Port_Clause (Parent : Iir)
+   function Parse_Port_Clause (Parent : Iir) return Iir
    is
       Res: Iir;
    begin
@@ -2803,7 +2808,7 @@ package body Vhdl.Parse is
       Res := Parse_Interface_List (Port_Interface_List, Parent);
 
       Scan_Semi_Colon ("port clause");
-      Set_Port_Chain (Parent, Res);
+      return Res;
    end Parse_Port_Clause;
 
    --  precond : GENERIC
@@ -2814,7 +2819,7 @@ package body Vhdl.Parse is
    --
    --  [ LRM93 1.1.1.1, LRM08 6.5.6.2]
    --  generic_list ::= GENERIC_interface_list
-   procedure Parse_Generic_Clause (Parent : Iir)
+   function Parse_Generic_Clause (Parent : Iir) return Iir
    is
       Res: Iir;
    begin
@@ -2823,9 +2828,10 @@ package body Vhdl.Parse is
       Scan;
 
       Res := Parse_Interface_List (Generic_Interface_List, Parent);
-      Set_Generic_Chain (Parent, Res);
 
       Scan_Semi_Colon ("generic clause");
+
+      return Res;
    end Parse_Generic_Clause;
 
    --  precond : a token.
@@ -2859,7 +2865,7 @@ package body Vhdl.Parse is
             end if;
 
             Has_Generic := True;
-            Parse_Generic_Clause (Parent);
+            Set_Generic_Chain (Parent, Parse_Generic_Clause (Parent));
          elsif Current_Token = Tok_Port then
             if Has_Port then
                Error_Msg_Parse ("at most one port clause is allowed");
@@ -2870,7 +2876,7 @@ package body Vhdl.Parse is
             end if;
 
             Has_Port := True;
-            Parse_Port_Clause (Parent);
+            Set_Port_Chain (Parent, Parse_Port_Clause (Parent));
          else
             exit;
          end if;
@@ -9530,20 +9536,21 @@ package body Vhdl.Parse is
    --  [ LRM93 9.1 ]
    --  block_header ::= [ generic_clause [ generic_map_aspect ; ] ]
    --                   [ port_clause [ port_map_aspect ; ] ]
-   function Parse_Block_Header return Iir_Block_Header is
+   function Parse_Block_Header (Parent : Iir) return Iir_Block_Header
+   is
       Res : Iir_Block_Header;
    begin
       Res := Create_Iir (Iir_Kind_Block_Header);
       Set_Location (Res);
       if Current_Token = Tok_Generic then
-         Parse_Generic_Clause (Res);
+         Set_Generic_Chain (Res, Parse_Generic_Clause (Parent));
          if Current_Token = Tok_Generic then
             Set_Generic_Map_Aspect_Chain (Res, Parse_Generic_Map_Aspect);
             Scan_Semi_Colon ("generic map aspect");
          end if;
       end if;
       if Current_Token = Tok_Port then
-         Parse_Port_Clause (Res);
+         Set_Port_Chain (Res, Parse_Port_Clause (Parent));
          if Current_Token = Tok_Port then
             Set_Port_Map_Aspect_Chain (Res, Parse_Port_Map_Aspect);
             Scan_Semi_Colon ("port map aspect");
@@ -9614,7 +9621,7 @@ package body Vhdl.Parse is
          Scan;
       end if;
       if Current_Token = Tok_Generic or Current_Token = Tok_Port then
-         Set_Block_Header (Res, Parse_Block_Header);
+         Set_Block_Header (Res, Parse_Block_Header (Res));
       end if;
       if Current_Token /= Tok_Begin then
          Parse_Declarative_Part (Res, Res);
@@ -11732,13 +11739,13 @@ package body Vhdl.Parse is
    --  package_header ::=
    --      [ generic_clause               -- LRM08 6.5.6.2
    --      [ generic_map aspect ; ] ]
-   function Parse_Package_Header return Iir
+   function Parse_Package_Header (Pkg : Iir) return Iir
    is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Package_Header);
       Set_Location (Res);
-      Parse_Generic_Clause (Res);
+      Set_Generic_Chain (Res, Parse_Generic_Clause (Pkg));
 
       if Current_Token = Tok_Generic then
          Set_Generic_Map_Aspect_Chain (Res, Parse_Generic_Map_Aspect);
@@ -11777,7 +11784,7 @@ package body Vhdl.Parse is
 
       if Current_Token = Tok_Generic then
          Check_Vhdl_At_Least_2008 ("generic packages");
-         Set_Package_Header (Res, Parse_Package_Header);
+         Set_Package_Header (Res, Parse_Package_Header (Res));
       end if;
 
       Parse_Declarative_Part (Res, Get_Package_Parent (Res));

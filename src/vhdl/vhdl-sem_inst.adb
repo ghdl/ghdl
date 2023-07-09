@@ -1320,6 +1320,9 @@ package body Vhdl.Sem_Inst is
 
       Res := Create_Iir (Iir_Kind_Package_Instantiation_Body);
       Location_Copy (Res, Inst);
+
+      Set_Instance (Bod, Res);
+
       Set_Declaration_Chain
         (Res, Instantiate_Iir_Chain (Get_Declaration_Chain (Bod)));
       Set_Attribute_Value_Chain

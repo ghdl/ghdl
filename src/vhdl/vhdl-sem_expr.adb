@@ -163,15 +163,20 @@ package body Vhdl.Sem_Expr is
                then
                   return Fully_Compatible;
                end if;
-               if Get_Kind (Right) = Iir_Kind_Array_Type_Definition then
-                  El_Type := Get_Base_Type (Get_Element_Subtype (Right));
-                  if El_Type = Std_Logic_Type
-                    or else El_Type = Std_Ulogic_Type
-                    or else El_Type = Bit_Type_Definition
-                  then
+               case Get_Kind (Right) is
+                  when Iir_Kind_Array_Type_Definition =>
+                     El_Type := Get_Base_Type (Get_Element_Subtype (Right));
+                     if El_Type = Std_Logic_Type
+                       or else El_Type = Std_Ulogic_Type
+                       or else El_Type = Bit_Type_Definition
+                     then
+                        return Fully_Compatible;
+                     end if;
+                  when Iir_Kind_Integer_Type_Definition =>
                      return Fully_Compatible;
-                  end if;
-               end if;
+                  when others =>
+                     null;
+               end case;
             end;
          when others =>
             null;
@@ -2776,14 +2781,27 @@ package body Vhdl.Sem_Expr is
 
          Bt : constant Iir := Get_Base_Type (Choice_Type);
       begin
-         if not Is_Sub_Range
-           and then Get_Type_Staticness (Choice_Type) = Locally
-           and then Type_Has_Bounds
+         if Is_Sub_Range
+           or else Get_Type_Staticness (Choice_Type) /= Locally
          then
-            Get_Low_High_Limit (Get_Range_Constraint (Choice_Type), Lb, Hb);
-         else
+            --  Do not check for all values if the choice is a sub-range,
+            --  or if the bounds are not known.
             Lb := Low;
             Hb := High;
+         else
+            declare
+               Def : Iir;
+               Tdecl : Iir;
+            begin
+               if Type_Has_Bounds then
+                  Def := Choice_Type;
+               else
+                  --  An integer type definition, use the bounds of the type.
+                  Tdecl := Get_Type_Declarator (Bt);
+                  Def := Get_Subtype_Definition (Tdecl);
+               end if;
+               Get_Low_High_Limit (Get_Range_Constraint (Def), Lb, Hb);
+            end;
          end if;
          if Lb = Null_Iir or else Hb = Null_Iir then
             --  Return now in case of error.
@@ -2806,7 +2824,7 @@ package body Vhdl.Sem_Expr is
                --  Choice out of bound, already handled.
                Error_No_Choice (Bt, Pos, Pos_Max, Get_Location (Choice));
                --  Avoid other errors.
-               Pos := Pos_Max + 1;
+               Pos := Pos_Max;
                exit;
             end if;
             if Pos < E_Pos then
@@ -2829,12 +2847,17 @@ package body Vhdl.Sem_Expr is
             end if;
 
             if Get_Kind (Choice) = Iir_Kind_Choice_By_Range then
-               Pos := Eval_Pos (Get_Assoc_High (Choice)) + 1;
+               Pos := Eval_Pos (Get_Assoc_High (Choice));
             else
-               Pos := E_Pos + 1;
+               Pos := E_Pos;
             end if;
+
+            --  Avoid overflow.  Not incrementing POS allows to check
+            --  POS < POS_MAX below.
+            exit when I = Info.Arr'Last;
+            Pos := Pos + 1;
          end loop;
-         if Pos /= Pos_Max + 1 then
+         if Pos < Pos_Max then
             Need_Others := True;
             if Info.Others_Choice = Null_Iir then
                Error_No_Choice (Bt, Pos, Pos_Max, Loc);
@@ -4912,6 +4935,10 @@ package body Vhdl.Sem_Expr is
                if not Can_Interface_Be_Read (Obj) then
                   Error_Msg_Sem (+Expr, "%n cannot be read", +Obj);
                end if;
+               return;
+            when Iir_Kind_Interface_View_Declaration =>
+               --  Must be refined by the caller.  We don't know here if there
+               --  is a selected element.
                return;
             when Iir_Kind_Enumeration_Literal
               | Iir_Kind_Physical_Int_Literal

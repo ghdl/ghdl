@@ -628,6 +628,14 @@ package body Translation is
          Rtis.Rti_Initialize;
       end if;
 
+      --  procedure __ghdl_signal_set_mode (mode : ghdl_i32);
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_signal_set_mode"),
+         O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("ctxt"),
+                          Ghdl_I32_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Set_Mode);
+
       --  procedure __ghdl_signal_name_rti
       --       (obj : ghdl_rti_access;
       --        ctxt : ghdl_rti_access;

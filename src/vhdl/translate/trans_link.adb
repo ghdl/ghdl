@@ -155,6 +155,8 @@ package body Trans_Link is
            Grt.Signals.Ghdl_Signal_Disconnect'Address);
       Def (Trans_Decls.Ghdl_Signal_Set_Disconnect,
            Grt.Signals.Ghdl_Signal_Set_Disconnect'Address);
+      Def (Trans_Decls.Ghdl_Signal_Set_Mode,
+           Grt.Signals.Ghdl_Signal_Set_Mode'Address);
       Def (Trans_Decls.Ghdl_Signal_Merge_Rti,
            Grt.Signals.Ghdl_Signal_Merge_Rti'Address);
       Def (Trans_Decls.Ghdl_Signal_Name_Rti,

@@ -256,6 +256,7 @@ package body Synth.Vhdl_Stmts is
               (Syn_Inst, Get_Named_Entity (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
          when Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_View_Declaration
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_File_Declaration =>
@@ -1056,15 +1057,15 @@ package body Synth.Vhdl_Stmts is
          exit when Ce = Null_Node;
       end loop;
 
-      if Last /= No_Net then
-         if Cond_Tri /= True then
-            --  There is at least one Mux2, and its input-1 is not connected.
-            --  Implement missing assignment as a self-assignment.
-            Val := Synth_Read (Inst, Targ, Stmt);
-            Connect (Get_Input (Get_Net_Parent (Last), 1),
-                     Get_Net (Ctxt, Val));
-         end if;
+      if Last /= No_Net and then Cond_Tri /= True then
+         --  There is at least one Mux2, and its input-1 is not connected.
+         --  Implement missing assignment as a self-assignment.
+         Val := Synth_Read (Inst, Targ, Stmt);
+         Connect (Get_Input (Get_Net_Parent (Last), 1),
+                  Get_Net (Ctxt, Val));
+      end if;
 
+      if First /= No_Valtyp then
          Synth_Assignment (Inst, Targ, First, Stmt);
       end if;
 
@@ -2763,8 +2764,7 @@ package body Synth.Vhdl_Stmts is
          Phi_Assign_Net (Ctxt, C.W_Val, C.Ret_Init, 0);
       end if;
 
-      Set_Wire_Gate
-        (C.W_En, Build_Control_Signal (Sub_Inst, 1, Imp));
+      Set_Wire_Gate (C.W_En, Build_Control_Signal (Sub_Inst, 1, Imp));
       Phi_Assign_Static (C.W_En, Bit1);
 
       Set_Wire_Gate

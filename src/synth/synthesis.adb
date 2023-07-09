@@ -28,6 +28,7 @@ pragma Unreferenced (Elab.Vhdl_Values.Debug);
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 
 with Synth.Vhdl_Insts; use Synth.Vhdl_Insts;
+with Synth.Verilog_Insts;
 
 package body Synthesis is
    function Make_Base_Instance return Base_Instance_Acc
@@ -76,6 +77,8 @@ package body Synthesis is
       Synth.Vhdl_Insts.Synth_All_Instances;
 
       pragma Assert (Is_Expr_Pool_Empty);
+
+      Synth.Verilog_Insts.Synth_All_Instances;
 
       if Errorout.Nbr_Errors > 0 then
          return No_Module;

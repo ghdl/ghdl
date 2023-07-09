@@ -2429,7 +2429,11 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Subtype_Indication (Field5)
    --
+   --  Chain of elements in source order.
    --   Get/Set_Elements_Definition_Chain (Field1)
+   --
+   --  Flist of elements, indexed by element position.
+   --   Get/Set_Elements_Definition_List (Field4)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
    --
@@ -3215,6 +3219,8 @@ package Vhdl.Nodes is
    --   Get/Set_Subtype_Indication (Field5)
    --
    --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -------------------------
    --  Nature definitions --
@@ -5328,20 +5334,20 @@ package Vhdl.Nodes is
       Iir_Kind_Selected_Waveform_Assignment_Statement,
       Iir_Kind_Signal_Force_Assignment_Statement,
       Iir_Kind_Signal_Release_Assignment_Statement,
+      Iir_Kind_Variable_Assignment_Statement,
+      Iir_Kind_Conditional_Variable_Assignment_Statement,
       Iir_Kind_Null_Statement,
       Iir_Kind_Assertion_Statement,
       Iir_Kind_Report_Statement,
-      Iir_Kind_Wait_Statement,
-      Iir_Kind_Variable_Assignment_Statement,
-      Iir_Kind_Conditional_Variable_Assignment_Statement,
-      Iir_Kind_Return_Statement,
-      Iir_Kind_For_Loop_Statement,
-      Iir_Kind_While_Loop_Statement,
       Iir_Kind_Next_Statement,
       Iir_Kind_Exit_Statement,
-      Iir_Kind_Case_Statement,
+      Iir_Kind_Return_Statement,
       Iir_Kind_Procedure_Call_Statement,
+      Iir_Kind_Wait_Statement,
       Iir_Kind_Break_Statement,
+      Iir_Kind_For_Loop_Statement,
+      Iir_Kind_While_Loop_Statement,
+      Iir_Kind_Case_Statement,
       Iir_Kind_If_Statement,
       Iir_Kind_Suspend_State_Statement,
       Iir_Kind_Elsif,
@@ -7325,21 +7331,28 @@ package Vhdl.Nodes is
    --Iir_Kind_Selected_Waveform_Assignment_Statement
    --Iir_Kind_Signal_Force_Assignment_Statement
    --Iir_Kind_Signal_Release_Assignment_Statement
+   --Iir_Kind_Variable_Assignment_Statement
+   --Iir_Kind_Conditional_Variable_Assignment_Statement
    --Iir_Kind_Null_Statement
    --Iir_Kind_Assertion_Statement
    --Iir_Kind_Report_Statement
-   --Iir_Kind_Wait_Statement
-   --Iir_Kind_Variable_Assignment_Statement
-   --Iir_Kind_Conditional_Variable_Assignment_Statement
-   --Iir_Kind_Return_Statement
-   --Iir_Kind_For_Loop_Statement
-   --Iir_Kind_While_Loop_Statement
    --Iir_Kind_Next_Statement
    --Iir_Kind_Exit_Statement
-   --Iir_Kind_Case_Statement
+   --Iir_Kind_Return_Statement
    --Iir_Kind_Procedure_Call_Statement
+   --Iir_Kind_Wait_Statement
    --Iir_Kind_Break_Statement
+   --Iir_Kind_For_Loop_Statement
+   --Iir_Kind_While_Loop_Statement
+   --Iir_Kind_Case_Statement
      Iir_Kind_If_Statement;
+
+   subtype Iir_Kinds_Signal_Assignment_Statement is Iir_Kind range
+     Iir_Kind_Simple_Signal_Assignment_Statement ..
+   --Iir_Kind_Conditional_Signal_Assignment_Statement
+   --Iir_Kind_Selected_Waveform_Assignment_Statement
+   --Iir_Kind_Signal_Force_Assignment_Statement
+     Iir_Kind_Signal_Release_Assignment_Statement;
 
    --  All sequential statements + suspend_state_statement.
    subtype Iir_Kinds_Sequential_Statement_Ext is Iir_Kind range
@@ -7348,20 +7361,20 @@ package Vhdl.Nodes is
    --Iir_Kind_Selected_Waveform_Assignment_Statement
    --Iir_Kind_Signal_Force_Assignment_Statement
    --Iir_Kind_Signal_Release_Assignment_Statement
+   --Iir_Kind_Variable_Assignment_Statement
+   --Iir_Kind_Conditional_Variable_Assignment_Statement
    --Iir_Kind_Null_Statement
    --Iir_Kind_Assertion_Statement
    --Iir_Kind_Report_Statement
-   --Iir_Kind_Wait_Statement
-   --Iir_Kind_Variable_Assignment_Statement
-   --Iir_Kind_Conditional_Variable_Assignment_Statement
-   --Iir_Kind_Return_Statement
-   --Iir_Kind_For_Loop_Statement
-   --Iir_Kind_While_Loop_Statement
    --Iir_Kind_Next_Statement
    --Iir_Kind_Exit_Statement
-   --Iir_Kind_Case_Statement
+   --Iir_Kind_Return_Statement
    --Iir_Kind_Procedure_Call_Statement
+   --Iir_Kind_Wait_Statement
    --Iir_Kind_Break_Statement
+   --Iir_Kind_For_Loop_Statement
+   --Iir_Kind_While_Loop_Statement
+   --Iir_Kind_Case_Statement
    --Iir_Kind_If_Statement
      Iir_Kind_Suspend_State_Statement;
 
@@ -8815,6 +8828,10 @@ package Vhdl.Nodes is
    --  Field: Field1 Chain
    function Get_Elements_Definition_Chain (Decl : Iir) return Iir;
    procedure Set_Elements_Definition_Chain (Decl : Iir; Chain : Iir);
+
+   --  Field: Field4 Of_Ref (uc)
+   function Get_Elements_Definition_List (Decl : Iir) return Iir_Flist;
+   procedure Set_Elements_Definition_List (Decl : Iir; List : Iir_Flist);
 
    --  Field: Field6 Chain
    function Get_Owned_Elements_Chain (Atype : Iir) return Iir;

@@ -176,7 +176,7 @@ default_paths.ads: $(srcdir)/default_paths.ads.in ./config.status
 scripts/gcc/Make-lang.in: $(srcdir)/scripts/gcc/Make-lang.in.in ./config.status
 	./config.status
 
-GHDL_COMMON_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/synth -aI$(srcdir)/src/grt -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/translate
+GHDL_COMMON_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/verilog -aI$(srcdir)/src/synth -aI$(srcdir)/src/grt -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/translate
 
 GRTSRCDIR=$(abs_srcdir)/src/grt
 include $(srcdir)/src/grt/Makefile.inc
@@ -265,6 +265,7 @@ copy-sources.gcc: version.ads scripts/gcc/Make-lang.in
 	$(CP) -p $(srcdir)/src/vhdl/translate/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/synth/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/psl/*.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/verilog/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-types.ads $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-vhdl_types.ads $(gcc_vhdl_dir)
@@ -274,6 +275,7 @@ copy-sources.gcc: version.ads scripts/gcc/Make-lang.in
 	$(CP) -p $(srcdir)/src/grt/grt-arith.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-vstrings.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-cstdio.c $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-astdio.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-stdio.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-table.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-files_operations.ad? $(gcc_vhdl_dir)

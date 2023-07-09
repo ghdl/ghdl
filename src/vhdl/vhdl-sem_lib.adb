@@ -373,6 +373,7 @@ package body Vhdl.Sem_Lib is
         and then Get_Date (Design_Unit) = Date_Parsed
       then
          Error_Msg_Sem (+Loc, "unit %n has not been analyzed", +Design_Unit);
+         return;
       end if;
 
       --  Save and clear Nbr_Errors so that the unit is fully analyzed even

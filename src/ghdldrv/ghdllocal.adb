@@ -1861,6 +1861,38 @@ package body Ghdllocal is
       end;
    end Convert_Name;
 
+   procedure Auto_Extract_Elab_Unit (Cmd_Name : String;
+                                     Auto : Boolean;
+                                     Prim_Id : out Name_Id)
+   is
+      use Errorout;
+      use Vhdl.Errors;
+      Top : Iir;
+   begin
+      Prim_Id := Null_Identifier;
+
+      --  No unit on the command line.
+      if not Auto then
+         Error ("command '" & Cmd_Name & "' requires an unit name");
+         raise Option_Error;
+      end if;
+
+      --  Find the top-level unit.
+      Top := Vhdl.Configuration.Find_Top_Entity
+        (Libraries.Work_Library, Libraries.Command_Line_Location);
+      if Top = Null_Node then
+         Ghdlmain.Error ("no top unit found");
+         return;
+      end if;
+      Errorout.Report_Msg (Msgid_Note, Option, No_Source_Coord,
+                           "top entity is %i", (1 => +Top));
+      if Nbr_Errors > 0 then
+         --  No need to configure if there are missing units.
+         return;
+      end if;
+      Prim_Id := Get_Identifier (Top);
+   end Auto_Extract_Elab_Unit;
+
    procedure Extract_Elab_Unit (Cmd_Name : String;
                                 Auto : Boolean;
                                 Args : String_Acc_Array;
@@ -1875,32 +1907,7 @@ package body Ghdllocal is
       Sec_Id := Null_Identifier;
 
       if Args'Length = 0 then
-         --  No unit on the command line.
-         if not Auto then
-            Error ("command '" & Cmd_Name & "' requires an unit name");
-            raise Option_Error;
-         end if;
-
-         --  Find the top-level unit.
-         declare
-            use Errorout;
-            use Vhdl.Errors;
-            Top : Iir;
-         begin
-            Top := Vhdl.Configuration.Find_Top_Entity
-              (Libraries.Work_Library, Libraries.Command_Line_Location);
-            if Top = Null_Node then
-               Ghdlmain.Error ("no top unit found");
-               return;
-            end if;
-            Errorout.Report_Msg (Msgid_Note, Option, No_Source_Coord,
-                                 "top entity is %i", (1 => +Top));
-            if Nbr_Errors > 0 then
-               --  No need to configure if there are missing units.
-               return;
-            end if;
-            Prim_Id := Get_Identifier (Top);
-         end;
+         Auto_Extract_Elab_Unit (Cmd_Name, Auto, Prim_Id);
          return;
       end if;
 
@@ -1909,6 +1916,12 @@ package body Ghdllocal is
          Dot : Natural;
       begin
          Lib_Id := Null_Identifier;
+
+         if S (S'First) = '-' then
+            --  An option.
+            Auto_Extract_Elab_Unit (Cmd_Name, Auto, Prim_Id);
+            return;
+         end if;
 
          Dot := S'First - 1;
          if S (S'First) /= '\' then

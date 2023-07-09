@@ -15,10 +15,11 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Types; use Types;
+with Simple_IO; use Simple_IO;
+with Name_Table; use Name_Table;
+
 with PSL.Types; use PSL.Types;
 with PSL.Errors; use PSL.Errors;
-with Name_Table; use Name_Table;
-with Ada.Text_IO; use Ada.Text_IO;
 
 package body PSL.Prints is
    function Get_Priority (N : Node) return Priority is

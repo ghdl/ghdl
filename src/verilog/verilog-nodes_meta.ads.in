@@ -1,0 +1,72 @@
+--  Meta description of nodes.
+--  Copyright (C) 2023 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with this program.  If not, see <gnu.org/licenses>.
+
+with Types; use Types;
+with Verilog.Types; use Verilog.Types;
+with Verilog.Nodes; use Verilog.Nodes;
+
+package Verilog.Nodes_Meta is
+   --  The enumeration of all possible types in the nodes.
+   type Types_Enum is
+     (
+      --  TYPES
+     );
+
+   --  The enumeration of all fields defined in iirs.
+   type Fields_Enum is
+     (
+      --  FIELDS
+     );
+   pragma Discard_Names (Fields_Enum);
+
+   --  Return the type of field F.
+   function Get_Field_Type (F : Fields_Enum) return Types_Enum;
+
+   --  Get the name of a field.
+   function Get_Field_Image (F : Fields_Enum) return String;
+
+   --  Get the name of a kind.
+   function Get_Nkind_Image (K : Nkind) return String;
+
+   --  Possible attributes of a field.
+   type Field_Attribute is
+     (
+      Attr_Maybe_Ref, Attr_Maybe_Ref2,
+      Attr_None,
+      Attr_Ref, Attr_Forward_Ref,
+      Attr_Chain, Attr_Chain_Next
+     );
+
+   --  Attributes without Maybe_Ref*
+   subtype Field_Actual_Attribute is Field_Attribute range
+     Attr_None .. Field_Attribute'Last;
+
+   --  Get the attribute of a field.
+   function Get_Field_Attribute (F : Fields_Enum) return Field_Attribute;
+
+   function Get_Field_Actual_Attribute (N : Node; F : Fields_Enum)
+                                       return Field_Actual_Attribute;
+
+   type Fields_Array is array (Natural range <>) of Fields_Enum;
+
+   --  Return the list of fields for node K.  The fields are sorted: first
+   --  the non nodes/list of nodes, then the nodes/lists that aren't reference,
+   --  and then the reference.
+   function Get_Fields (K : Nkind) return Fields_Array;
+
+   --  Get/Set a field.
+   --  FUNCS
+end Verilog.Nodes_Meta;

@@ -14,9 +14,10 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Ada.Text_IO; use Ada.Text_IO;
 with Types; use Types;
 with Name_Table;
+with Simple_IO; use Simple_IO;
+
 with PSL.Types; use PSL.Types;
 with PSL.Errors;
 with PSL.Nodes_Meta;

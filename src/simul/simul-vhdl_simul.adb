@@ -88,6 +88,13 @@ package body Simul.Vhdl_Simul is
    procedure Set_Quantities_Values (Y : F64_C_Arr_Ptr; Yp: F64_C_Arr_Ptr);
    pragma Export (C, Set_Quantities_Values, "grt__analog_solver__set_values");
 
+   --  Mapping.
+   type Iir_Kind_To_Kind_Signal_Type is
+     array (Iir_Signal_Kind) of Kind_Signal_Type;
+   Iir_Kind_To_Kind_Signal : constant Iir_Kind_To_Kind_Signal_Type :=
+     (Iir_Register_Kind  => Kind_Signal_Register,
+      Iir_Bus_Kind       => Kind_Signal_Bus);
+
    function Sig_Index (Base : Memory_Ptr; Idx : Uns32) return Memory_Ptr is
    begin
       return Base + Size_Type (Idx) * Sig_Size;
@@ -2746,7 +2753,11 @@ package body Simul.Vhdl_Simul is
 
       --  Create the type.
       Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length (R.Idx_Typ.Drange, Len);
-      Arr_Typ := Create_Array_Type (Bnd, False, True, El_Typ);
+      if El_Typ.Kind in Type_Nets then
+         Arr_Typ := Create_Vector_Type (Bnd, False, El_Typ);
+      else
+         Arr_Typ := Create_Array_Type (Bnd, False, True, El_Typ);
+      end if;
 
       --  Allocate the array.
       Arr := Create_Memory (Arr_Typ);
@@ -2813,6 +2824,48 @@ package body Simul.Vhdl_Simul is
             raise Internal_Error;
       end case;
    end Create_Scalar_Signal;
+
+   function Get_Signal_Mode (E : Signal_Entry) return Mode_Signal_Type is
+   begin
+      case E.Kind is
+         when Signal_User =>
+            case Get_Kind (E.Decl) is
+               when Iir_Kind_Signal_Declaration =>
+                  return Mode_Signal;
+               when Iir_Kind_Interface_Signal_Declaration =>
+                  case Get_Mode (E.Decl) is
+                     when Iir_In_Mode =>
+                        return Mode_In;
+                     when Iir_Out_Mode =>
+                        return Mode_Out;
+                     when Iir_Linkage_Mode =>
+                        return Mode_Linkage;
+                     when Iir_Inout_Mode =>
+                        return Mode_Inout;
+                     when Iir_Buffer_Mode =>
+                        return Mode_Buffer;
+                     when Iir_Unknown_Mode =>
+                        raise Internal_Error;
+                  end case;
+               when others =>
+                  raise Internal_Error;
+            end case;
+         when Signal_Quiet =>
+            return Mode_Quiet;
+         when Signal_Stable =>
+            return Mode_Stable;
+         when Signal_Transaction =>
+            return Mode_Transaction;
+         when Signal_Delayed =>
+            return Mode_Delayed;
+         when Signal_Above =>
+            return Mode_Above;
+         when Signal_Guard =>
+            return Mode_Guard;
+         when Signal_None =>
+            raise Internal_Error;
+      end case;
+   end Get_Signal_Mode;
 
    procedure Create_User_Signal (E : Signal_Entry)
    is
@@ -2918,13 +2971,15 @@ package body Simul.Vhdl_Simul is
       Sig_Type: constant Iir := Get_Type (E.Decl);
       Kind : Kind_Signal_Type;
    begin
-      if Get_Guarded_Signal_Flag (E.Decl) then
+      if Get_Kind (E.Decl) /= Iir_Kind_Interface_View_Declaration
+        and then Get_Guarded_Signal_Flag (E.Decl)
+      then
          Kind := Iir_Kind_To_Kind_Signal (Get_Signal_Kind (E.Decl));
       else
          Kind := Kind_Signal_No;
       end if;
 
-      Grt.Signals.Ghdl_Signal_Set_Mode (E.Kind, Kind, True);
+      Grt.Signals.Ghdl_Signal_Set_Mode_Kind (Get_Signal_Mode (E), Kind, True);
 
       Create_Signal (E.Val, 0, Sig_Type, E.Typ, E.Nbr_Sources.all, False);
    end Create_User_Signal;
@@ -3128,31 +3183,31 @@ package body Simul.Vhdl_Simul is
    begin
       E.Sig := Alloc_Signal_Memory (E.Typ, Global_Pool'Access);
       case E.Kind is
-         when Mode_Guard =>
+         when Signal_Guard =>
             Create_Guard_Signal (Idx);
-         when Mode_Quiet =>
+         when Signal_Quiet =>
             S := Grt.Signals.Ghdl_Create_Quiet_Signal
               (To_Ghdl_Value_Ptr (To_Address (E.Val)), E.Time);
             Write_Sig (E.Sig, S);
             Register_Prefix (E.Pfx.Typ, To_Memory_Ptr (E.Pfx));
-         when Mode_Stable =>
+         when Signal_Stable =>
             S := Grt.Signals.Ghdl_Create_Stable_Signal
               (To_Ghdl_Value_Ptr (To_Address (E.Val)), E.Time);
             Write_Sig (E.Sig, S);
             Register_Prefix (E.Pfx.Typ, To_Memory_Ptr (E.Pfx));
-         when Mode_Transaction =>
+         when Signal_Transaction =>
             S := Grt.Signals.Ghdl_Create_Transaction_Signal
               (To_Ghdl_Value_Ptr (To_Address (E.Val)));
             Write_Sig (E.Sig, S);
             Register_Prefix (E.Pfx.Typ, To_Memory_Ptr (E.Pfx));
-         when Mode_Delayed =>
+         when Signal_Delayed =>
             Create_Delayed_Signal (E.Sig, E.Val, To_Memory_Ptr (E.Pfx),
                                    E.Typ, E.Time);
-         when Mode_Above =>
+         when Signal_Above =>
             raise Internal_Error;
-         when Mode_Signal_User =>
+         when Signal_User =>
             Create_User_Signal (Signals_Table.Table (Idx));
-         when Mode_Conv_In | Mode_Conv_Out | Mode_End =>
+         when Signal_None =>
             raise Internal_Error;
       end case;
    end Create_Signal;
@@ -3512,9 +3567,28 @@ package body Simul.Vhdl_Simul is
       end case;
    end Add_Conversion;
 
-   procedure Create_Connect (C : Connect_Entry) is
+   procedure Create_Connect (C : Connect_Entry; Mode : Iir_Mode)
+   is
+      Drive_Actual : Boolean;
+      Drive_Formal : Boolean;
    begin
-      if C.Drive_Actual then
+      case Mode is
+         when Iir_In_Mode =>
+            Drive_Formal := True;
+            Drive_Actual := False;
+         when Iir_Out_Mode
+           | Iir_Buffer_Mode =>
+            Drive_Formal := False;
+            Drive_Actual := True;
+         when Iir_Inout_Mode
+           | Iir_Linkage_Mode =>
+            Drive_Formal := True;
+            Drive_Actual := True;
+         when Iir_Unknown_Mode =>
+            raise Internal_Error;
+      end case;
+
+      if Drive_Actual then
          declare
             Out_Conv : constant Node := Get_Formal_Conversion (C.Assoc);
             Csig : Memory_Ptr;
@@ -3550,7 +3624,7 @@ package body Simul.Vhdl_Simul is
          end;
       end if;
 
-      if C.Drive_Formal then
+      if Drive_Formal then
          declare
             In_Conv : constant Node := Get_Actual_Conversion (C.Assoc);
             Csig : Memory_Ptr;
@@ -3581,6 +3655,48 @@ package body Simul.Vhdl_Simul is
          end;
       end if;
    end Create_Connect;
+
+   procedure Create_View_Connect
+     (View : Iir; Reversed : Boolean; C : Connect_Entry) is
+   begin
+      if Get_Kind (View) = Iir_Kind_Simple_Mode_View_Element then
+         declare
+            Sub_Mode : Iir_Mode;
+         begin
+            Sub_Mode := Get_Mode (View);
+            if Reversed then
+               Sub_Mode := Get_Converse_Mode (Sub_Mode);
+            end if;
+            Create_Connect (C, Sub_Mode);
+         end;
+      else
+         declare
+            Typ : constant Type_Acc :=
+              Signals_Table.Table (C.Formal.Base).Typ;
+            Sub_View : Iir;
+            Sub_Reversed : Boolean;
+            Sub_Connect : Connect_Entry;
+         begin
+            for I in 1 .. Typ.Rec.Len loop
+               Update_Mode_View_By_Pos
+                 (Sub_View, Sub_Reversed, View, Reversed, Natural (I - 1));
+               Sub_Connect :=
+                 (Formal => (Base => C.Formal.Base,
+                             Offs => C.Formal.Offs + Typ.Rec.E (I).Offs,
+                             Typ => Typ.Rec.E (I).Typ),
+                  Formal_Link => C.Formal_Link,
+                  Actual => (Base => C.Actual.Base,
+                             Offs => C.Actual.Offs + Typ.Rec.E (I).Offs,
+                             Typ => Typ.Rec.E (I).Typ),
+                  Actual_Link => C.Actual_Link,
+                  Collapsed => C.Collapsed,
+                  Assoc => C.Assoc,
+                  Assoc_Inst => C.Assoc_Inst);
+               Create_View_Connect (Sub_View, Sub_Reversed, Sub_Connect);
+            end loop;
+         end;
+      end if;
+   end Create_View_Connect;
 
    procedure Signal_Associate_Cst (Sig : Memory_Ptr;
                                    Typ : Type_Acc;
@@ -3642,7 +3758,25 @@ package body Simul.Vhdl_Simul is
          begin
             if not C.Collapsed then
                if C.Actual.Base /= No_Signal_Index then
-                  Create_Connect (C);
+                  declare
+                     Inter : constant Iir :=
+                       Signals_Table.Table (C.Formal.Base).Decl;
+                     View : Iir;
+                     Reversed : Boolean;
+                  begin
+                     if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration
+                     then
+                        pragma Assert
+                          (Get_Formal_Conversion (C.Assoc) = Null_Iir);
+                        pragma Assert
+                          (Get_Actual_Conversion (C.Assoc) = Null_Iir);
+                        Get_Mode_View_From_Name
+                          (Get_Formal (C.Assoc), View, Reversed);
+                        Create_View_Connect (View, Reversed, C);
+                     else
+                        Create_Connect (C, Get_Mode (Inter));
+                     end if;
+                  end;
                elsif Get_Expr_Staticness (Get_Actual (C.Assoc)) >= Globally
                then
                   Mark_Expr_Pool (Marker);

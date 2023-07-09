@@ -1051,6 +1051,7 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_Attribute_Name =>
             return Synth_Name (Syn_Inst, Get_Named_Entity (Name));
          when Iir_Kind_Interface_Signal_Declaration
+            | Iir_Kind_Interface_View_Declaration
             | Iir_Kind_Variable_Declaration
             | Iir_Kind_Interface_Variable_Declaration
             | Iir_Kind_Signal_Declaration
@@ -1523,20 +1524,27 @@ package body Synth.Vhdl_Expr is
       end if;
       pragma Assert (Off < Step);
 
-      --  Assume input width large enough to cover all the values of the
-      --  bounds.
+      --  Do not assume input width large enough to cover all the values of
+      --  the bounds.
+      if Bias /= 0 then
+         declare
+            Pfx_Width : constant Uns32 := Clog2 (Pfx_Bnd.Len);
+         begin
+            Inp := Build2_Uresize (Ctxt, Inp, Pfx_Width, +Loc);
+            Bias_Net := Build2_Const_Int (Ctxt, Int64 (Bias), Pfx_Width);
+         end;
+      end if;
+
       if (Pfx_Bnd.Dir = Dir_Downto and then L_Fac > 0)
         or else (Pfx_Bnd.Dir = Dir_To and then L_Fac < 0)
       then
          --  Same direction.
          if Bias /= 0 then
-            Bias_Net := Build2_Const_Int (Ctxt, Int64 (Bias), Get_Width (Inp));
             Inp := Build_Dyadic (Ctxt, Id_Add, Inp, Bias_Net);
             Set_Location (Inp, Loc);
          end if;
       else
          if Bias /= 0 then
-            Bias_Net := Build2_Const_Int (Ctxt, Int64 (Bias), Get_Width (Inp));
             Inp := Build_Dyadic (Ctxt, Id_Sub, Bias_Net, Inp);
          else
             Inp := Build_Monadic (Ctxt, Id_Neg, Inp);

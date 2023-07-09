@@ -278,6 +278,7 @@ package body Vhdl.Canon is
               (Get_Prefix (Expr), Sensitivity_List, False);
 
          when Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_View_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kinds_Signal_Attribute
@@ -634,11 +635,17 @@ package body Vhdl.Canon is
             --    construct the union of the resulting sets.
             Canon_Extract_Sensitivity_Procedure_Call
               (Get_Procedure_Call (Stmt), List);
+
+         when Iir_Kind_Suspend_State_Statement =>
+            --  Could happen when the procedure is called before its body
+            --  is analyzed.
+            --  FIXME: set suspend_flag during elaboration.
+            null;
+
          when Iir_Kind_Signal_Force_Assignment_Statement
            | Iir_Kind_Signal_Release_Assignment_Statement
            | Iir_Kind_Break_Statement
-           | Iir_Kind_Wait_Statement
-           | Iir_Kind_Suspend_State_Statement =>
+           | Iir_Kind_Wait_Statement =>
             Error_Kind ("canon_extract_sensitivity_statement", Stmt);
       end case;
    end Canon_Extract_Sensitivity_Statement;

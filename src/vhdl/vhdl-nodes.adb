@@ -1174,19 +1174,19 @@ package body Vhdl.Nodes is
            | Iir_Kind_Conditional_Signal_Assignment_Statement
            | Iir_Kind_Signal_Force_Assignment_Statement
            | Iir_Kind_Signal_Release_Assignment_Statement
+           | Iir_Kind_Variable_Assignment_Statement
+           | Iir_Kind_Conditional_Variable_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
-           | Iir_Kind_Variable_Assignment_Statement
-           | Iir_Kind_Conditional_Variable_Assignment_Statement
-           | Iir_Kind_Return_Statement
-           | Iir_Kind_For_Loop_Statement
-           | Iir_Kind_While_Loop_Statement
            | Iir_Kind_Next_Statement
            | Iir_Kind_Exit_Statement
-           | Iir_Kind_Case_Statement
+           | Iir_Kind_Return_Statement
            | Iir_Kind_Procedure_Call_Statement
            | Iir_Kind_Break_Statement
+           | Iir_Kind_For_Loop_Statement
+           | Iir_Kind_While_Loop_Statement
+           | Iir_Kind_Case_Statement
            | Iir_Kind_If_Statement
            | Iir_Kind_Suspend_State_Statement
            | Iir_Kind_Elsif
@@ -4507,6 +4507,22 @@ package body Vhdl.Nodes is
                      "no field Elements_Definition_Chain");
       Set_Field1 (Decl, Chain);
    end Set_Elements_Definition_Chain;
+
+   function Get_Elements_Definition_List (Decl : Iir) return Iir_Flist is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Elements_Definition_List (Get_Kind (Decl)),
+                     "no field Elements_Definition_List");
+      return Iir_To_Iir_Flist (Get_Field4 (Decl));
+   end Get_Elements_Definition_List;
+
+   procedure Set_Elements_Definition_List (Decl : Iir; List : Iir_Flist) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Elements_Definition_List (Get_Kind (Decl)),
+                     "no field Elements_Definition_List");
+      Set_Field4 (Decl, Iir_Flist_To_Iir (List));
+   end Set_Elements_Definition_List;
 
    function Get_Owned_Elements_Chain (Atype : Iir) return Iir is
    begin

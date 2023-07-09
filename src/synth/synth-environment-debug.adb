@@ -16,10 +16,9 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Ada.Text_IO; use Ada.Text_IO;
-with Netlists.Dump; use Netlists.Dump;
+with Simple_IO; use Simple_IO;
 
---  with Synth.Values.Debug; use Synth.Values.Debug;
+with Netlists.Dump; use Netlists.Dump;
 
 package body Synth.Environment.Debug is
    procedure Put_Wire_Id (Wid : Wire_Id) is
@@ -95,7 +94,7 @@ package body Synth.Environment.Debug is
             Put_Line ("   ??? (unknown)");
          when True =>
             Put_Line ("   static:");
---            Debug_Memtyp (Rec.Val.Val);
+            Dump_Static (Rec.Val.Val);
          when False =>
             Dump_Partial_Assign (Rec.Val.Asgns);
       end case;

@@ -23,7 +23,6 @@ with Name_Table;
 with Str_Table;
 
 with Grt.Types; use Grt.Types;
-with Grt.Readline;
 
 with Vhdl.Errors;
 with Vhdl.Utils;
@@ -34,6 +33,12 @@ with Elab.Vhdl_Context.Debug; use Elab.Vhdl_Context.Debug;
 with Elab.Vhdl_Debug; use Elab.Vhdl_Debug;
 
 package body Elab.Debugger is
+   --  TODO:
+   --  * restart
+   --  * step in declarations
+   --  * stop at subprogram entry
+   --  * for step: stop at loop cond/for.
+
    Current_Instance : Synth_Instance_Acc;
    Current_Loc : Node;
 
@@ -221,67 +226,10 @@ package body Elab.Debugger is
       Put_Line (Extract_Expanded_Line (File, Line));
    end Disp_Source_Line;
 
-   --  The status of the debugger.  This status can be modified by a command
-   --  as a side effect to resume or quit the debugger.
-   type Command_Status_Type is (Status_Default, Status_Quit);
-   Command_Status : Command_Status_Type;
-
-   --  This exception can be raised by a debugger command to directly return
-   --  to the prompt.
-   Command_Error : exception;
-
-   --  If set (by commands), call this procedure on empty line to repeat
-   --  last command.
-   Cmd_Repeat : Menu_Procedure;
-
-   type Menu_Kind is (Menu_Command, Menu_Submenu);
-   type Menu_Entry (Kind : Menu_Kind);
-   type Menu_Entry_Acc is access all Menu_Entry;
-
-   type Menu_Entry (Kind : Menu_Kind) is record
-      Name : Cst_String_Acc;
-      Help : Cst_String_Acc;
-      Next : Menu_Entry_Acc;
-
-      case Kind is
-         when Menu_Command =>
-            Proc : Menu_Procedure;
-         when Menu_Submenu =>
-            First : Menu_Entry_Acc := null;
-      end case;
-   end record;
-
-   function Is_Blank (C : Character) return Boolean is
-   begin
-      return C = ' ' or else C = ASCII.HT;
-   end Is_Blank;
-
-   function Skip_Blanks (S : String) return Positive
-   is
-      P : Positive := S'First;
-   begin
-      while P <= S'Last and then Is_Blank (S (P)) loop
-         P := P + 1;
-      end loop;
-      return P;
-   end Skip_Blanks;
-
    function Skip_Blanks (S : String; F : Positive) return Positive is
    begin
       return Skip_Blanks (S (F .. S'Last));
    end Skip_Blanks;
-
-   --  Return the position of the last character of the word (the last
-   --  non-blank character).
-   function Get_Word (S : String) return Positive
-   is
-      P : Positive := S'First;
-   begin
-      while P <= S'Last and then not Is_Blank (S (P)) loop
-         P := P + 1;
-      end loop;
-      return P - 1;
-   end Get_Word;
 
    function Get_Word (S : String; F : Positive) return Positive is
    begin
@@ -479,8 +427,6 @@ package body Elab.Debugger is
       Status := Walk_Declarations (Cb_Set_Break'Access);
       pragma Assert (Status = Walk_Continue);
    end Break_Proc;
-
-   procedure Help_Proc (Line : String);
 
    procedure Prepare_Continue is
    begin
@@ -742,27 +688,6 @@ package body Elab.Debugger is
       Next => null,
       First => Menu_Help2'Access);
 
-   --  Append command to MENU.
-   procedure Append_Menu (Menu : Menu_Entry;
-                          Name : Cst_String_Acc;
-                          Help : Cst_String_Acc;
-                          Proc : Menu_Procedure)
-   is
-      M, L : Menu_Entry_Acc;
-   begin
-      M := new Menu_Entry'(Kind => Menu_Command,
-                           Name => Name,
-                           Help => Help,
-                           Next => null,
-                           Proc => Proc);
-
-      L := Menu.First;
-      while L.Next /= null loop
-         L := L.Next;
-      end loop;
-      L.Next := M;
-   end Append_Menu;
-
    procedure Append_Menu_Command (Name : Cst_String_Acc;
                                   Help : Cst_String_Acc;
                                   Proc : Menu_Procedure) is
@@ -777,109 +702,9 @@ package body Elab.Debugger is
       Append_Menu (Menu_Info, Name, Help, Proc);
    end Append_Info_Command;
 
-   function Find_Menu (Menu : Menu_Entry_Acc; Cmd : String)
-                      return Menu_Entry_Acc
-   is
-      function Is_Cmd (Cmd_Name : String; Str : String) return Boolean
-      is
-         -- Number of characters that were compared.
-         P : Natural;
-      begin
-         P := 0;
-         --  Prefix (before the '*').
-         loop
-            if P = Cmd_Name'Length then
-               --  Full match.
-               return P = Str'Length;
-            end if;
-            exit when Cmd_Name (Cmd_Name'First + P) = '*';
-            if P = Str'Length then
-               --  Command is too short
-               return False;
-            end if;
-            if Cmd_Name (Cmd_Name'First + P) /= Str (Str'First + P) then
-               return False;
-            end if;
-            P := P + 1;
-         end loop;
-         --  Suffix (after the '*')
-         loop
-            if P = Str'Length then
-               return True;
-            end if;
-            if P + 1 = Cmd_Name'Length then
-               --  String is too long
-               return False;
-            end if;
-            if Cmd_Name (Cmd_Name'First + P + 1) /= Str (Str'First + P) then
-               return False;
-            end if;
-            P := P + 1;
-         end loop;
-      end Is_Cmd;
-      Ent : Menu_Entry_Acc;
-   begin
-      Ent := Menu.First;
-      while Ent /= null loop
-         if Is_Cmd (Ent.Name.all, Cmd) then
-            return Ent;
-         end if;
-         Ent := Ent.Next;
-      end loop;
-      return null;
-   end Find_Menu;
-
-   procedure Parse_Command (Line : String;
-                            P : in out Natural;
-                            Menu : out Menu_Entry_Acc)
-   is
-      E : Natural;
-   begin
-      P := Skip_Blanks (Line (P .. Line'Last));
-      if P > Line'Last then
-         return;
-      end if;
-      E := Get_Word (Line (P .. Line'Last));
-      Menu := Find_Menu (Menu, Line (P .. E));
-      if Menu = null then
-         Put_Line ("command '" & Line (P .. E) & "' not found");
-      end if;
-      P := E + 1;
-   end Parse_Command;
-
-   procedure Help_Proc (Line : String)
-   is
-      P : Natural;
-      Root : Menu_Entry_Acc := Menu_Top'access;
-   begin
-      Put_Line ("This is the help command");
-      P := Line'First;
-      while P < Line'Last loop
-         Parse_Command (Line, P, Root);
-         if Root = null then
-            return;
-         elsif Root.Kind /= Menu_Submenu then
-            Put_Line ("Menu entry " & Root.Name.all & " is not a submenu");
-            return;
-         end if;
-      end loop;
-
-      Root := Root.First;
-      while Root /= null loop
-         Put (Root.Name.all);
-         if Root.Kind = Menu_Submenu then
-            Put (" (menu)");
-         end if;
-         New_Line;
-         Root := Root.Next;
-      end loop;
-   end Help_Proc;
-
    procedure Debug (Reason: Debug_Reason)
    is
-      use Grt.Readline;
       Prev_Hook : constant Error_Hook_Type := Error_Hook;
-      Raw_Line : Ghdl_C_String;
       Prompt : Ghdl_C_String;
    begin
       --  Do not call the error hook on nested debug.
@@ -933,68 +758,8 @@ package body Elab.Debugger is
          Set_List_Current (Get_Location (Current_Loc));
       end if;
 
-      Command_Status := Status_Default;
+      Debug_Loop (Prompt);
 
-      loop
-         loop
-            Raw_Line := Readline (Prompt);
-            --  Skip empty lines
-            if Raw_Line = null or else Raw_Line (1) = ASCII.NUL then
-               if Cmd_Repeat /= null then
-                  Cmd_Repeat.all ("");
-                  case Command_Status is
-                     when Status_Default =>
-                        null;
-                     when Status_Quit =>
-                        return;
-                  end case;
-               end if;
-            else
-               Cmd_Repeat := null;
-               exit;
-            end if;
-         end loop;
-         declare
-            Line_Last : constant Natural := strlen (Raw_Line);
-            Line : String renames Raw_Line (1 .. Line_Last);
-            P, E : Positive;
-            Cmd : Menu_Entry_Acc := Menu_Top'Access;
-         begin
-            --  Find command
-            P := 1;
-            loop
-               E := P;
-               Parse_Command (Line, E, Cmd);
-               exit when Cmd = null;
-               case Cmd.Kind is
-                  when Menu_Submenu =>
-                     if E > Line_Last then
-                        Put_Line ("missing command for submenu "
-                                    & Line (P .. E - 1));
-                        Cmd := null;
-                        exit;
-                     end if;
-                     P := E;
-                  when Menu_Command =>
-                     exit;
-               end case;
-            end loop;
-
-            if Cmd /= null then
-               Cmd.Proc.all (Line (E .. Line_Last));
-
-               case Command_Status is
-                  when Status_Default =>
-                     null;
-                  when Status_Quit =>
-                     exit;
-               end case;
-            end if;
-         exception
-            when Command_Error =>
-               null;
-         end;
-      end loop;
       --  Put ("resuming");
 
       Error_Hook := Prev_Hook;
@@ -1074,4 +839,6 @@ package body Elab.Debugger is
       end if;
    end Debug_Error;
 
+begin
+   Debuggers.Menu_Top := Menu_Top'Access;
 end Elab.Debugger;
