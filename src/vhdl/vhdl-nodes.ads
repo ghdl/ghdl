@@ -1269,6 +1269,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Name_Staticness (State2)
    --
+   --   Get/Set_Seen_Flag (Flag1)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_After_Drivers_Flag (Flag5)
