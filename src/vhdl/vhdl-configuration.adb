@@ -55,9 +55,12 @@ package body Vhdl.Configuration is
          --    a direct entity instantiation
          --  * a configuration may be referenced by itself for a recursive
          --    instantiation
-         pragma Assert (Get_Configuration_Done_Flag (Unit)
-                          or else (Get_Kind (Get_Library_Unit (Unit))
-                                     = Iir_Kind_Configuration_Declaration));
+         if not Get_Configuration_Done_Flag (Unit)
+           and then (Get_Kind (Get_Library_Unit (Unit))
+                       /= Iir_Kind_Configuration_Declaration)
+         then
+            Error_Msg_Elab (Unit, "recursive dependency of design unit");
+         end if;
          return;
       end if;
       Set_Configuration_Mark_Flag (Unit, True);
