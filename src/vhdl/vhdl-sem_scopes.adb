@@ -999,6 +999,56 @@ package body Vhdl.Sem_Scopes is
       pragma Assert (Get_Next_Interpretation (Inter) = No_Name_Interpretation);
    end Replace_Name;
 
+   procedure Add_Alias_Name (Decl : Iir)
+   is
+      Ident : constant Name_Id := Get_Identifier (Decl);
+      Raw_Inter : constant Name_Interpretation_Type :=
+        Get_Interpretation_Raw (Ident);
+      Prev_Hidden : Boolean;
+   begin
+      --  Compute wether the current interpretation should be hidden or not.
+      if Valid_Interpretation (Raw_Inter)
+        and then Is_Overloadable (Get_Declaration (Raw_Inter))
+      then
+         Prev_Hidden := False;
+      else
+         Prev_Hidden := True;
+      end if;
+
+      --  Add a temporary interpretation.
+      Interpretations.Append ((Decl => Decl,
+                               Prev => Raw_Inter,
+                               Is_Potential => False,
+                               Prev_Hidden => Prev_Hidden,
+                               Prev_In_Region => Last_In_Region));
+      Set_Interpretation (Ident, Interpretations.Last);
+      Last_In_Region := Ident;
+   end Add_Alias_Name;
+
+   procedure Replace_Alias_Name (Decl : Iir; Prev : Iir)
+   is
+      Ident : constant Name_Id := Get_Identifier (Prev);
+      Raw_Inter : constant Name_Interpretation_Type :=
+        Get_Interpretation_Raw (Ident);
+      Cell : Interpretation_Cell;
+   begin
+      --  Must be the last name added.
+      pragma Assert (Raw_Inter = Interpretations.Last);
+
+      Cell := Interpretations.Table (Raw_Inter);
+      pragma Assert (Cell.Decl = Prev);
+
+      --  Remove the old interpretation.
+      Set_Interpretation (Ident, Cell.Prev);
+      Last_In_Region := Cell.Prev_In_Region;
+      Interpretations.Decrement_Last;
+
+      --  Add the new one (it will replace the old one).
+      if Decl /= Null_Iir then
+         Add_Name (Decl, Ident, False);
+      end if;
+   end Replace_Alias_Name;
+
    procedure Name_Visible (Decl : Iir) is
    begin
       --  A name can be made visible only once.

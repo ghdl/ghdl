@@ -48,6 +48,15 @@ package Vhdl.Sem_Scopes is
    --  Set the visible_flag of DECL to true.
    procedure Name_Visible (Decl : Iir);
 
+   --  Special case for alias: the alias name needs to be analyzed to know
+   --  if the name is overloadable or not, but visibility should also be
+   --  handled.
+   --  Add_Alias_Name should be called at the beginning, before the analysis
+   --  of the name, and Replase_Alias_Name should be called just after when
+   --  the node is known.
+   procedure Add_Alias_Name (Decl : Iir);
+   procedure Replace_Alias_Name (Decl : Iir; Prev : Iir);
+
    --  Replace the interpretation OLD of ID by DECL.
    --  ID must have a uniq interpretation OLD (ie, it must not be overloaded).
    --  The interpretation must have been done in the current scope.
