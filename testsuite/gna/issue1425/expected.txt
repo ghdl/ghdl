@@ -1,0 +1,9 @@
+counter.vhdl:23:3:warning: Incomplete sensitivity list! Missing signal: "ena" [-Wsensitivity]
+  comb: process (rst)
+  ^
+counter.vhdl:23:3:warning: Incomplete sensitivity list! Missing signal: "cont" [-Wsensitivity]
+  comb: process (rst)
+  ^
+counter.vhdl:23:3:warning: Over-specified sensitivity list! Redundant signal: "rst" [-Wsensitivity]
+  comb: process (rst)
+  ^
