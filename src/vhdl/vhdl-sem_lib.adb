@@ -30,7 +30,7 @@ with Vhdl.Sem;
 with Vhdl.Post_Sems;
 with Vhdl.Canon;
 with Vhdl.Nodes_GC;
-with Vhdl.Synthesis_Checks;
+with Vhdl.Sensitivity_Checks;
 
 package body Vhdl.Sem_Lib is
    procedure Error_Lib_Msg (Msg : String; Arg1 : Earg_Type) is
@@ -138,7 +138,7 @@ package body Vhdl.Sem_Lib is
       --       demanding than before. This is because, concurent assignments
       --       has been converted to processes and are therefore checked too!
       if Is_Warning_Enabled(Warnid_Sensitivity) then
-         Vhdl.Synthesis_Checks.Do_Synthesis_Checks (Unit);
+         Vhdl.Sensitivity_Checks.Do_Sensitivity_Checks (Unit);
       end if;
 
       -- Tree Dump

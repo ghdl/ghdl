@@ -1,5 +1,5 @@
 --  Synthesis checks
---  Copyright (C) 2021 Ondrej Ille
+--  Copyright (C) 2021-2013 Ondrej Ille, Hipólito Guzmán-Miranda
 --
 --  This program is free software: you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ with Errorout; use Errorout;
 --with Simple_IO; use Simple_IO;
 with Vhdl.Nodes_Meta; use Vhdl.Nodes_Meta;
 
-package body Vhdl.Synthesis_Checks is
+package body Vhdl.Sensitivity_Checks is
 
    --      "Golden" list of signals is queried by Sensitivity list extraction
    --      mechanism used in case of "all" keyword. This is a good option,
@@ -191,9 +191,9 @@ package body Vhdl.Synthesis_Checks is
       end if;
    end Check_Sensitivity_Lists;
 
-   procedure Do_Synthesis_Checks (Unit: Iir_Design_Unit) is
+   procedure Do_Sensitivity_Checks (Unit: Iir_Design_Unit) is
    begin
       Check_Sensitivity_Lists(Unit);
-   end Do_Synthesis_Checks;
+   end Do_Sensitivity_Checks;
 
-end Vhdl.Synthesis_Checks;
+end Vhdl.Sensitivity_Checks;

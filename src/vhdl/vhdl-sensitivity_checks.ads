@@ -1,5 +1,5 @@
 --  Synthesis checks
---  Copyright (C) 2021 Ondrej Ille
+--  Copyright (C) 2021-2013 Ondrej Ille, Hipólito Guzmán-Miranda
 --
 --  This program is free software: you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -15,10 +15,10 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-package Vhdl.Synthesis_Checks is
+package Vhdl.Sensitivity_Checks is
 
    -- Check for issues which cause simulation synthesis mismatches
    --  - check incomplete and over-specified sensitivity lists
-   procedure Do_Synthesis_Checks(Unit: Iir_Design_Unit);
+   procedure Do_Sensitivity_Checks(Unit: Iir_Design_Unit);
 
-end Vhdl.Synthesis_Checks;
+end Vhdl.Sensitivity_Checks;
