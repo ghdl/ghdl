@@ -1,0 +1,9 @@
+counter.vhdl:25:8:warning: incomplete sensitivity list, signal "ena" is missing [-Wsensitivity]
+    if ena = '1' then
+       ^
+counter.vhdl:26:17:warning: incomplete sensitivity list, signal "cont" is missing [-Wsensitivity]
+      n_cont <= cont + 1;
+                ^
+counter.vhdl:23:18:warning: extra signal "rst" in sensitivity list [-Wsensitivity]
+  comb: process (rst)
+                 ^
