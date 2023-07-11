@@ -2015,6 +2015,10 @@ package body Vhdl.Sem_Decls is
    begin
       Xref_Decl (Alias);
 
+      --  Add the alias name now (so that visbility is checked) even if the
+      --  node could change.
+      Sem_Scopes.Add_Alias_Name (Alias);
+
       Name := Get_Name (Alias);
       case Get_Kind (Name) is
          when Iir_Kind_Signature =>
@@ -2066,8 +2070,7 @@ package body Vhdl.Sem_Decls is
 
       if Is_Object_Name (N_Entity) then
          --  Object alias declaration.
-
-         Sem_Scopes.Add_Name (Alias);
+         Sem_Scopes.Replace_Alias_Name (Alias, Alias);
          Name_Visible (Alias);
 
          if Sig /= Null_Iir then
@@ -2097,7 +2100,7 @@ package body Vhdl.Sem_Decls is
             Set_Signature_Prefix (Sig, Null_Iir);
          end if;
 
-         Sem_Scopes.Add_Name (Res);
+         Sem_Scopes.Replace_Alias_Name (Res, Alias);
          Name_Visible (Res);
 
          Free_Iir (Alias);

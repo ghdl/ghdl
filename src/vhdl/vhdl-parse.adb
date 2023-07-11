@@ -6995,6 +6995,12 @@ package body Vhdl.Parse is
               ("'-' and '+' are not allowed in primary, use parenthesis");
             return Parse_Expression (Prio_Simple);
 
+         when Tok_Abs
+           | Tok_Not =>
+            Error_Msg_Parse
+              ("'abs' and 'not' are not allowed in primary, use parenthesis");
+            return Parse_Expression (Prio_Simple);
+
          when Tok_Comma
            | Tok_Semi_Colon
            | Tok_Right_Paren
@@ -7041,10 +7047,14 @@ package body Vhdl.Parse is
    --    | abs primary
    --    | not primary
    --    | logical_operator primary
-   function Build_Unary_Factor (Op : Iir_Kind) return Iir
+   function Build_Unary_Factor (Op : Iir_Kind; Prio : Prio_Type) return Iir
    is
       Res : Iir;
    begin
+      if Prio > Prio_Factor then
+         Error_Msg_Parse ("'-'/'+' can only appear before the first term");
+      end if;
+
       Res := Create_Iir (Op);
       Set_Location (Res);
 
@@ -7056,10 +7066,14 @@ package body Vhdl.Parse is
       return Res;
    end Build_Unary_Factor;
 
-   function Build_Unary_Simple (Op : Iir_Kind) return Iir
+   function Build_Unary_Simple (Op : Iir_Kind; Prio : Prio_Type) return Iir
    is
       Res : Iir;
    begin
+      if Prio > Prio_Simple then
+         Error_Msg_Parse ("'-'/'+' can only appear before the first term");
+      end if;
+
       Res := Create_Iir (Op);
       Set_Location (Res);
 
@@ -7071,7 +7085,8 @@ package body Vhdl.Parse is
       return Res;
    end Build_Unary_Simple;
 
-   function Build_Unary_Factor_08 (Op : Iir_Kind) return Iir is
+   function Build_Unary_Factor_08 (Op : Iir_Kind; Prio : Prio_Type)
+                                  return Iir is
    begin
       if Flags.Vhdl_Std < Vhdl_08 then
          Error_Msg_Parse ("missing left operand of logical expression");
@@ -7081,57 +7096,49 @@ package body Vhdl.Parse is
 
          return Parse_Primary;
       else
-         return Build_Unary_Factor (Op);
+         return Build_Unary_Factor (Op, Prio);
       end if;
    end Build_Unary_Factor_08;
 
-   function Parse_Unary_Expression return Iir
-   is
-      Res, Left : Iir_Expression;
+   --  Parse a factor.
+   function Parse_Unary_Expression (Prio : Prio_Type) return Iir is
    begin
       case Current_Token is
          when Tok_Plus =>
-            return Build_Unary_Simple (Iir_Kind_Identity_Operator);
+            return Build_Unary_Simple (Iir_Kind_Identity_Operator, Prio);
          when Tok_Minus =>
-            return Build_Unary_Simple (Iir_Kind_Negation_Operator);
+            return Build_Unary_Simple (Iir_Kind_Negation_Operator, Prio);
 
          when Tok_Abs =>
-            return Build_Unary_Factor (Iir_Kind_Absolute_Operator);
+            return Build_Unary_Factor (Iir_Kind_Absolute_Operator, Prio);
          when Tok_Not =>
-            return Build_Unary_Factor (Iir_Kind_Not_Operator);
+            return Build_Unary_Factor (Iir_Kind_Not_Operator, Prio);
 
          when Tok_And =>
-            return Build_Unary_Factor_08 (Iir_Kind_Reduction_And_Operator);
+            return Build_Unary_Factor_08
+              (Iir_Kind_Reduction_And_Operator, Prio);
          when Tok_Or =>
-            return Build_Unary_Factor_08 (Iir_Kind_Reduction_Or_Operator);
+            return Build_Unary_Factor_08
+              (Iir_Kind_Reduction_Or_Operator, Prio);
          when Tok_Nand =>
-            return Build_Unary_Factor_08 (Iir_Kind_Reduction_Nand_Operator);
+            return Build_Unary_Factor_08
+              (Iir_Kind_Reduction_Nand_Operator, Prio);
          when Tok_Nor =>
-            return Build_Unary_Factor_08 (Iir_Kind_Reduction_Nor_Operator);
+            return Build_Unary_Factor_08
+              (Iir_Kind_Reduction_Nor_Operator, Prio);
          when Tok_Xor =>
-            return Build_Unary_Factor_08 (Iir_Kind_Reduction_Xor_Operator);
+            return Build_Unary_Factor_08
+              (Iir_Kind_Reduction_Xor_Operator, Prio);
          when Tok_Xnor =>
-            return Build_Unary_Factor_08 (Iir_Kind_Reduction_Xnor_Operator);
+            return Build_Unary_Factor_08
+              (Iir_Kind_Reduction_Xnor_Operator, Prio);
 
          when Tok_Exclam_Mark =>
             Error_Msg_Parse ("'!' is not allowed here, replaced by 'not'");
-            return Build_Unary_Factor (Iir_Kind_Not_Operator);
+            return Build_Unary_Factor (Iir_Kind_Not_Operator, Prio);
 
          when others =>
-            Left := Parse_Primary;
-            if Current_Token = Tok_Double_Star then
-               Res := Create_Iir (Iir_Kind_Exponentiation_Operator);
-               Set_Location (Res);
-
-               --  Skip '**'.
-               Scan;
-
-               Set_Left (Res, Left);
-               Set_Right (Res, Parse_Primary);
-               return Res;
-            else
-               return Left;
-            end if;
+            return Parse_Primary;
       end case;
    end Parse_Unary_Expression;
 
@@ -7140,6 +7147,7 @@ package body Vhdl.Parse is
    is
       Res : Iir;
       Expr : Iir;
+      Right : Iir;
       Op : Iir_Kind;
       Op_Prio : Prio_Type;
       Op_Tok : Token_Type;
@@ -7246,6 +7254,10 @@ package body Vhdl.Parse is
                Op := Iir_Kind_Xnor_Operator;
                Op_Prio := Prio_Logical;
 
+            when Tok_Double_Star =>
+               Op := Iir_Kind_Exponentiation_Operator;
+               Op_Prio := Prio_Factor;
+
             when others =>
                return Res;
          end case;
@@ -7275,13 +7287,14 @@ package body Vhdl.Parse is
             Scan;
          end if;
 
-         if Op_Prio >= Prio_Simple and then Current_Token in Token_Sign_Type
-         then
-            Error_Msg_Parse ("'-'/'+' can only appear before the first term");
-         end if;
-
          --  Left association: A + B + C is (A + B) + C
-         Set_Right (Expr, Parse_Expression (Prio_Type'Succ (Op_Prio)));
+         if Op_Prio = Prio_Factor then
+            --  Only for **
+            Right := Parse_Primary;
+         else
+            Right := Parse_Expression (Prio_Type'Succ (Op_Prio));
+         end if;
+         Set_Right (Expr, Right);
          Res := Expr;
 
          --  Only one relational_operator or shift_operator.
@@ -7346,7 +7359,7 @@ package body Vhdl.Parse is
                null;
          end case;
       else
-         Left := Parse_Unary_Expression;
+         Left := Parse_Unary_Expression (Prio);
          Res := Parse_Binary_Expression (Left, Prio);
       end if;
 
