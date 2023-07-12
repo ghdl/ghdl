@@ -4134,6 +4134,8 @@ package body Simul.Vhdl_Simul is
    begin
       Set_Quantities_Values (Y, Yp);
 
+      Instance_Pool := Process_Pool'Access;
+
       --  Apply time.
       --  TODO: physical time too.
       Prev_Time := Current_Time_AMS;
@@ -4212,6 +4214,9 @@ package body Simul.Vhdl_Simul is
       end if;
 
       Current_Time_AMS := Prev_Time;
+
+      pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
+      Instance_Pool := null;
    end Residues;
 
    procedure Runtime_Elaborate is

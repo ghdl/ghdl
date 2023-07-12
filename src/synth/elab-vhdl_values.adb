@@ -174,36 +174,38 @@ package body Elab.Vhdl_Values is
       return (Vtype, Create_Value_File (File, Pool));
    end Create_Value_File;
 
-   function Create_Value_Quantity (Q : Quantity_Index_Type) return Value_Acc
+   function Create_Value_Quantity (Q : Quantity_Index_Type;
+                                   Pool : Areapool_Acc) return Value_Acc
    is
       subtype Value_Type_Quantity is Value_Type (Value_Quantity);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Quantity);
    begin
-      return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Quantity, Q => Q)));
+      return To_Value_Acc (Alloc (Pool, (Kind => Value_Quantity, Q => Q)));
    end Create_Value_Quantity;
 
-   function Create_Value_Quantity (Vtype : Type_Acc; Q : Quantity_Index_Type)
-                                  return Valtyp
+   function Create_Value_Quantity (Vtype : Type_Acc;
+                                   Q : Quantity_Index_Type;
+                                   Pool : Areapool_Acc) return Valtyp
    is
       pragma Assert (Vtype /= null);
    begin
-      return (Vtype, Create_Value_Quantity (Q));
+      return (Vtype, Create_Value_Quantity (Q, Pool));
    end Create_Value_Quantity;
 
-   function Create_Value_Terminal (T : Terminal_Index_Type) return Value_Acc
+   function Create_Value_Terminal (T : Terminal_Index_Type;
+                                   Pool : Areapool_Acc) return Value_Acc
    is
       subtype Value_Type_Terminal is Value_Type (Value_Terminal);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Terminal);
    begin
-      return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Terminal, T => T)));
+      return To_Value_Acc (Alloc (Pool, (Kind => Value_Terminal, T => T)));
    end Create_Value_Terminal;
 
-   function Create_Value_Terminal (Vtype : Type_Acc; T : Terminal_Index_Type)
-                                  return Valtyp is
+   function Create_Value_Terminal (Vtype : Type_Acc;
+                                   T : Terminal_Index_Type;
+                                   Pool : Areapool_Acc) return Valtyp is
    begin
-      return (Vtype, Create_Value_Terminal (T));
+      return (Vtype, Create_Value_Terminal (T, Pool));
    end Create_Value_Terminal;
 
    function Create_Value_Alias (Obj : Valtyp;

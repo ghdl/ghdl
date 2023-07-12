@@ -147,7 +147,7 @@ package body Elab.Vhdl_Decls is
       Res : Valtyp;
    begin
       Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
-      Res := Create_Value_Quantity (Obj_Typ, No_Quantity_Index);
+      Res := Create_Value_Quantity (Obj_Typ, No_Quantity_Index, Instance_Pool);
       Create_Object (Syn_Inst, Decl, Res);
    end Elab_Free_Quantity_Declaration;
 
@@ -167,7 +167,7 @@ package body Elab.Vhdl_Decls is
       Res : Valtyp;
    begin
       Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
-      Res := Create_Value_Quantity (Obj_Typ, No_Quantity_Index);
+      Res := Create_Value_Quantity (Obj_Typ, No_Quantity_Index, Instance_Pool);
       Create_Object (Syn_Inst, Decl, Res);
    end Elab_Implicit_Quantity_Declaration;
 
@@ -176,7 +176,7 @@ package body Elab.Vhdl_Decls is
    is
       Res : Valtyp;
    begin
-      Res := Create_Value_Terminal (null, No_Terminal_Index);
+      Res := Create_Value_Terminal (null, No_Terminal_Index, Instance_Pool);
       Create_Object (Syn_Inst, Decl, Res);
    end Elab_Terminal_Declaration;
 
