@@ -16,7 +16,6 @@
 
 with Ada.Unchecked_Deallocation;
 with Ada.Characters.Handling;
-with Interfaces;
 
 with Name_Table; use Name_Table;
 with Str_Table;
@@ -2798,7 +2797,7 @@ package body Vhdl.Evaluation is
    begin
       P := Str'First;
 
-      Grt.Fcvt.Format_Image (Str, P, Interfaces.IEEE_Float_64 (Val));
+      Grt.Fcvt.Format_Image (Str, P, Grt.Types.Ghdl_F64 (Val));
 
       Res := Build_String (Str (1 .. P), Orig);
       --  FIXME: this is not correct since the type is *not* constrained.

@@ -21,8 +21,6 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
-with Interfaces;
-
 with Grt.Fcvt;
 with Grt.Strings; use Grt.Strings;
 
@@ -69,7 +67,7 @@ package body Grt.To_Strings is
 
    procedure To_String (Str : out String; Last : out Natural; N : Ghdl_F64) is
    begin
-      Grt.Fcvt.Format_Image (Str, Last, Interfaces.IEEE_Float_64 (N));
+      Grt.Fcvt.Format_Image (Str, Last, N);
    end To_String;
 
    procedure To_String (Str : out String;
@@ -77,8 +75,7 @@ package body Grt.To_Strings is
                         N : Ghdl_F64;
                         Nbr_Digits : Ghdl_I32) is
    begin
-      Grt.Fcvt.Format_Digits
-        (Str, Last, Interfaces.IEEE_Float_64 (N), Natural (Nbr_Digits));
+      Grt.Fcvt.Format_Digits (Str, Last, N, Natural (Nbr_Digits));
    end To_String;
 
    procedure To_String (Str : out String_Real_Format;

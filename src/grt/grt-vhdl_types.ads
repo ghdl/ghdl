@@ -56,6 +56,8 @@ package Grt.Vhdl_Types is
    type Std_String_Basep is access all Std_String_Base;
    function To_Std_String_Basep is new Ada.Unchecked_Conversion
      (Source => Address, Target => Std_String_Basep);
+   function To_Address is new Ada.Unchecked_Conversion
+     (Source => Std_String_Basep, Target => Address);
 
    type Std_String_Bound is record
       Dim_1 : Std_Integer_Trt;

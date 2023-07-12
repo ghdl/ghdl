@@ -22,10 +22,10 @@
 --  covered by the GNU Public License.
 
 --  IMPORTANT: this unit can also be used by the front-end, so it must NOT
---  depend on anything else from grt (except the grt parent package), including
---  grt.types.
+--  depend on anything else from grt (except the grt parent package).
 
 with Interfaces; use Interfaces;
+with Grt.Types; use Grt.Types;
 
 package Grt.Fcvt is
    pragma Preelaborate;
@@ -43,7 +43,7 @@ package Grt.Fcvt is
                         Is_Num : out Boolean;
                         Is_Neg : out Boolean;
                         Exp : out Integer;
-                        V : IEEE_Float_64);
+                        V : Ghdl_F64);
 
    --  Formatting.
 
@@ -52,12 +52,12 @@ package Grt.Fcvt is
    --  Sign (1) + digit (1) + dot (1) + digits (15) + 'e' (1) + sign (1)
    --  + exp_digits (4) -> 24.
    procedure Format_Image
-     (Str : out String; Last : out Natural; N : IEEE_Float_64);
+     (Str : out String; Last : out Natural; N : Ghdl_F64);
 
    --  For To_String (Value : Real; Digits : Natural)
    procedure Format_Digits (Str : out String;
                             Last : out Natural;
-                            N : IEEE_Float_64;
+                            N : Ghdl_F64;
                             Ndigits : Natural);
 
    --  Reduce the precision of STR to PREC digits after the point.  If PREC is
@@ -72,8 +72,11 @@ package Grt.Fcvt is
    --  Input format is [+-]int[.int][e[+-]int]
    --  where int is digit { _ digit }
    --    and [+-] means optional + or -.
-   --  The input string must be correctly formatted.
-   function From_String (Str : String) return IEEE_Float_64;
+   --  If the input string is not correctly formatted, VALID is set to false.
+   procedure From_String (Str : Ghdl_C_String;
+                          Len : Natural;
+                          Res : out Ghdl_F64;
+                          Valid : out Boolean);
 
    --  Ad-hoc implementation of bignums, with the minimal features to support
    --  radix conversion.
@@ -99,7 +102,7 @@ package Grt.Fcvt is
    --  Return (-1)**Neg * F * BASE**EXP to a float.
    function To_Float_64
      (Neg : Boolean; F : Bignum; Base : Positive; Exp : Integer)
-     return IEEE_Float_64;
+     return Ghdl_F64;
 private
    type Unsigned_32_Array is array (Natural range <>) of Unsigned_32;
 
