@@ -25,9 +25,6 @@ package Vhdl.Scanner is
    -- It can be replaced by a function call.
    Current_Token: Token_Type := Tok_Invalid;
 
-   --  Maximal length for identifiers.
-   Max_Name_Length : constant Natural := 1024;
-
    -- Simply set current_token to tok_invalid.
    procedure Invalidate_Current_Token;
    pragma Inline (Invalidate_Current_Token);

@@ -14,6 +14,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
+with Ada.Strings.Unbounded;
 with Errorout; use Errorout;
 with Name_Table;
 with Files_Map; use Files_Map;
@@ -992,12 +993,6 @@ package body Vhdl.Scanner is
       --  Not a letter.
       others => NUL);
 
-   procedure Error_Too_Long is
-   begin
-      Error_Msg_Scan ("identifier is too long (>"
-                        & Natural'Image (Max_Name_Length - 1) & ")");
-   end Error_Too_Long;
-
    -- LRM93 13.3.1
    -- Basic Identifiers
    -- A basic identifier consists only of letters, digits, and underlines.
@@ -1009,6 +1004,7 @@ package body Vhdl.Scanner is
    -- character for a basic identifier.
    procedure Scan_Identifier (Allow_PSL : Boolean)
    is
+      use Ada.Strings.Unbounded;
       use Name_Table;
       --  Local copy for speed-up.
       Source : constant File_Buffer_Acc := Current_Context.Source;
@@ -1017,7 +1013,7 @@ package body Vhdl.Scanner is
       --  Current and next character.
       C : Character;
 
-      Buffer : String (1 .. Max_Name_Length);
+      Buffer : Unbounded_String;
       Len : Natural;
    begin
       -- This is an identifier or a key word.
@@ -1071,19 +1067,8 @@ package body Vhdl.Scanner is
 
          --  Put character in name buffer.  FIXME: compute the hash at the same
          --  time ?
-         if Len >= Max_Name_Length - 1 then
-            if Len = Max_Name_Length -1 then
-               Error_Msg_Scan ("identifier is too long (>"
-                                 & Natural'Image (Max_Name_Length - 1) & ")");
-               --  Accept this last one character, so that no error for the
-               --  following characters.
-               Len := Len + 1;
-               Buffer (Len) := C;
-            end if;
-         else
-            Len := Len + 1;
-            Buffer (Len) := C;
-         end if;
+         Len := Len + 1;
+         Append (Buffer, C);
 
          --  Next character.
          P := P + 1;
@@ -1139,8 +1124,8 @@ package body Vhdl.Scanner is
                --  with the same meaning.
                declare
                   Base : Nat32;
-                  Cl : constant Character := Buffer (Len);
-                  Cf : constant Character := Buffer (1);
+                  Cl : constant Character := Element (Buffer, Len);
+                  Cf : constant Character := Element (Buffer, 1);
                begin
                   Current_Context.Bit_Str_Base := Cl;
                   if Cl = 'b' then
@@ -1181,7 +1166,7 @@ package body Vhdl.Scanner is
             --  quote marks, there are invalid character (in the 128-160
             --  range).
             if C = Character'Val (16#80#)
-              and then Buffer (Len) = Character'Val (16#e2#)
+              and then Element (Buffer, Len) = Character'Val (16#e2#)
               and then (Source (Pos + 1) = Character'Val (16#98#)
                           or else Source (Pos + 1) = Character'Val (16#99#))
             then
@@ -1229,7 +1214,7 @@ package body Vhdl.Scanner is
       end case;
 
       -- Hash it.
-      Current_Context.Identifier := Get_Identifier (Buffer (1 .. Len));
+      Current_Context.Identifier := Get_Identifier (Slice (Buffer, 1, Len));
       Current_Token := Tok_Identifier;
    end Scan_Identifier;
 
@@ -1477,8 +1462,9 @@ package body Vhdl.Scanner is
    --  backslashes, doubling backslashes inside).
    procedure Scan_Extended_Identifier
    is
+      use Ada.Strings.Unbounded;
       use Name_Table;
-      Buffer : String (1 .. Max_Name_Length);
+      Buffer : Unbounded_String;
       Len : Natural;
       C : Character;
    begin
@@ -1487,7 +1473,7 @@ package body Vhdl.Scanner is
       --  identifier.
       --  GHDL: This is satisfied by storing '\' in the name table.
       Len := 1;
-      Buffer (1) := '\';
+      Buffer := To_Unbounded_String("\");
       loop
          --  Next character.
          Pos := Pos + 1;
@@ -1499,17 +1485,8 @@ package body Vhdl.Scanner is
             --  of an extended literal, it must be doubled.
             --  LRM93 13.3.2
             --  (a doubled backslash couting as one character)
-            if Len >= Max_Name_Length - 1 then
-               if Len = Max_Name_Length - 1 then
-                  Error_Too_Long;
-                  --  Accept this last one.
-                  Len := Len + 1;
-                  Buffer (Len) := C;
-               end if;
-            else
-               Len := Len + 1;
-               Buffer (Len) := C;
-            end if;
+            Len := Len + 1;
+            Append (Buffer, C);
 
             Pos := Pos + 1;
             C := Source (Pos);
@@ -1541,17 +1518,8 @@ package body Vhdl.Scanner is
          --  LRM93 13.3.2
          --  Extended identifiers differing only in the use of corresponding
          --  upper and lower case letters are distinct.
-         if Len >= Max_Name_Length - 1 then
-            if Len = Max_Name_Length - 1 then
-               Error_Too_Long;
-               --  Accept this last one.
-               Len := Len + 1;
-               Buffer (Len) := C;
-            end if;
-         else
-            Len := Len + 1;
-            Buffer (Len) := C;
-         end if;
+         Len := Len + 1;
+         Append (Buffer, C);
       end loop;
 
       if Len <= 2 then
@@ -1575,7 +1543,7 @@ package body Vhdl.Scanner is
       end case;
 
       -- Hash it.
-      Current_Context.Identifier := Get_Identifier (Buffer (1 .. Len));
+      Current_Context.Identifier := Get_Identifier (Slice (Buffer, 1, Len));
       Current_Token := Tok_Identifier;
    end Scan_Extended_Identifier;
 
@@ -1720,8 +1688,9 @@ package body Vhdl.Scanner is
    --  allowed.
    procedure Scan_Comment_Identifier (Id : out Name_Id; Create : Boolean)
    is
+      use Ada.Strings.Unbounded;
       use Name_Table;
-      Buffer : String (1 .. Max_Name_Length);
+      Buffer : Unbounded_String;
       Len : Natural;
       C : Character;
    begin
@@ -1752,7 +1721,7 @@ package body Vhdl.Scanner is
                exit;
          end case;
          Len := Len + 1;
-         Buffer (Len) := C;
+         Append (Buffer, C);
          Pos := Pos + 1;
       end loop;
 
@@ -1762,9 +1731,9 @@ package body Vhdl.Scanner is
       end if;
 
       if Create then
-         Id := Get_Identifier (Buffer (1 .. Len));
+         Id := Get_Identifier (Slice (Buffer, 1, Len));
       else
-         Id := Get_Identifier_No_Create (Buffer (1 .. Len));
+         Id := Get_Identifier_No_Create (Slice (Buffer, 1, Len));
       end if;
    end Scan_Comment_Identifier;
 
