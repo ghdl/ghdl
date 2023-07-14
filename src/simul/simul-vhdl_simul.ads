@@ -31,7 +31,12 @@ with Simul.Vhdl_Elab; use Simul.Vhdl_Elab;
 with Grt.Signals; use Grt.Signals;
 
 package Simul.Vhdl_Simul is
+   --  If True, be verbose while computing residues for analog equations.
+   --  Controlled by 'trace residues'.
    Trace_Residues : Boolean := False;
+
+   --  If True, display quantities after each step.
+   Trace_Quantities : Boolean := False;
 
    type Process_Kind is (Kind_Process, Kind_PSL);
 

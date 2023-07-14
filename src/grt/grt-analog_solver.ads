@@ -34,6 +34,9 @@ package Grt.Analog_Solver is
    --  Initialize the analog solver, SIZE is the number of scalar quantities.
    procedure Init (Size : Ghdl_I32);
 
+   --  Set maximum solver step.
+   procedure Set_Max_Step (Step : Ghdl_F64);
+
    --  Return the address of the initial values vector and derivative vector.
    function Get_Init_Val_Ptr return F64_C_Arr_Ptr;
    function Get_Init_Der_Ptr return F64_C_Arr_Ptr;

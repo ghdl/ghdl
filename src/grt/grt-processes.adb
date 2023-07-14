@@ -905,7 +905,7 @@ package body Grt.Processes is
    is
       use Grt.Options;
       Tn : Std_Time;
-      Tn_AMS : Ghdl_F64;
+      Tn_AMS, Tout_AMS : Ghdl_F64;
       Status : Integer;
    begin
       --  LRM08 14.7.5.3 Simulation cycle (ex LRM93 12.6.4)
@@ -916,11 +916,21 @@ package body Grt.Processes is
       --  a) The analog solver is executed
       if Flag_AMS and Next_Time > Current_Time then
          Current_Time_AMS := Ghdl_F64 (Current_Time) * Time_Phys_To_Real;
-         Tn_AMS := Ghdl_F64 (Next_Time) * Time_Phys_To_Real;
-         Grt.Analog_Solver.Solve (Current_Time_AMS, Tn_AMS, Status);
-         if Status /= 0 then
-            Internal_Error ("simulation_cycle - analog_solver");
+         if Stop_Time > 0 and then Stop_Time < Next_Time then
+            Tn_AMS := Ghdl_F64 (Stop_Time) * Time_Phys_To_Real;
+         else
+            Tn_AMS := Ghdl_F64 (Next_Time) * Time_Phys_To_Real;
          end if;
+         Tout_AMS := Current_Time_AMS;
+         loop
+            Tout_AMS := Ghdl_F64'Min (Tn_AMS, Tout_AMS + Step_Limit);
+            Grt.Analog_Solver.Solve (Current_Time_AMS, Tout_AMS, Status);
+            if Status /= 0 then
+               Internal_Error ("simulation_cycle - analog_solver");
+            end if;
+            Current_Time_AMS := Tout_AMS;
+            exit when Tout_AMS >= Tn_AMS;
+         end loop;
       end if;
 
       --  a) The current time, Tc is set equal to Tn.  Simulation is complete

@@ -25,6 +25,12 @@ grt_sundials_start (void)
   return -1;
 }
 
+void
+grt_sundials_set_max_step (realtype hmax)
+{
+  return;
+}
+
 int
 grt_sundials_solve(realtype t0, realtype *tn, int *res)
 {
