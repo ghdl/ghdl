@@ -32,7 +32,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 
-from ctypes import c_int32, c_char_p
+from ctypes import c_void_p
 
 from pyTooling.Decorators import export
 
@@ -42,7 +42,7 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 @export
 @BindToLibGHDL("vhdl__formatters__indent_string")
-def Indent_String(File: int, Handle: int, FirstLine: int, LastLine: int) -> None:
+def Indent_String(File: int, Handle: c_void_p, FirstLine: int, LastLine: int) -> None:
     """
     Reindent all lines of F between [First_Line; Last_Line] to :obj:`Handle`.
 
