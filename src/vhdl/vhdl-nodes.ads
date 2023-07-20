@@ -4296,6 +4296,10 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Break_Element (Field4)
    --
+   --  Never set.
+   -- Only for Iir_Kind_Concurrent_Break_Statement:
+   --   Get/Set_Postponed_Flag (Flag3)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Ref (Flag12)
