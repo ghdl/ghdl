@@ -3205,7 +3205,9 @@ package body Simul.Vhdl_Simul is
             Create_Delayed_Signal (E.Sig, E.Val, To_Memory_Ptr (E.Pfx),
                                    E.Typ, E.Time);
          when Signal_Above =>
-            raise Internal_Error;
+            S := Grt.Signals.Ghdl_Create_Above_Signal
+              (To_Ghdl_Value_Ptr (To_Address (E.Val)));
+            Write_Sig (E.Sig, S);
          when Signal_User =>
             Create_User_Signal (Signals_Table.Table (Idx));
          when Signal_None =>

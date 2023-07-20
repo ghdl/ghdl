@@ -1630,6 +1630,16 @@ package body Grt.Signals is
       Add_Port (Last_Implicit_Signal, Sig);
    end Ghdl_Signal_Attribute_Register_Prefix;
 
+   function Ghdl_Create_Above_Signal (Val_Ptr : Ghdl_Value_Ptr)
+                                     return Ghdl_Signal_Ptr
+   is
+      Res : Ghdl_Signal_Ptr;
+   begin
+      Res := Create_Signal (Mode_B1, Val_Ptr, Mode_Above, null, Null_Address);
+      Last_Implicit_Signal := Res;
+      return Res;
+   end Ghdl_Create_Above_Signal;
+
    function Ghdl_Signal_Create_Guard
      (Val_Ptr : Ghdl_Value_Ptr; This : System.Address; Proc : Guard_Func_Acc)
      return Ghdl_Signal_Ptr
@@ -2467,7 +2477,7 @@ package body Grt.Signals is
                   when Mode_Transaction =>
                      Add_Propagation ((Kind => Imp_Transaction, Sig => Sig));
                   when Mode_Above =>
-                     Internal_Error ("order_signal");
+                     Add_Propagation ((Kind => Imp_Above, Sig => Sig));
                end case;
                return;
             when Mode_Conv_In =>
@@ -2751,6 +2761,7 @@ package body Grt.Signals is
               | Eff_One_Port
               | Imp_Guard
               | Imp_Transaction
+              | Imp_Above
               | Eff_Actual
               | Drv_One_Resolved =>
                Sig := Propagation.Table (I).Sig;
@@ -3332,6 +3343,7 @@ package body Grt.Signals is
               | Imp_Stable
               | Imp_Quiet
               | Imp_Transaction
+              | Imp_Above
               | Imp_Forward_Build =>
                null;
             when Imp_Forward =>
@@ -3510,6 +3522,8 @@ package body Grt.Signals is
                   end if;
                end if;
                Delayed_Implicit_Process (Sig);
+            when Imp_Above =>
+               null;
             when In_Conversion =>
                --  TODO: handle eff_forced signals.
                Set_Conversion_Activity (Propagation.Table (I).Conv);
@@ -3822,6 +3836,7 @@ package body Grt.Signals is
               | Imp_Stable
               | Imp_Quiet
               | Imp_Transaction
+              | Imp_Above
               | Imp_Forward
               | Imp_Forward_Build =>
                null;
@@ -3877,6 +3892,7 @@ package body Grt.Signals is
             when Imp_Stable
               | Imp_Quiet
               | Imp_Transaction
+              | Imp_Above
               | Imp_Forward
               | Imp_Forward_Build =>
                --  Already initialized during creation.

@@ -451,6 +451,10 @@ package Grt.Signals is
       --  dependences.
       Imp_Delayed,
 
+      --  Implicit above.
+      --  No dependencies
+      Imp_Above,
+
       --  in_conversion.
       --  Pseudo-signal which is set by conversion function.
       In_Conversion,
@@ -474,6 +478,7 @@ package Grt.Signals is
            | Imp_Transaction
            | Imp_Stable
            | Imp_Delayed
+           | Imp_Above
            | Eff_Actual
            | Eff_One_Resolved
            | Drv_One_Resolved =>
@@ -856,6 +861,10 @@ package Grt.Signals is
    --  expression.
    procedure Ghdl_Signal_Guard_Dependence (Sig : Ghdl_Signal_Ptr);
 
+   --  Create 'Above signal.
+   function Ghdl_Create_Above_Signal
+     (Val_Ptr : Ghdl_Value_Ptr) return Ghdl_Signal_Ptr;
+
    --  Return number of ports/drivers.
    function Ghdl_Signal_Get_Nbr_Ports (Sig : Ghdl_Signal_Ptr)
                                       return Ghdl_Index_Type;
@@ -1063,6 +1072,9 @@ private
                   "__ghdl_signal_attribute_register_prefix");
    pragma Export (C, Ghdl_Create_Delayed_Signal,
                   "__ghdl_create_delayed_signal");
+
+   pragma Export (C, Ghdl_Create_Above_Signal,
+                  "__ghdl_create_above_signal");
 
    pragma Export (Ada, Ghdl_Signal_Create_Guard,
                   "__ghdl_signal_create_guard");

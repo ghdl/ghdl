@@ -99,6 +99,8 @@ package body Grt.Disp is
             Put ("Transaction ");
          when Imp_Delayed =>
             Put ("Delayed ");
+         when Imp_Above =>
+            Put ("Above");
          when Eff_Actual =>
             Put ("Eff Actual ");
          when Eff_Multiple =>
@@ -138,6 +140,7 @@ package body Grt.Disp is
               | Imp_Quiet
               | Imp_Transaction
               | Imp_Delayed
+              | Imp_Above
               | Eff_Actual =>
                Put_Sig_Index (Signal_Ptr_To_Index (Propagation.Table (I).Sig));
                New_Line;
