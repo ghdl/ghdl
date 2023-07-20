@@ -9649,6 +9649,7 @@ package body Vhdl.Parse is
 
       if Flag_Elocations then
          Create_Elocations (Res);
+         Set_Start_Location (Res, Loc);
          Set_Begin_Location (Res, Begin_Loc);
          Set_End_Location (Res, Get_Token_Location);
       end if;

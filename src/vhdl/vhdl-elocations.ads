@@ -471,6 +471,8 @@ package Vhdl.Elocations is
 
    -- Iir_Kind_Block_Statement (L4)
    --
+   --   Get/Set_Start_Location (Field1)
+   --
    --   Get/Set_End_Location (Field2)
    --
    --   Get/Set_Begin_Location (Field3)
