@@ -243,7 +243,9 @@ package body Vhdl.Configuration is
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Psl_Declaration
            | Iir_Kind_Psl_Endpoint_Declaration
-           | Iir_Kind_Simple_Simultaneous_Statement =>
+           | Iir_Kind_Simple_Simultaneous_Statement
+           | Iir_Kind_Simultaneous_If_Statement
+           | Iir_Kind_Simultaneous_Case_Statement =>
             null;
          when others =>
             Error_Kind ("add_design_concurrent_stmts(2)", Stmt);
