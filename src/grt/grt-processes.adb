@@ -925,7 +925,7 @@ package body Grt.Processes is
          loop
             Tout_AMS := Ghdl_F64'Min (Tn_AMS, Tout_AMS + Step_Limit);
             Grt.Analog_Solver.Solve (Current_Time_AMS, Tout_AMS, Status);
-            if Status /= 0 then
+            if Status /= Grt.Analog_Solver.Solve_Ok then
                Internal_Error ("simulation_cycle - analog_solver");
             end if;
             Current_Time_AMS := Tout_AMS;

@@ -68,5 +68,8 @@ package Grt.Analog_Solver is
    --  2: failure
    procedure Solve (T : Ghdl_F64; Tn : in out Ghdl_F64; Res : out Integer);
 
+   Solve_Ok : constant Integer := 0;
+   Solve_Failure : constant Integer := 2;
+
    procedure Finish;
 end Grt.Analog_Solver;
