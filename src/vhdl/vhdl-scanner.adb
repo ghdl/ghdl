@@ -14,7 +14,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
-with Ada.Strings.Unbounded;
+with Grt.Vstrings;
 with Errorout; use Errorout;
 with Name_Table;
 with Files_Map; use Files_Map;
@@ -1004,7 +1004,7 @@ package body Vhdl.Scanner is
    -- character for a basic identifier.
    procedure Scan_Identifier (Allow_PSL : Boolean)
    is
-      use Ada.Strings.Unbounded;
+      use Grt.Vstrings;
       use Name_Table;
       --  Local copy for speed-up.
       Source : constant File_Buffer_Acc := Current_Context.Source;
@@ -1013,7 +1013,7 @@ package body Vhdl.Scanner is
       --  Current and next character.
       C : Character;
 
-      Buffer : Unbounded_String;
+      Buffer : Vstring;
       Len : Natural;
    begin
       -- This is an identifier or a key word.
@@ -1124,8 +1124,8 @@ package body Vhdl.Scanner is
                --  with the same meaning.
                declare
                   Base : Nat32;
-                  Cl : constant Character := Element (Buffer, Len);
-                  Cf : constant Character := Element (Buffer, 1);
+                  Cl : constant Character := Get_C_String (Buffer) (Len);
+                  Cf : constant Character := Get_C_String (Buffer) (1);
                begin
                   Current_Context.Bit_Str_Base := Cl;
                   if Cl = 'b' then
@@ -1166,7 +1166,7 @@ package body Vhdl.Scanner is
             --  quote marks, there are invalid character (in the 128-160
             --  range).
             if C = Character'Val (16#80#)
-              and then Element (Buffer, Len) = Character'Val (16#e2#)
+              and then Get_C_String (Buffer) (Len) = Character'Val (16#e2#)
               and then (Source (Pos + 1) = Character'Val (16#98#)
                           or else Source (Pos + 1) = Character'Val (16#99#))
             then
@@ -1214,7 +1214,8 @@ package body Vhdl.Scanner is
       end case;
 
       -- Hash it.
-      Current_Context.Identifier := Get_Identifier (Slice (Buffer, 1, Len));
+      Current_Context.Identifier := Get_Identifier
+         (Get_C_String (Buffer) (1 .. Len));
       Current_Token := Tok_Identifier;
    end Scan_Identifier;
 
@@ -1462,9 +1463,9 @@ package body Vhdl.Scanner is
    --  backslashes, doubling backslashes inside).
    procedure Scan_Extended_Identifier
    is
-      use Ada.Strings.Unbounded;
+      use Grt.Vstrings;
       use Name_Table;
-      Buffer : Unbounded_String;
+      Buffer : Vstring;
       Len : Natural;
       C : Character;
    begin
@@ -1473,7 +1474,7 @@ package body Vhdl.Scanner is
       --  identifier.
       --  GHDL: This is satisfied by storing '\' in the name table.
       Len := 1;
-      Buffer := To_Unbounded_String("\");
+      Append (Buffer, "\");
       loop
          --  Next character.
          Pos := Pos + 1;
@@ -1543,7 +1544,8 @@ package body Vhdl.Scanner is
       end case;
 
       -- Hash it.
-      Current_Context.Identifier := Get_Identifier (Slice (Buffer, 1, Len));
+      Current_Context.Identifier := Get_Identifier
+         (Get_C_String (Buffer) (1 .. Len));
       Current_Token := Tok_Identifier;
    end Scan_Extended_Identifier;
 
@@ -1688,9 +1690,9 @@ package body Vhdl.Scanner is
    --  allowed.
    procedure Scan_Comment_Identifier (Id : out Name_Id; Create : Boolean)
    is
-      use Ada.Strings.Unbounded;
+      use Grt.Vstrings;
       use Name_Table;
-      Buffer : Unbounded_String;
+      Buffer : Vstring;
       Len : Natural;
       C : Character;
    begin
@@ -1731,9 +1733,9 @@ package body Vhdl.Scanner is
       end if;
 
       if Create then
-         Id := Get_Identifier (Slice (Buffer, 1, Len));
+         Id := Get_Identifier (Get_C_String (Buffer) (1 .. Len));
       else
-         Id := Get_Identifier_No_Create (Slice (Buffer, 1, Len));
+         Id := Get_Identifier_No_Create (Get_C_String (Buffer) (1 .. Len));
       end if;
    end Scan_Comment_Identifier;
 
