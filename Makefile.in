@@ -17,6 +17,7 @@ CC=@CC@
 CFLAGS=@CFLAGS@
 CXX=@CXX@
 CXXFLAGS=@CXXFLAGS@
+AR=@AR@
 build=@build@
 srcdir=@srcdir@
 abs_srcdir=@abs_srcdir@
@@ -481,7 +482,7 @@ libghdl.a: lib/$(libghdl_name)
 #	Also create a static library
 	sed -e '1,/--  BEGIN/d' -e '/--  END/,$$d' -e 's/^   --   //' < b~libghdl.adb > libghdl.bind
 	$(RM) -f $@
-	ar rc $@ b~libghdl.o $(LIBGHDL_GRT_OBJS) `sed -e /^-/d < libghdl.bind`
+	$(AR) rc $@ b~libghdl.o $(LIBGHDL_GRT_OBJS) `sed -e /^-/d < libghdl.bind`
 	grep adalib libghdl.bind | sed -e 's/^-L//' -e 's@adalib/@adalib/libgnat.a@' > libghdl.link
 
 $(srcdir)/src/synth/include/synth_gates.h: $(srcdir)/src/synth/netlists.ads $(srcdir)/src/synth/netlists-gates.ads
