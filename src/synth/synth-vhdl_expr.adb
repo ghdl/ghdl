@@ -1065,7 +1065,8 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_Object_Alias_Declaration
             | Iir_Kind_Non_Object_Alias_Declaration
             | Iir_Kind_File_Declaration
-            | Iir_Kind_Interface_File_Declaration =>
+            | Iir_Kind_Interface_File_Declaration
+            | Iir_Kind_Above_Attribute =>
             return Get_Value (Syn_Inst, Name);
          when Iir_Kind_External_Signal_Name =>
             return Synth_External_Name (Syn_Inst, Name);
@@ -2626,7 +2627,8 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_Non_Object_Alias_Declaration   -- For PSL
             | Iir_Kind_External_Signal_Name
             | Iir_Kind_Implicit_Dereference
-            | Iir_Kind_Dereference =>
+            | Iir_Kind_Dereference
+            | Iir_Kind_Above_Attribute =>
             declare
                Res : Valtyp;
             begin
