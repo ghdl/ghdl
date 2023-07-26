@@ -24,25 +24,21 @@
 with Grt.Errors; use Grt.Errors;
 
 package body Grt.Analog_Solver is
-   function Sundials_Init (Sz : Ghdl_I32) return Ghdl_I32;
-   pragma Import (C, Sundials_Init, "grt_sundials_init");
+   function Sundials_Create (Sz : Ghdl_I32) return Ghdl_I32;
+   pragma Import (C, Sundials_Create, "grt_sundials_create");
 
-   function Sundials_Start return Ghdl_I32;
-   pragma Import (C, Sundials_Start, "grt_sundials_start");
+   function Sundials_Initialize return Ghdl_I32;
+   pragma Import (C, Sundials_Initialize, "grt_sundials_initialize");
 
-   procedure Sundials_Solve (T0 : Ghdl_F64; Tn : in out Ghdl_F64;
-                                            Res : out Integer);
-   pragma Import (C, Sundials_Solve, "grt_sundials_solve");
-
-   procedure Init (Size : Ghdl_I32)
+   procedure Create (Size : Ghdl_I32)
    is
       Res : Ghdl_I32;
    begin
-      Res := Sundials_Init (Size);
+      Res := Sundials_Create (Size);
       if Res < 0 then
          Internal_Error ("sundials initialization failure");
       end if;
-   end Init;
+   end Create;
 
    procedure Sundials_Set_Max_Step (Step : Ghdl_F64);
    pragma Import (C, Sundials_Set_Max_Step, "grt_sundials_set_max_step");
@@ -68,22 +64,17 @@ package body Grt.Analog_Solver is
       return Sundials_Get_Yp_Vec;
    end Get_Init_Der_Ptr;
 
-   procedure Start is
+   procedure Initialize is
    begin
-      if Sundials_Start /= 0 then
+      if Sundials_Initialize /= 0 then
          Internal_Error ("sundials start");
       end if;
-   end Start;
+   end Initialize;
 
    procedure Set_Root_Size (Size : Ghdl_I32) is
    begin
       Internal_Error ("sundials set_root_size");
    end Set_Root_Size;
-
-   procedure Solve (T : Ghdl_F64; Tn : in out Ghdl_F64; Res : out Integer) is
-   begin
-      Sundials_Solve (T, Tn, Res);
-   end Solve;
 
    procedure Finish is
    begin

@@ -28,11 +28,10 @@ with Simul.Vhdl_Elab;
 
 with Grt.Types; use Grt.Types;
 with Grt.Vhdl_Types; use Grt.Vhdl_Types;
-with Grt.Stdio;
+with Grt.Stdio; use Grt.Stdio;
 with Grt.Options;
 with Grt.Processes;
 with Grt.Errors;
-with Grt.Analog_Solver;
 with Grt.Main;
 
 package body Simul.Main is
@@ -43,6 +42,26 @@ package body Simul.Main is
 
    procedure Ghdl_Elaborate is
    begin
+      if Csv_Filename /= null then
+         if Csv_Filename.all = "-" then
+            Csv_File := stdout;
+         else
+            declare
+               Filename : constant String := Csv_Filename.all & ASCII.NUL;
+               W : constant String := 'w' & ASCII.NUL;
+            begin
+               Csv_File := fopen (Filename'Address, W'Address);
+               if Csv_File = NULL_Stream then
+                  Grt.Errors.Error_S ("cannot open '");
+                  Grt.Errors.Diag_C (Csv_Filename.all);
+                  Grt.Errors.Error_E ("' for --wave-csv");
+               end if;
+            end;
+         end if;
+      else
+         Csv_File := NULL_Stream;
+      end if;
+
       Elaborate_Proc.all;
    end Ghdl_Elaborate;
 
@@ -90,10 +109,6 @@ package body Simul.Main is
         (Grt.Processes.Simulation_Init'Access);
 
       if Status = 0 then
-         if Grt.Processes.Flag_AMS then
-            Grt.Analog_Solver.Start;
-         end if;
-
          pragma Assert (Areapools.Is_Empty (Expr_Pool));
          pragma Assert (Areapools.Is_Empty (Process_Pool));
 

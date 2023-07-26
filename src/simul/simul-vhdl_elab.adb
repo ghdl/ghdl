@@ -456,21 +456,17 @@ package body Simul.Vhdl_Elab is
       --  Increment the number of driver for each scalar element.
       Need_It := False;
       for I in Sig.Offs.Net_Off .. Sig.Offs.Net_Off + Sig.Typ.W - 1 loop
-         declare
-            Ns : Nbr_Sources_Type renames S.Nbr_Sources (I);
-         begin
-            if Ns.Last_Proc /= Proc_Idx then
-               --  New driver.
-               if (Ns.Nbr_Conns + Ns.Nbr_Drivers) > 0
-                 and then Ns.Total = 0
-               then
-                  Error_Msg_Elab (Loc, "too many drivers for %n", +S.Decl);
-               end if;
-               Ns.Nbr_Drivers := Ns.Nbr_Drivers + 1;
-               Ns.Last_Proc := Proc_Idx;
-               Need_It := True;
+         if S.Nbr_Sources (I).Last_Proc /= Proc_Idx then
+            --  New driver.
+            if S.Nbr_Sources (I).Nbr_Conns + S.Nbr_Sources (I).Nbr_Drivers > 0
+              and then S.Nbr_Sources (I).Total = 0
+            then
+               Error_Msg_Elab (Loc, "too many drivers for %n", +S.Decl);
             end if;
-         end;
+            S.Nbr_Sources (I).Nbr_Drivers := S.Nbr_Sources (I).Nbr_Drivers + 1;
+            S.Nbr_Sources (I).Last_Proc := Proc_Idx;
+            Need_It := True;
+         end if;
       end loop;
 
       if not Need_It then
@@ -647,16 +643,12 @@ package body Simul.Vhdl_Elab is
          return;
       end if;
       for I in Ep.Offs.Net_Off .. Ep.Offs.Net_Off + Ep.Typ.W - 1 loop
-         declare
-            Src : Nbr_Sources_Type renames S.Nbr_Sources (I);
-         begin
-            Src.Nbr_Conns := Src.Nbr_Conns + 1;
-            if (Src.Nbr_Conns + Src.Nbr_Drivers) > 1
-              and then Src.Total = 0
-            then
-               Error_Msg_Elab (Loc, "too many drivers for %n", +S.Decl);
-            end if;
-         end;
+         S.Nbr_Sources (I).Nbr_Conns := S.Nbr_Sources (I).Nbr_Conns + 1;
+         if (S.Nbr_Sources (I).Nbr_Conns + S.Nbr_Sources (I).Nbr_Drivers) > 1
+           and then S.Nbr_Sources (I).Total = 0
+         then
+            Error_Msg_Elab (Loc, "too many drivers for %n", +S.Decl);
+         end if;
       end loop;
    end Increment_Nbr_Sources;
 
@@ -1088,16 +1080,18 @@ package body Simul.Vhdl_Elab is
             if E.Kind = Signal_User then
                for J in 1 .. E.Typ.W loop
                   declare
-                     Ns : Nbr_Sources_Type renames E.Nbr_Sources (J - 1);
                      Collapsed_By : Signal_Index_Type;
+                     Total : Uns32;
                   begin
                      --  Total number of sources.  (It was set to 1 to know
                      --  if it is resolved).
-                     Ns.Total := Ns.Nbr_Drivers + Ns.Nbr_Conns;
+                     Total := E.Nbr_Sources (J - 1).Nbr_Drivers
+                        + E.Nbr_Sources (J - 1).Nbr_Conns;
                      --  Undriven out ports have a default source.
-                     if Ns.Total = 0 and then Is_Out then
-                        Ns.Total := 1;
+                     if Total = 0 and then Is_Out then
+                        Total := 1;
                      end if;
+                     E.Nbr_Sources (J - 1).Total := Total;
 
                      --  Propagate nbr sources to the non-collapsed signal.
                      Collapsed_By := E.Collapsed_By;
@@ -1107,13 +1101,13 @@ package body Simul.Vhdl_Elab is
                      loop
                         --  Add to the parent.
                         declare
-                           C_Ns : Nbr_Sources_Type renames
-                             Signals_Table.Table (Collapsed_By)
-                             .Nbr_Sources (J - 1);
+                           C_S : Signal_Entry renames
+                             Signals_Table.Table (Collapsed_By);
                         begin
                            --  Remove 1 for out connection.
-                           C_Ns.Total :=
-                             C_Ns.Total + Ns.Total - Boolean'Pos (Is_Out);
+                           C_S.Nbr_Sources (J - 1).Total :=
+                             C_S.Nbr_Sources (J - 1).Total
+                             + Total - Boolean'Pos (Is_Out);
                         end;
 
                         Collapsed_By :=

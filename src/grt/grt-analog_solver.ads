@@ -32,7 +32,7 @@ package Grt.Analog_Solver is
    pragma Convention (C, F64_C_Arr_Ptr);
 
    --  Initialize the analog solver, SIZE is the number of scalar quantities.
-   procedure Init (Size : Ghdl_I32);
+   procedure Create (Size : Ghdl_I32);
 
    --  Set maximum solver step.
    procedure Set_Max_Step (Step : Ghdl_F64);
@@ -42,7 +42,7 @@ package Grt.Analog_Solver is
    function Get_Init_Der_Ptr return F64_C_Arr_Ptr;
 
    --  Finish initialization.
-   procedure Start;
+   procedure Initialize;
 
    procedure Residues (T : Ghdl_F64;
                        Y : F64_C_Arr_Ptr;
@@ -62,11 +62,32 @@ package Grt.Analog_Solver is
                          Yp: F64_C_Arr_Ptr);
    pragma Import (C, Set_Values, "grt__analog_solver__set_values");
 
+   procedure Solver_Set_Algebric_Variable (Idx : Natural);
+   pragma Import (C, Solver_Set_Algebric_Variable,
+                  "grt__analog_solver__set_algebric_variable");
+   procedure Solver_Set_Differential_Variable (Idx : Natural);
+   pragma Import (C, Solver_Set_Differential_Variable,
+                  "grt__analog_solver__set_differential_variable");
+
+   --  Resolve initial conditions.
+   function Solver_Initial_Conditions(Tout : Ghdl_F64) return Integer;
+   pragma Import (C, Solver_Initial_Conditions,
+                  "grt__analog_solver__initial_conditions");
+
+   --  Run the analog solver.
    --  Return status:
    --  0: Ok, Tn reached
    --  1: Stopped due to zero crossing
    --  2: failure
    procedure Solve (T : Ghdl_F64; Tn : in out Ghdl_F64; Res : out Integer);
+   pragma Import (Ada, Solve, "grt__analog_solver__solve");
+
+   procedure Sundials_Solve
+     (T : Ghdl_F64; Tn : in out Ghdl_F64; Res : out Integer);
+   pragma Import (C, Sundials_Solve, "grt_sundials_solve");
+
+   Solve_Ok : constant Integer := 0;
+   Solve_Failure : constant Integer := 2;
 
    Solve_Ok : constant Integer := 0;
    Solve_Failure : constant Integer := 2;

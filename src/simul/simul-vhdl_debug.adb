@@ -646,8 +646,8 @@ package body Simul.Vhdl_Debug is
          begin
             Put ("  scal #");
             Put_Uns32 (Uns32 (Idx));
-            Put ("  idx: ");
-            Put_Int32 (Int32 (Sq.Idx));
+            Put ("  y_idx: ");
+            Put_Int32 (Int32 (Sq.Y_Idx));
             Put (", deriv: ");
             Put_Uns32 (Uns32 (Sq.Deriv));
             Put (", integ: ");
@@ -677,11 +677,11 @@ package body Simul.Vhdl_Debug is
             Put (", len: ");
             Put_Uns32 (Q.Typ.W);
             Put (", Idx: ");
-            Put_Uns32 (Uns32 (Q.Idx));
+            Put_Uns32 (Uns32 (Q.Sq_Idx));
             Put (", val: ");
             Disp_Memtyp ((Q.Typ, Q.Val), Get_Type (Q.Decl));
             New_Line;
-            Info_Scalar_Quantity (Q.Idx, Q.Typ.W);
+            Info_Scalar_Quantity (Q.Sq_Idx, Q.Typ.W);
          end;
       end loop;
    end Info_Quantity_Proc;

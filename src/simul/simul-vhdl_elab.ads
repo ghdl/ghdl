@@ -230,12 +230,13 @@ package Simul.Vhdl_Elab is
    No_Scalar_Quantity : constant Scalar_Quantity_Index := 0;
 
    type Quantity_Entry is record
+      --  Any quantity: free, branch, dot...
       Decl : Iir;
       Inst : Synth_Instance_Acc;
       Typ : Type_Acc;
       Val : Memory_Ptr;
       --  Index in the scalar table.
-      Idx : Scalar_Quantity_Index;
+      Sq_Idx : Scalar_Quantity_Index;
       --  For across quantity, we need the terminals to compute the value
       --  For a through quantity, we need the terminals to compute the contrib
    end record;
