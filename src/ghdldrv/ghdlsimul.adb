@@ -194,15 +194,30 @@ package body Ghdlsimul is
 --           T := new String'(Str & Ghdllocal.Nul);
 --           return To_Ghdl_C_String (T.all'Address);
 --        end Strdup;
+
+      Ni : Positive;
    begin
       Argc := 1 + Args'Length;
       Argv := Malloc
         (size_t (Argc * (Ghdl_C_String'Size / System.Storage_Unit)));
       Argv (0) := Strdup (Ada.Command_Line.Command_Name & Ghdllocal.Nul);
       Progname := Argv (0);
+
+      Ni := 1;
       for I in Args'Range loop
-         Argv (1 + I - Args'First) := Strdup (Args (I).all & Ghdllocal.Nul);
+         declare
+            Arg : String renames Args (I).all;
+         begin
+            if Arg'Last > 11 and then Arg (1 .. 11) = "--wave-csv=" then
+               Simul.Main.Csv_Filename := new String'(Arg (12 .. Arg'Last));
+            else
+               Argv (Ni) := Strdup (Args (I).all & Ghdllocal.Nul);
+               Ni := Ni + 1;
+            end if;
+         end;
       end loop;
+
+      Argc := Ni;
    end Set_Run_Options;
 
    procedure Run
@@ -228,6 +243,7 @@ package body Ghdlsimul is
 
    function Decode_Option (Option : String) return Boolean
    is
+      pragma Assert (Option'First = 1);
       Res : Options.Option_State;
       pragma Unreferenced (Res);
    begin
@@ -235,6 +251,10 @@ package body Ghdlsimul is
          Elab.Debugger.Flag_Debug_Enable := True;
       elsif Option = "-t" then
          Synth.Flags.Flag_Trace_Statements := True;
+      elsif Option = "-ta" then
+         Simul.Vhdl_Simul.Trace_Solver := True;
+      elsif Option = "-tr" then
+         Simul.Vhdl_Simul.Trace_Residues := True;
       elsif Option = "-i" then
          Simul.Main.Flag_Interractive := True;
       elsif Option = "-ge" then
