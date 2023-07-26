@@ -800,6 +800,10 @@ package Grt.Signals is
    procedure Ghdl_Signal_Add_Extra_Driver (Sign : Ghdl_Signal_Ptr;
                                            Val : Value_Union);
 
+   --  Add a driver for the kernel (only for AMS Domain signal).
+   procedure Ghdl_Signal_Add_Kernel_Driver (Sig : Ghdl_Signal_Ptr;
+                                            Init : Ghdl_E8);
+
    --  Conversions.  In order to do conversion from A to B, an intermediate
    --  signal T must be created.  The flow is A -> T -> B.
    --  The link from A -> T is a conversion, added by one of the two

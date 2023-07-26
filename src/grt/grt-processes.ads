@@ -80,6 +80,8 @@ package Grt.Processes is
    --  to be cleared.
    Break_Flag : Boolean := False;
 
+   Domain_Sig : Ghdl_Signal_Ptr;
+
    type Process_Type is private;
    --  type Process_Acc is access all Process_Type;
 

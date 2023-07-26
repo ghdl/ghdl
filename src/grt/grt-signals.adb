@@ -422,6 +422,23 @@ package body Grt.Signals is
       Ghdl_Signal_Add_Driver (Sign, null, Trans);
    end Ghdl_Signal_Add_Extra_Driver;
 
+   procedure Ghdl_Signal_Add_Kernel_Driver (Sig : Ghdl_Signal_Ptr;
+                                            Init : Ghdl_E8)
+   is
+      Trans : Transaction_Acc;
+   begin
+      if Sig.S.Nbr_Drivers /= 0 then
+         Error ("kernel signal is driven by a user process");
+      end if;
+
+      Trans := new Transaction'(Kind => Trans_Value,
+                                Line => 0,
+                                Time => 0,
+                                Next => null,
+                                Val => (Mode => Mode_E8, E8 => Init));
+      Ghdl_Signal_Add_Driver (Sig, null, Trans);
+   end Ghdl_Signal_Add_Kernel_Driver;
+
    procedure Ghdl_Process_Add_Port_Driver
      (Sign : Ghdl_Signal_Ptr; Val : Value_Union)
    is
