@@ -16,8 +16,9 @@
 with Vhdl.Canon; use Vhdl.Canon;
 with Vhdl.Errors; use Vhdl.Errors;
 with Errorout; use Errorout;
---with Simple_IO; use Simple_IO;
 with Vhdl.Nodes_Meta; use Vhdl.Nodes_Meta;
+--with Simple_IO; use Simple_IO;
+--with Vhdl.Disp_Tree; use Vhdl.Disp_Tree;
 
 package body Vhdl.Sensitivity_Checks is
 
@@ -63,6 +64,20 @@ package body Vhdl.Sensitivity_Checks is
          Match := False;
          Real_It := List_Iterate (Real_List);
 
+         -- To support records: if the golden has prefix, we should compare
+         -- with its prefix instead. And if its prefix also has prefix, then we
+         -- should compare with that prefix... until we get the topmost
+         -- element, which will not have prefix
+         while Has_Prefix(Get_Kind(Gold_Iir)) loop
+            Gold_Iir := Get_Prefix(Gold_Iir);
+         end loop;
+
+         -- To support records: the top-most prefix we got in the previous step
+         -- won't match the named_entity of the Real_Iir, so we must get the
+         -- named entity of the top-most prefix and compare with that
+         if Has_Named_Entity(Get_Kind(Gold_Iir)) then
+            Gold_Iir := Get_Named_Entity(Gold_Iir);
+         end if;
          while Is_Valid (Real_It) loop
             --Put_Line ("Checking pair:");
             --Put_Line ("Golden:");
