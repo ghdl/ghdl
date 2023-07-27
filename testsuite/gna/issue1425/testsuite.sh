@@ -10,13 +10,16 @@ analyze counter.vhdl 2> analyze.log
 # Compare if our warnings match the expected warnings
 diff_nocr analyze.log expected.txt
 
-# Test 2: records.vhdl (we expect no warnings, so fail if we get any)
+# Test 2: records.vhdl
+# For this test and the rest, we expect no warnings, so fail if we get any
 GHDL_STD_FLAGS=-Werror
 analyze records.vhdl
 
-# Test 3: records_in_records.vhdl (also we expect no warnings)
-GHDL_STD_FLAGS=-Werror
+# Test 3: records_in_records.vhdl
 analyze records_in_records.vhdl
+
+# Test 4: arrays.vhdl
+analyze arrays.vhdl
 
 clean
 
