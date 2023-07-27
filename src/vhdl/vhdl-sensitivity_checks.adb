@@ -139,6 +139,15 @@ package body Vhdl.Sensitivity_Checks is
 
          while Is_Valid (Gold_It) loop
             Gold_Iir := Get_Element (Gold_It);
+            -- To support records: traverse them as we do in
+            -- Check_Incomplete_Sensitivity_List
+            while Has_Prefix(Get_Kind(Gold_Iir)) loop
+               Gold_Iir := Get_Prefix(Gold_Iir);
+            end loop;
+
+            if Has_Named_Entity(Get_Kind(Gold_Iir)) then
+               Gold_Iir := Get_Named_Entity(Gold_Iir);
+            end if;
             -- Don't call Get_Named_Entity if Real_Iir has no Identifier
             if Has_Identifier(Get_Kind(Real_Iir)) then
                if Get_Named_Entity (Real_Iir) = Gold_Iir then
