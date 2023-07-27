@@ -25,7 +25,7 @@ begin
 
   count <= std_logic_vector(cont(0));
 
-  comb: process (ena)  --, cont)
+  comb: process (ena, cont)
   begin
     if ena = '1' then
       n_cont(0) <= cont(0) + 1;
