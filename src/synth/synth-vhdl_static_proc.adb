@@ -16,8 +16,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Interfaces;
-
 with Types; use Types;
 
 with Vhdl.Errors; use Vhdl.Errors;
@@ -31,6 +29,7 @@ with Elab.Debugger;
 
 with Synth.Errors; use Synth.Errors;
 
+with Grt.Types;
 with Grt.Fcvt;
 
 package body Synth.Vhdl_Static_Proc is
@@ -69,8 +68,7 @@ package body Synth.Vhdl_Static_Proc is
       S : String (1 .. Natural (Str.Typ.Abound.Len));
       Last : Natural;
    begin
-      Grt.Fcvt.Format_Digits (S, Last,
-                              Interfaces.IEEE_Float_64 (Read_Fp64 (Val)),
+      Grt.Fcvt.Format_Digits (S, Last, Grt.Types.Ghdl_F64 (Read_Fp64 (Val)),
                               Natural (Read_Discrete (Ndigits)));
       Write_Discrete (Len, Int64 (Last));
       for I in 1 .. Last loop

@@ -741,7 +741,7 @@ package body Grt.Vcd is
       --  conversions, [...]
 
       --  Note: the code always uses the 'e' format, with a full precision.
-      Grt.Fcvt.Format_Image (Str, Len, Interfaces.IEEE_Float_64 (V));
+      Grt.Fcvt.Format_Image (Str, Len, V);
 
       Vcd_Put (Str (1 .. Len));
    end Vcd_Put_Float64;

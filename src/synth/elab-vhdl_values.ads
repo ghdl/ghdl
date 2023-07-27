@@ -171,10 +171,12 @@ package Elab.Vhdl_Values is
                                File : File_Index;
                                Pool : Areapool_Acc) return Valtyp;
 
-   function Create_Value_Quantity (Vtype : Type_Acc; Q : Quantity_Index_Type)
-                                  return Valtyp;
-   function Create_Value_Terminal (Vtype : Type_Acc; T : Terminal_Index_Type)
-                                  return Valtyp;
+   function Create_Value_Quantity (Vtype : Type_Acc;
+                                   Q : Quantity_Index_Type;
+                                   Pool : Areapool_Acc) return Valtyp;
+   function Create_Value_Terminal (Vtype : Type_Acc;
+                                   T : Terminal_Index_Type;
+                                   Pool : Areapool_Acc) return Valtyp;
 
    function Create_Value_Alias (Obj : Valtyp;
                                 Off : Value_Offsets;

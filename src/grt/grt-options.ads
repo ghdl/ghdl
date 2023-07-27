@@ -173,6 +173,13 @@ package Grt.Options is
    -- Report all uncovered cover points at the end of simulation
    Flag_Psl_Report_Uncovered : Boolean := False;
 
+   --  For AMS: tolerances (--atol and --rtol)
+   Abs_Tol : Ghdl_F64 := 1.0e-4;
+   Rel_Tol : Ghdl_F64 := 1.0e-4;
+
+   --  For AMS: minimum step (--step)
+   Step_Limit : Ghdl_F64 := 1.0e-1;
+
    --  Helper: extract time from STR (a number followed by a unit, without
    --  spaces; the number is optionnal).  In case of error, display an error
    --  message and returns -1.

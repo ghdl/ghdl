@@ -49,7 +49,7 @@ with Ada.Unchecked_Conversion;
 
 package body Grt.Fcvt is
    function F64_To_U64 is new Ada.Unchecked_Conversion
-     (IEEE_Float_64, Unsigned_64);
+     (Ghdl_F64, Unsigned_64);
 
    type Fcvt_Context is record
       --  Inputs
@@ -782,7 +782,7 @@ package body Grt.Fcvt is
                         Is_Num : out Boolean;
                         Is_Neg : out Boolean;
                         Exp : out Integer;
-                        V : IEEE_Float_64)
+                        V : Ghdl_F64)
    is
       pragma Assert (Str'First = 1);
 
@@ -859,10 +859,10 @@ package body Grt.Fcvt is
    --  Input is: (-1)**S * M * 2**E
    function Pack (M : Unsigned_64;
                   E : Integer;
-                  S : Boolean) return IEEE_Float_64
+                  S : Boolean) return Ghdl_F64
    is
-      function To_IEEE_Float_64 is new Ada.Unchecked_Conversion
-        (Unsigned_64, IEEE_Float_64);
+      function To_Ghdl_F64 is new Ada.Unchecked_Conversion
+        (Unsigned_64, Ghdl_F64);
       T : Unsigned_64;
    begin
       pragma Assert (M < 16#20_00_00_00_00_00_00#);
@@ -894,13 +894,14 @@ package body Grt.Fcvt is
          T := T or Shift_Left (1, 63);
       end if;
 
-      return To_IEEE_Float_64 (T);
+      return To_Ghdl_F64 (T);
    end Pack;
 
    --  Return (-1)**Neg * F * BASE**EXP to a float.
-   function To_Float_64
-     (Neg : Boolean; F : Bignum; Base : Positive; Exp : Integer)
-     return IEEE_Float_64
+   function To_Float_64 (Neg : Boolean;
+                         F : Bignum;
+                         Base : Positive;
+                         Exp : Integer) return Ghdl_F64
    is
       M : Unsigned_64;
       T : Bignum;
@@ -926,7 +927,10 @@ package body Grt.Fcvt is
       return Pack (M, E, Neg);
    end To_Float_64;
 
-   function From_String (Str : String) return IEEE_Float_64
+   procedure From_String (Str : Ghdl_C_String;
+                          Len : Natural;
+                          Res : out Ghdl_F64;
+                          Valid : out Boolean)
    is
       P : Positive;
       C : Character;
@@ -939,9 +943,14 @@ package body Grt.Fcvt is
       Exp : Integer;
       Exp_Neg : Boolean;
    begin
+      Valid := False;
+
       Neg := False;
 
-      P := Str'First;
+      P := 1;
+      if Len = 0 then
+         return;
+      end if;
 
       --  A correctly formatted number has at least one character.
 
@@ -950,10 +959,21 @@ package body Grt.Fcvt is
       if C = '-' then
          Neg := True;
          P := P + 1;
+         if P > Len then
+            return;
+         end if;
          C := Str (P);
       elsif C = '+' then
          P := P + 1;
+         if P > Len then
+            return;
+         end if;
          C := Str (P);
+      end if;
+
+      --  Numbers cannot start with '_'.
+      if C = '_' then
+         return;
       end if;
 
       Nbr_Digits := 0;
@@ -973,10 +993,10 @@ package body Grt.Fcvt is
                Exp := 0;
                exit;
             when others =>
-               raise Constraint_Error;
+               return;
          end case;
          P := P + 1;
-         if P > Str'Last then
+         if P > Len then
             Exp := -1;
             exit;
          end if;
@@ -985,6 +1005,9 @@ package body Grt.Fcvt is
 
       if Exp = 0 then
          P := P + 1;
+         if P > Len then
+            return;
+         end if;
          C := Str (P);
 
          --  Sign of the exponent.
@@ -992,10 +1015,20 @@ package body Grt.Fcvt is
          if C = '-' then
             Exp_Neg := True;
             P := P + 1;
+            if P > Len then
+               return;
+            end if;
             C := Str (P);
          elsif C = '+' then
             P := P + 1;
+            if P > Len then
+               return;
+            end if;
             C := Str (P);
+         end if;
+
+         if C = '_' then
+            return;
          end if;
 
          --  Exponent.
@@ -1006,10 +1039,10 @@ package body Grt.Fcvt is
                when '_' =>
                   null;
                when others =>
-                  raise Constraint_Error;
+                  return;
             end case;
             P := P + 1;
-            exit when P > Str'Last;
+            exit when P > Len;
             C := Str (P);
          end loop;
 
@@ -1026,11 +1059,11 @@ package body Grt.Fcvt is
 
       --  The internal representation of the number is:
       --  F * 10**EXP
-      return To_Float_64 (Neg, F, 10, Exp);
+      Res := To_Float_64 (Neg, F, 10, Exp);
+      Valid := True;
    end From_String;
 
-   procedure Format_Image
-     (Str : out String; Last : out Natural; N : IEEE_Float_64)
+   procedure Format_Image (Str : out String; Last : out Natural; N : Ghdl_F64)
    is
       P : Natural;
       S : String (1 .. 20);
@@ -1170,7 +1203,7 @@ package body Grt.Fcvt is
 
    procedure Format_Digits (Str : out String;
                             Last : out Natural;
-                            N : IEEE_Float_64;
+                            N : Ghdl_F64;
                             Ndigits : Natural)
    is
       procedure Append (C : Character) is

@@ -272,6 +272,7 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kinds_Branch_Quantity_Declaration
            | Iir_Kind_Dot_Attribute
+           | Iir_Kind_Above_Attribute
            | Iir_Kinds_Signal_Attribute =>
             Assign_Base (Syn_Inst);
 

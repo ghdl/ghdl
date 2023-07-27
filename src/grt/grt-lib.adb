@@ -21,7 +21,6 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
-with Interfaces;
 with Grt.Errors; use Grt.Errors;
 with Grt.Errors_Exec; use Grt.Errors_Exec;
 with Grt.Severity;
@@ -401,10 +400,15 @@ package body Grt.Lib is
 
    function Textio_Read_Real (Str : Std_String_Ptr) return Ghdl_F64
    is
-      subtype Str1 is String (1 .. Natural (Str.Bounds.Dim_1.Length));
+      Len : Natural;
+      Valid : Boolean;
+      Res : Ghdl_F64;
    begin
-      return Ghdl_F64 (Grt.Fcvt.From_String
-                         (Str1 (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1))));
+      Len := Natural (Str.Bounds.Dim_1.Length);
+      Grt.Fcvt.From_String (To_Ghdl_C_String (To_Address (Str.Base)), Len,
+                            Res, Valid);
+      pragma Assert (Valid);
+      return Res;
    end Textio_Read_Real;
 
    procedure Textio_Write_Real (Str : Std_String_Ptr;
@@ -416,8 +420,7 @@ package body Grt.Lib is
       S : String (1 .. Natural (Str.Bounds.Dim_1.Length));
       Last : Natural;
    begin
-      Grt.Fcvt.Format_Digits
-        (S, Last, Interfaces.IEEE_Float_64 (V), Natural (Ndigits));
+      Grt.Fcvt.Format_Digits (S, Last, V, Natural (Ndigits));
       Len.all := Std_Integer (Last);
       for I in 1 .. Last loop
          Str.Base (Ghdl_Index_Type (I - 1)) := S (I);

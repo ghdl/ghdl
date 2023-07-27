@@ -22,6 +22,7 @@
 --  covered by the GNU Public License.
 with Interfaces; use Interfaces;
 with Grt.Strings; use Grt.Strings;
+with Grt.Fcvt;
 with Grt.Errors; use Grt.Errors;
 with Grt.Severity; use Grt.Severity;
 with Grt.Stdio; use Grt.Stdio;
@@ -121,12 +122,10 @@ package body Grt.Options is
    --  The position of the first non digit or one past the upper bound is
    --  returned into POS.
    --  If there is no digits, OK is set to false, else to true.
-   procedure Extract_Integer
-     (Str : String;
-      Ok : out Boolean;
-      Result : out Integer_64;
-      Pos : out Natural)
-   is
+   procedure Extract_Integer (Str : String;
+                              Ok : out Boolean;
+                              Result : out Integer_64;
+                              Pos : out Natural) is
    begin
       Pos := Str'First;
       --  Skip blanks.
@@ -143,6 +142,21 @@ package body Grt.Options is
          Pos := Pos + 1;
       end loop;
    end Extract_Integer;
+
+   procedure Extract_F64 (Str : String;
+                          First : Positive;
+                          Result : out Ghdl_F64)
+   is
+      Valid : Boolean;
+   begin
+      Grt.Fcvt.From_String (To_Ghdl_C_String (Str (First)'Address),
+                            Str'Last - First + 1, Result, Valid);
+      if not Valid then
+         Error_S ("bad value in '");
+         Diag_C (Str);
+         Error_E ("'");
+      end if;
+   end Extract_F64;
 
    function Parse_Time (Str : String) return Std_Time
    is
@@ -385,6 +399,12 @@ package body Grt.Options is
                Nbr_Threads := Integer (Val);
             end if;
          end;
+      elsif Len > 7 and then Option (1 .. 7) = "--atol=" then
+         Extract_F64 (Option, 8, Abs_Tol);
+      elsif Len > 7 and then Option (1 .. 7) = "--rtol=" then
+         Extract_F64 (Option, 8, Rel_Tol);
+      elsif Len > 7 and then Option (1 .. 7) = "--step=" then
+         Extract_F64 (Option, 8, Step_Limit);
       elsif Len > 4 and then Option (1 .. 2) = "-g" then
          if Option (3) = '=' then
             Error_S ("missing generic name in '");

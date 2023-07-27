@@ -3075,12 +3075,14 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Foreign_Textio_Read_Real =>
             declare
                Len : constant Natural := Natural (Param1.Typ.Abound.Len);
-               Res : Fp64;
+               Res : Ghdl_F64;
+               Valid : Boolean;
                Cs : Ghdl_C_String;
             begin
                Cs := To_Ghdl_C_String (To_Address (Param1.Mem));
-               Res := Fp64 (Grt.Fcvt.From_String (Cs (1 .. Len)));
-               return Create_Memory_Fp64 (Res, Res_Typ);
+               Grt.Fcvt.From_String (Cs, Len, Res, Valid);
+               pragma Assert (Valid);
+               return Create_Memory_Fp64 (Fp64 (Res), Res_Typ);
             end;
          when others =>
             Error_Msg_Synth (Inst, Expr, "unhandled (static) function: "

@@ -950,6 +950,9 @@ package body Simul.Vhdl_Elab is
             Gather_Process_Sensitivity (Inst, Stmt, Processes_Table.Last);
          when Iir_Kind_Simple_Simultaneous_Statement =>
             Simultaneous_Table.Append ((Stmt => Stmt, Inst => Inst));
+         when Iir_Kind_Simultaneous_If_Statement
+            | Iir_Kind_Simultaneous_Case_Statement =>
+            Complex_Simultaneous_Table.Append ((Stmt => Stmt, Inst => Inst));
          when others =>
             Vhdl.Errors.Error_Kind ("gather_processes_stmt", Stmt);
       end case;

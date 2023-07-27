@@ -1038,7 +1038,9 @@ package body Elab.Vhdl_Annotations is
          when Iir_Kind_Psl_Endpoint_Declaration =>
             Create_Object_Info (Block_Info, Stmt, Kind_PSL);
 
-         when Iir_Kind_Simple_Simultaneous_Statement =>
+         when Iir_Kind_Simple_Simultaneous_Statement
+            | Iir_Kind_Simultaneous_If_Statement
+            | Iir_Kind_Simultaneous_Case_Statement =>
             null;
 
          when Iir_Kind_Concurrent_Simple_Signal_Assignment

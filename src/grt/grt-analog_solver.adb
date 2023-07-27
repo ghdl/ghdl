@@ -44,6 +44,14 @@ package body Grt.Analog_Solver is
       end if;
    end Init;
 
+   procedure Sundials_Set_Max_Step (Step : Ghdl_F64);
+   pragma Import (C, Sundials_Set_Max_Step, "grt_sundials_set_max_step");
+
+   procedure Set_Max_Step (Step : Ghdl_F64) is
+   begin
+      Sundials_Set_Max_Step (Step);
+   end Set_Max_Step;
+
    function Sundials_Get_Yy_Vec return F64_C_Arr_Ptr;
    pragma Import (C, Sundials_Get_Yy_Vec, "grt_sundials_get_yy_vec");
 

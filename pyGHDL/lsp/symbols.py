@@ -129,6 +129,7 @@ def get_symbols(fe, n):
         nodes.Iir_Kind.Sensitized_Process_Statement,
         nodes.Iir_Kind.If_Generate_Statement,
         nodes.Iir_Kind.For_Generate_Statement,
+        nodes.Iir_Kind.Block_Statement,
     ):
         start_loc = elocations.Get_Start_Location(n)
         end_loc = elocations.Get_End_Location(n)

@@ -70,7 +70,16 @@ package Simul.Vhdl_Elab is
 
    type Simultaneous_Index_Type is new Nat32;
 
+   --  Table of simple simultaneous statements.  Those are always considered.
    package Simultaneous_Table is new Tables
+     (Table_Component_Type => Simultaneous_Record,
+      Table_Index_Type => Simultaneous_Index_Type,
+      Table_Low_Bound => 1,
+      Table_Initial => 16);
+
+   --  Table of complex simultaneous statements.
+   --  The simple (or procedural) simultaneous statements are extracted.
+   package Complex_Simultaneous_Table is new Tables
      (Table_Component_Type => Simultaneous_Record,
       Table_Index_Type => Simultaneous_Index_Type,
       Table_Low_Bound => 1,

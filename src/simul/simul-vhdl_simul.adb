@@ -22,6 +22,7 @@ with Ada.Unchecked_Conversion;
 with Simple_IO;
 with Utils_IO;
 with Flags;
+with Name_Table;
 
 with Vhdl.Types;
 with Vhdl.Errors;
@@ -85,8 +86,8 @@ package body Simul.Vhdl_Simul is
                        Res : F64_C_Arr_Ptr);
    pragma Export (C, Residues, "grt__analog_solver__residues");
 
-   procedure Set_Quantities_Values (Y : F64_C_Arr_Ptr; Yp: F64_C_Arr_Ptr);
-   pragma Export (C, Set_Quantities_Values, "grt__analog_solver__set_values");
+   procedure Set_Solver_Values (Y : F64_C_Arr_Ptr; Yp: F64_C_Arr_Ptr);
+   pragma Export (C, Set_Solver_Values, "grt__analog_solver__set_values");
 
    --  Mapping.
    type Iir_Kind_To_Kind_Signal_Type is
@@ -3204,7 +3205,9 @@ package body Simul.Vhdl_Simul is
             Create_Delayed_Signal (E.Sig, E.Val, To_Memory_Ptr (E.Pfx),
                                    E.Typ, E.Time);
          when Signal_Above =>
-            raise Internal_Error;
+            S := Grt.Signals.Ghdl_Create_Above_Signal
+              (To_Ghdl_Value_Ptr (To_Address (E.Val)));
+            Write_Sig (E.Sig, S);
          when Signal_User =>
             Create_User_Signal (Signals_Table.Table (Idx));
          when Signal_None =>
@@ -4015,6 +4018,8 @@ package body Simul.Vhdl_Simul is
       --  Initialize solver.
       Grt.Analog_Solver.Init (Ghdl_I32 (Num));
 
+      Grt.Analog_Solver.Set_Max_Step (Grt.Options.Step_Limit);
+
       --  LRM 1076.1-2007 12.6.4 Simulation cycle
       --  The value of each implicit quantity of the form ... Q'Dot ... is
       --  set to 0.0
@@ -4037,6 +4042,32 @@ package body Simul.Vhdl_Simul is
             end if;
          end;
       end loop;
+
+      if Trace_Quantities then
+         declare
+            use Simple_IO;
+         begin
+            Put ("Time");
+            for I in Quantity_Table.First .. Quantity_Table.Last loop
+               declare
+                  Decl : constant Node := Quantity_Table.Table (I).Decl;
+               begin
+                  Put (',');
+                  case Get_Kind (Decl) is
+                     when Iir_Kind_Free_Quantity_Declaration
+                       | Iir_Kind_Across_Quantity_Declaration
+                       | Iir_Kind_Through_Quantity_Declaration =>
+                        Put (Name_Table.Image (Get_Identifier (Decl)));
+                     when Iir_Kind_Dot_Attribute =>
+                        Put ("dot");
+                     when others =>
+                        Vhdl.Errors.Error_Kind ("create_quantities", Decl);
+                  end case;
+               end;
+            end loop;
+            New_Line;
+         end;
+      end if;
    end Create_Quantities;
 
    function Exec_Bit_Edge (Param : Valtyp; Res_Typ : Type_Acc; Val : Ghdl_U8)
@@ -4123,6 +4154,30 @@ package body Simul.Vhdl_Simul is
       end loop;
    end Set_Quantities_Values;
 
+   procedure Set_Solver_Values (Y : F64_C_Arr_Ptr; Yp: F64_C_Arr_Ptr) is
+   begin
+      Set_Quantities_Values (Y, Yp);
+
+      --  Display values
+      if Trace_Quantities then
+         declare
+            use Simple_IO;
+            use Utils_IO;
+         begin
+            Put_Fp64 (Fp64 (Current_Time_AMS));
+            for I in Quantity_Table.First .. Quantity_Table.Last loop
+               declare
+                  Q : Quantity_Entry renames Quantity_Table.Table (I);
+               begin
+                  Put (',');
+                  Put_Fp64 (Read_Fp64 (Q.Val));
+               end;
+            end loop;
+            New_Line;
+         end;
+      end if;
+   end Set_Solver_Values;
+
    procedure Residues (T : Ghdl_F64;
                        Y : F64_C_Arr_Ptr;
                        Yp : F64_C_Arr_Ptr;
@@ -4134,15 +4189,40 @@ package body Simul.Vhdl_Simul is
    begin
       Set_Quantities_Values (Y, Yp);
 
+      Instance_Pool := Process_Pool'Access;
+
       --  Apply time.
       --  TODO: physical time too.
       Prev_Time := Current_Time_AMS;
       Current_Time_AMS := T;
 
+      if Trace_Residues then
+         declare
+            use Simple_IO;
+            use Utils_IO;
+         begin
+            Put ("Residues at ");
+            Put_Fp64 (Fp64 (Current_Time_AMS));
+            New_Line;
+            for I in 0 .. Nbr_Solver_Variables -1 loop
+               Put ("Y");
+               Put_Uns32 (Uns32 (I));
+               Put ("=");
+               Put_Fp64 (Fp64 (Y (I)));
+               Put (", Yp(");
+               Put_Uns32 (Uns32 (I));
+               Put (")=");
+               Put_Fp64 (Fp64 (Yp (I)));
+               New_Line;
+            end loop;
+         end;
+      end if;
+
       Num := 0;
       for I in Simultaneous_Table.First .. Simultaneous_Table.Last loop
          declare
             S : Simultaneous_Record renames Simultaneous_Table.Table (I);
+            Lv, Rv : Fp64;
          begin
             case Get_Kind (S.Stmt) is
                when Iir_Kind_Simple_Simultaneous_Statement =>
@@ -4152,8 +4232,27 @@ package body Simul.Vhdl_Simul is
                     (S.Inst, Get_Simultaneous_Right (S.Stmt));
                   pragma Assert (R.Typ.Kind = Type_Float);
                   pragma Assert (L.Typ.Kind = Type_Float);
-                  Res (Num) := Ghdl_F64
-                    (Read_Fp64 (L.Val.Mem) - Read_Fp64 (R.Val.Mem));
+                  Lv := Read_Fp64 (L.Val.Mem);
+                  Rv := Read_Fp64 (R.Val.Mem);
+                  Res (Num) := Ghdl_F64 (Lv - Rv);
+
+                  if Trace_Residues then
+                     declare
+                        use Simple_IO;
+                        use Utils_IO;
+                     begin
+                        Put ("Equ #");
+                        Put_Uns32 (Uns32 (Num));
+                        Put (": L=");
+                        Put_Fp64 (Lv);
+                        Put (", R=");
+                        Put_Fp64 (Rv);
+                        Put (", d=");
+                        Put_Fp64 (Lv - Rv);
+                        New_Line;
+                     end;
+                  end if;
+
                   Num := Num + 1;
                when others =>
                   Vhdl.Errors.Error_Kind ("residues", S.Stmt);
@@ -4212,6 +4311,9 @@ package body Simul.Vhdl_Simul is
       end if;
 
       Current_Time_AMS := Prev_Time;
+
+      pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
+      Instance_Pool := null;
    end Residues;
 
    procedure Runtime_Elaborate is
