@@ -181,4 +181,17 @@ package Simul.Vhdl_Simul is
       Table_Index_Type => Uns32,
       Table_Low_Bound => 1,
       Table_Initial => 32);
+
+   type Above_Entry is record
+      Sq_Idx : Scalar_Quantity_Index;
+      Sig : Ghdl_Signal_Ptr;
+      Expr : Iir;
+      Inst : Synth_Instance_Acc;
+   end record;
+
+   package Above_Table is new Tables
+     (Table_Component_Type => Above_Entry,
+      Table_Index_Type => Uns32,
+      Table_Low_Bound => 1,
+      Table_Initial => 32);
 end Simul.Vhdl_Simul;
