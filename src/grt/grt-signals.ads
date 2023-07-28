@@ -804,6 +804,10 @@ package Grt.Signals is
    procedure Ghdl_Signal_Add_Kernel_Driver (Sig : Ghdl_Signal_Ptr;
                                             Init : Ghdl_E8);
 
+   --  Assign a value to a 'Above signal.
+   procedure Ghdl_Signal_Assign_Above (Sig : Ghdl_Signal_Ptr;
+                                       Val : Ghdl_B1);
+
    --  Conversions.  In order to do conversion from A to B, an intermediate
    --  signal T must be created.  The flow is A -> T -> B.
    --  The link from A -> T is a conversion, added by one of the two

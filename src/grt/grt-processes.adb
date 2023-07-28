@@ -930,12 +930,18 @@ package body Grt.Processes is
          loop
             Tout_AMS := Ghdl_F64'Min (Tn_AMS, Tout_AMS + Step_Limit);
             Grt.Analog_Solver.Solve (Current_Time_AMS, Tout_AMS, Status);
-            if Status /= Grt.Analog_Solver.Solve_Ok then
-               Internal_Error ("simulation_cycle - analog_solver");
-            end if;
+            case Status is
+               when Grt.Analog_Solver.Solve_Ok =>
+                  exit when Tout_AMS >= Tn_AMS;
+               when Grt.Analog_Solver.Solve_Cross =>
+                  exit;
+               when others =>
+                  Internal_Error ("simulation_cycle - analog_solver");
+            end case;
             Current_Time_AMS := Tout_AMS;
-            exit when Tout_AMS >= Tn_AMS;
          end loop;
+         Current_Time_AMS := Tout_AMS;
+         Next_Time := Std_Time (Current_Time_AMS * Time_Real_To_Phys);
       end if;
 
       --  LRM 1076.1-2017 b)
@@ -1218,8 +1224,8 @@ package body Grt.Processes is
    is
       use Options;
    begin
-      if Next_Time > Stop_Time
-        and then Next_Time /= Std_Time'Last
+      if (Next_Time > Stop_Time and then Next_Time /= Std_Time'Last)
+        or else Current_Time >= Stop_Time
       then
          --  FIXME: Implement with a callback instead ?  This could be done
          --  in 2 steps: an after_delay for the time and then a read_only

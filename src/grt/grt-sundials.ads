@@ -31,6 +31,10 @@ package Grt.Sundials is
    type F64_C_Arr_Ptr is access all F64_Fat_Array;
    pragma Convention (C, F64_C_Arr_Ptr);
 
+   type I32_Array is array (Natural range <>) of Ghdl_I32;
+   subtype I32_Fat_Array is I32_Array (Natural);
+   type I32_C_Arr_Ptr is access all I32_Fat_Array;
+
    function Initialize return Ghdl_I32;
    pragma Import (C, Initialize, "grt__sundials__initialize");
 
@@ -48,6 +52,9 @@ package Grt.Sundials is
 
    function Get_Yp_Vec return F64_C_Arr_Ptr;
    pragma Import (C, Get_Yp_Vec, "grt__sundials__get_yp_vec");
+
+   function Get_Root_Info return I32_C_Arr_Ptr;
+   pragma Import (C, Get_Root_Info, "grt__sundials__get_root_info");
 
    procedure Residues (T : Ghdl_F64;
                        Y : F64_C_Arr_Ptr;

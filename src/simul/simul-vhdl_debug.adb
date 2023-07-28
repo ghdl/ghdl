@@ -384,12 +384,13 @@ package body Simul.Vhdl_Debug is
 
       Disp_Instance_Path (S.Inst, True);
       Put ('/');
-      Put (Image (Get_Identifier (S.Decl)));
 
       case Get_Kind (S.Decl) is
          when Iir_Kind_Signal_Declaration =>
+            Put (Image (Get_Identifier (S.Decl)));
             Put (" [sig]");
          when Iir_Kind_Interface_Signal_Declaration =>
+            Put (Image (Get_Identifier (S.Decl)));
             case Get_Mode (S.Decl) is
                when Iir_In_Mode =>
                   Put (" [in]");
@@ -405,7 +406,10 @@ package body Simul.Vhdl_Debug is
                   Put (" [??]");
             end case;
          when Iir_Kind_Guard_Signal_Declaration =>
+            Put (Image (Get_Identifier (S.Decl)));
             Put (" [guard]");
+         when Iir_Kind_Above_Attribute =>
+            Put (" [above]");
          when others =>
             raise Internal_Error;
       end case;

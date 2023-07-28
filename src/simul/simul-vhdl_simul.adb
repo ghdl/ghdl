@@ -4335,7 +4335,7 @@ package body Simul.Vhdl_Simul is
                   Put_F64 (Csv_File, Ghdl_F64 (Read_Fp64 (Q.Val)));
                end;
             end loop;
-            New_Line;
+            New_Line (Csv_File);
          end;
       end if;
    end Print_Values;
@@ -4345,10 +4345,13 @@ package body Simul.Vhdl_Simul is
                        Yp : F64_C_Arr_Ptr;
                        Res : F64_C_Arr_Ptr)
    is
+      Marker : Mark_Type;
       Num : Natural;
       L, R : Valtyp;
       Prev_Time : Ghdl_F64;
    begin
+      Mark_Expr_Pool (Marker);
+
       Set_Quantities_Values (Y, Yp);
 
       Instance_Pool := Process_Pool'Access;
@@ -4473,6 +4476,8 @@ package body Simul.Vhdl_Simul is
 
       pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
       Instance_Pool := null;
+
+      Release_Expr_Pool (Marker);
    end Residues;
 
    procedure Roots (T : Ghdl_F64;
@@ -4481,10 +4486,12 @@ package body Simul.Vhdl_Simul is
                     Res : F64_C_Arr_Ptr)
    is
       pragma Unreferenced (Yp);
+      Marker : Mark_Type;
       Val : Valtyp;
       Q_Val, E_Val : Ghdl_F64;
    begin
       --  TODO: write back T, Y and Yp
+      Mark_Expr_Pool (Marker);
 
       if Trace_Residues then
          declare
@@ -4525,6 +4532,7 @@ package body Simul.Vhdl_Simul is
             end if;
          end;
       end loop;
+      Release_Expr_Pool (Marker);
    end Roots;
 
    procedure Solve (T : Ghdl_F64; Tn : in out Ghdl_F64; Res : out Integer);
@@ -4652,7 +4660,22 @@ package body Simul.Vhdl_Simul is
             Grt.Sundials.Sundials_Solve (T, Tn, Res);
 
             if Res = Solve_Cross then
-               raise Internal_Error;
+               declare
+                  Roots : constant Grt.Sundials.I32_C_Arr_Ptr :=
+                     Grt.Sundials.Get_Root_Info;
+               begin
+                  for I in Above_Table.First .. Above_Table.Last loop
+                     if Roots (Natural (I - Above_Table.First)) /= 0 then
+                        declare
+                           Above : Above_Entry renames Above_Table.Table (I);
+                        begin
+                           Ghdl_Signal_Assign_Above
+                             (Above.Sig, not Above.Sig.Value_Ptr.B1);
+                        end;
+                     end if;
+                  end loop;
+               end;
+               --  TODO: return Solve_Cross only if one signal has changed.
             end if;
          else
             --  Frequency domain

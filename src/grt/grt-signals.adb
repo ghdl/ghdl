@@ -1125,6 +1125,17 @@ package body Grt.Signals is
       Ghdl_Signal_Start_Assign (Sign, 0, Trans, 0);
    end Ghdl_Signal_Simple_Assign_B1;
 
+   procedure Ghdl_Signal_Assign_Above (Sig : Ghdl_Signal_Ptr;
+                                       Val : Ghdl_B1) is
+   begin
+      if Val = Sig.Value_Ptr.B1 then
+         return;
+      end if;
+
+      Insert_Active_Chain (Sig);
+      Sig.Driving_Value.B1 := Val;
+   end Ghdl_Signal_Assign_Above;
+
    procedure Ghdl_Signal_Start_Assign_Any (Sign : Ghdl_Signal_Ptr;
                                            Rej : Std_Time;
                                            Val : Value_Union;
@@ -3360,9 +3371,11 @@ package body Grt.Signals is
               | Imp_Stable
               | Imp_Quiet
               | Imp_Transaction
-              | Imp_Above
               | Imp_Forward_Build =>
                null;
+            when Imp_Above =>
+               Sig := Propagation.Table (I).Sig;
+               Mark_Active (Sig);
             when Imp_Forward =>
                Sig := Propagation.Table (I).Sig;
                Insert_Active_Chain (Sig);
@@ -3540,7 +3553,8 @@ package body Grt.Signals is
                end if;
                Delayed_Implicit_Process (Sig);
             when Imp_Above =>
-               null;
+               Set_Effective_Value
+                 (Sig, Sig.Driving_Value'Unrestricted_Access);
             when In_Conversion =>
                --  TODO: handle eff_forced signals.
                Set_Conversion_Activity (Propagation.Table (I).Conv);
