@@ -35,12 +35,17 @@ package Grt.Sundials is
    subtype I32_Fat_Array is I32_Array (Natural);
    type I32_C_Arr_Ptr is access all I32_Fat_Array;
 
-   function Initialize return Ghdl_I32;
-   pragma Import (C, Initialize, "grt__sundials__initialize");
-
    --  Initialize the analog solver, SIZE is the number of scalar quantities.
    function Create (Sz : Ghdl_I32; Nbr_Roots : Ghdl_I32) return Ghdl_I32;
    pragma Import (C, Create, "grt__sundials__create");
+
+   --  First solver initialization.
+   function Initialize return Ghdl_I32;
+   pragma Import (C, Initialize, "grt__sundials__initialize");
+
+   procedure Set_Tolerances_Scalar (Atol : Ghdl_F64; Rtol : Ghdl_F64);
+   pragma Import (C, Set_Tolerances_Scalar,
+                  "grt__sundials__set_tolerances_scalar");
 
    --  Set maximum solver step.
    procedure Set_Max_Step (Step : Ghdl_F64);
@@ -68,21 +73,21 @@ package Grt.Sundials is
                     Res : F64_C_Arr_Ptr);
    pragma Import (C, Roots, "grt__analog_solver__roots");
 
-   procedure Set_Values (Y : F64_C_Arr_Ptr;
-                         Yp: F64_C_Arr_Ptr);
-   pragma Import (C, Set_Values, "grt__analog_solver__set_values");
-
    procedure Solver_Set_Algebric_Variable (Idx : Natural);
    pragma Import (C, Solver_Set_Algebric_Variable,
-                  "grt__analog_solver__set_algebric_variable");
+                  "grt__sundials__set_algebric_variable");
    procedure Solver_Set_Differential_Variable (Idx : Natural);
    pragma Import (C, Solver_Set_Differential_Variable,
-                  "grt__analog_solver__set_differential_variable");
+                  "grt__sundials__set_differential_variable");
 
    --  Resolve initial conditions.
    function Solver_Initial_Conditions(Tout : Ghdl_F64) return Integer;
    pragma Import (C, Solver_Initial_Conditions,
-                  "grt__analog_solver__initial_conditions");
+                  "grt__sundials__initial_conditions");
+
+   function Solver_Reinit (T : Ghdl_F64) return Integer;
+   pragma Import (C, Solver_Reinit,
+                  "grt__sundials__reinit");
 
    procedure Sundials_Solve
      (T : Ghdl_F64; Tn : in out Ghdl_F64; Res : out Integer);
