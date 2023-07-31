@@ -80,7 +80,12 @@ package Grt.Processes is
    --  to be cleared.
    Break_Flag : Boolean := False;
 
+   --  For AMS: the domain signal.
    Domain_Sig : Ghdl_Signal_Ptr;
+
+   Quiescent_Domain : constant Ghdl_U8 := 0;
+   Time_Domain : constant Ghdl_U8 := 1;
+   Frequency_Domain : constant Ghdl_U8 := 0;
 
    type Process_Type is private;
    --  type Process_Acc is access all Process_Type;

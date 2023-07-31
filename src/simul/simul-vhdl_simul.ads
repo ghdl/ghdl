@@ -155,7 +155,8 @@ package Simul.Vhdl_Simul is
       Kind : Augmentation_Kind;
       --  If True, selected in the break set.
       Selected : Boolean;
-      Q : Scalar_Quantity_Index;
+      Sq_Idx : Scalar_Quantity_Index;
+      Val : Fp64;
    end record;
 
    package Augmentations_Set is new Tables
@@ -168,7 +169,7 @@ package Simul.Vhdl_Simul is
 
    type Break_Entry is record
       --  The scalar quantity to be assigned.
-      Quan : Scalar_Quantity_Index;
+      Sq_Idx : Scalar_Quantity_Index;
       --  The corresponding characteristic equation (either for Q'Dot or for
       --  Q'Integ).
       Tag : Augmentation_Index;

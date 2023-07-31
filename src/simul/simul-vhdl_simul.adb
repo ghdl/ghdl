@@ -67,7 +67,7 @@ with Grt.Analog_Solver;
 with Grt.Sundials;
 
 package body Simul.Vhdl_Simul is
-   Quiescent_Domain : constant Ghdl_U8 := 0;
+   Last_Simple_Simultaneous : Simultaneous_Index_Type;
 
    function To_Instance_Acc is new Ada.Unchecked_Conversion
      (System.Address, Grt.Processes.Instance_Acc);
@@ -83,18 +83,6 @@ package body Simul.Vhdl_Simul is
       new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_Signal_Ptr_Ptr);
 
    subtype F64_C_Arr_Ptr is Grt.Sundials.F64_C_Arr_Ptr;
-
-   procedure Residues (T : Ghdl_F64;
-                       Y : F64_C_Arr_Ptr;
-                       Yp : F64_C_Arr_Ptr;
-                       Res : F64_C_Arr_Ptr);
-   pragma Export (C, Residues, "grt__analog_solver__residues");
-
-   procedure Roots (T : Ghdl_F64;
-                    Y : F64_C_Arr_Ptr;
-                    Yp: F64_C_Arr_Ptr;
-                    Res : F64_C_Arr_Ptr);
-   pragma Export (C, Roots, "grt__analog_solver__roots");
 
    --  Mapping.
    type Iir_Kind_To_Kind_Signal_Type is
@@ -4023,6 +4011,40 @@ package body Simul.Vhdl_Simul is
       end loop;
    end Create_Terminals;
 
+   procedure Print_Csv_Name (Name : Node)
+   is
+      use Simul.Main;
+      use Grt.Astdio;
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kind_Free_Quantity_Declaration
+            | Iir_Kind_Across_Quantity_Declaration
+            | Iir_Kind_Through_Quantity_Declaration =>
+            Put (Csv_File,
+                 Name_Table.Image (Get_Identifier (Name)));
+         when Iir_Kind_Simple_Name =>
+            Print_Csv_Name (Get_Named_Entity (Name));
+         when Iir_Kind_Dot_Attribute =>
+            Print_Csv_Name (Get_Prefix (Name));
+            Put (Csv_File, "'dot");
+         when others =>
+            Vhdl.Errors.Error_Kind ("print_csv_name", Name);
+      end case;
+   end Print_Csv_Name;
+
+   procedure Print_Csv_Header
+   is
+      use Grt.Astdio;
+      use Simul.Main;
+   begin
+      Put (Csv_File, "Time");
+      for I in Quantity_Table.First .. Quantity_Table.Last loop
+         Put (Csv_File, ',');
+         Print_Csv_Name (Quantity_Table.Table (I).Decl);
+      end loop;
+      New_Line (Csv_File);
+   end Print_Csv_Header;
+
    --  Compute solver variables, allocate memory for quantities.
    procedure Create_Quantities
    is
@@ -4104,7 +4126,8 @@ package body Simul.Vhdl_Simul is
 
                         Augmentations_Set.Append ((Kind => Aug_Dot,
                                                    Selected => False,
-                                                   Q => Q.Sq_Idx));
+                                                   Sq_Idx => Q.Sq_Idx,
+                                                   Val => 0.0));
                      end if;
 
                      Q.Val := Alloc_Memory (Q.Typ, Global_Pool'Access);
@@ -4206,31 +4229,7 @@ package body Simul.Vhdl_Simul is
       end loop;
 
       if Simul.Main.Csv_Filename /= null then
-         declare
-            use Grt.Astdio;
-            use Simul.Main;
-         begin
-            Put (Csv_File, "Time");
-            for I in Quantity_Table.First .. Quantity_Table.Last loop
-               declare
-                  Decl : constant Node := Quantity_Table.Table (I).Decl;
-               begin
-                  Put (Csv_File, ',');
-                  case Get_Kind (Decl) is
-                     when Iir_Kind_Free_Quantity_Declaration
-                       | Iir_Kind_Across_Quantity_Declaration
-                       | Iir_Kind_Through_Quantity_Declaration =>
-                        Put (Csv_File,
-                             Name_Table.Image (Get_Identifier (Decl)));
-                     when Iir_Kind_Dot_Attribute =>
-                        Put (Csv_File, "dot");
-                     when others =>
-                        Vhdl.Errors.Error_Kind ("create_quantities", Decl);
-                  end case;
-               end;
-            end loop;
-            New_Line (Csv_File);
-         end;
+         Print_Csv_Header;
       end if;
    end Create_Quantities;
 
@@ -4318,7 +4317,7 @@ package body Simul.Vhdl_Simul is
       end loop;
    end Set_Quantities_Values;
 
-   procedure Print_Values (T : Ghdl_F64) is
+   procedure Print_Csv_Values (T : Ghdl_F64) is
    begin
       --  Display values
       if Simul.Main.Csv_Filename /= null then
@@ -4338,15 +4337,102 @@ package body Simul.Vhdl_Simul is
             New_Line (Csv_File);
          end;
       end if;
-   end Print_Values;
+   end Print_Csv_Values;
 
    --  Residues function called by Sundials.
    --  Return the differences of characteristic equations.
    procedure Residues (T : Ghdl_F64;
                        Y : F64_C_Arr_Ptr;
                        Yp : F64_C_Arr_Ptr;
+                       Res : F64_C_Arr_Ptr);
+   pragma Export (C, Residues, "grt__analog_solver__residues");
+
+   procedure Residues_Time (A : Augmentation_Entry;
+                            Num : Natural;
+                            Res : F64_C_Arr_Ptr;
+                            Y : F64_C_Arr_Ptr;
+                            Yp : F64_C_Arr_Ptr) is
+   begin
+      case A.Kind is
+         when Aug_Dot =>
+            declare
+               Q : Scalar_Quantity_Record renames
+                 Scalar_Quantities_Table.Table (A.Sq_Idx);
+               pragma Assert (Q.Integ /= No_Scalar_Quantity);
+               Qi : Scalar_Quantity_Record renames
+                 Scalar_Quantities_Table.Table (Q.Integ);
+            begin
+               --  The value is equal to the derivative of its integral.
+               Res (Num) := Y (Q.Y_Idx) - Yp (Qi.Y_Idx);
+
+               if Trace_Residues then
+                  declare
+                     use Simple_IO;
+                     use Utils_IO;
+                  begin
+                     Put ("Der");
+                     Put_Uns32 (Uns32 (Num));
+                     Put (" Y=");
+                     Put_Fp64 (Fp64 (Y (Q.Y_Idx)));
+                     Put (", Yp=");
+                     Put_Fp64 (Fp64 (Yp (Qi.Y_Idx)));
+                     Put (", R=");
+                     Put_Fp64 (Fp64 (Res (Num)));
+                     New_Line;
+                  end;
+               end if;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Residues_Time;
+
+   procedure Residues_Discontinuity (A : Augmentation_Entry;
+                                     Num : Natural;
+                                     Res : F64_C_Arr_Ptr;
+                                     Y : F64_C_Arr_Ptr;
+                                     Yp : F64_C_Arr_Ptr) is
+   begin
+      case A.Kind is
+         when Aug_Dot =>
+            declare
+               Q : Scalar_Quantity_Record renames
+                 Scalar_Quantities_Table.Table (A.Sq_Idx);
+               pragma Assert (Q.Integ /= No_Scalar_Quantity);
+               Qi : Scalar_Quantity_Record renames
+                 Scalar_Quantities_Table.Table (Q.Integ);
+            begin
+               --  The value is equal to the derivative of its integral.
+               Res (Num) := Y (Q.Y_Idx) - Yp (Qi.Y_Idx);
+
+               if Trace_Residues then
+                  declare
+                     use Simple_IO;
+                     use Utils_IO;
+                  begin
+                     Put ("Der");
+                     Put_Uns32 (Uns32 (Num));
+                     Put (" Y=");
+                     Put_Fp64 (Fp64 (Y (Q.Y_Idx)));
+                     Put (", Yp=");
+                     Put_Fp64 (Fp64 (Yp (Qi.Y_Idx)));
+                     Put (", R=");
+                     Put_Fp64 (Fp64 (Res (Num)));
+                     New_Line;
+                  end;
+               end if;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Residues_Discontinuity;
+
+   procedure Residues (T : Ghdl_F64;
+                       Y : F64_C_Arr_Ptr;
+                       Yp : F64_C_Arr_Ptr;
                        Res : F64_C_Arr_Ptr)
    is
+      Domain : constant Ghdl_E8 := Grt.Processes.Domain_Sig.Value_Ptr.E8;
       Marker : Mark_Type;
       Num : Natural;
       L, R : Valtyp;
@@ -4429,45 +4515,49 @@ package body Simul.Vhdl_Simul is
       end loop;
 
       --  TODO: apply break set, apply discontinuity set.
-      for I in Augmentations_Set.First .. Augmentations_Set.Last loop
-         declare
-            A : Augmentation_Entry renames Augmentations_Set.Table (I);
-         begin
-            case A.Kind is
-               when Aug_Dot =>
-                  declare
-                     Q : Scalar_Quantity_Record renames
-                       Scalar_Quantities_Table.Table (A.Q);
-                     pragma Assert (Q.Integ /= No_Scalar_Quantity);
-                     Qi : Scalar_Quantity_Record renames
-                       Scalar_Quantities_Table.Table (Q.Integ);
-                  begin
-                     --  The value is equal to the derivative of its integral.
-                     Res (Num) := Y (Q.Y_Idx) - Yp (Qi.Y_Idx);
+      if Grt.Processes.Break_Flag then
+         --  b) If the value of the predefined DOMAIN signal is TIME_DOMAIN,
+         --     the discontinuity augmentation set is determined.
+         if Domain = Grt.Processes.Time_Domain then
+            for I in Augmentations_Set.First .. Augmentations_Set.Last loop
+               declare
+                  A : Augmentation_Entry renames Augmentations_Set.Table (I);
+               begin
+                  if not A.Selected then
+                     Residues_Discontinuity (A, Num, Res, Y, Yp);
+                     Num := Num + 1;
+                  end if;
+               end;
+            end loop;
+         end if;
 
-                     if Trace_Residues then
-                        declare
-                           use Simple_IO;
-                           use Utils_IO;
-                        begin
-                           Put ("Der");
-                           Put_Uns32 (Uns32 (I));
-                           Put (" Y=");
-                           Put_Fp64 (Fp64 (Y (Q.Y_Idx)));
-                           Put (", Yp=");
-                           Put_Fp64 (Fp64 (Yp (Qi.Y_Idx)));
-                           Put (", R=");
-                           Put_Fp64 (Fp64 (Res (Num)));
-                           New_Line;
-                        end;
-                     end if;
-                  end;
-                  Num := Num + 1;
-               when others =>
-                  raise Internal_Error;
-            end case;
-         end;
-      end loop;
+         --  c) The break set is applied to the current augmentation set.
+         for I in Break_Set.First .. Break_Set.Last loop
+            declare
+               B : Break_Entry renames Break_Set.Table (I);
+               Y_Idx : constant Natural :=
+                 Scalar_Quantities_Table.Table (B.Sq_Idx).Y_Idx;
+            begin
+               Res (Num) := Y (Y_Idx) - Ghdl_F64 (B.Val);
+               Num := Num + 1;
+            end;
+         end loop;
+      else
+         for I in Augmentations_Set.First .. Augmentations_Set.Last loop
+            declare
+               A : Augmentation_Entry renames Augmentations_Set.Table (I);
+            begin
+               case Domain is
+                  when Grt.Processes.Time_Domain =>
+                     Residues_Time (A, Num, Res, Y, Yp);
+
+                     Num := Num + 1;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            end;
+         end loop;
+      end if;
 
       pragma Assert (Nbr_Solver_Variables = Num);
 
@@ -4481,6 +4571,12 @@ package body Simul.Vhdl_Simul is
 
    --  Root finding function for sundials.
    --  Detect 'Above changes.
+   procedure Roots (T : Ghdl_F64;
+                    Y : F64_C_Arr_Ptr;
+                    Yp: F64_C_Arr_Ptr;
+                    Res : F64_C_Arr_Ptr);
+   pragma Export (C, Roots, "grt__analog_solver__roots");
+
    procedure Roots (T : Ghdl_F64;
                     Y : F64_C_Arr_Ptr;
                     Yp: F64_C_Arr_Ptr;
@@ -4536,6 +4632,65 @@ package body Simul.Vhdl_Simul is
       Release_Expr_Pool (Marker);
    end Roots;
 
+   procedure Exec_Complex_Simultaneous (Inst : Synth_Instance_Acc;
+                                        Stmt : Node);
+
+   procedure Exec_Complex_Simultaneous_Chain (Inst : Synth_Instance_Acc;
+                                              Chain : Node)
+   is
+      Stmt : Node;
+   begin
+      Stmt := Chain;
+      while Stmt /= Null_Node loop
+         Exec_Complex_Simultaneous (Inst, Stmt);
+         Stmt := Get_Chain (Stmt);
+      end loop;
+   end Exec_Complex_Simultaneous_Chain;
+
+   procedure Exec_Complex_Simultaneous (Inst : Synth_Instance_Acc;
+                                        Stmt : Node) is
+   begin
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Simultaneous_If_Statement =>
+            declare
+               S : Node;
+            begin
+               S := Stmt;
+               loop
+                  if Execute_Condition (Inst, Get_Condition (S)) then
+                     Exec_Complex_Simultaneous_Chain
+                       (Inst, Get_Simultaneous_Statement_Chain (S));
+                     return;
+                  end if;
+                  S := Get_Else_Clause (S);
+                  exit when S = Null_Node;
+               end loop;
+            end;
+         when Iir_Kind_Simple_Simultaneous_Statement =>
+            Simultaneous_Table.Append ((Stmt => Stmt, Inst => Inst));
+         when others =>
+            Vhdl.Errors.Error_Kind ("exec_complex_simultaneous", Stmt);
+      end case;
+   end Exec_Complex_Simultaneous;
+
+   --  Evaluate complex (ie non-simple) simulatenous statements and append
+   --  all the simple simultaneous statements found.
+   procedure Eval_Complex_Simultaneous is
+   begin
+      Simultaneous_Table.Set_Last (Last_Simple_Simultaneous);
+
+      for I in Complex_Simultaneous_Table.First
+        .. Complex_Simultaneous_Table.Last
+      loop
+         declare
+            S : Simultaneous_Record renames
+              Complex_Simultaneous_Table.Table (I);
+         begin
+            Exec_Complex_Simultaneous (S.Inst, S.Stmt);
+         end;
+      end loop;
+   end Eval_Complex_Simultaneous;
+
    --  Called by the kernel (grt-processes) to run the analog solver.
    procedure Solve (T : Ghdl_F64; Tn : in out Ghdl_F64; Res : out Integer);
    pragma Export (Ada, Solve, "grt__analog_solver__solve");
@@ -4590,6 +4745,39 @@ package body Simul.Vhdl_Simul is
                New_Line;
             end;
          end if;
+
+         if Grt.Processes.Break_Flag then
+            --  Save old value for discontinuity set.
+            declare
+               Y : constant F64_C_Arr_Ptr := Grt.Sundials.Get_Yy_Vec;
+            begin
+               for I in Augmentations_Set.First .. Augmentations_Set.Last loop
+                  declare
+                     A : Augmentation_Entry renames
+                       Augmentations_Set.Table (I);
+                     Y_Idx : constant Natural :=
+                       Scalar_Quantities_Table.Table (A.Sq_Idx).Y_Idx;
+                  begin
+                     A.Val := Fp64 (Y (Y_Idx));
+                  end;
+               end loop;
+
+               for I in Break_Set.First .. Break_Set.Last loop
+                  declare
+                     B : Break_Entry renames Break_Set.Table (I);
+                     Y_Idx : constant Natural :=
+                       Scalar_Quantities_Table.Table (B.Sq_Idx).Y_Idx;
+                  begin
+                     Y (Y_Idx) := Ghdl_F64 (B.Val);
+                  end;
+               end loop;
+
+               Set_Quantities_Values (Y => Grt.Sundials.Get_Yy_Vec,
+                                      Yp => Grt.Sundials.Get_Yp_Vec);
+            end;
+         end if;
+
+         Eval_Complex_Simultaneous;
 
          if Grt.Sundials.Solver_Reinit (T) /= 0 then
             Grt.Errors.Internal_Error ("solver re-init");
@@ -4659,7 +4847,7 @@ package body Simul.Vhdl_Simul is
             Release_Expr_Pool (Mark);
          end;
       else
-         if Domain = Quiescent_Domain then
+         if Domain = Grt.Processes.Quiescent_Domain then
             --  Initial conditions
             --  1. call SetId
             --  2. Call CalcIC
@@ -4672,9 +4860,14 @@ package body Simul.Vhdl_Simul is
                Res := Solve_Ok;
                return;
             end if;
+
+            Eval_Complex_Simultaneous;
+
             Grt.Sundials.Sundials_Solve (T, Tn, Res);
 
             if Res = Solve_Cross then
+               --  If a zero has been crossed, invert the corresponding 'Above
+               --  signal.
                declare
                   Roots : constant Grt.Sundials.I32_C_Arr_Ptr :=
                      Grt.Sundials.Get_Root_Info;
@@ -4690,7 +4883,6 @@ package body Simul.Vhdl_Simul is
                      end if;
                   end loop;
                end;
-               --  TODO: return Solve_Cross only if one signal has changed.
             end if;
          else
             --  Frequency domain
@@ -4701,7 +4893,7 @@ package body Simul.Vhdl_Simul is
                                 Yp => Grt.Sundials.Get_Yp_Vec);
       end if;
 
-      Print_Values (Tn);
+      Print_Csv_Values (Tn);
    end Solve;
 
    --  Called by the simulation kernel (grt-processes) to initialize the
@@ -4717,6 +4909,8 @@ package body Simul.Vhdl_Simul is
       Grt.Sundials.Set_Tolerances_Scalar
         (Grt.Options.Abs_Tol, Grt.Options.Rel_Tol);
 
+      --  For the initial condition: determines which quantity is algebric
+      --  and which quantity is differential.
       for I in Scalar_Quantities_Table.First .. Scalar_Quantities_Table.Last
       loop
          declare
@@ -4728,6 +4922,8 @@ package body Simul.Vhdl_Simul is
             else
                Grt.Sundials.Solver_Set_Algebric_Variable (Sq.Y_Idx);
             end if;
+            --  Not really needed: Integ is set, there is a corresponding
+            --  Dot.
             if Sq.Integ /= No_Scalar_Quantity then
                Grt.Sundials.Solver_Set_Differential_Variable
                  (Scalar_Quantities_Table.Table (Sq.Integ).Y_Idx);
@@ -4771,6 +4967,8 @@ package body Simul.Vhdl_Simul is
            Read_Sig (Signals_Table.Table (Signals_Table.First).Sig);
          Grt.Signals.Ghdl_Signal_Add_Kernel_Driver
            (Grt.Processes.Domain_Sig, 0);
+
+         Last_Simple_Simultaneous := Simultaneous_Table.Last;
       end if;
 
       --  Allow Synth_Expression to handle signals.
