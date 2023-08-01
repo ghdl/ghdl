@@ -4370,13 +4370,13 @@ package body Simul.Vhdl_Simul is
                      use Simple_IO;
                      use Utils_IO;
                   begin
-                     Put ("Der");
+                     Put ("Der #");
                      Put_Uns32 (Uns32 (Num));
                      Put (" Y=");
                      Put_Fp64 (Fp64 (Y (Q.Y_Idx)));
                      Put (", Yp=");
                      Put_Fp64 (Fp64 (Yp (Qi.Y_Idx)));
-                     Put (", R=");
+                     Put (", r=");
                      Put_Fp64 (Fp64 (Res (Num)));
                      New_Line;
                   end;
@@ -4387,23 +4387,33 @@ package body Simul.Vhdl_Simul is
       end case;
    end Residues_Time;
 
+   function Get_Y_Idx (Sq : Scalar_Quantity_Index) return Natural is
+   begin
+      return Scalar_Quantities_Table.Table (Sq).Y_Idx;
+   end Get_Y_Idx;
+
    procedure Residues_Discontinuity (A : Augmentation_Entry;
                                      Num : Natural;
                                      Res : F64_C_Arr_Ptr;
                                      Y : F64_C_Arr_Ptr;
-                                     Yp : F64_C_Arr_Ptr) is
+                                     Yp : F64_C_Arr_Ptr)
+   is
+      pragma Unreferenced (Yp);
    begin
       case A.Kind is
          when Aug_Dot =>
             declare
                Q : Scalar_Quantity_Record renames
                  Scalar_Quantities_Table.Table (A.Sq_Idx);
-               pragma Assert (Q.Integ /= No_Scalar_Quantity);
-               Qi : Scalar_Quantity_Record renames
-                 Scalar_Quantities_Table.Table (Q.Integ);
+               Y_Idx : constant Natural := Get_Y_Idx (Q.Integ);
             begin
-               --  The value is equal to the derivative of its integral.
-               Res (Num) := Y (Q.Y_Idx) - Yp (Qi.Y_Idx);
+               --  LRM 1076.1-2017 14.7.6.4 Discontinuity augmentation set
+               --  The difference between each scakar subelement of the
+               --  prefix Q of each quantity of the form Q'Dot and the numeric
+               --  value of that scalar subelement of Q when the discontinuity
+               --  augmentation set is determined is a characteristic
+               --  exression of the discontinuity augmentation set.
+               Res (Num) := Y (Y_Idx) - Ghdl_F64 (A.Val);
 
                if Trace_Residues then
                   declare
@@ -4413,10 +4423,10 @@ package body Simul.Vhdl_Simul is
                      Put ("Der");
                      Put_Uns32 (Uns32 (Num));
                      Put (" Y=");
-                     Put_Fp64 (Fp64 (Y (Q.Y_Idx)));
-                     Put (", Yp=");
-                     Put_Fp64 (Fp64 (Yp (Qi.Y_Idx)));
-                     Put (", R=");
+                     Put_Fp64 (Fp64 (Y (Y_Idx)));
+                     Put (", Old=");
+                     Put_Fp64 (A.Val);
+                     Put (", r=");
                      Put_Fp64 (Fp64 (Res (Num)));
                      New_Line;
                   end;
@@ -4501,7 +4511,7 @@ package body Simul.Vhdl_Simul is
                         Put_Fp64 (Lv);
                         Put (", R=");
                         Put_Fp64 (Rv);
-                        Put (", d=");
+                        Put (", r=");
                         Put_Fp64 (Lv - Rv);
                         New_Line;
                      end;
@@ -4525,6 +4535,7 @@ package body Simul.Vhdl_Simul is
                begin
                   if not A.Selected then
                      Residues_Discontinuity (A, Num, Res, Y, Yp);
+
                      Num := Num + 1;
                   end if;
                end;
@@ -4539,6 +4550,24 @@ package body Simul.Vhdl_Simul is
                  Scalar_Quantities_Table.Table (B.Sq_Idx).Y_Idx;
             begin
                Res (Num) := Y (Y_Idx) - Ghdl_F64 (B.Val);
+
+               if Trace_Residues then
+                  declare
+                     use Simple_IO;
+                     use Utils_IO;
+                  begin
+                     Put ("Brk #");
+                     Put_Uns32 (Uns32 (Num));
+                     Put (": Y");
+                     Put_Uns32 (Uns32 (Y_Idx));
+                     Put ("=");
+                     Put_Fp64 (B.Val);
+                     Put (", r=");
+                     Put_Fp64 (Fp64 (Res (Num)));
+                     New_Line;
+                  end;
+               end if;
+
                Num := Num + 1;
             end;
          end loop;
@@ -4747,21 +4776,29 @@ package body Simul.Vhdl_Simul is
          end if;
 
          if Grt.Processes.Break_Flag then
-            --  Save old value for discontinuity set.
             declare
                Y : constant F64_C_Arr_Ptr := Grt.Sundials.Get_Yy_Vec;
             begin
+               --  Save old value for discontinuity set.
                for I in Augmentations_Set.First .. Augmentations_Set.Last loop
                   declare
                      A : Augmentation_Entry renames
                        Augmentations_Set.Table (I);
-                     Y_Idx : constant Natural :=
-                       Scalar_Quantities_Table.Table (A.Sq_Idx).Y_Idx;
+                     Sq : Scalar_Quantity_Record renames
+                       Scalar_Quantities_Table.Table (A.Sq_Idx);
                   begin
-                     A.Val := Fp64 (Y (Y_Idx));
+                     case A.Kind is
+                        when Aug_Dot =>
+                           A.Val := Fp64 (Y (Get_Y_Idx (Sq.Integ)));
+                        when others =>
+                           raise Internal_Error;
+                     end case;
                   end;
                end loop;
 
+               --  Apply break values
+               --  (So that the complex simultaneous statements are correctly
+               --  evaluated).
                for I in Break_Set.First .. Break_Set.Last loop
                   declare
                      B : Break_Entry renames Break_Set.Table (I);

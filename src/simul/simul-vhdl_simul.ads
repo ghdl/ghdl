@@ -155,6 +155,7 @@ package Simul.Vhdl_Simul is
       Kind : Augmentation_Kind;
       --  If True, selected in the break set.
       Selected : Boolean;
+      --  The scalar quantity representing the derivative or the integral.
       Sq_Idx : Scalar_Quantity_Index;
       Val : Fp64;
    end record;
