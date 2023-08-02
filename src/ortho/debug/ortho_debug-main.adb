@@ -16,7 +16,6 @@
 with Ada.Command_Line; use Ada.Command_Line;
 with Ada.Unchecked_Deallocation;
 with Ada.Text_IO; use Ada.Text_IO;
-with Ortho_Debug; use Ortho_Debug;
 with Ortho_Debug_Front; use Ortho_Debug_Front;
 with Ortho_Debug.Disp;
 with System; use System;
