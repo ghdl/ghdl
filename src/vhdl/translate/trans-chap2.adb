@@ -1161,10 +1161,6 @@ package body Trans.Chap2 is
 
    procedure Translate_Package_Body_Unit (Bod : Iir_Package_Body) is
    begin
-      if not Flag_Elaboration then
-         return;
-      end if;
-
       Translate_Package_Body_Internal (Bod);
    end Translate_Package_Body_Unit;
 
