@@ -94,7 +94,7 @@ package Simul.Vhdl_Simul is
    Sig_Size : constant Size_Type := Ghdl_Signal_Ptr'Size / 8;
 
    procedure Write_Sig (Mem : Memory_Ptr; Val : Ghdl_Signal_Ptr);
-   procedure Create_User_Signal (E : Signal_Entry);
+   procedure Create_Signal (E : Signal_Entry);
    procedure Collapse_Signal (E : in out Signal_Entry);
    procedure Create_Process_Drivers (Proc : Process_Index_Type);
    procedure Register_Sensitivity (Proc_Idx : Process_Index_Type);

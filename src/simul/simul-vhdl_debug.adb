@@ -410,6 +410,8 @@ package body Simul.Vhdl_Debug is
             Put (" [guard]");
          when Iir_Kind_Above_Attribute =>
             Put (" [above]");
+         when Iir_Kind_Delayed_Attribute =>
+            Put (" [delayed]");
          when others =>
             raise Internal_Error;
       end case;

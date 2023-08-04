@@ -3138,10 +3138,8 @@ package body Simul.Vhdl_Simul is
       end case;
    end Add_Guard_Sensitivity;
 
-   procedure Create_Guard_Signal (Idx : Signal_Index_Type)
+   procedure Create_Guard_Signal (E : Signal_Entry)
    is
-      E : Signal_Entry renames Signals_Table.Table (Idx);
-
       Dep_List : Iir_List;
       Dep_It : List_Iterator;
       S : Ghdl_Signal_Ptr;
@@ -3272,15 +3270,13 @@ package body Simul.Vhdl_Simul is
       return (S.Typ, To_Memory_Ptr (S));
    end To_Memtyp;
 
-   procedure Create_Signal (Idx : Signal_Index_Type)
+   procedure Create_Signal (E : Signal_Entry)
    is
-      E : Signal_Entry renames Signals_Table.Table (Idx);
       S : Ghdl_Signal_Ptr;
    begin
-      E.Sig := Alloc_Signal_Memory (E.Typ, Global_Pool'Access);
       case E.Kind is
          when Signal_Guard =>
-            Create_Guard_Signal (Idx);
+            Create_Guard_Signal (E);
          when Signal_Quiet =>
             S := Grt.Signals.Ghdl_Create_Quiet_Signal
               (To_Ghdl_Value_Ptr (To_Address (E.Val)), E.Time);
@@ -3304,7 +3300,7 @@ package body Simul.Vhdl_Simul is
               (To_Ghdl_Value_Ptr (To_Address (E.Val)));
             Write_Sig (E.Sig, S);
          when Signal_User =>
-            Create_User_Signal (Signals_Table.Table (Idx));
+            Create_User_Signal (E);
          when Signal_None =>
             raise Internal_Error;
       end case;
@@ -3321,7 +3317,8 @@ package body Simul.Vhdl_Simul is
                E.Sig := Signals_Table.Table (E.Collapsed_By).Sig;
                --  E.Val will be assigned in Collapse_Signals.
             else
-               Create_Signal (I);
+               E.Sig := Alloc_Signal_Memory (E.Typ, Global_Pool'Access);
+               Create_Signal (E);
             end if;
          end;
       end loop;
