@@ -1997,13 +1997,7 @@ package body Synth.Vhdl_Stmts is
          Conv := Null_Node;
       end if;
 
-      --  Special case for protected type as the slot describes
-      --  declarations.
-      if Get_Kind (Inter_Type) = Iir_Kind_Protected_Type_Declaration then
-         Inter_Typ := Protected_Type;
-      else
-         Inter_Typ := Get_Subtype_Object (Subprg_Inst, Inter_Type);
-      end if;
+      Inter_Typ := Get_Subtype_Object (Subprg_Inst, Inter_Type);
 
       if Get_Kind (Inter) = Iir_Kind_Interface_Constant_Declaration
         or else (Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration

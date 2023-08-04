@@ -480,8 +480,12 @@ package body Elab.Vhdl_Types is
             Typ := Synth_Record_Type_Definition (Syn_Inst, null, Def);
          when Iir_Kind_Protected_Type_Declaration =>
             Typ := Protected_Type;
+            Create_Subtype_Object (Syn_Inst, Def, Typ);
             Elab.Vhdl_Decls.Elab_Declarations
               (Syn_Inst, Get_Declaration_Chain (Def));
+
+            --  Do not call create_subtype_object twice.
+            Typ := null;
          when Iir_Kind_Incomplete_Type_Definition =>
             return;
          when others =>
@@ -915,11 +919,7 @@ package body Elab.Vhdl_Types is
             Error_Kind ("elab_subtype_indication", Atype);
       end case;
 
-      if Get_Kind (Res_Type) = Iir_Kind_Protected_Type_Declaration then
-         return Protected_Type;
-      else
-         return Get_Subtype_Object (Syn_Inst, Res_Type);
-      end if;
+      return Get_Subtype_Object (Syn_Inst, Res_Type);
    end Elab_Subtype_Indication;
 
    function Elab_Declaration_Type
