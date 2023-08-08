@@ -254,8 +254,9 @@ package body Ortho_Code.Dwarf is
       --  Generate type names.
       Flags.Flag_Type_Name := True;
 
+      --  Symbols for the start/end of .text
       Orig_Sym := Create_Local_Symbol;
-      Set_Symbol_Pc (Orig_Sym, False);
+      Set_Symbol_Pc (Orig_Sym, False);  --  Set its address
       End_Sym := Create_Local_Symbol;
 
       Create_Section (Line1_Sect, ".debug_line-1", Section_Debug);

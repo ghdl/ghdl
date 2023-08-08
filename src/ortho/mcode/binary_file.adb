@@ -14,8 +14,9 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 with System.Storage_Elements;
-with Ada.Text_IO; use Ada.Text_IO;
+with Simple_IO; use Simple_IO;
 with Ada.Characters.Latin_1;
+
 with Hex_Images; use Hex_Images;
 with Disassemble;
 
@@ -888,7 +889,7 @@ package body Binary_File is
             Add_32 (Sect, Addr, Unsigned_32 (Get_Symbol_Vaddr (Sym)));
 
          when Reloc_Abs
-           | Reloc_Ua_Addr =>
+            | Reloc_Ua_Addr =>
             Add_Addr (Sect, Addr, Get_Symbol_Vaddr (Sym));
 
          when Reloc_Pc32 =>

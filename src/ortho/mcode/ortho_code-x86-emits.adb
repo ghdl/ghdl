@@ -3447,6 +3447,7 @@ package body Ortho_Code.X86.Emits is
       end if;
 
       if Flag_Debug /= Debug_None then
+         Set_Current_Section (Sect_Text);
          Dwarf.Init;
       end if;
 
