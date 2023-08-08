@@ -53,12 +53,25 @@ package body Simul.Vhdl_Elab is
             T.W := T.Abound.Len * T.Arr_El.W;
             T.Wkind := Wkind_Sim;
          when Type_Record =>
-            T.W := 0;
-            for I in T.Rec.E'Range loop
-               T.Rec.E (I).Offs.Net_Off := T.W;
-               Convert_Type_Width (T.Rec.E (I).Typ);
-               T.W := T.W + T.Rec.E (I).Typ.W;
-            end loop;
+            declare
+               Base : constant Type_Acc := T.Rec_Base;
+               Off : Uns32;
+            begin
+               Off := 0;
+               --  For offsets: first static types, then the others.
+               for Static in reverse Boolean loop
+                  for I in T.Rec.E'Range loop
+                     if Static then
+                        Convert_Type_Width (T.Rec.E (I).Typ);
+                     end if;
+                     if Base.Rec.E (I).Typ.Is_Static = Static then
+                        T.Rec.E (I).Offs.Net_Off := Off;
+                        Off := Off + T.Rec.E (I).Typ.W;
+                     end if;
+                  end loop;
+               end loop;
+               T.W := Off;
+            end;
             T.Wkind := Wkind_Sim;
          when Type_Unbounded_Array
             | Type_Unbounded_Vector =>
