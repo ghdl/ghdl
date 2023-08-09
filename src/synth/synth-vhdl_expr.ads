@@ -82,7 +82,7 @@ package Synth.Vhdl_Expr is
    --  EXPR_TYPE.
    function Synth_Expression_With_Type (Syn_Inst : Synth_Instance_Acc;
                                         Expr : Node;
-                                        Expr_Type : Type_Acc) return Valtyp;
+                                        Typ : Type_Acc) return Valtyp;
 
    --  For value signal attribute (like 'Event).
    type Hook_Attribute_Acc is access
