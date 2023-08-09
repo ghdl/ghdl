@@ -1336,6 +1336,8 @@ package body Trans.Chap3 is
       end loop;
 
       --  Create the bounds type
+      --  TODO: separate type bounds (for complex elements) and subtype bounds
+      --  (for unbounded elements).
       Info.B.Bounds_Type := O_Tnode_Null;
       Start_Record_Type (El_List);
       New_Record_Field (El_List, Info.B.Layout_Size,
