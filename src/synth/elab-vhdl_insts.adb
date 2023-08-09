@@ -487,7 +487,8 @@ package body Elab.Vhdl_Insts is
          Release_Expr_Pool (Marker);
          return Res;
       else
-         return Elab_Declaration_Type (Sub_Inst, Inter);
+         Res := Elab_Declaration_Type (Sub_Inst, Inter);
+         return Res;
       end if;
    end Elab_Port_Association_Type;
 
@@ -509,6 +510,42 @@ package body Elab.Vhdl_Insts is
             Inter_Typ := Elab_Port_Association_Type
               (Sub_Inst, Syn_Inst, Inter, Assoc);
             if Inter_Typ /= null then
+               --  Check matching bounds.
+               if Inter_Typ.Kind in Type_Scalars
+                 and then
+                 Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Name
+               then
+                  declare
+                     use Synth.Vhdl_Stmts;
+                     Marker : Mark_Type;
+                     Actual : constant Node := Get_Actual (Assoc);
+                     Actual_Base : Valtyp;
+                     Actual_Typ : Type_Acc;
+                     Actual_Offs : Value_Offsets;
+                     Dyn : Dyn_Name;
+                     Same : Boolean;
+                  begin
+                     Mark_Expr_Pool (Marker);
+
+                     Synth_Assignment_Prefix
+                       (Syn_Inst, Actual,
+                        Actual_Base, Actual_Typ, Actual_Offs, Dyn);
+                     pragma Assert (Dyn = No_Dyn_Name);
+                     case Type_Scalars (Inter_Typ.Kind) is
+                        when Type_All_Discrete =>
+                           Same := Inter_Typ.Drange = Actual_Typ.Drange;
+                        when Type_Float =>
+                           Same := Inter_Typ.Frange = Actual_Typ.Frange;
+                     end case;
+                     if not Same then
+                        Error_Msg_Elab
+                          (+Assoc,
+                           "range of formal %i is different from formal range",
+                           +Inter);
+                     end if;
+                     Release_Expr_Pool (Marker);
+                  end;
+               end if;
                Create_Signal (Sub_Inst, Inter, Inter_Typ);
             end if;
          end if;
