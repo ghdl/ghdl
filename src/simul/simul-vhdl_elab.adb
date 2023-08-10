@@ -148,15 +148,16 @@ package body Simul.Vhdl_Elab is
       Convert_Type_Width (E.Typ);
 
       --  Allocate the value in global pool.
-      E.Val := Alloc_Memory (E.Typ, Global_Pool'Access);
+      E.Val_Init := Alloc_Memory (E.Typ, Global_Pool'Access);
 
       --  Set it to the default value.
       if Val.Val.Init /= null then
-         Copy_Memory (E.Val, Get_Memory (Val.Val.Init), E.Typ.Sz);
+         Copy_Memory (E.Val_Init, Get_Memory (Val.Val.Init), E.Typ.Sz);
       else
-         Write_Value_Default (E.Val, E.Typ);
+         Write_Value_Default (E.Val_Init, E.Typ);
       end if;
       E.Sig := null;
+      E.Val := E.Val_Init;
 
       if E.Kind = Signal_User then
          if E.Typ.W > 0 then
@@ -286,7 +287,7 @@ package body Simul.Vhdl_Elab is
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Interface_View_Declaration =>
             --  Driver.
-            Gather_Signal ((Signal_User, Decl, Inst, null, null, null,
+            Gather_Signal ((Signal_User, Decl, Inst, null, null, null, null,
                             No_Sensitivity_Index, No_Signal_Index,
                             No_Connect_Index, No_Driver_Index,
                             No_Disconnect_Index, null));
@@ -320,7 +321,7 @@ package body Simul.Vhdl_Elab is
                end loop;
             end;
          when Iir_Kind_Above_Attribute =>
-            Gather_Signal ((Signal_Above, Decl, Inst, null, null, null,
+            Gather_Signal ((Signal_Above, Decl, Inst, null, null, null, null,
                             No_Sensitivity_Index, No_Signal_Index,
                             No_Connect_Index));
          when Iir_Kind_Quiet_Attribute =>
@@ -330,7 +331,8 @@ package body Simul.Vhdl_Elab is
             begin
                T := Compute_Attribute_Time (Inst, Decl);
                Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
-               Gather_Signal ((Signal_Quiet, Decl, Inst, null, null, null,
+               Gather_Signal ((Signal_Quiet, Decl, Inst,
+                               null, null, null, null,
                                No_Sensitivity_Index, No_Signal_Index,
                                No_Connect_Index, T, Pfx));
             end;
@@ -341,7 +343,8 @@ package body Simul.Vhdl_Elab is
             begin
                T := Compute_Attribute_Time (Inst, Decl);
                Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
-               Gather_Signal ((Signal_Stable, Decl, Inst, null, null, null,
+               Gather_Signal ((Signal_Stable, Decl, Inst,
+                               null, null, null, null,
                                No_Sensitivity_Index, No_Signal_Index,
                                No_Connect_Index, T, Pfx));
             end;
@@ -351,7 +354,7 @@ package body Simul.Vhdl_Elab is
             begin
                Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
                Gather_Signal
-                 ((Signal_Transaction, Decl, Inst, null, null, null,
+                 ((Signal_Transaction, Decl, Inst, null, null, null, null,
                    No_Sensitivity_Index, No_Signal_Index,
                    No_Connect_Index, 0, Pfx));
             end;
@@ -362,7 +365,8 @@ package body Simul.Vhdl_Elab is
             begin
                T := Compute_Attribute_Time (Inst, Decl);
                Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
-               Gather_Signal ((Signal_Delayed, Decl, Inst, null, null, null,
+               Gather_Signal ((Signal_Delayed, Decl, Inst,
+                               null, null, null, null,
                                No_Sensitivity_Index, No_Signal_Index,
                                No_Connect_Index, T, Pfx));
             end;
@@ -998,7 +1002,8 @@ package body Simul.Vhdl_Elab is
                Guard : constant Node := Get_Guard_Decl (N);
             begin
                if Guard /= Null_Node then
-                  Gather_Signal ((Signal_Guard, Guard, Inst, null, null, null,
+                  Gather_Signal ((Signal_Guard, Guard, Inst,
+                                  null, null, null, null,
                                   No_Sensitivity_Index, No_Signal_Index,
                                   No_Connect_Index));
                end if;
@@ -1042,7 +1047,7 @@ package body Simul.Vhdl_Elab is
       Signals_Table.Set_Last (Get_Nbr_Signal);
       for I in Signals_Table.First .. Signals_Table.Last loop
          Signals_Table.Table (I) :=
-           (Signal_None, Null_Node, null, null, null, null,
+           (Signal_None, Null_Node, null, null, null, null, null,
             No_Sensitivity_Index, No_Signal_Index, No_Connect_Index);
       end loop;
 

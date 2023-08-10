@@ -413,8 +413,9 @@ package body Simul.Vhdl_Simul is
             D : Driver_Entry renames Drivers_Table.Table (Drv);
             S : Signal_Entry renames Signals_Table.Table (D.Sig.Base);
          begin
+            --  Use the initial value.
             Add_Source (D.Sig.Typ, Sig_Index (S.Sig, D.Sig.Offs.Net_Off),
-                        S.Val + D.Sig.Offs.Mem_Off);
+                        S.Val_Init + D.Sig.Offs.Mem_Off);
 
             Drv := D.Prev_Proc;
          end;
@@ -3422,13 +3423,13 @@ package body Simul.Vhdl_Simul is
          --  collapsed and has no source, an extra source needs to be
          --  created.
          Add_Extra_Driver_To_Signal
-           (Ec.Sig, E.Typ, E.Val, 0, E.Nbr_Sources.all);
+           (Ec.Sig, E.Typ, E.Val_Init, 0, E.Nbr_Sources.all);
 
          --  The signal value is the value of the collapsed signal.
          --  Keep default value.
-         Copy_Memory (Ec.Val, E.Val, E.Typ.Sz);
+         Copy_Memory (Ec.Val, E.Val_Init, E.Typ.Sz);
          Exec_Write_Signal
-           (Ec.Sig, (E.Typ, E.Val), Write_Signal_Driving_Value);
+           (Ec.Sig, (E.Typ, E.Val_Init), Write_Signal_Driving_Value);
       end if;
 
       E.Val := Ec.Val;

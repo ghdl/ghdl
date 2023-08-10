@@ -152,6 +152,10 @@ package Simul.Vhdl_Elab is
       Decl : Iir;
       Inst : Synth_Instance_Acc;
       Typ : Type_Acc;
+      --  Initial value.
+      Val_Init : Memory_Ptr;
+      --  Current value.  In case of collapsed signal, this is the initial
+      --  value of the collapsed_by signal.
       Val : Memory_Ptr;
       Sig : Memory_Ptr;
 
