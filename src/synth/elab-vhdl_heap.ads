@@ -18,7 +18,7 @@
 
 with Types; use Types;
 
---  with Grt.Types; use Grt.Types;
+with Grt.Types; use Grt.Types;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
@@ -55,4 +55,8 @@ package Elab.Vhdl_Heap is
 
    function Insert_Bounds (Slot : Heap_Slot; Bnd_Sz : Size_Type)
                           return Memory_Ptr;
+
+   --  When called by generated code.
+   function Ghdl_Allocate (Sz : Ghdl_Index_Type) return Heap_Ptr;
+   procedure Ghdl_Deallocate (Ptr : Heap_Ptr);
 end Elab.Vhdl_Heap;

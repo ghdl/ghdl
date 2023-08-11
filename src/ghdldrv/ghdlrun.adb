@@ -49,6 +49,7 @@ with Grt.Options;
 with Grt.Types;
 with Grt.Errors;
 with Grt.Backtraces.Jit;
+with Grt.Heap;
 
 with Grt.No_Analog_Solver;
 pragma Unreferenced (Grt.No_Analog_Solver);
@@ -196,6 +197,11 @@ package body Ghdlrun is
       end if;
 
       Trans_Link.Link;
+
+      Def (Trans_Decls.Ghdl_Allocate,
+           Grt.Heap.Ghdl_Allocate'Address);
+      Def (Trans_Decls.Ghdl_Deallocate,
+           Grt.Heap.Ghdl_Deallocate'Address);
 
       Ortho_Jit.Link (Err);
       if Err then

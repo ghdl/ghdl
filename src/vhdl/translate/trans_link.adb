@@ -24,7 +24,6 @@ with Trans_Decls;
 
 with Grt.Main;
 with Grt.Lib;
-with Grt.Heap;
 with Grt.Processes;
 with Grt.Rtis;
 with Grt.Files_Lib;
@@ -79,10 +78,7 @@ package body Trans_Link is
            Grt.Lib.Ghdl_Program_Error'Address);
       Def (Trans_Decls.Ghdl_Malloc,
            Grt.Lib.Ghdl_Malloc'Address);
-      Def (Trans_Decls.Ghdl_Allocate,
-           Grt.Heap.Ghdl_Allocate'Address);
-      Def (Trans_Decls.Ghdl_Deallocate,
-           Grt.Heap.Ghdl_Deallocate'Address);
+
       Def (Trans_Decls.Ghdl_Real_Exp,
            Grt.Lib.Ghdl_Real_Exp'Address);
       Def (Trans_Decls.Ghdl_I32_Exp,
