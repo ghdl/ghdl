@@ -49,7 +49,9 @@ with Grt.Options;
 with Grt.Types;
 with Grt.Errors;
 with Grt.Backtraces.Jit;
+
 with Grt.No_Analog_Solver;
+pragma Unreferenced (Grt.No_Analog_Solver);
 
 with Ghdlcomp; use Ghdlcomp;
 with Grtlink;
