@@ -37,6 +37,7 @@ pragma Warnings (Off);
 with Grt.Files_Lib;
 with Grt.Types;
 with Grt.Lib;
+with Grt.Heap;
 with Grt.Shadow_Ieee;
 with Grt.Images;
 with Grt.Values;

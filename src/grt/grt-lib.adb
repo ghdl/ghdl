@@ -352,19 +352,6 @@ package body Grt.Lib is
       return Res;
    end Ghdl_Malloc0;
 
-   function Ghdl_Allocate (Size : Ghdl_Index_Type) return Ghdl_Ptr is
-   begin
-      return C_Malloc (Size);
-   end Ghdl_Allocate;
-
-   procedure Ghdl_Deallocate (Ptr : Ghdl_Ptr)
-   is
-      procedure C_Free (Ptr : Ghdl_Ptr);
-      pragma Import (C, C_Free, "free");
-   begin
-      C_Free (Ptr);
-   end Ghdl_Deallocate;
-
    function Ghdl_Real_Exp (X : Ghdl_Real; Exp : Ghdl_I32)
      return Ghdl_Real
    is
