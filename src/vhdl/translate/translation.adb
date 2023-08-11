@@ -546,6 +546,14 @@ package body Translation is
       New_Interface_Decl (Interfaces, Param, Wki_Length, Ghdl_Index_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Memcpy);
 
+      -- function __ghdl_allocate (length : ghdl_index_type)
+      --    return ghdl_ptr_type;
+      Start_Function_Decl
+        (Interfaces, Get_Identifier ("__ghdl_allocate"), O_Storage_External,
+         Ghdl_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Length, Ghdl_Index_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Allocate);
+
       --  procedure __ghdl_deallocate (ptr : ghdl_ptr_type);
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_deallocate"), O_Storage_External);

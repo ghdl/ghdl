@@ -4373,6 +4373,15 @@ package body Trans.Chap7 is
       end case;
    end Translate_Aggregate_Bounds;
 
+   function Gen_Heap_Alloc (Size : O_Enode; Ptype : O_Tnode) return O_Enode
+   is
+      Constr : O_Assoc_List;
+   begin
+      Start_Association (Constr, Ghdl_Malloc);
+      New_Association (Constr, Size);
+      return New_Convert_Ov (New_Function_Call (Constr), Ptype);
+   end Gen_Heap_Alloc;
+
    function Translate_Allocator_By_Expression (Expr : Iir) return O_Enode
    is
       --  TODO: the constraint from an access subtype is ignored.
@@ -4411,12 +4420,11 @@ package body Trans.Chap7 is
                --  Allocate the object.
                New_Assign_Stmt
                  (New_Obj (Res),
-                  Gen_Alloc (Alloc_Heap,
-                             New_Dyadic_Op
-                               (ON_Add_Ov,
-                                New_Lit (Bounds_Size),
-                                New_Obj_Value (Val_Size)),
-                             A_Info.Ortho_Type (Mode_Value)));
+                  Gen_Heap_Alloc (New_Dyadic_Op
+                                    (ON_Add_Ov,
+                                     New_Lit (Bounds_Size),
+                                     New_Obj_Value (Val_Size)),
+                                  A_Info.Ortho_Type (Mode_Value)));
 
                --  Copy bounds.
                Gen_Memcpy
@@ -4435,8 +4443,11 @@ package body Trans.Chap7 is
          when Type_Mode_Acc =>
             R := Dp2M (Create_Temp (D_Info.Ortho_Ptr_Type (Mode_Value)),
                        D_Info, Mode_Value);
-            Chap3.Translate_Object_Allocation
-              (R, Alloc_Heap, D_Type, Mnode_Null);
+            New_Assign_Stmt
+              (M2Lp (R),
+               Gen_Heap_Alloc
+                 (Chap3.Get_Object_Size (T2M (D_Type, Mode_Value), D_Type),
+                  D_Info.Ortho_Ptr_Type (Mode_Value)));
             Chap3.Translate_Object_Copy
               (R, E2M (Val, D_Info, Mode_Value), D_Type);
             return New_Convert_Ov (M2Addr (R), A_Info.Ortho_Type (Mode_Value));
@@ -4471,7 +4482,6 @@ package body Trans.Chap7 is
       A_Info   : constant Type_Info_Acc := Get_Info (A_Type);
       D_Type   : constant Iir := Get_Designated_Type (A_Type);
       D_Info   : constant Type_Info_Acc := Get_Info (D_Type);
-      Bounds   : Mnode;
       Res      : Mnode;
    begin
       case A_Info.Type_Mode is
@@ -4502,12 +4512,11 @@ package body Trans.Chap7 is
                --  Allocate the object.
                New_Assign_Stmt
                  (New_Obj (Ptr),
-                  Gen_Alloc (Alloc_Heap,
-                             New_Dyadic_Op
-                               (ON_Add_Ov,
-                                New_Lit (Bounds_Size),
-                                New_Obj_Value (Val_Size)),
-                             A_Info.Ortho_Type (Mode_Value)));
+                  Gen_Heap_Alloc (New_Dyadic_Op
+                                    (ON_Add_Ov,
+                                     New_Lit (Bounds_Size),
+                                     New_Obj_Value (Val_Size)),
+                                  A_Info.Ortho_Type (Mode_Value)));
 
                --  Copy bounds.
                Gen_Memcpy (New_Obj_Value (Ptr),
@@ -4523,9 +4532,11 @@ package body Trans.Chap7 is
          when Type_Mode_Acc =>
             Res := Dp2M (Create_Temp (D_Info.Ortho_Ptr_Type (Mode_Value)),
                          D_Info, Mode_Value);
-            Bounds := Mnode_Null;
-            Chap3.Translate_Object_Allocation
-              (Res, Alloc_Heap, D_Type, Bounds);
+            New_Assign_Stmt
+              (M2Lp (Res),
+               Gen_Heap_Alloc
+                 (Chap3.Get_Object_Size (T2M (D_Type, Mode_Value), D_Type),
+                  D_Info.Ortho_Ptr_Type (Mode_Value)));
             Chap4.Init_Object (Res, D_Type);
             return New_Convert_Ov
               (M2Addr (Res), A_Info.Ortho_Type (Mode_Value));

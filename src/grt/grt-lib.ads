@@ -83,6 +83,7 @@ package Grt.Lib is
    --  Allocate and clear SIZE bytes.
    function Ghdl_Malloc0 (Size : Ghdl_Index_Type) return Ghdl_Ptr;
 
+   function Ghdl_Allocate (Size : Ghdl_Index_Type) return Ghdl_Ptr;
    procedure Ghdl_Deallocate (Ptr : Ghdl_Ptr);
 
    function Ghdl_Real_Exp (X : Ghdl_Real; Exp : Ghdl_I32)
@@ -141,6 +142,8 @@ private
 
    pragma Export (C, Ghdl_Malloc, "__ghdl_malloc");
    pragma Export (C, Ghdl_Malloc0, "__ghdl_malloc0");
+
+   pragma Export (C, Ghdl_Allocate, "__ghdl_allocate");
    pragma Export (C, Ghdl_Deallocate, "__ghdl_deallocate");
 
    pragma Export (C, Ghdl_I32_Exp, "__ghdl_i32_exp");

@@ -352,6 +352,11 @@ package body Grt.Lib is
       return Res;
    end Ghdl_Malloc0;
 
+   function Ghdl_Allocate (Size : Ghdl_Index_Type) return Ghdl_Ptr is
+   begin
+      return C_Malloc (Size);
+   end Ghdl_Allocate;
+
    procedure Ghdl_Deallocate (Ptr : Ghdl_Ptr)
    is
       procedure C_Free (Ptr : Ghdl_Ptr);

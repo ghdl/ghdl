@@ -129,10 +129,6 @@ package body Trans.Helpers2 is
       Constr : O_Assoc_List;
    begin
       case Kind is
-         when Alloc_Heap =>
-            Start_Association (Constr, Ghdl_Malloc);
-            New_Association (Constr, Size);
-            return New_Convert_Ov (New_Function_Call (Constr), Ptype);
          when Alloc_System =>
             Start_Association (Constr, Ghdl_Malloc0);
             New_Association (Constr, Size);

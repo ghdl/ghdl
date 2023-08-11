@@ -78,6 +78,8 @@ package body Trans_Link is
            Grt.Lib.Ghdl_Program_Error'Address);
       Def (Trans_Decls.Ghdl_Malloc,
            Grt.Lib.Ghdl_Malloc'Address);
+      Def (Trans_Decls.Ghdl_Allocate,
+           Grt.Lib.Ghdl_Allocate'Address);
       Def (Trans_Decls.Ghdl_Deallocate,
            Grt.Lib.Ghdl_Deallocate'Address);
       Def (Trans_Decls.Ghdl_Real_Exp,

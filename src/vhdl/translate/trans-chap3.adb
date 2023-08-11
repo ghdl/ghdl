@@ -1338,6 +1338,7 @@ package body Trans.Chap3 is
       --  Create the bounds type
       --  TODO: separate type bounds (for complex elements) and subtype bounds
       --  (for unbounded elements).
+      --  TODO: only for unbounded or complex records.
       Info.B.Bounds_Type := O_Tnode_Null;
       Start_Record_Type (El_List);
       New_Record_Field (El_List, Info.B.Layout_Size,
