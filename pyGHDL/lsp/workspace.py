@@ -409,6 +409,8 @@ class Workspace(object):
         elif k in nodes.Iir_Kinds.Subprogram_Declaration:
             bod = nodes.Get_Subprogram_Body(decl)
             if bod != nodes.Null_Iir:
+                # FIXME: it crashes as :var bod: is not a declaration
+                # (declaration_to_location calls get_identifier)
                 decl = bod
 
         decl_loc = self.declaration_to_location(decl)
