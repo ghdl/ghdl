@@ -1225,7 +1225,7 @@ package body Grt.Processes is
       use Options;
    begin
       if (Next_Time > Stop_Time and then Next_Time /= Std_Time'Last)
-        or else Current_Time >= Stop_Time
+        or else (Current_Time >= Stop_Time and then Next_Time /= Current_Time)
       then
          --  FIXME: Implement with a callback instead ?  This could be done
          --  in 2 steps: an after_delay for the time and then a read_only
