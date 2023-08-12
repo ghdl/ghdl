@@ -81,12 +81,35 @@ package body Elab.Vhdl_Types is
    function Synth_Float_Range_Expression
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Float_Range_Type
    is
+      Dir : constant Direction_Type := Get_Direction (Rng);
       L, R : Valtyp;
+      Lv, Rv : Fp64;
    begin
       --  Static values (so no enable).
       L := Synth_Expression (Syn_Inst, Get_Left_Limit (Rng));
+      if L = No_Valtyp then
+         case Dir is
+            when Dir_To =>
+               Lv := Fp64'First;
+            when Dir_Downto =>
+               Lv := Fp64'Last;
+         end case;
+      else
+         Lv := Read_Fp64 (L);
+      end if;
+
       R := Synth_Expression (Syn_Inst, Get_Right_Limit (Rng));
-      return (Get_Direction (Rng), Read_Fp64 (L), Read_Fp64 (R));
+      if R = No_Valtyp then
+         case Dir is
+            when Dir_To =>
+               Rv := Fp64'Last;
+            when Dir_Downto =>
+               Rv := Fp64'First;
+         end case;
+      else
+         Rv := Read_Fp64 (R);
+      end if;
+      return (Dir, Lv, Rv);
    end Synth_Float_Range_Expression;
 
    --  Return the type of the prefix for an array attribute.
