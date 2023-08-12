@@ -682,11 +682,13 @@ package body Elab.Vhdl_Objtypes is
       Al : Palign_Type;
       Sz : Size_Type;
       Res : Type_Acc;
+      Is_Static : Boolean;
    begin
       --  Layout the record.
       if Parent_Typ = null then
          Al := 0;
          Sz := 0;
+         Is_Static := True;
          --  First elements with static types, then the others.
          for Static in reverse Boolean loop
             for I in Els.E'Range loop
@@ -695,23 +697,25 @@ package body Elab.Vhdl_Objtypes is
                begin
                   if El.Typ.Is_Static = Static then
                      Layout_Element_Mem (El, Sz, Al);
+                     Is_Static := Is_Static and Static;
                   end if;
                end;
             end loop;
          end loop;
          Sz := Align (Sz, Al);
-
       else
          Base := Parent_Typ.Rec_Base;
          Base_Els := Base.Rec;
          Al := Base.Al;
          Sz := Base.Sz;
+         Is_Static := True;
          --  Only the non-static types.
          for I in Els.E'Range loop
             if Base_Els.E (I).Typ.Is_Static then
                Els.E (I).Offs.Mem_Off := Base_Els.E (I).Offs.Mem_Off;
             else
                Layout_Element_Mem (Els.E (I), Sz, Al);
+               Is_Static := False;
             end if;
          end loop;
       end if;
@@ -727,7 +731,7 @@ package body Elab.Vhdl_Objtypes is
                                                 Wkind => Wkind,
                                                 Al => Al,
                                                 Is_Global => False,
-                                                Is_Static => False,
+                                                Is_Static => Is_Static,
                                                 Is_Bnd_Static => False,
                                                 Sz => Sz,
                                                 W => W,
