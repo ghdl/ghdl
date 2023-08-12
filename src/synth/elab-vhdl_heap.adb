@@ -161,7 +161,8 @@ package body Elab.Vhdl_Heap is
 
    procedure Free (Obj : in out Heap_Entry) is
    begin
-      -- TODO
+      --  TODO: free memory
+      --  But not until there are no more references.
       Obj := (null, null, null, Null_Node);
    end Free;
 
@@ -215,6 +216,8 @@ package body Elab.Vhdl_Heap is
       Copy_Memory (Ptr, E.Ptr, Prefix_Size);
       Copy_Memory (Ptr + Prefix_Size + Sz, E.Ptr + Prefix_Size, E.Obj_Typ.Sz);
 
+      --  TODO: free memory, but at then end.
+      --  The memory might still be referenced to get the slot.
       if False then
          Free_Mem (E.Ptr);
       end if;
