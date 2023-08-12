@@ -3005,6 +3005,7 @@ package body Simul.Vhdl_Simul is
                   Sig => Sig_Index (E.Sig, Sig_Off),
                   Idx_Typ => Get_Subtype_Object (E.Inst, Idx_Type),
                   Arr_Typ => Get_Subtype_Object (E.Inst, Arr_Type));
+               Convert_Type_Width (Resolv_Instance.Arr_Typ);
                Grt.Signals.Ghdl_Signal_Create_Resolution
                  (Resolution_Proc'Access,
                   Resolv_Instance.all'Address,

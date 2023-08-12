@@ -60,6 +60,10 @@ package body Simul.Vhdl_Elab is
                T.W := T.W + T.Rec.E (I).Typ.W;
             end loop;
             T.Wkind := Wkind_Sim;
+         when Type_Unbounded_Array
+            | Type_Unbounded_Vector =>
+            Convert_Type_Width (T.Uarr_El);
+            T.Wkind := Wkind_Sim;
          when others =>
             raise Internal_Error;
       end case;
