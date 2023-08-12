@@ -102,7 +102,7 @@ package body Elab.Vhdl_Insts is
                            Dyn : Dyn_Name;
                         begin
                            Synth_Assignment_Prefix
-                             (Syn_Inst, Formal,
+                             (Syn_Inst, Sub_Inst, Formal,
                               Formal_Base, Formal_Typ, Formal_Offs, Dyn);
                            pragma Assert (Dyn = No_Dyn_Name);
                         end;
@@ -524,15 +524,13 @@ package body Elab.Vhdl_Insts is
                      Actual_Base : Valtyp;
                      Actual_Typ : Type_Acc;
                      Actual_Offs : Value_Offsets;
-                     Dyn : Dyn_Name;
                      Same : Boolean;
                   begin
                      Mark_Expr_Pool (Marker);
 
                      Synth_Assignment_Prefix
                        (Syn_Inst, Actual,
-                        Actual_Base, Actual_Typ, Actual_Offs, Dyn);
-                     pragma Assert (Dyn = No_Dyn_Name);
+                        Actual_Base, Actual_Typ, Actual_Offs);
                      case Type_Scalars (Inter_Typ.Kind) is
                         when Type_All_Discrete =>
                            Same := Inter_Typ.Drange = Actual_Typ.Drange;

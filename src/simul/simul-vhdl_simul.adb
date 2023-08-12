@@ -1843,7 +1843,6 @@ package body Simul.Vhdl_Simul is
       Val : Valtyp;
       Typ, Sel_Typ : Type_Acc;
       Off, Sel_Off : Value_Offsets;
-      Dyn : Dyn_Name;
       Is_Integ : Boolean;
       Sval : Fp64;
 
@@ -1864,8 +1863,7 @@ package body Simul.Vhdl_Simul is
          Quan := Get_Break_Quantity (El);
          Sel := Get_Selector_Quantity (El);
 
-         Synth_Assignment_Prefix (Inst, Quan, Quan_Base, Typ, Off, Dyn);
-         pragma Assert (Dyn = No_Dyn_Name);
+         Synth_Assignment_Prefix (Inst, Quan, Quan_Base, Typ, Off);
          --  Only full quantities are currently supported.
          pragma Assert (Off.Net_Off = 0);
          pragma Assert (Typ.W = Quan_Base.Typ.W);
@@ -1879,9 +1877,7 @@ package body Simul.Vhdl_Simul is
             Sel_Off := Off;
             Is_Integ := Get_Kind (Quan) = Iir_Kind_Integ_Attribute;
          else
-            Synth_Assignment_Prefix
-              (Inst, Sel, Sel_Base, Sel_Typ, Sel_Off, Dyn);
-            pragma Assert (Dyn = No_Dyn_Name);
+            Synth_Assignment_Prefix (Inst, Sel, Sel_Base, Sel_Typ, Sel_Off);
             if Sel_Typ.W /= Typ.W then
                Error_Msg_Exec
                  (Stmt, "number of break and selected quantities mismatch");
@@ -4154,15 +4150,13 @@ package body Simul.Vhdl_Simul is
                Sig : Ghdl_Signal_Ptr;
                Typ : Type_Acc;
                Off : Value_Offsets;
-               Dyn : Dyn_Name;
                V : Valtyp;
                Mem : Memory_Ptr;
             begin
                Mark_Expr_Pool (Mark);
 
-               Synth_Assignment_Prefix (Inst, Get_Prefix (Attr),
-                                        Quan_Base, Typ, Off, Dyn);
-               pragma Assert (Dyn = No_Dyn_Name);
+               Synth_Assignment_Prefix
+                 (Inst, Get_Prefix (Attr), Quan_Base, Typ, Off);
 
                Sq_Idx := Quantity_Table.Table (Quan_Base.Val.Q).Sq_Idx
                  + Scalar_Quantity_Index (Off.Net_Off);

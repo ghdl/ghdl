@@ -2696,7 +2696,8 @@ package body Synth.Vhdl_Expr is
 
                Dyn : Dyn_Name;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Expr, Base, Typ, Off, Dyn);
+               Synth_Assignment_Prefix
+                 (Syn_Inst, Syn_Inst, Expr, Base, Typ, Off, Dyn);
                if Base = No_Valtyp then
                   --  Propagate error.
                   return No_Valtyp;
@@ -2962,26 +2963,28 @@ package body Synth.Vhdl_Expr is
             return Create_Value_Access (Null_Heap_Ptr, Expr_Type);
          when Iir_Kind_Allocator_By_Subtype =>
             declare
+               Acc_Tdef : constant Node := Get_Type (Expr);
                Acc_Typ : constant Type_Acc :=
-                 Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
+                 Get_Subtype_Object (Syn_Inst, Acc_Tdef);
                T : Type_Acc;
                Acc : Heap_Ptr;
             begin
                T := Synth_Subtype_Indication
                  (Syn_Inst, Get_Subtype_Indication (Expr));
-               Acc := Allocate_By_Type (Acc_Typ, T);
+               Acc := Allocate_By_Type (Acc_Tdef, Acc_Typ, T);
                return Create_Value_Access (Acc, Expr_Type);
             end;
          when Iir_Kind_Allocator_By_Expression =>
             declare
+               Acc_Tdef : constant Node := Get_Type (Expr);
                Acc_Typ : constant Type_Acc :=
-                 Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
+                 Get_Subtype_Object (Syn_Inst, Acc_Tdef);
                V : Valtyp;
                Acc : Heap_Ptr;
             begin
                V := Synth_Expression_With_Type
                  (Syn_Inst, Get_Expression (Expr), Expr_Type.Acc_Acc);
-               Acc := Allocate_By_Value (Acc_Typ, V);
+               Acc := Allocate_By_Value (Acc_Tdef, Acc_Typ, V);
                return Create_Value_Access (Acc, Expr_Type);
             end;
          when Iir_Kind_Psl_Prev =>

@@ -225,6 +225,7 @@ package body Synth.Vhdl_Stmts is
    end Synth_Assignment_Prefix_Slice_Name;
 
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
+                                      Pfx_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
                                       Dest_Base : out Valtyp;
                                       Dest_Typ : out Type_Acc;
@@ -253,14 +254,14 @@ package body Synth.Vhdl_Stmts is
             | Iir_Kind_Selected_Name
             | Iir_Kind_Attribute_Name =>
             Synth_Assignment_Prefix
-              (Syn_Inst, Get_Named_Entity (Pfx),
+              (Syn_Inst, Pfx_Inst, Get_Named_Entity (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_View_Declaration
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_File_Declaration =>
-            Assign_Base (Syn_Inst);
+            Assign_Base (Pfx_Inst);
          when Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
@@ -274,25 +275,25 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Above_Attribute
            | Iir_Kinds_Signal_Attribute =>
-            Assign_Base (Syn_Inst);
+            Assign_Base (Pfx_Inst);
 
          when Iir_Kind_Indexed_Name =>
             Synth_Assignment_Prefix
-              (Syn_Inst, Get_Prefix (Pfx),
+              (Syn_Inst, Pfx_Inst, Get_Prefix (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
             Synth_Assignment_Prefix_Indexed_Name
               (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
 
          when Iir_Kind_Selected_Element =>
             Synth_Assignment_Prefix
-              (Syn_Inst, Get_Prefix (Pfx),
+              (Syn_Inst, Pfx_Inst, Get_Prefix (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
             Synth_Assignment_Prefix_Selected_Name
               (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
 
          when Iir_Kind_Slice_Name =>
             Synth_Assignment_Prefix
-              (Syn_Inst, Get_Prefix (Pfx),
+              (Syn_Inst, Pfx_Inst, Get_Prefix (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
             Synth_Assignment_Prefix_Slice_Name
               (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
@@ -342,7 +343,7 @@ package body Synth.Vhdl_Stmts is
       Dyn : Dyn_Name;
    begin
       Synth_Assignment_Prefix
-        (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dyn);
+        (Syn_Inst, Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dyn);
       pragma Assert (Dyn = No_Dyn_Name);
    end Synth_Assignment_Prefix;
 
@@ -475,7 +476,7 @@ package body Synth.Vhdl_Stmts is
                Dyn : Dyn_Name;
             begin
                Synth_Assignment_Prefix
-                 (Syn_Inst, Target, Base, Typ, Off, Dyn);
+                 (Syn_Inst, Syn_Inst, Target, Base, Typ, Off, Dyn);
                return To_Target_Info (Base, Typ, Off, Dyn);
             end;
          when others =>
@@ -2402,8 +2403,8 @@ package body Synth.Vhdl_Stmts is
                Act_Off := No_Value_Offsets;
                Act_Dyn := No_Dyn_Name;
             else
-               Synth_Assignment_Prefix
-                 (Caller_Inst, Actual, Act_Base, Act_Typ, Act_Off, Act_Dyn);
+               Synth_Assignment_Prefix (Caller_Inst, Caller_Inst, Actual,
+                                        Act_Base, Act_Typ, Act_Off, Act_Dyn);
             end if;
             if Get_Actual_Conversion (Assoc) /= Null_Node then
                --  TODO
