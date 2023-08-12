@@ -397,7 +397,8 @@ package body Elab.Vhdl_Debug is
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Procedure_Body
-           | Iir_Kind_Component_Declaration =>
+           | Iir_Kind_Component_Declaration
+           | Iir_Kind_Protected_Type_Body =>
             null;
          when Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body =>

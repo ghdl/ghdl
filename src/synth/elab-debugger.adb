@@ -239,6 +239,10 @@ package body Elab.Debugger is
    procedure To_Num (Str : String; Res : out Uns32; Valid : out Boolean) is
    begin
       Res := 0;
+      if Str'Length = 0 then
+         Valid := False;
+         return;
+      end if;
       Valid := True;
       for P in Str'Range loop
          if Str (P) in '0' .. '9' then
