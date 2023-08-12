@@ -512,8 +512,10 @@ package body Elab.Vhdl_Insts is
             if Inter_Typ /= null then
                --  Check matching bounds.
                if Inter_Typ.Kind in Type_Scalars
-                 and then
-                 Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Name
+                 and then (Get_Kind (Assoc)
+                             = Iir_Kind_Association_Element_By_Name)
+                 and then Get_Formal_Conversion (Assoc) = Null_Node
+                 and then Get_Actual_Conversion (Assoc) = Null_Node
                then
                   declare
                      use Synth.Vhdl_Stmts;
