@@ -307,8 +307,11 @@ package Elab.Vhdl_Objtypes is
                                      Els : Rec_El_Array_Acc) return Type_Acc;
 
    --  ACC_TYPE can be null for an incomplete type.
-   function Create_Access_Type (Acc_Type : Type_Acc) return Type_Acc;
+   --  For an access subtype: keep the bound size of the parent.
+   function Create_Access_Type (Parent_Type : Type_Acc; Acc_Type : Type_Acc)
+                                  return Type_Acc;
    procedure Complete_Access_Type (Acc_Type : Type_Acc; Des_Typ : Type_Acc);
+
 
    function Create_File_Type (File_Type : Type_Acc) return Type_Acc;
 

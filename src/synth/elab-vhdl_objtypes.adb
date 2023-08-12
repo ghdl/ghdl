@@ -923,7 +923,8 @@ package body Elab.Vhdl_Objtypes is
       return Res;
    end Compute_Bounds_Size;
 
-   function Create_Access_Type (Acc_Type : Type_Acc) return Type_Acc
+   function Create_Access_Type (Parent_Type : Type_Acc; Acc_Type : Type_Acc)
+                               return Type_Acc
    is
       subtype Access_Type_Type is Type_Type (Type_Access);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Access_Type_Type);
@@ -932,11 +933,16 @@ package body Elab.Vhdl_Objtypes is
    begin
       if Acc_Type = null then
          --  For incomplete type.
+         pragma Assert (Parent_Type = null);
          Type_Sz := 0;
          Bnd_Sz := 0;
       else
          Type_Sz := Compute_Size_Type (Acc_Type);
-         Bnd_Sz := Compute_Bounds_Size (Acc_Type);
+         if Parent_Type = null then
+            Bnd_Sz := Compute_Bounds_Size (Acc_Type);
+         else
+            Bnd_Sz := Parent_Type. Acc_Bnd_Sz;
+         end if;
       end if;
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Access,
                                                 Wkind => Wkind_Sim,

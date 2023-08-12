@@ -341,7 +341,7 @@ package body Elab.Vhdl_Types is
          Des_Typ := Synth_Subtype_Indication_If_Anonymous (Syn_Inst, Des_Type);
       end if;
 
-      Typ := Create_Access_Type (Des_Typ);
+      Typ := Create_Access_Type (null, Des_Typ);
       return Typ;
    end Synth_Access_Type_Definition;
 
@@ -761,11 +761,13 @@ package body Elab.Vhdl_Types is
             end;
          when Iir_Kind_Access_Subtype_Definition =>
             declare
+               Parent_Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Syn_Inst, Get_Parent_Type (Atype));
                Acc_Typ : Type_Acc;
             begin
                Acc_Typ := Synth_Subtype_Indication
                  (Syn_Inst, Get_Designated_Type (Atype));
-               return Create_Access_Type (Acc_Typ);
+               return Create_Access_Type (Parent_Typ, Acc_Typ);
             end;
          when Iir_Kind_File_Subtype_Definition =>
             --  Same as parent.
