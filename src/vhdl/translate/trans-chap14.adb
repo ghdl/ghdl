@@ -1025,8 +1025,7 @@ package body Trans.Chap14 is
                              Pinfo.Ortho_Type (Mode_Value));
    end Translate_Value_Attribute;
 
-   function Translate_Path_Instance_Name_Attribute (Attr : Iir)
-                                                       return O_Enode
+   function Translate_Path_Instance_Name_Attribute (Attr : Iir) return O_Enode
    is
       Name        : constant Path_Instance_Name_Type :=
         Get_Path_Instance_Name_Suffix (Attr);
@@ -1039,12 +1038,14 @@ package body Trans.Chap14 is
    begin
       Create_Temp_Stack2_Mark;
 
+      --  Create a const string for the suffix.
       Res := Create_Temp (Std_String_Node);
       Str_Cst := Create_String_Len (Name.Suffix, Create_Uniq_Identifier);
       New_Const_Decl (Name_Cst, Create_Uniq_Identifier, O_Storage_Private,
                       Ghdl_Str_Len_Type_Node);
       Start_Init_Value (Name_Cst);
       Finish_Init_Value (Name_Cst, Str_Cst);
+
       if Is_Instance then
          Start_Association (Constr, Ghdl_Get_Instance_Name);
       else
@@ -1057,9 +1058,8 @@ package body Trans.Chap14 is
       else
          Rtis.Associate_Rti_Context (Constr, Name.Path_Instance);
       end if;
-      New_Association (Constr,
-                       New_Address (New_Obj (Name_Cst),
-                         Ghdl_Str_Len_Ptr_Node));
+      New_Association (Constr, New_Address (New_Obj (Name_Cst),
+                                            Ghdl_Str_Len_Ptr_Node));
       New_Procedure_Call (Constr);
       return New_Address (New_Obj (Res), Std_String_Ptr_Node);
    end Translate_Path_Instance_Name_Attribute;
