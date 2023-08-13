@@ -54,6 +54,7 @@ package body Ortho_Code.Decls is
 
       case Kind is
          when OD_Type
+           | OD_Completer
            | OD_Const
            | OD_Var
            | OD_Local
@@ -304,6 +305,19 @@ package body Ortho_Code.Decls is
          TDnodes.Table (Atype) := Dnodes.Last;
       end if;
    end New_Type_Decl;
+
+   procedure Complete_Type_Decl (Atype : O_Tnode) is
+   begin
+      Dnodes.Append (Dnode_Common'(Kind => OD_Completer,
+                                   Storage => O_Storage_Private,
+                                   Depth => Cur_Depth,
+                                   Reg => R_Nil,
+                                   Id => O_Ident_Nul,
+                                   Dtype => Atype,
+                                   Ref => 0,
+                                   Info2 => 0,
+                                   others => False));
+   end Complete_Type_Decl;
 
    function Get_Type_Decl (Atype : O_Tnode) return O_Dnode is
    begin
@@ -654,6 +668,9 @@ package body Ortho_Code.Decls is
             Put ("type ");
             Disp_Decl_Name (Decl);
             Put (" is ");
+            Disp_Decl_Type (Decl);
+         when OD_Completer =>
+            Put ("type completer ");
             Disp_Decl_Type (Decl);
          when OD_Function =>
             Disp_Decl_Storage (Decl);

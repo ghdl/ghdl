@@ -169,6 +169,7 @@ package body Ortho_Code.X86.Insns is
                   Stack_Max := Stack_Offset;
                end if;
             when OD_Type
+              | OD_Completer
               | OD_Const
               | OD_Init_Val
               | OD_Var

@@ -501,6 +501,7 @@ package body Ortho_Code.Dwarf is
    Abbrev_Subrange : Unsigned_32 := 0;
    Abbrev_Struct : Unsigned_32 := 0;
    Abbrev_Struct_Name : Unsigned_32 := 0;
+   Abbrev_Uncomplete_Struct : Unsigned_32 := 0;
    Abbrev_Union : Unsigned_32 := 0;
    Abbrev_Union_Name : Unsigned_32 := 0;
    Abbrev_Member : Unsigned_32 := 0;
@@ -563,7 +564,7 @@ package body Ortho_Code.Dwarf is
       end if;
    end Emit_Decl_Ident_If_Set;
 
-   procedure Emit_Type (Atype : O_Tnode);
+   procedure Emit_Type_Maybe (Atype : O_Tnode);
 
    procedure Emit_Base_Type (Atype : O_Tnode; Decl : O_Dnode)
    is
@@ -669,7 +670,7 @@ package body Ortho_Code.Dwarf is
          D_Pc := Get_Current_Pc;
          Gen_32 (0);
          --  ... generate the designated type ...
-         Emit_Type (Dtype);
+         Emit_Type_Maybe (Dtype);
          --  ... and write its reference.
          Patch_32 (D_Pc, Unsigned_32 (TOnodes.Table (Dtype)));
       end if;
@@ -841,6 +842,7 @@ package body Ortho_Code.Dwarf is
       end Finish_Gen_Abbrev;
    begin
       if Decl = O_Dnode_Null then
+         --  Anonymous record.
          if Abbrev_Struct = 0 then
             Generate_Abbrev (Abbrev_Struct);
 
@@ -862,6 +864,23 @@ package body Ortho_Code.Dwarf is
       end if;
       Emit_Members (Atype, Decl);
    end Emit_Record_Type;
+
+   procedure Emit_Uncomplete_Record_Type (Atype : O_Tnode; Decl : O_Dnode)
+   is
+      pragma Unreferenced (Atype);
+   begin
+      if Abbrev_Uncomplete_Struct = 0 then
+         Generate_Abbrev (Abbrev_Uncomplete_Struct);
+         Gen_Abbrev_Header (DW_TAG_Structure_Type, DW_CHILDREN_No);
+         Gen_Abbrev_Tuple (DW_AT_Name, DW_FORM_String);
+         Gen_Abbrev_Tuple (DW_AT_Declaration, DW_FORM_Flag);
+         Gen_Abbrev_Tuple (0, 0);
+      end if;
+
+      Gen_Info_Header (Abbrev_Uncomplete_Struct);
+      Emit_Decl_Ident (Decl);
+      Gen_8 (1);
+   end Emit_Uncomplete_Record_Type;
 
    procedure Emit_Union_Type (Atype : O_Tnode; Decl : O_Dnode)
    is
@@ -968,23 +987,12 @@ package body Ortho_Code.Dwarf is
       Patch_Info_Sibling (Sibling_Pc);
    end Emit_Enum_Type;
 
-   procedure Emit_Type (Atype : O_Tnode)
+   procedure Emit_Type_Force (Atype : O_Tnode; Completer : Boolean)
    is
       use Ortho_Code.Types;
       Kind : OT_Kind;
       Decl : O_Dnode;
    begin
-      if Flag_Debug < Debug_Dwarf then
-         return;
-      end if;
-
-      --  If already emitted, then return.
-      if Atype <= TOnodes.Last
-        and then TOnodes.Table (Atype) /= Null_Pc
-      then
-         return;
-      end if;
-
       Kind := Get_Type_Kind (Atype);
 
       --  First step: emit inner types (if any).
@@ -998,11 +1006,11 @@ package body Ortho_Code.Dwarf is
          when OT_Access =>
             null;
          when OT_Ucarray =>
-            Emit_Type (Get_Type_Ucarray_Index (Atype));
-            Emit_Type (Get_Type_Ucarray_Element (Atype));
+            Emit_Type_Maybe (Get_Type_Ucarray_Index (Atype));
+            Emit_Type_Maybe (Get_Type_Ucarray_Element (Atype));
          when OT_Subarray =>
-            Emit_Type (Get_Type_Subarray_Base (Atype));
-            Emit_Type (Get_Type_Subarray_Element (Atype));
+            Emit_Type_Maybe (Get_Type_Subarray_Base (Atype));
+            Emit_Type_Maybe (Get_Type_Subarray_Element (Atype));
          when OT_Record
             | OT_Subrecord
             | OT_Union =>
@@ -1013,13 +1021,11 @@ package body Ortho_Code.Dwarf is
                Nbr := Get_Type_Record_Nbr_Fields (Atype);
                F := Get_Type_Record_Fields (Atype);
                while Nbr > 0 loop
-                  Emit_Type (Get_Field_Type (F));
+                  Emit_Type_Maybe (Get_Field_Type (F));
                   F := Get_Field_Chain (F);
                   Nbr := Nbr - 1;
                end loop;
             end;
-         when OT_Complete =>
-            null;
       end case;
 
       Set_Current_Section (Info_Sect);
@@ -1041,17 +1047,31 @@ package body Ortho_Code.Dwarf is
          when OT_Subarray =>
             Emit_Subarray_Type (Atype, Decl);
          when OT_Record
-            | OT_Subrecord =>
-            Emit_Record_Type (Atype, Decl);
+           | OT_Subrecord =>
+            if not Completer and then Get_Type_Deferred (Atype) then
+               Emit_Uncomplete_Record_Type (Atype, Decl);
+            else
+               Emit_Record_Type (Atype, Decl);
+            end if;
          when OT_Union =>
             Emit_Union_Type (Atype, Decl);
          when OT_Enum
             | OT_Boolean =>
             Emit_Enum_Type (Atype, Decl);
-         when OT_Complete =>
-            null;
       end case;
-   end Emit_Type;
+   end Emit_Type_Force;
+
+   procedure Emit_Type_Maybe (Atype : O_Tnode) is
+   begin
+      --  If already emitted, then return.
+      if Atype <= TOnodes.Last
+        and then TOnodes.Table (Atype) /= Null_Pc
+      then
+         return;
+      end if;
+
+      Emit_Type_Force (Atype, False);
+   end Emit_Type_Maybe;
 
    procedure Emit_Decl_Type (Decl : O_Dnode)
    is
@@ -1104,7 +1124,7 @@ package body Ortho_Code.Dwarf is
       end if;
 
       Dtype := Get_Decl_Type (Decl);
-      Emit_Type (Dtype);
+      Emit_Type_Maybe (Dtype);
 
       Gen_Info_Header (Abbrev_Variable);
       Emit_Decl_Ident (Decl);
@@ -1137,7 +1157,7 @@ package body Ortho_Code.Dwarf is
       end if;
 
       Dtype := Get_Decl_Type (Decl);
-      Emit_Type (Dtype);
+      Emit_Type_Maybe (Dtype);
       Gen_Info_Header (Abbrev_Const);
       Emit_Decl_Ident (Decl);
       Emit_Type_Ref (Dtype);
@@ -1148,8 +1168,23 @@ package body Ortho_Code.Dwarf is
    is
       use Ortho_Code.Decls;
    begin
-      Emit_Type (Get_Decl_Type (Decl));
+      if Flag_Debug < Debug_Dwarf then
+         return;
+      end if;
+
+      Emit_Type_Maybe (Get_Decl_Type (Decl));
    end Emit_Type_Decl;
+
+   procedure Emit_Type_Completer (Decl : O_Dnode)
+   is
+      use Ortho_Code.Decls;
+   begin
+      if Flag_Debug < Debug_Dwarf then
+         return;
+      end if;
+
+      Emit_Type_Force (Get_Decl_Type (Decl), True);
+   end Emit_Type_Completer;
 
    Subprg_Sym : Symbol;
 
@@ -1211,14 +1246,18 @@ package body Ortho_Code.Dwarf is
       Sibling_Pc : Pc_Type;
    begin
       --  Emit interfaces type.
-      Idecl := Get_Subprg_Interfaces (Decl);
-      while Idecl /= O_Dnode_Null loop
-         Emit_Type (Get_Decl_Type (Idecl));
-         Idecl := Get_Interface_Chain (Idecl);
-      end loop;
+      if Flag_Debug >= Debug_Dwarf then
+         Idecl := Get_Subprg_Interfaces (Decl);
+         while Idecl /= O_Dnode_Null loop
+            Emit_Type_Maybe (Get_Decl_Type (Idecl));
+            Idecl := Get_Interface_Chain (Idecl);
+         end loop;
+         if Kind = OD_Function then
+            Emit_Type_Maybe (Get_Decl_Type (Decl));
+         end if;
+      end if;
 
       if Kind = OD_Function then
-         Emit_Type (Get_Decl_Type (Decl));
          if Abbrev_Function = 0 then
             Generate_Abbrev (Abbrev_Function);
 
@@ -1334,6 +1373,8 @@ package body Ortho_Code.Dwarf is
          case Get_Decl_Kind (Decl) is
             when OD_Type =>
                Emit_Type_Decl (Decl);
+            when OD_Completer =>
+               Emit_Type_Completer (Decl);
             when OD_Local
               | OD_Var =>
                Emit_Variable (Decl);

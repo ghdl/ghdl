@@ -56,6 +56,9 @@ package body Ortho_Mcode is
       Ortho_Code.Types.Finish_Record_Type
         (Ortho_Code.Types.O_Element_List (Elements),
          Ortho_Code.O_Tnode (Res));
+      if Get_Type_Deferred (Ortho_Code.O_Tnode (Res)) then
+         Ortho_Code.Decls.Complete_Type_Decl (Ortho_Code.O_Tnode (Res));
+      end if;
    end Finish_Record_Type;
 
    procedure Start_Record_Subtype

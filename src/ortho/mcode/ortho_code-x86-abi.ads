@@ -37,7 +37,6 @@ package Ortho_Code.X86.Abi is
      (Boolean'Pos (Flags.M64) * Mode_Type'Pos (Mode_P64)
         + Boolean'Pos (not Flags.M64) * Mode_Type'Pos (Mode_P32));
 
-   Flag_Type_Completer : constant Boolean := False;
    Flag_Lower_Stmt : constant Boolean := True;
 
    --  If True, use SSE/SSE2 instructions instead of FPU one.  The code is

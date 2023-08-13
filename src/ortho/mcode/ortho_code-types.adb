@@ -492,23 +492,6 @@ package body Ortho_Code.Types is
       return Res;
    end New_Array_Subtype;
 
-   procedure Create_Completer (Atype : O_Tnode) is
-   begin
-      Tnodes.Append (Tnode_Common'(Kind => OT_Complete,
-                                   Mode => Mode_Nil,
-                                   Align => 0,
-                                   Deferred => False,
-                                   Sized => False,
-                                   Flag1 => False,
-                                   Pad0 => (others => False),
-                                   Size => To_Uns32 (Int32 (Atype))));
-   end Create_Completer;
-
-   function Get_Type_Complete_Type (Atype : O_Tnode) return O_Tnode is
-   begin
-      return O_Tnode (To_Int32 (Tnodes.Table (Atype).Size));
-   end Get_Type_Complete_Type;
-
    function To_Tnode_Common is new Ada.Unchecked_Conversion
      (Source => Tnode_Access, Target => Tnode_Common);
 
@@ -540,9 +523,6 @@ package body Ortho_Code.Types is
       Tnodes.Table (Atype + 1) :=
         To_Tnode_Common (Tnode_Access'(Dtype => Dtype,
                                        Pad => 0));
-      if Flag_Type_Completer then
-         Create_Completer (Atype);
-      end if;
    end Finish_Access_Type;
 
 
@@ -701,11 +681,6 @@ package body Ortho_Code.Types is
    begin
       Finish_Record (Elements);
       Res := Elements.Res;
-      if Flag_Type_Completer
-        and then Tnodes.Table (Elements.Res).Deferred
-      then
-         Create_Completer (Elements.Res);
-      end if;
    end Finish_Record_Type;
 
    procedure Start_Record_Subtype
@@ -917,8 +892,6 @@ package body Ortho_Code.Types is
          when OT_Subarray
             | OT_Subrecord =>
             return Atype + 3;
-         when OT_Complete =>
-            return Atype + 1;
       end case;
    end Get_Type_Next;
 
