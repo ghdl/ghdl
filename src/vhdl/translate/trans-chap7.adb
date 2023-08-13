@@ -4377,7 +4377,7 @@ package body Trans.Chap7 is
    is
       Constr : O_Assoc_List;
    begin
-      Start_Association (Constr, Ghdl_Malloc);
+      Start_Association (Constr, Ghdl_Allocate);
       New_Association (Constr, Size);
       return New_Convert_Ov (New_Function_Call (Constr), Ptype);
    end Gen_Heap_Alloc;
