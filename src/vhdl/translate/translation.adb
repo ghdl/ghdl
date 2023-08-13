@@ -576,6 +576,12 @@ package body Translation is
       New_Interface_Decl (Interfaces, Param, Wki_Length, Ghdl_Index_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Malloc0);
 
+      --  procedure __ghdl_free_mem (ptr : ghdl_ptr_type);
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_free_mem"), O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Wki_Obj, Ghdl_Ptr_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Free_Mem);
+
       --  function __ghdl_text_file_elaborate return file_index_type;
       Start_Function_Decl
         (Interfaces, Get_Identifier ("__ghdl_text_file_elaborate"),

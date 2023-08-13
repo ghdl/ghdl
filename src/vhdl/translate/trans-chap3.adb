@@ -3453,20 +3453,12 @@ package body Trans.Chap3 is
       end if;
    end Translate_Object_Allocation;
 
-   procedure Gen_Deallocate (Obj : O_Enode)
-   is
-      Assocs : O_Assoc_List;
-   begin
-      Start_Association (Assocs, Ghdl_Deallocate);
-      New_Association (Assocs, New_Convert_Ov (Obj, Ghdl_Ptr_Type));
-      New_Procedure_Call (Assocs);
-   end Gen_Deallocate;
-
    --  Performs deallocation of PARAM (the parameter of a deallocate call).
    procedure Translate_Object_Deallocation (Param : Iir)
    is
       Param_Type : constant Iir := Get_Type (Param);
       Info       : constant Type_Info_Acc := Get_Info (Param_Type);
+      Assocs : O_Assoc_List;
       Val        : Mnode;
    begin
       --  Compute parameter
@@ -3474,7 +3466,10 @@ package body Trans.Chap3 is
       Stabilize (Val);
 
       --  Call deallocator.
-      Gen_Deallocate (New_Value (M2Lv (Val)));
+      Start_Association (Assocs, Ghdl_Deallocate);
+      New_Association (Assocs, New_Convert_Ov (New_Value (M2Lv (Val)),
+                                               Ghdl_Ptr_Type));
+      New_Procedure_Call (Assocs);
 
       --  Set the value to null.
       New_Assign_Stmt

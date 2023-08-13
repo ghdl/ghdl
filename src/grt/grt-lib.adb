@@ -352,6 +352,14 @@ package body Grt.Lib is
       return Res;
    end Ghdl_Malloc0;
 
+   procedure Ghdl_Free_Mem (Ptr : Ghdl_Ptr)
+   is
+      procedure C_Free (Ptr : Ghdl_Ptr);
+      pragma Import (C, C_Free, "free");
+   begin
+      C_Free (Ptr);
+   end Ghdl_Free_Mem;
+
    function Ghdl_Real_Exp (X : Ghdl_Real; Exp : Ghdl_I32)
      return Ghdl_Real
    is
