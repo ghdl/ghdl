@@ -615,7 +615,12 @@ package body Synth.Vhdl_Decls is
       else
          Res := Create_Value_Alias (Base, Off, Typ, Expr_Pool'Access);
       end if;
-      if Obj_Typ /= null then
+      if Obj_Typ /= null
+        and then Obj_Typ.Kind not in Type_Scalars
+      then
+         --  Reshape composite types
+         --  (but not scalar, as it will suppress the alias of the value is
+         --   constant - humm).
          Res := Synth_Subtype_Conversion (Syn_Inst, Res, Obj_Typ, True, Decl);
       end if;
       Res := Unshare (Res, Instance_Pool);
