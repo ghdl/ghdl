@@ -424,10 +424,7 @@ package body Simul.Vhdl_Debug is
 
       if Opts.Types then
          Put ("  type: ");
-         Debug_Type_Short (S.Typ);
-         Put (", len: ");
-         Put_Uns32 (S.Typ.W);
-         New_Line;
+         Debug_Typ (S.Typ);
       end if;
 
       if Opts.Conn then
