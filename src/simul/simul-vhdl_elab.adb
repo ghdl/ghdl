@@ -110,7 +110,7 @@ package body Simul.Vhdl_Elab is
                   Mark_Resolved_Signals
                     (Sig_Off + (I - 1) * Typ.Arr_El.W,
                      El_Type, Typ.Arr_El,
-                     Vec, Already_Resolved);
+                     Vec, Sub_Resolved);
                end loop;
             end;
          when Type_Record =>
