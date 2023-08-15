@@ -55,6 +55,14 @@ package body Elab.Vhdl_Values.Debug is
       Put_Uns32 (Uns32 (T.Sz));
       Put (" w=");
       Put_Uns32 (T.W);
+      case T.Wkind is
+         when Wkind_Net =>
+            Put ('b');
+         when Wkind_Sim =>
+            Put ('s');
+         when Wkind_Undef =>
+            Put ('?');
+      end case;
       Put (']');
    end Debug_Typ_Phys;
 
