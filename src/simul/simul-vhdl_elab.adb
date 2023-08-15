@@ -42,9 +42,9 @@ package body Simul.Vhdl_Elab is
       end if;
       case T.Kind is
          when Type_Bit
-           | Type_Logic
-           | Type_Discrete
-           | Type_Float =>
+        | Type_Logic
+        | Type_Discrete
+        | Type_Float =>
             T.W := 1;
             T.Wkind := Wkind_Sim;
          when Type_Vector
@@ -74,10 +74,16 @@ package body Simul.Vhdl_Elab is
             end;
             T.Wkind := Wkind_Sim;
          when Type_Unbounded_Array
-            | Type_Unbounded_Vector =>
+           | Type_Unbounded_Vector =>
             Convert_Type_Width (T.Uarr_El);
             T.Wkind := Wkind_Sim;
-         when others =>
+         when Type_Unbounded_Record
+           | Type_Array_Unbounded
+           | Type_Access =>
+            null;
+         when Type_Slice
+           | Type_Protected
+           | Type_File =>
             raise Internal_Error;
       end case;
    end Convert_Type_Width;
