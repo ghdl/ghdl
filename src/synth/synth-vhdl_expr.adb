@@ -2455,6 +2455,7 @@ package body Synth.Vhdl_Expr is
 
    function Synth_Short_Circuit (Syn_Inst : Synth_Instance_Acc;
                                  Id : And_Or_Module_Id;
+                                 Neg : Boolean;
                                  Left_Expr : Node;
                                  Right_Expr : Node;
                                  Typ : Type_Acc;
@@ -2484,6 +2485,9 @@ package body Synth.Vhdl_Expr is
         and then Get_Static_Discrete (Left) = Val
       then
          --  Short-circuit when the left operand determines the result.
+         if Neg then
+            Val := 1 - Val;
+         end if;
          return Create_Value_Discrete (Val, Typ);
       end if;
 
@@ -2499,6 +2503,9 @@ package body Synth.Vhdl_Expr is
         and then Get_Static_Discrete (Right) = Val
       then
          --  If the right operand can determine the result, return it.
+         if Neg then
+            Val := 1 - Val;
+         end if;
          return Create_Value_Discrete (Val, Typ);
       end if;
 
@@ -2519,8 +2526,13 @@ package body Synth.Vhdl_Expr is
       else
          N := Build_Dyadic (Ctxt, Id, Nl, Nr);
       end if;
-
       Set_Location (N, Expr);
+
+      if Neg then
+         N := Build_Monadic (Ctxt, Id_Not, N);
+         Set_Location (N, Expr);
+      end if;
+
       return Create_Value_Net (N, Typ);
    end Synth_Short_Circuit;
 
@@ -2572,20 +2584,36 @@ package body Synth.Vhdl_Expr is
                case Def is
                   when Iir_Predefined_Boolean_And =>
                      return Synth_Short_Circuit
-                       (Syn_Inst, Id_And, Get_Left (Expr), Get_Right (Expr),
-                        Boolean_Type, Expr);
+                       (Syn_Inst, Id_And, False,
+                        Get_Left (Expr), Get_Right (Expr), Boolean_Type, Expr);
                   when Iir_Predefined_Boolean_Or =>
                      return Synth_Short_Circuit
-                       (Syn_Inst, Id_Or, Get_Left (Expr), Get_Right (Expr),
-                        Boolean_Type, Expr);
+                       (Syn_Inst, Id_Or, False,
+                        Get_Left (Expr), Get_Right (Expr), Boolean_Type, Expr);
+                  when Iir_Predefined_Boolean_Nand =>
+                     return Synth_Short_Circuit
+                       (Syn_Inst, Id_And, True,
+                        Get_Left (Expr), Get_Right (Expr), Boolean_Type, Expr);
+                  when Iir_Predefined_Boolean_Nor =>
+                     return Synth_Short_Circuit
+                       (Syn_Inst, Id_Or, True,
+                        Get_Left (Expr), Get_Right (Expr), Boolean_Type, Expr);
                   when Iir_Predefined_Bit_And =>
                      return Synth_Short_Circuit
-                       (Syn_Inst, Id_And, Get_Left (Expr), Get_Right (Expr),
-                        Bit_Type, Expr);
+                       (Syn_Inst, Id_And, False,
+                        Get_Left (Expr), Get_Right (Expr), Bit_Type, Expr);
                   when Iir_Predefined_Bit_Or =>
                      return Synth_Short_Circuit
-                       (Syn_Inst, Id_Or, Get_Left (Expr), Get_Right (Expr),
-                        Bit_Type, Expr);
+                       (Syn_Inst, Id_Or, False,
+                        Get_Left (Expr), Get_Right (Expr), Bit_Type, Expr);
+                  when Iir_Predefined_Bit_Nand =>
+                     return Synth_Short_Circuit
+                       (Syn_Inst, Id_And, True,
+                        Get_Left (Expr), Get_Right (Expr), Bit_Type, Expr);
+                  when Iir_Predefined_Bit_Nor =>
+                     return Synth_Short_Circuit
+                       (Syn_Inst, Id_Or, True,
+                        Get_Left (Expr), Get_Right (Expr), Bit_Type, Expr);
                   when Iir_Predefined_None =>
                      if Error_Ieee_Operator (Syn_Inst, Imp, Expr) then
                         return No_Valtyp;
