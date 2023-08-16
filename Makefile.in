@@ -109,7 +109,7 @@ WARN_CFLAGS=-Wall
 CFLAGS:=$(OPT_FLAGS) $(WARN_CFLAGS) $(CFLAGS)
 CXXFLAGS:=$(OPT_FLAGS) $(WARN_CFLAGS) $(CXXFLAGS)
 
-GNAT_BARGS=-bargs -E
+GNAT_BARGS=-bargs -static
 
 target=$(build)
 #target=i686-pc-linux-gnu
