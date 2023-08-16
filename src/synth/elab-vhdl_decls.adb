@@ -253,12 +253,12 @@ package body Elab.Vhdl_Decls is
       end if;
 
       Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl), Base, Typ, Off);
-      Typ := Unshare (Typ, Instance_Pool);
       Res := Create_Value_Alias (Base, Off, Typ, Expr_Pool'Access);
       if Obj_Typ /= null and then Obj_Typ.Kind not in Type_Scalars then
          --  Reshape bounds.
          Res := Exec_Subtype_Conversion (Res, Obj_Typ, True, Decl);
       end if;
+      Res.Typ := Unshare (Res.Typ, Instance_Pool);
       Res := Unshare (Res, Instance_Pool);
       Create_Object (Syn_Inst, Decl, Res);
       Release_Expr_Pool (Marker);

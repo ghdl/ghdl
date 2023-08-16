@@ -604,7 +604,6 @@ package body Synth.Vhdl_Decls is
 
       Vhdl_Stmts.Synth_Assignment_Prefix
         (Syn_Inst, Get_Name (Decl), Base, Typ, Off);
-      Typ := Unshare (Typ, Instance_Pool);
       if Base.Val.Kind = Value_Net then
          --  Object is a net if it is not writable.  Extract the
          --  bits for the alias.
@@ -623,6 +622,7 @@ package body Synth.Vhdl_Decls is
          --   constant - humm).
          Res := Synth_Subtype_Conversion (Syn_Inst, Res, Obj_Typ, True, Decl);
       end if;
+      Res.Typ := Unshare (Res.Typ, Instance_Pool);
       Res := Unshare (Res, Instance_Pool);
       Release_Expr_Pool (Marker);
       Create_Object (Syn_Inst, Decl, Res);
