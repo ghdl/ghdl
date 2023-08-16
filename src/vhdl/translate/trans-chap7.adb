@@ -862,11 +862,18 @@ package body Trans.Chap7 is
       --  std_logic_vector.
       Ptype := Parent_Type;
       while Get_Kind (Ptype) = Iir_Kind_Array_Subtype_Definition
-        and then Get_Index_Constraint_List (Ptype) = Null_Iir_Flist
+
         and then Get_Array_Element_Constraint (Ptype) = Null_Iir
       loop
          T := Get_Parent_Type (Ptype);
          exit when T = Null_Iir;
+
+         --  If the index subtype list is different from the parent, then it
+         --  has been constrained.
+         --  We cannot simply check index constraint list, as some subtypes
+         --  are created implicitely (eg: slices).
+         exit when (Get_Index_Subtype_List (Ptype)
+                      /= Get_Index_Subtype_List (T));
          Ptype := T;
       end loop;
 
