@@ -1093,7 +1093,21 @@ package body Elab.Vhdl_Insts is
 
       --  Clear elab_flag
       for I in Design_Units.First .. Design_Units.Last loop
-         Set_Elab_Flag (Design_Units.Table (I), False);
+         declare
+            Unit : constant Node := Design_Units.Table (I);
+            Lib_Unit : Node;
+         begin
+            if not Get_Elab_Flag (Unit) then
+               Lib_Unit := Get_Library_Unit (Unit);
+               if Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration
+                 and then not Is_Uninstantiated_Package (Lib_Unit)
+               then
+                  Clear_Package_Object (Root_Instance, Lib_Unit);
+               end if;
+            else
+               Set_Elab_Flag (Unit, False);
+            end if;
+         end;
       end loop;
 
       return Top_Inst;
