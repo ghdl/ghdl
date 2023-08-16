@@ -969,6 +969,7 @@ package body Elab.Vhdl_Insts is
          when Iir_Kind_Entity_Aspect_Configuration =>
             Config := Get_Configuration (Aspect);
             Arch := Get_Block_Specification (Get_Block_Configuration (Config));
+            Arch := Get_Named_Entity (Arch);
          when Iir_Kind_Entity_Aspect_Open =>
             return;
       end case;
