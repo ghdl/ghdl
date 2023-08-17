@@ -62,6 +62,12 @@ package body Elab.Vhdl_Decls is
       if Get_Kind (Decl) = Iir_Kind_Interface_View_Declaration then
          Init := No_Valtyp;
       else
+         --  According to LRM08 14.4.2.5 Object declarations
+         --  b) If the object declaration includes an explicit initialization
+         --     expression, then the initial value of the object is obtained
+         --     by evaluating the expression.
+         --  GHDL: so the default value is evaluated even if not needed
+         --    (like for an associated IN port).
          Def := Get_Default_Value (Decl);
          if Is_Valid (Def) then
             Mark_Expr_Pool (Expr_Mark);
