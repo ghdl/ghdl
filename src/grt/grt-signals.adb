@@ -627,7 +627,8 @@ package body Grt.Signals is
             Trans : constant Transaction_Acc :=
               Sig.S.Drivers (I - 1).First_Trans.Next;
          begin
-            if Trans.Kind /= Trans_Direct
+            if Trans /= null
+              and then Trans.Kind /= Trans_Direct
               and then Trans.Time = Current_Time
             then
                return True;
