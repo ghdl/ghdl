@@ -293,8 +293,8 @@ package body Simul.Vhdl_Elab is
             --  Driver.
             Gather_Signal ((Signal_User, Decl, Inst, null, null, null, null,
                             No_Sensitivity_Index, No_Signal_Index,
-                            No_Connect_Index, No_Driver_Index,
-                            No_Disconnect_Index, null));
+                            No_Connect_Index, Get_Has_Active_Flag (Decl),
+                            No_Driver_Index, No_Disconnect_Index, null));
          when Iir_Kind_Configuration_Specification =>
             null;
          when Iir_Kind_Free_Quantity_Declaration
@@ -327,7 +327,7 @@ package body Simul.Vhdl_Elab is
          when Iir_Kind_Above_Attribute =>
             Gather_Signal ((Signal_Above, Decl, Inst, null, null, null, null,
                             No_Sensitivity_Index, No_Signal_Index,
-                            No_Connect_Index));
+                            No_Connect_Index, Get_Has_Active_Flag (Decl)));
          when Iir_Kind_Quiet_Attribute =>
             declare
                T : Std_Time;
@@ -338,7 +338,8 @@ package body Simul.Vhdl_Elab is
                Gather_Signal ((Signal_Quiet, Decl, Inst,
                                null, null, null, null,
                                No_Sensitivity_Index, No_Signal_Index,
-                               No_Connect_Index, T, Pfx));
+                               No_Connect_Index, Get_Has_Active_Flag (Decl),
+                               T, Pfx));
             end;
          when Iir_Kind_Stable_Attribute =>
             declare
@@ -350,7 +351,8 @@ package body Simul.Vhdl_Elab is
                Gather_Signal ((Signal_Stable, Decl, Inst,
                                null, null, null, null,
                                No_Sensitivity_Index, No_Signal_Index,
-                               No_Connect_Index, T, Pfx));
+                               No_Connect_Index, Get_Has_Active_Flag (Decl),
+                               T, Pfx));
             end;
          when Iir_Kind_Transaction_Attribute =>
             declare
@@ -360,7 +362,8 @@ package body Simul.Vhdl_Elab is
                Gather_Signal
                  ((Signal_Transaction, Decl, Inst, null, null, null, null,
                    No_Sensitivity_Index, No_Signal_Index,
-                   No_Connect_Index, 0, Pfx));
+                   No_Connect_Index, Get_Has_Active_Flag (Decl),
+                   0, Pfx));
             end;
          when Iir_Kind_Delayed_Attribute =>
             declare
@@ -372,7 +375,8 @@ package body Simul.Vhdl_Elab is
                Gather_Signal ((Signal_Delayed, Decl, Inst,
                                null, null, null, null,
                                No_Sensitivity_Index, No_Signal_Index,
-                               No_Connect_Index, T, Pfx));
+                               No_Connect_Index, Get_Has_Active_Flag (Decl),
+                               T, Pfx));
             end;
          when Iir_Kind_Object_Alias_Declaration =>
             --  In case it aliases a signal.
@@ -1006,10 +1010,11 @@ package body Simul.Vhdl_Elab is
                Guard : constant Node := Get_Guard_Decl (N);
             begin
                if Guard /= Null_Node then
-                  Gather_Signal ((Signal_Guard, Guard, Inst,
-                                  null, null, null, null,
-                                  No_Sensitivity_Index, No_Signal_Index,
-                                  No_Connect_Index));
+                  Gather_Signal
+                    ((Signal_Guard, Guard, Inst,
+                      null, null, null, null,
+                      No_Sensitivity_Index, No_Signal_Index,
+                      No_Connect_Index, Get_Has_Active_Flag (Guard)));
                end if;
                if Hdr /= Null_Node then
                   Gather_Processes_Decls (Inst, Get_Port_Chain (Hdr));
@@ -1052,7 +1057,7 @@ package body Simul.Vhdl_Elab is
       for I in Signals_Table.First .. Signals_Table.Last loop
          Signals_Table.Table (I) :=
            (Signal_None, Null_Node, null, null, null, null, null,
-            No_Sensitivity_Index, No_Signal_Index, No_Connect_Index);
+            No_Sensitivity_Index, No_Signal_Index, No_Connect_Index, False);
       end loop;
 
       --  Gather declarations of top-level packages.
@@ -1085,17 +1090,32 @@ package body Simul.Vhdl_Elab is
             Is_Out : constant Boolean :=
               Get_Kind (E.Decl) = Iir_Kind_Interface_Signal_Declaration
               and then Get_Mode (E.Decl) in Iir_Out_Modes;
+            Collapsed_By : Signal_Index_Type;
          begin
+            --  Propagate Has_Active flag.
+            if E.Has_Active then
+               Collapsed_By := E.Collapsed_By;
+               while Collapsed_By /= No_Signal_Index loop
+                  declare
+                     Ec : Signal_Entry renames
+                       Signals_Table.Table (Collapsed_By);
+                  begin
+                     exit when Ec.Has_Active;
+                     Ec.Has_Active := True;
+                     Collapsed_By := Ec.Collapsed_By;
+                  end;
+               end loop;
+            end if;
+
             if E.Kind = Signal_User then
                for J in 1 .. E.Typ.W loop
                   declare
-                     Collapsed_By : Signal_Index_Type;
                      Total : Uns32;
                   begin
                      --  Total number of sources.  (It was set to 1 to know
                      --  if it is resolved).
                      Total := E.Nbr_Sources (J - 1).Nbr_Drivers
-                        + E.Nbr_Sources (J - 1).Nbr_Conns;
+                       + E.Nbr_Sources (J - 1).Nbr_Conns;
                      --  Undriven out ports have a default source.
                      if Total = 0 and then Is_Out then
                         Total := 1;

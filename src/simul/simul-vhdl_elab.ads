@@ -168,6 +168,8 @@ package Simul.Vhdl_Elab is
       --  Connections.  Non-user signals can only be actuals.
       Connect : Connect_Index_Type;
 
+      Has_Active : Boolean;
+
       case Kind is
          when Signal_User =>
             Drivers : Driver_Index_Type;
