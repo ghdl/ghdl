@@ -4436,10 +4436,25 @@ package body Synth.Vhdl_Stmts is
             if Get_Kind (Unit) = Iir_Kind_Design_Unit then
                Lib := Get_Library (Get_Design_File (Unit));
                if Get_Identifier (Lib) = Std_Names.Name_Ieee then
-                  Error_Msg_Synth (Syn_Inst, Expr,
-                                   "unhandled call to ieee function %i", +Imp);
-                  Set_Error (Syn_Inst);
-                  return No_Valtyp;
+                  case Get_Identifier (Pkg) is
+                     when Std_Names.Name_Std_Logic_1164
+                        | Std_Names.Name_Numeric_Std
+                        | Std_Names.Name_Numeric_Bit
+                        | Std_Names.Name_Numeric_Std_Unsigned
+                        | Std_Names.Name_Math_Real
+                        | Std_Names.Name_Std_Logic_Unsigned
+                        | Std_Names.Name_Std_Logic_Signed
+                        | Std_Names.Name_Std_Logic_Misc
+                        | Std_Names.Name_Std_Logic_Arith =>
+                        Error_Msg_Synth
+                          (Syn_Inst, Expr,
+                           "unhandled call to ieee function %i", +Imp);
+                        Set_Error (Syn_Inst);
+                        return No_Valtyp;
+                     when others =>
+                        --  Other ieee packages are handled as normal packages.
+                        null;
+                  end case;
                end if;
             end if;
          end if;
