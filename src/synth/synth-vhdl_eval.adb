@@ -661,8 +661,7 @@ package body Synth.Vhdl_Eval is
             when '1' =>
                Res := Res * 2 + 1;
             when 'X' =>
-               Warning_Msg_Synth
-                 (+Loc, "metavalue detected, returning 0");
+               Warning_Msg_Synth (+Loc, "metavalue detected, returning 0");
                Res := 0;
                exit;
          end case;
@@ -706,6 +705,22 @@ package body Synth.Vhdl_Eval is
       end loop;
       return To_Int64 (Res);
    end Eval_Signed_To_Integer;
+
+   function Eval_Log_To_Integer (Arg : Memtyp; Loc : Node) return Int64
+   is
+      V : Std_Ulogic;
+   begin
+      V := Std_Ulogic'Val (Read_U8 (Arg.Mem));
+      case To_X01 (V) is
+         when '0' =>
+            return 0;
+         when '1' =>
+            return 1;
+         when 'X' =>
+            Warning_Msg_Synth (+Loc, "metavalue detected, returning 0");
+            return 0;
+      end case;
+   end Eval_Log_To_Integer;
 
    function Eval_Array_Char_To_String (Param : Memtyp;
                                        Res_Typ : Type_Acc;
@@ -2656,6 +2671,9 @@ package body Synth.Vhdl_Eval is
             --  SIGNED to Integer
             return Create_Memory_Discrete
               (Eval_Signed_To_Integer (Param1, Expr), Res_Typ);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Log =>
+            return Create_Memory_Discrete
+              (Eval_Log_To_Integer (Param1, Expr), Res_Typ);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Int =>
             return Param1;
 
