@@ -3033,6 +3033,20 @@ package body Synth.Vhdl_Eval is
             begin
                return Create_Memory_Fp64 (Sqrt (Read_Fp64 (Param1)), Res_Typ);
             end;
+         when Iir_Predefined_Ieee_Math_Real_Exp =>
+            declare
+               function Exp (Arg : Fp64) return Fp64;
+               pragma Import (C, Exp);
+            begin
+               return Create_Memory_Fp64 (Exp (Read_Fp64 (Param1)), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Math_Real_Log =>
+            declare
+               function Log (Arg : Fp64) return Fp64;
+               pragma Import (C, Log);
+            begin
+               return Create_Memory_Fp64 (Log (Read_Fp64 (Param1)), Res_Typ);
+            end;
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
                function Log2 (Arg : Fp64) return Fp64;
@@ -3088,6 +3102,20 @@ package body Synth.Vhdl_Eval is
                pragma Import (C, Atan);
             begin
                return Create_Memory_Fp64 (Atan (Read_Fp64 (Param1)), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Math_Real_Sinh =>
+            declare
+               function Sinh (Arg : Fp64) return Fp64;
+               pragma Import (C, Sinh);
+            begin
+               return Create_Memory_Fp64 (Sinh (Read_Fp64 (Param1)), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Math_Real_Cosh =>
+            declare
+               function Cosh (Arg : Fp64) return Fp64;
+               pragma Import (C, Cosh);
+            begin
+               return Create_Memory_Fp64 (Cosh (Read_Fp64 (Param1)), Res_Typ);
             end;
 
          when Iir_Predefined_Foreign_Textio_Read_Real =>

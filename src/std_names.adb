@@ -698,11 +698,15 @@ package body Std_Names is
       Def ("ceil",               Name_Ceil);
       Def ("floor",              Name_Floor);
       Def ("round",              Name_Round);
+      Def ("exp",                Name_Exp);
+      Def ("log",                Name_Log);
       Def ("log2",               Name_Log2);
       Def ("log10",              Name_Log10);
       Def ("sin",                Name_Sin);
       Def ("cos",                Name_Cos);
       Def ("arctan",             Name_Arctan);
+      Def ("sinh",               Name_Sinh);
+      Def ("cosh",               Name_Cosh);
       Def ("sign",               Name_Sign);
       Def ("sqrt",               Name_Sqrt);
       Def ("shl",                Name_Shl);
