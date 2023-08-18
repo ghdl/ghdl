@@ -3708,6 +3708,7 @@ package body Synth.Vhdl_Stmts is
          if Cond /= Null_Node then
             Mark_Expr_Pool (Marker);
             Val := Synth_Expression_With_Type (C.Inst, Cond, Boolean_Type);
+            exit when Val = No_Valtyp;
             pragma Assert (Is_Static (Val.Val));
             Cv := Read_Discrete (Val) = 0;
             Release_Expr_Pool (Marker);
