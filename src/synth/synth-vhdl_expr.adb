@@ -16,6 +16,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Flags;
 with Types_Utils; use Types_Utils;
 with Std_Names;
 with Mutils; use Mutils;
@@ -2659,6 +2660,7 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_Above_Attribute =>
             declare
                Res : Valtyp;
+               Init : Valtyp;
             begin
                Res := Synth_Name (Syn_Inst, Expr);
                if Res.Val /= null then
@@ -2670,10 +2672,34 @@ package body Synth.Vhdl_Expr is
                      if Hook_Signal_Expr /= null then
                         return Hook_Signal_Expr (Res);
                      end if;
-                     Error_Msg_Synth
-                       (Syn_Inst, Expr,
-                        "cannot use signal value during elaboration");
-                     return No_Valtyp;
+                     if Flags.Flag_Relaxed_Rules then
+                        Warning_Msg_Synth
+                          (Warnid_Elaboration, +Expr,
+                           "cannot use signal value during elaboration");
+                        if Res.Val.Kind = Value_Signal then
+                           --  The signal may have no default value.
+                           if Res.Val.Init = null then
+                              Init := Create_Value_Memory
+                                (Res.Typ, Instance_Pool);
+                              Write_Value_Default (Init.Val.Mem, Res.Typ);
+                              Res.Val.Init := Init.Val;
+                           end if;
+                           Res := (Res.Typ, Res.Val.Init);
+                        elsif Res.Val.Kind = Value_Alias then
+                           Res := Create_Value_Memtyp
+                             ((Res.Val.A_Typ,
+                               Res.Val.A_Obj.Init.Mem
+                                 + Res.Val.A_Off.Mem_Off));
+                        else
+                           Res := No_Valtyp;
+                        end if;
+                        return Res;
+                     else
+                        Error_Msg_Synth
+                          (Syn_Inst, Expr,
+                           "cannot use signal value during elaboration");
+                        return No_Valtyp;
+                     end if;
                   elsif (Res.Val.Kind = Value_Quantity
                            or else
                            (Res.Val.Kind = Value_Alias
