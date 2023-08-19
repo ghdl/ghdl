@@ -2680,11 +2680,15 @@ package body Synth.Vhdl_Expr is
                            --  The signal may have no default value.
                            if Res.Val.Init = null then
                               Init := Create_Value_Memory
-                                (Res.Typ, Instance_Pool);
+                                (Res.Typ, Current_Pool);
                               Write_Value_Default (Init.Val.Mem, Res.Typ);
-                              Res.Val.Init := Init.Val;
+                              --  Do not write the default value, even if it
+                              --  were allocated on the instance_pool, it
+                              --  might be deallocated after a subprogram call.
+                              Res := (Res.Typ, Init.Val);
+                           else
+                              Res := (Res.Typ, Res.Val.Init);
                            end if;
-                           Res := (Res.Typ, Res.Val.Init);
                         elsif Res.Val.Kind = Value_Alias then
                            Res := Create_Value_Memtyp
                              ((Res.Val.A_Typ,
