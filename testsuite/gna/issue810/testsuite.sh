@@ -2,11 +2,12 @@
 
 . ../../testenv.sh
 
-analyze repro.vhdl
-elab_simulate repro
+analyze_failure repro.vhdl
 
-analyze nullrng.vhdl
-analyze_failure -Werror nullrng.vhdl
+analyze_failure nullrng.vhdl
+
+analyze_failure -Werror nullrng2.vhdl
+analyze nullrng2.vhdl
 
 clean
 
