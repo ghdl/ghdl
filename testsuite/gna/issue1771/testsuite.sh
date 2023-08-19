@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-export GHDL_STD_FLAGS=--std=08
+export GHDL_STD_FLAGS="--std=08 -frelaxed"
 analyze tf.vhdl
 elab_simulate tf
 

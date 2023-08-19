@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-export GHDL_STD_FLAGS=--std=08
+export GHDL_STD_FLAGS="--std=08 -frelaxed"
 analyze test_pkg.vhdl test_bench.vhdl
 elab test_bench
 if ghdl_has_feature test_bench ghw; then
