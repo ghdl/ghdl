@@ -25,6 +25,7 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 
 with Simul.Vhdl_Elab; use Simul.Vhdl_Elab;
 
@@ -98,6 +99,7 @@ package Simul.Vhdl_Simul is
    procedure Collapse_Signal (E : in out Signal_Entry);
    procedure Create_Process_Drivers (Proc : Process_Index_Type);
    procedure Register_Sensitivity (Proc_Idx : Process_Index_Type);
+   procedure Add_Source (Typ : Type_Acc; Sig : Memory_Ptr; Val : Memory_Ptr);
    procedure Create_Connects;
 
    --  Tables visible to the debugger.

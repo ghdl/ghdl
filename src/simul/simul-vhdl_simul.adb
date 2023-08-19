@@ -42,7 +42,6 @@ with PSL.Subsets;
 with Elab.Debugger;
 with Elab.Vhdl_Types;
 with Elab.Vhdl_Debug;
-with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 
 with Synth.Errors;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
