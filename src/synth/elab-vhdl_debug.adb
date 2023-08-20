@@ -682,8 +682,10 @@ package body Elab.Vhdl_Debug is
                Put ("generate statement body");
                --  TODO: disp label or index ?
                New_Line;
-               Disp_Declaration_Objects
-                 (Inst, Get_Declaration_Chain (N), Cfg.Indent + 1);
+               if Cfg.With_Objs then
+                  Disp_Declaration_Objects
+                    (Inst, Get_Declaration_Chain (N), Cfg.Indent + 1);
+               end if;
                Disp_Hierarchy_Statements
                  (Inst, Get_Concurrent_Statement_Chain (N), Cfg);
             when Iir_Kind_Block_Statement =>
