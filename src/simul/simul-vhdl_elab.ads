@@ -105,8 +105,8 @@ package Simul.Vhdl_Elab is
       --  Next connection for the actual.
       Actual_Link : Connect_Index_Type;
 
-      --  If true, the connection is fully collapsed: formal is the same
-      --  signal as actual.
+      --  If true, the connection is collapsed: formal is the same (or a
+      --  part) as the actual.
       Collapsed : Boolean;
 
       Assoc : Node;
@@ -162,8 +162,10 @@ package Simul.Vhdl_Elab is
       --  Processes sensitized by this signal.
       Sensitivity : Sensitivity_Index_Type;
 
-      --  This signal is identical to Collapsed_By, if set.
+      --  This signal is collapsed by Collapsed_By, if set.
+      --  Collapsed_Offs are the offset in Collapsed_By signal.
       Collapsed_By : Signal_Index_Type;
+      Collapsed_Offs : Value_Offsets;
 
       --  Connections.  Non-user signals can only be actuals.
       Connect : Connect_Index_Type;

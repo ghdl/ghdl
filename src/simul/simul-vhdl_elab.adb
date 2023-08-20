@@ -292,7 +292,8 @@ package body Simul.Vhdl_Elab is
            | Iir_Kind_Interface_View_Declaration =>
             --  Driver.
             Gather_Signal ((Signal_User, Decl, Inst, null, null, null, null,
-                            No_Sensitivity_Index, No_Signal_Index,
+                            No_Sensitivity_Index,
+                            No_Signal_Index, No_Value_Offsets,
                             No_Connect_Index, Get_Has_Active_Flag (Decl),
                             No_Driver_Index, No_Disconnect_Index, null));
          when Iir_Kind_Configuration_Specification =>
@@ -326,7 +327,8 @@ package body Simul.Vhdl_Elab is
             end;
          when Iir_Kind_Above_Attribute =>
             Gather_Signal ((Signal_Above, Decl, Inst, null, null, null, null,
-                            No_Sensitivity_Index, No_Signal_Index,
+                            No_Sensitivity_Index,
+                            No_Signal_Index, No_Value_Offsets,
                             No_Connect_Index, Get_Has_Active_Flag (Decl)));
          when Iir_Kind_Quiet_Attribute =>
             declare
@@ -337,7 +339,8 @@ package body Simul.Vhdl_Elab is
                Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
                Gather_Signal ((Signal_Quiet, Decl, Inst,
                                null, null, null, null,
-                               No_Sensitivity_Index, No_Signal_Index,
+                               No_Sensitivity_Index,
+                               No_Signal_Index, No_Value_Offsets,
                                No_Connect_Index, Get_Has_Active_Flag (Decl),
                                T, Pfx));
             end;
@@ -350,7 +353,8 @@ package body Simul.Vhdl_Elab is
                Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
                Gather_Signal ((Signal_Stable, Decl, Inst,
                                null, null, null, null,
-                               No_Sensitivity_Index, No_Signal_Index,
+                               No_Sensitivity_Index,
+                               No_Signal_Index, No_Value_Offsets,
                                No_Connect_Index, Get_Has_Active_Flag (Decl),
                                T, Pfx));
             end;
@@ -361,7 +365,8 @@ package body Simul.Vhdl_Elab is
                Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
                Gather_Signal
                  ((Signal_Transaction, Decl, Inst, null, null, null, null,
-                   No_Sensitivity_Index, No_Signal_Index,
+                   No_Sensitivity_Index,
+                   No_Signal_Index, No_Value_Offsets,
                    No_Connect_Index, Get_Has_Active_Flag (Decl),
                    0, Pfx));
             end;
@@ -374,7 +379,8 @@ package body Simul.Vhdl_Elab is
                Pfx := Compute_Sub_Signal (Inst, Get_Prefix (Decl));
                Gather_Signal ((Signal_Delayed, Decl, Inst,
                                null, null, null, null,
-                               No_Sensitivity_Index, No_Signal_Index,
+                               No_Sensitivity_Index,
+                               No_Signal_Index, No_Value_Offsets,
                                No_Connect_Index, Get_Has_Active_Flag (Decl),
                                T, Pfx));
             end;
@@ -736,11 +742,13 @@ package body Simul.Vhdl_Elab is
                Actual_Sig := Actual_Base.Val.S;
                Actual_Ep := (Actual_Sig, Off, Typ);
 
+               --  TODO: partial collapse.
                Is_Collapsed := Get_Collapse_Signal_Flag (Assoc)
                  and then Formal_Ep.Offs.Mem_Off = 0
-                 and then Actual_Ep.Offs.Mem_Off = 0
-                 and then Actual_Base.Typ.W = Actual_Ep.Typ.W
-                 and then Formal_Base.Typ.W = Formal_Ep.Typ.W;
+                 and then Formal_Ep.Typ.W = Formal_Base.Typ.W;
+               pragma Assert
+                 (not Is_Collapsed
+                    or else Formal_Ep.Typ.W >= Actual_Ep.Typ.W);
 
                Conn :=
                  (Formal => Formal_Ep,
@@ -781,6 +789,8 @@ package body Simul.Vhdl_Elab is
                                    = No_Signal_Index);
                   pragma Assert (Formal_Sig > Actual_Sig);
                   Signals_Table.Table (Formal_Sig).Collapsed_By := Actual_Sig;
+                  Signals_Table.Table (Formal_Sig).Collapsed_Offs :=
+                    Actual_Ep.Offs;
                end if;
             when Iir_Kind_Association_Element_Open
               | Iir_Kind_Association_Element_By_Individual =>
@@ -1013,7 +1023,8 @@ package body Simul.Vhdl_Elab is
                   Gather_Signal
                     ((Signal_Guard, Guard, Inst,
                       null, null, null, null,
-                      No_Sensitivity_Index, No_Signal_Index,
+                      No_Sensitivity_Index,
+                      No_Signal_Index, No_Value_Offsets,
                       No_Connect_Index, Get_Has_Active_Flag (Guard)));
                end if;
                if Hdr /= Null_Node then
@@ -1057,7 +1068,9 @@ package body Simul.Vhdl_Elab is
       for I in Signals_Table.First .. Signals_Table.Last loop
          Signals_Table.Table (I) :=
            (Signal_None, Null_Node, null, null, null, null, null,
-            No_Sensitivity_Index, No_Signal_Index, No_Connect_Index, False);
+            No_Sensitivity_Index,
+            No_Signal_Index, No_Value_Offsets,
+            No_Connect_Index, False);
       end loop;
 
       --  Gather declarations of top-level packages.
@@ -1111,6 +1124,7 @@ package body Simul.Vhdl_Elab is
                for J in 1 .. E.Typ.W loop
                   declare
                      Total : Uns32;
+                     Collapsed_Off : Uns32;
                   begin
                      --  Total number of sources.  (It was set to 1 to know
                      --  if it is resolved).
@@ -1122,8 +1136,9 @@ package body Simul.Vhdl_Elab is
                      end if;
                      E.Nbr_Sources (J - 1).Total := Total;
 
-                     --  Propagate nbr sources to the non-collapsed signal.
+                     --  Propagate nbr sources to the non-collapsed signals.
                      Collapsed_By := E.Collapsed_By;
+                     Collapsed_Off := E.Collapsed_Offs.Net_Off;
                      while Collapsed_By /= No_Signal_Index
                        and then (Signals_Table.Table (Collapsed_By).Kind
                                    = Signal_User)
@@ -1134,13 +1149,14 @@ package body Simul.Vhdl_Elab is
                              Signals_Table.Table (Collapsed_By);
                         begin
                            --  Remove 1 for out connection.
-                           C_S.Nbr_Sources (J - 1).Total :=
-                             C_S.Nbr_Sources (J - 1).Total
+                           C_S.Nbr_Sources (Collapsed_Off + J - 1).Total :=
+                             C_S.Nbr_Sources (Collapsed_Off + J - 1).Total
                              + Total - Boolean'Pos (Is_Out);
-                        end;
 
-                        Collapsed_By :=
-                          Signals_Table.Table (Collapsed_By).Collapsed_By;
+                           Collapsed_By := C_S.Collapsed_By;
+                           Collapsed_Off := Collapsed_Off
+                             + C_S.Collapsed_Offs.Net_Off;
+                        end;
                      end loop;
                   end;
                end loop;

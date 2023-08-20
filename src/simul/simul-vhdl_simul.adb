@@ -3315,7 +3315,8 @@ package body Simul.Vhdl_Simul is
          begin
             pragma Assert (E.Sig = null);
             if E.Collapsed_By /= No_Signal_Index then
-               E.Sig := Signals_Table.Table (E.Collapsed_By).Sig;
+               E.Sig := Sig_Index (Signals_Table.Table (E.Collapsed_By).Sig,
+                                   E.Collapsed_Offs.Net_Off);
                --  E.Val will be assigned in Collapse_Signals.
             else
                E.Sig := Alloc_Signal_Memory (E.Typ, Global_Pool'Access);
@@ -3412,24 +3413,27 @@ package body Simul.Vhdl_Simul is
    procedure Collapse_Signal (E : in out Signal_Entry)
    is
       Ec : Signal_Entry renames Signals_Table.Table (E.Collapsed_By);
+      Nsig : constant Memory_Ptr :=
+        Sig_Index (Ec.Sig, E.Collapsed_Offs.Net_Off);
+      Nval : constant Memory_Ptr := Ec.Val + E.Collapsed_Offs.Mem_Off;
    begin
       if Get_Mode (E.Decl) in Iir_Out_Modes then
          --  As an out connection creates a source, if a signal is
          --  collapsed and has no source, an extra source needs to be
          --  created.
          Add_Extra_Driver_To_Signal
-           (Ec.Sig, E.Typ, E.Val_Init, 0, E.Nbr_Sources.all);
+           (Nsig, E.Typ, E.Val_Init, 0, E.Nbr_Sources.all);
 
          --  The signal value is the value of the collapsed signal.
          --  Keep default value.
-         Copy_Memory (Ec.Val, E.Val_Init, E.Typ.Sz);
+         Copy_Memory (Nval, E.Val_Init, E.Typ.Sz);
          Exec_Write_Signal
-           (Ec.Sig, (E.Typ, E.Val_Init), Write_Signal_Driving_Value);
+           (Nsig, (E.Typ, E.Val_Init), Write_Signal_Driving_Value);
       end if;
 
-      E.Val := Ec.Val;
+      E.Val := Nval;
       --  Already done for simulation but not for compilation.
-      E.Sig := Ec.Sig;
+      E.Sig := Nsig;
    end Collapse_Signal;
 
    procedure Collapse_Signals is
