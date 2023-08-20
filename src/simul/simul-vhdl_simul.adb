@@ -2888,6 +2888,73 @@ package body Simul.Vhdl_Simul is
       pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
    end Resolution_Proc;
 
+   procedure Std_Resolve_Proc (Sig_Addr : System.Address;
+                               Val : System.Address;
+                               Bool_Vec : System.Address;
+                               Vec_Len : Ghdl_Index_Type;
+                               Nbr_Drv : Ghdl_Index_Type;
+                               Nbr_Ports : Ghdl_Index_Type);
+   pragma Convention (C, Std_Resolve_Proc);
+
+   Resolution_Table  : constant Table_2d :=
+   --  UX01ZWLH-
+     ("UUUUUUUUU",   --  U
+      "UXXXXXXXX",   --  X
+      "UX0X0000X",   --  0
+      "UXX11111X",   --  1
+      "UX01ZWLHX",   --  Z
+      "UX01WWWWX",   --  W
+      "UX01LWLWX",   --  L
+      "UX01HWWHX",   --  H
+      "UXXXXXXXX"    --  -
+     );
+
+   procedure Std_Resolve_Proc (Sig_Addr : System.Address;
+                               Val : System.Address;
+                               Bool_Vec : System.Address;
+                               Vec_Len : Ghdl_Index_Type;
+                               Nbr_Drv : Ghdl_Index_Type;
+                               Nbr_Ports : Ghdl_Index_Type)
+   is
+      pragma Unreferenced (Val, Vec_Len);
+
+      S : constant Ghdl_Signal_Ptr := Read_Sig (To_Memory_Ptr (Sig_Addr));
+
+      Res, Last : Std_Ulogic;
+      Num : Natural;
+
+      type Bool_Array is array (1 .. Nbr_Drv) of Boolean;
+      Vec : Bool_Array;
+      pragma Import (Ada, Vec);
+      for Vec'Address use Bool_Vec;
+   begin
+      Res := 'Z';
+      Num := 0;
+      Last := 'Z';
+
+      --  Ports.
+      for I in 1 .. Nbr_Ports loop
+         Last := Std_Ulogic'Val (Ghdl_Signal_Read_Port (S, I - 1).E8);
+         Res := Resolution_Table (Res, Last);
+         Num := Num + 1;
+      end loop;
+
+      --  Drivers.
+      for I in 1 .. Nbr_Drv loop
+         if Vec (I) then
+            Last := Std_Ulogic'Val (Ghdl_Signal_Read_Driver (S, I - 1).E8);
+            Res := Resolution_Table (Res, Last);
+            Num := Num + 1;
+         end if;
+      end loop;
+
+      --  Set driving value.
+      if Num = 1 then
+         Res := Last;
+      end if;
+      S.Driving_Value.E8 := Ghdl_E8'Val (Std_Ulogic'Pos (Res));
+   end Std_Resolve_Proc;
+
    function Create_Scalar_Signal (Typ : Type_Acc; Val : Ghdl_Value_Ptr)
                                  return Ghdl_Signal_Ptr is
    begin
@@ -2989,11 +3056,21 @@ package body Simul.Vhdl_Simul is
             else
                Resolv_Func := Null_Node;
             end if;
+
+            --  Handle std_logic in an optimized way.
+            --  Note: Resolved may not be set.
             if Resolv_Func /= Null_Node
-              and then
-              (Vec (Sig_Off).Total > 1
-                 or else Resolv_Func /= Vhdl.Ieee.Std_Logic_1164.Resolved)
+              and then Resolv_Func = Vhdl.Ieee.Std_Logic_1164.Resolved
             then
+               if Vec (Sig_Off).Total > 1 then
+                  pragma Assert (Typ.W = 1);
+                  Sub_Resolved := True;
+                  Grt.Signals.Ghdl_Signal_Create_Resolution
+                    (Std_Resolve_Proc'Access,
+                     To_Address (Sig_Index (E.Sig, Sig_Off)),
+                     System.Null_Address, 1);
+               end if;
+            elsif Resolv_Func /= Null_Node then
                Sub_Resolved := True;
                Arr_Type :=
                  Get_Type (Get_Interface_Declaration_Chain (Resolv_Func));
