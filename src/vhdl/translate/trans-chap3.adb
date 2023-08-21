@@ -753,14 +753,19 @@ package body Trans.Chap3 is
                      --  for it.
                      null;
                   elsif El_Tinfo.S.Subtype_Owner /= Tinfo then
-                     --  The element is not owned by this subtype, so it has
-                     --  its own layout variable that must have been set.
-                     --  Just copy the layout.
-                     Gen_Memcpy
-                       (M2Addr (Array_Bounds_To_Element_Layout (Targ, Def)),
-                        M2Addr (Get_Composite_Type_Layout (El_Tinfo)),
-                        New_Lit (New_Sizeof (El_Tinfo.B.Layout_Type,
-                                             Ghdl_Index_Type)));
+                     --  Do not try to copy layout if there are none.
+                     if El_Tinfo.S.Subtype_Owner /= null
+                       or else El_Tinfo.S.Composite_Layout /= Null_Var
+                     then
+                        --  The element is not owned by this subtype, so it has
+                        --  its own layout variable that must have been set.
+                        --  Just copy the layout.
+                        Gen_Memcpy
+                          (M2Addr (Array_Bounds_To_Element_Layout (Targ, Def)),
+                           M2Addr (Get_Composite_Type_Layout (El_Tinfo)),
+                           New_Lit (New_Sizeof (El_Tinfo.B.Layout_Type,
+                                                Ghdl_Index_Type)));
+                     end if;
                   else
                      --  New constraints.
                      Elab_Composite_Subtype_Layout
