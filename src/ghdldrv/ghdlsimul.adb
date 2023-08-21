@@ -37,11 +37,14 @@ with Vhdl.Configuration;
 with Vhdl.Utils;
 with Vhdl.Back_End;
 
+with Ortho_Jit;
+
 with Grt.Options;
 with Grt.Types;
 with Grt.Errors;
 
 with Ghdlcomp; use Ghdlcomp;
+with Ghdlvpi;
 with Grtlink;
 
 --  For Elaborate.
@@ -50,15 +53,20 @@ with Elab.Vhdl_Debug;
 with Elab.Vhdl_Insts;
 with Elab.Debugger;
 
+with Translation;
+
 with Synth.Flags;
 with Synth.Errors;
 with Synth.Vhdl_Foreign;
 
 with Simul.Vhdl_Elab;
+with Simul.Vhdl_Compile;
 with Simul.Vhdl_Simul;
 with Simul.Main;
 
 package body Ghdlsimul is
+   Flag_Compile : Boolean := True;
+
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
       Common_Compile_Init (Analyze_Only);
@@ -74,8 +82,10 @@ package body Ghdlsimul is
       Vhdl.Canon.Canon_Flag_Add_Labels := True;
       Vhdl.Canon.Canon_Flag_Add_Suspend_State := True;
 
-      --  Do not canon concurrent statements.
-      Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
+      if not Flag_Compile then
+         --  Do not canon concurrent statements.
+         Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
+      end if;
    end Compile_Init;
 
    procedure Compile_Elab
@@ -236,7 +246,11 @@ package body Ghdlsimul is
 
       Synth.Flags.Severity_Level := Grt.Options.Severity_Level;
 
-      Simul.Vhdl_Simul.Simulation;
+      if Flag_Compile then
+         Simul.Vhdl_Compile.Simulation;
+      else
+         Simul.Vhdl_Simul.Simulation;
+      end if;
 
       Set_Exit_Status (Exit_Status (Grt.Errors.Exit_Status));
    end Run;
@@ -259,11 +273,19 @@ package body Ghdlsimul is
          Simul.Main.Flag_Interractive := True;
       elsif Option = "-ge" then
          Simul.Main.Flag_Debug_Elab := True;
+      elsif Option = "--jit" then
+         Flag_Compile := True;
+      elsif Option = "--interp" then
+         Flag_Compile := False;
       elsif Option'Last > 3
         and then Option (Option'First + 1) = 'g'
         and then Is_Generic_Override_Option (Option)
       then
          Res := Decode_Generic_Override_Option (Option);
+      elsif Flag_Compile
+        and then Ortho_Jit.Decode_Option (Option)
+      then
+         null;
       else
          return False;
       end if;
@@ -285,5 +307,8 @@ package body Ghdlsimul is
                          Decode_Option'Access,
                          Disp_Help'Access);
       Ghdlcomp.Register_Commands;
+      Translation.Register_Translation_Back_End;
+      Ghdlvpi.Register_Commands;
+
    end Register_Commands;
 end Ghdlsimul;

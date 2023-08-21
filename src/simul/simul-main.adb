@@ -33,6 +33,7 @@ with Grt.Options;
 with Grt.Processes;
 with Grt.Errors;
 with Grt.Main;
+with Grt.Disp_Signals;
 
 package body Simul.Main is
    Ghdl_Progname : constant String := "ghdl" & ASCII.Nul;
@@ -96,9 +97,6 @@ package body Simul.Main is
       --  Copy flag.
       Synth.Flags.Severity_Level := Grt.Options.Severity_Level;
 
-      --  Not supported.
-      Grt.Options.Trace_Signals := False;
-
       if Flag_Interractive then
          Elab.Debugger.Debug_Elab (Vhdl_Elab.Top_Instance);
       end if;
@@ -120,8 +118,13 @@ package body Simul.Main is
             Status := Grt.Main.Run_Through_Longjump
               (Grt.Processes.Simulation_Cycle'Access);
             exit when Status < 0
-              or Status = Grt.Errors.Run_Stop
-              or Status = Grt.Errors.Run_Finished;
+              or Status = Grt.Errors.Run_Stop;
+
+            if Grt.Options.Trace_Signals then
+               Grt.Disp_Signals.Disp_All_Signals;
+            end if;
+
+            exit when Status = Grt.Errors.Run_Finished;
 
             if Break_Step
               or else (Current_Time >= Break_Time

@@ -101,6 +101,7 @@ package Simul.Vhdl_Simul is
    procedure Register_Sensitivity (Proc_Idx : Process_Index_Type);
    procedure Add_Source (Typ : Type_Acc; Sig : Memory_Ptr; Val : Memory_Ptr);
    procedure Create_Connects;
+   procedure Create_Disconnections;
 
    --  Tables visible to the debugger.
 
