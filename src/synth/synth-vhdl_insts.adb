@@ -1471,7 +1471,6 @@ package body Synth.Vhdl_Insts is
            and then not Get_Elab_Flag (Dep)
          then
             Set_Elab_Flag (Dep, True);
-            Synth_Dependencies (Parent_Inst, Dep);
             Dep_Unit := Get_Library_Unit (Dep);
             case Iir_Kinds_Library_Unit (Get_Kind (Dep_Unit)) is
                when Iir_Kind_Entity_Declaration =>
@@ -1485,6 +1484,7 @@ package body Synth.Vhdl_Insts is
                      Bod : constant Node := Get_Package_Body (Dep_Unit);
                      Bod_Unit : Node;
                   begin
+                     Synth_Dependencies (Parent_Inst, Dep);
                      Synth_Concurrent_Package_Declaration
                        (Parent_Inst, Dep_Unit);
                      --  Do not try to elaborate math_real body: there are
@@ -1500,6 +1500,7 @@ package body Synth.Vhdl_Insts is
                      end if;
                   end;
                when Iir_Kind_Package_Instantiation_Declaration =>
+                  Synth_Dependencies (Parent_Inst, Dep);
                   Synth_Concurrent_Package_Instantiation
                     (Parent_Inst, Dep_Unit);
                when Iir_Kind_Package_Body =>
