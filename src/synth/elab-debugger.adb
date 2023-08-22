@@ -512,25 +512,38 @@ package body Elab.Debugger is
    is
       With_Objs : Boolean;
       Recurse : Boolean;
+      List_Pkg : Boolean;
       F, L : Natural;
    begin
       With_Objs := False;
       Recurse := False;
+      List_Pkg := False;
+
       F := Line'First;
       loop
          F := Skip_Blanks (Line, F);
          exit when F > Line'Last;
          L := Get_Word (Line, F);
-         if Line (F .. L) = "-v" then
-            With_Objs := True;
-         elsif Line (F .. L) = "-R" then
-            Recurse := True;
-         elsif Line (F .. L) = "-h" then
-            Put_Line ("options:");
-            Put_Line (" -h   this help");
-            Put_Line (" -v   with objects");
-            Put_Line (" -R   recurses");
-            return;
+         if Line (F) = '-' then
+            for I in F + 1 .. L loop
+               if Line (I) = 'v' then
+                  With_Objs := True;
+               elsif Line (I) = 'R' then
+                  Recurse := True;
+               elsif Line (I) = 'p' then
+                  List_Pkg := True;
+               elsif Line (I) = 'h' then
+                  Put_Line ("options:");
+                  Put_Line (" -h   this help");
+                  Put_Line (" -p   top-level packages only");
+                  Put_Line (" -v   with objects");
+                  Put_Line (" -R   recurses");
+                  return;
+               else
+                  Put_Line ("unknown option: -" & Line (I));
+                  return;
+               end if;
+            end loop;
          else
             Put_Line ("unknown option: " & Line (F .. L));
             return;
@@ -538,7 +551,20 @@ package body Elab.Debugger is
          F := L + 1;
       end loop;
 
-      Disp_Hierarchy (Current_Instance, Recurse, With_Objs);
+      if List_Pkg then
+         declare
+            It : Iterator_Top_Level_Type := Iterator_Top_Level_Init;
+            Pkg_Inst : Synth_Instance_Acc;
+         begin
+            loop
+               Iterate_Top_Level (It, Pkg_Inst);
+               exit when Pkg_Inst = null;
+               Disp_Top_Package (Pkg_Inst, With_Objs);
+            end loop;
+         end;
+      else
+         Disp_Hierarchy (Current_Instance, Recurse, With_Objs);
+      end if;
    end List_Hierarchy;
 
    procedure Change_Hierarchy (Line : String)

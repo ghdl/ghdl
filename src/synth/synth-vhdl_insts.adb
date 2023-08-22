@@ -1549,7 +1549,7 @@ package body Synth.Vhdl_Insts is
       Insts_Interning.Init;
 
       if Flags.Flag_Debug_Init then
-         Elab.Debugger.Debug_Init (Arch);
+         Elab.Debugger.Debug_Elab (Syn_Inst);
       end if;
 
       pragma Assert (Is_Expr_Pool_Empty);

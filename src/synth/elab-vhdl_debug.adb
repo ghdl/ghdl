@@ -461,6 +461,19 @@ package body Elab.Vhdl_Debug is
       end loop;
    end Disp_Declaration_Objects;
 
+   procedure Disp_Top_Package (Syn_Inst : Synth_Instance_Acc;
+                              With_Objs : Boolean)
+   is
+      Decl : constant Node := Get_Source_Scope (Syn_Inst);
+   begin
+      Put (Vhdl.Errors.Disp_Node (Decl));
+      Put (":");
+      New_Line;
+      if With_Objs then
+         Disp_Declaration_Objects (Syn_Inst, Get_Declaration_Chain (Decl), 0);
+      end if;
+   end Disp_Top_Package;
+
    package Hierarchy_Pkg is
       type Config_Type is record
          With_Objs : Boolean;

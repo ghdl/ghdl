@@ -41,6 +41,9 @@ package Elab.Vhdl_Debug is
                              Recurse : Boolean;
                              With_Objs : Boolean);
 
+   procedure Disp_Top_Package (Syn_Inst : Synth_Instance_Acc;
+                              With_Objs : Boolean);
+
    --  Get sub-instance NAME of INST.  Return null if not found.
    function Get_Sub_Instance_By_Name (Inst : Synth_Instance_Acc; Name : String)
                                      return Synth_Instance_Acc;
