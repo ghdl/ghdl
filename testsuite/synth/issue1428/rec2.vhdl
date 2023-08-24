@@ -20,4 +20,10 @@ begin
   s.a <= '1' when s.b /= x"00" else '0';
 
   s.b (1) <= '0';
+
+  -- Assignments to net s:
+  --  bits 0 - 0 (w=1)
+  --  bits 1 - 8 (w=8)
+  --  bits 2 - 2 (w=1)
+
 end behav;
