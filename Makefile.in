@@ -359,6 +359,7 @@ libs.vhdl.local_gcc: ghdl_gcc$(EXEEXT) ghdl1-gcc$(EXEEXT)
 ghdl1-debug$(EXEEXT): version.ads $(GRT_SYNTH_OBJS) force
 	$(MAKE) -f $(srcdir)/src/ortho/debug/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
+	 GNAT_BARGS="$(GNAT_BARGS)" \
 	 GNATFLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" \
 	 GNATLFLAGS="$(GRT_SYNTH_OBJS)" \
 	 GNATMAKE="$(GNATMAKE)" all
