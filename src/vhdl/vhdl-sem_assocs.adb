@@ -1726,6 +1726,10 @@ package body Vhdl.Sem_Assocs is
       Set_Actual_Type (Assoc, Actual_Type);
       Set_Associated_Type (Inter_Def, Actual_Type);
 
+      if Get_Has_Signal_Flag (Inter_Def) then
+         Vhdl.Sem_Types.Set_Type_Has_Signal (Actual_Type);
+      end if;
+
       --  FIXME: it is not clear at all from the LRM how the implicit
       --  associations are done...
       Op_Eq := Sem_Implicit_Operator_Association
