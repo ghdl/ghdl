@@ -1007,7 +1007,7 @@ package body Vhdl.Sem_Assocs is
          declare
             Act_High, Act_Low : Iir;
          begin
-            Get_Low_High_Limit (Get_Range_Constraint (Actual_Type),
+            Get_Low_High_Limit (Get_Range_Constraint (Actual_Index),
                                 Act_Low, Act_High);
             if Eval_Pos (Act_Low) /= Eval_Pos (Low)
               or Eval_Pos (Act_High) /= Eval_Pos (High)
@@ -1029,6 +1029,13 @@ package body Vhdl.Sem_Assocs is
             while El /= Null_Iir loop
                Finish_Individual_Association1
                  (Get_Associated_Expr (El), El_Type);
+               El := Get_Chain (El);
+            end loop;
+         else
+            El := Chain;
+            while El /= Null_Node loop
+               Finish_Individual_Assoc_Array
+                 (Actual, Get_Associated_Expr (El), Dim + 1);
                El := Get_Chain (El);
             end loop;
          end if;
@@ -1185,7 +1192,9 @@ package body Vhdl.Sem_Assocs is
       case Get_Kind (Atype) is
          when Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Array_Type_Definition =>
-            if Get_Constraint_State (Atype) = Fully_Constrained then
+            if Get_Constraint_State (Atype) = Fully_Constrained
+              and then Are_Array_Indexes_Locally_Static (Atype)
+            then
                Finish_Individual_Assoc_Array_Subtype (Assoc, Atype, 1);
                Set_Actual_Type (Assoc, Atype);
             else
