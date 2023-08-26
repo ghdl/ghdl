@@ -63,14 +63,18 @@ package Synth.Vhdl_Decls is
    --   architecture, blocks...)
 
    procedure Synth_Concurrent_Declaration (Syn_Inst : Synth_Instance_Acc;
-                                           Decl : Node);
+                                           Decl : Node;
+                                           Top_Level : Boolean);
    procedure Synth_Concurrent_Declarations (Syn_Inst : Synth_Instance_Acc;
-                                            Decls : Node);
+                                            Decls : Node;
+                                            Top_Level : Boolean);
 
    procedure Synth_Concurrent_Package_Declaration
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
-   procedure Synth_Concurrent_Package_Body
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node);
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Top_Level : Boolean);
+   procedure Synth_Concurrent_Package_Body (Parent_Inst : Synth_Instance_Acc;
+                                            Pkg : Node;
+                                            Bod : Node;
+                                            Top_Level : Boolean);
    procedure Synth_Concurrent_Package_Instantiation
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Top_Level : Boolean);
 end Synth.Vhdl_Decls;

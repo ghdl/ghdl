@@ -4502,7 +4502,7 @@ package body Synth.Vhdl_Stmts is
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
-      Synth_Concurrent_Declarations (Blk_Inst, Decls_Chain);
+      Synth_Concurrent_Declarations (Blk_Inst, Decls_Chain, False);
       Synth_Concurrent_Statements
         (Blk_Inst, Get_Concurrent_Statement_Chain (Blk));
 
@@ -4829,7 +4829,7 @@ package body Synth.Vhdl_Stmts is
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
-      Synth_Concurrent_Declarations (Syn_Inst, Decls_Chain);
+      Synth_Concurrent_Declarations (Syn_Inst, Decls_Chain, False);
 
       Synth_Concurrent_Statements
         (Syn_Inst, Get_Concurrent_Statement_Chain (Bod));
@@ -5128,7 +5128,7 @@ package body Synth.Vhdl_Stmts is
                | Iir_Kind_Subtype_Declaration
                | Iir_Kind_Type_Declaration
                | Iir_Kind_Anonymous_Type_Declaration =>
-               Synth_Concurrent_Declaration (Syn_Inst, Item);
+               Synth_Concurrent_Declaration (Syn_Inst, Item, False);
             when Iir_Kinds_Concurrent_Signal_Assignment
                | Iir_Kinds_Process_Statement
                | Iir_Kinds_Generate_Statement
