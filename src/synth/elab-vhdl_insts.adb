@@ -545,6 +545,26 @@ package body Elab.Vhdl_Insts is
                      end if;
                      Release_Expr_Pool (Marker);
                   end;
+               elsif (Get_Kind (Assoc)
+                        = Iir_Kind_Association_Element_By_Individual)
+               then
+                  --  Check matching bounds.
+                  declare
+                     Marker : Mark_Type;
+                     Actual_Typ : Type_Acc;
+                  begin
+                     Mark_Expr_Pool (Marker);
+
+                     Actual_Typ := Synth_Subtype_Indication
+                       (Syn_Inst, Get_Actual_Type (Assoc));
+                     if not Check_Matching_Bounds (Syn_Inst, Inter_Typ,
+                                                   Actual_Typ, Assoc)
+                     then
+                        --  Error message already emitted.
+                        null;
+                     end if;
+                     Release_Expr_Pool (Marker);
+                  end;
                end if;
                Create_Signal (Sub_Inst, Inter, Inter_Typ);
             end if;
@@ -864,25 +884,9 @@ package body Elab.Vhdl_Insts is
 
       --  Create objects for the inputs and the outputs of the component,
       --  assign inputs (that's nets) and create wires for outputs.
-      declare
-         Assoc : Node;
-         Assoc_Inter : Node;
-         Inter : Node;
-         Inter_Typ : Type_Acc;
-      begin
-         Assoc := Get_Port_Map_Aspect_Chain (Stmt);
-         Assoc_Inter := Get_Port_Chain (Component);
-         while Is_Valid (Assoc) loop
-            if Get_Whole_Association_Flag (Assoc) then
-               Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-
-               Inter_Typ := Elab_Port_Association_Type
-                 (Comp_Inst, Syn_Inst, Inter, Assoc);
-               Create_Signal (Comp_Inst, Inter, Inter_Typ);
-            end if;
-            Next_Association_Interface (Assoc, Assoc_Inter);
-         end loop;
-      end;
+      Elab_Ports_Association_Type (Comp_Inst, Syn_Inst,
+                                   Get_Port_Chain (Component),
+                                   Get_Port_Map_Aspect_Chain (Stmt));
 
       Set_Component_Configuration (Stmt, Null_Node);
 

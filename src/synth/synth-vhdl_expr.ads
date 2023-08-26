@@ -33,6 +33,13 @@ with Netlists.Builders; use Netlists.Builders;
 with Synth.Source;
 
 package Synth.Vhdl_Expr is
+   --  Return True iff bounds of T and OBJ matches.
+   --  Return False and emit an error message if not.
+   function Check_Matching_Bounds (Syn_Inst : Synth_Instance_Acc;
+                                   T : Type_Acc;
+                                   Obj : Type_Acc;
+                                   Loc : Node) return Boolean;
+
    --  Perform a subtype conversion.  Check constraints.
    function Synth_Subtype_Conversion (Syn_Inst : Synth_Instance_Acc;
                                       Vt : Valtyp;
