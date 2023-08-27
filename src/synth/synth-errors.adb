@@ -21,9 +21,16 @@ package body Synth.Errors is
                                 Msg : String;
                                 Args : Earg_Arr := No_Eargs) is
    begin
-      Report_Msg (Msgid_Error, Errorout.Elaboration,
-                  +Loc, Msg, Args);
+      Report_Msg (Msgid_Error, Errorout.Elaboration, +Loc, Msg, Args);
    end Error_Msg_Netlist;
+
+   procedure Warning_Msg_Netlist (Warnid : Msgid_Warnings;
+                                  Loc : Location_Type;
+                                  Msg : String;
+                                  Args : Earg_Arr := No_Eargs) is
+   begin
+      Report_Msg (Warnid, Errorout.Elaboration, +Loc, Msg, Args);
+   end Warning_Msg_Netlist;
 
    function To_Coord (N : Node) return Source_Coord_Type is
    begin

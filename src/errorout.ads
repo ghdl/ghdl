@@ -111,6 +111,9 @@ package Errorout is
       --  (only for synthesis)
       Warnid_Nowrite,
 
+      --  Combinatorial logic loop (for synthesis).
+      Warnid_Logic_Loop,
+
       --  Others choice is not needed, all values are already covered.
       Warnid_Others,
 
@@ -341,6 +344,7 @@ private
         | Warnid_Nowrite | Warnid_No_Wait | Warnid_Useless
         | Warnid_Elaboration | Warnid_Conformance
         | Warnid_Unkept_Attribute | Warnid_Unhandled_Attribute
+        | Warnid_Logic_Loop
         | Msgid_Warning  => (Enabled => True, Error => False),
       Warnid_Delta_Cycle | Warnid_Body | Warnid_Static | Warnid_Nested_Comment
         | Warnid_Universal | Warnid_Port_Bounds
