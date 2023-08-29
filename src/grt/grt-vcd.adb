@@ -62,6 +62,9 @@ package body Grt.Vcd is
    --  Only use 4 states (01zx) for std_ulogic.
    Flag_Vcd_4states : Boolean := False;
 
+   --  If TRUE, also dump enums.
+   Flag_Vcd_Strings : Boolean := False;
+
    Stream : FILEs;
 
    procedure My_Vcd_Put (Str : String)
@@ -86,6 +89,17 @@ package body Grt.Vcd is
       Stream := NULL_Stream;
    end My_Vcd_Close;
 
+   procedure Vcd_Puts (S : Ghdl_C_String)
+   is
+      C : Character;
+   begin
+      for I in S'Range loop
+         C := S (I);
+         exit when C = NUL;
+         Vcd_Putc (C);
+      end loop;
+   end Vcd_Puts;
+
    --  Index type of the table of vcd variables to dump.
    type Vcd_Index_Type is new Integer;
 
@@ -105,6 +119,10 @@ package body Grt.Vcd is
       end if;
       if Opt'Length = 13 and then Opt (F + 5 .. F + 12) = "-4states" then
          Flag_Vcd_4states := True;
+         return True;
+      end if;
+      if Opt'Length = 11 and then Opt (F + 5 .. F + 10) = "-enums" then
+         Flag_Vcd_Strings := True;
          return True;
       end if;
       if Opt'Length > 6 and then Opt (F + 5) = '=' then
@@ -142,6 +160,7 @@ package body Grt.Vcd is
       Put_Line (" --vcd=FILENAME     dump signal values into a VCD file");
       Put_Line (" --vcd-nodate       do not write date in VCD file");
       Put_Line (" --vcd-4states      reduce std_logic to verilog 0/1/x/z");
+      Put_Line (" --vcd-enums        dump enumerated types");
    end Vcd_Help;
 
    procedure Vcd_Newline is
@@ -515,6 +534,7 @@ package body Grt.Vcd is
    is
       N : Vcd_Index_Type;
       Vcd_El : Verilog_Wire_Info;
+      Handled : Boolean;
    begin
       Get_Verilog_Wire (Sig, Vcd_El);
 
@@ -526,18 +546,22 @@ package body Grt.Vcd is
            | Vcd_Stdlogic
            | Vcd_Bitvector
            | Vcd_Stdlogic_Vector =>
-            --  Handled below.
-            null;
+            Handled := True;
+         when Vcd_Enum8 =>
+            Handled := Flag_Vcd_Strings;
          when others =>
-            --  Not handled.
-            Vcd_Put ("$comment ");
-            Vcd_Put_Name (Sig);
-            Vcd_Put (" is not handled");
-            --Vcd_Put (Ghdl_Type_Kind'Image (Desc.Kind));
-            Vcd_Putc (' ');
-            Vcd_Put_End;
-            return;
+            Handled := False;
       end case;
+
+      if not Handled then
+         Vcd_Put ("$comment ");
+         Vcd_Put_Name (Sig);
+         Vcd_Put (" is not handled");
+         --Vcd_Put (Ghdl_Type_Kind'Image (Desc.Kind));
+         Vcd_Putc (' ');
+         Vcd_Put_End;
+         return;
+      end if;
 
       Vcd_Table.Increment_Last;
       N := Vcd_Table.Last;
@@ -557,10 +581,11 @@ package body Grt.Vcd is
            | Vcd_Stdlogic_Vector =>
             Vcd_Put ("reg ");
             Vcd_Put_I32 (Ghdl_I32 (Vcd_El.Vec_Range.I32.Len));
+         when Vcd_Enum8 =>
+            Vcd_Put ("string 8");
          when Vcd_Bad
            | Vcd_Array
-           | Vcd_Struct
-           | Vcd_Enum8 =>
+           | Vcd_Struct =>
             raise Program_Error;
       end case;
       Vcd_Putc (' ');
@@ -746,6 +771,18 @@ package body Grt.Vcd is
       Vcd_Put (Str (1 .. Len));
    end Vcd_Put_Float64;
 
+   procedure Vcd_Put_Enum8 (V : Verilog_Wire_Info)
+   is
+      Val : constant Ghdl_E8 := Verilog_Wire_Val (V).E8;
+      Enum_Rti : constant Ghdl_Rtin_Type_Enum_Acc :=
+        To_Ghdl_Rtin_Type_Enum_Acc (V.Rti);
+      Str : constant Ghdl_C_String := Enum_Rti.Names (Ghdl_Index_Type (Val));
+   begin
+      Vcd_Putc ('s');
+      Vcd_Puts (Str);
+      Vcd_Putc (' ');
+   end Vcd_Put_Enum8;
+
    procedure Vcd_Put_Var (I : Vcd_Index_Type)
    is
       V : Verilog_Wire_Info renames Vcd_Table.Table (I);
@@ -777,10 +814,11 @@ package body Grt.Vcd is
                Vcd_Put_Stdlogic (Verilog_Wire_Val (V, J).E8);
             end loop;
             Vcd_Putc (' ');
+         when Vcd_Enum8 =>
+            Vcd_Put_Enum8 (V);
          when Vcd_Bad
            | Vcd_Array
-           | Vcd_Struct
-           | Vcd_Enum8 =>
+           | Vcd_Struct =>
             null;
       end case;
       Vcd_Put_Idcode (I);
