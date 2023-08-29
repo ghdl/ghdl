@@ -1,0 +1,30 @@
+$version
+  GHDL v0
+$end
+$timescale
+  1 fs
+$end
+$scope module standard $end
+$upscope $end
+$scope module std_logic_1164 $end
+$upscope $end
+$scope module foo $end
+$var string 8 ! state $end
+$upscope $end
+$enddefinitions $end
+#0
+sa !
+#10000000
+sb !
+#20000000
+sc !
+#30000000
+sd !
+#40000000
+se !
+#50000000
+sf !
+#60000000
+sg !
+#70000000
+#80000000
