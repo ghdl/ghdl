@@ -529,7 +529,8 @@ package Grt.Signals is
 
    --  Set the effective value of signal SIG to VAL.
    --  If the value is different from the previous one, resume processes.
-   procedure Set_Effective_Value (Sig : Ghdl_Signal_Ptr; Val : Ghdl_Value_Ptr);
+   procedure Set_Effective_Value (Sig : Ghdl_Signal_Ptr;
+                                  Val : Value_Union);
 
    --  Add PROC in the list of processes to be resumed in case of event on
    --  SIG.
