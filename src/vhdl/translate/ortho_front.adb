@@ -253,7 +253,7 @@ package body Ortho_Front is
          end if;
          return 2;
       elsif Opt.all = "--help" then
-         Options.Disp_Options_Help;
+         Options.Disp_Help_Options;
          return 1;
       elsif Opt.all = "--expect-failure" then
          Flag_Expect_Failure := True;

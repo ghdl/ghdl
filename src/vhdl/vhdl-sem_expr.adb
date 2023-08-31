@@ -2872,7 +2872,7 @@ package body Vhdl.Sem_Expr is
 
       --  LRM93 7.3.2.2 Array aggregates
       --  An others choice is locally static if the applicable index constraint
-      --  if locally static.
+      --  is locally static.
       if Info.Nbr_Choices > 0
         and then Info.Others_Choice /= Null_Iir
         and then Get_Type_Staticness (Choice_Type) /= Locally

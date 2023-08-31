@@ -604,11 +604,6 @@ Some warnings are reported only during analysis, others during elaboration.
 
   Emit a warning if a ``/*`` appears within a block comment (vhdl 2008).
 
-.. option:: --warn-directive
-.. option:: -Wdirective
-
-  Emit an option on tool directive
-
 .. option:: --warn-parenthesis
 .. option:: -Wparenthesis
 
@@ -666,8 +661,8 @@ Some warnings are reported only during analysis, others during elaboration.
   Emit a warning if a signal assignemnt creates a delta cycle in a
   postponed process.
 
-.. option:: --warn-no-wait
-.. option:: -Wno-wait
+.. option:: --warn-missing-wait
+.. option:: -Wmissing-wait
 
   Emit a warning if there is no wait statement in a non-sensitized
   process
@@ -720,8 +715,8 @@ Some warnings are reported only during analysis, others during elaboration.
   Emit a warning on useless code (like conditions that are always
   false or true, assertions that cannot be triggered).
 
-.. option:: --warn-no-assoc
-.. option:: -Wno-assoc
+.. option:: --warn-missing-assoc
+.. option:: -Wmissing-assoc
 
   Emit a warning on missing association for a port association.  Open
   associations are required.

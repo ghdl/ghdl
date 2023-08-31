@@ -98,6 +98,29 @@ package body Errorout is
       return Res;
    end Warning_Image;
 
+   function Warning_Value (S : String) return Msgid_All_Warnings is
+   begin
+      for I in Msgid_Warnings loop
+         if Warning_Image (I) = S then
+            return I;
+         end if;
+      end loop;
+
+      --  Backward compatibility.
+      if S = "no-wait" then
+         return Warnid_Missing_Wait;
+      end if;
+      if S = "no-assoc" then
+         return Warnid_Missing_Assoc;
+      end if;
+      if S = "reserved" then
+         return Warnid_Reserved_Word;
+      end if;
+
+      --  Not found.
+      return Msgid_Warning;
+   end Warning_Value;
+
    procedure Save_Warnings_Setting (Res : out Warnings_Setting) is
    begin
       Res := Warnings_Control;

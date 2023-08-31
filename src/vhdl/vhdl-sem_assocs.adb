@@ -2902,7 +2902,7 @@ package body Vhdl.Sem_Assocs is
                            Err := True;
                         elsif not Is_Open then
                            Warning_Msg_Sem
-                             (Warnid_No_Assoc, +Loc,
+                             (Warnid_Missing_Assoc, +Loc,
                               "%n of mode IN is not connected", +Inter);
                         end if;
                      when Iir_Out_Mode
@@ -2919,7 +2919,7 @@ package body Vhdl.Sem_Assocs is
                            Err := True;
                         elsif not Is_Open then
                            Warning_Msg_Sem
-                             (Warnid_No_Assoc, +Loc,
+                             (Warnid_Missing_Assoc, +Loc,
                               "%n of mode OUT is not connected", +Inter);
                         end if;
                      when Iir_Unknown_Mode =>

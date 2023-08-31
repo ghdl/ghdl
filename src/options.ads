@@ -42,8 +42,11 @@ package Options is
    --  been called before this subprogram.
    function Parse_Option (Opt : String) return Option_State;
 
-   -- Disp help about these options.
-   procedure Disp_Options_Help;
+   --  Disp help about these options.
+   procedure Disp_Help_Options;
+
+   --  Disp help about warnings.
+   procedure Disp_Help_Warnings;
 
    --  Initialization
    --  There are several stages:

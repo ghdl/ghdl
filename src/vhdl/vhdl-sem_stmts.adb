@@ -2563,7 +2563,7 @@ package body Vhdl.Sem_Stmts is
       else
          if not Get_Suspend_Flag (Proc) and then not Get_Stop_Flag (Proc) then
             Warning_Msg_Sem
-              (Warnid_No_Wait, +Proc,
+              (Warnid_Missing_Wait, +Proc,
                "infinite loop for this process without a wait statement");
          end if;
       end if;

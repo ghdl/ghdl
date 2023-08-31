@@ -195,35 +195,37 @@ package body Ghdlmain is
       Success := True;
    end Perform_Action;
 
-   --  Command options help.
-   type Command_Option_Help is new Command_Type with null record;
-   function Decode_Command (Cmd : Command_Option_Help; Name : String)
+   --  Command help options.
+   type Command_Help_Option is new Command_Type with null record;
+   function Decode_Command (Cmd : Command_Help_Option; Name : String)
                            return Boolean;
-   function Get_Short_Help (Cmd : Command_Option_Help) return String;
-   procedure Perform_Action (Cmd : in out Command_Option_Help;
+   function Get_Short_Help (Cmd : Command_Help_Option) return String;
+   procedure Perform_Action (Cmd : in out Command_Help_Option;
                              Args : String_Acc_Array;
                              Success : out Boolean);
 
-   function Decode_Command (Cmd : Command_Option_Help; Name : String)
+   function Decode_Command (Cmd : Command_Help_Option; Name : String)
                            return Boolean
    is
       pragma Unreferenced (Cmd);
    begin
       return
+        Name = "help-options" or else
+        Name = "--help-options" or else
         Name = "opts-help" or else
         Name = "--options-help";
    end Decode_Command;
 
-   function Get_Short_Help (Cmd : Command_Option_Help) return String
+   function Get_Short_Help (Cmd : Command_Help_Option) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "opts-help"
+      return "help-options"
         & ASCII.LF & "  Display help for analyzer options"
-        & ASCII.LF & "  alias: --options-help";
+        & ASCII.LF & "  alias: --help-options, opts-help, --options-help";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Option_Help;
+   procedure Perform_Action (Cmd : in out Command_Help_Option;
                              Args : String_Acc_Array;
                              Success : out Boolean)
    is
@@ -232,7 +234,49 @@ package body Ghdlmain is
       if Args'Length /= 0 then
          Error ("warning: command 'opts-help' does not accept any argument");
       end if;
-      Options.Disp_Options_Help;
+      Options.Disp_Help_Options;
+      Success := True;
+   end Perform_Action;
+
+   --  Command help-warnings
+   type Command_Help_Warnings is new Command_Type with null record;
+   function Decode_Command (Cmd : Command_Help_Warnings; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Help_Warnings) return String;
+   procedure Perform_Action (Cmd : in out Command_Help_Warnings;
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
+
+   function Decode_Command (Cmd : Command_Help_Warnings; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return
+        Name = "help-warnings" or else
+        Name = "--help-warnings";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Help_Warnings) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "help-warnings-help"
+        & ASCII.LF & "  Display help about all the warnings"
+        & ASCII.LF & "  alias: --help-warnings";
+   end Get_Short_Help;
+
+   procedure Perform_Action (Cmd : in out Command_Help_Warnings;
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      if Args'Length /= 0 then
+         Error
+           ("warning: command 'help-warnings' does not accept any argument");
+      end if;
+      Options.Disp_Help_Warnings;
       Success := True;
    end Perform_Action;
 
@@ -659,6 +703,7 @@ package body Ghdlmain is
    begin
       Register_Command (new Command_Help);
       Register_Command (new Command_Version);
-      Register_Command (new Command_Option_Help);
+      Register_Command (new Command_Help_Option);
+      Register_Command (new Command_Help_Warnings);
    end Register_Commands;
 end Ghdlmain;
