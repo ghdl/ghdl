@@ -43,7 +43,9 @@ package body Elab.Vhdl_Decls is
 
       Inter := Get_Interface_Declaration_Chain (Subprg);
       while Inter /= Null_Node loop
-         Typ := Elab_Declaration_Type (Syn_Inst, Inter);
+         if not Get_Is_Ref (Inter) then
+            Elab_Declaration_Type (Syn_Inst, Inter);
+         end if;
          Inter := Get_Chain (Inter);
       end loop;
       pragma Unreferenced (Typ);
@@ -322,12 +324,7 @@ package body Elab.Vhdl_Decls is
                Get_Subtype_Definition (Decl));
          when Iir_Kind_Subtype_Declaration
            | Iir_Kind_Mode_View_Declaration =>
-            declare
-               T : Type_Acc;
-            begin
-               T := Elab_Declaration_Type (Syn_Inst, Decl);
-               pragma Unreferenced (T);
-            end;
+            Elab_Declaration_Type (Syn_Inst, Decl);
          when Iir_Kind_Component_Declaration =>
             null;
          when Iir_Kind_File_Declaration =>

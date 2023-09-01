@@ -41,8 +41,14 @@ package body Elab.Vhdl_Types is
       Atype : Node) return Type_Acc;
 
    function Elab_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;
-                                     Atype : Node;
-                                     Is_Ref : Boolean) return Type_Acc;
+                                     Atype : Node) return Type_Acc;
+
+   --  Return true if a subtype indication needs to be elaborated (because
+   --  it defines its own subtype definition).
+   function Need_Elab_Subtype_Indication (Atype : Node) return Boolean is
+   begin
+      return Get_Kind (Atype) in Iir_Kinds_Subtype_Definition;
+   end Need_Elab_Subtype_Indication;
 
    function Synth_Discrete_Range_Expression
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type
@@ -273,7 +279,11 @@ package body Elab.Vhdl_Types is
       Idx_Typ : Type_Acc;
       Typ : Type_Acc;
    begin
-      El_Typ := Elab_Subtype_Indication (Syn_Inst, El_St, False);
+      if Need_Elab_Subtype_Indication (El_St) then
+         El_Typ := Elab_Subtype_Indication (Syn_Inst, El_St);
+      else
+         El_Typ := Get_Elaborated_Subtype_Indication (Syn_Inst, El_St);
+      end if;
 
       if El_Typ.Kind in Type_Nets and then Ndims = 1 then
          --  An array of nets is a vector.
@@ -857,27 +867,15 @@ package body Elab.Vhdl_Types is
       end loop;
    end Get_Declaration_Type;
 
-   function Elab_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;
-                                     Atype : Node;
-                                     Is_Ref : Boolean) return Type_Acc
+   function Get_Elaborated_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;
+                                               Atype : Node) return Type_Acc
    is
       Marker : Mark_Type;
-      Typ : Type_Acc;
       Res_Type : Node;
    begin
       case Get_Kind (Atype) is
          when Iir_Kinds_Subtype_Definition =>
-            if not Is_Ref then
-               --  That's a new type.
-               Mark_Expr_Pool (Marker);
-               Typ := Synth_Subtype_Indication (Syn_Inst, Atype);
-               Typ := Unshare (Typ, Instance_Pool);
-               Create_Subtype_Object (Syn_Inst, Atype, Typ);
-               Release_Expr_Pool (Marker);
-               return Typ;
-            else
-               Res_Type := Atype;
-            end if;
+            Res_Type := Atype;
          when Iir_Kinds_Denoting_Name =>
             --  Already elaborated.
             --  We cannot use the object type as it can be a subtype
@@ -920,6 +918,21 @@ package body Elab.Vhdl_Types is
       end case;
 
       return Get_Subtype_Object (Syn_Inst, Res_Type);
+   end Get_Elaborated_Subtype_Indication;
+
+   function Elab_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;
+                                     Atype : Node) return Type_Acc
+   is
+      Marker : Mark_Type;
+      Typ : Type_Acc;
+   begin
+      --  That's a new type.
+      Mark_Expr_Pool (Marker);
+      Typ := Synth_Subtype_Indication (Syn_Inst, Atype);
+      Typ := Unshare (Typ, Instance_Pool);
+      Create_Subtype_Object (Syn_Inst, Atype, Typ);
+      Release_Expr_Pool (Marker);
+      return Typ;
    end Elab_Subtype_Indication;
 
    function Elab_Declaration_Type
@@ -935,6 +948,28 @@ package body Elab.Vhdl_Types is
       else
          Is_Ref := Get_Is_Ref (Decl);
       end if;
-      return Elab_Subtype_Indication (Syn_Inst, Atype, Is_Ref);
+      if Is_Ref
+        or else not Need_Elab_Subtype_Indication (Atype)
+      then
+         return Get_Elaborated_Subtype_Indication (Syn_Inst, Atype);
+      else
+         return Elab_Subtype_Indication (Syn_Inst, Atype);
+      end if;
    end Elab_Declaration_Type;
+
+   procedure Elab_Declaration_Type
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+   is
+      Atype : constant Node := Get_Subtype_Indication (Decl);
+      Res : Type_Acc;
+      pragma Unreferenced (Res);
+   begin
+      if Atype = Null_Node then
+         return;
+      end if;
+      if Need_Elab_Subtype_Indication (Atype) then
+         Res := Elab_Subtype_Indication (Syn_Inst, Atype);
+      end if;
+   end Elab_Declaration_Type;
+
 end Elab.Vhdl_Types;

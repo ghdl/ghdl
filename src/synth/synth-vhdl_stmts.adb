@@ -1968,7 +1968,7 @@ package body Synth.Vhdl_Stmts is
                                           Assoc : Node;
                                           Loc : Node) return Valtyp
    is
-      Inter_Type : constant Node := Get_Type (Inter);
+      Inter_Type : Node;
       Inter_Typ : Type_Acc;
       Actual : Node;
       Val : Valtyp;
@@ -1997,7 +1997,11 @@ package body Synth.Vhdl_Stmts is
          Conv := Null_Node;
       end if;
 
-      Inter_Typ := Get_Subtype_Object (Subprg_Inst, Inter_Type);
+      Inter_Type := Get_Subtype_Indication (Inter);
+      if Inter_Type = Null_Node then
+         Inter_Type := Get_Type (Inter);
+      end if;
+      Inter_Typ := Get_Elaborated_Subtype_Indication (Subprg_Inst, Inter_Type);
 
       if Get_Kind (Inter) = Iir_Kind_Interface_Constant_Declaration
         or else (Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
