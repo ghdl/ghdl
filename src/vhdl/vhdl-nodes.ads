@@ -955,6 +955,10 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Bound_Vunit_Chain (Field8)
    --
+   --  True if the entity has to be macro-expanded.  Set when a generic
+   --  interface is a type or a subprogram interface.
+   --   Get/Set_Macro_Expanded_Flag (Flag2)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Within_Flag (Flag5)
@@ -985,6 +989,9 @@ package Vhdl.Nodes is
    --   Get/Set_Default_Configuration_Declaration (Field6)
    --
    --   Get/Set_Bound_Vunit_Chain (Field8)
+   --
+   --  Inherited from the entity.
+   --   Get/Set_Macro_Expanded_Flag (Flag2)
    --
    --   Get/Set_Foreign_Flag (Flag3)
    --
