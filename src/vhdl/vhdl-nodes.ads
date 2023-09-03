@@ -4828,6 +4828,9 @@ package Vhdl.Nodes is
    -- Only for Iir_Kind_Quantity_Delayed_Attribute:
    --   Get/Set_Parameter (Field4)
    --
+   -- Only for Iir_Kind_Above_Attribute:
+   --   Get/Set_Has_Active_Flag (Flag2)
+   --
    --   Get/Set_Base_Name (Field5)
    --
    --   Get/Set_Name_Staticness (State2)
