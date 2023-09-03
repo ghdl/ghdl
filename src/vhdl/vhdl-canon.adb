@@ -2241,7 +2241,7 @@ package body Vhdl.Canon is
       Sensitivity_List := Get_Sensitivity_List (Stmt);
       if Sensitivity_List = Null_Iir_List and then Cond /= Null_Iir then
          Sensitivity_List := Create_Iir_List;
-         Canon_Extract_Sensitivity_Break_Statement (Cond, Sensitivity_List);
+         Canon_Extract_Sensitivity_Break_Statement (Stmt, Sensitivity_List);
       end if;
       Set_Sensitivity_List (Proc, Sensitivity_List);
       Set_Is_Ref (Proc, True);
