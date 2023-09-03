@@ -90,14 +90,27 @@ package body Simul.Vhdl_Elab is
 
    --  For each scalar element, set Vec (off).Total to 1 if the signal is
    --  resolved.
-   procedure Mark_Resolved_Signals (Sig_Off : Uns32;
-                                    Sig_Type: Iir;
+   procedure Mark_Resolved_Signals (Inst : Synth_Instance_Acc;
+                                    Sig_Off : Uns32;
+                                    Sig_Type1: Iir;
                                     Typ : Type_Acc;
                                     Vec : in out Nbr_Sources_Array;
                                     Already_Resolved : Boolean)
    is
+      Sig_Type : Node;
       Sub_Resolved : Boolean;
    begin
+      if Get_Kind (Sig_Type1) = Iir_Kind_Interface_Type_Definition then
+         declare
+            Ntyp : Type_Acc;
+         begin
+            Get_Interface_Type (Inst, Sig_Type1, Ntyp, Sig_Type);
+            pragma Unreferenced (Ntyp);
+         end;
+      else
+         Sig_Type := Sig_Type1;
+      end if;
+
       if not Already_Resolved
         and then Get_Kind (Sig_Type) in Iir_Kinds_Subtype_Definition
       then
@@ -127,7 +140,7 @@ package body Simul.Vhdl_Elab is
                end if;
                for I in 1 .. Len loop
                   Mark_Resolved_Signals
-                    (Sig_Off + (I - 1) * Typ.Arr_El.W,
+                    (Inst, Sig_Off + (I - 1) * Typ.Arr_El.W,
                      El_Type, Typ.Arr_El,
                      Vec, Sub_Resolved);
                end loop;
@@ -141,7 +154,7 @@ package body Simul.Vhdl_Elab is
                for I in Typ.Rec.E'Range loop
                   El := Get_Nth_Element (List, Natural (I - 1));
                   Mark_Resolved_Signals
-                    (Sig_Off + Typ.Rec.E (I).Offs.Net_Off,
+                    (Inst, Sig_Off + Typ.Rec.E (I).Offs.Net_Off,
                      Get_Type (El), Typ.Rec.E (I).Typ,
                      Vec, Sub_Resolved);
                end loop;
@@ -194,7 +207,7 @@ package body Simul.Vhdl_Elab is
             end loop;
 
             Mark_Resolved_Signals
-              (0, Get_Type (E.Decl), E.Typ, E.Nbr_Sources.all, False);
+              (E.Inst, 0, Get_Type (E.Decl), E.Typ, E.Nbr_Sources.all, False);
          else
             E.Nbr_Sources := new Nbr_Sources_Array (1 .. 0);
          end if;

@@ -3032,18 +3032,30 @@ package body Simul.Vhdl_Simul is
    is
       procedure Create_Signal (Val : Memory_Ptr;
                                Sig_Off : Uns32;
-                               Sig_Type: Iir;
+                               Sig_Type1 : Node;
                                Typ : Type_Acc;
                                Vec : Nbr_Sources_Array;
                                Already_Resolved : Boolean)
       is
          Sub_Resolved : Boolean := Already_Resolved;
+         Sig_Type : Node;
          Resolv_Func : Node;
          Resolv_Instance : Resolv_Instance_Acc;
          S : Ghdl_Signal_Ptr;
          Arr_Type : Node;
          Idx_Type : Node;
       begin
+         if Get_Kind (Sig_Type1) = Iir_Kind_Interface_Type_Definition then
+            declare
+               Ntyp : Type_Acc;
+            begin
+               Get_Interface_Type (E.Inst, Sig_Type1, Ntyp, Sig_Type);
+               pragma Unreferenced (Ntyp);
+            end;
+         else
+            Sig_Type := Sig_Type1;
+         end if;
+
          if not Already_Resolved
            and then Get_Kind (Sig_Type) in Iir_Kinds_Subtype_Definition
          then
