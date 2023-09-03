@@ -868,6 +868,9 @@ package body Elab.Vhdl_Annotations is
             when Iir_Kind_Suspend_State_Statement =>
                null;
 
+            when Iir_Kind_Break_Statement =>
+               null;
+
             when others =>
                Error_Kind ("annotate_sequential_statement_chain", Stmt);
          end case;
