@@ -161,6 +161,9 @@ package Elab.Vhdl_Context is
    procedure Create_Subtype_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Typ : Type_Acc);
 
+   procedure Create_Interface_Type
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Typ : Type_Acc; Def : Node);
+
    --  Force the value of DECL, without checking for elaboration order.
    --  It is for deferred constants.
    procedure Create_Object_Force
@@ -194,6 +197,12 @@ package Elab.Vhdl_Context is
    --  Return the type for DECL (a subtype indication).
    function Get_Subtype_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Node) return Type_Acc;
+
+   --  Return the actual type of an interface type.
+   procedure Get_Interface_Type (Syn_Inst : Synth_Instance_Acc;
+                                 Decl : Node;
+                                 Typ : out Type_Acc;
+                                 Def : out Node);
 
    function Get_Sub_Instance
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node) return Synth_Instance_Acc;
@@ -235,10 +244,22 @@ private
 
    type Obj_Kind is
      (
+      --  Unused slot.
       Obj_None,
+
+      --  An object or a signal.
       Obj_Object,
+
+      --  A subtype indication.
       Obj_Subtype,
+
+      --  A sub-instance or a package.
       Obj_Instance,
+
+      --  For interface type.
+      Obj_Inter_Type,
+
+      --  Marker for for-loop.
       Obj_Marker
      );
 
@@ -252,6 +273,9 @@ private
             T_Typ : Type_Acc;
          when Obj_Instance =>
             I_Inst : Synth_Instance_Acc;
+         when Obj_Inter_Type =>
+            I_Typ : Type_Acc;
+            I_Def : Node;
          when Obj_Marker =>
             M_Mark : Areapools.Mark_Type;
       end case;

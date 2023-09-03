@@ -177,8 +177,9 @@ package body Elab.Vhdl_Insts is
                      Act_Typ := Get_Subtype_Object (Syn_Inst, Act);
                   end if;
                   Act_Typ := Unshare (Act_Typ, Instance_Pool);
-                  Create_Subtype_Object
-                    (Sub_Inst, Get_Interface_Type_Definition (Inter), Act_Typ);
+                  Create_Interface_Type
+                    (Sub_Inst, Get_Interface_Type_Definition (Inter),
+                     Act_Typ, Act);
                   Release_Expr_Pool (Marker);
                end;
 

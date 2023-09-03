@@ -872,6 +872,8 @@ package body Elab.Vhdl_Types is
    is
       Marker : Mark_Type;
       Res_Type : Node;
+      Def : Node;
+      Res : Type_Acc;
    begin
       case Get_Kind (Atype) is
          when Iir_Kinds_Subtype_Definition =>
@@ -881,6 +883,10 @@ package body Elab.Vhdl_Types is
             --  We cannot use the object type as it can be a subtype
             --  deduced from the default value (for constants).
             Res_Type := Get_Type (Get_Named_Entity (Atype));
+            if Get_Kind (Res_Type) = Iir_Kind_Interface_Type_Definition then
+               Get_Interface_Type (Syn_Inst, Res_Type, Res, Def);
+               return Res;
+            end if;
          when Iir_Kind_Subtype_Attribute =>
             declare
                Pfx : constant Node := Get_Prefix (Atype);
