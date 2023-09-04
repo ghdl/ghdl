@@ -49,7 +49,10 @@ with Grt.Options;
 with Grt.Types;
 with Grt.Errors;
 with Grt.Backtraces.Jit;
-with Grt.Analog_Solver;
+with Grt.Heap;
+
+with Grt.No_Analog_Solver;
+pragma Unreferenced (Grt.No_Analog_Solver);
 
 with Ghdlcomp; use Ghdlcomp;
 with Grtlink;
@@ -58,30 +61,6 @@ package body Ghdlrun is
    procedure Foreign_Hook (Decl : Iir;
                            Info : Vhdl.Back_End.Foreign_Info_Type;
                            Ortho : O_Dnode);
-
-   subtype F64_C_Arr_Ptr is Grt.Analog_Solver.F64_C_Arr_Ptr;
-
-   procedure Residues (T : Grt.Types.Ghdl_F64;
-                       Y : F64_C_Arr_Ptr;
-                       Yp : F64_C_Arr_Ptr;
-                       Res : F64_C_Arr_Ptr);
-   pragma Export (C, Residues, "grt__analog_solver__residues");
-
-   procedure Set_Quantities_Values (Y : F64_C_Arr_Ptr; Yp: F64_C_Arr_Ptr);
-   pragma Export (C, Set_Quantities_Values, "grt__analog_solver__set_values");
-
-   procedure Residues (T : Grt.Types.Ghdl_F64;
-                       Y : F64_C_Arr_Ptr;
-                       Yp : F64_C_Arr_Ptr;
-                       Res : F64_C_Arr_Ptr) is
-   begin
-      raise Program_Error;
-   end Residues;
-
-   procedure Set_Quantities_Values (Y : F64_C_Arr_Ptr; Yp: F64_C_Arr_Ptr) is
-   begin
-      raise Program_Error;
-   end Set_Quantities_Values;
 
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
@@ -218,6 +197,11 @@ package body Ghdlrun is
       end if;
 
       Trans_Link.Link;
+
+      Def (Trans_Decls.Ghdl_Allocate,
+           Grt.Heap.Ghdl_Allocate'Address);
+      Def (Trans_Decls.Ghdl_Deallocate,
+           Grt.Heap.Ghdl_Deallocate'Address);
 
       Ortho_Jit.Link (Err);
       if Err then

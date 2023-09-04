@@ -876,16 +876,21 @@ package body Grt.Processes is
       --  - Each postponed process in the model is executed until it suspends.
       Status := Run_Processes (Postponed => True);
 
-      --  - The time of the next simulation cycle (which in this case is the
-      --    first simulation cycle), Tn, is calculated according to the rules
-      --    of step f of the simulation cycle, below.
+      --  LRM 1076.1-2017
+      --  k) The quiescent state augmentation set is determined.
+      --  l) The break set is applied to the quiescent state augmentation set.
+      null;
 
-      --  LRM 1076.1-2007
-      --  - The time of the next simulation cycle (which in this case is the
-      --    first simulation cycle), Tn, is set to 0.0
       if Flag_AMS then
+         --  LRM 1076.1-2017
+         --  m) The time of the next simulation cycle (which in this case is
+         --     the first simulation cycle), Tn, is set to 0.0
+         Analog_Solver.Initialize;
          Next_Time := 0;
       else
+         --  - The time of the next simulation cycle (which in this case is
+         --    the first simulation cycle), Tn, is calculated according to
+         --    the rules of step f of the simulation cycle, below.
          Next_Time := Compute_Next_Time;
          if Next_Time /= 0 then
             if Has_Callbacks (Hooks.Cb_Last_Known_Delta) then
@@ -914,7 +919,7 @@ package body Grt.Processes is
 
       --  LRM 1076.1-2007 12.6.4 Simulation cycle
       --  a) The analog solver is executed
-      if Flag_AMS and Next_Time > Current_Time then
+      if Flag_AMS then
          Current_Time_AMS := Ghdl_F64 (Current_Time) * Time_Phys_To_Real;
          if Stop_Time > 0 and then Stop_Time < Next_Time then
             Tn_AMS := Ghdl_F64 (Stop_Time) * Time_Phys_To_Real;
@@ -925,14 +930,21 @@ package body Grt.Processes is
          loop
             Tout_AMS := Ghdl_F64'Min (Tn_AMS, Tout_AMS + Step_Limit);
             Grt.Analog_Solver.Solve (Current_Time_AMS, Tout_AMS, Status);
-            if Status /= Grt.Analog_Solver.Solve_Ok then
-               Internal_Error ("simulation_cycle - analog_solver");
-            end if;
+            case Status is
+               when Grt.Analog_Solver.Solve_Ok =>
+                  exit when Tout_AMS >= Tn_AMS;
+               when Grt.Analog_Solver.Solve_Cross =>
+                  exit;
+               when others =>
+                  Internal_Error ("simulation_cycle - analog_solver");
+            end case;
             Current_Time_AMS := Tout_AMS;
-            exit when Tout_AMS >= Tn_AMS;
          end loop;
+         Current_Time_AMS := Tout_AMS;
+         Next_Time := Std_Time (Current_Time_AMS * Time_Real_To_Phys);
       end if;
 
+      --  LRM 1076.1-2017 b)
       --  a) The current time, Tc is set equal to Tn.  Simulation is complete
       --     when Tn = TIME'HIGH and there are no active drivers or process
       --     resumptions at Tn.
@@ -942,6 +954,7 @@ package body Grt.Processes is
          Grt.Disp.Disp_Now;
       end if;
 
+      --  LRM 1076.1-2017 c)
       --  b) The following actions occur in the indicated order:
       --     1) If the current simulation cycle is not a delta cycle, each
       --        registered and enabled vhpiCbNextTimeStep and
@@ -961,9 +974,12 @@ package body Grt.Processes is
          end if;
       end if;
 
+      --  LRM 1076.1-2017 d)
       --  c) Each active driver in the model is updated.  If a force or deposit
       --     was scheduled for any driver, the force or deposit is no longer
       --     scheduler for the driver [TODO]
+
+      --  LRM 1076.1-2017 e)
       --  d) Each signal on each net in the model that includes active drivers
       --     is updated in an order that is consistent with the dependency
       --     relaction between signals (see 14.7.4).  (Events may occur on
@@ -979,10 +995,12 @@ package body Grt.Processes is
          Stats.Start_Resume;
       end if;
 
+      --  LRM 1076.1-2017 f)
       --  e) Any action required to give effect to a PSL directive is performed
       --     [TODO]
       null;
 
+      --  LRM 1076.1-2017 g)
       --  f) The following actions occur in the indicated order:
       --     2) For each process P, if P is currently sensitive to a signal S
       --        and if an event has occurred on S in this simulation cycle,
@@ -1039,15 +1057,40 @@ package body Grt.Processes is
       --          with P is executed [TODO]
       Status := Run_Processes (Postponed => False);
 
-      --  g) The time of the next simulation cycle, Tn, is calculated according
-      --    to the rules of 14.7.5.1
       if Options.Flag_Stats then
          Stats.Start_Next_Time;
       end if;
+
+      --  LRM 1076.1-2017
+      --  h) If the break flag is set, the time of the next simulation cycle,
+      --     Tn, is set to Tc.  Otherwise, Tn is calculated according to the
+      --     rules of 14.7.5.1
+      --
+      --  LRM 1076
+      --  g) The time of the next simulation cycle, Tn, is calculated according
+      --    to the rules of 14.7.5.1
       if Flag_AMS and Break_Flag then
          Tn := Current_Time;
       else
          Tn := Compute_Next_Time;
+      end if;
+
+      --  LRM 1076.1-2017
+      --  i) If the value of DOMAIN signal is TIME_DOMAIN, or if Tn = 0.0, the
+      --     remainder of this step is skipped.
+      --     Otherwise, the driver of the DOMAIN signal is assigned to one of
+      --     the following waveforms:
+      --     1) FREQUENCY_DOMAIN after 0 ns if the simulation cycle is executed
+      --        as described in 14.9
+      --     2) TIME_DOMAIN after 0 ns otherwise
+      --     Then, Tn is reset to 0.0. The next simulation cycle will be a
+      --     delta cycle.
+      if Flag_AMS
+        and then not (Tn = 0 or else Domain_Sig.Value_Ptr.E8 = 1)
+      then
+         Set_Current_Process (null);
+         Ghdl_Signal_Simple_Assign_E8 (Domain_Sig, 1);
+         Tn := 0;
       end if;
 
       --  h) If the next simulation cycle will be a delta cycle, the remainder
@@ -1181,8 +1224,8 @@ package body Grt.Processes is
    is
       use Options;
    begin
-      if Next_Time > Stop_Time
-        and then Next_Time /= Std_Time'Last
+      if (Next_Time > Stop_Time and then Next_Time /= Std_Time'Last)
+        or else (Current_Time >= Stop_Time and then Next_Time /= Current_Time)
       then
          --  FIXME: Implement with a callback instead ?  This could be done
          --  in 2 steps: an after_delay for the time and then a read_only

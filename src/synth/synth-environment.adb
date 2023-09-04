@@ -380,6 +380,11 @@ package body Synth.Environment is
       Conc_Assign_Table.Table (Asgn).Next := Chain;
    end Set_Conc_Chain;
 
+   function Get_Conc_Location (Asgn : Conc_Assign) return Location_Type is
+   begin
+      return Conc_Assign_Table.Table (Asgn).Loc;
+   end Get_Conc_Location;
+
    procedure Add_Conc_Assign
      (Wid : Wire_Id; Val : Net; Off : Uns32; Loc : Location_Type)
    is
@@ -673,6 +678,8 @@ package body Synth.Environment is
       end if;
    end Le_Conc_Assign;
 
+   --  Merge-sort the first LEN assignments of CHAIN and put the head of the
+   --  result to FIRST.  The LEN+1 assignment is written to NEXT.
    procedure Sort_Conc_Assign (Chain : Conc_Assign;
                                Len : Natural;
                                First : out Conc_Assign;
@@ -694,6 +701,7 @@ package body Synth.Environment is
          Sort_Conc_Assign (Chain, Len / 2, Left, Right);
          Sort_Conc_Assign (Right, Len - Len / 2, Right, Next);
 
+         --  Merge
          First := No_Conc_Assign;
          Last := No_Conc_Assign;
          for I in 1 .. Len loop
@@ -749,28 +757,6 @@ package body Synth.Environment is
       return True;
    end Is_Proto_Memory;
 
-   --  Return True iff PREV and NEXT are two concurrent assignments for
-   --  a multiport memory.
-   function Is_Finalize_Assignment_Multiport (Prev, Next : Conc_Assign)
-                                             return Boolean
-   is
-      P_Val : Net;
-      N_Val : Net;
-   begin
-      --  The assignemnts must fully overlap (same offset and same width).
-      if Get_Conc_Offset (Prev) /= Get_Conc_Offset (Next) then
-         return False;
-      end if;
-      P_Val := Get_Conc_Value (Prev);
-      N_Val := Get_Conc_Value (Next);
-      if Get_Width (P_Val) /= Get_Width (N_Val) then
-         return False;
-      end if;
-
-      --  Both assignments must be a dff.
-      return Is_Proto_Memory (P_Val) and then Is_Proto_Memory (N_Val);
-   end Is_Finalize_Assignment_Multiport;
-
    function Is_Tribuf_Net (N : Net) return Boolean
    is
       use Netlists.Gates;
@@ -792,25 +778,123 @@ package body Synth.Environment is
       end case;
    end Is_Tribuf_Net;
 
-   function Is_Tribuf_Assignment (Prev, Next : Conc_Assign) return Boolean
-   is
-      P_Val : Net;
-      N_Val : Net;
-   begin
-      --  The assignemnts must fully overlap (same offset and same width).
-      if Get_Conc_Offset (Prev) /= Get_Conc_Offset (Next) then
-         return False;
-      end if;
-      P_Val := Get_Conc_Value (Prev);
-      N_Val := Get_Conc_Value (Next);
-      if Get_Width (P_Val) /= Get_Width (N_Val) then
-         return False;
-      end if;
+   type Finalize_Assignment_Data is record
+      --  List of assignments to handle.
+      --  They will be sorted by offset and width.
+      Asgn : Conc_Assign;
 
-      --  Both assignments must be a tri or a resolver.
-      return Is_Tribuf_Net (P_Val)
-        and then Is_Tribuf_Net (N_Val);
-   end Is_Tribuf_Assignment;
+      --  Width of the target.
+      Wire_Width : Width;
+
+      --  Result: list of assignments, without holes and without overlaps.
+      First_Assign : Conc_Assign;
+      Last_Assign : Conc_Assign;
+      Nbr_Assign : Natural;
+
+      --  Current offset in the result.
+      --  All the assignments whose offset is less than RES_OFF have been
+      --  (at least partially) processed.
+      Res_Off : Uns32;
+   end record;
+
+   --  True if the first INP_NBR sources are tri net and therefore can be
+   --  merged with a resolver.
+   type Finalize_Assignment_Kind is (Tristate, Multiport, Unknown);
+
+   function Finalize_Assignment_Classify
+     (Data : Finalize_Assignment_Data;
+      Inp_Nbr : Natural) return Finalize_Assignment_Kind
+   is
+      Res, Last : Finalize_Assignment_Kind;
+      Conc : Conc_Assign;
+      N : Net;
+   begin
+      Res := Unknown;
+      Conc := Data.Asgn;
+      for I in 1 .. Inp_Nbr loop
+         N := Get_Conc_Value (Conc);
+         if Is_Tribuf_Net (N) then
+            Last := Tristate;
+         elsif Is_Proto_Memory (N) then
+            Last := Multiport;
+         else
+            return Unknown;
+         end if;
+
+         if Res = Unknown then
+            Res := Last;
+         elsif Last /= Res then
+            return Unknown;
+         end if;
+      end loop;
+      return Res;
+   end Finalize_Assignment_Classify;
+
+   --  Remove from DATA all input assignment that cover DATA.RES_OFF to
+   --  DATA.RES_OFF + W - 1.
+   procedure Finalize_Assignment_Skip
+     (Data : in out Finalize_Assignment_Data; W : Uns32)
+   is
+      V_End : constant Uns32 := Data.Res_Off + W;
+      Asgn, Prev : Conc_Assign;
+   begin
+      Prev := No_Conc_Assign;
+      Asgn := Data.Asgn;
+      while Asgn /= No_Conc_Assign loop
+         declare
+            Off : constant Uns32 := Get_Conc_Offset (Asgn);
+            N : constant Net := Get_Conc_Value (Asgn);
+            N_Wd : constant Uns32 := Get_Width (N);
+            Next : constant Conc_Assign := Get_Conc_Chain (Asgn);
+         begin
+            exit when Off >= V_End;
+            if Off + N_Wd <= V_End then
+               --  Discard.
+               if Prev = No_Conc_Assign then
+                  Data.Asgn := Next;
+               else
+                  Set_Conc_Chain (Prev, Next);
+               end if;
+
+               --  Keep prev.
+               Asgn := Next;
+            else
+               Prev := Asgn;
+               Asgn := Next;
+            end if;
+         end;
+      end loop;
+
+      Data.Res_Off := Data.Res_Off + W;
+   end Finalize_Assignment_Skip;
+
+   procedure Finalize_Assignment_Append
+     (Data : in out Finalize_Assignment_Data; V : Net)
+   is
+      V_Wd : constant Uns32 := Get_Width (V);
+      Res : Conc_Assign;
+   begin
+      --  Create
+      --  TODO: reuse.
+      Conc_Assign_Table.Append
+        ((Next => No_Conc_Assign,
+          Loc => No_Location,
+          Value => V,
+          Offset => Data.Res_Off));
+      Res := Conc_Assign_Table.Last;
+
+      --  Append
+      if Data.Last_Assign = No_Conc_Assign then
+         Data.First_Assign := Res;
+      else
+         Conc_Assign_Table.Table (Data.Last_Assign).Next := Res;
+      end if;
+      Data.Last_Assign := Res;
+
+      Data.Nbr_Assign := Data.Nbr_Assign + 1;
+
+      Finalize_Assignment_Skip (Data, V_Wd);
+   end Finalize_Assignment_Append;
 
    --  Compute the VALUE to be assigned to WIRE_REC.  Handle partial
    --  assignment, multiple assignments and error cases.
@@ -818,152 +902,195 @@ package body Synth.Environment is
                                           Wire_Rec : Wire_Id_Record;
                                           Value : out Net)
    is
-      Wire_Width : constant Width := Get_Width (Wire_Rec.Gate);
-      First_Assign : Conc_Assign;
-      Asgn : Conc_Assign;
-      Last_Asgn : Conc_Assign;
-      New_Asgn : Conc_Assign;
-      Next_Off : Uns32;
-      Expected_Off : Uns32;
-      Nbr_Assign : Natural;
+      Inp : Conc_Assign;
+      Inp_Off : Uns32;
+      Inp_Wd : Width;
+      Inp_Net : Net;
+      Inp_Src_Off : Uns32;
+      Inp_Src_Wd : Width;
+      Inp_Nbr : Natural;
+      Data : Finalize_Assignment_Data;
+      Cls : Finalize_Assignment_Kind;
    begin
       --  Do inferences.
       if not Synth.Flags.Flag_Debug_Noinference then
-         Asgn := Wire_Rec.Final_Assign;
-         while Asgn /= No_Conc_Assign loop
-            declare
-               Ca : Conc_Assign_Record renames Conc_Assign_Table.Table (Asgn);
-            begin
-               Ca.Value := Inference.Infere
-                 (Ctxt, Ca.Value, Ca.Offset, Wire_Rec.Gate, Ca.Loc,
-                  Wire_Rec.Kind = Wire_Variable);
-               Asgn := Ca.Next;
-            end;
-         end loop;
+         declare
+            Asgn : Conc_Assign;
+         begin
+            Asgn := Wire_Rec.Final_Assign;
+            while Asgn /= No_Conc_Assign loop
+               declare
+                  Ca : Conc_Assign_Record renames
+                    Conc_Assign_Table.Table (Asgn);
+               begin
+                  Ca.Value := Inference.Infere
+                    (Ctxt, Ca.Value, Ca.Offset, Wire_Rec.Gate, Ca.Loc,
+                     Wire_Rec.Kind = Wire_Variable);
+                  Asgn := Ca.Next;
+               end;
+            end loop;
+         end;
       end if;
 
       --  Sort assignments by offset.
-      Nbr_Assign := Wire_Rec.Nbr_Final_Assign;
-      Asgn := Wire_Rec.Final_Assign;
-      Sort_Conc_Assign (Asgn, Nbr_Assign, Asgn, Last_Asgn);
-      First_Assign := Asgn;
+      Data := (Asgn => Wire_Rec.Final_Assign,
+               Wire_Width => Get_Width (Wire_Rec.Gate),
+               First_Assign => No_Conc_Assign,
+               Last_Assign => No_Conc_Assign,
+               Nbr_Assign => 0,
+               Res_Off => 0);
+      Sort_Conc_Assign (Data.Asgn, Wire_Rec.Nbr_Final_Assign,
+                        Data.Asgn, Data.Last_Assign);
+      pragma Assert (Data.Last_Assign = No_Conc_Assign);
 
       --  Report overlaps and holes, count number of inputs
-      Last_Asgn := No_Conc_Assign;
-      Expected_Off := 0;
-      while (Expected_Off < Wire_Width) or Asgn /= No_Conc_Assign loop
-         --  NEXT_OFF is the offset of the next assignment.
+      while Data.Res_Off < Data.Wire_Width loop
+         --  Pick the first assignment input (if still remaining).
+         Inp := Data.Asgn;
+
+         --  NEXT_OFF is the offset of the assignment.
          --  EXPECTED_OFF is the offset just after the previous assignment.
-         if Asgn /= No_Conc_Assign then
-            Next_Off := Get_Conc_Offset (Asgn);
+         if Inp /= No_Conc_Assign then
+            Inp_Off := Get_Conc_Offset (Inp);
+            Inp_Net := Get_Conc_Value (Inp);
+            Inp_Src_Wd := Get_Width (Inp_Net);
+            Inp_Nbr := 1;
+
+            if Inp_Off < Data.Res_Off then
+               --  The input was already partially handled.
+               Inp_Src_Off := Data.Res_Off - Inp_Off;
+               Inp_Wd := Inp_Src_Wd - Inp_Src_Off;
+               Inp_Off := Data.Res_Off;
+            else
+               Inp_Src_Off := 0;
+               Inp_Wd := Inp_Src_Wd;
+            end if;
+
+            pragma Assert (Inp_Wd > 0);
+
+            --  Maybe the input has to be partially handled because it
+            --  overlaps with a following one.
+            declare
+               Next_Inp : Conc_Assign;
+               Next_Inp_Off : Uns32;
+               Next_Inp_Wd : Width;
+            begin
+               Next_Inp := Get_Conc_Chain (Inp);
+               while Next_Inp /= No_Conc_Assign loop
+                  Next_Inp_Off := Get_Conc_Offset (Next_Inp);
+
+                  --  No overlap.
+                  exit when Next_Inp_Off >= Inp_Off + Inp_Wd;
+
+                  if Next_Inp_Off > Inp_Off then
+                     --  Next_Inp partially overlap the tail of Inp.
+                     --  Need to truncate the width and stop count.  Next_Inp
+                     --  is not part of the inputs for the current offset.
+                     Inp_Wd := Next_Inp_Off - Inp_Off;
+                     exit;
+                  end if;
+
+                  Next_Inp_Wd := Get_Width (Get_Conc_Value (Next_Inp));
+                  if Next_Inp_Off + Next_Inp_Wd < Inp_Off + Inp_Wd then
+                     --  Next_Inp partially overlap the head of Inp.
+                     --  Need to reduce the width.
+                     Inp_Wd := (Next_Inp_Off + Next_Inp_Wd) - Inp_Off;
+                  end if;
+
+                  --  Several inputs for the offset.
+                  Inp_Nbr := Inp_Nbr + 1;
+
+                  Next_Inp := Get_Conc_Chain (Next_Inp);
+               end loop;
+            end;
          else
             --  If there is no more assignment, simulate a hole until the end.
-            Next_Off := Wire_Width;
+            Inp_Off := Data.Wire_Width;
+            Inp_Src_Off := 0;
+            Inp_Src_Wd := 0;
+            Inp_Wd := 0;
+            Inp_Net := No_Net;
+            Inp_Nbr := 0;
          end if;
 
-         if Next_Off = Expected_Off then
-            --  Normal case.
-            pragma Assert (Asgn /= No_Conc_Assign);
-            Expected_Off := Expected_Off + Get_Width (Get_Conc_Value (Asgn));
-            Last_Asgn := Asgn;
-            Asgn := Get_Conc_Chain (Asgn);
-         elsif Next_Off > Expected_Off then
-            --  There is an hole.
-            Warning_No_Assignment (Wire_Rec.Decl, Expected_Off, Next_Off - 1);
-
-            --  Insert conc_assign with initial value.
-            --  FIXME: handle initial values.
-            Conc_Assign_Table.Append
-              ((Next => Asgn,
-                Loc => No_Location,
-                Value => Build_Const_Z (Ctxt, Next_Off - Expected_Off),
-                Offset => Expected_Off));
-            New_Asgn := Conc_Assign_Table.Last;
-            if Last_Asgn = No_Conc_Assign then
-               First_Assign := New_Asgn;
+         if Inp_Nbr <= 1 then
+            --  Normal case: no overlap.
+            if Inp_Off = Data.Res_Off then
+               --  No hole, no overlap.
+               --  Append the input directly if it is not truncated.
+               declare
+                  V : Net;
+               begin
+                  V := Build2_Extract (Ctxt, Inp_Net, Inp_Src_Off, Inp_Wd);
+                  Finalize_Assignment_Append (Data, V);
+               end;
             else
-               Set_Conc_Chain (Last_Asgn, New_Asgn);
+               --  There is a hole.
+               pragma Assert (Inp_Off > Data.Res_Off);
+               Warning_No_Assignment
+                 (Wire_Rec.Decl, Data.Res_Off, Inp_Off - 1);
+               Finalize_Assignment_Append
+                 (Data, Build_Const_Z (Ctxt, Inp_Off - Data.Res_Off));
             end if;
-            Last_Asgn := New_Asgn;
-            Nbr_Assign := Nbr_Assign + 1;
-
-            Expected_Off := Next_Off;
          else
-            --  Overlap.
-            pragma Assert (Next_Off < Expected_Off);
-            pragma Assert (Asgn /= No_Conc_Assign);
+            --  Overlap: multiple inputs at this offset.
 
-            if Wire_Rec.Kind = Wire_Variable
-              and then Is_Finalize_Assignment_Multiport (Last_Asgn, Asgn)
-            then
-               --  Insert a multiport (for shared variable).
-               declare
-                  Last_Asgn_Rec : Conc_Assign_Record renames
-                    Conc_Assign_Table.Table (Last_Asgn);
-               begin
-                  Last_Asgn_Rec.Value := Build_Mem_Multiport
-                    (Ctxt, Last_Asgn_Rec.Value, Get_Conc_Value (Asgn));
-               end;
-               --  Remove this assignment.
-               Nbr_Assign := Nbr_Assign - 1;
-               Set_Conc_Chain (Last_Asgn, Get_Conc_Chain (Asgn));
-            elsif Is_Tribuf_Assignment (Last_Asgn, Asgn) then
-               --  Insert a resolver.
-               declare
-                  Last_Asgn_Rec : Conc_Assign_Record renames
-                    Conc_Assign_Table.Table (Last_Asgn);
-                  V : constant Net := Last_Asgn_Rec.Value;
-               begin
-                  Last_Asgn_Rec.Value := Build_Resolver
-                    (Ctxt, V, Get_Conc_Value (Asgn));
-                  Copy_Location (Last_Asgn_Rec.Value, V);
-               end;
-               --  Remove this assignment.
-               Nbr_Assign := Nbr_Assign - 1;
-               Set_Conc_Chain (Last_Asgn, Get_Conc_Chain (Asgn));
+            Cls := Finalize_Assignment_Classify (Data, Inp_Nbr);
+            if Cls = Multiport and then Wire_Rec.Kind /= Wire_Variable then
+               Cls := Unknown;
+            end if;
+
+            if Cls = Unknown then
+               Error_Multiple_Assignments
+                 (Wire_Rec.Decl, Data.Res_Off, Data.Res_Off + Inp_Wd - 1);
+               Finalize_Assignment_Skip (Data, Inp_Wd);
             else
                declare
-                  Asgn_Wd : constant Width :=
-                    Get_Width (Get_Conc_Value (Asgn));
-                  Overlap_Wd : Width;
+                  Res, Vc, V : Net;
+                  Voff : Uns32;
+                  Conc : Conc_Assign;
                begin
-                  Overlap_Wd := Asgn_Wd;
-                  if Next_Off + Overlap_Wd > Expected_Off then
-                     Overlap_Wd := Expected_Off - Next_Off;
-                  end if;
+                  Res := Build2_Extract (Ctxt, Inp_Net, Inp_Src_Off, Inp_Wd);
+                  Conc := Get_Conc_Chain (Inp);
+                  for I in 2 .. Inp_Nbr loop
+                     Vc := Get_Conc_Value (Conc);
+                     Voff := Data.Res_Off - Get_Conc_Offset (Conc);
+                     V := Build2_Extract (Ctxt, Vc, Voff, Inp_Wd);
+                     case Cls is
+                        when Tristate =>
+                           Res := Build_Resolver (Ctxt, Res, V);
+                        when Multiport =>
+                           Res := Build_Mem_Multiport (Ctxt, Res, V);
+                        when Unknown =>
+                           raise Internal_Error;
+                     end case;
+                     Set_Location (Res, Get_Conc_Location (Conc));
 
-                  Error_Multiple_Assignments
-                    (Wire_Rec.Decl, Next_Off, Next_Off + Overlap_Wd - 1);
-
-                  if Next_Off + Asgn_Wd < Expected_Off then
-                     --  Remove this assignment
-                     Nbr_Assign := Nbr_Assign - 1;
-                     Set_Conc_Chain (Last_Asgn, Get_Conc_Chain (Asgn));
-                  else
-                     Expected_Off := Next_Off + Asgn_Wd;
-                     Last_Asgn := Asgn;
-                  end if;
+                     Conc := Get_Conc_Chain (Conc);
+                  end loop;
+                  Finalize_Assignment_Append (Data, Res);
                end;
             end if;
-            Asgn := Get_Conc_Chain (Asgn);
          end if;
       end loop;
 
       --  Create concat
       --  Set concat inputs
-      if Nbr_Assign = 1 then
-         Value := Get_Conc_Value (First_Assign);
-      elsif Nbr_Assign = 2 then
+      if Data.Nbr_Assign = 1 then
+         Value := Get_Conc_Value (Data.First_Assign);
+      elsif Data.Nbr_Assign = 2 then
          Value := Build_Concat2 (Ctxt,
-                                 Get_Conc_Value (Last_Asgn),
-                                 Get_Conc_Value (First_Assign));
+                                 Get_Conc_Value (Data.Last_Assign),
+                                 Get_Conc_Value (Data.First_Assign));
       else
-         Value := Build_Concatn (Ctxt, Wire_Width, Uns32 (Nbr_Assign));
+         Value := Build_Concatn
+           (Ctxt, Data.Wire_Width, Uns32 (Data.Nbr_Assign));
          declare
             Inst : constant Instance := Get_Net_Parent (Value);
+            Asgn : Conc_Assign;
          begin
-            Asgn := First_Assign;
-            for I in reverse 0 .. Nbr_Assign - 1 loop
+            Asgn := Data.First_Assign;
+            for I in reverse 0 .. Data.Nbr_Assign - 1 loop
                Connect (Get_Input (Inst, Port_Idx (I)), Get_Conc_Value (Asgn));
                Asgn := Get_Conc_Chain (Asgn);
             end loop;

@@ -1916,7 +1916,7 @@ package body Trans.Chap9 is
                Open_Temp;
                Chap9.Destroy_Types (Sig);
                if Info.Process_Drivers (I).Var /= Null_Var then
-                  --  Elaborate direct driver.  Done only once.
+                  --  Elaborate direct driver.  Done only once per signal.
                   Chap4.Elab_Direct_Driver_Declaration_Storage (Base);
 
                   --  Initial value.
@@ -1939,6 +1939,7 @@ package body Trans.Chap9 is
                         Base_Type);
                   end if;
                end if;
+
                if Chap4.Has_Direct_Driver (Base) then
                   --  Signal has a direct driver.
                   Chap6.Translate_Direct_Driver (Sig, Sig_Node, Drv_Node);

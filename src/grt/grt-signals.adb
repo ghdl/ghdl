@@ -422,6 +422,23 @@ package body Grt.Signals is
       Ghdl_Signal_Add_Driver (Sign, null, Trans);
    end Ghdl_Signal_Add_Extra_Driver;
 
+   procedure Ghdl_Signal_Add_Kernel_Driver (Sig : Ghdl_Signal_Ptr;
+                                            Init : Ghdl_E8)
+   is
+      Trans : Transaction_Acc;
+   begin
+      if Sig.S.Nbr_Drivers /= 0 then
+         Error ("kernel signal is driven by a user process");
+      end if;
+
+      Trans := new Transaction'(Kind => Trans_Value,
+                                Line => 0,
+                                Time => 0,
+                                Next => null,
+                                Val => (Mode => Mode_E8, E8 => Init));
+      Ghdl_Signal_Add_Driver (Sig, null, Trans);
+   end Ghdl_Signal_Add_Kernel_Driver;
+
    procedure Ghdl_Process_Add_Port_Driver
      (Sign : Ghdl_Signal_Ptr; Val : Value_Union)
    is
@@ -610,7 +627,8 @@ package body Grt.Signals is
             Trans : constant Transaction_Acc :=
               Sig.S.Drivers (I - 1).First_Trans.Next;
          begin
-            if Trans.Kind /= Trans_Direct
+            if Trans /= null
+              and then Trans.Kind /= Trans_Direct
               and then Trans.Time = Current_Time
             then
                return True;
@@ -1107,6 +1125,17 @@ package body Grt.Signals is
 
       Ghdl_Signal_Start_Assign (Sign, 0, Trans, 0);
    end Ghdl_Signal_Simple_Assign_B1;
+
+   procedure Ghdl_Signal_Assign_Above (Sig : Ghdl_Signal_Ptr;
+                                       Val : Ghdl_B1) is
+   begin
+      if Val = Sig.Value_Ptr.B1 then
+         return;
+      end if;
+
+      Insert_Active_Chain (Sig);
+      Sig.Driving_Value.B1 := Val;
+   end Ghdl_Signal_Assign_Above;
 
    procedure Ghdl_Signal_Start_Assign_Any (Sign : Ghdl_Signal_Ptr;
                                            Rej : Std_Time;
@@ -2104,6 +2133,58 @@ package body Grt.Signals is
                                            Sig => Sig,
                                            Val => Val));
    end Ghdl_Signal_Force_Effective_Any;
+
+   --  Chain of saved value of signals being forced.
+   Saved_Forced_Head : Force_Value_Acc;
+   Saved_Forced_Tail : Force_Value_Acc;
+
+   procedure Save_Forced_Value (Sig : Ghdl_Signal_Ptr;
+                                Val : Value_Union;
+                                Mode : Force_Mode)
+   is
+      V : Force_Value_Acc;
+   begin
+      V := new Force_Value'(Kind => Force,
+                            Mode => Mode,
+                            Next => null,
+                            Sig => Sig,
+                            Val => Val);
+      if Saved_Forced_Head = null then
+         Saved_Forced_Head := V;
+      else
+         Saved_Forced_Tail.Next := V;
+      end if;
+      Saved_Forced_Tail := V;
+   end Save_Forced_Value;
+
+   function Get_Forced_Old_Value (Sig : Ghdl_Signal_Ptr;
+                                  Mode : Force_Mode) return Value_Union
+   is
+      Res : Value_Union;
+      Val, Prev : Force_Value_Acc;
+   begin
+      Prev := null;
+      Val := Saved_Forced_Head;
+      loop
+         pragma Assert (Val /= null);
+         if Val.Sig = Sig and Val.Mode = Mode then
+            Res := Val.Val;
+            if Prev = null then
+               Saved_Forced_Head := Val.Next;
+            else
+               Prev.Next := Val.Next;
+            end if;
+            if Saved_Forced_Tail = Val then
+               Saved_Forced_Tail := Prev;
+            end if;
+            Free (Val);
+            return Res;
+         else
+            Prev := Val;
+            Val := Val.Next;
+         end if;
+      end loop;
+   end Get_Forced_Old_Value;
 
    --  Remove all (but Signal_End) signals in the next active chain.
    --  Called when a transaction/event will occur before the time for this
@@ -3173,7 +3254,7 @@ package body Grt.Signals is
    --  Set the effective value of signal SIG to VAL.
    --  If the value is different from the previous one, resume processes.
    procedure Set_Effective_Value
-     (Sig : Ghdl_Signal_Ptr; Val : Ghdl_Value_Ptr)
+     (Sig : Ghdl_Signal_Ptr; Val : Value_Union)
    is
       El : Action_List_Acc;
    begin
@@ -3343,9 +3424,11 @@ package body Grt.Signals is
               | Imp_Stable
               | Imp_Quiet
               | Imp_Transaction
-              | Imp_Above
               | Imp_Forward_Build =>
                null;
+            when Imp_Above =>
+               Sig := Propagation.Table (I).Sig;
+               Mark_Active (Sig);
             when Imp_Forward =>
                Sig := Propagation.Table (I).Sig;
                Insert_Active_Chain (Sig);
@@ -3384,8 +3467,7 @@ package body Grt.Signals is
                Sig := Propagation.Table (I).Sig;
                if Sig.Active then
                   if not Sig.Flags.Is_Eff_Forced then
-                     Set_Effective_Value
-                       (Sig, Sig.Driving_Value'Unrestricted_Access);
+                     Set_Effective_Value (Sig, Sig.Driving_Value);
                   end if;
                end if;
             when Eff_Multiple =>
@@ -3399,8 +3481,7 @@ package body Grt.Signals is
                      loop
                         Sig := Sig_Table.Table (I);
                         if not Sig.Flags.Is_Eff_Forced then
-                           Set_Effective_Value
-                             (Sig, Sig.Driving_Value'Unrestricted_Access);
+                           Set_Effective_Value (Sig, Sig.Driving_Value);
                         end if;
                      end loop;
                   end if;
@@ -3409,7 +3490,7 @@ package body Grt.Signals is
                Sig := Propagation.Table (I).Sig;
                if Sig.Active then
                   if not Sig.Flags.Is_Eff_Forced then
-                     Set_Effective_Value (Sig, Sig.S.Effective.Value_Ptr);
+                     Set_Effective_Value (Sig, Sig.S.Effective.Value_Ptr.all);
                   end if;
                end if;
             when Imp_Forward
@@ -3426,8 +3507,7 @@ package body Grt.Signals is
                   end if;
 
                   if not Sig.Flags.Is_Eff_Forced then
-                     Set_Effective_Value
-                       (Sig, Sig.Driving_Value'Unrestricted_Access);
+                     Set_Effective_Value (Sig, Sig.Driving_Value);
                   end if;
                end if;
             when Imp_Stable
@@ -3461,8 +3541,7 @@ package body Grt.Signals is
                   end if;
                   Sig.S.Attr_Trans.Next := Trans;
                   if not Sig.Flags.Is_Eff_Forced then
-                     Set_Effective_Value
-                       (Sig, Sig.Driving_Value'Unrestricted_Access);
+                     Set_Effective_Value (Sig, Sig.Driving_Value);
                   end if;
                   if Sig.S.Time = 0 then
                      --  Signal is active in the next cycle.  If Time > 0, it
@@ -3484,8 +3563,7 @@ package body Grt.Signals is
                         Sig.Driving_Value := Trans.Val;
                      end if;
                      if not Sig.Flags.Is_Eff_Forced then
-                        Set_Effective_Value
-                          (Sig, Sig.Driving_Value'Unrestricted_Access);
+                        Set_Effective_Value (Sig, Sig.Driving_Value);
                      end if;
                   end if;
                end if;
@@ -3507,7 +3585,7 @@ package body Grt.Signals is
                      if Sig.Ports (I).Active then
                         Mark_Active (Sig);
                         if not Sig.Flags.Is_Eff_Forced then
-                           Set_Effective_Value (Sig, Val'Unrestricted_Access);
+                           Set_Effective_Value (Sig, Val);
                         end if;
                         exit;
                      end if;
@@ -3517,13 +3595,12 @@ package body Grt.Signals is
                Sig := Propagation.Table (I).Sig;
                if Sig.Active then
                   if not Sig.Flags.Is_Eff_Forced then
-                     Set_Effective_Value
-                       (Sig, Sig.Driving_Value'Unrestricted_Access);
+                     Set_Effective_Value (Sig, Sig.Driving_Value);
                   end if;
                end if;
                Delayed_Implicit_Process (Sig);
             when Imp_Above =>
-               null;
+               Set_Effective_Value (Sig, Sig.Driving_Value);
             when In_Conversion =>
                --  TODO: handle eff_forced signals.
                Set_Conversion_Activity (Propagation.Table (I).Conv);
@@ -3621,8 +3698,7 @@ package body Grt.Signals is
             end if;
 
             if not Sig.Flags.Is_Eff_Forced then
-               Set_Effective_Value
-                 (Sig, Sig.Driving_Value'Unrestricted_Access);
+               Set_Effective_Value (Sig, Sig.Driving_Value);
             end if;
 
          when Net_One_Direct =>
@@ -3636,8 +3712,7 @@ package body Grt.Signals is
                Sig.Driving_Value := Sig.S.Drivers (0).First_Trans.Val;
             end if;
             if not Sig.Flags.Is_Eff_Forced then
-               Set_Effective_Value
-                 (Sig, Sig.Driving_Value'Unrestricted_Access);
+               Set_Effective_Value (Sig, Sig.Driving_Value);
             end if;
 
          when Net_One_Resolved =>
@@ -3661,8 +3736,7 @@ package body Grt.Signals is
                Compute_Resolved_Signal (Sig.S.Resolv);
             end if;
             if not Sig.Flags.Is_Eff_Forced then
-               Set_Effective_Value
-                 (Sig, Sig.Driving_Value'Unrestricted_Access);
+               Set_Effective_Value (Sig, Sig.Driving_Value);
             end if;
 
          when No_Signal_Net =>
@@ -3673,8 +3747,7 @@ package body Grt.Signals is
             --  Driving value is not modified (there is not driver).
 
             if not Sig.Flags.Is_Eff_Forced then
-               Set_Effective_Value
-                 (Sig, Sig.Driving_Value'Unrestricted_Access);
+               Set_Effective_Value (Sig, Sig.Driving_Value);
             end if;
 
          when Signal_Net_Defined =>
@@ -3712,22 +3785,41 @@ package body Grt.Signals is
                      --  TODO: warn if forced many times in the same cycle ?
                      case Fv.Mode is
                         when Force_Driving =>
+                           if not Sig.Flags.Is_Drv_Forced then
+                              --  Save old value.
+                              Save_Forced_Value
+                                (Sig, Sig.Driving_Value, Force_Driving);
+                           end if;
                            Sig.Flags.Is_Drv_Forced := True;
                            Sig.Flags.Is_Drv_Force_Scheduled := True;
                            Sig.Driving_Value := Fv.Val;
                         when Force_Effective =>
+                           if not Sig.Flags.Is_Eff_Forced then
+                              --  Save old value.
+                              Save_Forced_Value
+                                (Sig, Sig.Value_Ptr.all, Force_Effective);
+                           end if;
                            Sig.Flags.Is_Eff_Forced := True;
                            Sig.Flags.Is_Eff_Force_Scheduled := True;
-                           Set_Effective_Value (Sig, Fv.Val'Access);
+                           Set_Effective_Value (Sig, Fv.Val);
                      end case;
                   when Release =>
                      case Fv.Mode is
                         when Force_Driving =>
-                           if not Sig.Flags.Is_Drv_Force_Scheduled then
+                           if not Sig.Flags.Is_Drv_Force_Scheduled
+                             and then Sig.Flags.Is_Drv_Forced
+                           then
+                              Sig.Driving_Value := Get_Forced_Old_Value
+                                (Sig, Force_Driving);
                               Sig.Flags.Is_Drv_Forced := False;
                            end if;
                         when Force_Effective =>
-                           if not Sig.Flags.Is_Eff_Force_Scheduled then
+                           if not Sig.Flags.Is_Eff_Force_Scheduled
+                             and then Sig.Flags.Is_Eff_Forced
+                           then
+                              Set_Effective_Value
+                                (Sig,
+                                 Get_Forced_Old_Value (Sig, Force_Effective));
                               Sig.Flags.Is_Eff_Forced := False;
                            end if;
                      end case;

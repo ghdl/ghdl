@@ -91,4 +91,5 @@ set lang ada
 # Must be the last command: some distributions use a shared libgnat by default,
 # and don't have the minimal required set of debug info to support this command.
 # As a result, this command fails and stop this script.
-catch exception
+#catch exception
+break __gnat_debug_raise_exception

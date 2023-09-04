@@ -55,8 +55,13 @@ package body Trans_Link is
       Def (Trans_Decls.Ghdl_Integer_Index_Check_Failed,
            Grt.Lib.Ghdl_Integer_Index_Check_Failed'Address);
 
+      Def (Trans_Decls.Ghdl_Malloc,
+           Grt.Lib.Ghdl_Malloc'Address);
       Def (Trans_Decls.Ghdl_Malloc0,
            Grt.Lib.Ghdl_Malloc0'Address);
+      Def (Trans_Decls.Ghdl_Free_Mem,
+           Grt.Lib.Ghdl_Free_Mem'Address);
+
       Def (Trans_Decls.Ghdl_Std_Ulogic_To_Boolean_Array,
            Grt.Lib.Ghdl_Std_Ulogic_To_Boolean_Array'Address);
 
@@ -76,10 +81,7 @@ package body Trans_Link is
            Grt.Lib.Ghdl_Psl_Cover_Failed'Address);
       Def (Trans_Decls.Ghdl_Program_Error,
            Grt.Lib.Ghdl_Program_Error'Address);
-      Def (Trans_Decls.Ghdl_Malloc,
-           Grt.Lib.Ghdl_Malloc'Address);
-      Def (Trans_Decls.Ghdl_Deallocate,
-           Grt.Lib.Ghdl_Deallocate'Address);
+
       Def (Trans_Decls.Ghdl_Real_Exp,
            Grt.Lib.Ghdl_Real_Exp'Address);
       Def (Trans_Decls.Ghdl_I32_Exp,

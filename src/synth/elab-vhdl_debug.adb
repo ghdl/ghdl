@@ -358,19 +358,30 @@ package body Elab.Vhdl_Debug is
       end case;
    end Disp_Type;
 
+   procedure Disp_Declaration_Type
+     (Instance : Synth_Instance_Acc; Decl : Node; Def : Node; Indent : Natural)
+   is
+      Typ : constant Type_Acc := Get_Subtype_Object (Instance, Def);
+   begin
+      Put_Indent (Indent);
+      Put (Vhdl.Errors.Disp_Node (Decl));
+      Put (": ");
+      Debug_Typ (Typ);
+   end Disp_Declaration_Type;
+
    procedure Disp_Declaration_Object
      (Instance : Synth_Instance_Acc; Decl : Iir; Indent : Natural) is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Constant_Declaration
-           | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Interface_Variable_Declaration
-           | Iir_Kind_Interface_Constant_Declaration
-           | Iir_Kind_Interface_File_Declaration
-           | Iir_Kind_Object_Alias_Declaration
-           | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Signal_Declaration
-           | Iir_Kind_File_Declaration =>
+            | Iir_Kind_Variable_Declaration
+            | Iir_Kind_Interface_Variable_Declaration
+            | Iir_Kind_Interface_Constant_Declaration
+            | Iir_Kind_Interface_File_Declaration
+            | Iir_Kind_Object_Alias_Declaration
+            | Iir_Kind_Interface_Signal_Declaration
+            | Iir_Kind_Signal_Declaration
+            | Iir_Kind_File_Declaration =>
             declare
                Val : constant Valtyp := Get_Value (Instance, Decl);
                Dtype : constant Node := Get_Type (Decl);
@@ -384,20 +395,32 @@ package body Elab.Vhdl_Debug is
                New_Line;
             end;
          when Iir_Kinds_Signal_Attribute
-           | Iir_Kind_Attribute_Declaration
-           | Iir_Kind_Attribute_Specification =>
+            | Iir_Kind_Attribute_Declaration
+            | Iir_Kind_Attribute_Specification =>
             --  FIXME: todo ?
             null;
-         when Iir_Kind_Type_Declaration
-           | Iir_Kind_Anonymous_Type_Declaration
-           | Iir_Kind_Subtype_Declaration =>
-            --  FIXME: disp ranges
+         when Iir_Kind_Type_Declaration =>
+            declare
+               Def : constant Node := Get_Type_Definition (Decl);
+            begin
+               case Get_Kind (Def) is
+                  when Iir_Kind_Record_Type_Definition
+                     | Iir_Kind_Array_Type_Definition =>
+                     Disp_Declaration_Type (Instance, Decl, Def, Indent);
+                  when others =>
+                     null;
+               end case;
+            end;
+         when Iir_Kind_Subtype_Declaration =>
+            null;
+         when Iir_Kind_Anonymous_Type_Declaration =>
             null;
          when Iir_Kind_Function_Declaration
-           | Iir_Kind_Function_Body
-           | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Procedure_Body
-           | Iir_Kind_Component_Declaration =>
+            | Iir_Kind_Function_Body
+            | Iir_Kind_Procedure_Declaration
+            | Iir_Kind_Procedure_Body
+            | Iir_Kind_Component_Declaration
+            | Iir_Kind_Protected_Type_Body =>
             null;
          when Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body =>
@@ -437,6 +460,19 @@ package body Elab.Vhdl_Debug is
          El := Get_Chain (El);
       end loop;
    end Disp_Declaration_Objects;
+
+   procedure Disp_Top_Package (Syn_Inst : Synth_Instance_Acc;
+                              With_Objs : Boolean)
+   is
+      Decl : constant Node := Get_Source_Scope (Syn_Inst);
+   begin
+      Put (Vhdl.Errors.Disp_Node (Decl));
+      Put (":");
+      New_Line;
+      if With_Objs then
+         Disp_Declaration_Objects (Syn_Inst, Get_Declaration_Chain (Decl), 0);
+      end if;
+   end Disp_Top_Package;
 
    package Hierarchy_Pkg is
       type Config_Type is record
@@ -659,8 +695,10 @@ package body Elab.Vhdl_Debug is
                Put ("generate statement body");
                --  TODO: disp label or index ?
                New_Line;
-               Disp_Declaration_Objects
-                 (Inst, Get_Declaration_Chain (N), Cfg.Indent + 1);
+               if Cfg.With_Objs then
+                  Disp_Declaration_Objects
+                    (Inst, Get_Declaration_Chain (N), Cfg.Indent + 1);
+               end if;
                Disp_Hierarchy_Statements
                  (Inst, Get_Concurrent_Statement_Chain (N), Cfg);
             when Iir_Kind_Block_Statement =>

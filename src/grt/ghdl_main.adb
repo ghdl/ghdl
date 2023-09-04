@@ -32,6 +32,8 @@ pragma Warnings (Off);
 with Grt.Rtis_Binding;
 with Grt.Std_Logic_1164;
 with Grt.Errors;
+with Grt.Heap;
+with Grt.No_Analog_Solver;
 pragma Warnings (On);
 
 function Ghdl_Main (Argc : Integer; Argv : System.Address) return Integer

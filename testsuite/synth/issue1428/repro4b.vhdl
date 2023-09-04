@@ -14,4 +14,9 @@ begin
 
   s (2) <= '0';
   s (5) <= '0';
+
+  --  Assignments to net s:
+  --  0 - 7 (w=8)
+  --  3 - 3
+  --  6 - 6
 end behav;

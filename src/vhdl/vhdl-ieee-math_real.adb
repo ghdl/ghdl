@@ -52,6 +52,10 @@ package body Vhdl.Ieee.Math_Real is
                      Def := Iir_Predefined_Ieee_Math_Real_Floor;
                   when Name_Round =>
                      Def := Iir_Predefined_Ieee_Math_Real_Round;
+                  when Name_Exp =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Exp;
+                  when Name_Log =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Log;
                   when Name_Log2 =>
                      Def := Iir_Predefined_Ieee_Math_Real_Log2;
                   when Name_Log10 =>
@@ -62,6 +66,10 @@ package body Vhdl.Ieee.Math_Real is
                      Def := Iir_Predefined_Ieee_Math_Real_Cos;
                   when Name_Arctan =>
                      Def := Iir_Predefined_Ieee_Math_Real_Arctan;
+                  when Name_Sinh =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Sinh;
+                  when Name_Cosh =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Cosh;
                   when Name_Op_Exp =>
                      declare
                         use Vhdl.Std_Package;

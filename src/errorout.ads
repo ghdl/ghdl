@@ -61,9 +61,6 @@ package Errorout is
       --  Start of block comment ('/*') appears in a block comment.
       Warnid_Nested_Comment,
 
-      --  Use of a tool directive.
-      Warnid_Directive,
-
       --  Weird use of parenthesis.
       Warnid_Parenthesis,
 
@@ -98,7 +95,7 @@ package Errorout is
       Warnid_Delta_Cycle,
 
       --  No wait statement in a non-sensitized process.
-      Warnid_No_Wait,
+      Warnid_Missing_Wait,
 
       --  Declaration of a shared variable with a non-protected type.
       Warnid_Shared,
@@ -113,6 +110,9 @@ package Errorout is
       --  A variable or signal is never written.
       --  (only for synthesis)
       Warnid_Nowrite,
+
+      --  Combinatorial logic loop (for synthesis).
+      Warnid_Logic_Loop,
 
       --  Others choice is not needed, all values are already covered.
       Warnid_Others,
@@ -131,7 +131,7 @@ package Errorout is
       Warnid_Useless,
 
       --  Missing association for a formal.
-      Warnid_No_Assoc,
+      Warnid_Missing_Assoc,
 
       --  Lexical conformance
       Warnid_Conformance,
@@ -167,6 +167,10 @@ package Errorout is
    --  in lower case, without the Msgid_Warn_ prefix and with '_' replaced
    --  by '-'.
    function Warning_Image (Id : Msgid_Warnings) return String;
+
+   --  Return the Warnid for string S.  Handle renamed warnings.
+   --  Return Msgid_Warning if not found.
+   function Warning_Value (S : String) return Msgid_All_Warnings;
 
    --  Enable or disable a warning.
    procedure Enable_Warning (Id : Msgid_Warnings; Enable : Boolean);
@@ -341,17 +345,18 @@ private
         | Warnid_Runtime_Error | Warnid_Pure | Warnid_Specs | Warnid_Hide
         | Warnid_Pragma | Warnid_Analyze_Assert | Warnid_Attribute
         | Warnid_Deprecated_Option | Warnid_Unexpected_Option
-        | Warnid_Nowrite | Warnid_No_Wait | Warnid_Useless
+        | Warnid_Nowrite | Warnid_Missing_Wait | Warnid_Useless
         | Warnid_Elaboration | Warnid_Conformance
         | Warnid_Unkept_Attribute | Warnid_Unhandled_Attribute
         | Warnid_Sensitivity
+        | Warnid_Logic_Loop
         | Msgid_Warning  => (Enabled => True, Error => False),
       Warnid_Delta_Cycle | Warnid_Body | Warnid_Static | Warnid_Nested_Comment
         | Warnid_Universal | Warnid_Port_Bounds
-        | Warnid_Others | Warnid_Reserved_Word | Warnid_Directive
+        | Warnid_Others | Warnid_Reserved_Word
         | Warnid_Parenthesis | Warnid_Delayed_Checks | Warnid_Default_Binding
         | Warnid_Vital_Generic | Warnid_Missing_Xref
-        | Warnid_No_Assoc
+        | Warnid_Missing_Assoc
         | Warnid_Unused => (Enabled => False, Error => False));
 
    --  Compute the column from Error_Record E.

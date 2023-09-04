@@ -758,6 +758,16 @@ package body Trans.Chap4 is
       Elab_Object_Value (Obj1, Value);
    end Elab_Object;
 
+   --  Free memory for OBJ (allocated with Alloc_System lifetime).
+   procedure Gen_Free_Mem (Obj : O_Enode)
+   is
+      Assocs : O_Assoc_List;
+   begin
+      Start_Association (Assocs, Ghdl_Free_Mem);
+      New_Association (Assocs, New_Convert_Ov (Obj, Ghdl_Ptr_Type));
+      New_Procedure_Call (Assocs);
+   end Gen_Free_Mem;
+
    procedure Fini_Object (Obj : Iir)
    is
       Obj_Type  : constant Iir := Get_Type (Obj);
@@ -771,16 +781,16 @@ package body Trans.Chap4 is
                Open_Temp;
                V := Chap6.Translate_Name (Obj, Mode_Value);
                Stabilize (V);
-               Chap3.Gen_Deallocate
+               Gen_Free_Mem
                  (New_Value (M2Lp (Chap3.Get_Composite_Bounds (V))));
-               Chap3.Gen_Deallocate
+               Gen_Free_Mem
                  (New_Value (M2Lp (Chap3.Get_Composite_Base (V))));
                Close_Temp;
             end;
          when Type_Mode_Complex_Array
            | Type_Mode_Complex_Record
            | Type_Mode_Protected =>
-            Chap3.Gen_Deallocate
+            Gen_Free_Mem
               (New_Value (M2Lp (Chap6.Translate_Name (Obj, Mode_Value))));
          when Type_Mode_Scalar
            | Type_Mode_Static_Record

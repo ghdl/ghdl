@@ -18,11 +18,7 @@ package Ortho_Code.Types is
                     OT_Ucarray, OT_Subarray,
                     OT_Access,
                     OT_Record, OT_Subrecord,
-                    OT_Union,
-
-                    --  Type completion.  Mark the completion of a type.
-                    --  Optionnal.
-                    OT_Complete);
+                    OT_Union);
 
    subtype OT_Kinds_Record_Union is OT_Kind range OT_Record .. OT_Union;
 
@@ -122,9 +118,6 @@ package Ortho_Code.Types is
 
    --  Get the next field.
    function Get_Field_Chain (Field : O_Fnode) return O_Fnode;
-
-   --  Get the type that was completed.
-   function Get_Type_Complete_Type (Atype : O_Tnode) return O_Tnode;
 
    --  Build a scalar type; size may be 8, 16, 32 or 64.
    function New_Unsigned_Type (Size : Natural) return O_Tnode;

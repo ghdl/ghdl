@@ -102,7 +102,7 @@ package body Elab.Vhdl_Insts is
                            Dyn : Dyn_Name;
                         begin
                            Synth_Assignment_Prefix
-                             (Syn_Inst, Formal,
+                             (Syn_Inst, Sub_Inst, Formal,
                               Formal_Base, Formal_Typ, Formal_Offs, Dyn);
                            pragma Assert (Dyn = No_Dyn_Name);
                         end;
@@ -487,7 +487,8 @@ package body Elab.Vhdl_Insts is
          Release_Expr_Pool (Marker);
          return Res;
       else
-         return Elab_Declaration_Type (Sub_Inst, Inter);
+         Res := Elab_Declaration_Type (Sub_Inst, Inter);
+         return Res;
       end if;
    end Elab_Port_Association_Type;
 
@@ -509,6 +510,62 @@ package body Elab.Vhdl_Insts is
             Inter_Typ := Elab_Port_Association_Type
               (Sub_Inst, Syn_Inst, Inter, Assoc);
             if Inter_Typ /= null then
+               --  Check matching bounds.
+               if Inter_Typ.Kind in Type_Scalars
+                 and then (Get_Kind (Assoc)
+                             = Iir_Kind_Association_Element_By_Name)
+                 and then Get_Formal_Conversion (Assoc) = Null_Node
+                 and then Get_Actual_Conversion (Assoc) = Null_Node
+               then
+                  declare
+                     use Synth.Vhdl_Stmts;
+                     Marker : Mark_Type;
+                     Actual : constant Node := Get_Actual (Assoc);
+                     Actual_Base : Valtyp;
+                     Actual_Typ : Type_Acc;
+                     Actual_Offs : Value_Offsets;
+                     Same : Boolean;
+                  begin
+                     Mark_Expr_Pool (Marker);
+
+                     Synth_Assignment_Prefix
+                       (Syn_Inst, Actual,
+                        Actual_Base, Actual_Typ, Actual_Offs);
+                     case Type_Scalars (Inter_Typ.Kind) is
+                        when Type_All_Discrete =>
+                           Same := Inter_Typ.Drange = Actual_Typ.Drange;
+                        when Type_Float =>
+                           Same := Inter_Typ.Frange = Actual_Typ.Frange;
+                     end case;
+                     if not Same then
+                        Error_Msg_Elab
+                          (+Assoc,
+                           "range of formal %i is different from formal range",
+                           +Inter);
+                     end if;
+                     Release_Expr_Pool (Marker);
+                  end;
+               elsif (Get_Kind (Assoc)
+                        = Iir_Kind_Association_Element_By_Individual)
+               then
+                  --  Check matching bounds.
+                  declare
+                     Marker : Mark_Type;
+                     Actual_Typ : Type_Acc;
+                  begin
+                     Mark_Expr_Pool (Marker);
+
+                     Actual_Typ := Synth_Subtype_Indication
+                       (Syn_Inst, Get_Actual_Type (Assoc));
+                     if not Check_Matching_Bounds (Syn_Inst, Inter_Typ,
+                                                   Actual_Typ, Assoc)
+                     then
+                        --  Error message already emitted.
+                        null;
+                     end if;
+                     Release_Expr_Pool (Marker);
+                  end;
+               end if;
                Create_Signal (Sub_Inst, Inter, Inter_Typ);
             end if;
          end if;
@@ -827,25 +884,9 @@ package body Elab.Vhdl_Insts is
 
       --  Create objects for the inputs and the outputs of the component,
       --  assign inputs (that's nets) and create wires for outputs.
-      declare
-         Assoc : Node;
-         Assoc_Inter : Node;
-         Inter : Node;
-         Inter_Typ : Type_Acc;
-      begin
-         Assoc := Get_Port_Map_Aspect_Chain (Stmt);
-         Assoc_Inter := Get_Port_Chain (Component);
-         while Is_Valid (Assoc) loop
-            if Get_Whole_Association_Flag (Assoc) then
-               Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-
-               Inter_Typ := Elab_Port_Association_Type
-                 (Comp_Inst, Syn_Inst, Inter, Assoc);
-               Create_Signal (Comp_Inst, Inter, Inter_Typ);
-            end if;
-            Next_Association_Interface (Assoc, Assoc_Inter);
-         end loop;
-      end;
+      Elab_Ports_Association_Type (Comp_Inst, Syn_Inst,
+                                   Get_Port_Chain (Component),
+                                   Get_Port_Map_Aspect_Chain (Stmt));
 
       Set_Component_Configuration (Stmt, Null_Node);
 
@@ -932,6 +973,7 @@ package body Elab.Vhdl_Insts is
          when Iir_Kind_Entity_Aspect_Configuration =>
             Config := Get_Configuration (Aspect);
             Arch := Get_Block_Specification (Get_Block_Configuration (Config));
+            Arch := Get_Named_Entity (Arch);
          when Iir_Kind_Entity_Aspect_Open =>
             return;
       end case;
@@ -1055,7 +1097,21 @@ package body Elab.Vhdl_Insts is
 
       --  Clear elab_flag
       for I in Design_Units.First .. Design_Units.Last loop
-         Set_Elab_Flag (Design_Units.Table (I), False);
+         declare
+            Unit : constant Node := Design_Units.Table (I);
+            Lib_Unit : Node;
+         begin
+            if not Get_Elab_Flag (Unit) then
+               Lib_Unit := Get_Library_Unit (Unit);
+               if Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration
+                 and then not Is_Uninstantiated_Package (Lib_Unit)
+               then
+                  Clear_Package_Object (Root_Instance, Lib_Unit);
+               end if;
+            else
+               Set_Elab_Flag (Unit, False);
+            end if;
+         end;
       end loop;
 
       return Top_Inst;

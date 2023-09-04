@@ -20,6 +20,7 @@ package Ortho_Code.Decls is
    type OD_Kind is
      (
       OD_Type,
+      OD_Completer,
       OD_Const,
 
       --  Value of constant, initial value of variable.
@@ -99,6 +100,7 @@ package Ortho_Code.Decls is
    --  Declare a type.
    --  This simply gives a name to a type.
    procedure New_Type_Decl (Ident : O_Ident; Atype : O_Tnode);
+   procedure Complete_Type_Decl (Atype : O_Tnode);
 
    --  If Flag_Type_Name is set, a map from type to name is maintained.
    function Get_Type_Decl (Atype : O_Tnode) return O_Dnode;

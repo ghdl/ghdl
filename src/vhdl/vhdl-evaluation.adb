@@ -1122,14 +1122,59 @@ package body Vhdl.Evaluation is
       return Res;
    end Eval_Predefined_Call;
 
+   procedure Eval_Int_Negation
+     (Val : Int64; Res : out Int64; Ovf : out Boolean; Orig : Iir)
+   is
+      Sz : Scalar_Size;
+   begin
+      if Val = Int64'First then
+         Res := Int64'Last;
+         Ovf := True;
+         return;
+      end if;
+
+      Res := -Val;
+      Sz := Get_Scalar_Size (Get_Base_Type (Get_Type (Orig)));
+      case Sz is
+         when Scalar_64 =>
+            Ovf := False;
+         when Scalar_32 =>
+            Ovf := Res >= 16#8000_0000#;
+         when Scalar_16 =>
+            Ovf := Res >= 16#8000#;
+         when Scalar_8 =>
+            Ovf := Res >= 16#80#;
+      end case;
+   end Eval_Int_Negation;
+
+   procedure Eval_Int_Absolute
+     (Val : Int64; Res : out Int64; Ovf : out Boolean; Orig : Iir) is
+   begin
+      if Val >= 0 then
+         Res := Val;
+         Ovf := False;
+      else
+         Eval_Int_Negation (Val, Res, Ovf, Orig);
+      end if;
+   end Eval_Int_Absolute;
+
+   function Build_Report_Overflow (Orig : Iir) return Iir is
+   begin
+      Warning_Msg_Sem (Warnid_Runtime_Error, +Orig,
+                       "arithmetic overflow in static expression");
+      return Build_Overflow (Orig);
+   end Build_Report_Overflow;
+
    function Eval_Monadic_Operator (Orig : Iir; Operand : Iir) return Iir
    is
-      pragma Unsuppress (Overflow_Check);
       subtype Iir_Predefined_Vector_Minmax is Iir_Predefined_Functions range
         Iir_Predefined_Vector_Minimum .. Iir_Predefined_Vector_Maximum;
 
       Imp : constant Iir := Get_Implementation (Orig);
       Func : Iir_Predefined_Functions;
+
+      Res : Int64;
+      Ovf : Boolean;
    begin
       if Is_Overflow_Literal (Operand) then
          --  Propagate overflow.
@@ -1139,11 +1184,21 @@ package body Vhdl.Evaluation is
       Func := Get_Implicit_Definition (Imp);
       case Func is
          when Iir_Predefined_Integer_Negation =>
-            return Build_Integer (-Get_Value (Operand), Orig);
+            Eval_Int_Negation (Get_Value (Operand), Res, Ovf, Orig);
+            if Ovf then
+               return Build_Report_Overflow (Orig);
+            else
+               return Build_Integer (Res, Orig);
+            end if;
          when Iir_Predefined_Integer_Identity =>
             return Build_Integer (Get_Value (Operand), Orig);
          when Iir_Predefined_Integer_Absolute =>
-            return Build_Integer (abs Get_Value (Operand), Orig);
+            Eval_Int_Absolute (Get_Value (Operand), Res, Ovf, Orig);
+            if Ovf then
+               return Build_Report_Overflow (Orig);
+            else
+               return Build_Integer (Res, Orig);
+            end if;
 
          when Iir_Predefined_Floating_Negation =>
             return Build_Floating (-Get_Fp_Value (Operand), Orig);
@@ -1153,11 +1208,21 @@ package body Vhdl.Evaluation is
             return Build_Floating (abs Get_Fp_Value (Operand), Orig);
 
          when Iir_Predefined_Physical_Negation =>
-            return Build_Physical (-Get_Physical_Value (Operand), Orig);
+            Eval_Int_Negation (Get_Physical_Value (Operand), Res, Ovf, Orig);
+            if Ovf then
+               return Build_Report_Overflow (Orig);
+            else
+               return Build_Physical (Res, Orig);
+            end if;
          when Iir_Predefined_Physical_Identity =>
             return Build_Physical (Get_Physical_Value (Operand), Orig);
          when Iir_Predefined_Physical_Absolute =>
-            return Build_Physical (abs Get_Physical_Value (Operand), Orig);
+            Eval_Int_Absolute (Get_Physical_Value (Operand), Res, Ovf, Orig);
+            if Ovf then
+               return Build_Report_Overflow (Orig);
+            else
+               return Build_Physical (Res, Orig);
+            end if;
 
          when Iir_Predefined_Boolean_Not
            | Iir_Predefined_Bit_Not =>
@@ -1289,12 +1354,6 @@ package body Vhdl.Evaluation is
             Error_Internal (Orig, "eval_monadic_operator: " &
                             Iir_Predefined_Functions'Image (Func));
       end case;
-   exception
-      when Constraint_Error =>
-         --  Can happen for absolute.
-         Warning_Msg_Sem (Warnid_Runtime_Error, +Orig,
-                          "arithmetic overflow in static expression");
-         return Build_Overflow (Orig);
    end Eval_Monadic_Operator;
 
    function Eval_Dyadic_Bit_Array_Operator

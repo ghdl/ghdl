@@ -73,7 +73,16 @@ package Elab.Vhdl_Types is
    function Elab_Scalar_Type_Definition (Def : Node; St : Node)
                                         return Type_Acc;
 
-   --  Elaborate the type of DECL.
+   --  Elaborate the subtype indication of declaration DECL (only if needed).
+   procedure Elab_Declaration_Type
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node);
+
+   --  Elaborate the type of DECL (if needed) and return the type.
    function Elab_Declaration_Type
      (Syn_Inst : Synth_Instance_Acc; Decl : Node) return Type_Acc;
+
+   --  Return the type of an elaborated subtype indication.
+   function Get_Elaborated_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;
+                                               Atype : Node) return Type_Acc;
+
 end Elab.Vhdl_Types;

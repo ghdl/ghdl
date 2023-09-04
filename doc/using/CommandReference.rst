@@ -25,12 +25,37 @@ Help [``-h``]
 
 .. option:: --help, -h
 
-Display (on the standard output) a short description of the all the commands available.
-If the help switch is followed by a command switch, then options for that second command are displayed::
+Display (on the standard output) a short description of the all the
+commands available.  If the help switch is followed by a command
+switch, then options for that second command are displayed::
 
   ghdl --help
   ghdl -h
   ghdl -h command
+
+.. index:: cmd help-options
+
+Help [``--help-options``]
+-----------------
+
+.. option:: --help-options,
+
+Display (on the standard output) a short description of the all the
+analysis options.
+
+  ghdl --help-options
+
+.. index:: cmd help-warnings
+
+Help [``--help-warnings``]
+-----------------
+
+.. option:: --help-warnings,
+
+Display (on the standard output) a short description of the all the warnings,
+and those which are enabled by default.
+
+  ghdl --help-warnings
 
 .. index:: cmd display configuration
 

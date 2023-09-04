@@ -180,9 +180,8 @@ package Trans is
    --  ALLOC_SYSTEM for object created during design elaboration and whose
    --    life is infinite.
    --  ALLOC_RETURN for unconstrained object returns by function.
-   --  ALLOC_HEAP for object created by new.
    type Allocation_Kind is
-     (Alloc_Stack, Alloc_Return, Alloc_Heap, Alloc_System);
+     (Alloc_Stack, Alloc_Return, Alloc_System);
 
    --  Sometimes useful to factorize code.  Defines what has to be translated.
    type Subprg_Translate_Kind is
@@ -755,6 +754,9 @@ package Trans is
       Kind_Type_File,
       Kind_Type_Protected
      );
+   subtype Kind_Type_Composite is Ortho_Info_Type_Kind
+     range Kind_Type_Array .. Kind_Type_Record;
+
    type O_Tnode_Array is array (Object_Kind_Type) of O_Tnode;
    type O_Fnode_Array is array (Object_Kind_Type) of O_Fnode;
    type O_Dnode_Array is array (Object_Kind_Type) of O_Dnode;
@@ -1281,8 +1283,7 @@ package Trans is
             Range_Dir    : O_Fnode;
             Range_Length : O_Fnode;
 
-         when Kind_Type_Array
-           | Kind_Type_Record =>
+         when Kind_Type_Composite =>
             --  For unbounded types:
             --  The base type.
             Base_Type       : O_Tnode_Array;
@@ -1370,8 +1371,7 @@ package Trans is
             --  Tree for the range record declaration.
             Range_Var : Var_Type := Null_Var;
 
-         when Kind_Type_Array
-           | Kind_Type_Record =>
+         when Kind_Type_Composite =>
             --  Variable containing the layout for a constrained type.
             Composite_Layout : Var_Type;
 

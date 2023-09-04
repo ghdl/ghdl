@@ -33,6 +33,13 @@ with Netlists.Builders; use Netlists.Builders;
 with Synth.Source;
 
 package Synth.Vhdl_Expr is
+   --  Return True iff bounds of T and OBJ matches.
+   --  Return False and emit an error message if not.
+   function Check_Matching_Bounds (Syn_Inst : Synth_Instance_Acc;
+                                   T : Type_Acc;
+                                   Obj : Type_Acc;
+                                   Loc : Node) return Boolean;
+
    --  Perform a subtype conversion.  Check constraints.
    function Synth_Subtype_Conversion (Syn_Inst : Synth_Instance_Acc;
                                       Vt : Valtyp;
@@ -82,7 +89,7 @@ package Synth.Vhdl_Expr is
    --  EXPR_TYPE.
    function Synth_Expression_With_Type (Syn_Inst : Synth_Instance_Acc;
                                         Expr : Node;
-                                        Expr_Type : Type_Acc) return Valtyp;
+                                        Typ : Type_Acc) return Valtyp;
 
    --  For value signal attribute (like 'Event).
    type Hook_Attribute_Acc is access

@@ -248,9 +248,6 @@ package Trans.Chap3 is
    function Array_Bounds_To_Element_Layout (B : Mnode; Arr_Type : Iir)
                                            return Mnode;
 
-   --  Deallocate OBJ.
-   procedure Gen_Deallocate (Obj : O_Enode);
-
    --  Performs deallocation of PARAM (the parameter of a deallocate call).
    procedure Translate_Object_Deallocation (Param : Iir);
 

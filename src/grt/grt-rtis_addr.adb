@@ -149,9 +149,18 @@ package body Grt.Rtis_Addr is
       Id : Ghdl_Index_Type;
       pragma Import (Ada, Id);
       for Id'Address use Id_Addr;
+
+      Nbase : Address;
    begin
-      return (Base => To_Addr_Acc (Base_Addr).all,
-              Block => Blk.Children (Id));
+      Nbase := To_Addr_Acc (Base_Addr).all;
+
+      if Nbase = Null_Address then
+         --  No generate body.
+         return Null_Context;
+      else
+         return (Base => Nbase,
+                 Block => Blk.Children (Id));
+      end if;
    end Get_If_Case_Generate_Child;
 
    function Loc_To_Addr (Depth : Ghdl_Rti_Depth;

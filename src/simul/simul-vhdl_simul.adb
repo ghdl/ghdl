@@ -42,7 +42,6 @@ with PSL.Subsets;
 with Elab.Debugger;
 with Elab.Vhdl_Types;
 with Elab.Vhdl_Debug;
-with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 
 with Synth.Errors;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
@@ -62,9 +61,13 @@ with Grt.Processes;
 with Grt.Errors;
 with Grt.Severity;
 with Grt.Lib;
+with Grt.Astdio;
 with Grt.Analog_Solver;
+with Grt.Sundials;
 
 package body Simul.Vhdl_Simul is
+   Last_Simple_Simultaneous : Simultaneous_Index_Type;
+
    function To_Instance_Acc is new Ada.Unchecked_Conversion
      (System.Address, Grt.Processes.Instance_Acc);
 
@@ -78,16 +81,7 @@ package body Simul.Vhdl_Simul is
    function To_Ghdl_Signal_Ptr_Ptr is
       new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_Signal_Ptr_Ptr);
 
-   subtype F64_C_Arr_Ptr is Grt.Analog_Solver.F64_C_Arr_Ptr;
-
-   procedure Residues (T : Ghdl_F64;
-                       Y : F64_C_Arr_Ptr;
-                       Yp : F64_C_Arr_Ptr;
-                       Res : F64_C_Arr_Ptr);
-   pragma Export (C, Residues, "grt__analog_solver__residues");
-
-   procedure Set_Solver_Values (Y : F64_C_Arr_Ptr; Yp: F64_C_Arr_Ptr);
-   pragma Export (C, Set_Solver_Values, "grt__analog_solver__set_values");
+   subtype F64_C_Arr_Ptr is Grt.Sundials.F64_C_Arr_Ptr;
 
    --  Mapping.
    type Iir_Kind_To_Kind_Signal_Type is
@@ -418,8 +412,9 @@ package body Simul.Vhdl_Simul is
             D : Driver_Entry renames Drivers_Table.Table (Drv);
             S : Signal_Entry renames Signals_Table.Table (D.Sig.Base);
          begin
+            --  Use the initial value.
             Add_Source (D.Sig.Typ, Sig_Index (S.Sig, D.Sig.Offs.Net_Off),
-                        S.Val + D.Sig.Offs.Mem_Off);
+                        S.Val_Init + D.Sig.Offs.Mem_Off);
 
             Drv := D.Prev_Proc;
          end;
@@ -1836,6 +1831,98 @@ package body Simul.Vhdl_Simul is
       end if;
    end Execute_Concurrent_Procedure_Call;
 
+   procedure Execute_Break_Statement (Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Mark : Mark_Type;
+
+      El : Node;
+      Quan : Node;
+      Sel : Node;
+      Quan_Base, Sel_Base : Valtyp;
+      Val : Valtyp;
+      Typ, Sel_Typ : Type_Acc;
+      Off, Sel_Off : Value_Offsets;
+      Is_Integ : Boolean;
+      Sval : Fp64;
+
+      Quan_Base_Idx, Quan_Idx : Scalar_Quantity_Index;
+      Sel_Base_Idx, Sel_Idx : Scalar_Quantity_Index;
+      Tag_Idx : Augmentation_Index;
+   begin
+      if not Execute_Condition (Inst, Get_Condition (Stmt)) then
+         return;
+      end if;
+
+      Grt.Processes.Break_Flag := True;
+
+      Mark_Expr_Pool (Mark);
+
+      El := Get_Break_Element (Stmt);
+      while El /= Null_Node loop
+         Quan := Get_Break_Quantity (El);
+         Sel := Get_Selector_Quantity (El);
+
+         Synth_Assignment_Prefix (Inst, Quan, Quan_Base, Typ, Off);
+         --  Only full quantities are currently supported.
+         pragma Assert (Off.Net_Off = 0);
+         pragma Assert (Typ.W = Quan_Base.Typ.W);
+
+         Val := Synth.Vhdl_Expr.Synth_Expression_With_Type
+           (Inst, Get_Expression (El), Typ);
+
+         if Sel = Null_Node then
+            Sel_Base := Quan_Base;
+            Sel_Typ := Typ;
+            Sel_Off := Off;
+            Is_Integ := Get_Kind (Quan) = Iir_Kind_Integ_Attribute;
+         else
+            Synth_Assignment_Prefix (Inst, Sel, Sel_Base, Sel_Typ, Sel_Off);
+            if Sel_Typ.W /= Typ.W then
+               Error_Msg_Exec
+                 (Stmt, "number of break and selected quantities mismatch");
+            end if;
+            Is_Integ := Get_Kind (Sel) = Iir_Kind_Integ_Attribute;
+         end if;
+
+         pragma Assert (Typ.W /= 0);
+         Quan_Base_Idx := Quantity_Table.Table (Quan_Base.Val.Q).Sq_Idx;
+         Sel_Base_Idx := Quantity_Table.Table (Sel_Base.Val.Q).Sq_Idx;
+         for I in 0 .. Typ.W - 1 loop
+            Quan_Idx := Quan_Base_Idx + Scalar_Quantity_Index (I);
+            Sel_Idx := Sel_Base_Idx + Scalar_Quantity_Index (I);
+            if Is_Integ then
+               --  LRM-AMS17 14.7.7.2 Application of the break set
+               --  If the selector quantity is of the form Q'INTEG, the
+               --  characteristic expression whose tag is the corresponding
+               --  scalar subelement of Q'INTEG is replaced.
+               null;
+            else
+               --  If the selector quantity is of the form Q, the
+               --  characteristic expression whose tag is the corresponding
+               --  scalar subelement of Q'DOT is replaced.
+               Sel_Idx := Scalar_Quantities_Table.Table (Sel_Idx).Deriv;
+               if Sel_Idx = No_Scalar_Quantity then
+                  Error_Msg_Exec (Stmt, "no corresponding Q'Dot quantity");
+               end if;
+            end if;
+
+            Tag_Idx := Scalar_Quantities_Table.Table (Sel_Idx).Tag;
+            pragma Assert (Tag_Idx /= No_Augmentation_Index);
+            if Augmentations_Set.Table (Tag_Idx).Selected then
+               Error_Msg_Exec (Stmt, "quantity already selected");
+            end if;
+            Augmentations_Set.Table (Tag_Idx).Selected := True;
+
+            Sval := Read_Fp64 (Val.Val.Mem + Size_Type (I) * 8);
+            Break_Set.Append ((Quan_Idx, Tag_Idx, Sval));
+         end loop;
+
+         El := Get_Chain (El);
+      end loop;
+
+      Release_Expr_Pool (Mark);
+   end Execute_Break_Statement;
+
    procedure Execute_Expression_Association (Proc_Idx : Process_Index_Type)
    is
       use Synth.Vhdl_Expr;
@@ -1924,6 +2011,11 @@ package body Simul.Vhdl_Simul is
                Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
             end if;
             Execute_Concurrent_Procedure_Call (Process);
+         when Iir_Kind_Concurrent_Break_Statement =>
+            if Elab.Debugger.Flag_Need_Debug then
+               Elab.Debugger.Debug_Break (Process.Instance, Process.Proc);
+            end if;
+            Execute_Break_Statement (Process.Instance, Process.Proc);
          when others =>
             raise Internal_Error;
       end case;
@@ -2290,7 +2382,8 @@ package body Simul.Vhdl_Simul is
          Instance_Addr := Processes_State (I)'Address;
          Instance_Grt := To_Instance_Acc (Instance_Addr);
          case Get_Kind (Proc) is
-            when Iir_Kind_Concurrent_Assertion_Statement =>
+            when Iir_Kind_Concurrent_Assertion_Statement
+               | Iir_Kind_Concurrent_Break_Statement =>
                Create_Process_Sensitized (Current_Process);
                Register_Sensitivity (I);
 
@@ -2795,6 +2888,73 @@ package body Simul.Vhdl_Simul is
       pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
    end Resolution_Proc;
 
+   procedure Std_Resolve_Proc (Sig_Addr : System.Address;
+                               Val : System.Address;
+                               Bool_Vec : System.Address;
+                               Vec_Len : Ghdl_Index_Type;
+                               Nbr_Drv : Ghdl_Index_Type;
+                               Nbr_Ports : Ghdl_Index_Type);
+   pragma Convention (C, Std_Resolve_Proc);
+
+   Resolution_Table  : constant Table_2d :=
+   --  UX01ZWLH-
+     ("UUUUUUUUU",   --  U
+      "UXXXXXXXX",   --  X
+      "UX0X0000X",   --  0
+      "UXX11111X",   --  1
+      "UX01ZWLHX",   --  Z
+      "UX01WWWWX",   --  W
+      "UX01LWLWX",   --  L
+      "UX01HWWHX",   --  H
+      "UXXXXXXXX"    --  -
+     );
+
+   procedure Std_Resolve_Proc (Sig_Addr : System.Address;
+                               Val : System.Address;
+                               Bool_Vec : System.Address;
+                               Vec_Len : Ghdl_Index_Type;
+                               Nbr_Drv : Ghdl_Index_Type;
+                               Nbr_Ports : Ghdl_Index_Type)
+   is
+      pragma Unreferenced (Val, Vec_Len);
+
+      S : constant Ghdl_Signal_Ptr := Read_Sig (To_Memory_Ptr (Sig_Addr));
+
+      Res, Last : Std_Ulogic;
+      Num : Natural;
+
+      type Bool_Array is array (1 .. Nbr_Drv) of Boolean;
+      Vec : Bool_Array;
+      pragma Import (Ada, Vec);
+      for Vec'Address use Bool_Vec;
+   begin
+      Res := 'Z';
+      Num := 0;
+      Last := 'Z';
+
+      --  Ports.
+      for I in 1 .. Nbr_Ports loop
+         Last := Std_Ulogic'Val (Ghdl_Signal_Read_Port (S, I - 1).E8);
+         Res := Resolution_Table (Res, Last);
+         Num := Num + 1;
+      end loop;
+
+      --  Drivers.
+      for I in 1 .. Nbr_Drv loop
+         if Vec (I) then
+            Last := Std_Ulogic'Val (Ghdl_Signal_Read_Driver (S, I - 1).E8);
+            Res := Resolution_Table (Res, Last);
+            Num := Num + 1;
+         end if;
+      end loop;
+
+      --  Set driving value.
+      if Num = 1 then
+         Res := Last;
+      end if;
+      S.Driving_Value.E8 := Ghdl_E8'Val (Std_Ulogic'Pos (Res));
+   end Std_Resolve_Proc;
+
    function Create_Scalar_Signal (Typ : Type_Acc; Val : Ghdl_Value_Ptr)
                                  return Ghdl_Signal_Ptr is
    begin
@@ -2896,11 +3056,21 @@ package body Simul.Vhdl_Simul is
             else
                Resolv_Func := Null_Node;
             end if;
+
+            --  Handle std_logic in an optimized way.
+            --  Note: Resolved may not be set.
             if Resolv_Func /= Null_Node
-              and then
-              (Vec (Sig_Off).Total > 1
-                 or else Resolv_Func /= Vhdl.Ieee.Std_Logic_1164.Resolved)
+              and then Resolv_Func = Vhdl.Ieee.Std_Logic_1164.Resolved
             then
+               if Vec (Sig_Off).Total > 1 then
+                  pragma Assert (Typ.W = 1);
+                  Sub_Resolved := True;
+                  Grt.Signals.Ghdl_Signal_Create_Resolution
+                    (Std_Resolve_Proc'Access,
+                     To_Address (Sig_Index (E.Sig, Sig_Off)),
+                     System.Null_Address, 1);
+               end if;
+            elsif Resolv_Func /= Null_Node then
                Sub_Resolved := True;
                Arr_Type :=
                  Get_Type (Get_Interface_Declaration_Chain (Resolv_Func));
@@ -2911,6 +3081,7 @@ package body Simul.Vhdl_Simul is
                   Sig => Sig_Index (E.Sig, Sig_Off),
                   Idx_Typ => Get_Subtype_Object (E.Inst, Idx_Type),
                   Arr_Typ => Get_Subtype_Object (E.Inst, Arr_Type));
+               Convert_Type_Width (Resolv_Instance.Arr_Typ);
                Grt.Signals.Ghdl_Signal_Create_Resolution
                  (Resolution_Proc'Access,
                   Resolv_Instance.all'Address,
@@ -2980,7 +3151,8 @@ package body Simul.Vhdl_Simul is
          Kind := Kind_Signal_No;
       end if;
 
-      Grt.Signals.Ghdl_Signal_Set_Mode_Kind (Get_Signal_Mode (E), Kind, True);
+      Grt.Signals.Ghdl_Signal_Set_Mode_Kind
+        (Get_Signal_Mode (E), Kind, E.Has_Active);
 
       Create_Signal (E.Val, 0, Sig_Type, E.Typ, E.Nbr_Sources.all, False);
    end Create_User_Signal;
@@ -3043,10 +3215,8 @@ package body Simul.Vhdl_Simul is
       end case;
    end Add_Guard_Sensitivity;
 
-   procedure Create_Guard_Signal (Idx : Signal_Index_Type)
+   procedure Create_Guard_Signal (E : Signal_Entry)
    is
-      E : Signal_Entry renames Signals_Table.Table (Idx);
-
       Dep_List : Iir_List;
       Dep_It : List_Iterator;
       S : Ghdl_Signal_Ptr;
@@ -3177,15 +3347,13 @@ package body Simul.Vhdl_Simul is
       return (S.Typ, To_Memory_Ptr (S));
    end To_Memtyp;
 
-   procedure Create_Signal (Idx : Signal_Index_Type)
+   procedure Create_Signal (E : Signal_Entry)
    is
-      E : Signal_Entry renames Signals_Table.Table (Idx);
       S : Ghdl_Signal_Ptr;
    begin
-      E.Sig := Alloc_Signal_Memory (E.Typ, Global_Pool'Access);
       case E.Kind is
          when Signal_Guard =>
-            Create_Guard_Signal (Idx);
+            Create_Guard_Signal (E);
          when Signal_Quiet =>
             S := Grt.Signals.Ghdl_Create_Quiet_Signal
               (To_Ghdl_Value_Ptr (To_Address (E.Val)), E.Time);
@@ -3209,7 +3377,7 @@ package body Simul.Vhdl_Simul is
               (To_Ghdl_Value_Ptr (To_Address (E.Val)));
             Write_Sig (E.Sig, S);
          when Signal_User =>
-            Create_User_Signal (Signals_Table.Table (Idx));
+            Create_User_Signal (E);
          when Signal_None =>
             raise Internal_Error;
       end case;
@@ -3223,10 +3391,12 @@ package body Simul.Vhdl_Simul is
          begin
             pragma Assert (E.Sig = null);
             if E.Collapsed_By /= No_Signal_Index then
-               E.Sig := Signals_Table.Table (E.Collapsed_By).Sig;
+               E.Sig := Sig_Index (Signals_Table.Table (E.Collapsed_By).Sig,
+                                   E.Collapsed_Offs.Net_Off);
                --  E.Val will be assigned in Collapse_Signals.
             else
-               Create_Signal (I);
+               E.Sig := Alloc_Signal_Memory (E.Typ, Global_Pool'Access);
+               Create_Signal (E);
             end if;
          end;
       end loop;
@@ -3319,24 +3489,27 @@ package body Simul.Vhdl_Simul is
    procedure Collapse_Signal (E : in out Signal_Entry)
    is
       Ec : Signal_Entry renames Signals_Table.Table (E.Collapsed_By);
+      Nsig : constant Memory_Ptr :=
+        Sig_Index (Ec.Sig, E.Collapsed_Offs.Net_Off);
+      Nval : constant Memory_Ptr := Ec.Val + E.Collapsed_Offs.Mem_Off;
    begin
       if Get_Mode (E.Decl) in Iir_Out_Modes then
          --  As an out connection creates a source, if a signal is
          --  collapsed and has no source, an extra source needs to be
          --  created.
          Add_Extra_Driver_To_Signal
-           (Ec.Sig, E.Typ, E.Val, 0, E.Nbr_Sources.all);
+           (Nsig, E.Typ, E.Val_Init, 0, E.Nbr_Sources.all);
 
          --  The signal value is the value of the collapsed signal.
          --  Keep default value.
-         Copy_Memory (Ec.Val, E.Val, E.Typ.Sz);
+         Copy_Memory (Nval, E.Val_Init, E.Typ.Sz);
          Exec_Write_Signal
-           (Ec.Sig, (E.Typ, E.Val), Write_Signal_Driving_Value);
+           (Nsig, (E.Typ, E.Val_Init), Write_Signal_Driving_Value);
       end if;
 
-      E.Val := Ec.Val;
+      E.Val := Nval;
       --  Already done for simulation but not for compilation.
-      E.Sig := Ec.Sig;
+      E.Sig := Nsig;
    end Collapse_Signal;
 
    procedure Collapse_Signals is
@@ -3902,9 +4075,10 @@ package body Simul.Vhdl_Simul is
                --  Allocate the reference quantity.
                T.Ref_Idx := Scalar_Quantities_Table.Last + 1;
                Scalar_Quantities_Table.Append
-                 ((Idx => Nbr_Solver_Variables,
+                 ((Y_Idx => Nbr_Solver_Variables,
                    Deriv => No_Scalar_Quantity,
-                   Integ => No_Scalar_Quantity));
+                   Integ => No_Scalar_Quantity,
+                   Tag => No_Augmentation_Index));
 
                Nbr_Solver_Variables :=
                  Nbr_Solver_Variables + Natural (T.Across_Typ.W);
@@ -3912,6 +4086,40 @@ package body Simul.Vhdl_Simul is
          end;
       end loop;
    end Create_Terminals;
+
+   procedure Print_Csv_Name (Name : Node)
+   is
+      use Simul.Main;
+      use Grt.Astdio;
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kind_Free_Quantity_Declaration
+            | Iir_Kind_Across_Quantity_Declaration
+            | Iir_Kind_Through_Quantity_Declaration =>
+            Put (Csv_File,
+                 Name_Table.Image (Get_Identifier (Name)));
+         when Iir_Kind_Simple_Name =>
+            Print_Csv_Name (Get_Named_Entity (Name));
+         when Iir_Kind_Dot_Attribute =>
+            Print_Csv_Name (Get_Prefix (Name));
+            Put (Csv_File, "'dot");
+         when others =>
+            Vhdl.Errors.Error_Kind ("print_csv_name", Name);
+      end case;
+   end Print_Csv_Name;
+
+   procedure Print_Csv_Header
+   is
+      use Grt.Astdio;
+      use Simul.Main;
+   begin
+      Put (Csv_File, "Time");
+      for I in Quantity_Table.First .. Quantity_Table.Last loop
+         Put (Csv_File, ',');
+         Print_Csv_Name (Quantity_Table.Table (I).Decl);
+      end loop;
+      New_Line (Csv_File);
+   end Print_Csv_Header;
 
    --  Compute solver variables, allocate memory for quantities.
    procedure Create_Quantities
@@ -3927,6 +4135,8 @@ package body Simul.Vhdl_Simul is
             Q : Quantity_Entry renames Quantity_Table.Table (I);
             Def : Node;
             Pfx_Info : Target_Info;
+            Mark : Mark_Type;
+            Ival : Valtyp;
          begin
             case Get_Kind (Q.Decl) is
                when Iir_Kind_Free_Quantity_Declaration
@@ -3940,19 +4150,24 @@ package body Simul.Vhdl_Simul is
                   Idx := Num;
                   Num := Num + Natural (Q.Typ.W);
 
-                  Q.Idx := Scalar_Quantities_Table.Last + 1;
+                  Q.Sq_Idx := Scalar_Quantities_Table.Last + 1;
                   Scalar_Quantities_Table.Append
-                    ((Idx => Idx,
+                    ((Y_Idx => Idx,
                       Deriv => No_Scalar_Quantity,
-                      Integ => No_Scalar_Quantity));
+                      Integ => No_Scalar_Quantity,
+                      Tag => No_Augmentation_Index));
+
+                  Q.Val := Alloc_Memory (Q.Typ, Global_Pool'Access);
 
                   Def := Get_Default_Value (Q.Decl);
                   if Def /= Null_Node then
-                     --  TODO
-                     raise Internal_Error;
+                     Mark_Expr_Pool (Mark);
+                     Ival := Synth.Vhdl_Expr.Synth_Expression (Q.Inst, Def);
+                     Write_Fp64 (Q.Val, Read_Fp64 (Ival.Val.Mem));
+                     Release_Expr_Pool (Mark);
+                  else
+                     Write_Fp64 (Q.Val, 0.0);
                   end if;
-                  Q.Val := Alloc_Memory (Q.Typ, Global_Pool'Access);
-                  Write_Fp64 (Q.Val, 0.0);
 
                   --  TODO:
                   --  For through quantities, add contribution to terminals.
@@ -3967,25 +4182,28 @@ package body Simul.Vhdl_Simul is
                   pragma Assert (Pfx_Info.Targ_Type.Kind = Type_Float);
                   declare
                      Pfx : constant Scalar_Quantity_Index :=
-                       Quantity_Table.Table (Pfx_Info.Obj.Val.Q).Idx;
+                       Quantity_Table.Table (Pfx_Info.Obj.Val.Q).Sq_Idx;
                      Pfx_Ent : Scalar_Quantity_Record renames
                        Scalar_Quantities_Table.Table (Pfx);
                   begin
                      if Pfx_Ent.Deriv /= No_Scalar_Quantity then
                         --  There is already a 'Dot, reuse it and done.
-                        Q.Idx := Pfx_Ent.Deriv;
+                        Q.Sq_Idx := Pfx_Ent.Deriv;
                      else
                         --  Create a 'Dot.
                         Pfx_Ent.Deriv := Scalar_Quantities_Table.Last + 1;
-                        Q.Idx := Pfx_Ent.Deriv;
+                        Q.Sq_Idx := Pfx_Ent.Deriv;
                         Scalar_Quantities_Table.Append
-                          ((Idx => Num,
+                          ((Y_Idx => Num,
                             Deriv => No_Scalar_Quantity,
-                            Integ => Pfx));
+                            Integ => Pfx,
+                            Tag => Augmentations_Set.Last + 1));
                         Num := Num + 1;
 
-                        Augmentations_Set.Append
-                          ((Kind => Aug_Dot, Q => Q.Idx));
+                        Augmentations_Set.Append ((Kind => Aug_Dot,
+                                                   Selected => False,
+                                                   Sq_Idx => Q.Sq_Idx,
+                                                   Val => 0.0));
                      end if;
 
                      Q.Val := Alloc_Memory (Q.Typ, Global_Pool'Access);
@@ -3996,6 +4214,49 @@ package body Simul.Vhdl_Simul is
                   Vhdl.Errors.Error_Kind ("create_quantities", Q.Decl);
             end case;
          end;
+      end loop;
+
+      for I in Signals_Table.First .. Signals_Table.Last loop
+         if Signals_Table.Table (I).Kind = Signal_Above then
+            declare
+               Inst : constant Synth_Instance_Acc :=
+                 Signals_Table.Table (I).Inst;
+               Attr : constant Node := Signals_Table.Table (I).Decl;
+               Expr : constant Node := Get_Parameter (Attr);
+               Mark : Mark_Type;
+               Quan_Base : Valtyp;
+               Sq_Idx : Scalar_Quantity_Index;
+               Sig : Ghdl_Signal_Ptr;
+               Typ : Type_Acc;
+               Off : Value_Offsets;
+               V : Valtyp;
+               Mem : Memory_Ptr;
+            begin
+               Mark_Expr_Pool (Mark);
+
+               Synth_Assignment_Prefix
+                 (Inst, Get_Prefix (Attr), Quan_Base, Typ, Off);
+
+               Sq_Idx := Quantity_Table.Table (Quan_Base.Val.Q).Sq_Idx
+                 + Scalar_Quantity_Index (Off.Net_Off);
+               Sig := Read_Sig (Signals_Table.Table (I).Sig);
+               Above_Table.Append ((Sq_Idx => Sq_Idx,
+                                    Sig => Sig,
+                                    Expr => Get_Parameter (Attr),
+                                    Inst => Inst));
+
+               V := Synth.Vhdl_Expr.Synth_Expression (Inst, Expr);
+               --  LRM 1076.1-2017 14.7.5.2 Initialization
+               --  The value of each implicit signal of the form Q'Above(E) is
+               --  set to the value of the boolean expression Q > E.
+               Mem := Quantity_Table.Table (Quan_Base.Val.Q).Val + Off.Mem_Off;
+               if Read_Fp64 (Mem) > Read_Fp64 (V) then
+                  Ghdl_Signal_Init_B1 (Sig, True);
+                  Sig.Value_Ptr.B1 := True;
+               end if;
+               Release_Expr_Pool (Mark);
+            end;
+         end if;
       end loop;
 
       --  TODO: also for the reference quantity of terminals.
@@ -4010,63 +4271,39 @@ package body Simul.Vhdl_Simul is
       --  AMS simulation.
       Grt.Processes.Flag_AMS := True;
 
-      --
-      --  For 'Dot:
-      --  * if the prefix is a quantity, use its corresponding prime.
-      --  * if the prefix is 'Dot, create an intermediate variable.
+      --  Create the solver.
+      if Grt.Sundials.Create (Ghdl_I32 (Num), Ghdl_I32 (Above_Table.Last)) < 0
+      then
+         Grt.Errors.Internal_Error ("sundials initialization failure");
+      end if;
 
-      --  Initialize solver.
-      Grt.Analog_Solver.Init (Ghdl_I32 (Num));
-
-      Grt.Analog_Solver.Set_Max_Step (Grt.Options.Step_Limit);
+      Grt.Sundials.Set_Max_Step (Grt.Options.Step_Limit);
 
       --  LRM 1076.1-2007 12.6.4 Simulation cycle
       --  The value of each implicit quantity of the form ... Q'Dot ... is
       --  set to 0.0
-      Vec := Grt.Analog_Solver.Get_Init_Der_Ptr;
+      Vec := Grt.Sundials.Get_Yp_Vec;
       for I in 0 .. Num - 1 loop
          Vec (I) := 0.0;
       end loop;
 
       --  Set initial values.
-      Vec := Grt.Analog_Solver.Get_Init_Val_Ptr;
+      Vec := Grt.Sundials.Get_Yy_Vec;
       for I in Quantity_Table.First .. Quantity_Table.Last loop
          declare
             Q : Quantity_Entry renames Quantity_Table.Table (I);
             Idx : Integer;
          begin
             pragma Assert (Q.Typ.Kind = Type_Float); --  TODO
-            Idx := Scalar_Quantities_Table.Table (Q.Idx).Idx;
+            Idx := Scalar_Quantities_Table.Table (Q.Sq_Idx).Y_Idx;
             if Idx >= 0 then
                Vec (Idx) := Ghdl_F64 (Read_Fp64 (Q.Val));
             end if;
          end;
       end loop;
 
-      if Trace_Quantities then
-         declare
-            use Simple_IO;
-         begin
-            Put ("Time");
-            for I in Quantity_Table.First .. Quantity_Table.Last loop
-               declare
-                  Decl : constant Node := Quantity_Table.Table (I).Decl;
-               begin
-                  Put (',');
-                  case Get_Kind (Decl) is
-                     when Iir_Kind_Free_Quantity_Declaration
-                       | Iir_Kind_Across_Quantity_Declaration
-                       | Iir_Kind_Through_Quantity_Declaration =>
-                        Put (Name_Table.Image (Get_Identifier (Decl)));
-                     when Iir_Kind_Dot_Attribute =>
-                        Put ("dot");
-                     when others =>
-                        Vhdl.Errors.Error_Kind ("create_quantities", Decl);
-                  end case;
-               end;
-            end loop;
-            New_Line;
-         end;
+      if Simul.Main.Csv_Filename /= null then
+         Print_Csv_Header;
       end if;
    end Create_Quantities;
 
@@ -4138,7 +4375,7 @@ package body Simul.Vhdl_Simul is
       end if;
    end Exec_Finish;
 
-   procedure Set_Quantities_Values (Y : F64_C_Arr_Ptr; Yp: F64_C_Arr_Ptr)
+   procedure Set_Quantities_Values (Y : F64_C_Arr_Ptr; Yp : F64_C_Arr_Ptr)
    is
       pragma Unreferenced (Yp);
    begin
@@ -4148,47 +4385,148 @@ package body Simul.Vhdl_Simul is
             Idx : Natural;
          begin
             pragma Assert (Q.Typ.Kind = Type_Float);
-            Idx := Scalar_Quantities_Table.Table (Q.Idx).Idx;
+            Idx := Scalar_Quantities_Table.Table (Q.Sq_Idx).Y_Idx;
             Write_Fp64 (Q.Val, Fp64 (Y (Idx)));
          end;
       end loop;
    end Set_Quantities_Values;
 
-   procedure Set_Solver_Values (Y : F64_C_Arr_Ptr; Yp: F64_C_Arr_Ptr) is
+   procedure Print_Csv_Values (T : Ghdl_F64) is
    begin
-      Set_Quantities_Values (Y, Yp);
-
       --  Display values
-      if Trace_Quantities then
+      if Simul.Main.Csv_Filename /= null then
          declare
-            use Simple_IO;
-            use Utils_IO;
+            use Simul.Main;
+            use Grt.Astdio;
          begin
-            Put_Fp64 (Fp64 (Current_Time_AMS));
+            Put_F64 (Csv_File, T);
             for I in Quantity_Table.First .. Quantity_Table.Last loop
                declare
                   Q : Quantity_Entry renames Quantity_Table.Table (I);
                begin
-                  Put (',');
-                  Put_Fp64 (Read_Fp64 (Q.Val));
+                  Put (Csv_File, ',');
+                  Put_F64 (Csv_File, Ghdl_F64 (Read_Fp64 (Q.Val)));
                end;
             end loop;
-            New_Line;
+            New_Line (Csv_File);
          end;
       end if;
-   end Set_Solver_Values;
+   end Print_Csv_Values;
+
+   --  Residues function called by Sundials.
+   --  Return the differences of characteristic equations.
+   procedure Residues (T : Ghdl_F64;
+                       Y : F64_C_Arr_Ptr;
+                       Yp : F64_C_Arr_Ptr;
+                       Res : F64_C_Arr_Ptr);
+   pragma Export (C, Residues, "grt__analog_solver__residues");
+
+   procedure Residues_Time (A : Augmentation_Entry;
+                            Num : Natural;
+                            Res : F64_C_Arr_Ptr;
+                            Y : F64_C_Arr_Ptr;
+                            Yp : F64_C_Arr_Ptr) is
+   begin
+      case A.Kind is
+         when Aug_Dot =>
+            declare
+               Q : Scalar_Quantity_Record renames
+                 Scalar_Quantities_Table.Table (A.Sq_Idx);
+               pragma Assert (Q.Integ /= No_Scalar_Quantity);
+               Qi : Scalar_Quantity_Record renames
+                 Scalar_Quantities_Table.Table (Q.Integ);
+            begin
+               --  The value is equal to the derivative of its integral.
+               Res (Num) := Y (Q.Y_Idx) - Yp (Qi.Y_Idx);
+
+               if Trace_Residues then
+                  declare
+                     use Simple_IO;
+                     use Utils_IO;
+                  begin
+                     Put ("Der #");
+                     Put_Uns32 (Uns32 (Num));
+                     Put (" Y=");
+                     Put_Fp64 (Fp64 (Y (Q.Y_Idx)));
+                     Put (", Yp=");
+                     Put_Fp64 (Fp64 (Yp (Qi.Y_Idx)));
+                     Put (", r=");
+                     Put_Fp64 (Fp64 (Res (Num)));
+                     New_Line;
+                  end;
+               end if;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Residues_Time;
+
+   function Get_Y_Idx (Sq : Scalar_Quantity_Index) return Natural is
+   begin
+      return Scalar_Quantities_Table.Table (Sq).Y_Idx;
+   end Get_Y_Idx;
+
+   procedure Residues_Discontinuity (A : Augmentation_Entry;
+                                     Num : Natural;
+                                     Res : F64_C_Arr_Ptr;
+                                     Y : F64_C_Arr_Ptr;
+                                     Yp : F64_C_Arr_Ptr)
+   is
+      pragma Unreferenced (Yp);
+   begin
+      case A.Kind is
+         when Aug_Dot =>
+            declare
+               Q : Scalar_Quantity_Record renames
+                 Scalar_Quantities_Table.Table (A.Sq_Idx);
+               Y_Idx : constant Natural := Get_Y_Idx (Q.Integ);
+            begin
+               --  LRM 1076.1-2017 14.7.6.4 Discontinuity augmentation set
+               --  The difference between each scakar subelement of the
+               --  prefix Q of each quantity of the form Q'Dot and the numeric
+               --  value of that scalar subelement of Q when the discontinuity
+               --  augmentation set is determined is a characteristic
+               --  exression of the discontinuity augmentation set.
+               Res (Num) := Y (Y_Idx) - Ghdl_F64 (A.Val);
+
+               if Trace_Residues then
+                  declare
+                     use Simple_IO;
+                     use Utils_IO;
+                  begin
+                     Put ("Der");
+                     Put_Uns32 (Uns32 (Num));
+                     Put (" Y=");
+                     Put_Fp64 (Fp64 (Y (Y_Idx)));
+                     Put (", Old=");
+                     Put_Fp64 (A.Val);
+                     Put (", r=");
+                     Put_Fp64 (Fp64 (Res (Num)));
+                     New_Line;
+                  end;
+               end if;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Residues_Discontinuity;
 
    procedure Residues (T : Ghdl_F64;
                        Y : F64_C_Arr_Ptr;
                        Yp : F64_C_Arr_Ptr;
                        Res : F64_C_Arr_Ptr)
    is
+      Domain : constant Ghdl_E8 := Grt.Processes.Domain_Sig.Value_Ptr.E8;
+      Marker : Mark_Type;
       Num : Natural;
       L, R : Valtyp;
       Prev_Time : Ghdl_F64;
    begin
+      Mark_Expr_Pool (Marker);
+
       Set_Quantities_Values (Y, Yp);
 
+      --  In case of function calls.
       Instance_Pool := Process_Pool'Access;
 
       --  Apply time.
@@ -4247,7 +4585,7 @@ package body Simul.Vhdl_Simul is
                         Put_Fp64 (Lv);
                         Put (", R=");
                         Put_Fp64 (Rv);
-                        Put (", d=");
+                        Put (", r=");
                         Put_Fp64 (Lv - Rv);
                         New_Line;
                      end;
@@ -4260,61 +4598,450 @@ package body Simul.Vhdl_Simul is
          end;
       end loop;
 
-      for I in Augmentations_Set.First .. Augmentations_Set.Last loop
-         declare
-            A : Augmentation_Entry renames Augmentations_Set.Table (I);
-         begin
-            case A.Kind is
-               when Aug_Dot =>
-                  declare
-                     Q : Scalar_Quantity_Record renames
-                       Scalar_Quantities_Table.Table (A.Q);
-                     pragma Assert (Q.Integ /= No_Scalar_Quantity);
-                     Qi : Scalar_Quantity_Record renames
-                       Scalar_Quantities_Table.Table (Q.Integ);
-                  begin
-                     Res (Num) := Y (Q.Idx) - Yp (Qi.Idx);
+      --  TODO: apply break set, apply discontinuity set.
+      if Grt.Processes.Break_Flag then
+         --  b) If the value of the predefined DOMAIN signal is TIME_DOMAIN,
+         --     the discontinuity augmentation set is determined.
+         if Domain = Grt.Processes.Time_Domain then
+            for I in Augmentations_Set.First .. Augmentations_Set.Last loop
+               declare
+                  A : Augmentation_Entry renames Augmentations_Set.Table (I);
+               begin
+                  if not A.Selected then
+                     Residues_Discontinuity (A, Num, Res, Y, Yp);
+
                      Num := Num + 1;
+                  end if;
+               end;
+            end loop;
+         end if;
+
+         --  c) The break set is applied to the current augmentation set.
+         for I in Break_Set.First .. Break_Set.Last loop
+            declare
+               B : Break_Entry renames Break_Set.Table (I);
+               Y_Idx : constant Natural :=
+                 Scalar_Quantities_Table.Table (B.Sq_Idx).Y_Idx;
+            begin
+               Res (Num) := Y (Y_Idx) - Ghdl_F64 (B.Val);
+
+               if Trace_Residues then
+                  declare
+                     use Simple_IO;
+                     use Utils_IO;
+                  begin
+                     Put ("Brk #");
+                     Put_Uns32 (Uns32 (Num));
+                     Put (": Y");
+                     Put_Uns32 (Uns32 (Y_Idx));
+                     Put ("=");
+                     Put_Fp64 (B.Val);
+                     Put (", r=");
+                     Put_Fp64 (Fp64 (Res (Num)));
+                     New_Line;
                   end;
-               when others =>
-                  raise Internal_Error;
-            end case;
-         end;
-      end loop;
+               end if;
+
+               Num := Num + 1;
+            end;
+         end loop;
+      else
+         for I in Augmentations_Set.First .. Augmentations_Set.Last loop
+            declare
+               A : Augmentation_Entry renames Augmentations_Set.Table (I);
+            begin
+               case Domain is
+                  when Grt.Processes.Time_Domain =>
+                     Residues_Time (A, Num, Res, Y, Yp);
+
+                     Num := Num + 1;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            end;
+         end loop;
+      end if;
 
       pragma Assert (Nbr_Solver_Variables = Num);
+
+      Current_Time_AMS := Prev_Time;
+
+      pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
+      Instance_Pool := null;
+
+      Release_Expr_Pool (Marker);
+   end Residues;
+
+   --  Root finding function for sundials.
+   --  Detect 'Above changes.
+   procedure Roots (T : Ghdl_F64;
+                    Y : F64_C_Arr_Ptr;
+                    Yp: F64_C_Arr_Ptr;
+                    Res : F64_C_Arr_Ptr);
+   pragma Export (C, Roots, "grt__analog_solver__roots");
+
+   procedure Roots (T : Ghdl_F64;
+                    Y : F64_C_Arr_Ptr;
+                    Yp: F64_C_Arr_Ptr;
+                    Res : F64_C_Arr_Ptr)
+   is
+      pragma Unreferenced (Yp);
+      Marker : Mark_Type;
+      Val : Valtyp;
+      Q_Val, E_Val : Ghdl_F64;
+   begin
+      --  TODO: write back T, Y and Yp (they may be read by the expression).
+      Mark_Expr_Pool (Marker);
 
       if Trace_Residues then
          declare
             use Simple_IO;
             use Utils_IO;
          begin
-            Put ("Residues at ");
-            Put_Fp64 (Fp64 (Current_Time_AMS));
+            Put ("Zero-cross at ");
+            Put_Fp64 (Fp64 (T));
             New_Line;
-            for I in 0 .. Num -1 loop
-               Put ("Y");
-               Put_Uns32 (Uns32 (I));
-               Put ("=");
-               Put_Fp64 (Fp64 (Y (I)));
-               Put (", Yp(");
-               Put_Uns32 (Uns32 (I));
-               Put (")=");
-               Put_Fp64 (Fp64 (Yp (I)));
-               Put (", R(");
-               Put_Uns32 (Uns32 (I));
-               Put (")=");
-               Put_Fp64 (Fp64 (Res (I)));
-               New_Line;
-            end loop;
          end;
       end if;
 
-      Current_Time_AMS := Prev_Time;
+      for I in Above_Table.First .. Above_Table.Last loop
+         declare
+            Above : Above_Entry renames Above_Table.Table (I);
+            Idx : constant Natural := Integer (I - Above_Table.First);
+         begin
+            Val := Synth.Vhdl_Expr.Synth_Expression (Above.Inst, Above.Expr);
+            E_Val := Ghdl_F64 (Read_Fp64 (Val));
+            Q_Val := Y (Scalar_Quantities_Table.Table (Above.Sq_Idx).Y_Idx);
+            Res (Idx) := Ghdl_F64 (Q_Val - E_Val);
 
-      pragma Assert (Areapools.Is_Empty (Instance_Pool.all));
-      Instance_Pool := null;
-   end Residues;
+            if Trace_Residues then
+               declare
+                  use Simple_IO;
+                  use Utils_IO;
+               begin
+                  Put_Uns32 (Uns32 (Idx));
+                  Put (" Q");
+                  Put ("=");
+                  Put_Fp64 (Fp64 (Q_Val));
+                  Put (", E=");
+                  Put_Fp64 (Fp64 (E_Val));
+                  Put (", Res=");
+                  Put_Fp64 (Fp64 (Res (Idx)));
+                  New_Line;
+               end;
+            end if;
+         end;
+      end loop;
+      Release_Expr_Pool (Marker);
+   end Roots;
+
+   procedure Exec_Complex_Simultaneous (Inst : Synth_Instance_Acc;
+                                        Stmt : Node);
+
+   procedure Exec_Complex_Simultaneous_Chain (Inst : Synth_Instance_Acc;
+                                              Chain : Node)
+   is
+      Stmt : Node;
+   begin
+      Stmt := Chain;
+      while Stmt /= Null_Node loop
+         Exec_Complex_Simultaneous (Inst, Stmt);
+         Stmt := Get_Chain (Stmt);
+      end loop;
+   end Exec_Complex_Simultaneous_Chain;
+
+   procedure Exec_Complex_Simultaneous (Inst : Synth_Instance_Acc;
+                                        Stmt : Node) is
+   begin
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Simultaneous_If_Statement =>
+            declare
+               S : Node;
+            begin
+               S := Stmt;
+               loop
+                  if Execute_Condition (Inst, Get_Condition (S)) then
+                     Exec_Complex_Simultaneous_Chain
+                       (Inst, Get_Simultaneous_Statement_Chain (S));
+                     return;
+                  end if;
+                  S := Get_Else_Clause (S);
+                  exit when S = Null_Node;
+               end loop;
+            end;
+         when Iir_Kind_Simple_Simultaneous_Statement =>
+            Simultaneous_Table.Append ((Stmt => Stmt, Inst => Inst));
+         when others =>
+            Vhdl.Errors.Error_Kind ("exec_complex_simultaneous", Stmt);
+      end case;
+   end Exec_Complex_Simultaneous;
+
+   --  Evaluate complex (ie non-simple) simulatenous statements and append
+   --  all the simple simultaneous statements found.
+   procedure Eval_Complex_Simultaneous is
+   begin
+      Simultaneous_Table.Set_Last (Last_Simple_Simultaneous);
+
+      for I in Complex_Simultaneous_Table.First
+        .. Complex_Simultaneous_Table.Last
+      loop
+         declare
+            S : Simultaneous_Record renames
+              Complex_Simultaneous_Table.Table (I);
+         begin
+            Exec_Complex_Simultaneous (S.Inst, S.Stmt);
+         end;
+      end loop;
+   end Eval_Complex_Simultaneous;
+
+   --  Called by the kernel (grt-processes) to run the analog solver.
+   procedure Solve (T : Ghdl_F64; Tn : in out Ghdl_F64; Res : out Integer);
+   pragma Export (Ada, Solve, "grt__analog_solver__solve");
+
+   procedure Solve (T : Ghdl_F64; Tn : in out Ghdl_F64; Res : out Integer)
+   is
+      use Grt.Analog_Solver;
+      Domain : constant Ghdl_U8 := Grt.Processes.Domain_Sig.Value_Ptr.E8;
+   begin
+      if Trace_Solver then
+         declare
+            use Simple_IO;
+            use Utils_IO;
+         begin
+            Put ("Solve at T=");
+            Put_Fp64 (Fp64 (T));
+            Put (", Tn=");
+            Put_Fp64 (Fp64 (Tn));
+            Put (", Domain=");
+            Put_Uns32 (Uns32 (Domain));
+            Put (", Break_Flag=");
+            Put_Uns32 (Boolean'Pos (Grt.Processes.Break_Flag));
+            New_Line;
+         end;
+      end if;
+
+      Res := Solve_Failure;
+
+      --  IEEE 1076.1-2017 Analog solver
+      --  When the analog solver resumes at time Tc, if the break flag is
+      --  set, the following steps occur:
+      if Grt.Processes.Break_Flag then
+         --  a) The current augmentation set (which may have been modified by
+         --     the application of a break set) is saved.
+         --  GHDL: not sure if it is necessary. It occurs only at Tc=0.0
+
+         --  b) If the value of the predefined DOMAIN signal is TIME_DOMAIN,
+         --     the discontinuity augmentation set is determined.
+         --  GHDL: done while computing residues.
+
+         --  c) The break set is applied to the current augmentation set.
+         --  GHDL: done while computing residues.
+
+         --  d) The analog solver determines an analog solution point.
+         if Trace_Residues then
+            declare
+               use Simple_IO;
+               use Utils_IO;
+            begin
+               Put ("Solve re-init at ");
+               Put_Fp64 (Fp64 (Current_Time_AMS));
+               New_Line;
+            end;
+         end if;
+
+         if Grt.Processes.Break_Flag then
+            declare
+               Y : constant F64_C_Arr_Ptr := Grt.Sundials.Get_Yy_Vec;
+            begin
+               --  Save old value for discontinuity set.
+               for I in Augmentations_Set.First .. Augmentations_Set.Last loop
+                  declare
+                     A : Augmentation_Entry renames
+                       Augmentations_Set.Table (I);
+                     Sq : Scalar_Quantity_Record renames
+                       Scalar_Quantities_Table.Table (A.Sq_Idx);
+                  begin
+                     case A.Kind is
+                        when Aug_Dot =>
+                           A.Val := Fp64 (Y (Get_Y_Idx (Sq.Integ)));
+                        when others =>
+                           raise Internal_Error;
+                     end case;
+                  end;
+               end loop;
+
+               --  Apply break values
+               --  (So that the complex simultaneous statements are correctly
+               --  evaluated).
+               for I in Break_Set.First .. Break_Set.Last loop
+                  declare
+                     B : Break_Entry renames Break_Set.Table (I);
+                     Y_Idx : constant Natural :=
+                       Scalar_Quantities_Table.Table (B.Sq_Idx).Y_Idx;
+                  begin
+                     Y (Y_Idx) := Ghdl_F64 (B.Val);
+                  end;
+               end loop;
+
+               Set_Quantities_Values (Y => Grt.Sundials.Get_Yy_Vec,
+                                      Yp => Grt.Sundials.Get_Yp_Vec);
+            end;
+         end if;
+
+         Eval_Complex_Simultaneous;
+
+         if Grt.Sundials.Solver_Reinit (T) /= 0 then
+            Grt.Errors.Internal_Error ("solver re-init");
+         end if;
+         if Grt.Sundials.Solver_Initial_Conditions
+           (T + Grt.Options.Step_Limit) /= 0
+         then
+            Grt.Errors.Internal_Error ("solver initial conditions");
+         end if;
+
+         Set_Quantities_Values (Y => Grt.Sundials.Get_Yy_Vec,
+                                Yp => Grt.Sundials.Get_Yp_Vec);
+
+         Res := Solve_Ok;
+
+         --  e) The analog solver evaluates the expression in each step limit,
+         --     specification in the model.  It is an error if such expression
+         --     has a non-positive value.
+         --  GHDL: TODO
+
+         --  f) The augmentation set saved in step a) is restored an becomes
+         --     the current augmentation set.
+
+         --  g) The break flag is cleared
+         Grt.Processes.Break_Flag := False;
+         for I in Break_Set.First .. Break_Set.Last loop
+            declare
+               Tag : constant Augmentation_Index := Break_Set.Table (I).Tag;
+            begin
+               Augmentations_Set.Table (Tag).Selected := False;
+            end;
+         end loop;
+         Break_Set.Init;
+
+         --  Next the analog solver resets Tn to Tc
+         Tn := T;
+
+         declare
+            Mark : Mark_Type;
+            Y : constant F64_C_Arr_Ptr := Grt.Sundials.Get_Yy_Vec;
+            Yp : constant F64_C_Arr_Ptr := Grt.Sundials.Get_Yp_Vec;
+         begin
+            Mark_Expr_Pool (Mark);
+
+            for I in Above_Table.First .. Above_Table.Last loop
+               declare
+                  Above : Above_Entry renames Above_Table.Table (I);
+                  Idx : constant Natural :=
+                    Scalar_Quantities_Table.Table (Above.Sq_Idx).Y_Idx;
+                  Val : Valtyp;
+                  Diff : Ghdl_F64;
+                  Res : Ghdl_B1;
+               begin
+                  Val := Synth.Vhdl_Expr.Synth_Expression
+                    (Above.Inst, Above.Expr);
+                  Diff := Y (Idx) - Ghdl_F64 (Read_Fp64 (Val));
+                  if Diff > Grt.Options.Abs_Tol then
+                     Res := True;
+                  elsif Diff < Grt.Options.Abs_Tol then
+                     Res := False;
+                  else
+                     Res := Ghdl_B1 (Yp (Idx) > 0.0);
+                  end if;
+                  Ghdl_Signal_Assign_Above (Above.Sig, Res);
+               end;
+            end loop;
+            Release_Expr_Pool (Mark);
+         end;
+      else
+         if Domain = Grt.Processes.Quiescent_Domain then
+            --  Initial conditions
+            --  1. call SetId
+            --  2. Call CalcIC
+            --  Quiescent
+            Res := Solve_Ok;
+         elsif Domain = 1 then
+            --  Time domain
+            if Tn = T then
+               --  Delta
+               Res := Solve_Ok;
+               return;
+            end if;
+
+            Eval_Complex_Simultaneous;
+
+            Grt.Sundials.Sundials_Solve (T, Tn, Res);
+
+            if Res = Solve_Cross then
+               --  If a zero has been crossed, invert the corresponding 'Above
+               --  signal.
+               declare
+                  Roots : constant Grt.Sundials.I32_C_Arr_Ptr :=
+                     Grt.Sundials.Get_Root_Info;
+               begin
+                  for I in Above_Table.First .. Above_Table.Last loop
+                     if Roots (Natural (I - Above_Table.First)) /= 0 then
+                        declare
+                           Above : Above_Entry renames Above_Table.Table (I);
+                        begin
+                           Ghdl_Signal_Assign_Above
+                             (Above.Sig, not Above.Sig.Value_Ptr.B1);
+                        end;
+                     end if;
+                  end loop;
+               end;
+            end if;
+         else
+            --  Frequency domain
+            raise Internal_Error;
+         end if;
+
+         Set_Quantities_Values (Y => Grt.Sundials.Get_Yy_Vec,
+                                Yp => Grt.Sundials.Get_Yp_Vec);
+      end if;
+
+      Print_Csv_Values (Tn);
+   end Solve;
+
+   --  Called by the simulation kernel (grt-processes) to initialize the
+   --  analog solver.
+   procedure Solver_Initialize;
+   pragma Export (Ada, Solver_Initialize, "grt__analog_solver__initialize");
+
+   procedure Solver_Initialize is
+   begin
+      if Grt.Sundials.Initialize /= 0 then
+         Grt.Errors.Internal_Error ("sundials start");
+      end if;
+      Grt.Sundials.Set_Tolerances_Scalar
+        (Grt.Options.Abs_Tol, Grt.Options.Rel_Tol);
+
+      --  For the initial condition: determines which quantity is algebric
+      --  and which quantity is differential.
+      for I in Scalar_Quantities_Table.First .. Scalar_Quantities_Table.Last
+      loop
+         declare
+            Sq : Scalar_Quantity_Record renames
+              Scalar_Quantities_Table.Table (I);
+         begin
+            if Sq.Deriv /= No_Scalar_Quantity then
+               Grt.Sundials.Solver_Set_Differential_Variable (Sq.Y_Idx);
+            else
+               Grt.Sundials.Solver_Set_Algebric_Variable (Sq.Y_Idx);
+            end if;
+            --  Not really needed: Integ is set, there is a corresponding
+            --  Dot.
+            if Sq.Integ /= No_Scalar_Quantity then
+               Grt.Sundials.Solver_Set_Differential_Variable
+                 (Scalar_Quantities_Table.Table (Sq.Integ).Y_Idx);
+            end if;
+         end;
+      end loop;
+   end Solver_Initialize;
 
    procedure Runtime_Elaborate is
    begin
@@ -4341,6 +5068,19 @@ package body Simul.Vhdl_Simul is
       Collapse_Signals;
 
       pragma Assert (Is_Expr_Pool_Empty);
+
+      if Grt.Processes.Flag_AMS then
+         --  The first signal must be the DOMAIN signal.
+         pragma assert (Signals_Table.Table (Signals_Table.First).Decl
+                          = Vhdl.Std_Package.Domain_Signal);
+         --  Initialize DOMAIN signal.
+         Grt.Processes.Domain_Sig :=
+           Read_Sig (Signals_Table.Table (Signals_Table.First).Sig);
+         Grt.Signals.Ghdl_Signal_Add_Kernel_Driver
+           (Grt.Processes.Domain_Sig, 0);
+
+         Last_Simple_Simultaneous := Simultaneous_Table.Last;
+      end if;
 
       --  Allow Synth_Expression to handle signals.
       --  This is done after elaboration as signals are available only after

@@ -333,7 +333,7 @@ package body Synth.Vhdl_Decls is
    end Synth_Concurrent_Attribute_Specification;
 
    procedure Synth_Concurrent_Package_Declaration
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Top_Level : Boolean)
    is
       Syn_Inst : Synth_Instance_Acc;
    begin
@@ -345,11 +345,14 @@ package body Synth.Vhdl_Decls is
       Syn_Inst := Get_Package_Object (Parent_Inst, Pkg);
       Set_Extra (Syn_Inst, Parent_Inst, No_Sname);
 
-      Synth_Concurrent_Declarations (Syn_Inst, Get_Declaration_Chain (Pkg));
+      Synth_Concurrent_Declarations
+        (Syn_Inst, Get_Declaration_Chain (Pkg), Top_Level);
    end Synth_Concurrent_Package_Declaration;
 
-   procedure Synth_Concurrent_Package_Body
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node)
+   procedure Synth_Concurrent_Package_Body (Parent_Inst : Synth_Instance_Acc;
+                                            Pkg : Node;
+                                            Bod : Node;
+                                            Top_Level : Boolean)
    is
       Pkg_Inst : Synth_Instance_Acc;
    begin
@@ -360,23 +363,25 @@ package body Synth.Vhdl_Decls is
 
       Pkg_Inst := Get_Package_Object (Parent_Inst, Pkg);
 
-      Synth_Concurrent_Declarations (Pkg_Inst, Get_Declaration_Chain (Bod));
+      Synth_Concurrent_Declarations
+        (Pkg_Inst, Get_Declaration_Chain (Bod), Top_Level);
    end Synth_Concurrent_Package_Body;
 
    procedure Synth_Concurrent_Package_Instantiation
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Top_Level : Boolean)
    is
       Bod : constant Node := Get_Instance_Package_Body (Pkg);
       Sub_Inst : Synth_Instance_Acc;
    begin
       Sub_Inst := Get_Package_Object (Parent_Inst, Pkg);
 
-      Synth_Concurrent_Declarations (Sub_Inst, Get_Declaration_Chain (Pkg));
+      Synth_Concurrent_Declarations
+        (Sub_Inst, Get_Declaration_Chain (Pkg), Top_Level);
 
       if Bod /= Null_Node then
          --  Macro expanded package instantiation.
          Synth_Concurrent_Declarations
-           (Sub_Inst, Get_Declaration_Chain (Bod));
+           (Sub_Inst, Get_Declaration_Chain (Bod), Top_Level);
       else
          --  Shared body
          declare
@@ -387,7 +392,7 @@ package body Synth.Vhdl_Decls is
             --  Synth declarations of (optional) body.
             if Uninst_Bod /= Null_Node then
                Synth_Concurrent_Declarations
-                 (Sub_Inst, Get_Declaration_Chain (Uninst_Bod));
+                 (Sub_Inst, Get_Declaration_Chain (Uninst_Bod), Top_Level);
             end if;
          end;
       end if;
@@ -428,7 +433,9 @@ package body Synth.Vhdl_Decls is
               | Iir_Kind_Subtype_Declaration
               | Iir_Kind_Constant_Declaration
               | Iir_Kind_Variable_Declaration
-              | Iir_Kind_File_Declaration =>
+              | Iir_Kind_File_Declaration
+              | Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Body =>
                Elab.Vhdl_Decls.Elab_Declaration
                  (Obj_Inst, Decl, True, Last_Type);
             when Iir_Kind_Function_Declaration
@@ -532,7 +539,8 @@ package body Synth.Vhdl_Decls is
    end Synth_Variable_Declaration;
 
    procedure Synth_Shared_Variable_Declaration (Syn_Inst : Synth_Instance_Acc;
-                                                Decl : Node)
+                                                Decl : Node;
+                                                Top_Level : Boolean)
    is
       Marker : Mark_Type;
       Init : Valtyp;
@@ -541,6 +549,12 @@ package body Synth.Vhdl_Decls is
       Init := Get_Value (Syn_Inst, Decl);
       if Init.Typ.Kind = Type_Protected then
          Error_Msg_Synth (Syn_Inst, Decl, "protected type not supported");
+         Set_Error (Syn_Inst);
+         return;
+      end if;
+      if Top_Level then
+         Error_Msg_Synth
+           (Syn_Inst, Decl, "share variable not allows in top-level packages");
          Set_Error (Syn_Inst);
          return;
       end if;
@@ -604,7 +618,6 @@ package body Synth.Vhdl_Decls is
 
       Vhdl_Stmts.Synth_Assignment_Prefix
         (Syn_Inst, Get_Name (Decl), Base, Typ, Off);
-      Typ := Unshare (Typ, Instance_Pool);
       if Base.Val.Kind = Value_Net then
          --  Object is a net if it is not writable.  Extract the
          --  bits for the alias.
@@ -615,9 +628,15 @@ package body Synth.Vhdl_Decls is
       else
          Res := Create_Value_Alias (Base, Off, Typ, Expr_Pool'Access);
       end if;
-      if Obj_Typ /= null then
+      if Obj_Typ /= null
+        and then Obj_Typ.Kind not in Type_Scalars
+      then
+         --  Reshape composite types
+         --  (but not scalar, as it will suppress the alias of the value is
+         --   constant - humm).
          Res := Synth_Subtype_Conversion (Syn_Inst, Res, Obj_Typ, True, Decl);
       end if;
+      Res.Typ := Unshare (Res.Typ, Instance_Pool);
       Res := Unshare (Res, Instance_Pool);
       Release_Expr_Pool (Marker);
       Create_Object (Syn_Inst, Decl, Res);
@@ -785,9 +804,13 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Suspend_State_Declaration =>
             declare
                Val : Valtyp;
+               Typ : Type_Acc;
             begin
+               --  Use Integer for suspend state.  Just to get a size.
+               Typ := Get_Subtype_Object
+                 (Syn_Inst, Vhdl.Std_Package.Integer_Subtype_Definition);
                Current_Pool := Instance_Pool;
-               Val := Create_Value_Memtyp (Create_Memory_U32 (0));
+               Val := Create_Value_Memtyp (Create_Memory_Zero (Typ));
                Current_Pool := Expr_Pool'Access;
                Create_Object (Syn_Inst, Decl, Val);
             end;
@@ -1001,13 +1024,14 @@ package body Synth.Vhdl_Decls is
    end Finalize_Declarations;
 
    procedure Synth_Concurrent_Declaration (Syn_Inst : Synth_Instance_Acc;
-                                           Decl : Node) is
+                                           Decl : Node;
+                                           Top_Level : Boolean) is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Signal_Declaration =>
             Synth_Signal_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Variable_Declaration =>
-            Synth_Shared_Variable_Declaration (Syn_Inst, Decl);
+            Synth_Shared_Variable_Declaration (Syn_Inst, Decl, Top_Level);
          when Iir_Kind_Constant_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Function_Body
@@ -1031,7 +1055,7 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Attribute_Specification =>
             Synth_Concurrent_Attribute_Specification (Syn_Inst, Decl);
          when Iir_Kind_Package_Instantiation_Declaration =>
-            Synth_Concurrent_Package_Instantiation (Syn_Inst, Decl);
+            Synth_Concurrent_Package_Instantiation (Syn_Inst, Decl, Top_Level);
          when Iir_Kind_Attribute_Implicit_Declaration =>
             --  Error will be printed when the attribute is used.
             null;
@@ -1042,13 +1066,14 @@ package body Synth.Vhdl_Decls is
    end Synth_Concurrent_Declaration;
 
    procedure Synth_Concurrent_Declarations (Syn_Inst : Synth_Instance_Acc;
-                                            Decls : Node)
+                                            Decls : Node;
+                                            Top_Level : Boolean)
    is
       Decl : Node;
    begin
       Decl := Decls;
       while Decl /= Null_Node loop
-         Synth_Concurrent_Declaration (Syn_Inst, Decl);
+         Synth_Concurrent_Declaration (Syn_Inst, Decl, Top_Level);
          Decl := Get_Chain (Decl);
       end loop;
    end Synth_Concurrent_Declarations;

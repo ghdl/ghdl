@@ -470,11 +470,20 @@ package body Vhdl.Sem_Stmts is
       Target_Prefix : Iir;
       Guarded_Target : Tri_State_Type;
       Targ_Obj_Kind : Iir_Kind;
+      Add_Driver : Boolean;
    begin
       Target_Object := Check_Simple_Signal_Target_Object (Target);
       if Target_Object = Null_Iir then
          return;
       end if;
+
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Signal_Force_Assignment_Statement
+           | Iir_Kind_Signal_Release_Assignment_Statement =>
+            Add_Driver := False;
+         when others =>
+            Add_Driver := True;
+      end case;
 
       Target_Prefix := Get_Object_Prefix (Target_Object);
       Targ_Obj_Kind := Get_Kind (Target_Prefix);
@@ -484,16 +493,24 @@ package body Vhdl.Sem_Stmts is
                Error_Msg_Sem
                  (+Target, "%n can't be assigned", +Target_Prefix);
             else
-               Sem_Add_Driver (Target_Object, Stmt);
+               if Add_Driver then
+                  Sem_Add_Driver (Target_Object, Stmt);
+               end if;
             end if;
          when Iir_Kind_Interface_View_Declaration =>
             Check_View_Signal_Target (Target);
-            Sem_Add_Driver (Target_Object, Stmt);
+            if Add_Driver then
+               Sem_Add_Driver (Target_Object, Stmt);
+            end if;
          when Iir_Kind_Signal_Declaration =>
-            Sem_Add_Driver (Target_Object, Stmt);
+            if Add_Driver then
+               Sem_Add_Driver (Target_Object, Stmt);
+            end if;
             Set_Use_Flag (Target_Prefix, True);
          when Iir_Kind_External_Signal_Name =>
-            Sem_Add_Driver (Target_Object, Stmt);
+            if Add_Driver then
+               Sem_Add_Driver (Target_Object, Stmt);
+            end if;
          when Iir_Kind_Guard_Signal_Declaration =>
             Error_Msg_Sem (+Stmt, "implicit GUARD signal cannot be assigned");
             return;
@@ -2546,7 +2563,7 @@ package body Vhdl.Sem_Stmts is
       else
          if not Get_Suspend_Flag (Proc) and then not Get_Stop_Flag (Proc) then
             Warning_Msg_Sem
-              (Warnid_No_Wait, +Proc,
+              (Warnid_Missing_Wait, +Proc,
                "infinite loop for this process without a wait statement");
          end if;
       end if;

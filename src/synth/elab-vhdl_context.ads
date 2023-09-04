@@ -139,10 +139,16 @@ package Elab.Vhdl_Context is
    procedure Create_Component_Instance (Syn_Inst : Synth_Instance_Acc;
                                         Sub_Inst : Synth_Instance_Acc);
 
+   --  Create an instance for a package.
    procedure Create_Package_Object (Syn_Inst : Synth_Instance_Acc;
                                     Decl : Node;
                                     Inst : Synth_Instance_Acc;
                                     Is_Global : Boolean);
+
+   --  Mark the instance for the package as null.
+   --  This is the way to mark the package unused.
+   --  Only for a root package.
+   procedure Clear_Package_Object (Syn_Inst : Synth_Instance_Acc; Decl : Node);
 
    function Create_Package_Instance (Parent_Inst : Synth_Instance_Acc;
                                      Pkg : Node)

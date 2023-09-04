@@ -25,6 +25,7 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 
 with Simul.Vhdl_Elab; use Simul.Vhdl_Elab;
 
@@ -37,6 +38,8 @@ package Simul.Vhdl_Simul is
 
    --  If True, display quantities after each step.
    Trace_Quantities : Boolean := False;
+
+   Trace_Solver : Boolean := False;
 
    type Process_Kind is (Kind_Process, Kind_PSL);
 
@@ -74,12 +77,12 @@ package Simul.Vhdl_Simul is
    type Process_State_Array_Acc is access Process_State_Array;
 
    --  Array containing all processes.
-   Processes_State: Process_State_Array_Acc;
+   Processes_State : Process_State_Array_Acc;
 
-   Current_Process: Process_State_Acc;
+   Current_Process : Process_State_Acc;
 
    -- If true, disp current time in assert message.
-   Disp_Time_Before_Values: Boolean := False;
+   Disp_Time_Before_Values : Boolean := False;
 
    procedure Simulation;
 
@@ -92,21 +95,30 @@ package Simul.Vhdl_Simul is
    Sig_Size : constant Size_Type := Ghdl_Signal_Ptr'Size / 8;
 
    procedure Write_Sig (Mem : Memory_Ptr; Val : Ghdl_Signal_Ptr);
-   procedure Create_User_Signal (E : Signal_Entry);
+   procedure Create_Signal (E : Signal_Entry);
    procedure Collapse_Signal (E : in out Signal_Entry);
    procedure Create_Process_Drivers (Proc : Process_Index_Type);
    procedure Register_Sensitivity (Proc_Idx : Process_Index_Type);
+   procedure Add_Source (Typ : Type_Acc; Sig : Memory_Ptr; Val : Memory_Ptr);
    procedure Create_Connects;
+   procedure Create_Disconnections;
 
    --  Tables visible to the debugger.
 
+   type Augmentation_Index is new Uns32;
+   No_Augmentation_Index : constant Augmentation_Index := 0;
+
    type Scalar_Quantity_Record is record
       --  Index in Y or Yp vector.
-      Idx : Integer;
+      Y_Idx : Integer;
       --  If there is a 'Dot, the corresponding entry.
       Deriv : Scalar_Quantity_Index;
       --  If there is a 'Integ, the corresponding entry.
       Integ : Scalar_Quantity_Index;
+      --  Tag (Only for source, 'Dot, 'Integ quantities)
+      --  TODO: use continuous indexes for those quantities and remove this
+      --   Tag.
+      Tag : Augmentation_Index;
    end record;
 
    package Scalar_Quantities_Table is new Tables
@@ -142,16 +154,49 @@ package Simul.Vhdl_Simul is
 
    pragma Unreferenced (Aug_Spectrum, Aug_Integ, Aug_Delayed);
 
-   type Augmentation_Entry (Kind : Augmentation_Kind := Aug_Noise) is record
-      Q : Scalar_Quantity_Index;
+   type Augmentation_Entry is record
+      Kind : Augmentation_Kind;
+      --  If True, selected in the break set.
+      Selected : Boolean;
+      --  The scalar quantity representing the derivative or the integral.
+      Sq_Idx : Scalar_Quantity_Index;
+      Val : Fp64;
    end record;
 
    package Augmentations_Set is new Tables
      (Table_Component_Type => Augmentation_Entry,
-      Table_Index_Type => Natural,
+      Table_Index_Type => Augmentation_Index,
       Table_Low_Bound => 1,
       Table_Initial => 64);
 
    Nbr_Solver_Variables : Natural := 0;
 
+   type Break_Entry is record
+      --  The scalar quantity to be assigned.
+      Sq_Idx : Scalar_Quantity_Index;
+      --  The corresponding characteristic equation (either for Q'Dot or for
+      --  Q'Integ).
+      Tag : Augmentation_Index;
+      --  The value to be assigned.
+      Val : Fp64;
+   end record;
+
+   package Break_Set is new Tables
+     (Table_Component_Type => Break_Entry,
+      Table_Index_Type => Uns32,
+      Table_Low_Bound => 1,
+      Table_Initial => 32);
+
+   type Above_Entry is record
+      Sq_Idx : Scalar_Quantity_Index;
+      Sig : Ghdl_Signal_Ptr;
+      Expr : Iir;
+      Inst : Synth_Instance_Acc;
+   end record;
+
+   package Above_Table is new Tables
+     (Table_Component_Type => Above_Entry,
+      Table_Index_Type => Uns32,
+      Table_Low_Bound => 1,
+      Table_Initial => 32);
 end Simul.Vhdl_Simul;

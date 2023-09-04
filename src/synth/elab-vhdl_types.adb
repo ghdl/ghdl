@@ -41,8 +41,14 @@ package body Elab.Vhdl_Types is
       Atype : Node) return Type_Acc;
 
    function Elab_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;
-                                     Atype : Node;
-                                     Is_Ref : Boolean) return Type_Acc;
+                                     Atype : Node) return Type_Acc;
+
+   --  Return true if a subtype indication needs to be elaborated (because
+   --  it defines its own subtype definition).
+   function Need_Elab_Subtype_Indication (Atype : Node) return Boolean is
+   begin
+      return Get_Kind (Atype) in Iir_Kinds_Subtype_Definition;
+   end Need_Elab_Subtype_Indication;
 
    function Synth_Discrete_Range_Expression
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type
@@ -81,12 +87,35 @@ package body Elab.Vhdl_Types is
    function Synth_Float_Range_Expression
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Float_Range_Type
    is
+      Dir : constant Direction_Type := Get_Direction (Rng);
       L, R : Valtyp;
+      Lv, Rv : Fp64;
    begin
       --  Static values (so no enable).
       L := Synth_Expression (Syn_Inst, Get_Left_Limit (Rng));
+      if L = No_Valtyp then
+         case Dir is
+            when Dir_To =>
+               Lv := Fp64'First;
+            when Dir_Downto =>
+               Lv := Fp64'Last;
+         end case;
+      else
+         Lv := Read_Fp64 (L);
+      end if;
+
       R := Synth_Expression (Syn_Inst, Get_Right_Limit (Rng));
-      return (Get_Direction (Rng), Read_Fp64 (L), Read_Fp64 (R));
+      if R = No_Valtyp then
+         case Dir is
+            when Dir_To =>
+               Rv := Fp64'Last;
+            when Dir_Downto =>
+               Rv := Fp64'First;
+         end case;
+      else
+         Rv := Read_Fp64 (R);
+      end if;
+      return (Dir, Lv, Rv);
    end Synth_Float_Range_Expression;
 
    --  Return the type of the prefix for an array attribute.
@@ -250,7 +279,11 @@ package body Elab.Vhdl_Types is
       Idx_Typ : Type_Acc;
       Typ : Type_Acc;
    begin
-      El_Typ := Elab_Subtype_Indication (Syn_Inst, El_St, False);
+      if Need_Elab_Subtype_Indication (El_St) then
+         El_Typ := Elab_Subtype_Indication (Syn_Inst, El_St);
+      else
+         El_Typ := Get_Elaborated_Subtype_Indication (Syn_Inst, El_St);
+      end if;
 
       if El_Typ.Kind in Type_Nets and then Ndims = 1 then
          --  An array of nets is a vector.
@@ -341,7 +374,7 @@ package body Elab.Vhdl_Types is
          Des_Typ := Synth_Subtype_Indication_If_Anonymous (Syn_Inst, Des_Type);
       end if;
 
-      Typ := Create_Access_Type (Des_Typ);
+      Typ := Create_Access_Type (null, Des_Typ);
       return Typ;
    end Synth_Access_Type_Definition;
 
@@ -457,8 +490,12 @@ package body Elab.Vhdl_Types is
             Typ := Synth_Record_Type_Definition (Syn_Inst, null, Def);
          when Iir_Kind_Protected_Type_Declaration =>
             Typ := Protected_Type;
+            Create_Subtype_Object (Syn_Inst, Def, Typ);
             Elab.Vhdl_Decls.Elab_Declarations
               (Syn_Inst, Get_Declaration_Chain (Def));
+
+            --  Do not call create_subtype_object twice.
+            Typ := null;
          when Iir_Kind_Incomplete_Type_Definition =>
             return;
          when others =>
@@ -761,11 +798,13 @@ package body Elab.Vhdl_Types is
             end;
          when Iir_Kind_Access_Subtype_Definition =>
             declare
+               Parent_Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Syn_Inst, Get_Parent_Type (Atype));
                Acc_Typ : Type_Acc;
             begin
                Acc_Typ := Synth_Subtype_Indication
                  (Syn_Inst, Get_Designated_Type (Atype));
-               return Create_Access_Type (Acc_Typ);
+               return Create_Access_Type (Parent_Typ, Acc_Typ);
             end;
          when Iir_Kind_File_Subtype_Definition =>
             --  Same as parent.
@@ -828,27 +867,15 @@ package body Elab.Vhdl_Types is
       end loop;
    end Get_Declaration_Type;
 
-   function Elab_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;
-                                     Atype : Node;
-                                     Is_Ref : Boolean) return Type_Acc
+   function Get_Elaborated_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;
+                                               Atype : Node) return Type_Acc
    is
       Marker : Mark_Type;
-      Typ : Type_Acc;
       Res_Type : Node;
    begin
       case Get_Kind (Atype) is
          when Iir_Kinds_Subtype_Definition =>
-            if not Is_Ref then
-               --  That's a new type.
-               Mark_Expr_Pool (Marker);
-               Typ := Synth_Subtype_Indication (Syn_Inst, Atype);
-               Typ := Unshare (Typ, Instance_Pool);
-               Create_Subtype_Object (Syn_Inst, Atype, Typ);
-               Release_Expr_Pool (Marker);
-               return Typ;
-            else
-               Res_Type := Atype;
-            end if;
+            Res_Type := Atype;
          when Iir_Kinds_Denoting_Name =>
             --  Already elaborated.
             --  We cannot use the object type as it can be a subtype
@@ -890,11 +917,22 @@ package body Elab.Vhdl_Types is
             Error_Kind ("elab_subtype_indication", Atype);
       end case;
 
-      if Get_Kind (Res_Type) = Iir_Kind_Protected_Type_Declaration then
-         return Protected_Type;
-      else
-         return Get_Subtype_Object (Syn_Inst, Res_Type);
-      end if;
+      return Get_Subtype_Object (Syn_Inst, Res_Type);
+   end Get_Elaborated_Subtype_Indication;
+
+   function Elab_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;
+                                     Atype : Node) return Type_Acc
+   is
+      Marker : Mark_Type;
+      Typ : Type_Acc;
+   begin
+      --  That's a new type.
+      Mark_Expr_Pool (Marker);
+      Typ := Synth_Subtype_Indication (Syn_Inst, Atype);
+      Typ := Unshare (Typ, Instance_Pool);
+      Create_Subtype_Object (Syn_Inst, Atype, Typ);
+      Release_Expr_Pool (Marker);
+      return Typ;
    end Elab_Subtype_Indication;
 
    function Elab_Declaration_Type
@@ -910,6 +948,28 @@ package body Elab.Vhdl_Types is
       else
          Is_Ref := Get_Is_Ref (Decl);
       end if;
-      return Elab_Subtype_Indication (Syn_Inst, Atype, Is_Ref);
+      if Is_Ref
+        or else not Need_Elab_Subtype_Indication (Atype)
+      then
+         return Get_Elaborated_Subtype_Indication (Syn_Inst, Atype);
+      else
+         return Elab_Subtype_Indication (Syn_Inst, Atype);
+      end if;
    end Elab_Declaration_Type;
+
+   procedure Elab_Declaration_Type
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+   is
+      Atype : constant Node := Get_Subtype_Indication (Decl);
+      Res : Type_Acc;
+      pragma Unreferenced (Res);
+   begin
+      if Atype = Null_Node then
+         return;
+      end if;
+      if Need_Elab_Subtype_Indication (Atype) then
+         Res := Elab_Subtype_Indication (Syn_Inst, Atype);
+      end if;
+   end Elab_Declaration_Type;
+
 end Elab.Vhdl_Types;

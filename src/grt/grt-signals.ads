@@ -529,7 +529,8 @@ package Grt.Signals is
 
    --  Set the effective value of signal SIG to VAL.
    --  If the value is different from the previous one, resume processes.
-   procedure Set_Effective_Value (Sig : Ghdl_Signal_Ptr; Val : Ghdl_Value_Ptr);
+   procedure Set_Effective_Value (Sig : Ghdl_Signal_Ptr;
+                                  Val : Value_Union);
 
    --  Add PROC in the list of processes to be resumed in case of event on
    --  SIG.
@@ -799,6 +800,14 @@ package Grt.Signals is
    --  has no source.
    procedure Ghdl_Signal_Add_Extra_Driver (Sign : Ghdl_Signal_Ptr;
                                            Val : Value_Union);
+
+   --  Add a driver for the kernel (only for AMS Domain signal).
+   procedure Ghdl_Signal_Add_Kernel_Driver (Sig : Ghdl_Signal_Ptr;
+                                            Init : Ghdl_E8);
+
+   --  Assign a value to a 'Above signal.
+   procedure Ghdl_Signal_Assign_Above (Sig : Ghdl_Signal_Ptr;
+                                       Val : Ghdl_B1);
 
    --  Conversions.  In order to do conversion from A to B, an intermediate
    --  signal T must be created.  The flow is A -> T -> B.

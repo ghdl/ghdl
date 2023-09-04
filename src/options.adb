@@ -69,7 +69,9 @@ package body Options is
       --  TODO: backend
    end Finalize;
 
-   function Option_Warning (Opt: String; Val : Boolean) return Option_State is
+   function Option_Warning (Opt: String; Val : Boolean) return Option_State
+   is
+      Id : Msgid_All_Warnings;
    begin
       --  Handle -Werror and -Wno-error
       if Opt = "error" then
@@ -84,15 +86,16 @@ package body Options is
       if Opt'Length >= 6
         and then Opt (Opt'First .. Opt'First + 5) = "error="
       then
-         for I in Msgid_Warnings loop
-            if Warning_Image (I) = Opt (Opt'First + 6 .. Opt'Last) then
-               Enable_Warning (I, True);
-               Warning_Error (I, Val);
-               return Option_Ok;
-            end if;
-         end loop;
-         Error_Msg_Option ("unknown warning identifier: " & Opt);
-         return Option_Err;
+         Id := Warning_Value (Opt (Opt'First + 6 .. Opt'Last));
+         if Id = Msgid_Warning then
+            Error_Msg_Option ("unknown warning identifier: "
+                                & Opt (Opt'First + 6 .. Opt'Last));
+            return Option_Err;
+         else
+            Enable_Warning (Id, True);
+            Warning_Error (Id, Val);
+            return Option_Ok;
+         end if;
       end if;
 
       -- Handle -Wall
@@ -104,22 +107,15 @@ package body Options is
       end if;
 
       --  Normal warnings.
-      for I in Msgid_Warnings loop
-         if Warning_Image (I) = Opt then
-            Enable_Warning (I, Val);
-            return Option_Ok;
-         end if;
-      end loop;
-
-      --  -Wreserved is an alias for -Wreserved-word.
-      if Opt = "reserved" then
-         Enable_Warning (Warnid_Reserved_Word, Val);
+      Id := Warning_Value (Opt);
+      if Id = Msgid_Warning then
+         --  Unknown warning.
+         Error_Msg_Option ("unknown warning identifier: " & Opt);
+         return Option_Err;
+      else
+         Enable_Warning (Id, Val);
          return Option_Ok;
       end if;
-
-      --  Unknown warning.
-      Error_Msg_Option ("unknown warning identifier: " & Opt);
-      return Option_Err;
    end Option_Warning;
 
    function Parse_Option (Opt : String) return Option_State
@@ -291,7 +287,7 @@ package body Options is
    end Parse_Option;
 
    -- Disp help about these options.
-   procedure Disp_Options_Help
+   procedure Disp_Help_Options
    is
       procedure P (S : String) renames Simple_IO.Put_Line;
    begin
@@ -302,17 +298,7 @@ package body Options is
       P ("  --std=87/93/00/02/08  select vhdl 87/93/00/02/08 standard");
       P ("  --std=93c          select vhdl 93 standard and allow 87 syntax");
       P ("  --[no-]vital-checks  do [not] check VITAL restrictions");
-      P ("Warnings:");
---    P ("  --warn-undriven    disp undriven signals");
-      P ("  -Wbinding          warns for component not bound");
-      P ("  -Wreserved         warns use of 93 reserved words in vhdl87");
-      P ("  -Wlibrary          warns for redefinition of a design unit");
-      P ("  -Wvital-generic    warns of non-vital generic names");
-      P ("  -Wdelayed-checks   warns for checks performed at elaboration");
-      P ("  -Wbody             warns for not necessary package body");
-      P ("  -Wspecs            warns if a all/others spec does not apply");
-      P ("  -Wunused           warns if a subprogram is never used");
-      P ("  -Wsensitivity      warns of incomplete/overspecified sens. lists");
+      P ("  -Wx or --warn-x    enable a warning (see help-warnings");
       P ("  -Wall              enables all warnings.");
       P ("  -Werror            turns warnings into errors");
 --    P ("Simulation option:");
@@ -337,6 +323,116 @@ package body Options is
       if Vhdl.Back_End.Disp_Option /= null then
          Vhdl.Back_End.Disp_Option.all;
       end if;
-   end Disp_Options_Help;
+   end Disp_Help_Options;
 
+   procedure Disp_Help_Warnings
+   is
+      use Simple_IO;
+      procedure P (S : String) renames Put;
+   begin
+      P ("Warnings ('*' means on by default):");
+      New_Line;
+      for I in Msgid_Warnings loop
+         P ("  -W");
+         declare
+            S : constant String := Warning_Image (I);
+         begin
+            P (S);
+            if Is_Warning_Enabled (I) then
+               Put ('*');
+            else
+               Put (' ');
+            end if;
+            P ((S'Length .. 18 => ' '));
+            Put (' ');
+         end;
+
+         case I is
+            when Warnid_Library =>
+               P ("redefinition of a design unit");
+            when Warnid_Deprecated_Option =>
+               P ("option is deprecated");
+            when Warnid_Unexpected_Option =>
+               P ("unexpected place of option in the command line");
+            when Warnid_Missing_Xref =>
+               P ("cross-referenced not found");
+            when Warnid_Default_Binding =>
+               P ("no default binding");
+            when Warnid_Binding =>
+               P ("component not bound");
+            when Warnid_Port =>
+               P ("invalid port association");
+            when Warnid_Reserved_Word =>
+               P ("use of 93 reserved words in vhdl87");
+            when Warnid_Pragma =>
+               P ("incorrect pragma directive");
+            when Warnid_Nested_Comment =>
+               P ("nested comment");
+            when Warnid_Parenthesis =>
+               P ("suspicious parenthesis");
+            when Warnid_Vital_Generic =>
+               P ("non-vital generic names");
+            when Warnid_Delayed_Checks =>
+               P ("checks performed at elaboration");
+            when Warnid_Body =>
+               P ("unnecessary package body");
+            when Warnid_Specs =>
+               P ("an all/others spec does not apply");
+            when Warnid_Universal =>
+               P ("invalid universal integer");
+            when Warnid_Port_Bounds =>
+               P ("mismatch bounds in port association");
+            when Warnid_Runtime_Error =>
+               P ("error at runtime for a construct");
+            when Warnid_Delta_Cycle =>
+               P ("delta cycle in postponed process");
+            when Warnid_Missing_Wait =>
+               P ("infinite loop in process");
+            when Warnid_Shared =>
+               P ("shared variable is not of protected type");
+            when Warnid_Hide =>
+               P ("hidden identifier");
+            when Warnid_Unused =>
+               P ("subprogram is never used");
+            when Warnid_Sensitivity =>
+               P ("missing or extra signals in sensitivity list");
+            when Warnid_Nowrite =>
+               P ("signal not written (in synthesis)");
+            when Warnid_Logic_Loop =>
+               P ("combinatorial loop (in synthesis)");
+            when Warnid_Others =>
+               P ("useless 'others' choice");
+            when Warnid_Pure =>
+               P ("violation of pure rules");
+            when Warnid_Analyze_Assert =>
+               P ("assertion during analysis");
+            when Warnid_Attribute =>
+               P ("incorrect attribute");
+            when Warnid_Useless =>
+               P ("useless construct");
+            when Warnid_Missing_Assoc =>
+               P ("missing association");
+            when Warnid_Conformance =>
+               P ("violation of conformance rules");
+            when Warnid_Unkept_Attribute =>
+               P ("attribute is discarded (in synthesis)");
+            when Warnid_Unhandled_Attribute =>
+               P ("attribute is not handled (in synthesis)");
+            when Warnid_Static =>
+               P ("'others' choice is not static");
+            when Warnid_Elaboration =>
+               P ("warning during elaboration");
+               null;
+         end case;
+         Simple_IO.New_Line;
+      end loop;
+      Put_Line ("Special warning option:");
+      Put_Line ("  -Wall              enables all warnings.");
+      Put_Line ("  --warn-xxx         same as -Wxxx");
+      Put_Line ("  -Wno-xxx           disable warning xxx");
+      Put_Line ("  --warn-no-xxx      same as -Wno-xxx");
+      Put_Line ("  -Werror            turns warnings into errors");
+      Put_Line ("  -Werror=xxx        turn warning xxx into an error");
+      Put_Line ("  -Wno-error=xxx     warning xxx is not an error");
+   end Disp_Help_Warnings;
 end Options;

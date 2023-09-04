@@ -16,9 +16,13 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Types; use Types;
+
 with Grt.Vhdl_Types;
+with Grt.Stdio;
 
 package Simul.Main is
+   --  For debugger: stop at time or next delta.
    Break_Time : Grt.Vhdl_Types.Std_Time;
    Break_Step : Boolean;
 
@@ -34,6 +38,10 @@ package Simul.Main is
 
    --  Start and run simulation.
    procedure Simulation;
+
+   --  Filename for the CSV output.
+   Csv_Filename : String_Acc;
+   Csv_File : Grt.Stdio.FILEs;
 
    Simulation_Finished : exception;
 end Simul.Main;

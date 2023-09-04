@@ -16,6 +16,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Flags;
 with Types_Utils; use Types_Utils;
 with Std_Names;
 with Mutils; use Mutils;
@@ -1065,7 +1066,8 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_Object_Alias_Declaration
             | Iir_Kind_Non_Object_Alias_Declaration
             | Iir_Kind_File_Declaration
-            | Iir_Kind_Interface_File_Declaration =>
+            | Iir_Kind_Interface_File_Declaration
+            | Iir_Kind_Above_Attribute =>
             return Get_Value (Syn_Inst, Name);
          when Iir_Kind_External_Signal_Name =>
             return Synth_External_Name (Syn_Inst, Name);
@@ -2454,6 +2456,7 @@ package body Synth.Vhdl_Expr is
 
    function Synth_Short_Circuit (Syn_Inst : Synth_Instance_Acc;
                                  Id : And_Or_Module_Id;
+                                 Neg : Boolean;
                                  Left_Expr : Node;
                                  Right_Expr : Node;
                                  Typ : Type_Acc;
@@ -2483,6 +2486,9 @@ package body Synth.Vhdl_Expr is
         and then Get_Static_Discrete (Left) = Val
       then
          --  Short-circuit when the left operand determines the result.
+         if Neg then
+            Val := 1 - Val;
+         end if;
          return Create_Value_Discrete (Val, Typ);
       end if;
 
@@ -2498,6 +2504,9 @@ package body Synth.Vhdl_Expr is
         and then Get_Static_Discrete (Right) = Val
       then
          --  If the right operand can determine the result, return it.
+         if Neg then
+            Val := 1 - Val;
+         end if;
          return Create_Value_Discrete (Val, Typ);
       end if;
 
@@ -2518,8 +2527,13 @@ package body Synth.Vhdl_Expr is
       else
          N := Build_Dyadic (Ctxt, Id, Nl, Nr);
       end if;
-
       Set_Location (N, Expr);
+
+      if Neg then
+         N := Build_Monadic (Ctxt, Id_Not, N);
+         Set_Location (N, Expr);
+      end if;
+
       return Create_Value_Net (N, Typ);
    end Synth_Short_Circuit;
 
@@ -2546,7 +2560,7 @@ package body Synth.Vhdl_Expr is
 
    function Synth_Expression_With_Type (Syn_Inst : Synth_Instance_Acc;
                                         Expr : Node;
-                                        Expr_Type : Type_Acc) return Valtyp is
+                                        Typ : Type_Acc) return Valtyp is
    begin
       case Get_Kind (Expr) is
          when Iir_Kinds_Dyadic_Operator =>
@@ -2571,20 +2585,36 @@ package body Synth.Vhdl_Expr is
                case Def is
                   when Iir_Predefined_Boolean_And =>
                      return Synth_Short_Circuit
-                       (Syn_Inst, Id_And, Get_Left (Expr), Get_Right (Expr),
-                        Boolean_Type, Expr);
+                       (Syn_Inst, Id_And, False,
+                        Get_Left (Expr), Get_Right (Expr), Boolean_Type, Expr);
                   when Iir_Predefined_Boolean_Or =>
                      return Synth_Short_Circuit
-                       (Syn_Inst, Id_Or, Get_Left (Expr), Get_Right (Expr),
-                        Boolean_Type, Expr);
+                       (Syn_Inst, Id_Or, False,
+                        Get_Left (Expr), Get_Right (Expr), Boolean_Type, Expr);
+                  when Iir_Predefined_Boolean_Nand =>
+                     return Synth_Short_Circuit
+                       (Syn_Inst, Id_And, True,
+                        Get_Left (Expr), Get_Right (Expr), Boolean_Type, Expr);
+                  when Iir_Predefined_Boolean_Nor =>
+                     return Synth_Short_Circuit
+                       (Syn_Inst, Id_Or, True,
+                        Get_Left (Expr), Get_Right (Expr), Boolean_Type, Expr);
                   when Iir_Predefined_Bit_And =>
                      return Synth_Short_Circuit
-                       (Syn_Inst, Id_And, Get_Left (Expr), Get_Right (Expr),
-                        Bit_Type, Expr);
+                       (Syn_Inst, Id_And, False,
+                        Get_Left (Expr), Get_Right (Expr), Bit_Type, Expr);
                   when Iir_Predefined_Bit_Or =>
                      return Synth_Short_Circuit
-                       (Syn_Inst, Id_Or, Get_Left (Expr), Get_Right (Expr),
-                        Bit_Type, Expr);
+                       (Syn_Inst, Id_Or, False,
+                        Get_Left (Expr), Get_Right (Expr), Bit_Type, Expr);
+                  when Iir_Predefined_Bit_Nand =>
+                     return Synth_Short_Circuit
+                       (Syn_Inst, Id_And, True,
+                        Get_Left (Expr), Get_Right (Expr), Bit_Type, Expr);
+                  when Iir_Predefined_Bit_Nor =>
+                     return Synth_Short_Circuit
+                       (Syn_Inst, Id_Or, True,
+                        Get_Left (Expr), Get_Right (Expr), Bit_Type, Expr);
                   when Iir_Predefined_None =>
                      if Error_Ieee_Operator (Syn_Inst, Imp, Expr) then
                         return No_Valtyp;
@@ -2626,9 +2656,11 @@ package body Synth.Vhdl_Expr is
             | Iir_Kind_Non_Object_Alias_Declaration   -- For PSL
             | Iir_Kind_External_Signal_Name
             | Iir_Kind_Implicit_Dereference
-            | Iir_Kind_Dereference =>
+            | Iir_Kind_Dereference
+            | Iir_Kind_Above_Attribute =>
             declare
                Res : Valtyp;
+               Init : Valtyp;
             begin
                Res := Synth_Name (Syn_Inst, Expr);
                if Res.Val /= null then
@@ -2640,10 +2672,38 @@ package body Synth.Vhdl_Expr is
                      if Hook_Signal_Expr /= null then
                         return Hook_Signal_Expr (Res);
                      end if;
-                     Error_Msg_Synth
-                       (Syn_Inst, Expr,
-                        "cannot use signal value during elaboration");
-                     return No_Valtyp;
+                     if Flags.Flag_Relaxed_Rules then
+                        Warning_Msg_Synth
+                          (Warnid_Elaboration, +Expr,
+                           "cannot use signal value during elaboration");
+                        if Res.Val.Kind = Value_Signal then
+                           --  The signal may have no default value.
+                           if Res.Val.Init = null then
+                              Init := Create_Value_Memory
+                                (Res.Typ, Current_Pool);
+                              Write_Value_Default (Init.Val.Mem, Res.Typ);
+                              --  Do not write the default value, even if it
+                              --  were allocated on the instance_pool, it
+                              --  might be deallocated after a subprogram call.
+                              Res := (Res.Typ, Init.Val);
+                           else
+                              Res := (Res.Typ, Res.Val.Init);
+                           end if;
+                        elsif Res.Val.Kind = Value_Alias then
+                           Res := Create_Value_Memtyp
+                             ((Res.Val.A_Typ,
+                               Res.Val.A_Obj.Init.Mem
+                                 + Res.Val.A_Off.Mem_Off));
+                        else
+                           Res := No_Valtyp;
+                        end if;
+                        return Res;
+                     else
+                        Error_Msg_Synth
+                          (Syn_Inst, Expr,
+                           "cannot use signal value during elaboration");
+                        return No_Valtyp;
+                     end if;
                   elsif (Res.Val.Kind = Value_Quantity
                            or else
                            (Res.Val.Kind = Value_Alias
@@ -2683,7 +2743,7 @@ package body Synth.Vhdl_Expr is
          when Iir_Kind_Reference_Name =>
             --  Only used for anonymous signals in internal association.
             return Synth_Expression_With_Type
-              (Syn_Inst, Get_Named_Entity (Expr), Expr_Type);
+              (Syn_Inst, Get_Named_Entity (Expr), Typ);
          when Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name =>
             declare
@@ -2694,7 +2754,8 @@ package body Synth.Vhdl_Expr is
 
                Dyn : Dyn_Name;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Expr, Base, Typ, Off, Dyn);
+               Synth_Assignment_Prefix
+                 (Syn_Inst, Syn_Inst, Expr, Base, Typ, Off, Dyn);
                if Base = No_Valtyp then
                   --  Propagate error.
                   return No_Valtyp;
@@ -2750,33 +2811,35 @@ package body Synth.Vhdl_Expr is
             end;
          when Iir_Kind_Character_Literal =>
             return Synth_Expression_With_Type
-              (Syn_Inst, Get_Named_Entity (Expr), Expr_Type);
+              (Syn_Inst, Get_Named_Entity (Expr), Typ);
          when Iir_Kind_Integer_Literal =>
             declare
                Res : Valtyp;
                V : Int64;
             begin
-               Res := Create_Value_Memory (Expr_Type, Current_Pool);
+               Res := Create_Value_Memory (Typ, Current_Pool);
                V := Get_Value (Expr);
-               if Expr_Type.Sz = 4
+               if Typ.Sz = 4
                  and then (V < Int64 (Int32'First) or V > Int64 (Int32'Last))
                then
                   --  TODO: should not exist, should be an overflow.
                   Error_Msg_Synth (Syn_Inst, Expr, "value out of range");
                   return No_Valtyp;
                end if;
+               if not In_Range (Typ.Drange, V) then
+                  Error_Msg_Synth (Syn_Inst, Expr, "value out of range");
+               end if;
                Write_Discrete (Res, V);
                return Res;
             end;
          when Iir_Kind_Floating_Point_Literal =>
-            return Create_Value_Float (Get_Fp_Value (Expr), Expr_Type);
+            return Create_Value_Float (Get_Fp_Value (Expr), Typ);
          when Iir_Kind_Physical_Int_Literal
            | Iir_Kind_Physical_Fp_Literal =>
             return Create_Value_Discrete
-              (Get_Physical_Value (Expr), Expr_Type);
+              (Get_Physical_Value (Expr), Typ);
          when Iir_Kind_String_Literal8 =>
-            return Elab.Vhdl_Expr.Exec_String_Literal
-              (Syn_Inst, Expr, Expr_Type);
+            return Elab.Vhdl_Expr.Exec_String_Literal (Syn_Inst, Expr, Typ);
          when Iir_Kind_Enumeration_Literal =>
             return Synth_Name (Syn_Inst, Expr);
          when Iir_Kind_Type_Conversion =>
@@ -2801,39 +2864,39 @@ package body Synth.Vhdl_Expr is
                end case;
             end;
          when Iir_Kind_Aggregate =>
-            return Synth.Vhdl_Aggr.Synth_Aggregate (Syn_Inst, Expr, Expr_Type);
+            return Synth.Vhdl_Aggr.Synth_Aggregate (Syn_Inst, Expr, Typ);
          when Iir_Kind_Simple_Aggregate =>
             return Elab.Vhdl_Expr.Exec_Simple_Aggregate (Syn_Inst, Expr);
          when Iir_Kind_Parenthesis_Expression =>
             return Synth_Expression_With_Type
-              (Syn_Inst, Get_Expression (Expr), Expr_Type);
+              (Syn_Inst, Get_Expression (Expr), Typ);
          when Iir_Kind_Left_Type_Attribute =>
             declare
                T : Type_Acc;
             begin
                T := Synth_Type_Attribute (Syn_Inst, Expr);
-               return Create_Value_Discrete (T.Drange.Left, Expr_Type);
+               return Create_Value_Discrete (T.Drange.Left, Typ);
             end;
          when Iir_Kind_Right_Type_Attribute =>
             declare
                T : Type_Acc;
             begin
                T := Synth_Type_Attribute (Syn_Inst, Expr);
-               return Create_Value_Discrete (T.Drange.Right, Expr_Type);
+               return Create_Value_Discrete (T.Drange.Right, Typ);
             end;
          when Iir_Kind_Left_Array_Attribute =>
             declare
                B : Bound_Type;
             begin
                B := Synth_Array_Attribute (Syn_Inst, Expr);
-               return Create_Value_Discrete (Int64 (B.Left), Expr_Type);
+               return Create_Value_Discrete (Int64 (B.Left), Typ);
             end;
          when Iir_Kind_Right_Array_Attribute =>
             declare
                B : Bound_Type;
             begin
                B := Synth_Array_Attribute (Syn_Inst, Expr);
-               return Create_Value_Discrete (Int64 (B.Right), Expr_Type);
+               return Create_Value_Discrete (Int64 (B.Right), Typ);
             end;
          when Iir_Kind_High_Array_Attribute =>
             declare
@@ -2847,7 +2910,7 @@ package body Synth.Vhdl_Expr is
                   when Dir_Downto =>
                      V := B.Left;
                end case;
-               return Create_Value_Discrete (Int64 (V), Expr_Type);
+               return Create_Value_Discrete (Int64 (V), Typ);
             end;
          when Iir_Kind_Low_Array_Attribute =>
             declare
@@ -2861,14 +2924,14 @@ package body Synth.Vhdl_Expr is
                   when Dir_Downto =>
                      V := B.Right;
                end case;
-               return Create_Value_Discrete (Int64 (V), Expr_Type);
+               return Create_Value_Discrete (Int64 (V), Typ);
             end;
          when Iir_Kind_Length_Array_Attribute =>
             declare
                B : Bound_Type;
             begin
                B := Synth_Array_Attribute (Syn_Inst, Expr);
-               return Create_Value_Discrete (Int64 (B.Len), Expr_Type);
+               return Create_Value_Discrete (Int64 (B.Len), Typ);
             end;
          when Iir_Kind_Ascending_Array_Attribute =>
             declare
@@ -2882,7 +2945,7 @@ package body Synth.Vhdl_Expr is
                   when Dir_Downto =>
                      V := 0;
                end case;
-               return Create_Value_Discrete (V, Expr_Type);
+               return Create_Value_Discrete (V, Typ);
             end;
 
          when Iir_Kind_Pos_Attribute
@@ -2957,30 +3020,32 @@ package body Synth.Vhdl_Expr is
                return Create_Value_Memtyp (Mt);
             end;
          when Iir_Kind_Null_Literal =>
-            return Create_Value_Access (Null_Heap_Ptr, Expr_Type);
+            return Create_Value_Access (Null_Heap_Ptr, Typ);
          when Iir_Kind_Allocator_By_Subtype =>
             declare
+               Acc_Tdef : constant Node := Get_Type (Expr);
                Acc_Typ : constant Type_Acc :=
-                 Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
+                 Get_Subtype_Object (Syn_Inst, Acc_Tdef);
                T : Type_Acc;
                Acc : Heap_Ptr;
             begin
                T := Synth_Subtype_Indication
                  (Syn_Inst, Get_Subtype_Indication (Expr));
-               Acc := Allocate_By_Type (Acc_Typ, T);
-               return Create_Value_Access (Acc, Expr_Type);
+               Acc := Allocate_By_Type (Acc_Tdef, Acc_Typ, T);
+               return Create_Value_Access (Acc, Typ);
             end;
          when Iir_Kind_Allocator_By_Expression =>
             declare
+               Acc_Tdef : constant Node := Get_Type (Expr);
                Acc_Typ : constant Type_Acc :=
-                 Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
+                 Get_Subtype_Object (Syn_Inst, Acc_Tdef);
                V : Valtyp;
                Acc : Heap_Ptr;
             begin
                V := Synth_Expression_With_Type
-                 (Syn_Inst, Get_Expression (Expr), Expr_Type.Acc_Acc);
-               Acc := Allocate_By_Value (Acc_Typ, V);
-               return Create_Value_Access (Acc, Expr_Type);
+                 (Syn_Inst, Get_Expression (Expr), Typ.Acc_Acc);
+               Acc := Allocate_By_Value (Acc_Tdef, Acc_Typ, V);
+               return Create_Value_Access (Acc, Typ);
             end;
          when Iir_Kind_Psl_Prev =>
             return Synth_Psl_Prev (Syn_Inst, Expr);

@@ -47,4 +47,6 @@ package Trans.Chap9 is
    procedure Gen_Port_Init_Driving
      (Port : Mnode; Port_Type : Iir; Init : Mnode);
 
+   procedure Set_Direct_Drivers (Proc : Iir);
+   procedure Reset_Direct_Drivers (Proc : Iir);
 end Trans.Chap9;

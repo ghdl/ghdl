@@ -13,7 +13,7 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
-with Ada.Text_IO; use Ada.Text_IO;
+with Simple_IO;
 
 package body Binary_File.Memory is
    --  Absolute section.
@@ -176,14 +176,14 @@ package body Binary_File.Memory is
       Sect := Section_Chain;
       Error := False;
       while Sect /= null loop
---           Put_Line ("Section: " & Sect.Name.all & ", Flags:"
---                     & Section_Flags'Image (Sect.Flags));
+--         Simple_IO.Put_Line ("Section: " & Sect.Name.all & ", Flags:"
+--                               & Section_Flags'Image (Sect.Flags));
          Rel := Sect.First_Reloc;
          while Rel /= null loop
             N_Rel := Rel.Sect_Next;
             if Get_Scope (Rel.Sym) = Sym_Undef then
-               Put_Line ("symbol " & Get_Symbol_Name (Rel.Sym)
-                         & " is undefined");
+               Simple_IO.Put_Line ("symbol " & Get_Symbol_Name (Rel.Sym)
+                                     & " is undefined");
                Error := True;
             else
                Apply_Reloc (Sect, Rel);

@@ -43,7 +43,9 @@ package body Elab.Vhdl_Decls is
 
       Inter := Get_Interface_Declaration_Chain (Subprg);
       while Inter /= Null_Node loop
-         Typ := Elab_Declaration_Type (Syn_Inst, Inter);
+         if not Get_Is_Ref (Inter) then
+            Elab_Declaration_Type (Syn_Inst, Inter);
+         end if;
          Inter := Get_Chain (Inter);
       end loop;
       pragma Unreferenced (Typ);
@@ -62,6 +64,12 @@ package body Elab.Vhdl_Decls is
       if Get_Kind (Decl) = Iir_Kind_Interface_View_Declaration then
          Init := No_Valtyp;
       else
+         --  According to LRM08 14.4.2.5 Object declarations
+         --  b) If the object declaration includes an explicit initialization
+         --     expression, then the initial value of the object is obtained
+         --     by evaluating the expression.
+         --  GHDL: so the default value is evaluated even if not needed
+         --    (like for an associated IN port).
          Def := Get_Default_Value (Decl);
          if Is_Valid (Def) then
             Mark_Expr_Pool (Expr_Mark);
@@ -253,12 +261,12 @@ package body Elab.Vhdl_Decls is
       end if;
 
       Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl), Base, Typ, Off);
-      Typ := Unshare (Typ, Instance_Pool);
       Res := Create_Value_Alias (Base, Off, Typ, Expr_Pool'Access);
       if Obj_Typ /= null and then Obj_Typ.Kind not in Type_Scalars then
          --  Reshape bounds.
          Res := Exec_Subtype_Conversion (Res, Obj_Typ, True, Decl);
       end if;
+      Res.Typ := Unshare (Res.Typ, Instance_Pool);
       Res := Unshare (Res, Instance_Pool);
       Create_Object (Syn_Inst, Decl, Res);
       Release_Expr_Pool (Marker);
@@ -316,12 +324,7 @@ package body Elab.Vhdl_Decls is
                Get_Subtype_Definition (Decl));
          when Iir_Kind_Subtype_Declaration
            | Iir_Kind_Mode_View_Declaration =>
-            declare
-               T : Type_Acc;
-            begin
-               T := Elab_Declaration_Type (Syn_Inst, Decl);
-               pragma Unreferenced (T);
-            end;
+            Elab_Declaration_Type (Syn_Inst, Decl);
          when Iir_Kind_Component_Declaration =>
             null;
          when Iir_Kind_File_Declaration =>

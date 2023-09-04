@@ -384,12 +384,13 @@ package body Simul.Vhdl_Debug is
 
       Disp_Instance_Path (S.Inst, True);
       Put ('/');
-      Put (Image (Get_Identifier (S.Decl)));
 
       case Get_Kind (S.Decl) is
          when Iir_Kind_Signal_Declaration =>
+            Put (Image (Get_Identifier (S.Decl)));
             Put (" [sig]");
          when Iir_Kind_Interface_Signal_Declaration =>
+            Put (Image (Get_Identifier (S.Decl)));
             case Get_Mode (S.Decl) is
                when Iir_In_Mode =>
                   Put (" [in]");
@@ -405,7 +406,12 @@ package body Simul.Vhdl_Debug is
                   Put (" [??]");
             end case;
          when Iir_Kind_Guard_Signal_Declaration =>
+            Put (Image (Get_Identifier (S.Decl)));
             Put (" [guard]");
+         when Iir_Kind_Above_Attribute =>
+            Put (" [above]");
+         when Iir_Kind_Delayed_Attribute =>
+            Put (" [delayed]");
          when others =>
             raise Internal_Error;
       end case;
@@ -418,10 +424,7 @@ package body Simul.Vhdl_Debug is
 
       if Opts.Types then
          Put ("  type: ");
-         Debug_Type_Short (S.Typ);
-         Put (", len: ");
-         Put_Uns32 (S.Typ.W);
-         New_Line;
+         Debug_Typ (S.Typ);
       end if;
 
       if Opts.Conn then
@@ -646,8 +649,8 @@ package body Simul.Vhdl_Debug is
          begin
             Put ("  scal #");
             Put_Uns32 (Uns32 (Idx));
-            Put ("  idx: ");
-            Put_Int32 (Int32 (Sq.Idx));
+            Put ("  y_idx: ");
+            Put_Int32 (Int32 (Sq.Y_Idx));
             Put (", deriv: ");
             Put_Uns32 (Uns32 (Sq.Deriv));
             Put (", integ: ");
@@ -677,11 +680,11 @@ package body Simul.Vhdl_Debug is
             Put (", len: ");
             Put_Uns32 (Q.Typ.W);
             Put (", Idx: ");
-            Put_Uns32 (Uns32 (Q.Idx));
+            Put_Uns32 (Uns32 (Q.Sq_Idx));
             Put (", val: ");
             Disp_Memtyp ((Q.Typ, Q.Val), Get_Type (Q.Decl));
             New_Line;
-            Info_Scalar_Quantity (Q.Idx, Q.Typ.W);
+            Info_Scalar_Quantity (Q.Sq_Idx, Q.Typ.W);
          end;
       end loop;
    end Info_Quantity_Proc;

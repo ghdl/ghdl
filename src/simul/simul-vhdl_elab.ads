@@ -105,8 +105,8 @@ package Simul.Vhdl_Elab is
       --  Next connection for the actual.
       Actual_Link : Connect_Index_Type;
 
-      --  If true, the connection is fully collapsed: formal is the same
-      --  signal as actual.
+      --  If true, the connection is collapsed: formal is the same (or a
+      --  part) as the actual.
       Collapsed : Boolean;
 
       Assoc : Node;
@@ -152,17 +152,25 @@ package Simul.Vhdl_Elab is
       Decl : Iir;
       Inst : Synth_Instance_Acc;
       Typ : Type_Acc;
+      --  Initial value.
+      Val_Init : Memory_Ptr;
+      --  Current value.  In case of collapsed signal, this is the initial
+      --  value of the collapsed_by signal.
       Val : Memory_Ptr;
       Sig : Memory_Ptr;
 
       --  Processes sensitized by this signal.
       Sensitivity : Sensitivity_Index_Type;
 
-      --  This signal is identical to Collapsed_By, if set.
+      --  This signal is collapsed by Collapsed_By, if set.
+      --  Collapsed_Offs are the offset in Collapsed_By signal.
       Collapsed_By : Signal_Index_Type;
+      Collapsed_Offs : Value_Offsets;
 
       --  Connections.  Non-user signals can only be actuals.
       Connect : Connect_Index_Type;
+
+      Has_Active : Boolean;
 
       case Kind is
          when Signal_User =>
@@ -230,12 +238,13 @@ package Simul.Vhdl_Elab is
    No_Scalar_Quantity : constant Scalar_Quantity_Index := 0;
 
    type Quantity_Entry is record
+      --  Any quantity: free, branch, dot...
       Decl : Iir;
       Inst : Synth_Instance_Acc;
       Typ : Type_Acc;
       Val : Memory_Ptr;
       --  Index in the scalar table.
-      Idx : Scalar_Quantity_Index;
+      Sq_Idx : Scalar_Quantity_Index;
       --  For across quantity, we need the terminals to compute the value
       --  For a through quantity, we need the terminals to compute the contrib
    end record;

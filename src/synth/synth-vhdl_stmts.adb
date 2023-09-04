@@ -225,6 +225,7 @@ package body Synth.Vhdl_Stmts is
    end Synth_Assignment_Prefix_Slice_Name;
 
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
+                                      Pfx_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
                                       Dest_Base : out Valtyp;
                                       Dest_Typ : out Type_Acc;
@@ -253,14 +254,14 @@ package body Synth.Vhdl_Stmts is
             | Iir_Kind_Selected_Name
             | Iir_Kind_Attribute_Name =>
             Synth_Assignment_Prefix
-              (Syn_Inst, Get_Named_Entity (Pfx),
+              (Syn_Inst, Pfx_Inst, Get_Named_Entity (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_View_Declaration
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_File_Declaration =>
-            Assign_Base (Syn_Inst);
+            Assign_Base (Pfx_Inst);
          when Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
@@ -274,25 +275,25 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Above_Attribute
            | Iir_Kinds_Signal_Attribute =>
-            Assign_Base (Syn_Inst);
+            Assign_Base (Pfx_Inst);
 
          when Iir_Kind_Indexed_Name =>
             Synth_Assignment_Prefix
-              (Syn_Inst, Get_Prefix (Pfx),
+              (Syn_Inst, Pfx_Inst, Get_Prefix (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
             Synth_Assignment_Prefix_Indexed_Name
               (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
 
          when Iir_Kind_Selected_Element =>
             Synth_Assignment_Prefix
-              (Syn_Inst, Get_Prefix (Pfx),
+              (Syn_Inst, Pfx_Inst, Get_Prefix (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
             Synth_Assignment_Prefix_Selected_Name
               (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
 
          when Iir_Kind_Slice_Name =>
             Synth_Assignment_Prefix
-              (Syn_Inst, Get_Prefix (Pfx),
+              (Syn_Inst, Pfx_Inst, Get_Prefix (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
             Synth_Assignment_Prefix_Slice_Name
               (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
@@ -342,7 +343,7 @@ package body Synth.Vhdl_Stmts is
       Dyn : Dyn_Name;
    begin
       Synth_Assignment_Prefix
-        (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dyn);
+        (Syn_Inst, Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dyn);
       pragma Assert (Dyn = No_Dyn_Name);
    end Synth_Assignment_Prefix;
 
@@ -475,7 +476,7 @@ package body Synth.Vhdl_Stmts is
                Dyn : Dyn_Name;
             begin
                Synth_Assignment_Prefix
-                 (Syn_Inst, Target, Base, Typ, Off, Dyn);
+                 (Syn_Inst, Syn_Inst, Target, Base, Typ, Off, Dyn);
                return To_Target_Info (Base, Typ, Off, Dyn);
             end;
          when others =>
@@ -1967,7 +1968,7 @@ package body Synth.Vhdl_Stmts is
                                           Assoc : Node;
                                           Loc : Node) return Valtyp
    is
-      Inter_Type : constant Node := Get_Type (Inter);
+      Inter_Type : Node;
       Inter_Typ : Type_Acc;
       Actual : Node;
       Val : Valtyp;
@@ -1996,13 +1997,11 @@ package body Synth.Vhdl_Stmts is
          Conv := Null_Node;
       end if;
 
-      --  Special case for protected type as the slot describes
-      --  declarations.
-      if Get_Kind (Inter_Type) = Iir_Kind_Protected_Type_Declaration then
-         Inter_Typ := Protected_Type;
-      else
-         Inter_Typ := Get_Subtype_Object (Subprg_Inst, Inter_Type);
+      Inter_Type := Get_Subtype_Indication (Inter);
+      if Inter_Type = Null_Node then
+         Inter_Type := Get_Type (Inter);
       end if;
+      Inter_Typ := Get_Elaborated_Subtype_Indication (Subprg_Inst, Inter_Type);
 
       if Get_Kind (Inter) = Iir_Kind_Interface_Constant_Declaration
         or else (Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
@@ -2402,8 +2401,8 @@ package body Synth.Vhdl_Stmts is
                Act_Off := No_Value_Offsets;
                Act_Dyn := No_Dyn_Name;
             else
-               Synth_Assignment_Prefix
-                 (Caller_Inst, Actual, Act_Base, Act_Typ, Act_Off, Act_Dyn);
+               Synth_Assignment_Prefix (Caller_Inst, Caller_Inst, Actual,
+                                        Act_Base, Act_Typ, Act_Off, Act_Dyn);
             end if;
             if Get_Actual_Conversion (Assoc) /= Null_Node then
                --  TODO
@@ -3707,6 +3706,7 @@ package body Synth.Vhdl_Stmts is
          if Cond /= Null_Node then
             Mark_Expr_Pool (Marker);
             Val := Synth_Expression_With_Type (C.Inst, Cond, Boolean_Type);
+            exit when Val = No_Valtyp;
             pragma Assert (Is_Static (Val.Val));
             Cv := Read_Discrete (Val) = 0;
             Release_Expr_Pool (Marker);
@@ -4435,10 +4435,25 @@ package body Synth.Vhdl_Stmts is
             if Get_Kind (Unit) = Iir_Kind_Design_Unit then
                Lib := Get_Library (Get_Design_File (Unit));
                if Get_Identifier (Lib) = Std_Names.Name_Ieee then
-                  Error_Msg_Synth (Syn_Inst, Expr,
-                                   "unhandled call to ieee function %i", +Imp);
-                  Set_Error (Syn_Inst);
-                  return No_Valtyp;
+                  case Get_Identifier (Pkg) is
+                     when Std_Names.Name_Std_Logic_1164
+                        | Std_Names.Name_Numeric_Std
+                        | Std_Names.Name_Numeric_Bit
+                        | Std_Names.Name_Numeric_Std_Unsigned
+                        | Std_Names.Name_Math_Real
+                        | Std_Names.Name_Std_Logic_Unsigned
+                        | Std_Names.Name_Std_Logic_Signed
+                        | Std_Names.Name_Std_Logic_Misc
+                        | Std_Names.Name_Std_Logic_Arith =>
+                        Error_Msg_Synth
+                          (Syn_Inst, Expr,
+                           "unhandled call to ieee function %i", +Imp);
+                        Set_Error (Syn_Inst);
+                        return No_Valtyp;
+                     when others =>
+                        --  Other ieee packages are handled as normal packages.
+                        null;
+                  end case;
                end if;
             end if;
          end if;
@@ -4491,7 +4506,7 @@ package body Synth.Vhdl_Stmts is
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
-      Synth_Concurrent_Declarations (Blk_Inst, Decls_Chain);
+      Synth_Concurrent_Declarations (Blk_Inst, Decls_Chain, False);
       Synth_Concurrent_Statements
         (Blk_Inst, Get_Concurrent_Statement_Chain (Blk));
 
@@ -4818,7 +4833,7 @@ package body Synth.Vhdl_Stmts is
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
-      Synth_Concurrent_Declarations (Syn_Inst, Decls_Chain);
+      Synth_Concurrent_Declarations (Syn_Inst, Decls_Chain, False);
 
       Synth_Concurrent_Statements
         (Syn_Inst, Get_Concurrent_Statement_Chain (Bod));
@@ -5117,7 +5132,7 @@ package body Synth.Vhdl_Stmts is
                | Iir_Kind_Subtype_Declaration
                | Iir_Kind_Type_Declaration
                | Iir_Kind_Anonymous_Type_Declaration =>
-               Synth_Concurrent_Declaration (Syn_Inst, Item);
+               Synth_Concurrent_Declaration (Syn_Inst, Item, False);
             when Iir_Kinds_Concurrent_Signal_Assignment
                | Iir_Kinds_Process_Statement
                | Iir_Kinds_Generate_Statement

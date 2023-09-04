@@ -431,6 +431,12 @@ package body Elab.Vhdl_Context is
                                        I_Inst => Inst);
    end Create_Package_Object;
 
+   procedure Clear_Package_Object
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node) is
+   begin
+      Create_Package_Object (Syn_Inst, Decl, null, True);
+   end Clear_Package_Object;
+
    procedure Create_Package_Interface (Syn_Inst : Synth_Instance_Acc;
                                        Decl     : Node;
                                        Inst     : Synth_Instance_Acc)

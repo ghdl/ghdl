@@ -1956,7 +1956,8 @@ package body Vhdl.Sem_Decls is
          when Iir_Kinds_Object_Declaration =>
             raise Internal_Error;
          when Iir_Kind_Attribute_Declaration
-           | Iir_Kind_Component_Declaration =>
+           | Iir_Kind_Component_Declaration
+           | Iir_Kind_Package_Declaration =>
             null;
          when Iir_Kind_Terminal_Declaration =>
             --  TODO: should have Sem_Terminal_Alias_Declaration.

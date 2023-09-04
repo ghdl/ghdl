@@ -179,8 +179,10 @@ package Trans_Decls is
    --  Predefined subprograms.
    Ghdl_Memcpy : O_Dnode;
    Ghdl_Deallocate : O_Dnode;
+   Ghdl_Allocate : O_Dnode;
    Ghdl_Malloc : O_Dnode;
    Ghdl_Malloc0 : O_Dnode;
+   Ghdl_Free_Mem : O_Dnode;
    Ghdl_Real_Exp : O_Dnode;
    Ghdl_I32_Exp : O_Dnode;
    Ghdl_I64_Exp : O_Dnode;

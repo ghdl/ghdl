@@ -56,7 +56,7 @@ class Workspace(object):
         # Do not consider analysis order issues.
         flags.Flag_Elaborate_With_Outdated.value = True
         libghdl.errorout.Enable_Warning(errorout.Msgid.Warnid_Unused, True)
-        libghdl.errorout.Enable_Warning(errorout.Msgid.Warnid_No_Assoc, True)
+        libghdl.errorout.Enable_Warning(errorout.Msgid.Warnid_Missing_Assoc, True)
         self.read_project()
         self.set_options_from_project()
         if libghdl.analyze_init_status() != 0:
@@ -409,6 +409,8 @@ class Workspace(object):
         elif k in nodes.Iir_Kinds.Subprogram_Declaration:
             bod = nodes.Get_Subprogram_Body(decl)
             if bod != nodes.Null_Iir:
+                # FIXME: it crashes as :var bod: is not a declaration
+                # (declaration_to_location calls get_identifier)
                 decl = bod
 
         decl_loc = self.declaration_to_location(decl)

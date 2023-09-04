@@ -682,39 +682,60 @@ package body Elab.Vhdl_Objtypes is
       Al : Palign_Type;
       Sz : Size_Type;
       Res : Type_Acc;
+      Is_Static : Boolean;
    begin
       --  Layout the record.
       if Parent_Typ = null then
-         Al := 0;
-         Sz := 0;
-         --  First elements with static types, then the others.
-         for Static in reverse Boolean loop
-            for I in Els.E'Range loop
-               declare
-                  El : Rec_El_Type renames Els.E (I);
-               begin
-                  if El.Typ.Is_Static = Static then
-                     Layout_Element_Mem (El, Sz, Al);
-                  end if;
-               end;
-            end loop;
-         end loop;
-         Sz := Align (Sz, Al);
-
+         Base := null;
+         Base_Els := null;
       else
          Base := Parent_Typ.Rec_Base;
          Base_Els := Base.Rec;
-         Al := Base.Al;
-         Sz := Base.Sz;
-         --  Only the non-static types.
-         for I in Els.E'Range loop
-            if Base_Els.E (I).Typ.Is_Static then
-               Els.E (I).Offs.Mem_Off := Base_Els.E (I).Offs.Mem_Off;
+      end if;
+
+      Al := 0;
+      Sz := 0;
+      Is_Static := True;
+      --  First elements with static types...
+      for I in Els.E'Range loop
+         declare
+            El : Rec_El_Type renames Els.E (I);
+            El_Static : Boolean;
+         begin
+            if Base_Els = null then
+               El_Static := El.Typ.Is_Static;
             else
-               Layout_Element_Mem (Els.E (I), Sz, Al);
+               El_Static := Base_Els.E (I).Typ.Is_Static;
             end if;
+
+            if El_Static then
+               Layout_Element_Mem (El, Sz, Al);
+            else
+               Is_Static := False;
+            end if;
+         end;
+      end loop;
+
+      --  ... then the others.
+      if not Is_Static then
+         for I in Els.E'Range loop
+            declare
+               El : Rec_El_Type renames Els.E (I);
+               El_Static : Boolean;
+            begin
+               if Base_Els = null then
+                  El_Static := El.Typ.Is_Static;
+               else
+                  El_Static := Base_Els.E (I).Typ.Is_Static;
+               end if;
+
+               if not El_Static then
+                  Layout_Element_Mem (El, Sz, Al);
+               end if;
+            end;
          end loop;
       end if;
+
       Sz := Align (Sz, Al);
 
       --  Layout nets.
@@ -723,11 +744,12 @@ package body Elab.Vhdl_Objtypes is
       for I in Els.E'Range loop
          Layout_Element_Net (Els.E (I), W, Wkind);
       end loop;
+
       Res := To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Record,
                                                 Wkind => Wkind,
                                                 Al => Al,
                                                 Is_Global => False,
-                                                Is_Static => False,
+                                                Is_Static => Is_Static,
                                                 Is_Bnd_Static => False,
                                                 Sz => Sz,
                                                 W => W,
@@ -919,7 +941,8 @@ package body Elab.Vhdl_Objtypes is
       return Res;
    end Compute_Bounds_Size;
 
-   function Create_Access_Type (Acc_Type : Type_Acc) return Type_Acc
+   function Create_Access_Type (Parent_Type : Type_Acc; Acc_Type : Type_Acc)
+                               return Type_Acc
    is
       subtype Access_Type_Type is Type_Type (Type_Access);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Access_Type_Type);
@@ -928,11 +951,16 @@ package body Elab.Vhdl_Objtypes is
    begin
       if Acc_Type = null then
          --  For incomplete type.
+         pragma Assert (Parent_Type = null);
          Type_Sz := 0;
          Bnd_Sz := 0;
       else
          Type_Sz := Compute_Size_Type (Acc_Type);
-         Bnd_Sz := Compute_Bounds_Size (Acc_Type);
+         if Parent_Type = null then
+            Bnd_Sz := Compute_Bounds_Size (Acc_Type);
+         else
+            Bnd_Sz := Parent_Type. Acc_Bnd_Sz;
+         end if;
       end if;
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Access,
                                                 Wkind => Wkind_Sim,
@@ -1192,15 +1220,6 @@ package body Elab.Vhdl_Objtypes is
       end case;
       return (Vtype, Res);
    end Create_Memory_Discrete;
-
-   function Create_Memory_U32 (Val : Uns32) return Memtyp
-   is
-      Res : Memory_Ptr;
-   begin
-      Res := Alloc_Memory (4, 2, Current_Pool);
-      Write_U32 (Res, Ghdl_U32 (Val));
-      return (null, Res);
-   end Create_Memory_U32;
 
    function Is_Equal (L, R : Memtyp) return Boolean is
    begin

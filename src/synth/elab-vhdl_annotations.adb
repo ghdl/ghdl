@@ -140,6 +140,11 @@ package body Elab.Vhdl_Annotations is
    is
       Decl : Iir;
    begin
+      --  Note: if this protected type declaration appears in a generic
+      --  package declaration that is shared, the instances will always get
+      --  Nbr_Objects as 0...
+      Create_Object_Info (Block_Info, Prot, Kind_Protected);
+
       --  First the interfaces type (they are elaborated in their context).
       Decl := Get_Declaration_Chain (Prot);
       while Decl /= Null_Iir loop
@@ -155,11 +160,6 @@ package body Elab.Vhdl_Annotations is
          end case;
          Decl := Get_Chain (Decl);
       end loop;
-
-      --  Note: if this protected type declaration appears in a generic
-      --  package declaration that is shared, the instances will always get
-      --  Nbr_Objects as 0...
-      Create_Object_Info (Block_Info, Prot, Kind_Protected);
 
       Decl := Get_Declaration_Chain (Prot);
       while Decl /= Null_Iir loop

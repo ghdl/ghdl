@@ -892,6 +892,15 @@ package body Synth.Vhdl_Oper is
          return Create_Value_Net (Edge, Res_Typ);
       end Synth_Posedge;
 
+      function Synth_Negedge return Valtyp
+      is
+         Edge : Net;
+      begin
+         Edge := Build_Negedge (Ctxt, Get_Net (Ctxt, L));
+         Set_Location (Edge, Expr);
+         return Create_Value_Net (Edge, Res_Typ);
+      end Synth_Negedge;
+
       function Error_Unhandled return Valtyp is
       begin
          Error_Msg_Synth
@@ -921,7 +930,7 @@ package body Synth.Vhdl_Oper is
                return Create_Value_Memtyp
                  (Hook_Bit_Falling_Edge.all (L, Res_Typ));
             end if;
-            raise Internal_Error;
+            return Synth_Negedge;
          when Iir_Predefined_Ieee_1164_Rising_Edge =>
             if Hook_Std_Rising_Edge /= null then
                return Create_Value_Memtyp
@@ -933,13 +942,7 @@ package body Synth.Vhdl_Oper is
                return Create_Value_Memtyp
                  (Hook_Std_Falling_Edge.all (L, Res_Typ));
             end if;
-            declare
-               Edge : Net;
-            begin
-               Edge := Build_Negedge (Ctxt, Get_Net (Ctxt, L));
-               Set_Location (Edge, Expr);
-               return Create_Value_Net (Edge, Res_Typ);
-            end;
+            return Synth_Negedge;
 
          when Iir_Predefined_Ieee_1164_Scalar_Not =>
             return Synth_Bit_Monadic (Id_Not);

@@ -254,7 +254,6 @@ package body Vhdl.Sem_Utils is
       Inter := Create_Iir (Iir_Kind_Interface_Variable_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
       Set_Location (Inter, Loc);
-      Set_Subtype_Indication (Inter, Build_Simple_Name (Decl, Loc));
       Set_Type (Inter, Type_Mark_Type);
       Set_Mode (Inter, Iir_Out_Mode);
       Set_Visible_Flag (Inter, True);
@@ -299,7 +298,6 @@ package body Vhdl.Sem_Utils is
       Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
       Set_Location (Inter, Loc);
-      Set_Subtype_Indication (Inter, Build_Simple_Name (Decl, Loc));
       Set_Type (Inter, Type_Mark_Type);
       Set_Mode (Inter, Iir_In_Mode);
       Set_Visible_Flag (Inter, True);

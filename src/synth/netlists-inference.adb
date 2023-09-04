@@ -16,6 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Errorout;
+
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Gates_Ports; use Netlists.Gates_Ports;
@@ -799,6 +801,19 @@ package body Netlists.Inference is
       return Res;
    end Is_False_Loop;
 
+   --  Return 1 if INP is connected to input 1 (i0),
+   --  return 2 if INP is connected to input 2 (i1).
+   function Get_Mux_Index (Mux : Instance; Inp : Net) return Port_Idx is
+   begin
+      if Get_Input_Net (Mux, 1) = Inp then
+         return 1;
+      else
+         pragma Assert (Get_Input_Net (Mux, 2) = Inp);
+         return 2;
+      end if;
+   end Get_Mux_Index;
+
+   --  Create a latch and merge all the mux2 above the last_mux.
    function Infere_Latch_Create (Ctxt : Context_Acc;
                                  Val : Net;
                                  Prev_Val : Net;
@@ -815,40 +830,40 @@ package body Netlists.Inference is
       Sel : Net;
       Res : Net;
    begin
-      --  Find which input of the last mux is creating the loop.
+      --  Disconnect the last mux.
+      --  The selection input will be part of the latch enable logic.
+      --  One of the input is the target, will the other is kept for latch
+      --  data input.
       Res_En := Disconnect_And_Get (Last_Mux, 0);
-      if Get_Input_Net (Last_Mux, 1) = Prev_Val then
-         --  Input on pin i1, normal.
-         Idx := 2;
-      else
-         --  Input on pin i0, inverted.
-         Idx := 1;
-         pragma Assert (Get_Input_Net (Last_Mux, 2) = Prev_Val);
+      Idx := Get_Mux_Index (Last_Mux, Prev_Val);
+      if Idx = 2 then
+         --  prev_val on pin i1, so data on pin i0, inverted.
          Res_En := Build_Monadic (Ctxt, Id_Not, Res_En);
          Set_Location (Res_En, Loc);
       end if;
-      Res_In := Disconnect_And_Get (Last_Mux, Idx);
-      Disconnect (Get_Input (Last_Mux, 1 + (2 - Idx)));
+      Res_In := Disconnect_And_Get (Last_Mux, 1 + (2 - Idx));
+      Disconnect (Get_Input (Last_Mux, Idx));
 
+      --  Build the latch control logic using the select input of the mux2
+      --  before the last one.
       Last := Last_Mux;
       Last_Out := Get_Output (Last, 0);
       Is_First := True;
 
       while Last_Out /= Val loop
+         --  Get the previous mux2
          Pinp := Get_First_Sink (Last_Out);
          pragma Assert (Pinp /= No_Input);
          pragma Assert (Get_Next_Sink (Pinp) = No_Input);
          Last := Get_Input_Parent (Pinp);
          pragma Assert (Get_Id (Last) = Id_Mux2);
+
          Sel := Get_Input_Net (Last, 0);
-         if Get_Input_Net (Last, 2) = Last_Out then
+         Idx := Get_Mux_Index (Last, Last_Out);
+         if Idx = 2 then
             --  Inverted
             Sel := Build_Monadic (Ctxt, Id_Not, Sel);
             Set_Location (Sel, Loc);
-            Idx := 2;
-         else
-            pragma Assert (Get_Input_Net (Last, 1) = Last_Out);
-            Idx := 1;
          end if;
          Res_En := Build_Dyadic (Ctxt, Id_Or, Res_En, Sel);
          Set_Location (Res_En, Loc);
@@ -871,6 +886,63 @@ package body Netlists.Inference is
       return Res;
    end Infere_Latch_Create;
 
+   --  Return a name for PREV_VAL (the target).
+   function Get_Prev_Val_Name (Prev_Val : Net) return Sname
+   is
+      Name : Sname;
+   begin
+      if Get_Id (Get_Net_Parent (Prev_Val)) = Id_Output then
+         --  Outputs are connected to a port.  The port is the first
+         --  connection made, so it is the last sink.  Be  more tolerant and
+         --  look for the (only) port connected to the output.
+         declare
+            Inp : Input;
+            Inst : Instance;
+         begin
+            Inp := Get_First_Sink (Prev_Val);
+            loop
+               pragma Assert (Inp /= No_Input);
+               Inst := Get_Input_Parent (Inp);
+               if Get_Id (Inst) >= Id_User_None then
+                  Name := Get_Output_Desc (Get_Module (Inst),
+                                           Get_Port_Idx (Inp)).Name;
+                  exit;
+               end if;
+               Inp := Get_Next_Sink (Inp);
+            end loop;
+         end;
+      else
+         Name := Get_Instance_Name (Get_Net_Parent (Prev_Val));
+      end if;
+
+      return Name;
+   end Get_Prev_Val_Name;
+
+   function Is_Mux2_Chain (Last_Mux : Instance; Val : Net) return Boolean
+   is
+      Last : Instance;
+      Last_Out : Net;
+      Pinp : Input;
+   begin
+      Last := Last_Mux;
+
+      loop
+         Last_Out := Get_Output (Last, 0);
+         exit when Last_Out = Val;
+
+         --  Get the previous mux2
+         Pinp := Get_First_Sink (Last_Out);
+         pragma Assert (Pinp /= No_Input);
+         if Get_Next_Sink (Pinp) /= No_Input then
+            return False;
+         end if;
+         Last := Get_Input_Parent (Pinp);
+         pragma Assert (Get_Id (Last) = Id_Mux2);
+      end loop;
+
+      return True;
+   end Is_Mux2_Chain;
+
    function Infere_Latch (Ctxt : Context_Acc;
                           Val : Net;
                           Prev_Val : Net;
@@ -878,6 +950,7 @@ package body Netlists.Inference is
                           Last_Use : Boolean;
                           Loc : Location_Type) return Net
    is
+      use Errorout;
       Name : Sname;
    begin
       --  In case of false loop, do not close the loop but assign X.
@@ -885,32 +958,19 @@ package body Netlists.Inference is
          return Build_Const_X (Ctxt, Get_Width (Val));
       end if;
 
-      --  Latch or combinational loop.
-      if not Flag_Latches then
-         if Get_Id (Get_Net_Parent (Prev_Val)) = Id_Output then
-            --  Outputs are connected to a port.  The port is the first
-            --  connection made, so it is the last sink.  Be  more tolerant and
-            --  look for the (only) port connected to the output.
-            declare
-               Inp : Input;
-               Inst : Instance;
-            begin
-               Inp := Get_First_Sink (Prev_Val);
-               loop
-                  pragma Assert (Inp /= No_Input);
-                  Inst := Get_Input_Parent (Inp);
-                  if Get_Id (Inst) >= Id_User_None then
-                     Name := Get_Output_Desc (Get_Module (Inst),
-                                              Get_Port_Idx (Inp)).Name;
-                     exit;
-                  end if;
-                  Inp := Get_Next_Sink (Inp);
-               end loop;
-            end;
-         else
-            Name := Get_Instance_Name (Get_Net_Parent (Prev_Val));
-         end if;
+      --  As the mux2 are modified, they should form a simple chain
+      --  (the output of a mux2 is only connected to an input of the mux2
+      --  before it).
+      if not Is_Mux2_Chain (Last_Mux, Val) then
+         Name := Get_Prev_Val_Name (Prev_Val);
+         Warning_Msg_Netlist (Warnid_Logic_Loop, Loc,
+                              "logical loop for net %n", (1 => +Name));
+         return Val;
+      end if;
 
+      --  Latch.
+      if not Flag_Latches then
+         Name := Get_Prev_Val_Name (Prev_Val);
          Error_Msg_Netlist
            (Loc, "latch infered for net %n (use --latches)", (1 => +Name));
       end if;
