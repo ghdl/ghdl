@@ -704,6 +704,9 @@ package body Vhdl.Sem_Inst is
                   --  Only when instantiating an architecture.  Done manually.
                   null;
 
+               when Field_Associated_Type =>
+                  null;
+
                when others =>
                   --  Common case.
                   Instantiate_Iir_Field (Res, N, F);

@@ -8625,7 +8625,7 @@ package Vhdl.Nodes is
    function Get_Incomplete_Type_Ref_Chain (N : Iir) return Iir;
    procedure Set_Incomplete_Type_Ref_Chain (N : Iir; Def : Iir);
 
-   --  Field: Field5 Ref
+   --  Field: Field5 Forward_Ref
    function Get_Associated_Type (Def : Iir) return Iir;
    procedure Set_Associated_Type (Def : Iir; Atype : Iir);
 

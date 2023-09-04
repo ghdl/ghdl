@@ -2178,7 +2178,7 @@ package body Vhdl.Nodes_Meta is
          when Field_Incomplete_Type_Ref_Chain =>
             return Attr_Forward_Ref;
          when Field_Associated_Type =>
-            return Attr_Ref;
+            return Attr_Forward_Ref;
          when Field_Enumeration_Literal_List =>
             return Attr_None;
          when Field_Entity_Class_Entry_Chain =>
