@@ -12,7 +12,7 @@ diff_nocr analyze.log expected.txt
 
 # Test 2: records.vhdl
 # For this test and the rest, we expect no warnings, so fail if we get any
-GHDL_STD_FLAGS=-Werror
+export GHDL_STD_FLAGS=-Werror
 analyze records.vhdl
 
 # Test 3: records_in_records.vhdl
