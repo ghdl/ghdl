@@ -551,7 +551,7 @@ Some warnings are reported only during analysis, others during elaboration.
   You could disable a warning by using the ``--warn-no-XXX`` or ``-Wno-XXX`` instead of ``--warn-XXX`` or ``-WXXX``.
 
 .. HINT::
-  The warnings ``-Wbinding``, ``-Wlibrary``, ``-Wshared``, ``-Wpure``, ``-Wspecs``, ``-Whide``, ``-Wport`` are enabled
+  The warnings ``-Wbinding``, ``-Wlibrary``, ``-Wshared``, ``-Wpure``, ``-Wspecs``, ``-Whide``, ``-Wport``, ``-Wsensitivity`` are enabled
   by default.
 
 .. option:: --warn-library
