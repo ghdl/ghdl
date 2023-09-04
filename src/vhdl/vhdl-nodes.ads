@@ -4138,6 +4138,7 @@ package Vhdl.Nodes is
    --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Conditional_Variable_Assignment_Statement (Short)
+   -- Iir_Kind_Selected_Variable_Assignment_Statement (Medium)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -4149,7 +4150,14 @@ package Vhdl.Nodes is
    --   Get/Set_Identifier (Alias Field3)
    --
    --  Chain of conditional_expressions.
+   -- Only for Iir_Kind_Conditional_Variable_Assignment_Statement:
    --   Get/Set_Conditional_Expression_Chain (Field5)
+   --
+   -- Only for Iir_Kind_Selected_Variable_Assignment_Statement:
+   --   Get/Set_Expression (Field5)
+   --
+   -- Only for Iir_Kind_Selected_Variable_Assignment_Statement:
+   --   Get/Set_Selected_Expressions_Chain (Field7)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -5348,6 +5356,7 @@ package Vhdl.Nodes is
       Iir_Kind_Signal_Release_Assignment_Statement,
       Iir_Kind_Variable_Assignment_Statement,
       Iir_Kind_Conditional_Variable_Assignment_Statement,
+      Iir_Kind_Selected_Variable_Assignment_Statement,
       Iir_Kind_Null_Statement,
       Iir_Kind_Assertion_Statement,
       Iir_Kind_Report_Statement,
@@ -7345,6 +7354,7 @@ package Vhdl.Nodes is
    --Iir_Kind_Signal_Release_Assignment_Statement
    --Iir_Kind_Variable_Assignment_Statement
    --Iir_Kind_Conditional_Variable_Assignment_Statement
+   --Iir_Kind_Selected_Variable_Assignment_Statement
    --Iir_Kind_Null_Statement
    --Iir_Kind_Assertion_Statement
    --Iir_Kind_Report_Statement
@@ -7375,6 +7385,7 @@ package Vhdl.Nodes is
    --Iir_Kind_Signal_Release_Assignment_Statement
    --Iir_Kind_Variable_Assignment_Statement
    --Iir_Kind_Conditional_Variable_Assignment_Statement
+   --Iir_Kind_Selected_Variable_Assignment_Statement
    --Iir_Kind_Null_Statement
    --Iir_Kind_Assertion_Statement
    --Iir_Kind_Report_Statement
@@ -7396,7 +7407,8 @@ package Vhdl.Nodes is
 
    subtype Iir_Kinds_Variable_Assignment_Statement is Iir_Kind range
      Iir_Kind_Variable_Assignment_Statement ..
-     Iir_Kind_Conditional_Variable_Assignment_Statement;
+   --Iir_Kind_Conditional_Variable_Assignment_Statement
+     Iir_Kind_Selected_Variable_Assignment_Statement;
 
    subtype Iir_Kinds_Allocator is Iir_Kind range
      Iir_Kind_Allocator_By_Expression ..
@@ -9164,6 +9176,10 @@ package Vhdl.Nodes is
    --  Field: Field7 Chain
    function Get_Selected_Waveform_Chain (Target : Iir) return Iir;
    procedure Set_Selected_Waveform_Chain (Target : Iir; Chain : Iir);
+
+   --  Field: Field7 Chain
+   function Get_Selected_Expressions_Chain (Target : Iir) return Iir;
+   procedure Set_Selected_Expressions_Chain (Target : Iir; Chain : Iir);
 
    --  Field: Field5 Chain
    function Get_Conditional_Waveform_Chain (Target : Iir) return Iir;

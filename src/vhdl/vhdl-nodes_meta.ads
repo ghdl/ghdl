@@ -317,6 +317,7 @@ package Vhdl.Nodes_Meta is
       Field_Conditional_Expression_Chain,
       Field_Allocator_Designated_Type,
       Field_Selected_Waveform_Chain,
+      Field_Selected_Expressions_Chain,
       Field_Conditional_Waveform_Chain,
       Field_Guard_Expression,
       Field_Guard_Decl,
@@ -928,6 +929,7 @@ package Vhdl.Nodes_Meta is
    function Has_Conditional_Expression_Chain (K : Iir_Kind) return Boolean;
    function Has_Allocator_Designated_Type (K : Iir_Kind) return Boolean;
    function Has_Selected_Waveform_Chain (K : Iir_Kind) return Boolean;
+   function Has_Selected_Expressions_Chain (K : Iir_Kind) return Boolean;
    function Has_Conditional_Waveform_Chain (K : Iir_Kind) return Boolean;
    function Has_Guard_Expression (K : Iir_Kind) return Boolean;
    function Has_Guard_Decl (K : Iir_Kind) return Boolean;

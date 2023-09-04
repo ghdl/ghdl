@@ -620,7 +620,8 @@ package body Vhdl.Sem_Stmts is
       else
          case Get_Kind (Stmt) is
             when Iir_Kind_Variable_Assignment_Statement
-              | Iir_Kind_Conditional_Variable_Assignment_Statement =>
+              | Iir_Kind_Conditional_Variable_Assignment_Statement
+              | Iir_Kind_Selected_Variable_Assignment_Statement =>
                Check_Simple_Variable_Target (Stmt, Target, None);
             when others =>
                Check_Simple_Signal_Target (Stmt, Target, None);
@@ -843,10 +844,10 @@ package body Vhdl.Sem_Stmts is
       end loop;
    end Sem_Check_Waveform_Chain;
 
-   procedure Sem_Selected_Signal_Assignment_Expression (Stmt : Iir)
+   procedure Sem_Selected_Assignment_Expressions
+     (Stmt : Iir; Chain : in out Iir)
    is
       Expr: Iir;
-      Chain : Iir;
    begin
       --  LRM 9.5  Concurrent Signal Assignment Statements.
       --  The process statement equivalent to a concurrent signal assignment
@@ -859,15 +860,13 @@ package body Vhdl.Sem_Stmts is
       --  statement
 
       --  The choices.
-      Chain := Get_Selected_Waveform_Chain (Stmt);
       Expr := Sem_Case_Expression (Get_Expression (Stmt));
       if Expr /= Null_Iir then
          Check_Read (Expr);
          Set_Expression (Stmt, Expr);
          Sem_Case_Choices (Expr, Chain, Get_Location (Stmt));
-         Set_Selected_Waveform_Chain (Stmt, Chain);
       end if;
-   end Sem_Selected_Signal_Assignment_Expression;
+   end Sem_Selected_Assignment_Expressions;
 
    procedure Sem_Guard (Stmt: Iir)
    is
@@ -1021,7 +1020,13 @@ package body Vhdl.Sem_Stmts is
          when Iir_Kind_Concurrent_Selected_Signal_Assignment
             | Iir_Kind_Selected_Waveform_Assignment_Statement =>
             --  The choices.
-            Sem_Selected_Signal_Assignment_Expression (Stmt);
+            declare
+               Chain : Iir;
+            begin
+               Chain := Get_Selected_Waveform_Chain (Stmt);
+               Sem_Selected_Assignment_Expressions (Stmt, Chain);
+               Set_Selected_Waveform_Chain (Stmt, Chain);
+            end;
          when others =>
             null;
       end case;
@@ -1070,6 +1075,34 @@ package body Vhdl.Sem_Stmts is
          El := Get_Chain (El);
       end loop;
    end Sem_Conditional_Expression_Chain;
+
+   procedure Sem_Selected_Expressions_Chain
+     (Sel_Expr : Iir; Atype : in out Iir; Constrained : Boolean)
+   is
+      El : Iir;
+      Expr : Iir;
+   begin
+      El := Sel_Expr;
+      while El /= Null_Iir loop
+         if not Get_Same_Alternative_Flag (El) then
+            Expr := Get_Associated_Expr (El);
+            Expr := Sem_Expression_Wildcard (Expr, Atype, Constrained);
+
+            if Expr /= Null_Iir then
+               Set_Associated_Expr (El, Expr);
+
+               if Is_Expr_Fully_Analyzed (Expr) then
+                  Check_Read (Expr);
+                  Expr := Eval_Expr_If_Static (Expr);
+               end if;
+
+               Merge_Wildcard_Type (Expr, Atype);
+            end if;
+         end if;
+
+         El := Get_Chain (El);
+      end loop;
+   end Sem_Selected_Expressions_Chain;
 
    procedure Sem_Signal_Force_Release_Assignment (Stmt: Iir)
    is
@@ -1271,8 +1304,11 @@ package body Vhdl.Sem_Stmts is
 
             when Iir_Kind_Conditional_Variable_Assignment_Statement =>
                Expr := Get_Conditional_Expression_Chain (Stmt);
-               Sem_Conditional_Expression_Chain
-                 (Expr, Stmt_Type, Constrained);
+               Sem_Conditional_Expression_Chain (Expr, Stmt_Type, Constrained);
+
+            when Iir_Kind_Selected_Variable_Assignment_Statement =>
+               Expr := Get_Selected_Expressions_Chain (Stmt);
+               Sem_Selected_Expressions_Chain (Expr, Stmt_Type, Constrained);
          end case;
 
          exit when Done;
@@ -1287,6 +1323,20 @@ package body Vhdl.Sem_Stmts is
             exit;
          end if;
       end loop;
+
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Selected_Variable_Assignment_Statement =>
+            --  The choices.
+            declare
+               Chain : Iir;
+            begin
+               Chain := Get_Selected_Expressions_Chain (Stmt);
+               Sem_Selected_Assignment_Expressions (Stmt, Chain);
+               Set_Selected_Expressions_Chain (Stmt, Chain);
+            end;
+         when others =>
+            null;
+      end case;
    end Sem_Variable_Assignment;
 
    procedure Sem_Return_Statement (Stmt: Iir_Return_Statement) is
@@ -2042,7 +2092,8 @@ package body Vhdl.Sem_Stmts is
                Sem_Passive_Statement (Stmt);
                Sem_Signal_Force_Release_Assignment (Stmt);
             when Iir_Kind_Variable_Assignment_Statement
-               | Iir_Kind_Conditional_Variable_Assignment_Statement =>
+               | Iir_Kind_Conditional_Variable_Assignment_Statement
+               | Iir_Kind_Selected_Variable_Assignment_Statement =>
                Sem_Variable_Assignment (Stmt);
             when Iir_Kind_Return_Statement =>
                Sem_Return_Statement (Stmt);

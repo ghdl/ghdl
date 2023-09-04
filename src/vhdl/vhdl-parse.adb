@@ -7619,6 +7619,68 @@ package body Vhdl.Parse is
       return Res;
    end Parse_Case_Expression;
 
+   --  [ LRM08 10.5.4 ]
+   --  selected_waveforms ::=
+   --    { waveform WHEN choices , }
+   --    waveform WHEN CHOICE
+   function Parse_Selected_Waveforms return Iir
+   is
+      First, Last : Iir;
+      Wf_Chain : Iir;
+      When_Loc : Location_Type;
+      Assoc : Iir;
+   begin
+      Chain_Init (First, Last);
+      loop
+         Wf_Chain := Parse_Waveform;
+         Expect (Tok_When, "'when' expected after waveform");
+         When_Loc := Get_Token_Location;
+
+         --  Eat 'when'.
+         Scan;
+
+         Parse_Choices (Null_Iir, When_Loc, Assoc);
+         Set_Associated_Chain (Assoc, Wf_Chain);
+         Chain_Append_Subchain (First, Last, Assoc);
+         exit when Current_Token /= Tok_Comma;
+         --  Skip ','.
+         Scan;
+      end loop;
+
+      return First;
+   end Parse_Selected_Waveforms;
+
+   --  [ LRM08 10.5.4 ]
+   --  selected_expressions ::=
+   --    { expression WHEN choices , }
+   --    expression WHEN CHOICE
+   function Parse_Selected_Expressions return Iir
+   is
+      First, Last : Iir;
+      Expr : Iir;
+      When_Loc : Location_Type;
+      Assoc : Iir;
+   begin
+      Chain_Init (First, Last);
+      loop
+         Expr := Parse_Expression;
+         Expect (Tok_When, "'when' expected after expression");
+         When_Loc := Get_Token_Location;
+
+         --  Eat 'when'.
+         Scan;
+
+         Parse_Choices (Null_Iir, When_Loc, Assoc);
+         Set_Associated_Expr (Assoc, Expr);
+         Chain_Append_Subchain (First, Last, Assoc);
+         exit when Current_Token /= Tok_Comma;
+         --  Skip ','.
+         Scan;
+      end loop;
+
+      return First;
+   end Parse_Selected_Expressions;
+
    --  precond : WITH
    --  postcond: ';'
    --
@@ -7636,21 +7698,26 @@ package body Vhdl.Parse is
    --  selected_waveform_assignment ::=
    --     WITH expression SELECT [?]
    --        target <= [ delay_mechanism ] selected_waveforms ;
-   function Parse_Selected_Signal_Assignment (Kind : Iir_Kind) return Iir
+   --
+   --  [ LRM08 10.6.4 ]
+   --  selected_variable_assignment ::=
+   --    WITH expression SELECT [?]
+   --        target := selected_expressions ;
+   function Parse_Selected_Assignment
+     (Sig_Kind : Iir_Kind; Var_Kind : Iir_Kind) return Iir
    is
+      Kind : Iir_Kind;
+      Expr : Iir;
       Res : Iir;
-      Assoc : Iir;
-      Wf_Chain : Iir_Waveform_Element;
       Target : Iir;
-      First, Last : Iir;
-      When_Loc : Location_Type;
+      With_Loc : Location_Type;
    begin
+      With_Loc := Get_Token_Location;
+
       --  Skip 'with'.
       Scan;
 
-      Res := Create_Iir (Kind);
-      Set_Location (Res);
-      Set_Expression (Res, Parse_Case_Expression);
+      Expr := Parse_Case_Expression;
 
       Expect_Scan (Tok_Select, "'select' expected after expression");
 
@@ -7659,38 +7726,45 @@ package body Vhdl.Parse is
       else
          Target := Parse_Name (Allow_Indexes => True);
       end if;
+
+      case Current_Token is
+         when Tok_Less_Equal =>
+            Kind := Sig_Kind;
+         when Tok_Assign =>
+            if Var_Kind = Iir_Kind_Error then
+               Error_Msg_Parse ("'<=' is expected instead of ':='");
+               Kind := Sig_Kind;
+            else
+               Kind := Var_Kind;
+            end if;
+         when others =>
+            Error_Msg_Parse ("'<=' expected after target");
+            Kind := Sig_Kind;
+      end case;
+
+      Res := Create_Iir (Kind);
+      Set_Location (Res, With_Loc);
+      Set_Expression (Res, Expr);
       Set_Target (Res, Target);
-      Expect_Scan (Tok_Less_Equal);
+
+      --  Skip '<=' or ':='.
+      Scan;
 
       case Kind is
          when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
             Parse_Options (Res);
+            Set_Selected_Waveform_Chain (Res, Parse_Selected_Waveforms);
          when Iir_Kind_Selected_Waveform_Assignment_Statement =>
             Parse_Delay_Mechanism (Res);
+            Set_Selected_Waveform_Chain (Res, Parse_Selected_Waveforms);
+         when Iir_Kind_Selected_Variable_Assignment_Statement =>
+            Set_Selected_Expressions_Chain (Res, Parse_Selected_Expressions);
          when others =>
             raise Internal_Error;
       end case;
 
-      Chain_Init (First, Last);
-      loop
-         Wf_Chain := Parse_Waveform;
-         Expect (Tok_When, "'when' expected after waveform");
-         When_Loc := Get_Token_Location;
-
-         --  Eat 'when'.
-         Scan;
-
-         Parse_Choices (Null_Iir, When_Loc, Assoc);
-         Set_Associated_Chain (Assoc, Wf_Chain);
-         Chain_Append_Subchain (First, Last, Assoc);
-         exit when Current_Token /= Tok_Comma;
-         --  Skip ','.
-         Scan;
-      end loop;
-      Set_Selected_Waveform_Chain (Res, First);
-
       return Res;
-   end Parse_Selected_Signal_Assignment;
+   end Parse_Selected_Assignment;
 
    --  precond : next token
    --  postcond: next token.
@@ -8716,8 +8790,9 @@ package body Vhdl.Parse is
                   end if;
                end;
             when Tok_With =>
-               Stmt := Parse_Selected_Signal_Assignment
-                 (Iir_Kind_Selected_Waveform_Assignment_Statement);
+               Stmt := Parse_Selected_Assignment
+                 (Iir_Kind_Selected_Waveform_Assignment_Statement,
+                  Iir_Kind_Selected_Variable_Assignment_Statement);
 
             when Tok_Return =>
                Stmt := Create_Iir (Iir_Kind_Return_Statement);
@@ -10930,8 +11005,9 @@ package body Vhdl.Parse is
                   Expect_Scan (Tok_Semi_Colon);
                end if;
             when Tok_With =>
-               Stmt := Parse_Selected_Signal_Assignment
-                 (Iir_Kind_Concurrent_Selected_Signal_Assignment);
+               Stmt := Parse_Selected_Assignment
+                 (Iir_Kind_Concurrent_Selected_Signal_Assignment,
+                  Iir_Kind_Error);
                Expect_Scan (Tok_Semi_Colon,
                             "';' expected at end of signal assignment");
 

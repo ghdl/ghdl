@@ -565,6 +565,8 @@ package Vhdl.Elocations is
 
    -- Iir_Kind_Conditional_Variable_Assignment_Statement (None)
 
+   -- Iir_Kind_Selected_Variable_Assignment_Statement (None)
+
    -- Iir_Kind_Assertion_Statement (None)
 
    -- Iir_Kind_Report_Statement (None)

@@ -73,6 +73,7 @@ package body Vhdl.Nodes_Walk is
            | Iir_Kind_Exit_Statement
            | Iir_Kind_Variable_Assignment_Statement
            | Iir_Kind_Conditional_Variable_Assignment_Statement
+           | Iir_Kind_Selected_Variable_Assignment_Statement
            | Iir_Kind_Break_Statement
            | Iir_Kind_Suspend_State_Statement =>
             null;

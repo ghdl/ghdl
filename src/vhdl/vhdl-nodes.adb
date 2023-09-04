@@ -1310,6 +1310,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Selected_Waveform_Assignment_Statement
+           | Iir_Kind_Selected_Variable_Assignment_Statement
            | Iir_Kind_Wait_Statement
            | Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute
@@ -5517,6 +5518,22 @@ package body Vhdl.Nodes is
                      "no field Selected_Waveform_Chain");
       Set_Field7 (Target, Chain);
    end Set_Selected_Waveform_Chain;
+
+   function Get_Selected_Expressions_Chain (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Selected_Expressions_Chain (Get_Kind (Target)),
+                     "no field Selected_Expressions_Chain");
+      return Get_Field7 (Target);
+   end Get_Selected_Expressions_Chain;
+
+   procedure Set_Selected_Expressions_Chain (Target : Iir; Chain : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Selected_Expressions_Chain (Get_Kind (Target)),
+                     "no field Selected_Expressions_Chain");
+      Set_Field7 (Target, Chain);
+   end Set_Selected_Expressions_Chain;
 
    function Get_Conditional_Waveform_Chain (Target : Iir) return Iir is
    begin

@@ -850,6 +850,9 @@ package body Vhdl.Errors is
          when Iir_Kind_Conditional_Variable_Assignment_Statement =>
             return Disp_Label
               (Node, "conditional variable assignment statement");
+         when Iir_Kind_Selected_Variable_Assignment_Statement =>
+            return Disp_Label
+              (Node, "selected variable assignment statement");
          when Iir_Kind_Null_Statement =>
             return Disp_Label (Node, "null statement");
          when Iir_Kind_Wait_Statement =>

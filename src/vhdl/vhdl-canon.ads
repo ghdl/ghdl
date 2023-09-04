@@ -71,6 +71,10 @@ package Vhdl.Canon is
    function Canon_Conditional_Variable_Assignment_Statement (Stmt : Iir)
                                                             return Iir;
 
+   --  Canon a selected variable assignment into a case statement.
+   function Canon_Selected_Variable_Assignment_Statement (Stmt : Iir)
+                                                         return Iir;
+
    --  Canon a conditional signal assignment into a conditional statement.
    function Canon_Conditional_Signal_Assignment_Statement (Stmt : Iir)
                                                           return Iir;

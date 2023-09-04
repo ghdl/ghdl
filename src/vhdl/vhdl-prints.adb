@@ -2867,6 +2867,38 @@ package body Vhdl.Prints is
       Close_Hbox (Ctxt);
    end Disp_Conditional_Variable_Assignment;
 
+   procedure Disp_Selected_Expressions
+     (Ctxt : in out Ctxt_Class; Stmt : Iir)
+   is
+      Assoc_Chain : constant Iir := Get_Selected_Expressions_Chain (Stmt);
+      Assoc: Iir;
+   begin
+      Assoc := Assoc_Chain;
+      while Assoc /= Null_Iir loop
+         if Assoc /= Assoc_Chain then
+            Disp_Token (Ctxt, Tok_Comma);
+         end if;
+         Print (Ctxt, Get_Associated_Expr (Assoc));
+         Disp_Token (Ctxt, Tok_When);
+         Disp_Choice (Ctxt, Assoc);
+      end loop;
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+   end Disp_Selected_Expressions;
+
+   procedure Disp_Selected_Variable_Assignment
+     (Ctxt : in out Ctxt_Class; Stmt: Iir) is
+   begin
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_With);
+      Print (Ctxt, Get_Expression (Stmt));
+      Disp_Token (Ctxt, Tok_Select);
+      Print (Ctxt, Get_Target (Stmt));
+      Disp_Token (Ctxt, Tok_Assign);
+      Disp_Selected_Expressions (Ctxt, Stmt);
+      Close_Hbox (Ctxt);
+   end Disp_Selected_Variable_Assignment;
+
    procedure Disp_Postponed (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
       if Get_Postponed_Flag (Stmt) then
@@ -3366,6 +3398,8 @@ package body Vhdl.Prints is
                Disp_Variable_Assignment (Ctxt, Stmt);
             when Iir_Kind_Conditional_Variable_Assignment_Statement =>
                Disp_Conditional_Variable_Assignment (Ctxt, Stmt);
+            when Iir_Kind_Selected_Variable_Assignment_Statement =>
+               Disp_Selected_Variable_Assignment (Ctxt, Stmt);
             when Iir_Kind_Assertion_Statement =>
                Disp_Assertion_Statement (Ctxt, Stmt);
             when Iir_Kind_Report_Statement =>

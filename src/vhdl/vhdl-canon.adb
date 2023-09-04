@@ -508,6 +508,23 @@ package body Vhdl.Canon is
                   Ce := Get_Chain (Ce);
                end loop;
             end;
+         when Iir_Kind_Selected_Variable_Assignment_Statement =>
+            declare
+               Ce : Iir;
+            begin
+               Canon_Extract_Sensitivity_Expression
+                 (Get_Expression (Stmt), List, False);
+               Canon_Extract_Sensitivity_Expression
+                 (Get_Target (Stmt), List, True);
+               Ce := Get_Selected_Expressions_Chain (Stmt);
+               while Ce /= Null_Iir loop
+                  Canon_Extract_Sensitivity_If_Not_Null
+                    (Get_Condition (Ce), List, False);
+                  Canon_Extract_Sensitivity_Expression
+                    (Get_Expression (Ce), List, False);
+                  Ce := Get_Chain (Ce);
+               end loop;
+            end;
 
          when Iir_Kind_Simple_Signal_Assignment_Statement =>
             --  LRM08 11.3
@@ -1240,6 +1257,47 @@ package body Vhdl.Canon is
       return Res;
    end Canon_Conditional_Variable_Assignment_Statement;
 
+   function Canon_Selected_Variable_Assignment_Statement (Stmt : Iir)
+                                                         return Iir
+   is
+      Target : constant Iir := Get_Target (Stmt);
+      Expr : Iir;
+      Asgn : Iir;
+      Res : Iir;
+      Choice : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Case_Statement);
+      Location_Copy (Res, Stmt);
+      Set_Label (Res, Get_Label (Stmt));
+      Set_Suspend_Flag (Res, False);
+      Set_Expression (Res, Get_Expression (Stmt));
+      Set_Label (Res, Get_Label (Res));
+
+      Choice := Get_Selected_Expressions_Chain (Stmt);
+      Set_Case_Statement_Alternative_Chain (Res, Choice);
+
+      while Choice /= Null_Iir loop
+         if not Get_Same_Alternative_Flag (Choice) then
+            Asgn := Create_Iir (Iir_Kind_Variable_Assignment_Statement);
+            Location_Copy (Asgn, Choice);
+            Set_Parent (Asgn, Res);
+            Set_Target (Asgn, Target);
+            Expr := Get_Associated_Expr (Choice);
+            if Canon_Flag_Expressions then
+               Canon_Expression (Expr);
+            end if;
+            Set_Expression (Asgn, Expr);
+
+            Set_Associated_Chain (Choice, Asgn);
+            Set_Associated_Expr (Choice, Null_Iir);
+         end if;
+
+         Choice := Get_Chain (Choice);
+      end loop;
+
+      return Res;
+   end Canon_Selected_Variable_Assignment_Statement;
+
    function Canon_Conditional_Signal_Assignment_Statement (Stmt : Iir)
                                                          return Iir is
    begin
@@ -1297,6 +1355,9 @@ package body Vhdl.Canon is
             when Iir_Kind_Conditional_Variable_Assignment_Statement =>
                N_Stmt :=
                  Canon_Conditional_Variable_Assignment_Statement (Stmt);
+
+            when Iir_Kind_Selected_Variable_Assignment_Statement =>
+               N_Stmt := Canon_Selected_Variable_Assignment_Statement (Stmt);
 
             when Iir_Kind_Wait_Statement =>
                declare

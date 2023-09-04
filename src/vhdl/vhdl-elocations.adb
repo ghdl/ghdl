@@ -386,6 +386,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Signal_Release_Assignment_Statement
            | Iir_Kind_Variable_Assignment_Statement
            | Iir_Kind_Conditional_Variable_Assignment_Statement
+           | Iir_Kind_Selected_Variable_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement

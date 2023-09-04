@@ -305,90 +305,91 @@ class Iir_Kind(IntEnum):
     Signal_Release_Assignment_Statement = 246
     Variable_Assignment_Statement = 247
     Conditional_Variable_Assignment_Statement = 248
-    Null_Statement = 249
-    Assertion_Statement = 250
-    Report_Statement = 251
-    Next_Statement = 252
-    Exit_Statement = 253
-    Return_Statement = 254
-    Procedure_Call_Statement = 255
-    Wait_Statement = 256
-    Break_Statement = 257
-    For_Loop_Statement = 258
-    While_Loop_Statement = 259
-    Case_Statement = 260
-    If_Statement = 261
-    Suspend_State_Statement = 262
-    Elsif = 263
-    Character_Literal = 264
-    Simple_Name = 265
-    Selected_Name = 266
-    Operator_Symbol = 267
-    Reference_Name = 268
-    External_Constant_Name = 269
-    External_Signal_Name = 270
-    External_Variable_Name = 271
-    Selected_By_All_Name = 272
-    Parenthesis_Name = 273
-    Package_Pathname = 274
-    Absolute_Pathname = 275
-    Relative_Pathname = 276
-    Pathname_Element = 277
-    Base_Attribute = 278
-    Subtype_Attribute = 279
-    Element_Attribute = 280
-    Across_Attribute = 281
-    Through_Attribute = 282
-    Nature_Reference_Attribute = 283
-    Left_Type_Attribute = 284
-    Right_Type_Attribute = 285
-    High_Type_Attribute = 286
-    Low_Type_Attribute = 287
-    Ascending_Type_Attribute = 288
-    Image_Attribute = 289
-    Value_Attribute = 290
-    Pos_Attribute = 291
-    Val_Attribute = 292
-    Succ_Attribute = 293
-    Pred_Attribute = 294
-    Leftof_Attribute = 295
-    Rightof_Attribute = 296
-    Signal_Slew_Attribute = 297
-    Quantity_Slew_Attribute = 298
-    Ramp_Attribute = 299
-    Zoh_Attribute = 300
-    Ltf_Attribute = 301
-    Ztf_Attribute = 302
-    Dot_Attribute = 303
-    Integ_Attribute = 304
-    Quantity_Delayed_Attribute = 305
-    Above_Attribute = 306
-    Delayed_Attribute = 307
-    Stable_Attribute = 308
-    Quiet_Attribute = 309
-    Transaction_Attribute = 310
-    Event_Attribute = 311
-    Active_Attribute = 312
-    Last_Event_Attribute = 313
-    Last_Active_Attribute = 314
-    Last_Value_Attribute = 315
-    Driving_Attribute = 316
-    Driving_Value_Attribute = 317
-    Behavior_Attribute = 318
-    Structure_Attribute = 319
-    Simple_Name_Attribute = 320
-    Instance_Name_Attribute = 321
-    Path_Name_Attribute = 322
-    Converse_Attribute = 323
-    Left_Array_Attribute = 324
-    Right_Array_Attribute = 325
-    High_Array_Attribute = 326
-    Low_Array_Attribute = 327
-    Length_Array_Attribute = 328
-    Ascending_Array_Attribute = 329
-    Range_Array_Attribute = 330
-    Reverse_Range_Array_Attribute = 331
-    Attribute_Name = 332
+    Selected_Variable_Assignment_Statement = 249
+    Null_Statement = 250
+    Assertion_Statement = 251
+    Report_Statement = 252
+    Next_Statement = 253
+    Exit_Statement = 254
+    Return_Statement = 255
+    Procedure_Call_Statement = 256
+    Wait_Statement = 257
+    Break_Statement = 258
+    For_Loop_Statement = 259
+    While_Loop_Statement = 260
+    Case_Statement = 261
+    If_Statement = 262
+    Suspend_State_Statement = 263
+    Elsif = 264
+    Character_Literal = 265
+    Simple_Name = 266
+    Selected_Name = 267
+    Operator_Symbol = 268
+    Reference_Name = 269
+    External_Constant_Name = 270
+    External_Signal_Name = 271
+    External_Variable_Name = 272
+    Selected_By_All_Name = 273
+    Parenthesis_Name = 274
+    Package_Pathname = 275
+    Absolute_Pathname = 276
+    Relative_Pathname = 277
+    Pathname_Element = 278
+    Base_Attribute = 279
+    Subtype_Attribute = 280
+    Element_Attribute = 281
+    Across_Attribute = 282
+    Through_Attribute = 283
+    Nature_Reference_Attribute = 284
+    Left_Type_Attribute = 285
+    Right_Type_Attribute = 286
+    High_Type_Attribute = 287
+    Low_Type_Attribute = 288
+    Ascending_Type_Attribute = 289
+    Image_Attribute = 290
+    Value_Attribute = 291
+    Pos_Attribute = 292
+    Val_Attribute = 293
+    Succ_Attribute = 294
+    Pred_Attribute = 295
+    Leftof_Attribute = 296
+    Rightof_Attribute = 297
+    Signal_Slew_Attribute = 298
+    Quantity_Slew_Attribute = 299
+    Ramp_Attribute = 300
+    Zoh_Attribute = 301
+    Ltf_Attribute = 302
+    Ztf_Attribute = 303
+    Dot_Attribute = 304
+    Integ_Attribute = 305
+    Quantity_Delayed_Attribute = 306
+    Above_Attribute = 307
+    Delayed_Attribute = 308
+    Stable_Attribute = 309
+    Quiet_Attribute = 310
+    Transaction_Attribute = 311
+    Event_Attribute = 312
+    Active_Attribute = 313
+    Last_Event_Attribute = 314
+    Last_Active_Attribute = 315
+    Last_Value_Attribute = 316
+    Driving_Attribute = 317
+    Driving_Value_Attribute = 318
+    Behavior_Attribute = 319
+    Structure_Attribute = 320
+    Simple_Name_Attribute = 321
+    Instance_Name_Attribute = 322
+    Path_Name_Attribute = 323
+    Converse_Attribute = 324
+    Left_Array_Attribute = 325
+    Right_Array_Attribute = 326
+    High_Array_Attribute = 327
+    Low_Array_Attribute = 328
+    Length_Array_Attribute = 329
+    Ascending_Array_Attribute = 330
+    Range_Array_Attribute = 331
+    Reverse_Range_Array_Attribute = 332
+    Attribute_Name = 333
 
 
 @export
@@ -1099,6 +1100,7 @@ class Iir_Kinds:
         Iir_Kind.Signal_Release_Assignment_Statement,
         Iir_Kind.Variable_Assignment_Statement,
         Iir_Kind.Conditional_Variable_Assignment_Statement,
+        Iir_Kind.Selected_Variable_Assignment_Statement,
         Iir_Kind.Null_Statement,
         Iir_Kind.Assertion_Statement,
         Iir_Kind.Report_Statement,
@@ -1130,6 +1132,7 @@ class Iir_Kinds:
         Iir_Kind.Signal_Release_Assignment_Statement,
         Iir_Kind.Variable_Assignment_Statement,
         Iir_Kind.Conditional_Variable_Assignment_Statement,
+        Iir_Kind.Selected_Variable_Assignment_Statement,
         Iir_Kind.Null_Statement,
         Iir_Kind.Assertion_Statement,
         Iir_Kind.Report_Statement,
@@ -1154,6 +1157,7 @@ class Iir_Kinds:
     Variable_Assignment_Statement = [
         Iir_Kind.Variable_Assignment_Statement,
         Iir_Kind.Conditional_Variable_Assignment_Statement,
+        Iir_Kind.Selected_Variable_Assignment_Statement,
     ]
 
     Allocator = [
@@ -5347,6 +5351,19 @@ def Get_Selected_Waveform_Chain(obj: Iir) -> Iir:
 @export
 @BindToLibGHDL("vhdl__nodes__set_selected_waveform_chain")
 def Set_Selected_Waveform_Chain(obj: Iir, value: Iir) -> None:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__get_selected_expressions_chain")
+def Get_Selected_Expressions_Chain(obj: Iir) -> Iir:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_selected_expressions_chain")
+def Set_Selected_Expressions_Chain(obj: Iir, value: Iir) -> None:
     """"""
 
 
