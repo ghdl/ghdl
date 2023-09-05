@@ -1813,7 +1813,6 @@ package body Synth.Vhdl_Stmts is
 
       Nets : Net_Array_Acc;
 
-
       Sel : Valtyp;
       Sel_Net : Net;
    begin
@@ -4020,129 +4019,8 @@ package body Synth.Vhdl_Stmts is
       Set_Location (Inst, Loc);
    end Synth_Dynamic_Assertion_Statement;
 
-   procedure Synth_Sequential_Statements
-     (C : in out Seq_Context; Stmts : Node)
-   is
-      Is_Dyn : constant Boolean := not Get_Instance_Const (C.Inst);
-      Ctxt : constant Context_Acc := Get_Build (C.Inst);
-      Marker : Mark_Type;
-      Stmt : Node;
-      Phi_T, Phi_F : Phi_Type;
-      Has_Phi : Boolean;
-   begin
-      Mark_Expr_Pool (Marker);
-
-      Stmt := Stmts;
-      while Is_Valid (Stmt) loop
-         if Is_Dyn then
-            pragma Assert (not Is_Static_Bit0 (C.W_En));
-            Has_Phi := not Is_Static_Bit1 (C.W_En);
-            if Has_Phi then
-               Push_Phi;
-            end if;
-         end if;
-
-         if Flags.Flag_Trace_Statements then
-            Elab.Vhdl_Debug.Put_Stmt_Trace (Stmt);
-         end if;
-         if Elab.Debugger.Flag_Need_Debug then
-            Elab.Debugger.Debug_Break (C.Inst, Stmt);
-         end if;
-
-         case Get_Kind (Stmt) is
-            when Iir_Kind_If_Statement =>
-               Synth_If_Statement (C, Stmt);
-            when Iir_Kind_Simple_Signal_Assignment_Statement =>
-               Synth_Simple_Signal_Assignment (C.Inst, Stmt);
-            when Iir_Kind_Conditional_Signal_Assignment_Statement =>
-               Synth_Conditional_Signal_Assignment (C.Inst, Stmt);
-            when Iir_Kind_Selected_Waveform_Assignment_Statement =>
-               Synth_Selected_Signal_Assignment (C.Inst, Stmt);
-            when Iir_Kind_Variable_Assignment_Statement =>
-               Synth_Variable_Assignment (C.Inst, Stmt);
-            when Iir_Kind_Conditional_Variable_Assignment_Statement =>
-               Synth_Conditional_Variable_Assignment (C.Inst, Stmt);
-            when Iir_Kind_Selected_Variable_Assignment_Statement =>
-               Synth_Selected_Variable_Assignment (C.Inst, Stmt);
-            when Iir_Kind_Case_Statement =>
-               Synth_Case_Statement (C, Stmt);
-            when Iir_Kind_For_Loop_Statement =>
-               if Is_Dyn then
-                  Synth_Dynamic_For_Loop_Statement (C, Stmt);
-               else
-                  Synth_Static_For_Loop_Statement (C, Stmt);
-               end if;
-            when Iir_Kind_While_Loop_Statement =>
-               if Is_Dyn then
-                  Synth_Dynamic_While_Loop_Statement (C, Stmt);
-               else
-                  Synth_Static_While_Loop_Statement (C, Stmt);
-               end if;
-            when Iir_Kind_Null_Statement =>
-               --  Easy
-               null;
-            when Iir_Kind_Return_Statement =>
-               Synth_Return_Statement (C, Stmt);
-            when Iir_Kind_Procedure_Call_Statement =>
-               Synth_Procedure_Call (C.Inst, Stmt);
-            when Iir_Kind_Report_Statement =>
-               if not Is_Dyn then
-                  Execute_Report_Statement (C.Inst, Stmt);
-               else
-                  --  Not executed.
-                  --  Depends on the execution path: the report statement may
-                  --  be conditionally executed.
-                  Synth_Dynamic_Report_Statement (C.Inst, Stmt, True);
-               end if;
-            when Iir_Kind_Assertion_Statement =>
-               if not Is_Dyn then
-                  Execute_Assertion_Statement (C.Inst, Stmt);
-               else
-                  Synth_Dynamic_Assertion_Statement (C, Stmt);
-               end if;
-            when Iir_Kind_Exit_Statement
-              | Iir_Kind_Next_Statement =>
-               if Is_Dyn then
-                  Synth_Dynamic_Exit_Next_Statement (C, Stmt);
-               else
-                  Synth_Static_Exit_Next_Statement (C, Stmt);
-               end if;
-            when Iir_Kind_Wait_Statement =>
-               Error_Msg_Synth
-                 (C.Inst, Stmt, "wait statement not allowed for synthesis");
-            when Iir_Kind_Suspend_State_Statement =>
-               --  Could happen in simulation when an 'unknown' procedure
-               --  is called from a sensitized process.
-               --  But this could also be detected during elaboration.
-               null;
-            when others =>
-               Error_Kind ("synth_sequential_statements", Stmt);
-         end case;
-         if Is_Dyn then
-            if Has_Phi then
-               Pop_Phi (Phi_T);
-               Push_Phi;
-               Pop_Phi (Phi_F);
-               Merge_Phis (Ctxt, Get_Current_Value (Ctxt, C.W_En),
-                           Phi_T, Phi_F, Get_Location (Stmt));
-            end if;
-            if Is_Static_Bit0 (C.W_En) then
-               --  Not more execution.
-               return;
-            end if;
-         else
-            if not C.S_En or C.Nbr_Ret /= 0 then
-               return;
-            end if;
-         end if;
-         --  Not possible due to returns.
---         pragma Assert (Areapools.Is_At_Mark (Expr_Pool, Marker));
-         Stmt := Get_Chain (Stmt);
-      end loop;
-   end Synth_Sequential_Statements;
-
    procedure Synth_Sequential_Statement
-     (C : in out Seq_Context; Stmt : Node)
+     (C : in out Seq_Context; Stmt : Node; Stop : out Boolean)
    is
       Is_Dyn : constant Boolean := not Get_Instance_Const (C.Inst);
       Marker : Mark_Type;
@@ -4177,10 +4055,15 @@ package body Synth.Vhdl_Stmts is
             end if;
          when Iir_Kind_Conditional_Signal_Assignment_Statement =>
             Synth_Conditional_Signal_Assignment (C.Inst, Stmt);
+         when Iir_Kind_Selected_Waveform_Assignment_Statement =>
+            Synth_Selected_Signal_Assignment (C.Inst, Stmt);
          when Iir_Kind_Variable_Assignment_Statement =>
             Synth_Variable_Assignment (C.Inst, Stmt);
          when Iir_Kind_Conditional_Variable_Assignment_Statement =>
             Synth_Conditional_Variable_Assignment (C.Inst, Stmt);
+         when Iir_Kind_Selected_Variable_Assignment_Statement =>
+            Synth_Selected_Variable_Assignment (C.Inst, Stmt);
+
          when Iir_Kind_Case_Statement =>
             Synth_Case_Statement (C, Stmt);
          when Iir_Kind_For_Loop_Statement =>
@@ -4243,16 +4126,26 @@ package body Synth.Vhdl_Stmts is
                            Phi_T, Phi_F, Get_Location (Stmt));
             end;
          end if;
-         if Is_Static_Bit0 (C.W_En) then
-            --  Not more execution.
-            return;
-         end if;
+         --  Not more execution.
+         Stop := Is_Static_Bit0 (C.W_En);
       else
-         if not C.S_En or C.Nbr_Ret /= 0 then
-            return;
-         end if;
+         Stop := not C.S_En or C.Nbr_Ret /= 0;
       end if;
    end Synth_Sequential_Statement;
+
+   procedure Synth_Sequential_Statements
+     (C : in out Seq_Context; Stmts : Node)
+   is
+      Stmt : Node;
+      Stop : Boolean;
+   begin
+      Stmt := Stmts;
+      while Is_Valid (Stmt) loop
+         Synth_Sequential_Statement (C, Stmt, Stop);
+         exit when Stop;
+         Stmt := Get_Chain (Stmt);
+      end loop;
+   end Synth_Sequential_Statements;
 
    function Make_Process_Instance (Syn_Inst : Synth_Instance_Acc;
                                    Proc : Node) return Synth_Instance_Acc
@@ -4284,6 +4177,7 @@ package body Synth.Vhdl_Stmts is
       Proc_Marker : Areapools.Mark_Type;
       C : Seq_Context (Mode_Static);
       Stmt : Node;
+      Stop : Boolean;
    begin
       C := (Mode_Static,
             Inst => Make_Process_Instance (Syn_Inst, Proc),
@@ -4315,7 +4209,8 @@ package body Synth.Vhdl_Stmts is
             exit;
          end if;
 
-         Synth_Sequential_Statement (C, Stmt);
+         Synth_Sequential_Statement (C, Stmt, Stop);
+         pragma Assert (not Stop);
 
          Stmt := Get_Chain (Stmt);
       end loop;
