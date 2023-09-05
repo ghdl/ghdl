@@ -1788,14 +1788,13 @@ package body Synth.Vhdl_Stmts is
       end if;
    end Synth_Case_Statement;
 
-   procedure Synth_Selected_Signal_Assignment
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   procedure Synth_Selected_Assignment
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node; Choices : Node)
    is
       use Vhdl.Sem_Expr;
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-
+      Kind : constant Iir_Kind := Get_Kind (Stmt);
       Expr : constant Node := Get_Expression (Stmt);
-      Choices : constant Node := Get_Selected_Waveform_Chain (Stmt);
 
       Marker : Mark_Type;
 
@@ -1846,7 +1845,7 @@ package body Synth.Vhdl_Stmts is
 
       --  Synth statements, extract choice value.
       declare
-         Choice, Wf : Node;
+         Choice, Assoc : Node;
          Val : Valtyp;
          Choice_Idx, Other_Choice : Nat32;
       begin
@@ -1858,8 +1857,18 @@ package body Synth.Vhdl_Stmts is
          while Is_Valid (Choice) loop
             pragma Assert (not Get_Same_Alternative_Flag (Choice));
 
-            Wf := Get_Associated_Chain (Choice);
-            Val := Synth_Waveform (Syn_Inst, Wf, Targ_Type);
+            case Kind is
+               when Iir_Kind_Selected_Waveform_Assignment_Statement
+                  | Iir_Kind_Concurrent_Selected_Signal_Assignment =>
+                  Assoc := Get_Associated_Chain (Choice);
+                  Val := Synth_Waveform (Syn_Inst, Assoc, Targ_Type);
+               when Iir_Kind_Selected_Variable_Assignment_Statement =>
+                  Assoc := Get_Associated_Expr (Choice);
+                  Val := Synth_Expression_With_Type
+                    (Syn_Inst, Assoc, Targ_Type);
+               when others =>
+                  raise Internal_Error;
+            end case;
 
             Alt_Idx := Alt_Idx + 1;
             Alts (Alt_Idx).Val := Get_Net (Ctxt, Val);
@@ -1912,7 +1921,21 @@ package body Synth.Vhdl_Stmts is
       Free_Alternative_Data_Array (Alts);
       Free_Net_Array (Nets);
       Release_Expr_Pool (Marker);
+   end Synth_Selected_Assignment;
+
+   procedure Synth_Selected_Signal_Assignment
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node) is
+   begin
+      Synth_Selected_Assignment
+        (Syn_Inst, Stmt, Get_Selected_Waveform_Chain (Stmt));
    end Synth_Selected_Signal_Assignment;
+
+   procedure Synth_Selected_Variable_Assignment
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node) is
+   begin
+      Synth_Selected_Assignment
+        (Syn_Inst, Stmt, Get_Selected_Expressions_Chain (Stmt));
+   end Synth_Selected_Variable_Assignment;
 
    function Synth_Label (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
                          return Sname
@@ -4039,6 +4062,8 @@ package body Synth.Vhdl_Stmts is
                Synth_Variable_Assignment (C.Inst, Stmt);
             when Iir_Kind_Conditional_Variable_Assignment_Statement =>
                Synth_Conditional_Variable_Assignment (C.Inst, Stmt);
+            when Iir_Kind_Selected_Variable_Assignment_Statement =>
+               Synth_Selected_Variable_Assignment (C.Inst, Stmt);
             when Iir_Kind_Case_Statement =>
                Synth_Case_Statement (C, Stmt);
             when Iir_Kind_For_Loop_Statement =>

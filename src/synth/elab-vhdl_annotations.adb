@@ -815,6 +815,7 @@ package body Elab.Vhdl_Annotations is
               | Iir_Kind_Conditional_Signal_Assignment_Statement
               | Iir_Kind_Variable_Assignment_Statement
               | Iir_Kind_Conditional_Variable_Assignment_Statement
+              | Iir_Kind_Selected_Variable_Assignment_Statement
               | Iir_Kind_Signal_Force_Assignment_Statement
               | Iir_Kind_Signal_Release_Assignment_Statement =>
                null;
