@@ -867,13 +867,26 @@ package body Elab.Vhdl_Types is
       end loop;
    end Get_Declaration_Type;
 
+   function Get_Elaborated_Type (Syn_Inst : Synth_Instance_Acc;
+                                 Atype : Node) return Type_Acc
+   is
+      Def : Node;
+      Res : Type_Acc;
+   begin
+      if Get_Kind (Atype) = Iir_Kind_Interface_Type_Definition then
+         Get_Interface_Type (Syn_Inst, Atype, Res, Def);
+      else
+         Res := Get_Subtype_Object (Syn_Inst, Atype);
+      end if;
+
+      return Res;
+   end Get_Elaborated_Type;
+
    function Get_Elaborated_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;
                                                Atype : Node) return Type_Acc
    is
       Marker : Mark_Type;
       Res_Type : Node;
-      Def : Node;
-      Res : Type_Acc;
    begin
       case Get_Kind (Atype) is
          when Iir_Kinds_Subtype_Definition =>
@@ -883,10 +896,6 @@ package body Elab.Vhdl_Types is
             --  We cannot use the object type as it can be a subtype
             --  deduced from the default value (for constants).
             Res_Type := Get_Type (Get_Named_Entity (Atype));
-            if Get_Kind (Res_Type) = Iir_Kind_Interface_Type_Definition then
-               Get_Interface_Type (Syn_Inst, Res_Type, Res, Def);
-               return Res;
-            end if;
          when Iir_Kind_Subtype_Attribute =>
             declare
                Pfx : constant Node := Get_Prefix (Atype);
@@ -923,7 +932,7 @@ package body Elab.Vhdl_Types is
             Error_Kind ("elab_subtype_indication", Atype);
       end case;
 
-      return Get_Subtype_Object (Syn_Inst, Res_Type);
+      return Get_Elaborated_Type (Syn_Inst, Res_Type);
    end Get_Elaborated_Subtype_Indication;
 
    function Elab_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;

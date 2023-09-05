@@ -1011,7 +1011,8 @@ package body Synth.Vhdl_Insts is
       while Is_Valid (Assoc) loop
          if Get_Whole_Association_Flag (Assoc) then
             Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-            Inter_Typ := Get_Subtype_Object (Ent_Inst, Get_Type (Inter));
+            Inter_Typ := Elab.Vhdl_Types.Get_Elaborated_Type
+              (Ent_Inst, Get_Type (Inter));
 
             case Mode_To_Port_Kind (Get_Mode (Inter)) is
                when Port_In =>

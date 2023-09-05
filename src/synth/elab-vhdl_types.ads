@@ -85,4 +85,7 @@ package Elab.Vhdl_Types is
    function Get_Elaborated_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;
                                                Atype : Node) return Type_Acc;
 
+   --  Likewise, but for a type or subtype definition.
+   function Get_Elaborated_Type (Syn_Inst : Synth_Instance_Acc;
+                                 Atype : Node) return Type_Acc;
 end Elab.Vhdl_Types;
