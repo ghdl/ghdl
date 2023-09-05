@@ -867,21 +867,6 @@ package body Elab.Vhdl_Types is
       end loop;
    end Get_Declaration_Type;
 
-   function Get_Elaborated_Type (Syn_Inst : Synth_Instance_Acc;
-                                 Atype : Node) return Type_Acc
-   is
-      Def : Node;
-      Res : Type_Acc;
-   begin
-      if Get_Kind (Atype) = Iir_Kind_Interface_Type_Definition then
-         Get_Interface_Type (Syn_Inst, Atype, Res, Def);
-      else
-         Res := Get_Subtype_Object (Syn_Inst, Atype);
-      end if;
-
-      return Res;
-   end Get_Elaborated_Type;
-
    function Get_Elaborated_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;
                                                Atype : Node) return Type_Acc
    is
@@ -932,7 +917,7 @@ package body Elab.Vhdl_Types is
             Error_Kind ("elab_subtype_indication", Atype);
       end case;
 
-      return Get_Elaborated_Type (Syn_Inst, Res_Type);
+      return Get_Subtype_Object (Syn_Inst, Res_Type);
    end Get_Elaborated_Subtype_Indication;
 
    function Elab_Subtype_Indication (Syn_Inst : Synth_Instance_Acc;

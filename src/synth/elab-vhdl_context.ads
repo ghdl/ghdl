@@ -256,9 +256,6 @@ private
       --  A sub-instance or a package.
       Obj_Instance,
 
-      --  For interface type.
-      Obj_Inter_Type,
-
       --  Marker for for-loop.
       Obj_Marker
      );
@@ -271,11 +268,9 @@ private
             Obj : Valtyp;
          when Obj_Subtype =>
             T_Typ : Type_Acc;
+            T_Def : Node;
          when Obj_Instance =>
             I_Inst : Synth_Instance_Acc;
-         when Obj_Inter_Type =>
-            I_Typ : Type_Acc;
-            I_Def : Node;
          when Obj_Marker =>
             M_Mark : Areapools.Mark_Type;
       end case;

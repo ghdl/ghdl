@@ -409,7 +409,9 @@ package body Elab.Vhdl_Context is
    begin
       Create_Object (Syn_Inst, Info.Slot, 1);
       pragma Assert (Syn_Inst.Objects (Info.Slot).Kind = Obj_None);
-      Syn_Inst.Objects (Info.Slot) := (Kind => Obj_Subtype, T_Typ => Typ);
+      Syn_Inst.Objects (Info.Slot) := (Kind => Obj_Subtype,
+                                       T_Typ => Typ,
+                                       T_Def => Null_Node);
    end Create_Subtype_Object;
 
    procedure Create_Interface_Type
@@ -419,9 +421,9 @@ package body Elab.Vhdl_Context is
    begin
       Create_Object (Syn_Inst, Info.Slot, 1);
       pragma Assert (Syn_Inst.Objects (Info.Slot).Kind = Obj_None);
-      Syn_Inst.Objects (Info.Slot) := (Kind => Obj_Inter_Type,
-                                       I_Typ => Typ,
-                                       I_Def => Def);
+      Syn_Inst.Objects (Info.Slot) := (Kind => Obj_Subtype,
+                                       T_Typ => Typ,
+                                       T_Def => Def);
    end Create_Interface_Type;
 
    procedure Create_Package_Object (Syn_Inst : Synth_Instance_Acc;
@@ -692,8 +694,8 @@ package body Elab.Vhdl_Context is
       Obj_Inst : Synth_Instance_Acc;
    begin
       Obj_Inst := Get_Instance_By_Scope (Syn_Inst, Info.Scope);
-      Typ := Obj_Inst.Objects (Info.Slot).I_Typ;
-      Def := Obj_Inst.Objects (Info.Slot).I_Def;
+      Typ := Obj_Inst.Objects (Info.Slot).T_Typ;
+      Def := Obj_Inst.Objects (Info.Slot).T_Def;
    end Get_Interface_Type;
 
    procedure Set_Caller_Instance (Syn_Inst : Synth_Instance_Acc;

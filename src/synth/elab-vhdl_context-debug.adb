@@ -45,9 +45,6 @@ package body Elab.Vhdl_Context.Debug is
             when Obj_Instance =>
                Put ("instance");
                New_Line;
-            when Obj_Inter_Type =>
-               Put ("inter-type");
-               New_Line;
             when Obj_Marker =>
                Put ("marker");
                New_Line;
