@@ -777,16 +777,20 @@ package body Elab.Vhdl_Types is
                Rng : Discrete_Range_Type;
                W : Uns32;
             begin
-               if Btype.Kind in Type_Nets then
-                  --  A subtype of a bit/logic type is still a bit/logic.
-                  --  FIXME: bounds.
+               Rng := Synth_Discrete_Range_Constraint
+                 (Syn_Inst, Get_Range_Constraint (Atype));
+               if Rng = Btype.Drange then
                   return Btype;
-               else
-                  Rng := Synth_Discrete_Range_Constraint
-                    (Syn_Inst, Get_Range_Constraint (Atype));
-                  W := Discrete_Range_Width (Rng);
-                  return Create_Discrete_Type (Rng, Btype.Sz, W);
                end if;
+               case Type_All_Discrete (Btype.Kind) is
+                  when Type_Discrete =>
+                     W := Discrete_Range_Width (Rng);
+                     return Create_Discrete_Type (Rng, Btype.Sz, W);
+                  when Type_Bit =>
+                     return Create_Bit_Subtype (Rng);
+                  when Type_Logic =>
+                     return Create_Logic_Subtype (Rng);
+               end case;
             end;
          when Iir_Kind_Floating_Subtype_Definition =>
             declare

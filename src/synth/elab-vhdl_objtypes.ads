@@ -271,6 +271,8 @@ package Elab.Vhdl_Objtypes is
    function Is_Expr_Pool_Empty return Boolean;
 
    --  Types.
+   function Create_Bit_Subtype (Rng : Discrete_Range_Type) return Type_Acc;
+   function Create_Logic_Subtype (Rng : Discrete_Range_Type) return Type_Acc;
    function Create_Discrete_Type (Rng : Discrete_Range_Type;
                                   Sz : Size_Type;
                                   W : Uns32)

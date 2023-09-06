@@ -318,43 +318,37 @@ package body Elab.Vhdl_Objtypes is
       return Size;
    end Compute_Size_Type;
 
-   function Create_Bit_Type return Type_Acc
+   function Create_Bit_Subtype (Rng : Discrete_Range_Type) return Type_Acc
    is
       subtype Bit_Type_Type is Type_Type (Type_Bit);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Bit_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Bit,
                                                 Wkind => Wkind_Net,
-                                                Drange => (Left => 0,
-                                                           Right => 1,
-                                                           Dir => Dir_To,
-                                                           Is_Signed => False),
-                                                Al => 0,
+                                                Drange => Rng,
                                                 Is_Global => False,
                                                 Is_Static => True,
                                                 Is_Bnd_Static => True,
+                                                Al => 1,
                                                 Sz => 1,
                                                 W => 1)));
-   end Create_Bit_Type;
+   end Create_Bit_Subtype;
 
-   function Create_Logic_Type return Type_Acc
+   function Create_Logic_Subtype (Rng : Discrete_Range_Type) return Type_Acc
    is
       subtype Logic_Type_Type is Type_Type (Type_Logic);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Logic_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Logic,
                                                 Wkind => Wkind_Net,
-                                                Drange => (Left => 0,
-                                                           Right => 8,
-                                                           Dir => Dir_To,
-                                                           Is_Signed => False),
-                                                Al => 0,
+                                                Drange => Rng,
                                                 Is_Global => False,
                                                 Is_Static => True,
                                                 Is_Bnd_Static => True,
+                                                Al => 1,
                                                 Sz => 1,
                                                 W => 1)));
-   end Create_Logic_Type;
+   end Create_Logic_Subtype;
 
    function Create_Discrete_Type (Rng : Discrete_Range_Type;
                                   Sz : Size_Type;
@@ -1588,9 +1582,18 @@ package body Elab.Vhdl_Objtypes is
 
       --  Alloc fundamental types (on the global pool).
       Current_Pool := Global_Pool'Access;
-      Boolean_Type := Create_Bit_Type;
-      Logic_Type := Create_Logic_Type;
-      Bit_Type := Create_Bit_Type;
+      Boolean_Type := Create_Bit_Subtype (Rng => (Left => 0,
+                                                  Right => 1,
+                                                  Dir => Dir_To,
+                                                  Is_Signed => False));
+      Logic_Type := Create_Logic_Subtype (Rng => (Left => 0,
+                                                  Right => 8,
+                                                  Dir => Dir_To,
+                                                  Is_Signed => False));
+      Bit_Type := Create_Bit_Subtype (Rng => (Left => 0,
+                                              Right => 1,
+                                              Dir => Dir_To,
+                                              Is_Signed => False));
       Protected_Type := Create_Protected_Type;
 
       Boolean_Type.Is_Global := True;
