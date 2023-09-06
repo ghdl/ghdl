@@ -1670,21 +1670,21 @@ package body Synth.Vhdl_Stmts is
       Free_Net_Array (Nets);
    end Synth_Case_Statement_Dynamic;
 
-   function Execute_Static_Case_Statement_Array
+   function Execute_Static_Choices_Array
      (Inst : Synth_Instance_Acc; Choices : Node; Sel : Valtyp) return Node
    is
       Choice : Node;
-      Stmts : Node;
       Sel_Expr : Node;
       Sel_Val : Valtyp;
+      Res : Node;
    begin
       --  Synth statements, extract choice value.
-      Stmts := Null_Node;
+      Res := Null_Node;
       Choice := Choices;
       loop
          pragma Assert (Is_Valid (Choice));
          if not Get_Same_Alternative_Flag (Choice) then
-            Stmts := Get_Associated_Chain (Choice);
+            Res := Choice;
          end if;
 
          case Get_Kind (Choice) is
@@ -1692,20 +1692,20 @@ package body Synth.Vhdl_Stmts is
                Sel_Expr := Get_Choice_Expression (Choice);
                Sel_Val := Synth_Expression_With_Basetype (Inst, Sel_Expr);
                if Is_Equal (Sel_Val, Sel) then
-                  return Stmts;
+                  return Res;
                end if;
                if Sel_Val.Typ.Abound.Len /= Sel.Typ.Abound.Len then
                   Error_Msg_Synth (Inst, Choice, "incorrect selector length");
                   --  TODO: what value should be returned ?
                end if;
             when Iir_Kind_Choice_By_Others =>
-               return Stmts;
+               return Res;
             when others =>
                raise Internal_Error;
          end case;
          Choice := Get_Chain (Choice);
       end loop;
-   end Execute_Static_Case_Statement_Array;
+   end Execute_Static_Choices_Array;
 
    function Execute_Static_Choices_Scalar
      (Inst : Synth_Instance_Acc; Choices : Node; Sel : Int64) return Node
@@ -1747,25 +1747,31 @@ package body Synth.Vhdl_Stmts is
       end loop;
    end Execute_Static_Choices_Scalar;
 
+   function Execute_Static_Choices
+     (Inst : Synth_Instance_Acc; Choices : Node; Sel : Valtyp) return Node is
+   begin
+      case Sel.Typ.Kind is
+         when Type_Bit
+           | Type_Logic
+           | Type_Discrete =>
+            return Execute_Static_Choices_Scalar (Inst, Choices,
+                                                  Read_Discrete (Sel));
+         when Type_Vector
+           | Type_Array =>
+            return Execute_Static_Choices_Array (Inst, Choices, Sel);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Execute_Static_Choices;
+
    function Execute_Static_Case_Statement
      (Inst : Synth_Instance_Acc; Stmt : Node; Sel : Valtyp) return Node
    is
       Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
       Choice : Node;
    begin
-      case Sel.Typ.Kind is
-         when Type_Bit
-           | Type_Logic
-           | Type_Discrete =>
-            Choice := Execute_Static_Choices_Scalar (Inst, Choices,
-                                                     Read_Discrete (Sel));
-            return Get_Associated_Chain (Choice);
-         when Type_Vector
-           | Type_Array =>
-            return Execute_Static_Case_Statement_Array (Inst, Choices, Sel);
-         when others =>
-            raise Internal_Error;
-      end case;
+      Choice := Execute_Static_Choices (Inst, Choices, Sel);
+      return Get_Associated_Chain (Choice);
    end Execute_Static_Case_Statement;
 
    procedure Synth_Case_Statement (C : in out Seq_Context; Stmt : Node)
@@ -1787,6 +1793,30 @@ package body Synth.Vhdl_Stmts is
          Release_Expr_Pool (Marker);
       end if;
    end Synth_Case_Statement;
+
+   function Synth_Selected_Assignment_Choice (Syn_Inst : Synth_Instance_Acc;
+                                              Kind : Iir_Kind;
+                                              Choice : Node;
+                                              Targ_Type : Type_Acc)
+                                             return Valtyp
+   is
+      Assoc : Node;
+      Val : Valtyp;
+   begin
+      case Kind is
+         when Iir_Kind_Selected_Waveform_Assignment_Statement
+           | Iir_Kind_Concurrent_Selected_Signal_Assignment =>
+            Assoc := Get_Associated_Chain (Choice);
+            Val := Synth_Waveform (Syn_Inst, Assoc, Targ_Type);
+         when Iir_Kind_Selected_Variable_Assignment_Statement =>
+            Assoc := Get_Associated_Expr (Choice);
+            Val := Synth_Expression_With_Type
+              (Syn_Inst, Assoc, Targ_Type);
+         when others =>
+            raise Internal_Error;
+      end case;
+      return Val;
+   end Synth_Selected_Assignment_Choice;
 
    procedure Synth_Selected_Assignment
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node; Choices : Node)
@@ -1815,6 +1845,7 @@ package body Synth.Vhdl_Stmts is
 
       Sel : Valtyp;
       Sel_Net : Net;
+      Asgn : Valtyp;
    begin
       Mark_Expr_Pool (Marker);
       Targ := Synth_Target (Syn_Inst, Get_Target (Stmt));
@@ -1822,103 +1853,106 @@ package body Synth.Vhdl_Stmts is
 
       --  Create a net for the expression.
       Sel := Synth_Expression_With_Basetype (Syn_Inst, Expr);
-      Sel_Net := Get_Net (Ctxt, Sel);
 
-      --  Count choices and alternatives.
-      Count_Choices (Case_Info, Choices);
-      --  Fill_Choices_Array (Case_Info, Choices);
-
-      --  Allocate structures.
-      --  Because there is no 1-1 link between choices and alternatives,
-      --  create an array for the choices and an array for the alternatives.
-      Alts := new Alternative_Data_Array
-        (1 .. Alternative_Index (Case_Info.Nbr_Alternatives));
-
-      --  Compute number of non-default alternatives.
-      Nbr_Choices := Nat32 (Case_Info.Nbr_Alternatives);
-      if Case_Info.Others_Choice /= Null_Node then
-         Nbr_Choices := Nbr_Choices - 1;
-      end if;
-
-      Nets := new Net_Array (1 .. Nbr_Choices);
-
-      --  Synth statements, extract choice value.
-      declare
-         Choice, Assoc : Node;
-         Val : Valtyp;
-         Choice_Idx, Other_Choice : Nat32;
-      begin
-         Alt_Idx := 0;
-         Choice_Idx := 0;
-         Other_Choice := 0;
-
-         Choice := Choices;
-         while Is_Valid (Choice) loop
-            pragma Assert (not Get_Same_Alternative_Flag (Choice));
-
-            case Kind is
-               when Iir_Kind_Selected_Waveform_Assignment_Statement
-                  | Iir_Kind_Concurrent_Selected_Signal_Assignment =>
-                  Assoc := Get_Associated_Chain (Choice);
-                  Val := Synth_Waveform (Syn_Inst, Assoc, Targ_Type);
-               when Iir_Kind_Selected_Variable_Assignment_Statement =>
-                  Assoc := Get_Associated_Expr (Choice);
-                  Val := Synth_Expression_With_Type
-                    (Syn_Inst, Assoc, Targ_Type);
-               when others =>
-                  raise Internal_Error;
-            end case;
-
-            Alt_Idx := Alt_Idx + 1;
-            Alts (Alt_Idx).Val := Get_Net (Ctxt, Val);
-
-            Synth_Choice (Syn_Inst, Sel_Net, Sel.Typ,
-                          Nets.all, Other_Choice, Choice_Idx, Choice);
-         end loop;
-         pragma Assert (Choice_Idx = Nbr_Choices);
-         Others_Alt_Idx := Alternative_Index (Other_Choice);
-      end;
-
-      --  Create the one-hot vector.
-      if Nbr_Choices = 0 then
-         Sel_Net := No_Net;
+      if Is_Static (Sel.Val) then
+         declare
+            Choice : Node;
+         begin
+            Choice := Execute_Static_Choices (Syn_Inst, Choices, Sel);
+            Asgn := Synth_Selected_Assignment_Choice
+              (Syn_Inst, Kind, Choice, Targ_Type);
+         end;
       else
-         Sel_Net := Build2_Concat (Ctxt, Nets (1 .. Nbr_Choices));
+         Sel_Net := Get_Net (Ctxt, Sel);
+
+         --  Count choices and alternatives.
+         Count_Choices (Case_Info, Choices);
+         --  Fill_Choices_Array (Case_Info, Choices);
+
+         --  Allocate structures.
+         --  Because there is no 1-1 link between choices and alternatives,
+         --  create an array for the choices and an array for the alternatives.
+         Alts := new Alternative_Data_Array
+           (1 .. Alternative_Index (Case_Info.Nbr_Alternatives));
+
+         --  Compute number of non-default alternatives.
+         Nbr_Choices := Nat32 (Case_Info.Nbr_Alternatives);
+         if Case_Info.Others_Choice /= Null_Node then
+            Nbr_Choices := Nbr_Choices - 1;
+         end if;
+
+         Nets := new Net_Array (1 .. Nbr_Choices);
+
+         --  Synth statements, extract choice value.
+         declare
+            Choice : Node;
+            Val : Valtyp;
+            Choice_Idx, Other_Choice : Nat32;
+         begin
+            Alt_Idx := 0;
+            Choice_Idx := 0;
+            Other_Choice := 0;
+
+            Choice := Choices;
+            while Is_Valid (Choice) loop
+               pragma Assert (not Get_Same_Alternative_Flag (Choice));
+
+               Val := Synth_Selected_Assignment_Choice
+                 (Syn_Inst, Kind, Choice, Targ_Type);
+
+               Alt_Idx := Alt_Idx + 1;
+               Alts (Alt_Idx).Val := Get_Net (Ctxt, Val);
+
+               Synth_Choice (Syn_Inst, Sel_Net, Sel.Typ,
+                             Nets.all, Other_Choice, Choice_Idx, Choice);
+            end loop;
+            pragma Assert (Choice_Idx = Nbr_Choices);
+            Others_Alt_Idx := Alternative_Index (Other_Choice);
+         end;
+
+         --  Create the one-hot vector.
+         if Nbr_Choices = 0 then
+            Sel_Net := No_Net;
+         else
+            Sel_Net := Build2_Concat (Ctxt, Nets (1 .. Nbr_Choices));
+         end if;
+
+         declare
+            Res : Net;
+            Res_Inst : Instance;
+            Default : Net;
+         begin
+            --  Extract default value (for missing alternative).
+            if Others_Alt_Idx /= 0 then
+               Default := Alts (Others_Alt_Idx).Val;
+            else
+               Default := Build_Const_X (Ctxt, Targ_Type.W);
+            end if;
+
+            if Nbr_Choices = 0 then
+               Res := Default;
+            else
+               Res := Build_Pmux (Ctxt, Sel_Net, Default);
+               Res_Inst := Get_Net_Parent (Res);
+               Set_Location (Res_Inst, Get_Location (Stmt));
+
+               for I in 1 .. Nbr_Choices loop
+                  Connect
+                    (Get_Input (Res_Inst, Port_Nbr (2 + I - Nets'First)),
+                     Alts (Alternative_Index (I)).Val);
+               end loop;
+            end if;
+
+            Asgn := Create_Value_Net (Res, Targ_Type);
+         end;
+
+         --  free.
+         Free_Alternative_Data_Array (Alts);
+         Free_Net_Array (Nets);
       end if;
 
-      declare
-         Res : Net;
-         Res_Inst : Instance;
-         Default : Net;
-      begin
-         --  Extract default value (for missing alternative).
-         if Others_Alt_Idx /= 0 then
-            Default := Alts (Others_Alt_Idx).Val;
-         else
-            Default := Build_Const_X (Ctxt, Targ_Type.W);
-         end if;
+      Synth_Assignment (Syn_Inst, Targ, Asgn, Stmt);
 
-         if Nbr_Choices = 0 then
-            Res := Default;
-         else
-            Res := Build_Pmux (Ctxt, Sel_Net, Default);
-            Res_Inst := Get_Net_Parent (Res);
-            Set_Location (Res_Inst, Get_Location (Stmt));
-
-            for I in 1 .. Nbr_Choices loop
-               Connect
-                 (Get_Input (Res_Inst, Port_Nbr (2 + I - Nets'First)),
-                  Alts (Alternative_Index (I)).Val);
-            end loop;
-         end if;
-
-         Synth_Assignment
-           (Syn_Inst, Targ, Create_Value_Net (Res, Targ_Type), Stmt);
-      end;
-
-      --  free.
-      Free_Alternative_Data_Array (Alts);
-      Free_Net_Array (Nets);
       Release_Expr_Pool (Marker);
    end Synth_Selected_Assignment;
 
@@ -4110,6 +4144,11 @@ package body Synth.Vhdl_Stmts is
          when Iir_Kind_Wait_Statement =>
             Error_Msg_Synth
               (C.Inst, Stmt, "wait statement not allowed for synthesis");
+         when Iir_Kind_Suspend_State_Statement =>
+            --  Could happen in simulation when an 'unknown' procedure
+            --  is called from a sensitized process.
+            --  But this could also be detected during elaboration.
+            null;
          when others =>
             Error_Kind ("synth_sequential_statements", Stmt);
       end case;
