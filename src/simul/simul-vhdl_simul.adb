@@ -1418,7 +1418,7 @@ package body Simul.Vhdl_Simul is
             Diag_C ("report");
          when Iir_Kind_Assertion_Statement
            | Iir_Kind_Concurrent_Assertion_Statement =>
-            Diag_C ("assert");
+            Diag_C ("assertion");
          when Iir_Kind_Psl_Assert_Directive =>
             Diag_C ("psl assertion");
          when Iir_Kind_Psl_Assume_Directive =>
@@ -1444,7 +1444,7 @@ package body Simul.Vhdl_Simul is
       Diag_C ("): ");
 
       if Msg = No_Valtyp then
-         Diag_C ("Assertion violation.");
+         Diag_C ("Assertion violation");
       else
          Diag_C (Value_To_String (Msg));
       end if;
