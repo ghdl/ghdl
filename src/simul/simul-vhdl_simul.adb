@@ -1654,6 +1654,10 @@ package body Simul.Vhdl_Simul is
                Synth.Vhdl_Stmts.Synth_Conditional_Variable_Assignment
                  (Inst, Stmt);
                Next_Statement (Process, Stmt);
+            when Iir_Kind_Selected_Variable_Assignment_Statement =>
+               Synth.Vhdl_Stmts.Synth_Selected_Variable_Assignment
+                 (Inst, Stmt);
+               Next_Statement (Process, Stmt);
 
             when Iir_Kind_Simple_Signal_Assignment_Statement =>
                Execute_Simple_Signal_Assignment (Inst, Stmt, False);

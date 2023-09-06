@@ -146,6 +146,8 @@ package Synth.Vhdl_Stmts is
                                         Stmt : Node);
    procedure Synth_Conditional_Variable_Assignment
      (Inst : Synth_Instance_Acc; Stmt : Node);
+   procedure Synth_Selected_Variable_Assignment
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
 
    procedure Synth_Procedure_Call (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
    procedure Synth_Subprogram_Back_Association
