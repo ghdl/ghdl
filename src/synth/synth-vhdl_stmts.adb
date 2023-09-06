@@ -3108,10 +3108,6 @@ package body Synth.Vhdl_Stmts is
       Free_Instance (Sub_Inst);
 
       if Res /= No_Valtyp then
-         --  Copy a result of the function call.
-         --  The result can be a local variable which will be released.
-         --  It can also be an alias of a local variable.
-         Res := Unshare_Result (Res);
          --  The type can have been created in the function.
          Ret_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Imp));
          Res.Typ := Unshare_Type_Expr (Res.Typ, Ret_Typ);
@@ -3813,6 +3809,11 @@ package body Synth.Vhdl_Stmts is
             end if;
             if Is_Dyn then
                Phi_Assign_Net (Ctxt, C.W_Val, Get_Net (Ctxt, Val), 0);
+            else
+               --  Copy a result of the function call.
+               --  The result can be a local variable which will be released.
+               --  It can also be an alias of a local variable.
+               C.Ret_Value := Unshare_Result (C.Ret_Value);
             end if;
          end if;
       end if;
