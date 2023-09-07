@@ -261,7 +261,7 @@ package body Ghdlmain is
    is
       pragma Unreferenced (Cmd);
    begin
-      return "help-warnings-help"
+      return "help-warnings"
         & ASCII.LF & "  Display help about all the warnings"
         & ASCII.LF & "  alias: --help-warnings";
    end Get_Short_Help;
