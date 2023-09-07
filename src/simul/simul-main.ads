@@ -31,11 +31,6 @@ package Simul.Main is
    Flag_Interractive : Boolean := False;
    Flag_Debug_Elab : Boolean := False;
 
-   type Elaborate_Acc is access procedure;
-
-   --  Procedure called for elaboration.
-   Elaborate_Proc : Elaborate_Acc;
-
    --  Start and run simulation.
    procedure Simulation;
 

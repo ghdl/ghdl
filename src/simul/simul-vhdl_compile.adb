@@ -1989,7 +1989,6 @@ package body Simul.Vhdl_Compile is
       Processes_State := new Process_State_Array
         (Processes_Table.First .. Processes_Table.Last);
       Process_Idx := No_Process_Index;
-      Simul.Main.Elaborate_Proc := Elaborate'Access;
 
       --  Set hooks for debugger.
       Synth.Vhdl_Expr.Hook_Signal_Expr :=

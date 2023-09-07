@@ -67,15 +67,25 @@ with Simul.Main;
 package body Ghdlsimul is
    Flag_Compile : Boolean := True;
 
+   procedure Ghdl_Elaborate;
+   pragma Export (C, Ghdl_Elaborate, "__ghdl_ELABORATE");
+
+   type Elaborate_Acc is access procedure;
+   Elaborate_Proc : Elaborate_Acc := null;
+
+   procedure Ghdl_Elaborate is
+   begin
+      Elaborate_Proc.all;
+   end Ghdl_Elaborate;
+
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
       Common_Compile_Init (Analyze_Only);
-
-      Vhdl.Back_End.Sem_Foreign := Vhdl.Back_End.Sem_Foreign_Wrapper'Access;
-
       if Analyze_Only then
          return;
       end if;
+
+      Vhdl.Back_End.Sem_Foreign := Vhdl.Back_End.Sem_Foreign_Wrapper'Access;
 
       --  The design is always analyzed in whole.
       Flags.Flag_Whole_Analyze := True;
@@ -247,8 +257,10 @@ package body Ghdlsimul is
       Synth.Flags.Severity_Level := Grt.Options.Severity_Level;
 
       if Flag_Compile then
+         Elaborate_Proc := Simul.Vhdl_Compile.Elaborate'Access;
          Simul.Vhdl_Compile.Simulation;
       else
+         Elaborate_Proc := Simul.Vhdl_Simul.Runtime_Elaborate'Access;
          Simul.Vhdl_Simul.Simulation;
       end if;
 
@@ -309,6 +321,5 @@ package body Ghdlsimul is
       Ghdlcomp.Register_Commands;
       Translation.Register_Translation_Back_End;
       Ghdlvpi.Register_Commands;
-
    end Register_Commands;
 end Ghdlsimul;

@@ -38,10 +38,7 @@ with Grt.Disp_Signals;
 package body Simul.Main is
    Ghdl_Progname : constant String := "ghdl" & ASCII.Nul;
 
-   procedure Ghdl_Elaborate;
-   pragma Export (C, Ghdl_Elaborate, "__ghdl_ELABORATE");
-
-   procedure Ghdl_Elaborate is
+   procedure Csv_File_Open is
    begin
       if Csv_Filename /= null then
          if Csv_Filename.all = "-" then
@@ -62,9 +59,7 @@ package body Simul.Main is
       else
          Csv_File := NULL_Stream;
       end if;
-
-      Elaborate_Proc.all;
-   end Ghdl_Elaborate;
+   end Csv_File_Open;
 
    procedure Simulation
    is
@@ -102,6 +97,8 @@ package body Simul.Main is
       end if;
 
       Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
+
+      Csv_File_Open;
 
       Status := Grt.Main.Run_Through_Longjump
         (Grt.Processes.Simulation_Init'Access);

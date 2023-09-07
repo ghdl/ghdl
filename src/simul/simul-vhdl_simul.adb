@@ -5138,8 +5138,6 @@ package body Simul.Vhdl_Simul is
 
    procedure Simulation is
    begin
-      Simul.Main.Elaborate_Proc := Runtime_Elaborate'Access;
-
       Simul.Main.Simulation;
    end Simulation;
 

@@ -36,12 +36,28 @@ with Vhdl.Canon;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Back_End;
 with Vhdl.Nodes_GC;
+with Vhdl.Utils;
+with Vhdl.Configuration;
+
+with Elab.Debugger;
+with Elab.Vhdl_Context;
+with Elab.Vhdl_Insts;
+
 with Ortho_Jit;
 with Ortho_Nodes; use Ortho_Nodes;
 with Trans_Decls;
 with Translation;
 with Trans_Link;
 with Trans_Foreign;
+
+with Simul.Main;
+with Simul.Vhdl_Elab;
+with Simul.Vhdl_Simul;
+with Simul.Vhdl_Compile;
+
+with Synth.Flags;
+with Synth.Errors;
+with Synth.Vhdl_Foreign;
 
 with Grt.Main;
 with Grt.Modules;
@@ -51,13 +67,13 @@ with Grt.Errors;
 with Grt.Backtraces.Jit;
 with Grt.Heap;
 
-with Grt.No_Analog_Solver;
-pragma Unreferenced (Grt.No_Analog_Solver);
-
 with Ghdlcomp; use Ghdlcomp;
 with Grtlink;
 
 package body Ghdlrun is
+   type Run_Mode_Kind is (Run_Interp, Run_Jit, Run_Elab_Jit);
+   Run_Mode : Run_Mode_Kind := Run_Elab_Jit;
+
    procedure Foreign_Hook (Decl : Iir;
                            Info : Vhdl.Back_End.Foreign_Info_Type;
                            Ortho : O_Dnode);
@@ -77,8 +93,15 @@ package body Ghdlrun is
 
       --  The design is always analyzed in whole.
       Flags.Flag_Whole_Analyze := True;
-
       Vhdl.Canon.Canon_Flag_Add_Labels := True;
+
+      case Run_Mode is
+         when Run_Interp =>
+            Vhdl.Canon.Canon_Flag_Add_Suspend_State := True;
+            Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
+         when others =>
+            null;
+      end case;
    end Compile_Init;
 
    procedure Compile_Elab
@@ -87,6 +110,28 @@ package body Ghdlrun is
       Config : Iir;
    begin
       Common_Compile_Elab (Cmd_Name, Args, True, Opt_Arg, Config);
+
+      if Run_Mode /= Run_Elab_Jit then
+         --  For compatibility, also handle '-gGEN=VAL' options after the
+         --  top-level unit.
+         --  Handle --expect-failure
+         for I in Opt_Arg .. Args'Last loop
+            declare
+               Arg : String renames Args (I).all;
+               Res : Options.Option_State;
+               pragma Unreferenced (Res);
+            begin
+               if Arg'Length > 3
+                 and then Arg (Arg'First + 1) = 'g'
+                 and then Is_Generic_Override_Option (Arg)
+               then
+                  Res := Decode_Generic_Override_Option (Arg);
+               elsif Arg = "--expect-failure" then
+                  Flag_Expect_Failure := True;
+               end if;
+            end;
+         end loop;
+      end if;
 
       if Time_Resolution = 'a' then
          Time_Resolution := Vhdl.Std_Package.Get_Minimal_Time_Resolution;
@@ -111,12 +156,54 @@ package body Ghdlrun is
 
       --  Overwrite time resolution in flag string.
       Flags.Flag_String (5) := Time_Resolution;
+      Grtlink.Flag_String := Flags.Flag_String;
 
-      Ortho_Jit.Init;
+      case Run_Mode is
+         when Run_Elab_Jit =>
+            Ortho_Jit.Init;
 
-      Translation.Initialize;
+            Translation.Initialize;
 
-      Translation.Elaborate (Config, True);
+            Translation.Elaborate (Config, True);
+         when Run_Interp
+           | Run_Jit =>
+            --  Set flags.
+            Synth.Flags.Flag_Simulation := True;
+            Synth.Errors.Debug_Handler := Elab.Debugger.Debug_Error'Access;
+            Synth.Vhdl_Foreign.Initialize;
+
+            declare
+               use Elab.Vhdl_Context;
+               Lib_Unit : Node;
+               Inst : Synth_Instance_Acc;
+               Top : Node;
+            begin
+               --  Generic overriding.
+               Top := Vhdl.Utils.Get_Entity_From_Configuration (Config);
+               Vhdl.Configuration.Apply_Generic_Override (Top);
+               Vhdl.Configuration.Check_Entity_Declaration_Top (Top, False);
+
+               if Errorout.Nbr_Errors > 0 then
+                  raise Errorout.Compilation_Error;
+               end if;
+
+               --  *THE* elaboration.
+               --  Compute values, instantiate..
+               Lib_Unit := Get_Library_Unit (Config);
+               pragma Assert (Get_Kind (Lib_Unit) /= Iir_Kind_Foreign_Module);
+               Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Lib_Unit);
+
+               if Errorout.Nbr_Errors > 0 then
+                  raise Errorout.Compilation_Error;
+               end if;
+
+               --  Finish elaboration: gather processes, signals.
+               --  Compute drivers, sources...
+               Simul.Vhdl_Elab.Gather_Processes (Inst);
+               Simul.Vhdl_Elab.Elab_Processes;
+               Simul.Vhdl_Elab.Compute_Sources;
+            end;
+      end case;
 
       if Errorout.Nbr_Errors > 0 then
          --  This may happen (bad entity for example).
@@ -162,7 +249,6 @@ package body Ghdlrun is
    pragma Export (C, Ghdl_Elaborate, "__ghdl_ELABORATE");
 
    type Elaborate_Acc is access procedure;
-   pragma Convention (C, Elaborate_Acc);
    Elaborate_Proc : Elaborate_Acc := null;
 
    procedure Ghdl_Elaborate is
@@ -187,64 +273,83 @@ package body Ghdlrun is
 
    procedure Run
    is
+      use Ada.Command_Line;
       function Conv is new Ada.Unchecked_Conversion
         (Source => Address, Target => Elaborate_Acc);
       Err : Boolean;
       Decl : O_Dnode;
    begin
-      if Flag_Verbose then
-         Put_Line ("Linking in memory");
-      end if;
+      case Run_Mode is
+         when Run_Elab_Jit =>
+            if Flag_Verbose then
+               Put_Line ("Linking in memory");
+            end if;
 
-      Trans_Link.Link;
+            Trans_Link.Link;
 
-      Def (Trans_Decls.Ghdl_Allocate,
-           Grt.Heap.Ghdl_Allocate'Address);
-      Def (Trans_Decls.Ghdl_Deallocate,
-           Grt.Heap.Ghdl_Deallocate'Address);
+            Def (Trans_Decls.Ghdl_Allocate,
+                 Grt.Heap.Ghdl_Allocate'Address);
+            Def (Trans_Decls.Ghdl_Deallocate,
+                 Grt.Heap.Ghdl_Deallocate'Address);
 
-      Ortho_Jit.Link (Err);
-      if Err then
-         raise Compile_Error;
-      end if;
+            Ortho_Jit.Link (Err);
+            if Err then
+               raise Compile_Error;
+            end if;
 
-      Grtlink.Std_Standard_Boolean_RTI_Ptr :=
-        Ortho_Jit.Get_Address (Trans_Decls.Std_Standard_Boolean_Rti);
-      Grtlink.Std_Standard_Bit_RTI_Ptr :=
-        Ortho_Jit.Get_Address (Trans_Decls.Std_Standard_Bit_Rti);
-      if Vhdl.Ieee.Std_Logic_1164.Resolved /= Null_Iir then
-         Decl := Translation.Get_Resolv_Ortho_Decl
-           (Vhdl.Ieee.Std_Logic_1164.Resolved);
-         if Decl /= O_Dnode_Null then
-            Grtlink.Ieee_Std_Logic_1164_Resolved_Resolv_Ptr :=
-              Ortho_Jit.Get_Address (Decl);
-         end if;
-      end if;
+            Grtlink.Std_Standard_Boolean_RTI_Ptr :=
+              Ortho_Jit.Get_Address (Trans_Decls.Std_Standard_Boolean_Rti);
+            Grtlink.Std_Standard_Bit_RTI_Ptr :=
+              Ortho_Jit.Get_Address (Trans_Decls.Std_Standard_Bit_Rti);
+            if Vhdl.Ieee.Std_Logic_1164.Resolved /= Null_Iir then
+               Decl := Translation.Get_Resolv_Ortho_Decl
+                 (Vhdl.Ieee.Std_Logic_1164.Resolved);
+               if Decl /= O_Dnode_Null then
+                  Grtlink.Ieee_Std_Logic_1164_Resolved_Resolv_Ptr :=
+                    Ortho_Jit.Get_Address (Decl);
+               end if;
+            end if;
 
-      Grtlink.Flag_String := Flags.Flag_String;
+            Grt.Backtraces.Jit.Symbolizer_Proc := Ortho_Jit.Symbolize'Access;
 
-      Grt.Backtraces.Jit.Symbolizer_Proc := Ortho_Jit.Symbolize'Access;
+            Elaborate_Proc :=
+              Conv (Ortho_Jit.Get_Address (Trans_Decls.Ghdl_Elaborate));
 
-      Elaborate_Proc :=
-        Conv (Ortho_Jit.Get_Address (Trans_Decls.Ghdl_Elaborate));
+            Ortho_Jit.Finish;
 
-      Ortho_Jit.Finish;
+            Translation.Finalize;
+            Options.Finalize;
 
-      Translation.Finalize;
-      Options.Finalize;
+            if Flag_Verbose then
+               Put_Line ("Starting simulation");
+            end if;
 
-      if Flag_Verbose then
-         Put_Line ("Starting simulation");
-      end if;
+            Grt.Modules.Register_Modules;
 
-      Grt.Modules.Register_Modules;
+            Grt.Main.Run;
 
-      Grt.Main.Run;
+         when Run_Interp
+           | Run_Jit =>
+            if Grt.Options.Flag_No_Run then
+               --  Some options like --has-feature set the exit status.
+               Set_Exit_Status (Exit_Status (Grt.Errors.Exit_Status));
+               return;
+            end if;
+
+            Synth.Flags.Severity_Level := Grt.Options.Severity_Level;
+
+            if Run_Mode = Run_Jit then
+               Elaborate_Proc := Simul.Vhdl_Compile.Elaborate'Access;
+               Simul.Vhdl_Compile.Simulation;
+            else
+               Elaborate_Proc := Simul.Vhdl_Simul.Runtime_Elaborate'Access;
+               Simul.Vhdl_Simul.Simulation;
+            end if;
+      end case;
 
       Ada.Command_Line.Set_Exit_Status
         (Ada.Command_Line.Exit_Status (Grt.Errors.Exit_Status));
    end Run;
-
 
    --  Command run help.
    type Command_Run_Help is new Command_Type with null record;
@@ -292,6 +397,49 @@ package body Ghdlrun is
       Success := True;
    end Perform_Action;
 
+   function Decode_Option (Option : String) return Boolean
+   is
+      pragma Assert (Option'First = 1);
+      Res : Options.Option_State;
+      pragma Unreferenced (Res);
+   begin
+      if Option = "--debug" or Option = "-g" then
+         Elab.Debugger.Flag_Debug_Enable := True;
+      elsif Option = "-t" then
+         Synth.Flags.Flag_Trace_Statements := True;
+      elsif Option = "-ta" then
+         Simul.Vhdl_Simul.Trace_Solver := True;
+      elsif Option = "-tr" then
+         Simul.Vhdl_Simul.Trace_Residues := True;
+      elsif Option = "-i" then
+         Simul.Main.Flag_Interractive := True;
+      elsif Option = "-ge" then
+         Simul.Main.Flag_Debug_Elab := True;
+      elsif Option = "--jit" then
+         Run_Mode := Run_Jit;
+      elsif Option = "--interp" then
+         Run_Mode := Run_Interp;
+      elsif Option'Last > 3
+        and then Option (Option'First + 1) = 'g'
+        and then Is_Generic_Override_Option (Option)
+      then
+         Res := Decode_Generic_Override_Option (Option);
+      elsif Run_Mode /= Run_Interp
+        and then Ortho_Jit.Decode_Option (Option)
+      then
+         null;
+      else
+         return False;
+      end if;
+      return True;
+   end Decode_Option;
+
+   procedure Disp_Help is
+   begin
+      Ortho_Jit.Disp_Help;
+      Simple_IO.Put_Line (" --debug        Run with debugger");
+   end Disp_Help;
+
    procedure Register_Commands
    is
    begin
@@ -299,10 +447,10 @@ package body Ghdlrun is
                          Compile_Elab'Access,
                          Set_Run_Options'Access,
                          Run'Access,
-                         Ortho_Jit.Decode_Option'Access,
-                         Ortho_Jit.Disp_Help'Access);
+                         Decode_Option'Access,
+                         Disp_Help'Access);
       Ghdlcomp.Register_Commands;
-      Register_Command (new Command_Run_Help);
       Translation.Register_Translation_Back_End;
+      Register_Command (new Command_Run_Help);
    end Register_Commands;
 end Ghdlrun;

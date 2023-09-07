@@ -84,6 +84,8 @@ package Simul.Vhdl_Simul is
    -- If true, disp current time in assert message.
    Disp_Time_Before_Values : Boolean := False;
 
+   procedure Runtime_Elaborate;
+
    procedure Simulation;
 
    --  Low level functions, for debugger.

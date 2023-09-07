@@ -17,5 +17,7 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 package Simul.Vhdl_Compile is
+   procedure Elaborate;
+
    procedure Simulation;
 end Simul.Vhdl_Compile;
