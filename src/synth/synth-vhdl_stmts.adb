@@ -4058,11 +4058,8 @@ package body Synth.Vhdl_Stmts is
      (C : in out Seq_Context; Stmt : Node; Stop : out Boolean)
    is
       Is_Dyn : constant Boolean := not Get_Instance_Const (C.Inst);
-      Marker : Mark_Type;
       Has_Phi : Boolean;
    begin
-      Mark_Expr_Pool (Marker);
-
       if Is_Dyn then
          pragma Assert (not Is_Static_Bit0 (C.W_En));
          Has_Phi := not Is_Static_Bit1 (C.W_En);
