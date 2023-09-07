@@ -329,7 +329,7 @@ package body Elab.Vhdl_Objtypes is
                                                 Is_Global => False,
                                                 Is_Static => True,
                                                 Is_Bnd_Static => True,
-                                                Al => 1,
+                                                Al => 0,
                                                 Sz => 1,
                                                 W => 1)));
    end Create_Bit_Subtype;
@@ -345,7 +345,7 @@ package body Elab.Vhdl_Objtypes is
                                                 Is_Global => False,
                                                 Is_Static => True,
                                                 Is_Bnd_Static => True,
-                                                Al => 1,
+                                                Al => 0,
                                                 Sz => 1,
                                                 W => 1)));
    end Create_Logic_Subtype;
