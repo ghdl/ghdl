@@ -32,6 +32,7 @@ with Errorout; use Errorout;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Std_Package;
+with Vhdl.Sem;
 with Vhdl.Canon;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Back_End;
@@ -71,7 +72,18 @@ with Ghdlcomp; use Ghdlcomp;
 with Grtlink;
 
 package body Ghdlrun is
-   type Run_Mode_Kind is (Run_Interp, Run_Jit, Run_Elab_Jit);
+   type Run_Mode_Kind is
+     (
+      --  Fully interpreted.
+      Run_Interp,
+
+      --  Elaboration is interpreted, simulation is compiled.
+      Run_Jit,
+
+      --  Most of the elaboration and the whole simulation is compiled.
+      Run_Elab_Jit
+     );
+
    Run_Mode : Run_Mode_Kind := Run_Elab_Jit;
 
    procedure Foreign_Hook (Decl : Iir;
@@ -440,9 +452,21 @@ package body Ghdlrun is
       Simple_IO.Put_Line (" --debug        Run with debugger");
    end Disp_Help;
 
-   procedure Register_Commands
-   is
+   procedure Register_Commands is
    begin
+      case Run_Mode is
+         when Run_Interp =>
+            Ghdlmain.Version_String :=
+              new String'("static elaboration, interpretation");
+         when Run_Jit =>
+            Ghdlmain.Version_String :=
+              new String'("static elaboration, "
+                            & Ortho_Jit.Get_Jit_Name & " code generator");
+         when Run_Elab_Jit =>
+            Ghdlmain.Version_String :=
+              new String'(Ortho_Jit.Get_Jit_Name & " code generator");
+      end case;
+
       Ghdlcomp.Hooks := (Compile_Init'Access,
                          Compile_Elab'Access,
                          Set_Run_Options'Access,

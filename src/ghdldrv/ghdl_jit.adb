@@ -22,14 +22,11 @@ with Ghdlxml;
 with Ghdllib;
 with Ghdlsynth_Maybe;
 with Ghdlverilog;
-with Ortho_Jit;
 
 procedure Ghdl_Jit is
 begin
    --  Manual elaboration so that the order is known (because it is the order
    --  used to display help).
-   Ghdlmain.Version_String :=
-     new String'(Ortho_Jit.Get_Jit_Name & " code generator");
    Ghdlrun.Register_Commands;
    Ghdllocal.Register_Commands;
    Ghdlprint.Register_Commands;
