@@ -112,9 +112,7 @@ handle_test() {
             echo "Cannot elaborate or run : no top level entity";
             exit 1;
         else
-            cmd="$GHDL -e $entity";
-            do_run "$cmd";
-            cmd="$GHDL -r $entity $stop --expect-failure --assert-level=error";
+            cmd="$GHDL --elab-run $entity $stop --expect-failure --assert-level=error";
             do_run "$cmd";
         fi
         ;;
