@@ -556,8 +556,11 @@ package body Elab.Vhdl_Insts is
                   begin
                      Mark_Expr_Pool (Marker);
 
+                     --  Although actual type is defined in Syn_Inst, its
+                     --  parent is defined in Sub_Inst.
                      Actual_Typ := Synth_Subtype_Indication
-                       (Syn_Inst, Get_Actual_Type (Assoc));
+                       (Sub_Inst, Get_Actual_Type (Assoc));
+
                      if not Check_Matching_Bounds (Syn_Inst, Inter_Typ,
                                                    Actual_Typ, Assoc)
                      then
