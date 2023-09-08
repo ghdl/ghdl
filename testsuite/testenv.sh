@@ -182,6 +182,11 @@ ghdl_is_interpretation ()
   "$GHDL" --version | grep -q interpretation
 }
 
+ghdl_is_preelaboration ()
+{
+  "$GHDL" --version | grep -q "static elaboration"
+}
+
 # Run a program
 run ()
 {
