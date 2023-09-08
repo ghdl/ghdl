@@ -184,6 +184,21 @@ package body Ghdlrun is
             Synth.Errors.Debug_Handler := Elab.Debugger.Debug_Error'Access;
             Synth.Vhdl_Foreign.Initialize;
 
+            --  As all design units are loaded, late semantic checks can be
+            --  performed.
+            declare
+               use Vhdl.Configuration;
+               Unit : Node;
+            begin
+               for I in Design_Units.First .. Design_Units.Last loop
+                  Unit := Design_Units.Table (I);
+                  Vhdl.Sem.Sem_Analysis_Checks_List (Unit, False);
+                  --  There cannot be remaining checks to do.
+                  pragma Assert
+                    (Get_Analysis_Checks_List (Unit) = Null_Iir_List);
+               end loop;
+            end;
+
             declare
                use Elab.Vhdl_Context;
                Lib_Unit : Node;
