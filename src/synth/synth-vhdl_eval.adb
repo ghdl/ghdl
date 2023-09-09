@@ -610,6 +610,57 @@ package body Synth.Vhdl_Eval is
    end Eval_Vector_Minimum;
 
    --  ARG to log-vector, sign extended.
+   function Eval_Signed_To_Log_Vector
+     (Arg : Uns64; Sz : Int64; Res_Type : Type_Acc; Loc : Node) return Memtyp
+   is
+      Len : constant Iir_Index32 := Iir_Index32 (Sz);
+      El_Type : constant Type_Acc := Get_Array_Element (Res_Type);
+      Res : Memtyp;
+      Bnd : Type_Acc;
+      B : Uns64;
+      D : Uns64;
+   begin
+      Bnd := Create_Vec_Type_By_Length (Width (Len), El_Type);
+      Res := Create_Memory (Bnd);
+      B := Arg;
+      D := 0;
+      for I in 1 .. Len loop
+         D := B and 1;
+         Write_Std_Logic (Res.Mem, Uns32 (Len - I),
+                          Std_Ulogic'Val (Std_Logic_0_Pos + D));
+         B := Shift_Right_Arithmetic (B, 1);
+      end loop;
+      if (Arg >= 0 and (B /= 0 or D /= 0))
+        or else (Arg < 0 and (B /= -1 or D /= 1))
+      then
+         Warning_Msg_Synth (+Loc, "NUMERIC_STD.TO_SIGNED: vector truncated");
+      end if;
+      return Res;
+   end Eval_Signed_To_Log_Vector;
+
+   function Eval_Unsigned_To_Log_Vector
+     (Arg : Uns64; Sz : Int64; Res_Type : Type_Acc; Loc : Node) return Memtyp
+   is
+      Len : constant Iir_Index32 := Iir_Index32 (Sz);
+      El_Type : constant Type_Acc := Get_Array_Element (Res_Type);
+      Res : Memtyp;
+      Bnd : Type_Acc;
+      B : Uns64;
+   begin
+      Bnd := Create_Vec_Type_By_Length (Width (Len), El_Type);
+      Res := Create_Memory (Bnd);
+      B := Arg;
+      for I in 1 .. Len loop
+         Write_Std_Logic (Res.Mem, Uns32 (Len - I),
+                          Std_Ulogic'Val (Std_Logic_0_Pos + (B and 1)));
+         B := Shift_Right (B, 1);
+      end loop;
+      if B /= 0 then
+         Warning_Msg_Synth (+Loc, "NUMERIC_STD.TO_UNSIGNED: vector truncated");
+      end if;
+      return Res;
+   end Eval_Unsigned_To_Log_Vector;
+
    function Eval_To_Log_Vector (Arg : Uns64; Sz : Int64; Res_Type : Type_Acc)
                                return Memtyp
    is
@@ -2636,8 +2687,11 @@ package body Synth.Vhdl_Eval is
               (Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
                Res_Typ);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int
+         when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns =>
+            return Eval_Unsigned_To_Log_Vector
+              (Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
+               Res_Typ, Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Suv_Nat_Nat =>
             return Eval_To_Log_Vector
@@ -2649,17 +2703,20 @@ package body Synth.Vhdl_Eval is
             return Eval_To_Log_Vector
               (Uns64 (Read_Discrete (Param1)), Int64 (Param2.Typ.Abound.Len),
                Res_Typ);
-         when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int
+         when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn =>
+            return Eval_Signed_To_Log_Vector
+              (To_Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
+               Res_Typ, Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Signed_Int =>
             return Eval_To_Log_Vector
               (To_Uns64 (Read_Discrete (Param1)), Read_Discrete (Param2),
                Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Sgn_Sgn =>
-            return Eval_To_Log_Vector
+            return Eval_Signed_To_Log_Vector
               (To_Uns64 (Read_Discrete (Param1)),
                Int64 (Param2.Typ.Abound.Len),
-               Res_Typ);
+               Res_Typ, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer
