@@ -90,6 +90,10 @@ package Vhdl.Canon is
    procedure Extract_Waveform_Sensitivity
      (Waveform : Iir; Sensitivity_List: Iir_List);
 
+   --  Extract sensititivity of a statement.
+   procedure Canon_Extract_Sensitivity_Statement
+     (Stmt : Iir; List : Iir_List);
+
    --  Likewise, but for all expressions appearing in statements CHAIN.
    procedure Canon_Extract_Sensitivity_Sequential_Statement_Chain
      (Chain : Iir; List : Iir_List);

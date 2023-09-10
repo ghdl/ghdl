@@ -106,6 +106,31 @@ package body Vhdl.Canon is
       end if;
    end Canon_Extract_Sensitivity_Aggregate;
 
+   procedure Sensitivity_Append (List : Iir_List; Expr : Iir) is
+   begin
+      Append_Element (List, Expr);
+   end Sensitivity_Append;
+
+   procedure Sensitivity_Append_Name (List : Iir_List; Name : Iir)
+   is
+      Obj : constant Node := Get_Named_Entity (Name);
+      El : Iir;
+      It : List_Iterator;
+   begin
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
+         --  Check if already present.
+         if Get_Kind (El) in Iir_Kinds_Denoting_Name
+           and then Get_Named_Entity (El) = Obj
+         then
+            return;
+         end if;
+         Next (It);
+      end loop;
+      Sensitivity_Append (List, Name);
+   end Sensitivity_Append_Name;
+
    procedure Canon_Extract_Sensitivity_Expression
      (Expr: Iir; Sensitivity_List: Iir_List; Is_Target: Boolean := False)
    is
@@ -119,12 +144,21 @@ package body Vhdl.Canon is
          when Iir_Kind_Overflow_Literal =>
             null;
 
+         when Iir_Kinds_Denoting_Name =>
+            if not Is_Target and then Is_Signal_Name (Expr) then
+               Sensitivity_Append_Name (Sensitivity_List, Expr);
+            else
+               --  For PSL endpoints
+               Canon_Extract_Sensitivity_Expression
+                 (Get_Named_Entity (Expr), Sensitivity_List, Is_Target);
+            end if;
+
          when Iir_Kind_Slice_Name =>
             if not Is_Target and then
               Get_Name_Staticness (Expr) >= Globally
             then
                if Is_Signal_Object (Expr) then
-                  Add_Element (Sensitivity_List, Expr);
+                  Sensitivity_Append (Sensitivity_List, Expr);
                end if;
             else
                declare
@@ -143,11 +177,11 @@ package body Vhdl.Canon is
             end if;
 
          when Iir_Kind_Selected_Element =>
-            if not Is_Target and then
-              Get_Name_Staticness (Expr) >= Globally
+            if not Is_Target
+              and then Get_Name_Staticness (Expr) >= Globally
             then
                if Is_Signal_Object (Expr) then
-                  Add_Element (Sensitivity_List, Expr);
+                  Sensitivity_Append (Sensitivity_List, Expr);
                end if;
             else
                Canon_Extract_Sensitivity_Expression
@@ -159,7 +193,7 @@ package body Vhdl.Canon is
               and then Get_Name_Staticness (Expr) >= Globally
             then
                if Is_Signal_Object (Expr) then
-                  Add_Element (Sensitivity_List, Expr);
+                  Sensitivity_Append (Sensitivity_List, Expr);
                end if;
             else
                Canon_Extract_Sensitivity_Expression
@@ -205,6 +239,7 @@ package body Vhdl.Canon is
 
          when Iir_Kind_Dereference
            | Iir_Kind_Implicit_Dereference =>
+            --  Not possible (now).
             Canon_Extract_Sensitivity_Expression
               (Get_Prefix (Expr), Sensitivity_List, False);
 
@@ -252,7 +287,8 @@ package body Vhdl.Canon is
             --  implicit signal denoted by the attribute name to the
             --  sensitivity set; [...]
             if not Is_Target then
-               Add_Element (Sensitivity_List, Expr);
+               --  TODO: Check for duplicate ?
+               Sensitivity_Append (Sensitivity_List, Expr);
             end if;
 
          when Iir_Kind_Psl_Endpoint_Declaration =>
@@ -262,14 +298,14 @@ package body Vhdl.Canon is
             begin
                It := List_Iterate (List);
                while Is_Valid (It) loop
-                  Add_Element (Sensitivity_List, Get_Element (It));
+                  Sensitivity_Append_Name (Sensitivity_List, Get_Element (It));
                   Next (It);
                end loop;
             end;
 
          when Iir_Kind_Object_Alias_Declaration =>
             if not Is_Target and then Is_Signal_Object (Expr) then
-               Add_Element (Sensitivity_List, Expr);
+               Sensitivity_Append_Name (Sensitivity_List, Expr);
             end if;
 
          when Iir_Kind_Constant_Declaration
@@ -381,7 +417,7 @@ package body Vhdl.Canon is
            | Iir_Kind_Concurrent_Simple_Signal_Assignment =>
             Guard := Get_Guard (Stmt);
             if Guard /= Null_Iir then
-               Add_Element (List, Guard);
+               Sensitivity_Append (List, Guard);
             end if;
          when others =>
             null;
