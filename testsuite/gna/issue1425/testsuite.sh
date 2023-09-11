@@ -15,11 +15,14 @@ diff_nocr analyze.log expected.txt
 GHDL_STD_FLAGS="-Werror=sensitivity"
 analyze records.vhdl
 
+# 2b - no warnings for use of aliases.
+analyze alias1.vhdl
+
 # Test 3: records_in_records.vhdl
-analyze -Wsensitivity records_in_records.vhdl
+analyze records_in_records.vhdl
 
 # Test 4: arrays.vhdl
-analyze -Wsensitivity arrays.vhdl
+analyze arrays.vhdl
 
 clean
 
