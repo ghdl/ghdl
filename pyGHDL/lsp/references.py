@@ -123,8 +123,8 @@ def find_def(n, loc):
                     if res is not None:
                         return res
         elif typ == nodes_meta.types.Iir_List:
-            attr = nodes_meta.get_field_attribute(f)
-            if attr == nodes_meta.Attr.ANone:
+            # Only sensitivity lists are interesting.
+            if f == nodes_meta.fields.Sensitivity_List:
                 for n1 in pyutils.list_iter(nodes_meta.Get_Iir_List(n, f)):
                     res = find_def(n1, loc)
                     if res is not None:
