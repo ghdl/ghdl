@@ -211,6 +211,9 @@ class Document(object):
         loc = self.position_to_location(position)
         t = references.find_definition_by_loc(self._tree, loc)
         if t is None:
+            # At least vscode sends an hover request even on spaces.
+            log.debug("hover: definition not found at {}.{}".format
+                      (position['line'], position['character']))
             return None
 
         # Regenerate the declaration
@@ -219,6 +222,8 @@ class Document(object):
         buffer = prints.Get_C_String(hand)
         buf_len = prints.Get_Length(hand)
         if buf_len == 0:
+            # Not expected.
+            log.info("hover: no string")
             res = None
         else:
             txt = ""
