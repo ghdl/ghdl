@@ -5542,6 +5542,10 @@ package body Vhdl.Prints is
             | Iir_Kind_Free_Quantity_Declaration
             | Iir_Kinds_Source_Quantity_Declaration =>
             Disp_Object_Declaration (Ctxt, N);
+         when Iir_Kind_Object_Alias_Declaration =>
+            Disp_Object_Alias_Declaration (Ctxt, N);
+         when Iir_Kind_Non_Object_Alias_Declaration =>
+            Disp_Non_Object_Alias_Declaration (Ctxt, N);
          when Iir_Kind_Type_Declaration =>
             Disp_Type_Declaration (Ctxt, N);
          when Iir_Kind_Subtype_Declaration =>
