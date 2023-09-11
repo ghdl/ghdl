@@ -50,7 +50,7 @@ package body Vhdl.Sensitivity_Checks is
    begin
       --  Try to find NAME in LIST; if found set the corresponding element
       --  in REF.
-      Obj := Get_Object_Prefix (Name);
+      Obj := Get_Object_Prefix (Name, False);
       Obj := Name_To_Object (Obj);
       if Obj = Null_Iir or else not Is_Signal_Name (Obj) then
          return;
