@@ -57,6 +57,7 @@ class Workspace(object):
         flags.Flag_Elaborate_With_Outdated.value = True
         libghdl.errorout.Enable_Warning(errorout.Msgid.Warnid_Unused, True)
         libghdl.errorout.Enable_Warning(errorout.Msgid.Warnid_Missing_Assoc, True)
+        libghdl.errorout.Enable_Warning(errorout.Msgid.Warnid_Sensitivity, True)
         self.read_project()
         self.set_options_from_project()
         if libghdl.analyze_init_status() != 0:
