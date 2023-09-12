@@ -212,8 +212,7 @@ class Document(object):
         t = references.find_definition_by_loc(self._tree, loc)
         if t is None:
             # At least vscode sends an hover request even on spaces.
-            log.debug("hover: definition not found at {}.{}".format
-                      (position['line'], position['character']))
+            log.debug("hover: definition not found at {}.{}".format(position["line"], position["character"]))
             return None
 
         # Regenerate the declaration
