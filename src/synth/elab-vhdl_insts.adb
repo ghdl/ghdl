@@ -512,9 +512,7 @@ package body Elab.Vhdl_Insts is
               (Sub_Inst, Syn_Inst, Inter, Assoc);
             if Inter_Typ /= null then
                --  Check matching bounds.
-               if Inter_Typ.Kind in Type_Scalars
-                 and then (Get_Kind (Assoc)
-                             = Iir_Kind_Association_Element_By_Name)
+               if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Name
                  and then Get_Formal_Conversion (Assoc) = Null_Node
                  and then Get_Actual_Conversion (Assoc) = Null_Node
                then
@@ -532,11 +530,23 @@ package body Elab.Vhdl_Insts is
                      Synth_Assignment_Prefix
                        (Syn_Inst, Actual,
                         Actual_Base, Actual_Typ, Actual_Offs);
-                     case Type_Scalars (Inter_Typ.Kind) is
+                     case Inter_Typ.Kind is
                         when Type_All_Discrete =>
                            Same := Inter_Typ.Drange = Actual_Typ.Drange;
                         when Type_Float =>
                            Same := Inter_Typ.Frange = Actual_Typ.Frange;
+                        when Type_Composite =>
+                           if not Check_Matching_Bounds (Syn_Inst, Inter_Typ,
+                                                         Actual_Typ, Assoc)
+                           then
+                              null;
+                           end if;
+                           Same := True;
+                        when Type_Slice
+                          | Type_Protected
+                          | Type_Access
+                          | Type_File =>
+                           raise Internal_Error;
                      end case;
                      if not Same then
                         Error_Msg_Elab

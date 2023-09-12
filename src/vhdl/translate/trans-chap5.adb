@@ -548,9 +548,8 @@ package body Trans.Chap5 is
             View := Null_Iir;
          end if;
 
-         if Get_Kind (Formal_Type) in Iir_Kinds_Array_Type_Definition then
+         if Get_Kind (Formal_Type) in Iir_Kinds_Composite_Type_Definition then
             --  Check length matches.
-            --  FIXME: records ?
             Stabilize (Formal_Sig);
             Stabilize (Actual_Sig);
             Chap3.Check_Composite_Match (Formal_Type, Formal_Sig,
