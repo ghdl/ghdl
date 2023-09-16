@@ -40,7 +40,10 @@ package Vhdl.Sem_Inst is
    --  body.  INST has the form of a generic-mapped package.
    function Instantiate_Package_Body (Inst : Iir) return Iir;
 
-   function Instantiate_Component_Declaration (Comp : Iir; Map : Iir)
+   function Instantiate_Entity_Declaration (Ent : Iir; Map_Parent : Iir)
+                                           return Iir;
+
+   function Instantiate_Component_Declaration (Comp : Iir; Map_Parent : Iir)
                                               return Iir;
 
    --  Instantiate architecture ARCH for *instantiated* entity ENT.

@@ -1361,19 +1361,20 @@ package body Vhdl.Sem_Inst is
       return Res;
    end Instantiate_Package_Body;
 
-   function Instantiate_Component_Declaration (Comp : Iir; Map : Iir)
-                                              return Iir
+   function Instantiate_Component_Entity_Common (Comp : Iir; Map_Parent : Iir)
+                                                return Iir
    is
       Prev_Instance_File : constant Source_File_Entry := Instance_File;
       Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
+      Kind : constant Iir_Kind := Get_Kind (Comp);
       Prev_Orig : Iir;
       Inst : Iir;
    begin
       --  Create the component/entity.
-      Inst := Create_Iir (Get_Kind (Comp));
+      Inst := Create_Iir (Kind);
 
       --  Build and set the new location.
-      Create_Relocation (Map, Comp);
+      Create_Relocation (Map_Parent, Comp);
       Set_Location (Inst, Relocate (Get_Location (Comp)));
 
       --  Be sure Get_Origin_Priv can be called on existing nodes.
@@ -1392,7 +1393,7 @@ package body Vhdl.Sem_Inst is
       declare
          Assoc, Inter, Inter_Iter : Iir;
       begin
-         Assoc := Get_Generic_Map_Aspect_Chain (Map);
+         Assoc := Get_Generic_Map_Aspect_Chain (Map_Parent);
          Inter_Iter := Get_Generic_Chain (Inst);
          while Is_Valid (Assoc) loop
             Inter := Get_Association_Interface (Assoc, Inter_Iter);
@@ -1404,12 +1405,37 @@ package body Vhdl.Sem_Inst is
       Set_Port_Chain
         (Inst, Instantiate_Iir_Chain (Get_Port_Chain (Comp)));
 
+      if Kind = Iir_Kind_Entity_Declaration then
+         Set_Declaration_Chain
+           (Inst, Instantiate_Iir_Chain (Get_Declaration_Chain (Comp)));
+         Set_Concurrent_Statement_Chain
+           (Inst,
+            Instantiate_Iir_Chain (Get_Concurrent_Statement_Chain (Comp)));
+         Set_Attribute_Value_Chain
+           (Inst, Instantiate_Iir (Get_Attribute_Value_Chain (Comp), True));
+         Instantiate_Attribute_Value_Chain (Inst);
+
+         --  TODO: vunit ?
+      end if;
+
       Set_Origin (Comp, Prev_Orig);
 
       Instance_File := Prev_Instance_File;
       Restore_Origin (Mark);
       return Inst;
+   end Instantiate_Component_Entity_Common;
+
+   function Instantiate_Component_Declaration (Comp : Iir; Map_Parent : Iir)
+                                              return Iir is
+   begin
+      return Instantiate_Component_Entity_Common (Comp, Map_Parent);
    end Instantiate_Component_Declaration;
+
+   function Instantiate_Entity_Declaration (Ent : Iir; Map_Parent : Iir)
+                                           return Iir is
+   begin
+      return Instantiate_Component_Entity_Common (Ent, Map_Parent);
+   end Instantiate_Entity_Declaration;
 
    --  Instantiate architecture ARCH for *instantiated* entity ENT.
    --  STMT is the statement that instantiated ENT.
@@ -1439,6 +1465,8 @@ package body Vhdl.Sem_Inst is
       --  Instantiate the architecture.
 
       Res := Instantiate_Iir (Arch, False);
+
+      Set_Named_Entity (Get_Entity_Name (Res), Ent);
 
       --  Restore.
       Instance_File := Prev_Instance_File;
