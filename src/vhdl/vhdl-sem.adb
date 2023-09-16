@@ -62,7 +62,9 @@ package body Vhdl.Sem is
    end Add_Dependence;
 
    --  LRM 1.1  Entity declaration.
-   procedure Sem_Entity_Declaration (Entity : Iir_Entity_Declaration) is
+   procedure Sem_Entity_Declaration (Entity : Iir_Entity_Declaration)
+   is
+      Generics : constant Iir := Get_Generic_Chain (Entity);
    begin
       Xrefs.Xref_Decl (Entity);
       Sem_Scopes.Add_Name (Entity);
@@ -76,7 +78,25 @@ package body Vhdl.Sem is
       Open_Declarative_Region;
 
       -- Sem generics.
-      Sem_Interface_Chain (Get_Generic_Chain (Entity), Generic_Interface_List);
+      Sem_Interface_Chain (Generics, Generic_Interface_List);
+
+      --  Set macro-expanded flag.
+      declare
+         Gen : Iir;
+      begin
+         Gen := Generics;
+         while Gen /= Null_Iir loop
+            case Get_Kind (Gen) is
+               when Iir_Kind_Interface_Type_Declaration
+                 | Iir_Kinds_Interface_Subprogram_Declaration =>
+                  Set_Macro_Expanded_Flag (Entity, True);
+                  exit;
+               when others =>
+                  null;
+            end case;
+            Gen := Get_Chain (Gen);
+         end loop;
+      end;
 
       -- Sem ports.
       Sem_Interface_Chain (Get_Port_Chain (Entity), Port_Interface_List);
