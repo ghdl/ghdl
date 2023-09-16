@@ -329,7 +329,7 @@ package body Vhdl.Sem_Stmts is
    begin
       Target_Object := Name_To_Object (Target);
       if Target_Object = Null_Iir then
-         if Get_Kind (Target) = Iir_Kind_Simple_Name
+         if Get_Kind (Target) in Iir_Kinds_Denoting_Name
            and then Is_Error (Get_Named_Entity (Target))
          then
             --  Common case: target is not declared.  There was already
@@ -1130,20 +1130,18 @@ package body Vhdl.Sem_Stmts is
       Target_Object := Null_Iir;
       Target_Prefix := Null_Iir;
       Target_Type := Wildcard_Any_Type;
-      if Target = Null_Iir then
-         --  To avoid spurious errors, assume the target is fully
-         --  constrained.
-         Constrained := True;
-      else
+      --  To avoid spurious errors, assume the target is fully constrained.
+      Constrained := True;
+      if Target /= Null_Iir then
          Set_Target (Stmt, Target);
          if Is_Expr_Fully_Analyzed (Target) then
             Check_Target (Stmt, Target);
             Target_Type := Get_Type (Target);
             Target_Object := Check_Simple_Signal_Target_Object (Target);
-            Target_Prefix := Get_Object_Prefix (Target_Object);
-            Constrained := Is_Object_Name_Fully_Constrained (Target);
-         else
-            Constrained := False;
+            if Target_Object /= Null_Iir then
+               Target_Prefix := Get_Object_Prefix (Target_Object);
+               Constrained := Is_Object_Name_Fully_Constrained (Target);
+            end if;
          end if;
       end if;
 

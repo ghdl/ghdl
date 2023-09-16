@@ -456,15 +456,17 @@ package body Vhdl.Utils is
          when Iir_Kind_Object_Alias_Declaration =>
             return Name;
 
+         --  LRM08 8.7 External names
+         --  An external name denotes an object [...]
+         when Iir_Kinds_External_Name =>
+            return Name;
+
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name =>
             --  LRM08 8 Names
             --  Names can denote declared entities [...]
             --  GHDL: in particular, names can denote objects.
             return Name_To_Object (Get_Named_Entity (Name));
-
-         when Iir_Kinds_External_Name =>
-            return Name;
 
          --  AMS-LRM17 6.4 Objects
          --  An implicit signal defined by any of the predefined attributes
@@ -527,7 +529,8 @@ package body Vhdl.Utils is
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kinds_Signal_Attribute =>
+           | Iir_Kinds_Signal_Attribute
+           | Iir_Kind_External_Signal_Name =>
             return True;
          when Iir_Kind_Object_Alias_Declaration =>
             --  Must have been handled by Get_Object_Prefix.

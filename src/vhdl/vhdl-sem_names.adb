@@ -2362,6 +2362,10 @@ package body Vhdl.Sem_Names is
          if Get_Kind (Base_Type) = Iir_Kind_Access_Type_Definition then
             Base_Type := Get_Base_Type (Get_Designated_Type (Base_Type));
          end if;
+         if Is_Error (Base_Type) then
+            --  Avoid error storm.
+            return;
+         end if;
          if Get_Kind (Base_Type) /= Iir_Kind_Record_Type_Definition then
             Error_Msg_Sem
               (+Name, "%n does not designate a record", +Prefix);
