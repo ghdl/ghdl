@@ -1191,7 +1191,8 @@ package body Trans.Chap6 is
                                Type_Info, Mode_Value);
             end;
 
-         when Iir_Kind_Object_Alias_Declaration =>
+         when Iir_Kind_Object_Alias_Declaration
+           | Iir_Kind_External_Signal_Name =>
             --  Alias_Var is not like an object variable, since it is
             --  always a pointer to the aliased object.
             declare
@@ -1226,8 +1227,7 @@ package body Trans.Chap6 is
            | Iir_Kind_Quiet_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Transaction_Attribute
-           | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kind_External_Signal_Name =>
+           | Iir_Kind_Guard_Signal_Declaration =>
             if Mode = Mode_Signal then
                return Get_Var (Name_Info.Signal_Sig, Type_Info, Mode_Signal);
             else
