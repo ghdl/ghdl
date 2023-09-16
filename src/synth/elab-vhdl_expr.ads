@@ -61,4 +61,8 @@ package Elab.Vhdl_Expr is
    function Exec_Simple_Aggregate (Syn_Inst : Synth_Instance_Acc;
                                    Aggr : Node) return Valtyp;
 
+   --  Resolve an external name.
+   function Exec_External_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
+                               return Valtyp;
+
 end Elab.Vhdl_Expr;
