@@ -198,6 +198,17 @@ package body Vhdl.Sem_Names is
       end if;
    end Add_Result;
 
+   --  Get the base name of NAME.
+   function Compute_Base_Name (Name : Iir) return Iir is
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kinds_External_Name =>
+            return Name;
+         when others =>
+            return Get_Base_Name (Name);
+      end case;
+   end Compute_Base_Name;
+
    --  Extract from overload list RES the function call without implicit
    --  conversion.  Return Null_Iir if there is no function call, or if there
    --  is an expressions that isn't a function call, or if there is more than
@@ -697,7 +708,7 @@ package body Vhdl.Sem_Names is
       Set_Expr_Staticness
         (Expr, Min (Expr_Staticness, Get_Expr_Staticness (Prefix)));
 
-      Set_Base_Name (Expr, Get_Base_Name (Prefix));
+      Set_Base_Name (Expr, Compute_Base_Name (Prefix));
    end Finish_Sem_Indexed_Name;
 
    procedure Finish_Sem_Dereference (Res : Iir) is
@@ -724,7 +735,7 @@ package body Vhdl.Sem_Names is
       Prefix_Rng : Iir;
       Suffix_Rng : Iir;
    begin
-      Set_Base_Name (Name, Get_Base_Name (Prefix));
+      Set_Base_Name (Name, Compute_Base_Name (Prefix));
 
       --  LRM93 6.5: the prefix of an indexed name must be appropriate
       --  for an array type.
@@ -2109,7 +2120,7 @@ package body Vhdl.Sem_Names is
             Xref_Ref (Res, Get_Named_Entity (Res));
             Set_Name_Staticness (Res, Get_Name_Staticness (Prefix));
             Set_Expr_Staticness (Res, Get_Expr_Staticness (Prefix));
-            Set_Base_Name (Res, Get_Base_Name (Prefix));
+            Set_Base_Name (Res, Compute_Base_Name (Prefix));
             Free_Iir (Name);
          when Iir_Kind_Dereference =>
             pragma Assert (Get_Kind (Name) = Iir_Kind_Selected_By_All_Name);
@@ -3957,7 +3968,7 @@ package body Vhdl.Sem_Names is
       Set_Prefix (Res, Prefix);
       Set_Type (Res, Attr_Type);
 
-      Set_Base_Name (Res, Get_Base_Name (Prefix_Name));
+      Set_Base_Name (Res, Compute_Base_Name (Prefix_Name));
       Set_Name_Staticness (Res, Get_Name_Staticness (Prefix_Name));
       Set_Type_Staticness (Res, Get_Type_Staticness (Attr_Type));
 
@@ -3990,7 +4001,7 @@ package body Vhdl.Sem_Names is
       Set_Prefix (Res, Prefix);
       Set_Nature (Res, Get_Nature (Prefix));
 
-      Set_Base_Name (Res, Get_Base_Name (Prefix_Name));
+      Set_Base_Name (Res, Compute_Base_Name (Prefix_Name));
       Set_Name_Staticness (Res, Get_Name_Staticness (Prefix_Name));
 
       return Res;
