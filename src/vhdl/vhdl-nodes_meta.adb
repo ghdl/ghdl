@@ -329,7 +329,6 @@ package body Vhdl.Nodes_Meta is
       Field_Parameter_3 => Type_Iir,
       Field_Parameter_4 => Type_Iir,
       Field_Attr_Chain => Type_Iir,
-      Field_Attribute_Implicit_Declaration => Type_Iir,
       Field_Actual_Type => Type_Iir,
       Field_Actual_Type_Definition => Type_Iir,
       Field_Association_Chain => Type_Iir,
@@ -1045,8 +1044,6 @@ package body Vhdl.Nodes_Meta is
             return "parameter_4";
          when Field_Attr_Chain =>
             return "attr_chain";
-         when Field_Attribute_Implicit_Declaration =>
-            return "attribute_implicit_declaration";
          when Field_Actual_Type =>
             return "actual_type";
          when Field_Actual_Type_Definition =>
@@ -2512,8 +2509,6 @@ package body Vhdl.Nodes_Meta is
          when Field_Parameter_4 =>
             return Attr_None;
          when Field_Attr_Chain =>
-            return Attr_Forward_Ref;
-         when Field_Attribute_Implicit_Declaration =>
             return Attr_Forward_Ref;
          when Field_Actual_Type =>
             return Attr_Ref;
@@ -5090,18 +5085,19 @@ package body Vhdl.Nodes_Meta is
       Field_Name_Staticness,
       Field_Parent,
       Field_Type,
-      Field_Chain,
+      Field_Attr_Chain,
       Field_External_Pathname,
       Field_Named_Entity,
       Field_Subtype_Indication,
       --  Iir_Kind_External_Signal_Name
       Field_Is_Ref,
       Field_Has_Active_Flag,
+      Field_After_Drivers_Flag,
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Parent,
       Field_Type,
-      Field_Chain,
+      Field_Attr_Chain,
       Field_External_Pathname,
       Field_Named_Entity,
       Field_Subtype_Indication,
@@ -5112,7 +5108,7 @@ package body Vhdl.Nodes_Meta is
       Field_Name_Staticness,
       Field_Parent,
       Field_Type,
-      Field_Chain,
+      Field_Attr_Chain,
       Field_External_Pathname,
       Field_Named_Entity,
       Field_Subtype_Indication,
@@ -5325,7 +5321,6 @@ package body Vhdl.Nodes_Meta is
       Field_Prefix,
       Field_Type,
       Field_Attr_Chain,
-      Field_Attribute_Implicit_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Integ_Attribute
       Field_Expr_Staticness,
@@ -5333,7 +5328,6 @@ package body Vhdl.Nodes_Meta is
       Field_Prefix,
       Field_Type,
       Field_Attr_Chain,
-      Field_Attribute_Implicit_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Quantity_Delayed_Attribute
       Field_Expr_Staticness,
@@ -5341,7 +5335,6 @@ package body Vhdl.Nodes_Meta is
       Field_Prefix,
       Field_Type,
       Field_Attr_Chain,
-      Field_Attribute_Implicit_Declaration,
       Field_Parameter,
       Field_Base_Name,
       --  Iir_Kind_Above_Attribute
@@ -5351,7 +5344,6 @@ package body Vhdl.Nodes_Meta is
       Field_Prefix,
       Field_Type,
       Field_Attr_Chain,
-      Field_Attribute_Implicit_Declaration,
       Field_Parameter,
       Field_Base_Name,
       --  Iir_Kind_Delayed_Attribute
@@ -5362,7 +5354,6 @@ package body Vhdl.Nodes_Meta is
       Field_Parameter,
       Field_Type,
       Field_Attr_Chain,
-      Field_Attribute_Implicit_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Stable_Attribute
       Field_Has_Active_Flag,
@@ -5372,7 +5363,6 @@ package body Vhdl.Nodes_Meta is
       Field_Parameter,
       Field_Type,
       Field_Attr_Chain,
-      Field_Attribute_Implicit_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Quiet_Attribute
       Field_Has_Active_Flag,
@@ -5382,7 +5372,6 @@ package body Vhdl.Nodes_Meta is
       Field_Parameter,
       Field_Type,
       Field_Attr_Chain,
-      Field_Attribute_Implicit_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Transaction_Attribute
       Field_Has_Active_Flag,
@@ -5392,7 +5381,6 @@ package body Vhdl.Nodes_Meta is
       Field_Parameter,
       Field_Type,
       Field_Attr_Chain,
-      Field_Attribute_Implicit_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Event_Attribute
       Field_Expr_Staticness,
@@ -5803,69 +5791,69 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_Operator_Symbol => 2126,
       Iir_Kind_Reference_Name => 2131,
       Iir_Kind_External_Constant_Name => 2140,
-      Iir_Kind_External_Signal_Name => 2150,
-      Iir_Kind_External_Variable_Name => 2160,
-      Iir_Kind_Selected_By_All_Name => 2166,
-      Iir_Kind_Parenthesis_Name => 2172,
-      Iir_Kind_Package_Pathname => 2176,
-      Iir_Kind_Absolute_Pathname => 2177,
-      Iir_Kind_Relative_Pathname => 2178,
-      Iir_Kind_Pathname_Element => 2183,
-      Iir_Kind_Base_Attribute => 2185,
-      Iir_Kind_Subtype_Attribute => 2190,
-      Iir_Kind_Element_Attribute => 2195,
-      Iir_Kind_Across_Attribute => 2200,
-      Iir_Kind_Through_Attribute => 2205,
-      Iir_Kind_Nature_Reference_Attribute => 2209,
-      Iir_Kind_Left_Type_Attribute => 2214,
-      Iir_Kind_Right_Type_Attribute => 2219,
-      Iir_Kind_High_Type_Attribute => 2224,
-      Iir_Kind_Low_Type_Attribute => 2229,
-      Iir_Kind_Ascending_Type_Attribute => 2234,
-      Iir_Kind_Image_Attribute => 2240,
-      Iir_Kind_Value_Attribute => 2246,
-      Iir_Kind_Pos_Attribute => 2252,
-      Iir_Kind_Val_Attribute => 2258,
-      Iir_Kind_Succ_Attribute => 2264,
-      Iir_Kind_Pred_Attribute => 2270,
-      Iir_Kind_Leftof_Attribute => 2276,
-      Iir_Kind_Rightof_Attribute => 2282,
-      Iir_Kind_Signal_Slew_Attribute => 2290,
-      Iir_Kind_Quantity_Slew_Attribute => 2298,
-      Iir_Kind_Ramp_Attribute => 2306,
-      Iir_Kind_Zoh_Attribute => 2314,
-      Iir_Kind_Ltf_Attribute => 2322,
-      Iir_Kind_Ztf_Attribute => 2332,
+      Iir_Kind_External_Signal_Name => 2151,
+      Iir_Kind_External_Variable_Name => 2161,
+      Iir_Kind_Selected_By_All_Name => 2167,
+      Iir_Kind_Parenthesis_Name => 2173,
+      Iir_Kind_Package_Pathname => 2177,
+      Iir_Kind_Absolute_Pathname => 2178,
+      Iir_Kind_Relative_Pathname => 2179,
+      Iir_Kind_Pathname_Element => 2184,
+      Iir_Kind_Base_Attribute => 2186,
+      Iir_Kind_Subtype_Attribute => 2191,
+      Iir_Kind_Element_Attribute => 2196,
+      Iir_Kind_Across_Attribute => 2201,
+      Iir_Kind_Through_Attribute => 2206,
+      Iir_Kind_Nature_Reference_Attribute => 2210,
+      Iir_Kind_Left_Type_Attribute => 2215,
+      Iir_Kind_Right_Type_Attribute => 2220,
+      Iir_Kind_High_Type_Attribute => 2225,
+      Iir_Kind_Low_Type_Attribute => 2230,
+      Iir_Kind_Ascending_Type_Attribute => 2235,
+      Iir_Kind_Image_Attribute => 2241,
+      Iir_Kind_Value_Attribute => 2247,
+      Iir_Kind_Pos_Attribute => 2253,
+      Iir_Kind_Val_Attribute => 2259,
+      Iir_Kind_Succ_Attribute => 2265,
+      Iir_Kind_Pred_Attribute => 2271,
+      Iir_Kind_Leftof_Attribute => 2277,
+      Iir_Kind_Rightof_Attribute => 2283,
+      Iir_Kind_Signal_Slew_Attribute => 2291,
+      Iir_Kind_Quantity_Slew_Attribute => 2299,
+      Iir_Kind_Ramp_Attribute => 2307,
+      Iir_Kind_Zoh_Attribute => 2315,
+      Iir_Kind_Ltf_Attribute => 2323,
+      Iir_Kind_Ztf_Attribute => 2333,
       Iir_Kind_Dot_Attribute => 2339,
-      Iir_Kind_Integ_Attribute => 2346,
-      Iir_Kind_Quantity_Delayed_Attribute => 2354,
-      Iir_Kind_Above_Attribute => 2363,
-      Iir_Kind_Delayed_Attribute => 2372,
-      Iir_Kind_Stable_Attribute => 2381,
-      Iir_Kind_Quiet_Attribute => 2390,
-      Iir_Kind_Transaction_Attribute => 2399,
-      Iir_Kind_Event_Attribute => 2403,
-      Iir_Kind_Active_Attribute => 2407,
-      Iir_Kind_Last_Event_Attribute => 2411,
-      Iir_Kind_Last_Active_Attribute => 2415,
-      Iir_Kind_Last_Value_Attribute => 2419,
-      Iir_Kind_Driving_Attribute => 2423,
-      Iir_Kind_Driving_Value_Attribute => 2427,
-      Iir_Kind_Behavior_Attribute => 2427,
-      Iir_Kind_Structure_Attribute => 2427,
-      Iir_Kind_Simple_Name_Attribute => 2434,
-      Iir_Kind_Instance_Name_Attribute => 2439,
-      Iir_Kind_Path_Name_Attribute => 2444,
-      Iir_Kind_Converse_Attribute => 2446,
-      Iir_Kind_Left_Array_Attribute => 2453,
-      Iir_Kind_Right_Array_Attribute => 2460,
-      Iir_Kind_High_Array_Attribute => 2467,
-      Iir_Kind_Low_Array_Attribute => 2474,
-      Iir_Kind_Length_Array_Attribute => 2481,
-      Iir_Kind_Ascending_Array_Attribute => 2488,
-      Iir_Kind_Range_Array_Attribute => 2495,
-      Iir_Kind_Reverse_Range_Array_Attribute => 2502,
-      Iir_Kind_Attribute_Name => 2511
+      Iir_Kind_Integ_Attribute => 2345,
+      Iir_Kind_Quantity_Delayed_Attribute => 2352,
+      Iir_Kind_Above_Attribute => 2360,
+      Iir_Kind_Delayed_Attribute => 2368,
+      Iir_Kind_Stable_Attribute => 2376,
+      Iir_Kind_Quiet_Attribute => 2384,
+      Iir_Kind_Transaction_Attribute => 2392,
+      Iir_Kind_Event_Attribute => 2396,
+      Iir_Kind_Active_Attribute => 2400,
+      Iir_Kind_Last_Event_Attribute => 2404,
+      Iir_Kind_Last_Active_Attribute => 2408,
+      Iir_Kind_Last_Value_Attribute => 2412,
+      Iir_Kind_Driving_Attribute => 2416,
+      Iir_Kind_Driving_Value_Attribute => 2420,
+      Iir_Kind_Behavior_Attribute => 2420,
+      Iir_Kind_Structure_Attribute => 2420,
+      Iir_Kind_Simple_Name_Attribute => 2427,
+      Iir_Kind_Instance_Name_Attribute => 2432,
+      Iir_Kind_Path_Name_Attribute => 2437,
+      Iir_Kind_Converse_Attribute => 2439,
+      Iir_Kind_Left_Array_Attribute => 2446,
+      Iir_Kind_Right_Array_Attribute => 2453,
+      Iir_Kind_High_Array_Attribute => 2460,
+      Iir_Kind_Low_Array_Attribute => 2467,
+      Iir_Kind_Length_Array_Attribute => 2474,
+      Iir_Kind_Ascending_Array_Attribute => 2481,
+      Iir_Kind_Range_Array_Attribute => 2488,
+      Iir_Kind_Reverse_Range_Array_Attribute => 2495,
+      Iir_Kind_Attribute_Name => 2504
      );
 
    function Get_Fields_First (K : Iir_Kind) return Fields_Index is
@@ -6762,8 +6750,6 @@ package body Vhdl.Nodes_Meta is
             return Get_Parameter_4 (N);
          when Field_Attr_Chain =>
             return Get_Attr_Chain (N);
-         when Field_Attribute_Implicit_Declaration =>
-            return Get_Attribute_Implicit_Declaration (N);
          when Field_Actual_Type =>
             return Get_Actual_Type (N);
          when Field_Actual_Type_Definition =>
@@ -7248,8 +7234,6 @@ package body Vhdl.Nodes_Meta is
             Set_Parameter_4 (N, V);
          when Field_Attr_Chain =>
             Set_Attr_Chain (N, V);
-         when Field_Attribute_Implicit_Declaration =>
-            Set_Attribute_Implicit_Declaration (N, V);
          when Field_Actual_Type =>
             Set_Actual_Type (N, V);
          when Field_Actual_Type_Definition =>
@@ -8566,7 +8550,8 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_View_Declaration
            | Iir_Kind_Interface_File_Declaration
-           | Iir_Kind_Interface_Quantity_Declaration =>
+           | Iir_Kind_Interface_Quantity_Declaration
+           | Iir_Kind_External_Signal_Name =>
             return True;
          when others =>
             return False;
@@ -9015,10 +9000,7 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_While_Loop_Statement
            | Iir_Kind_Case_Statement
            | Iir_Kind_If_Statement
-           | Iir_Kind_Suspend_State_Statement
-           | Iir_Kind_External_Constant_Name
-           | Iir_Kind_External_Signal_Name
-           | Iir_Kind_External_Variable_Name =>
+           | Iir_Kind_Suspend_State_Statement =>
             return True;
          when others =>
             return False;
@@ -12328,7 +12310,10 @@ package body Vhdl.Nodes_Meta is
    function Has_Attr_Chain (K : Iir_Kind) return Boolean is
    begin
       case K is
-         when Iir_Kind_Signal_Slew_Attribute
+         when Iir_Kind_External_Constant_Name
+           | Iir_Kind_External_Signal_Name
+           | Iir_Kind_External_Variable_Name
+           | Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute
            | Iir_Kind_Ramp_Attribute
            | Iir_Kind_Zoh_Attribute
@@ -12347,24 +12332,6 @@ package body Vhdl.Nodes_Meta is
             return False;
       end case;
    end Has_Attr_Chain;
-
-   function Has_Attribute_Implicit_Declaration (K : Iir_Kind)
-      return Boolean is
-   begin
-      case K is
-         when Iir_Kind_Dot_Attribute
-           | Iir_Kind_Integ_Attribute
-           | Iir_Kind_Quantity_Delayed_Attribute
-           | Iir_Kind_Above_Attribute
-           | Iir_Kind_Delayed_Attribute
-           | Iir_Kind_Stable_Attribute
-           | Iir_Kind_Quiet_Attribute
-           | Iir_Kind_Transaction_Attribute =>
-            return True;
-         when others =>
-            return False;
-      end case;
-   end Has_Attribute_Implicit_Declaration;
 
    function Has_Actual_Type (K : Iir_Kind) return Boolean is
    begin

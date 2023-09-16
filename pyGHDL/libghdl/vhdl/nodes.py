@@ -6083,19 +6083,6 @@ def Set_Attr_Chain(obj: Iir, value: Iir) -> None:
 
 
 @export
-@BindToLibGHDL("vhdl__nodes__get_attribute_implicit_declaration")
-def Get_Attribute_Implicit_Declaration(obj: Iir) -> Iir:
-    """"""
-    return 0
-
-
-@export
-@BindToLibGHDL("vhdl__nodes__set_attribute_implicit_declaration")
-def Set_Attribute_Implicit_Declaration(obj: Iir, value: Iir) -> None:
-    """"""
-
-
-@export
 @BindToLibGHDL("vhdl__nodes__get_actual_type")
 def Get_Actual_Type(obj: Iir) -> Iir:
     """"""

@@ -4618,7 +4618,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Type (Field1)
    --
-   --   Get/Set_Chain (Field2)
+   --   Get/Set_Attr_Chain (Field2)
    --
    --   Get/Set_External_Pathname (Field3)
    --
@@ -4631,6 +4631,9 @@ package Vhdl.Nodes is
    --
    -- Only for Iir_Kind_External_Signal_Name:
    --   Get/Set_Has_Active_Flag (Flag2)
+   --
+   -- Only for Iir_Kind_External_Signal_Name:
+   --   Get/Set_After_Drivers_Flag (Flag5)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -4836,9 +4839,6 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Attr_Chain (Field2)
    --
-   --  Head of the chain.  Used only to ease the reconstruction of the chain.
-   --   Get/Set_Attribute_Implicit_Declaration (Field3)
-   --
    -- Only for Iir_Kind_Above_Attribute:
    -- Only for Iir_Kind_Quantity_Delayed_Attribute:
    --   Get/Set_Parameter (Field4)
@@ -4951,9 +4951,6 @@ package Vhdl.Nodes is
    --  attribute_implicit_declaration.  Usual Get/Set_Chain is not used here as
    --  the chain is composed only of forward references.
    --   Get/Set_Attr_Chain (Field2)
-   --
-   --  Head of the chain.  Used only to ease the reconstruction of the chain.
-   --   Get/Set_Attribute_Implicit_Declaration (Field3)
    --
    --   Get/Set_Base_Name (Field5)
    --
@@ -9442,10 +9439,6 @@ package Vhdl.Nodes is
    --  Field: Field2 Forward_Ref
    function Get_Attr_Chain (Attr : Iir) return Iir;
    procedure Set_Attr_Chain (Attr : Iir; Chain : Iir);
-
-   --  Field: Field3 Forward_Ref
-   function Get_Attribute_Implicit_Declaration (Attr : Iir) return Iir;
-   procedure Set_Attribute_Implicit_Declaration (Attr : Iir; Decl : Iir);
 
    --  Type of the actual for an association by individual.
    --    Unless the formal is an unconstrained array type, this is the same as

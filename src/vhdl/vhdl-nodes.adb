@@ -6436,22 +6436,6 @@ package body Vhdl.Nodes is
       Set_Field2 (Attr, Chain);
    end Set_Attr_Chain;
 
-   function Get_Attribute_Implicit_Declaration (Attr : Iir) return Iir is
-   begin
-      pragma Assert (Attr /= Null_Iir);
-      pragma Assert (Has_Attribute_Implicit_Declaration (Get_Kind (Attr)),
-                     "no field Attribute_Implicit_Declaration");
-      return Get_Field3 (Attr);
-   end Get_Attribute_Implicit_Declaration;
-
-   procedure Set_Attribute_Implicit_Declaration (Attr : Iir; Decl : Iir) is
-   begin
-      pragma Assert (Attr /= Null_Iir);
-      pragma Assert (Has_Attribute_Implicit_Declaration (Get_Kind (Attr)),
-                     "no field Attribute_Implicit_Declaration");
-      Set_Field3 (Attr, Decl);
-   end Set_Attribute_Implicit_Declaration;
-
    function Get_Actual_Type (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);

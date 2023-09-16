@@ -373,7 +373,6 @@ package Vhdl.Nodes_Meta is
       Field_Parameter_3,
       Field_Parameter_4,
       Field_Attr_Chain,
-      Field_Attribute_Implicit_Declaration,
       Field_Actual_Type,
       Field_Actual_Type_Definition,
       Field_Association_Chain,
@@ -985,8 +984,6 @@ package Vhdl.Nodes_Meta is
    function Has_Parameter_3 (K : Iir_Kind) return Boolean;
    function Has_Parameter_4 (K : Iir_Kind) return Boolean;
    function Has_Attr_Chain (K : Iir_Kind) return Boolean;
-   function Has_Attribute_Implicit_Declaration (K : Iir_Kind)
-      return Boolean;
    function Has_Actual_Type (K : Iir_Kind) return Boolean;
    function Has_Actual_Type_Definition (K : Iir_Kind) return Boolean;
    function Has_Association_Chain (K : Iir_Kind) return Boolean;

@@ -99,9 +99,6 @@ package body Vhdl.Sem_Decls is
          Set_Attr_Chain (Current_Signals_Region.Last_Attribute, Attr);
       end if;
       Current_Signals_Region.Last_Attribute := Attr;
-
-      Set_Attribute_Implicit_Declaration
-        (Attr, Current_Signals_Region.Implicit_Decl);
    end Add_Implicit_Declaration;
 
    --  Insert pending implicit declarations after the last analyzed LAST_DECL,
