@@ -355,21 +355,23 @@ package body Simul.Vhdl_Elab is
 
       Res := Elab.Vhdl_Expr.Exec_External_Name (Inst, Name);
 
-      Res := Elab.Vhdl_Expr.Exec_Subtype_Conversion
-        (Res, Prev.Typ, True, Name);
-      Convert_Type_Width (Res.Typ);
-      Res.Typ := Unshare (Res.Typ, Instance_Pool);
-      case Res.Val.Kind is
-         when Value_Signal =>
-            Prev.Val.all := (Kind => Value_Alias,
-                             A_Obj => Res.Val,
-                             A_Typ => Res.Typ,
-                             A_Off => No_Value_Offsets);
-         when others =>
-            raise Internal_Error;
-      end case;
+      if Res /= No_Valtyp then
+         Res := Elab.Vhdl_Expr.Exec_Subtype_Conversion
+           (Res, Prev.Typ, True, Name);
+         Convert_Type_Width (Res.Typ);
+         Res.Typ := Unshare (Res.Typ, Instance_Pool);
+         case Res.Val.Kind is
+            when Value_Signal =>
+               Prev.Val.all := (Kind => Value_Alias,
+                                A_Obj => Res.Val,
+                                A_Typ => Res.Typ,
+                                A_Off => No_Value_Offsets);
+            when others =>
+               raise Internal_Error;
+         end case;
 
-      Mutate_Object (Inst, Name, Prev);
+         Mutate_Object (Inst, Name, Prev);
+      end if;
 
       Instance_Pool := Prev_Instance_Pool;
       Release_Expr_Pool (Marker);

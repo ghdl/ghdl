@@ -289,7 +289,7 @@ package body Elab.Vhdl_Expr is
       if Get_Identifier (Top_Ent) /= Get_Identifier (Suffix) then
          Error_Msg_Synth
            (Syn_Inst, Path,
-            "root %i of absolute pathname is not the top entity %i",
+            "expect %i instead of %i for root of absolute pathname",
             (+Top_Ent, +Suffix));
          return No_Valtyp;
       end if;
