@@ -242,11 +242,40 @@ package body Trans.Chap4 is
       end case;
    end Create_Signal;
 
+   function Get_Alias_Ortho_Type
+     (Tinfo : Type_Info_Acc; Mode : Object_Kind_Type) return O_Tnode is
+   begin
+      case Tinfo.Type_Mode is
+         when Type_Mode_Unbounded =>
+            --  create an object.
+            --  At elaboration: copy base from name, copy bounds from type,
+            --   check for matching bounds.
+            return Tinfo.Ortho_Type (Mode);
+         when Type_Mode_Bounded_Arrays
+           | Type_Mode_Bounded_Records
+           | Type_Mode_Acc
+           | Type_Mode_Bounds_Acc
+           | Type_Mode_Protected =>
+            --  Create an object pointer.
+            --  At elaboration: copy base from name.
+            return Tinfo.Ortho_Ptr_Type (Mode);
+         when Type_Mode_Scalar =>
+            case Mode is
+               when Mode_Signal =>
+                  return Tinfo.Ortho_Type (Mode_Signal);
+               when Mode_Value =>
+                  return Tinfo.Ortho_Ptr_Type (Mode_Value);
+            end case;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Alias_Ortho_Type;
+
    procedure Create_Implicit_Signal (Decl : Iir)
    is
-      Sig_Type_Def : constant Iir := Get_Type (Decl);
-      Type_Info    : constant Type_Info_Acc := Get_Info (Sig_Type_Def);
-      Info         : Signal_Info_Acc;
+      Sig_Type : constant Iir := Get_Type (Decl);
+      Type_Info : constant Type_Info_Acc := Get_Info (Sig_Type);
+      Info      : Signal_Info_Acc;
    begin
       --  The type of DECL is already known: either bit, or boolean or the
       --  type of the prefix.
@@ -260,6 +289,40 @@ package body Trans.Chap4 is
         (Create_Uniq_Identifier,
          Get_Object_Type (Type_Info, Mode_Value));
    end Create_Implicit_Signal;
+
+   procedure Create_Implicit_Declaration (Decl : Iir) is
+   begin
+      case Get_Kind (Decl) is
+         when Iir_Kinds_Signal_Attribute =>
+            Create_Implicit_Signal (Decl);
+         when Iir_Kind_External_Signal_Name =>
+            declare
+               Mark : Id_Mark_Type;
+               Tinfo : Type_Info_Acc;
+               Info      : Alias_Info_Acc;
+            begin
+               Push_Identifier_Prefix_Uniq (Mark);
+
+               Chap3.Translate_External_Name_Subtype_Indication (Decl);
+
+               Tinfo := Get_Info (Get_Type (Decl));
+
+               Info := Add_Info (Decl, Kind_Alias);
+               Info.Alias_Kind := Mode_Signal;
+
+               Info.Alias_Var (Mode_Signal) := Create_Var
+                 (Create_Var_Identifier ("ESIG"),
+                  Get_Alias_Ortho_Type (Tinfo, Mode_Signal));
+               Info.Alias_Var (Mode_Value) := Create_Var
+                 (Create_Var_Identifier ("EVAL"),
+                  Get_Alias_Ortho_Type (Tinfo, Mode_Value));
+
+               Pop_Identifier_Prefix (Mark);
+            end;
+         when others =>
+            Error_Kind ("create_implicit_declaration", Decl);
+      end case;
+   end Create_Implicit_Declaration;
 
    procedure Create_File_Object (El : Iir_File_Declaration)
    is
@@ -1788,30 +1851,7 @@ package body Trans.Chap4 is
 
       Tinfo := Get_Info (Decl_Type);
       for Mode in Mode_Value .. Info.Alias_Kind loop
-         case Tinfo.Type_Mode is
-            when Type_Mode_Unbounded =>
-               --  create an object.
-               --  At elaboration: copy base from name, copy bounds from type,
-               --   check for matching bounds.
-               Atype := Get_Ortho_Type (Decl_Type, Mode);
-            when Type_Mode_Bounded_Arrays
-              | Type_Mode_Bounded_Records
-              | Type_Mode_Acc
-              | Type_Mode_Bounds_Acc
-              | Type_Mode_Protected =>
-               --  Create an object pointer.
-               --  At elaboration: copy base from name.
-               Atype := Tinfo.Ortho_Ptr_Type (Mode);
-            when Type_Mode_Scalar =>
-               case Mode is
-                  when Mode_Signal =>
-                     Atype := Tinfo.Ortho_Type (Mode_Signal);
-                  when Mode_Value =>
-                     Atype := Tinfo.Ortho_Ptr_Type (Mode_Value);
-               end case;
-            when others =>
-               raise Internal_Error;
-         end case;
+         Atype := Get_Alias_Ortho_Type (Tinfo, Mode);
          if Mode = Mode_Signal then
             Id := Create_Var_Identifier (Decl, "_SIG", 0);
          else
@@ -2075,12 +2115,12 @@ package body Trans.Chap4 is
 
          when Iir_Kind_Attribute_Implicit_Declaration =>
             declare
-               Sig : Iir;
+               Imp : Iir;
             begin
-               Sig := Get_Attribute_Implicit_Chain (Decl);
-               while Is_Valid (Sig) loop
-                  Chap4.Create_Implicit_Signal (Sig);
-                  Sig := Get_Attr_Chain (Sig);
+               Imp := Get_Attribute_Implicit_Chain (Decl);
+               while Is_Valid (Imp) loop
+                  Chap4.Create_Implicit_Declaration (Imp);
+                  Imp := Get_Attr_Chain (Imp);
                end loop;
             end;
 
@@ -2864,13 +2904,17 @@ package body Trans.Chap4 is
                begin
                   Sig := Get_Attribute_Implicit_Chain (Decl);
                   while Is_Valid (Sig) loop
-                     case Iir_Kinds_Signal_Attribute (Get_Kind (Sig)) is
+                     case Get_Kind (Sig) is
                         when Iir_Kind_Stable_Attribute
                           | Iir_Kind_Quiet_Attribute
                           | Iir_Kind_Transaction_Attribute =>
                            Elab_Signal_Attribute (Sig);
                         when Iir_Kind_Delayed_Attribute =>
                            Elab_Signal_Delayed_Attribute (Sig);
+                        when Iir_Kinds_External_Name =>
+                           Chap3.Elab_External_Name_Subtype_Indication (Sig);
+                        when others =>
+                           null;
                      end case;
                      Sig := Get_Attr_Chain (Sig);
                   end loop;

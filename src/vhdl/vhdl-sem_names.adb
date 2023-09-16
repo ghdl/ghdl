@@ -2616,6 +2616,7 @@ package body Vhdl.Sem_Names is
          when Iir_Kinds_Object_Declaration
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Selected_Element
+           | Iir_Kinds_External_Name
            | Iir_Kind_Dereference
            | Iir_Kind_Implicit_Dereference
            | Iir_Kind_Attribute_Value
@@ -5186,6 +5187,7 @@ package body Vhdl.Sem_Names is
 
       case Iir_Kinds_External_Name (Get_Kind (Name)) is
          when Iir_Kind_External_Signal_Name =>
+            Sem_Types.Set_Type_Has_Signal (Atype);
             --  By default.
             Set_Has_Active_Flag (Name, True);
          when others =>
@@ -5194,6 +5196,8 @@ package body Vhdl.Sem_Names is
 
       --  Consider the node as analyzed.
       Set_Named_Entity (Name, Name);
+
+      Add_Implicit_Declaration (Name);
    end Sem_External_Name;
 
    function Sem_Terminal_Name (Name : Iir) return Iir

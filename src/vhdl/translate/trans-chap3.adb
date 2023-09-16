@@ -2787,6 +2787,31 @@ package body Trans.Chap3 is
       end if;
    end Elab_Object_Subtype_Indication;
 
+   procedure Translate_External_Name_Subtype_Indication (Name : Iir)
+   is
+      Ind : constant Iir := Get_Subtype_Indication (Name);
+      Ind_Type : Iir;
+      Mark2 : Id_Mark_Type;
+   begin
+      if Is_Proper_Subtype_Indication (Ind) then
+         Ind_Type := Get_Type_Of_Subtype_Indication (Ind);
+         Push_Identifier_Prefix (Mark2, "OT");
+         Chap3.Translate_Subtype_Definition (Ind_Type, True);
+         Pop_Identifier_Prefix (Mark2);
+      end if;
+   end Translate_External_Name_Subtype_Indication;
+
+   procedure Elab_External_Name_Subtype_Indication (Name : Iir)
+   is
+      Ind : constant Iir := Get_Subtype_Indication (Name);
+      Ind_Type : Iir;
+   begin
+      if Is_Proper_Subtype_Indication (Ind) then
+         Ind_Type := Get_Type_Of_Subtype_Indication (Ind);
+         Chap3.Elab_Subtype_Definition (Ind_Type);
+      end if;
+   end Elab_External_Name_Subtype_Indication;
+
    procedure Elab_Type_Declaration (Decl : Iir) is
    begin
       Elab_Type_Definition (Get_Type_Definition (Decl));

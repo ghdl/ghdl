@@ -1226,7 +1226,8 @@ package body Trans.Chap6 is
            | Iir_Kind_Quiet_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Transaction_Attribute
-           | Iir_Kind_Guard_Signal_Declaration =>
+           | Iir_Kind_Guard_Signal_Declaration
+           | Iir_Kind_External_Signal_Name =>
             if Mode = Mode_Signal then
                return Get_Var (Name_Info.Signal_Sig, Type_Info, Mode_Signal);
             else
@@ -1317,7 +1318,8 @@ package body Trans.Chap6 is
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Transaction_Attribute
            | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kind_Object_Alias_Declaration =>
+           | Iir_Kind_Object_Alias_Declaration
+           | Iir_Kind_External_Signal_Name =>
             Translate_Signal_Base (Name, Sig, Drv);
          when Iir_Kind_Slice_Name =>
             declare
@@ -1436,7 +1438,8 @@ package body Trans.Chap6 is
             | Iir_Kind_Interface_View_Declaration =>
             Sig := Translate_Interface_Name (Name, Name_Info, Mode_Signal);
             Val := Translate_Interface_Name (Name, Name_Info, Mode_Value);
-         when Iir_Kind_Object_Alias_Declaration =>
+         when Iir_Kind_Object_Alias_Declaration
+            | Iir_Kind_External_Signal_Name =>
             Sig := Translate_Object_Alias_Name (Name, Mode_Signal);
             Val := Translate_Object_Alias_Name (Name, Mode_Value);
          when others =>

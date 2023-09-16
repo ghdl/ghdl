@@ -2348,7 +2348,7 @@ package body Trans.Rtis is
                begin
                   Sig := Get_Attribute_Implicit_Chain (Decl);
                   while Is_Valid (Sig) loop
-                     case Iir_Kinds_Signal_Attribute (Get_Kind (Sig)) is
+                     case Get_Kind (Sig) is
                         when Iir_Kind_Stable_Attribute
                           | Iir_Kind_Quiet_Attribute
                           | Iir_Kind_Transaction_Attribute =>
@@ -2357,6 +2357,10 @@ package body Trans.Rtis is
                            Add_Rti_Node (Info.Signal_Rti);
                         when Iir_Kind_Delayed_Attribute =>
                            null;
+                        when Iir_Kinds_External_Name =>
+                           null;
+                        when others =>
+                           raise Internal_Error;
                      end case;
                      Sig := Get_Attr_Chain (Sig);
                   end loop;

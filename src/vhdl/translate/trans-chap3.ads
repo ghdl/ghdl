@@ -23,6 +23,10 @@ package Trans.Chap3 is
      (Decl : Iir; With_Vars : Boolean := True);
    procedure Elab_Object_Subtype_Indication (Decl : Iir);
 
+   --  Likewise, but for external names.
+   procedure Translate_External_Name_Subtype_Indication (Name : Iir);
+   procedure Elab_External_Name_Subtype_Indication (Name : Iir);
+
    --  Translate the subtype of a literal.
    --  This can be done not at declaration time, ie no variables are created
    --  for this subtype.
