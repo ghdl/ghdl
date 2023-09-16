@@ -23,6 +23,9 @@ with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 
+with Vhdl.Nodes_Meta;
+with Vhdl.Sem_Inst;
+
 with Elab.Vhdl_Utils;
 
 package body Elab.Vhdl_Annotations is
@@ -1310,6 +1313,161 @@ package body Elab.Vhdl_Annotations is
             Error_Kind ("annotate2", El);
       end case;
    end Annotate;
+
+   procedure Instantiate_Annotate_Chain (Chain : Iir)
+   is
+      N : Iir;
+   begin
+      N := Chain;
+      while N /= Null_Iir loop
+         Instantiate_Annotate (N);
+         N := Get_Chain (N);
+      end loop;
+   end Instantiate_Annotate_Chain;
+
+   procedure Instantiate_Annotate_List (L : Iir_List)
+   is
+      It : List_Iterator;
+   begin
+      case L is
+         when Null_Iir_List
+            | Iir_List_All =>
+            return;
+         when others =>
+            It := List_Iterate (L);
+            while Is_Valid (It) loop
+               Instantiate_Annotate (Get_Element (It));
+               Next (It);
+            end loop;
+      end case;
+   end Instantiate_Annotate_List;
+
+   procedure Instantiate_Annotate_Flist (L : Iir_Flist)
+   is
+      El : Iir;
+   begin
+      case L is
+         when Null_Iir_Flist
+            | Iir_Flist_All
+            | Iir_Flist_Others =>
+            return;
+         when others =>
+            for I in Flist_First .. Flist_Last (L) loop
+               El := Get_Nth_Element (L, I);
+               Instantiate_Annotate (El);
+            end loop;
+      end case;
+   end Instantiate_Annotate_Flist;
+
+   procedure Instantiate_Annotate (N : Iir) is
+   begin
+      --  Nothing to do for null node.
+      if N = Null_Iir then
+         return;
+      end if;
+
+      declare
+         use Vhdl.Nodes_Meta;
+         Kind      : constant Iir_Kind := Get_Kind (N);
+         Fields    : constant Fields_Array := Get_Fields (Kind);
+         F         : Fields_Enum;
+         Orig      : constant Iir := Vhdl.Sem_Inst.Get_Origin (N);
+         pragma Assert (Orig /= Null_Iir);
+         Orig_Ann : constant Sim_Info_Acc := Get_Ann (Orig);
+      begin
+         if Orig_Ann /= null then
+            Set_Ann (N, Orig_Ann);
+         end if;
+
+         for I in Fields'Range loop
+            F := Fields (I);
+            case Get_Field_Type (F) is
+               when Type_Iir =>
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        Instantiate_Annotate (Get_Iir (N, F));
+                     when Attr_Ref
+                       | Attr_Forward_Ref
+                       | Attr_Maybe_Forward_Ref =>
+                        null;
+                     when Attr_Maybe_Ref =>
+                        if not Get_Is_Ref (N) then
+                           Instantiate_Annotate (Get_Iir (N, F));
+                        end if;
+                     when Attr_Chain =>
+                        Instantiate_Annotate_Chain (Get_Iir (N, F));
+                     when Attr_Chain_Next =>
+                        null;
+                     when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
+                        raise Internal_Error;
+                  end case;
+               when Type_Iir_List =>
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        Instantiate_Annotate_List (Get_Iir_List (N, F));
+                     when Attr_Of_Maybe_Ref =>
+                        if not Get_Is_Ref (N) then
+                           Instantiate_Annotate_List (Get_Iir_List (N, F));
+                        end if;
+                     when Attr_Ref
+                        | Attr_Of_Ref =>
+                        null;
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+               when Type_Iir_Flist =>
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        Instantiate_Annotate_Flist (Get_Iir_Flist (N, F));
+                     when Attr_Of_Maybe_Ref =>
+                        if not Get_Is_Ref (N) then
+                           Instantiate_Annotate_Flist (Get_Iir_Flist (N, F));
+                        end if;
+                     when Attr_Ref
+                        | Attr_Of_Ref =>
+                        null;
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+               when Type_PSL_NFA
+                  | Type_PSL_Node =>
+                  --  TODO
+                  raise Internal_Error;
+               when Type_Date_Type
+                  | Type_Date_State_Type
+                  | Type_Time_Stamp_Id
+                  | Type_File_Checksum_Id =>
+                  --  Can this happen ?
+                  raise Internal_Error;
+               when Type_String8_Id
+                  | Type_Source_Ptr
+                  | Type_Source_File_Entry
+                  | Type_Number_Base_Type
+                  | Type_Iir_Constraint
+                  | Type_Iir_Mode
+                  | Type_Iir_Index32
+                  | Type_Int64
+                  | Type_Boolean
+                  | Type_Iir_Staticness
+                  | Type_Iir_All_Sensitized
+                  | Type_Iir_Signal_Kind
+                  | Type_Tri_State_Type
+                  | Type_Iir_Pure_State
+                  | Type_Iir_Delay_Mechanism
+                  | Type_Iir_Force_Mode
+                  | Type_Iir_Predefined_Functions
+                  | Type_Direction_Type
+                  | Type_Iir_Int32
+                  | Type_Int32
+                  | Type_Fp64
+                  | Type_Token_Type
+                  | Type_Scalar_Size
+                  | Type_Name_Id =>
+                  null;
+            end case;
+         end loop;
+      end;
+   end Instantiate_Annotate;
 
    procedure Initialize_Annotate is
    begin

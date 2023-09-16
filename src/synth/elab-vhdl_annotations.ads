@@ -89,6 +89,9 @@ package Elab.Vhdl_Annotations is
    --  Decorate the tree in order to be usable with the internal simulator.
    procedure Annotate (Unit : Iir_Design_Unit);
 
+   --  For an instantiated node N, copy the annotation from its origin node.
+   procedure Instantiate_Annotate (N : Iir);
+
    --  Disp annotations for an iir node.
    procedure Disp_Vhdl_Info (Node : Iir);
    procedure Disp_Tree_Info (Node : Iir);
