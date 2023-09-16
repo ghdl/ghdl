@@ -272,6 +272,20 @@ package body Elab.Vhdl_Decls is
       Release_Expr_Pool (Marker);
    end Elab_Object_Alias_Declaration;
 
+   procedure Elab_External_Name (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+   is
+      Obj_Typ : Type_Acc;
+      Res : Valtyp;
+   begin
+      Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
+
+      Res := Create_Value_Alias
+        (No_Valtyp, No_Value_Offsets, Obj_Typ, Instance_Pool);
+
+      --  For elaboration: Base, Offset and reshaped bounds.
+      Create_Object (Syn_Inst, Decl, Res);
+   end Elab_External_Name;
+
    procedure Elab_Declaration (Syn_Inst : Synth_Instance_Acc;
                                Decl : Node;
                                Force_Init : Boolean;
@@ -378,6 +392,9 @@ package body Elab.Vhdl_Decls is
             Elab_Implicit_Signal_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Disconnection_Specification =>
             null;
+
+         when Iir_Kinds_External_Name =>
+            Elab_External_Name (Syn_Inst, Decl);
 
          when Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration =>

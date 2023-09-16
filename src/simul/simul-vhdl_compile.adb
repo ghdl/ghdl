@@ -86,6 +86,19 @@ package body Simul.Vhdl_Compile is
       Table_Low_Bound => First_Instance_Id,
       Table_Initial => 16);
 
+   type External_Signal_Name_Record is record
+      Mem : Memory_Ptr;
+      Inst : Synth_Instance_Acc;
+      Name : Node;
+   end record;
+
+   --  Table of external signal names to be resolved at the end.
+   package External_Names_Table is new Tables
+     (Table_Component_Type => External_Signal_Name_Record,
+      Table_Index_Type => Natural,
+      Table_Low_Bound => 1,
+      Table_Initial => 16);
+
    --  Array of processes, using the same order (and index) as the process
    --  table for elaboration.
    Processes_State : Process_State_Array_Acc;
@@ -829,6 +842,69 @@ package body Simul.Vhdl_Compile is
       Vhdl_Simul.Create_Signal (E);
    end Build_Signal_Decl;
 
+   procedure Build_Object_Alias (Mem : Memory_Ptr;
+                                 Inst : Synth_Instance_Acc;
+                                 Decl : Node)
+   is
+      Info : constant Alias_Info_Acc := Get_Info (Decl);
+      Src_Type : constant Node := Get_Type (Decl);
+      Tinfo : constant Type_Info_Acc := Get_Info (Src_Type);
+      Src : constant Valtyp := Get_Value (Inst, Decl);
+      Obj : constant Value_Acc := Src.Val.A_Obj;
+      Var_Mem : Memory_Ptr;
+      Src_Ptr : Memory_Ptr;
+   begin
+      Build_Subtype_Indication
+        (Mem, Inst, Get_Subtype_Indication (Decl));
+      for Mode in Mode_Value .. Info.Alias_Kind loop
+         Var_Mem := Get_Var_Mem (Mem, Info.Alias_Var (Mode));
+         case Obj.Kind is
+            when Value_Signal =>
+               case Mode is
+                  when Mode_Value =>
+                     Src_Ptr := Signals_Table.Table (Obj.S).Val
+                       + Src.Val.A_Off.Mem_Off;
+                  when Mode_Signal =>
+                     Src_Ptr := Signals_Table.Table (Obj.S).Sig
+                       + (Size_Type (Src.Val.A_Off.Net_Off)
+                            * Vhdl_Simul.Sig_Size);
+               end case;
+            when Value_Memory =>
+               pragma Assert (Mode = Mode_Value);
+               Src_Ptr := Obj.Mem + Src.Val.A_Off.Mem_Off;
+            when others =>
+               raise Internal_Error;
+         end case;
+         case Tinfo.Type_Mode is
+            when Type_Mode_Bounded_Arrays
+              | Type_Mode_Bounded_Records
+              | Type_Mode_Protected =>
+               Write_Ptr (Var_Mem, Src_Ptr);
+            when Type_Mode_Scalar =>
+               case Mode is
+                  when Mode_Value =>
+                     Write_Ptr (Var_Mem, Src_Ptr);
+                  when Mode_Signal =>
+                     --  Copy sig.
+                     Write_Ptr (Var_Mem, Read_Ptr (Src_Ptr));
+               end case;
+            when Type_Mode_Unbounded_Array
+              | Type_Mode_Unbounded_Record =>
+               declare
+                  Bnd : Memory_Ptr;
+               begin
+                  --  TODO: get the bounds from the name instead of
+                  --  re-creating them (twice!).
+                  Bnd := Build_Unbounded_Bounds (Tinfo, Src_Type, Src.Typ);
+
+                  Write_Unbounded (Var_Mem, Tinfo, Mode, Bnd, Src_Ptr);
+               end;
+            when others =>
+               raise Internal_Error;
+         end case;
+      end loop;
+   end Build_Object_Alias;
+
    procedure Build_Decl_Instance (Mem : Memory_Ptr;
                                   Inst : Synth_Instance_Acc;
                                   Decl : Node) is
@@ -949,67 +1025,7 @@ package body Simul.Vhdl_Compile is
                Build_Object_Decl (Mem, Inst, Decl);
             end if;
          when Iir_Kind_Object_Alias_Declaration =>
-            declare
-               Info : constant Alias_Info_Acc := Get_Info (Decl);
-               Src_Type : constant Node := Get_Type (Decl);
-               Tinfo : constant Type_Info_Acc := Get_Info (Src_Type);
-               Src : constant Valtyp := Get_Value (Inst, Decl);
-               Obj : constant Value_Acc := Src.Val.A_Obj;
-               Var_Mem : Memory_Ptr;
-               Src_Ptr : Memory_Ptr;
-            begin
-               Build_Subtype_Indication
-                 (Mem, Inst, Get_Subtype_Indication (Decl));
-               for Mode in Mode_Value .. Info.Alias_Kind loop
-                  Var_Mem := Get_Var_Mem (Mem, Info.Alias_Var (Mode));
-                  case Obj.Kind is
-                     when Value_Signal =>
-                        case Mode is
-                           when Mode_Value =>
-                              Src_Ptr := Signals_Table.Table (Obj.S).Val
-                                + Src.Val.A_Off.Mem_Off;
-                           when Mode_Signal =>
-                              Src_Ptr := Signals_Table.Table (Obj.S).Sig
-                                + (Size_Type (Src.Val.A_Off.Net_Off)
-                                     * Vhdl_Simul.Sig_Size);
-                        end case;
-                     when Value_Memory =>
-                        pragma Assert (Mode = Mode_Value);
-                        Src_Ptr := Obj.Mem + Src.Val.A_Off.Mem_Off;
-                     when others =>
-                        raise Internal_Error;
-                  end case;
-                  case Tinfo.Type_Mode is
-                     when Type_Mode_Bounded_Arrays
-                        | Type_Mode_Bounded_Records
-                        | Type_Mode_Protected =>
-                        Write_Ptr (Var_Mem, Src_Ptr);
-                     when Type_Mode_Scalar =>
-                        case Mode is
-                           when Mode_Value =>
-                              Write_Ptr (Var_Mem, Src_Ptr);
-                           when Mode_Signal =>
-                              --  Copy sig.
-                              Write_Ptr (Var_Mem, Read_Ptr (Src_Ptr));
-                        end case;
-                     when Type_Mode_Unbounded_Array
-                        | Type_Mode_Unbounded_Record =>
-                        declare
-                           Bnd : Memory_Ptr;
-                        begin
-                           --  TODO: get the bounds from the name instead of
-                           --  re-creating them (twice!).
-                           Bnd := Build_Unbounded_Bounds
-                             (Tinfo, Src_Type, Src.Typ);
-
-                           Write_Unbounded
-                             (Var_Mem, Tinfo, Mode, Bnd, Src_Ptr);
-                        end;
-                     when others =>
-                        raise Internal_Error;
-                  end case;
-               end loop;
-            end;
+            Build_Object_Alias (Mem, Inst, Decl);
          when Iir_Kind_Attribute_Implicit_Declaration =>
             declare
                Attr : Node;
@@ -1020,6 +1036,9 @@ package body Simul.Vhdl_Compile is
                   Attr := Get_Attr_Chain (Attr);
                end loop;
             end;
+
+         when Iir_Kind_External_Signal_Name =>
+            External_Names_Table.Append ((Mem, Inst, Decl));
 
          when Iir_Kind_Interface_Type_Declaration
            | Iir_Kinds_Interface_Subprogram_Declaration =>
@@ -1716,6 +1735,19 @@ package body Simul.Vhdl_Compile is
       end if;
    end Create_Process_Drivers;
 
+   procedure Build_Elab_External_Signal_Names is
+   begin
+      for I in External_Names_Table.First .. External_Names_Table.Last loop
+         declare
+            E : constant External_Signal_Name_Record :=
+              External_Names_Table.Table (I);
+         begin
+            --  TODO: handle external signal name of an external signal name.
+            Build_Object_Alias (E.Mem, E.Inst, E.Name);
+         end;
+      end loop;
+   end Build_Elab_External_Signal_Names;
+
    procedure Elaborate
    is
       use Vhdl.Configuration;
@@ -1771,9 +1803,12 @@ package body Simul.Vhdl_Compile is
          end;
       end loop;
 
+      --  Build instances for the hierarchy.
       Top := Build_Elab_Instance (Vhdl_Elab.Top_Instance);
       Top_Arch := Get_Source_Scope (Vhdl_Elab.Top_Instance);
       Link_Instance (Top, Top_Arch, null);
+
+      Build_Elab_External_Signal_Names;
 
       --  Call ghdl_rti_add_top, with:
       --   number of pkgs, array of pkgs, arch rti, arch_instance

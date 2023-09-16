@@ -591,7 +591,22 @@ package body Elab.Vhdl_Annotations is
             begin
                Attr := Get_Attribute_Implicit_Chain (Decl);
                while Is_Valid (Attr) loop
-                  Create_Signal_Info (Block_Info, Attr);
+                  case Get_Kind (Attr) is
+                     when Iir_Kinds_Signal_Attribute =>
+                        Create_Signal_Info (Block_Info, Attr);
+                     when Iir_Kind_External_Signal_Name =>
+                        declare
+                           Ind : constant Iir :=
+                             Get_Subtype_Indication (Attr);
+                        begin
+                           if Is_Proper_Subtype_Indication (Ind) then
+                              Annotate_Type_Definition (Block_Info, Ind);
+                           end if;
+                        end;
+                        Create_Signal_Info (Block_Info, Attr);
+                     when others =>
+                        raise Internal_Error;
+                  end case;
                   Attr := Get_Attr_Chain (Attr);
                end loop;
             end;

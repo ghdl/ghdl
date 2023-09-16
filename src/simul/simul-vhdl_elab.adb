@@ -27,6 +27,8 @@ with PSL.Nodes;
 with PSL.Subsets;
 with PSL.Types;
 
+with Elab.Vhdl_Expr;
+
 with Synth.Vhdl_Stmts;
 with Synth.Vhdl_Decls;
 with Synth.Vhdl_Expr;
@@ -316,6 +318,63 @@ package body Simul.Vhdl_Elab is
       return Res;
    end Compute_Attribute_Time;
 
+   --  Re-elaborate an object alias (in case it's a signal).
+   procedure Elab2_Object_Alias (Inst : Synth_Instance_Acc; Decl : Node)
+   is
+      Marker : Mark_Type;
+      V : Valtyp;
+      Base : Valtyp;
+      Typ : Type_Acc;
+      Off : Value_Offsets;
+   begin
+      V := Get_Value (Inst, Decl);
+      Convert_Type_Width (V.Typ);
+
+      --  Recompute alias offsets.
+      Mark_Expr_Pool (Marker);
+      Synth.Vhdl_Stmts.Synth_Assignment_Prefix
+        (Inst, Get_Name (Decl), Base, Typ, Off);
+      V.Val.A_Off := Off;
+      pragma Assert (Base.Val = V.Val.A_Obj);
+      pragma Unreferenced (Typ);
+      Release_Expr_Pool (Marker);
+   end Elab2_Object_Alias;
+
+   procedure Elab_External_Name (Inst : Synth_Instance_Acc; Name : Node)
+   is
+      Prev_Instance_Pool : constant Areapools.Areapool_Acc := Instance_Pool;
+      Marker : Mark_Type;
+
+      Prev : Valtyp;
+      Res : Valtyp;
+   begin
+      Mark_Expr_Pool (Marker);
+      Instance_Pool := Global_Pool'Access;
+
+      Prev := Get_Value (Inst, Name);
+
+      Res := Elab.Vhdl_Expr.Exec_External_Name (Inst, Name);
+
+      Res := Elab.Vhdl_Expr.Exec_Subtype_Conversion
+        (Res, Prev.Typ, True, Name);
+      Convert_Type_Width (Res.Typ);
+      Res.Typ := Unshare (Res.Typ, Instance_Pool);
+      case Res.Val.Kind is
+         when Value_Signal =>
+            Prev.Val.all := (Kind => Value_Alias,
+                             A_Obj => Res.Val,
+                             A_Typ => Res.Typ,
+                             A_Off => No_Value_Offsets);
+         when others =>
+            raise Internal_Error;
+      end case;
+
+      Mutate_Object (Inst, Name, Prev);
+
+      Instance_Pool := Prev_Instance_Pool;
+      Release_Expr_Pool (Marker);
+   end Elab_External_Name;
+
    procedure Gather_Processes_Decl (Inst : Synth_Instance_Acc; Decl : Node) is
    begin
       case Get_Kind (Decl) is
@@ -418,25 +477,7 @@ package body Simul.Vhdl_Elab is
             end;
          when Iir_Kind_Object_Alias_Declaration =>
             --  In case it aliases a signal.
-            declare
-               Marker : Mark_Type;
-               V : Valtyp;
-               Base : Valtyp;
-               Typ : Type_Acc;
-               Off : Value_Offsets;
-            begin
-               V := Get_Value (Inst, Decl);
-               Convert_Type_Width (V.Typ);
-
-               --  Recompute alias offsets.
-               Mark_Expr_Pool (Marker);
-               Synth.Vhdl_Stmts.Synth_Assignment_Prefix
-                 (Inst, Get_Name (Decl), Base, Typ, Off);
-               V.Val.A_Off := Off;
-               pragma Assert (Base.Val = V.Val.A_Obj);
-               pragma Unreferenced (Typ);
-               Release_Expr_Pool (Marker);
-            end;
+            Elab2_Object_Alias (Inst, Decl);
          when Iir_Kind_Disconnection_Specification =>
             Gather_Disconnection (Inst, Decl);
          when Iir_Kind_Variable_Declaration =>
@@ -469,6 +510,9 @@ package body Simul.Vhdl_Elab is
             null;
          when Iir_Kind_Package_Body =>
             null;
+
+         when Iir_Kind_External_Signal_Name =>
+            Elab_External_Name (Inst, Decl);
 
          when others =>
             Error_Kind ("gather_processes_decl", Decl);

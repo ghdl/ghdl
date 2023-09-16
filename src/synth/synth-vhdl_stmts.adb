@@ -269,6 +269,7 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_File_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Object_Alias_Declaration
+           | Iir_Kinds_External_Name
            | Iir_Kind_Attribute_Value
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kinds_Branch_Quantity_Declaration
