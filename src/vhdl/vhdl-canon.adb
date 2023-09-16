@@ -648,9 +648,17 @@ package body Vhdl.Canon is
             --  FIXME: set suspend_flag during elaboration.
             null;
 
-         when Iir_Kind_Signal_Force_Assignment_Statement
-           | Iir_Kind_Signal_Release_Assignment_Statement
-           | Iir_Kind_Break_Statement
+         when Iir_Kind_Signal_Force_Assignment_Statement =>
+            Canon_Extract_Sensitivity_Expression
+              (Get_Target (Stmt), List, True);
+            Canon_Extract_Sensitivity_Expression
+              (Get_Expression (Stmt), List, False);
+
+         when Iir_Kind_Signal_Release_Assignment_Statement =>
+            Canon_Extract_Sensitivity_Expression
+              (Get_Target (Stmt), List, True);
+
+         when Iir_Kind_Break_Statement
            | Iir_Kind_Wait_Statement =>
             Error_Kind ("canon_extract_sensitivity_statement", Stmt);
       end case;
