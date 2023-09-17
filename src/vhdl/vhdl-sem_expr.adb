@@ -5254,7 +5254,7 @@ package body Vhdl.Sem_Expr is
             end;
 
          when Iir_Kinds_External_Name =>
-            Sem_External_Name (Expr);
+            Sem_External_Name (Expr, False);
             return Expr;
 
          when Iir_Kinds_Monadic_Operator =>

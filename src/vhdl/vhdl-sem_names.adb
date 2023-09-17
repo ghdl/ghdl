@@ -574,22 +574,25 @@ package body Vhdl.Sem_Names is
          Obj_Alias := Obj;
       end if;
 
-      if Kind_In (Obj_Alias, Iir_Kind_Variable_Declaration,
-                  Iir_Kind_Interface_Variable_Declaration)
-      then
-         Obj_Type := Get_Type (Obj_Alias);
-         if Obj_Type = Null_Iir then
-            return;
-         end if;
-         if Get_Kind (Obj_Type) /= Iir_Kind_Protected_Type_Declaration
-         then
-            Error_Msg_Sem
-              (+Prefix, "type of the prefix should be a protected type");
-            return;
-         end if;
-         Set_Method_Object (Call, Obj_Alias);
-         Set_Use_Flag (Obj, True);
-      end if;
+      case Get_Kind (Obj_Alias) is
+         when Iir_Kind_Variable_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_External_Variable_Name =>
+            Obj_Type := Get_Type (Obj_Alias);
+            if Obj_Type = Null_Iir then
+               return;
+            end if;
+            if Get_Kind (Obj_Type) /= Iir_Kind_Protected_Type_Declaration
+            then
+               Error_Msg_Sem
+                 (+Prefix, "type of the prefix should be a protected type");
+               return;
+            end if;
+            Set_Method_Object (Call, Obj);
+            Set_Use_Flag (Obj, True);
+         when others =>
+            null;
+      end case;
    end Name_To_Method_Object;
 
    --  NAME is the name of the function (and not the parenthesis name)
@@ -4659,7 +4662,7 @@ package body Vhdl.Sem_Names is
          when Iir_Kind_Attribute_Name =>
             Sem_Attribute_Name (Name);
          when Iir_Kinds_External_Name =>
-            Sem_External_Name (Name);
+            Sem_External_Name (Name, False);
          when Iir_Kind_Signature =>
             Error_Msg_Sem (+Name, "signature cannot be used here");
             Set_Named_Entity (Name, Create_Error_Name (Name));
@@ -5164,7 +5167,7 @@ package body Vhdl.Sem_Names is
       end case;
    end Sem_Denoting_Name;
 
-   procedure Sem_External_Name (Name : Iir)
+   procedure Sem_External_Name (Name : Iir; In_Alias : Boolean)
    is
       Atype : Iir;
    begin
@@ -5201,7 +5204,11 @@ package body Vhdl.Sem_Names is
       --  Consider the node as analyzed.
       Set_Named_Entity (Name, Name);
 
-      Add_Implicit_Declaration (Name);
+      if not In_Alias then
+         --  Add an implicit declaration if the external name is not the name
+         --  in an alias.
+         Add_Implicit_Declaration (Name);
+      end if;
    end Sem_External_Name;
 
    function Sem_Terminal_Name (Name : Iir) return Iir

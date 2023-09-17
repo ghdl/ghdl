@@ -2037,6 +2037,9 @@ package body Vhdl.Sem_Decls is
          when Iir_Kind_Error =>
             pragma Assert (Flags.Flag_Force_Analysis);
             return Alias;
+         when Iir_Kinds_External_Name =>
+            Sem_External_Name (Name, True);
+            Sig := Null_Iir;
          when others =>
             Sem_Name (Name);
             Sig := Null_Iir;

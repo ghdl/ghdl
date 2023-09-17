@@ -171,7 +171,7 @@ package Vhdl.Sem_Names is
    function Sem_Terminal_Name (Name : Iir) return Iir;
 
    --  Analyze an external name.
-   procedure Sem_External_Name (Name : Iir);
+   procedure Sem_External_Name (Name : Iir; In_Alias : Boolean);
 
    --  Emit an error for NAME that doesn't match its class CLASS_NAME.
    procedure Error_Class_Match (Name : Iir; Class_Name : String);
