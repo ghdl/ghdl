@@ -146,7 +146,19 @@ package body Elab.Vhdl_Expr is
                when Iir_Kind_External_Constant_Name
                  | Iir_Kind_External_Variable_Name =>
                   Error_Msg_Synth
-                    (Loc_Inst, Path, "object name %i is a signal", +Obj);
+                    (Loc_Inst, Path,
+                     "denoted object name %i is a not a signal", +Obj);
+                  return No_Valtyp;
+            end case;
+         when Iir_Kind_Variable_Declaration =>
+            case Iir_Kinds_External_Name (Get_Kind (Name)) is
+               when Iir_Kind_External_Variable_Name =>
+                  Res := Get_Value (Cur_Inst, Obj);
+               when Iir_Kind_External_Constant_Name
+                 | Iir_Kind_External_Signal_Name =>
+                  Error_Msg_Synth
+                    (Loc_Inst, Path,
+                     "denoted object name %i is a not a variable", +Obj);
                   return No_Valtyp;
             end case;
          when others =>
@@ -278,7 +290,7 @@ package body Elab.Vhdl_Expr is
       end case;
    end Synth_Pathname;
 
-   function Synth_Absolute_Pathname
+   function Exec_Absolute_Pathname
      (Syn_Inst : Synth_Instance_Acc; Name : Node; Path : Node) return Valtyp
    is
       Path_Inst : constant Synth_Instance_Acc := Elab.Vhdl_Insts.Top_Instance;
@@ -296,7 +308,53 @@ package body Elab.Vhdl_Expr is
 
       return Synth_Pathname
         (Syn_Inst, Name, Path_Inst, Get_Pathname_Suffix (Suffix));
-   end Synth_Absolute_Pathname;
+   end Exec_Absolute_Pathname;
+
+   function Exec_Relative_Pathname
+     (Syn_Inst : Synth_Instance_Acc; Name : Node; Path : Node) return Valtyp
+   is
+      Cur_Inst : Synth_Instance_Acc;
+      Cur_Src : Node;
+   begin
+      --  LRM08 8.7 External names
+      --  For a relative pathname, the innermost concurrent region is
+      --  initially identifier, where a concurrent region is defined
+      --  recursively to be
+      --  - A block declarative region (including an external block and
+      --    any block equivalet to a generate statement), or
+      --  - A package declarative region (including a generic-mapped package
+      --    equivalent to a package instantiation) declared immediately within
+      --    a concurrent region.
+      Cur_Inst := Syn_Inst;
+      loop
+         Cur_Src := Get_Source_Scope (Cur_Inst);
+         case Get_Kind (Cur_Src) is
+            when Iir_Kind_Architecture_Body =>
+               exit;
+            when Iir_Kind_Process_Statement =>
+               null;
+            when others =>
+               Error_Kind ("exec_relative_pathname", Cur_Src);
+         end case;
+         Cur_Inst := Get_Instance_Parent (Cur_Inst);
+         pragma Assert (Cur_Inst /= null);
+      end loop;
+
+      --  LRM08 8.7 External names
+      --  Then, for each occurrence of a circumflex accent followed by a dot,
+      --  the innermost concurrent region, other than a block corresponding
+      --  to a component instantiation statement, containing the previously
+      --  identified declarative region replaces the previously identified
+      --  declaration region as the identified declarative region.
+      --  It is an error when evaluating the external name if, at any stage,
+      --  there is no such containing declarative region, of if the containing
+      --  declarative region is the declarative region of an uninstantiated
+      --  package.
+
+      --  TODO
+
+      return Synth_Pathname (Syn_Inst, Name, Cur_Inst, Path);
+   end Exec_Relative_Pathname;
 
    function Exec_External_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                                return Valtyp
@@ -306,7 +364,9 @@ package body Elab.Vhdl_Expr is
       Path := Get_External_Pathname (Name);
       case Get_Kind (Path) is
          when Iir_Kind_Absolute_Pathname =>
-            return Synth_Absolute_Pathname (Syn_Inst, Name, Path);
+            return Exec_Absolute_Pathname (Syn_Inst, Name, Path);
+         when Iir_Kind_Pathname_Element =>
+            return Exec_Relative_Pathname (Syn_Inst, Name, Path);
          when others =>
             Error_Kind ("exec_external_name", Path);
       end case;
