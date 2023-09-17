@@ -1393,7 +1393,7 @@ package body Elab.Vhdl_Debug is
       Cur_Inst : Synth_Instance_Acc;
       Cur_Scope : Node;
    begin
-      --  Decode options: /v
+      --  Decode options: /t /n
       P := Line'First;
       loop
          P := Skip_Blanks (Line (P .. Line'Last));
