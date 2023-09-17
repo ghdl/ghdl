@@ -625,6 +625,14 @@ package body Synth.Vhdl_Decls is
       else
          Vhdl_Stmts.Synth_Assignment_Prefix (Syn_Inst, Name, Base, Typ, Off);
       end if;
+
+      --  In case of error (in particular invalid external names)
+      if Base = No_Valtyp then
+         Set_Error (Syn_Inst);
+         Release_Expr_Pool (Marker);
+         return;
+      end if;
+
       if Base.Val.Kind = Value_Net then
          --  Object is a net if it is not writable.  Extract the
          --  bits for the alias.
