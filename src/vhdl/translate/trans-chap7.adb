@@ -5071,7 +5071,8 @@ package body Trans.Chap7 is
             | Iir_Kind_Transaction_Attribute
             | Iir_Kind_Guard_Signal_Declaration
             | Iir_Kind_Attribute_Value
-            | Iir_Kind_Attribute_Name =>
+            | Iir_Kind_Attribute_Name
+            | Iir_Kinds_External_Name =>
             Res := M2E (Chap6.Translate_Name (Expr, Mode_Value));
 
          when Iir_Kind_Iterator_Declaration =>
