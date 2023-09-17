@@ -425,6 +425,51 @@ package body Elab.Vhdl_Insts is
       end loop;
    end Apply_Block_Configuration;
 
+   procedure Unapply_Block_Configuration (Cfg : Node)
+   is
+      Item : Node;
+   begin
+      Item := Get_Configuration_Item_Chain (Cfg);
+      while Item /= Null_Node loop
+         case Get_Kind (Item) is
+            when Iir_Kind_Component_Configuration =>
+               declare
+                  List : constant Iir_Flist :=
+                    Get_Instantiation_List (Item);
+                  El : Node;
+                  Inst : Node;
+               begin
+                  for I in Flist_First .. Flist_Last (List) loop
+                     El := Get_Nth_Element (List, I);
+                     Inst := Get_Named_Entity (El);
+                     Set_Component_Configuration (Inst, Null_Node);
+                  end loop;
+               end;
+            when Iir_Kind_Block_Configuration =>
+               declare
+                  Sub_Blk : constant Node := Get_Block_From_Block_Specification
+                    (Get_Block_Specification (Item));
+                  Prev : Node;
+               begin
+                  case Get_Kind (Sub_Blk) is
+                     when Iir_Kind_Generate_Statement_Body =>
+                        -- Linked chain.
+                        Prev := Get_Prev_Block_Configuration (Item);
+                        Set_Generate_Block_Configuration (Sub_Blk, Prev);
+                     when Iir_Kind_Block_Statement =>
+                        Set_Block_Block_Configuration (Sub_Blk, Null_Node);
+                     when others =>
+                        Vhdl.Errors.Error_Kind
+                          ("unapply_block_configuration(blk)", Sub_Blk);
+                  end case;
+               end;
+            when others =>
+               Vhdl.Errors.Error_Kind ("unapply_block_configuration", Item);
+         end case;
+         Item := Get_Chain (Item);
+      end loop;
+   end Unapply_Block_Configuration;
+
    function Elab_Port_Association_Type (Sub_Inst : Synth_Instance_Acc;
                                         Syn_Inst : Synth_Instance_Acc;
                                         Inter : Node;
@@ -814,6 +859,8 @@ package body Elab.Vhdl_Insts is
            (Syn_Inst, Get_Concurrent_Statement_Chain (Arch));
          pragma Assert (Is_Expr_Pool_Empty);
       end if;
+
+      Unapply_Block_Configuration (Config);
 
       if not Is_Error (Syn_Inst) then
          Elab_Recurse_Instantiations (Syn_Inst, Arch);

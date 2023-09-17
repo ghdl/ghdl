@@ -55,6 +55,9 @@ package Elab.Vhdl_Insts is
    --  The synthesis of BLK will clear all configuration of it.
    procedure Apply_Block_Configuration (Cfg : Node; Blk : Node);
 
+   --  Remove applied block configurations.
+   procedure Unapply_Block_Configuration (Cfg : Node);
+
    type Elab_Foreign_Instance_Acc is access
      procedure (Syn_Inst : Synth_Instance_Acc;
                 Comp_Inst : Synth_Instance_Acc;
