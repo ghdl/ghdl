@@ -86,7 +86,7 @@ package body Simul.Vhdl_Compile is
       Table_Low_Bound => First_Instance_Id,
       Table_Initial => 16);
 
-   type External_Signal_Name_Record is record
+   type External_Name_Record is record
       Mem : Memory_Ptr;
       Inst : Synth_Instance_Acc;
       Name : Node;
@@ -94,7 +94,7 @@ package body Simul.Vhdl_Compile is
 
    --  Table of external signal names to be resolved at the end.
    package External_Names_Table is new Tables
-     (Table_Component_Type => External_Signal_Name_Record,
+     (Table_Component_Type => External_Name_Record,
       Table_Index_Type => Natural,
       Table_Low_Bound => 1,
       Table_Initial => 16);
@@ -674,6 +674,8 @@ package body Simul.Vhdl_Compile is
       Sz := Size_Type (Get_Byte_Size (Bod_Otype));
       Res := Alloc_Mem (Sz);
 
+      Set_Instance_To_Mem (Prot_Inst, Res);
+
       --  Set prev scope.
       if Info.B.Prot_Prev_Scope /= null then
          Mem := Add_Field_Offset (Res, Info.B.Prot_Subprg_Instance_Field);
@@ -724,10 +726,11 @@ package body Simul.Vhdl_Compile is
             end;
          when Type_Protected =>
             declare
-               Prot : Protected_Index;
+               Prot : constant Protected_Index := Read_Protected (Src.Mem);
+               Res : Memory_Ptr;
             begin
-               Prot := Read_Protected (Src.Mem);
-               Write_Ptr (Dst_Mem, Build_Protected_Object (Prot));
+               Res := Build_Protected_Object (Prot);
+               Write_Ptr (Dst_Mem, Res);
             end;
          when others =>
             if Is_Unbounded_Type (Tinfo) then
@@ -877,9 +880,20 @@ package body Simul.Vhdl_Compile is
          end case;
          case Tinfo.Type_Mode is
             when Type_Mode_Bounded_Arrays
-              | Type_Mode_Bounded_Records
-              | Type_Mode_Protected =>
+              | Type_Mode_Bounded_Records =>
                Write_Ptr (Var_Mem, Src_Ptr);
+            when Type_Mode_Protected =>
+               declare
+                  Prot_Idx : constant Protected_Index :=
+                    Read_Protected (Src_Ptr);
+                  Prot_Inst : constant Synth_Instance_Acc :=
+                    Elab.Vhdl_Prot.Get (Prot_Idx);
+                  Prot_Mem : Memory_Ptr;
+               begin
+                  Prot_Mem := Instance_To_Mem_Table.Table
+                    (Get_Instance_Id (Prot_Inst));
+                  Write_Ptr (Var_Mem, Prot_Mem);
+               end;
             when Type_Mode_Scalar =>
                case Mode is
                   when Mode_Value =>
@@ -1025,7 +1039,17 @@ package body Simul.Vhdl_Compile is
                Build_Object_Decl (Mem, Inst, Decl);
             end if;
          when Iir_Kind_Object_Alias_Declaration =>
-            Build_Object_Alias (Mem, Inst, Decl);
+            declare
+               Name : constant Node := Get_Name (Decl);
+            begin
+               case Get_Kind (Name) is
+                  when Iir_Kind_External_Signal_Name
+                    | Iir_Kind_External_Variable_Name =>
+                     External_Names_Table.Append ((Mem, Inst, Decl));
+                  when others =>
+                     Build_Object_Alias (Mem, Inst, Decl);
+               end case;
+            end;
          when Iir_Kind_Attribute_Implicit_Declaration =>
             declare
                Attr : Node;
@@ -1735,18 +1759,18 @@ package body Simul.Vhdl_Compile is
       end if;
    end Create_Process_Drivers;
 
-   procedure Build_Elab_External_Signal_Names is
+   procedure Build_Elab_External_Names is
    begin
       for I in External_Names_Table.First .. External_Names_Table.Last loop
          declare
-            E : constant External_Signal_Name_Record :=
+            E : constant External_Name_Record :=
               External_Names_Table.Table (I);
          begin
             --  TODO: handle external signal name of an external signal name.
             Build_Object_Alias (E.Mem, E.Inst, E.Name);
          end;
       end loop;
-   end Build_Elab_External_Signal_Names;
+   end Build_Elab_External_Names;
 
    procedure Elaborate
    is
@@ -1808,7 +1832,9 @@ package body Simul.Vhdl_Compile is
       Top_Arch := Get_Source_Scope (Vhdl_Elab.Top_Instance);
       Link_Instance (Top, Top_Arch, null);
 
-      Build_Elab_External_Signal_Names;
+      --  External names may reference signals or protected objects which
+      --  may be created after the external name.
+      Build_Elab_External_Names;
 
       --  Call ghdl_rti_add_top, with:
       --   number of pkgs, array of pkgs, arch rti, arch_instance
