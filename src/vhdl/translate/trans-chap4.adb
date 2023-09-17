@@ -1875,6 +1875,11 @@ package body Trans.Chap4 is
 
       Chap3.Elab_Object_Subtype_Indication (Decl);
 
+      if Get_Kind (Name) in Iir_Kinds_External_Name then
+         --  Not supported...
+         return;
+      end if;
+
       Open_Temp;
 
       if Get_Kind (Name) = Iir_Kind_Slice_Name then

@@ -1192,7 +1192,7 @@ package body Trans.Chap6 is
             end;
 
          when Iir_Kind_Object_Alias_Declaration
-           | Iir_Kind_External_Signal_Name =>
+           | Iir_Kinds_External_Name =>
             --  Alias_Var is not like an object variable, since it is
             --  always a pointer to the aliased object.
             declare
@@ -1201,7 +1201,8 @@ package body Trans.Chap6 is
                pragma Assert (Mode <= Name_Info.Alias_Kind);
                case Type_Info.Type_Mode is
                   when Type_Mode_Unbounded_Array
-                     | Type_Mode_Unbounded_Record =>
+                    | Type_Mode_Unbounded_Record
+                    | Type_Mode_Protected =>
                      return Get_Var (Name_Info.Alias_Var (Mode), Type_Info,
                                      Mode);
                   when Type_Mode_Bounded_Arrays
