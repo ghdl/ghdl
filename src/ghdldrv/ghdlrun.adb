@@ -84,7 +84,7 @@ package body Ghdlrun is
       Run_Elab_Jit
      );
 
-   Run_Mode : Run_Mode_Kind := Run_Elab_Jit;
+   Run_Mode : Run_Mode_Kind := Run_Jit;
 
    procedure Foreign_Hook (Decl : Iir;
                            Info : Vhdl.Back_End.Foreign_Info_Type;
