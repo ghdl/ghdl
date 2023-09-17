@@ -36,6 +36,7 @@ with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Decls; use Elab.Vhdl_Decls;
 with Elab.Vhdl_Files;
 with Elab.Vhdl_Prot;
+with Elab.Vhdl_Expr;
 
 with Synth.Flags;
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
@@ -599,6 +600,7 @@ package body Synth.Vhdl_Decls is
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Atype : constant Node := Get_Declaration_Type (Decl);
+      Name : constant Node := Get_Name (Decl);
       Marker : Mark_Type;
       Off : Value_Offsets;
       Res : Valtyp;
@@ -616,8 +618,13 @@ package body Synth.Vhdl_Decls is
 
       Mark_Expr_Pool (Marker);
 
-      Vhdl_Stmts.Synth_Assignment_Prefix
-        (Syn_Inst, Get_Name (Decl), Base, Typ, Off);
+      if Get_Kind (Name) in Iir_Kinds_External_Name then
+         Base := Elab.Vhdl_Expr.Exec_External_Name (Syn_Inst, Name);
+         Off := No_Value_Offsets;
+         Typ := Base.Typ;
+      else
+         Vhdl_Stmts.Synth_Assignment_Prefix (Syn_Inst, Name, Base, Typ, Off);
+      end if;
       if Base.Val.Kind = Value_Net then
          --  Object is a net if it is not writable.  Extract the
          --  bits for the alias.
