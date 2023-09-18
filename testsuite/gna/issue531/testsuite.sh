@@ -6,8 +6,8 @@ analyze repro1.vhdl
 elab sliced_ex
 
 if c_compiler_is_available && ghdl_has_feature sliced_ex vpi; then
-  $GHDL --vpi-compile -v gcc -c vpi1.c
-  $GHDL --vpi-link -v gcc -o vpi1.vpi vpi1.o
+  $GHDL --vpi-compile -v $CC -c vpi1.c
+  $GHDL --vpi-link -v $CC -o vpi1.vpi vpi1.o
 
   add_vpi_path
 

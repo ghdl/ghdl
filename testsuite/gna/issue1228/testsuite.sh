@@ -8,8 +8,8 @@ elab test_load
 if c_compiler_is_available && ghdl_has_feature test_load vpi; then
   add_vpi_path
 
-  $GHDL --vpi-compile -v gcc $CFLAGS -c vpi1.c
-  $GHDL --vpi-link -v gcc $CFLAGS -o vpi1.vpi vpi1.o
+  $GHDL --vpi-compile -v $CC $CFLAGS -c vpi1.c
+  $GHDL --vpi-link -v $CC $CFLAGS -o vpi1.vpi vpi1.o
 
   simulate test_load --vpi=./vpi1.vpi
 
