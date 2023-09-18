@@ -365,7 +365,14 @@ package body Elab.Vhdl_Objtypes is
          Al := 2;
       else
          pragma Assert (Sz <= 8);
-         Al := 3;
+         case Uns64'Alignment is
+            when 8 =>
+               Al := 3;
+            when 4 =>
+               Al := 2;
+            when others =>
+               raise Internal_Error;
+         end case;
       end if;
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Discrete,
                                                 Wkind => Wkind_Net,
@@ -382,10 +389,20 @@ package body Elab.Vhdl_Objtypes is
    is
       subtype Float_Type_Type is Type_Type (Type_Float);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Float_Type_Type);
+      Al : Palign_Type;
    begin
+      case Fp64'Alignment is
+         when 8 =>
+            Al := 3;
+         when 4 =>
+            Al := 2;
+         when others =>
+            raise Internal_Error;
+      end case;
+
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Float,
                                                 Wkind => Wkind_Net,
-                                                Al => 3,
+                                                Al => Al,
                                                 Is_Global => False,
                                                 Is_Static => True,
                                                 Is_Bnd_Static => True,
