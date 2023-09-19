@@ -24,8 +24,8 @@ package Ortho_Code.X86.Flags_Linux is
    --  Must be a power of 2.
    Stack_Boundary : constant Unsigned_32 := 2 ** 3;
 
-   --  Alignment for double (64 bit float).
-   Mode_F64_Align : constant Natural := 2;
+   --  Alignment for double (64 bit float) and double words.
+   Mode_64_Align : constant Natural := 2;
 
    --  32 bits.
    M64 : constant Boolean := False;

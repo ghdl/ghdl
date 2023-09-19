@@ -684,8 +684,10 @@ package body Ortho_Code.X86.Abi is
    is
       use Ortho_Code.Debug;
    begin
-      --  Alignment of doubles is platform dependent.
-      Mode_Align (Mode_F64) := X86.Flags.Mode_F64_Align;
+      --  Alignment of doubles and double words is platform dependent.
+      Mode_Align (Mode_F64) := X86.Flags.Mode_64_Align;
+      Mode_Align (Mode_I64) := X86.Flags.Mode_64_Align;
+      Mode_Align (Mode_U64) := X86.Flags.Mode_64_Align;
 
       if Flag_Debug_Hli then
          Disps.Init;
