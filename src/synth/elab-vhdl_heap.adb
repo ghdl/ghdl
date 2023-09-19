@@ -70,11 +70,21 @@ package body Elab.Vhdl_Heap is
    procedure Free_Mem (Ptr : Memory_Ptr);
    pragma Import (C, Free_Mem, "free");
 
-   --  Return the data memory address from an heap entry.
-   function Entry_To_Data_Mem (E : Heap_Entry) return Memory_Ptr is
+   function Realign (Res : Size_Type;
+                     Align : Size_Type) return Size_Type is
    begin
-      return E.Ptr + Prefix_Size;
-   end Entry_To_Data_Mem;
+      return (Res + Align - 1) and not (Align - 1);
+   end Realign;
+
+   --  Return the data memory address from an heap entry.
+   function Entry_To_Obj_Ptr (E : Heap_Entry) return Memory_Ptr
+   is
+      Bnd_Sz : Size_Type;
+   begin
+      Bnd_Sz := Realign (E.Acc_Typ.Acc_Bnd_Sz, 2**Natural (E.Obj_Typ.Al));
+
+      return E.Ptr + Prefix_Size + Bnd_Sz;
+   end Entry_To_Obj_Ptr;
 
    function Get_Last_Slot return Heap_Slot is
    begin
@@ -86,16 +96,21 @@ package body Elab.Vhdl_Heap is
    procedure Allocate (Acc_Def : Node;
                        Acc_Typ : Type_Acc;
                        Obj_Typ : Type_Acc;
-                       Res : out Memory_Ptr)
+                       Res : out Memory_Ptr;
+                       Data_Mem : out Memory_Ptr)
    is
       Typ_Sz : constant Size_Type := Acc_Typ.Acc_Type_Sz;
+      Bnd_Sz : Size_Type;
       E : Heap_Entry;
    begin
       pragma Assert (Acc_Typ.Kind = Type_Access);
 
+      Bnd_Sz := Realign (Acc_Typ.Acc_Bnd_Sz, 2**Natural (Obj_Typ.Al));
+
       --  Allocate memory for the object, the bounds and the prefix.
-      E.Ptr := Alloc_Mem (Prefix_Size + Obj_Typ.Sz);
-      Res := Entry_To_Data_Mem (E);
+      E.Ptr := Alloc_Mem (Prefix_Size + Bnd_Sz + Obj_Typ.Sz);
+      Res := E.Ptr + Prefix_Size;
+      Data_Mem := Res + Bnd_Sz;
 
       --  Allocate the memory for the type.
       if Typ_Sz > 0 then
@@ -124,20 +139,20 @@ package body Elab.Vhdl_Heap is
    function Allocate_By_Type (Acc_Def : Node; Acc_Typ : Type_Acc; T : Type_Acc)
                              return Heap_Ptr
    is
-      Res : Memory_Ptr;
+      Res, Obj_Ptr : Memory_Ptr;
    begin
-      Allocate (Acc_Def, Acc_Typ, T, Res);
-      Write_Value_Default (Res, T);
+      Allocate (Acc_Def, Acc_Typ, T, Res, Obj_Ptr);
+      Write_Value_Default (Obj_Ptr, T);
       return Heap_Ptr (Res);
    end Allocate_By_Type;
 
    function Allocate_By_Value (Acc_Def : Node; Acc_Typ : Type_Acc; V : Valtyp)
                               return Heap_Ptr
    is
-      Mem : Memory_Ptr;
+      Mem, Obj_Ptr : Memory_Ptr;
    begin
-      Allocate (Acc_Def, Acc_Typ, V.Typ, Mem);
-      Write_Value (Mem, V);
+      Allocate (Acc_Def, Acc_Typ, V.Typ, Mem, Obj_Ptr);
+      Write_Value (Obj_Ptr, V);
       return Heap_Ptr (Mem);
    end Allocate_By_Value;
 
@@ -155,7 +170,7 @@ package body Elab.Vhdl_Heap is
    is
       E : Heap_Entry renames Heap_Table.Table (Idx);
    begin
-      return Heap_Ptr (Entry_To_Data_Mem (E));
+      return Heap_Ptr (Entry_To_Obj_Ptr (E));
    end Get_Pointer;
 
    function Synth_Dereference (Ptr : Heap_Ptr) return Memtyp
@@ -164,7 +179,7 @@ package body Elab.Vhdl_Heap is
 
       E : Heap_Entry renames Heap_Table.Table (Slot);
    begin
-      return (E.Obj_Typ, Entry_To_Data_Mem (E));
+      return (E.Obj_Typ, Entry_To_Obj_Ptr (E));
    end Synth_Dereference;
 
    procedure Free (Obj : in out Heap_Entry) is
@@ -205,34 +220,14 @@ package body Elab.Vhdl_Heap is
       return E.Def;
    end Get_Slot_Type_Def;
 
-   function Realign (Res : Size_Type;
-                     Align : Size_Type) return Size_Type is
-   begin
-      return (Res + Align - 1) and not (Align - 1);
-   end Realign;
-
    function Insert_Bounds (Slot : Heap_Slot; Bnd_Sz : Size_Type)
                           return Memory_Ptr
    is
       E : Heap_Entry renames Heap_Table.Table (Slot);
-      Ptr : Memory_Ptr;
-      Sz : Size_Type;
    begin
-      Sz := Realign (Bnd_Sz, 2**Natural (E.Obj_Typ.Al));
+      pragma Assert (E.Acc_Typ.Acc_Bnd_Sz = Bnd_Sz);
 
-      Ptr := Alloc_Mem (Prefix_Size + Sz + E.Obj_Typ.Sz);
-      Copy_Memory (Ptr, E.Ptr, Prefix_Size);
-      Copy_Memory (Ptr + Prefix_Size + Sz, E.Ptr + Prefix_Size, E.Obj_Typ.Sz);
-
-      --  TODO: free memory, but at then end.
-      --  The memory might still be referenced to get the slot.
-      if Boolean'(False) then
-         Free_Mem (E.Ptr);
-      end if;
-
-      E.Ptr := Ptr;
-
-      return Ptr + Prefix_Size;
+      return E.Ptr + Prefix_Size;
    end Insert_Bounds;
 
    function Ghdl_Allocate (Sz : Ghdl_Index_Type) return Heap_Ptr

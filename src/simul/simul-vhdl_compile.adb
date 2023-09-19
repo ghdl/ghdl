@@ -709,20 +709,10 @@ package body Simul.Vhdl_Compile is
       case Src.Typ.Kind is
          when Type_Access =>
             declare
-               use Elab.Vhdl_Heap;
-               Hptr : constant Heap_Ptr := Read_Access (Src);
-               Ptr : Heap_Ptr;
-               Slot : Heap_Slot;
+               Ptr : constant Heap_Ptr := Read_Access (Src);
             begin
-               if Hptr = Null_Heap_Ptr then
-                  --  Null access.
-                  Ptr := null;
-               else
-                  Slot := Get_Index (Hptr);
-                  Ptr := Get_Pointer (Slot);
-               end if;
-
                Write_Access (Dst_Mem, Ptr);
+               Src_Vt.Val.Mem := Dst_Mem;
             end;
          when Type_Protected =>
             declare
