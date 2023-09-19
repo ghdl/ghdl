@@ -161,6 +161,17 @@ package body Elab.Vhdl_Expr is
                      "denoted object name %i is a not a variable", +Obj);
                   return No_Valtyp;
             end case;
+         when Iir_Kind_Constant_Declaration =>
+            case Iir_Kinds_External_Name (Get_Kind (Name)) is
+               when Iir_Kind_External_Constant_Name =>
+                  Res := Get_Value (Cur_Inst, Obj);
+               when Iir_Kind_External_Variable_Name
+                 | Iir_Kind_External_Signal_Name =>
+                  Error_Msg_Synth
+                    (Loc_Inst, Path,
+                     "denoted object name %i is a not a constant", +Obj);
+                  return No_Valtyp;
+            end case;
          when others =>
             Error_Kind ("synth_pathname_object(2)", Obj);
       end case;
@@ -254,7 +265,8 @@ package body Elab.Vhdl_Expr is
 
       --  Find name in concurrent statements.
       case Get_Kind (Scope) is
-         when Iir_Kind_Architecture_Body =>
+         when Iir_Kind_Architecture_Body
+           | Iir_Kind_Block_Statement =>
             Res := Find_Name_In_Chain
               (Get_Concurrent_Statement_Chain (Scope), Id);
          when others =>
@@ -285,6 +297,13 @@ package body Elab.Vhdl_Expr is
                end if;
                return Synth_Pathname (Loc_Inst, Name, Sub_Inst, Suffix);
             end;
+         when Iir_Kind_Process_Statement =>
+            --  And other concurrent statements...
+            Error_Msg_Synth
+              (Loc_Inst, Path,
+               "pathname element %i does not denote a concurrent region",
+               +Id);
+            return No_Valtyp;
          when others =>
             Error_Kind ("synth_pathname(2)", Res);
       end case;
@@ -310,8 +329,9 @@ package body Elab.Vhdl_Expr is
         (Syn_Inst, Name, Path_Inst, Get_Pathname_Suffix (Suffix));
    end Exec_Absolute_Pathname;
 
-   function Exec_Relative_Pathname
-     (Syn_Inst : Synth_Instance_Acc; Name : Node; Path : Node) return Valtyp
+   --  Find the corresponding concurrent region from SCOPE.
+   function Exec_Pathname_Concurrent_Region (Scope : Synth_Instance_Acc)
+                                            return Synth_Instance_Acc
    is
       Cur_Inst : Synth_Instance_Acc;
       Cur_Src : Node;
@@ -325,20 +345,34 @@ package body Elab.Vhdl_Expr is
       --  - A package declarative region (including a generic-mapped package
       --    equivalent to a package instantiation) declared immediately within
       --    a concurrent region.
-      Cur_Inst := Syn_Inst;
+      Cur_Inst := Scope;
       loop
          Cur_Src := Get_Source_Scope (Cur_Inst);
+         if Cur_Src = Null_Node then
+            return null;
+         end if;
          case Get_Kind (Cur_Src) is
-            when Iir_Kind_Architecture_Body =>
-               exit;
+            when Iir_Kind_Architecture_Body
+               | Iir_Kind_Block_Statement
+               | Iir_Kind_Generate_Statement_Body =>
+               return Cur_Inst;
             when Iir_Kind_Process_Statement =>
                null;
             when others =>
-               Error_Kind ("exec_relative_pathname", Cur_Src);
+               Error_Kind ("exec_pathname_concurrent_region", Cur_Src);
          end case;
          Cur_Inst := Get_Instance_Parent (Cur_Inst);
          pragma Assert (Cur_Inst /= null);
       end loop;
+   end Exec_Pathname_Concurrent_Region;
+
+   function Exec_Relative_Pathname
+     (Syn_Inst : Synth_Instance_Acc; Name : Node; Path : Node) return Valtyp
+   is
+      Cur_Inst : Synth_Instance_Acc;
+      Cur_Path : Node;
+   begin
+      Cur_Inst := Exec_Pathname_Concurrent_Region (Syn_Inst);
 
       --  LRM08 8.7 External names
       --  Then, for each occurrence of a circumflex accent followed by a dot,
@@ -351,9 +385,21 @@ package body Elab.Vhdl_Expr is
       --  declarative region is the declarative region of an uninstantiated
       --  package.
 
-      --  TODO
+      Cur_Path := Path;
+      while Get_Kind (Cur_Path) = Iir_Kind_Relative_Pathname loop
+         Cur_Inst := Get_Instance_Parent (Cur_Inst);
+         Cur_Inst := Exec_Pathname_Concurrent_Region (Cur_Inst);
 
-      return Synth_Pathname (Syn_Inst, Name, Cur_Inst, Path);
+         if Cur_Inst = null then
+            Error_Msg_Synth
+              (Syn_Inst, Path, "path already at top of hierarchy");
+            return No_Valtyp;
+         end if;
+
+         Cur_Path := Get_Pathname_Suffix (Cur_Path);
+      end loop;
+
+      return Synth_Pathname (Syn_Inst, Name, Cur_Inst, Cur_Path);
    end Exec_Relative_Pathname;
 
    function Exec_External_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
@@ -365,7 +411,8 @@ package body Elab.Vhdl_Expr is
       case Get_Kind (Path) is
          when Iir_Kind_Absolute_Pathname =>
             return Exec_Absolute_Pathname (Syn_Inst, Name, Path);
-         when Iir_Kind_Pathname_Element =>
+         when Iir_Kind_Pathname_Element
+           | Iir_Kind_Relative_Pathname =>
             return Exec_Relative_Pathname (Syn_Inst, Name, Path);
          when others =>
             Error_Kind ("exec_external_name", Path);
