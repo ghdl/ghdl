@@ -5170,6 +5170,8 @@ package body Vhdl.Sem_Names is
    procedure Sem_External_Name (Name : Iir; In_Alias : Boolean)
    is
       Atype : Iir;
+      Path : Iir;
+      Expr : Iir;
    begin
       pragma Assert (Get_Type (Name) = Null_Iir);
 
@@ -5203,6 +5205,22 @@ package body Vhdl.Sem_Names is
 
       --  Consider the node as analyzed.
       Set_Named_Entity (Name, Name);
+
+      Path := Get_External_Pathname (Name);
+      while Path /= Null_Iir loop
+         if Get_Kind (Path) = Iir_Kind_Pathname_Element then
+            --  LRM08 8.7 External names
+            --  The type of the expression shall be determined by applying the
+            --  rules of 12.5 to the expression considered as a complete
+            --  context, using the rule that the type shall be discrete.
+            Expr := Get_Pathname_Expression (Path);
+            if Expr /= Null_Iir then
+               Expr := Sem_Expression_Wildcard
+                 (Expr, Wildcard_Any_Discrete_Type);
+            end if;
+         end if;
+         Path := Get_Pathname_Suffix (Path);
+      end loop;
 
       if not In_Alias then
          --  Add an implicit declaration if the external name is not the name

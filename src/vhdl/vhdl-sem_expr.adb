@@ -5447,6 +5447,7 @@ package body Vhdl.Sem_Expr is
                      return Wildcard_Psl_Bitvector_Type;
                   when Wildcard_Any_Access_Type
                      | Wildcard_Any_Integer_Type
+                     | Wildcard_Any_Discrete_Type
                      | Wildcard_Psl_Bit_Type
                      | Wildcard_Psl_Boolean_Type =>
                      return Null_Iir;
@@ -5461,6 +5462,7 @@ package body Vhdl.Sem_Expr is
                      return Wildcard_Psl_Bitvector_Type;
                   when Wildcard_Any_Access_Type
                      | Wildcard_Any_Integer_Type
+                     | Wildcard_Any_Discrete_Type
                      | Wildcard_Psl_Bit_Type
                      | Wildcard_Psl_Boolean_Type =>
                      return Null_Iir;
@@ -5473,15 +5475,18 @@ package body Vhdl.Sem_Expr is
                   when Wildcard_Any_Aggregate_Type
                      | Wildcard_Any_String_Type
                      | Wildcard_Any_Integer_Type
+                     | Wildcard_Any_Discrete_Type
                      | Wildcard_Psl_Bit_Type
                      | Wildcard_Psl_Bitvector_Type
                      | Wildcard_Psl_Boolean_Type =>
                      return Null_Iir;
                end case;
-            when Wildcard_Any_Integer_Type =>
+            when Wildcard_Any_Integer_Type
+               | Wildcard_Any_Discrete_Type =>
                case Iir_Wildcard_Types (Atype) is
                   when Wildcard_Any_Type
-                     | Wildcard_Any_Integer_Type =>
+                     | Wildcard_Any_Integer_Type
+                     | Wildcard_Any_Discrete_Type =>
                      return Wildcard_Any_Integer_Type;
                   when Wildcard_Any_Access_Type
                      | Wildcard_Any_Aggregate_Type
@@ -5500,6 +5505,7 @@ package body Vhdl.Sem_Expr is
                      | Wildcard_Any_Aggregate_Type
                      | Wildcard_Any_String_Type
                      | Wildcard_Any_Integer_Type
+                     | Wildcard_Any_Discrete_Type
                      | Wildcard_Psl_Bitvector_Type
                      | Wildcard_Psl_Boolean_Type =>
                      return Null_Iir;
@@ -5513,6 +5519,7 @@ package body Vhdl.Sem_Expr is
                      return Wildcard_Psl_Bitvector_Type;
                   when Wildcard_Any_Access_Type
                      | Wildcard_Any_Integer_Type
+                     | Wildcard_Any_Discrete_Type
                      | Wildcard_Psl_Bit_Type
                      | Wildcard_Psl_Boolean_Type =>
                      return Null_Iir;
@@ -5528,6 +5535,7 @@ package body Vhdl.Sem_Expr is
                      | Wildcard_Any_Aggregate_Type
                      | Wildcard_Any_String_Type
                      | Wildcard_Any_Integer_Type
+                     | Wildcard_Any_Discrete_Type
                      | Wildcard_Psl_Bitvector_Type =>
                      return Null_Iir;
                end case;
@@ -5557,6 +5565,14 @@ package body Vhdl.Sem_Expr is
                then
                   return Atype;
                end if;
+            when Wildcard_Any_Discrete_Type =>
+               case Get_Kind (Get_Base_Type (Atype)) is
+                  when Iir_Kind_Integer_Type_Definition
+                    | Iir_Kind_Enumeration_Type_Definition =>
+                     return Atype;
+                  when others =>
+                     null;
+               end case;
             when Wildcard_Psl_Bit_Type =>
                if Sem_Psl.Is_Psl_Bit_Type (Atype) then
                   return Atype;

@@ -27,6 +27,7 @@ with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Scanner;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
+with Vhdl.Sem_Expr;
 
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Heap; use Elab.Vhdl_Heap;
@@ -116,7 +117,8 @@ package body Elab.Vhdl_Expr is
    begin
       --  Object simple name.
       case Get_Kind (Scope) is
-         when Iir_Kind_Architecture_Body =>
+         when Iir_Kind_Architecture_Body
+           | Iir_Kind_Generate_Statement_Body =>
             Obj := Find_Name_In_Chain (Get_Declaration_Chain (Scope), Id);
          when others =>
             Error_Kind ("synth_pathname_object(1)", Scope);
@@ -295,6 +297,60 @@ package body Elab.Vhdl_Expr is
                      return No_Valtyp;
                   end if;
                end if;
+               return Synth_Pathname (Loc_Inst, Name, Sub_Inst, Suffix);
+            end;
+         when Iir_Kind_For_Generate_Statement =>
+            declare
+               use Vhdl.Sem_Expr;
+               Expr : constant Node := Get_Pathname_Expression (Path);
+               Param : constant Node := Get_Parameter_Specification (Res);
+               Param_Rng : Type_Acc;
+               Idx : Valtyp;
+               V : Int64;
+               V_Off : Natural;
+               Gen_Inst, Sub_Inst : Synth_Instance_Acc;
+            begin
+               --  LRM08 8.7 External names
+               --  If the generate statement is a for generate statement, the
+               --  pathname element shall include a static expression, [...]
+               if Expr = Null_Node then
+                  Error_Msg_Synth
+                    (Loc_Inst, Path,
+                     "expression required for a for-generate statement");
+                  return No_Valtyp;
+               end if;
+
+               --  [...] the type of the expressoin shall be the same as the
+               --  type of the generate parameter, [...]
+               if Are_Nodes_Compatible (Expr, Param) = Not_Compatible then
+                  Error_Msg_Synth
+                    (Loc_Inst, Path,
+                     "expression and generate parameter are not compatible");
+                  return No_Valtyp;
+               end if;
+
+               --  [...] and the value of the expression shall belong to the
+               --  discrete range specified for the generate parameter.
+               Param_Rng := Get_Subtype_Object (Loc_Inst, Get_Type (Param));
+               Idx := Synth_Expression_With_Type (Loc_Inst, Expr, Param_Rng);
+               if Idx = No_Valtyp then
+                  return No_Valtyp;
+               end if;
+               V := Read_Discrete (Idx);
+               if not In_Range (Param_Rng.Drange, V) then
+                  Error_Msg_Synth
+                    (Loc_Inst, Path,
+                     "expression not in the range of the generate parameter");
+                  return No_Valtyp;
+               end if;
+               case Param_Rng.Drange.Dir is
+                  when Dir_To =>
+                     V_Off := Natural (V - Param_Rng.Drange.Left);
+                  when Dir_Downto =>
+                     V_Off := Natural (Param_Rng.Drange.Left - V);
+               end case;
+               Gen_Inst := Get_Sub_Instance (Cur_Inst, Res);
+               Sub_Inst := Get_Generate_Sub_Instance (Gen_Inst, V_Off + 1);
                return Synth_Pathname (Loc_Inst, Name, Sub_Inst, Suffix);
             end;
          when Iir_Kind_Process_Statement =>
