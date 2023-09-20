@@ -4822,6 +4822,47 @@ package body Vhdl.Prints is
       end if;
    end Print_Qualified_Expression;
 
+   procedure Print_External_Name (Ctxt : in out Ctxt_Class; Name : Iir)
+   is
+      Path : Iir;
+   begin
+      Disp_Token (Ctxt, Tok_Double_Less);
+      case Iir_Kinds_External_Name (Get_Kind (Name)) is
+         when Iir_Kind_External_Signal_Name =>
+            Disp_Token (Ctxt, Tok_Signal);
+         when Iir_Kind_External_Variable_Name =>
+            Disp_Token (Ctxt, Tok_Variable);
+         when Iir_Kind_External_Constant_Name =>
+            Disp_Token (Ctxt, Tok_Constant);
+      end case;
+
+      Path := Get_External_Pathname (Name);
+      loop
+         case Get_Kind (Path) is
+            when Iir_Kind_Package_Pathname =>
+               Disp_Token (Ctxt, Tok_Arobase);
+               Disp_Identifier (Ctxt, Path);
+            when Iir_Kind_Absolute_Pathname =>
+               --  The dot will be printed as the separator.
+               null;
+            when Iir_Kind_Relative_Pathname =>
+               Disp_Token (Ctxt, Tok_Caret);
+            when Iir_Kind_Pathname_Element =>
+               Disp_Identifier (Ctxt, Path);
+            when others =>
+               raise Internal_Error;
+         end case;
+
+         Path := Get_Pathname_Suffix (Path);
+         exit when Path = Null_Iir;
+         Disp_Token (Ctxt, Tok_Dot);
+      end loop;
+
+      Disp_Token (Ctxt, Tok_Colon);
+      Disp_Subtype_Indication (Ctxt, Get_Subtype_Indication (Name));
+      Disp_Token (Ctxt, Tok_Double_Greater);
+   end Print_External_Name;
+
    procedure Print (Ctxt : in out Ctxt_Class; Expr: Iir)
    is
       Orig : Iir;
@@ -5115,6 +5156,8 @@ package body Vhdl.Prints is
          when Iir_Kind_Parenthesis_Name =>
             Print (Ctxt, Get_Prefix (Expr));
             Disp_Association_Chain (Ctxt, Get_Association_Chain (Expr));
+         when Iir_Kinds_External_Name =>
+            Print_External_Name (Ctxt, Expr);
          when Iir_Kind_Base_Attribute =>
             Disp_Name_Attribute (Ctxt, Expr, Name_Base);
          when Iir_Kind_Subtype_Attribute =>
@@ -5219,11 +5262,11 @@ package body Vhdl.Prints is
    function Need_Space (Tok, Prev_Tok : Token_Type) return Boolean is
    begin
       if Prev_Tok = Tok_Newline then
+         --  No space after newline.
          return False;
       elsif Prev_Tok >= Tok_First_Keyword then
          --  A space after a keyword.
          if Tok /= Tok_Semi_Colon
-           and Tok /= Tok_Dot
            and Tok /= Tok_Right_Paren
          then
             return True;
@@ -5232,6 +5275,7 @@ package body Vhdl.Prints is
          --  Space before a keyword.
          if Prev_Tok /= Tok_Dot
            and Prev_Tok /= Tok_Left_Paren
+           and Prev_Tok /= Tok_Double_Less
          then
             return True;
          end if;
