@@ -4639,6 +4639,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Name_Staticness (State2)
    --
+   --   Get/Set_Is_Forward_Ref (Flag1)
+   --
    --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Selected_By_All_Name (Short)
