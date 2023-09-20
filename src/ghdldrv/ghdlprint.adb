@@ -231,7 +231,7 @@ package body Ghdlprint is
          Put ("""");
       end Disp_Anchor;
 
-      procedure Disp_Identifier
+      procedure Disp_Identifier (With_Xref : Boolean := True)
       is
          use Vhdl.Xrefs;
          Ref : Xref;
@@ -245,8 +245,11 @@ package body Ghdlprint is
             if Ref = Bad_Xref then
                Disp_Spaces;
                Disp_Text;
-               Warning_Msg_Sem (Warnid_Missing_Xref, Loc, "cannot find xref");
-               Missing_Xref := True;
+               if With_Xref then
+                  Warning_Msg_Sem (Warnid_Missing_Xref, Loc,
+                                   "cannot find xref");
+                  Missing_Xref := True;
+               end if;
                return;
             end if;
          else
@@ -348,6 +351,8 @@ package body Ghdlprint is
             Put ("</a>");
          end if;
       end Disp_Attribute;
+
+      With_Xref : Boolean;
    begin
       Vhdl.Scanner.Flag_Comment := True;
       Vhdl.Scanner.Flag_Newline := True;
@@ -360,6 +365,7 @@ package body Ghdlprint is
       Disp_Ln;
       Last_Tok := Source_Ptr_Org;
       Prev_Tok := Tok_Invalid;
+      With_Xref := True;
       loop
          Scan;
          Bef_Tok := Get_Token_Position;
@@ -477,7 +483,7 @@ package body Ghdlprint is
                if Prev_Tok = Tok_Tick then
                   Disp_Attribute;
                else
-                  Disp_Identifier;
+                  Disp_Identifier (With_Xref);
                end if;
             when Tok_Left_Paren .. Tok_Colon
               | Tok_Comma .. Tok_Dot
@@ -485,7 +491,17 @@ package body Ghdlprint is
               | Tok_Integer
               | Tok_Integer_Letter
               | Tok_Real
-              | Tok_Equal .. Tok_Slash =>
+              | Tok_Equal .. Tok_Condition
+              | Tok_Caret .. Tok_Slash =>
+               Disp_Spaces;
+               Disp_Text;
+            when Tok_Double_Less =>
+               --  Identifiers within an external names are not resolved.
+               With_Xref := False;
+               Disp_Spaces;
+               Disp_Text;
+            when Tok_Double_Greater =>
+               With_Xref := True;
                Disp_Spaces;
                Disp_Text;
             when Tok_Invalid
