@@ -117,12 +117,24 @@ package body Elab.Vhdl_Expr is
    begin
       --  Object simple name.
       case Get_Kind (Scope) is
-         when Iir_Kind_Architecture_Body
-           | Iir_Kind_Generate_Statement_Body
+         when Iir_Kind_Generate_Statement_Body
            | Iir_Kind_Block_Statement
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration =>
             Obj := Find_Name_In_Chain (Get_Declaration_Chain (Scope), Id);
+         when Iir_Kind_Architecture_Body =>
+            Obj := Find_Name_In_Chain (Get_Declaration_Chain (Scope), Id);
+            if Obj = Null_Node then
+               --  Try ports / generics
+               declare
+                  Ent : constant Node := Get_Entity (Scope);
+               begin
+                  Obj := Find_Name_In_Chain (Get_Port_Chain (Ent), Id);
+                  if Obj = Null_Node then
+                     Obj := Find_Name_In_Chain (Get_Generic_Chain (Ent), Id);
+                  end if;
+               end;
+            end if;
          when others =>
             Error_Kind ("synth_pathname_object(1)", Scope);
       end case;
@@ -144,7 +156,8 @@ package body Elab.Vhdl_Expr is
       --  object denoted by an external signal name is not a signal, or if
       --  the object denoted by an external variable name is not a variable.
       case Get_Kind (Obj) is
-         when Iir_Kind_Signal_Declaration =>
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Interface_Signal_Declaration =>
             case Iir_Kinds_External_Name (Get_Kind (Name)) is
                when Iir_Kind_External_Signal_Name =>
                   Res := Get_Value (Cur_Inst, Obj);
@@ -166,7 +179,8 @@ package body Elab.Vhdl_Expr is
                      "denoted object name %i is a not a variable", +Obj);
                   return No_Valtyp;
             end case;
-         when Iir_Kind_Constant_Declaration =>
+         when Iir_Kind_Constant_Declaration
+           | Iir_Kind_Interface_Constant_Declaration =>
             case Iir_Kinds_External_Name (Get_Kind (Name)) is
                when Iir_Kind_External_Constant_Name =>
                   Res := Get_Value (Cur_Inst, Obj);
@@ -436,7 +450,9 @@ package body Elab.Vhdl_Expr is
                | Iir_Kind_Block_Statement
                | Iir_Kind_Generate_Statement_Body =>
                return Cur_Inst;
-            when Iir_Kind_Process_Statement =>
+            when Iir_Kind_Process_Statement
+              | Iir_Kind_Function_Body
+              | Iir_Kind_Procedure_Body =>
                null;
             when others =>
                Error_Kind ("exec_pathname_concurrent_region", Cur_Src);
