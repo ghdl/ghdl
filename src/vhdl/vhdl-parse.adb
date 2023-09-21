@@ -1406,6 +1406,11 @@ package body Vhdl.Parse is
 
             --  Skip ')'.
             Expect_Scan (Tok_Right_Paren);
+
+            if Current_Token /= Tok_Dot then
+               Error_Msg_Parse ("pathname must finish with a name");
+               exit;
+            end if;
          end if;
 
          exit when Current_Token /= Tok_Dot;
