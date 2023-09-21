@@ -118,7 +118,10 @@ package body Elab.Vhdl_Expr is
       --  Object simple name.
       case Get_Kind (Scope) is
          when Iir_Kind_Architecture_Body
-           | Iir_Kind_Generate_Statement_Body =>
+           | Iir_Kind_Generate_Statement_Body
+           | Iir_Kind_Block_Statement
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration =>
             Obj := Find_Name_In_Chain (Get_Declaration_Chain (Scope), Id);
          when others =>
             Error_Kind ("synth_pathname_object(1)", Scope);
@@ -256,6 +259,7 @@ package body Elab.Vhdl_Expr is
       Id : Name_Id;
       Scope : Node;
       Res : Node;
+      Sub_Inst : Synth_Instance_Acc;
    begin
       if Suffix = Null_Node then
          --  Object simple name.
@@ -271,6 +275,9 @@ package body Elab.Vhdl_Expr is
            | Iir_Kind_Block_Statement =>
             Res := Find_Name_In_Chain
               (Get_Concurrent_Statement_Chain (Scope), Id);
+         when Iir_Kind_Package_Declaration =>
+            Res := Find_Name_In_Chain
+              (Get_Declaration_Chain (Scope), Id);
          when others =>
             Error_Kind ("synth_pathname(scope)", Scope);
       end case;
@@ -283,7 +290,6 @@ package body Elab.Vhdl_Expr is
       case Get_Kind (Res) is
          when Iir_Kind_Component_Instantiation_Statement =>
             declare
-               Sub_Inst : Synth_Instance_Acc;
                Comp_Inst : Synth_Instance_Acc;
             begin
                if Is_Entity_Instantiation (Res) then
@@ -297,8 +303,14 @@ package body Elab.Vhdl_Expr is
                      return No_Valtyp;
                   end if;
                end if;
-               return Synth_Pathname (Loc_Inst, Name, Sub_Inst, Suffix);
             end;
+         when Iir_Kind_If_Generate_Statement =>
+            Sub_Inst := Get_Sub_Instance (Cur_Inst, Res);
+            if Sub_Inst = null then
+               Error_Msg_Synth
+                 (Loc_Inst, Path, "condition of generate statement is false");
+               return No_Valtyp;
+            end if;
          when Iir_Kind_For_Generate_Statement =>
             declare
                use Vhdl.Sem_Expr;
@@ -308,7 +320,7 @@ package body Elab.Vhdl_Expr is
                Idx : Valtyp;
                V : Int64;
                V_Off : Natural;
-               Gen_Inst, Sub_Inst : Synth_Instance_Acc;
+               Gen_Inst : Synth_Instance_Acc;
             begin
                --  LRM08 8.7 External names
                --  If the generate statement is a for generate statement, the
@@ -351,10 +363,21 @@ package body Elab.Vhdl_Expr is
                end case;
                Gen_Inst := Get_Sub_Instance (Cur_Inst, Res);
                Sub_Inst := Get_Generate_Sub_Instance (Gen_Inst, V_Off + 1);
-               return Synth_Pathname (Loc_Inst, Name, Sub_Inst, Suffix);
             end;
+         when Iir_Kind_Package_Declaration =>
+            if Is_Uninstantiated_Package (Res) then
+               Error_Msg_Synth
+                 (Loc_Inst, Path,
+                  "pathname element %i designates an uninstantiated package",
+                  +Id);
+               return No_Valtyp;
+            end if;
+            Sub_Inst := Get_Sub_Instance (Cur_Inst, Res);
+         when Iir_Kind_Block_Statement =>
+            Sub_Inst := Get_Sub_Instance (Cur_Inst, Res);
          when Iir_Kind_Process_Statement =>
             --  And other concurrent statements...
+            --  and other declarations
             Error_Msg_Synth
               (Loc_Inst, Path,
                "pathname element %i does not denote a concurrent region",
@@ -363,6 +386,7 @@ package body Elab.Vhdl_Expr is
          when others =>
             Error_Kind ("synth_pathname(2)", Res);
       end case;
+      return Synth_Pathname (Loc_Inst, Name, Sub_Inst, Suffix);
    end Synth_Pathname;
 
    function Exec_Absolute_Pathname
@@ -458,20 +482,52 @@ package body Elab.Vhdl_Expr is
       return Synth_Pathname (Syn_Inst, Name, Cur_Inst, Cur_Path);
    end Exec_Relative_Pathname;
 
+   function Exec_Package_Pathname
+     (Syn_Inst : Synth_Instance_Acc; Name : Node; Path : Node) return Valtyp
+   is
+      Lib_Id : constant Name_Id := Get_Identifier (Path);
+      Pkg_Path : constant Node := Get_Pathname_Suffix (Path);
+      Pkg_Id : constant Name_Id := Get_Identifier (Pkg_Path);
+      Cur_Inst : Synth_Instance_Acc;
+      It : Iterator_Top_Level_Type;
+      N : Node;
+   begin
+      It := Iterator_Top_Level_Init;
+      loop
+         Iterate_Top_Level (It, Cur_Inst);
+         exit when Cur_Inst = null;
+         N := Get_Source_Scope (Cur_Inst);
+         if Get_Identifier (N) = Pkg_Id
+           and then
+           Get_Identifier (Get_Library (Get_Design_File
+                                          (Get_Design_Unit (N)))) = Lib_Id
+         then
+            return Synth_Pathname
+              (Syn_Inst, Name, Cur_Inst, Get_Pathname_Suffix (Pkg_Path));
+         end if;
+      end loop;
+
+      Error_Msg_Synth
+        (Syn_Inst, Path, "cannot find package %i.%i in the design",
+         (+Path, +Pkg_Path));
+      return No_Valtyp;
+   end Exec_Package_Pathname;
+
+
    function Exec_External_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                                return Valtyp
    is
       Path : Node;
    begin
       Path := Get_External_Pathname (Name);
-      case Get_Kind (Path) is
+      case Iir_Kinds_Pathname (Get_Kind (Path)) is
          when Iir_Kind_Absolute_Pathname =>
             return Exec_Absolute_Pathname (Syn_Inst, Name, Path);
          when Iir_Kind_Pathname_Element
            | Iir_Kind_Relative_Pathname =>
             return Exec_Relative_Pathname (Syn_Inst, Name, Path);
-         when others =>
-            Error_Kind ("exec_external_name", Path);
+         when Iir_Kind_Package_Pathname =>
+            return Exec_Package_Pathname (Syn_Inst, Name, Path);
       end case;
    end Exec_External_Name;
 

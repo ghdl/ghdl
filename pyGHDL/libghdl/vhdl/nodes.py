@@ -826,6 +826,13 @@ class Iir_Kinds:
         Iir_Kind.External_Variable_Name,
     ]
 
+    Pathname = [
+        Iir_Kind.Package_Pathname,
+        Iir_Kind.Absolute_Pathname,
+        Iir_Kind.Relative_Pathname,
+        Iir_Kind.Pathname_Element,
+    ]
+
     Expression_Attribute = [
         Iir_Kind.Left_Type_Attribute,
         Iir_Kind.Right_Type_Attribute,

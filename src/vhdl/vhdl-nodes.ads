@@ -7147,6 +7147,12 @@ package Vhdl.Nodes is
    --Iir_Kind_External_Signal_Name
      Iir_Kind_External_Variable_Name;
 
+   subtype Iir_Kinds_Pathname is Iir_Kind range
+     Iir_Kind_Package_Pathname ..
+   --Iir_Kind_Absolute_Pathname
+   --Iir_Kind_Relative_Pathname
+     Iir_Kind_Pathname_Element;
+
    --  Any attribute that is an expression.
    subtype Iir_Kinds_Expression_Attribute is Iir_Kind range
      Iir_Kind_Left_Type_Attribute ..
