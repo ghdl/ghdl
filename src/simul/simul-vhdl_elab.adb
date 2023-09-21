@@ -506,10 +506,12 @@ package body Simul.Vhdl_Elab is
            | Iir_Kind_Group_Declaration =>
             null;
 
-         when Iir_Kind_Package_Instantiation_Declaration
-            | Iir_Kind_Package_Declaration =>
-            --  TODO: signals in package ?
-            null;
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Gather_Processes_1 (Get_Sub_Instance (Inst, Decl));
+         when Iir_Kind_Package_Declaration =>
+            if not Is_Uninstantiated_Package (Decl) then
+               Gather_Processes_1 (Get_Sub_Instance (Inst, Decl));
+            end if;
          when Iir_Kind_Package_Body =>
             null;
 
