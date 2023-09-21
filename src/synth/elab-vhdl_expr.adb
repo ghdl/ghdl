@@ -270,6 +270,7 @@ package body Elab.Vhdl_Expr is
    is
       use Errorout;
       Suffix : constant Node := Get_Pathname_Suffix (Path);
+      Expr : constant Node := Get_Pathname_Expression (Path);
       Id : Name_Id;
       Scope : Node;
       Res : Node;
@@ -301,6 +302,18 @@ package body Elab.Vhdl_Expr is
             "cannot find path element %i in %i", (+Id, +Scope));
          return No_Valtyp;
       end if;
+
+      --  Check that expression is valid only for for-generate statement
+      --  TODO: is it an error according to LRM08 ?
+      if Expr /= Null_Node
+        and then Get_Kind (Res) /= Iir_Kind_For_Generate_Statement
+      then
+         Error_Msg_Synth
+           (Loc_Inst, Path,
+            "index expression valid only for generate statements");
+         return No_Valtyp;
+      end if;
+
       case Get_Kind (Res) is
          when Iir_Kind_Component_Instantiation_Statement =>
             declare
@@ -328,7 +341,6 @@ package body Elab.Vhdl_Expr is
          when Iir_Kind_For_Generate_Statement =>
             declare
                use Vhdl.Sem_Expr;
-               Expr : constant Node := Get_Pathname_Expression (Path);
                Param : constant Node := Get_Parameter_Specification (Res);
                Param_Rng : Type_Acc;
                Idx : Valtyp;
