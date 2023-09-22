@@ -1324,6 +1324,9 @@ package body Vhdl.Parse is
             else
                Set_Identifier (Res, Current_Identifier);
 
+               --  The location should be on the identifier.
+               Set_Location (Res);
+
                --  Skip identifier.
                Scan;
             end if;
