@@ -4825,6 +4825,7 @@ package body Vhdl.Prints is
    procedure Print_External_Name (Ctxt : in out Ctxt_Class; Name : Iir)
    is
       Path : Iir;
+      Expr : Iir;
    begin
       Disp_Token (Ctxt, Tok_Double_Less);
       case Iir_Kinds_External_Name (Get_Kind (Name)) is
@@ -4849,6 +4850,12 @@ package body Vhdl.Prints is
                Disp_Token (Ctxt, Tok_Caret);
             when Iir_Kind_Pathname_Element =>
                Disp_Identifier (Ctxt, Path);
+               Expr := Get_Pathname_Expression (Path);
+               if Expr /= Null_Iir then
+                  Disp_Token (Ctxt, Tok_Left_Paren);
+                  Print (Ctxt, Expr);
+                  Disp_Token (Ctxt, Tok_Right_Paren);
+               end if;
             when others =>
                raise Internal_Error;
          end case;
