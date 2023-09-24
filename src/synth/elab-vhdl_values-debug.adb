@@ -63,12 +63,24 @@ package body Elab.Vhdl_Values.Debug is
          when Wkind_Undef =>
             Put ('?');
       end case;
+      Put (' ');
+      if T.Is_Global then
+         --  Lifetime is global
+         Put ('G');
+      end if;
+      if T.Is_Static then
+         --  Size is static
+         Put ('S');
+      end if;
+      if T.Is_Bnd_Static then
+         Put ('B');
+      end if;
       Put (']');
    end Debug_Typ_Phys;
 
-   procedure Debug_Typ1 (T : Type_Acc);
+   procedure Debug_Typ1 (T : Type_Acc; Indent : Natural);
 
-   procedure Debug_Typ_Arr (T : Type_Acc)
+   procedure Debug_Typ_Arr (T : Type_Acc; Indent : Natural)
    is
       It : Type_Acc;
    begin
@@ -81,11 +93,29 @@ package body Elab.Vhdl_Values.Debug is
          Put (", ");
          It := It.Arr_El;
       end loop;
-      Put (") of ");
-      Debug_Typ1 (It.Arr_El);
+      Put (") of");
+      New_Line;
+      Put_Indent (Indent + 1);
+      Debug_Typ1 (It.Arr_El, Indent + 1);
    end Debug_Typ_Arr;
 
-   procedure Debug_Typ1 (T : Type_Acc) is
+   procedure Debug_Typ_Rec (T : Type_Acc; Indent : Natural) is
+   begin
+      Put (" ");
+      Debug_Typ_Phys (T);
+      for I in T.Rec.E'Range loop
+         New_Line;
+         Put_Indent (Indent + 1);
+         Put ("[noff=");
+         Put_Uns32 (T.Rec.E (I).Offs.Net_Off);
+         Put (", moff=");
+         Put_Uns32 (Uns32 (T.Rec.E (I).Offs.Mem_Off));
+         Put ("] ");
+         Debug_Typ1 (T.Rec.E (I).Typ, Indent + 2);
+      end loop;
+   end Debug_Typ_Rec;
+
+   procedure Debug_Typ1 (T : Type_Acc; Indent : Natural) is
    begin
       case T.Kind is
          when Type_Bit =>
@@ -99,30 +129,20 @@ package body Elab.Vhdl_Values.Debug is
             Debug_Typ_Phys (T);
             Put (" (");
             Debug_Bound (T.Abound, True);
-            Put (") of ");
-            Debug_Typ1 (T.Arr_El);
+            Put (") of");
+            New_Line;
+            Put_Indent (Indent + 1);
+            Debug_Typ1 (T.Arr_El, Indent + 1);
          when Type_Array =>
             Put ("arr ");
             Debug_Typ_Phys (T);
-            Debug_Typ_Arr (T);
+            Debug_Typ_Arr (T, Indent);
          when Type_Record =>
-            Put ("rec ");
-            Debug_Typ_Phys (T);
-            Put (" (");
-            for I in T.Rec.E'Range loop
-               if I /= 1 then
-                  Put (", ");
-               end if;
-               Put ("[noff=");
-               Put_Uns32 (T.Rec.E (I).Offs.Net_Off);
-               Put (", moff=");
-               Put_Uns32 (Uns32 (T.Rec.E (I).Offs.Mem_Off));
-               Put ("] ");
-               Debug_Typ1 (T.Rec.E (I).Typ);
-            end loop;
-            Put (")");
+            Put ("record");
+            Debug_Typ_Rec (T, Indent);
          when Type_Unbounded_Record =>
             Put ("unbounded record");
+            Debug_Typ_Rec (T, Indent);
          when Type_Discrete =>
             Put ("discrete ");
             Debug_Typ_Phys (T);
@@ -149,7 +169,7 @@ package body Elab.Vhdl_Values.Debug is
             Put ("unbounded vector");
          when Type_Array_Unbounded =>
             Put ("array_unbounded");
-            Debug_Typ_Arr (T);
+            Debug_Typ_Arr (T, Indent);
          when Type_Unbounded_Array =>
             Put ("unbounded arr (");
             declare
@@ -162,8 +182,10 @@ package body Elab.Vhdl_Values.Debug is
                   Put (", ");
                   It := It.Uarr_El;
                end loop;
-               Put (") of ");
-               Debug_Typ1 (It.Uarr_El);
+               Put (") of");
+               New_Line;
+               Put_Indent (Indent + 1);
+               Debug_Typ1 (It.Uarr_El, Indent + 1);
             end;
          when Type_Protected =>
             Put ("protected");
@@ -172,7 +194,7 @@ package body Elab.Vhdl_Values.Debug is
 
    procedure Debug_Typ (T : Type_Acc) is
    begin
-      Debug_Typ1 (T);
+      Debug_Typ1 (T, 0);
       New_Line;
    end Debug_Typ;
 
@@ -320,13 +342,13 @@ package body Elab.Vhdl_Values.Debug is
             Put ("net ");
             Put_Uns32 (V.Val.N);
             Put (' ');
-            Debug_Typ1 (V.Typ);
+            Debug_Typ1 (V.Typ, 0);
             New_Line;
          when Value_Signal =>
             Put ("signal ");
             Put_Uns32 (Uns32 (V.Val.S));
             Put (": ");
-            Debug_Typ1 (V.Typ);
+            Debug_Typ1 (V.Typ, 0);
             New_Line;
          when Value_Wire =>
             Put ("wire ");
@@ -344,17 +366,17 @@ package body Elab.Vhdl_Values.Debug is
             New_Line;
          when Value_Alias =>
             Put ("an alias: ");
-            Debug_Typ1 (V.Typ);
+            Debug_Typ1 (V.Typ, 0);
             Put (" at offs ");
             Put_Uns32 (V.Val.A_Off.Net_Off);
             Put (" of ");
             Debug_Valtyp ((V.Val.A_Typ, V.Val.A_Obj));
          when Value_Dyn_Alias =>
             Put ("dyn alias: ");
-            Debug_Typ1 (V.Typ);
+            Debug_Typ1 (V.Typ, 0);
          when Value_Sig_Val =>
             Put ("sig val: ");
-            Debug_Typ1 (V.Typ);
+            Debug_Typ1 (V.Typ, 0);
       end case;
    end Debug_Valtyp;
 
