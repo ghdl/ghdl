@@ -3439,6 +3439,7 @@ package body Vhdl.Canon is
                   Pkg_Spec := Get_Uninstantiated_Package_Decl (Pkg_Decl);
                   if Get_Need_Body (Pkg_Spec)
                     and then Get_Macro_Expanded_Flag (Pkg_Spec)
+                    and then not Get_Immediate_Body_Flag (Pkg_Decl)
                   then
                      --  ... that needs a body.  Create the body.
                      Inst_Bod := Sem_Inst.Instantiate_Package_Body (Pkg_Decl);
