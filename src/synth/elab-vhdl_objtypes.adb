@@ -854,7 +854,8 @@ package body Elab.Vhdl_Objtypes is
            | Type_Access =>
             null;
          when Type_Unbounded_Vector
-           | Type_Unbounded_Array =>
+            | Type_Unbounded_Array
+            | Type_Array_Unbounded =>
             declare
                B_Sz : Size_Type;
                B_Al : Palign_Type;
@@ -867,10 +868,9 @@ package body Elab.Vhdl_Objtypes is
                Sz := Sz + B_Sz;
                Al := Palign_Type'Max (Al, B_Al);
             end;
-         when Type_Unbounded_Record
-           | Type_Array_Unbounded =>
-            --  TODO
-            raise Internal_Error;
+         when Type_Unbounded_Record =>
+            --  Same as bounds.
+            Update_Bounds_Size (Typ, Sz, Al);
          when Type_Slice
            | Type_File
            | Type_Protected =>
@@ -932,8 +932,28 @@ package body Elab.Vhdl_Objtypes is
 
             end;
          when Type_Unbounded_Record =>
-            --  TODO
-            raise Internal_Error;
+            declare
+               B_Sz : Size_Type;
+               B_Al : Palign_Type;
+            begin
+               --  Layout of an array is sizes + bounds.
+               B_Sz := 2 * Ghdl_Index_Sz;
+               B_Al := Ghdl_Index_Al;
+               for I in Typ.Rec.E'Range loop
+                  declare
+                     El : Rec_El_Type renames Typ.Rec.E (I);
+                  begin
+                     if not El.Typ.Is_Static then
+                        --  Add offset field (alignment is ok).
+                        B_Sz := B_Sz + Ghdl_Index_Sz;
+                        Update_Layout_Size (El.Typ, B_Sz, B_Al);
+                     end if;
+                  end;
+               end loop;
+               Sz := Align (Sz, B_Al);
+               Sz := Sz + B_Sz;
+               Al := Palign_Type'Max (Al, B_Al);
+            end;
          when Type_Slice
            | Type_File
            | Type_Protected =>
@@ -970,7 +990,7 @@ package body Elab.Vhdl_Objtypes is
          if Parent_Type = null then
             Bnd_Sz := Compute_Bounds_Size (Acc_Type);
          else
-            Bnd_Sz := Parent_Type. Acc_Bnd_Sz;
+            Bnd_Sz := Parent_Type.Acc_Bnd_Sz;
          end if;
       end if;
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Access,

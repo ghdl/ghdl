@@ -167,6 +167,9 @@ package Elab.Vhdl_Objtypes is
       --  True if the size of an object is known at compile time.
       --  Used for layout of records.
       Is_Static : Boolean;
+
+      --  True if the bounds are static.  This is used to compute the size
+      --  of the bounds vector.
       Is_Bnd_Static : Boolean;
 
       --  Number of bytes (when in memory) for this type.
