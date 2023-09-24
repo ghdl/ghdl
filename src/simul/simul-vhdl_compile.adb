@@ -384,7 +384,7 @@ package body Simul.Vhdl_Compile is
                                            * Uns32 (Vhdl_Simul.Sig_Size)));
                end if;
 
-               --  _BND
+               --  _BND (layout)
                if Is_Unbounded then
                   El_Mem := Add_Field_Offset (Mem, El_Info.Field_Bound);
                   Build_Composite_Subtype_Layout
