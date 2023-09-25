@@ -1254,7 +1254,13 @@ package body PSL.Nodes_Meta is
 
    function Has_Value (K : Nkind) return Boolean is
    begin
-      return K = N_Number;
+      case K is
+         when N_Number
+           | N_Name =>
+            return True;
+         when others =>
+            return False;
+      end case;
    end Has_Value;
 
    function Has_Boolean (K : Nkind) return Boolean is
