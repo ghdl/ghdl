@@ -62,6 +62,11 @@ package body Vhdl.Parse_Psl is
          Set_Value (Res, Uns32 (V));
          Scan;
          return Res;
+      elsif Current_Token = Tok_Identifier then
+         Res := Create_Node_Loc(N_Name);
+         Set_Identifier (Res, Current_Identifier);
+         Scan;
+         return Res;
       elsif Current_Token = Tok_Inf then
          Res := Create_Node_Loc (N_Inf);
          Scan;
