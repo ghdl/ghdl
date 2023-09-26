@@ -783,6 +783,7 @@ package body Simul.Vhdl_Elab is
                                  Assocs : Node)
    is
       use Synth.Vhdl_Stmts;
+      Prev_Instance_Pool : constant Areapools.Areapool_Acc := Instance_Pool;
       Marker : Mark_Type;
       Assoc_Inter : Node;
       Assoc : Node;
@@ -799,7 +800,10 @@ package body Simul.Vhdl_Elab is
       Formal_Ep, Actual_Ep : Sub_Signal_Type;
       Is_Collapsed : Boolean;
    begin
+      --  Associations may have expressions and function calls.
       Mark_Expr_Pool (Marker);
+      Instance_Pool := Process_Pool'Access;
+
       Assoc := Assocs;
       Assoc_Inter := Ports;
       while Is_Valid (Assoc) loop
@@ -922,6 +926,8 @@ package body Simul.Vhdl_Elab is
          Release_Expr_Pool (Marker);
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
+
+      Instance_Pool := Prev_Instance_Pool;
    end Gather_Connections;
 
    procedure Gather_Connections_Instantiation_Statement
