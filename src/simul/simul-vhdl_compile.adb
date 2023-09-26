@@ -1026,7 +1026,24 @@ package body Simul.Vhdl_Compile is
             if Get_Deferred_Declaration_Flag (Decl)
               or else Get_Deferred_Declaration (Decl) = Null_Node
             then
-               Build_Object_Decl (Mem, Inst, Decl);
+               declare
+                  Ind : constant Node := Get_Subtype_Indication (Decl);
+                  Ind_Type : constant Node :=
+                    Get_Type_Of_Subtype_Indication (Ind);
+                  Def : constant Node := Get_Type (Decl);
+                  Val : constant Valtyp := Get_Value (Inst, Decl);
+               begin
+                  --  For unbounded subtype indication, the real type is
+                  --  defined by the value.
+                  if Def /= Ind_Type
+                    and then Is_Anonymous_Type_Definition (Def)
+                  then
+                     Build_Subtype_Definition (Mem, Def, Val.Typ);
+                  else
+                     Build_Subtype_Definition (Mem, Ind, Val.Typ);
+                  end if;
+                  Build_Object_Value (Mem, Inst, Decl);
+               end;
             end if;
          when Iir_Kind_Object_Alias_Declaration =>
             declare

@@ -2750,7 +2750,9 @@ package body Trans.Chap3 is
       if Get_Kind (Decl) = Iir_Kind_Constant_Declaration then
          Ind_Type := Get_Type_Of_Subtype_Indication (Ind);
          Def := Get_Type (Decl);
-         if Def /= Ind_Type then
+         if Def /= Ind_Type
+           and then Is_Anonymous_Type_Definition (Def)
+         then
             Push_Identifier_Prefix (Mark2, "OTD");
             Chap3.Translate_Subtype_Definition (Def, With_Vars);
             Pop_Identifier_Prefix (Mark2);
@@ -2781,7 +2783,9 @@ package body Trans.Chap3 is
       if Get_Kind (Decl) = Iir_Kind_Constant_Declaration then
          Ind_Type := Get_Type_Of_Subtype_Indication (Ind);
          Def := Get_Type (Decl);
-         if Def /= Ind_Type then
+         if Def /= Ind_Type
+           and then Is_Anonymous_Type_Definition (Def)
+         then
             Elab_Subtype_Definition (Def);
          end if;
       end if;
