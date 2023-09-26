@@ -399,6 +399,8 @@ package body Elab.Vhdl_Debug is
             | Iir_Kind_Attribute_Specification =>
             --  FIXME: todo ?
             null;
+         when Iir_Kind_Non_Object_Alias_Declaration =>
+            null;
          when Iir_Kind_Type_Declaration =>
             declare
                Def : constant Node := Get_Type_Definition (Decl);
