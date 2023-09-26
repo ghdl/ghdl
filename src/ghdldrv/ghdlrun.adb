@@ -444,6 +444,8 @@ package body Ghdlrun is
          Simul.Main.Flag_Debug_Elab := True;
       elsif Option = "--jit" then
          Run_Mode := Run_Jit;
+      elsif Option = "--elab-jit" then
+         Run_Mode := Run_Elab_Jit;
       elsif Option = "--interp" then
          Run_Mode := Run_Interp;
       elsif Option'Last > 3
