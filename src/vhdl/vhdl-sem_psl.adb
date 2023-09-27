@@ -422,6 +422,60 @@ package body Vhdl.Sem_Psl is
       return Res;
    end Reduce_Logic_Unary_Node;
 
+   function Sem_Number (N : PSL_Node) return PSL_Node
+   is
+      use Vhdl.Sem_Expr;
+      use Vhdl.Std_Package;
+      Expr : Iir;
+   begin
+      case Get_Kind (N) is
+         when N_Inf
+           | N_Number =>
+            return N;
+         when N_HDL_Expr =>
+            Expr := Get_HDL_Node (N);
+            Expr := Sem_Expression_Wildcard
+              (Expr, Wildcard_Any_Integer_Type);
+            Expr := Eval_Expr (Expr);
+            Set_HDL_Node (N, Expr);
+
+            return N;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Sem_Number;
+
+   --  Analyze the field Number of N.
+   procedure Sem_Number (N : PSL_Node)
+   is
+      Num : PSL_Node;
+   begin
+      Num := Get_Number (N);
+      if Num /= Null_PSL_Node then
+         Num := Sem_Number (Num);
+         Set_Number (N, Num);
+      end if;
+   end Sem_Number;
+
+   procedure Sem_Range (N : PSL_Node)
+   is
+      B : PSL_Node;
+   begin
+      B := Get_Low_Bound (N);
+      if B /= Null_PSL_Node then
+         --  In many cases, the range is optional.
+         B := Sem_Number (B);
+         Set_Low_Bound (N, B);
+      end if;
+
+      B := Get_High_Bound (N);
+      if B /= Null_PSL_Node then
+         --  In many cases, the high bound is optional.
+         B := Sem_Number (B);
+         Set_High_Bound (N, B);
+      end if;
+   end Sem_Range;
+
    function Sem_Sequence (Seq : PSL_Node) return PSL_Node
    is
       Res : PSL_Node;
@@ -448,8 +502,15 @@ package body Vhdl.Sem_Psl is
             R := Sem_Sequence (Get_Right (Seq));
             Set_Right (Seq, R);
             return Seq;
-         when N_Star_Repeat_Seq
-            | N_Plus_Repeat_Seq =>
+         when N_Plus_Repeat_Seq =>
+            Res := Get_Sequence (Seq);
+            if Res /= Null_PSL_Node then
+               Res := Sem_Sequence (Res);
+               Set_Sequence (Seq, Res);
+            end if;
+            return Seq;
+         when N_Star_Repeat_Seq =>
+            Sem_Range (Seq);
             Res := Get_Sequence (Seq);
             if Res /= Null_PSL_Node then
                Res := Sem_Sequence (Res);
@@ -500,16 +561,6 @@ package body Vhdl.Sem_Psl is
       Set_Property (N, Prop);
    end Sem_Property;
 
-   procedure Sem_Number (N : PSL_Node)
-   is
-      Num : PSL_Node;
-   begin
-      Num := Get_Number (N);
-      --  FIXME: todo
-      null;
-      Set_Number (N, Num);
-   end Sem_Number;
-
    function Sem_Property (Prop : PSL_Node; Top : Boolean := False)
                          return PSL_Node
    is
@@ -524,6 +575,7 @@ package body Vhdl.Sem_Psl is
             declare
                Seq : PSL_Node;
             begin
+               Sem_Range (Prop);
                Seq := Get_Sequence (Prop);
                if Seq /= Null_PSL_Node then
                   Seq := Sem_Sequence (Seq);
