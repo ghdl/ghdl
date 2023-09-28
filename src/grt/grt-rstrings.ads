@@ -24,44 +24,37 @@
 with Grt.Types; use Grt.Types;
 with System; use System;
 
-package Grt.Vstrings is
+package Grt.Rstrings is
    pragma Preelaborate;
-   --  A Vstring (Variable string) is an object which contains an unbounded
-   --  string.
-   type Vstring is limited private;
+   --  A Rstring is link a Vstring but characters can only be prepended.
+   type Rstring is limited private;
 
-   --  Deallocate all storage internally allocated.
-   procedure Free (Vstr : in out Vstring);
+   --  Deallocate storage associated with Rstr.
+   procedure Free (Rstr : in out Rstring);
 
-   --  Reset VSTR to an empty string.
-   procedure Reset (Vstr : in out Vstring);
+   --  Prepend characters or strings.
+   procedure Prepend (Rstr : in out Rstring; C : Character);
+   procedure Prepend (Rstr : in out Rstring; Str : String);
+   procedure Prepend (Rstr : in out Rstring; Str : Ghdl_C_String);
 
-   --  Append a character.
-   procedure Append (Vstr : in out Vstring; C : Character);
+   --  Get the length of RSTR.
+   function Length (Rstr : Rstring) return Natural;
 
-   --  Append a string.
-   procedure Append (Vstr : in out Vstring; Str : String);
+   --  Return the address of the first character of RSTR.
+   function Get_Address (Rstr : Rstring) return Address;
 
-   --  Append a C string.
-   procedure Append (Vstr : in out Vstring; Str : Ghdl_C_String);
-
-   --  Get length of VSTR.
-   function Length (Vstr : Vstring) return Natural;
-
-   --  Truncate VSTR to LEN.
-   --  It is an error if LEN is greater than the current length.
-   procedure Truncate (Vstr : in out Vstring; Len : Natural);
-
-   --  Return the address of the first character of VSTR.
-   function Get_Address (Vstr : Vstring) return Address;
-
-   --  Get VSTR as a C String.  The NUL character must have been added.
-   function Get_C_String (Vstr : Vstring) return Ghdl_C_String;
+   --  Copy RSTR to STR, and return length of the string to LEN.
+   procedure Copy (Rstr : Rstring; Str : in out String; Len : out Natural);
 
 private
-   type Vstring is record
+   type Rstring is record
+      --  String whose bounds is (1 .. Max).
       Str : Ghdl_C_String := null;
+
+      --  Last index in STR.
       Max : Natural := 0;
-      Len : Natural := 0;
+
+      --  Index of the first character.
+      First : Natural := 1;
    end record;
-end Grt.Vstrings;
+end Grt.Rstrings;

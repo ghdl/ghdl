@@ -25,6 +25,7 @@ with Grt.Types; use Grt.Types;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Vstrings; use Grt.Vstrings;
+with Grt.Rstrings; use Grt.Rstrings;
 with Grt.Stdio; use Grt.Stdio;
 
 package Grt.Rtis_Utils is

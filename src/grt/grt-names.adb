@@ -27,7 +27,7 @@ pragma Unreferenced (System.Storage_Elements);
 with Grt.Processes; use Grt.Processes;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
-with Grt.Vstrings; use Grt.Vstrings;
+with Grt.Rstrings; use Grt.Rstrings;
 
 package body Grt.Names is
    function To_Str_String_Boundp is new Ada.Unchecked_Conversion

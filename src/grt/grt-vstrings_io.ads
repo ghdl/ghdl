@@ -22,6 +22,7 @@
 --  covered by the GNU Public License.
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Vstrings; use Grt.Vstrings;
+with Grt.Rstrings; use Grt.Rstrings;
 
 package Grt.Vstrings_IO is
    --  Display VSTR.

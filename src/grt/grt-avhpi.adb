@@ -21,7 +21,7 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 with Grt.Errors; use Grt.Errors;
-with Grt.Vstrings; use Grt.Vstrings;
+with Grt.Rstrings; use Grt.Rstrings;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
 with Grt.To_Strings;
 

@@ -43,7 +43,7 @@ with Grt.Types;
 with Grt.Vhdl_Types;
 with Grt.Strings;
 with Grt.To_Strings;
-with Grt.Vstrings;
+with Grt.Rstrings;
 
 package body Elab.Vhdl_Expr is
    function Synth_Bounds_From_Length (Atype : Node; Len : Int32)
@@ -1065,7 +1065,7 @@ package body Elab.Vhdl_Expr is
    function Exec_Path_Instance_Name_Attribute
      (Inst : Synth_Instance_Acc; Attr : Iir) return Memtyp
    is
-      use Grt.Vstrings;
+      use Grt.Rstrings;
       use Name_Table;
 
       Is_Instance : constant Boolean :=
