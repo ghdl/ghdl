@@ -1173,7 +1173,7 @@ extern "C" void
 finish_record_aggr(ORecordAggrList *List, OCnode *Res)
 {
   *Res = {LLVMConstStruct(List->Els, List->Len, 0), List->Atype};
-  delete List->Els;
+  delete [] List->Els;
 }
 
 struct OArrayAggrList {
@@ -1199,7 +1199,7 @@ extern "C" void
 finish_array_aggr(OArrayAggrList *List, OCnode *Res)
 {
   *Res = {LLVMConstArray(List->ElType, List->Els, List->Len), List->Atype};
-  delete List->Els;
+  delete [] List->Els;
 }
 
 extern "C" OCnode
@@ -2166,7 +2166,7 @@ new_function_call (OAssocList *Assocs)
   } else {
     Res = nullptr;
   }
-  delete Assocs->Vals;
+  delete [] Assocs->Vals;
   return { Res, Assocs->Subprg->Dtype };
 }
 
@@ -2177,7 +2177,7 @@ new_procedure_call (OAssocList *Assocs)
     LLVMBuildCall2(Builder, Assocs->Subprg->Ftype, Assocs->Subprg->Ref,
                    Assocs->Vals, Assocs->Subprg->Inters.size(), "");
   }
-  delete Assocs->Vals;
+  delete [] Assocs->Vals;
 }
 
 extern "C" void
