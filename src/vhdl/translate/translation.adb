@@ -2152,7 +2152,6 @@ package body Translation is
    begin
       Free_Node_Infos;
       Free_Old_Temp;
-      Trans.Chap10.Free_Identifier_Prefix;
    end Finalize;
 
    procedure Elaborate (Config : Iir; Whole : Boolean)

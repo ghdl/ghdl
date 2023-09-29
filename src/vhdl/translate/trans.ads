@@ -349,9 +349,6 @@ package Trans is
       type Id_Mark_Type is limited private;
       type Local_Identifier_Type is private;
 
-      --  Free the memory for identifier prefix.  Must be called at the end.
-      procedure Free_Identifier_Prefix;
-
       procedure Reset_Identifier_Prefix;
       procedure Push_Identifier_Prefix (Mark : out Id_Mark_Type;
                                         Name : String;

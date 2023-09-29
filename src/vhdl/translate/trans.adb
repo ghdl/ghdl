@@ -719,12 +719,6 @@ package body Trans is
          Identifier_Local := Id;
       end Restore_Local_Identifier;
 
-      procedure Free_Identifier_Prefix is
-      begin
-         pragma Assert (Identifier_Len = 0);
-         Free (Identifier_Buffer);
-      end Free_Identifier_Prefix;
-
       --  Reset the identifier.
       procedure Reset_Identifier_Prefix is
       begin
