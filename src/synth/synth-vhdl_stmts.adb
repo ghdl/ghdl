@@ -730,8 +730,10 @@ package body Synth.Vhdl_Stmts is
         (Syn_Inst, Val, Target.Targ_Type, False, Loc);
       pragma Unreferenced (Val);
       if V = No_Valtyp then
-         --  In case of error.
-         return;
+         --  In case of error - avoid warnings about non-written signals.
+         V := Create_Value_Net
+           (Build_Const_X (Get_Build (Syn_Inst), Target.Targ_Type.W),
+            Target.Targ_Type);
       end if;
 
       case Target.Kind is
@@ -973,7 +975,10 @@ package body Synth.Vhdl_Stmts is
         (Inst, Get_Expression (Stmt), Targ.Targ_Type);
       if Val = No_Valtyp then
          Set_Error (Inst);
-         return;
+         --  Avoid warnings about non-assigned variable.
+         Val := Create_Value_Net
+           (Build_Const_X (Get_Build (Inst), Targ.Targ_Type.W),
+            Targ.Targ_Type);
       end if;
       Synth_Assignment (Inst, Targ, Val, Stmt);
       Release_Expr_Pool (Marker);
