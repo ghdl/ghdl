@@ -2,8 +2,9 @@
 
 . ../../testenv.sh
 
-for t in shift1; do
-    synth_tb $t
-done
+synth_tb shift1
+
+synth_failure repro2.vhdl -e
+synth_failure repro3.vhdl -e
 
 echo "Test successful"

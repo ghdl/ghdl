@@ -4,21 +4,16 @@ use ieee.numeric_std.all;
 
 entity repro2 is
   port (n : natural;
-        en : std_logic;
-        d1 : std_logic_vector(31 downto 0);
+        d1 : std_logic_vector(15 downto 0);
         q : out std_logic_vector(31 downto 0));
 end;
 
 architecture behav of repro2 is
 begin
-  process (n, en)
+  comb : process(d1, n) is
+     variable h : unsigned(31 downto 0);
   begin
-    if en = '1' then
-      q <= d1 or std_logic_vector(to_unsigned(2 ** n, 32));
-    end if;
-
-    if en = '0' then
-      q <= (others => '0');
-    end if;
+    h := resize(unsigned(d1), 32) and to_unsigned(3 ** n-1, 32);
+    q <= std_logic_vector(h);
   end process;
 end;
