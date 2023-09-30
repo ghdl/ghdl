@@ -1385,6 +1385,21 @@ package body Synth.Vhdl_Oper is
          when Iir_Predefined_Integer_Rem =>
             return Synth_Int_Dyadic (Id_Srem);
          when Iir_Predefined_Integer_Exp =>
+            if Is_Static_Val (L.Val) then
+               --  Support 2**X
+               declare
+                  Lint : constant Int64 := Get_Static_Discrete (L);
+                  N : Net;
+               begin
+                  if Lint = 2 then
+                     N := Build_Const_UB32 (Ctxt, 1, L.Typ.W);
+                     N := Build_Shift_Rotate
+                       (Ctxt, Id_Lsl, N, Get_Net (Ctxt, R));
+                     Set_Location (N, Expr);
+                     return Create_Value_Net (N, Res_Typ);
+                  end if;
+               end;
+            end if;
             Error_Msg_Synth
               (Syn_Inst, Expr, "non-constant exponentiation not supported");
             return No_Valtyp;
