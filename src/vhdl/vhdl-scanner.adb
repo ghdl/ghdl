@@ -1010,10 +1010,13 @@ package body Vhdl.Scanner is
       Source : constant File_Buffer_Acc := Current_Context.Source;
       P : Source_Ptr;
 
-      --  Current and next character.
+      --  Current character.
       C : Character;
 
-      Buffer : Vstring (128);
+      Prev_C : Character;
+
+      Vbuf : Vstring (0);
+      Buffer : String (1 .. 128);
       Len : Natural;
    begin
       -- This is an identifier or a key word.
@@ -1068,7 +1071,14 @@ package body Vhdl.Scanner is
          --  Put character in name buffer.  FIXME: compute the hash at the same
          --  time ?
          Len := Len + 1;
-         Append (Buffer, C);
+         if Len <= Buffer'Length then
+            Buffer (Len) := C;
+         else
+            if Len = Buffer'Length + 1 then
+               Append (Vbuf, Buffer);
+            end if;
+            Append (Vbuf, C);
+         end if;
 
          --  Next character.
          P := P + 1;
@@ -1124,8 +1134,8 @@ package body Vhdl.Scanner is
                --  with the same meaning.
                declare
                   Base : Nat32;
-                  Cl : constant Character := Get_C_String (Buffer) (Len);
-                  Cf : constant Character := Get_C_String (Buffer) (1);
+                  Cl : constant Character := Buffer (Len);
+                  Cf : constant Character := Buffer (1);
                begin
                   --  Note: no need to free Buffer, as LEN <= 2.
                   Current_Context.Bit_Str_Base := Cl;
@@ -1166,8 +1176,13 @@ package body Vhdl.Scanner is
             --  It's possible because in the sequence of UTF-8 bytes for the
             --  quote marks, there are invalid character (in the 128-160
             --  range).
+            if Len <= Buffer'Length then
+               Prev_C := Buffer (Len);
+            else
+               Prev_C := Get_C_String (Vbuf) (Len);
+            end if;
             if C = Character'Val (16#80#)
-              and then Get_C_String (Buffer) (Len) = Character'Val (16#e2#)
+              and then Prev_C = Character'Val (16#e2#)
               and then (Source (Pos + 1) = Character'Val (16#98#)
                           or else Source (Pos + 1) = Character'Val (16#99#))
             then
@@ -1215,11 +1230,15 @@ package body Vhdl.Scanner is
       end case;
 
       -- Hash it.
-      Current_Context.Identifier := Get_Identifier
-         (Get_C_String (Buffer) (1 .. Len));
+      if Len <= Buffer'Length then
+         Current_Context.Identifier := Get_Identifier (Buffer (1 .. Len));
+      else
+         Current_Context.Identifier := Get_Identifier
+           (Get_C_String (Vbuf) (1 .. Len));
+         Free (Vbuf);
+      end if;
       Current_Token := Tok_Identifier;
 
-      Free (Buffer);
    end Scan_Identifier;
 
    procedure Scan_Psl_Keyword_Em (Tok : Token_Type; Tok_Em : Token_Type) is
