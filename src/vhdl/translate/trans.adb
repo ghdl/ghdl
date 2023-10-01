@@ -185,7 +185,7 @@ package body Trans is
 
       --  Identifiers.
       --  The following functions are helpers to create ortho identifiers.
-      Identifier_Buffer : Vstring;
+      Identifier_Buffer : Vstring (1024);
       Identifier_Len    : Natural := 0;
       Identifier_Start  : Natural := 1;
 

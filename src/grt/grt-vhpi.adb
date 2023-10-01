@@ -53,7 +53,7 @@ package body Grt.Vhpi is
    Err_Line : Integer_32 := -1;
    Err_Occured : Boolean := False;
 
-   Buf_Err_Message : Vstring;
+   Buf_Err_Message : Vstring (64);
 
    procedure Reset_Error is
    begin

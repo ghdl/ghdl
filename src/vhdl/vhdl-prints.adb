@@ -5621,7 +5621,7 @@ package body Vhdl.Prints is
 
    function Allocate_Handle return Vstring_Acc is
    begin
-      return new Grt.Vstrings.Vstring;
+      return new Grt.Vstrings.Vstring (32);
    end Allocate_Handle;
 
    function Get_Length (Handle : Vstring_Acc) return Natural is

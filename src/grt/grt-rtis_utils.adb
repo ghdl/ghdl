@@ -247,7 +247,7 @@ package body Grt.Rtis_Utils is
       Addr : Address;
       Bounds : Address;
 
-      Name : Vstring;
+      Name : Vstring (32);
 
       procedure Handle_Any (Rti : Ghdl_Rti_Access);
 
@@ -580,7 +580,7 @@ package body Grt.Rtis_Utils is
                          Value : Value_Union;
                          Type_Rti : Ghdl_Rti_Access)
    is
-      Name : Vstring;
+      Name : Vstring (32);
    begin
       Rtis_Utils.Get_Value (Name, Value, Type_Rti);
       Put (Stream, Name);

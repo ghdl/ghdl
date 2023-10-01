@@ -28,7 +28,7 @@ package Grt.Vstrings is
    pragma Preelaborate;
    --  A Vstring (Variable string) is an object which contains an unbounded
    --  string.
-   type Vstring is limited private;
+   type Vstring (Threshold : Natural) is limited private;
 
    --  Deallocate all storage internally allocated.
    procedure Free (Vstr : in out Vstring);
@@ -59,9 +59,12 @@ package Grt.Vstrings is
    function Get_C_String (Vstr : Vstring) return Ghdl_C_String;
 
 private
-   type Vstring is record
+   type Vstring (Threshold : Natural) is limited record
       Str : Ghdl_C_String := null;
       Max : Natural := 0;
       Len : Natural := 0;
+
+      --  The fixed buffer, used when strings len is less than threshold.
+      Fixed : String (1 .. Threshold);
    end record;
 end Grt.Vstrings;

@@ -865,7 +865,7 @@ package body Grt.Vpi is
    -- void  vpi_get_value(vpiHandle expr, p_vpi_value value);
    -- Retrieve the simulation value of an object.
    -- see IEEE 1364-2001, chapter 27.14, page 675
-   Buf_Value : Vstring;
+   Buf_Value : Vstring (64);
 
    procedure Append_Bin (V : Ghdl_U64; Ndigits : Natural) is
    begin

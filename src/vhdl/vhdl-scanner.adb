@@ -1013,7 +1013,7 @@ package body Vhdl.Scanner is
       --  Current and next character.
       C : Character;
 
-      Buffer : Vstring;
+      Buffer : Vstring (128);
       Len : Natural;
    begin
       -- This is an identifier or a key word.
@@ -1127,6 +1127,7 @@ package body Vhdl.Scanner is
                   Cl : constant Character := Get_C_String (Buffer) (Len);
                   Cf : constant Character := Get_C_String (Buffer) (1);
                begin
+                  --  Note: no need to free Buffer, as LEN <= 2.
                   Current_Context.Bit_Str_Base := Cl;
                   if Cl = 'b' then
                      Base := 1;
@@ -1217,6 +1218,8 @@ package body Vhdl.Scanner is
       Current_Context.Identifier := Get_Identifier
          (Get_C_String (Buffer) (1 .. Len));
       Current_Token := Tok_Identifier;
+
+      Free (Buffer);
    end Scan_Identifier;
 
    procedure Scan_Psl_Keyword_Em (Tok : Token_Type; Tok_Em : Token_Type) is
@@ -1465,7 +1468,7 @@ package body Vhdl.Scanner is
    is
       use Grt.Vstrings;
       use Name_Table;
-      Buffer : Vstring;
+      Buffer : Vstring (128);
       Len : Natural;
       C : Character;
    begin
@@ -1686,13 +1689,12 @@ package body Vhdl.Scanner is
       end loop;
    end Skip_Until_EOL;
 
-   --  Scan an identifier within a comment.  Only lower case letters are
-   --  allowed.
+   --  Scan an identifier within a comment.
    procedure Scan_Comment_Identifier (Id : out Name_Id; Create : Boolean)
    is
       use Grt.Vstrings;
       use Name_Table;
-      Buffer : Vstring;
+      Buffer : Vstring (32);
       Len : Natural;
       C : Character;
    begin

@@ -26,10 +26,12 @@ with Grt.C; use Grt.C;
 package body Grt.Vstrings is
    procedure Free (Vstr : in out Vstring) is
    begin
-      Free (To_Address (Vstr.Str));
-      Vstr := (Str => null,
-               Max => 0,
-               Len => 0);
+      if Vstr.Max > Vstr.Threshold then
+         Free (To_Address (Vstr.Str));
+      end if;
+      Vstr.Max := 0;
+      Vstr.Len := 0;
+      Vstr.Str := null;
    end Free;
 
    procedure Reset (Vstr : in out Vstring) is
@@ -42,25 +44,53 @@ package body Grt.Vstrings is
       Nlen : constant Natural := Vstr.Len + Sum;
       Nmax : Natural;
    begin
-      Vstr.Len := Nlen;
       if Nlen <= Vstr.Max then
+         Vstr.Len := Nlen;
          return;
       end if;
+
       if Vstr.Max = 0 then
-         Nmax := 32;
+         --  Initialization.
+         pragma Assert (Vstr.Str = null);
+         Vstr.Max := Vstr.Threshold;
+
+         if Nlen <= Vstr.Threshold then
+            --  Use the fixed part.
+            Vstr.Str := To_Ghdl_C_String (Vstr.Fixed'Address);
+            Vstr.Len := Nlen;
+            return;
+         end if;
+
+         if Vstr.Max /= 0 then
+            Nmax := Vstr.Max;
+         else
+            Nmax := 32;
+         end if;
       else
          Nmax := Vstr.Max;
       end if;
+
+      --  Compute new maximum.  Must be large enough to contain the new
+      --  strings.
       while Nmax < Nlen loop
          Nmax := Nmax * 2;
       end loop;
-      Vstr.Str := To_Ghdl_C_String
-        (Realloc (To_Address (Vstr.Str), size_t (Nmax)));
+
+      --  Realloc buffer.
+      if Vstr.Max <= Vstr.Threshold then
+         --  Move from static buffer to allocaed buffer.
+         Vstr.Str := To_Ghdl_C_String (Malloc (size_t (Nmax)));
+         Vstr.Str (1 .. Vstr.Len) := Vstr.Fixed (1 .. Vstr.Len);
+      else
+         Vstr.Str := To_Ghdl_C_String
+           (Realloc (To_Address (Vstr.Str), size_t (Nmax)));
+      end if;
       if Vstr.Str = null then
          --  Memory exhausted.
          raise Storage_Error;
       end if;
       Vstr.Max := Nmax;
+      Vstr.Len := Nlen;
    end Grow;
 
    procedure Append (Vstr : in out Vstring; C : Character)
