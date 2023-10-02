@@ -1084,14 +1084,18 @@ package body Vhdl.Scanner is
          P := P + 1;
       end loop;
 
-      if Source (P - 1) = '_' then
+      --  P points to the next character.
+      if Source (P - 1) = '_' and Len > 1 then
+         --  The identifier ends with '_'.
          if Allow_PSL then
             --  Some PSL reserved words finish with '_'.
+            --  Do not scan the '_', so remove it from the identifier.
             P := P - 1;
             Len := Len - 1;
             C := '_';
          else
             --  Eat the trailing underscore.
+            --  Set POS for the message.
             Pos := P - 1;
             Error_Msg_Scan ("an identifier cannot finish with '_'");
          end if;
