@@ -1569,6 +1569,8 @@ package body Vhdl.Scanner is
       Current_Context.Identifier := Get_Identifier
          (Get_C_String (Buffer) (1 .. Len));
       Current_Token := Tok_Identifier;
+
+      Free (Buffer);
    end Scan_Extended_Identifier;
 
    procedure Convert_Identifier (Str : in out String; Err : out Boolean)
@@ -1709,11 +1711,11 @@ package body Vhdl.Scanner is
    end Skip_Until_EOL;
 
    --  Scan an identifier within a comment.
-   procedure Scan_Comment_Identifier (Id : out Name_Id; Create : Boolean)
+   procedure Scan_Comment_Identifier (Id : out Name_Id)
    is
-      use Grt.Vstrings;
       use Name_Table;
-      Buffer : Vstring (32);
+      --  No need to use unlimited strings, the identifiers are recognized.
+      Buffer : String (1 .. 32);
       Len : Natural;
       C : Character;
    begin
@@ -1744,7 +1746,7 @@ package body Vhdl.Scanner is
                exit;
          end case;
          Len := Len + 1;
-         Append (Buffer, C);
+         Buffer (Len) := C;
          Pos := Pos + 1;
       end loop;
 
@@ -1753,11 +1755,7 @@ package body Vhdl.Scanner is
          return;
       end if;
 
-      if Create then
-         Id := Get_Identifier (Get_C_String (Buffer) (1 .. Len));
-      else
-         Id := Get_Identifier_No_Create (Get_C_String (Buffer) (1 .. Len));
-      end if;
+      Id := Get_Identifier_No_Create (Buffer (1 .. Len));
    end Scan_Comment_Identifier;
 
    package Directive_Protect is
@@ -1879,13 +1877,10 @@ package body Vhdl.Scanner is
       use Std_Names;
       Id : Name_Id;
    begin
-      Scan_Comment_Identifier (Id, True);
+      Scan_Comment_Identifier (Id);
       case Id is
-         when Null_Identifier =>
-            Warning_Msg_Scan
-              (Warnid_Pragma, "incomplete pragma directive ignored");
          when Name_Translate =>
-            Scan_Comment_Identifier (Id, False);
+            Scan_Comment_Identifier (Id);
             case Id is
                when Name_On =>
                   Scan_Translate_On;
@@ -1912,7 +1907,8 @@ package body Vhdl.Scanner is
             Skip_Until_EOL;
          when others =>
             Warning_Msg_Scan
-              (Warnid_Pragma, "unknown pragma %i ignored", +Id);
+              (Warnid_Pragma,
+               "incomplete or unknown pragma directive ignored");
       end case;
    end Scan_Comment_Pragma;
 
@@ -1923,7 +1919,7 @@ package body Vhdl.Scanner is
       use Std_Names;
       Id : Name_Id;
    begin
-      Scan_Comment_Identifier (Id, False);
+      Scan_Comment_Identifier (Id);
 
       if Id = Null_Identifier then
          return False;
