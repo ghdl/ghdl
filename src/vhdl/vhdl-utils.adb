@@ -1515,8 +1515,17 @@ package body Vhdl.Utils is
 
    function Is_Second_Subprogram_Specification (Spec : Iir) return Boolean
    is
-      Bod : constant Iir := Get_Chain (Spec);
+      Bod : Iir;
    begin
+      Bod := Get_Chain (Spec);
+      if Bod /= Null_Iir
+        and then Get_Kind (Bod) = Iir_Kind_Attribute_Implicit_Declaration
+      then
+         --  Maybe implicit declarations have been inserted before the
+         --  body.
+         Bod := Get_Chain (Bod);
+      end if;
+
       --  FIXME: don't directly use Subprogram_Body as it is not yet correctly
       --  set during instantiation.
       return Get_Has_Body (Spec)
