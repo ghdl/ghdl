@@ -1734,9 +1734,7 @@ package body Vhdl.Sem_Names is
          when Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Interface_File_Declaration
-           | Iir_Kind_External_Signal_Name
-           | Iir_Kind_External_Variable_Name =>
+           | Iir_Kind_Interface_File_Declaration =>
             null;
          when Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration =>
@@ -1745,7 +1743,9 @@ package body Vhdl.Sem_Names is
             if not Get_Is_Within_Flag (Get_Parent (Decl)) then
                return;
             end if;
-         when Iir_Kind_File_Declaration =>
+         when Iir_Kind_File_Declaration
+            | Iir_Kind_External_Signal_Name
+            | Iir_Kind_External_Variable_Name =>
             --  LRM 93 2.2
             --  If a pure function is the parent of a given procedure, then
             --  that procedure must not contain a reference to an explicitly
@@ -1753,6 +1753,9 @@ package body Vhdl.Sem_Names is
             --
             --  A pure function must not contain a reference to an explicitly
             --  declared file.
+
+            --  GHDL: likewise for external names: they cannot appear in
+            --   pure functions.
             if Get_Kind (Subprg) = Iir_Kind_Function_Declaration then
                Error_Pure (Subprg, Obj);
             else
