@@ -512,7 +512,8 @@ package body Simul.Vhdl_Elab is
             if not Is_Uninstantiated_Package (Decl) then
                Gather_Processes_1 (Get_Sub_Instance (Inst, Decl));
             end if;
-         when Iir_Kind_Package_Body =>
+         when Iir_Kind_Package_Body
+            | Iir_Kind_Package_Instantiation_Body =>
             null;
 
          when Iir_Kind_External_Signal_Name =>
@@ -1127,8 +1128,16 @@ package body Simul.Vhdl_Elab is
             Gather_Processes_Stmts
               (Inst, Get_Concurrent_Statement_Chain (N));
          when Iir_Kind_Package_Declaration =>
-            Gather_Processes_Decls
-              (Inst, Get_Declaration_Chain (N));
+            declare
+               Bod : constant Node := Get_Package_Body (N);
+            begin
+               Gather_Processes_Decls
+                 (Inst, Get_Declaration_Chain (N));
+               if Bod /= Null_Node then
+                  Gather_Processes_Decls
+                    (Inst, Get_Declaration_Chain (Bod));
+               end if;
+            end;
          when Iir_Kind_Package_Instantiation_Declaration =>
             Gather_Processes_Decls
               (Inst, Get_Declaration_Chain (N));
