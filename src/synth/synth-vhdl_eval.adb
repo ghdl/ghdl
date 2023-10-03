@@ -613,6 +613,7 @@ package body Synth.Vhdl_Eval is
    function Eval_Signed_To_Log_Vector
      (Arg : Uns64; Sz : Int64; Res_Type : Type_Acc; Loc : Node) return Memtyp
    is
+      Is_Neg : constant Boolean := (Arg and (2 ** (Uns64'Size - 1))) /= 0;
       Len : constant Iir_Index32 := Iir_Index32 (Sz);
       El_Type : constant Type_Acc := Get_Array_Element (Res_Type);
       Res : Memtyp;
@@ -630,8 +631,8 @@ package body Synth.Vhdl_Eval is
                           Std_Ulogic'Val (Std_Logic_0_Pos + D));
          B := Shift_Right_Arithmetic (B, 1);
       end loop;
-      if (Arg >= 0 and (B /= 0 or D /= 0))
-        or else (Arg < 0 and (B /= -1 or D /= 1))
+      if (not Is_Neg and (B /= 0 or D /= 0))
+        or else (Is_Neg and (B /= -1 or D /= 1))
       then
          Warning_Msg_Synth (+Loc, "NUMERIC_STD.TO_SIGNED: vector truncated");
       end if;
