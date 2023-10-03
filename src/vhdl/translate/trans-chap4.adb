@@ -1875,8 +1875,10 @@ package body Trans.Chap4 is
 
       Chap3.Elab_Object_Subtype_Indication (Decl);
 
-      if Get_Kind (Name) in Iir_Kinds_External_Name then
-         --  Not supported...
+      if Get_Kind (Name) in Iir_Kinds_External_Name
+        and then Get_Kind (Get_Parent (Decl)) not in Iir_Kinds_Subprogram_Body
+      then
+         --  Not supported or set by pre-elaboration.
          return;
       end if;
 
