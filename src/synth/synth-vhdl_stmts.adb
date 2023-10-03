@@ -137,11 +137,7 @@ package body Synth.Vhdl_Stmts is
             Dest_Off := Off;
          else
             --  Nested one.
-            --  FIXME
             Dest_Off := Dest_Off + Off;
-            --  if Dest_Off /= (0, 0) then
-            --     Error_Msg_Synth (+Pfx, "nested memory not supported");
-            --  end if;
 
             Dest_Dyn.Voff := Build_Addidx
               (Get_Build (Syn_Inst), Dest_Dyn.Voff, Voff);
@@ -707,14 +703,19 @@ package body Synth.Vhdl_Stmts is
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       W : constant Wire_Id := Get_Value_Wire (Targ_Base);
-      N : Net;
+      V, N : Net;
    begin
       --  Get the whole memory.
       N := Get_Current_Assign_Value (Ctxt, W, Targ_Poff, Targ_Ptyp.W);
       --  Insert the new value.
-      N := Build_Dyn_Insert
-        (Ctxt, N, Get_Net (Ctxt, Val), Targ_Voff, Targ_Eoff);
-      Set_Location (N, Loc);
+      V := Get_Net (Ctxt, Val);
+      if Targ_Ptyp.W <= 1 then
+         --  Dummy insertion.
+         N := V;
+      else
+         N := Build_Dyn_Insert (Ctxt, N, V, Targ_Voff, Targ_Eoff);
+         Set_Location (N, Loc);
+      end if;
       --  Write.
       Phi_Assign_Net (Ctxt, W, N, Targ_Poff);
    end Synth_Assignment_Memory;
@@ -775,18 +776,23 @@ package body Synth.Vhdl_Stmts is
       N : Net;
    begin
       N := Get_Net (Ctxt, Obj);
-      if Dyn.Voff /= No_Net then
-         Synth.Source.Set_Location_Maybe (N, Loc);
-         if Res_Typ.W /= 0 then
+      if Res_Typ.W = Obj.Typ.W then
+         --  The only possible offset is 0.
+         null;
+      elsif Res_Typ.W = 0 then
+         N := Build_Const_X (Ctxt, 0);
+      else
+         if Dyn.Voff /= No_Net then
+            Synth.Source.Set_Location_Maybe (N, Loc);
             --  Do not try to extract if the net is null.
             N := Build_Dyn_Extract (Ctxt, N, Dyn.Voff,
                                     Off + Dyn.Pfx_Off.Net_Off, Res_Typ.W);
+         else
+            pragma Assert (not Is_Static (Obj.Val));
+            N := Build2_Extract (Ctxt, N, Off, Res_Typ.W);
          end if;
-      else
-         pragma Assert (not Is_Static (Obj.Val));
-         N := Build2_Extract (Ctxt, N, Off, Res_Typ.W);
+         Set_Location (N, Loc);
       end if;
-      Set_Location (N, Loc);
       return Create_Value_Net (N, Res_Typ);
    end Synth_Read_Memory;
 

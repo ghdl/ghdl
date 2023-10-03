@@ -1067,6 +1067,9 @@ package body Synth.Vhdl_Expr is
             Off.Mem_Off := Off.Mem_Off
               + Idx_Off.Mem_Off * Size_Type (Stride) * El_Typ.Sz;
          end if;
+      elsif Bnd.Len <= 1 then
+         --  Nothing to select.
+         null;
       else
          Ivoff := Dyn_Index_To_Offset (Ctxt, Bnd, Idx_Val, Idx_Expr);
          Ivoff := Build_Memidx
