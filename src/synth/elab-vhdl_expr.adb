@@ -455,10 +455,12 @@ package body Elab.Vhdl_Expr is
       loop
          Cur_Src := Get_Source_Scope (Cur_Inst);
          if Cur_Src = Null_Node then
+            --  Top level.
             return null;
          end if;
          case Get_Kind (Cur_Src) is
             when Iir_Kind_Architecture_Body
+               | Iir_Kind_Entity_Declaration
                | Iir_Kind_Block_Statement
                | Iir_Kind_Generate_Statement_Body =>
                return Cur_Inst;
@@ -466,6 +468,18 @@ package body Elab.Vhdl_Expr is
               | Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body =>
                null;
+            when Iir_Kind_Package_Declaration =>
+               --  Check if it is within a concurrent region.
+               declare
+                  Sub_Inst : constant Synth_Instance_Acc :=
+                    Get_Instance_Parent (Cur_Inst);
+               begin
+                  if Exec_Pathname_Concurrent_Region (Sub_Inst) /= null then
+                     return Cur_Inst;
+                  else
+                     return null;
+                  end if;
+               end;
             when others =>
                Error_Kind ("exec_pathname_concurrent_region", Cur_Src);
          end case;
@@ -481,6 +495,11 @@ package body Elab.Vhdl_Expr is
       Cur_Path : Node;
    begin
       Cur_Inst := Exec_Pathname_Concurrent_Region (Syn_Inst);
+      if Cur_Inst = null then
+         Error_Msg_Synth
+           (Syn_Inst, Path, "external name is not within a concurrent region");
+         return No_Valtyp;
+      end if;
 
       --  LRM08 8.7 External names
       --  Then, for each occurrence of a circumflex accent followed by a dot,
