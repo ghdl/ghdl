@@ -3128,10 +3128,12 @@ package body Vhdl.Sem is
    procedure Sem_Package_Body (Decl : Iir)
    is
       Package_Ident : constant Name_Id := Get_Identifier (Decl);
+      Is_Top_Level : constant Boolean := not Is_Nested_Package (Decl);
       Package_Decl : Iir;
+      Implicit : Implicit_Declaration_Type;
    begin
       -- First, find the package declaration.
-      if not Is_Nested_Package (Decl) then
+      if Is_Top_Level then
          declare
             Design_Unit: Iir_Design_Unit;
          begin
@@ -3204,11 +3206,19 @@ package body Vhdl.Sem is
       --     body (if any).
       Open_Declarative_Region;
 
+      if Is_Top_Level then
+         Push_Signals_Declarative_Part (Implicit, Decl);
+      end if;
+
       Sem_Scopes.Add_Package_Declarations (Package_Decl);
 
       Sem_Declaration_Chain (Decl);
       Check_Full_Declaration (Decl, Decl);
       Check_Full_Declaration (Package_Decl, Decl);
+
+      if Is_Top_Level then
+         Pop_Signals_Declarative_Part (Implicit);
+      end if;
 
       Close_Declarative_Region;
       Set_Is_Within_Flag (Package_Decl, False);
