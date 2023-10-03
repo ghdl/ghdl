@@ -2038,8 +2038,20 @@ package body Vhdl.Sem_Decls is
             pragma Assert (Flags.Flag_Force_Analysis);
             return Alias;
          when Iir_Kinds_External_Name =>
-            Sem_External_Name (Name, True);
-            Sig := Null_Iir;
+            declare
+               Implicit_Decl : Boolean;
+            begin
+               if Get_Kind (Get_Parent (Alias)) in Iir_Kinds_Subprogram_Body
+               then
+                  --  Create an implicit declaration for the external name,
+                  --  so that it will be elaborated at start.
+                  Implicit_Decl := True;
+               else
+                  Implicit_Decl := False;
+               end if;
+               Sem_External_Name (Name, not Implicit_Decl);
+               Sig := Null_Iir;
+            end;
          when others =>
             Sem_Name (Name);
             Sig := Null_Iir;
