@@ -80,14 +80,43 @@ package body Translation is
       Current_Filename_Node := Info.Design_Filename;
    end Gen_Filename;
 
+   procedure Push_Unit_Prefix (Unit : Iir_Design_Unit; Mark : out Id_Mark_Type)
+   is
+      Design_File : constant Iir_Design_File := Get_Design_File (Unit);
+      Lib_Unit : constant Iir := Get_Library_Unit (Unit);
+      Lib : constant Iir := Get_Library (Design_File);
+      Mark2 : Id_Mark_Type;
+      Id : Name_Id;
+   begin
+      --  Create the prefix for identifiers.
+      Reset_Identifier_Prefix;
+      if Lib = Libraries.Work_Library then
+         Id := Libraries.Work_Library_Name;
+      else
+         Id := Get_Identifier (Lib);
+      end if;
+      Push_Identifier_Prefix (Mark, Id);
+
+      if Get_Kind (Lib_Unit) = Iir_Kind_Architecture_Body then
+         --  Put 'ARCH' between the entity name and the architecture name, to
+         --  avoid a name clash with names from entity (eg an entity port with
+         --  the same name as an architecture).
+         Push_Identifier_Prefix
+           (Mark2, Get_Identifier (Get_Entity (Lib_Unit)));
+         Push_Identifier_Prefix (Mark2, "ARCH");
+      end if;
+      Id := Get_Identifier (Lib_Unit);
+      if Id /= Null_Identifier then
+         Push_Identifier_Prefix (Mark2, Id);
+      end if;
+   end Push_Unit_Prefix;
+
    --  Decorate the tree in order to be usable with the internal simulator.
    procedure Translate (Unit : Iir_Design_Unit; Main : Boolean)
    is
       Design_File : constant Iir_Design_File := Get_Design_File (Unit);
       Lib_Unit : constant Iir := Get_Library_Unit (Unit);
-      Lib : Iir_Library_Declaration;
-      Lib_Mark, Ent_Mark, Sep_Mark, Unit_Mark : Id_Mark_Type;
-      Id : Name_Id;
+      Mark : Id_Mark_Type;
    begin
       Update_Node_Infos;
 
@@ -123,27 +152,7 @@ package body Translation is
       end if;
 
       --  Create the prefix for identifiers.
-      Lib := Get_Library (Get_Design_File (Unit));
-      Reset_Identifier_Prefix;
-      if Lib = Libraries.Work_Library then
-         Id := Libraries.Work_Library_Name;
-      else
-         Id := Get_Identifier (Lib);
-      end if;
-      Push_Identifier_Prefix (Lib_Mark, Id);
-
-      if Get_Kind (Lib_Unit) = Iir_Kind_Architecture_Body then
-         --  Put 'ARCH' between the entity name and the architecture name, to
-         --  avoid a name clash with names from entity (eg an entity port with
-         --  the same name as an architecture).
-         Push_Identifier_Prefix (Ent_Mark,
-                                 Get_Identifier (Get_Entity (Lib_Unit)));
-         Push_Identifier_Prefix (Sep_Mark, "ARCH");
-      end if;
-      Id := Get_Identifier (Lib_Unit);
-      if Id /= Null_Identifier then
-         Push_Identifier_Prefix (Unit_Mark, Id);
-      end if;
+      Push_Unit_Prefix (Unit, Mark);
 
       if Main then
          Set_Global_Storage (O_Storage_Public);
@@ -186,7 +195,7 @@ package body Translation is
          when Iir_Kind_Configuration_Declaration =>
             New_Debug_Comment_Decl
               ("configuration " & Image_Identifier (Lib_Unit));
-            if Id = Null_Identifier then
+            if Get_Identifier (Lib_Unit) = Null_Identifier then
                --  Default configuration.
                declare
                   Mark : Id_Mark_Type;
@@ -226,14 +235,7 @@ package body Translation is
       Current_Filename_Node := O_Dnode_Null;
       Current_Library_Unit := Null_Iir;
 
-      if Id /= Null_Identifier then
-         Pop_Identifier_Prefix (Unit_Mark);
-      end if;
-      if Get_Kind (Lib_Unit) = Iir_Kind_Architecture_Body then
-         Pop_Identifier_Prefix (Sep_Mark);
-         Pop_Identifier_Prefix (Ent_Mark);
-      end if;
-      Pop_Identifier_Prefix (Lib_Mark);
+      Pop_Identifier_Prefix (Mark);
    end Translate;
 
    procedure Initialize
