@@ -245,6 +245,7 @@ package body Elab.Vhdl_Decls is
    procedure Elab_Object_Alias_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
+      Name : constant Node := Get_Name (Decl);
       Marker : Mark_Type;
       Off : Value_Offsets;
       Res : Valtyp;
@@ -260,14 +261,23 @@ package body Elab.Vhdl_Decls is
          Obj_Typ := null;
       end if;
 
-      Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl), Base, Typ, Off);
-      Res := Create_Value_Alias (Base, Off, Typ, Expr_Pool'Access);
-      if Obj_Typ /= null and then Obj_Typ.Kind not in Type_Scalars then
-         --  Reshape bounds.
-         Res := Exec_Subtype_Conversion (Res, Obj_Typ, True, Decl);
+      if Get_Kind (Name) in Iir_Kinds_External_Name then
+         Base := Exec_External_Name (Syn_Inst, Name);
+         Typ := Base.Typ;
+         Off := No_Value_Offsets;
+      else
+         Synth_Assignment_Prefix (Syn_Inst, Name, Base, Typ, Off);
       end if;
-      Res.Typ := Unshare (Res.Typ, Instance_Pool);
-      Res := Unshare (Res, Instance_Pool);
+      if Base /= No_Valtyp then
+         --  In case of error (invalid name or invalid external name).
+         Res := Create_Value_Alias (Base, Off, Typ, Expr_Pool'Access);
+         if Obj_Typ /= null and then Obj_Typ.Kind not in Type_Scalars then
+            --  Reshape bounds.
+            Res := Exec_Subtype_Conversion (Res, Obj_Typ, True, Decl);
+         end if;
+         Res.Typ := Unshare (Res.Typ, Instance_Pool);
+         Res := Unshare (Res, Instance_Pool);
+      end if;
       Create_Object (Syn_Inst, Decl, Res);
       Release_Expr_Pool (Marker);
    end Elab_Object_Alias_Declaration;
