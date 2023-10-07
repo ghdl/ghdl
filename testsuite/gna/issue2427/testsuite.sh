@@ -5,6 +5,8 @@
 GHDL_STD_FLAGS=--std=93
 analyze_failure pkg.vhdl
 
+analyze repro2.vhdl
+
 GHDL_STD_FLAGS=--std=93c
 analyze pkg.vhdl
 analyze ent.vhdl
