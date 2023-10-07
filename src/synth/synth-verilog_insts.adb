@@ -40,6 +40,8 @@ with Verilog.Vpi;
 with Verilog.Sem_Instances;
 with Verilog.Sem_Names;
 with Verilog.Bignums;
+with Verilog.Storages;
+with Verilog.Allocates;
 
 with Vhdl.Nodes;
 with Vhdl.Errors;
@@ -90,10 +92,13 @@ package body Synth.Verilog_Insts is
    function Equal (Ln : Node; Ls : Scope_Acc; Rn : Node; Rs : Scope_Acc)
                   return Boolean
    is
+      pragma Unreferenced (Ls, Rs);
       use Verilog.Bignums;
+      use Verilog.Storages;
+      use Verilog.Allocates;
       Lt : constant Node := Get_Param_Type (Ln);
       Rt : constant Node := Get_Param_Type (Rn);
-      Lv, Rv : Valtyp;
+      Lv, Rv : Data_Ptr;
    begin
       --  First: type
       if Lt /= Rt then
@@ -101,14 +106,13 @@ package body Synth.Verilog_Insts is
       end if;
 
       --  Second: value
-      Lv := Get_Obj_Value (Ls, Ln);
-      Rv := Get_Obj_Value (Rs, Rn);
-      pragma Assert (Get_Kind (Lv.Typ) = Get_Kind (Rv.Typ));
-      case Get_Kind (Lv.Typ) is
+      Lv := Get_Parameter_Data (Ln);
+      Rv := Get_Parameter_Data (Rn);
+      case Get_Kind (Lt) is
          when N_Log_Packed_Array_Cst =>
             return Compute_Log_Eq
-              (To_Logvec_Ptr (Lv.Mem), To_Logvec_Ptr (Rv.Mem),
-               Get_Type_Width (Lv.Typ), True) = V_1;
+              (To_Logvec_Ptr (Lv), To_Logvec_Ptr (Rv),
+               Get_Type_Width (Lt), True) = V_1;
          when others =>
             raise Internal_Error;
       end case;
