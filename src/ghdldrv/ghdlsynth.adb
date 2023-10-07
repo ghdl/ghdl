@@ -44,10 +44,11 @@ with Netlists.Errors;
 with Netlists.Inference;
 with Netlists.Rename;
 
+with Elab.Debugger;
+with Elab.Vhdl_Errors;
 with Elab.Vhdl_Annotations;
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Insts;
-with Elab.Debugger;
 with Elab.Vhdl_Objtypes;
 
 with Synthesis;
@@ -289,6 +290,8 @@ package body Ghdlsynth is
       Common_Compile_Init (False);
       --  Will elaborate.
       Flags.Flag_Elaborate := True;
+
+      Elab.Vhdl_Errors.Debug_Handler := Elab.Debugger.Debug_Error'Access;
 
       --  Load content only if there are no files.
       Libraries.Load_Work_Library (Load_Work);

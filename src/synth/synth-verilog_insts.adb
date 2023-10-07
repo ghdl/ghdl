@@ -204,7 +204,7 @@ package body Synth.Verilog_Insts is
             use Vhdl.Errors;
          begin
             Elab.Vhdl_Errors.Error_Msg_Elab
-              (+Vhd_Ent, "no architecture for %n", +Vhd_Ent);
+              (Vhd_Inst, Vhd_Ent, "no architecture for %n", +Vhd_Ent);
          end;
          return No_Module;
       end if;

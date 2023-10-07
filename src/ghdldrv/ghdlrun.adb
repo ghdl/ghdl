@@ -57,7 +57,7 @@ with Simul.Vhdl_Simul;
 with Simul.Vhdl_Compile;
 
 with Synth.Flags;
-with Synth.Errors;
+with Elab.Vhdl_Errors;
 with Synth.Vhdl_Foreign;
 
 with Grt.Main;
@@ -181,7 +181,7 @@ package body Ghdlrun is
            | Run_Jit =>
             --  Set flags.
             Synth.Flags.Flag_Simulation := True;
-            Synth.Errors.Debug_Handler := Elab.Debugger.Debug_Error'Access;
+            Elab.Vhdl_Errors.Debug_Handler := Elab.Debugger.Debug_Error'Access;
             Synth.Vhdl_Foreign.Initialize;
 
             --  As all design units are loaded, late semantic checks can be

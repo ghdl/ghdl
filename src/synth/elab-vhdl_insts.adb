@@ -126,7 +126,8 @@ package body Elab.Vhdl_Insts is
                   Set_Error (Sub_Inst);
                elsif not Is_Static (Val.Val) then
                   Error_Msg_Elab
-                    (+Assoc, "value of generic %i must be static", +Inter);
+                    (Syn_Inst, Assoc,
+                     "value of generic %i must be static", +Inter);
                   Val := No_Valtyp;
                   Set_Error (Sub_Inst);
                end if;
@@ -595,7 +596,7 @@ package body Elab.Vhdl_Insts is
                      end case;
                      if not Same then
                         Error_Msg_Elab
-                          (+Assoc,
+                          (Syn_Inst, Assoc,
                            "range of formal %i is different from formal range",
                            +Inter);
                      end if;

@@ -592,7 +592,8 @@ package body Synth.Vhdl_Insts is
       Build => Build,
       Equal => Equal);
 
-   function Is_Arch_Black_Box (Arch : Node) return Boolean
+   function Is_Arch_Black_Box (Inst : Synth_Instance_Acc; Arch : Node)
+                              return Boolean
    is
       use Vhdl.Std_Package;
       use Elab.Vhdl_Errors;
@@ -616,7 +617,7 @@ package body Synth.Vhdl_Insts is
                when Std_Names.Name_Syn_Black_Box =>
                   if Get_Type (Attr_Decl) /= Boolean_Type_Definition then
                      Error_Msg_Elab
-                       (+Attr_Decl,
+                       (Inst, Attr_Decl,
                         "type of syn_black_box attribute must be boolean");
                      return True;
                   end if;
@@ -625,7 +626,7 @@ package body Synth.Vhdl_Insts is
                      --  Do we really require the value to be static if the
                      --  architecture has been elaborated ?
                      Error_Msg_Elab
-                       (+Spec, "value of syn_black_box must be static");
+                       (Inst, Spec, "value of syn_black_box must be static");
                      return True;
                   end if;
                   if Vhdl.Evaluation.Eval_Pos (Val) /= 0 then
@@ -642,7 +643,7 @@ package body Synth.Vhdl_Insts is
 
    function Interning_Get (Param : Inst_Params) return Inst_Object is
    begin
-      if Is_Arch_Black_Box (Param.Arch) then
+      if Is_Arch_Black_Box (Param.Syn_Inst, Param.Arch) then
          return Insts_Interning.Get ((Decl => Param.Decl,
                                       Arch => Null_Node,
                                       Config => Null_Node,

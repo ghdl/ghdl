@@ -16,6 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Elab.Vhdl_Errors; use Elab.Vhdl_Errors;
+
 package body Synth.Errors is
    procedure Error_Msg_Netlist (Loc : Location_Type;
                                 Msg : String;

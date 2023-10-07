@@ -20,7 +20,6 @@ with Types; use Types;
 with Files_Map;
 with Name_Table;
 
-with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 
 with Grt.Types; use Grt.Types;
@@ -250,7 +249,8 @@ package body Elab.Vhdl_Files is
       if Status /= Op_Ok then
          if Status = Op_Name_Error then
             Error_Msg_Elab
-              (+Decl, "cannot open file: " & C_Name (1 .. C_Name_Len));
+              (Syn_Inst, Decl,
+               "cannot open file: " & C_Name (1 .. C_Name_Len));
             Set_Error (Syn_Inst);
          else
             File_Error (Syn_Inst, Decl, Status);
@@ -310,7 +310,8 @@ package body Elab.Vhdl_Files is
       if Status /= Op_Ok then
          if Status = Op_Name_Error then
             Error_Msg_Elab
-              (+Loc, "cannot open file: " & C_Name (1 .. C_Name_Len));
+              (Syn_Inst, Loc,
+               "cannot open file: " & C_Name (1 .. C_Name_Len));
             raise File_Execution_Error;
          else
             File_Error (Syn_Inst, Loc, Status);

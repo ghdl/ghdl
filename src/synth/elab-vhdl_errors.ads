@@ -16,14 +16,18 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Types; use Types;
 with Errorout; use Errorout;
 
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+with Vhdl.Nodes; use Vhdl.Nodes;
+
 package Elab.Vhdl_Errors is
-   procedure Error_Msg_Elab (Loc : Location_Type;
+   procedure Error_Msg_Elab (Syn_Inst : Synth_Instance_Acc;
+                             Loc : Node;
                              Msg : String;
                              Arg1 : Earg_Type);
-   procedure Error_Msg_Elab (Loc : Location_Type;
+   procedure Error_Msg_Elab (Syn_Inst : Synth_Instance_Acc;
+                             Loc : Node;
                              Msg : String;
                              Args : Earg_Arr := No_Eargs);
 
@@ -36,4 +40,8 @@ package Elab.Vhdl_Errors is
    --  procedure Info_Msg_Synth (Loc : Location_Type;
    --                            Msg : String;
    --                            Args : Earg_Arr := No_Eargs);
+
+   type Handler_Access is access procedure (Inst : Synth_Instance_Acc;
+                                            Loc : Node);
+   Debug_Handler : Handler_Access;
 end Elab.Vhdl_Errors;

@@ -58,7 +58,4 @@ package Synth.Errors is
                              Msg : String;
                              Args : Earg_Arr := No_Eargs);
 
-   type Handler_Access is access procedure (Inst : Synth_Instance_Acc;
-                                            Loc : Node);
-   Debug_Handler : Handler_Access;
 end Synth.Errors;

@@ -16,21 +16,31 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Vhdl.Errors; use Vhdl.Errors;
+
 package body Elab.Vhdl_Errors is
-   procedure Error_Msg_Elab (Loc : Location_Type;
+   procedure Error_Msg_Elab (Syn_Inst : Synth_Instance_Acc;
+                             Loc : Node;
                              Msg : String;
                              Arg1 : Earg_Type) is
    begin
       Report_Msg (Msgid_Error, Errorout.Elaboration,
                   +Loc, Msg, (1 => Arg1));
+      if Syn_Inst /= null and then Debug_Handler /= null then
+         Debug_Handler (Syn_Inst, Loc);
+      end if;
    end Error_Msg_Elab;
 
-   procedure Error_Msg_Elab (Loc : Location_Type;
+   procedure Error_Msg_Elab (Syn_Inst : Synth_Instance_Acc;
+                             Loc : Node;
                              Msg : String;
                              Args : Earg_Arr := No_Eargs) is
    begin
       Report_Msg (Msgid_Error, Errorout.Elaboration,
                   +Loc, Msg, Args);
+      if Syn_Inst /= null and then Debug_Handler /= null then
+         Debug_Handler (Syn_Inst, Loc);
+      end if;
    end Error_Msg_Elab;
 
    --  procedure Warning_Msg_Synth (Loc : Location_Type;

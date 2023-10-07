@@ -766,7 +766,7 @@ package body Elab.Vhdl_Expr is
 
       Dtype := Get_Subtype_Object (Syn_Inst, Etype);
       if not Is_Static (V.Val) then
-         Error_Msg_Elab (+Attr, "parameter of 'value must be static");
+         Error_Msg_Elab (Syn_Inst, Attr, "parameter of 'value must be static");
          return No_Valtyp;
       end if;
 
@@ -846,7 +846,7 @@ package body Elab.Vhdl_Expr is
       end if;
       Dtype := Get_Subtype_Object (Syn_Inst, Etype);
       if not Is_Static (V.Val) then
-         Error_Msg_Elab (+Attr, "parameter of 'image must be static");
+         Error_Msg_Elab (Syn_Inst, Attr, "parameter of 'image must be static");
          return No_Valtyp;
       end if;
 
@@ -870,10 +870,11 @@ package body Elab.Vhdl_Expr is
       return Create_Value_Memtyp (Res);
    end Exec_Instance_Name_Attribute;
 
-   procedure Check_Matching_Bounds (L, R : Type_Acc; Loc : Node) is
+   procedure Check_Matching_Bounds (Syn_Inst : Synth_Instance_Acc;
+                                    L, R : Type_Acc; Loc : Node) is
    begin
       if not Are_Types_Equal (L, R) then
-         Error_Msg_Elab (+Loc, "non matching bounds");
+         Error_Msg_Elab (Syn_Inst, Loc, "non matching bounds");
       end if;
    end Check_Matching_Bounds;
 

@@ -1271,7 +1271,7 @@ package body Synth.Vhdl_Oper is
                Result_Typ : Type_Acc;
                N : Net;
             begin
-               Check_Matching_Bounds (Le_Typ, R.Typ, Expr);
+               Check_Matching_Bounds (Syn_Inst, Le_Typ, R.Typ, Expr);
                N := Build2_Concat2 (Ctxt, Ln, Get_Net (Ctxt, R));
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
@@ -1294,7 +1294,7 @@ package body Synth.Vhdl_Oper is
                Result_Typ : Type_Acc;
                N : Net;
             begin
-               Check_Matching_Bounds (L.Typ, Re_Typ, Expr);
+               Check_Matching_Bounds (Syn_Inst, L.Typ, Re_Typ, Expr);
                N := Build2_Concat2 (Ctxt, Get_Net (Ctxt, L), Rn);
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
@@ -1315,7 +1315,7 @@ package body Synth.Vhdl_Oper is
                Bnd : Bound_Type;
                Result_Typ : Type_Acc;
             begin
-               Check_Matching_Bounds (L.Typ, R.Typ, Expr);
+               Check_Matching_Bounds (Syn_Inst, L.Typ, R.Typ, Expr);
                N := Build2_Concat2
                  (Ctxt, Get_Net (Ctxt, L), Get_Net (Ctxt, R));
                Set_Location (N, Expr);
@@ -1338,7 +1338,7 @@ package body Synth.Vhdl_Oper is
                Result_Typ : Type_Acc;
                N : Net;
             begin
-               Check_Matching_Bounds (Le_Typ, Re_Typ, Expr);
+               Check_Matching_Bounds (Syn_Inst, Le_Typ, Re_Typ, Expr);
                N := Build2_Concat2 (Ctxt, Ln, Rn);
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length

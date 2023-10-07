@@ -73,7 +73,7 @@ package body Elab.Vhdl_Types is
       Strip_Const (R);
 
       if not (Is_Static_Val (L.Val) and Is_Static_Val (R.Val)) then
-         Error_Msg_Elab (+Rng, "limits of range are not constant");
+         Error_Msg_Elab (Syn_Inst, Rng, "limits of range are not constant");
          Set_Error (Syn_Inst);
          return (Dir => Get_Direction (Rng),
                  Left => 0,
