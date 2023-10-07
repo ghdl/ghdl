@@ -2867,8 +2867,10 @@ package body Synth.Vhdl_Stmts is
 
       Pop_Phi (Subprg_Phi);
 
-      Vhdl_Decls.Finalize_Declarations
-        (C.Inst, Get_Declaration_Chain (Bod), True);
+      if not Is_Error (C.Inst) then
+         Vhdl_Decls.Finalize_Declarations
+           (C.Inst, Get_Declaration_Chain (Bod), True);
+      end if;
 
       --  Propagate assignments.
       --  Wires that have been created for this subprogram will be destroyed.

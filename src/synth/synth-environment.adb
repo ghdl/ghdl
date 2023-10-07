@@ -228,6 +228,9 @@ package body Synth.Environment is
                      end loop;
                      Wire_Id_Table.Table (Last) := Wire_Rec;
                   end if;
+               when Wire_Variable =>
+                  --  In case of error.
+                  null;
                when others =>
                   raise Internal_Error;
             end case;
