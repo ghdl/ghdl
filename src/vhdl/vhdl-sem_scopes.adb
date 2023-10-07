@@ -1008,6 +1008,7 @@ package body Vhdl.Sem_Scopes is
    begin
       --  Compute wether the current interpretation should be hidden or not.
       if Valid_Interpretation (Raw_Inter)
+        and then not Is_Conflict_Declaration (Raw_Inter)
         and then Is_Overloadable (Get_Declaration (Raw_Inter))
       then
          Prev_Hidden := False;
