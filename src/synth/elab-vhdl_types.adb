@@ -33,6 +33,7 @@ with Elab.Vhdl_Errors; use Elab.Vhdl_Errors;
 
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Errors;
+with Synth.Vhdl_Context;
 
 package body Elab.Vhdl_Types is
    function Synth_Subtype_Indication_With_Parent
@@ -53,6 +54,7 @@ package body Elab.Vhdl_Types is
    function Synth_Discrete_Range_Expression
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type
    is
+      use Synth.Vhdl_Context;
       L, R : Valtyp;
       Lval, Rval : Int64;
    begin
@@ -70,7 +72,7 @@ package body Elab.Vhdl_Types is
       Strip_Const (L);
       Strip_Const (R);
 
-      if not (Is_Static (L.Val) and Is_Static (R.Val)) then
+      if not (Is_Static_Val (L.Val) and Is_Static_Val (R.Val)) then
          Error_Msg_Elab (+Rng, "limits of range are not constant");
          Set_Error (Syn_Inst);
          return (Dir => Get_Direction (Rng),
@@ -79,8 +81,8 @@ package body Elab.Vhdl_Types is
                  Is_Signed => False);
       end if;
 
-      Lval := Read_Discrete (L);
-      Rval := Read_Discrete (R);
+      Lval := Get_Static_Discrete (L);
+      Rval := Get_Static_Discrete (R);
       return Build_Discrete_Range_Type (Lval, Rval, Get_Direction (Rng));
    end Synth_Discrete_Range_Expression;
 
