@@ -279,13 +279,10 @@ package body Vhdl.Sem_Specs is
 
          --  If -frelaxed, specifying an attribute of class 'type' to
          --  an anonynous type declaration is allowed.
-         Is_Anon_Type := Get_Kind (Decl) = Iir_Kind_Subtype_Declaration
-           and then Get_Entity_Class (Attr) = Tok_Type
-           and then Get_Type (Decl) /= Null_Iir
-           and then Get_Base_Type (Get_Type (Decl)) /= Null_Iir
-           and then (Get_Kind (Get_Type_Declarator
-                                 (Get_Base_Type (Get_Type (Decl))))
-                       = Iir_Kind_Anonymous_Type_Declaration);
+         Is_Anon_Type :=
+           (Get_Kind (Decl) = Iir_Kind_Subtype_Declaration
+              or else Get_Kind (Decl) = Iir_Kind_Type_Declaration)
+           and then Attr_Class = Tok_Type;
 
          if Is_Anon_Type then
             --  The type declaration declares an anonymous type
