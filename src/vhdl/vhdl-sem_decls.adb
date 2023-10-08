@@ -2851,6 +2851,44 @@ package body Vhdl.Sem_Decls is
       End_Of_Declarations_For_Implicit_Declarations (Parent, Last_Decl);
    end Sem_Declaration_Chain;
 
+   procedure Mark_Declarations_Elaborated (Hdr : Iir; Flag : Boolean)
+   is
+      Decl : Iir;
+   begin
+      Decl := Get_Declaration_Chain (Hdr);
+      while Decl /= Null_Iir loop
+         case Get_Kind (Decl) is
+            when Iir_Kinds_Subprogram_Declaration =>
+               --  The flag can always be set, but not cleared on implicit
+               --  subprograms.
+               if Flag
+                 or else
+                 Get_Implicit_Definition (Decl) not in Iir_Predefined_Implicit
+               then
+                  Set_Elaborated_Flag (Decl, Flag);
+               end if;
+            when Iir_Kind_Type_Declaration =>
+               declare
+                  Def : constant Iir := Get_Type_Definition (Decl);
+               begin
+                  if Get_Kind (Def) = Iir_Kind_Protected_Type_Declaration then
+                     --  Mark the protected type as elaborated.
+                     --  Mark the methods as elaborated.
+                     Set_Elaborated_Flag (Def, Flag);
+                     Mark_Declarations_Elaborated (Def, Flag);
+                  end if;
+               end;
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               if not Get_Immediate_Body_Flag (Decl) then
+                  Mark_Declarations_Elaborated (Decl, Flag);
+               end if;
+            when others =>
+               null;
+         end case;
+         Decl := Get_Chain (Decl);
+      end loop;
+   end Mark_Declarations_Elaborated;
+
    procedure Check_Full_Declaration (Decls_Parent : Iir; Decl: Iir)
    is
       procedure Warn_Unused (E : Iir) is
@@ -2962,6 +3000,10 @@ package body Vhdl.Sem_Decls is
                  and then Get_Package_Body (El) = Null_Iir
                then
                   Error_Msg_Sem (+El, "missing package body for %n", +El);
+               end if;
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               if not Get_Immediate_Body_Flag (El) then
+                  Mark_Declarations_Elaborated (El, True);
                end if;
             when others =>
                null;

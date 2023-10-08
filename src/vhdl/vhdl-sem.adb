@@ -2998,43 +2998,6 @@ package body Vhdl.Sem is
       return False;
    end Is_Package_Macro_Expanded;
 
-   --  Mark declarations of HDR elaboration status to FLAG.
-   --  Set to true at then end of a package declaration, but reset at the
-   --  beginning of body analysis.
-   procedure Mark_Declarations_Elaborated (Hdr : Iir; Flag : Boolean)
-   is
-      Decl : Iir;
-   begin
-      Decl := Get_Declaration_Chain (Hdr);
-      while Decl /= Null_Iir loop
-         case Get_Kind (Decl) is
-            when Iir_Kinds_Subprogram_Declaration =>
-               --  The flag can always be set, but not cleared on implicit
-               --  subprograms.
-               if Flag
-                 or else
-                 Get_Implicit_Definition (Decl) not in Iir_Predefined_Implicit
-               then
-                  Set_Elaborated_Flag (Decl, Flag);
-               end if;
-            when Iir_Kind_Type_Declaration =>
-               declare
-                  Def : constant Iir := Get_Type_Definition (Decl);
-               begin
-                  if Get_Kind (Def) = Iir_Kind_Protected_Type_Declaration then
-                     --  Mark the protected type as elaborated.
-                     --  Mark the methods as elaborated.
-                     Set_Elaborated_Flag (Def, Flag);
-                     Mark_Declarations_Elaborated (Def, Flag);
-                  end if;
-               end;
-            when others =>
-               null;
-         end case;
-         Decl := Get_Chain (Decl);
-      end loop;
-   end Mark_Declarations_Elaborated;
-
    --  LRM 2.5  Package Declarations.
    procedure Sem_Package_Declaration (Pkg : Iir_Package_Declaration)
    is
@@ -3213,7 +3176,11 @@ package body Vhdl.Sem is
       Sem_Scopes.Add_Package_Declarations (Package_Decl);
 
       Sem_Declaration_Chain (Decl);
+
+      --  Check presence of bodies for declarations in the package body.
       Check_Full_Declaration (Decl, Decl);
+
+      --  Check presence of bodies for declarations in the package declaration.
       Check_Full_Declaration (Package_Decl, Decl);
 
       if Is_Top_Level then
@@ -3259,6 +3226,7 @@ package body Vhdl.Sem is
       Hdr : Iir;
       Pkg : Iir;
       Bod : Iir_Design_Unit;
+      Parent : Iir;
    begin
       Sem_Scopes.Add_Name (Decl);
       Set_Visible_Flag (Decl, True);
@@ -3308,6 +3276,21 @@ package body Vhdl.Sem is
       --  Instantiate the declaration after analyse of the body.  So that
       --  the use_flag on the declaration can be propagated to the instance.
       Sem_Inst.Instantiate_Package_Declaration (Decl, Pkg);
+
+      --  LRM08 4.9 Package instantiation declarations
+      --  If the package instantiation declaration occurs immediately within
+      --  an encloding package declaration [...], the generic-mapped package
+      --  body occurs at the end of the package body corresponding to the
+      --  enclosing package declaration.
+      Parent := Get_Parent (Decl);
+      if Get_Kind (Parent) = Iir_Kind_Package_Declaration then
+         Set_Immediate_Body_Flag (Decl, False);
+         Mark_Declarations_Elaborated (Decl, False);
+      else
+         if Get_Need_Body (Pkg) then
+            Set_Immediate_Body_Flag (Decl, True);
+         end if;
+      end if;
    end Sem_Package_Instantiation_Declaration;
 
    --  LRM 10.4  Use Clauses.

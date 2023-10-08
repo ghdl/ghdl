@@ -39,6 +39,11 @@ package Vhdl.Sem_Decls is
    --  Analyze declarations of PARENT.
    procedure Sem_Declaration_Chain (Parent : Iir);
 
+   --  Mark declarations of HDR elaboration status to FLAG.
+   --  Set to true at then end of a package declaration, but reset at the
+   --  beginning of body analysis.
+   procedure Mark_Declarations_Elaborated (Hdr : Iir; Flag : Boolean);
+
    --  Check all declarations of DECLS_PARENT are complete
    --  This checks subprograms, deferred constants, incomplete types and
    --  protected types.
