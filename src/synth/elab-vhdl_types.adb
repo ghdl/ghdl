@@ -758,6 +758,11 @@ package body Elab.Vhdl_Types is
                Parent_Typ : constant Type_Acc :=
                  Get_Subtype_Object (Syn_Inst, Parent_Type);
             begin
+               if Parent_Typ = null then
+                  Elab.Vhdl_Errors.Error_Msg_Elab
+                    (Syn_Inst, Atype, "base type is not yet elaborated");
+                  raise Elab.Vhdl_Errors.Elaboration_Error;
+               end if;
                return Synth_Array_Subtype_Indication
                  (Syn_Inst, Parent_Typ, Atype);
             end;
@@ -767,6 +772,11 @@ package body Elab.Vhdl_Types is
                Parent_Typ : constant Type_Acc :=
                  Get_Subtype_Object (Syn_Inst, Parent_Type);
             begin
+               if Parent_Typ = null then
+                  Elab.Vhdl_Errors.Error_Msg_Elab
+                    (Syn_Inst, Atype, "base type is not yet elaborated");
+                  raise Elab.Vhdl_Errors.Elaboration_Error;
+               end if;
                return Synth_Record_Type_Definition
                  (Syn_Inst, Parent_Typ, Atype);
             end;
@@ -935,8 +945,10 @@ package body Elab.Vhdl_Types is
       --  That's a new type.
       Mark_Expr_Pool (Marker);
       Typ := Synth_Subtype_Indication (Syn_Inst, Atype);
-      Typ := Unshare (Typ, Instance_Pool);
-      Create_Subtype_Object (Syn_Inst, Atype, Typ);
+      if Typ /= null then
+         Typ := Unshare (Typ, Instance_Pool);
+         Create_Subtype_Object (Syn_Inst, Atype, Typ);
+      end if;
       Release_Expr_Pool (Marker);
       return Typ;
    end Elab_Subtype_Indication;

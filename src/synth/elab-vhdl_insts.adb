@@ -342,6 +342,7 @@ package body Elab.Vhdl_Insts is
                      Bod : constant Node := Get_Package_Body (Dep_Unit);
                      Bod_Unit : Node;
                   begin
+                     --  Dependencies of the package.
                      Elab_Dependencies (Parent_Inst, Dep);
                      Elab_Package_Declaration (Parent_Inst, Dep_Unit);
                      --  Do not try to elaborate math_real body: there are
@@ -1177,6 +1178,10 @@ package body Elab.Vhdl_Insts is
       end loop;
 
       return Top_Inst;
+
+   exception
+      when Elaboration_Error =>
+         return null;
    end Elab_Top_Unit;
 
 end Elab.Vhdl_Insts;

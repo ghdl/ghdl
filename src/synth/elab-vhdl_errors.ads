@@ -44,4 +44,6 @@ package Elab.Vhdl_Errors is
    type Handler_Access is access procedure (Inst : Synth_Instance_Acc;
                                             Loc : Node);
    Debug_Handler : Handler_Access;
+
+   Elaboration_Error : exception;
 end Elab.Vhdl_Errors;

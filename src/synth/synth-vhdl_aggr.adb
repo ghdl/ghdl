@@ -396,6 +396,10 @@ package body Synth.Vhdl_Aggr is
       begin
          El_Type := Aggr_Typ.Rec.E (Iir_Index32 (Pos + 1)).Typ;
          Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Type);
+         if Val = No_Valtyp then
+            Err_P := True;
+            return;
+         end if;
          if Const_P and not Is_Static (Val.Val) then
             Const_P := False;
          end if;

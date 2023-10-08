@@ -24,6 +24,7 @@ with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Files;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 with Elab.Vhdl_Insts;
+with Elab.Vhdl_Errors;
 
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
@@ -105,6 +106,12 @@ package body Elab.Vhdl_Decls is
       Obj_Typ : Type_Acc;
    begin
       Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
+      if Obj_Typ = null then
+         Elab.Vhdl_Errors.Error_Msg_Elab
+           (Syn_Inst, Decl,
+            "type of variable %i referenced before its elaboration", +Decl);
+         raise Elab.Vhdl_Errors.Elaboration_Error;
+      end if;
 
       Mark_Expr_Pool (Marker);
       if Is_Valid (Def) then

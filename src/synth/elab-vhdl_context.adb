@@ -467,10 +467,15 @@ package body Elab.Vhdl_Context is
      (Syn_Inst : Synth_Instance_Acc; Info : Sim_Info_Acc)
      return Synth_Instance_Acc
    is
-      Parent : Synth_Instance_Acc;
+      Parent : constant Synth_Instance_Acc :=
+        Get_Instance_By_Scope (Syn_Inst, Info.Scope);
+      Obj : Obj_Type renames Parent.Objects (Info.Slot);
    begin
-      Parent := Get_Instance_By_Scope (Syn_Inst, Info.Scope);
-      return Parent.Objects (Info.Slot).I_Inst;
+      if Obj.Kind = Obj_None then
+         --  Not yet elaborated.
+         return null;
+      end if;
+      return Obj.I_Inst;
    end Get_Package_Object;
 
    function Get_Package_Object
@@ -669,10 +674,15 @@ package body Elab.Vhdl_Context is
                       return Valtyp
    is
       Info : constant Sim_Info_Acc := Get_Ann (Obj);
-      Obj_Inst : Synth_Instance_Acc;
+      Obj_Inst : constant Synth_Instance_Acc :=
+        Get_Instance_By_Scope (Syn_Inst, Info.Scope);
+      Iobj : Obj_Type renames Obj_Inst.Objects (Info.Slot);
    begin
-      Obj_Inst := Get_Instance_By_Scope (Syn_Inst, Info.Scope);
-      return Obj_Inst.Objects (Info.Slot).Obj;
+      if Iobj.Kind = Obj_None then
+         --  Not yet elaborated...
+         return No_Valtyp;
+      end if;
+      return Iobj.Obj;
    end Get_Value;
 
    function Get_Subtype_Object
@@ -682,7 +692,19 @@ package body Elab.Vhdl_Context is
       Obj_Inst : Synth_Instance_Acc;
    begin
       Obj_Inst := Get_Instance_By_Scope (Syn_Inst, Info.Scope);
-      return Obj_Inst.Objects (Info.Slot).T_Typ;
+      if Obj_Inst = null then
+         --  Not yet elaborated...
+         return null;
+      end if;
+      declare
+         Iobj : Obj_Type renames Obj_Inst.Objects (Info.Slot);
+      begin
+         if Iobj.Kind = Obj_None then
+            --  Not yet elaborated
+            return null;
+         end if;
+         return Iobj.T_Typ;
+      end;
    end Get_Subtype_Object;
 
    procedure Get_Interface_Type (Syn_Inst : Synth_Instance_Acc;

@@ -448,6 +448,10 @@ package body Synth.Vhdl_Decls is
             when others =>
                Vhdl.Errors.Error_Kind ("create_protected_object", Decl);
          end case;
+         if Is_Error (Obj_Inst) then
+            Set_Error (Inst);
+            exit;
+         end if;
          Decl := Get_Chain (Decl);
       end loop;
 
@@ -473,6 +477,9 @@ package body Synth.Vhdl_Decls is
       Wid : Wire_Id;
    begin
       Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
+      if Obj_Typ = null then
+         return;
+      end if;
       if Obj_Typ.Kind = Type_Protected then
          if not Synth.Flags.Flag_Simulation then
             Error_Msg_Synth

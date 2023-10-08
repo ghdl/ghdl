@@ -38,6 +38,7 @@ with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations;
 
 with Elab.Memtype; use Elab.Memtype;
+with Elab.Vhdl_Errors;
 with Elab.Vhdl_Annotations;
 with Elab.Vhdl_Heap; use Elab.Vhdl_Heap;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
@@ -841,7 +842,18 @@ package body Synth.Vhdl_Expr is
          when Iir_Kind_Simple_Name
             | Iir_Kind_Selected_Name
             | Iir_Kind_Attribute_Name =>
-            return Synth_Name (Syn_Inst, Get_Named_Entity (Name));
+            declare
+               Res : Valtyp;
+            begin
+               Res := Synth_Name (Syn_Inst, Get_Named_Entity (Name));
+               if Res = No_Valtyp then
+                  Elab.Vhdl_Errors.Error_Msg_Elab
+                    (Syn_Inst, Name,
+                     "reference to a declaration before its elaboration");
+                  raise Elab.Vhdl_Errors.Elaboration_Error;
+               end if;
+               return Res;
+            end;
          when Iir_Kind_Interface_Signal_Declaration
             | Iir_Kind_Interface_View_Declaration
             | Iir_Kind_Variable_Declaration

@@ -1268,7 +1268,8 @@ package body Vhdl.Sem_Decls is
                   then
                      Warning_Msg_Sem
                        (Warnid_Elaboration, +Decl,
-                        "declaration of a protected type before the body");
+                        "declaration of a protected object before "
+                          & "the protected body");
                   end if;
                end;
             end if;
