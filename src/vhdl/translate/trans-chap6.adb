@@ -1037,12 +1037,12 @@ package body Trans.Chap6 is
          Stable_Prefix := Prefix;
       end if;
 
-      --  Get the base.
-      Base := Chap3.Get_Composite_Base (Stable_Prefix);
-
       if Prefix_Tinfo.Type_Mode = Type_Mode_Static_Record
         or else Is_Static_Type (El_Tinfo)
       then
+         --  Get the base.
+         Base := Chap3.Get_Composite_Base (Stable_Prefix);
+
          --  If the base element type is static or if the prefix is static,
          --  then the element can directly be accessed.
          Res := Lv2M (New_Selected_Element (M2Lv (Base), F), El_Tinfo, Kind);
@@ -1052,6 +1052,11 @@ package body Trans.Chap6 is
          Res_Addr := New_Convert_Ov
            (M2Addr (Res), Res_Tinfo.B.Base_Ptr_Type (Kind));
       else
+         Stabilize (Stable_Prefix);
+
+         --  Get the base.
+         Base := Chap3.Get_Composite_Base (Stable_Prefix);
+
          --  Unbounded or complex element.
          Stabilize (Base);
 
