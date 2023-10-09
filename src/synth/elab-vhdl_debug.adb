@@ -853,8 +853,30 @@ package body Elab.Vhdl_Debug is
                         Stmt1 := Get_Generate_Else_Clause (Stmt1);
                      end loop;
                   end;
+               when Iir_Kind_Case_Generate_Statement =>
+                  declare
+                     Choice : Iir;
+                  begin
+                     Choice := Get_Case_Statement_Alternative_Chain (Stmt);
+                     while Choice /= Null_Iir loop
+                        if not Get_Same_Alternative_Flag (Choice) then
+                           if Walk_Generate_Statement_Body
+                             (Get_Associated_Block (Choice)) = Walk_Abort
+                           then
+                              return Walk_Abort;
+                           end if;
+                        end if;
+                        Choice := Get_Chain (Choice);
+                     end loop;
+                  end;
                when Iir_Kind_Component_Instantiation_Statement
-                 | Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+                 | Iir_Kind_Concurrent_Simple_Signal_Assignment
+                 | Iir_Kind_Concurrent_Conditional_Signal_Assignment
+                 | Iir_Kind_Concurrent_Selected_Signal_Assignment
+                 | Iir_Kind_Concurrent_Procedure_Call_Statement
+                 | Iir_Kind_Concurrent_Assertion_Statement
+                 | Iir_Kind_Psl_Assert_Directive
+                 | Iir_Kind_Psl_Assume_Directive =>
                   null;
                when Iir_Kind_Block_Statement =>
                   --  FIXME: header
@@ -899,6 +921,8 @@ package body Elab.Vhdl_Debug is
             then
                return Walk_Abort;
             end if;
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            null;
          when Iir_Kind_Configuration_Declaration =>
             if Walk_Decl_Chain (Get_Declaration_Chain (Unit)) = Walk_Abort
             then
@@ -1067,6 +1091,7 @@ package body Elab.Vhdl_Debug is
             when Iir_Kind_Component_Instantiation_Statement
               | Iir_Kind_If_Generate_Statement
               | Iir_Kind_For_Generate_Statement
+              | Iir_Kind_Case_Generate_Statement
               | Iir_Kind_Block_Statement =>
                declare
                   Sub : constant Synth_Instance_Acc :=
