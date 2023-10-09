@@ -736,9 +736,11 @@ package body Simul.Vhdl_Compile is
             else
                Elab.Vhdl_Objtypes.Copy_Memory (Dst_Mem, Src.Mem, Src.Typ.Sz);
 
-               --  TODO: what if src_vt is an alias (when a generic is
-               --  associated to an alias) ?
-               Src_Vt.Val.Mem := Dst_Mem;
+               --  If src_vt is an alias (when a generic is associated to an
+               --  alias), nothing to update.
+               if Src_Vt.Val.Kind = Value_Memory then
+                  Src_Vt.Val.Mem := Dst_Mem;
+               end if;
             end if;
       end case;
    end Build_Object_Value;
