@@ -2533,6 +2533,8 @@ package body Synth.Vhdl_Eval is
             return Match_Cmp_Vec_Vec (Param1, Param2, Map_Ge, False, +Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Sgn_Sgn =>
             return Match_Cmp_Vec_Vec (Param1, Param2, Map_Ge, True, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Uns_Nat =>
+            return Match_Cmp_Vec_Int (Param1, Param2, Map_Ge, False, +Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Sgn_Sgn =>
             declare
@@ -2541,6 +2543,9 @@ package body Synth.Vhdl_Eval is
                Res := Match_Eq_Vec_Vec (Param1, Param2, True, +Expr);
                return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Uns_Nat =>
+            return Match_Cmp_Vec_Int (Param1, Param2, Map_Eq, False, +Expr);
+
          when Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Sgn_Sgn =>
             declare
                Res : Std_Ulogic;
@@ -2549,6 +2554,8 @@ package body Synth.Vhdl_Eval is
                Res := Not_Table (Res);
                return Create_Memory_U8 (Std_Ulogic'Pos (Res), Res_Typ);
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Uns_Nat =>
+            return Match_Cmp_Vec_Int (Param1, Param2, Map_Ne, False, +Expr);
 
          when Iir_Predefined_Physical_Minimum
            | Iir_Predefined_Integer_Minimum

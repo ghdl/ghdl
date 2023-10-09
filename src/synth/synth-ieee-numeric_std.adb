@@ -1681,4 +1681,37 @@ package body Synth.Ieee.Numeric_Std is
 
       return Create_Memory_U8 (Std_Ulogic'Pos (Res), Logic_Type);
    end Match_Cmp_Vec_Vec;
+
+   function Match_Cmp_Vec_Int (Left, Right : Memtyp;
+                               Map : Order_Map_Type;
+                               Is_Signed : Boolean;
+                               Loc : Location_Type) return Memtyp
+   is
+      Llen : constant Uns32 := Left.Typ.Abound.Len;
+      L : Std_Ulogic;
+      Res : Std_Ulogic;
+      Cmp : Order_Type;
+   begin
+      if Llen = 0 then
+         Warn_Compare_Null (Loc);
+         Res := 'X';
+      else
+         L := Has_Xd (Left);
+         if L = '-' then
+            Warning_Msg_Synth (+Loc, "'-' found in compare string");
+            Res := 'X';
+         elsif L = 'X' then
+            Res := 'X';
+         else
+            if Is_Signed then
+               Cmp := Compare_Sgn_Int (Left, Right, Equal, Loc);
+            else
+               Cmp := Compare_Uns_Nat (Left, Right, Equal, Loc);
+            end if;
+            Res := Map (Cmp);
+         end if;
+      end if;
+
+      return Create_Memory_U8 (Std_Ulogic'Pos (Res), Logic_Type);
+   end Match_Cmp_Vec_Int;
 end Synth.Ieee.Numeric_Std;

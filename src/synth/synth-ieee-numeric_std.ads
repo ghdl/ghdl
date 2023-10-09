@@ -186,10 +186,16 @@ package Synth.Ieee.Numeric_Std is
    Map_Le : constant Order_Map_Type := "110";
    Map_Ge : constant Order_Map_Type := "011";
    Map_Gt : constant Order_Map_Type := "001";
+   Map_Eq : constant Order_Map_Type := "010";
+   Map_Ne : constant Order_Map_Type := "101";
 
    function Match_Cmp_Vec_Vec (Left, Right : Memtyp;
                                Map : Order_Map_Type;
                                Is_Signed : Boolean;
                                Loc : Location_Type) return Memtyp;
 
+   function Match_Cmp_Vec_Int (Left, Right : Memtyp;
+                               Map : Order_Map_Type;
+                               Is_Signed : Boolean;
+                               Loc : Location_Type) return Memtyp;
 end Synth.Ieee.Numeric_Std;
