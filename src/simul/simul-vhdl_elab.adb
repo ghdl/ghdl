@@ -321,6 +321,7 @@ package body Simul.Vhdl_Elab is
    --  Re-elaborate an object alias (in case it's a signal).
    procedure Elab2_Object_Alias (Inst : Synth_Instance_Acc; Decl : Node)
    is
+      Prev_Instance_Pool : constant Areapools.Areapool_Acc := Instance_Pool;
       Marker : Mark_Type;
       V : Valtyp;
       Base : Valtyp;
@@ -332,11 +333,14 @@ package body Simul.Vhdl_Elab is
 
       --  Recompute alias offsets.
       Mark_Expr_Pool (Marker);
+      Instance_Pool := Global_Pool'Access;
+
       Synth.Vhdl_Stmts.Synth_Assignment_Prefix
         (Inst, Get_Name (Decl), Base, Typ, Off);
       V.Val.A_Off := Off;
       pragma Assert (Base.Val = V.Val.A_Obj);
       pragma Unreferenced (Typ);
+      Instance_Pool := Prev_Instance_Pool;
       Release_Expr_Pool (Marker);
    end Elab2_Object_Alias;
 
