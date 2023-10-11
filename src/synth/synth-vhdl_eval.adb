@@ -2929,6 +2929,20 @@ package body Synth.Vhdl_Eval is
                return Res;
             end;
 
+         when Iir_Predefined_Ieee_1164_To_01_Log_Log =>
+            declare
+               S : Std_Ulogic;
+               Xmap : Std_Ulogic;
+            begin
+               S := Read_Std_Logic (Param1.Mem, 0);
+               Xmap := Read_Std_Logic (Param2.Mem, 0);
+               S := To_X01 (S);
+               if S = 'X' then
+                  S := Xmap;
+               end if;
+               return Create_Memory_U8 (Std_Ulogic'Pos (S), Res_Typ);
+            end;
+
          when Iir_Predefined_Ieee_1164_Is_X_Log =>
             declare
                B : Std_Ulogic;
