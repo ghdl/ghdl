@@ -601,15 +601,20 @@ package body Synth.Vhdl_Expr is
          when Type_Unbounded_Record =>
             declare
                Els : Rec_El_Array_Acc;
+               Res : Type_Acc;
             begin
                Els := Create_Rec_El_Array (T.Rec.Len);
                for I in Els.E'Range loop
                   Els.E (I).Typ := Convert_Indexes
                     (T.Rec.E (I).Typ, Obj.Rec.E (I).Typ);
+               end loop;
+               Res := Create_Record_Type (T.Rec_Base, Els);
+               for I in Els.E'Range loop
                   --  Offsets don't change, only bounds do.
+                  --  (Need to be overwritten for simulation).
                   Els.E (I).Offs := Obj.Rec.E (I).Offs;
                end loop;
-               return Create_Record_Type (T.Rec_Base, Els);
+               return Res;
             end;
       end case;
    end Convert_Indexes;
