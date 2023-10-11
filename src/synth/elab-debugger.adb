@@ -39,8 +39,12 @@ package body Elab.Debugger is
    --  * stop at subprogram entry
    --  * for step: stop at loop cond/for.
 
+   --  Instance and statement at the breakpoint.
    Current_Instance : Synth_Instance_Acc;
    Current_Loc : Node;
+
+   Current_Frame : Synth_Instance_Acc;
+   Current_Frame_Stmt : Node;
 
    type Debug_Reason is
      (
@@ -50,12 +54,12 @@ package body Elab.Debugger is
       Reason_Error
      );
 
-   procedure Get_Debug_Loc (Inst : out Synth_Instance_Acc;
-                            Loc : out Node) is
+   procedure Get_Debug_Frame (Inst : out Synth_Instance_Acc;
+                              Stmt : out Node) is
    begin
-      Inst := Current_Instance;
-      Loc := Current_Loc;
-   end Get_Debug_Loc;
+      Inst := Current_Frame;
+      Stmt := Current_Frame_Stmt;
+   end Get_Debug_Frame;
 
    package Breakpoints is new Tables
      (Table_Index_Type => Natural,
@@ -496,10 +500,29 @@ package body Elab.Debugger is
       --  Check_Current_Process;
       Inst := Current_Instance;
       while Inst /= null loop
+         if Inst = Current_Frame then
+            Put ("* ");
+         else
+            Put ("  ");
+         end if;
          Disp_A_Frame (Inst);
          Inst := Get_Caller_Instance (Inst);
       end loop;
    end Where_Proc;
+
+   procedure Up_Proc (Line : String)
+   is
+      pragma Unreferenced (Line);
+      Inst : Synth_Instance_Acc;
+   begin
+      Inst := Get_Caller_Instance (Current_Frame);
+      if Inst = null then
+         Put_Line ("top frame reached");
+         return;
+      end if;
+      Current_Frame_Stmt := Get_Statement_Scope (Current_Frame);
+      Current_Frame := Inst;
+   end Up_Proc;
 
    procedure List_Proc (Line : String)
    is
@@ -697,11 +720,18 @@ package body Elab.Debugger is
       Next => Menu_Step'Access,
       Proc => Break_Proc'Access);
 
+   Menu_Up : aliased Menu_Entry :=
+     (Kind => Menu_Command,
+      Name => new String'("up"),
+      Help => new String'("up frame"),
+      Next => Menu_Break'Access,
+      Proc => Up_Proc'Access);
+
    Menu_Where : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("w*here"),
       Help => new String'("disp call stack"),
-      Next => Menu_Break'Access,
+      Next => Menu_Up'Access,
       Proc => Where_Proc'Access);
 
    Menu_Help2 : aliased Menu_Entry :=
@@ -802,6 +832,9 @@ package body Elab.Debugger is
       Current_Instance := null;
       Current_Loc := Top;
 
+      Current_Frame := null;
+      Current_Frame_Stmt := Null_Node;
+
       --  To avoid warnings.
       Exec_Statement := Null_Node;
       Exec_Instance := null;
@@ -813,6 +846,10 @@ package body Elab.Debugger is
    begin
       Current_Instance := Top;
       Current_Loc := Get_Source_Scope (Top);
+
+      Current_Frame := Top;
+      Current_Frame_Stmt := Null_Node;
+
       Flag_Debug_Enable := True;
 
       --  To avoid warnings.
@@ -827,6 +864,9 @@ package body Elab.Debugger is
       Current_Instance := Inst;
       Current_Loc := Stmt;
 
+      Current_Frame := Inst;
+      Current_Frame_Stmt := Stmt;
+
       Debug (Reason_Break);
    end Debug_Break;
 
@@ -834,6 +874,9 @@ package body Elab.Debugger is
    begin
       Current_Instance := Top;
       Current_Loc := Null_Node;
+
+      Current_Frame := Top;
+      Current_Frame_Stmt := Null_Node;
 
       Debug (Reason_Time);
    end Debug_Time;
@@ -862,6 +905,10 @@ package body Elab.Debugger is
       if Flag_Debug_Enable then
          Current_Instance := Inst;
          Current_Loc := Expr;
+
+         Current_Frame := Inst;
+         Current_Frame_Stmt := Null_Node;
+
          Debug (Reason_Error);
       end if;
       if Error_Hook /= null then

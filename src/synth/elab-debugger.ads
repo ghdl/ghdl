@@ -54,9 +54,9 @@ package Elab.Debugger is
    pragma Convention (C, Error_Hook_Type);
    Error_Hook : Error_Hook_Type;
 
-   --  Get the current location.
-   procedure Get_Debug_Loc (Inst : out Synth_Instance_Acc;
-                            Loc : out Node);
+   --  Get the current frame.  STMT and INST can be null.
+   procedure Get_Debug_Frame (Inst : out Synth_Instance_Acc;
+                              Stmt : out Node);
 
    --  Append a command to the main menu.
    procedure Append_Menu_Command (Name : Cst_String_Acc;

@@ -1453,7 +1453,7 @@ package body Elab.Vhdl_Debug is
          return;
       end if;
 
-      Get_Debug_Loc (Cur_Inst, Cur_Scope);
+      Get_Debug_Frame (Cur_Inst, Cur_Scope);
       if Cur_Scope = Null_Node
         or else Get_Kind (Cur_Scope) not in Iir_Kinds_Sequential_Statement
       then
