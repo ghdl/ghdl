@@ -790,7 +790,7 @@ package body Synth.Vhdl_Expr is
            | Type_Unbounded_Vector =>
             pragma Assert (Vtype.Kind = Type_Vector
                              or Vtype.Kind = Type_Slice);
-            if not Check_Matching_Bounds(Syn_Inst, Dtype, Vtype, Loc) then
+            if not Check_Matching_Bounds (Syn_Inst, Dtype, Vtype, Loc) then
                return No_Valtyp;
             end if;
             if Bounds then
@@ -805,7 +805,7 @@ package body Synth.Vhdl_Expr is
            | Type_Array_Unbounded
            | Type_Unbounded_Array =>
             pragma Assert (Vtype.Kind = Type_Array);
-            if not Check_Matching_Bounds(Syn_Inst, Dtype, Vtype, Loc) then
+            if not Check_Matching_Bounds (Syn_Inst, Dtype, Vtype, Loc) then
                return No_Valtyp;
             end if;
             if Bounds then
@@ -816,7 +816,7 @@ package body Synth.Vhdl_Expr is
          when Type_Record
            | Type_Unbounded_Record =>
             pragma Assert (Vtype.Kind = Type_Record);
-            if not Check_Matching_Bounds(Syn_Inst, Dtype, Vtype, Loc) then
+            if not Check_Matching_Bounds (Syn_Inst, Dtype, Vtype, Loc) then
                return No_Valtyp;
             end if;
             if Bounds then
