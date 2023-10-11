@@ -387,6 +387,7 @@ package body Elab.Debugger is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
             if Get_Identifier (El) = Break_Id
+              and then not Vhdl.Utils.Is_Second_Subprogram_Specification (El)
               and then
               Get_Implicit_Definition (El) not in Iir_Predefined_Implicit
             then
