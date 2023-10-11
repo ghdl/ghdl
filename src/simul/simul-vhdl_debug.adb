@@ -555,6 +555,73 @@ package body Simul.Vhdl_Debug is
    --  For gdb.
    pragma Unreferenced (Info_Signal);
 
+   function Find_Signal_By_Addr (Sig : Ghdl_Signal_Ptr)
+                                return Signal_Index_Type
+   is
+      function Is_Signal_Inside (Addr : Ghdl_Signal_Ptr;
+                                 S : Memtyp) return Boolean
+      is
+         use Simul.Vhdl_Simul;
+      begin
+         case S.Typ.Kind is
+            when Type_Scalars =>
+               return Read_Sig (S.Mem) = Addr;
+            when Type_Vector
+              | Type_Array =>
+               declare
+                  Len : constant Uns32 := S.Typ.Abound.Len;
+                  Stride : constant Uns32 := S.Typ.Arr_El.W;
+                  Sub : Memtyp;
+               begin
+                  Sub.Typ := S.Typ.Arr_El;
+                  for I in 1 .. Len loop
+                     Sub.Mem := Sig_Index (S.Mem, (Len - I) * Stride);
+                     if Is_Signal_Inside (Addr, Sub) then
+                        return True;
+                     end if;
+                  end loop;
+               end;
+            when Type_Record =>
+               declare
+                  Sub : Memtyp;
+               begin
+                  for I in S.Typ.Rec.E'Range loop
+                     Sub.Mem := Sig_Index (S.Mem,
+                                           S.Typ.Rec.E (I).Offs.Net_Off);
+                     Sub.Typ := S.Typ.Rec.E (I).Typ;
+                     if Is_Signal_Inside (Addr, Sub) then
+                        return True;
+                     end if;
+                  end loop;
+               end;
+            when Type_Unbounded_Vector
+              | Type_Unbounded_Record
+              | Type_Array_Unbounded
+              | Type_Unbounded_Array
+              | Type_Slice
+              | Type_Protected
+              | Type_File
+              | Type_Access =>
+               raise Internal_Error;
+         end case;
+         return False;
+      end Is_Signal_Inside;
+   begin
+      for I in Signals_Table.First .. Signals_Table.Last loop
+         declare
+            S : Signal_Entry renames Signals_Table.Table (I);
+         begin
+            if Is_Signal_Inside (Sig, (S.Typ, S.Sig)) then
+               return I;
+            end if;
+         end;
+      end loop;
+      return No_Signal_Index;
+   end Find_Signal_By_Addr;
+
+   --  For gdb.
+   pragma Unreferenced (Find_Signal_By_Addr);
+
    procedure Info_Signal_Proc (Line : String)
    is
       Opts : Info_Signal_Options;
