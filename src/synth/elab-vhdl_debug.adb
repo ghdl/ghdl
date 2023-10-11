@@ -594,6 +594,14 @@ package body Elab.Vhdl_Debug is
                      end loop;
                   end if;
                end;
+            when Iir_Kind_Case_Generate_Statement =>
+               Put_Indent (Cfg.Indent);
+               Put (Image (Get_Label (Stmt)));
+               Put_Line (": case-generate");
+               if Cfg.Recurse then
+                  Disp_Hierarchy (Get_Sub_Instance (Inst, Stmt),
+                                  Inc_Indent (Cfg));
+               end if;
             when Iir_Kind_Block_Statement =>
                declare
                   Sub : constant Synth_Instance_Acc :=
