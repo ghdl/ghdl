@@ -800,6 +800,28 @@ package body Elab.Vhdl_Debug is
       begin
          Decl := Chain;
          while Decl /= Null_Iir loop
+            case Get_Kind (Decl) is
+               when Iir_Kind_Protected_Type_Body =>
+                  if (Walk_Decl_Chain (Get_Declaration_Chain (Decl))
+                        = Walk_Abort)
+                  then
+                     return Walk_Abort;
+                  end if;
+               when Iir_Kind_Type_Declaration =>
+                  declare
+                     Def : constant Node := Get_Type_Definition (Decl);
+                  begin
+                     if Get_Kind (Def) = Iir_Kind_Protected_Type_Declaration
+                       and then (Walk_Decl_Chain (Get_Declaration_Chain (Def))
+                                   = Walk_Abort)
+                     then
+                        return Walk_Abort;
+                     end if;
+                  end;
+               when others =>
+                  null;
+            end case;
+
             case Walk_Declarations_Cb.all (Decl) is
                when Walk_Abort =>
                   return Walk_Abort;
