@@ -356,6 +356,7 @@ package body Simul.Vhdl_Debug is
      (Info_Scalar_Signal_Action);
 
    type Info_Signal_Options is record
+      Max_Sz : Size_Type;
       Value : Boolean;
       Conn : Boolean;
       Types : Boolean;
@@ -418,7 +419,11 @@ package body Simul.Vhdl_Debug is
 
       if Opts.Value = False then
          Put (" = ");
-         Disp_Memtyp ((S.Typ, S.Val), Get_Type (S.Decl));
+         if S.Typ.Sz > Opts.Max_Sz then
+            Put ("[too large]");
+         else
+            Disp_Memtyp ((S.Typ, S.Val), Get_Type (S.Decl));
+         end if;
       end if;
       New_Line;
 
@@ -544,7 +549,7 @@ package body Simul.Vhdl_Debug is
 
    procedure Info_Signal (Idx : Signal_Index_Type) is
    begin
-      Info_Signal_Opts (Idx, (others => True));
+      Info_Signal_Opts (Idx, (Max_Sz => 256, others => True));
    end Info_Signal;
 
    --  For gdb.
@@ -557,7 +562,8 @@ package body Simul.Vhdl_Debug is
       Idx : Uns32;
       Valid : Boolean;
    begin
-      Opts := (others => False);
+      Opts := (Max_Sz => 80,
+               others => False);
       Idx := 0;
 
       F := Line'First;
