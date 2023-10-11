@@ -1217,6 +1217,8 @@ package body Elab.Vhdl_Debug is
       if Get_Kind (Scope) in Iir_Kinds_Process_Statement then
          --  The name to display is the name of the process.
          Stmt := Scope;
+      elsif Get_Kind (Scope) = Iir_Kind_Package_Instantiation_Declaration then
+         Stmt := Scope;
       elsif Get_Kind (Parent_Scope) = Iir_Kind_Component_Declaration then
          --  Display the name of then entity.
          Stmt := Get_Entity (Scope);
