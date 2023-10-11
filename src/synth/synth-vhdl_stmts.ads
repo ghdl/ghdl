@@ -39,6 +39,7 @@ package Synth.Vhdl_Stmts is
 
    --  Create a new Synth_Instance for calling subprogram IMP/BOD.
    function Synth_Subprogram_Call_Instance (Inst : Synth_Instance_Acc;
+                                            Call : Node;
                                             Imp : Node;
                                             Bod : Node)
                                            return Synth_Instance_Acc;

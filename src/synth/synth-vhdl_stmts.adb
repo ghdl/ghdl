@@ -2958,6 +2958,7 @@ package body Synth.Vhdl_Stmts is
    end Synth_Static_Subprogram_Call;
 
    function Synth_Subprogram_Call_Instance (Inst : Synth_Instance_Acc;
+                                            Call : Node;
                                             Imp : Node;
                                             Bod : Node)
                                            return Synth_Instance_Acc
@@ -2966,7 +2967,7 @@ package body Synth.Vhdl_Stmts is
       Up_Inst : Synth_Instance_Acc;
    begin
       Up_Inst := Get_Instance_By_Scope (Inst, Get_Parent_Scope (Imp));
-      Res := Make_Elab_Instance (Up_Inst, Null_Node, Bod, Config => Null_Node);
+      Res := Make_Elab_Instance (Up_Inst, Call, Bod, Config => Null_Node);
       Set_Caller_Instance (Res, Inst);
       return Res;
    end Synth_Subprogram_Call_Instance;
@@ -3073,7 +3074,7 @@ package body Synth.Vhdl_Stmts is
       if Obj /= Null_Node then
          Sub_Inst := Synth_Protected_Call_Instance (Syn_Inst, Obj, Imp, Bod);
       else
-         Sub_Inst := Synth_Subprogram_Call_Instance (Syn_Inst, Imp, Bod);
+         Sub_Inst := Synth_Subprogram_Call_Instance (Syn_Inst, Call, Imp, Bod);
       end if;
       if Ctxt /= null then
          Set_Extra (Sub_Inst, Syn_Inst, New_Internal_Name (Ctxt));
@@ -3228,7 +3229,8 @@ package body Synth.Vhdl_Stmts is
       if Obj /= Null_Node then
          Sub_Inst := Synth_Protected_Call_Instance (Syn_Inst, Obj, Imp, Bod);
       else
-         Sub_Inst := Synth_Subprogram_Call_Instance (Syn_Inst, Imp, Bod);
+         Sub_Inst := Synth_Subprogram_Call_Instance
+           (Syn_Inst, Null_Node, Imp, Bod);
       end if;
 
       Set_Instance_Const (Sub_Inst, True);

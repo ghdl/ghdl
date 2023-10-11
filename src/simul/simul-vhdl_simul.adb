@@ -914,7 +914,7 @@ package body Simul.Vhdl_Simul is
               Get_Interface_Declaration_Chain (Imp);
          begin
             pragma Assert (Obj = Null_Node);
-            Sub_Inst := Synth_Subprogram_Call_Instance (Inst, Imp, Imp);
+            Sub_Inst := Synth_Subprogram_Call_Instance (Inst, Stmt, Imp, Imp);
 
             Synth_Subprogram_Associations
               (Sub_Inst, Inst, Inter_Chain, Assoc_Chain, Call);
@@ -943,7 +943,8 @@ package body Simul.Vhdl_Simul is
             if Obj /= Null_Node then
                Sub_Inst := Synth_Protected_Call_Instance (Inst, Obj, Imp, Bod);
             else
-               Sub_Inst := Synth_Subprogram_Call_Instance (Inst, Imp, Bod);
+               Sub_Inst := Synth_Subprogram_Call_Instance
+                 (Inst, Stmt, Imp, Bod);
             end if;
 
             --  Note: in fact the uninstantiated scope is the instantiated
