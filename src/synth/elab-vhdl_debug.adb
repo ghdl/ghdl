@@ -1385,7 +1385,11 @@ package body Elab.Vhdl_Debug is
    procedure Enter_Scope (Node : Iir)
    is
       use Vhdl.Sem_Scopes;
+      use Errorout;
    begin
+      --  Disable -Whide.
+      Enable_Warning (Warnid_Hide, False);
+
       Push_Interpretations;
       Open_Declarative_Region;
 
