@@ -4631,16 +4631,21 @@ package body Trans.Chap8 is
          if Target_Tinfo.Type_Mode in Type_Mode_Unbounded then
             pragma Assert (not Constrained);
             --  Unbounded array, allocate bounds.
-            pragma Assert (Target_Tinfo.S.Composite_Layout = Null_Var);
-            Target_Tinfo.S.Composite_Layout :=
-              Create_Var (Create_Uniq_Identifier, Target_Tinfo.B.Layout_Type,
-                          O_Storage_Local);
-            Layout := Lv2M (Get_Var (Target_Tinfo.S.Composite_Layout),
-                            Target_Tinfo,
-                            Mode_Value,
-                            Target_Tinfo.B.Layout_Type,
-                            Target_Tinfo.B.Layout_Ptr_Type);
-            Bounds := Stabilize (Chap3.Layout_To_Bounds (Layout));
+
+            if Get_Literal_Subtype (Target) /= Null_Iir then
+               pragma Assert (Target_Tinfo.S.Composite_Layout = Null_Var);
+               Target_Tinfo.S.Composite_Layout :=
+                 Create_Var (Create_Uniq_Identifier,
+                             Target_Tinfo.B.Layout_Type, O_Storage_Local);
+               Layout := Lv2M (Get_Var (Target_Tinfo.S.Composite_Layout),
+                               Target_Tinfo,
+                               Mode_Value,
+                               Target_Tinfo.B.Layout_Type,
+                               Target_Tinfo.B.Layout_Ptr_Type);
+               Bounds := Stabilize (Chap3.Layout_To_Bounds (Layout));
+            else
+               Bounds := Create_Temp_Bounds (Target_Tinfo);
+            end if;
             New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Targ)),
                              M2Addr (Bounds));
             --  Build bounds from aggregate.
