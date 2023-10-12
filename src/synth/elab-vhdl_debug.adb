@@ -425,7 +425,8 @@ package body Elab.Vhdl_Debug is
             | Iir_Kind_Protected_Type_Body =>
             null;
          when Iir_Kind_Package_Declaration
-           | Iir_Kind_Package_Body =>
+           | Iir_Kind_Package_Body
+           | Iir_Kind_Package_Instantiation_Declaration =>
             declare
                Sub_Inst : constant Synth_Instance_Acc :=
                  Get_Package_Object (Instance, Decl);
