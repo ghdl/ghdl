@@ -32,10 +32,16 @@ with Vhdl.Canon;
 with Vhdl.Nodes_GC;
 
 package body Vhdl.Sem_Lib is
-   procedure Error_Lib_Msg (Msg : String; Arg1 : Earg_Type) is
+   procedure Error_Msg_Lib (Loc : Location_Type;
+                            Msg : String;
+                            Arg1 : Earg_Type) is
    begin
-      Report_Msg (Msgid_Error, Library, No_Source_Coord, Msg, (1 => Arg1));
-   end Error_Lib_Msg;
+      if Loc = No_Location then
+         Report_Msg (Msgid_Error, Library, No_Source_Coord, Msg, (1 => Arg1));
+      else
+         Report_Msg (Msgid_Error, Semantic, +Loc, Msg, (1 => Arg1));
+      end if;
+   end Error_Msg_Lib;
 
    function Load_File (File : Source_File_Entry) return Iir_Design_File
    is
@@ -198,7 +204,8 @@ package body Vhdl.Sem_Lib is
            (Get_Design_File_Directory (Design_File),
             Get_Design_File_Filename (Design_File));
          if Fe = No_Source_File_Entry then
-            Error_Lib_Msg ("cannot load %n", +Get_Library_Unit (Design_Unit));
+            Error_Msg_Lib
+              (Loc, "cannot load %n", +Get_Library_Unit (Design_Unit));
             raise Compilation_Error;
          end if;
          Set_Design_File_Source (Design_File, Fe);
