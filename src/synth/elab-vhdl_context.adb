@@ -749,7 +749,9 @@ package body Elab.Vhdl_Context is
 
          if Obj.Kind = Obj_Instance then
             Res := Obj.I_Inst;
-            return;
+            if Res /= null then
+               return;
+            end if;
          end if;
       end loop;
    end Iterate_Top_Level;
