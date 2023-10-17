@@ -55,18 +55,29 @@ with Simul.Main;
 with Simul.Vhdl_Elab;
 with Simul.Vhdl_Simul;
 with Simul.Vhdl_Compile;
+with Simul.Fst;
 
 with Synth.Flags;
 with Elab.Vhdl_Errors;
 with Synth.Vhdl_Foreign;
 
 with Grt.Main;
-with Grt.Modules;
 with Grt.Options;
 with Grt.Types;
 with Grt.Errors;
 with Grt.Backtraces.Jit;
 with Grt.Heap;
+
+with Grt.Vcd;
+with Grt.Vcdz;
+with Grt.Vpi;
+with Grt.Vhpi;
+with Grt.Waves;
+with Grt.Vital_Annotate;
+with Grt.Disp_Tree;
+with Grt.Disp_Rti;
+with Grt.Psl;
+with Grt.Backtraces;
 
 with Ghdlcomp; use Ghdlcomp;
 with Grtlink;
@@ -298,6 +309,22 @@ package body Ghdlrun is
       end if;
    end Foreign_Hook;
 
+   procedure Register_Modules is
+   begin
+      --  List of modules to be registered.
+      Grt.Disp_Tree.Register;
+      Grt.Vcd.Register;
+      Grt.Vcdz.Register;
+      Grt.Waves.Register;
+      Simul.Fst.Register;
+      Grt.Vpi.Register;
+      Grt.Vhpi.Register;
+      Grt.Vital_Annotate.Register;
+      Grt.Disp_Rti.Register;
+      Grt.Psl.Register;
+      Grt.Backtraces.Register;
+   end Register_Modules;
+
    procedure Run
    is
       use Ada.Command_Line;
@@ -351,7 +378,7 @@ package body Ghdlrun is
                Put_Line ("Starting simulation");
             end if;
 
-            Grt.Modules.Register_Modules;
+            Register_Modules;
 
             Grt.Main.Run;
 
@@ -367,6 +394,9 @@ package body Ghdlrun is
 
             if Run_Mode = Run_Jit then
                Elaborate_Proc := Simul.Vhdl_Compile.Elaborate'Access;
+
+               Register_Modules;
+
                Simul.Vhdl_Compile.Simulation;
             else
                Elaborate_Proc := Simul.Vhdl_Simul.Runtime_Elaborate'Access;
@@ -417,7 +447,7 @@ package body Ghdlrun is
       end if;
       Put_Line ("These options can only be placed at [RUNOPTS]");
       --  Register modules, since they add commands.
-      Grt.Modules.Register_Modules;
+      Register_Modules;
       --  Bypass usual help header.
       Grt.Options.Argc := 0;
       Grt.Options.Help;

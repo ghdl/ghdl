@@ -374,7 +374,9 @@ package Grt.Signals is
       Table_Low_Bound => 0,
       Table_Initial => 128);
 
-   -- Signals with RO_Event set. Cleared in Grt.Wave.Wave_Cycle.
+   --  A signal is added to this table when its RO_Event is set iff its
+   --  Dump_Table_Idx is not 0.
+   --  The user should flush it.
    package Changed_Sig_Table is new Grt.Table
      (Table_Component_Type => Ghdl_Signal_Ptr,
       Table_Index_Type => Natural,

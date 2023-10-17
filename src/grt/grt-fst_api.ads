@@ -1,5 +1,5 @@
 with Interfaces; use Interfaces;
-with Interfaces.C; use Interfaces.C;
+with Grt.C; use Grt.C;
 with System;
 with Grt.Types; use Grt.Types;
 
@@ -7,6 +7,8 @@ package Grt.Fst_Api is
 
    subtype fstHandle is unsigned;
    Null_fstHandle : constant fstHandle := 0;
+
+   subtype fstEnumHandle is unsigned;
 
    type fstWriterPackType is
      (FST_WR_PT_ZLIB,
@@ -211,6 +213,15 @@ package Grt.Fst_Api is
                              return fstContext;
    pragma Import (C, fstWriterCreate, "fstWriterCreate");
 
+   function fstWriterCreateEnumTable
+     (ctx : fstContext;
+      name : Ghdl_C_String;
+      elem_count : unsigned;
+      min_valbits : unsigned;
+      Literal_Arr : System.Address;
+      Val_Arr : System.Address) return fstEnumHandle;
+   pragma Import (C, fstWriterCreateEnumTable, "fstWriterCreateEnumTable");
+
    function fstWriterCreateVar
      (ctx : fstContext;
       vt : fstVarType;
@@ -231,6 +242,10 @@ package Grt.Fst_Api is
       svt : fstSupplementalVarType;
       sdt : fstSupplementalDataType) return fstHandle;
    pragma Import (C, fstWriterCreateVar2, "fstWriterCreateVar2");
+
+   procedure fstWriterEmitEnumTableRef
+     (Ctx : fstContext; Handle : fstEnumHandle);
+   pragma Import (C, fstWriterEmitEnumTableRef, "fstWriterEmitEnumTableRef");
 
    procedure fstWriterEmitValueChange
      (ctx : fstContext;
@@ -339,15 +354,11 @@ package Grt.Fst_Api is
    pragma Import (C, fstWriterSetVersion, "fstWriterSetVersion");
 
    function fstUtilityBinToEsc
-     (d : access unsigned_char;
-      s : access unsigned_char;
-      len : int) return int;
+     (d : chars; s : chars; len : int) return int;
    pragma Import (C, fstUtilityBinToEsc, "fstUtilityBinToEsc");
 
    function fstUtilityEscToBin
-     (d : access unsigned_char;
-      s : access unsigned_char;
-      len : int) return int;
+     (d : chars; s : chars; len : int) return int;
    pragma Import (C, fstUtilityEscToBin, "fstUtilityEscToBin");
 
 end Grt.Fst_Api;

@@ -60,7 +60,6 @@ with Grt.Processes;
 with Grt.Signals;
 
 with Grt.Rtis;
-with Grt.Modules;
 with Grtlink;
 
 with Ortho_Nodes; use Ortho_Nodes;
@@ -2063,8 +2062,6 @@ package body Simul.Vhdl_Compile is
       --  Set hooks for debugger.
       Synth.Vhdl_Expr.Hook_Signal_Expr :=
         Simul.Vhdl_Simul.Hook_Signal_Expr'Access;
-
-      Grt.Modules.Register_Modules;
 
       Simul.Main.Simulation;
    end Simulation;

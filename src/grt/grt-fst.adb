@@ -38,7 +38,7 @@
 
 with Ada.Unchecked_Deallocation;
 with Interfaces; use Interfaces;
-with Interfaces.C;
+with Grt.C;
 with Grt.Types; use Grt.Types;
 with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Fst_Api; use Grt.Fst_Api;
@@ -221,7 +221,7 @@ package body Grt.Fst is
       Vt : fstVarType;
       Sdt : fstSupplementalDataType;
       Dir : fstVarDir;
-      Len : Interfaces.C.unsigned;
+      Len : Grt.C.unsigned;
       Name : String (1 .. 128);
       Name_Len : Natural;
       Type_Name : String (1 .. 32);
@@ -265,11 +265,11 @@ package body Grt.Fst is
             Sdt := FST_SDT_VHDL_STD_LOGIC;
          when Vcd_Bitvector =>
             Vt := FST_VT_VCD_REG;
-            Len := Interfaces.C.unsigned (Vcd_El.Vec_Range.I32.Len);
+            Len := Grt.C.unsigned (Vcd_El.Vec_Range.I32.Len);
             Sdt := FST_SDT_VHDL_BIT_VECTOR;
          when Vcd_Stdlogic_Vector =>
             Vt := FST_VT_VCD_REG;
-            Len := Interfaces.C.unsigned (Vcd_El.Vec_Range.I32.Len);
+            Len := Grt.C.unsigned (Vcd_El.Vec_Range.I32.Len);
             Sdt := FST_SDT_VHDL_STD_LOGIC_VECTOR;
       end case;
 
@@ -321,7 +321,7 @@ package body Grt.Fst is
             Vhpi_Get (VhpiLineNoP, Sig, Line, Err);
             if Filename /= null and then Err = AvhpiErrorOk then
                fstWriterSetSourceStem
-                 (Context, Filename, Interfaces.C.unsigned (Line), 0);
+                 (Context, Filename, Grt.C.unsigned (Line), 0);
             end if;
          end;
       end if;
@@ -402,7 +402,7 @@ package body Grt.Fst is
       end if;
 
       --  Do not put aliases in the table.
-      if Flag_Aliases and then Interfaces.C."/=" (Alias, Null_fstHandle) then
+      if Flag_Aliases and then Grt.C."/=" (Alias, Null_fstHandle) then
          return;
       end if;
 
@@ -436,11 +436,11 @@ package body Grt.Fst is
             if Vhpi_Get_Kind (Decl) /= VhpiCompInstStmtK then
                --  For a block, a generate block: source location.
                fstWriterSetSourceStem
-                 (Context, Filename, Interfaces.C.unsigned (Line), 0);
+                 (Context, Filename, Grt.C.unsigned (Line), 0);
             else
                --  For a component instantiation: instance location
                fstWriterSetSourceInstantiationStem
-                 (Context, Filename, Interfaces.C.unsigned (Line), 0);
+                 (Context, Filename, Grt.C.unsigned (Line), 0);
                --  Request DesignUnit => arch
                Vhpi_Handle (VhpiDesignUnit, Decl, Arch, Err);
                if Err /= AvhpiErrorOk then
@@ -452,7 +452,7 @@ package body Grt.Fst is
                   if Filename /= null and then Err = AvhpiErrorOk then
                      --  And source location.
                      fstWriterSetSourceStem
-                       (Context, Filename, Interfaces.C.unsigned (Line), 0);
+                       (Context, Filename, Grt.C.unsigned (Line), 0);
                   end if;
                end if;
             end if;
@@ -573,7 +573,7 @@ package body Grt.Fst is
    begin
       fstWriterEmitVariableLengthValueChange
         (Context, Hand, To_Address (Str),
-         Interfaces.C.unsigned (strlen (Str)));
+         Grt.C.unsigned (strlen (Str)));
    end Fst_Put_Enum8;
 
    procedure Fst_Put_Var (I : Fst_Index_Type)
