@@ -306,6 +306,9 @@ package Grt.Signals is
       --  Set if the signal has already been visited.  When outside of the
       --  algorithm that use it, it must be cleared.
       Seen : Boolean;
+
+      Unused1 : Boolean;
+      Unused2 : Boolean;
    end record;
    pragma Pack (Ghdl_Signal_Flags);
 

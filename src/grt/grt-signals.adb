@@ -246,7 +246,8 @@ package body Grt.Signals is
                                         Is_Eff_Force_Scheduled => False,
                                         RO_Event => False,
                                         Implicit_Active_Next => False,
-                                        Seen => False),
+                                        Seen => False,
+                                        others => False),
 
                               Net => No_Signal_Net,
                               Link => null,
@@ -663,7 +664,8 @@ package body Grt.Signals is
                                                Is_Eff_Force_Scheduled => False,
                                                RO_Event => False,
                                                Implicit_Active_Next => False,
-                                               Seen => False),
+                                               Seen => False,
+                                               others => False),
 
                                      Net => No_Signal_Net,
                                      Link => null,
