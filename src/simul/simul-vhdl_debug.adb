@@ -27,7 +27,6 @@ with Simple_IO; use Simple_IO;
 with Utils_IO; use Utils_IO;
 with Debuggers; use Debuggers;
 
-with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors;
 
@@ -365,6 +364,43 @@ package body Simul.Vhdl_Debug is
       Actions : Boolean;
    end record;
 
+   procedure Put_Signal_Name (Inst : Synth_Instance_Acc; Decl : Node) is
+   begin
+      Disp_Instance_Path (Inst, True);
+      Put ('/');
+
+      case Get_Kind (Decl) is
+         when Iir_Kind_Signal_Declaration =>
+            Put (Image (Get_Identifier (Decl)));
+            Put (" [sig]");
+         when Iir_Kind_Interface_Signal_Declaration =>
+            Put (Image (Get_Identifier (Decl)));
+            case Get_Mode (Decl) is
+               when Iir_In_Mode =>
+                  Put (" [in]");
+               when Iir_Out_Mode =>
+                  Put (" [out]");
+               when Iir_Buffer_Mode =>
+                  Put (" [buffer]");
+               when Iir_Linkage_Mode =>
+                  Put (" [linkage]");
+               when Iir_Inout_Mode =>
+                  Put (" [inout]");
+               when Iir_Unknown_Mode =>
+                  Put (" [??]");
+            end case;
+         when Iir_Kind_Guard_Signal_Declaration =>
+            Put (Image (Get_Identifier (Decl)));
+            Put (" [guard]");
+         when Iir_Kind_Above_Attribute =>
+            Put (" [above]");
+         when Iir_Kind_Delayed_Attribute =>
+            Put (" [delayed]");
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Put_Signal_Name;
+
    procedure Info_Signal_Opts (Idx : Signal_Index_Type;
                                Opts : Info_Signal_Options)
    is
@@ -383,39 +419,7 @@ package body Simul.Vhdl_Debug is
          return;
       end if;
 
-      Disp_Instance_Path (S.Inst, True);
-      Put ('/');
-
-      case Get_Kind (S.Decl) is
-         when Iir_Kind_Signal_Declaration =>
-            Put (Image (Get_Identifier (S.Decl)));
-            Put (" [sig]");
-         when Iir_Kind_Interface_Signal_Declaration =>
-            Put (Image (Get_Identifier (S.Decl)));
-            case Get_Mode (S.Decl) is
-               when Iir_In_Mode =>
-                  Put (" [in]");
-               when Iir_Out_Mode =>
-                  Put (" [out]");
-               when Iir_Buffer_Mode =>
-                  Put (" [buffer]");
-               when Iir_Linkage_Mode =>
-                  Put (" [linkage]");
-               when Iir_Inout_Mode =>
-                  Put (" [inout]");
-               when Iir_Unknown_Mode =>
-                  Put (" [??]");
-            end case;
-         when Iir_Kind_Guard_Signal_Declaration =>
-            Put (Image (Get_Identifier (S.Decl)));
-            Put (" [guard]");
-         when Iir_Kind_Above_Attribute =>
-            Put (" [above]");
-         when Iir_Kind_Delayed_Attribute =>
-            Put (" [delayed]");
-         when others =>
-            raise Internal_Error;
-      end case;
+      Put_Signal_Name (S.Inst, S.Decl);
 
       if Opts.Value = False then
          Put (" = ");

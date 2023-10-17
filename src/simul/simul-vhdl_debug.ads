@@ -16,7 +16,13 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Vhdl.Nodes; use Vhdl.Nodes;
+
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+
 package Simul.Vhdl_Debug is
+   procedure Put_Signal_Name (Inst : Synth_Instance_Acc; Decl : Node);
+
    --  Append new commands
    procedure Init;
 end Simul.Vhdl_Debug;
