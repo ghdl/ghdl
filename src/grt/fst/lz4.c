@@ -27,6 +27,8 @@
    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+   SPDX-License-Identifier: BSD-2-Clause
+
    You can contact the author at :
    - LZ4 source repository : https://github.com/Cyan4973/lz4
    - LZ4 public forum : https://groups.google.com/forum/#!forum/lz4c
@@ -228,6 +230,9 @@ static const int LZ4_minLength = (MFLIMIT+1);
 #define GB *(1U<<30)
 
 #define MAXD_LOG 16
+#ifdef MAX_DISTANCE
+#undef MAX_DISTANCE
+#endif
 #define MAX_DISTANCE ((1 << MAXD_LOG) - 1)
 
 #define ML_BITS  4
@@ -245,7 +250,7 @@ static const int LZ4_minLength = (MFLIMIT+1);
 /**************************************
 *  Common functions
 **************************************/
-static unsigned LZ4_NbCommonBytes (register size_t val)
+static unsigned LZ4_NbCommonBytes (size_t val)
 {
     if (LZ4_isLittleEndian())
     {
@@ -825,7 +830,7 @@ _next_match:
                 /* Match description too long : reduce it */
                 matchLength = (15-1) + (oMaxMatch-op) * 255;
             }
-            //printf("offset %5i, matchLength%5i \n", (int)(ip-match), matchLength + MINMATCH);
+            /*printf("offset %5i, matchLength%5i \n", (int)(ip-match), matchLength + MINMATCH);*/
             ip += MINMATCH + matchLength;
 
             if (matchLength>=ML_MASK)
