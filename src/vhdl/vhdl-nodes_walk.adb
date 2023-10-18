@@ -189,6 +189,21 @@ package body Vhdl.Nodes_Walk is
                   Cl := Get_Generate_Else_Clause (Cl);
                end loop;
             end;
+         when Iir_Kind_Case_Generate_Statement =>
+            declare
+               Ch : Node;
+            begin
+               Status := Cb.all (Stmt);
+               Ch := Get_Case_Statement_Alternative_Chain (Stmt);
+               while Status = Walk_Continue and then Ch /= Null_Node loop
+                  if not Get_Same_Alternative_Flag (Ch) then
+                     Status := Walk_Concurrent_Statements_Chain
+                       (Get_Concurrent_Statement_Chain
+                          (Get_Associated_Block (Ch)), Cb);
+                  end if;
+                  Ch := Get_Chain (Ch);
+               end loop;
+            end;
          when others =>
             Error_Kind ("walk_concurrent_statement", Stmt);
       end case;
