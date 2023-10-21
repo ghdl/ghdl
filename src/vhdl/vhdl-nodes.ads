@@ -8781,7 +8781,8 @@ package Vhdl.Nodes is
    function Get_Only_Characters_Flag (Atype : Iir) return Boolean;
    procedure Set_Only_Characters_Flag (Atype : Iir; Flag : Boolean);
 
-   --  True if enumeration type ATYPE is a character type.
+   --  True if enumeration type ATYPE is a character type (at least one
+   --  literal is a character).
    --  Field: Flag5
    function Get_Is_Character_Type (Atype : Iir) return Boolean;
    procedure Set_Is_Character_Type (Atype : Iir; Flag : Boolean);
