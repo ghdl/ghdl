@@ -30,13 +30,14 @@ with Dyn_Tables;
 --  Use BUILD_TYPE instead of PARAMS_TYPE.
 
 generic
-   --  Parameters of the object to be created.
+   --  Key for an object to be searched, extended with parameters to be able
+   --  to create the object if not found.
    type Params_Type (<>) is private;
 
-   --  Object to be built and stored.
+   --  Key stored.  The key is not mutable.
    type Object_Type is private;
 
-   --  Value associated to the object.  Could be modified but not used
+   --  Value associated to the key.  Could be modified but not used
    --  for comparision.
    type Value_Type is private;
 
