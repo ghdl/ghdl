@@ -1204,8 +1204,8 @@ package body Synth.Vhdl_Oper is
                   Cst := R;
                   Oper := L;
                else
-                  Warning_Msg_Synth
-                    (+Expr, "no operand of ?= is constant, handled like =");
+                  --  There was a warning as '?=' is handled like '=',
+                  --  but the result is std_logic - so still useful.
                   return Synth_Compare (Id_Eq, Logic_Type);
                end if;
                Res := Synth_Match (Ctxt, Cst, Oper, Expr);
@@ -1233,8 +1233,6 @@ package body Synth.Vhdl_Oper is
                   Cst := R;
                   Oper := L;
                else
-                  Warning_Msg_Synth
-                    (+Expr, "no operand of ?/= is constant, handled like /=");
                   return Synth_Compare (Id_Ne, Logic_Type);
                end if;
                Res := Synth_Match (Ctxt, Cst, Oper, Expr, Id_Ne);
