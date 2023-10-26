@@ -249,7 +249,6 @@ package body Simul.Fst is
       if Context = Null_fstContext then
          Error_S ("fst: cannot open ");
          Error_E (Fst_Filename (Fst_Filename'First .. Fst_Filename'Last - 1));
-         return;
       end if;
 
       fstWriterSetFileType (Context, FST_FT_VHDL);
