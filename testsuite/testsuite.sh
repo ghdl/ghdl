@@ -129,8 +129,9 @@ do_test() {
 
     pyunit)
       # The Python Unit testsuite: regression testsuite for Python bindings to libghdl
+      # pyunit/dom fails with python 3.12
       gstart "[GHDL - test] pyunit"
-      PYTHONPATH=$(pwd)/.. ${PYTHON:-python3} -m pytest -vsrA pyunit
+      PYTHONPATH=$(pwd)/.. ${PYTHON:-python3} -m pytest -vsrA pyunit/lsp pyunit/libghdl
       gend
     ;;
 
