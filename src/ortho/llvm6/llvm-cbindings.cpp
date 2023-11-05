@@ -382,6 +382,7 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
 
 #ifdef USE_ATTRIBUTES
   unsigned AttrId;
+  unsigned val;
 
   AttrId = LLVMGetEnumAttributeKindForName("nounwind", 8);
   assert (AttrId != 0);
@@ -389,7 +390,12 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
 
   AttrId = LLVMGetEnumAttributeKindForName("uwtable", 7);
   assert (AttrId != 0);
-  UwtableAttr = LLVMCreateEnumAttribute(LLVMGetGlobalContext(), AttrId, 0);
+#if LLVM_VERSION_MAJOR > 14
+  val = 1;  // sync
+#else
+  val = 0;  // Not an int, just a flag
+#endif
+  UwtableAttr = LLVMCreateEnumAttribute(LLVMGetGlobalContext(), AttrId, val);
 #endif
 
 #ifdef USE_DEBUG
