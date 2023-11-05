@@ -389,7 +389,7 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
 
   AttrId = LLVMGetEnumAttributeKindForName("uwtable", 7);
   assert (AttrId != 0);
-  UwtableAttr = LLVMCreateEnumAttribute(LLVMGetGlobalContext(), AttrId, 1);
+  UwtableAttr = LLVMCreateEnumAttribute(LLVMGetGlobalContext(), AttrId, 0);
 #endif
 
 #ifdef USE_DEBUG
