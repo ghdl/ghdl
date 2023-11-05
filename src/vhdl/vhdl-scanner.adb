@@ -1715,11 +1715,12 @@ package body Vhdl.Scanner is
    end Skip_Until_EOL;
 
    --  Scan an identifier within a comment.
+   --  The longest identifier is "label_applies_to" (16 characters).
    procedure Scan_Comment_Identifier (Id : out Name_Id)
    is
       use Name_Table;
       --  No need to use unlimited strings, the identifiers are recognized.
-      Buffer : String (1 .. 32);
+      Buffer : String (1 .. 20);
       Len : Natural;
       C : Character;
    begin
@@ -1752,6 +1753,11 @@ package body Vhdl.Scanner is
          Len := Len + 1;
          Buffer (Len) := C;
          Pos := Pos + 1;
+
+         --  Comment identifiers are not very long...
+         if Len >= Buffer'Length then
+            return;
+         end if;
       end loop;
 
       --  Shall be followed by a space or a new line.
