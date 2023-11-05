@@ -499,24 +499,7 @@ package body Synth.Vhdl_Expr is
    --  Change the bounds of VAL.
    function Reshape_Value (Val : Valtyp; Ntype : Type_Acc) return Valtyp is
    begin
-      case Val.Val.Kind is
-         when Value_Wire =>
-            return Create_Value_Wire
-              (Get_Value_Wire (Val.Val), Ntype, Current_Pool);
-         when Value_Net =>
-            return Create_Value_Net (Get_Value_Net (Val.Val), Ntype);
-         when Value_Alias =>
-            return (Ntype, Val.Val);
-         when Value_Const =>
-            return Reshape_Value ((Val.Typ, Val.Val.C_Val), Ntype);
-         when Value_Memory =>
-            return (Ntype, Val.Val);
-         when Value_Signal =>
-            --  For external names.
-            return (Ntype, Create_Value_Signal (Val.Val.S, Val.Val.Init));
-         when others =>
-            raise Internal_Error;
-      end case;
+      return (Ntype, Val.Val);
    end Reshape_Value;
 
    function Convert_Array_Indexes (Syn_Inst : Synth_Instance_Acc;
