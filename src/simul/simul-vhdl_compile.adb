@@ -1069,7 +1069,7 @@ package body Simul.Vhdl_Compile is
                end loop;
             end;
 
-         when Iir_Kind_External_Signal_Name =>
+         when Iir_Kinds_External_Name =>
             External_Names_Table.Append ((Mem, Inst, Decl));
 
          when Iir_Kind_Interface_Type_Declaration

@@ -372,7 +372,6 @@ package body Elab.Vhdl_Context is
       Obj : Obj_Type renames Syn_Inst.Objects (Info.Slot);
    begin
       pragma Assert (Obj.Kind = Obj_Object);
-      pragma Assert (Obj.Obj.Typ = Vt.Typ);
 
       Obj.Obj := Vt;
    end Mutate_Object;

@@ -574,6 +574,16 @@ package body Elab.Vhdl_Annotations is
       end if;
    end Annotate_Declaration_Type;
 
+   procedure Annotate_External_Name_Type
+     (Block_Info : Sim_Info_Acc; Decl : Iir)
+   is
+      Ind : constant Iir := Get_Subtype_Indication (Decl);
+   begin
+      if Is_Proper_Subtype_Indication (Ind) then
+         Annotate_Type_Definition (Block_Info, Ind);
+      end if;
+   end Annotate_External_Name_Type;
+
    procedure Annotate_Declaration (Block_Info: Sim_Info_Acc; Decl: Iir) is
    begin
       case Get_Kind (Decl) is
@@ -595,15 +605,11 @@ package body Elab.Vhdl_Annotations is
                      when Iir_Kinds_Signal_Attribute =>
                         Create_Signal_Info (Block_Info, Attr);
                      when Iir_Kind_External_Signal_Name =>
-                        declare
-                           Ind : constant Iir :=
-                             Get_Subtype_Indication (Attr);
-                        begin
-                           if Is_Proper_Subtype_Indication (Ind) then
-                              Annotate_Type_Definition (Block_Info, Ind);
-                           end if;
-                        end;
+                        Annotate_External_Name_Type (Block_Info, Attr);
                         Create_Signal_Info (Block_Info, Attr);
+                     when Iir_Kind_External_Constant_Name =>
+                        Annotate_External_Name_Type (Block_Info, Attr);
+                        Create_Object_Info (Block_Info, Attr);
                      when others =>
                         raise Internal_Error;
                   end case;

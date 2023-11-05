@@ -290,12 +290,14 @@ package body Trans.Chap4 is
          Get_Object_Type (Type_Info, Mode_Value));
    end Create_Implicit_Signal;
 
-   procedure Create_Implicit_Declaration (Decl : Iir) is
+   procedure Create_Implicit_Declaration (Decl : Iir)
+   is
+      Kind : constant Iir_Kind := Get_Kind (Decl);
    begin
-      case Get_Kind (Decl) is
+      case Kind is
          when Iir_Kinds_Signal_Attribute =>
             Create_Implicit_Signal (Decl);
-         when Iir_Kind_External_Signal_Name =>
+         when Iir_Kinds_External_Name =>
             declare
                Mark : Id_Mark_Type;
                Tinfo : Type_Info_Acc;
@@ -308,11 +310,17 @@ package body Trans.Chap4 is
                Tinfo := Get_Info (Get_Type (Decl));
 
                Info := Add_Info (Decl, Kind_Alias);
-               Info.Alias_Kind := Mode_Signal;
 
-               Info.Alias_Var (Mode_Signal) := Create_Var
-                 (Create_Var_Identifier ("ESIG"),
-                  Get_Alias_Ortho_Type (Tinfo, Mode_Signal));
+               if Kind = Iir_Kind_External_Signal_Name then
+                  Info.Alias_Kind := Mode_Signal;
+
+                  Info.Alias_Var (Mode_Signal) := Create_Var
+                    (Create_Var_Identifier ("ESIG"),
+                     Get_Alias_Ortho_Type (Tinfo, Mode_Signal));
+               else
+                  Info.Alias_Kind := Mode_Value;
+               end if;
+
                Info.Alias_Var (Mode_Value) := Create_Var
                  (Create_Var_Identifier ("EVAL"),
                   Get_Alias_Ortho_Type (Tinfo, Mode_Value));

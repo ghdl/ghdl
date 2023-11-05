@@ -351,21 +351,22 @@ package body Simul.Vhdl_Elab is
 
       Prev : Valtyp;
       Res : Valtyp;
+      Name_Typ : Type_Acc;
    begin
       Mark_Expr_Pool (Marker);
       Instance_Pool := Global_Pool'Access;
 
       Prev := Get_Value (Inst, Name);
 
+      --  Resolve the external name.
       Res := Elab.Vhdl_Expr.Exec_External_Name (Inst, Name);
 
       if Res /= No_Valtyp then
-         Res := Elab.Vhdl_Expr.Exec_Subtype_Conversion
-           (Res, Prev.Typ, True, Name);
-         Convert_Type_Width (Res.Typ);
-         Res.Typ := Unshare (Res.Typ, Instance_Pool);
+         --  Rewrite the external name as an alias.
+         Name_Typ := Prev.Typ;
          case Res.Val.Kind is
-            when Value_Signal =>
+            when Value_Signal
+              | Value_Memory =>
                Prev.Val.all := (Kind => Value_Alias,
                                 A_Obj => Res.Val,
                                 A_Typ => Res.Typ,
@@ -373,6 +374,15 @@ package body Simul.Vhdl_Elab is
             when others =>
                raise Internal_Error;
          end case;
+
+         --  Subtype conversion.
+         --  The type of the external name is Res.Typ, and the target type is
+         --  in Prev.Typ.  Need to do some gymnastic.
+         Prev.Typ := Res.Typ;
+         Prev := Elab.Vhdl_Expr.Exec_Subtype_Conversion
+           (Prev, Name_Typ, True, Name);
+         Convert_Type_Width (Prev.Typ);
+         Prev.Typ := Unshare (Prev.Typ, Instance_Pool);
 
          Mutate_Object (Inst, Name, Prev);
       end if;
@@ -520,7 +530,7 @@ package body Simul.Vhdl_Elab is
             | Iir_Kind_Package_Instantiation_Body =>
             null;
 
-         when Iir_Kind_External_Signal_Name =>
+         when Iir_Kinds_External_Name =>
             Elab_External_Name (Inst, Decl);
 
          when others =>

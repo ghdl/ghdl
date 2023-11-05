@@ -506,9 +506,7 @@ package body Synth.Vhdl_Expr is
          when Value_Net =>
             return Create_Value_Net (Get_Value_Net (Val.Val), Ntype);
          when Value_Alias =>
-            return Create_Value_Alias
-              ((Val.Val.A_Typ, Val.Val.A_Obj), Val.Val.A_Off, Ntype,
-              Current_Pool);
+            return (Ntype, Val.Val);
          when Value_Const =>
             return Reshape_Value ((Val.Typ, Val.Val.C_Val), Ntype);
          when Value_Memory =>
