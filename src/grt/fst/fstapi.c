@@ -343,7 +343,7 @@ return(NULL);
 static void *fstMmap2(size_t __len, int __fd, fst_off_t __off)
 {
 HANDLE handle = CreateFileMapping((HANDLE)_get_osfhandle(__fd), NULL,
-				  PAGE_READWRITE, (DWORD)(__len >> 32),
+				  PAGE_READWRITE, (DWORD)((__len >> 16) >> 16),
 				  (DWORD)__len, NULL);
 if (!handle) { return NULL; }
 
