@@ -724,10 +724,12 @@ distclean: clean
 
 clean-c: force
 	$(RM) -f memsegs_c.o chkstk.o chkstk-x64.o jumps.o times.o
+	$(RM) -f win32.o clock.o
 	$(RM) -f grt-cstdio.o grt-cgnatrts.o grt-modules.o
 	$(RM) -f grt-cvpi.o grt-cvhpi.o grt-cdynload.o
 	$(RM) -f fstapi.o fastlz.o lz4.o
 	$(RM) -f pic/times.o pic/grt-cvpi.o pic/grt-cvhpi.o pic/jumps.o
+	$(RM) -f pic/win32.o pic/clock.o
 	$(RM) -f pic/grt-cstdio.o pic/grt-cgnatrts.o pic/grt-modules.o
 	$(RM) -f pic/grt-cdynload.o
 
