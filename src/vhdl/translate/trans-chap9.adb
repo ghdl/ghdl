@@ -312,7 +312,10 @@ package body Trans.Chap9 is
             Sig := Get_Object_Prefix (Sig);
             pragma Assert
               (Get_Kind (Sig) /= Iir_Kind_Object_Alias_Declaration);
-            if not Get_After_Drivers_Flag (Sig) then
+            --  No direct drivers for external names.
+            if not Get_After_Drivers_Flag (Sig)
+              and then Get_Kind (Sig) /= Iir_Kind_External_Signal_Name
+            then
                Info.Process_Drivers (I).Var :=
                  Create_Var (Create_Var_Identifier (Sig, "_DDRV", I),
                              Chap4.Get_Object_Type

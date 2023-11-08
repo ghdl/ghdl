@@ -1349,8 +1349,13 @@ package body Trans.Chap4 is
 
    function Has_Direct_Driver (Sig : Iir) return Boolean
    is
-      Info : constant Ortho_Info_Acc := Get_Info (Get_Object_Prefix (Sig));
+      Pfx : constant Iir := Get_Object_Prefix (Sig);
+      Info : constant Ortho_Info_Acc := Get_Info (Pfx);
    begin
+      --  No direct drivers for external names.  They might have no info.
+      if Get_Kind (Pfx) = Iir_Kind_External_Signal_Name then
+         return False;
+      end if;
       --  Can be an alias ?
       return Info.Kind = Kind_Signal
         and then Info.Signal_Driver /= Null_Var;
@@ -1831,7 +1836,16 @@ package body Trans.Chap4 is
       Atype     : O_Tnode;
       Id        : Var_Ident_Type;
    begin
-      Chap3.Translate_Object_Subtype_Indication (Decl, True);
+      if Get_Kind (Name) in Iir_Kinds_External_Name
+        and then Get_Subtype_Indication (Decl) = Null_Iir
+      then
+         --  If the alias has no type and the name is an external name,
+         --  translate external name type, as the alias inherit from this
+         --  type.
+         Chap3.Translate_External_Name_Subtype_Indication (Name);
+      else
+         Chap3.Translate_Object_Subtype_Indication (Decl, True);
+      end if;
 
       Info := Add_Info (Decl, Kind_Alias);
       if Is_Signal_Name (Decl) then
