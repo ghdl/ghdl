@@ -314,23 +314,37 @@ package body Elab.Vhdl_Expr is
          return No_Valtyp;
       end if;
 
+      --  Check if pathname element is elaborated.
+      case Get_Kind (Res) is
+         when Iir_Kind_Component_Instantiation_Statement
+            | Iir_Kind_If_Generate_Statement
+            | Iir_Kind_For_Generate_Statement
+            | Iir_Kind_Package_Declaration
+            | Iir_Kind_Block_Statement =>
+            if not Is_Elaborated (Cur_Inst, Res) then
+               Error_Msg_Synth
+                 (Loc_Inst, Path, "%n is not yet elaborated", +Res);
+               return No_Valtyp;
+            end if;
+         when Iir_Kind_Process_Statement =>
+            --  And other concurrent statements...
+            --  and other declarations
+            null;
+         when others =>
+            Error_Kind ("synth_pathname(2a)", Res);
+      end case;
+
       case Get_Kind (Res) is
          when Iir_Kind_Component_Instantiation_Statement =>
-            declare
-               Comp_Inst : Synth_Instance_Acc;
-            begin
-               if Is_Entity_Instantiation (Res) then
-                  Sub_Inst := Get_Sub_Instance (Cur_Inst, Res);
-               else
-                  Comp_Inst := Get_Sub_Instance (Cur_Inst, Res);
-                  Sub_Inst := Get_Component_Instance (Comp_Inst);
-                  if Cur_Inst = null then
-                     Error_Msg_Synth
-                       (Loc_Inst, Path, "component for %i is not bound", +Res);
-                     return No_Valtyp;
-                  end if;
+            Sub_Inst := Get_Sub_Instance (Cur_Inst, Res);
+            if not Is_Entity_Instantiation (Res) then
+               Sub_Inst := Get_Component_Instance (Sub_Inst);
+               if Cur_Inst = null then
+                  Error_Msg_Synth
+                    (Loc_Inst, Path, "component for %i is not bound", +Res);
+                  return No_Valtyp;
                end if;
-            end;
+            end if;
          when Iir_Kind_If_Generate_Statement =>
             Sub_Inst := Get_Sub_Instance (Cur_Inst, Res);
             if Sub_Inst = null then

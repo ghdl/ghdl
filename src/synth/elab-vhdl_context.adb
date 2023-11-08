@@ -518,6 +518,15 @@ package body Elab.Vhdl_Context is
       Syn_Inst.Objects (Info.Slot).I_Inst := Sub_Inst;
    end Set_Sub_Instance;
 
+   function Is_Elaborated (Syn_Inst : Synth_Instance_Acc; N : Node)
+                          return Boolean
+   is
+      Info : constant Sim_Info_Acc := Get_Ann (N);
+   begin
+      --  Elab_Objects is the slot value of the last created object.
+      return Syn_Inst.Elab_Objects >= Info.Slot;
+   end Is_Elaborated;
+
    function Get_Component_Instance
      (Syn_Inst : Synth_Instance_Acc) return Synth_Instance_Acc
    is

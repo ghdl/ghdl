@@ -214,6 +214,12 @@ package Elab.Vhdl_Context is
                                Stmt : Node;
                                Sub_Inst : Synth_Instance_Acc);
 
+   --  Return True iff declaration or statement N is elaborated.
+   --  SYN_INST must correspond to the instance for N.
+   --  Used to check external names.
+   function Is_Elaborated (Syn_Inst : Synth_Instance_Acc; N : Node)
+                          return Boolean;
+
    --  Return the scope of BLK.  Deals with architecture bodies.
    function Get_Info_Scope (Blk : Node) return Sim_Info_Acc;
 
