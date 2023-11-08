@@ -424,7 +424,6 @@ package body Simul.Fst is
       Src : constant Node := Get_Source_Scope (Inst);
       Parent : constant Synth_Instance_Acc := Get_Instance_Parent (Inst);
       Parent_Src : Node;
-      Str : Vstring (32);
       St : fstScopeType;
       Id : Name_Id;
       Comp_Name : Ghdl_C_String;
@@ -455,11 +454,13 @@ package body Simul.Fst is
                      It : constant Node :=
                        Get_Parameter_Specification (Parent_Src);
                      Val : constant Valtyp := Get_Value (Inst, It);
+                     Str : Vstring (32);
                   begin
                      Append (Str, Id);
                      Append (Str, '(');
                      Append (Str, Read_Discrete (Val));
                      Append (Str, ')');
+                     Append (Str, NUL);
 
                      St := FST_ST_VHDL_FOR_GENERATE;
 
