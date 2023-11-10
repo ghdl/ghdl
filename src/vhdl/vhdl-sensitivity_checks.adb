@@ -245,11 +245,13 @@ package body Vhdl.Sensitivity_Checks is
       while Is_Valid (It) loop
          if not Ctxt.Referenced (Idx) then
             El := Get_Element (It);
-            while Get_Kind (El) not in Iir_Kinds_Denoting_Name loop
-               El := Get_Prefix (El);
-            end loop;
-            Warning_Msg_Sem (Warnid_Sensitivity, +El,
-                             "extra signal %i in sensitivity list", +El);
+            if not Is_Error (El) then
+               while Get_Kind (El) not in Iir_Kinds_Denoting_Name loop
+                  El := Get_Prefix (El);
+               end loop;
+               Warning_Msg_Sem (Warnid_Sensitivity, +El,
+                                "extra signal %i in sensitivity list", +El);
+            end if;
          end if;
          Next (It);
          Idx := Idx + 1;
