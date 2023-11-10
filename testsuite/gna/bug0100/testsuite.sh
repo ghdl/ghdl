@@ -39,6 +39,8 @@ analyze_failure inter1.vhdl
 analyze_failure --force-analysis inter1.vhdl
 analyze_failure id2.vhdl
 analyze_failure -fpsl pslid1.vhdl
+analyze_failure --force-analysis -Wsensitivity proc1.vhdl
+analyze_failure --force-analysis -Wsensitivity proc2.vhdl
 
 if analyze_failure --force-analysis notype1.vhdl 2>&1 | grep -q "indexed name"; then
   :
