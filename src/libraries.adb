@@ -201,6 +201,13 @@ package body Libraries is
    --  Set PATH as the path of the work library.
    procedure Set_Work_Library_Path (Path : String) is
    begin
+      if Path = "." then
+         --  Handle "." as current directory and do not try to expand the path
+         --  in that case.
+         Work_Directory := Name_Nil;
+         return;
+      end if;
+
       Work_Directory := Path_To_Id (Path);
       if not Filesystem.Is_Directory (Image (Work_Directory))
         and then Is_Warning_Enabled (Warnid_Library)
