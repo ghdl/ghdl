@@ -1095,26 +1095,31 @@ package body Vhdl.Sem_Inst is
                Inst_Inter : constant Iir := Get_Instance (Inter);
             begin
                Set_Instance (Inter_Type_Def, Actual_Type);
-               Set_Associated_Type (Get_Type (Inst_Inter), Actual_Type);
+               --  The associated type is a forward reference, so it can
+               --  be set to the actual type (which can be defined later,
+               --  as an anonymous typ in the association).
+               --  Let the type be an interface type definition.
+               Set_Associated_Type (Get_Interface_Type_Definition (Inst_Inter),
+                                    Actual_Type);
             end;
          when Iir_Kinds_Interface_Subprogram_Declaration =>
-            if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
-               Set_Instance (Get_Origin (Assoc_Formal),
-                             Get_Open_Actual (Assoc));
-            else
-               pragma Assert
-                 (Get_Kind (Assoc) = Iir_Kind_Association_Element_Subprogram);
-               --  Replace the interface subprogram by the subprogram.
-               declare
-                  Actual_Subprg : constant Iir :=
-                    Get_Named_Entity (Get_Actual (Assoc));
-               begin
-                  Set_Instance (Get_Origin (Assoc_Formal), Actual_Subprg);
-                  --  Also set the associated subprogram to the interface
-                  --  subprogram, so that it can referenced through its name.
-                  Set_Associated_Subprogram (Assoc_Formal, Actual_Subprg);
-               end;
-            end if;
+            declare
+               Actual_Subprg : Iir;
+            begin
+               if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
+                  Actual_Subprg := Get_Open_Actual (Assoc);
+               else
+                  pragma Assert
+                    (Get_Kind (Assoc)
+                       = Iir_Kind_Association_Element_Subprogram);
+                  --  Replace the interface subprogram by the subprogram.
+                  Actual_Subprg := Get_Named_Entity (Get_Actual (Assoc));
+               end if;
+               Set_Instance (Get_Origin (Assoc_Formal), Actual_Subprg);
+               --  Also set the associated subprogram to the interface
+               --  subprogram, so that it can referenced through its name.
+               Set_Associated_Subprogram (Assoc_Formal, Actual_Subprg);
+            end;
          when Iir_Kind_Error =>
             null;
          when others =>
@@ -1282,7 +1287,8 @@ package body Vhdl.Sem_Inst is
          case Get_Kind (Inter_El) is
             when Iir_Kind_Interface_Type_Declaration =>
                --  Redirect the interface type definition.
-               Set_Instance (Get_Type (Orig_El), Get_Actual_Type (Assoc_El));
+               Set_Instance (Get_Interface_Type_Definition (Orig_El),
+                             Get_Actual_Type (Assoc_El));
                --  Implicit operators.
                declare
                   Imp_Inter : Iir;

@@ -5089,9 +5089,27 @@ package body Vhdl.Sem_Names is
             case Get_Kind (Atype) is
                when Iir_Kind_Type_Declaration =>
                   return Get_Type_Definition (Atype);
-               when Iir_Kind_Subtype_Declaration
-                 | Iir_Kind_Interface_Type_Declaration =>
+               when Iir_Kind_Subtype_Declaration =>
                   return Get_Type (Atype);
+               when Iir_Kind_Interface_Type_Declaration =>
+                  declare
+                     Def : constant Iir := Get_Type (Atype);
+                     Assoc_Type : Iir;
+                  begin
+                     if Get_Kind (Def) /= Iir_Kind_Interface_Type_Definition
+                     then
+                        --  For a generic-mapped package.
+                        return Def;
+                     end if;
+                     Assoc_Type := Get_Associated_Type (Def);
+                     if Assoc_Type = Null_Iir then
+                        --  During the analysis of an uninstantiated unit.
+                        return Def;
+                     else
+                        --  When the unit is instantiated.
+                        return Assoc_Type;
+                     end if;
+                  end;
                when Iir_Kind_Error =>
                   return Atype;
                when others =>
