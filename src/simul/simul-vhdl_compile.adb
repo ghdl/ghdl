@@ -1909,7 +1909,8 @@ package body Simul.Vhdl_Compile is
                   Create_Process_Drivers (I);
                when Iir_Kind_Process_Statement =>
                   if Get_Postponed_Flag (Proc) then
-                     raise Program_Error;
+                     Grt.Processes.Ghdl_Postponed_Process_Register
+                       (P.This, P.Subprg, null, System.Null_Address);
                   else
                      Grt.Processes.Ghdl_Process_Register
                        (P.This, P.Subprg, null, System.Null_Address);
