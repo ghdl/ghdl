@@ -1816,6 +1816,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Return_Type_Mark (Field8)
    --
+   --  A Reference_Name for <>.
    --   Get/Set_Default_Subprogram (Field9)
    --
    --   Get/Set_Subprogram_Depth (Field10)
