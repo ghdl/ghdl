@@ -4101,6 +4101,9 @@ package body Trans.Chap7 is
             if Get_Type_Staticness (Range_Type) = Locally then
                goto Next;
             end if;
+            if Get_Info (Expr_Type) = null then
+               Chap3.Create_Composite_Subtype (Expr_Type, True);
+            end if;
             Bnd := Chap3.Get_Composite_Type_Bounds (Expr_Type);
          else
             --  Eval expr
