@@ -574,6 +574,7 @@ package body Synth.Vhdl_Aggr is
       Tab_Res := new Valtyp_Array(1 .. Nat32 (Flen));
       Tab_Res.all := (others => No_Valtyp);
 
+      Err_P := False;
       Len := 0;
       Pos := Tab_Res'First;
       Const_P := True;
