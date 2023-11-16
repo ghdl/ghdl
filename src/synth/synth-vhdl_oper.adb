@@ -1983,7 +1983,8 @@ package body Synth.Vhdl_Oper is
 
          when Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int
             | Iir_Predefined_Ieee_Numeric_Std_Sll_Sgn_Int
-            | Iir_Predefined_Ieee_1164_Vector_Sll =>
+            | Iir_Predefined_Ieee_1164_Vector_Sll
+            | Iir_Predefined_Ieee_Numeric_Std_Sla_Uns_Int =>
             return Synth_Shift (Id_Lsl, Id_Lsr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int
