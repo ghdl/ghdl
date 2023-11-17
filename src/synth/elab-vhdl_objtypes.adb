@@ -20,6 +20,7 @@ with Ada.Unchecked_Conversion;
 with System; use System;
 
 with Mutils; use Mutils;
+with Types_Utils;
 
 package body Elab.Vhdl_Objtypes is
    function To_Rec_El_Array_Acc is new Ada.Unchecked_Conversion
@@ -1177,6 +1178,12 @@ package body Elab.Vhdl_Objtypes is
       end case;
    end Write_Discrete;
 
+   function Read_Uns32 (Mt : Memtyp) return Uns32 is
+   begin
+      pragma Assert (Mt.Typ.Sz = 4);
+      return Uns32 (Read_U32 (Mt.Mem));
+   end Read_Uns32;
+
    function Alloc_Memory (Sz : Size_Type;
                           Align2 : Natural;
                           Pool : Areapool_Acc) return Memory_Ptr
@@ -1236,6 +1243,7 @@ package body Elab.Vhdl_Objtypes is
    function Create_Memory_Discrete (Val : Int64; Vtype : Type_Acc)
                                    return Memtyp
    is
+      use Types_Utils;
       Res : Memory_Ptr;
    begin
       Res := Alloc_Memory (Vtype, Current_Pool);
@@ -1243,7 +1251,7 @@ package body Elab.Vhdl_Objtypes is
          when 1 =>
             Write_U8 (Res, Ghdl_U8 (Val));
          when 4 =>
-            Write_I32 (Res, Ghdl_I32 (Val));
+            Write_U32 (Res, Ghdl_U32 (To_Uns64 (Val) and 16#ffff_ffff#));
          when 8 =>
             Write_I64 (Res, Ghdl_I64 (Val));
          when others =>

@@ -379,6 +379,7 @@ package Elab.Vhdl_Objtypes is
    procedure Write_Discrete (Mem : Memory_Ptr; Typ : Type_Acc; Val : Int64);
    function Read_Discrete (Mem : Memory_Ptr; Typ : Type_Acc) return Int64;
    function Read_Discrete (Mt : Memtyp) return Int64;
+   function Read_Uns32 (Mt : Memtyp) return Uns32;
 
    --  Memory allocation.
 

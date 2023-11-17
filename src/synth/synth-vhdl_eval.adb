@@ -2745,32 +2745,29 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Shift_Left =>
-            return Shift_Vec (Param1, Uns32 (Read_Discrete (Param2)),
-                              False, False);
+            return Shift_Vec (Param1, Read_Uns32 (Param2), False, False);
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Shift_Right =>
-            return Shift_Vec (Param1, Uns32 (Read_Discrete (Param2)),
-                              True, False);
+            return Shift_Vec (Param1, Read_Uns32 (Param2), True, False);
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat =>
-            return Shift_Vec (Param1, Uns32 (Read_Discrete (Param2)),
-                              True, True);
+            return Shift_Vec (Param1, Read_Uns32 (Param2), True, True);
          when Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Sgn_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Rotate_Left =>
-            return Rotate_Vec (Param1, Uns32 (Read_Discrete (Param2)), False);
+            return Rotate_Vec (Param1, Read_Uns32 (Param2), False);
          when Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Sgn_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Rotate_Right =>
-            return Rotate_Vec (Param1, Uns32 (Read_Discrete (Param2)), True);
+            return Rotate_Vec (Param1, Read_Uns32 (Param2), True);
 
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Resize_Slv_Nat =>
-            return Resize_Vec (Param1, Uns32 (Read_Discrete (Param2)), False);
+            return Resize_Vec (Param1, Read_Uns32 (Param2), False);
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Resize_Slv_Slv =>
             return Resize_Vec (Param1, Param2.Typ.Abound.Len, False);
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat =>
-            return Resize_Vec (Param1, Uns32 (Read_Discrete (Param2)), True);
+            return Resize_Vec (Param1, Read_Uns32 (Param2), True);
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn =>
             return Resize_Vec (Param1, Param2.Typ.Abound.Len, True);
 
