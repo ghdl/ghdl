@@ -1978,8 +1978,12 @@ package body Synth.Vhdl_Oper is
             --  ">=" (Signed, Unsigned)
             return Synth_Compare_Sgn_Uns (Id_Sge, Res_Typ);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int
+            | Iir_Predefined_Ieee_Numeric_Std_Sra_Uns_Int =>
             return Synth_Shift (Id_Asr, Id_Lsl);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Sla_Sgn_Int =>
+            return Synth_Shift (Id_Lsl, Id_Asr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int
             | Iir_Predefined_Ieee_Numeric_Std_Sll_Sgn_Int
