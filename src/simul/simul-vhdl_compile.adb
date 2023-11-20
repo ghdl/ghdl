@@ -850,6 +850,25 @@ package body Simul.Vhdl_Compile is
    begin
       Build_Subtype_Indication
         (Mem, Inst, Get_Subtype_Indication (Decl));
+
+      if Get_Kind (Decl) = Iir_Kind_Object_Alias_Declaration then
+         declare
+            Name : constant Node := Get_Name (Decl);
+         begin
+            if Get_Kind (Name) = Iir_Kind_Slice_Name then
+               --  Add layout
+               declare
+                  Name_Type : constant Node := Get_Type (Name);
+                  Name_Tinfo : constant Type_Info_Acc := Get_Info (Name_Type);
+                  Lay_Mem : Memory_Ptr;
+               begin
+                  Lay_Mem := Get_Var_Mem (Mem, Name_Tinfo.S.Composite_Layout);
+                  Build_Composite_Subtype_Layout (Lay_Mem, Name_Type, Src.Typ);
+               end;
+            end if;
+         end;
+      end if;
+
       for Mode in Mode_Value .. Info.Alias_Kind loop
          Var_Mem := Get_Var_Mem (Mem, Info.Alias_Var (Mode));
          case Obj.Kind is
