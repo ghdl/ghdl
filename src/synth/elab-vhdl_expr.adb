@@ -287,7 +287,8 @@ package body Elab.Vhdl_Expr is
       --  Find name in concurrent statements.
       case Get_Kind (Scope) is
          when Iir_Kind_Architecture_Body
-           | Iir_Kind_Block_Statement =>
+           | Iir_Kind_Block_Statement
+           | Iir_Kind_Generate_Statement_Body =>
             Res := Find_Name_In_Chain
               (Get_Concurrent_Statement_Chain (Scope), Id);
          when Iir_Kind_Package_Declaration =>
