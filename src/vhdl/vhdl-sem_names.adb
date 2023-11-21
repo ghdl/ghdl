@@ -5197,7 +5197,11 @@ package body Vhdl.Sem_Names is
       Path : Iir;
       Expr : Iir;
    begin
-      pragma Assert (Get_Type (Name) = Null_Iir);
+      if Get_Type (Name) /= Null_Node then
+         --  An external name has no named entity, but should have a
+         --  type if already analyzed.
+         return;
+      end if;
 
       Atype := Get_Subtype_Indication (Name);
 
