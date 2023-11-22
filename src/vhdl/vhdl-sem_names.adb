@@ -4198,6 +4198,7 @@ package body Vhdl.Sem_Names is
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
+           | Iir_Kind_External_Signal_Name
            | Iir_Kinds_Signal_Attribute =>
             null;
          when others =>
