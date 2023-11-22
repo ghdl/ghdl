@@ -136,7 +136,10 @@ package body Vhdl.Canon is
    is
       El : Iir;
    begin
-      if Get_Expr_Staticness (Expr) /= None then
+      if Expr = Null_Iir
+         or else Get_Expr_Staticness (Expr) /= None
+      then
+         --  In case of error, or trivially not a signal.
          return;
       end if;
 
