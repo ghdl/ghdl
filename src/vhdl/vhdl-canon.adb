@@ -353,6 +353,8 @@ package body Vhdl.Canon is
                end case;
             end;
 
+         when Iir_Kind_Error =>
+            null;
          when others =>
             Error_Kind ("canon_extract_sensitivity", Expr);
       end case;
