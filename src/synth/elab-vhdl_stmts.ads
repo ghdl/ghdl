@@ -19,11 +19,13 @@
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+with Elab.Vhdl_Insts; use Elab.Vhdl_Insts;
 
 package Elab.Vhdl_Stmts is
-   procedure Elab_Concurrent_Statement
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
-
-   procedure Elab_Concurrent_Statements
-     (Syn_Inst : Synth_Instance_Acc; Chain : Node);
+   procedure Elab_Concurrent_Statement (Syn_Inst : Synth_Instance_Acc;
+                                        Stmt : Node;
+                                        Cfgs : in out Configs_Rec);
+   procedure Elab_Concurrent_Statements (Syn_Inst : Synth_Instance_Acc;
+                                         Chain : Node;
+                                         Cfgs : in out Configs_Rec);
 end Elab.Vhdl_Stmts;

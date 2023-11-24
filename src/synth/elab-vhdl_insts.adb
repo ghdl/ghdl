@@ -371,15 +371,19 @@ package body Elab.Vhdl_Insts is
       end loop;
    end Elab_Dependencies;
 
-   procedure Apply_Block_Configuration (Cfg : Node; Blk : Node)
+   function Apply_Block_Configuration_With_Stmts
+     (Cfg : Node; Stmts : Node; Blk : Node) return Configs_Rec
    is
       Item : Node;
+      Count : Natural;
+      Res : Iir_Array_Acc;
    begin
       --  Be sure CFG applies to BLK.
       pragma Assert (Get_Block_From_Block_Specification
                        (Get_Block_Specification (Cfg)) = Blk);
 
       --  Clear_Instantiation_Configuration (Blk);
+      Count := 0;
 
       Item := Get_Configuration_Item_Chain (Cfg);
       while Item /= Null_Node loop
@@ -400,51 +404,8 @@ package body Elab.Vhdl_Insts is
                      pragma Assert
                        (Get_Component_Configuration (Inst) = Null_Node);
                      Set_Component_Configuration (Inst, Item);
-                  end loop;
-               end;
-            when Iir_Kind_Block_Configuration =>
-               declare
-                  Sub_Blk : constant Node := Get_Block_From_Block_Specification
-                    (Get_Block_Specification (Item));
-               begin
-                  case Get_Kind (Sub_Blk) is
-                     when Iir_Kind_Generate_Statement_Body =>
-                        -- Linked chain.
-                        Set_Prev_Block_Configuration
-                          (Item, Get_Generate_Block_Configuration (Sub_Blk));
-                        Set_Generate_Block_Configuration (Sub_Blk, Item);
-                     when Iir_Kind_Block_Statement =>
-                        Set_Block_Block_Configuration (Sub_Blk, Item);
-                     when others =>
-                        Vhdl.Errors.Error_Kind
-                          ("apply_block_configuration(blk)", Sub_Blk);
-                  end case;
-               end;
-            when others =>
-               Vhdl.Errors.Error_Kind ("apply_block_configuration", Item);
-         end case;
-         Item := Get_Chain (Item);
-      end loop;
-   end Apply_Block_Configuration;
 
-   procedure Unapply_Block_Configuration (Cfg : Node)
-   is
-      Item : Node;
-   begin
-      Item := Get_Configuration_Item_Chain (Cfg);
-      while Item /= Null_Node loop
-         case Get_Kind (Item) is
-            when Iir_Kind_Component_Configuration =>
-               declare
-                  List : constant Iir_Flist :=
-                    Get_Instantiation_List (Item);
-                  El : Node;
-                  Inst : Node;
-               begin
-                  for I in Flist_First .. Flist_Last (List) loop
-                     El := Get_Nth_Element (List, I);
-                     Inst := Get_Named_Entity (El);
-                     Set_Component_Configuration (Inst, Null_Node);
+                     Count := Count + 1;
                   end loop;
                end;
             when Iir_Kind_Block_Configuration =>
@@ -456,21 +417,122 @@ package body Elab.Vhdl_Insts is
                   case Get_Kind (Sub_Blk) is
                      when Iir_Kind_Generate_Statement_Body =>
                         -- Linked chain.
-                        Prev := Get_Prev_Block_Configuration (Item);
-                        Set_Generate_Block_Configuration (Sub_Blk, Prev);
+                        Prev := Get_Generate_Block_Configuration (Sub_Blk);
+                        Set_Prev_Block_Configuration (Item, Prev);
+                        Set_Generate_Block_Configuration (Sub_Blk, Item);
+                        if Prev = Null_Node then
+                           Count := Count + 1;
+                        end if;
                      when Iir_Kind_Block_Statement =>
-                        Set_Block_Block_Configuration (Sub_Blk, Null_Node);
+                        Set_Block_Block_Configuration (Sub_Blk, Item);
+                        Count := Count + 1;
                      when others =>
                         Vhdl.Errors.Error_Kind
-                          ("unapply_block_configuration(blk)", Sub_Blk);
+                          ("apply_block_configuration(blk)", Sub_Blk);
                   end case;
                end;
             when others =>
-               Vhdl.Errors.Error_Kind ("unapply_block_configuration", Item);
+               Vhdl.Errors.Error_Kind ("apply_block_configuration", Item);
          end case;
          Item := Get_Chain (Item);
       end loop;
-   end Unapply_Block_Configuration;
+
+      --  There are COUNT sub-blocks and instances.
+      Res := new Iir_Array (1 .. Count);
+
+      Count := 0;
+      Item := Stmts;
+      while Item /= Null_Node loop
+         case Get_Kind (Item) is
+            when Iir_Kind_Component_Instantiation_Statement =>
+               if Is_Component_Instantiation (Item) then
+                  Count := Count + 1;
+                  Res (Count) := Get_Component_Configuration (Item);
+                  Set_Component_Configuration (Item, Null_Node);
+               end if;
+            when Iir_Kind_Block_Statement =>
+               Count := Count + 1;
+               Res (Count) := Get_Block_Block_Configuration (Item);
+               Set_Block_Block_Configuration (Item, Null_Node);
+            when Iir_Kind_If_Generate_Statement =>
+               declare
+                  Item2 : Node;
+                  Bod : Node;
+               begin
+                  Item2 := Item;
+                  while Item2 /= Null_Node loop
+                     Bod := Get_Generate_Statement_Body (Item2);
+                     Count := Count + 1;
+                     Res (Count) := Get_Generate_Block_Configuration (Bod);
+                     Set_Generate_Block_Configuration (Bod, Null_Node);
+                     Item2 := Get_Generate_Else_Clause (Item2);
+                  end loop;
+               end;
+            when Iir_Kind_For_Generate_Statement =>
+               declare
+                  Bod : Node;
+               begin
+                  Bod := Get_Generate_Statement_Body (Item);
+                  Count := Count + 1;
+                  Res (Count) := Get_Generate_Block_Configuration (Bod);
+                  Set_Generate_Block_Configuration (Bod, Null_Node);
+               end;
+            when Iir_Kind_Case_Generate_Statement =>
+               declare
+                  Bod : Node;
+                  Alt : Node;
+               begin
+                  Alt := Get_Case_Statement_Alternative_Chain (Item);
+                  while Alt /= Null_Node loop
+                     if not Get_Same_Alternative_Flag (Alt) then
+                        Bod := Get_Associated_Expr (Alt);
+                        Count := Count + 1;
+                        Res (Count) := Get_Generate_Block_Configuration (Bod);
+                        Set_Generate_Block_Configuration (Bod, Null_Node);
+                     end if;
+                     Alt := Get_Chain (Alt);
+                  end loop;
+               end;
+            when others =>
+               null;
+         end case;
+         Item := Get_Chain (Item);
+      end loop;
+
+      pragma Assert (Count = Res'Last);
+      return (Res, Res'First - 1);
+   end Apply_Block_Configuration_With_Stmts;
+
+   function Apply_Block_Configuration
+     (Cfg : Node; Blk : Node) return Configs_Rec is
+   begin
+      return Apply_Block_Configuration_With_Stmts
+        (Cfg, Get_Concurrent_Statement_Chain (Blk), Blk);
+   end Apply_Block_Configuration;
+
+   procedure Free_Configs_Rec (Cfg : in out Configs_Rec) is
+   begin
+      Free (Cfg.Cfg);
+   end Free_Configs_Rec;
+
+   procedure Get_Next_Block_Configuration (Cfg : in out Configs_Rec;
+                                           Stmt : Node;
+                                           Res : out Node) is
+   begin
+      Cfg.Idx := Cfg.Idx + 1;
+      Res := Cfg.Cfg (Cfg.Idx);
+      pragma Assert (Get_Kind (Res) = Iir_Kind_Block_Configuration);
+      pragma Assert (Get_Block_From_Block_Specification
+                       (Get_Block_Specification (Res)) = Stmt);
+   end Get_Next_Block_Configuration;
+
+   procedure Get_Next_Component_Configuration (Cfg : in out Configs_Rec;
+                                               Res : out Node) is
+   begin
+      Cfg.Idx := Cfg.Idx + 1;
+      Res := Cfg.Cfg (Cfg.Idx);
+      pragma Assert (Get_Kind (Res) = Iir_Kind_Component_Configuration);
+   end Get_Next_Component_Configuration;
 
    function Elab_Port_Association_Type (Sub_Inst : Synth_Instance_Acc;
                                         Syn_Inst : Synth_Instance_Acc;
@@ -640,6 +702,7 @@ package body Elab.Vhdl_Insts is
       Unit_Inst : Synth_Instance_Acc;
       Item : Node;
       Last_Type : Node;
+      Cfgs : Configs_Rec;
    begin
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Unit));
 
@@ -647,8 +710,10 @@ package body Elab.Vhdl_Insts is
         (Syn_Inst, Null_Node, Unit, Config => Null_Node);
       Add_Extra_Instance (Syn_Inst, Unit_Inst);
 
-      Apply_Block_Configuration
-        (Get_Verification_Block_Configuration (Unit), Unit);
+      Cfgs := Apply_Block_Configuration_With_Stmts
+        (Get_Verification_Block_Configuration (Unit),
+         Get_Vunit_Item_Chain (Unit),
+         Unit);
 
       Last_Type := Null_Node;
       Item := Get_Vunit_Item_Chain (Unit);
@@ -683,12 +748,14 @@ package body Elab.Vhdl_Insts is
                | Iir_Kind_Block_Statement
                | Iir_Kind_Concurrent_Procedure_Call_Statement
                | Iir_Kind_Component_Instantiation_Statement =>
-               Elab_Concurrent_Statement (Unit_Inst, Item);
+               Elab_Concurrent_Statement (Unit_Inst, Item, Cfgs);
             when others =>
                Error_Kind ("elab_verification_unit", Item);
          end case;
          Item := Get_Chain (Item);
       end loop;
+
+      Free_Configs_Rec (Cfgs);
 
       --  Recurse now.
       Item := Get_Vunit_Item_Chain (Unit);
@@ -825,6 +892,7 @@ package body Elab.Vhdl_Insts is
       Arch : constant Node := Get_Source_Scope (Syn_Inst);
       Config : constant Node := Get_Instance_Config (Syn_Inst);
       Entity : Node;
+      Cfgs : Configs_Rec;
    begin
       if Get_Kind (Arch) = Iir_Kind_Foreign_Module then
          return;
@@ -833,7 +901,7 @@ package body Elab.Vhdl_Insts is
       pragma Assert (Is_Expr_Pool_Empty);
 
       Entity := Get_Entity (Arch);
-      Apply_Block_Configuration (Config, Arch);
+      Cfgs := Apply_Block_Configuration (Config, Arch);
 
       Elab.Vhdl_Files.Set_Design_Unit (Arch);
 
@@ -841,8 +909,9 @@ package body Elab.Vhdl_Insts is
       pragma Assert (Is_Expr_Pool_Empty);
 
       if not Is_Error (Syn_Inst) then
+         --  CFGS won't be used.
          Elab_Concurrent_Statements
-           (Syn_Inst, Get_Concurrent_Statement_Chain (Entity));
+           (Syn_Inst, Get_Concurrent_Statement_Chain (Entity), Cfgs);
          pragma Assert (Is_Expr_Pool_Empty);
       end if;
 
@@ -858,11 +927,11 @@ package body Elab.Vhdl_Insts is
 
       if not Is_Error (Syn_Inst) then
          Elab_Concurrent_Statements
-           (Syn_Inst, Get_Concurrent_Statement_Chain (Arch));
+           (Syn_Inst, Get_Concurrent_Statement_Chain (Arch), Cfgs);
          pragma Assert (Is_Expr_Pool_Empty);
       end if;
 
-      Unapply_Block_Configuration (Config);
+      Free_Configs_Rec (Cfgs);
 
       if not Is_Error (Syn_Inst) then
          Elab_Recurse_Instantiations (Syn_Inst, Arch);
@@ -916,12 +985,14 @@ package body Elab.Vhdl_Insts is
    end Elab_Direct_Instantiation_Statement;
 
    procedure Elab_Component_Instantiation_Statement
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+     (Syn_Inst : Synth_Instance_Acc;
+      Stmt : Node;
+      Cfgs : in out Configs_Rec)
    is
       Component : constant Node :=
         Get_Named_Entity (Get_Instantiated_Unit (Stmt));
-      Config : constant Node := Get_Component_Configuration (Stmt);
-      Bind : constant Node := Get_Binding_Indication (Config);
+      Config : Node;
+      Bind : Node;
       Aspect : Iir;
       Comp_Inst : Synth_Instance_Acc;
 
@@ -930,6 +1001,9 @@ package body Elab.Vhdl_Insts is
       Sub_Config : Node;
       Sub_Inst : Synth_Instance_Acc;
    begin
+      Get_Next_Component_Configuration (Cfgs, Config);
+      Bind := Get_Binding_Indication (Config);
+
       pragma Assert (Is_Expr_Pool_Empty);
 
       --  Create the sub-instance for the component
