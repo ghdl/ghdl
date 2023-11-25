@@ -40,6 +40,12 @@ with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Vhdl_Stmts;
 
 package body Elab.Vhdl_Insts is
+   --  Immediately elaborate sub instances.
+   --  Needed if external names are present as they can refer to declarations
+   --  in sub-instances.
+   --  Otherwise, sub-instances are elaborated at the end of each unit.
+   Flag_Elab_Sub_Instances : constant Boolean := True;
+
    procedure Elab_Instance_Body (Syn_Inst : Synth_Instance_Acc);
    procedure Elab_Recurse_Instantiations
      (Syn_Inst : Synth_Instance_Acc; Head : Node);
@@ -757,14 +763,16 @@ package body Elab.Vhdl_Insts is
 
       Free_Configs_Rec (Cfgs);
 
-      --  Recurse now.
-      Item := Get_Vunit_Item_Chain (Unit);
-      while Item /= Null_Node loop
-         if Get_Kind (Item) in Iir_Kinds_Concurrent_Statement then
-            Elab_Recurse_Instantiations_Statement (Unit_Inst, Item);
-         end if;
-         Item := Get_Chain (Item);
-      end loop;
+      if not Flag_Elab_Sub_Instances then
+         --  Recurse now.
+         Item := Get_Vunit_Item_Chain (Unit);
+         while Item /= Null_Node loop
+            if Get_Kind (Item) in Iir_Kinds_Concurrent_Statement then
+               Elab_Recurse_Instantiations_Statement (Unit_Inst, Item);
+            end if;
+            Item := Get_Chain (Item);
+         end loop;
+      end if;
    end Elab_Verification_Unit;
 
    procedure Elab_Verification_Units
@@ -933,9 +941,11 @@ package body Elab.Vhdl_Insts is
 
       Free_Configs_Rec (Cfgs);
 
-      if not Is_Error (Syn_Inst) then
-         Elab_Recurse_Instantiations (Syn_Inst, Arch);
-         pragma Assert (Areapools.Is_Empty (Expr_Pool));
+      if not Flag_Elab_Sub_Instances then
+         if not Is_Error (Syn_Inst) then
+            Elab_Recurse_Instantiations (Syn_Inst, Arch);
+            pragma Assert (Areapools.Is_Empty (Expr_Pool));
+         end if;
       end if;
 
       if not Is_Error (Syn_Inst) then
@@ -981,6 +991,10 @@ package body Elab.Vhdl_Insts is
       if Is_Error (Sub_Inst) then
          --  TODO: Free it?
          return;
+      end if;
+
+      if Flag_Elab_Sub_Instances then
+         Elab_Instance_Body (Sub_Inst);
       end if;
    end Elab_Direct_Instantiation_Statement;
 
@@ -1086,6 +1100,10 @@ package body Elab.Vhdl_Insts is
                                    Get_Port_Chain (Ent),
                                    Get_Port_Map_Aspect_Chain (Bind));
       pragma Assert (Is_Expr_Pool_Empty);
+
+      if Flag_Elab_Sub_Instances then
+         Elab_Instance_Body (Sub_Inst);
+      end if;
    end Elab_Component_Instantiation_Statement;
 
    procedure Elab_Design_Instantiation_Statement
