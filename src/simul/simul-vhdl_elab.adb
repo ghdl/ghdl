@@ -322,6 +322,7 @@ package body Simul.Vhdl_Elab is
    procedure Elab2_Object_Alias (Inst : Synth_Instance_Acc; Decl : Node)
    is
       Prev_Instance_Pool : constant Areapools.Areapool_Acc := Instance_Pool;
+      Name : constant Node := Get_Name (Decl);
       Marker : Mark_Type;
       V : Valtyp;
       Base : Valtyp;
@@ -332,16 +333,17 @@ package body Simul.Vhdl_Elab is
       Convert_Type_Width (V.Typ);
 
       --  Recompute alias offsets.
-      Mark_Expr_Pool (Marker);
-      Instance_Pool := Global_Pool'Access;
+      if Get_Kind (Name) /= Iir_Kind_External_Signal_Name then
+         Mark_Expr_Pool (Marker);
+         Instance_Pool := Global_Pool'Access;
 
-      Synth.Vhdl_Stmts.Synth_Assignment_Prefix
-        (Inst, Get_Name (Decl), Base, Typ, Off);
-      V.Val.A_Off := Off;
-      pragma Assert (Base.Val = V.Val.A_Obj);
-      pragma Unreferenced (Typ);
-      Instance_Pool := Prev_Instance_Pool;
-      Release_Expr_Pool (Marker);
+         Synth.Vhdl_Stmts.Synth_Assignment_Prefix (Inst, Name, Base, Typ, Off);
+         V.Val.A_Off := Off;
+         pragma Assert (Base.Val = V.Val.A_Obj);
+         pragma Unreferenced (Typ);
+         Instance_Pool := Prev_Instance_Pool;
+         Release_Expr_Pool (Marker);
+      end if;
    end Elab2_Object_Alias;
 
    procedure Elab_External_Name (Inst : Synth_Instance_Acc; Name : Node)
