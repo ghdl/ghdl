@@ -53,6 +53,7 @@ with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
 with Synth.Vhdl_Decls; use Synth.Vhdl_Decls;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
+with Synth.Vhdl_Oper;
 with Synth.Source; use Synth.Source;
 with Synth.Errors;
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
@@ -654,6 +655,22 @@ package body Synth.Vhdl_Insts is
       end if;
    end Interning_Get;
 
+   function Synth_Function_Conversion (Syn_Inst : Synth_Instance_Acc;
+                                       Actual : Node;
+                                       Conv : Node) return Valtyp
+   is
+      Imp : constant Node := Get_Implementation (Conv);
+   begin
+      if Get_Implicit_Definition (Imp) = Iir_Predefined_None then
+         --  This is an abuse, but it works like a user operator.
+         return Synth_User_Operator (Syn_Inst, Actual, Null_Node, Conv);
+      else
+         --  An implicit definition.
+         return Synth.Vhdl_Oper.Synth_Monadic_Operation
+           (Syn_Inst, Imp, Actual, Conv);
+      end if;
+   end Synth_Function_Conversion;
+
    function Synth_Single_Input_Assoc (Syn_Inst : Synth_Instance_Acc;
                                       Inter_Typ : Type_Acc;
                                       Act_Inst : Synth_Instance_Acc;
@@ -674,7 +691,7 @@ package body Synth.Vhdl_Insts is
             when Iir_Kind_Function_Call =>
                pragma Assert (Act_Inst = Syn_Inst);
                --  This is an abuse, but it works like a user operator.
-               Act := Synth_User_Operator (Syn_Inst, Actual, Null_Node, Conv);
+               Act := Synth_Function_Conversion (Syn_Inst, Actual, Conv);
             when Iir_Kind_Type_Conversion =>
                Act := Synth_Type_Conversion (Syn_Inst, Conv);
             when others =>
