@@ -80,10 +80,10 @@ package body Translation is
       Current_Filename_Node := Info.Design_Filename;
    end Gen_Filename;
 
-   procedure Push_Unit_Prefix (Unit : Iir_Design_Unit; Mark : out Id_Mark_Type)
+   procedure Push_Unit_Prefix (Lib_Unit : Iir; Mark : out Id_Mark_Type)
    is
+      Unit : constant Iir := Get_Design_Unit (Lib_Unit);
       Design_File : constant Iir_Design_File := Get_Design_File (Unit);
-      Lib_Unit : constant Iir := Get_Library_Unit (Unit);
       Lib : constant Iir := Get_Library (Design_File);
       Mark2 : Id_Mark_Type;
       Id : Name_Id;
@@ -112,52 +112,34 @@ package body Translation is
    end Push_Unit_Prefix;
 
    --  Decorate the tree in order to be usable with the internal simulator.
-   procedure Translate (Unit : Iir_Design_Unit; Main : Boolean)
+   procedure Translate (Lib_Unit : Iir; Main : Boolean)
    is
-      Design_File : constant Iir_Design_File := Get_Design_File (Unit);
-      Lib_Unit : constant Iir := Get_Library_Unit (Unit);
+      Design_Unit : constant Iir_Design_Unit := Get_Design_Unit (Lib_Unit);
+      Design_File : Iir_Design_File;
       Mark : Id_Mark_Type;
    begin
       Update_Node_Infos;
 
-      if False then
-         --  No translation for context items.
-         declare
-            El : Iir;
-         begin
-            El := Get_Context_Items (Unit);
-            while El /= Null_Iir loop
-               case Get_Kind (El) is
-                  when Iir_Kind_Use_Clause =>
-                     null;
-                  when Iir_Kind_Library_Clause =>
-                     null;
-                  when others =>
-                     Error_Kind ("translate1", El);
-               end case;
-               El := Get_Chain (El);
-            end loop;
-         end;
-      end if;
+      Design_File := Get_Design_File (Design_Unit);
 
       if Flags.Verbose then
          if Main then
-            Report_Msg (Msgid_Note, Semantic, +Unit,
+            Report_Msg (Msgid_Note, Semantic, +Lib_Unit,
                         "translating (with code generation) %n",
                         (1 => +Lib_Unit));
          else
-            Report_Msg (Msgid_Note, Semantic, +Unit,
+            Report_Msg (Msgid_Note, Semantic, +Lib_Unit,
                         "translating %n", (1 => +Lib_Unit));
          end if;
       end if;
 
       --  Create the prefix for identifiers.
-      Push_Unit_Prefix (Unit, Mark);
+      Push_Unit_Prefix (Lib_Unit, Mark);
 
       if Main then
          Set_Global_Storage (O_Storage_Public);
          --  Create the variable containing the current file name.
-         Gen_Filename (Get_Design_File (Unit));
+         Gen_Filename (Design_File);
       else
          Set_Global_Storage (O_Storage_External);
       end if;
@@ -186,12 +168,17 @@ package body Translation is
               ("package instantiation " & Image_Identifier (Lib_Unit));
             Chap2.Translate_Package_Instantiation_Declaration_Unit (Lib_Unit);
          when Iir_Kind_Entity_Declaration =>
-            New_Debug_Comment_Decl ("entity " & Image_Identifier (Lib_Unit));
-            Chap1.Translate_Entity_Declaration (Lib_Unit);
+            if not Get_Macro_Expanded_Flag (Lib_Unit) then
+               New_Debug_Comment_Decl
+                 ("entity " & Image_Identifier (Lib_Unit));
+               Chap1.Translate_Entity_Declaration (Lib_Unit);
+            end if;
          when Iir_Kind_Architecture_Body =>
-            New_Debug_Comment_Decl
-              ("architecture " & Image_Identifier (Lib_Unit));
-            Chap1.Translate_Architecture_Body (Lib_Unit);
+            if not Get_Macro_Expanded_Flag (Get_Entity (Lib_Unit)) then
+               New_Debug_Comment_Decl
+                 ("architecture " & Image_Identifier (Lib_Unit));
+               Chap1.Translate_Architecture_Body (Lib_Unit);
+            end if;
          when Iir_Kind_Configuration_Declaration =>
             New_Debug_Comment_Decl
               ("configuration " & Image_Identifier (Lib_Unit));

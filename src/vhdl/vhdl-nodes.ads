@@ -1232,6 +1232,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Port_Chain (Field7)
    --
+   --   Get/Set_Macro_Expanded_Flag (Flag2)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)

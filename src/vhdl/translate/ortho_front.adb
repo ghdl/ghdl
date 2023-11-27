@@ -305,6 +305,7 @@ package body Ortho_Front is
       Res : Iir_Design_File;
       New_Design_File : Iir_Design_File;
       Design : Iir_Design_Unit;
+      Lunit : Iir;
       Next_Design : Iir_Design_Unit;
       Prev_Design : Iir_Design_Unit;
 
@@ -402,7 +403,7 @@ package body Ortho_Front is
          if Get_Design_File (Design) /= New_Design_File then
             --  Do not yet translate units to be compiled.  They can appear as
             --  dependencies.
-            Translation.Translate (Design, False);
+            Translation.Translate (Get_Library_Unit (Design), False);
          end if;
          Next (Dep_It);
       end loop;
@@ -411,15 +412,14 @@ package body Ortho_Front is
       --  Note: the order of design unit is kept.
       Design := Get_First_Design_Unit (New_Design_File);
       while Is_Valid (Design) loop
-         if Get_Kind (Get_Library_Unit (Design))
-           = Iir_Kind_Configuration_Declaration
-         then
+         Lunit := Get_Library_Unit (Design);
+         if Get_Kind (Lunit) = Iir_Kind_Configuration_Declaration then
             --  Defer code generation of configuration declaration.
             --  (default binding may change between analysis and
             --   elaboration).
-            Translation.Translate (Design, False);
+            Translation.Translate (Lunit, False);
          else
-            Translation.Translate (Design, True);
+            Translation.Translate (Lunit, True);
          end if;
 
          if Errorout.Nbr_Errors > 0 then

@@ -2697,7 +2697,7 @@ package body Trans.Rtis is
       Field_Off : O_Cnode;
    begin
       if Global_Storage /= O_Storage_External then
-         if Get_Kind (Get_Parent (Blk)) = Iir_Kind_Design_Unit then
+         if Get_Kind (Blk) in Iir_Kinds_Library_Unit then
             --  Also include filename for units.
             Rti_Type := Ghdl_Rtin_Block_File;
          else

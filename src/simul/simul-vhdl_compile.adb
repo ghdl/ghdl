@@ -2017,25 +2017,27 @@ package body Simul.Vhdl_Compile is
             Dunit : constant Node := Design_Units.Table (I);
             Lunit : constant Node := Get_Library_Unit (Dunit);
          begin
-            Trans.Rtis.Generate_Library
-              (Get_Library (Get_Design_File (Dunit)), True);
+            if Lunit /= Vhdl.Std_Package.Standard_Package then
+               Trans.Rtis.Generate_Library
+                 (Get_Library (Get_Design_File (Dunit)), True);
 
-            case Iir_Kinds_Library_Unit (Get_Kind (Lunit)) is
-               when Iir_Kind_Configuration_Declaration
-                 | Iir_Kind_Context_Declaration =>
-                  null;
-               when Iir_Kind_Package_Declaration =>
-                  Translation.Translate (Dunit, True);
-               when Iir_Kind_Entity_Declaration
-                 | Iir_Kind_Architecture_Body
-                 | Iir_Kind_Package_Instantiation_Declaration
-                 | Iir_Kind_Package_Body =>
-                  Translation.Translate (Dunit, True);
-               when Iir_Kind_Foreign_Module =>
-                  raise Internal_Error;
-               when Iir_Kinds_Verification_Unit =>
-                  raise Internal_Error;
-            end case;
+               case Iir_Kinds_Library_Unit (Get_Kind (Lunit)) is
+                  when Iir_Kind_Configuration_Declaration
+                    | Iir_Kind_Context_Declaration =>
+                     null;
+                  when Iir_Kind_Package_Declaration =>
+                     Translation.Translate (Lunit, True);
+                  when Iir_Kind_Entity_Declaration
+                    | Iir_Kind_Architecture_Body
+                    | Iir_Kind_Package_Instantiation_Declaration
+                    | Iir_Kind_Package_Body =>
+                     Translation.Translate (Lunit, True);
+                  when Iir_Kind_Foreign_Module =>
+                     raise Internal_Error;
+                  when Iir_Kinds_Verification_Unit =>
+                     raise Internal_Error;
+               end case;
+            end if;
          end;
       end loop;
 

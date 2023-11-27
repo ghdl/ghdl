@@ -609,7 +609,7 @@ package body Trans.Chap12 is
                   --  Always generate code for configuration.
                   --  Because default binding may be changed between analysis
                   --  and elaboration.
-                  Translate (Unit, True);
+                  Translate (Lib_Unit, True);
                end if;
             when Iir_Kind_Entity_Declaration
               | Iir_Kind_Architecture_Body
@@ -618,11 +618,11 @@ package body Trans.Chap12 is
                --  For package spec, mark it as 'body is not present', this
                --  flag will be set below when the body is translated.
                Set_Elab_Flag (Unit, False);
-               Translate (Unit, Whole);
+               Translate (Lib_Unit, Whole);
             when Iir_Kind_Package_Body =>
                --  Mark the spec with 'body is present' flag.
                Set_Elab_Flag (Get_Design_Unit (Get_Package (Lib_Unit)), True);
-               Translate (Unit, Whole);
+               Translate (Lib_Unit, Whole);
             when Iir_Kind_Context_Declaration =>
                null;
             when others =>
@@ -638,7 +638,7 @@ package body Trans.Chap12 is
          then
             --  Because of possible indirect recursion, translate default
             --  configuration at the end.
-            Translate (Unit, True);
+            Translate (Lib_Unit, True);
          end if;
       end loop;
 
