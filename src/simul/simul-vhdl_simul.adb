@@ -3936,6 +3936,17 @@ package body Simul.Vhdl_Simul is
                      Val + Size_Type (I - 1) * Typ.Arr_El.Sz);
                end loop;
             end;
+         when Type_Record =>
+            for I in Typ.Rec.E'Range loop
+               declare
+                  E : Rec_El_Type renames Typ.Rec.E (I);
+               begin
+                  Signal_Associate_Cst
+                    (Sig_Index (Sig, E.Offs.Net_Off),
+                     E.Typ, Val + E.Offs.Mem_Off);
+               end;
+            end loop;
+
          when others =>
             raise Internal_Error;
       end case;
