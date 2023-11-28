@@ -2860,7 +2860,7 @@ package body Vhdl.Sem_Expr is
          if Pos < Pos_Max then
             Need_Others := True;
             if Info.Others_Choice = Null_Iir then
-               Error_No_Choice (Bt, Pos, Pos_Max, Loc);
+               Error_No_Choice (Bt, Pos + 1, Pos_Max, Loc);
             end if;
          end if;
 
