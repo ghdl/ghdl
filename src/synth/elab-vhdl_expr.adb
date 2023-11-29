@@ -103,6 +103,27 @@ package body Elab.Vhdl_Expr is
       return Synth_Subtype_Conversion (null, Vt, Dtype, Bounds, Loc);
    end Exec_Subtype_Conversion;
 
+   function Find_Name_In_Declaration_Chain (Parent : Node; Id : Name_Id)
+                                           return Node
+   is
+      Item : Node;
+   begin
+      Item := Get_Declaration_Chain (Parent);
+      while Item /= Null_Node loop
+         case Get_Kind (Item) is
+            when Iir_Kinds_Specification
+              | Iir_Kind_Attribute_Implicit_Declaration =>
+               null;
+            when others =>
+               if Get_Identifier (Item) = Id then
+                  return Item;
+               end if;
+         end case;
+         Item := Get_Chain (Item);
+      end loop;
+      return Null_Node;
+   end Find_Name_In_Declaration_Chain;
+
    function Synth_Pathname_Object (Loc_Inst : Synth_Instance_Acc;
                                    Name : Node;
                                    Cur_Inst : Synth_Instance_Acc;
@@ -121,9 +142,9 @@ package body Elab.Vhdl_Expr is
            | Iir_Kind_Block_Statement
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration =>
-            Obj := Find_Name_In_Chain (Get_Declaration_Chain (Scope), Id);
+            Obj := Find_Name_In_Declaration_Chain (Scope, Id);
          when Iir_Kind_Architecture_Body =>
-            Obj := Find_Name_In_Chain (Get_Declaration_Chain (Scope), Id);
+            Obj := Find_Name_In_Declaration_Chain (Scope, Id);
             if Obj = Null_Node then
                --  Try ports / generics
                declare
@@ -292,8 +313,7 @@ package body Elab.Vhdl_Expr is
             Res := Find_Name_In_Chain
               (Get_Concurrent_Statement_Chain (Scope), Id);
          when Iir_Kind_Package_Declaration =>
-            Res := Find_Name_In_Chain
-              (Get_Declaration_Chain (Scope), Id);
+            Res := Find_Name_In_Declaration_Chain (Scope, Id);
          when others =>
             Error_Kind ("synth_pathname(scope)", Scope);
       end case;
