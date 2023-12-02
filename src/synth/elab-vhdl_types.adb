@@ -262,10 +262,17 @@ package body Elab.Vhdl_Types is
    end Create_Bounds_From_Length;
 
    function Synth_Subtype_Indication_If_Anonymous
-     (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc is
+     (Syn_Inst : Synth_Instance_Acc;
+      Atype : Node;
+      Parent : Type_Acc) return Type_Acc is
    begin
       if Get_Type_Declarator (Atype) = Null_Node then
-         return Synth_Subtype_Indication (Syn_Inst, Atype);
+         if Parent /= null then
+            return Synth_Subtype_Indication_With_Parent
+              (Syn_Inst, Parent, Atype);
+         else
+            return Synth_Subtype_Indication (Syn_Inst, Atype);
+         end if;
       else
          return Get_Subtype_Object (Syn_Inst, Atype);
       end if;
@@ -328,15 +335,17 @@ package body Elab.Vhdl_Types is
          El := Get_Nth_Element (El_List, I);
          El_Type := Get_Type (El);
          if Parent_Typ /= null then
+            --  Get parent subtype for the element.
+            El_Typ := Parent_Els.E (Iir_Index32 (I + 1)).Typ;
+
             if Get_Kind (El) = Iir_Kind_Record_Element_Constraint then
+               --  There is an additional constraint.
                El_Typ := Synth_Subtype_Indication_If_Anonymous
-                 (Syn_Inst, El_Type);
-            else
-               El_Typ := Parent_Els.E (Iir_Index32 (I + 1)).Typ;
+                 (Syn_Inst, El_Type, El_Typ);
             end if;
          else
             El_Typ := Synth_Subtype_Indication_If_Anonymous
-              (Syn_Inst, El_Type);
+              (Syn_Inst, El_Type, null);
          end if;
          if Bounded and then not Is_Bounded_Type (El_Typ) then
             Bounded := False;
@@ -373,7 +382,8 @@ package body Elab.Vhdl_Types is
             Des_Typ := Get_Subtype_Object (Syn_Inst, Des_Type);
          end if;
       else
-         Des_Typ := Synth_Subtype_Indication_If_Anonymous (Syn_Inst, Des_Type);
+         Des_Typ := Synth_Subtype_Indication_If_Anonymous
+           (Syn_Inst, Des_Type, null);
       end if;
 
       Typ := Create_Access_Type (null, Des_Typ);
