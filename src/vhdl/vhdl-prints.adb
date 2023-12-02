@@ -3247,6 +3247,7 @@ package body Vhdl.Prints is
       Clause := Stmt;
       Print (Ctxt, Get_Condition (Clause));
       Close_Hbox (Ctxt);
+
       Start_Hbox (Ctxt);
       Disp_Token (Ctxt, Tok_Then);
       Close_Hbox (Ctxt);
@@ -3475,10 +3476,13 @@ package body Vhdl.Prints is
          Disp_Designator_List (Ctxt, Get_Sensitivity_List (Process));
          Disp_Token (Ctxt, Tok_Right_Paren);
       end if;
-      if Get_Has_Is (Process) then
-         Disp_Token (Ctxt, Tok_Is);
-      end if;
       Close_Hbox (Ctxt);
+
+      if Get_Has_Is (Process) then
+         Start_Hbox (Ctxt);
+         Disp_Token (Ctxt, Tok_Is);
+         Close_Hbox (Ctxt);
+      end if;
 
       Start_Vbox (Ctxt);
       Disp_Declaration_Chain (Ctxt, Process);
