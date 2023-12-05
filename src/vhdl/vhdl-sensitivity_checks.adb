@@ -192,6 +192,9 @@ package body Vhdl.Sensitivity_Checks is
                return R;
             end;
 
+         when Iir_Kind_Parenthesis_Expression =>
+            return Get_Sensitivity_Edge (Get_Expression (Expr));
+
          when others =>
             return Null_Iir;
       end case;
