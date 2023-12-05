@@ -24,6 +24,15 @@ analyze records_in_records.vhdl
 # Test 4: arrays.vhdl
 analyze arrays.vhdl
 
+# Usual register
+analyze reg_re.vhdl
+analyze reg_ev1.vhdl
+analyze reg_ev2.vhdl
+analyze reg_ev3.vhdl
+analyze --force-analysis reg_ev3.vhdl
+
+analyze_failure reg_err1.vhdl
+
 clean
 
 echo "Test successful"
