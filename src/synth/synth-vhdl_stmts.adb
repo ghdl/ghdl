@@ -3580,8 +3580,6 @@ package body Synth.Vhdl_Stmts is
       It_Type : constant Node := Get_Declaration_Type (Iterator);
       It_Rng : Type_Acc;
    begin
-      Create_Object_Marker (Inst, Stmt, Instance_Pool);
-
       if It_Type /= Null_Node then
          Synth_Subtype_Indication (Inst, It_Type);
       end if;
@@ -3606,7 +3604,6 @@ package body Synth.Vhdl_Stmts is
       if It_Type /= Null_Node then
          Destroy_Object (D, It_Type);
       end if;
-      Destroy_Marker (D, Stmt, Instance_Pool);
       Destroy_Finish (D);
    end Finish_For_Loop_Statement;
 

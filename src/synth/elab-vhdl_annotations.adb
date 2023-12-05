@@ -880,7 +880,6 @@ package body Elab.Vhdl_Annotations is
                end;
 
             when Iir_Kind_For_Loop_Statement =>
-               Create_Object_Info (Block_Info, Stmt);
                Annotate_Declaration
                  (Block_Info, Get_Parameter_Specification (Stmt));
                Annotate_Sequential_Statement_Chain
