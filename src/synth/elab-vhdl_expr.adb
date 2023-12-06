@@ -112,7 +112,8 @@ package body Elab.Vhdl_Expr is
       while Item /= Null_Node loop
          case Get_Kind (Item) is
             when Iir_Kinds_Specification
-              | Iir_Kind_Attribute_Implicit_Declaration =>
+              | Iir_Kind_Attribute_Implicit_Declaration
+              | Iir_Kinds_Subprogram_Body =>
                null;
             when others =>
                if Get_Identifier (Item) = Id then
