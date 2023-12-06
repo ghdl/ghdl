@@ -686,8 +686,8 @@ package body Elab.Vhdl_Insts is
                      Actual_Typ := Synth_Subtype_Indication
                        (Sub_Inst, Get_Actual_Type (Assoc));
 
-                     if not Check_Matching_Bounds (Syn_Inst, Inter_Typ,
-                                                   Actual_Typ, Assoc)
+                     if not Check_Matching_Bounds (Syn_Inst, Actual_Typ,
+                                                   Inter_Typ, Assoc)
                      then
                         --  Error message already emitted.
                         null;
