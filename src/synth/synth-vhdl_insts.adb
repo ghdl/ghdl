@@ -36,7 +36,6 @@ with Netlists.Folds;
 
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
-with Elab.Vhdl_Types;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors;
@@ -744,10 +743,9 @@ package body Synth.Vhdl_Insts is
                                           Inter_Typ : Type_Acc;
                                           Assoc : Node) return Net
    is
-      pragma Unreferenced (Inter_Typ);
+      pragma Unreferenced (Inter_Inst);
       use Netlists.Concats;
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-      Formal_Typ : Type_Acc;
       Iassoc : Node;
       V : Valtyp;
       Typ : Type_Acc;
@@ -759,10 +757,6 @@ package body Synth.Vhdl_Insts is
    begin
       Value_Offset_Tables.Init (Els, 16);
 
-      --  FIXME: should it be unshared ?
-      Formal_Typ := Elab.Vhdl_Types.Synth_Subtype_Indication
-        (Inter_Inst, Get_Actual_Type (Assoc));
-
       Iassoc := Get_Chain (Assoc);
       while Iassoc /= Null_Node
         and then not Get_Whole_Association_Flag (Iassoc)
@@ -770,7 +764,7 @@ package body Synth.Vhdl_Insts is
          --  For each individual assoc:
          --   1. compute type and offset
          Synth_Individual_Formal
-           (Syn_Inst, Formal_Typ, Get_Formal (Iassoc), Typ, Offs);
+           (Syn_Inst, Inter_Typ, Get_Formal (Iassoc), Typ, Offs);
 
          --   2. synth expression
          V := Synth_Single_Input_Assoc
@@ -795,10 +789,11 @@ package body Synth.Vhdl_Insts is
          N_Off := N_Off + V.Typ.W;
          Append (Concat, Get_Net (Ctxt, V));
       end loop;
-      Value_Offset_Tables.Free (Els);
 
       --   3. connect
       Build (Ctxt, Concat, N);
+
+      Value_Offset_Tables.Free (Els);
       return N;
    end Synth_Individual_Input_Assoc;
 
@@ -1015,6 +1010,7 @@ package body Synth.Vhdl_Insts is
       Assoc : Node;
       Assoc_Inter : Node;
       Inter : Node;
+      Inter_Vt : Valtyp;
       Inter_Typ : Type_Acc;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
@@ -1029,7 +1025,11 @@ package body Synth.Vhdl_Insts is
       while Is_Valid (Assoc) loop
          if Get_Whole_Association_Flag (Assoc) then
             Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-            Inter_Typ := Get_Subtype_Object (Ent_Inst, Get_Type (Inter));
+
+            --  Get the type of the interface as it has been built by
+            --  elaboration.
+            Inter_Vt := Get_Value (Ent_Inst, Inter);
+            Inter_Typ := Inter_Vt.Typ;
 
             case Mode_To_Port_Kind (Get_Mode (Inter)) is
                when Port_In =>
