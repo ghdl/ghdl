@@ -519,8 +519,8 @@ package body Vhdl.Sem_Assocs is
       if Assoc /= Null_Iir then
          Error_Msg_Sem
            (+Assoc, "cannot associate " & Get_Mode_Name (Fmode) & " %n"
-              & " with actual port of mode "
-              & Get_Mode_Name (Amode), +Formal);
+              & " with actual %n of mode "
+              & Get_Mode_Name (Amode), (+Formal, +Actual));
       end if;
       return False;
    end Check_Port_Association_Mode_Restrictions;
