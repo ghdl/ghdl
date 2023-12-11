@@ -16,13 +16,26 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Tables;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
 package Elab.Vhdl_Insts is
+   Flag_Macro_Expand_Instance : Boolean := False;
+
    --  The result of Elab_Top_Unit, to handle external names.
    Top_Instance : Synth_Instance_Acc;
+
+   --  Table of library units for the elaborated design.
+   --  This is similar to the design unit table in vhdl.configuration,
+   --  except unsued units are not present and instantiated units are added.
+   package Elab_Units is new Tables
+     (Table_Component_Type => Node,
+      Table_Index_Type => Natural,
+      Table_Low_Bound => 1,
+      Table_Initial => 16);
 
    function Elab_Top_Unit (Config : Node) return Synth_Instance_Acc;
 

@@ -225,6 +225,10 @@ package body Ghdlrun is
                   raise Errorout.Compilation_Error;
                end if;
 
+               if Run_Mode = Run_Jit then
+                  Elab.Vhdl_Insts.Flag_Macro_Expand_Instance := True;
+               end if;
+
                --  *THE* elaboration.
                --  Compute values, instantiate..
                Lib_Unit := Get_Library_Unit (Config);

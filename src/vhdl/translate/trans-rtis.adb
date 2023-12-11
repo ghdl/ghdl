@@ -16,10 +16,13 @@
 
 with Name_Table;
 with Files_Map;
+with Libraries;
+
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Configuration;
-with Libraries;
+with Vhdl.Sem_Inst;
+
 with Trans.Chap7;
 use Trans.Helpers;
 with Trans.Helpers2; use Trans.Helpers2;
@@ -2281,8 +2284,17 @@ package body Trans.Rtis is
            (Get_Info (Get_Named_Entity (Inst)).Comp_Rti_Const);
       else
          declare
-            Ent : constant Iir := Get_Entity_From_Entity_Aspect (Inst);
+            Ent : Iir;
          begin
+            --  Check if entity has been instantiated.
+            Ent := Get_Instantiated_Header (Stmt);
+            --  If not, or if it is not macro expanded, use the named entity.
+            --  Otherwise, the maco-expanded entity is used.
+            if Ent = Null_Iir
+              or else not Get_Macro_Expand_Flag (Ent)
+            then
+               Ent := Get_Entity_From_Entity_Aspect (Inst);
+            end if;
             Val := New_Rti_Address (Get_Info (Ent).Block_Rti_Const);
          end;
       end if;
@@ -2425,6 +2437,9 @@ package body Trans.Rtis is
               |  Iir_Kind_Interface_Package_Declaration
               | Iir_Kind_Package_Instantiation_Body =>
                --  FIXME: todo
+               null;
+
+            when Iir_Kind_Interface_Type_Declaration =>
                null;
 
             when Iir_Kind_Mode_View_Declaration =>
@@ -2976,9 +2991,14 @@ package body Trans.Rtis is
                --  The library.
                declare
                   Lib : Iir_Library_Declaration;
+                  Dunit : Iir;
                begin
-                  Lib := Get_Library (Get_Design_File
-                                      (Get_Design_Unit (Lib_Unit)));
+                  Dunit := Get_Design_Unit (Lib_Unit);
+                  if Dunit = Null_Iir then
+                     Dunit := Get_Design_Unit
+                       (Vhdl.Sem_Inst.Get_Origin (Lib_Unit));
+                  end if;
+                  Lib := Get_Library (Get_Design_File (Dunit));
                   Generate_Library (Lib, False);
                   Rti := Get_Info (Lib).Library_Rti_Const;
                end;

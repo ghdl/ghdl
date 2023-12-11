@@ -2007,6 +2007,15 @@ package body Trans.Chap4 is
       end loop;
    end Translate_Generic_Chain;
 
+   procedure Translate_Interface_Type_Association (Assoc : Iir)
+   is
+      Def : constant Iir := Get_Actual (Assoc);
+   begin
+      if Is_Proper_Subtype_Indication (Def) then
+         Chap3.Translate_Subtype_Definition (Def, True);
+      end if;
+   end Translate_Interface_Type_Association;
+
    procedure Translate_Generic_Association_Chain (Parent : Iir)
    is
       Assoc : Iir;
@@ -2023,14 +2032,7 @@ package body Trans.Chap4 is
             when Iir_Kind_Interface_Package_Declaration =>
                Translate_Interface_Package (Inter);
             when Iir_Kind_Interface_Type_Declaration =>
-               declare
-                  Def : Iir;
-               begin
-                  Def := Get_Actual (Assoc);
-                  if Is_Proper_Subtype_Indication (Def) then
-                     Chap3.Translate_Subtype_Definition (Def, True);
-                  end if;
-               end;
+               Translate_Interface_Type_Association (Assoc);
             when Iir_Kinds_Interface_Subprogram_Declaration =>
                null;
             when others =>

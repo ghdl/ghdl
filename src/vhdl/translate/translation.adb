@@ -27,6 +27,7 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Canon;
+with Vhdl.Sem_Inst;
 
 with Ortho_Nodes; use Ortho_Nodes;
 with Ortho_Ident; use Ortho_Ident;
@@ -82,12 +83,20 @@ package body Translation is
 
    procedure Push_Unit_Prefix (Lib_Unit : Iir; Mark : out Id_Mark_Type)
    is
-      Unit : constant Iir := Get_Design_Unit (Lib_Unit);
-      Design_File : constant Iir_Design_File := Get_Design_File (Unit);
-      Lib : constant Iir := Get_Library (Design_File);
+      Unit : Iir;
+      Design_File : Iir_Design_File;
+      Lib : Iir;
       Mark2 : Id_Mark_Type;
       Id : Name_Id;
    begin
+      Unit := Get_Design_Unit (Lib_Unit);
+      if Unit = Null_Iir then
+         Unit := Get_Design_Unit (Vhdl.Sem_Inst.Get_Origin (Lib_Unit));
+      end if;
+
+      Design_File := Get_Design_File (Unit);
+      Lib  := Get_Library (Design_File);
+
       --  Create the prefix for identifiers.
       Reset_Identifier_Prefix;
       if Lib = Libraries.Work_Library then
@@ -114,13 +123,11 @@ package body Translation is
    --  Decorate the tree in order to be usable with the internal simulator.
    procedure Translate (Lib_Unit : Iir; Main : Boolean)
    is
-      Design_Unit : constant Iir_Design_Unit := Get_Design_Unit (Lib_Unit);
+      Parent : constant Iir := Get_Design_Unit (Lib_Unit);
       Design_File : Iir_Design_File;
       Mark : Id_Mark_Type;
    begin
       Update_Node_Infos;
-
-      Design_File := Get_Design_File (Design_Unit);
 
       if Flags.Verbose then
          if Main then
@@ -135,6 +142,17 @@ package body Translation is
 
       --  Create the prefix for identifiers.
       Push_Unit_Prefix (Lib_Unit, Mark);
+
+      declare
+         Design_Unit : Iir_Design_Unit;
+      begin
+         Design_Unit := Get_Design_Unit (Lib_Unit);
+         if Design_Unit = Null_Node then
+            Design_Unit := Get_Design_Unit
+              (Vhdl.Sem_Inst.Get_Origin (Lib_Unit));
+         end if;
+         Design_File := Get_Design_File (Design_Unit);
+      end;
 
       if Main then
          Set_Global_Storage (O_Storage_Public);
@@ -168,17 +186,25 @@ package body Translation is
               ("package instantiation " & Image_Identifier (Lib_Unit));
             Chap2.Translate_Package_Instantiation_Declaration_Unit (Lib_Unit);
          when Iir_Kind_Entity_Declaration =>
-            if not Get_Macro_Expand_Flag (Lib_Unit) then
+            if not Get_Macro_Expand_Flag (Lib_Unit)
+              or else Parent = Null_Iir
+            then
                New_Debug_Comment_Decl
                  ("entity " & Image_Identifier (Lib_Unit));
                Chap1.Translate_Entity_Declaration (Lib_Unit);
             end if;
          when Iir_Kind_Architecture_Body =>
-            if not Get_Macro_Expand_Flag (Get_Entity (Lib_Unit)) then
-               New_Debug_Comment_Decl
-                 ("architecture " & Image_Identifier (Lib_Unit));
-               Chap1.Translate_Architecture_Body (Lib_Unit);
-            end if;
+            declare
+               Ent : constant Iir := Get_Entity (Lib_Unit);
+            begin
+               if not Get_Macro_Expand_Flag (Ent)
+                 or else Get_Design_Unit (Ent) = Null_Iir
+               then
+                  New_Debug_Comment_Decl
+                    ("architecture " & Image_Identifier (Lib_Unit));
+                  Chap1.Translate_Architecture_Body (Lib_Unit);
+               end if;
+            end;
          when Iir_Kind_Configuration_Declaration =>
             New_Debug_Comment_Decl
               ("configuration " & Image_Identifier (Lib_Unit));

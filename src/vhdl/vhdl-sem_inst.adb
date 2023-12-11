@@ -1424,6 +1424,8 @@ package body Vhdl.Sem_Inst is
          --  TODO: vunit ?
       end if;
 
+      Set_Macro_Expand_Flag (Inst, Get_Macro_Expand_Flag (Comp));
+
       Set_Origin (Comp, Prev_Orig);
 
       Instance_File := Prev_Instance_File;

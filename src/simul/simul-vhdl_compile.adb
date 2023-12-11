@@ -31,6 +31,7 @@ with Vhdl.Back_End;
 with Vhdl.Configuration;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
+with Vhdl.Sem_Inst;
 
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
@@ -38,6 +39,7 @@ with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Prot;
 with Elab.Vhdl_Heap;
+with Elab.Vhdl_Insts;
 
 with Synth.Vhdl_Expr;
 with Synth.Vhdl_Stmts;
@@ -1988,7 +1990,7 @@ package body Simul.Vhdl_Compile is
 
    procedure Simulation
    is
-      use Vhdl.Configuration;
+      use Elab.Vhdl_Insts;
       Err : Boolean;
    begin
       Ortho_Jit.Init;
@@ -2012,12 +2014,16 @@ package body Simul.Vhdl_Compile is
 
       --  Translate units.
       --  FIXME: discard unused units ?
-      for I in Design_Units.First .. Design_Units.Last loop
+      for I in Elab_Units.First .. Elab_Units.Last loop
          declare
-            Dunit : constant Node := Design_Units.Table (I);
-            Lunit : constant Node := Get_Library_Unit (Dunit);
+            Lunit : constant Node := Elab_Units.Table (I);
+            Dunit : Node;
          begin
             if Lunit /= Vhdl.Std_Package.Standard_Package then
+               Dunit := Get_Design_Unit (Lunit);
+               if Dunit = Null_Node then
+                  Dunit := Get_Design_Unit (Vhdl.Sem_Inst.Get_Origin (Lunit));
+               end if;
                Trans.Rtis.Generate_Library
                  (Get_Library (Get_Design_File (Dunit)), True);
 
@@ -2028,16 +2034,31 @@ package body Simul.Vhdl_Compile is
                   when Iir_Kind_Package_Declaration =>
                      Translation.Translate (Lunit, True);
                   when Iir_Kind_Entity_Declaration
-                    | Iir_Kind_Architecture_Body
                     | Iir_Kind_Package_Instantiation_Declaration
                     | Iir_Kind_Package_Body =>
                      Translation.Translate (Lunit, True);
+                  when Iir_Kind_Architecture_Body =>
+                     null;
                   when Iir_Kind_Foreign_Module =>
                      raise Internal_Error;
                   when Iir_Kinds_Verification_Unit =>
                      raise Internal_Error;
                end case;
             end if;
+         end;
+      end loop;
+
+      --  Then architectures
+      for I in Elab_Units.First .. Elab_Units.Last loop
+         declare
+            Lunit : constant Node := Elab_Units.Table (I);
+         begin
+            case Iir_Kinds_Library_Unit (Get_Kind (Lunit)) is
+               when Iir_Kind_Architecture_Body =>
+                  Translation.Translate (Lunit, True);
+               when others =>
+                  null;
+            end case;
          end;
       end loop;
 

@@ -19,11 +19,13 @@
 with Types; use Types;
 with Libraries;
 with Areapools;
+with Name_Table;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
 with Vhdl.Configuration; use Vhdl.Configuration;
 with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Sem_Inst;
 
 with Elab.Memtype;
 with Elab.Vhdl_Annotations;
@@ -51,6 +53,40 @@ package body Elab.Vhdl_Insts is
      (Syn_Inst : Synth_Instance_Acc; Head : Node);
    procedure Elab_Recurse_Instantiations_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
+
+   Inst_Num : Positive := 1;
+
+   procedure Add_To_Elab_Units (Lib_Unit : Node)
+   is
+      Design_Unit : constant Node := Get_Design_Unit (Lib_Unit);
+   begin
+      if Design_Unit = Null_Node then
+         --  Library units without a parent are the instantiated ones.
+         declare
+            use Name_Table;
+            Orig : constant Node := Vhdl.Sem_Inst.Get_Origin (Lib_Unit);
+            Orig_Id : constant Name_Id := Get_Identifier (Orig);
+            Id_Len : constant Natural := Get_Name_Length (Orig_Id);
+            Suffix : constant String := Natural'Image (Inst_Num);
+            New_Name : String (1 .. Id_Len + 8);
+            New_Id : Name_Id;
+         begin
+            New_Name (1 .. Id_Len) := Image (Orig_Id);
+            New_Name (Id_Len + 1 .. Id_Len + Suffix'Length) := Suffix;
+            New_Name (Id_Len + 1) := 'O';  -- Replace the space.
+            New_Id := Get_Identifier (New_Name (1 .. Id_Len + Suffix'Length));
+            Set_Identifier (Lib_Unit, New_Id);
+            Inst_Num := Inst_Num + 1;
+         end;
+
+         Elab_Units.Append (Lib_Unit);
+      else
+         if not Get_Elab_Flag (Design_Unit) then
+            Elab_Units.Append (Lib_Unit);
+            Set_Elab_Flag (Design_Unit, True);
+         end if;
+      end if;
+   end Add_To_Elab_Units;
 
    procedure Elab_Convertible_Declarations (Syn_Inst : Synth_Instance_Acc)
    is
@@ -333,23 +369,27 @@ package body Elab.Vhdl_Insts is
          if Get_Kind (Dep) = Iir_Kind_Design_Unit
            and then not Get_Elab_Flag (Dep)
          then
-            Set_Elab_Flag (Dep, True);
             Dep_Unit := Get_Library_Unit (Dep);
             case Iir_Kinds_Library_Unit (Get_Kind (Dep_Unit)) is
                when Iir_Kind_Entity_Declaration =>
                   null;
                when Iir_Kind_Configuration_Declaration =>
+                  Set_Elab_Flag (Dep, True);
                   Elab_Dependencies (Parent_Inst, Dep);
+                  Elab_Units.Append (Dep_Unit);
                   Elab_Configuration_Declaration (Parent_Inst, Dep_Unit);
                when Iir_Kind_Context_Declaration =>
+                  Set_Elab_Flag (Dep, True);
                   Elab_Dependencies (Parent_Inst, Dep);
                when Iir_Kind_Package_Declaration =>
+                  Set_Elab_Flag (Dep, True);
                   declare
                      Bod : constant Node := Get_Package_Body (Dep_Unit);
                      Bod_Unit : Node;
                   begin
                      --  Dependencies of the package.
                      Elab_Dependencies (Parent_Inst, Dep);
+                     Elab_Units.Append (Dep_Unit);
                      Elab_Package_Declaration (Parent_Inst, Dep_Unit);
                      --  Do not try to elaborate math_real body: there are
                      --  functions with loop.  Currently, try create signals,
@@ -357,11 +397,15 @@ package body Elab.Vhdl_Insts is
                      if Bod /= Null_Node then
                         Bod_Unit := Get_Design_Unit (Bod);
                         Elab_Dependencies (Parent_Inst, Bod_Unit);
+                        Elab_Units.Append (Bod);
+                        Set_Elab_Flag (Bod_Unit, True);
                         Elab_Package_Body (Parent_Inst, Dep_Unit, Bod);
                      end if;
                   end;
                when Iir_Kind_Package_Instantiation_Declaration =>
+                  Set_Elab_Flag (Dep, True);
                   Elab_Dependencies (Parent_Inst, Dep);
+                  Elab_Units.Append (Dep_Unit);
                   Elab_Package_Instantiation (Parent_Inst, Dep_Unit);
                when Iir_Kind_Package_Body =>
                   null;
@@ -899,6 +943,7 @@ package body Elab.Vhdl_Insts is
    is
       Arch : constant Node := Get_Source_Scope (Syn_Inst);
       Config : constant Node := Get_Instance_Config (Syn_Inst);
+      Arch_Orig : Node;
       Entity : Node;
       Cfgs : Configs_Rec;
    begin
@@ -908,10 +953,19 @@ package body Elab.Vhdl_Insts is
 
       pragma Assert (Is_Expr_Pool_Empty);
 
-      Entity := Get_Entity (Arch);
-      Cfgs := Apply_Block_Configuration (Config, Arch);
+      --  Configurations are not instantiated so they apply to the original
+      --  architecture.
+      Arch_Orig := Vhdl.Sem_Inst.Get_Origin (Arch);
+      if Arch_Orig = Null_Node then
+         Arch_Orig := Arch;
+      end if;
 
+      Cfgs := Apply_Block_Configuration (Config, Arch_Orig);
+
+      --  File names are relative to the source.
       Elab.Vhdl_Files.Set_Design_Unit (Arch);
+
+      Entity := Get_Entity (Arch);
 
       Elab_Declarations (Syn_Inst, Get_Declaration_Chain (Entity));
       pragma Assert (Is_Expr_Pool_Empty);
@@ -962,9 +1016,26 @@ package body Elab.Vhdl_Insts is
       Config : Node)
    is
       Sub_Inst : Synth_Instance_Acc;
+      E_Ent : Node;
+      E_Arch : Node;
    begin
+      if Flag_Macro_Expand_Instance
+        and then Get_Macro_Expand_Flag (Entity)
+      then
+         E_Ent := Vhdl.Sem_Inst.Instantiate_Entity_Declaration (Entity, Stmt);
+         E_Arch := Vhdl.Sem_Inst.Instantiate_Architecture
+           (Arch, E_Ent, Stmt, Stmt);
+         Elab.Vhdl_Annotations.Instantiate_Annotate (E_Ent);
+         Elab.Vhdl_Annotations.Instantiate_Annotate (E_Arch);
+
+         Set_Instantiated_Header (Stmt, E_Ent);
+      else
+         E_Ent := Entity;
+         E_Arch := Arch;
+      end if;
+
       --  Elaborate generic + map aspect
-      Sub_Inst := Make_Elab_Instance (Syn_Inst, Stmt, Arch, Config);
+      Sub_Inst := Make_Elab_Instance (Syn_Inst, Stmt, E_Arch, Config);
 
       Create_Sub_Instance (Syn_Inst, Stmt, Sub_Inst);
 
@@ -975,15 +1046,17 @@ package body Elab.Vhdl_Insts is
 
       pragma Assert (Is_Expr_Pool_Empty);
 
+      Add_To_Elab_Units (E_Ent);
+
       Elab_Generics_Association (Sub_Inst, Syn_Inst,
-                                 Get_Generic_Chain (Entity),
+                                 Get_Generic_Chain (E_Ent),
                                  Get_Generic_Map_Aspect_Chain (Stmt));
 
       pragma Assert (Is_Expr_Pool_Empty);
 
       --  Elaborate port types.
       Elab_Ports_Association_Type (Sub_Inst, Syn_Inst,
-                                   Get_Port_Chain (Entity),
+                                   Get_Port_Chain (E_Ent),
                                    Get_Port_Map_Aspect_Chain (Stmt));
 
       pragma Assert (Is_Expr_Pool_Empty);
@@ -996,6 +1069,8 @@ package body Elab.Vhdl_Insts is
       if Flag_Elab_Sub_Instances then
          Elab_Instance_Body (Sub_Inst);
       end if;
+
+      Add_To_Elab_Units (E_Arch);
    end Elab_Direct_Instantiation_Statement;
 
    procedure Elab_Component_Instantiation_Statement
@@ -1088,6 +1163,8 @@ package body Elab.Vhdl_Insts is
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Ent));
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Arch));
 
+      Add_To_Elab_Units (Ent);
+
       --  Elaborate generic + map aspect for the entity instance.
       Sub_Inst := Make_Elab_Instance (Comp_Inst, Stmt, Arch, Sub_Config);
       Create_Component_Instance (Comp_Inst, Sub_Inst);
@@ -1104,6 +1181,8 @@ package body Elab.Vhdl_Insts is
       if Flag_Elab_Sub_Instances then
          Elab_Instance_Body (Sub_Inst);
       end if;
+
+      Add_To_Elab_Units (Arch);
    end Elab_Component_Instantiation_Statement;
 
    procedure Elab_Design_Instantiation_Statement
@@ -1151,6 +1230,8 @@ package body Elab.Vhdl_Insts is
       Arch := Get_Named_Entity
         (Get_Block_Specification (Get_Block_Configuration (Config)));
       Entity := Get_Entity (Arch);
+
+      Elab_Units.Init;
 
       --  Annotate units.
       Elab.Vhdl_Annotations.Initialize_Annotate;
@@ -1250,20 +1331,36 @@ package body Elab.Vhdl_Insts is
 
       Instance_Pool := null;
 
-      --  Clear elab_flag
+      Add_To_Elab_Units (Entity);
+      Add_To_Elab_Units (Arch);
+      Add_To_Elab_Units (Config);
+
+      --  Clear instance for unused packages.
       for I in Design_Units.First .. Design_Units.Last loop
          declare
             Unit : constant Node := Design_Units.Table (I);
             Lib_Unit : Node;
          begin
             if not Get_Elab_Flag (Unit) then
+               --  This unit is not used.
                Lib_Unit := Get_Library_Unit (Unit);
                if Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration
                  and then not Is_Uninstantiated_Package (Lib_Unit)
                then
                   Clear_Package_Object (Root_Instance, Lib_Unit);
                end if;
-            else
+            end if;
+         end;
+      end loop;
+
+      --  Clear elab flag.
+      for I in Elab_Units.First .. Elab_Units.Last loop
+         declare
+            Lib_Unit : constant Node := Elab_Units.Table (I);
+            Unit : constant Node := Get_Design_Unit (Lib_Unit);
+         begin
+            if Unit /= Null_Node then
+               pragma Assert (Get_Elab_Flag (Unit));
                Set_Elab_Flag (Unit, False);
             end if;
          end;

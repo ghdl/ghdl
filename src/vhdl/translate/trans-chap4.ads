@@ -90,6 +90,8 @@ package Trans.Chap4 is
    procedure Translate_Port_Chain (Parent : Iir);
    procedure Translate_Generic_Chain (Parent : Iir);
 
+   procedure Translate_Interface_Type_Association (Assoc : Iir);
+
    --  Also handle interface type.
    procedure Translate_Generic_Association_Chain (Parent : Iir);
 

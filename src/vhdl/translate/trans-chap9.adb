@@ -217,43 +217,49 @@ package body Trans.Chap9 is
       Assoc := Get_Port_Map_Aspect_Chain (Inst);
       Inter := Get_Port_Chain (Ports);
       while Assoc /= Null_Iir loop
-         if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Name then
-            declare
-               Act_Conv : constant Iir := Get_Actual_Conversion (Assoc);
-               Act_Type : constant Iir := Get_Type (Get_Actual (Assoc));
-               Form_Conv : constant Iir := Get_Formal_Conversion (Assoc);
-               Formal : constant Iir := Get_Formal (Assoc);
-               Need_Actual : constant Boolean := Act_Conv /= Null_Iir
-                 and then Is_Anonymous_Type_Definition (Act_Type);
-               Need_Formal : constant Boolean := Form_Conv /= Null_Iir
-                 and then Is_Anonymous_Type_Definition (Get_Type (Formal));
-            begin
-               if Need_Actual or Need_Formal then
-                  --  Lazy creation of the record.
-                  if not Has_Conv_Record then
-                     Has_Conv_Record := True;
-                     Push_Instance_Factory (Info.Block_Scope'Access);
-                  end if;
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Association_Element_By_Name =>
+               declare
+                  Act_Conv : constant Iir := Get_Actual_Conversion (Assoc);
+                  Act_Type : constant Iir := Get_Type (Get_Actual (Assoc));
+                  Form_Conv : constant Iir := Get_Formal_Conversion (Assoc);
+                  Formal : constant Iir := Get_Formal (Assoc);
+                  Need_Actual : constant Boolean := Act_Conv /= Null_Iir
+                    and then Is_Anonymous_Type_Definition (Act_Type);
+                  Need_Formal : constant Boolean := Form_Conv /= Null_Iir
+                    and then Is_Anonymous_Type_Definition (Get_Type (Formal));
+               begin
+                  if Need_Actual or Need_Formal then
+                     --  Lazy creation of the record.
+                     if not Has_Conv_Record then
+                        Has_Conv_Record := True;
+                        Push_Instance_Factory (Info.Block_Scope'Access);
+                     end if;
 
-                  --  FIXME: handle with overload multiple case on the same
-                  --  formal.
-                  Push_Identifier_Prefix
-                    (Mark2,
-                     Get_Identifier
-                       (Get_Association_Interface (Assoc, Inter)), Num);
-                  Num := Num + 1;
-                  if Need_Actual then
-                     Chap3.Translate_Anonymous_Subtype_Definition
-                       (Act_Type, True);
+                     --  FIXME: handle with overload multiple case on the same
+                     --  formal.
+                     Push_Identifier_Prefix
+                       (Mark2,
+                        Get_Identifier
+                          (Get_Association_Interface (Assoc, Inter)), Num);
+                     Num := Num + 1;
+                     if Need_Actual then
+                        Chap3.Translate_Anonymous_Subtype_Definition
+                          (Act_Type, True);
+                     end if;
+                     if Need_Formal then
+                        Chap3.Translate_Anonymous_Subtype_Definition
+                          (Get_Type (Formal), True);
+                     end if;
+                     Pop_Identifier_Prefix (Mark2);
                   end if;
-                  if Need_Formal then
-                     Chap3.Translate_Anonymous_Subtype_Definition
-                       (Get_Type (Formal), True);
-                  end if;
-                  Pop_Identifier_Prefix (Mark2);
-               end if;
-            end;
-         end if;
+               end;
+            when Iir_Kind_Association_Element_Type =>
+               Chap4.Translate_Interface_Type_Association (Assoc);
+               --  Elaborateion of the type ??
+            when others =>
+               null;
+         end case;
          Next_Association_Interface (Assoc, Inter);
       end loop;
       if Has_Conv_Record then
