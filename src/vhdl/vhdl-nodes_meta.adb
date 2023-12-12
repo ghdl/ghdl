@@ -100,7 +100,7 @@ package body Vhdl.Nodes_Meta is
       Field_Owned_Instance_Package_Body => Type_Iir,
       Field_Need_Body => Type_Boolean,
       Field_Immediate_Body_Flag => Type_Boolean,
-      Field_Macro_Expanded_Flag => Type_Boolean,
+      Field_Macro_Expand_Flag => Type_Boolean,
       Field_Need_Instance_Bodies => Type_Boolean,
       Field_Hierarchical_Name => Type_Iir,
       Field_Vunit_Item_Chain => Type_Iir,
@@ -586,8 +586,8 @@ package body Vhdl.Nodes_Meta is
             return "need_body";
          when Field_Immediate_Body_Flag =>
             return "immediate_body_flag";
-         when Field_Macro_Expanded_Flag =>
-            return "macro_expanded_flag";
+         when Field_Macro_Expand_Flag =>
+            return "macro_expand_flag";
          when Field_Need_Instance_Bodies =>
             return "need_instance_bodies";
          when Field_Hierarchical_Name =>
@@ -2052,7 +2052,7 @@ package body Vhdl.Nodes_Meta is
             return Attr_None;
          when Field_Immediate_Body_Flag =>
             return Attr_None;
-         when Field_Macro_Expanded_Flag =>
+         when Field_Macro_Expand_Flag =>
             return Attr_None;
          when Field_Need_Instance_Bodies =>
             return Attr_None;
@@ -3360,7 +3360,7 @@ package body Vhdl.Nodes_Meta is
       --  Iir_Kind_Entity_Declaration
       Field_Identifier,
       Field_Has_Begin,
-      Field_Macro_Expanded_Flag,
+      Field_Macro_Expand_Flag,
       Field_Visible_Flag,
       Field_Is_Within_Flag,
       Field_End_Has_Reserved_Id,
@@ -3393,7 +3393,7 @@ package body Vhdl.Nodes_Meta is
       --  Iir_Kind_Package_Declaration
       Field_Identifier,
       Field_Need_Body,
-      Field_Macro_Expanded_Flag,
+      Field_Macro_Expand_Flag,
       Field_Need_Instance_Bodies,
       Field_Visible_Flag,
       Field_Is_Within_Flag,
@@ -3474,7 +3474,7 @@ package body Vhdl.Nodes_Meta is
       Field_Package,
       --  Iir_Kind_Architecture_Body
       Field_Identifier,
-      Field_Macro_Expanded_Flag,
+      Field_Macro_Expand_Flag,
       Field_Foreign_Flag,
       Field_Visible_Flag,
       Field_Is_Within_Flag,
@@ -3559,7 +3559,7 @@ package body Vhdl.Nodes_Meta is
       Field_Chain,
       --  Iir_Kind_Component_Declaration
       Field_Identifier,
-      Field_Macro_Expanded_Flag,
+      Field_Macro_Expand_Flag,
       Field_Visible_Flag,
       Field_Use_Flag,
       Field_Has_Is,
@@ -5918,8 +5918,8 @@ package body Vhdl.Nodes_Meta is
             return Get_Need_Body (N);
          when Field_Immediate_Body_Flag =>
             return Get_Immediate_Body_Flag (N);
-         when Field_Macro_Expanded_Flag =>
-            return Get_Macro_Expanded_Flag (N);
+         when Field_Macro_Expand_Flag =>
+            return Get_Macro_Expand_Flag (N);
          when Field_Need_Instance_Bodies =>
             return Get_Need_Instance_Bodies (N);
          when Field_Reference_Terminal_Flag =>
@@ -6084,8 +6084,8 @@ package body Vhdl.Nodes_Meta is
             Set_Need_Body (N, V);
          when Field_Immediate_Body_Flag =>
             Set_Immediate_Body_Flag (N, V);
-         when Field_Macro_Expanded_Flag =>
-            Set_Macro_Expanded_Flag (N, V);
+         when Field_Macro_Expand_Flag =>
+            Set_Macro_Expand_Flag (N, V);
          when Field_Need_Instance_Bodies =>
             Set_Need_Instance_Bodies (N, V);
          when Field_Reference_Terminal_Flag =>
@@ -8776,7 +8776,7 @@ package body Vhdl.Nodes_Meta is
       return K = Iir_Kind_Package_Instantiation_Declaration;
    end Has_Immediate_Body_Flag;
 
-   function Has_Macro_Expanded_Flag (K : Iir_Kind) return Boolean is
+   function Has_Macro_Expand_Flag (K : Iir_Kind) return Boolean is
    begin
       case K is
          when Iir_Kind_Entity_Declaration
@@ -8787,7 +8787,7 @@ package body Vhdl.Nodes_Meta is
          when others =>
             return False;
       end case;
-   end Has_Macro_Expanded_Flag;
+   end Has_Macro_Expand_Flag;
 
    function Has_Need_Instance_Bodies (K : Iir_Kind) return Boolean is
    begin

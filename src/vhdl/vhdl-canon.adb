@@ -3401,7 +3401,7 @@ package body Vhdl.Canon is
       --  package, the body of the instance should be appended to the package
       --  body.
       --  FIXME: generate only if generating code for this unit.
-      if Get_Macro_Expanded_Flag (Pkg)
+      if Get_Macro_Expand_Flag (Pkg)
         and then Get_Need_Body (Pkg)
         and then Instantiation_Needs_Immediate_Body_P (Decl)
       then
@@ -3443,7 +3443,7 @@ package body Vhdl.Canon is
                   --  This is a package instantiation...
                   Pkg_Spec := Get_Uninstantiated_Package_Decl (Pkg_Decl);
                   if Get_Need_Body (Pkg_Spec)
-                    and then Get_Macro_Expanded_Flag (Pkg_Spec)
+                    and then Get_Macro_Expand_Flag (Pkg_Spec)
                     and then not Get_Immediate_Body_Flag (Pkg_Decl)
                   then
                      --  ... that needs a body.  Create the body.

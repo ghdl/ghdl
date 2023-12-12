@@ -957,7 +957,7 @@ package Vhdl.Nodes is
    --
    --  True if the entity has to be macro-expanded.  Set when a generic
    --  interface is a type or a subprogram interface.
-   --   Get/Set_Macro_Expanded_Flag (Flag2)
+   --   Get/Set_Macro_Expand_Flag (Flag2)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -991,7 +991,7 @@ package Vhdl.Nodes is
    --   Get/Set_Bound_Vunit_Chain (Field8)
    --
    --  Inherited from the entity.
-   --   Get/Set_Macro_Expanded_Flag (Flag2)
+   --   Get/Set_Macro_Expand_Flag (Flag2)
    --
    --   Get/Set_Foreign_Flag (Flag3)
    --
@@ -1061,7 +1061,7 @@ package Vhdl.Nodes is
    --  simulation.  The macro-expansion is done by canon, so controlled by
    --  back-end.  The reason of macro-expansion is presence of interface
    --  type.
-   --   Get/Set_Macro_Expanded_Flag (Flag2)
+   --   Get/Set_Macro_Expand_Flag (Flag2)
    --
    --  True if the package declaration has least one package instantiation
    --  declaration whose uninstantiated declaration needs both a body and
@@ -1232,7 +1232,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Port_Chain (Field7)
    --
-   --   Get/Set_Macro_Expanded_Flag (Flag2)
+   --   Get/Set_Macro_Expand_Flag (Flag2)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -8316,8 +8316,8 @@ package Vhdl.Nodes is
    procedure Set_Immediate_Body_Flag (Decl : Iir; Flag : Boolean);
 
    --  Field: Flag2
-   function Get_Macro_Expanded_Flag (Decl : Iir) return Boolean;
-   procedure Set_Macro_Expanded_Flag (Decl : Iir; Flag : Boolean);
+   function Get_Macro_Expand_Flag (Decl : Iir) return Boolean;
+   procedure Set_Macro_Expand_Flag (Decl : Iir; Flag : Boolean);
 
    --  Field: Flag3
    function Get_Need_Instance_Bodies (Decl : Iir) return Boolean;

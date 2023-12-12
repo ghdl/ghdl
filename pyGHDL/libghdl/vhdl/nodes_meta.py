@@ -200,7 +200,7 @@ class fields(IntEnum):
     Owned_Instance_Package_Body = 80
     Need_Body = 81
     Immediate_Body_Flag = 82
-    Macro_Expanded_Flag = 83
+    Macro_Expand_Flag = 83
     Need_Instance_Bodies = 84
     Hierarchical_Name = 85
     Vunit_Item_Chain = 86
@@ -1143,8 +1143,8 @@ def Has_Immediate_Body_Flag(kind: IirKind) -> bool:
 
 
 @export
-@BindToLibGHDL("vhdl__nodes_meta__has_macro_expanded_flag")
-def Has_Macro_Expanded_Flag(kind: IirKind) -> bool:
+@BindToLibGHDL("vhdl__nodes_meta__has_macro_expand_flag")
+def Has_Macro_Expand_Flag(kind: IirKind) -> bool:
     """"""
 
 

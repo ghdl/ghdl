@@ -932,7 +932,7 @@ package body Trans.Chap2 is
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
       Mark  : Id_Mark_Type;
    begin
-      if Is_Uninst and then Get_Macro_Expanded_Flag (Decl) then
+      if Is_Uninst and then Get_Macro_Expand_Flag (Decl) then
          --  Nothing to do for macro-expanded packages.
          return;
       end if;
@@ -988,7 +988,7 @@ package body Trans.Chap2 is
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
       Mark  : Id_Mark_Type;
    begin
-      if Is_Uninst and then Get_Macro_Expanded_Flag (Spec) then
+      if Is_Uninst and then Get_Macro_Expand_Flag (Spec) then
          --  Nothing to do for macro-expanded packages.
          return;
       end if;
@@ -1028,7 +1028,7 @@ package body Trans.Chap2 is
       Mark : Id_Mark_Type;
    begin
       --  Skip uninstantiated package that have to be macro-expanded.
-      if Get_Macro_Expanded_Flag (Decl) then
+      if Get_Macro_Expand_Flag (Decl) then
          return;
       end if;
 
@@ -1049,7 +1049,7 @@ package body Trans.Chap2 is
       Header : Iir;
    begin
       --  Skip uninstantiated package that have to be macro-expanded.
-      if Get_Macro_Expanded_Flag (Decl) then
+      if Get_Macro_Expand_Flag (Decl) then
          return;
       end if;
 
@@ -1077,7 +1077,7 @@ package body Trans.Chap2 is
       Prev_Storage : constant O_Storage := Global_Storage;
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
    begin
-      if Is_Spec_Decl and then Get_Macro_Expanded_Flag (Spec) then
+      if Is_Spec_Decl and then Get_Macro_Expand_Flag (Spec) then
          return;
       end if;
 
@@ -1236,8 +1236,7 @@ package body Trans.Chap2 is
       Final  : Boolean;
    begin
       --  Macro-expanded packages are skipped.
-      pragma Assert
-        (not (Is_Spec_Decl and then Get_Macro_Expanded_Flag (Spec)));
+      pragma Assert (not (Is_Spec_Decl and then Get_Macro_Expand_Flag (Spec)));
 
       if Is_Uninst then
          --  Make spec reachable.
@@ -1287,7 +1286,7 @@ package body Trans.Chap2 is
 
    procedure Elab_Package_Unit_Without_Body (Spec : Iir) is
    begin
-      if Get_Macro_Expanded_Flag (Spec) then
+      if Get_Macro_Expand_Flag (Spec) then
          return;
       end if;
 
@@ -1872,7 +1871,7 @@ package body Trans.Chap2 is
    begin
       Push_Identifier_Prefix (Mark, Get_Identifier (Inst));
 
-      if Get_Macro_Expanded_Flag (Spec) then
+      if Get_Macro_Expand_Flag (Spec) then
          Translate_Package_Concrete_Common (Inst, Inst);
          Translate_Package_Instantiation_Declaration_Macro (Inst);
       else
@@ -1885,7 +1884,7 @@ package body Trans.Chap2 is
    procedure Translate_Package_Instantiation_Declaration_Subprograms
      (Inst : Iir; What : Subprg_Translate_Kind) is
    begin
-      if Get_Macro_Expanded_Flag (Get_Uninstantiated_Package_Decl (Inst)) then
+      if Get_Macro_Expand_Flag (Get_Uninstantiated_Package_Decl (Inst)) then
          declare
             Bod : constant Iir := Get_Instance_Package_Body (Inst);
             Mark  : Id_Mark_Type;
@@ -1916,7 +1915,7 @@ package body Trans.Chap2 is
       Interface_List : O_Inter_List;
       Info           : Ortho_Info_Acc;
    begin
-      if Get_Macro_Expanded_Flag (Spec) then
+      if Get_Macro_Expand_Flag (Spec) then
          Translate_Package_Concrete_Common (Inst, Inst);
          Translate_Package_Concrete_Unit (Inst, Inst);
          Translate_Package_Instantiation_Declaration_Macro (Inst);
@@ -1964,7 +1963,7 @@ package body Trans.Chap2 is
       Constr         : O_Assoc_List;
    begin
       --  Macro-expanded instances are handled like a regular package.
-      if Get_Macro_Expanded_Flag (Spec) then
+      if Get_Macro_Expand_Flag (Spec) then
          declare
             Bod : constant Iir := Get_Package_Body (Spec);
          begin
@@ -2057,7 +2056,7 @@ package body Trans.Chap2 is
 
    procedure Elab_Dependence_Package_Instantiation (Pkg : Iir) is
    begin
-      if Get_Macro_Expanded_Flag (Get_Uninstantiated_Package_Decl (Pkg)) then
+      if Get_Macro_Expand_Flag (Get_Uninstantiated_Package_Decl (Pkg)) then
          --  Handled as a normal package
          Elab_Dependence_Package (Pkg);
       else

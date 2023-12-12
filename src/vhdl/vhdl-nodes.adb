@@ -2720,21 +2720,21 @@ package body Vhdl.Nodes is
       Set_Flag5 (Decl, Flag);
    end Set_Immediate_Body_Flag;
 
-   function Get_Macro_Expanded_Flag (Decl : Iir) return Boolean is
+   function Get_Macro_Expand_Flag (Decl : Iir) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);
-      pragma Assert (Has_Macro_Expanded_Flag (Get_Kind (Decl)),
-                     "no field Macro_Expanded_Flag");
+      pragma Assert (Has_Macro_Expand_Flag (Get_Kind (Decl)),
+                     "no field Macro_Expand_Flag");
       return Get_Flag2 (Decl);
-   end Get_Macro_Expanded_Flag;
+   end Get_Macro_Expand_Flag;
 
-   procedure Set_Macro_Expanded_Flag (Decl : Iir; Flag : Boolean) is
+   procedure Set_Macro_Expand_Flag (Decl : Iir; Flag : Boolean) is
    begin
       pragma Assert (Decl /= Null_Iir);
-      pragma Assert (Has_Macro_Expanded_Flag (Get_Kind (Decl)),
-                     "no field Macro_Expanded_Flag");
+      pragma Assert (Has_Macro_Expand_Flag (Get_Kind (Decl)),
+                     "no field Macro_Expand_Flag");
       Set_Flag2 (Decl, Flag);
-   end Set_Macro_Expanded_Flag;
+   end Set_Macro_Expand_Flag;
 
    function Get_Need_Instance_Bodies (Decl : Iir) return Boolean is
    begin

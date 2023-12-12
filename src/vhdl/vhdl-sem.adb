@@ -89,7 +89,7 @@ package body Vhdl.Sem is
             case Get_Kind (Gen) is
                when Iir_Kind_Interface_Type_Declaration
                  | Iir_Kinds_Interface_Subprogram_Declaration =>
-                  Set_Macro_Expanded_Flag (Entity, True);
+                  Set_Macro_Expand_Flag (Entity, True);
                   exit;
                when others =>
                   null;
@@ -2985,7 +2985,7 @@ package body Vhdl.Sem is
                begin
                   --  Could be an error.
                   if Get_Kind (Pkg) = Iir_Kind_Package_Declaration
-                    and then Get_Macro_Expanded_Flag (Pkg)
+                    and then Get_Macro_Expand_Flag (Pkg)
                   then
                      return True;
                   end if;
@@ -3039,7 +3039,7 @@ package body Vhdl.Sem is
 
             if Generic_Map /= Null_Iir then
                --  Generic-mapped packages are not macro-expanded.
-               Set_Macro_Expanded_Flag (Pkg, False);
+               Set_Macro_Expand_Flag (Pkg, False);
 
                if Sem_Generic_Association_Chain (Header, Header) then
                   --  For generic-mapped packages, use the actual type for
@@ -3062,13 +3062,13 @@ package body Vhdl.Sem is
                end if;
             else
                --  Uninstantiated package.  Maybe macro expanded.
-               Set_Macro_Expanded_Flag
+               Set_Macro_Expand_Flag
                  (Pkg, Is_Package_Macro_Expanded (Pkg));
             end if;
          end;
       else
          --  Simple packages are never expanded.
-         Set_Macro_Expanded_Flag (Pkg, False);
+         Set_Macro_Expand_Flag (Pkg, False);
       end if;
 
       Sem_Declaration_Chain (Pkg);

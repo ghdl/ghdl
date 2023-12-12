@@ -449,7 +449,7 @@ package body Elab.Vhdl_Annotations is
    begin
       if not Is_Inst
         and then Is_Uninstantiated_Package (Decl)
-        and then Get_Macro_Expanded_Flag (Decl)
+        and then Get_Macro_Expand_Flag (Decl)
       then
          --  Macro-expanded packages are ignored.  Only their instances are
          --  annotated.
@@ -534,7 +534,7 @@ package body Elab.Vhdl_Annotations is
                begin
                   --  There is not corresponding body for an instantiation, so
                   --  also add objects for the shared body.
-                  if not Get_Macro_Expanded_Flag (Uninst) then
+                  if not Get_Macro_Expand_Flag (Uninst) then
                      Package_Info.Nbr_Objects := Uninst_Info.Nbr_Objects;
                   end if;
                end;
@@ -552,7 +552,7 @@ package body Elab.Vhdl_Annotations is
    begin
       if not Is_Inst
         and then Is_Uninstantiated_Package (Pkg)
-        and then Get_Macro_Expanded_Flag (Pkg)
+        and then Get_Macro_Expand_Flag (Pkg)
       then
          --  The body of a macro-expanded flag.
          return;

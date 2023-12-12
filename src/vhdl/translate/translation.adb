@@ -168,13 +168,13 @@ package body Translation is
               ("package instantiation " & Image_Identifier (Lib_Unit));
             Chap2.Translate_Package_Instantiation_Declaration_Unit (Lib_Unit);
          when Iir_Kind_Entity_Declaration =>
-            if not Get_Macro_Expanded_Flag (Lib_Unit) then
+            if not Get_Macro_Expand_Flag (Lib_Unit) then
                New_Debug_Comment_Decl
                  ("entity " & Image_Identifier (Lib_Unit));
                Chap1.Translate_Entity_Declaration (Lib_Unit);
             end if;
          when Iir_Kind_Architecture_Body =>
-            if not Get_Macro_Expanded_Flag (Get_Entity (Lib_Unit)) then
+            if not Get_Macro_Expand_Flag (Get_Entity (Lib_Unit)) then
                New_Debug_Comment_Decl
                  ("architecture " & Image_Identifier (Lib_Unit));
                Chap1.Translate_Architecture_Body (Lib_Unit);

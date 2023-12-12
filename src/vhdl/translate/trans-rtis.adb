@@ -3027,7 +3027,7 @@ package body Trans.Rtis is
             when Iir_Kind_Package_Declaration =>
                Nbr_Pkgs := Nbr_Pkgs + 1;
             when Iir_Kind_Package_Instantiation_Declaration =>
-               if Get_Macro_Expanded_Flag
+               if Get_Macro_Expand_Flag
                  (Get_Uninstantiated_Package_Decl (Lib_Unit))
                then
                   Nbr_Pkgs := Nbr_Pkgs + 1;
