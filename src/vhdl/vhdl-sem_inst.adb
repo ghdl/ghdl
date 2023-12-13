@@ -1475,6 +1475,7 @@ package body Vhdl.Sem_Inst is
       Res := Instantiate_Iir (Arch, False);
 
       Set_Named_Entity (Get_Entity_Name (Res), Ent);
+      Set_Design_Unit (Res, Null_Iir);
 
       --  Restore.
       Instance_File := Prev_Instance_File;
