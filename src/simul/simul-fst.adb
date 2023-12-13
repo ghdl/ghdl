@@ -209,7 +209,7 @@ package body Simul.Fst is
          return False;
       end if;
 
-      if Opt (F + 5) = '=' then
+      if Opt'Length > 5 and then Opt (F + 5) = '=' then
          if Fst_Filename /= null then
             Free (Fst_Filename);
          end if;
