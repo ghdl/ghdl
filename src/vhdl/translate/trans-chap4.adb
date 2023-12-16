@@ -38,7 +38,7 @@ package body Trans.Chap4 is
 
    --  Get the ortho type for an object of mode MODE.
    function Get_Object_Type (Tinfo : Type_Info_Acc; Kind : Object_Kind_Type)
-                                return O_Tnode is
+                            return O_Tnode is
    begin
       case Tinfo.Type_Mode is
          when Type_Mode_Complex_Record

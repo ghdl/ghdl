@@ -2224,14 +2224,16 @@ package body Vhdl.Sem_Stmts is
       while Assoc /= Null_Iir loop
          Formal := Get_Formal (Assoc);
          if Formal /= Null_Iir then
-            if Get_Kind (Formal) = Iir_Kind_Simple_Name then
-               Ent := Get_Named_Entity (Formal);
-               Ent := Sem_Inst.Get_Origin (Ent);
-               Set_Named_Entity (Formal, Ent);
-            else
-               --  TODO.
-               raise Internal_Error;
-            end if;
+            case Get_Kind (Formal) is
+               when Iir_Kind_Simple_Name
+                 | Iir_Kind_Reference_Name =>
+                  Ent := Get_Named_Entity (Formal);
+                  Ent := Sem_Inst.Get_Origin (Ent);
+                  Set_Named_Entity (Formal, Ent);
+               when others =>
+                  --  TODO.
+                  raise Internal_Error;
+            end case;
          end if;
          Assoc := Get_Chain (Assoc);
       end loop;

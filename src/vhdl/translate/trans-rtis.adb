@@ -2434,8 +2434,10 @@ package body Trans.Rtis is
                end if;
 
             when Iir_Kind_Package_Instantiation_Declaration
-              |  Iir_Kind_Interface_Package_Declaration
-              | Iir_Kind_Package_Instantiation_Body =>
+               | Iir_Kind_Interface_Package_Declaration
+               | Iir_Kind_Package_Instantiation_Body
+               | Iir_Kind_Interface_Function_Declaration
+               | Iir_Kind_Interface_Procedure_Declaration =>
                --  FIXME: todo
                null;
 
