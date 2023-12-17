@@ -8,6 +8,11 @@ elab_simulate test_entity
 
 clean
 
+analyze repro2.vhdl
+elab_simulate test_entity
+
+clean
+
 analyze ent.vhdl
 elab_simulate ent
 
