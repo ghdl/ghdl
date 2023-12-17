@@ -74,7 +74,6 @@ package Elab.Vhdl_Insts is
    --  Get the next block configuration from CFG
    --  There is an assertion to check it corresponds to STMT.
    procedure Get_Next_Block_Configuration (Cfg : in out Configs_Rec;
-                                           Stmt : Node;
                                            Res : out Node);
 
    procedure Elab_Component_Instantiation_Statement

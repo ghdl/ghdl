@@ -707,6 +707,11 @@ package body Vhdl.Sem_Inst is
                when Field_Associated_Type =>
                   null;
 
+               when Field_Generate_Block_Configuration =>
+                  pragma Assert
+                    (Get_Generate_Block_Configuration (Res) = Null_Iir);
+                  null;
+
                when others =>
                   --  Common case.
                   Instantiate_Iir_Field (Res, N, F);
@@ -1012,7 +1017,7 @@ package body Vhdl.Sem_Inst is
    --  In ASSOC (which is the association for interface INTER), adjust
    --  references to the instance, so that any name designating an interface
    --  is substitued by the instance.
-   --  INTER is the interface of the uninstantiated unit.
+   --  INTER is the interface of the instantiated unit.
    procedure Instantiate_Generic_Map (Assoc : Iir; Inter: Iir)
    is
       Orig_Inter : constant Iir := Get_Origin (Inter);

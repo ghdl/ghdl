@@ -422,17 +422,16 @@ package body Elab.Vhdl_Insts is
    end Elab_Dependencies;
 
    function Apply_Block_Configuration_With_Stmts
-     (Cfg : Node; Stmts : Node; Blk : Node) return Configs_Rec
+     (Cfg : Node; Stmts : Node) return Configs_Rec
    is
       Item : Node;
       Count : Natural;
       Res : Iir_Array_Acc;
    begin
       --  Be sure CFG applies to BLK.
-      pragma Assert (Get_Block_From_Block_Specification
-                       (Get_Block_Specification (Cfg)) = Blk);
+      --  There was an assertion, but it doesn't work with instantiated
+      --  architectures.
 
-      --  Clear_Instantiation_Configuration (Blk);
       Count := 0;
 
       Item := Get_Configuration_Item_Chain (Cfg);
@@ -557,7 +556,7 @@ package body Elab.Vhdl_Insts is
      (Cfg : Node; Blk : Node) return Configs_Rec is
    begin
       return Apply_Block_Configuration_With_Stmts
-        (Cfg, Get_Concurrent_Statement_Chain (Blk), Blk);
+        (Cfg, Get_Concurrent_Statement_Chain (Blk));
    end Apply_Block_Configuration;
 
    procedure Free_Configs_Rec (Cfg : in out Configs_Rec) is
@@ -566,14 +565,11 @@ package body Elab.Vhdl_Insts is
    end Free_Configs_Rec;
 
    procedure Get_Next_Block_Configuration (Cfg : in out Configs_Rec;
-                                           Stmt : Node;
                                            Res : out Node) is
    begin
       Cfg.Idx := Cfg.Idx + 1;
       Res := Cfg.Cfg (Cfg.Idx);
       pragma Assert (Get_Kind (Res) = Iir_Kind_Block_Configuration);
-      pragma Assert (Get_Block_From_Block_Specification
-                       (Get_Block_Specification (Res)) = Stmt);
    end Get_Next_Block_Configuration;
 
    procedure Get_Next_Component_Configuration (Cfg : in out Configs_Rec;
@@ -762,8 +758,7 @@ package body Elab.Vhdl_Insts is
 
       Cfgs := Apply_Block_Configuration_With_Stmts
         (Get_Verification_Block_Configuration (Unit),
-         Get_Vunit_Item_Chain (Unit),
-         Unit);
+         Get_Vunit_Item_Chain (Unit));
 
       Last_Type := Null_Node;
       Item := Get_Vunit_Item_Chain (Unit);

@@ -81,7 +81,7 @@ package body Elab.Vhdl_Stmts is
       Len : Uns32;
       Cfgs : Configs_Rec;
    begin
-      Get_Next_Block_Configuration (Parent_Cfgs, Bod, Configs);
+      Get_Next_Block_Configuration (Parent_Cfgs, Configs);
 
       if It_Type /= Null_Node then
          Synth_Subtype_Indication (Syn_Inst, It_Type);
@@ -192,7 +192,7 @@ package body Elab.Vhdl_Stmts is
          Release_Expr_Pool (Marker);
 
          Bod := Get_Generate_Statement_Body (Gen);
-         Get_Next_Block_Configuration (Parent_Cfgs, Bod, Config);
+         Get_Next_Block_Configuration (Parent_Cfgs, Config);
 
          if Cond_Val then
             Cfgs := Apply_Block_Configuration (Config, Bod);
@@ -205,7 +205,7 @@ package body Elab.Vhdl_Stmts is
             Gen := Get_Generate_Else_Clause (Gen);
             while Gen /= Null_Node loop
                Bod := Get_Generate_Statement_Body (Gen);
-               Get_Next_Block_Configuration (Parent_Cfgs, Bod, Config);
+               Get_Next_Block_Configuration (Parent_Cfgs, Config);
                Gen := Get_Generate_Else_Clause (Gen);
             end loop;
 
@@ -249,7 +249,7 @@ package body Elab.Vhdl_Stmts is
       while Alt /= Null_Node loop
          if not Get_Same_Alternative_Flag (Alt) then
             Bod := Get_Associated_Block (Alt);
-            Get_Next_Block_Configuration (Parent_Cfgs, Bod, Bod_Config);
+            Get_Next_Block_Configuration (Parent_Cfgs, Bod_Config);
             if Alt = Gen then
                Config := Bod_Config;
             end if;
@@ -274,7 +274,7 @@ package body Elab.Vhdl_Stmts is
       Inter : Node;
       Cfgs : Configs_Rec;
    begin
-      Get_Next_Block_Configuration (Parent_Cfgs, Blk, Blk_Cfg);
+      Get_Next_Block_Configuration (Parent_Cfgs, Blk_Cfg);
       Cfgs := Apply_Block_Configuration (Blk_Cfg, Blk);
 
       Blk_Inst := Make_Elab_Instance (Syn_Inst, Blk, Blk, Null_Iir);
