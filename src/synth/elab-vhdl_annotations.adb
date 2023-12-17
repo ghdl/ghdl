@@ -1386,6 +1386,8 @@ package body Elab.Vhdl_Annotations is
          return;
       end if;
 
+      Annotate_Expand_Table;
+
       declare
          use Vhdl.Nodes_Meta;
          Kind      : constant Iir_Kind := Get_Kind (N);
