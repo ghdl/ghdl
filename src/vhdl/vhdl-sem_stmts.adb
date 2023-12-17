@@ -2228,8 +2228,11 @@ package body Vhdl.Sem_Stmts is
                when Iir_Kind_Simple_Name
                  | Iir_Kind_Reference_Name =>
                   Ent := Get_Named_Entity (Formal);
-                  Ent := Sem_Inst.Get_Origin (Ent);
-                  Set_Named_Entity (Formal, Ent);
+                  if Ent /= Null_Iir then
+                     --  Except in case of error!
+                     Ent := Sem_Inst.Get_Origin (Ent);
+                     Set_Named_Entity (Formal, Ent);
+                  end if;
                when others =>
                   --  TODO.
                   raise Internal_Error;
