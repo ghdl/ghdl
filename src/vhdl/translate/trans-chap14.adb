@@ -68,6 +68,8 @@ package body Trans.Chap14 is
                Res := Chap3.Array_Bounds_To_Element_Bounds (Res, Pfx_Type);
                return Res;
             end;
+         when Iir_Kind_Subtype_Attribute =>
+            return Translate_Name_Bounds (Get_Prefix (Name));
          when others =>
             Error_Kind ("translate_name_bounds", Name);
       end case;
