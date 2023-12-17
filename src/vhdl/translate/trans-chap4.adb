@@ -743,7 +743,10 @@ package body Trans.Chap4 is
       else
          Value_Node := Chap7.Translate_Expression (Value, Obj_Type);
 
-         if Type_Info.Type_Mode in Type_Mode_Unbounded then
+         if (Get_Kind (Obj) = Iir_Kind_Attribute_Value
+               or else not Is_Object_Type_Attribute (Obj))
+           and then Type_Info.Type_Mode in Type_Mode_Unbounded
+         then
             declare
                S : Mnode;
             begin
