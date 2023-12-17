@@ -1318,24 +1318,9 @@ package body Vhdl.Sem_Scopes is
                end if;
             when Iir_Kind_Interface_Type_Declaration =>
                Add_Name (Inter, Id, Potentially);
-               declare
-                  El : Iir;
-                  El_Id : Name_Id;
-               begin
-                  El := Get_Interface_Type_Subprograms (Inter);
-                  while El /= Null_Iir loop
-                     El_Id := Get_Identifier (El);
-                     --  See above comment for interface subprogram.
-                     if Potentially then
-                        Assoc := Get_Associated_Subprogram (El);
-                        pragma Assert (Assoc /= Null_Iir);
-                        Add_Name (Assoc, El_Id, Potentially);
-                     else
-                        Add_Name (El, El_Id, Potentially);
-                     end if;
-                     El := Get_Chain (El);
-                  end loop;
-               end;
+               --  Also add implicit associated subprograms.
+               Add_Declarations_From_Interface_Chain
+                 (Get_Interface_Type_Subprograms (Inter), Potentially);
          end case;
 
          Inter := Get_Chain (Inter);
