@@ -3003,7 +3003,9 @@ package body Trans.Rtis is
                   Dunit : Iir;
                begin
                   Dunit := Get_Design_Unit (Lib_Unit);
-                  if Dunit = Null_Iir then
+                  if Get_Kind (Dunit)
+                    = Iir_Kind_Component_Instantiation_Statement
+                  then
                      Dunit := Get_Design_Unit
                        (Vhdl.Sem_Inst.Get_Origin (Lib_Unit));
                   end if;

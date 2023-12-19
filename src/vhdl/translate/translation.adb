@@ -90,7 +90,9 @@ package body Translation is
       Id : Name_Id;
    begin
       Unit := Get_Design_Unit (Lib_Unit);
-      if Unit = Null_Iir then
+      if Unit = Null_Iir
+        or else Get_Kind (Unit) = Iir_Kind_Component_Instantiation_Statement
+      then
          Unit := Get_Design_Unit (Vhdl.Sem_Inst.Get_Origin (Lib_Unit));
       end if;
 
@@ -147,7 +149,10 @@ package body Translation is
          Design_Unit : Iir_Design_Unit;
       begin
          Design_Unit := Get_Design_Unit (Lib_Unit);
-         if Design_Unit = Null_Node then
+         if Design_Unit = Null_Iir
+           or else
+           Get_Kind (Design_Unit) = Iir_Kind_Component_Instantiation_Statement
+         then
             Design_Unit := Get_Design_Unit
               (Vhdl.Sem_Inst.Get_Origin (Lib_Unit));
          end if;
@@ -187,7 +192,8 @@ package body Translation is
             Chap2.Translate_Package_Instantiation_Declaration_Unit (Lib_Unit);
          when Iir_Kind_Entity_Declaration =>
             if not Get_Macro_Expand_Flag (Lib_Unit)
-              or else Parent = Null_Iir
+              or else (Get_Kind (Parent)
+                         = Iir_Kind_Component_Instantiation_Statement)
             then
                New_Debug_Comment_Decl
                  ("entity " & Image_Identifier (Lib_Unit));
@@ -196,9 +202,11 @@ package body Translation is
          when Iir_Kind_Architecture_Body =>
             declare
                Ent : constant Iir := Get_Entity (Lib_Unit);
+               Ent_Parent : constant Iir := Get_Parent (Ent);
             begin
                if not Get_Macro_Expand_Flag (Ent)
-                 or else Get_Design_Unit (Ent) = Null_Iir
+                 or else (Get_Kind (Ent_Parent)
+                            = Iir_Kind_Component_Instantiation_Statement)
                then
                   New_Debug_Comment_Decl
                     ("architecture " & Image_Identifier (Lib_Unit));

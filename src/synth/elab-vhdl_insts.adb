@@ -60,7 +60,10 @@ package body Elab.Vhdl_Insts is
    is
       Design_Unit : constant Node := Get_Design_Unit (Lib_Unit);
    begin
-      if Design_Unit = Null_Node then
+      if Design_Unit = Null_Iir
+        or else
+        Get_Kind (Design_Unit) = Iir_Kind_Component_Instantiation_Statement
+      then
          --  Library units without a parent are the instantiated ones.
          declare
             use Name_Table;
@@ -1023,7 +1026,11 @@ package body Elab.Vhdl_Insts is
          Elab.Vhdl_Annotations.Instantiate_Annotate (E_Ent);
          Elab.Vhdl_Annotations.Instantiate_Annotate (E_Arch);
 
+         --  TODO: remove previous Instantiated_Header.
          Set_Instantiated_Header (Stmt, E_Ent);
+
+         pragma Assert (Get_Parent (E_Ent) = Null_Iir);
+         Set_Parent (E_Ent, Stmt);
       else
          E_Ent := Entity;
          E_Arch := Arch;
@@ -1354,7 +1361,10 @@ package body Elab.Vhdl_Insts is
             Lib_Unit : constant Node := Elab_Units.Table (I);
             Unit : constant Node := Get_Design_Unit (Lib_Unit);
          begin
-            if Unit /= Null_Node then
+            if Unit /= Null_Node
+              and then
+              Get_Kind (Unit) /= Iir_Kind_Component_Instantiation_Statement
+            then
                pragma Assert (Get_Elab_Flag (Unit));
                Set_Elab_Flag (Unit, False);
             end if;

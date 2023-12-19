@@ -2021,7 +2021,10 @@ package body Simul.Vhdl_Compile is
          begin
             if Lunit /= Vhdl.Std_Package.Standard_Package then
                Dunit := Get_Design_Unit (Lunit);
-               if Dunit = Null_Node then
+               if Dunit = Null_Node
+                 or else
+                 Get_Kind (Dunit) = Iir_Kind_Component_Instantiation_Statement
+               then
                   Dunit := Get_Design_Unit (Vhdl.Sem_Inst.Get_Origin (Lunit));
                end if;
                Trans.Rtis.Generate_Library
