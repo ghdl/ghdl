@@ -196,12 +196,16 @@ package body Vhdl.Errors is
    -- Disp a node.
    -- Used for output of message.
    function Disp_Node (Node: Iir) return String is
-      function Disp_Identifier (Node : Iir; Str : String) return String
-      is
+      function Disp_Identifier (Node : Iir) return String is
          Id : Name_Id;
       begin
          Id := Get_Identifier (Node);
-         return Str & " """ & Name_Table.Image (Id) & """";
+         return '"' & Name_Table.Image (Id) & '"';
+      end Disp_Identifier;
+
+      function Disp_Identifier (Node : Iir; Str : String) return String is
+      begin
+         return Str & " " & Disp_Identifier (Node);
       end Disp_Identifier;
 
       function Disp_Type (Node : Iir; Str : String) return String
@@ -372,9 +376,9 @@ package body Vhdl.Errors is
          when Iir_Kind_Procedure_Call =>
             return "procedure call";
          when Iir_Kind_Selected_Name =>
-            return ''' & Name_Table.Image (Get_Identifier (Node)) & ''';
+            return Disp_Identifier (Node);
          when Iir_Kind_Simple_Name =>
-            return ''' & Name_Table.Image (Get_Identifier (Node)) & ''';
+            return Disp_Identifier (Node);
          when Iir_Kind_Reference_Name =>
             --  Shouldn't happen.
             return "name";
