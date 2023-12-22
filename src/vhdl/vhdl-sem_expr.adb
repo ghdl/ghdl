@@ -3157,6 +3157,9 @@ package body Vhdl.Sem_Expr is
    is
       El_List : constant Iir_Flist := Get_Elements_Declaration_List (A_Type);
 
+      --  Element.
+      Rec_El : Iir;
+
       --  Type of the element.
       El_Type : Iir;
 
@@ -3167,7 +3170,7 @@ package body Vhdl.Sem_Expr is
       --  Add a choice for element REC_EL.
       --  Checks the element is not already associated.
       --  Checks type of expression is compatible with type of element.
-      procedure Add_Match (El : Iir; Rec_El : Iir_Element_Declaration)
+      procedure Add_Match (El : Iir)
       is
          Ass_Type : Iir;
          Pos : constant Natural := Natural (Get_Element_Position (Rec_El));
@@ -3191,6 +3194,21 @@ package body Vhdl.Sem_Expr is
          end if;
       end Add_Match;
 
+      procedure Check_Constraints (Expr : Iir; Rec_El : Iir) is
+      begin
+         if Expr /= Null_Iir
+           and then Get_Kind (Expr) /= Iir_Kind_Overflow_Literal
+           and then Rec_El /= Null_Iir
+           and then not Eval_Is_In_Bound (Expr, Get_Type (Rec_El))
+         then
+            Warning_Msg_Sem
+              (Warnid_Runtime_Error, +Expr,
+               "expression constraints don't match record element %n",
+               +Rec_El);
+            Ovf := True;
+         end if;
+      end Check_Constraints;
+
       --  Analyze a simple choice: extract the record element corresponding
       --  to the expression, and create a choice_by_name.
       --  FIXME: should mutate the node.
@@ -3198,21 +3216,20 @@ package body Vhdl.Sem_Expr is
       is
          Expr : constant Iir := Get_Choice_Expression (Ass);
          N_El : Iir;
-         Aggr_El : Iir_Element_Declaration;
       begin
          if Get_Kind (Expr) /= Iir_Kind_Simple_Name then
             Error_Msg_Sem (+Ass, "element association must be a simple name");
             Ok := False;
             return Ass;
          end if;
-         Aggr_El := Find_Name_In_Flist (El_List, Get_Identifier (Expr));
-         if Aggr_El = Null_Iir then
-            Error_Msg_Sem (+Ass, "record has no such element %n", +Ass);
+         Rec_El := Find_Name_In_Flist (El_List, Get_Identifier (Expr));
+         if Rec_El = Null_Iir then
+            Error_Msg_Sem (+Ass, "record has no such element %n", +Expr);
             Ok := False;
             return Ass;
          end if;
-         Set_Named_Entity (Expr, Aggr_El);
-         Xref_Ref (Expr, Aggr_El);
+         Set_Named_Entity (Expr, Rec_El);
+         Xref_Ref (Expr, Rec_El);
 
          --  Was a choice_by_expression, now by_name.
          N_El := Create_Iir (Iir_Kind_Choice_By_Name);
@@ -3224,7 +3241,7 @@ package body Vhdl.Sem_Expr is
          Set_Same_Alternative_Flag (N_El, Get_Same_Alternative_Flag (Ass));
 
          Free_Iir (Ass);
-         Add_Match (N_El, Aggr_El);
+         Add_Match (N_El);
          return N_El;
       end Sem_Simple_Choice;
 
@@ -3254,11 +3271,10 @@ package body Vhdl.Sem_Expr is
       Prev_El := Null_Iir;
       El := Assoc_Chain;
       while El /= Null_Iir loop
-         Expr := Get_Associated_Expr (El);
-
          --  If there is an associated expression with the choice, then the
          --  choice is a new alternative, and has no expected type.
          if not Get_Same_Alternative_Flag (El) then
+            Expr := Get_Associated_Expr (El);
             pragma Assert (Expr /= Null_Iir);
             El_Type := Null_Iir;
          end if;
@@ -3273,7 +3289,8 @@ package body Vhdl.Sem_Expr is
                   Error_Msg_Sem (+El, "too many elements");
                   exit;
                else
-                  Add_Match (El, Get_Nth_Element (El_List, Rec_El_Index));
+                  Rec_El := Get_Nth_Element (El_List, Rec_El_Index);
+                  Add_Match (El);
                   Rec_El_Index := Rec_El_Index + 1;
                end if;
             when Iir_Kind_Choice_By_Expression =>
@@ -3295,10 +3312,15 @@ package body Vhdl.Sem_Expr is
                declare
                   Found : Boolean := False;
                begin
+                  --  Find the first matching element.
+                  --  We will match the remaining one after analysis of the
+                  --  expressions to check constraints.
                   for I in Matches'Range loop
                      if Matches (I) = Null_Iir then
-                        Add_Match (El, Get_Nth_Element (El_List, I));
+                        Rec_El := Get_Nth_Element (El_List, I);
+                        Add_Match (El);
                         Found := True;
+                        exit;
                      end if;
                   end loop;
                   if not Found then
@@ -3335,14 +3357,7 @@ package body Vhdl.Sem_Expr is
                      Set_Aggregate_Expand_Flag (Aggr, False);
                   end if;
                   --  Check constraints.
-                  if Get_Kind (Expr) /= Iir_Kind_Overflow_Literal
-                    and then not Eval_Is_In_Bound (Expr, El_Type)
-                  then
-                     Warning_Msg_Sem
-                       (Warnid_Runtime_Error, +Expr,
-                        "expression constraints don't match record element");
-                     Ovf := True;
-                  end if;
+                  Check_Constraints (Expr, Rec_El);
                else
                   Ok := False;
                end if;
@@ -3351,6 +3366,19 @@ package body Vhdl.Sem_Expr is
                pragma Assert (not Ok);
                null;
             end if;
+         else
+            Check_Constraints (Expr, Rec_El);
+         end if;
+
+         if Get_Kind (El) = Iir_Kind_Choice_By_Others then
+            --  Finish and check associations.
+            for I in Matches'Range loop
+               if Matches (I) = Null_Iir then
+                  Rec_El := Get_Nth_Element (El_List, I);
+                  Add_Match (El);
+                  Check_Constraints (Expr, Rec_El);
+               end if;
+            end loop;
          end if;
 
          Prev_El := El;
