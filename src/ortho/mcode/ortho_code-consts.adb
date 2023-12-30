@@ -619,6 +619,7 @@ package body Ortho_Code.Consts is
 
    function New_Global (Decl : O_Dnode) return O_Gnode is
    begin
+      pragma Assert (Decl /= O_Dnode_Null);
       Gnodes.Append (Gnode_Common'(Kind => OG_Decl,
                                    Ref => Int32 (Decl)));
       return Gnodes.Last;
