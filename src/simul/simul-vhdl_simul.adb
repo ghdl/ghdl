@@ -3079,7 +3079,9 @@ package body Simul.Vhdl_Simul is
             if Resolv_Func /= Null_Node
               and then Resolv_Func = Vhdl.Ieee.Std_Logic_1164.Resolved
             then
-               if Vec (Sig_Off).Total > 1 then
+               if Vec (Sig_Off).Total > 1
+                 or else Get_Guarded_Signal_Flag (E.Decl)
+               then
                   pragma Assert (Typ.W = 1);
                   Sub_Resolved := True;
                   Grt.Signals.Ghdl_Signal_Create_Resolution
