@@ -2257,11 +2257,11 @@ package body Trans.Rtis is
 
    procedure Generate_Instance (Stmt : Iir; Parent : O_Dnode)
    is
+      Inst : constant Iir := Get_Instantiated_Unit (Stmt);
+      Info : constant Block_Info_Acc := Get_Info (Stmt);
       Name : O_Dnode;
       List : O_Record_Aggr_List;
       Val  : O_Cnode;
-      Inst : constant Iir := Get_Instantiated_Unit (Stmt);
-      Info : constant Block_Info_Acc := Get_Info (Stmt);
    begin
       Name := Generate_Name (Stmt);
 
@@ -2285,7 +2285,7 @@ package body Trans.Rtis is
       else
          declare
             Ent : Iir;
-            Info : Block_Info_Acc;
+            Ent_Info : Block_Info_Acc;
          begin
             --  Check if entity has been instantiated.
             Ent := Get_Instantiated_Header (Stmt);
@@ -2296,12 +2296,12 @@ package body Trans.Rtis is
             then
                Ent := Get_Entity_From_Entity_Aspect (Inst);
             end if;
-            Info := Get_Info (Ent);
-            if Info = null then
+            Ent_Info := Get_Info (Ent);
+            if Ent_Info = null then
                --  The block is never used.
                Val := New_Null_Access (Ghdl_Rti_Access);
             else
-               Val := New_Rti_Address (Info.Block_Rti_Const);
+               Val := New_Rti_Address (Ent_Info.Block_Rti_Const);
             end if;
          end;
       end if;

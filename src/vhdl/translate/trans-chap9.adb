@@ -256,7 +256,7 @@ package body Trans.Chap9 is
                end;
             when Iir_Kind_Association_Element_Type =>
                Chap4.Translate_Interface_Type_Association (Assoc);
-               --  Elaborateion of the type ??
+               --  Elaboration of the type ??
             when others =>
                null;
          end case;
