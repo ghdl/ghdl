@@ -125,6 +125,9 @@ package Trans.Rtis is
    --  Generate rtis for a library unit.
    procedure Generate_Unit (Lib_Unit : Iir);
 
+   --  Declare the RTI for entity ENT.
+   procedure Generate_Entity_Decl (Ent : Iir);
+
    --  Generate a constant declaration for SIG; but do not set its value.
    procedure Generate_Signal_Rti (Sig : Iir);
 

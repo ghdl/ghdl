@@ -120,14 +120,10 @@ package body Trans.Chap1 is
       Pop_Local_Factory;
    end Translate_Entity_Init_Ports;
 
-   procedure Translate_Entity_Declaration (Entity : Iir_Entity_Declaration)
+   procedure Translate_Entity_Declaration
+     (Entity : Iir_Entity_Declaration; Origin : Iir)
    is
       Info                 : Block_Info_Acc;
-      Interface_List       : O_Inter_List;
-      type Subprg_Instance_Array is
-        array (Elab_Kind) of Subprgs.Subprg_Instance_Type;
-      Instance             : Subprg_Instance_Array;
-      Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
    begin
       Info := Add_Info (Entity, Kind_Block);
       Start_Block_Decl (Entity);
@@ -137,6 +133,15 @@ package body Trans.Chap1 is
       Info.Block_Link_Field := Add_Instance_Factory_Field
         (Wki_Rti, Rtis.Ghdl_Entity_Link_Type);
 
+      if Origin /= Null_Iir then
+         --  Set Block_Origin_Field
+         Info.Block_Origin_Field := Add_Instance_Factory_Field
+           (Get_Identifier ("ORIGIN"),
+            Get_Info (Origin).Block_Decls_Ptr_Type);
+      else
+         Info.Block_Origin_Field := O_Fnode_Null;
+      end if;
+
       --  generics, ports.
       Chap4.Translate_Generic_Chain (Entity);
       Chap4.Translate_Port_Chain (Entity);
@@ -145,6 +150,20 @@ package body Trans.Chap1 is
 
       Pop_Instance_Factory (Info.Block_Scope'Access);
 
+      if Flag_Rti and then Global_Storage /= O_Storage_External then
+         Rtis.Generate_Entity_Decl (Entity);
+      end if;
+   end Translate_Entity_Declaration;
+
+   procedure Translate_Entity_Subprograms (Entity : Iir_Entity_Declaration)
+   is
+      Info : constant Block_Info_Acc := Get_Info (Entity);
+      Interface_List       : O_Inter_List;
+      type Subprg_Instance_Array is
+        array (Elab_Kind) of Subprgs.Subprg_Instance_Type;
+      Instance             : Subprg_Instance_Array;
+      Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
+   begin
       Subprgs.Push_Subprg_Instance (Info.Block_Scope'Access,
                                     Info.Block_Decls_Ptr_Type,
                                     Wki_Instance,
@@ -210,7 +229,7 @@ package body Trans.Chap1 is
          end if;
       end if;
       Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
-   end Translate_Entity_Declaration;
+   end Translate_Entity_Subprograms;
 
    --  Push scope for architecture ARCH via INSTANCE, and for its
    --  entity via the entity field of the instance.
@@ -236,6 +255,54 @@ package body Trans.Chap1 is
       Clear_Scope (Entity_Info.Block_Scope);
       Clear_Scope (Arch_Info.Block_Scope);
    end Pop_Architecture_Scope;
+
+   procedure Push_Instantiated_Architecture_Scope
+     (Entity : Iir; Entity_Info : Block_Info_Acc)
+   is
+      Parent : Iir;
+   begin
+      Parent := Get_Parent (Entity);
+      loop
+         case Get_Kind (Parent) is
+            when Iir_Kind_Architecture_Body =>
+               exit;
+            when Iir_Kind_Block_Statement
+              | Iir_Kind_Component_Instantiation_Statement =>
+               Parent := Get_Parent (Parent);
+            when others =>
+               --  TODO
+               Error_Kind ("push_instantiated_architecture_scope", Parent);
+         end case;
+      end loop;
+
+      --  TODO: continue recursion.
+      Set_Scope_Via_Field_Ptr (Get_Info (Parent).Block_Scope,
+                               Entity_Info.Block_Origin_Field,
+                               Entity_Info.Block_Scope'Access);
+   end Push_Instantiated_Architecture_Scope;
+
+   procedure Pop_Instantiated_Architecture_Scope
+     (Entity : Iir)
+   is
+      Parent : Iir;
+   begin
+      Parent := Get_Parent (Entity);
+      loop
+         case Get_Kind (Parent) is
+            when Iir_Kind_Architecture_Body =>
+               exit;
+            when Iir_Kind_Block_Statement
+              | Iir_Kind_Component_Instantiation_Statement =>
+               Parent := Get_Parent (Parent);
+            when others =>
+               --  TODO
+               Error_Kind ("pop_instantiated_architecture_scope", Parent);
+         end case;
+      end loop;
+
+      --  TODO: continue recursion.
+      Clear_Scope (Get_Info (Parent).Block_Scope);
+   end Pop_Instantiated_Architecture_Scope;
 
    procedure Translate_Architecture_Body (Arch : Iir)
    is
@@ -331,7 +398,17 @@ package body Trans.Chap1 is
                            Info.Block_Parent_Field,
                            Info.Block_Scope'Access);
 
+      if Entity_Info.Block_Origin_Field /= O_Fnode_Null then
+         --  Set scope for origin and parents.
+         Push_Instantiated_Architecture_Scope (Entity, Entity_Info);
+      end if;
+
       Chap9.Translate_Block_Subprograms (Arch, Arch);
+
+      if Entity_Info.Block_Origin_Field /= O_Fnode_Null then
+         --  Remove scope for origin and parents.
+         Pop_Instantiated_Architecture_Scope (Entity);
+      end if;
 
       Clear_Scope (Entity_Info.Block_Scope);
       Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);

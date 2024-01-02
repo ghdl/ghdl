@@ -197,7 +197,8 @@ package body Translation is
             then
                New_Debug_Comment_Decl
                  ("entity " & Image_Identifier (Lib_Unit));
-               Chap1.Translate_Entity_Declaration (Lib_Unit);
+               Chap1.Translate_Entity_Declaration (Lib_Unit, Null_Iir);
+               Chap1.Translate_Entity_Subprograms (Lib_Unit);
             end if;
          when Iir_Kind_Architecture_Body =>
             declare

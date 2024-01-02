@@ -18,7 +18,9 @@ package Trans.Chap1  is
    --  Declare types for block BLK
    procedure Start_Block_Decl (Blk : Iir);
 
-   procedure Translate_Entity_Declaration (Entity : Iir_Entity_Declaration);
+   procedure Translate_Entity_Declaration
+     (Entity : Iir_Entity_Declaration; Origin : Iir);
+   procedure Translate_Entity_Subprograms (Entity : Iir_Entity_Declaration);
 
    --  Generate code to initialize generics of instance INSTANCE of ENTITY
    --  using the default values.

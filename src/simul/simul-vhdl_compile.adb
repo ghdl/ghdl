@@ -2017,15 +2017,18 @@ package body Simul.Vhdl_Compile is
       for I in Elab_Units.First .. Elab_Units.Last loop
          declare
             Lunit : constant Node := Elab_Units.Table (I);
+            Parent : constant Node := Get_Parent (Lunit);
             Dunit : Node;
          begin
             if Lunit /= Vhdl.Std_Package.Standard_Package then
-               Dunit := Get_Design_Unit (Lunit);
-               if Dunit = Null_Node
+               --  Get the design unit (to get the library).
+               if Parent = Null_Node
                  or else
-                 Get_Kind (Dunit) = Iir_Kind_Component_Instantiation_Statement
+                 Get_Kind (Parent) = Iir_Kind_Component_Instantiation_Statement
                then
                   Dunit := Get_Design_Unit (Vhdl.Sem_Inst.Get_Origin (Lunit));
+               else
+                  Dunit := Parent;
                end if;
                Trans.Rtis.Generate_Library
                  (Get_Library (Get_Design_File (Dunit)), True);
@@ -2036,8 +2039,11 @@ package body Simul.Vhdl_Compile is
                      null;
                   when Iir_Kind_Package_Declaration =>
                      Translation.Translate (Lunit, True);
-                  when Iir_Kind_Entity_Declaration
-                    | Iir_Kind_Package_Instantiation_Declaration
+                  when Iir_Kind_Entity_Declaration =>
+                     if Get_Kind (Parent) = Iir_Kind_Design_Unit then
+                        Translation.Translate (Lunit, True);
+                     end if;
+                  when Iir_Kind_Package_Instantiation_Declaration
                     | Iir_Kind_Package_Body =>
                      Translation.Translate (Lunit, True);
                   when Iir_Kind_Architecture_Body =>

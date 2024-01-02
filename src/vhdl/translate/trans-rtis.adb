@@ -2702,6 +2702,14 @@ package body Trans.Rtis is
       end if;
    end Generate_For_Generate_Statement;
 
+   procedure Generate_Entity_Decl (Ent : Iir)
+   is
+      Info : constant Block_Info_Acc := Get_Info (Ent);
+   begin
+      New_Const_Decl (Info.Block_Rti_Const, Create_Identifier ("RTI"),
+                      Global_Storage, Ghdl_Rtin_Block_File);
+   end Generate_Entity_Decl;
+
    procedure Generate_Block (Blk : Iir; Parent_Rti : O_Dnode)
    is
       Info : constant Ortho_Info_Acc := Get_Info (Blk);
@@ -2720,7 +2728,10 @@ package body Trans.Rtis is
 
       Field_Off : O_Cnode;
    begin
-      if Global_Storage /= O_Storage_External then
+      if Get_Kind (Blk) = Iir_Kind_Entity_Declaration then
+         Rti := Info.Block_Rti_Const;
+         Rti_Type := Ghdl_Rtin_Block_File;
+      elsif Global_Storage /= O_Storage_External then
          if Get_Kind (Blk) in Iir_Kinds_Library_Unit then
             --  Also include filename for units.
             Rti_Type := Ghdl_Rtin_Block_File;

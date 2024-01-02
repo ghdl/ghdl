@@ -174,8 +174,10 @@ package body Trans.Chap9 is
       Finish_Subprogram_Body;
    end Translate_Implicit_Guard_Signal;
 
-   procedure Translate_Component_Instantiation_Statement (Inst : Iir)
+   procedure Translate_Component_Instantiation_Statement
+     (Inst : Iir; Origin : Iir)
    is
+      Hdr : constant Iir := Get_Instantiated_Header (Inst);
       Info : Block_Info_Acc;
       Ports : Iir;
 
@@ -203,6 +205,10 @@ package body Trans.Chap9 is
          end;
       else
          --  Direct instantiation.
+         if Hdr /= Null_Iir and then Get_Macro_Expand_Flag (Hdr) then
+            Chap1.Translate_Entity_Declaration (Hdr, Origin);
+         end if;
+
          Info.Block_Link_Field := Add_Instance_Factory_Field
            (Create_Identifier_Without_Prefix (Inst),
             Rtis.Ghdl_Component_Link_Type);
@@ -1170,7 +1176,7 @@ package body Trans.Chap9 is
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Translate_Psl_Directive_Declarations (El);
             when Iir_Kind_Component_Instantiation_Statement =>
-               Translate_Component_Instantiation_Statement (El);
+               Translate_Component_Instantiation_Statement (El, Origin);
             when Iir_Kind_Block_Statement =>
                Translate_Block_Statement (El, Origin);
             when Iir_Kind_For_Generate_Statement =>
@@ -1330,6 +1336,16 @@ package body Trans.Chap9 is
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Translate_Psl_Directive_Statement (Stmt, Base_Info);
             when Iir_Kind_Component_Instantiation_Statement =>
+               declare
+                  Hdr : constant Iir := Get_Instantiated_Header (Stmt);
+               begin
+                  if Hdr /= Null_Iir
+                    and then Get_Kind (Hdr) = Iir_Kind_Entity_Declaration
+                    and then Get_Macro_Expand_Flag (Hdr) then
+                     Chap1.Translate_Entity_Subprograms (Hdr);
+                  end if;
+               end;
+
                Chap4.Translate_Association_Subprograms
                  (Stmt, Block, Base_Block,
                   Get_Entity_From_Entity_Aspect

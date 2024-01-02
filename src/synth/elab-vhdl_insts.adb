@@ -1068,11 +1068,11 @@ package body Elab.Vhdl_Insts is
          return;
       end if;
 
+      Add_To_Elab_Units (E_Arch);
+
       if Flag_Elab_Sub_Instances then
          Elab_Instance_Body (Sub_Inst);
       end if;
-
-      Add_To_Elab_Units (E_Arch);
    end Elab_Direct_Instantiation_Statement;
 
    procedure Elab_Component_Instantiation_Statement
@@ -1327,14 +1327,15 @@ package body Elab.Vhdl_Insts is
 
       Top_Instance := Top_Inst;
 
+      Add_To_Elab_Units (Entity);
+      Add_To_Elab_Units (Arch);
+
       Elab_Instance_Body (Top_Inst);
 
       pragma Assert (Areapools.Is_Empty (Expr_Pool));
 
       Instance_Pool := null;
 
-      Add_To_Elab_Units (Entity);
-      Add_To_Elab_Units (Arch);
       Add_To_Elab_Units (Config);
 
       --  Clear instance for unused packages.
