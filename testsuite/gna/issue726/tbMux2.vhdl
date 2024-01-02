@@ -4,10 +4,10 @@ use ieee.numeric_std.all;
 
 use std.env.all;
 
-entity tbMux is
-end entity tbMux;
+entity tbMux2 is
+end entity tbMux2;
 
-architecture Bhv of tbMux is
+architecture Bhv of tbMux2 is
 	constant cWaitTime : time := 5 ns;
 	
 	signal iA_ulogic, iB_ulogic, oRes_ulogic : std_ulogic;

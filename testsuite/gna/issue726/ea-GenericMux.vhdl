@@ -16,7 +16,7 @@ entity GenericMux is
 	);
 end entity GenericMux;
 
-architecture RTL of GenericMux is
+architecture RTLgm of GenericMux is
 	
 begin
 	--formal equivalent to
@@ -32,4 +32,4 @@ begin
 	*/
 	
 	oRes <= iB when iSel else iA; 
-end architecture RTL;
+end architecture RTLgm;

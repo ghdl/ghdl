@@ -7,6 +7,9 @@ if ghdl_is_preelaboration; then
     export GHDL_STD_FLAGS=--std=08
     analyze ea-GenericMux.vhdl
     analyze tbMux2.vhdl
+    elab_simulate tbMux2
+
+    analyze tbMux.vhdl
     elab_simulate tbMux
 
     clean
