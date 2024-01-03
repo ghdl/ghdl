@@ -646,6 +646,11 @@ class Iir_Kinds:
         Iir_Kind.Procedure_Body,
     ]
 
+    Subprogram_Instantiation_Declaration = [
+        Iir_Kind.Function_Instantiation_Declaration,
+        Iir_Kind.Procedure_Instantiation_Declaration,
+    ]
+
     Interface_Object_Declaration = [
         Iir_Kind.Interface_Constant_Declaration,
         Iir_Kind.Interface_Variable_Declaration,

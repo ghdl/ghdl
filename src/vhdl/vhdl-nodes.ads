@@ -6981,6 +6981,10 @@ package Vhdl.Nodes is
      Iir_Kind_Function_Body ..
      Iir_Kind_Procedure_Body;
 
+   subtype Iir_Kinds_Subprogram_Instantiation_Declaration is Iir_Kind range
+     Iir_Kind_Function_Instantiation_Declaration ..
+     Iir_Kind_Procedure_Instantiation_Declaration;
+
    subtype Iir_Kinds_Interface_Object_Declaration is Iir_Kind range
      Iir_Kind_Interface_Constant_Declaration ..
    --Iir_Kind_Interface_Variable_Declaration
