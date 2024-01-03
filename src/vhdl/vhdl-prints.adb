@@ -1699,6 +1699,14 @@ package body Vhdl.Prints is
 
       Disp_Function_Name (Ctxt, Subprg);
 
+      if Get_Kind (Subprg) in Iir_Kinds_Subprogram_Declaration then
+         Inter := Get_Generic_Chain (Subprg);
+         if Inter /= Null_Iir then
+            Disp_Token (Ctxt, Tok_Generic);
+            Disp_Interface_Chain (Ctxt, Inter, True);
+         end if;
+      end if;
+
       if Get_Has_Parameter (Subprg) then
          Disp_Token (Ctxt, Tok_Parameter);
       end if;
@@ -1751,6 +1759,34 @@ package body Vhdl.Prints is
          Disp_End (Ctxt, Subprg, Tok_Procedure);
       end if;
    end Disp_Subprogram_Body;
+
+   procedure Disp_Generic_Map_Aspect
+     (Ctxt : in out Ctxt_Class; Parent : Iir) is
+   begin
+      Disp_Token (Ctxt, Tok_Generic, Tok_Map);
+      Disp_Association_Chain (Ctxt, Get_Generic_Map_Aspect_Chain (Parent));
+   end Disp_Generic_Map_Aspect;
+
+   procedure Disp_Subprogram_Instantiation_Declaration
+     (Ctxt : in out Ctxt_Class; Decl: Iir)
+   is
+      Tok : Token_Type;
+   begin
+      Start_Hbox (Ctxt);
+      case Iir_Kinds_Subprogram_Instantiation_Declaration (Get_Kind (Decl)) is
+         when Iir_Kind_Procedure_Instantiation_Declaration =>
+            Tok := Tok_Procedure;
+         when Iir_Kind_Function_Instantiation_Declaration =>
+            Tok := Tok_Function;
+      end case;
+      Disp_Token (Ctxt, Tok);
+      Disp_Identifier (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Is, Tok_New);
+      Print (Ctxt, Get_Uninstantiated_Subprogram_Name (Decl));
+      Disp_Generic_Map_Aspect (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
+   end Disp_Subprogram_Instantiation_Declaration;
 
    procedure Disp_Instantiation_List
      (Ctxt : in out Ctxt_Class; Insts: Iir_Flist)
@@ -2639,6 +2675,8 @@ package body Vhdl.Prints is
                Disp_Token (Ctxt, Tok_Is);
                Close_Hbox (Ctxt);
                Disp_Subprogram_Body (Ctxt, Decl);
+            when Iir_Kinds_Subprogram_Instantiation_Declaration =>
+               Disp_Subprogram_Instantiation_Declaration (Ctxt, Decl);
             when Iir_Kind_Protected_Type_Body =>
                Disp_Protected_Type_Body (Ctxt, Decl);
             when Iir_Kind_Configuration_Specification =>
@@ -3589,13 +3627,6 @@ package body Vhdl.Prints is
       end loop;
       Disp_Token (Ctxt, Tok_Right_Paren);
    end Disp_Association_Chain;
-
-   procedure Disp_Generic_Map_Aspect
-     (Ctxt : in out Ctxt_Class; Parent : Iir) is
-   begin
-      Disp_Token (Ctxt, Tok_Generic, Tok_Map);
-      Disp_Association_Chain (Ctxt, Get_Generic_Map_Aspect_Chain (Parent));
-   end Disp_Generic_Map_Aspect;
 
    procedure Disp_Port_Map_Aspect (Ctxt : in out Ctxt_Class; Parent : Iir) is
    begin
