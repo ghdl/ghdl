@@ -11505,8 +11505,7 @@ package body Vhdl.Parse is
       Set_Location (Res, Loc);
 
       --  Skip ':'.
-      pragma Assert (Current_Token = Tok_Colon);
-      Scan;
+      Expect_Scan (Tok_Colon);
 
       --  Component specification.
       Set_Instantiation_List (Res, Inst_List);
