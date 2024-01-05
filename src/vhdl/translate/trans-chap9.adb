@@ -190,6 +190,15 @@ package body Trans.Chap9 is
       Push_Identifier_Prefix (Mark, Get_Label (Inst));
       Num := 0;
 
+      Assoc := Get_Generic_Map_Aspect_Chain (Inst);
+      while Assoc /= Null_Iir loop
+         if Get_Kind (Assoc) = Iir_Kind_Association_Element_Type then
+            Chap4.Translate_Interface_Type_Association (Assoc);
+            --  Elaboration of the type ??
+         end if;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+
       --  Add a pointer to the instance.
       if Is_Component_Instantiation (Inst) then
          --  Via a component declaration.
@@ -261,8 +270,7 @@ package body Trans.Chap9 is
                   end if;
                end;
             when Iir_Kind_Association_Element_Type =>
-               Chap4.Translate_Interface_Type_Association (Assoc);
-               --  Elaboration of the type ??
+               raise Internal_Error;
             when others =>
                null;
          end case;

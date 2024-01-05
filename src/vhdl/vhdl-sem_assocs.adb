@@ -1098,8 +1098,7 @@ package body Vhdl.Sem_Assocs is
                Set_Resolution_Indication
                  (Ntype, Get_Resolution_Indication (Atype));
             end if;
-            if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration
-            then
+            if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
                --  The subtype is used for signals.
                Set_Has_Signal_Flag (Ntype, True);
             end if;
@@ -1735,7 +1734,10 @@ package body Vhdl.Sem_Assocs is
       Set_Actual_Type (Assoc, Actual_Type);
       Set_Associated_Type (Inter_Def, Actual_Type);
 
-      if Get_Has_Signal_Flag (Inter_Def) then
+      --  Previously, the test was: Get_Has_Signal_Flag (Inter_Def)
+      --  But this flag might be set by an architecture which might not be
+      --  known.
+      if Get_Signal_Type_Flag (Actual_Type) then
          Vhdl.Sem_Types.Set_Type_Has_Signal (Actual_Type);
       end if;
 
