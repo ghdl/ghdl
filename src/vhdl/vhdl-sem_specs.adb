@@ -1968,17 +1968,16 @@ package body Vhdl.Sem_Specs is
       Found : Natural;
       Comp_Chain : Iir;
       Ent_Chain : Iir;
+      Inter_Kind : Iir_Kinds_Interface_Declaration;
       Assoc_Kind : Iir_Kind;
    begin
       case Kind is
          when Map_Generic =>
             Ent_Chain := Get_Generic_Chain (Entity);
             Comp_Chain := Get_Generic_Chain (Comp);
-            Assoc_Kind := Iir_Kind_Association_Element_By_Expression;
          when Map_Port =>
             Ent_Chain := Get_Port_Chain (Entity);
             Comp_Chain := Get_Port_Chain (Comp);
-            Assoc_Kind := Iir_Kind_Association_Element_By_Name;
       end case;
 
       --  No error found yet.
@@ -1989,70 +1988,124 @@ package body Vhdl.Sem_Specs is
       Ent_El := Ent_Chain;
       while Ent_El /= Null_Iir loop
          --  Find the component generic/port with the same name.
+         Inter_Kind := Get_Kind (Ent_El);
          Comp_El := Find_Name_In_Chain (Comp_Chain, Get_Identifier (Ent_El));
-         if Comp_El = Null_Iir then
-            Assoc := Create_Iir (Iir_Kind_Association_Element_Open);
-            Location_Copy (Assoc, Parent);
-         else
-            if Are_Nodes_Compatible (Ent_El, Comp_El) = Not_Compatible then
-               Report_Start_Group;
-               Error_Header;
-               Error_Msg_Sem
-                 (+Parent, "type of %n declared at %l", (+Comp_El, +Comp_El));
-               Error_Msg_Sem
-                 (+Parent, "not compatible with type of %n declared at %l",
-                  (+Ent_El, +Ent_El));
-               Report_End_Group;
-            elsif Kind = Map_Port
-              and then not Check_Port_Association_Mode_Restrictions
-              (Ent_El, Comp_El, Null_Iir)
-            then
-               Report_Start_Group;
-               Error_Header;
-               Error_Msg_Sem (+Parent, "cannot associate "
-                                & Get_Mode_Name (Get_Mode (Ent_El))
-                                & " %n declared at %l",
-                              (+Ent_El, +Ent_El));
-               Error_Msg_Sem (+Parent, "with actual port of mode "
-                                & Get_Mode_Name (Get_Mode (Comp_El))
-                                & " declared at %l", +Comp_El);
-               Report_End_Group;
-            end if;
+         Assoc_Kind := Iir_Kind_Error;
+         case Inter_Kind is
+            when Iir_Kind_Interface_Type_Declaration =>
+               if Comp_El = Null_Iir then
+                  Report_Start_Group;
+                  Error_Header;
+                  Error_Msg_Sem (+Parent, "no association for %n", +Ent_El);
+                  Report_End_Group;
+               elsif Get_Kind (Comp_El) /= Iir_Kind_Interface_Type_Declaration
+               then
+                  Report_Start_Group;
+                  Error_Header;
+                  Error_Msg_Sem (+Parent, "incorrect association for %n",
+                                 +Ent_El);
+                  Report_End_Group;
+               else
+                  Assoc_Kind := Iir_Kind_Association_Element_Type;
+               end if;
+            when Iir_Kind_Interface_Signal_Declaration
+              | Iir_Kind_Interface_Constant_Declaration =>
+               if Comp_El = Null_Iir then
+                  Assoc_Kind := Iir_Kind_Association_Element_Open;
+               elsif Are_Nodes_Compatible (Ent_El, Comp_El) = Not_Compatible
+               then
+                  Report_Start_Group;
+                  Error_Header;
+                  Error_Msg_Sem
+                    (+Parent, "type of %n declared at %l",
+                     (+Comp_El, +Comp_El));
+                  Error_Msg_Sem
+                    (+Parent, "not compatible with type of %n declared at %l",
+                     (+Ent_El, +Ent_El));
+                  Report_End_Group;
+               elsif Kind = Map_Port
+                 and then not Check_Port_Association_Mode_Restrictions
+                 (Ent_El, Comp_El, Null_Iir)
+               then
+                  Report_Start_Group;
+                  Error_Header;
+                  Error_Msg_Sem (+Parent, "cannot associate "
+                                   & Get_Mode_Name (Get_Mode (Ent_El))
+                                   & " %n declared at %l",
+                                 (+Ent_El, +Ent_El));
+                  Error_Msg_Sem (+Parent, "with actual port of mode "
+                                   & Get_Mode_Name (Get_Mode (Comp_El))
+                                   & " declared at %l", +Comp_El);
+                  Report_End_Group;
+               else
+                  if Inter_Kind = Iir_Kind_Interface_Signal_Declaration then
+                     Assoc_Kind := Iir_Kind_Association_Element_By_Name;
+                  else
+                     Assoc_Kind := Iir_Kind_Association_Element_By_Expression;
+                  end if;
+               end if;
+            when Iir_Kind_Interface_Variable_Declaration
+              | Iir_Kind_Interface_File_Declaration =>
+               raise Internal_Error;
+            when Iir_Kind_Interface_View_Declaration =>
+               --  TODO
+               raise Internal_Error;
+            when Iir_Kind_Interface_Quantity_Declaration
+              | Iir_Kind_Interface_Terminal_Declaration =>
+               --  TODO
+               raise Internal_Error;
+            when Iir_Kind_Interface_Package_Declaration =>
+               if Comp_El = Null_Iir then
+                  --  TODO: check if default
+                  Assoc_Kind := Iir_Kind_Association_Element_Open;
+               else
+                  --  TODO: check if they are compatible.
+                  Assoc_Kind := Iir_Kind_Association_Element_Package;
+               end if;
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               --  TODO
+               raise Internal_Error;
+         end case;
 
+         if Assoc_Kind /= Iir_Kind_Error then
             Assoc := Create_Iir (Assoc_Kind);
             Location_Copy (Assoc, Parent);
-            Name := Build_Simple_Name (Comp_El, Comp_El);
-            Set_Type (Name, Get_Type (Comp_El));
-            Set_Actual (Assoc, Name);
-            if Kind = Map_Port and then not Error then
+            Set_Whole_Association_Flag (Assoc, True);
+
+            --  The actual.
+            if Assoc_Kind /= Iir_Kind_Association_Element_Open then
+               Name := Build_Simple_Name (Comp_El, Comp_El);
+               Set_Type (Name, Get_Type (Comp_El));
+               Set_Actual (Assoc, Name);
+               Found := Found + 1;
+            end if;
+
+            --  Create the formal name.  This is a forward reference as the
+            --  current design unit does not depend on the entity.
+            Name := Build_Simple_Name (Ent_El, Ent_El);
+            Set_Is_Forward_Ref (Name, True);
+            Set_Formal (Assoc, Name);
+
+            if Inter_Kind in Iir_Kinds_Interface_Object_Declaration then
+               --  Do not set the type of the formal, as it can be a forward
+               --  reference.  This is a little bit unusual to not have type.
+               --  Set_Type (Name, Get_Type (Ent_El));
+               null;
+            end if;
+
+            if Inter_Kind = Iir_Kind_Interface_Signal_Declaration
+              and then Assoc_Kind /= Iir_Kind_Association_Element_Open
+              and then not Error
+            then
                Check_Port_Association_Bounds_Restrictions
                  (Ent_El, Comp_El, Assoc);
+               Set_Collapse_Signal_Flag
+                 (Assoc, Can_Collapse_Signals (Assoc, Ent_El));
             end if;
-            Found := Found + 1;
-         end if;
-         Set_Whole_Association_Flag (Assoc, True);
 
-         --  Create the formal name.  This is a forward reference as the
-         --  current design unit does not depend on the entity.
-         Name := Build_Simple_Name (Ent_El, Ent_El);
-         Set_Is_Forward_Ref (Name, True);
-         Set_Formal (Assoc, Name);
-
-         if Get_Kind (Ent_El) in Iir_Kinds_Interface_Object_Declaration then
-            --  Do not set the type of the formal, as it can be a forward
-            --  reference.  This is a little bit unusual to not have type.
-            --  Set_Type (Name, Get_Type (Ent_El));
-            null;
+            Chain_Append (Res, Last, Assoc);
          end if;
 
-         if Kind = Map_Port
-           and then not Error
-           and then Comp_El /= Null_Iir
-         then
-            Set_Collapse_Signal_Flag
-              (Assoc, Can_Collapse_Signals (Assoc, Ent_El));
-         end if;
-         Chain_Append (Res, Last, Assoc);
          Ent_El := Get_Chain (Ent_El);
       end loop;
       if Nodes_Utils.Get_Chain_Length (Comp_Chain) /= Found then
@@ -2072,6 +2125,7 @@ package body Vhdl.Sem_Specs is
          end loop;
       end if;
       if Error then
+         --  TODO: free RES chain
          return Null_Iir;
       else
          return Res;
