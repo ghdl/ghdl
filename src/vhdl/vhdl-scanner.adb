@@ -477,7 +477,7 @@ package body Vhdl.Scanner is
       pragma Assert (Mark = '"' or else Mark = '%');
       if (Vhdl_Std >= Vhdl_08 and then Mark = '%') then
          Error_Msg_Scan
-            ("'%' not allowed in vhdl 2008 (was replacement character)");
+            ("'%%' not allowed in vhdl 2008 (was replacement character)");
       end if;
 
       Pos := Pos + 1;
@@ -590,8 +590,9 @@ package body Vhdl.Scanner is
    begin
       pragma Assert (Mark = '"' or else Mark = '%');
       if (Vhdl_Std >= Vhdl_08 and then Mark = '%') then
+
          Error_Msg_Scan
-            ("'%' not allowed in vhdl 2008 (was replacement character)");
+            ("'%%' not allowed in vhdl 2008 (was replacement character)");
       end if;
 
       Pos := Pos + 1;
@@ -785,7 +786,7 @@ package body Vhdl.Scanner is
       pragma Assert (Source (Pos) = '"' or else Source (Pos) = '%');
       if (Vhdl_Std >= Vhdl_08 and then Source (Pos) = '%') then
          Error_Msg_Scan
-            ("'%' not allowed in vhdl 2008 (was replacement character)");
+            ("'%%' not allowed in vhdl 2008 (was replacement character)");
       end if;
 
       Pos := Pos + 1;
