@@ -2309,6 +2309,11 @@ package body Vhdl.Scanner is
                   Current_Token := Tok_Not_Equal;
                   Pos := Pos + 1;
                else
+                  if Vhdl_Std >= Vhdl_08 then
+                     Error_Msg_Scan
+                       ("'!' not allowed since vhdl 2008"
+                         & "(was replacement character for '|')");
+                  end if;
                   --  LRM93 13.10
                   --  A vertical line (|) can be replaced by an exclamation
                   --  mark (!) where used as a delimiter.
