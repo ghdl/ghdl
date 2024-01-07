@@ -453,6 +453,12 @@ package body Vhdl.Scanner is
    -- BASE ::= INTEGER
    procedure Scan_Literal is separate;
 
+   procedure Error_Replacement_Percent is
+   begin
+      Error_Msg_Scan
+        ("'%%' not allowed in vhdl 2008 (was replacement character)");
+   end Error_Replacement_Percent;
+
    --  Scan a string literal.
    --
    --  LRM93 13.6 / LRM08 15.7
@@ -475,9 +481,8 @@ package body Vhdl.Scanner is
       --  String delimiter.
       Mark := Source (Pos);
       pragma Assert (Mark = '"' or else Mark = '%');
-      if (Vhdl_Std >= Vhdl_08 and then Mark = '%') then
-         Error_Msg_Scan
-            ("'%%' not allowed in vhdl 2008 (was replacement character)");
+      if Vhdl_Std >= Vhdl_08 and then Mark = '%' then
+         Error_Replacement_Percent;
       end if;
 
       Pos := Pos + 1;
@@ -488,9 +493,10 @@ package body Vhdl.Scanner is
          if C = Mark then
             --  LRM93 13.6
             --  If a quotation mark value is to be represented in the sequence
-            --  of character values, then a pair of adjacent quoatation
+            --  of character values, then a pair of adjacent quotation
             --  characters marks must be written at the corresponding place
             --  within the string literal.
+            --
             --  LRM93 13.10
             --  Any pourcent sign within the sequence of characters must then
             --  be doubled, and each such doubled percent sign is interpreted
@@ -589,11 +595,7 @@ package body Vhdl.Scanner is
       Has_Invalid : Boolean;
    begin
       pragma Assert (Mark = '"' or else Mark = '%');
-      if (Vhdl_Std >= Vhdl_08 and then Mark = '%') then
-
-         Error_Msg_Scan
-            ("'%%' not allowed in vhdl 2008 (was replacement character)");
-      end if;
+      --  No need to diagnose use of '%' in vhdl 2008, already done.
 
       Pos := Pos + 1;
       Length := 0;
@@ -784,10 +786,7 @@ package body Vhdl.Scanner is
       end Add_One_To_Carries;
    begin
       pragma Assert (Source (Pos) = '"' or else Source (Pos) = '%');
-      if (Vhdl_Std >= Vhdl_08 and then Source (Pos) = '%') then
-         Error_Msg_Scan
-            ("'%%' not allowed in vhdl 2008 (was replacement character)");
-      end if;
+      --  No need to diagnose use of '%' in vhdl-2008, already done.
 
       Pos := Pos + 1;
       Length := 0;
@@ -1130,8 +1129,7 @@ package body Vhdl.Scanner is
          when Other_Special_Character | Special_Character =>
             if (C = '"' or C = '%') and then Len <= 2 then
                if C = '%' and Vhdl_Std >= Vhdl_08 then
-                  Error_Msg_Scan ("'%%' not allowed in vhdl 2008 "
-                                    & "(was replacement character)");
+                  Error_Replacement_Percent;
                   --  Continue as a bit string.
                end if;
 
