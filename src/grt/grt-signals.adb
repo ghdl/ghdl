@@ -3625,9 +3625,6 @@ package body Grt.Signals is
       Sig := Active_Clear_List;
       Active_Clear_List := null;
       while Sig /= null loop
-         Sig.Active := False;
-         Sig.Event := False;
-
          if Options.Flag_Stats then
             if Sig.Active then
                Nbr_Active := Nbr_Active + 1;
@@ -3636,6 +3633,10 @@ package body Grt.Signals is
                Nbr_Events := Nbr_Events + 1;
             end if;
          end if;
+
+         Sig.Active := False;
+         Sig.Event := False;
+
          Sig := Sig.Alink;
       end loop;
 
