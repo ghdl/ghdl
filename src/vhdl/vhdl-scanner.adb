@@ -475,6 +475,10 @@ package body Vhdl.Scanner is
       --  String delimiter.
       Mark := Source (Pos);
       pragma Assert (Mark = '"' or else Mark = '%');
+      if (Vhdl_Std >= Vhdl_08 and then Mark = '%') then
+         Error_Msg_Scan
+            ("'%%' not allowed in vhdl 2008 (was replacement character)");
+      end if;
 
       Pos := Pos + 1;
       Length := 0;
@@ -585,6 +589,12 @@ package body Vhdl.Scanner is
       Has_Invalid : Boolean;
    begin
       pragma Assert (Mark = '"' or else Mark = '%');
+      if (Vhdl_Std >= Vhdl_08 and then Mark = '%') then
+
+         Error_Msg_Scan
+            ("'%%' not allowed in vhdl 2008 (was replacement character)");
+      end if;
+
       Pos := Pos + 1;
       Length := 0;
       Has_Invalid := False;
@@ -773,7 +783,12 @@ package body Vhdl.Scanner is
          end loop;
       end Add_One_To_Carries;
    begin
-      pragma Assert (Source (Pos) = '"' or Source (Pos) = '%');
+      pragma Assert (Source (Pos) = '"' or else Source (Pos) = '%');
+      if (Vhdl_Std >= Vhdl_08 and then Source (Pos) = '%') then
+         Error_Msg_Scan
+            ("'%%' not allowed in vhdl 2008 (was replacement character)");
+      end if;
+
       Pos := Pos + 1;
       Length := 0;
       Id := Create_String8;
@@ -2295,6 +2310,11 @@ package body Vhdl.Scanner is
                   Current_Token := Tok_Not_Equal;
                   Pos := Pos + 1;
                else
+                  if Vhdl_Std >= Vhdl_08 then
+                     Error_Msg_Scan
+                       ("'!' not allowed since vhdl 2008"
+                         & "(was replacement character for '|')");
+                  end if;
                   --  LRM93 13.10
                   --  A vertical line (|) can be replaced by an exclamation
                   --  mark (!) where used as a delimiter.
@@ -2478,11 +2498,6 @@ package body Vhdl.Scanner is
             Scan_String;
             return;
          when '%' =>
-            if Vhdl_Std >= Vhdl_08 then
-               Error_Msg_Scan
-                 ("'%%' not allowed in vhdl 2008 (was replacement character)");
-               --  Continue as a string.
-            end if;
             Scan_String;
             return;
          when '[' =>
