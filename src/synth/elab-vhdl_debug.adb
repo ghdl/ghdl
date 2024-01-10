@@ -447,6 +447,8 @@ package body Elab.Vhdl_Debug is
                Put_Int32 (Int32 (Read_I32 (Val.Val.Mem)));
                New_Line;
             end;
+         when Iir_Kind_Use_Clause =>
+            null;
          when others =>
             Vhdl.Errors.Error_Kind ("disp_declaration_object", Decl);
       end case;
