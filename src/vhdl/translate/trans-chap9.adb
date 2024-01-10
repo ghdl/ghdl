@@ -190,27 +190,32 @@ package body Trans.Chap9 is
       Push_Identifier_Prefix (Mark, Get_Label (Inst));
       Num := 0;
 
+      if Is_Component_Instantiation (Inst) then
+         Ports := Get_Named_Entity (Get_Instantiated_Unit (Inst));
+      else
+         Ports := Get_Entity_From_Entity_Aspect (Get_Instantiated_Unit (Inst));
+      end if;
+
       Assoc := Get_Generic_Map_Aspect_Chain (Inst);
+      Inter := Get_Generic_Chain (Ports);
       while Assoc /= Null_Iir loop
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_Type then
-            Chap4.Translate_Interface_Type_Association (Assoc);
+            Chap4.Translate_Interface_Type_Association
+              (Get_Association_Interface (Assoc, Inter), Assoc);
             --  Elaboration of the type ??
          end if;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Inter);
       end loop;
 
       --  Add a pointer to the instance.
       if Is_Component_Instantiation (Inst) then
          --  Via a component declaration.
          declare
-            Comp : constant Iir :=
-              Get_Named_Entity (Get_Instantiated_Unit (Inst));
-            Comp_Info : constant Comp_Info_Acc := Get_Info (Comp);
+            Comp_Info : constant Comp_Info_Acc := Get_Info (Ports);
          begin
             Info.Block_Link_Field := Add_Instance_Factory_Field
               (Create_Identifier_Without_Prefix (Inst),
                Get_Scope_Type (Comp_Info.Comp_Scope));
-            Ports := Comp;
          end;
       else
          --  Direct instantiation.
@@ -221,7 +226,6 @@ package body Trans.Chap9 is
          Info.Block_Link_Field := Add_Instance_Factory_Field
            (Create_Identifier_Without_Prefix (Inst),
             Rtis.Ghdl_Component_Link_Type);
-         Ports := Get_Entity_From_Entity_Aspect (Get_Instantiated_Unit (Inst));
       end if;
 
       --  When conversions are used, the subtype of the actual (or of the
