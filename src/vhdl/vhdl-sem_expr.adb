@@ -3203,7 +3203,7 @@ package body Vhdl.Sem_Expr is
          then
             Warning_Msg_Sem
               (Warnid_Runtime_Error, +Expr,
-               "expression constraints don't match record element %n",
+               "expression constraints don't match record element %i",
                +Rec_El);
             Ovf := True;
          end if;
