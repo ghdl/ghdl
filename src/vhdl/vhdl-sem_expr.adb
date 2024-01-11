@@ -3343,6 +3343,17 @@ package body Vhdl.Sem_Expr is
                --  Analyze the expression only if the choice is correct.
                Expr := Sem_Expression_Wildcard (Expr, El_Type, Constrained);
                if Expr /= Null_Iir then
+
+                  --  If the expression is associated by 'others' and is an
+                  --  aggregate, don't set with a subtype as it might be
+                  --  associated to elements with different constraints.
+                  --  Make the type unconstrained.
+                  if Get_Kind (El) = Iir_Kind_Choice_By_Others
+                    and then Get_Kind (Expr) = Iir_Kind_Aggregate
+                  then
+                     Set_Type (Expr, Get_Base_Type (El_Type));
+                  end if;
+
                   Expr := Eval_Expr_Check_If_Static (Expr, El_Type);
                   Set_Associated_Expr (El, Expr);
                   Expr_Staticness := Min (Expr_Staticness,
