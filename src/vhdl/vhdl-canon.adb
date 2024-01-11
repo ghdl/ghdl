@@ -92,6 +92,20 @@ package body Vhdl.Canon is
       Assoc := Get_Association_Choices_Chain (Aggr);
       if Get_Nbr_Elements (Get_Index_Subtype_List (Aggr_Type)) = Dim then
          while Assoc /= Null_Iir loop
+            case Get_Kind (Assoc) is
+               when Iir_Kind_Choice_By_Range =>
+                  declare
+                     Choice : constant Iir := Get_Choice_Range (Assoc);
+                  begin
+                     if Get_Kind (Choice) = Iir_Kind_Range_Expression then
+                        Canon_Extract_Sensitivity_Expression
+                          (Choice, Sensitivity_List, False);
+                     end if;
+                  end;
+               when others =>
+                  null;
+            end case;
+
             Canon_Extract_Sensitivity_Expression
               (Get_Associated_Expr (Assoc), Sensitivity_List, Is_Target);
             Assoc := Get_Chain (Assoc);
