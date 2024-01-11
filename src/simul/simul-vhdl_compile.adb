@@ -117,6 +117,9 @@ package body Simul.Vhdl_Compile is
    procedure Build_Decls_Instance (Mem : Memory_Ptr;
                                    Inst : Synth_Instance_Acc;
                                    Chain : Node);
+   procedure Build_Decl_Instance (Mem : Memory_Ptr;
+                                  Inst : Synth_Instance_Acc;
+                                  Decl : Node);
 
    procedure Set_Instance_To_Mem (Inst : Synth_Instance_Acc; Mem : Memory_Ptr)
    is
@@ -766,7 +769,30 @@ package body Simul.Vhdl_Compile is
       if Info.Kind = Kind_Package then
          --  Macro-expanded (either at top-level or within an block)
          Pkg_Mem := Mem;
-         Build_Decls_Instance (Pkg_Mem, Inst, Get_Generic_Chain (Pkg));
+         declare
+            Assoc, Assoc_Inter, Inter : Node;
+         begin
+            Assoc := Get_Generic_Map_Aspect_Chain (Pkg);
+            Assoc_Inter := Get_Generic_Chain (Pkg);
+            while Assoc /= Null_Node loop
+               Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+
+               if Get_Kind (Inter) = Iir_Kind_Interface_Type_Declaration then
+                  declare
+                     Def : constant Node := Get_Actual (Assoc);
+                  begin
+                     if Is_Proper_Subtype_Indication (Def) then
+                        Build_Subtype_Indication (Mem, Inst, Def);
+                     end if;
+                  end;
+               else
+                  Build_Decl_Instance (Pkg_Mem, Inst, Inter);
+               end if;
+
+               Next_Association_Interface (Assoc, Assoc_Inter);
+            end loop;
+         end;
+
          Build_Decls_Instance (Pkg_Mem, Inst, Get_Declaration_Chain (Pkg));
 
          declare
@@ -1030,6 +1056,10 @@ package body Simul.Vhdl_Compile is
                end if;
             end;
 
+         when Iir_Kind_Interface_Type_Declaration
+           | Iir_Kinds_Interface_Subprogram_Declaration =>
+            null;
+
          when Iir_Kind_Signal_Declaration =>
             Build_Subtype_Indication
               (Mem, Inst, Get_Subtype_Indication (Decl));
@@ -1093,9 +1123,6 @@ package body Simul.Vhdl_Compile is
          when Iir_Kinds_External_Name =>
             External_Names_Table.Append ((Mem, Inst, Decl));
 
-         when Iir_Kind_Interface_Type_Declaration
-           | Iir_Kinds_Interface_Subprogram_Declaration =>
-            null;
          when Iir_Kind_File_Declaration =>
             declare
                Var_Info : constant Object_Info_Acc := Get_Info (Decl);
