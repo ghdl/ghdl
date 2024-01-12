@@ -1361,6 +1361,7 @@ package body Simul.Vhdl_Compile is
       Sub_Inst : constant Synth_Instance_Acc :=
         Get_Sub_Instance (Inst, Stmt);
       Info : constant Block_Info_Acc := Get_Info (Stmt);
+      Hdr : constant Node := Get_Instantiated_Header (Stmt);
       Link : Memory_Ptr;
       Ptr : Memory_Ptr;
    begin
@@ -1392,6 +1393,21 @@ package body Simul.Vhdl_Compile is
          --  An entity (or a configuration).
          Ptr := Build_Elab_Instance (Sub_Inst);
          Link_Instance (Ptr, Get_Source_Scope (Sub_Inst), Link);
+
+         if Hdr /= Null_Node then
+            declare
+               Ent_Info : constant Block_Info_Acc := Get_Info (Hdr);
+               Orig_Mem : Memory_Ptr;
+            begin
+               --  Set the origin field.
+               if Ent_Info /= null then
+                  Orig_Mem := Add_Field_Offset
+                    (Ptr, Ent_Info.Block_Origin_Field);
+                  Write_Ptr (Orig_Mem, Base_Mem);
+               end if;
+            end;
+         end if;
+
          Link_Component (Link, Stmt, Ptr);
       end if;
 

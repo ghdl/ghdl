@@ -256,10 +256,11 @@ package body Trans.Chap1 is
       Clear_Scope (Arch_Info.Block_Scope);
    end Pop_Architecture_Scope;
 
-   procedure Push_Instantiated_Architecture_Scope
-     (Entity : Iir; Entity_Info : Block_Info_Acc)
+   procedure Push_Pop_Instantiated_Architecture_Scope
+     (Entity : Iir; Entity_Info : Block_Info_Acc; Is_Push : Boolean)
    is
       Parent : Iir;
+      P_Info : Block_Info_Acc;
    begin
       Parent := Get_Parent (Entity);
       loop
@@ -276,33 +277,30 @@ package body Trans.Chap1 is
       end loop;
 
       --  TODO: continue recursion.
-      Set_Scope_Via_Field_Ptr (Get_Info (Parent).Block_Scope,
-                               Entity_Info.Block_Origin_Field,
-                               Entity_Info.Block_Scope'Access);
-   end Push_Instantiated_Architecture_Scope;
+      P_Info := Get_Info (Parent);
+      if Is_Push then
+         Set_Scope_Via_Field_Ptr (P_Info.Block_Scope,
+                                  Entity_Info.Block_Origin_Field,
+                                  Entity_Info.Block_Scope'Access);
+      else
+         Clear_Scope (P_Info.Block_Scope);
+      end if;
 
-   procedure Pop_Instantiated_Architecture_Scope
-     (Entity : Iir)
-   is
-      Parent : Iir;
-   begin
-      Parent := Get_Parent (Entity);
-      loop
-         case Get_Kind (Parent) is
-            when Iir_Kind_Architecture_Body =>
-               exit;
-            when Iir_Kind_Block_Statement
-              | Iir_Kind_Component_Instantiation_Statement =>
-               Parent := Get_Parent (Parent);
-            when others =>
-               --  TODO
-               Error_Kind ("pop_instantiated_architecture_scope", Parent);
-         end case;
-      end loop;
-
-      --  TODO: continue recursion.
-      Clear_Scope (Get_Info (Parent).Block_Scope);
-   end Pop_Instantiated_Architecture_Scope;
+      if Get_Kind (Parent) = Iir_Kind_Architecture_Body then
+         declare
+            P_Ent : constant Iir := Get_Entity (Parent);
+            P_Ent_Info : constant Block_Info_Acc := Get_Info (P_Ent);
+         begin
+            if Is_Push then
+               Set_Scope_Via_Field (P_Ent_Info.Block_Scope,
+                                    P_Info.Block_Parent_Field,
+                                    P_Info.Block_Scope'Access);
+            else
+               Clear_Scope (P_Ent_Info.Block_Scope);
+            end if;
+         end;
+      end if;
+   end Push_Pop_Instantiated_Architecture_Scope;
 
    procedure Translate_Architecture_Body (Arch : Iir)
    is
@@ -400,14 +398,14 @@ package body Trans.Chap1 is
 
       if Entity_Info.Block_Origin_Field /= O_Fnode_Null then
          --  Set scope for origin and parents.
-         Push_Instantiated_Architecture_Scope (Entity, Entity_Info);
+         Push_Pop_Instantiated_Architecture_Scope (Entity, Entity_Info, True);
       end if;
 
       Chap9.Translate_Block_Subprograms (Arch, Arch);
 
       if Entity_Info.Block_Origin_Field /= O_Fnode_Null then
          --  Remove scope for origin and parents.
-         Pop_Instantiated_Architecture_Scope (Entity);
+         Push_Pop_Instantiated_Architecture_Scope (Entity, Entity_Info, False);
       end if;
 
       Clear_Scope (Entity_Info.Block_Scope);
