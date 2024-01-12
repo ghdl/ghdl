@@ -10,6 +10,11 @@ elab_simulate test1
 analyze test2.vhdl
 elab_simulate test2
 
+if ghdl_is_preelaboration; then
+    analyze streamtb.vhdl
+    elab_simulate streamtb
+fi
+
 clean
 
 echo "Test successful"
