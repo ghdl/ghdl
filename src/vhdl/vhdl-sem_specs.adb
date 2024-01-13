@@ -2079,6 +2079,11 @@ package body Vhdl.Sem_Specs is
                Set_Actual (Assoc, Name);
                Found := Found + 1;
             end if;
+            if Assoc_Kind = Iir_Kind_Association_Element_Type then
+               Set_Actual_Type (Assoc,
+                                Get_Associated_Type
+                                  (Get_Interface_Type_Definition (Comp_El)));
+            end if;
 
             --  Create the formal name.  This is a forward reference as the
             --  current design unit does not depend on the entity.

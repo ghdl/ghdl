@@ -1080,18 +1080,26 @@ package body Elab.Vhdl_Insts is
       Stmt : Node;
       Cfgs : in out Configs_Rec)
    is
-      Component : constant Node :=
-        Get_Named_Entity (Get_Instantiated_Unit (Stmt));
+      Component : Node;
       Config : Node;
       Bind : Node;
       Aspect : Iir;
       Comp_Inst : Synth_Instance_Acc;
 
-      Ent : Node;
-      Arch : Node;
+      Ent, E_Ent : Node;
+      Arch, E_Arch : Node;
       Sub_Config : Node;
       Sub_Inst : Synth_Instance_Acc;
    begin
+      --  Get the component (either the macro-expanded one, or the original
+      --  one).
+      Component := Get_Instantiated_Header (Stmt);
+      if Component = Null_Node then
+         --  Always use the original component.  The macro-expanded one is
+         --  not annotated (and has no parent).
+         Component := Get_Named_Entity (Get_Instantiated_Unit (Stmt));
+      end if;
+
       Get_Next_Component_Configuration (Cfgs, Config);
       Bind := Get_Binding_Indication (Config);
 
@@ -1165,18 +1173,33 @@ package body Elab.Vhdl_Insts is
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Ent));
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Arch));
 
-      Add_To_Elab_Units (Ent);
+      if Flag_Macro_Expand_Instance
+        and then Get_Macro_Expand_Flag (Ent)
+      then
+         E_Ent := Vhdl.Sem_Inst.Instantiate_Entity_Declaration (Ent, Bind);
+         E_Arch := Vhdl.Sem_Inst.Instantiate_Architecture
+           (Arch, E_Ent, Stmt, Bind);
+         Elab.Vhdl_Annotations.Instantiate_Annotate (E_Ent);
+         Elab.Vhdl_Annotations.Instantiate_Annotate (E_Arch);
+
+         Set_Parent (E_Ent, Stmt);
+      else
+         E_Ent := Ent;
+         E_Arch := Arch;
+      end if;
+
+      Add_To_Elab_Units (E_Ent);
 
       --  Elaborate generic + map aspect for the entity instance.
-      Sub_Inst := Make_Elab_Instance (Comp_Inst, Stmt, Arch, Sub_Config);
+      Sub_Inst := Make_Elab_Instance (Comp_Inst, Stmt, E_Arch, Sub_Config);
       Create_Component_Instance (Comp_Inst, Sub_Inst);
 
       Elab_Generics_Association (Sub_Inst, Comp_Inst,
-                                 Get_Generic_Chain (Ent),
+                                 Get_Generic_Chain (E_Ent),
                                  Get_Generic_Map_Aspect_Chain (Bind));
 
       Elab_Ports_Association_Type (Sub_Inst, Comp_Inst,
-                                   Get_Port_Chain (Ent),
+                                   Get_Port_Chain (E_Ent),
                                    Get_Port_Map_Aspect_Chain (Bind));
       pragma Assert (Is_Expr_Pool_Empty);
 
@@ -1184,7 +1207,7 @@ package body Elab.Vhdl_Insts is
          Elab_Instance_Body (Sub_Inst);
       end if;
 
-      Add_To_Elab_Units (Arch);
+      Add_To_Elab_Units (E_Arch);
    end Elab_Component_Instantiation_Statement;
 
    procedure Elab_Design_Instantiation_Statement

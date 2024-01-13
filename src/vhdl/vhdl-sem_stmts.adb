@@ -2225,6 +2225,7 @@ package body Vhdl.Sem_Stmts is
    is
       Decl : Iir;
       Decl_Inst : Iir;
+      Hdr : Iir;
       Entity_Unit : Iir_Design_Unit;
       Bind : Iir_Binding_Indication;
    begin
@@ -2281,8 +2282,15 @@ package body Vhdl.Sem_Stmts is
            and then (Flags.Flag_Elaborate_With_Outdated
                      or else Get_Date (Entity_Unit) in Date_Valid)
          then
+            --  If the component is macro-expanded, use the macro-expanded
+            --  component.
+            Hdr := Get_Instantiated_Header (Stmt);
+            if Hdr = Null_Iir then
+               Hdr := Decl;
+            end if;
+
             Bind := Sem_Create_Default_Binding_Indication
-              (Decl, Entity_Unit, Stmt, False, True);
+              (Hdr, Entity_Unit, Stmt, False, True);
             Set_Default_Binding_Indication (Stmt, Bind);
          end if;
       end if;

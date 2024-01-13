@@ -2106,6 +2106,19 @@ package body Simul.Vhdl_Compile is
             Lunit : constant Node := Elab_Units.Table (I);
          begin
             case Iir_Kinds_Library_Unit (Get_Kind (Lunit)) is
+               when Iir_Kind_Entity_Declaration =>
+                  --  Translate a macro-expanded entity which has been
+                  --  instantiated through a component.
+                  declare
+                     Parent : constant Node := Get_Parent (Lunit);
+                  begin
+                     if Get_Kind (Parent)
+                       = Iir_Kind_Component_Instantiation_Statement
+                       and then Is_Component_Instantiation (Parent)
+                     then
+                        Translation.Translate (Lunit, True);
+                     end if;
+                  end;
                when Iir_Kind_Architecture_Body =>
                   Translation.Translate (Lunit, True);
                when others =>

@@ -1008,6 +1008,7 @@ package body Elab.Vhdl_Annotations is
    procedure Annotate_Component_Instantiation_Statement
      (Block_Info : Sim_Info_Acc; Stmt : Iir)
    is
+      Hdr : constant Iir := Get_Instantiated_Header (Stmt);
       Info: Sim_Info_Acc;
    begin
       --  Add a slot just to put the instance.
@@ -1018,6 +1019,12 @@ package body Elab.Vhdl_Annotations is
                                  Slot => Block_Info.Nbr_Objects,
                                  Nbr_Objects => 0);
       Set_Ann (Stmt, Info);
+
+      if Hdr /= Null_Iir
+        and then Get_Kind (Hdr) = Iir_Kind_Component_Declaration
+      then
+         Instantiate_Annotate (Hdr);
+      end if;
    end Annotate_Component_Instantiation_Statement;
 
    procedure Annotate_Process_Statement (Block_Info : Sim_Info_Acc; Stmt : Iir)
