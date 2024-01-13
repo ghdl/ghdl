@@ -384,6 +384,8 @@ struct ghw_handler
   char *skip_sigs;
   int flag_full_names;
   struct ghw_sig *sigs;
+  /* 1: sigs does not contain any signals with type = NULL and index > 0 */
+  int sigs_no_null;
 
   /* Hierarchy.  */
   struct ghw_hie *hie;
