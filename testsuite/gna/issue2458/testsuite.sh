@@ -10,6 +10,9 @@ if ghdl_is_preelaboration; then
     analyze test3.vhdl
     elab_simulate test3
 
+    analyze test.vhdl
+    elab_simulate test
+
     clean
 fi
 
