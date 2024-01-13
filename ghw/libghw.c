@@ -1097,6 +1097,7 @@ ghw_read_hie (struct ghw_handler *h)
   h->nbr_sigs++;
   h->skip_sigs = NULL;
   h->flag_full_names = 0;
+  h->sigs_no_null = 0;
   h->sigs = (struct ghw_sig *) malloc (h->nbr_sigs * sizeof (struct ghw_sig));
   memset (h->sigs, 0, h->nbr_sigs * sizeof (struct ghw_sig));
 
@@ -1212,10 +1213,20 @@ ghw_read_hie (struct ghw_handler *h)
 	}
     }
 
-  /* Allocate values.  */
+  /* Allocate values. Store indication if we have NULL-type signals with index
+     i > 0. Index i=0  */
+  int sigs_no_null = 1;
   for (i = 0; i < h->nbr_sigs; i++)
     if (h->sigs[i].type != NULL)
       h->sigs[i].val = (union ghw_val *) malloc (sizeof (union ghw_val));
+    else if (i > 0)
+      {
+	printf ("Warning: ghw_read_hie: NULL type signal %ud.", i);
+	printf ("Loading this file may take a long time.\n");
+	sigs_no_null = 0;
+      }
+
+  h->sigs_no_null = sigs_no_null;
   return 0;
 }
 
@@ -1505,7 +1516,7 @@ ghw_read_cycle_start (struct ghw_handler *h)
 int
 ghw_read_cycle_cont (struct ghw_handler *h, int *list)
 {
-  int i;
+  uint32_t i;
   int *list_p;
 
   i = 0;
@@ -1524,11 +1535,25 @@ ghw_read_cycle_cont (struct ghw_handler *h, int *list)
 	}
 
       /* Find next signal.  */
-      while (d > 0)
+      if (h->sigs_no_null)
 	{
-	  i++;
-	  if (h->sigs[i].type != NULL)
-	    d--;
+	  /* Fast version. */
+	  i = i + d;
+	  if (i >= h->nbr_sigs)
+	    goto err;
+	}
+      else
+	{
+	  /* Slow version: Linear search through all signals. Find d-th 
+	     element with non-NULL type. Note: Type of sigs[0] is ignored. */
+	  while (d > 0)
+	    {
+	      i++;
+	      if (i >= h->nbr_sigs)
+	        goto err;
+	      if (h->sigs[i].type != NULL)
+		d--;
+	    }
 	}
 
       if (ghw_read_signal_value (h, &h->sigs[i]) < 0)
@@ -1540,6 +1565,10 @@ ghw_read_cycle_cont (struct ghw_handler *h, int *list)
   if (list_p)
     *list_p = 0;
   return 0;
+
+err:
+  fprintf(stderr, "Error: ghw_read_cycle_cont: Invalid entry in GHW file.\n");
+  return -1;
 }
 
 int
