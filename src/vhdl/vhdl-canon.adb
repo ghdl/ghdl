@@ -102,6 +102,9 @@ package body Vhdl.Canon is
                           (Choice, Sensitivity_List, False);
                      end if;
                   end;
+               when Iir_Kind_Choice_By_Expression =>
+                  Canon_Extract_Sensitivity_Expression
+                    (Get_Choice_Expression (Assoc), Sensitivity_List, False);
                when others =>
                   null;
             end case;
