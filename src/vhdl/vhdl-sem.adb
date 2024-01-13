@@ -80,23 +80,10 @@ package body Vhdl.Sem is
       -- Sem generics.
       Sem_Interface_Chain (Generics, Generic_Interface_List);
 
-      --  Set macro-expanded flag.
-      declare
-         Gen : Iir;
-      begin
-         Gen := Generics;
-         while Gen /= Null_Iir loop
-            case Get_Kind (Gen) is
-               when Iir_Kind_Interface_Type_Declaration
-                 | Iir_Kinds_Interface_Subprogram_Declaration =>
-                  Set_Macro_Expand_Flag (Entity, True);
-                  exit;
-               when others =>
-                  null;
-            end case;
-            Gen := Get_Chain (Gen);
-         end loop;
-      end;
+      --  Set macro-expand flag.
+      if Component_Need_Instance (Entity, False) then
+         Set_Macro_Expand_Flag (Entity, True);
+      end if;
 
       -- Sem ports.
       Sem_Interface_Chain (Get_Port_Chain (Entity), Port_Interface_List);

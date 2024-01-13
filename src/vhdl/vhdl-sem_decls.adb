@@ -1546,6 +1546,10 @@ package body Vhdl.Sem_Decls is
       Close_Declarative_Region;
 
       Name_Visible (Component);
+
+      if Component_Need_Instance (Component, False) then
+         Set_Macro_Expand_Flag (Component, True);
+      end if;
    end Sem_Component_Declaration;
 
    procedure Sem_Object_Alias_Declaration (Alias: Iir_Object_Alias_Declaration)

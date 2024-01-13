@@ -348,6 +348,15 @@ package Vhdl.Utils is
    function Is_Entity_Instantiation
      (Inst : Iir_Component_Instantiation_Statement) return Boolean;
 
+   --  If a component or an entity contains an interface package or type,
+   --  the ports have to be instantiated in the case they use a type of the
+   --  interface.
+   --  if FOR_SEM is true, it will return True if there is an interface
+   --  package.  This is needed to correctly match object subtypes.
+   --  This is used to set macro_expand_flag.
+   function Component_Need_Instance (Comp : Iir; For_Sem : Boolean)
+                                    return Boolean;
+
    --  Get the expression of the attribute specification corresponding to the
    --  attribute name NAME.  Meaningful only for static values.
    function Get_Attribute_Name_Expression (Name : Iir) return Iir;

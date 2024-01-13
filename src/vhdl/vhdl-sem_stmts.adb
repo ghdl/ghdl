@@ -2191,28 +2191,6 @@ package body Vhdl.Sem_Stmts is
       end if;
    end Sem_Instantiated_Unit;
 
-   --  If a component or an entity contains an interface package or type,
-   --  the ports have to be instantiated in the case they use a type of the
-   --  interface.
-   function Component_Need_Instance (Comp : Iir) return Boolean
-   is
-      Inter : Iir;
-   begin
-      Inter := Get_Generic_Chain (Comp);
-      while Inter /= Null_Iir loop
-         case Get_Kind (Inter) is
-            when Iir_Kind_Interface_Package_Declaration
-              | Iir_Kind_Interface_Type_Declaration =>
-               return True;
-            when others =>
-               null;
-         end case;
-         Inter := Get_Chain (Inter);
-      end loop;
-
-      return False;
-   end Component_Need_Instance;
-
    --  Change the formal so that it refers to the original interface.
    procedure Reassoc_Association_Chain (Chain : Iir)
    is
@@ -2270,7 +2248,7 @@ package body Vhdl.Sem_Stmts is
 
       --  The associations
       Sem_Generic_Association_Chain (Decl, Stmt);
-      if Component_Need_Instance (Decl) then
+      if Component_Need_Instance (Decl, True) then
          Decl_Inst := Sem_Inst.Instantiate_Component_Declaration (Decl, Stmt);
          Set_Instantiated_Header (Stmt, Decl_Inst);
          Sem_Port_Association_Chain (Decl_Inst, Stmt);

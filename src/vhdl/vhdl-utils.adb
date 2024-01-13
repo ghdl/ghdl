@@ -1740,6 +1740,39 @@ package body Vhdl.Utils is
       end case;
    end Is_Entity_Instantiation;
 
+   function Component_Need_Instance (Comp : Iir; For_Sem : Boolean)
+                                    return Boolean
+   is
+      Inter : Iir;
+   begin
+      Inter := Get_Generic_Chain (Comp);
+      while Inter /= Null_Iir loop
+         case Get_Kind (Inter) is
+            when Iir_Kind_Interface_Package_Declaration =>
+               if For_Sem then
+                  return True;
+               end if;
+               declare
+                  Pkg : constant Iir :=
+                    Get_Uninstantiated_Package_Decl (Inter);
+               begin
+                  if not Is_Error (Pkg) and then Get_Macro_Expand_Flag (Pkg)
+                  then
+                     return True;
+                  end if;
+               end;
+            when Iir_Kinds_Interface_Subprogram_Declaration
+              | Iir_Kind_Interface_Type_Declaration =>
+               return True;
+            when others =>
+               null;
+         end case;
+         Inter := Get_Chain (Inter);
+      end loop;
+
+      return False;
+   end Component_Need_Instance;
+
    function Get_Attribute_Name_Expression (Name : Iir) return Iir
    is
       Attr_Val : constant Iir := Get_Named_Entity (Name);
