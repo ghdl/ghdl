@@ -299,7 +299,7 @@ copy-sources.gcc: version.ads scripts/gcc/Make-lang.in
 	 6 | 6.*)  	    gcc_ortho_lang=ortho-lang-6.c ;; \
 	 7.*)      	    gcc_ortho_lang=ortho-lang-7.c ;; \
 	 8.*)      	    gcc_ortho_lang=ortho-lang-8.c ;; \
-	 9.* | 10.* | 11.* | 12.*) gcc_ortho_lang=ortho-lang-9.c ;; \
+	 9.* | 10.* | 11.* | 12.* | 13.*) gcc_ortho_lang=ortho-lang-9.c ;; \
 	 *) echo "Mismatch gcc version from $(gcc_src_dir)"; \
 	    echo "Need gcc version 4.9.x, 5.x to 12.x"; \
 	    exit 1 ;; \
@@ -316,7 +316,7 @@ copy-sources.gcc: version.ads scripts/gcc/Make-lang.in
 #	For gcc 12.x, use .cc extension
 	base_ver=`cat $(gcc_src_dir)/gcc/BASE-VER`; \
 	case $$base_ver in \
-	12.*) for f in $(gcc_vhdl_dir)/*.c; do mv $$f $${f}c; done; \
+	12.* | 13.*) for f in $(gcc_vhdl_dir)/*.c; do mv $$f $${f}c; done; \
 	  sed -e 's/ortho-lang.c/ortho-lang.cc/' \
 	    < $(srcdir)/scripts/gcc/config-lang.in \
 	    > $(gcc_vhdl_dir)/config-lang.in ;; \
