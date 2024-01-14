@@ -511,6 +511,7 @@ package body Vhdl.Sem_Specs is
               | Iir_Kinds_Non_Alias_Object_Declaration
               | Iir_Kind_Type_Declaration
               | Iir_Kind_Subtype_Declaration
+              | Iir_Kind_Interface_Type_Declaration
               | Iir_Kind_Component_Declaration
               | Iir_Kind_Enumeration_Literal
               | Iir_Kind_Unit_Declaration
