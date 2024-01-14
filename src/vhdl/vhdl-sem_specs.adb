@@ -46,7 +46,8 @@ package body Vhdl.Sem_Specs is
             return Tok_Architecture;
          when Iir_Kind_Configuration_Declaration =>
             return Tok_Configuration;
-         when Iir_Kind_Package_Declaration =>
+         when Iir_Kind_Package_Declaration
+            | Iir_Kind_Interface_Package_Declaration =>
             return Tok_Package;
          when Iir_Kind_Procedure_Declaration =>
             return Tok_Procedure;
@@ -314,16 +315,23 @@ package body Vhdl.Sem_Specs is
       --  (ie an entity declaration, an architecture, a configuration, or a
       --  package) must appear immediately within the declarative part of
       --  that design unit.
-      case Get_Entity_Class (Attr) is
-         when Tok_Entity
-           | Tok_Architecture
-           | Tok_Configuration
-           | Tok_Package =>
-            if Get_Design_Unit (Decl) /= Get_Current_Design_Unit then
-               Error_Msg_Sem (+Attr, "%n must appear immediatly within %n",
-                              (+Attr, +Decl));
-               return;
-            end if;
+      case Get_Kind (Decl) is
+         when Iir_Kind_Entity_Declaration
+           | Iir_Kind_Architecture_Body
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Package_Declaration =>
+            declare
+               Parent : constant Iir := Get_Parent (Decl);
+            begin
+               --  Note: a package can be a nested package.
+               if Get_Kind (Parent) = Iir_Kind_Design_Unit
+                 and then Parent /= Get_Current_Design_Unit
+               then
+                  Error_Msg_Sem (+Attr, "%n must appear immediatly within %n",
+                                 (+Attr, +Decl));
+                  return;
+               end if;
+            end;
          when others =>
             null;
       end case;
@@ -512,6 +520,7 @@ package body Vhdl.Sem_Specs is
               | Iir_Kind_Type_Declaration
               | Iir_Kind_Subtype_Declaration
               | Iir_Kind_Interface_Type_Declaration
+              | Iir_Kind_Interface_Package_Declaration
               | Iir_Kind_Component_Declaration
               | Iir_Kind_Enumeration_Literal
               | Iir_Kind_Unit_Declaration
@@ -698,6 +707,14 @@ package body Vhdl.Sem_Specs is
             when Iir_Kind_Entity_Declaration =>
                Sem_Named_Entity_Chain (Get_Generic_Chain (Scope));
                Sem_Named_Entity_Chain (Get_Port_Chain (Scope));
+            when Iir_Kind_Package_Declaration =>
+               declare
+                  Header : constant Iir := Get_Package_Header (Scope);
+               begin
+                  if Header /= Null_Iir then
+                     Sem_Named_Entity_Chain (Get_Generic_Chain (Header));
+                  end if;
+               end;
             when Iir_Kind_Block_Statement =>
                declare
                   Header : constant Iir := Get_Block_Header (Scope);
