@@ -561,6 +561,8 @@ package body Ortho_Code.Disps is
                     & Uns32'Image (Types.Get_Type_Size (Dtype)) & "}");
             end if;
             Put_Line (";");
+         when OD_Var_Body =>
+            null;
          when OD_Const =>
             Disp_Decl_Storage (Decl);
             Put ("constant ");

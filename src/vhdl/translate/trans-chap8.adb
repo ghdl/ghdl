@@ -29,6 +29,7 @@ with Trans.Chap6;
 with Trans.Chap7;
 with Trans.Chap9;
 with Trans.Chap14;
+with Trans.Coverage;
 with Trans_Decls; use Trans_Decls;
 with Translation; use Translation;
 with Trans.Helpers2; use Trans.Helpers2;
@@ -191,6 +192,8 @@ package body Trans.Chap8 is
          end if;
       end Gen_Return_Value;
    begin
+      Trans.Coverage.Cover_Statement (Stmt);
+
       if Expr = Null_Iir then
          --  Return in a procedure.
          if Get_Suspend_Flag (Chap2.Current_Subprogram) then
@@ -392,6 +395,8 @@ package body Trans.Chap8 is
 
    procedure Translate_If_Statement (Stmt : Iir) is
    begin
+      Trans.Coverage.Cover_Statement (Stmt);
+
       if Get_Suspend_Flag (Stmt) then
          Translate_If_Statement_State (Stmt);
       else
@@ -765,6 +770,8 @@ package body Trans.Chap8 is
    is
       Prev_Loop      : Iir;
    begin
+      Trans.Coverage.Cover_Statement (Stmt);
+
       Prev_Loop := Current_Loop;
       Current_Loop := Stmt;
 
@@ -782,6 +789,8 @@ package body Trans.Chap8 is
       Cond : constant Iir := Get_Condition (Stmt);
       Prev_Loop : Iir;
    begin
+      Trans.Coverage.Cover_Statement (Stmt);
+
       Prev_Loop := Current_Loop;
       Current_Loop := Stmt;
 
@@ -860,6 +869,8 @@ package body Trans.Chap8 is
       Loop_Label : Iir;
       Loop_Stmt  : Iir;
    begin
+      Trans.Coverage.Cover_Statement (Stmt);
+
       Loop_Label := Get_Loop_Label (Stmt);
       if Loop_Label = Null_Iir then
          Loop_Stmt := Current_Loop;
@@ -1166,6 +1177,8 @@ package body Trans.Chap8 is
       Expr      : constant Iir := Get_Expression (Stmt);
       Targ_Node : Mnode;
    begin
+      Trans.Coverage.Cover_Statement (Stmt);
+
       if Get_Kind (Target) = Iir_Kind_Aggregate then
          declare
             E    : Mnode;
@@ -1302,6 +1315,8 @@ package body Trans.Chap8 is
       If_Blk : O_If_Block;
       Subprg : O_Dnode;
    begin
+      Trans.Coverage.Cover_Statement (Stmt);
+
       --  Select the procedure to call in case of assertion (so that
       --  assertions within the IEEE library could be ignored).
       if Is_Within_Ieee_Library then
@@ -1336,6 +1351,8 @@ package body Trans.Chap8 is
 
    procedure Translate_Report_Statement (Stmt : Iir_Report_Statement) is
    begin
+      Trans.Coverage.Cover_Statement (Stmt);
+
       Translate_Report (Stmt, Ghdl_Report, Severity_Level_Note);
    end Translate_Report_Statement;
 
@@ -2066,6 +2083,8 @@ package body Trans.Chap8 is
    is
       Handler : Case_Statement_Handler;
    begin
+      Trans.Coverage.Cover_Statement (Stmt);
+
       --  Initialize handler.
       Handler.Has_Suspend := Get_Suspend_Flag (Stmt);
       if Handler.Has_Suspend then
@@ -2240,6 +2259,8 @@ package body Trans.Chap8 is
       Assoc_Chain : constant Iir := Get_Parameter_Association_Chain (Call);
       Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
    begin
+      Trans.Coverage.Cover_Statement (Call);
+
       case Kind is
          when Iir_Predefined_Write =>
             declare
@@ -3401,6 +3422,8 @@ package body Trans.Chap8 is
       Next_State : State_Type;
       If_Blk : O_If_Block;
    begin
+      Trans.Coverage.Cover_Statement (Call);
+
       --  For functions returning an unconstrained object: save the mark.
       if Is_Function and then Info.Use_Stack2 then
          Create_Temp_Stack2_Mark;
@@ -3796,6 +3819,8 @@ package body Trans.Chap8 is
       Resume_State : State_Type;
       Free_List_P : Boolean;
    begin
+      Trans.Coverage.Cover_Statement (Stmt);
+
       Sensitivity := Get_Sensitivity_List (Stmt);
       Free_List_P := False;
       if Sensitivity = Null_Iir_List and Cond /= Null_Iir then
@@ -4837,6 +4862,8 @@ package body Trans.Chap8 is
       Targ : Mnode;
       Drv : Mnode;
    begin
+      Trans.Coverage.Cover_Statement (Stmt);
+
       if Is_Valid (Wf_Chain)
         and then Get_Kind (Wf_Chain) = Iir_Kind_Unaffected_Waveform
       then
@@ -4887,6 +4914,8 @@ package body Trans.Chap8 is
       Wf : Iir;
       Handler : Selected_Assignment_Handler;
    begin
+      Trans.Coverage.Cover_Statement (Stmt);
+
       Handler.Stmt := Stmt;
 
       --  Compute the mechanism used.
@@ -4932,6 +4961,8 @@ package body Trans.Chap8 is
       Targ : Mnode;
       Proc : O_Dnode;
    begin
+      Trans.Coverage.Cover_Statement (Stmt);
+
       Targ := Chap6.Translate_Name (Target, Mode_Signal);
       case Get_Force_Mode (Stmt) is
          when Iir_Force_In =>
@@ -5034,6 +5065,8 @@ package body Trans.Chap8 is
       Value : Mnode;
       Targ  : Mnode;
    begin
+      Trans.Coverage.Cover_Statement (Stmt);
+
       Targ := Chap6.Translate_Name (Target, Mode_Signal);
       Value := Chap7.Translate_Expression (Expr, Target_Type);
 

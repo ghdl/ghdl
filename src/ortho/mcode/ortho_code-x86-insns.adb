@@ -173,6 +173,7 @@ package body Ortho_Code.X86.Insns is
               | OD_Const
               | OD_Init_Val
               | OD_Var
+              | OD_Var_Body
               | OD_Function
               | OD_Procedure
               | OD_Interface

@@ -572,6 +572,15 @@ package body Ortho_Mcode is
          Ortho_Code.O_Tnode (Atype));
    end New_Var_Decl;
 
+   procedure New_Var_Body (Var : O_Dnode;
+                           Storage : O_Storage;
+                           Atype : O_Tnode) is
+   begin
+      Ortho_Code.Decls.New_Var_Body
+        (Ortho_Code.O_Dnode (Var), To_Storage (Storage),
+         Ortho_Code.O_Tnode (Atype));
+   end New_Var_Body;
+
    function New_Obj (Obj : O_Dnode) return O_Lnode is
    begin
       return O_Lnode (Ortho_Code.Exprs.New_Obj (Ortho_Code.O_Dnode (Obj)));

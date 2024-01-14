@@ -23,7 +23,9 @@ package Ortho_Code.X86.Emits is
    procedure Emit_Subprg (Subprg : Subprogram_Data_Acc);
 
    procedure Emit_Var_Decl (Decl : O_Dnode);
-   procedure Emit_Var_Zero (Decl : O_Dnode);
+   procedure Emit_Var_Zero (Decl : O_Dnode;
+                            Storage : O_Storage;
+                            Dtype : O_Tnode);
 
    procedure Emit_Const_Decl (Decl : O_Dnode);
    procedure Emit_Init_Value (Decl : O_Dnode; Val : O_Cnode);

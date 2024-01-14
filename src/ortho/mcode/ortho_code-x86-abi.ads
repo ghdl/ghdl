@@ -56,8 +56,10 @@ package Ortho_Code.X86.Abi is
    procedure Expand_Const_Decl (Decl : O_Dnode);
    procedure Expand_Var_Decl (Decl : O_Dnode);
 
-   --  Create a variable with a nul default value.
-   procedure Expand_Var_Zero (Decl : O_Dnode);
+   --  Create a variable with a null default value.
+   procedure Expand_Var_Zero (Decl : O_Dnode;
+                              Storage : O_Storage;
+                              Dtype : O_Tnode);
 
    --  Set the initial value of a constant or a variable.
    procedure Expand_Init_Value (Decl : O_Dnode; Val : O_Cnode);

@@ -378,11 +378,10 @@ package Ortho_Mcode is
    --  This simply gives a name to a constant value or aggregate.
    --  A constant cannot be modified and its storage cannot be local.
    --  ATYPE must be constrained.
-   procedure New_Const_Decl
-     (Res : out O_Dnode;
-      Ident : O_Ident;
-      Storage : O_Storage;
-      Atype : O_Tnode);
+   procedure New_Const_Decl (Res : out O_Dnode;
+                             Ident : O_Ident;
+                             Storage : O_Storage;
+                             Atype : O_Tnode);
 
    --  Set the value of a non-external constant or variable.
    procedure Start_Init_Value (Decl : in out O_Dnode);
@@ -391,11 +390,16 @@ package Ortho_Mcode is
    --  Create a variable declaration.
    --  A variable can be local only inside a function.
    --  ATYPE must be constrained.
-   procedure New_Var_Decl
-     (Res : out O_Dnode;
-      Ident : O_Ident;
-      Storage : O_Storage;
-      Atype : O_Tnode);
+   procedure New_Var_Decl (Res : out O_Dnode;
+                           Ident : O_Ident;
+                           Storage : O_Storage;
+                           Atype : O_Tnode);
+
+   --  Make an external variable VAR either public or private.
+   --  Can constrain its type (if it was an array type).
+   procedure New_Var_Body (Var : O_Dnode;
+                           Storage : O_Storage;
+                           Atype : O_Tnode);
 
    --  Start a subprogram declaration.
    --  Note: nested subprograms are allowed, ie o_storage_local subprograms can
@@ -571,6 +575,7 @@ private
    pragma Inline (Start_Init_Value);
    pragma Inline (Finish_Init_Value);
    pragma Inline (New_Var_Decl);
+   pragma Inline (New_Var_Body);
 
    pragma Inline (New_Obj);
    pragma Inline (Start_Function_Decl);

@@ -223,9 +223,11 @@ package body Ortho_Code.X86.Abi is
       Emits.Emit_Var_Decl (Decl);
    end Expand_Var_Decl;
 
-   procedure Expand_Var_Zero (Decl : O_Dnode) is
+   procedure Expand_Var_Zero (Decl : O_Dnode;
+                              Storage : O_Storage;
+                              Dtype : O_Tnode) is
    begin
-      Emits.Emit_Var_Zero (Decl);
+      Emits.Emit_Var_Zero (Decl, Storage, Dtype);
    end Expand_Var_Zero;
 
    procedure Expand_Init_Value (Decl : O_Dnode; Val : O_Cnode) is

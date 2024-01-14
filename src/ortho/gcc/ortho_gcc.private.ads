@@ -240,6 +240,7 @@ private
    pragma Import (C, New_Debug_Line_Decl);
    pragma Import (C, New_Const_Decl);
    pragma Import (C, New_Var_Decl);
+   pragma Import (C, New_Var_Body);
 
    pragma Import (C, Start_Init_Value);
    pragma Import (C, Finish_Init_Value);

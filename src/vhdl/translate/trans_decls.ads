@@ -58,6 +58,9 @@ package Trans_Decls is
    --  NOW variable.
    Ghdl_Now : O_Dnode;
 
+   --  Counters for coverage.
+   Ghdl_Cov_Counters : O_Dnode;
+
    --  Protected variables.
    Ghdl_Protected_Enter : O_Dnode;
    Ghdl_Protected_Leave : O_Dnode;

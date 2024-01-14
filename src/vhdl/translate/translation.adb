@@ -19,6 +19,7 @@ with Flags; use Flags;
 with Types; use Types;
 with Errorout; use Errorout;
 with Name_Table; -- use Name_Table;
+with Std_Names;
 with Files_Map;
 with Libraries;
 with Simple_IO;
@@ -42,6 +43,7 @@ with Trans.Chap7;
 with Trans.Chap12;
 with Trans.Rtis;
 with Trans.Helpers2;
+with Trans.Coverage;
 
 package body Translation is
    use Trans;
@@ -126,7 +128,9 @@ package body Translation is
    procedure Translate (Lib_Unit : Iir; Main : Boolean)
    is
       Parent : constant Iir := Get_Design_Unit (Lib_Unit);
+      Prev_Coverage_On : constant Boolean := Trans.Coverage.Coverage_On;
       Design_File : Iir_Design_File;
+      Lib : Iir;
       Mark : Id_Mark_Type;
    begin
       Update_Node_Infos;
@@ -158,6 +162,14 @@ package body Translation is
          end if;
          Design_File := Get_Design_File (Design_Unit);
       end;
+
+      --  Do not enable coverage for ieee and std units.
+      Lib := Get_Library (Design_File);
+      if Get_Identifier (Lib) = Std_Names.Name_Ieee
+        or else Get_Identifier (Lib) = Std_Names.Name_Std
+      then
+         Trans.Coverage.Coverage_On := False;
+      end if;
 
       if Main then
          Set_Global_Storage (O_Storage_Public);
@@ -256,6 +268,8 @@ package body Translation is
 
       Current_Filename_Node := O_Dnode_Null;
       Current_Library_Unit := Null_Iir;
+
+      Trans.Coverage.Coverage_On := Prev_Coverage_On;
 
       Pop_Identifier_Prefix (Mark);
    end Translate;
@@ -728,6 +742,8 @@ package body Translation is
       New_Interface_Decl
         (Interfaces, Param, Get_Identifier ("proc"), Ghdl_Ptr_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Finalize_Register);
+
+      Coverage.Cover_Initialize;
    end Initialize;
 
    procedure Create_Signal_Subprograms (Suffix          : String;

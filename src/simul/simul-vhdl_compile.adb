@@ -56,6 +56,7 @@ with Trans.Rtis;
 with Trans_Link;
 with Trans_Foreign;
 with Trans_Decls;
+with Trans.Coverage;
 
 with Grt.Types; use Grt.Types;
 with Grt.Processes;
@@ -2134,6 +2135,8 @@ package body Simul.Vhdl_Compile is
            Elab.Vhdl_Heap.Ghdl_Allocate'Address);
       Def (Trans_Decls.Ghdl_Deallocate,
            Elab.Vhdl_Heap.Ghdl_Deallocate'Address);
+
+      Trans.Coverage.Cover_Finalize;
 
       --  Link.
       Ortho_Jit.Link (Err);

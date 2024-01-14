@@ -27,7 +27,7 @@ package Ortho_Code.Decls is
       OD_Init_Val,
 
       --  Global and local variables.
-      OD_Var, OD_Local,
+      OD_Var, OD_Local, OD_Var_Body,
 
       --  Subprograms.
       OD_Function, OD_Procedure,
@@ -142,6 +142,11 @@ package Ortho_Code.Decls is
    --  ATYPE must be constrained.
    procedure New_Var_Decl (Res : out O_Dnode;
                            Ident : O_Ident;
+                           Storage : O_Storage;
+                           Atype : O_Tnode);
+
+   --  Change storage of VAR (from external to public or private).
+   procedure New_Var_Body (Var : O_Dnode;
                            Storage : O_Storage;
                            Atype : O_Tnode);
 

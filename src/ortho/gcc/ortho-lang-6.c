@@ -1769,6 +1769,12 @@ new_var_decl (tree *res, tree ident, enum o_storage storage, tree atype)
   *res = var;
 }
 
+void
+new_var_body (tree res, enum o_storage storage, tree atype)
+{
+  abort();
+}
+
 struct GTY(()) o_inter_list
 {
   tree ident;

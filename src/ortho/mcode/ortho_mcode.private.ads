@@ -110,6 +110,7 @@ private
    pragma Inline (Start_Init_Value);
    pragma Inline (Finish_Init_Value);
    pragma Inline (New_Var_Decl);
+   pragma Inline (New_Var_Body);
 
    pragma Inline (New_Obj);
    pragma Inline (Start_Function_Decl);

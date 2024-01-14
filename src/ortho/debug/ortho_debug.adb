@@ -1572,6 +1572,13 @@ package body Ortho_Debug is
       Add_Decl (Res);
    end New_Var_Decl;
 
+   procedure New_Var_Body (Var : O_Dnode;
+                           Storage : O_Storage;
+                           Atype : O_Tnode) is
+   begin
+      raise Program_Error;
+   end New_Var_Body;
+
    procedure Start_Subprogram_Decl_1
      (Interfaces : out O_Inter_List;
       Ident : O_Ident;

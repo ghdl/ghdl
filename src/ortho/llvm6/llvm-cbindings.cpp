@@ -1388,6 +1388,12 @@ new_var_decl(ODnode *Res, OIdent Ident, OStorage Storage, OTnode Atype)
   }
 }
 
+extern "C" void
+new_var_body(ODnode Res, OStorage Storage, OTnode Atype)
+{
+  abort();
+}
+
 struct ODnodeConst : ODnodeBase {
   OStorage Storage;
   OIdent Ident;

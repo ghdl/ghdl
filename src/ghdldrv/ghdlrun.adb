@@ -50,6 +50,7 @@ with Trans_Decls;
 with Translation;
 with Trans_Link;
 with Trans_Foreign;
+with Trans.Coverage;
 
 with Simul.Main;
 with Simul.Vhdl_Elab;
@@ -482,6 +483,10 @@ package body Ghdlrun is
          Run_Mode := Run_Elab_Jit;
       elsif Option = "--interp" then
          Run_Mode := Run_Interp;
+      elsif Option = "--coverage"
+        or else Option = "--coverage=stmt"
+      then
+         Trans.Coverage.Coverage_Level := Trans.Coverage.Coverage_Stmt;
       elsif Option'Last > 3
         and then Option (Option'First + 1) = 'g'
         and then Is_Generic_Override_Option (Option)

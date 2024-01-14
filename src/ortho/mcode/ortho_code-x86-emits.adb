@@ -3225,13 +3225,13 @@ package body Ortho_Code.X86.Emits is
       Set_Decl_Info (Decl, To_Int32 (Uns32 (Sym)));
    end Emit_Var_Decl;
 
-   procedure Emit_Var_Zero (Decl : O_Dnode)
+   procedure Emit_Var_Zero (Decl : O_Dnode;
+                            Storage : O_Storage;
+                            Dtype : O_Tnode)
    is
       use Decls;
       use Types;
       Sym : constant Symbol := Symbol (To_Uns32 (Get_Decl_Info (Decl)));
-      Storage : constant O_Storage := Get_Decl_Storage (Decl);
-      Dtype : constant O_Tnode := Get_Decl_Type (Decl);
    begin
       Set_Current_Section (Sect_Bss);
       pragma Assert (Storage = O_Storage_Public
