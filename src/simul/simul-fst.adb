@@ -398,9 +398,17 @@ package body Simul.Fst is
                             Line : out unsigned)
    is
       use Files_Map;
-      Loc : constant Location_Type := Get_Location (N);
-      Sfe : constant Source_File_Entry := Location_To_File (Loc);
+      Loc, Nloc : Location_Type;
+      Sfe : Source_File_Entry;
    begin
+      Loc := Get_Location (N);
+      --  Strip instantiation locations.
+      loop
+         Nloc := Files_Map.Location_Instance_To_Location (Loc);
+         exit when Nloc = No_Location;
+         Loc := Nloc;
+      end loop;
+      Sfe := Location_To_File (Loc);
       Path := Get_C_String (Get_File_Name (Sfe));
       Line := unsigned (Location_File_To_Line (Loc, Sfe));
    end Get_File_Line;
