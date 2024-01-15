@@ -691,9 +691,8 @@ package body Files_Map is
       return Res;
    end Create_Instance_Source_File;
 
-   function Instance_Relocate
-     (Inst_File : Source_File_Entry; Loc : Location_Type)
-     return Location_Type
+   function Instance_Relocate (Inst_File : Source_File_Entry;
+                               Loc : Location_Type) return Location_Type
    is
       pragma Assert (Inst_File <= Source_Files.Last);
       F : Source_File_Record renames Source_Files.Table (Inst_File);
@@ -707,8 +706,8 @@ package body Files_Map is
       end if;
    end Instance_Relocate;
 
-   function Location_Instance_To_Location
-     (Loc : Location_Type) return Location_Type
+   function Location_Instance_To_Location (Loc : Location_Type)
+                                          return Location_Type
    is
       File : Source_File_Entry;
       Pos :  Source_Ptr;

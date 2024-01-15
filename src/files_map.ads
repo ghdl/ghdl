@@ -91,16 +91,15 @@ package Files_Map is
    procedure Free_Source_File (File : Source_File_Entry);
 
    --  Relocate location LOC (which must be in the reference of INST_FILE)
-   --  for instrnace INST_FILE.
-   function Instance_Relocate
-     (Inst_File : Source_File_Entry; Loc : Location_Type)
-     return Location_Type;
+   --  for instance INST_FILE.
+   function Instance_Relocate (Inst_File : Source_File_Entry;
+                               Loc : Location_Type) return Location_Type;
 
    --  If LOC is a location of an instance (in a file created by
    --  create_instance_source_file), return the location where the instance
    --  has been created.  Otherwise, return No_Location.
-   function Location_Instance_To_Location
-     (Loc : Location_Type) return Location_Type;
+   function Location_Instance_To_Location (Loc : Location_Type)
+                                          return Location_Type;
 
    --  If POS points to the start of the gap of FILE, it will be updated
    --  to the next character after the gap.
