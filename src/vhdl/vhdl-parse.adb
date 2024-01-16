@@ -1373,9 +1373,11 @@ package body Vhdl.Parse is
             end loop;
 
          when Tok_Identifier =>
+            Res := Null_Iir;
             Last := Null_Iir;
 
          when others =>
+            Res := Null_Iir;
             Last := Null_Iir;
             --  Error is handled just below.
       end case;
