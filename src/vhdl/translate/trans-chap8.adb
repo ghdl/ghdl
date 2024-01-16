@@ -5060,7 +5060,6 @@ package body Trans.Chap8 is
    is
       Target : constant Iir := Get_Target (Stmt);
       Target_Type : constant Iir := Get_Type (Target);
-      Targ_Tinfo : constant Type_Info_Acc := Get_Info (Target_Type);
       Expr : constant Iir := Get_Expression (Stmt);
       Value : Mnode;
       Targ  : Mnode;
@@ -5070,7 +5069,7 @@ package body Trans.Chap8 is
       Targ := Chap6.Translate_Name (Target, Mode_Signal);
       Value := Chap7.Translate_Expression (Expr, Target_Type);
 
-      if Is_Composite (Targ_Tinfo)
+      if (Is_Array_Type (Target_Type) or else Is_Record_Type (Target_Type))
         and then Get_Constraint_State (Target_Type) /= Fully_Constrained
       then
          Stabilize (Targ);
