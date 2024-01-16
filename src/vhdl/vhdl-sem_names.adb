@@ -5236,7 +5236,9 @@ package body Vhdl.Sem_Names is
       Set_Named_Entity (Name, Name);
 
       Path := Get_External_Pathname (Name);
-      while Path /= Null_Iir loop
+      while Path /= Null_Iir
+         and then Get_Kind (Path) in Iir_Kinds_Pathname
+      loop
          if Get_Kind (Path) = Iir_Kind_Pathname_Element then
             --  LRM08 8.7 External names
             --  The type of the expression shall be determined by applying the
