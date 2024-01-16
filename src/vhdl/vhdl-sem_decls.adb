@@ -412,10 +412,8 @@ package body Vhdl.Sem_Decls is
          when Parameter_Interface_List =>
             if Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
               and then Interface_Kind = Function_Parameter_Interface_List
-              and then (
-                Vhdl_Std < Vhdl_19
-                or else Get_Pure_Flag (Get_Parent (Inter))
-              )
+              and then (Vhdl_Std < Vhdl_19
+                          or else Get_Pure_Flag (Get_Parent (Inter)))
             then
                Error_Msg_Sem (+Inter, "variable interface parameter are not "
                                 & "allowed for a function (use a constant)");
@@ -1057,6 +1055,33 @@ package body Vhdl.Sem_Decls is
       end if;
    end Sem_Object_Type_From_Value;
 
+   --  Return True if OBJ is global: its value is set during elaboration and
+   --  does not change.
+   --  False for constants declared within subprograms.
+   function Is_Global_Object (Obj : Iir) return Boolean
+   is
+      Parent : constant Iir := Get_Parent (Obj);
+   begin
+      case Get_Kind (Parent) is
+         when Iir_Kinds_Subprogram_Body =>
+            return False;
+         when Iir_Kind_Protected_Type_Body =>
+            --  Humm, depends of the object; let's be safe.
+            return False;
+         when Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Body
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Architecture_Body
+           | Iir_Kinds_Process_Statement
+           | Iir_Kind_Generate_Statement_Body
+           | Iir_Kind_Block_Statement
+           | Iir_Kinds_Verification_Unit =>
+            return True;
+         when others =>
+            Error_Kind ("is_dynamic_object", Parent);
+      end case;
+   end Is_Global_Object;
+
    --  LAST_DECL is set only if DECL is part of a list of declarations (they
    --  share the same type and the same default value).
    procedure Sem_Object_Declaration (Decl: Iir; Last_Decl : Iir)
@@ -1208,6 +1233,14 @@ package body Vhdl.Sem_Decls is
                   --  5. a constant
                   if Staticness < Globally then
                      Staticness := Globally;
+                  end if;
+
+                  --  This is not in the LRM, but if a non-global constant
+                  --  is globally static, it could be used as a time parameter
+                  --  for 'Stable/'Delayed/'Quiet.
+                  if Staticness /= Locally and then not Is_Global_Object (Decl)
+                  then
+                     Staticness := None;
                   end if;
                end if;
                Set_Expr_Staticness (Decl, Staticness);
