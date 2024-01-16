@@ -2313,6 +2313,10 @@ package body Vhdl.Sem_Stmts is
       Call := Get_Procedure_Call (Stmt);
       if Get_Parameter_Association_Chain (Call) = Null_Iir then
          Imp := Get_Prefix (Call);
+         if Imp = Null_Iir then
+            --  Return now in case of error
+            return Stmt;
+         end if;
          Sem_Name (Imp);
          Set_Prefix (Call, Imp);
 
