@@ -106,7 +106,8 @@ jobs:
         run: |
           sudo apt update -qq
           sudo apt install -y gnat
-          python -m pip install --disable-pip-version-check black wheel pyTooling
+          python -m pip install --disable-pip-version-check black wheel
+          python -m pip install --disable-pip-version-check -R pyGHDL/requirements.txt
 
       - name: '🚧 Update Python bindings'
         run: ./scripts/update_py_bindings.sh
