@@ -268,6 +268,12 @@ package Files_Map is
    --  Free all memory.
    procedure Finalize;
 
+   --  Debug procedures.
+
+   --  Disp info about all source files
+   procedure Debug_Source_Files;
+   procedure Debug_Source_File (File : Source_File_Entry);
+
 private
    Lines_Table_Init : Natural := 64;
 
@@ -346,8 +352,4 @@ private
       Table_Low_Bound => No_Source_File_Entry + 1,
       Table_Initial => 16);
 
-   --  Debug procedures.
-
-   --  Disp info about all source files
-   procedure Debug_Source_Files;
 end Files_Map;

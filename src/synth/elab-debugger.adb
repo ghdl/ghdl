@@ -326,6 +326,16 @@ package body Elab.Debugger is
       Debug_Synth_Instance (Current_Instance);
    end Info_Instance_Proc;
 
+   procedure Info_Files_Proc (Line : String)
+   is
+      pragma Unreferenced (Line);
+      use Files_Map;
+   begin
+      for I in No_Source_File_Entry + 1 .. Get_Last_Source_File_Entry loop
+         Debug_Source_File (I);
+      end loop;
+   end Info_Files_Proc;
+
    --  Next statement in the same frame, but handle compound statements as
    --  one statement.
    procedure Next_Stmt_Proc (Line : String)
@@ -623,11 +633,18 @@ package body Elab.Debugger is
       New_Line;
    end Print_Hierarchy_Path;
 
+   Menu_Info_Files : aliased Menu_Entry :=
+     (Kind => Menu_Command,
+      Name => new String'("files"),
+      Help => new String'("display files info"),
+      Next => null, -- Menu_Info_Tree'Access,
+      Proc => Info_Files_Proc'Access);
+
    Menu_Info_Instance : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("inst*ance"),
       Help => new String'("display instance info"),
-      Next => null, -- Menu_Info_Tree'Access,
+      Next => Menu_Info_Files'Access,
       Proc => Info_Instance_Proc'Access);
 
    Menu_Info_Locals : aliased Menu_Entry :=
