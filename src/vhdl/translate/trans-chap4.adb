@@ -3506,21 +3506,25 @@ package body Trans.Chap4 is
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_By_Name =>
                Info := null;
-               if Get_Actual_Conversion (Assoc) /= Null_Iir then
-                  Info := Add_Info (Assoc, Kind_Assoc);
-                  Translate_Association_Subprogram
-                    (Stmt, Block, Assoc, Inter, Conv_Mode_In, Info.Assoc_In,
-                     Num, Base_Block, Entity);
-                  Num := Num + 1;
-               end if;
-               if Get_Formal_Conversion (Assoc) /= Null_Iir then
-                  if Info = null then
+               if Flag_Elaboration then
+                  if Get_Actual_Conversion (Assoc) /= Null_Iir then
                      Info := Add_Info (Assoc, Kind_Assoc);
+                     Translate_Association_Subprogram
+                       (Stmt, Block, Assoc, Inter,
+                        Conv_Mode_In, Info.Assoc_In,
+                        Num, Base_Block, Entity);
+                     Num := Num + 1;
                   end if;
-                  Translate_Association_Subprogram
-                    (Stmt, Block, Assoc, Inter, Conv_Mode_Out, Info.Assoc_Out,
-                     Num, Base_Block, Entity);
-                  Num := Num + 1;
+                  if Get_Formal_Conversion (Assoc) /= Null_Iir then
+                     if Info = null then
+                        Info := Add_Info (Assoc, Kind_Assoc);
+                     end if;
+                     Translate_Association_Subprogram
+                       (Stmt, Block, Assoc, Inter,
+                        Conv_Mode_Out, Info.Assoc_Out,
+                        Num, Base_Block, Entity);
+                     Num := Num + 1;
+                  end if;
                end if;
             when Iir_Kind_Association_Element_By_Expression =>
                if Get_Expr_Staticness (Get_Actual (Assoc)) = None then
