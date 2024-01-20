@@ -115,15 +115,10 @@ package body Elab.Vhdl_Heap is
       --  Allocate the memory for the type.
       if Typ_Sz > 0 then
          declare
-            T : Type_Acc;
-            function To_Type_Acc is new Ada.Unchecked_Conversion
-              (Memory_Ptr, Type_Acc);
-            function To_Memory_Ptr is new Ada.Unchecked_Conversion
-              (Type_Acc, Memory_Ptr);
+            Mem : Memory_Ptr;
          begin
-            E.Obj_Typ := To_Type_Acc (Alloc_Mem (Typ_Sz));
-            T := Save_Type (Obj_Typ, To_Memory_Ptr (E.Obj_Typ), Typ_Sz);
-            pragma Unreferenced (T);
+            Mem := Alloc_Mem (Typ_Sz);
+            E.Obj_Typ := Save_Type (Obj_Typ, Mem, Typ_Sz);
          end;
       else
          E.Obj_Typ := Obj_Typ;
