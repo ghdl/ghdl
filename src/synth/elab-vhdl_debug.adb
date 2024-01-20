@@ -723,7 +723,14 @@ package body Elab.Vhdl_Debug is
                  (Inst, Get_Concurrent_Statement_Chain (N), Cfg);
             when Iir_Kind_Process_Statement
               | Iir_Kind_Sensitized_Process_Statement =>
-               Disp_Hierarchy_Statement (Inst, N, Cfg);
+               Put_Indent (Cfg.Indent);
+               Put ("process ");
+               Put (Image (Get_Identifier (N)));
+               New_Line;
+               if Cfg.With_Objs then
+                  Disp_Declaration_Objects
+                    (Inst, Get_Declaration_Chain (N), Cfg.Indent + 1);
+               end if;
             when others =>
                Vhdl.Errors.Error_Kind ("disp_hierarchy", N);
          end case;
