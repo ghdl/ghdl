@@ -37,22 +37,16 @@ from pathlib import Path
 from platform import system as platform_system
 from textwrap import wrap, dedent
 
-from pyGHDL.dom import DOMException
-
-from pyGHDL.libghdl import LibGHDLException
 from pyTooling.Decorators import export
-from pyTooling.TerminalUI import LineTerminal, Severity
-from pyAttributes import Attribute
-from pyAttributes.ArgParseAttributes import (
-    ArgParseMixin,
-    CommonSwitchArgumentAttribute,
-    DefaultAttribute,
-    CommandAttribute,
-    ArgumentAttribute,
-    SwitchArgumentAttribute,
-)
+from pyTooling.TerminalUI import TerminalApplication, Severity
+from pyTooling.Attributes import Attribute
+from pyTooling.Attributes.ArgParse import ArgParseHelperMixin, DefaultHandler, CommandHandler
+from pyTooling.Attributes.ArgParse.Argument import StringArgument
+from pyTooling.Attributes.ArgParse.Flag import FlagArgument
 
 from pyGHDL import GHDLBaseException
+from pyGHDL.libghdl import LibGHDLException
+from pyGHDL.dom import DOMException
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.formatting.prettyprint import PrettyPrint, PrettyPrintException
 
@@ -117,7 +111,7 @@ class SourceAttribute(Attribute):
 
 
 @export
-class Application(LineTerminal, ArgParseMixin):
+class Application(TerminalApplication, ArgParseHelperMixin):
     HeadLine = "pyGHDL.dom - Test Application"
 
     # load platform information (Windows, Linux, Darwin, ...)
@@ -158,7 +152,7 @@ class Application(LineTerminal, ArgParseMixin):
                 kwargs["width"] = textWidth
                 super().__init__(*args, **kwargs)
 
-        ArgParseMixin.__init__(
+        ArgParseHelperMixin.__init__(
             self,
             description=description,
             epilog=epilog,
@@ -186,7 +180,7 @@ class Application(LineTerminal, ArgParseMixin):
                 {HEADLINE}{line}
                 {headline: ^80s}
                 {line}"""
-            ).format(line="=" * 80, headline=self.HeadLine, **LineTerminal.Foreground)
+            ).format(line="=" * 80, headline=self.HeadLine, **TerminalApplication.Foreground)
         )
 
     # ============================================================================
@@ -194,13 +188,13 @@ class Application(LineTerminal, ArgParseMixin):
     # ============================================================================
     # common arguments valid for all commands
     # ----------------------------------------------------------------------------
-    @CommonSwitchArgumentAttribute("-d", "--debug", dest="debug", help="Enable debug mode.")
-    @CommonSwitchArgumentAttribute("-v", "--verbose", dest="verbose", help="Print out detailed messages.")
-    @CommonSwitchArgumentAttribute("-q", "--quiet", dest="quiet", help="Reduce messages to a minimum.")
+    @FlagArgument("-d", "--debug", dest="debug", help="Enable debug mode.")
+    @FlagArgument("-v", "--verbose", dest="verbose", help="Print out detailed messages.")
+    @FlagArgument("-q", "--quiet", dest="quiet", help="Reduce messages to a minimum.")
     def Run(self):
-        ArgParseMixin.Run(self)
+        ArgParseHelperMixin.Run(self)
 
-    @DefaultAttribute()
+    @DefaultHandler()
     def HandleDefault(self, _):
         self.PrintHeadline()
         self.MainParser.print_help()
@@ -211,12 +205,11 @@ class Application(LineTerminal, ArgParseMixin):
     # ----------------------------------------------------------------------------
     # create the sub-parser for the "help" command
     # ----------------------------------------------------------------------------
-    @CommandAttribute("help", help="Display help page(s) for the given command name.")
-    @ArgumentAttribute(
+    @CommandHandler("help", help="Display help page(s) for the given command name.")
+    @StringArgument(
         metavar="Command",
         dest="Command",
-        type=str,
-        nargs="?",
+        optional=True,
         help="Print help page(s) for a command.",
     )
     def HandleHelp(self, args):
@@ -238,7 +231,7 @@ class Application(LineTerminal, ArgParseMixin):
     # ----------------------------------------------------------------------------
     # create the sub-parser for the "version" command
     # ----------------------------------------------------------------------------
-    @CommandAttribute("version", help="Display tool and version information.")
+    @CommandHandler("version", help="Display tool and version information.")
     def HandleInfo(self, args):
         self.PrintHeadline()
 
@@ -257,7 +250,7 @@ class Application(LineTerminal, ArgParseMixin):
     # ----------------------------------------------------------------------------
     # Create the sub-parser for the "pretty" command
     # ----------------------------------------------------------------------------
-    @CommandAttribute(
+    @CommandHandler(
         "pretty",
         help="Pretty-print the DOM to console.",
         description="Translate a source file into a DOM and pretty-print the DOM.",
