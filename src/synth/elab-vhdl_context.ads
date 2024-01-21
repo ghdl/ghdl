@@ -178,13 +178,13 @@ package Elab.Vhdl_Context is
    --  Used by for-loop.
    procedure Create_Object_Marker
      (Syn_Inst : Synth_Instance_Acc; N : Node; Pool : Areapools.Areapool_Acc);
+   procedure Destroy_Marker
+     (Syn_Inst : Synth_Instance_Acc; N : Node; Pool : Areapools.Areapool_Acc);
 
    type Destroy_Type is limited private;
    procedure Destroy_Init (D : out Destroy_Type;
                            Syn_Inst : Synth_Instance_Acc);
    procedure Destroy_Object (D : in out Destroy_Type; Decl : Node);
-   procedure Destroy_Marker
-     (D : in out Destroy_Type; N : Node; Pool : Areapools.Areapool_Acc);
    procedure Destroy_Finish (D : in out Destroy_Type);
 
    --  Get the value of OBJ.

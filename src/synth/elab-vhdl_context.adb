@@ -579,15 +579,15 @@ package body Elab.Vhdl_Context is
    end Destroy_Object;
 
    procedure Destroy_Marker
-     (D : in out Destroy_Type; N : Node; Pool : Areapools.Areapool_Acc)
+     (Syn_Inst : Synth_Instance_Acc; N : Node; Pool : Areapools.Areapool_Acc)
    is
       use Areapools;
       Info : constant Sim_Info_Acc := Get_Ann (N);
       Slot : constant Object_Slot_Type := Info.Slot;
    begin
-      Destroy_Check (D, Info);
-      Release (D.Inst.Objects (Slot).M_Mark, Pool.all);
-      D.Inst.Objects (Slot) := (Kind => Obj_None);
+      Release (Syn_Inst.Objects (Slot).M_Mark, Pool.all);
+      Syn_Inst.Objects (Slot) := (Kind => Obj_None);
+      Syn_Inst.Elab_Objects := Syn_Inst.Elab_Objects - 1;
    end Destroy_Marker;
 
    procedure Destroy_Finish (D : in out Destroy_Type) is

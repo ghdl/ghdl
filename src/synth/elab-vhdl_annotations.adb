@@ -26,6 +26,8 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Nodes_Meta;
 with Vhdl.Sem_Inst;
 
+with Synth.Flags;
+
 with Elab.Vhdl_Utils;
 
 package body Elab.Vhdl_Annotations is
@@ -880,6 +882,11 @@ package body Elab.Vhdl_Annotations is
                end;
 
             when Iir_Kind_For_Loop_Statement =>
+               if Synth.Flags.Flag_Simulation then
+                  --  Special annotation for memory marker.
+                  Create_Object_Info (Block_Info, Stmt);
+               end if;
+
                Annotate_Declaration
                  (Block_Info, Get_Parameter_Specification (Stmt));
                Annotate_Sequential_Statement_Chain

@@ -3580,6 +3580,10 @@ package body Synth.Vhdl_Stmts is
       It_Type : constant Node := Get_Declaration_Type (Iterator);
       It_Rng : Type_Acc;
    begin
+      if Flags.Flag_Simulation then
+         Create_Object_Marker (Inst, Stmt, Instance_Pool);
+      end if;
+
       if It_Type /= Null_Node then
          Synth_Subtype_Indication (Inst, It_Type);
       end if;
@@ -3605,6 +3609,10 @@ package body Synth.Vhdl_Stmts is
          Destroy_Object (D, It_Type);
       end if;
       Destroy_Finish (D);
+
+      if Flags.Flag_Simulation then
+         Destroy_Marker (Inst, Stmt, Instance_Pool);
+      end if;
    end Finish_For_Loop_Statement;
 
    procedure Synth_Dynamic_For_Loop_Statement
