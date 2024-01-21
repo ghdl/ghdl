@@ -33,17 +33,19 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
+from setuptools          import setup
+
 from pathlib             import Path
 from pyTooling.Licensing import GPL_2_0_or_later
 from pyTooling.Packaging import DescribePythonPackageHostedOnGitHub
 
 gitHubNamespace = "ghdl"
-packageName =  "pyGHDL"
+packageName = "pyGHDL"
 packageDirectory = packageName
 packageInformationFile = Path(f"{packageDirectory}/__init__.py")
 requirementsFile = Path(f"{packageDirectory}/requirements.txt")
 
-DescribePythonPackageHostedOnGitHub(
+setup(**DescribePythonPackageHostedOnGitHub(
     packageName=packageName,
     description="Python binding for GHDL and high-level APIs (incl. LSP).",
     license=GPL_2_0_or_later,
@@ -69,4 +71,4 @@ DescribePythonPackageHostedOnGitHub(
     dataFiles={
         packageName: ["py.typed"]
     }
-)
+))

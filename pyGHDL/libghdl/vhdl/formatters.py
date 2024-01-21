@@ -36,7 +36,6 @@ from ctypes import c_void_p
 
 from pyTooling.Decorators import export
 
-from pyGHDL.libghdl import libghdl
 from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 
