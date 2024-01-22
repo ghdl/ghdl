@@ -3422,8 +3422,6 @@ package body Trans.Chap8 is
       Next_State : State_Type;
       If_Blk : O_If_Block;
    begin
-      Trans.Coverage.Cover_Statement (Call);
-
       --  For functions returning an unconstrained object: save the mark.
       if Is_Function and then Info.Use_Stack2 then
          Create_Temp_Stack2_Mark;
@@ -5202,6 +5200,8 @@ package body Trans.Chap8 is
                Call : constant Iir := Get_Procedure_Call (Stmt);
                Imp  : constant Iir := Get_Implementation (Call);
             begin
+               Trans.Coverage.Cover_Statement (Stmt);
+
                if not Get_Suspend_Flag (Stmt) then
                   --  Suspendable calls were already canonicalized.
                   Vhdl.Canon.Canon_Subprogram_Call (Call);

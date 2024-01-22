@@ -7388,6 +7388,22 @@ package body Vhdl.Nodes is
       Set_Flag11 (Stmt, Flag);
    end Set_Suspend_Flag;
 
+   function Get_Covered_Flag (Stmt : Iir) return Boolean is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Covered_Flag (Get_Kind (Stmt)),
+                     "no field Covered_Flag");
+      return Get_Flag10 (Stmt);
+   end Get_Covered_Flag;
+
+   procedure Set_Covered_Flag (Stmt : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Covered_Flag (Get_Kind (Stmt)),
+                     "no field Covered_Flag");
+      Set_Flag10 (Stmt, Flag);
+   end Set_Covered_Flag;
+
    function Get_Stop_Flag (Stmt : Iir) return Boolean is
    begin
       pragma Assert (Stmt /= Null_Iir);

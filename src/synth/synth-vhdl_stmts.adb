@@ -4092,6 +4092,8 @@ package body Synth.Vhdl_Stmts is
          Elab.Debugger.Debug_Break (C.Inst, Stmt);
       end if;
 
+      Set_Covered_Flag (Stmt, True);
+
       case Get_Kind (Stmt) is
          when Iir_Kind_If_Statement =>
             Synth_If_Statement (C, Stmt);

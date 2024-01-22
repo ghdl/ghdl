@@ -3959,6 +3959,8 @@ package Vhdl.Nodes is
    -- Only for Iir_Kind_If_Statement:
    --   Get/Set_Suspend_Flag (Flag11)
    --
+   --   Get/Set_Covered_Flag (Flag10)
+   --
    --   Get/Set_Is_Ref (Flag12)
 
    --  LRM08 10.10 Loop statement / LRM93 8.9
@@ -4001,6 +4003,8 @@ package Vhdl.Nodes is
    --   Get/Set_End_Has_Identifier (Flag9)
    --
    --   Get/Set_Suspend_Flag (Flag11)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_While_Loop_Statement (Short)
    --
@@ -4026,6 +4030,8 @@ package Vhdl.Nodes is
    --   Get/Set_Suspend_Flag (Flag11)
    --
    --   Get/Set_Is_Ref (Flag12)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_Exit_Statement (Short)
    -- Iir_Kind_Next_Statement (Short)
@@ -4054,6 +4060,8 @@ package Vhdl.Nodes is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Ref (Flag12)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_Signal_Force_Assignment_Statement (Short)
    -- Iir_Kind_Signal_Release_Assignment_Statement (Short)
@@ -4080,6 +4088,8 @@ package Vhdl.Nodes is
    --   Get/Set_Is_Ref (Flag12)
    --
    --   Get/Set_Has_Force_Mode (Flag2)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_Simple_Signal_Assignment_Statement (Short)
    -- Iir_Kind_Conditional_Signal_Assignment_Statement (Short)
@@ -4122,6 +4132,8 @@ package Vhdl.Nodes is
    --   Get/Set_Guarded_Target_State (State1)
    --
    --   Get/Set_Is_Ref (Flag12)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_Variable_Assignment_Statement (Short)
    --
@@ -4139,6 +4151,8 @@ package Vhdl.Nodes is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Ref (Flag12)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_Conditional_Variable_Assignment_Statement (Short)
    -- Iir_Kind_Selected_Variable_Assignment_Statement (Medium)
@@ -4165,6 +4179,8 @@ package Vhdl.Nodes is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Ref (Flag12)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_Assertion_Statement (Short)
    --
@@ -4182,6 +4198,8 @@ package Vhdl.Nodes is
    --   Get/Set_Report_Expression (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_Report_Statement (Short)
    --
@@ -4197,6 +4215,8 @@ package Vhdl.Nodes is
    --   Get/Set_Report_Expression (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_Wait_Statement (Medium)
    --
@@ -4216,6 +4236,8 @@ package Vhdl.Nodes is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Ref (Flag12)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_Return_Statement (Short)
    --
@@ -4233,6 +4255,8 @@ package Vhdl.Nodes is
    --   Get/Set_Expression (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_Case_Statement (Short)
    --
@@ -4255,6 +4279,8 @@ package Vhdl.Nodes is
    --   Get/Set_End_Has_Identifier (Flag9)
    --
    --   Get/Set_Suspend_Flag (Flag11)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_Procedure_Call_Statement (Short)
    -- Iir_Kind_Concurrent_Procedure_Call_Statement (Short)
@@ -4274,6 +4300,8 @@ package Vhdl.Nodes is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Suspend_Flag (Flag11)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_Procedure_Call (Short)
    --
@@ -4296,6 +4324,8 @@ package Vhdl.Nodes is
    --   Get/Set_Identifier (Alias Field3)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_Break_Statement (Short)
    -- Iir_Kind_Concurrent_Break_Statement (Medium)
@@ -4321,6 +4351,8 @@ package Vhdl.Nodes is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Ref (Flag12)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    -- Iir_Kind_Break_Element (Short)
    --
@@ -4347,6 +4379,8 @@ package Vhdl.Nodes is
    --   Get/Set_Suspend_State_Decl (Field5)
    --
    --   Get/Set_Suspend_State_Chain (Field4)
+   --
+   --   Get/Set_Covered_Flag (Flag10)
 
    ----------------
    --  operators --
@@ -9767,6 +9801,11 @@ package Vhdl.Nodes is
    --  Field: Flag11
    function Get_Suspend_Flag (Stmt : Iir) return Boolean;
    procedure Set_Suspend_Flag (Stmt : Iir; Flag : Boolean);
+
+   --  Set during elaboration when the statement is executed.
+   --  Field: Flag10
+   function Get_Covered_Flag (Stmt : Iir) return Boolean;
+   procedure Set_Covered_Flag (Stmt : Iir; Flag : Boolean);
 
    --  Field: Flag13
    function Get_Stop_Flag (Stmt : Iir) return Boolean;

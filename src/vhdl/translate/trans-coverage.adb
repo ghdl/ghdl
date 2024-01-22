@@ -47,7 +47,9 @@ package body Trans.Coverage is
       end if;
 
       Cover_Tables.Append (Cover_Table, (N => N));
-      Gen_Cover (Cover_Tables.Last (Cover_Table));
+      if not Get_Covered_Flag (N) then
+         Gen_Cover (Cover_Tables.Last (Cover_Table));
+      end if;
    end Cover_Statement;
 
    function Cover_Decision (N : Iir; Val : O_Enode) return O_Enode is
