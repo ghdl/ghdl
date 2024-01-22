@@ -219,7 +219,10 @@ package body Trans.Chap9 is
          end;
       else
          --  Direct instantiation.
-         if Hdr /= Null_Iir and then Get_Macro_Expand_Flag (Hdr) then
+         if Hdr /= Null_Iir
+           and then Get_Macro_Expand_Flag (Hdr)
+           and then Get_Parent (Hdr) /= Null_Iir
+         then
             Chap1.Translate_Entity_Declaration (Hdr, Origin);
          end if;
 
@@ -1353,7 +1356,9 @@ package body Trans.Chap9 is
                begin
                   if Hdr /= Null_Iir
                     and then Get_Kind (Hdr) = Iir_Kind_Entity_Declaration
-                    and then Get_Macro_Expand_Flag (Hdr) then
+                    and then Get_Macro_Expand_Flag (Hdr)
+                    and then Get_Parent (Hdr) /= Null_Iir
+                  then
                      Chap1.Translate_Entity_Subprograms (Hdr);
                   end if;
                end;
