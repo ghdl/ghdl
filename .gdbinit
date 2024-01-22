@@ -71,7 +71,7 @@ Print the value that is $.
 end
 
 define ploc
-call disp_iir_location ($arg0)
+call elab.debugger.disp_iir_location ($arg0)
 end
 
 document ploc
