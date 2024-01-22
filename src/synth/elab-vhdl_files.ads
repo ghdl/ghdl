@@ -27,7 +27,7 @@ package Elab.Vhdl_Files is
 
    --  Set the current design unit, so that its path can be used to search
    --  files.
-   procedure Set_Design_Unit (Unit : Node);
+   procedure Set_Current_Design_Unit (Unit : Node);
 
    function Elaborate_File_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node) return File_Index;

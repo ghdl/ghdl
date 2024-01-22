@@ -2250,6 +2250,7 @@ package body Vhdl.Sem_Stmts is
       --  The associations
       Sem_Generic_Association_Chain (Decl, Stmt);
       if Component_Need_Instance (Decl, True) then
+         --  Can be an entity or a component.
          Decl_Inst := Sem_Inst.Instantiate_Component_Declaration (Decl, Stmt);
          Set_Instantiated_Header (Stmt, Decl_Inst);
          Sem_Port_Association_Chain (Decl_Inst, Stmt);

@@ -961,7 +961,7 @@ package body Elab.Vhdl_Insts is
       Cfgs := Apply_Block_Configuration (Config, Arch_Orig);
 
       --  File names are relative to the source.
-      Elab.Vhdl_Files.Set_Design_Unit (Arch);
+      Elab.Vhdl_Files.Set_Current_Design_Unit (Arch);
 
       Entity := Get_Entity (Arch);
 
@@ -1277,7 +1277,7 @@ package body Elab.Vhdl_Insts is
 
       --  Save the current architecture, so that files can be open using a
       --  path relative to the architecture filename.
-      Elab.Vhdl_Files.Set_Design_Unit (Arch);
+      Elab.Vhdl_Files.Set_Current_Design_Unit (Arch);
 
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Entity));
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Arch));

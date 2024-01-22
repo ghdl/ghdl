@@ -91,11 +91,11 @@ package body Elab.Vhdl_Files is
       Status := Op_Ok;
    end Convert_File_Name;
 
-   procedure Set_Design_Unit (Unit : Node) is
+   procedure Set_Current_Design_Unit (Unit : Node) is
    begin
       Current_Unit := Unit;
       Current_Pfx_Id := No_Name_Id;
-   end Set_Design_Unit;
+   end Set_Current_Design_Unit;
 
    function Synth_Open (Name : Ghdl_C_String; Mode : Ghdl_C_String)
                        return Grt.Stdio.FILEs

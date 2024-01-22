@@ -1767,7 +1767,7 @@ package body Synth.Vhdl_Insts is
 
       --  Save the current architecture, so that files can be open using a
       --  path relative to the architecture filename.
-      Elab.Vhdl_Files.Set_Design_Unit (Arch);
+      Elab.Vhdl_Files.Set_Current_Design_Unit (Arch);
 
       Synth_Dependencies (Root_Instance, Get_Design_Unit (Arch));
 
