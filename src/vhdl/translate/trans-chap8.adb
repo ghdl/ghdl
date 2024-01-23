@@ -4608,6 +4608,7 @@ package body Trans.Chap8 is
    function Is_Simple_Waveform (We : Iir) return Boolean is
    begin
       if We /= Null_Iir
+        and then Get_Kind (We) = Iir_Kind_Waveform_Element
         and then Get_Chain (We) = Null_Iir
         and then Get_Time (We) = Null_Iir
       then
@@ -4712,6 +4713,10 @@ package body Trans.Chap8 is
       if Wf_Chain = Null_Iir then
          --  Implicit disconnect statment.
          Register_Signal (Targ, Target_Type, Ghdl_Signal_Disconnect);
+         return;
+      end if;
+
+      if Get_Kind (Wf_Chain) = Iir_Kind_Unaffected_Waveform then
          return;
       end if;
 
