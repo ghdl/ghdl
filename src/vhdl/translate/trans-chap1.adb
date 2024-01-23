@@ -268,11 +268,13 @@ package body Trans.Chap1 is
             when Iir_Kind_Architecture_Body =>
                exit;
             when Iir_Kind_Block_Statement
-              | Iir_Kind_Component_Instantiation_Statement =>
+               | Iir_Kind_Generate_Statement_Body
+               | Iir_Kind_Case_Generate_Statement
+               | Iir_Kind_Component_Instantiation_Statement =>
                Parent := Get_Parent (Parent);
             when others =>
                --  TODO
-               Error_Kind ("push_instantiated_architecture_scope", Parent);
+               Error_Kind ("push_pop_instantiated_architecture_scope", Parent);
          end case;
       end loop;
 
