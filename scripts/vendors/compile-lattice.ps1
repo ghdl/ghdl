@@ -284,6 +284,18 @@ if ((-not $StopCompiling) -and $ecp5)
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
+# Lattice ECP5UM library
+# ==============================================================================
+if ((-not $StopCompiling) -and $ecp5)
+{	$Library = "ecp5u"
+	$SourceFiles = $FileLists[$Library] | % { "$SourceDirectory\$Library\src\$_" }
+  
+  # rename library to get extra directory for ecp5um (libs are the same as for ecp5u)
+  $Library = "ecp5um" 
+	$ErrorCount += Start-PackageCompilation $GHDLBinary $Analyze_Parameters $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+}
+
 # Lattice LPTM library
 # ==============================================================================
 if ((-not $StopCompiling) -and $lptm)
