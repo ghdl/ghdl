@@ -28,7 +28,7 @@
 #   (1) creates a subdirectory in the current working directory
 #   (2) compiles all Lattice Diamond simulation libraries and packages
 #       o Lattice device libraries:
-#         - EC, ECP, ECP2, ECP3, ECP5U
+#         - EC, ECP, ECP2, ECP3, ECP5
 #         - LPTM, LPTM2
 #         - MachXO, MachXO2, MachXO3L, MachXO3D
 #         - SC, SCM
@@ -50,8 +50,8 @@ param(
 	[switch]$ecp2 =       $false,
 	# Compile the Lattice ECP3 device libraries
 	[switch]$ecp3 =       $false,
-	# Compile the Lattice ECP5U device libraries
-	[switch]$ecp5u =      $false,
+	# Compile the Lattice ECP5 device libraries
+	[switch]$ecp5 =      $false,
 
 	# Compile the Lattice LPTM device libraries
 	[switch]$lptm =       $false,
@@ -115,7 +115,7 @@ Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("Lattice
 
 # Display help if no command was selected
 $Help = $Help -or (-not ($All -or
-                    ($ec -or $ecp -or $ecp2 -or $ecp3 -or $ecp5u) -or
+                    ($ec -or $ecp -or $ecp2 -or $ecp3 -or $ecp5) -or
                     ($lptm -or $lptm2) -or
                     ($MachXO -or $MachXO2 -or $MachXO3L -or $MachXO3D) -or
                     ($sc -or $scm) -or
@@ -131,7 +131,7 @@ if ($All)
 	$ecp =      $true
 	$ecp2 =     $true
 	$ecp3 =     $true
-	$ecp5u =    $true
+	$ecp5 =    $true
 	$lptm =     $true
 	$lptm2 =    $true
 	$MachXO =   $true
@@ -276,7 +276,7 @@ if ((-not $StopCompiling) -and $ecp3)
 
 # Lattice ECP5U library
 # ==============================================================================
-if ((-not $StopCompiling) -and $ecp5u)
+if ((-not $StopCompiling) -and $ecp5)
 {	$Library = "ecp5u"
 	$SourceFiles = $FileLists[$Library] | % { "$SourceDirectory\$Library\src\$_" }
 
