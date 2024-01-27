@@ -24,6 +24,7 @@ with Interfaces.C;
 with Types; use Types;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
+with Ghdlcovout;
 with Simple_IO; use Simple_IO;
 
 with Flags;
@@ -408,6 +409,15 @@ package body Ghdlrun is
                Simul.Vhdl_Simul.Simulation;
             end if;
       end case;
+
+      declare
+         use Trans.Coverage;
+      begin
+         if Coverage_Level /= Coverage_None then
+            Ghdlcovout.Collect;
+            Ghdlcovout.Write_Coverage_File;
+         end if;
+      end;
 
       Ada.Command_Line.Set_Exit_Status
         (Ada.Command_Line.Exit_Status (Grt.Errors.Exit_Status));

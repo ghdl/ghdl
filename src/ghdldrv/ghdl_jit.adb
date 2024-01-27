@@ -22,6 +22,7 @@ with Ghdlxml;
 with Ghdllib;
 with Ghdlsynth_Maybe;
 with Ghdlverilog;
+with Ghdlcov;
 
 procedure Ghdl_Jit is
 begin
@@ -34,6 +35,7 @@ begin
    Ghdlxml.Register_Commands;
    Ghdlverilog.Register_Commands;
    Ghdlsynth_Maybe.Register_Commands;
+   Ghdlcov.Register_Commands;
    Ghdllib.Register_Commands;
    Ghdlmain.Register_Commands;
    Ghdlmain.Main;
