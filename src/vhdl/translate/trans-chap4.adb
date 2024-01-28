@@ -1845,7 +1845,13 @@ package body Trans.Chap4 is
          --  If the alias has no type and the name is an external name,
          --  translate external name type, as the alias inherit from this
          --  type.
-         Chap3.Translate_External_Name_Subtype_Indication (Name);
+         declare
+            Mark1 : Id_Mark_Type;
+         begin
+            Push_Identifier_Prefix (Mark1, Get_Identifier (Decl));
+            Chap3.Translate_External_Name_Subtype_Indication (Name);
+            Pop_Identifier_Prefix (Mark1);
+         end;
       else
          Chap3.Translate_Object_Subtype_Indication (Decl, True);
       end if;
