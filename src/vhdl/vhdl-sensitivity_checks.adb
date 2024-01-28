@@ -40,6 +40,27 @@ package body Vhdl.Sensitivity_Checks is
       Referenced : Bool_Vector (1 .. Len);
    end record;
 
+   --  Return TRUE iff REF and NAME refer to the same selected element of the
+   --  same object.
+   function Same_Selected_Element (Ref : Iir; Name : Iir) return Boolean
+   is
+      Pfx_Name, Pfx_Ref : Iir;
+   begin
+      --  Just one level of selected elements.
+      --  TODO: multi-level ?
+      if Get_Kind (Name) /= Iir_Kind_Selected_Element then
+         return False;
+      end if;
+      if Get_Named_Entity (Name) /= Get_Named_Entity (Ref) then
+         return False;
+      end if;
+
+      Pfx_Name := Get_Prefix (Name);
+      Pfx_Ref := Get_Prefix (Ref);
+      return Get_Named_Entity (Pfx_Name) = Get_Named_Entity (Pfx_Ref);
+   end Same_Selected_Element;
+
+   --  Check NAME is present in the sensitivity list.
    procedure Check_Sensitivity_Name (Name : Iir; Ctxt : in out Context_Type)
    is
       It : List_Iterator;
@@ -53,6 +74,7 @@ package body Vhdl.Sensitivity_Checks is
       Obj := Get_Object_Prefix (Name, False);
       Obj := Name_To_Object (Obj);
       if Obj = Null_Iir or else not Is_Signal_Name (Obj) then
+         --  Error or not a signal.
          return;
       end if;
 
@@ -65,6 +87,11 @@ package body Vhdl.Sensitivity_Checks is
 
          El_Obj := Name_To_Object (El);
          if El_Obj = Obj then
+            Ctxt.Referenced (Idx) := True;
+            return;
+         elsif Get_Kind (El_Obj) = Iir_Kind_Selected_Element
+           and then Same_Selected_Element (El_Obj, Name)
+         then
             Ctxt.Referenced (Idx) := True;
             return;
          end if;
@@ -270,9 +297,12 @@ package body Vhdl.Sensitivity_Checks is
       Stmt : Iir;
    begin
       --  TODO: sanity check the sensitivity list.
-      Ctxt.Referenced := (others => False);
-      Ctxt.Sensitivity_List := List;
-      Ctxt.Missing_List := Null_Iir_List;
+
+      --  Build the context
+      Ctxt := (Len => Nbr_Sens,
+               Sensitivity_List => List,
+               Missing_List => Null_Iir_List,
+               Referenced => (others => False));
 
       Stmt := Stmts;
       while Stmt /= Null_Node loop
