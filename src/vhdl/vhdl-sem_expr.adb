@@ -5434,6 +5434,16 @@ package body Vhdl.Sem_Expr is
                return Create_Error_Expr (Res, A_Type);
             end;
 
+         when Iir_Kind_Length_Array_Attribute
+            | Iir_Kind_Pos_Attribute =>
+            --  Call only be called in the second phase, to adjust the type.
+            pragma Assert
+              (Get_Type (Expr) = Convertible_Integer_Type_Definition);
+            pragma Assert
+              (Get_Kind (A_Type) = Iir_Kind_Integer_Type_Definition);
+            Set_Type (Expr, A_Type);
+            return Expr;
+
          when Iir_Kind_Psl_Prev =>
             return Sem_Psl.Sem_Prev_Builtin (Expr, A_Type);
 
@@ -5909,15 +5919,27 @@ package body Vhdl.Sem_Expr is
          --  This is necessary when the first call to sem_expression was done
          --  with A_TYPE set to NULL_IIR and results in setting the type of
          --  EXPR.
-         if A_Type /= Null_Iir
-           and then Are_Types_Compatible (A_Type, Expr_Type) = Not_Compatible
-         then
+         if A_Type = Null_Iir then
+            return Expr;
+         end if;
+
+         if Are_Types_Compatible (A_Type, Expr_Type) = Not_Compatible then
             if not Is_Error (Expr_Type) then
                Error_Not_Match (Expr, A_Type);
             end if;
             return Null_Iir;
          end if;
-         return Expr;
+
+         --  Done, unless there is an implicit conversion.
+         if Expr_Type /= Convertible_Integer_Type_Definition
+           and then Expr_Type /= Convertible_Real_Type_Definition
+         then
+            return Expr;
+         end if;
+         if Get_Kind (Expr) in Iir_Kinds_Dyadic_Operator then
+            --  No conversion for dyadic operators.
+            return Expr;
+         end if;
       end if;
 
       -- A_TYPE must be a type definition and not a subtype.
