@@ -2014,6 +2014,12 @@ package body Vhdl.Scanner is
                       +Source (Pos));
    end Error_Bad_Character;
 
+   procedure Error_Conflict_Marker is
+   begin
+      Error_Msg_Scan ("conflict marker is ignored");
+      Skip_Until_EOL;
+   end Error_Conflict_Marker;
+
    procedure Scan_Block_Comment is
    begin
       Current_Context.Prev_Pos := Pos;
@@ -2367,6 +2373,12 @@ package body Vhdl.Scanner is
                   Current_Token := Tok_Box;
                   Pos := Pos + 2;
                when '<' =>
+                  if Source (Pos + 2) = '<' and then Source (Pos + 3) = '<'
+                     and then Get_Current_Offset = 0
+                  then
+                     Error_Conflict_Marker;
+                     goto Again;
+                  end if;
                   Current_Token := Tok_Double_Less;
                   Pos := Pos + 2;
                when '-' =>
@@ -2388,6 +2400,12 @@ package body Vhdl.Scanner is
                   Current_Token := Tok_Greater_Equal;
                   Pos := Pos + 2;
                when '>' =>
+                  if Source (Pos + 2) = '>' and then Source (Pos + 3) = '>'
+                     and then Get_Current_Offset = 0
+                  then
+                     Error_Conflict_Marker;
+                     goto Again;
+                  end if;
                   Current_Token := Tok_Double_Greater;
                   Pos := Pos + 2;
                when others =>
@@ -2397,6 +2415,12 @@ package body Vhdl.Scanner is
             return;
          when '=' =>
             if Source (Pos + 1) = '=' then
+               if Source (Pos + 2) = '=' and then Source (Pos + 3) = '='
+                  and then Get_Current_Offset = 0
+               then
+                  Error_Conflict_Marker;
+                  goto Again;
+               end if;
                if AMS_Vhdl then
                   Current_Token := Tok_Equal_Equal;
                else
