@@ -6492,7 +6492,7 @@ package body Vhdl.Parse is
                | Tok_Generate
                | Tok_Loop =>
                --  Surely a missing parenthesis.
-               Error_Missing_Parenthesis(Loc);
+               Error_Missing_Parenthesis (Loc);
                return Expr;
             when others =>
                --  Surely a parse error...
@@ -6505,6 +6505,8 @@ package body Vhdl.Parse is
       Set_Location (Res, Loc);
       Chain_Init (First, Last);
       loop
+         Loc := Get_Token_Location;
+
          if Current_Token = Tok_Others and then Expr = Null_Iir then
             Assoc := Parse_A_Choice (Null_Iir, Loc);
             Expect (Tok_Double_Arrow);
@@ -6517,9 +6519,9 @@ package body Vhdl.Parse is
             --  Not others: an expression (or a range).
             if Expr = Null_Iir then
                Expr := Parse_Expression;
-            end if;
-            if Expr = Null_Iir then
-               return Null_Iir;
+               if Expr = Null_Iir then
+                  return Null_Iir;
+               end if;
             end if;
 
             case Current_Token is
@@ -6540,8 +6542,6 @@ package body Vhdl.Parse is
          Set_Associated_Expr (Assoc, Expr);
          Chain_Append_Subchain (First, Last, Assoc);
          exit when Current_Token /= Tok_Comma;
-
-         Loc := Get_Token_Location;
 
          --  Eat ','
          Scan;
