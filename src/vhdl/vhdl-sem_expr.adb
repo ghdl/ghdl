@@ -2651,10 +2651,20 @@ package body Vhdl.Sem_Expr is
    is
       --  Compare two elements of ARR.
       --  Return true iff OP1 < OP2.
-      function Lt (Op1, Op2 : Natural) return Boolean is
+      function Lt (Op1, Op2 : Natural) return Boolean
+      is
+         N1 : constant Iir := Info.Arr (Op1);
+         N2 : constant Iir := Info.Arr (Op2);
+         P1, P2 : Int64;
       begin
-         return (Eval_Pos (Get_Assoc_Low (Info.Arr (Op1)))
-                   < Eval_Pos (Get_Assoc_Low (Info.Arr (Op2))));
+         P1 := Eval_Pos (Get_Assoc_Low (N1));
+         P2 := Eval_Pos (Get_Assoc_Low (N2));
+         --  Sort by location if the values are equal (this improves error
+         --  messages).
+         if P1 /= P2 then
+            return P1 < P2;
+         end if;
+         return Get_Location (N1) < Get_Location (N2);
       end Lt;
 
       procedure Swap (From : Natural; To : Natural) is
@@ -2774,6 +2784,7 @@ package body Vhdl.Sem_Expr is
          --  Lowest and highest bounds.
          Lb, Hb : Iir;
          Pos : Int64;
+         N_Pos : Int64;
          Pos_Max : Int64;
          E_Pos : Int64;
          Choice : Iir;
@@ -2827,14 +2838,15 @@ package body Vhdl.Sem_Expr is
                Pos := Pos_Max;
                exit;
             end if;
-            if Pos < E_Pos then
+            if E_Pos > Pos then
+               --  A hole
                Need_Others := True;
                if Info.Others_Choice = Null_Iir then
                   Error_No_Choice (Bt, Pos, E_Pos - 1, Get_Location (Choice));
                end if;
-            elsif Pos > E_Pos then
-               Need_Others := True;
-               if Pos = E_Pos + 1 then
+            elsif E_Pos < Pos then
+               --  Overlap.
+               if Get_Kind (Choice) = Iir_Kind_Choice_By_Expression then
                   Error_Msg_Sem
                     (+Choice,
                      "duplicate choice for " & Disp_Discrete (Bt, E_Pos));
@@ -2842,19 +2854,28 @@ package body Vhdl.Sem_Expr is
                   Error_Msg_Sem
                     (+Choice, "duplicate choices for "
                        & Disp_Discrete (Bt, E_Pos)
-                       & " to " & Disp_Discrete (Bt, Pos));
+                       & " to " & Disp_Discrete (Bt, Pos - 1));
                end if;
+
+               --  POS has been incremented in the previous iteration and
+               --  will in this iteration.  Avoid this double incrementation.
+               Pos := Pos - 1;
             end if;
 
             if Get_Kind (Choice) = Iir_Kind_Choice_By_Range then
-               Pos := Eval_Pos (Get_Assoc_High (Choice));
+               N_Pos := Eval_Pos (Get_Assoc_High (Choice));
             else
-               Pos := E_Pos;
+               N_Pos := E_Pos;
+            end if;
+
+            if N_Pos >= Pos then
+               Pos := N_Pos;
             end if;
 
             --  Avoid overflow.  Not incrementing POS allows to check
             --  POS < POS_MAX below.
             exit when I = Info.Arr'Last;
+
             Pos := Pos + 1;
          end loop;
          if Pos < Pos_Max then
