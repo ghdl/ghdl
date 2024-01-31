@@ -1,0 +1,3 @@
+repro4.vhdl:18:9: duplicate choices for 8 to 15
+      a (23 downto 8) => v2,
+        ^

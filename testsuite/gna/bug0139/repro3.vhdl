@@ -1,0 +1,20 @@
+entity repro3b is
+  port (a : bit_vector (31 downto 0));
+end;
+
+architecture behav of repro3b is
+begin
+end;
+
+entity repro3 is
+end;
+
+architecture behav of repro3 is
+  signal v1, v2 : bit_vector (15 downto 0);
+begin
+  dut: entity work.repro3b
+    port map (
+      a (15 downto 0) => v1,
+      a (0) => v1 (0),
+      a (31 downto 16) => v2);
+end;
