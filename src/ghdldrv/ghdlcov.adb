@@ -508,7 +508,9 @@ package body Ghdlcov is
                              Success : out Boolean);
 
    function Decode_Command (Cmd : Command_Coverage; Name : String)
-                           return Boolean is
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
    begin
       return Name = "coverage";
    end Decode_Command;
@@ -526,7 +528,9 @@ package body Ghdlcov is
       end if;
    end Decode_Option;
 
-   function Get_Short_Help (Cmd : Command_Coverage) return String is
+   function Get_Short_Help (Cmd : Command_Coverage) return String
+   is
+      pragma Unreferenced (Cmd);
    begin
       return "coverage [-o FILENAME] COV-FILES...";
    end Get_Short_Help;
@@ -534,6 +538,7 @@ package body Ghdlcov is
    procedure Disp_Long_Help (Cmd : Command_Coverage)
    is
       use Simple_IO;
+      pragma Unreferenced (Cmd);
    begin
       Put_Line ("  -o FILENAME   specify result file");
    end Disp_Long_Help;
@@ -542,6 +547,7 @@ package body Ghdlcov is
                              Args : String_Acc_Array;
                              Success : out Boolean)
    is
+      pragma Unreferenced (Cmd);
    begin
       for I in Args'Range loop
          Read_Coverage_File (Args (I).all);
