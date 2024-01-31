@@ -701,8 +701,10 @@ package body Vhdl.Sem_Assocs is
                        and then
                        Eval_Int_In_Range (Eval_Pos (Index), Choice_Range)
                      then
-                        --  FIXME: overlap.
-                        raise Internal_Error;
+                        --  Overlap: cannot be used.
+                        --  This will be reported later while checking for
+                        --  all associations.
+                        null;
                      end if;
                   end;
                when others =>
