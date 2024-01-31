@@ -2259,8 +2259,6 @@ package body Trans.Chap8 is
       Assoc_Chain : constant Iir := Get_Parameter_Association_Chain (Call);
       Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
    begin
-      Trans.Coverage.Cover_Statement (Call);
-
       case Kind is
          when Iir_Predefined_Write =>
             declare
