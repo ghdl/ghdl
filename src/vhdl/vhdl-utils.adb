@@ -1191,9 +1191,11 @@ package body Vhdl.Utils is
       case Get_Kind (Base) is
          when Iir_Kind_Variable_Declaration
             | Iir_Kind_Signal_Declaration
+            | Iir_Kind_Constant_Declaration
             | Iir_Kind_Interface_Variable_Declaration
             | Iir_Kind_Interface_Signal_Declaration
-            | Iir_Kind_Object_Alias_Declaration =>
+            | Iir_Kind_Object_Alias_Declaration
+            | Iir_Kind_Interface_Constant_Declaration =>
             declare
                Ind : constant Iir := Get_Subtype_Indication (Base);
             begin
