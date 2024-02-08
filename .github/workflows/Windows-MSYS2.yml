@@ -94,6 +94,9 @@ jobs:
           - 'gna'
           - 'vests'
           - 'synth'
+        exclude:
+          - suite: 'synth'
+            sys: { pkg: 'llvm', sys: 'UCRT64' }
 
     defaults:
       run:
