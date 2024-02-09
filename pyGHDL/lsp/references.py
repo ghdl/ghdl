@@ -153,6 +153,7 @@ def find_definition_by_loc(n, loc):
     if ref is None:
         return None
     k = nodes.Get_Kind(ref)
+    # TODO: character literal, attribute name...
     if k in nodes.Iir_Kinds.Denoting_Name or k == nodes.Iir_Kind.Selected_Element:
         ent = nodes.Get_Named_Entity(ref)
     else:
