@@ -186,6 +186,7 @@ package body Synth.Verilog_Elaboration is
             | N_Var
             | N_Assign
             | Nkinds_Process
+            | Nkinds_Gate
             | N_Genvar
             | N_Module_Instance
             | N_Task
@@ -282,6 +283,7 @@ package body Synth.Verilog_Elaboration is
                | N_Var
                | N_Assign
                | Nkinds_Process
+               | Nkinds_Gate
                | N_Genvar
                | N_Module_Instance
                | N_Task
@@ -360,7 +362,8 @@ package body Synth.Verilog_Elaboration is
          when N_Assign
             | N_Noblk_Assign
             | N_Blocking_Assign
-            | N_Subroutine_Call_Stmt =>
+            | N_Subroutine_Call_Stmt
+            | Nkinds_Gate =>
             null;
          when Nkinds_Process =>
             Allocate_Node (Scope, Get_Statement (N));

@@ -30,6 +30,8 @@ package Synth.Verilog_Stmts is
    --  Implicit assignment for net assigned with an expression.
    procedure Synth_Net_Init (Inst : Synth_Instance_Acc; N : Node);
 
+   procedure Synth_Gate (Inst : Synth_Instance_Acc; N : Node);
+
    use Verilog.Storages;
 
    --  Assignment procedure for VPI.

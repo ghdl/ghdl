@@ -891,4 +891,43 @@ package body Synth.Verilog_Stmts is
       Is_Initial := False;
    end Synth_Initial;
 
+   procedure Synth_Gate_Buf (Inst : Synth_Instance_Acc; N : Node)
+   is
+      Terms : constant Node := Get_Gate_Terminals (N);
+      Term_Out, Term_Inp, Term_Next : Node;
+      Expr : Valtyp;
+   begin
+      --  Find the last terminal (it's the input).
+      Term_Inp := Terms;
+      loop
+         Term_Next := Get_Chain (Term_Inp);
+         exit when Term_Next = Null_Node;
+         Term_Inp := Term_Next;
+      end loop;
+
+      Expr := Synth_Expression (Inst, Get_Expression (Term_Inp));
+
+      --  Assign.
+      Term_Out := Terms;
+      while Term_Out /= Term_Inp loop
+         Synth_Assign (Inst, True, Get_Expression (Term_Out), Expr);
+         Term_Out := Get_Chain (Term_Out);
+      end loop;
+   end Synth_Gate_Buf;
+
+   procedure Synth_Gate (Inst : Synth_Instance_Acc; N : Node)
+   is
+      Ctxt : constant Context_Acc := Get_Build (Inst);
+   begin
+      Push_Phi;
+
+      case Get_Kind (N) is
+         when N_Gate_Buf =>
+            Synth_Gate_Buf (Inst, N);
+         when others =>
+            Error_Kind ("synth_gate", N);
+      end case;
+      Pop_And_Merge_Phi (Ctxt, Get_Location (N));
+      null;
+   end Synth_Gate;
 end Synth.Verilog_Stmts;
