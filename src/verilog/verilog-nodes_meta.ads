@@ -86,6 +86,8 @@ package Verilog.Nodes_Meta is
       Field_Return_Variable_Ref,
       Field_This_Variable,
       Field_Expression,
+      Field_Reject_Limit,
+      Field_Error_Limit,
       Field_Sequence,
       Field_Init_Expression,
       Field_Size_Expression,
@@ -539,6 +541,8 @@ package Verilog.Nodes_Meta is
    function Has_Return_Variable_Ref (K : Nkind) return Boolean;
    function Has_This_Variable (K : Nkind) return Boolean;
    function Has_Expression (K : Nkind) return Boolean;
+   function Has_Reject_Limit (K : Nkind) return Boolean;
+   function Has_Error_Limit (K : Nkind) return Boolean;
    function Has_Sequence (K : Nkind) return Boolean;
    function Has_Init_Expression (K : Nkind) return Boolean;
    function Has_Size_Expression (K : Nkind) return Boolean;

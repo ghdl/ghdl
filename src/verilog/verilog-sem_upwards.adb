@@ -155,7 +155,8 @@ package body Verilog.Sem_Upwards is
               | N_Assert_Property
               | N_Class
               | N_Package_Import
-              | N_Analog =>
+              | N_Analog
+              | N_Specify =>
                null;
             when others =>
                Error_Kind ("enter_scope(2)", Item);

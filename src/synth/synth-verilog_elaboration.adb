@@ -189,7 +189,8 @@ package body Synth.Verilog_Elaboration is
             | N_Genvar
             | N_Module_Instance
             | N_Task
-            | N_Function =>
+            | N_Function
+            | N_Specify =>
             null;
          when others =>
             Error_Kind ("allocate_param_node", N);
@@ -284,7 +285,8 @@ package body Synth.Verilog_Elaboration is
                | N_Genvar
                | N_Module_Instance
                | N_Task
-               | N_Function =>
+               | N_Function
+               | N_Specify =>
                null;
             when others =>
                Error_Kind ("elaborate_param_chain", Item);
@@ -350,6 +352,9 @@ package body Synth.Verilog_Elaboration is
          when N_Task
             | N_Function =>
             --  TODO
+            null;
+
+         when N_Specify =>
             null;
 
          when N_Assign

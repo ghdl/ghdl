@@ -969,6 +969,7 @@ package body Verilog.Nodes is
            | N_Seq_Block
            | N_Par_Block
            | N_Specparam
+           | N_Pulse_Control_Specparam
            | N_Path_Delay12
            | N_Member
            | N_Packed_Member =>
@@ -1471,6 +1472,38 @@ package body Verilog.Nodes is
                      "no field Expression");
       Set_Field4 (N, Expr);
    end Set_Expression;
+
+   function Get_Reject_Limit (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Reject_Limit (Get_Kind (N)),
+                     "no field Reject_Limit");
+      return Get_Field4 (N);
+   end Get_Reject_Limit;
+
+   procedure Set_Reject_Limit (N : Node; Expr : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Reject_Limit (Get_Kind (N)),
+                     "no field Reject_Limit");
+      Set_Field4 (N, Expr);
+   end Set_Reject_Limit;
+
+   function Get_Error_Limit (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Error_Limit (Get_Kind (N)),
+                     "no field Error_Limit");
+      return Get_Field7 (N);
+   end Get_Error_Limit;
+
+   procedure Set_Error_Limit (N : Node; Expr : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Error_Limit (Get_Kind (N)),
+                     "no field Error_Limit");
+      Set_Field7 (N, Expr);
+   end Set_Error_Limit;
 
    function Get_Sequence (N : Node) return Node is
    begin

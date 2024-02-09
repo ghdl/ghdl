@@ -393,6 +393,7 @@ package Verilog.Nodes is
       N_Prop_Until,
 
       N_Specparam,
+      N_Pulse_Control_Specparam,
       N_Ifnone,
       N_Timing_Check,
       N_Par_Path,
@@ -1954,6 +1955,36 @@ package Verilog.Nodes is
    --
    --  For AMS: the value range (a chain)
    --   Get/Set_Value_Range (Field10)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Parent (Field6)
+   --
+   --   Get/Set_Type_Owner (Flag3)
+   --
+   --   Get/Set_Is_Constant (Flag4)
+   --
+   --  Always false.
+   --   Get/Set_Is_Automatic (Flag10)
+   --
+   --   Get/Set_Fully_Analyzed_Flag (Flag8)
+   --
+   --   Get/Set_Mark_Flag (Flag9)
+
+   -- N_Pulse_Control_Specparam (Medium)
+   --
+   --   Get/Set_Identifier (Field1)
+   --
+   --   Get/Set_Data_Type (Field3)
+   --
+   --   Get/Set_Reject_Limit (Field4)
+   --
+   --   Get/Set_Error_Limit (Field7)
+   --
+   --   Get/Set_Obj_Id (Field5)
+   --
+   --  Type of the parameter.
+   --   Get/Set_Param_Type (Field9)
    --
    --   Get/Set_Chain (Field2)
    --
@@ -4193,6 +4224,14 @@ package Verilog.Nodes is
    --  Field: Field4
    function Get_Expression (N : Node) return Node;
    procedure Set_Expression (N : Node; Expr : Node);
+
+   --  Field: Field4
+   function Get_Reject_Limit (N : Node) return Node;
+   procedure Set_Reject_Limit (N : Node; Expr : Node);
+
+   --  Field: Field7
+   function Get_Error_Limit (N : Node) return Node;
+   procedure Set_Error_Limit (N : Node; Expr : Node);
 
    --  Field: Field4
    function Get_Sequence (N : Node) return Node;

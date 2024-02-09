@@ -48,6 +48,8 @@ package body Verilog.Nodes_Meta is
       Field_Return_Variable_Ref => Type_Node,
       Field_This_Variable => Type_Node,
       Field_Expression => Type_Node,
+      Field_Reject_Limit => Type_Node,
+      Field_Error_Limit => Type_Node,
       Field_Sequence => Type_Node,
       Field_Init_Expression => Type_Node,
       Field_Size_Expression => Type_Node,
@@ -363,6 +365,10 @@ package body Verilog.Nodes_Meta is
             return "this_variable";
          when Field_Expression =>
             return "expression";
+         when Field_Reject_Limit =>
+            return "reject_limit";
+         when Field_Error_Limit =>
+            return "error_limit";
          when Field_Sequence =>
             return "sequence";
          when Field_Init_Expression =>
@@ -1505,6 +1511,8 @@ package body Verilog.Nodes_Meta is
             return "prop_until";
          when N_Specparam =>
             return "specparam";
+         when N_Pulse_Control_Specparam =>
+            return "pulse_control_specparam";
          when N_Ifnone =>
             return "ifnone";
          when N_Timing_Check =>
@@ -1610,6 +1618,10 @@ package body Verilog.Nodes_Meta is
          when Field_This_Variable =>
             return Attr_None;
          when Field_Expression =>
+            return Attr_None;
+         when Field_Reject_Limit =>
+            return Attr_None;
+         when Field_Error_Limit =>
             return Attr_None;
          when Field_Sequence =>
             return Attr_None;
@@ -4465,6 +4477,20 @@ package body Verilog.Nodes_Meta is
       Field_Is_Automatic,
       Field_Fully_Analyzed_Flag,
       Field_Mark_Flag,
+      --  N_Pulse_Control_Specparam
+      Field_Identifier,
+      Field_Data_Type,
+      Field_Reject_Limit,
+      Field_Error_Limit,
+      Field_Obj_Id,
+      Field_Param_Type,
+      Field_Chain,
+      Field_Parent,
+      Field_Type_Owner,
+      Field_Is_Constant,
+      Field_Is_Automatic,
+      Field_Fully_Analyzed_Flag,
+      Field_Mark_Flag,
       --  N_Ifnone
       Field_True_Stmt,
       Field_Chain,
@@ -4914,25 +4940,26 @@ package body Verilog.Nodes_Meta is
       N_Prop_Non_Overlap_Imp => 1999,
       N_Prop_Until => 2001,
       N_Specparam => 2014,
-      N_Ifnone => 2017,
-      N_Timing_Check => 2021,
-      N_Par_Path => 2027,
-      N_Full_Path => 2033,
-      N_Par_Edge_Path => 2040,
-      N_Full_Edge_Path => 2047,
-      N_Path_Element => 2049,
-      N_Path_Delay3 => 2052,
-      N_Path_Delay6 => 2058,
-      N_Path_Delay12 => 2070,
-      N_Member => 2079,
-      N_Packed_Member => 2088,
-      N_Udp_Combinational_Entry => 2092,
-      N_Udp_Sequential_Entry => 2097,
-      N_Udp_Level_Symbol => 2100,
-      N_Udp_Change_Symbol => 2104,
-      N_Attribute => 2108,
-      N_Label => 2112,
-      N_Goto => 2115
+      N_Pulse_Control_Specparam => 2027,
+      N_Ifnone => 2030,
+      N_Timing_Check => 2034,
+      N_Par_Path => 2040,
+      N_Full_Path => 2046,
+      N_Par_Edge_Path => 2053,
+      N_Full_Edge_Path => 2060,
+      N_Path_Element => 2062,
+      N_Path_Delay3 => 2065,
+      N_Path_Delay6 => 2071,
+      N_Path_Delay12 => 2083,
+      N_Member => 2092,
+      N_Packed_Member => 2101,
+      N_Udp_Combinational_Entry => 2105,
+      N_Udp_Sequential_Entry => 2110,
+      N_Udp_Level_Symbol => 2113,
+      N_Udp_Change_Symbol => 2117,
+      N_Attribute => 2121,
+      N_Label => 2125,
+      N_Goto => 2128
      );
 
    function Get_Fields (K : Nkind) return Fields_Array
@@ -5588,6 +5615,10 @@ package body Verilog.Nodes_Meta is
             return Get_This_Variable (N);
          when Field_Expression =>
             return Get_Expression (N);
+         when Field_Reject_Limit =>
+            return Get_Reject_Limit (N);
+         when Field_Error_Limit =>
+            return Get_Error_Limit (N);
          when Field_Sequence =>
             return Get_Sequence (N);
          when Field_Init_Expression =>
@@ -5926,6 +5957,10 @@ package body Verilog.Nodes_Meta is
             Set_This_Variable (N, V);
          when Field_Expression =>
             Set_Expression (N, V);
+         when Field_Reject_Limit =>
+            Set_Reject_Limit (N, V);
+         when Field_Error_Limit =>
+            Set_Error_Limit (N, V);
          when Field_Sequence =>
             Set_Sequence (N, V);
          when Field_Init_Expression =>
@@ -6788,6 +6823,7 @@ package body Verilog.Nodes_Meta is
            | N_Post_Decrement
            | N_Pre_Decrement
            | N_Specparam
+           | N_Pulse_Control_Specparam
            | N_Ifnone
            | N_Timing_Check
            | N_Par_Path
@@ -6953,6 +6989,7 @@ package body Verilog.Nodes_Meta is
            | N_Member_Select
            | N_System_Call
            | N_Specparam
+           | N_Pulse_Control_Specparam
            | N_Timing_Check
            | N_Member
            | N_Packed_Member
@@ -7371,6 +7408,7 @@ package body Verilog.Nodes_Meta is
            | N_Post_Decrement
            | N_Pre_Decrement
            | N_Specparam
+           | N_Pulse_Control_Specparam
            | N_Ifnone
            | N_Timing_Check
            | N_Par_Path
@@ -7566,6 +7604,16 @@ package body Verilog.Nodes_Meta is
             return False;
       end case;
    end Has_Expression;
+
+   function Has_Reject_Limit (K : Nkind) return Boolean is
+   begin
+      return K = N_Pulse_Control_Specparam;
+   end Has_Reject_Limit;
+
+   function Has_Error_Limit (K : Nkind) return Boolean is
+   begin
+      return K = N_Pulse_Control_Specparam;
+   end Has_Error_Limit;
 
    function Has_Sequence (K : Nkind) return Boolean is
    begin
@@ -8759,6 +8807,7 @@ package body Verilog.Nodes_Meta is
            | N_Parameter_Value_Type
            | N_Repeat
            | N_Specparam
+           | N_Pulse_Control_Specparam
            | N_Member
            | N_Packed_Member =>
             return True;
@@ -8873,7 +8922,8 @@ package body Verilog.Nodes_Meta is
       case K is
          when N_Parameter
            | N_Localparam
-           | N_Specparam =>
+           | N_Specparam
+           | N_Pulse_Control_Specparam =>
             return True;
          when others =>
             return False;
@@ -9113,6 +9163,7 @@ package body Verilog.Nodes_Meta is
            | N_Access_Call
            | N_Conversion
            | N_Specparam
+           | N_Pulse_Control_Specparam
            | N_Member
            | N_Packed_Member =>
             return True;
@@ -9796,6 +9847,7 @@ package body Verilog.Nodes_Meta is
            | N_Interface_Instance
            | N_Repeat
            | N_Specparam
+           | N_Pulse_Control_Specparam
            | N_Member =>
             return True;
          when others =>
@@ -10078,7 +10130,8 @@ package body Verilog.Nodes_Meta is
            | N_Casez
            | N_Label_Stmt
            | N_Simple_Immediate_Assert
-           | N_Specparam =>
+           | N_Specparam
+           | N_Pulse_Control_Specparam =>
             return True;
          when others =>
             return False;
@@ -10289,7 +10342,8 @@ package body Verilog.Nodes_Meta is
            | N_Import_DPI_Function
            | N_Parameter
            | N_Localparam
-           | N_Specparam =>
+           | N_Specparam
+           | N_Pulse_Control_Specparam =>
             return True;
          when others =>
             return False;
@@ -10317,7 +10371,8 @@ package body Verilog.Nodes_Meta is
            | N_Parameter
            | N_Localparam
            | N_Typedef
-           | N_Specparam =>
+           | N_Specparam
+           | N_Pulse_Control_Specparam =>
             return True;
          when others =>
             return False;
@@ -10376,7 +10431,8 @@ package body Verilog.Nodes_Meta is
            | N_Short_Circuit_Op
            | N_Unary_Op
            | N_Access_Call
-           | N_Specparam =>
+           | N_Specparam
+           | N_Pulse_Control_Specparam =>
             return True;
          when others =>
             return False;

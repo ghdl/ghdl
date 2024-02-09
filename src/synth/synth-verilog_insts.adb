@@ -591,8 +591,11 @@ package body Synth.Verilog_Insts is
             | N_Function =>
             null;
 
+         when N_Specify =>
+            null;
+
          when others =>
-            Error_Kind ("synth_item", N);
+            Error_Kind ("synth_decl_item", N);
       end case;
    end Synth_Decl_Item;
 
@@ -638,6 +641,8 @@ package body Synth.Verilog_Insts is
             | N_Function =>
             null;
 
+         when N_Specify =>
+            null;
          when others =>
             Error_Kind ("synth_initial_item", N);
       end case;
@@ -684,6 +689,9 @@ package body Synth.Verilog_Insts is
 
          when N_Task
             | N_Function =>
+            null;
+
+         when N_Specify =>
             null;
 
          when others =>
@@ -799,6 +807,8 @@ package body Synth.Verilog_Insts is
          when N_Task =>
             null;
          when N_Subroutine_Call_Stmt =>
+            null;
+         when N_Specify =>
             null;
          when others =>
             Error_Kind ("synth_finalize_item", N);

@@ -1146,6 +1146,11 @@ package body Verilog.Sem is
 
          when N_Analog =>
             Sem_Statement (Get_Statement (Item));
+
+         when N_Specify =>
+            --  TODO
+            null;
+
          when others =>
             Error_Kind ("sem_item", Item);
       end case;
@@ -1212,6 +1217,8 @@ package body Verilog.Sem is
            | N_Input
            | N_Output
            | N_Inout =>
+            null;
+         when N_Specify =>
             null;
          when N_Var
            | Nkinds_Nets =>
@@ -1372,7 +1379,8 @@ package body Verilog.Sem is
               | N_If_Generate
               | N_Assert_Property
               | N_Class
-              | N_Analog =>
+              | N_Analog
+              | N_Specify =>
                null;
             when N_Package_Import =>
                null;

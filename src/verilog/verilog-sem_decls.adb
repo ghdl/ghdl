@@ -976,6 +976,10 @@ package body Verilog.Sem_Decls is
             | N_Label_Stmt
             | N_Analog =>
             Sem_Decl_Type_Inner (Decl);
+
+         when N_Specify =>
+            null;
+
          when others =>
             Error_Kind ("sem_decl_type", Decl);
       end case;
