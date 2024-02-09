@@ -7785,6 +7785,25 @@ package body Verilog.Parse is
       return Res;
    end Parse_Timing_Task;
 
+   --  1364-2005 4.10.3 Specify parameters
+   --  specparam_declaration ::=
+   --    SPECPARAM [ range ] list_of_specparam_assignments ;
+   --  list_of_specparam_assignments ::=
+   --    specparam_assignment { , specparam_assignment }
+   --  specparam_assignment ::=
+   --      specparam_identifier = constant_mintypmax_expression
+   --    | pulse_control_specparam
+   --  pulse_control_specparam ::=
+   --      PATHPULSE$ = ( reject_limit_value [, error_limit_value ] )
+   --    | PATHPULSE$input_terminal$output_terminal =
+   --        ( reject_limit_value [, error_limit_value ] )
+   --  error_limit_value ::= limit_value
+   --  reject_limit_value ::= limit_value
+   --  limit_value ::= constant_mintypmax_expression
+   --
+   --  Note:
+   --  input_terminal is specify_input_terminal_descriptor
+   --  output_terminal is specify_output_terminal_descriptor
    procedure Parse_Specparam_Declaration (Constr : in out Items_Constr)
    is
       Res : Node;
@@ -7798,16 +7817,51 @@ package body Verilog.Parse is
             Skip_Until_Semicolon;
             return;
          end if;
-         Res := Create_Node (N_Specparam);
-         Set_Token_Location (Res);
-         Set_Identifier (Res, Current_Identifier);
-         Scan;
-         if Current_Token /= Tok_Equal then
-            Error_Msg_Parse ("'=' expected after specparam identifier");
-         else
+         if Current_Dollar_In_Id then
+            --  TODO: Check PATHPULSE$ prefix
+            Res := Create_Node (N_Pulse_Control_Specparam);
+            Set_Token_Location (Res);
+            Set_Identifier (Res, Current_Identifier);
             Scan;
-            Set_Expression (Res, Parse_Expression (Prio_Paren));
+
+            if Current_Token /= Tok_Equal then
+               Error_Msg_Parse ("'=' expected after specparam identifier");
+            else
+               Scan;
+            end if;
+
+            if Current_Token /= Tok_Left_Paren then
+               Error_Msg_Parse ("'(' expected for pulse control value");
+            else
+               Scan;
+            end if;
+
+            Set_Reject_Limit (Res, Parse_Expression (Prio_Paren));
+
+            if Current_Token = Tok_Comma then
+               Scan;
+               Set_Error_Limit (Res, Parse_Expression (Prio_Paren));
+            end if;
+
+            if Current_Token /= Tok_Right_Paren then
+               Error_Msg_Parse ("')' expected at end of value");
+            else
+               Scan;
+            end if;
+         else
+            Res := Create_Node (N_Specparam);
+            Set_Token_Location (Res);
+            Set_Identifier (Res, Current_Identifier);
+            Scan;
+
+            if Current_Token /= Tok_Equal then
+               Error_Msg_Parse ("'=' expected after specparam identifier");
+            else
+               Scan;
+               Set_Expression (Res, Parse_Expression (Prio_Paren));
+            end if;
          end if;
+
          Append_Node (Constr, Res);
          exit when Current_Token /= Tok_Comma;
          Scan;

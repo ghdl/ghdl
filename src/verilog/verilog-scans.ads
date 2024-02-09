@@ -29,6 +29,7 @@ package Verilog.Scans is
 
    Current_Token : Token_Type;
    Current_Identifier : Name_Id;
+   Current_Dollar_In_Id : Boolean;
    Current_Number_Lo : Logic_32;
    Current_Number_Hi : Logic_32;
    --  Number of bits for the current number (extracted from the number of

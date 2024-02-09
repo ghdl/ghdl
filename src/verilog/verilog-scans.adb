@@ -3651,6 +3651,8 @@ package body Verilog.Scans is
       Length : Natural;
       C : Character;
    begin
+      Current_Dollar_In_Id := False;
+
       Length := 0;
       C := Source (Pos - 1);
       loop
@@ -3663,6 +3665,11 @@ package body Verilog.Scans is
                           or C in '0' .. '9'
                           or C = '_'
                           or C = '$');
+
+         if C = '$' then
+            Current_Dollar_In_Id := True;
+         end if;
+
          Pos := Pos + 1;
       end loop;
       if Scan_Ignore then
