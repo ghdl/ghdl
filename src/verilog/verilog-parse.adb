@@ -5499,7 +5499,7 @@ package body Verilog.Parse is
    end Parse_Variable_Declarations_From_Module;
 
    --  postcond: next token after '('
-   procedure Parse_Gate_Terminal_List (Gate : Node)
+   procedure Parse_UDP_Terminal_List (Gate : Node)
    is
       Conn : Node;
       Last_Conn : Node;
@@ -5527,7 +5527,7 @@ package body Verilog.Parse is
          Scan;
       end loop;
       Scan;
-   end Parse_Gate_Terminal_List;
+   end Parse_UDP_Terminal_List;
 
    --  Common between udp instance and gates.
    --  Parse:
@@ -5547,7 +5547,7 @@ package body Verilog.Parse is
       Scan_Or_Error
         (Tok_Left_Paren, "'(' expected before list of terminals");
 
-      Parse_Gate_Terminal_List (Res);
+      Parse_UDP_Terminal_List (Res);
    end Parse_Instance_Terminal;
 
    --  1800-2017 29.8 UDP instances
@@ -6235,7 +6235,7 @@ package body Verilog.Parse is
       return Term;
    end Parse_Terminal;
 
-   procedure Scan_Semicolon_After_Terminal is
+   procedure Scan_Comma_After_Terminal is
    begin
       if Current_Token /= Tok_Comma then
          Error_Msg_Parse ("',' required between terminals");
@@ -6243,53 +6243,118 @@ package body Verilog.Parse is
          --  Skip ','.
          Scan;
       end if;
-   end Scan_Semicolon_After_Terminal;
+   end Scan_Comma_After_Terminal;
 
    --  postcond: next token after '('
-   procedure Parse_Input_Gate_Terminal_List (Gate : Node)
+   procedure Parse_Gate_Terminal_List (Gate : Node)
    is
+      Kind : constant Nkinds_Gate := Get_Kind (Gate);
+      Term_Kind : Nkinds_Terminal;
       First, Last : Node;
-      Term : Node;
+      Term, Expr : Node;
+      Loc : Location_Type;
+      Term_Idx : Positive;
    begin
       Init_Chain (First, Last);
 
-      --  The output terminal.
-      Term := Parse_Terminal (N_Output_Terminal);
+      --  First terminal.
+      case Kind is
+         when Nkinds_Input_Gate
+           | Nkinds_Output_Gate
+           | Nkinds_Enable_Gate
+           | Nkinds_Mos_Switch
+           | Nkinds_Cmos_Switch
+           | Nkinds_Pull_Gate =>
+            Term_Kind := N_Output_Terminal;
+         when Nkinds_Pass_Switch
+           | Nkinds_Pass_En_Switch =>
+            Term_Kind := N_Inout_Terminal;
+      end case;
+      Term := Parse_Terminal (Term_Kind);
+      Term_Idx := 2;
 
       Set_Gate_Terminals (Gate, Term);
       Append_Chain (First, Last, Term);
 
-      if Current_Token = Tok_Right_Paren then
-         Error_Msg_Parse ("input terminal required");
-
-         --  Skip ')'.
-         Scan;
-
+      if Kind in Nkinds_Pull_Gate then
+         if Current_Token /= Tok_Right_Paren then
+            Error_Msg_Parse ("pull gates have only one terminal");
+         else
+            --  Skip ')'.
+            Scan;
+         end if;
          return;
+      else
+         if Current_Token = Tok_Right_Paren then
+            Error_Msg_Parse ("input terminal required");
+
+            --  Skip ')'.
+            Scan;
+
+            return;
+         end if;
       end if;
 
       --  Skip ','.
-      Scan_Semicolon_After_Terminal;
+      Scan_Comma_After_Terminal;
 
-      --  The input terminals.
+      --  The other terminals.
       loop
-         Term := Parse_Terminal (N_Input_Terminal);
+         Loc := Get_Token_Location;
+         Expr := Parse_Expression;
+
+         case Kind is
+            when Nkinds_Input_Gate =>
+               Term_Kind := N_Input_Terminal;
+            when Nkinds_Output_Gate =>
+               --  Only the last terminal is an input.
+               if Current_Token = Tok_Comma then
+                  Term_Kind := N_Output_Terminal;
+               else
+                  Term_Kind := N_Input_Terminal;
+               end if;
+            when Nkinds_Enable_Gate
+              | Nkinds_Mos_Switch
+              | Nkinds_Cmos_Switch =>
+               case Term_Idx is
+                  when 2 =>
+                     Term_Kind := N_Input_Terminal;
+                  when others =>
+                     Term_Kind := N_Control_Terminal;
+               end case;
+            when Nkinds_Pass_Switch =>
+               Term_Kind := N_Inout_Terminal;
+            when Nkinds_Pass_En_Switch =>
+               if Current_Token = Tok_Comma then
+                  Term_Kind := N_Inout_Terminal;
+               else
+                  Term_Kind := N_Control_Terminal;
+               end if;
+            when Nkinds_Pull_Gate =>
+               raise Program_Error;
+         end case;
+
+         Term := Create_Node (Term_Kind);
+         Set_Location (Term, Loc);
+         Set_Expression (Term, Expr);
 
          Append_Chain (First, Last, Term);
 
          exit when Current_Token = Tok_Right_Paren;
 
          --  Skip ','.
-         Scan_Semicolon_After_Terminal;
+         Scan_Comma_After_Terminal;
       end loop;
 
       --  Skip ')'.
       Scan;
-   end Parse_Input_Gate_Terminal_List;
+   end Parse_Gate_Terminal_List;
 
-   --  precond:  n_input_gate (AND, NAND, OR ...)
-   procedure Parse_Input_Gate_Instantiation (Constr : in out Items_Constr;
-                                             Kind : Nkind)
+   --  precond:  gate (OR, NMOS, TRANS ...)
+   --
+   --  1800-2017 28.3 Gate and switch declaration syntax
+   procedure Parse_Gate_Instantiation (Constr : in out Items_Constr;
+                                       Kind : Nkind)
    is
       Gate : Node;
       Del : Node;
@@ -6313,7 +6378,7 @@ package body Verilog.Parse is
             Strength := 0;
             Gate := Create_Node (Kind);
             Set_Token_Location (Gate);
-            Parse_Input_Gate_Terminal_List (Gate);
+            Parse_Gate_Terminal_List (Gate);
             if Current_Token = Tok_Comma then
                Scan;
                goto Instances;
@@ -6347,75 +6412,7 @@ package body Verilog.Parse is
          Scan_Or_Error
            (Tok_Left_Paren, "'(' expected before list of terminals");
 
-         Parse_Input_Gate_Terminal_List (Gate);
-
-         Append_Node (Constr, Gate);
-         exit when Current_Token /= Tok_Comma;
-         Scan;
-      end loop;
-      << Semicol >> null;
-
-      --  Skip ';'.
-      Scan_Declaration_Semicolon;
-   end Parse_Input_Gate_Instantiation;
-
-   --  precond:  gate (OR, NMOS, TRANS ...)
-   --
-   --  1800-2017 28.3 Gate and switch declaration syntax
-   procedure Parse_Gate_Instantiation (Constr : in out Items_Constr;
-                                       Kind : Nkind)
-   is
-      Gate : Node;
-      Del : Node;
-      Strength : Int32;
-      pragma Unreferenced (Strength);
-   begin
-      --  Skip gate type.
-      Scan;
-
-      Del := Null_Node;
-
-      --  Drive strength.
-      if Current_Token = Tok_Left_Paren then
-         Scan;
-         case Current_Token is
-            when Tok_Supply1
-              | Tok_Strong1
-              | Tok_Pull1
-              | Tok_Weak1
-              | Tok_Highz1
-              | Tok_Supply0
-              | Tok_Strong0
-              | Tok_Pull0
-              | Tok_Weak0
-              | Tok_Highz0 =>
-               Strength := Parse_Drive_Strength;
-            when others =>
-               Strength := 0;
-               Gate := Create_Node (Kind);
-               Set_Token_Location (Gate);
-               Parse_Gate_Terminal_List (Gate);
-               if Current_Token = Tok_Comma then
-                  Scan;
-                  goto Instances;
-               else
-                  goto Semicol;
-               end if;
-         end case;
-      end if;
-
-      --  Delay3
-      if Current_Token = Tok_Sharp then
-         Del := Parse_Delay2_3 (True);
-      end if;
-
-      << Instances >> null;
-      loop
-         Gate := Create_Node (Kind);
-         Set_Token_Location (Gate);
-         Set_Gate_Delay (Gate, Del);
-
-         Parse_Instance_Terminal (Gate);
+         Parse_Gate_Terminal_List (Gate);
 
          Append_Node (Constr, Gate);
          exit when Current_Token /= Tok_Comma;
@@ -11329,17 +11326,17 @@ package body Verilog.Parse is
             Parse_Initial_Always_Statement (Constr, N_Final);
 
          when Tok_And =>
-            Parse_Input_Gate_Instantiation (Constr, N_Gate_And);
+            Parse_Gate_Instantiation (Constr, N_Gate_And);
          when Tok_Nand =>
-            Parse_Input_Gate_Instantiation (Constr, N_Gate_Nand);
+            Parse_Gate_Instantiation (Constr, N_Gate_Nand);
          when Tok_Or =>
-            Parse_Input_Gate_Instantiation (Constr, N_Gate_Or);
+            Parse_Gate_Instantiation (Constr, N_Gate_Or);
          when Tok_Nor =>
-            Parse_Input_Gate_Instantiation (Constr, N_Gate_Nor);
+            Parse_Gate_Instantiation (Constr, N_Gate_Nor);
          when Tok_Xor =>
-            Parse_Input_Gate_Instantiation (Constr, N_Gate_Xor);
+            Parse_Gate_Instantiation (Constr, N_Gate_Xor);
          when Tok_Xnor =>
-            Parse_Input_Gate_Instantiation (Constr, N_Gate_Xnor);
+            Parse_Gate_Instantiation (Constr, N_Gate_Xnor);
 
          when Tok_Buf =>
             Parse_Gate_Instantiation (Constr, N_Gate_Buf);

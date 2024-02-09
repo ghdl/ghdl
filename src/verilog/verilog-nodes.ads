@@ -591,6 +591,48 @@ package Verilog.Nodes is
    --N_Gate_Pullup
      N_Gate_Pulldown;
 
+   subtype Nkinds_Input_Gate is Nkind range
+     N_Gate_And ..
+   --N_Gate_Nand
+   --N_Gate_Or
+   --N_Gate_Nor
+   --N_Gate_Xor
+     N_Gate_Xnor;
+
+   subtype Nkinds_Output_Gate is Nkind range
+     N_Gate_Buf ..
+     N_Gate_Not;
+
+   subtype Nkinds_Enable_Gate is Nkind range
+     N_Gate_Bufif0 ..
+   --N_Gate_Bufif1
+   --N_Gate_Notif0
+     N_Gate_Notif1;
+
+   subtype Nkinds_Mos_Switch is Nkind range
+     N_Gate_Nmos ..
+   --N_Gate_Pmos
+   --N_Gate_Rnmos
+     N_Gate_Rpmos;
+
+   subtype Nkinds_Pass_Switch is Nkind range
+     N_Gate_Tran ..
+     N_Gate_Rtran;
+
+   subtype Nkinds_Pass_En_Switch is Nkind range
+     N_Gate_Tranif0 ..
+   --N_Gate_Tranif1
+   --N_Gate_Rtranif0
+     N_Gate_Rtranif1;
+
+   subtype Nkinds_Cmos_Switch is Nkind range
+     N_Gate_Cmos ..
+     N_Gate_Rcmos;
+
+   subtype Nkinds_Pull_Gate is Nkind range
+     N_Gate_Pullup ..
+     N_Gate_Pulldown;
+
    subtype Nkinds_Terminal is Nkind range
      N_Control_Terminal ..
    --N_Input_Terminal
