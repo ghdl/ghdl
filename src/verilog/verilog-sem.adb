@@ -492,7 +492,8 @@ package body Verilog.Sem is
 
       if Get_Assign_Delay (Stmt) /= Null_Node then
          --  TODO
-         raise Program_Error;
+         -- raise Program_Error;
+         null;
       end if;
    end Sem_Continuous_Assign;
 
