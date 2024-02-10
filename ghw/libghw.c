@@ -48,6 +48,19 @@ malloc_unwrap (size_t size)
   return ret;
 }
 
+// Call calloc ()
+void *
+calloc_unwrap (size_t nmemb, size_t size)
+{
+  void *ret = calloc(nmemb, size);
+  if (ret == NULL)
+  {
+    fprintf(stderr, "libghw could not allocate %zu elements of size %zu bytes. Terminating.\n", nmemb, size);
+    exit(12);
+  }
+  return ret;
+}
+
 /* Reopen H through decompressor DECOMP.  */
 
 static int
@@ -158,6 +171,15 @@ ghw_get_i32 (struct ghw_handler *h, unsigned char *b)
     return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | (b[3] << 0);
   else
     return (b[3] << 24) | (b[2] << 16) | (b[1] << 8) | (b[0] << 0);
+}
+
+// Read an i32, make sure it's positive, cast to u32
+uint32_t
+ghw_get_i32_positive (struct ghw_handler *h, unsigned char *b)
+{
+  int32_t val_i = ghw_get_i32 (h, b);
+  if (val_i < 0) ghw_error_exit ();
+  return (uint32_t) val_i;
 }
 
 int64_t
@@ -423,17 +445,14 @@ ghw_read_str (struct ghw_handler *h)
 
   // Read number of strings and total string size. Make sure that nbr_string
   // is not too large, as it's incremented afterwards.
-  h->nbr_str = (uint32_t) ghw_get_i32 (h, &hdr[4]);
-  if (h->nbr_str >= UINT32_MAX-8) ghw_error_exit();
+  h->nbr_str = ghw_get_i32_positive (h, &hdr[4]);
   h->nbr_str++;
   h->str_size = (uint32_t) ghw_get_i32 (h, &hdr[8]);
 
   // Allocate str_table, str_content. Avoid exceeding size_t limits.
-  uint64_t alloc_size = ((uint64_t)h->nbr_str) * sizeof (char *);
-  if (alloc_size > SIZE_MAX) ghw_error_exit();
-  h->str_table = (char **) malloc_unwrap (alloc_size);
+  h->str_table = (char **) calloc_unwrap(h->nbr_str, sizeof (char *));
 
-  alloc_size = h->str_size + h->nbr_str + 1;
+  uint64_t alloc_size = h->str_size + h->nbr_str + 1;
   if (alloc_size > SIZE_MAX) ghw_error_exit();
   h->str_content = (char *) malloc_unwrap (alloc_size);
   char *p_end = h->str_content + alloc_size;
@@ -458,7 +477,7 @@ ghw_read_str (struct ghw_handler *h)
       prev = h->str_table[i - 1];
       for (j = 0; j < prev_len; j++)
       {
-	if (p >= p_end) goto ghw_read_str_err;
+	if (p >= p_end) goto err_ghw_read_str;
 	*p++ = prev[j];
       }
 
@@ -469,11 +488,11 @@ ghw_read_str (struct ghw_handler *h)
 	    return -1;
 	  if ((c >= 0 && c <= 31) || (c >= 128 && c <= 159))
 	    break;
-	  if (p >= p_end) goto ghw_read_str_err;
+	  if (p >= p_end) goto err_ghw_read_str;
 	  *p++ = c;
 	}
 
-      if (p >= p_end) goto ghw_read_str_err;
+      if (p >= p_end) goto err_ghw_read_str;
       *p++ = 0;
 
       if (h->flag_verbose > 1)
@@ -496,8 +515,8 @@ ghw_read_str (struct ghw_handler *h)
     return -1;
   return 0;
 
-ghw_read_str_err:
-  printf("Invalid string entry in GHW file.\n");
+err_ghw_read_str:
+  fprintf(stderr, "Invalid string entry in GHW file.\n");
   ghw_error_exit();
 
 
@@ -623,7 +642,7 @@ ghw_read_array_subtype (struct ghw_handler *h, union ghw_type *base)
   sa->base = base;
   nbr_els = get_nbr_elements (arr->el);
   nbr_scalars = 1;
-  sa->rngs = malloc_unwrap (arr->nbr_dim * sizeof (union ghw_range *));
+  sa->rngs = calloc_unwrap (arr->nbr_dim, sizeof (union ghw_range *));
   for (j = 0; j < arr->nbr_dim; j++)
     {
       sa->rngs[j] = ghw_read_range (h);
@@ -666,7 +685,7 @@ ghw_read_record_subtype (struct ghw_handler *h, struct ghw_type_record *base)
       int nbr_scalars;
 
       sr->els =
-	malloc_unwrap (base->nbr_fields * sizeof (struct ghw_record_element));
+	calloc_unwrap (base->nbr_fields, sizeof (struct ghw_record_element));
       nbr_scalars = 0;
       for (j = 0; j < base->nbr_fields; j++)
 	{
@@ -724,13 +743,11 @@ ghw_read_type (struct ghw_handler *h)
 
   if (hdr[0] != 0 || hdr[1] != 0 || hdr[2] != 0 || hdr[3] != 0)
     return -1;
-  h->nbr_types = (uint32_t) ghw_get_i32 (h, &hdr[4]);
+
+  h->nbr_types = ghw_get_i32_positive (h, &hdr[4]);
 
   // Allocate type storage, initialize it to 0 to catch invalid accesses.
-  uint64_t h_types_size = (uint64_t)h->nbr_types * sizeof (union ghw_type *);
-  if (h_types_size > SIZE_MAX) ghw_error_exit();
-  h->types = (union ghw_type **) malloc_unwrap (h_types_size);
-  memset(h->types, 0, h_types_size);
+  h->types = (union ghw_type **) calloc_unwrap (h->nbr_types, sizeof (union ghw_type *));
 
   for (i = 0; i < h->nbr_types; i++)
     {
@@ -772,8 +789,8 @@ ghw_read_type (struct ghw_handler *h)
 	    h->types[i] = (union ghw_type *) e;
 	    break;
 	  err_rt_b2:
-	    if (e->lits != NULL) free (e->lits);
-	    if (e != NULL) free (e);
+	    free (e->lits);
+	    free (e);
 	    return -1;
 	  }
 	  break;
@@ -807,7 +824,7 @@ ghw_read_type (struct ghw_handler *h)
 
 		if (ghw_read_uleb128 (h, &ph->nbr_units) != 0)
 		  goto err_p32;
-		ph->units = malloc_unwrap (ph->nbr_units * sizeof (struct ghw_unit));
+		ph->units = calloc_unwrap (ph->nbr_units, sizeof (struct ghw_unit));
 		for (j = 0; j < ph->nbr_units; j++)
 		  {
 		    ph->units[j].name = ghw_read_strid (h);
@@ -851,7 +868,7 @@ ghw_read_type (struct ghw_handler *h)
 	    if (ghw_read_uleb128 (h, &arr->nbr_dim) != 0)
 	      goto err_array;
 	    arr->dims =
-	      (union ghw_type **) malloc_unwrap (arr->nbr_dim *
+	      (union ghw_type **) calloc_unwrap (arr->nbr_dim,
 					  sizeof (union ghw_type *));
 	    for (j = 0; j < arr->nbr_dim; j++)
 	      arr->dims[j] = ghw_read_typeid (h);
@@ -909,7 +926,7 @@ ghw_read_type (struct ghw_handler *h)
 	    if (ghw_read_uleb128 (h, &rec->nbr_fields) != 0)
 	      goto err_record;
 	    rec->els =
-	      malloc_unwrap (rec->nbr_fields * sizeof (struct ghw_record_element));
+	      calloc_unwrap (rec->nbr_fields, sizeof (struct ghw_record_element));
 	    nbr_scalars = 0;
 	    for (j = 0; j < rec->nbr_fields; j++)
 	      {
@@ -1171,8 +1188,7 @@ ghw_read_hie (struct ghw_handler *h)
   /* Number of declared signals (which may be composite).  */
   nbr_sigs = ghw_get_i32 (h, &hdr[8]);
   /* Number of basic signals.  */
-  h->nbr_sigs = (uint32_t) ghw_get_i32 (h, &hdr[12]);
-  if (h->nbr_sigs > UINT32_MAX - 10) ghw_error_exit();
+  h->nbr_sigs = ghw_get_i32_positive (h, &hdr[12]);
 
   if (h->flag_verbose)
     printf ("%d scopes, %d signals, %u signal elements\n", nbr_scopes,
@@ -1192,10 +1208,7 @@ ghw_read_hie (struct ghw_handler *h)
   h->skip_sigs = NULL;
   h->flag_full_names = 0;
   h->sigs_no_null = 0;
-  uint64_t sigs_size = (uint64_t)h->nbr_sigs * sizeof (struct ghw_sig);
-  if (sigs_size > SIZE_MAX) ghw_error_exit();
-  h->sigs = (struct ghw_sig *) malloc_unwrap (sigs_size);
-  memset (h->sigs, 0, sigs_size);
+  h->sigs = (struct ghw_sig *) calloc_unwrap (h->nbr_sigs, sizeof (struct ghw_sig));
 
   while (1)
     {
@@ -1247,7 +1260,7 @@ ghw_read_hie (struct ghw_handler *h)
 	case ghw_hie_design:
 	case ghw_hie_eos:
 	  /* Should not be here.  */
-	  ghw_error_exit();
+	  abort();
 	case ghw_hie_process:
 	  el->u.blk.child = NULL;
 	  break;
@@ -1287,7 +1300,7 @@ ghw_read_hie (struct ghw_handler *h)
 	    if (nbr_el < 0)
 	      return -1;
 	    sigs =
-	      (unsigned int *) malloc_unwrap ((nbr_el + 1) * sizeof (unsigned int));
+	      (unsigned int *) calloc_unwrap (nbr_el + 1, sizeof (unsigned int));
 	    el->u.sig.sigs = sigs;
 	    /* Last element is NULL.  */
 	    sigs[nbr_el] = 0;
@@ -1397,7 +1410,7 @@ print_name (struct ghw_hie *hie, int full_names)
       p = p->parent;
       ++depth;
     }
-  buf = (struct ghw_hie **) malloc_unwrap (depth * sizeof (struct ghw_hie *));
+  buf = (struct ghw_hie **) calloc_unwrap (depth, sizeof (struct ghw_hie *));
 
   p = hie;
   end = depth + buf;
@@ -1467,7 +1480,7 @@ ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top)
 	  break;
 	case ghw_hie_generic:
 	case ghw_hie_eos:
-	  ghw_error_exit();
+	  abort();
 	case ghw_hie_signal:
 	case ghw_hie_port_in:
 	case ghw_hie_port_out:
@@ -1498,7 +1511,7 @@ ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top)
 	  }
 	  break;
 	default:
-	  ghw_error_exit();
+	  abort();
 	}
       printf ("\n");
 
@@ -1810,7 +1823,7 @@ ghw_filter_signals (struct ghw_handler *h, int *signals_to_keep,
     {
       if (0 == h->skip_sigs)
 	{
-	  h->skip_sigs = (char *) malloc_unwrap (sizeof (char) * h->nbr_sigs);
+	  h->skip_sigs = (char *) calloc_unwrap (h->nbr_sigs, sizeof (char));
 	}
       for (i = 0; i < h->nbr_sigs; ++i)
 	{
