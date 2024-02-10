@@ -16,9 +16,11 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Ada.Unchecked_Deallocation;
 with Types; use Types;
 
 with Netlists; use Netlists;
+with Netlists.Utils;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
 
@@ -28,7 +30,6 @@ with Verilog.Bignums; use Verilog.Bignums;
 with Verilog.Sem_Utils;
 with Verilog.Allocates;
 with Verilog.Vpi;
-with Verilog.Nutils;
 
 with Elab.Memtype;
 
@@ -547,25 +548,23 @@ package body Synth.Verilog_Stmts is
    end Synth_Comb_Process;
 
    procedure Synth_FF_Single_Process_Inner (Inst : Synth_Instance_Acc;
-                                            Ev : Node;
+                                            Cond : Net;
+                                            Is_Pos : Boolean;
+                                            Loc : Node;
                                             Stmt : Node;
                                             Proc : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (Inst);
-      Edge_Expr : constant Node := Get_Expression (Ev);
-      Cond : Net;
       Edge : Net;
       Phi_True : Phi_Type;
       Phi_False : Phi_Type;
    begin
-      Cond := Get_Net (Ctxt, Synth_Expression (Inst, Edge_Expr));
-      case Nkinds_Edge (Get_Kind (Ev)) is
-         when N_Posedge =>
-            Edge := Build_Posedge (Ctxt, Cond);
-         when N_Negedge =>
-            Edge := Build_Negedge (Ctxt, Cond);
-      end case;
-      Set_Location (Edge, Edge_Expr);
+      if Is_Pos then
+         Edge := Build_Posedge (Ctxt, Cond);
+      else
+         Edge := Build_Negedge (Ctxt, Cond);
+      end if;
+      Set_Location (Edge, Loc);
 
       Push_Phi;
       Synth_Stmt (Inst, Stmt);
@@ -583,10 +582,15 @@ package body Synth.Verilog_Stmts is
                                       Proc : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (Inst);
+      Edge_Expr : constant Node := Get_Expression (Ev);
+      Is_Pos : constant Boolean := Nkinds_Edge (Get_Kind (Ev)) = N_Posedge;
+      Cond : Net;
    begin
       Push_Phi;
 
-      Synth_FF_Single_Process_Inner (Inst, Ev, Stmt, Proc);
+      Cond := Get_Net (Ctxt, Synth_Expression (Inst, Edge_Expr));
+
+      Synth_FF_Single_Process_Inner (Inst, Cond, Is_Pos, Ev, Stmt, Proc);
 
       Pop_And_Merge_Phi (Ctxt, Get_Location (Proc));
    end Synth_FF_Single_Process;
@@ -623,13 +627,31 @@ package body Synth.Verilog_Stmts is
       end case;
    end Count_Edge_Events;
 
+   --  Describe the event control.
+   type Edge_Entry is record
+      --  The HDL expression.
+      Ev : Node;
+
+      --  True for posedge, False for negedge.
+      Is_Pos : Boolean;
+
+      --  The net of the edge operator.
+      N : Net;
+   end record;
+
+   type Edge_Array is array (Nat32 range <>) of Edge_Entry;
+   type Edge_Arr_Acc is access Edge_Array;
+
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Edge_Array, Edge_Arr_Acc);
+
    procedure Fill_Edge_Events
-     (Evs : in out Node_Array; Pos : in out Nat32; Ev : Node) is
+     (Evs : in out Edge_Array; Pos : in out Nat32; Ev : Node) is
    begin
       case Get_Kind (Ev) is
          when Nkinds_Edge =>
             Pos := Pos + 1;
-            Evs (Pos) := Ev;
+            Evs (Pos) := (Ev, False, No_Net);
          when N_Or =>
             declare
                L, R : Node;
@@ -640,7 +662,7 @@ package body Synth.Verilog_Stmts is
                   L := Get_Left (L);
                   if Get_Kind (R) in Nkinds_Edge then
                      Pos := Pos + 1;
-                     Evs (Pos) := R;
+                     Evs (Pos) := (R, False, No_Net);
                   else
                      Fill_Edge_Events (Evs, Pos, L);
                      Fill_Edge_Events (Evs, Pos, R);
@@ -657,22 +679,35 @@ package body Synth.Verilog_Stmts is
       end case;
    end Fill_Edge_Events;
 
-   function Is_Same_Cond (L, R : Node) return Boolean is
+   function Is_Same_Cond (Ev : Edge_Entry; Cond_Net : Net) return Boolean
+   is
+      use Netlists.Utils;
+      N : Net;
    begin
-      if Get_Kind (L) /= Get_Kind (R) then
-         return False;
+      if Ev.Is_Pos then
+         N := Cond_Net;
+      else
+         declare
+            Parent : constant Instance := Get_Net_Parent (Cond_Net);
+         begin
+            if Get_Id (Parent) = Id_Not then
+               N := Get_Input_Net (Parent, 0);
+            else
+               --  Different edge.
+               return False;
+            end if;
+         end;
       end if;
-      case Get_Kind (L) is
-         when N_Name =>
-            return Get_Declaration (L) = Get_Declaration (R);
-         when others =>
-            Error_Kind ("is_same_cond", L);
-      end case;
+      return Same_Net (Ev.N, N);
    end Is_Same_Cond;
 
+   --  Synthesize a complex always process.
+   --  We need to extract the edge corresponding to the clock, so we have to
+   --  match each event with the condition of each 'if' statement.  The last
+   --  event is for the last 'else', which is the clock.
    procedure Synth_Complex_Edge_Process_If (Inst : Synth_Instance_Acc;
                                             Stmt : Node;
-                                            Evs : in out Node_Array;
+                                            Evs : in out Edge_Array;
                                             Proc : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (Inst);
@@ -688,37 +723,27 @@ package body Synth.Verilog_Stmts is
       end if;
 
       Cond := Get_Condition (Stmt);
-      if Get_Kind (Cond) = N_Unary_Op
-        and then Get_Unary_Op (Cond) = Unop_Bit_Neg
-      then
-         raise Internal_Error;
-      end if;
+      Cond_Net := Get_Net (Ctxt, Synth_Expression (Inst, Cond));
 
       --  Find the condition in EVS.
       declare
          Pos : Nat32;
-         E : Node;
       begin
          Pos := 0;
          for I in Evs'Range loop
-            E := Evs (I);
-            pragma Assert (Get_Kind (E) in Nkinds_Edge);
-            E := Get_Expression (E);
-            if Is_Same_Cond (E, Cond) then
+            if Is_Same_Cond (Evs (I), Cond_Net) then
                Pos := I;
                exit;
             end if;
          end loop;
          if Pos = 0 then
             --  Not found.
-            raise Internal_Error;
+            Error_Msg_Synth
+              (Inst, +Cond, "cannot find corresponding edge expression");
+            return;
          end if;
 
-         if Get_Kind (Evs (Pos)) = N_Negedge then
-            --  TODO
-            raise Internal_Error;
-         end if;
-
+         --  Remove the matching event from the list.
          Evs (Pos) := Evs (Evs'Last);
       end;
 
@@ -729,21 +754,22 @@ package body Synth.Verilog_Stmts is
       Push_Phi;
       False_Stmt := Get_False_Stmt (Stmt);
       if Evs'Last = 2 then
-         Synth_FF_Single_Process_Inner (Inst, Evs (1), False_Stmt, Proc);
+         Synth_FF_Single_Process_Inner
+           (Inst, Evs (1).N, Evs (1).Is_Pos, Evs (1).Ev, False_Stmt, Proc);
       else
          Synth_Complex_Edge_Process_If
            (Inst, False_Stmt, Evs (1 .. Evs'Last - 1), Proc);
       end if;
       Pop_Phi (Phi_False);
 
-      Cond_Net := Get_Net (Ctxt, Synth_Expression (Inst, Cond));
       Merge_Phis (Ctxt, Cond_Net, Phi_True, Phi_False, Get_Location (Stmt));
    end Synth_Complex_Edge_Process_If;
 
+   --  Complex always process controlled by edge events EVS.
    procedure Synth_Complex_Edge_Process_1 (Inst : Synth_Instance_Acc;
                                            Stmt : Node;
                                            Ev : Node;
-                                           Evs : in out Node_Array;
+                                           Evs : in out Edge_Array;
                                            Proc : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (Inst);
@@ -754,6 +780,17 @@ package body Synth.Verilog_Stmts is
       Fill_Edge_Events (Evs, Num, Ev);
       pragma Assert (Num = Evs'Last);
 
+      --  Compute the nets for the events.
+      for I in Evs'Range loop
+         declare
+            Ev : constant Node := Evs (I).Ev;
+            Edge_Expr : constant Node := Get_Expression (Ev);
+         begin
+            Evs (I).Is_Pos := Get_Kind (Ev) = N_Posedge;
+            Evs (I).N := Get_Net (Ctxt, Synth_Expression (Inst, Edge_Expr));
+         end;
+      end loop;
+
       Push_Phi;
 
       Synth_Complex_Edge_Process_If (Inst, Stmt, Evs, Proc);
@@ -761,13 +798,15 @@ package body Synth.Verilog_Stmts is
       Pop_And_Merge_Phi (Ctxt, Get_Location (Proc));
    end Synth_Complex_Edge_Process_1;
 
+   --  Complex always process controlled by (edge) event EV.
    procedure Synth_Complex_Edge_Process
      (Inst : Synth_Instance_Acc; Proc : Node; Stmt : Node; Ev : Node)
    is
       Nbr_Events : constant Nat32 := Count_Edge_Events (Ev);
       Stmt1 : Node;
    begin
-      --  Check statement.
+      --  Check statement: expect an 'if' statement (maybe within a begin-end
+      --  block).
       Stmt1 := Stmt;
       if Get_Kind (Stmt1) = N_Seq_Block then
          pragma Assert (Get_Block_Item_Declaration_Chain (Stmt1) = Null_Node);
@@ -785,18 +824,18 @@ package body Synth.Verilog_Stmts is
       --  2. Allocate and populate the array (TODO: duplicates ?)
       if Nbr_Events < 8 then
          declare
-            Evs : Node_Array (1 .. 8);
+            Evs : Edge_Array (1 .. 8);
          begin
             Synth_Complex_Edge_Process_1
               (Inst, Stmt1, Ev, Evs (1 .. Nbr_Events), Proc);
          end;
       else
          declare
-            Evs : Node_Arr_Acc;
+            Evs : Edge_Arr_Acc;
          begin
-            Evs := new Node_Array (1 .. Nbr_Events);
+            Evs := new Edge_Array (1 .. Nbr_Events);
             Synth_Complex_Edge_Process_1 (Inst, Stmt1, Ev, Evs.all, Proc);
-            Verilog.Nutils.Free (Evs);
+            Free (Evs);
          end;
       end if;
    end Synth_Complex_Edge_Process;
@@ -846,6 +885,7 @@ package body Synth.Verilog_Stmts is
       Sub_Stmt : Node;
       Ev : Node;
    begin
+      --  The first statement must be an event control.
       if Get_Kind (Stmt) /= N_Event_Control then
          raise Internal_Error;
       end if;

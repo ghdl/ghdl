@@ -330,7 +330,16 @@ package body Synth.Verilog_Exprs is
             when Binop_Log_Ne =>
                Res := Build_Compare (Ctxt, Id_Ne, Ln, Rn);
             when Binop_Log_Eq =>
-               Res := Build_Compare (Ctxt, Id_Eq, Ln, Rn);
+               --  Reduce 'N == 1'b0' to '!N'
+               --  That's the canonical form for clocks.
+               if Get_Width (Ln) = 1
+                 and then Is_Const_Net (Rn)
+                 and then Get_Net_Uns64 (Rn) = 0
+               then
+                  Res := Build_Monadic (Ctxt, Id_Not, Ln);
+               else
+                  Res := Build_Compare (Ctxt, Id_Eq, Ln, Rn);
+               end if;
             when Binop_Slt =>
                Res := Build_Compare (Ctxt, Id_Slt, Ln, Rn);
             when Binop_Ult =>
