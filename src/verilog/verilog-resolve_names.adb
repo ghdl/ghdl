@@ -1880,13 +1880,13 @@ package body Verilog.Resolve_Names is
             null;
          when N_Wire_Direct =>
             Resolve_Names_Data_Type (Item);
-            Resolve_Names (Get_Expression (Item));
             Add_Data_Object_Decl (Item);
+            Resolve_Names (Get_Expression (Item));
          when Nkinds_Delay_Nets =>
             Resolve_Names (Get_Net_Delay (Item));
             Resolve_Names_Data_Type (Item);
-            Resolve_Names (Get_Expression (Item));
             Add_Data_Object_Decl (Item);
+            Resolve_Names (Get_Expression (Item));
          when N_Port_Connection =>
             Resolve_Names (Get_Expression (Item));
          when N_Genvar =>
