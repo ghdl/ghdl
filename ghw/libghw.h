@@ -176,7 +176,7 @@ struct ghw_type_enum
   const char *name;
 
   enum ghw_wkt_type wkt;
-  unsigned int nbr;
+  uint32_t nbr;
   const char **lits;
 };
 
@@ -367,20 +367,20 @@ struct ghw_handler
 
   /* String table.  */
   /* Number of strings.  */
-  unsigned nbr_str;
+  uint32_t nbr_str;
   /* Size of the strings (without nul).  */
-  unsigned str_size;
+  uint32_t str_size;
   /* String table.  */
   char **str_table;
   /* Array containing strings.  */
   char *str_content;
 
   /* Type table.  */
-  unsigned nbr_types;
+  uint32_t nbr_types;
   union ghw_type **types;
 
   /* Non-composite (or basic) signals.  */
-  unsigned nbr_sigs;
+  uint32_t nbr_sigs;
   char *skip_sigs;
   int flag_full_names;
   struct ghw_sig *sigs;
