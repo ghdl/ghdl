@@ -86,7 +86,10 @@ package body Vhdl.Sensitivity_Checks is
          El := Get_Element (It);
 
          El_Obj := Name_To_Object (El);
-         if El_Obj = Obj then
+         if El_Obj = Null_Iir then
+            --  Nothing to do in case of error.
+            null;
+         elsif El_Obj = Obj then
             Ctxt.Referenced (Idx) := True;
             return;
          elsif Get_Kind (El_Obj) = Iir_Kind_Selected_Element
