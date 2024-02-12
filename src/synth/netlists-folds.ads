@@ -102,4 +102,11 @@ package Netlists.Folds is
    --  The old dyn_insert gate is removed.
    function Add_Enable_To_Dyn_Insert
      (Ctxt : Context_Acc; Inst : Instance; Sel : Net) return Instance;
+
+   --  Specially handle 'and' to canonicalize clock edge: move them to the
+   --  top of trees so that it is easily recognized by infere.
+   --  If KEEP is true, R and L shouldn't be modified.
+   function Build2_Canon_And (Ctxt : Context_Acc;
+                              R, L : Net;
+                              Keep : Boolean) return Net;
 end Netlists.Folds;

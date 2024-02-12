@@ -386,4 +386,57 @@ package body Netlists.Folds is
       return Get_Net_Parent (Res);
    end Add_Enable_To_Dyn_Insert;
 
+   function Build2_Canon_And (Ctxt : Context_Acc;
+                              R, L : Net;
+                              Keep : Boolean) return Net
+   is
+      Inst_L, Inst_R : Instance;
+      Inst_Pp : Instance;
+      E, N : Net;
+   begin
+      --  Swap R and L
+      if Get_Id (Get_Net_Parent (R)) in Edge_Module_Id then
+         return Build_Dyadic (Ctxt, Id_And, R, L);
+      end if;
+
+      --  L = Edge and X
+      --  Rotate with L parent: result = Edge and (R and X)
+      Inst_L := Get_Net_Parent (L);
+      if Get_Id (Inst_L) = Id_And then
+         E := Get_Input_Net (Inst_L, 0);
+         Inst_Pp := Get_Net_Parent (E);
+         if Get_Id (Inst_Pp) in Edge_Module_Id then
+            if Keep then
+               N := Build_Dyadic (Ctxt, Id_And, R, Get_Input_Net (Inst_L, 1));
+               Set_Location (N, Get_Location (Inst_L));
+            else
+               E := Disconnect_And_Get (Inst_L, 0);
+               Connect (Get_Input (Inst_L, 0), R);
+               N := L;
+            end if;
+            return Build_Dyadic (Ctxt, Id_And, E, N);
+         end if;
+      end if;
+
+      --  R = Edge and X
+      --  Rotate with R parent: result = Edge and (L and X)
+      Inst_R := Get_Net_Parent (R);
+      if Get_Id (Inst_R) = Id_And then
+         E := Get_Input_Net (Inst_R, 0);
+         Inst_Pp := Get_Net_Parent (E);
+         if Get_Id (Inst_Pp) in Edge_Module_Id then
+            if Keep then
+               N := Build_Dyadic (Ctxt, Id_And, L, Get_Input_Net (Inst_R, 1));
+               Set_Location (N, Get_Location (Inst_R));
+            else
+               E := Disconnect_And_Get (Inst_R, 0);
+               Connect (Get_Input (Inst_R, 0), L);
+               N := R;
+            end if;
+            return Build_Dyadic (Ctxt, Id_And, E, N);
+         end if;
+      end if;
+
+      return Build_Dyadic (Ctxt, Id_And, L, R);
+   end Build2_Canon_And;
 end Netlists.Folds;

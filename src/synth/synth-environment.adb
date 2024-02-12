@@ -1703,11 +1703,11 @@ package body Synth.Environment is
                   --  If the previous mux2 is not used, just modify it.
                   Res := N1_Net;
                   Disconnect (N1_Sel);
-                  N1_Sel_Net := Build_Dyadic (Ctxt, Id_And, Sel, N1_Sel_Net);
+                  N1_Sel_Net := Build2_Canon_And (Ctxt, Sel, N1_Sel_Net, True);
                   Set_Location (N1_Sel_Net, Loc);
                   Connect (N1_Sel, N1_Sel_Net);
                else
-                  Res := Build_Dyadic (Ctxt, Id_And, Sel, N1_Sel_Net);
+                  Res := Build2_Canon_And (Ctxt, Sel, N1_Sel_Net, True);
                   Set_Location (Res, Loc);
                   Res := Build_Mux2
                     (Ctxt, Res, N (0), Get_Driver (Get_Mux2_I1 (N1_Inst)));

@@ -87,7 +87,8 @@ package body Netlists.Inference is
             return True;
          when Id_And =>
             --  The condition is canonicalized, ie of the form:
-            --  CLK and EXPR.
+            --  CLK and EXPR (as AND gates must be always built with
+            --  build2_Canon_And).
             return Get_Id (Get_Input_Instance (Inst, 0)) in Edge_Module_Id;
          when others =>
             return False;

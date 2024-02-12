@@ -2206,44 +2206,6 @@ package body Synth.Vhdl_Expr is
       return Create_Value_Net (Res, Boolean_Type);
    end Synth_Psl_Onehot0;
 
-   --  Specially handle 'and' to canonicalize clock edge: move them to the
-   --  top of trees so that it is easily recognized by infere.
-   function Synth_And (Ctxt : Context_Acc; R, L : Net) return Net
-   is
-      Inst_L, Inst_R : Instance;
-      Inst_Pp : Instance;
-      E : Net;
-   begin
-      --  Swap R and L
-      if Get_Id (Get_Net_Parent (R)) in Edge_Module_Id then
-         return Build_Dyadic (Ctxt, Id_And, R, L);
-      end if;
-
-      --  Rotate with L parent.
-      Inst_L := Get_Net_Parent (L);
-      if Get_Id (Inst_L) = Id_And then
-         Inst_Pp := Get_Net_Parent (Get_Input_Net (Inst_L, 0));
-         if Get_Id (Inst_Pp) in Edge_Module_Id then
-            E := Disconnect_And_Get (Inst_L, 0);
-            Connect (Get_Input (Inst_L, 0), R);
-            return Build_Dyadic (Ctxt, Id_And, E, L);
-         end if;
-      end if;
-
-      --  Rotate with R parent.
-      Inst_R := Get_Net_Parent (R);
-      if Get_Id (Inst_R) = Id_And then
-         Inst_Pp := Get_Net_Parent (Get_Input_Net (Inst_R, 0));
-         if Get_Id (Inst_Pp) in Edge_Module_Id then
-            E := Disconnect_And_Get (Inst_R, 0);
-            Connect (Get_Input (Inst_R, 0), L);
-            return Build_Dyadic (Ctxt, Id_And, E, R);
-         end if;
-      end if;
-
-      return Build_Dyadic (Ctxt, Id_And, L, R);
-   end Synth_And;
-
    subtype And_Or_Module_Id is Module_Id range Id_And .. Id_Or;
 
    function Synth_Short_Circuit (Syn_Inst : Synth_Instance_Acc;
@@ -2315,7 +2277,7 @@ package body Synth.Vhdl_Expr is
 
       if Id = Id_And then
          --  Canonicalize edge: move it to the left.
-         N := Synth_And (Ctxt, Nl, Nr);
+         N := Build2_Canon_And (Ctxt, Nl, Nr, False);
       else
          N := Build_Dyadic (Ctxt, Id, Nl, Nr);
       end if;
