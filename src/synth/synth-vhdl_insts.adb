@@ -1476,9 +1476,10 @@ package body Synth.Vhdl_Insts is
    end Synth_Component_Instantiation_Statement;
 
    procedure Synth_Dependencies
-     (Parent_Inst : Synth_Instance_Acc; Unit : Node);
+     (Parent_Inst : Synth_Instance_Acc; Unit : Node; Start : Boolean);
 
-   procedure Synth_Dependency (Parent_Inst : Synth_Instance_Acc; Dep : Node)
+   procedure Synth_Dependency
+     (Parent_Inst : Synth_Instance_Acc; Dep : Node; Start : Boolean)
    is
       Unit : constant Node := Get_Library_Unit (Dep);
       Inst : Synth_Instance_Acc;
@@ -1496,18 +1497,18 @@ package body Synth.Vhdl_Insts is
             end if;
 
             Inst := Get_Package_Object (Parent_Inst, Unit);
-            if Get_Package_Used_Flag (Inst) then
+            if Get_Package_Used_Flag (Inst) = Start then
                --  Already handled.
                return;
             else
-               Set_Package_Used_Flag (Inst, True);
+               Set_Package_Used_Flag (Inst, Start);
             end if;
 
             declare
                Bod : constant Node := Get_Package_Body (Unit);
                Bod_Unit : Node;
             begin
-               Synth_Dependencies (Parent_Inst, Dep);
+               Synth_Dependencies (Parent_Inst, Dep, Start);
 
                Synth_Concurrent_Package_Declaration (Parent_Inst, Unit, True);
                --  Do not try to elaborate math_real body: there are
@@ -1518,20 +1519,20 @@ package body Synth.Vhdl_Insts is
                  and then Unit /= Vhdl.Ieee.Math_Real.Math_Real_Pkg
                then
                   Bod_Unit := Get_Design_Unit (Bod);
-                  Synth_Dependencies (Parent_Inst, Bod_Unit);
+                  Synth_Dependencies (Parent_Inst, Bod_Unit, Start);
                   Synth_Concurrent_Package_Body (Parent_Inst, Unit, Bod, True);
                end if;
             end;
          when Iir_Kind_Package_Instantiation_Declaration =>
             Inst := Get_Package_Object (Parent_Inst, Unit);
-            if Get_Package_Used_Flag (Inst) then
+            if Get_Package_Used_Flag (Inst) = Start then
                --  Already handled.
                return;
             else
-               Set_Package_Used_Flag (Inst, True);
+               Set_Package_Used_Flag (Inst, Start);
             end if;
 
-            Synth_Dependencies (Parent_Inst, Dep);
+            Synth_Dependencies (Parent_Inst, Dep, Start);
             Synth_Concurrent_Package_Instantiation (Parent_Inst, Unit, True);
          when Iir_Kind_Package_Body =>
             null;
@@ -1544,7 +1545,8 @@ package body Synth.Vhdl_Insts is
       end case;
    end Synth_Dependency;
 
-   procedure Synth_Dependencies (Parent_Inst : Synth_Instance_Acc; Unit : Node)
+   procedure Synth_Dependencies
+     (Parent_Inst : Synth_Instance_Acc; Unit : Node; Start : Boolean)
    is
       Dep_List : constant Node_List := Get_Dependence_List (Unit);
       Dep_It : List_Iterator;
@@ -1555,7 +1557,7 @@ package body Synth.Vhdl_Insts is
          Dep := Get_Element (Dep_It);
          --  Do not care about aspects, handle only unit dependencies.
          if Get_Kind (Dep) = Iir_Kind_Design_Unit then
-            Synth_Dependency (Parent_Inst, Dep);
+            Synth_Dependency (Parent_Inst, Dep, Start);
          end if;
          Next (Dep_It);
       end loop;
@@ -1600,8 +1602,8 @@ package body Synth.Vhdl_Insts is
       pragma Assert (Is_Expr_Pool_Empty);
 
       --  Dependencies first.
-      Synth_Dependencies (Root_Instance, Get_Design_Unit (Entity));
-      Synth_Dependencies (Root_Instance, Get_Design_Unit (Arch));
+      Synth_Dependencies (Root_Instance, Get_Design_Unit (Entity), True);
+      Synth_Dependencies (Root_Instance, Get_Design_Unit (Arch), True);
 
       Set_Extra
         (Syn_Inst, Base, New_Sname_User (Get_Identifier (Entity), No_Sname));
@@ -1821,7 +1823,7 @@ package body Synth.Vhdl_Insts is
          Inter := Get_Chain (Inter);
       end loop;
 
-      Synth_Dependencies (Root_Instance, Get_Design_Unit (Arch));
+      Synth_Dependencies (Root_Instance, Get_Design_Unit (Arch), True);
 
       Synth_Instance_Design (Syn_Inst, Entity, Arch);
 
