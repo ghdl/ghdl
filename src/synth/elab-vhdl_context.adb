@@ -265,6 +265,27 @@ package body Elab.Vhdl_Context is
       return Inst.Flag2;
    end Get_Indiv_Signal_Assoc_Parent_Flag;
 
+   procedure Set_Package_Elab_Flag (Inst : Synth_Instance_Acc) is
+   begin
+      Inst.Flag1 := True;
+   end Set_Package_Elab_Flag;
+
+   function Get_Package_Elab_Flag (Inst : Synth_Instance_Acc) return Boolean is
+   begin
+      return Inst.Flag1;
+   end Get_Package_Elab_Flag;
+
+   procedure Set_Package_Used_Flag
+     (Inst : Synth_Instance_Acc; Flag : Boolean) is
+   begin
+      Inst.Flag2 := Flag;
+   end Set_Package_Used_Flag;
+
+   function Get_Package_Used_Flag (Inst : Synth_Instance_Acc) return Boolean is
+   begin
+      return Inst.Flag2;
+   end Get_Package_Used_Flag;
+
    procedure Add_Extra_Instance (Inst : Synth_Instance_Acc;
                                  Extra : Synth_Instance_Acc) is
    begin

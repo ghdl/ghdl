@@ -1475,62 +1475,87 @@ package body Synth.Vhdl_Insts is
       Release_Expr_Pool (Marker);
    end Synth_Component_Instantiation_Statement;
 
+   procedure Synth_Dependencies
+     (Parent_Inst : Synth_Instance_Acc; Unit : Node);
+
+   procedure Synth_Dependency (Parent_Inst : Synth_Instance_Acc; Dep : Node)
+   is
+      Unit : constant Node := Get_Library_Unit (Dep);
+      Inst : Synth_Instance_Acc;
+   begin
+      case Iir_Kinds_Library_Unit (Get_Kind (Unit)) is
+         when Iir_Kind_Entity_Declaration =>
+            null;
+         when Iir_Kind_Configuration_Declaration =>
+            null;
+         when Iir_Kind_Context_Declaration =>
+            null;
+         when Iir_Kind_Package_Declaration =>
+            if Is_Uninstantiated_Package (Unit) then
+               return;
+            end if;
+
+            Inst := Get_Package_Object (Parent_Inst, Unit);
+            if Get_Package_Used_Flag (Inst) then
+               --  Already handled.
+               return;
+            else
+               Set_Package_Used_Flag (Inst, True);
+            end if;
+
+            declare
+               Bod : constant Node := Get_Package_Body (Unit);
+               Bod_Unit : Node;
+            begin
+               Synth_Dependencies (Parent_Inst, Dep);
+
+               Synth_Concurrent_Package_Declaration (Parent_Inst, Unit, True);
+               --  Do not try to elaborate math_real body: there are
+               --  functions with loop.  Currently, it tries to create
+               --  signals, which is not possible during package
+               --  elaboration.
+               if Bod /= Null_Node
+                 and then Unit /= Vhdl.Ieee.Math_Real.Math_Real_Pkg
+               then
+                  Bod_Unit := Get_Design_Unit (Bod);
+                  Synth_Dependencies (Parent_Inst, Bod_Unit);
+                  Synth_Concurrent_Package_Body (Parent_Inst, Unit, Bod, True);
+               end if;
+            end;
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Inst := Get_Package_Object (Parent_Inst, Unit);
+            if Get_Package_Used_Flag (Inst) then
+               --  Already handled.
+               return;
+            else
+               Set_Package_Used_Flag (Inst, True);
+            end if;
+
+            Synth_Dependencies (Parent_Inst, Dep);
+            Synth_Concurrent_Package_Instantiation (Parent_Inst, Unit, True);
+         when Iir_Kind_Package_Body =>
+            null;
+         when Iir_Kind_Architecture_Body =>
+            null;
+         when Iir_Kinds_Verification_Unit =>
+            null;
+         when Iir_Kind_Foreign_Module =>
+            raise Internal_Error;
+      end case;
+   end Synth_Dependency;
+
    procedure Synth_Dependencies (Parent_Inst : Synth_Instance_Acc; Unit : Node)
    is
       Dep_List : constant Node_List := Get_Dependence_List (Unit);
       Dep_It : List_Iterator;
       Dep : Node;
-      Dep_Unit : Node;
    begin
       Dep_It := List_Iterate (Dep_List);
       while Is_Valid (Dep_It) loop
          Dep := Get_Element (Dep_It);
-         if Get_Kind (Dep) = Iir_Kind_Design_Unit
-           and then not Get_Elab_Flag (Dep)
-         then
-            Set_Elab_Flag (Dep, True);
-            Dep_Unit := Get_Library_Unit (Dep);
-            case Iir_Kinds_Library_Unit (Get_Kind (Dep_Unit)) is
-               when Iir_Kind_Entity_Declaration =>
-                  null;
-               when Iir_Kind_Configuration_Declaration =>
-                  null;
-               when Iir_Kind_Context_Declaration =>
-                  null;
-               when Iir_Kind_Package_Declaration =>
-                  declare
-                     Bod : constant Node := Get_Package_Body (Dep_Unit);
-                     Bod_Unit : Node;
-                  begin
-                     Synth_Dependencies (Parent_Inst, Dep);
-                     Synth_Concurrent_Package_Declaration
-                       (Parent_Inst, Dep_Unit, True);
-                     --  Do not try to elaborate math_real body: there are
-                     --  functions with loop.  Currently, it tries to create
-                     --  signals, which is not possible during package
-                     --  elaboration.
-                     if Bod /= Null_Node
-                       and then Dep_Unit /= Vhdl.Ieee.Math_Real.Math_Real_Pkg
-                     then
-                        Bod_Unit := Get_Design_Unit (Bod);
-                        Synth_Dependencies (Parent_Inst, Bod_Unit);
-                        Synth_Concurrent_Package_Body
-                          (Parent_Inst, Dep_Unit, Bod, True);
-                     end if;
-                  end;
-               when Iir_Kind_Package_Instantiation_Declaration =>
-                  Synth_Dependencies (Parent_Inst, Dep);
-                  Synth_Concurrent_Package_Instantiation
-                    (Parent_Inst, Dep_Unit, True);
-               when Iir_Kind_Package_Body =>
-                  null;
-               when Iir_Kind_Architecture_Body =>
-                  null;
-               when Iir_Kinds_Verification_Unit =>
-                  null;
-               when Iir_Kind_Foreign_Module =>
-                  raise Internal_Error;
-            end case;
+         --  Do not care about aspects, handle only unit dependencies.
+         if Get_Kind (Dep) = Iir_Kind_Design_Unit then
+            Synth_Dependency (Parent_Inst, Dep);
          end if;
          Next (Dep_It);
       end loop;
@@ -1769,8 +1794,6 @@ package body Synth.Vhdl_Insts is
       --  path relative to the architecture filename.
       Elab.Vhdl_Files.Set_Current_Design_Unit (Arch);
 
-      Synth_Dependencies (Root_Instance, Get_Design_Unit (Arch));
-
       Set_Instance_Module (Syn_Inst, Inst.M);
       Self_Inst := Get_Self_Instance (Inst.M);
       Set_Location (Self_Inst, Entity);
@@ -1798,9 +1821,7 @@ package body Synth.Vhdl_Insts is
          Inter := Get_Chain (Inter);
       end loop;
 
-      --  Apply configuration.
-      --  FIXME: what about inner block configuration ?
-      pragma Assert (Get_Kind (Inst.Config) = Iir_Kind_Block_Configuration);
+      Synth_Dependencies (Root_Instance, Get_Design_Unit (Arch));
 
       Synth_Instance_Design (Syn_Inst, Entity, Arch);
 

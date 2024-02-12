@@ -109,6 +109,16 @@ package Elab.Vhdl_Context is
    function Get_Indiv_Signal_Assoc_Parent_Flag (Inst : Synth_Instance_Acc)
                                                return Boolean;
 
+   --  For synthesis: set on packages which have been 'elaborated' once.
+   --  This consists in applying attribute specifications.
+   procedure Set_Package_Elab_Flag (Inst : Synth_Instance_Acc);
+   function Get_Package_Elab_Flag (Inst : Synth_Instance_Acc) return Boolean;
+
+   --  For synthesis: set on packages used for the current module.
+   --  Possibly to create global signals, or to free constant nets.
+   procedure Set_Package_Used_Flag (Inst : Synth_Instance_Acc; Flag : Boolean);
+   function Get_Package_Used_Flag (Inst : Synth_Instance_Acc) return Boolean;
+
    --  Add/Get extra instances.
    --  Those instances are verification units.
    procedure Add_Extra_Instance (Inst : Synth_Instance_Acc;

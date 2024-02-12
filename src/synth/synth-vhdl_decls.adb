@@ -312,6 +312,7 @@ package body Synth.Vhdl_Decls is
       end loop;
    end Synth_Attribute_Specification;
 
+   --  Apply attribute specification.
    procedure Synth_Concurrent_Attribute_Specification
      (Syn_Inst : Synth_Instance_Acc; Spec : Node)
    is
@@ -327,6 +328,7 @@ package body Synth.Vhdl_Decls is
       Value := Get_Attribute_Value_Spec_Chain (Spec);
       while Value /= Null_Iir loop
          Val := Get_Value (Syn_Inst, Value);
+         --  TODO: check VAL is constant ?
          Synth_Attribute_Object (Syn_Inst, Value, Attr_Decl, Val);
 
          Value := Get_Spec_Chain (Value);
