@@ -136,12 +136,14 @@ package body Verilog.Vhdl_Export is
                --   the identifier of the port.
                null;
             when N_Localparam
-              | N_Var =>
+              | N_Var
+              | N_Genvar =>
                null;
             when Nkinds_Nets
               | N_Assign
               | N_Module_Instance
               | N_Generate_Region
+              | N_Loop_Generate
               | N_Always
               | N_Initial =>
                null;
