@@ -955,6 +955,33 @@ package body Synth.Verilog_Stmts is
       end loop;
    end Synth_Gate_Buf;
 
+   procedure Synth_Input_Gate (Inst : Synth_Instance_Acc;
+                               Op : Dyadic_Module_Id;
+                               N : Node)
+   is
+      Ctxt : constant Context_Acc := Get_Build (Inst);
+      Term_Out, Term_Inp, Term_Expr : Node;
+      Res, Last_Val : Valtyp;
+      Last_Net : Net;
+   begin
+      Term_Out := Get_Gate_Terminals (N);
+      Term_Inp := Get_Chain (Term_Out);
+      Res := Synth_Expression (Inst, Get_Expression (Term_Inp));
+
+      loop
+         Term_Inp := Get_Chain (Term_Inp);
+         exit when Term_Inp = Null_Node;
+         Term_Expr := Get_Expression (Term_Inp);
+         Last_Val := Synth_Expression (Inst, Term_Expr);
+         Last_Net := Build_Dyadic
+           (Ctxt, Op, Get_Net (Ctxt, Res), Get_Net (Ctxt, Last_Val));
+         Set_Location (Last_Net, N);
+         Res := Create_Value_Net (Last_Net, Get_Expr_Type (Term_Expr));
+      end loop;
+
+      Synth_Assign (Inst, True, Get_Expression (Term_Out), Res);
+   end Synth_Input_Gate;
+
    procedure Synth_Gate (Inst : Synth_Instance_Acc; N : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (Inst);
@@ -964,6 +991,8 @@ package body Synth.Verilog_Stmts is
       case Get_Kind (N) is
          when N_Gate_Buf =>
             Synth_Gate_Buf (Inst, N);
+         when N_Gate_Or =>
+            Synth_Input_Gate (Inst, Id_Or, N);
          when others =>
             Error_Kind ("synth_gate", N);
       end case;
