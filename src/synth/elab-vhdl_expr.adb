@@ -483,7 +483,7 @@ package body Elab.Vhdl_Expr is
       --  initially identifier, where a concurrent region is defined
       --  recursively to be
       --  - A block declarative region (including an external block and
-      --    any block equivalet to a generate statement), or
+      --    any block equivalent to a generate statement), or
       --  - A package declarative region (including a generic-mapped package
       --    equivalent to a package instantiation) declared immediately within
       --    a concurrent region.
@@ -500,6 +500,9 @@ package body Elab.Vhdl_Expr is
                | Iir_Kind_Block_Statement
                | Iir_Kind_Generate_Statement_Body =>
                return Cur_Inst;
+            when Iir_Kind_Component_Declaration =>
+               --  The implicit block for the component.
+               null;
             when Iir_Kind_Process_Statement
               | Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body =>
