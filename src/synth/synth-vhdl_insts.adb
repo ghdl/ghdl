@@ -60,6 +60,11 @@ with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 package body Synth.Vhdl_Insts is
    Global_Base_Instance : Base_Instance_Acc;
 
+   package Instance_Tables is new Dyn_Tables
+     (Table_Component_Type => Synth_Instance_Acc,
+      Table_Index_Type => Integer,
+      Table_Low_Bound => 0);
+
    procedure Synth_Instance_Design (Syn_Inst : Synth_Instance_Acc;
                                     Entity : Node;
                                     Arch : Node);
@@ -1475,11 +1480,13 @@ package body Synth.Vhdl_Insts is
       Release_Expr_Pool (Marker);
    end Synth_Component_Instantiation_Statement;
 
-   procedure Synth_Dependencies
-     (Parent_Inst : Synth_Instance_Acc; Unit : Node; Start : Boolean);
+   procedure Synth_Dependencies (Parent_Inst : Synth_Instance_Acc;
+                                 Unit : Node;
+                                 Pkgs : in out Instance_Tables.Instance);
 
-   procedure Synth_Dependency
-     (Parent_Inst : Synth_Instance_Acc; Dep : Node; Start : Boolean)
+   procedure Synth_Dependency (Parent_Inst : Synth_Instance_Acc;
+                               Dep : Node;
+                               Pkgs : in out Instance_Tables.Instance)
    is
       Unit : constant Node := Get_Library_Unit (Dep);
       Inst : Synth_Instance_Acc;
@@ -1497,20 +1504,26 @@ package body Synth.Vhdl_Insts is
             end if;
 
             Inst := Get_Package_Object (Parent_Inst, Unit);
-            if Get_Package_Used_Flag (Inst) = Start then
+            if Get_Package_Used_Flag (Inst) then
                --  Already handled.
                return;
             else
-               Set_Package_Used_Flag (Inst, Start);
+               Set_Package_Used_Flag (Inst, True);
             end if;
 
             declare
                Bod : constant Node := Get_Package_Body (Unit);
                Bod_Unit : Node;
             begin
-               Synth_Dependencies (Parent_Inst, Dep, Start);
+               Instance_Tables.Append (Pkgs, Inst);
 
-               Synth_Concurrent_Package_Declaration (Parent_Inst, Unit, True);
+               Synth_Dependencies (Parent_Inst, Dep, Pkgs);
+
+               if not Get_Package_Elab_Flag (Inst) then
+                  Synth_Concurrent_Package_Declaration
+                    (Parent_Inst, Unit, True);
+               end if;
+
                --  Do not try to elaborate math_real body: there are
                --  functions with loop.  Currently, it tries to create
                --  signals, which is not possible during package
@@ -1519,21 +1532,34 @@ package body Synth.Vhdl_Insts is
                  and then Unit /= Vhdl.Ieee.Math_Real.Math_Real_Pkg
                then
                   Bod_Unit := Get_Design_Unit (Bod);
-                  Synth_Dependencies (Parent_Inst, Bod_Unit, Start);
-                  Synth_Concurrent_Package_Body (Parent_Inst, Unit, Bod, True);
+                  Synth_Dependencies (Parent_Inst, Bod_Unit, Pkgs);
+                  if not Get_Package_Elab_Flag (Inst) then
+                     Synth_Concurrent_Package_Body
+                       (Parent_Inst, Unit, Bod, True);
+                  end if;
                end if;
+
+               Set_Package_Elab_Flag (Inst);
             end;
          when Iir_Kind_Package_Instantiation_Declaration =>
             Inst := Get_Package_Object (Parent_Inst, Unit);
-            if Get_Package_Used_Flag (Inst) = Start then
+            if Get_Package_Used_Flag (Inst) then
                --  Already handled.
                return;
             else
-               Set_Package_Used_Flag (Inst, Start);
+               Set_Package_Used_Flag (Inst, True);
             end if;
 
-            Synth_Dependencies (Parent_Inst, Dep, Start);
-            Synth_Concurrent_Package_Instantiation (Parent_Inst, Unit, True);
+            Instance_Tables.Append (Pkgs, Inst);
+
+            Synth_Dependencies (Parent_Inst, Dep, Pkgs);
+
+            if not Get_Package_Elab_Flag (Inst) then
+               Synth_Concurrent_Package_Instantiation
+                 (Parent_Inst, Unit, True);
+            end if;
+
+            Set_Package_Elab_Flag (Inst);
          when Iir_Kind_Package_Body =>
             null;
          when Iir_Kind_Architecture_Body =>
@@ -1545,8 +1571,9 @@ package body Synth.Vhdl_Insts is
       end case;
    end Synth_Dependency;
 
-   procedure Synth_Dependencies
-     (Parent_Inst : Synth_Instance_Acc; Unit : Node; Start : Boolean)
+   procedure Synth_Dependencies (Parent_Inst : Synth_Instance_Acc;
+                                 Unit : Node;
+                                 Pkgs : in out Instance_Tables.Instance)
    is
       Dep_List : constant Node_List := Get_Dependence_List (Unit);
       Dep_It : List_Iterator;
@@ -1557,7 +1584,7 @@ package body Synth.Vhdl_Insts is
          Dep := Get_Element (Dep_It);
          --  Do not care about aspects, handle only unit dependencies.
          if Get_Kind (Dep) = Iir_Kind_Design_Unit then
-            Synth_Dependency (Parent_Inst, Dep, Start);
+            Synth_Dependency (Parent_Inst, Dep, Pkgs);
          end if;
          Next (Dep_It);
       end loop;
@@ -1600,10 +1627,6 @@ package body Synth.Vhdl_Insts is
       end if;
 
       pragma Assert (Is_Expr_Pool_Empty);
-
-      --  Dependencies first.
-      Synth_Dependencies (Root_Instance, Get_Design_Unit (Entity), True);
-      Synth_Dependencies (Root_Instance, Get_Design_Unit (Arch), True);
 
       Set_Extra
         (Syn_Inst, Base, New_Sname_User (Get_Identifier (Entity), No_Sname));
@@ -1769,11 +1792,68 @@ package body Synth.Vhdl_Insts is
       Finalize_Declarations (Syn_Inst, Get_Port_Chain (Entity));
    end Synth_Instance_Design;
 
+   procedure Finalize_Package_Declarations
+     (Inst : Synth_Instance_Acc; Decls : Node)
+   is
+      Decl : Node;
+   begin
+      Decl := Decls;
+      while Decl /= Null_Node loop
+         case Get_Kind (Decl) is
+            when Iir_Kind_Constant_Declaration =>
+               declare
+                  Val : Valtyp;
+               begin
+                  if Get_Deferred_Declaration (Decl) = Null_Node
+                    or else Get_Deferred_Declaration_Flag (Decl)
+                  then
+                     Val := Get_Value (Inst, Decl);
+                     if Val.Val.Kind = Value_Const then
+                        Val.Val.C_Net := 0;
+                     end if;
+                  end if;
+               end;
+            when others =>
+               --  TODO: recurse on nested package, nested instantiation
+               null;
+         end case;
+         Decl := Get_Chain (Decl);
+      end loop;
+   end Finalize_Package_Declarations;
+
+   procedure Finalize_Package (Inst : Synth_Instance_Acc)
+   is
+      Pkg : constant Node := Get_Source_Scope (Inst);
+   begin
+      Set_Package_Used_Flag (Inst, False);
+
+      case Get_Kind (Pkg) is
+         when Iir_Kind_Package_Declaration =>
+            declare
+               Bod : constant Node := Get_Package_Body (Pkg);
+            begin
+               Finalize_Package_Declarations
+                 (Inst, Get_Declaration_Chain (Pkg));
+               if Bod /= Null_Node then
+                  Finalize_Package_Declarations
+                    (Inst, Get_Declaration_Chain (Bod));
+               end if;
+            end;
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            --  TODO: generics ?
+            Finalize_Package_Declarations
+              (Inst, Get_Declaration_Chain (Pkg));
+         when others =>
+            Vhdl.Errors.Error_Kind ("finalize_package", Pkg);
+      end case;
+   end Finalize_Package;
+
    procedure Synth_Instance (Inst : Inst_Object)
    is
       Entity : constant Node := Inst.Decl;
       Arch : constant Node := Inst.Arch;
       Syn_Inst : constant Synth_Instance_Acc := Inst.Syn_Inst;
+      Pkgs : Instance_Tables.Instance;
       Marker : Mark_Type;
       Self_Inst : Instance;
       Inter : Node;
@@ -1823,9 +1903,17 @@ package body Synth.Vhdl_Insts is
          Inter := Get_Chain (Inter);
       end loop;
 
-      Synth_Dependencies (Root_Instance, Get_Design_Unit (Arch), True);
+      Instance_Tables.Init (Pkgs, 16);
+
+      Synth_Dependencies (Root_Instance, Get_Design_Unit (Entity), Pkgs);
+      Synth_Dependencies (Root_Instance, Get_Design_Unit (Arch), Pkgs);
 
       Synth_Instance_Design (Syn_Inst, Entity, Arch);
+
+      for I in Instance_Tables.First .. Instance_Tables.Last (Pkgs) loop
+         Finalize_Package (Pkgs.Table (I));
+      end loop;
+      Instance_Tables.Free (Pkgs);
 
       Finalize_Wires;
 
