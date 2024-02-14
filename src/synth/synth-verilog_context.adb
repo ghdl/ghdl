@@ -64,6 +64,19 @@ package body Synth.Verilog_Context is
       return Inst.Name;
    end Get_Sname;
 
+   procedure Push_Sname
+     (Inst : Synth_Instance_Acc; Name : Sname; Prev : out Sname) is
+   begin
+      Prev := Inst.Name;
+      Inst.Name := Name;
+   end Push_Sname;
+
+   procedure Pop_Sname
+     (Inst : Synth_Instance_Acc; Prev : Sname) is
+   begin
+      Inst.Name := Prev;
+   end Pop_Sname;
+
    function Get_Scope (Inst : Synth_Instance_Acc) return Scope_Acc is
    begin
       return Inst.Scope;

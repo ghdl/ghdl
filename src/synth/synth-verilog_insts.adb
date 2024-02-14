@@ -476,7 +476,41 @@ package body Synth.Verilog_Insts is
    begin
       N := Chain;
       while N /= Null_Node loop
-         Call_Item (Inst, N);
+         case Get_Kind (N) is
+            when N_Generate_Region =>
+               Generic_Call_Items_Chain (Inst, Get_Generate_Item_Chain (N));
+            when N_Array_Generate_Block
+              | N_Generate_Block =>
+               declare
+                  Label : constant Name_Id := Get_Identifier (N);
+                  Name : Sname;
+                  Prev : Sname;
+               begin
+                  if Label = Null_Identifier then
+                     --  TODO: uniq name.
+                     Name := New_Sname_Artificial (Std_Names.Name_Generate);
+                  else
+                     Name := New_Sname_User (Label, Get_Sname (Inst));
+                  end if;
+                  Push_Sname (Inst, Name, Prev);
+                  Generic_Call_Items_Chain (Inst, Get_Generate_Item_Chain (N));
+                  Pop_Sname (Inst, Prev);
+               end;
+            when N_Indexed_Generate_Block =>
+               declare
+                  Prev : Sname;
+                  Name : Sname;
+               begin
+                  Name := New_Sname_Version
+                    (Types_Utils.To_Uns32 (Get_Generate_Index (N)),
+                    Get_Sname (Inst));
+                  Push_Sname (Inst, Name, Prev);
+                  Generic_Call_Items_Chain (Inst, Get_Generate_Item_Chain (N));
+                  Pop_Sname (Inst, Prev);
+               end;
+            when others =>
+               Call_Item (Inst, N);
+         end case;
          N := Get_Chain (N);
       end loop;
    end Generic_Call_Items_Chain;
@@ -581,10 +615,11 @@ package body Synth.Verilog_Insts is
             --  Replicated
             null;
          when N_Generate_Region
-            | N_Array_Generate_Block
-            | N_Indexed_Generate_Block
-            | N_Generate_Block =>
-            Synth_Decl_Items_Chain (Inst, Get_Generate_Item_Chain (N));
+           | N_Array_Generate_Block
+           | N_Generate_Block
+           | N_Indexed_Generate_Block =>
+            --  Handled by generic code
+            raise Internal_Error;
          when N_Module_Instance =>
             null;
 
@@ -635,7 +670,8 @@ package body Synth.Verilog_Insts is
             | N_Array_Generate_Block
             | N_Indexed_Generate_Block
             | N_Generate_Block =>
-            Synth_Initial_Items_Chain (Inst, Get_Generate_Item_Chain (N));
+            --  Handled by generic code
+            raise Internal_Error;
          when N_Module_Instance =>
             null;
 
@@ -687,7 +723,8 @@ package body Synth.Verilog_Insts is
             | N_Array_Generate_Block
             | N_Indexed_Generate_Block
             | N_Generate_Block =>
-            Synth_Always_Items_Chain (Inst, Get_Generate_Item_Chain (N));
+            --  Handled by generic code
+            raise Internal_Error;
          when N_Module_Instance =>
             Synth_Module_Instance (Inst, N);
 
@@ -801,7 +838,8 @@ package body Synth.Verilog_Insts is
             | N_Array_Generate_Block
             | N_Indexed_Generate_Block
             | N_Generate_Block =>
-            Synth_Finalize_Items_Chain (Inst, Get_Generate_Item_Chain (N));
+            --  Handled by generic code
+            raise Internal_Error;
 
          when N_Module_Instance =>
             null;

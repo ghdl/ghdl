@@ -85,6 +85,12 @@ package Synth.Verilog_Context is
    function Get_Sname (Inst : Synth_Instance_Acc) return Sname;
    pragma Inline (Get_Sname);
 
+   --  Modify the current name of the instance for hiearchy changes.
+   procedure Push_Sname
+     (Inst : Synth_Instance_Acc; Name : Sname; Prev : out Sname);
+   procedure Pop_Sname
+     (Inst : Synth_Instance_Acc; Prev : Sname);
+
    function Get_Build (Inst : Synth_Instance_Acc) return Context_Acc;
    pragma Inline (Get_Build);
 
