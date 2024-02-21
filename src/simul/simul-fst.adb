@@ -46,6 +46,7 @@ with Dyn_Maps;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Utils;
+with Vhdl.Std_Package;
 
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
@@ -89,6 +90,37 @@ package body Simul.Fst is
 
    procedure Free is new Ada.Unchecked_Deallocation
      (String, String_Access);
+
+   --  Note: the STR is not null terminated!
+   procedure Get_Id_From_Source (Name : Node;
+                                 Str : out Ghdl_C_String;
+                                 Len : out Natural)
+   is
+      use Name_Table;
+      Id : constant Name_Id := Get_Identifier (Name);
+      Loc : constant Location_Type := Get_Location (Name);
+      pragma Assert (Id /= Null_Identifier);
+      pragma Assert (not Is_Character (Id));
+   begin
+      Len := Get_Name_Length (Id);
+
+      if Loc /= No_Location
+        and then Loc /= Vhdl.Std_Package.Std_Location
+      then
+         declare
+            use Files_Map;
+            File : Source_File_Entry;
+            Pos : Source_Ptr;
+            Buf : File_Buffer_Acc;
+         begin
+            Location_To_File_Pos (Loc, File, Pos);
+            Buf := Get_File_Source (File);
+            Str := To_Ghdl_C_String (Buf (Pos)'Address);
+         end;
+      else
+         Str := To_Ghdl_C_String (Name_Table.Get_Address (Id));
+      end if;
+   end Get_Id_From_Source;
 
    function Get_C_String (Id : Name_Id) return Ghdl_C_String is
    begin
@@ -156,6 +188,7 @@ package body Simul.Fst is
          begin
             Val := new String (1 .. Nbits + 1);
 
+            --  Enum value (ASCII binary).
             V := Uns32 (I);
             for K in reverse 1 .. Nbits loop
                Val (K) := Character'Val (Character'Pos ('0') + (V and 1));
@@ -163,6 +196,7 @@ package body Simul.Fst is
             end loop;
             Val (Nbits + 1) := ASCII.NUL;
 
+            --  Enum name.
             Id := Get_Identifier (Get_Nth_Element (Lits, I));
             Vals (I) := Val;
             Val_Addr (I) := To_Ghdl_C_String (Vals (I)(1)'Address);
@@ -288,9 +322,15 @@ package body Simul.Fst is
    Buffer : Ghdl_C_String;
    Num_Buffer : String (1 .. 12);
 
-   procedure Append (Vstr : in out Vstring; Id : Name_Id) is
+   procedure Append (Vstr : in out Vstring; N : Node)
+   is
+      Str : Ghdl_C_String;
+      Len : Natural;
    begin
-      Append (Vstr, Get_C_String (Id));
+      Get_Id_From_Source (N, Str, Len);
+      for I in 1 .. Len loop
+         Append (Vstr, Str (I));
+      end loop;
    end Append;
 
    procedure Append (Vstr : in out Vstring; Val : Int64)
@@ -302,9 +342,9 @@ package body Simul.Fst is
       Append (Vstr, Buf (First .. Buf'Last));
    end Append;
 
-   function To_C_String (Id : Name_Id; Idx : Int32) return Ghdl_C_String is
+   function To_C_String (Decl : Node; Idx : Int32) return Ghdl_C_String is
    begin
-      if Id = Null_Identifier then
+      if Decl = Null_Node then
          declare
             First : Natural;
          begin
@@ -314,7 +354,7 @@ package body Simul.Fst is
             return To_Ghdl_C_String (Num_Buffer (First)'Address);
          end;
       else
-         return Get_C_String (Id);
+         return Get_C_String (Get_Identifier (Decl));
       end if;
    end To_C_String;
 
@@ -433,19 +473,19 @@ package body Simul.Fst is
       Parent : constant Synth_Instance_Acc := Get_Instance_Parent (Inst);
       Parent_Src : Node;
       St : fstScopeType;
-      Id : Name_Id;
-      Comp_Name : Ghdl_C_String;
+      Name : Node;
       Stem, Istem : Node;
+      Str : Vstring (32);
    begin
       if Parent /= Last then
          Push_Scope (Parent, Last);
       end if;
 
-      Comp_Name := null;
-
-      Id := Get_Identifier (Src);
       Stem := Src;
       Istem := Null_Node;
+
+      --  Default
+      Name := Src;
 
       case Get_Kind (Src) is
          when Iir_Kind_If_Generate_Statement =>
@@ -454,7 +494,6 @@ package body Simul.Fst is
             St := FST_ST_VHDL_FOR_GENERATE;
          when Iir_Kind_Generate_Statement_Body =>
             Parent_Src := Get_Parent (Src);
-            Id := Get_Identifier (Parent_Src);
 
             case Iir_Kinds_Generate_Statement (Get_Kind (Parent_Src)) is
                when Iir_Kind_For_Generate_Statement =>
@@ -462,21 +501,15 @@ package body Simul.Fst is
                      It : constant Node :=
                        Get_Parameter_Specification (Parent_Src);
                      Val : constant Valtyp := Get_Value (Inst, It);
-                     Str : Vstring (32);
                   begin
-                     Append (Str, Id);
+                     Append (Str, Parent_Src);
                      Append (Str, '(');
                      Append (Str, Read_Discrete (Val));
                      Append (Str, ')');
-                     Append (Str, NUL);
 
                      St := FST_ST_VHDL_FOR_GENERATE;
 
-                     Fst_Put_Stem (Stem, Istem);
-
-                     fstWriterSetScope (Context, St, Get_C_String (Str), null);
-                     Free (Str);
-                     return;
+                     Name := Null_Node;
                   end;
                when Iir_Kind_If_Generate_Statement =>
                   --  Continue with Id.
@@ -493,8 +526,9 @@ package body Simul.Fst is
             St := FST_ST_VHDL_ARCHITECTURE;
          when Iir_Kind_Architecture_Body =>
             St := FST_ST_VHDL_ARCHITECTURE;
-            Id := Get_Identifier (Vhdl.Utils.Get_Entity (Src));
-            if not (Flag_Components or else Parent = Root_Instance) then
+            if Flag_Components or else Parent = Root_Instance then
+               Name := Vhdl.Utils.Get_Entity (Src);
+            else
                --  Extract instance name.
                declare
                   Stmt : constant Node := Get_Statement_Scope (Inst);
@@ -503,8 +537,7 @@ package body Simul.Fst is
                     (Get_Kind (Stmt)
                        = Iir_Kind_Component_Instantiation_Statement);
                   Istem := Stmt;
-                  Comp_Name := Get_C_String (Id);
-                  Id := Get_Identifier (Stmt);
+                  Name := Stmt;
                end;
             end if;
          when Iir_Kind_Package_Declaration
@@ -519,9 +552,17 @@ package body Simul.Fst is
             raise Internal_Error;
       end case;
 
+      if Name /= Null_Node then
+         Append (Str, Name);
+      end if;
+
+      Append (Str, NUL);
+
       Fst_Put_Stem (Stem, Istem);
 
-      fstWriterSetScope (Context, St, Get_C_String (Id), Comp_Name);
+      fstWriterSetScope (Context, St, Get_C_String (Str), null);
+
+      Free (Str);
    end Push_Scope;
 
    function Is_Discarded_Scope (Inst : Synth_Instance_Acc) return Boolean is
@@ -599,13 +640,14 @@ package body Simul.Fst is
                                 Decl_Type : Node;
                                 Vd : fstVarDir;
                                 Is_Drv : Boolean;
-                                Id : Name_Id;
+                                Decl : Node;
                                 Idx : Int32)
    is
       Vt : fstVarType;
       Len : Uns32;
       Nbr_Sig : Uns32;
       Name_Len : Natural;
+      Name_Addr : Ghdl_C_String;
       Hand : fstHandle;
       Alias : fstHandle;
       Typ : Vcd_Type;
@@ -658,10 +700,10 @@ package body Simul.Fst is
             raise Internal_Error;
       end case;
 
-      if Id = Null_Identifier then
+      if Decl = Null_Node then
          Name_Len := Num32_Len;
       else
-         Name_Len := Name_Table.Get_Name_Length (Id);
+         Get_Id_From_Source (Decl, Name_Addr, Name_Len);
       end if;
 
       declare
@@ -669,7 +711,10 @@ package body Simul.Fst is
          Sig_Ptr : constant Ghdl_Signal_Ptr := Read_Sig (Sig);
          Prev_Idx : constant Dump_Table_Index := Sig_Ptr.Dump_Table_Idx;
       begin
-         if Prev_Idx /= 0 then
+         if Prev_Idx /= 0
+           and then Fst_Table.Table (Prev_Idx).W = Len
+         then
+            --  Can only alias the full vector (and not a part of it).
             Alias := Fst_Table.Table (Prev_Idx).Hand;
          else
             Alias := 0;
@@ -695,16 +740,13 @@ package body Simul.Fst is
          Str : Ghdl_C_String;
       begin
          Str := To_Ghdl_C_String (Name2'Address);
-         if Id = Null_Identifier then
+         if Decl = Null_Node then
             Name_Len := 0;
             Append (Idx);
          else
-            if Sig_Typ.Kind = Type_Vector then
-               Name2 (1 .. Name_Len) := Name_Table.Image (Id);
-            else
-               --  No need to copy.
-               Str := Get_C_String (Id);
-            end if;
+            for I in 1 .. Name_Len loop
+               Name2 (I) := Name_Addr (I);
+            end loop;
          end if;
 
          if Sig_Typ.Kind = Type_Vector then
@@ -748,7 +790,7 @@ package body Simul.Fst is
                              Decl_Type : Node;
                              Vd : fstVarDir;
                              Is_Drv : Boolean;
-                             Id : Name_Id;
+                             Decl : Node;
                              Idx : Int32)
    is
       use Simul.Vhdl_Simul;
@@ -756,7 +798,7 @@ package body Simul.Fst is
       case Typ.Kind is
          when Type_Scalars
            | Type_Vector =>
-            Add_Signal_Scalar (Sig, Typ, Decl_Type, Vd, Is_Drv, Id, Idx);
+            Add_Signal_Scalar (Sig, Typ, Decl_Type, Vd, Is_Drv, Decl, Idx);
          when Type_Record =>
             declare
                List : constant Node_Flist := Get_Elements_Declaration_List
@@ -764,12 +806,12 @@ package body Simul.Fst is
                El : Node;
             begin
                fstWriterSetScope
-                 (Context, FST_ST_VHDL_RECORD, To_C_String (Id, Idx), null);
+                 (Context, FST_ST_VHDL_RECORD, To_C_String (Decl, Idx), null);
                for I in Typ.Rec.E'Range loop
                   El := Get_Nth_Element (List, Natural (I - 1));
                   Add_Signal_Any (Sig_Index (Sig, Typ.Rec.E (I).Offs.Net_Off),
                                   Typ.Rec.E (I).Typ, Get_Type (El),
-                                  Vd, Is_Drv, Get_Identifier (El), 0);
+                                  Vd, Is_Drv, El, 0);
                end loop;
                fstWriterSetUpscope (Context);
             end;
@@ -785,7 +827,7 @@ package body Simul.Fst is
                   El_Type := Decl_Type;
                end if;
                fstWriterSetScope
-                 (Context, FST_ST_VCD_UNION, To_C_String (Id, Idx), null);
+                 (Context, FST_ST_VCD_UNION, To_C_String (Decl, Idx), null);
                for I in 1 .. Typ.Abound.Len loop
                   case Typ.Abound.Dir is
                      when Dir_To =>
@@ -794,8 +836,7 @@ package body Simul.Fst is
                         Sidx := Typ.Abound.Left - Int32 (I - 1);
                   end case;
                   Add_Signal_Any (Sig_Index (Sig, (I - 1) * El.W), El,
-                                  El_Type,
-                                  Vd, Is_Drv, Null_Identifier, Sidx);
+                                  El_Type, Vd, Is_Drv, Null_Node, Sidx);
                end loop;
                fstWriterSetUpscope (Context);
             end;
@@ -834,8 +875,7 @@ package body Simul.Fst is
             raise Internal_Error;
       end case;
 
-      Add_Signal_Any (S.Sig, S.Typ, Get_Type (S.Decl),
-                      Vd, Is_Drv, Get_Identifier (S.Decl), 0);
+      Add_Signal_Any (S.Sig, S.Typ, Get_Type (S.Decl), Vd, Is_Drv, S.Decl, 0);
    end Add_Signal;
 
    --  Classify an instance.
