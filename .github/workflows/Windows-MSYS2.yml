@@ -14,12 +14,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32' } ! not yet functional
-          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64' }
-          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64'  } #! experimental
-          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32' }
-#          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64' } #! simulation with mcode is not yet supported on win64
-          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64'  } #! experimental; simulation with mcode is not yet supported on win64
+#          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', arch: 'i686' } ! not yet functional
+          - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', arch: 'x86_64' }
+          - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64', arch: 'ucrt-x86_64'  } #! experimental
+          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', arch: 'i686'  }
+#          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', arch: 'x86_64' } #! simulation with mcode is not yet supported on win64
+          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64', arch: 'ucrt-x86_64'  } #! experimental; simulation with mcode is not yet supported on win64
 
     env:
       MINGW_ARCH: ${{ matrix.sys }}
@@ -31,9 +31,9 @@ jobs:
       - name: '${{ matrix.icon }} Setup MSYS2'
         uses: msys2/setup-msys2@v2
         with:
-          msystem: ${{ matrix.sys }}
+          msystem: ${{matrix.sys}}
           update: true
-          install: base-devel git
+          install: base-devel git mingw-w64-${{matrix.arch}}-gcc-ada mingw-w64-${{matrix.arch}}-zlib
           pacboy: toolchain:p
 
       - name: '⚙ git config'
@@ -52,7 +52,7 @@ jobs:
           cd scripts/msys2-${{ matrix.pkg }}
           makepkg-mingw --noconfirm --noprogressbar -sCLf
           for item in src pkg; do
-            tar czf msys2-${{ matrix.pkg }}."$item".tar.gz "$item"
+            tar czf msys2-${{matrix.pkg}}."$item".tar.gz "$item"
           done
 
       - name: '📤 Upload artifact: builddir'
