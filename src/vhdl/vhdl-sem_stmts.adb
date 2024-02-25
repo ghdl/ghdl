@@ -958,6 +958,7 @@ package body Vhdl.Sem_Stmts is
             Done := True;
             Target := Get_Target (Stmt);
             Constrained := Get_Kind (Target) /= Iir_Kind_Aggregate
+              and then Is_Object_Name (Target)
               and then Is_Object_Name_Fully_Constrained (Target);
          else
             Constrained := False;
