@@ -4,6 +4,8 @@
 
 export GHDL_STD_FLAGS=--std=08
 
+analyze_failure err1.vhdl 2>&1 | grep 'for LitB'
+
 if ghdl_is_preelaboration; then
     analyze tb.vhdl
     elab_simulate tb --fst=tb.fst
