@@ -190,6 +190,10 @@ package Errorout is
    procedure Disable_All_Warnings;
    procedure Restore_Warnings_Setting (Res : Warnings_Setting);
 
+   --  Utility: get the identifier image from sources, to keep casing.
+   function Get_Identifier_From_Source (Id : Name_Id; Loc : Location_Type)
+                                       return String;
+
    type Earg_Type is private;
    type Earg_Arr is array (Natural range <>) of Earg_Type;
 
@@ -295,6 +299,8 @@ package Errorout is
    procedure Register_Earg_Handler (Kind : Earg_Kind; Handler : Earg_Handler);
 
    procedure Output_Quoted_Identifier (Id : Name_Id);
+   procedure Output_Quoted_Identifier_From_Source
+     (Id : Name_Id; Loc : Location_Type);
    procedure Output_Identifier (Id : Name_Id);
    procedure Output_Location (Err : Error_Record; Loc : Location_Type);
    procedure Output_Message (S : String);

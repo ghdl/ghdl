@@ -181,26 +181,32 @@ package body Vhdl.Errors is
       raise Internal_Error;
    end Error_Internal;
 
+   function Image_Identifier_From_Source (N : Iir) return String
+   is
+      Loc : constant Location_Type := Get_Location (N);
+      Id : constant Name_Id := Get_Identifier (N);
+   begin
+      return Get_Identifier_From_Source (Id, Loc);
+   end Image_Identifier_From_Source;
+
    function Disp_Label (Node : Iir; Str : String) return String
    is
-      Id : Name_Id;
+      Id : constant Name_Id := Get_Label (Node);
    begin
-      Id := Get_Label (Node);
       if Id = Null_Identifier then
          return "(unlabeled) " & Str;
       else
-         return Str & " labeled """ & Name_Table.Image (Id) & """";
+         return Str & " labeled """
+           & Image_Identifier_From_Source (Node) & """";
       end if;
    end Disp_Label;
 
    -- Disp a node.
    -- Used for output of message.
    function Disp_Node (Node: Iir) return String is
-      function Disp_Identifier (Node : Iir) return String is
-         Id : Name_Id;
+      function Disp_Identifier (N : Iir) return String is
       begin
-         Id := Get_Identifier (Node);
-         return '"' & Name_Table.Image (Id) & '"';
+         return '"' & Image_Identifier_From_Source (N) & '"';
       end Disp_Identifier;
 
       function Disp_Identifier (Node : Iir; Str : String) return String is
@@ -248,12 +254,14 @@ package body Vhdl.Errors is
            | Iir_Kind_Physical_Fp_Literal =>
             return "physical literal";
          when Iir_Kind_Enumeration_Literal =>
-            return "enumeration literal " & Image_Identifier (Node);
+            return "enumeration literal "
+              & Image_Identifier_From_Source (Node);
          when Iir_Kind_Element_Declaration
            | Iir_Kind_Nature_Element_Declaration =>
             return Disp_Identifier (Node, "element");
          when Iir_Kind_Record_Element_Constraint =>
-            return "record element constraint " & Image_Identifier (Node);
+            return "record element constraint "
+              & Image_Identifier_From_Source (Node);
          when Iir_Kind_Array_Element_Resolution =>
             return "array element resolution";
          when Iir_Kind_Record_Resolution =>
@@ -301,7 +309,7 @@ package body Vhdl.Errors is
 
          when Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Enumeration_Type_Definition =>
-            return Image_Identifier (Get_Type_Declarator (Node));
+            return Image_Identifier_From_Source (Get_Type_Declarator (Node));
          when Iir_Kind_Wildcard_Type_Definition =>
             return "<any>";
          when Iir_Kind_Array_Type_Definition =>
@@ -407,7 +415,7 @@ package body Vhdl.Errors is
                   return "aspect " & Disp_Node (Ent);
                else
                   return "aspect " & Disp_Node (Ent)
-                    & '(' & Image_Identifier (Arch) & ')';
+                    & '(' & Image_Identifier_From_Source (Arch) & ')';
                end if;
             end;
          when Iir_Kind_Entity_Aspect_Configuration =>
@@ -559,8 +567,8 @@ package body Vhdl.Errors is
                   Arch := Get_Block_Specification
                     (Get_Block_Configuration (Node));
                   return "default configuration of "
-                    & Image_Identifier (Ent)
-                    & '(' & Image_Identifier (Arch) & ')';
+                    & Image_Identifier_From_Source (Ent)
+                    & '(' & Image_Identifier_From_Source (Arch) & ')';
                end if;
             end;
          when Iir_Kind_Context_Declaration =>
@@ -924,10 +932,12 @@ package body Vhdl.Errors is
          when Iir_Kind_Integer_Type_Definition =>
             return Image (Pos);
          when Iir_Kind_Enumeration_Type_Definition =>
-            return Name_Table.Image
-              (Get_Identifier (Get_Nth_Element
-                               (Get_Enumeration_Literal_List (Dtype),
-                                Natural (Pos))));
+            declare
+               Lit : constant Iir := Get_Nth_Element
+                 (Get_Enumeration_Literal_List (Dtype), Natural (Pos));
+            begin
+               return Image_Identifier_From_Source (Lit);
+            end;
          when others =>
             Error_Kind ("disp_discrete", Dtype);
       end case;
@@ -1032,11 +1042,11 @@ package body Vhdl.Errors is
       end if;
       Decl := Get_Type_Declarator (Def);
       if Decl /= Null_Iir then
-         return Image_Identifier (Decl);
+         return Image_Identifier_From_Source (Decl);
       end if;
       Decl := Get_Type_Declarator (Get_Base_Type (Def));
       if Decl /= Null_Iir then
-         return "a subtype of " & Image_Identifier (Decl);
+         return "a subtype of " & Image_Identifier_From_Source (Decl);
       else
          return "an unknown type";
       end if;
@@ -1147,7 +1157,8 @@ package body Vhdl.Errors is
    begin
       case Format is
          when 'i' =>
-            Output_Quoted_Identifier (Get_Identifier (N));
+            Output_Quoted_Identifier_From_Source
+              (Get_Identifier (N), Get_Location (N));
          when 'l' =>
             Output_Location (Err, Get_Location (N));
          when 'n' =>
