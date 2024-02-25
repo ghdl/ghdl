@@ -473,9 +473,10 @@ package body Simul.Fst is
       Parent : constant Synth_Instance_Acc := Get_Instance_Parent (Inst);
       Parent_Src : Node;
       St : fstScopeType;
-      Name : Node;
+      Name, Comp_Name : Node;
       Stem, Istem : Node;
       Str : Vstring (32);
+      Comp_Str : Vstring (32);
    begin
       if Parent /= Last then
          Push_Scope (Parent, Last);
@@ -486,12 +487,14 @@ package body Simul.Fst is
 
       --  Default
       Name := Src;
+      Comp_Name := Null_Node;
 
       case Get_Kind (Src) is
          when Iir_Kind_If_Generate_Statement =>
             St := FST_ST_VHDL_IF_GENERATE;
          when Iir_Kind_For_Generate_Statement =>
-            St := FST_ST_VHDL_FOR_GENERATE;
+            --  Merged with the generate body.
+            return;
          when Iir_Kind_Generate_Statement_Body =>
             Parent_Src := Get_Parent (Src);
 
@@ -514,9 +517,11 @@ package body Simul.Fst is
                when Iir_Kind_If_Generate_Statement =>
                   --  Continue with Id.
                   St := FST_ST_VHDL_IF_GENERATE;
+                  Name := Parent_Src;
                when Iir_Kind_Case_Generate_Statement =>
                   --  Continue with Id.
                   St := FST_ST_VHDL_GENERATE;
+                  Name := Parent_Src;
             end case;
          when Iir_Kind_Case_Generate_Statement =>
             St := FST_ST_VHDL_GENERATE;
@@ -538,6 +543,7 @@ package body Simul.Fst is
                        = Iir_Kind_Component_Instantiation_Statement);
                   Istem := Stmt;
                   Name := Stmt;
+                  Comp_Name := Vhdl.Utils.Get_Entity (Src);
                end;
             end if;
          when Iir_Kind_Package_Declaration
@@ -555,23 +561,34 @@ package body Simul.Fst is
       if Name /= Null_Node then
          Append (Str, Name);
       end if;
-
       Append (Str, NUL);
+
+      if Comp_Name /= Null_Node then
+         Append (Comp_Str, Comp_Name);
+      end if;
+      Append (Comp_Str, NUL);
 
       Fst_Put_Stem (Stem, Istem);
 
-      fstWriterSetScope (Context, St, Get_C_String (Str), null);
+      fstWriterSetScope
+        (Context, St, Get_C_String (Str), Get_C_String (Comp_Str));
 
       Free (Str);
    end Push_Scope;
 
-   function Is_Discarded_Scope (Inst : Synth_Instance_Acc) return Boolean is
+   function Is_Discarded_Scope (Inst : Synth_Instance_Acc) return Boolean
+   is
+      Kind : constant Iir_Kind := Get_Kind (Get_Source_Scope (Inst));
    begin
+      if Kind = Iir_Kind_For_Generate_Statement then
+         --  Those are merged with their generate body.
+         return True;
+      end if;
+
       if Flag_Components then
          return False;
       end if;
-      return (Get_Kind (Get_Source_Scope (Inst))
-                = Iir_Kind_Component_Declaration);
+      return Kind = Iir_Kind_Component_Declaration;
    end Is_Discarded_Scope;
 
    procedure Adjust_Scope (Prev_Depth : in out Natural;
