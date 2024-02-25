@@ -303,12 +303,15 @@ package body Simul.Fst is
 
    subtype Vcd_Vector_Type is Vcd_Type range Vcd_Bitvect .. Vcd_Logvect;
 
+   --  Important data used to dump a signal.
    type Fst_Sig_Info is record
       Typ : Vcd_Type;
       Is_Drv : Boolean;
       Seen : Boolean;
-      Sig : Memory_Ptr;
       W : Uns32;  --  Width (for fst).
+      --  Sub-aliases
+      Alias : Dump_Table_Index;
+      Sig : Memory_Ptr;
       Hand : fstHandle;
    end record;
 
@@ -381,7 +384,7 @@ package body Simul.Fst is
    type Map_Type is array (Ghdl_E8 range 0 .. 8) of Character;
    From_Log : constant Map_Type := "UX01ZWLH-";
 
-   procedure Fst_Put_Var (S : Fst_Sig_Info) is
+   procedure Fst_Put_Var_1 (S : Fst_Sig_Info) is
    begin
       case S.Typ is
          when Vcd_Bit =>
@@ -431,6 +434,18 @@ package body Simul.Fst is
             return;
       end case;
       fstWriterEmitValueChange (Context, S.Hand, Buffer (1)'Address);
+   end Fst_Put_Var_1;
+
+   procedure Fst_Put_Var (S : Fst_Sig_Info)
+   is
+      Alias : Dump_Table_Index;
+   begin
+      Fst_Put_Var_1 (S);
+      Alias := S.Alias;
+      while Alias /= 0 loop
+         Fst_Put_Var_1 (Fst_Table.Table (Alias));
+         Alias := Fst_Table.Table (Alias).Alias;
+      end loop;
    end Fst_Put_Var;
 
    procedure Get_File_Line (N : Node;
@@ -667,6 +682,7 @@ package body Simul.Fst is
       Name_Addr : Ghdl_C_String;
       Hand : fstHandle;
       Alias : fstHandle;
+      Sub_Alias : Dump_Table_Index;
       Typ : Vcd_Type;
       Info : Fst_Sig_Info;
    begin
@@ -727,14 +743,20 @@ package body Simul.Fst is
          use Simul.Vhdl_Simul;
          Sig_Ptr : constant Ghdl_Signal_Ptr := Read_Sig (Sig);
          Prev_Idx : constant Dump_Table_Index := Sig_Ptr.Dump_Table_Idx;
+         Prev_Len : Uns32;
       begin
-         if Prev_Idx /= 0
-           and then Fst_Table.Table (Prev_Idx).W = Len
-         then
-            --  Can only alias the full vector (and not a part of it).
-            Alias := Fst_Table.Table (Prev_Idx).Hand;
-         else
-            Alias := 0;
+         Alias := 0;
+         Sub_Alias := 0;
+
+         if Prev_Idx /= 0 then
+            Prev_Len := Fst_Table.Table (Prev_Idx).W;
+            if Prev_Len = Len then
+               --  FST can only alias the full vector (and not a part of it).
+               Alias := Fst_Table.Table (Prev_Idx).Hand;
+            else
+               pragma Assert (Prev_Len > Len);
+               Sub_Alias := Prev_Idx;
+            end if;
          end if;
       end;
 
@@ -788,17 +810,24 @@ package body Simul.Fst is
          Info := Fst_Sig_Info'(Typ => Typ,
                                Is_Drv => Is_Drv,
                                Seen => False,
+                               Alias => 0,
                                Sig => Sig,
                                W => Len,
                                Hand => Hand);
          Fst_Table.Append (Info);
 
-         --  And set the dump index.
-         for I in 1 .. Nbr_Sig loop
-            Get_Signal (Info, I - 1).Dump_Table_Idx := Fst_Table.Last;
-         end loop;
+         if Sub_Alias /= 0 then
+            Fst_Table.Table (Fst_Table.Last).Alias :=
+              Fst_Table.Table (Sub_Alias).Alias;
+            Fst_Table.Table (Sub_Alias).Alias := Fst_Table.Last;
+         else
+            --  And set the dump index.
+            for I in 1 .. Nbr_Sig loop
+               Get_Signal (Info, I - 1).Dump_Table_Idx := Fst_Table.Last;
+            end loop;
 
-         Max_Width := Uns32'Max (Max_Width, Len);
+            Max_Width := Uns32'Max (Max_Width, Len);
+         end if;
       end if;
    end Add_Signal_Scalar;
 
