@@ -1,0 +1,7 @@
+#20000000 recursive_xor_tb.dut.g_recursion.g_split(0).u_split.g_recursion.g_split(0).u_split.xi[1:0] 01
+#20000000 recursive_xor_tb.dut.g_recursion.g_split(0).u_split.xi[3:0] 0001
+#20000000 recursive_xor_tb.xi[7:0] 00000001
+#80000000 recursive_xor_tb.dut.g_recursion.g_split(0).u_split.g_recursion.g_split(1).u_split.xi[1:0] 01
+#320000000 recursive_xor_tb.dut.g_recursion.g_split(1).u_split.xi[3:0] 0001
+#320000000 recursive_xor_tb.dut.g_recursion.g_split(1).u_split.g_recursion.g_split(0).u_split.xi[1:0] 01
+#1280000000 recursive_xor_tb.dut.g_recursion.g_split(1).u_split.g_recursion.g_split(1).u_split.xi[1:0] 01
