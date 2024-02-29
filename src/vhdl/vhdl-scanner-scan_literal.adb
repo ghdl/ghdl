@@ -77,7 +77,7 @@ begin
    C := Source (Pos);
    D := 0;
    loop
-      D := D * 10 + Character'Pos (C) - Character'Pos ('0');
+      D := D * 10 + (Character'Pos (C) - Character'Pos ('0'));
 
       Pos := Pos + 1;
       C := Source (Pos);
