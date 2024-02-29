@@ -478,16 +478,40 @@ package body Synth.Disp_Vhdl is
       end if;
    end Disp_Output_Port_Converter;
 
+   function Has_Floating_Type (Atype : Node) return Boolean is
+   begin
+      case Get_Kind (Atype) is
+         when Iir_Kind_Floating_Subtype_Definition =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Floating_Type;
+
    procedure Disp_Vhdl_Wrapper
      (Ent : Node; Top : Module; Inst : Synth_Instance_Acc)
    is
       Unit : constant Node := Get_Design_Unit (Ent);
       Main : Module;
+      Inter : Node;
    begin
       --  Extract the first user submodule.
       Main := Get_First_Sub_Module (Top);
       while Get_Id (Main) < Id_User_None loop
          Main := Get_Next_Sub_Module (Main);
+      end loop;
+
+      --  Ports with a floating point type are not supported.
+      Inter := Get_Port_Chain (Ent);
+      while Inter /= Null_Node loop
+         if Has_Floating_Type (Get_Type (Inter)) then
+            Error_Msg_Elab
+              (Inter, "cannot output vhdl: %n has a floating point type",
+               (1 => +Inter));
+            return;
+         end if;
+
+         Inter := Get_Chain (Inter);
       end loop;
 
       --  Disp the original design unit.
