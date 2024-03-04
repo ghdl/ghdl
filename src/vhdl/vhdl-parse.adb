@@ -7721,6 +7721,7 @@ package body Vhdl.Parse is
       Res : Iir;
       Target : Iir;
       With_Loc : Location_Type;
+      Matching : Location_Type;
    begin
       With_Loc := Get_Token_Location;
 
@@ -7730,6 +7731,17 @@ package body Vhdl.Parse is
       Expr := Parse_Case_Expression;
 
       Expect_Scan (Tok_Select, "'select' expected after expression");
+
+      --  Check ? for matching case
+      Matching := No_Location;
+      if Flags.Vhdl_Std >= Vhdl_08
+        and then Current_Token = Tok_Question_Mark
+      then
+         Matching := Get_Token_Location;
+
+         --  Skip '?'.
+         Scan;
+      end if;
 
       if Current_Token = Tok_Left_Paren then
          Target := Parse_Aggregate;
@@ -7759,6 +7771,10 @@ package body Vhdl.Parse is
 
       --  Skip '<=' or ':='.
       Scan;
+
+      if Matching /= No_Location then
+         Set_Matching_Flag (Res, True);
+      end if;
 
       case Kind is
          when Iir_Kind_Concurrent_Selected_Signal_Assignment =>

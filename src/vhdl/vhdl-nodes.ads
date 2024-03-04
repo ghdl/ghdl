@@ -3435,6 +3435,9 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
+   -- Only for Iir_Kind_Concurrent_Selected_Signal_Assignment:
+   --   Get/Set_Matching_Flag (Flag5)
+   --
    --  True if the target of the assignment is guarded
    --   Get/Set_Guarded_Target_State (State1)
    --
@@ -4122,6 +4125,9 @@ package Vhdl.Nodes is
    -- Only for Iir_Kind_Selected_Waveform_Assignment_Statement:
    --   Get/Set_Selected_Waveform_Chain (Field7)
    --
+   -- Only for Iir_Kind_Selected_Waveform_Assignment_Statement:
+   --   Get/Set_Matching_Flag (Flag5)
+   --
    --   Get/Set_Delay_Mechanism (Flag1)
    --
    --   Get/Set_Has_Delay_Mechanism (Flag2)
@@ -4175,6 +4181,9 @@ package Vhdl.Nodes is
    --
    -- Only for Iir_Kind_Selected_Variable_Assignment_Statement:
    --   Get/Set_Selected_Expressions_Chain (Field7)
+   --
+   -- Only for Iir_Kind_Selected_Variable_Assignment_Statement:
+   --   Get/Set_Matching_Flag (Flag5)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -4264,7 +4273,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Expression (Field5)
    --
-   --   Get/Set_Matching_Flag (Flag1)
+   --   Get/Set_Matching_Flag (Flag5)
    --
    --  Chain is composed of Iir_Kind_Choice_By_XXX.
    --   Get/Set_Case_Statement_Alternative_Chain (Field1)
@@ -9583,7 +9592,7 @@ package Vhdl.Nodes is
    procedure Set_Case_Statement_Alternative_Chain (Target : Iir; Chain : Iir);
 
    --  Matching condition for case statement.
-   --  Field: Flag1
+   --  Field: Flag5
    function Get_Matching_Flag (Target : Iir) return Boolean;
    procedure Set_Matching_Flag (Target : Iir; Flag : Boolean);
 

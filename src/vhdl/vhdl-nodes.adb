@@ -6720,7 +6720,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Matching_Flag (Get_Kind (Target)),
                      "no field Matching_Flag");
-      return Get_Flag1 (Target);
+      return Get_Flag5 (Target);
    end Get_Matching_Flag;
 
    procedure Set_Matching_Flag (Target : Iir; Flag : Boolean) is
@@ -6728,7 +6728,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Matching_Flag (Get_Kind (Target)),
                      "no field Matching_Flag");
-      Set_Flag1 (Target, Flag);
+      Set_Flag5 (Target, Flag);
    end Set_Matching_Flag;
 
    function Get_Choice_Staticness (Target : Iir) return Iir_Staticness is

@@ -391,22 +391,28 @@ package body Vhdl.Prints is
       Close_Hbox (Ctxt);
    end Disp_End;
 
-   procedure Disp_End_Label_No_Close
-     (Ctxt : in out Ctxt_Class; Stmt : Iir; Tok : Token_Type) is
+   procedure Disp_Matching (Ctxt : in out Ctxt_Class; Stmt : Iir) is
+   begin
+      if Get_Matching_Flag (Stmt) then
+         Disp_Token (Ctxt, Tok_Question_Mark);
+      end if;
+   end Disp_Matching;
+
+   procedure Disp_End_Label (Ctxt : in out Ctxt_Class;
+                             Stmt : Iir;
+                             Tok : Token_Type;
+                             With_Matching : Boolean := False) is
    begin
       Start_Hbox (Ctxt);
       Disp_Token (Ctxt, Tok_End);
       Disp_Token (Ctxt, Tok);
+      if With_Matching then
+         Disp_Matching (Ctxt, Stmt);
+      end if;
       if Get_End_Has_Identifier (Stmt) then
          Disp_Ident (Ctxt, Get_Label (Stmt));
       end if;
       Disp_Token (Ctxt, Tok_Semi_Colon);
-   end Disp_End_Label_No_Close;
-
-   procedure Disp_End_Label
-     (Ctxt : in out Ctxt_Class; Stmt : Iir; Tok : Token_Type) is
-   begin
-      Disp_End_Label_No_Close (Ctxt, Stmt, Tok);
       Close_Hbox (Ctxt);
    end Disp_End_Label;
 
@@ -2853,6 +2859,7 @@ package body Vhdl.Prints is
       Disp_Token (Ctxt, Tok_With);
       Print (Ctxt, Get_Expression (Stmt));
       Disp_Token (Ctxt, Tok_Select);
+      Disp_Matching (Ctxt, Stmt);
       Print (Ctxt, Get_Target (Stmt));
       Disp_Token (Ctxt, Tok_Less_Equal);
       Disp_Delay_Mechanism (Ctxt, Stmt);
@@ -2971,6 +2978,7 @@ package body Vhdl.Prints is
       Disp_Token (Ctxt, Tok_With);
       Print (Ctxt, Get_Expression (Stmt));
       Disp_Token (Ctxt, Tok_Select);
+      Disp_Matching (Ctxt, Stmt);
       Print (Ctxt, Get_Target (Stmt));
       Disp_Token (Ctxt, Tok_Less_Equal);
       if Get_Guard (Stmt) /= Null_Iir then
@@ -3219,7 +3227,10 @@ package body Vhdl.Prints is
       Assoc: Iir;
       Sel_Stmt : Iir;
    begin
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
       Disp_Token (Ctxt, Tok_Case);
+      Disp_Matching (Ctxt, Stmt);
       Print (Ctxt, Get_Expression (Stmt));
       Close_Hbox (Ctxt);
       Start_Hbox (Ctxt);
@@ -3242,7 +3253,7 @@ package body Vhdl.Prints is
       end loop;
       Close_Vbox (Ctxt);
 
-      Disp_End_Label_No_Close (Ctxt, Stmt, Tok_Case);
+      Disp_End_Label (Ctxt, Stmt, Tok_Case, With_Matching => True);
    end Disp_Case_Statement;
 
    procedure Disp_Wait_Statement
@@ -3453,10 +3464,7 @@ package body Vhdl.Prints is
                Disp_Token (Ctxt, Tok_Semi_Colon);
                Close_Hbox (Ctxt);
             when Iir_Kind_Case_Statement =>
-               Start_Hbox (Ctxt);
-               Disp_Label (Ctxt, Stmt);
                Disp_Case_Statement (Ctxt, Stmt);
-               Close_Hbox (Ctxt);
             when Iir_Kind_Wait_Statement =>
                Disp_Wait_Statement (Ctxt, Stmt);
             when Iir_Kind_Procedure_Call_Statement =>
