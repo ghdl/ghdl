@@ -180,6 +180,13 @@ Here is the list of the most useful options. For further info, see :ref:`DEV:Deb
 
   Trace vhpi calls. Trace is printed to :file:`FILENAME` if provided, otherwise to stdout.
 
+.. option:: --coverage
+
+  Generate coverage information about the simulation.  A JSON file
+  (whose name is :file:'coverage-DATETIME.json') is generated at the
+  end of the simulation.  You can use the ``coverage`` command to merge
+  results and generate reports.
+
 .. option:: --help
 
   Display a short description of the options accepted by the runtime library.
