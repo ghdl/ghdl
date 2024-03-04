@@ -32,5 +32,5 @@ begin
 
   rst <= '1', '0' after 10 ns;
 
-  lim <= x"12";
+  lim <= "00010010"; -- x"12"
 end behav;
