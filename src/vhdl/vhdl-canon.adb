@@ -2094,6 +2094,7 @@ package body Vhdl.Canon is
          Set_Parent (Stmt, Parent);
          Set_Sequential_Statement_Chain (Parent, Stmt);
          Location_Copy (Stmt, Conc_Stmt);
+         Set_Matching_Flag (Stmt, Get_Matching_Flag (Conc_Stmt));
 
          Set_Expression (Stmt, Expr);
 

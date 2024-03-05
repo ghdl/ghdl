@@ -22,6 +22,7 @@ with Vhdl.Canon;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Ieee.Std_Logic_1164;
 with Trans.Chap2;
 with Trans.Chap3;
 with Trans.Chap4;
@@ -1357,26 +1358,59 @@ package body Trans.Chap8 is
    end Translate_Report_Statement;
 
    --  Helper to compare a string choice with the selector.
-   function Translate_Simple_String_Choice (Expr     : Mnode;
-                                            Val      : Mnode;
-                                            Func     : Iir) return O_Enode
+   function Translate_Simple_String_Choice (Expr : Mnode;
+                                            Val  : Mnode;
+                                            Func : Iir) return O_Enode
    is
       Assoc     : O_Assoc_List;
-      Func_Info : Operator_Info_Acc;
    begin
       case Get_Implicit_Definition (Func) is
          when Iir_Predefined_Std_Ulogic_Array_Match_Equality =>
-            raise Internal_Error;
+            declare
+               Inter : constant Iir := Get_Interface_Declaration_Chain (Func);
+               Arr_Type : constant Iir := Get_Type (Inter);
+               Sval : Mnode;
+               Res : O_Enode;
+            begin
+               Sval := Stabilize (Val);
+               Start_Association (Assoc, Ghdl_Std_Ulogic_Array_Match_Eq);
+               New_Association
+                 (Assoc,
+                  New_Convert_Ov (M2E (Chap3.Get_Composite_Base (Expr)),
+                                  Ghdl_Ptr_Type));
+               New_Association
+                 (Assoc,
+                  M2E (Chap3.Range_To_Length
+                         (Chap3.Get_Array_Range (Expr, Arr_Type, 1))));
+               New_Association
+                 (Assoc,
+                  New_Convert_Ov (M2E (Chap3.Get_Composite_Base (Sval)),
+                                  Ghdl_Ptr_Type));
+               New_Association
+                 (Assoc,
+                  M2E (Chap3.Range_To_Length
+                         (Chap3.Get_Array_Range (Sval, Arr_Type, 1))));
+               Res := New_Function_Call (Assoc);
+               return New_Compare_Op
+                 (ON_Eq,
+                  Res,
+                  New_Lit (New_Signed_Literal
+                             (Ghdl_I32_Type,
+                              Vhdl.Ieee.Std_Logic_1164.Std_Logic_1_Pos)),
+                  Std_Boolean_Type_Node);
+            end;
          when others =>
-            Func_Info := Get_Info (Func);
-            Start_Association (Assoc, Func_Info.Operator_Node);
-            Subprgs.Add_Subprg_Instance_Assoc
-              (Assoc, Func_Info.Operator_Instance);
-            New_Association (Assoc, M2E (Expr));
-            New_Association (Assoc, M2E (Val));
+            declare
+               Func_Info : constant Operator_Info_Acc := Get_Info (Func);
+            begin
+               Start_Association (Assoc, Func_Info.Operator_Node);
+               Subprgs.Add_Subprg_Instance_Assoc
+                 (Assoc, Func_Info.Operator_Instance);
+               New_Association (Assoc, M2E (Expr));
+               New_Association (Assoc, M2E (Val));
+               return New_Function_Call (Assoc);
+            end;
       end case;
-
-      return New_Function_Call (Assoc);
    end Translate_Simple_String_Choice;
 
    --  Helper to evaluate the selector and preparing a choice variable.
