@@ -1357,7 +1357,7 @@ package body Trans.Chap8 is
    end Translate_Report_Statement;
 
    --  Helper to compare a string choice with the selector.
-   function Translate_Simple_String_Choice (Expr     : O_Dnode;
+   function Translate_Simple_String_Choice (Expr     : Mnode;
                                             Val      : Mnode;
                                             Func     : Iir) return O_Enode
    is
@@ -1372,7 +1372,7 @@ package body Trans.Chap8 is
             Start_Association (Assoc, Func_Info.Operator_Node);
             Subprgs.Add_Subprg_Instance_Assoc
               (Assoc, Func_Info.Operator_Instance);
-            New_Association (Assoc, New_Obj_Value (Expr));
+            New_Association (Assoc, M2E (Expr));
             New_Association (Assoc, M2E (Val));
       end case;
 
@@ -1388,8 +1388,8 @@ package body Trans.Chap8 is
       Choices    : Iir;
       Len_Type   : out Iir;
       Base_Type  : out Iir;
-      Expr_Node  : out O_Dnode;
-      C_Node     : out O_Dnode)
+      Expr_Node  : out Mnode;
+      C_Node     : out Mnode)
    is
       Expr       : constant Iir := Get_Expression (Stmt);
       Expr_Type  : Iir;
@@ -1406,17 +1406,13 @@ package body Trans.Chap8 is
       Len_Type := Expr_Type;
 
       --  Translate selector.
-      Expr_Node := Create_Temp_Init
-        (Tinfo.Ortho_Ptr_Type (Mode_Value),
-         Chap7.Translate_Expression (Expr, Base_Type));
+      Expr_Node := Chap7.Translate_Expression (Expr, Base_Type);
+      Stabilize (Expr_Node);
 
       --  Copy the bounds for the choices.
-      C_Node := Create_Temp (Tinfo.Ortho_Type (Mode_Value));
-      New_Assign_Stmt
-        (New_Selected_Element (New_Obj (C_Node),
-         Tinfo.B.Bounds_Field (Mode_Value)),
-         New_Value_Selected_Acc_Value
-           (New_Obj (Expr_Node), Tinfo.B.Bounds_Field (Mode_Value)));
+      C_Node := Create_Temp (Tinfo, Mode_Value);
+      New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (C_Node)),
+                       M2Addr (Chap3.Get_Composite_Bounds (Expr_Node)));
 
       --  LRM08 10.9 Case statement
       --  In all cases, it is an error if the value of the expression is not of
@@ -1430,9 +1426,7 @@ package body Trans.Chap8 is
            (Get_String_Type_Bound_Type (Len_Type));
          Cond := New_Compare_Op
            (ON_Neq,
-            Chap3.Get_Array_Length
-              (Dp2M (Expr_Node, Get_Info (Expr_Type), Mode_Value),
-               Expr_Type),
+            Chap3.Get_Array_Length (Expr_Node, Expr_Type),
             New_Lit (New_Index_Lit (Unsigned_64 (Sel_Length))),
             Ghdl_Bool_Type);
          Chap6.Check_Bound_Error (Cond, Expr);
@@ -1470,8 +1464,8 @@ package body Trans.Chap8 is
 
       --  Selector.
       Tinfo     : Type_Info_Acc;
-      Expr_Node : O_Dnode;
-      C_Node    : O_Dnode;
+      Expr_Node : Mnode;
+      C_Node    : Mnode;
       Var_Idx   : O_Dnode;
       Others_Lit : O_Cnode;
 
@@ -1699,16 +1693,14 @@ package body Trans.Chap8 is
                                       (Ghdl_Index_Type, 2))));
 
          New_Assign_Stmt
-           (New_Selected_Element (New_Obj (C_Node),
-                                  Tinfo.B.Base_Field (Mode_Value)),
+           (M2Lp (Chap3.Get_Composite_Base (C_Node)),
             New_Address (New_Indexed_Element (New_Obj (Table),
                                               New_Obj_Value (Var_Mid)),
                          Tinfo.B.Base_Ptr_Type (Mode_Value)));
 
          New_Assign_Stmt
            (New_Obj (Var_Cmp),
-            Translate_Simple_String_Choice
-              (Expr_Node, Dv2M (C_Node, Tinfo, Mode_Value), Func));
+            Translate_Simple_String_Choice (Expr_Node, C_Node, Func));
 
          --  Generate:
          --       if Cmp = Eq then
@@ -1856,9 +1848,9 @@ package body Trans.Chap8 is
    is
       Len_Type  : Iir;
       --  Node containing the address of the selector.
-      Expr_Node : O_Dnode;
+      Expr_Node : Mnode;
       --  Node containing the current choice.
-      Val_Node  : O_Dnode;
+      Val_Node  : Mnode;
       Base_Type : Iir;
 
       Cond_Var : O_Dnode;
