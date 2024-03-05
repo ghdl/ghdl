@@ -71,7 +71,7 @@ package Trans.Chap8 is
                                   Handler : in out Case_Handler) is null;
 
    --  Translate a case statement or a selected signal assignment.
-   procedure Translate_Case (N : Iir; Handler : in out Case_Handler'Class);
+   procedure Translate_Case (Stmt : Iir; Handler : in out Case_Handler'Class);
 
    --  Create declarations for a for-loop statement.
    procedure Translate_For_Loop_Statement_Declaration (Stmt : Iir);

@@ -1357,26 +1357,25 @@ package body Trans.Chap8 is
    end Translate_Report_Statement;
 
    --  Helper to compare a string choice with the selector.
-   function Translate_Simple_String_Choice
-     (Expr     : O_Dnode;
-      Val      : O_Enode;
-      Val_Node : O_Dnode;
-      Tinfo    : Type_Info_Acc;
-      Func     : Iir)
-     return O_Enode
+   function Translate_Simple_String_Choice (Expr     : O_Dnode;
+                                            Val      : Mnode;
+                                            Func     : Iir) return O_Enode
    is
       Assoc     : O_Assoc_List;
       Func_Info : Operator_Info_Acc;
    begin
-      New_Assign_Stmt (New_Selected_Element (New_Obj (Val_Node),
-                                             Tinfo.B.Base_Field (Mode_Value)),
-                       New_Convert (Val, Tinfo.B.Base_Ptr_Type (Mode_Value)));
-      Func_Info := Get_Info (Func);
-      Start_Association (Assoc, Func_Info.Operator_Node);
-      Subprgs.Add_Subprg_Instance_Assoc (Assoc, Func_Info.Operator_Instance);
-      New_Association (Assoc, New_Obj_Value (Expr));
-      New_Association (Assoc, New_Address (New_Obj (Val_Node),
-                                           Tinfo.Ortho_Ptr_Type (Mode_Value)));
+      case Get_Implicit_Definition (Func) is
+         when Iir_Predefined_Std_Ulogic_Array_Match_Equality =>
+            raise Internal_Error;
+         when others =>
+            Func_Info := Get_Info (Func);
+            Start_Association (Assoc, Func_Info.Operator_Node);
+            Subprgs.Add_Subprg_Instance_Assoc
+              (Assoc, Func_Info.Operator_Instance);
+            New_Association (Assoc, New_Obj_Value (Expr));
+            New_Association (Assoc, M2E (Val));
+      end case;
+
       return New_Function_Call (Assoc);
    end Translate_Simple_String_Choice;
 
@@ -1698,14 +1697,18 @@ package body Trans.Chap8 is
                                           New_Obj_Value (Var_Hi)),
                            New_Lit (New_Unsigned_Literal
                                       (Ghdl_Index_Type, 2))));
+
+         New_Assign_Stmt
+           (New_Selected_Element (New_Obj (C_Node),
+                                  Tinfo.B.Base_Field (Mode_Value)),
+            New_Address (New_Indexed_Element (New_Obj (Table),
+                                              New_Obj_Value (Var_Mid)),
+                         Tinfo.B.Base_Ptr_Type (Mode_Value)));
+
          New_Assign_Stmt
            (New_Obj (Var_Cmp),
             Translate_Simple_String_Choice
-              (Expr_Node,
-               New_Address (New_Indexed_Element (New_Obj (Table),
-                                                 New_Obj_Value (Var_Mid)),
-                            Tinfo.B.Base_Ptr_Type (Mode_Value)),
-               C_Node, Tinfo, Func));
+              (Expr_Node, Dv2M (C_Node, Tinfo, Mode_Value), Func));
 
          --  Generate:
          --       if Cmp = Eq then
@@ -1857,11 +1860,12 @@ package body Trans.Chap8 is
       --  Node containing the current choice.
       Val_Node  : O_Dnode;
       Base_Type : Iir;
-      Tinfo     : Type_Info_Acc;
 
       Cond_Var : O_Dnode;
 
+      Func_Def : Iir_Predefined_Functions;
       Func : Iir;
+
 
       procedure Translate_String_Choice (Choice : Iir)
       is
@@ -1885,9 +1889,9 @@ package body Trans.Chap8 is
                   Ch_Expr := Get_Choice_Expression (Ch);
                   Cond := Translate_Simple_String_Choice
                     (Expr_Node,
-                     Chap7.Translate_Expression (Ch_Expr,
-                                                 Get_Type (Ch_Expr)),
-                     Val_Node, Tinfo, Func);
+                     Chap7.Translate_Expression
+                       (Ch_Expr, Get_Base_Type (Get_Type (Ch_Expr))),
+                     Func);
                when Iir_Kind_Choice_By_Others =>
                   Case_Association_Cb (Stmt_Chain, Handler);
                   return;
@@ -1921,10 +1925,14 @@ package body Trans.Chap8 is
       Open_Temp;
       Translate_String_Case_Statement_Common
         (Stmt, Choices, Len_Type, Base_Type, Expr_Node, Val_Node);
-      Tinfo := Get_Info (Base_Type);
 
+      if Get_Matching_Flag (Stmt) then
+         Func_Def := Iir_Predefined_Std_Ulogic_Array_Match_Equality;
+      else
+         Func_Def := Iir_Predefined_Array_Equality;
+      end if;
       Func := Chap7.Find_Predefined_Function
-        (Get_Base_Type (Len_Type), Iir_Predefined_Array_Equality);
+        (Get_Base_Type (Len_Type), Func_Def);
 
       Cond_Var := Create_Temp (Std_Boolean_Type_Node);
 
@@ -1961,20 +1969,20 @@ package body Trans.Chap8 is
       end case;
    end Translate_Case_Choice;
 
-   procedure Translate_Case (N : Iir; Handler : in out Case_Handler'Class)
+   procedure Translate_Case (Stmt : Iir; Handler : in out Case_Handler'Class)
    is
-      Expr : constant Iir := Get_Expression (N);
+      Expr : constant Iir := Get_Expression (Stmt);
       Expr_Type : constant Iir := Get_Type (Expr);
       Choices : Iir;
    begin
       --  Get the chain of choices.
-      case Get_Kind (N) is
+      case Get_Kind (Stmt) is
          when Iir_Kind_Case_Statement =>
-            Choices := Get_Case_Statement_Alternative_Chain (N);
+            Choices := Get_Case_Statement_Alternative_Chain (Stmt);
          when Iir_Kind_Selected_Waveform_Assignment_Statement =>
-            Choices := Get_Selected_Waveform_Chain (N);
+            Choices := Get_Selected_Waveform_Chain (Stmt);
          when others =>
-            Error_Kind ("translate_case", N);
+            Error_Kind ("translate_case", Stmt);
       end case;
 
       if Get_Kind (Expr_Type) in Iir_Kinds_Array_Type_Definition then
@@ -1999,8 +2007,8 @@ package body Trans.Chap8 is
             end loop;
 
             --  Select the strategy according to the number of choices.
-            if Nbr_Choices < 3 then
-               Translate_String_Case_Statement_Linear (N, Choices, Handler);
+            if Get_Matching_Flag (Stmt) or else Nbr_Choices < 3 then
+               Translate_String_Case_Statement_Linear (Stmt, Choices, Handler);
             elsif Nbr_Choices <= 512 then
                --  Can allocate on the stack.
                declare
@@ -2009,7 +2017,7 @@ package body Trans.Chap8 is
                   Choices_Info : Choice_Info_Arr (Valid_Choice_Id);
                begin
                   Translate_String_Case_Statement_Dichotomy
-                    (N, Choices, Nbr_Choices, Choices_Info, Handler);
+                    (Stmt, Choices, Nbr_Choices, Choices_Info, Handler);
                end;
             else
                --  Allocate on the heap.
@@ -2023,7 +2031,7 @@ package body Trans.Chap8 is
                begin
                   Choices_Info := new Choice_Info_Arr (Valid_Choice_Id);
                   Translate_String_Case_Statement_Dichotomy
-                    (N, Choices, Nbr_Choices, Choices_Info.all, Handler);
+                    (Stmt, Choices, Nbr_Choices, Choices_Info.all, Handler);
                   Free (Choices_Info);
                end;
             end if;

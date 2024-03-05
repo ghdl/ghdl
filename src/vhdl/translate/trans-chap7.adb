@@ -2551,7 +2551,6 @@ package body Trans.Chap7 is
         Get_Ortho_Type (Res_Type, Mode_Value);
       L_Type         : constant Iir := Get_Type (Left);
       R_Type         : constant Iir := Get_Type (Right);
-      L_Expr, R_Expr : O_Enode;
       L, R           : Mnode;
       Assoc          : O_Assoc_List;
 
@@ -2563,11 +2562,11 @@ package body Trans.Chap7 is
       --  Translate the arrays.  Note that Translate_Expression may create
       --  the info for the array type, so be sure to call it before calling
       --  Get_Info.
-      L_Expr := Translate_Expression (Left);
-      L := Stabilize (E2M (L_Expr, Get_Info (L_Type), Mode_Value));
+      L := Translate_Expression (Left);
+      Stabilize (L);
 
-      R_Expr := Translate_Expression (Right);
-      R := Stabilize (E2M (R_Expr, Get_Info (R_Type), Mode_Value));
+      R := Translate_Expression (Right);
+      Stabilize (R);
 
       Start_Association (Assoc, Subprg);
       New_Association
