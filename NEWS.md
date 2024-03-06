@@ -1,6 +1,14 @@
-## [Next] 4.0
+## [Next] 5.0
 
-[![GitHub v4.0 milestone](https://img.shields.io/github/milestones/progress/ghdl/ghdl/12?style=flat-square)](https://github.com/ghdl/ghdl/milestone/12)
+## [2024-03-06] 4.0
+
+- For the mcode backend, elaboration of the designs is now performed
+  before code generation.  This allows some optimizations and the support
+  of external names.
+- There is a new signal dumper (using FST format) for the mcode backend.
+- The GCC backend will be deprecated and the  LLVM backend will be used like
+  the mcode backend (code generation in memory). As a consequence, no backend
+  will generate object files anymore.
 
 ## [2023-03-08] 3.0
 
