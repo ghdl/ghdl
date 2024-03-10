@@ -98,6 +98,11 @@ package body Simul.Main is
 
       Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
 
+      --  Handle --no-run
+      if Grt.Options.Flag_No_Run then
+         return;
+      end if;
+
       Csv_File_Open;
 
       Status := Grt.Main.Run_Through_Longjump
