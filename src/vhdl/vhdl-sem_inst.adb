@@ -760,16 +760,24 @@ package body Vhdl.Sem_Inst is
 
          case Get_Kind (Res) is
             when Iir_Kind_Interface_Constant_Declaration =>
-               Set_Type (Res, Get_Type (Inter));
-               Set_Subtype_Indication (Res, Null_Iir); --  Not owner
-               Set_Mode (Res, Get_Mode (Inter));
-               Set_Has_Mode (Res, Get_Has_Mode (Inter));
-               Set_Has_Class (Res, Get_Has_Class (Inter));
-               Set_Has_Identifier_List (Res, Get_Has_Identifier_List (Inter));
-               Set_Expr_Staticness (Res, Get_Expr_Staticness (Inter));
-               Set_Name_Staticness (Res, Get_Name_Staticness (Inter));
-               Set_Default_Value (Res, Get_Default_Value (Inter));
-               Set_Is_Ref (Res, True);
+               declare
+                  Is_Ref : constant Boolean := Get_Is_Ref (Inter);
+               begin
+                  Set_Type (Res, Get_Type (Inter));
+                  Set_Subtype_Indication
+                    (Res,
+                     Instantiate_Iir (Get_Subtype_Indication (Inter), Is_Ref));
+                  Set_Mode (Res, Get_Mode (Inter));
+                  Set_Has_Mode (Res, Get_Has_Mode (Inter));
+                  Set_Has_Class (Res, Get_Has_Class (Inter));
+                  Set_Has_Identifier_List
+                    (Res, Get_Has_Identifier_List (Inter));
+                  Set_Expr_Staticness (Res, Get_Expr_Staticness (Inter));
+                  Set_Name_Staticness (Res, Get_Name_Staticness (Inter));
+                  Set_Default_Value
+                    (Res, Instantiate_Iir (Get_Default_Value (Inter), Is_Ref));
+                  Set_Is_Ref (Res, Is_Ref);
+               end;
             when Iir_Kind_Interface_Package_Declaration =>
                Set_Uninstantiated_Package_Decl
                  (Res, Get_Uninstantiated_Package_Decl (Inter));
