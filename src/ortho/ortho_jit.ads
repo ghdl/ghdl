@@ -27,7 +27,7 @@ package Ortho_Jit is
    --  Get address of a global.
    function Get_Address (Decl : O_Dnode) return Address;
 
-   function Get_Byte_Size (Typ : O_Tnode) return Storage_Count;
+   function Get_Byte_Size (Atype : O_Tnode) return Storage_Count;
    function Get_Field_Offset (Field : O_Fnode) return Storage_Count;
 
    --  Do link.

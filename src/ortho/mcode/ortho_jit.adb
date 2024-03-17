@@ -46,7 +46,7 @@ package body Ortho_Jit is
    function Get_Address (Decl : O_Dnode) return Address
      renames Ortho_Mcode.Jit.Get_Address;
 
-   function Get_Byte_Size (Typ : O_Tnode) return Storage_Count
+   function Get_Byte_Size (Atype : O_Tnode) return Storage_Count
      renames Ortho_Mcode.Jit.Get_Type_Size;
 
    function Get_Field_Offset (Field : O_Fnode) return Storage_Count

@@ -65,6 +65,10 @@
 #include <vector>
 #endif
 
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/ExecutionEngine/MCJIT.h>
+#include <llvm/IR/Mangler.h>
+
 #if LLVM_VERSION_MAJOR >= 4
 #define USE_ATTRIBUTES
 #endif
@@ -719,6 +723,7 @@ struct OFnodeBase {
   OFKind Kind;
   OTnode FType;
   OIdent Ident;
+  OTnode Parent;
   OFnodeBase(OFKind Kind, OTnode FType, OIdent Ident) :
     Kind(Kind), FType(FType), Ident(Ident) {}
 };
@@ -857,6 +862,9 @@ finish_record_type(OElementList *Els, OTnode *Res)
     T->Els = std::move(*Els->Els);
   }
   *Res = T;
+
+  for (OFnodeBase *Field : T->Els)
+    Field->Parent = T;
 }
 
 struct OElementSublist {
@@ -2868,4 +2876,76 @@ new_debug_line_stmt (unsigned Line)
       (DILocation::get(DebugCurrentScope->getContext(), DebugCurrentLine, 0, DebugCurrentScope));
   }
 #endif
+}
+
+static ExecutionEngine *EE;
+
+extern "C" int
+llvm_jit_init(void)
+{
+  std::string error;
+
+  EE = llvm::EngineBuilder(std::unique_ptr<Module>(unwrap(TheModule)))
+    .setErrorStr(&error)
+    .setEngineKind(llvm::EngineKind::JIT)
+     .create();
+  EE->setProcessAllSections(true);
+
+  return EE != NULL;
+}
+
+extern "C" void
+llvm_jit_finalize(void)
+{
+  generateCommon();
+  EE->finalizeObject();
+}
+
+extern "C" void *
+llvm_jit_get_address (ODnode decl)
+{
+  llvm::Value *val = unwrap(decl->Ref);
+
+  switch (decl->getKind()) {
+  case ODKConst:
+  case ODKVar: {
+    const llvm::GlobalValue *gv = dyn_cast<const GlobalValue>(val);
+    SmallString<128> FullName;
+
+    Mangler::getNameWithPrefix(FullName, gv->getName(), EE->getDataLayout());
+    return (void *)EE->getGlobalValueAddress(std::string(FullName));
+  }
+  case ODKSubprg:
+    return EE->getPointerToFunction(dyn_cast<Function>(val));
+  default:
+    abort();
+  }
+}
+
+extern "C" void
+llvm_jit_set_address (ODnode decl, void *addr)
+{
+  const llvm::GlobalValue *val = dyn_cast<const GlobalValue>(unwrap(decl->Ref));
+
+  switch (decl->getKind()) {
+  case ODKConst:
+  case ODKVar:
+  case ODKSubprg:
+    EE->addGlobalMapping(val, addr);
+    return;
+  default:
+    abort();
+  }
+}
+
+extern "C" size_t
+llvm_jit_get_byte_size (OTnode typ)
+{
+  return typ->getSize();
+}
+
+extern "C" size_t
+llvm_jit_get_field_offset (OFnodeRec *field)
+{
+  return LLVMOffsetOfElement(TheTargetData, field->Parent->Ref, field->Index);
 }

@@ -372,7 +372,7 @@ oread-gcc$(EXEEXT): force
 
 #################### For llvm backend ##############################
 
-GHDL_LLVM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/$(llvm_be) -aI$(srcdir)/src/synth
+GHDL_LLVM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/$(llvm_be) -aI$(srcdir)/src/synth -aI$(srcdir)/src/simul
 
 all.llvm: ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT) grt-all libs.vhdl.llvm all.vpi
 

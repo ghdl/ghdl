@@ -51,6 +51,7 @@ with Simul.Main;
 with Translation;
 with Trans; use Trans; use Trans.Chap10;
 with Trans.Chap4;
+with Trans.Chap7;
 with Trans.Chap9;
 with Trans.Rtis;
 with Trans_Link;
@@ -439,8 +440,10 @@ package body Simul.Vhdl_Compile is
                Info : constant Type_Info_Acc := Get_Info (Def);
                Rng_Mem : Memory_Ptr;
             begin
-               Rng_Mem := Get_Var_Mem (Mem, Info.S.Range_Var);
-               Build_Scalar_Subtype_Range (Rng_Mem, Def, Typ);
+               if not Info.S.Same_Range then
+                  Rng_Mem := Get_Var_Mem (Mem, Info.S.Range_Var);
+                  Build_Scalar_Subtype_Range (Rng_Mem, Def, Typ);
+               end if;
             end;
          when Iir_Kind_Array_Subtype_Definition =>
             --  If is static, already done.
@@ -452,7 +455,9 @@ package body Simul.Vhdl_Compile is
                Info : constant Type_Info_Acc := Get_Info (Def);
                Lay_Mem : Memory_Ptr;
             begin
-               if Info /= null then
+               if Info /= null
+                 and then Info.Type_Mode /= Type_Mode_Static_Array
+               then
                   Lay_Mem := Get_Var_Mem (Mem, Info.S.Composite_Layout);
                   Build_Array_Subtype_Layout (Lay_Mem, Def, Typ);
                end if;
@@ -467,8 +472,10 @@ package body Simul.Vhdl_Compile is
                Info : constant Type_Info_Acc := Get_Info (Def);
                Lay_Mem : Memory_Ptr;
             begin
-               Lay_Mem := Get_Var_Mem (Mem, Info.S.Composite_Layout);
-               Build_Record_Subtype_Layout (Lay_Mem, Def, Typ);
+               if Info.Type_Mode /= Type_Mode_Static_Record then
+                  Lay_Mem := Get_Var_Mem (Mem, Info.S.Composite_Layout);
+                  Build_Record_Subtype_Layout (Lay_Mem, Def, Typ);
+               end if;
             end;
          when Iir_Kind_File_Subtype_Definition =>
             null;
@@ -574,7 +581,9 @@ package body Simul.Vhdl_Compile is
                      Typ.Rec.E (Iir_Index32 (I - Flist_First + 1)).Typ);
                end loop;
 
-               if Info.S.Composite_Layout /= Null_Var then
+               if Info.S.Composite_Layout /= Null_Var
+                 and then Info.Type_Mode /= Type_Mode_Static_Record
+               then
                   Lay_Mem := Get_Var_Mem (Mem, Info.S.Composite_Layout);
                   Build_Record_Subtype_Layout (Lay_Mem, Def, Typ);
                end if;
@@ -891,8 +900,12 @@ package body Simul.Vhdl_Compile is
                   Name_Tinfo : constant Type_Info_Acc := Get_Info (Name_Type);
                   Lay_Mem : Memory_Ptr;
                begin
-                  Lay_Mem := Get_Var_Mem (Mem, Name_Tinfo.S.Composite_Layout);
-                  Build_Composite_Subtype_Layout (Lay_Mem, Name_Type, Src.Typ);
+                  if Name_Tinfo.Type_Mode /= Type_Mode_Static_Array then
+                     Lay_Mem :=
+                       Get_Var_Mem (Mem, Name_Tinfo.S.Composite_Layout);
+                     Build_Composite_Subtype_Layout
+                       (Lay_Mem, Name_Type, Src.Typ);
+                  end if;
                end;
             end if;
          end;
@@ -1079,6 +1092,10 @@ package body Simul.Vhdl_Compile is
             if Get_Deferred_Declaration_Flag (Decl)
               or else Get_Deferred_Declaration (Decl) = Null_Node
             then
+               if Trans.Chap7.Is_Static_Constant (Decl) then
+                  return;
+               end if;
+
                declare
                   Ind : constant Node := Get_Subtype_Indication (Decl);
                   Ind_Type : constant Node :=

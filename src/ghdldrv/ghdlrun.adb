@@ -527,10 +527,10 @@ package body Ghdlrun is
          when Run_Jit =>
             Ghdlmain.Version_String :=
               new String'("static elaboration, "
-                            & Ortho_Jit.Get_Jit_Name & " code generator");
+                            & Ortho_Jit.Get_Jit_Name & " JIT code generator");
          when Run_Elab_Jit =>
             Ghdlmain.Version_String :=
-              new String'(Ortho_Jit.Get_Jit_Name & " code generator");
+              new String'(Ortho_Jit.Get_Jit_Name & " JIT code generator");
       end case;
 
       Ghdlcomp.Hooks := (Compile_Init'Access,
