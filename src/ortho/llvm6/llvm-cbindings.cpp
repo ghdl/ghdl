@@ -2878,6 +2878,8 @@ new_debug_line_stmt (unsigned Line)
 #endif
 }
 
+#if LLVM_VERSION_MAJOR > 10
+
 static ExecutionEngine *EE;
 
 extern "C" int
@@ -2949,3 +2951,5 @@ llvm_jit_get_field_offset (OFnodeRec *field)
 {
   return LLVMOffsetOfElement(TheTargetData, field->Parent->Ref, field->Index);
 }
+
+#endif
