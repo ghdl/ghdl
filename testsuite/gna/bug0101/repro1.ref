@@ -1,3 +1,3 @@
-repro1.vhdl:7:16: no declaration for "sig1"
+repro1.vhdl:7:16:error: no declaration for "sig1"
   g : for i in sig1'range generate
                ^
