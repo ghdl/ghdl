@@ -215,6 +215,7 @@ package body Errorout.Console is
             end if;
             if Msg_Len = 0
               or else Flag_Color_Diagnostics = On
+              or else Flag_Caret_Diagnostics
             then
                --  'error:' is displayed only if not location is present, or
                --  if messages are colored.
