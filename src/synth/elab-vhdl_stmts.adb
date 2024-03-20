@@ -41,6 +41,9 @@ package body Elab.Vhdl_Stmts is
       Bod_Inst : Synth_Instance_Acc;
       Cfgs : Configs_Rec;
    begin
+      --  The generate statement body is used in at least one instance.
+      Set_Use_Flag (Bod, True);
+
       Bod_Inst := Make_Elab_Instance (Syn_Inst, Bod, Bod, Config);
 
       Cfgs := Apply_Block_Configuration (Config, Bod);

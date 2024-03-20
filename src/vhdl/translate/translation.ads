@@ -54,6 +54,10 @@ package Translation is
    --  If set, do not generate code for unused implicit subprograms.
    Flag_Discard_Unused_Implicit : Boolean := False;
 
+   --  If set, generate statement body not marked used are discarded.
+   --  (can only be used with pre-elaboration).
+   Flag_Discard_Unused_Generate : Boolean := False;
+
    --  If set, dump drivers per process during compilation.
    Flag_Dump_Drivers : Boolean := False;
 

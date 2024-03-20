@@ -23,6 +23,7 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Configuration;
 with Vhdl.Sem_Inst;
 
+with Translation;
 with Trans.Chap7;
 use Trans.Helpers;
 with Trans.Helpers2; use Trans.Helpers2;
@@ -2562,9 +2563,13 @@ package body Trans.Rtis is
                Clause := Blk;
                while Clause /= Null_Iir loop
                   Bod := Get_Generate_Statement_Body (Clause);
-                  Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
-                  Generate_Block (Bod, Rti);
-                  Pop_Identifier_Prefix (Mark);
+                  if not Translation.Flag_Discard_Unused_Generate
+                    or else Get_Use_Flag (Bod)
+                  then
+                     Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
+                     Generate_Block (Bod, Rti);
+                     Pop_Identifier_Prefix (Mark);
+                  end if;
                   Clause := Get_Generate_Else_Clause (Clause);
                   Num := Num + 1;
                end loop;
@@ -2578,9 +2583,13 @@ package body Trans.Rtis is
                while Alt /= Null_Iir loop
                   if not Get_Same_Alternative_Flag (Alt) then
                      Bod := Get_Associated_Block (Alt);
-                     Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
-                     Generate_Block (Bod, Rti);
-                     Pop_Identifier_Prefix (Mark);
+                     if not Translation.Flag_Discard_Unused_Generate
+                       or else Get_Use_Flag (Bod)
+                     then
+                        Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
+                        Generate_Block (Bod, Rti);
+                        Pop_Identifier_Prefix (Mark);
+                     end if;
                      Num := Num + 1;
                   end if;
                   Alt := Get_Chain (Alt);

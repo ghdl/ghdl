@@ -2064,6 +2064,7 @@ package body Simul.Vhdl_Compile is
       --  Set flags for whole translation.
       Translation.Flag_Discard_Unused := True;
       Translation.Flag_Discard_Unused_Implicit := True;
+      Translation.Flag_Discard_Unused_Generate := True;
 
 --      Translation.Flag_Direct_Drivers := False;
       Translation.Flag_Elaboration := False;

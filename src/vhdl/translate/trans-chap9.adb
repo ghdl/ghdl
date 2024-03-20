@@ -991,6 +991,10 @@ package body Trans.Chap9 is
       Info : Block_Info_Acc;
       Mark2 : Id_Mark_Type;
    begin
+      if Flag_Discard_Unused_Generate and then not Get_Use_Flag (Bod) then
+         return;
+      end if;
+
       Info := Add_Info (Bod, Kind_Block);
 
       Push_Identifier_Prefix (Mark2, Get_Alternative_Label (Bod));
@@ -1294,6 +1298,9 @@ package body Trans.Chap9 is
       Info : constant Block_Info_Acc := Get_Info (Bod);
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
    begin
+      if Flag_Discard_Unused_Generate and then not Get_Use_Flag (Bod) then
+         return;
+      end if;
       Subprgs.Push_Subprg_Instance (Info.Block_Scope'Access,
                                     Info.Block_Decls_Ptr_Type,
                                     Wki_Instance,
