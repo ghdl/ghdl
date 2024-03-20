@@ -1,13 +1,13 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+from ctypes import c_int32
 from enum import IntEnum, unique
+from typing import TypeVar
+
 from pyTooling.Decorators import export
 
 from pyGHDL.libghdl._decorator import BindToLibGHDL
-
-from typing import TypeVar
-from ctypes import c_int32
 from pyGHDL.libghdl._types import (
     Iir,
     IirKind,

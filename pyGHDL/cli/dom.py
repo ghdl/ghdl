@@ -37,22 +37,16 @@ from pathlib import Path
 from platform import system as platform_system
 from textwrap import wrap, dedent
 
-from pyGHDL.dom import DOMException
-
-from pyGHDL.libghdl import LibGHDLException
 from pyTooling.Decorators import export
-from pyTooling.TerminalUI import LineTerminal, Severity
-from pyAttributes import Attribute
-from pyAttributes.ArgParseAttributes import (
-    ArgParseMixin,
-    CommonSwitchArgumentAttribute,
-    DefaultAttribute,
-    CommandAttribute,
-    ArgumentAttribute,
-    SwitchArgumentAttribute,
-)
+from pyTooling.TerminalUI import TerminalApplication, Severity
+from pyTooling.Attributes import Attribute
+from pyTooling.Attributes.ArgParse import ArgParseHelperMixin, DefaultHandler, CommandHandler
+from pyTooling.Attributes.ArgParse.Argument import StringArgument
+from pyTooling.Attributes.ArgParse.Flag import FlagArgument
 
 from pyGHDL import GHDLBaseException
+from pyGHDL.libghdl import LibGHDLException
+from pyGHDL.dom import DOMException
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.formatting.prettyprint import PrettyPrint, PrettyPrintException
 
@@ -102,11 +96,22 @@ class SourceAttribute(Attribute):
                 help="The directory to parse.",
             ),
         )
+        self._AppendAttribute(
+            func,
+            ArgumentAttribute(
+                "-L",
+                "--library",
+                metavar="lib",
+                dest="DefaultLibrary",
+                type=str,
+                help="Default library for files in the root directory.",
+            ),
+        )
         return func
 
 
 @export
-class Application(LineTerminal, ArgParseMixin):
+class Application(TerminalApplication, ArgParseHelperMixin):
     HeadLine = "pyGHDL.dom - Test Application"
 
     # load platform information (Windows, Linux, Darwin, ...)
@@ -147,7 +152,7 @@ class Application(LineTerminal, ArgParseMixin):
                 kwargs["width"] = textWidth
                 super().__init__(*args, **kwargs)
 
-        ArgParseMixin.__init__(
+        ArgParseHelperMixin.__init__(
             self,
             description=description,
             epilog=epilog,
@@ -175,7 +180,7 @@ class Application(LineTerminal, ArgParseMixin):
                 {HEADLINE}{line}
                 {headline: ^80s}
                 {line}"""
-            ).format(line="=" * 80, headline=self.HeadLine, **LineTerminal.Foreground)
+            ).format(line="=" * 80, headline=self.HeadLine, **TerminalApplication.Foreground)
         )
 
     # ============================================================================
@@ -183,13 +188,13 @@ class Application(LineTerminal, ArgParseMixin):
     # ============================================================================
     # common arguments valid for all commands
     # ----------------------------------------------------------------------------
-    @CommonSwitchArgumentAttribute("-d", "--debug", dest="debug", help="Enable debug mode.")
-    @CommonSwitchArgumentAttribute("-v", "--verbose", dest="verbose", help="Print out detailed messages.")
-    @CommonSwitchArgumentAttribute("-q", "--quiet", dest="quiet", help="Reduce messages to a minimum.")
+    @FlagArgument("-d", "--debug", dest="debug", help="Enable debug mode.")
+    @FlagArgument("-v", "--verbose", dest="verbose", help="Print out detailed messages.")
+    @FlagArgument("-q", "--quiet", dest="quiet", help="Reduce messages to a minimum.")
     def Run(self):
-        ArgParseMixin.Run(self)
+        ArgParseHelperMixin.Run(self)
 
-    @DefaultAttribute()
+    @DefaultHandler()
     def HandleDefault(self, _):
         self.PrintHeadline()
         self.MainParser.print_help()
@@ -200,12 +205,11 @@ class Application(LineTerminal, ArgParseMixin):
     # ----------------------------------------------------------------------------
     # create the sub-parser for the "help" command
     # ----------------------------------------------------------------------------
-    @CommandAttribute("help", help="Display help page(s) for the given command name.")
-    @ArgumentAttribute(
+    @CommandHandler("help", help="Display help page(s) for the given command name.")
+    @StringArgument(
         metavar="Command",
         dest="Command",
-        type=str,
-        nargs="?",
+        optional=True,
         help="Print help page(s) for a command.",
     )
     def HandleHelp(self, args):
@@ -227,7 +231,7 @@ class Application(LineTerminal, ArgParseMixin):
     # ----------------------------------------------------------------------------
     # create the sub-parser for the "version" command
     # ----------------------------------------------------------------------------
-    @CommandAttribute("version", help="Display tool and version information.")
+    @CommandHandler("version", help="Display tool and version information.")
     def HandleInfo(self, args):
         self.PrintHeadline()
 
@@ -246,7 +250,7 @@ class Application(LineTerminal, ArgParseMixin):
     # ----------------------------------------------------------------------------
     # Create the sub-parser for the "pretty" command
     # ----------------------------------------------------------------------------
-    @CommandAttribute(
+    @CommandHandler(
         "pretty",
         help="Pretty-print the DOM to console.",
         description="Translate a source file into a DOM and pretty-print the DOM.",
@@ -278,21 +282,38 @@ class Application(LineTerminal, ArgParseMixin):
             d: Path = args.Directory.resolve()
             if not d.exists():
                 self.WriteError(f"Directory '{d!s}' does not exist.")
+            elif not d.is_dir():
+                self.WriteError(f"Path '{d!s}' is not a directory.")
 
-            for file in d.glob("**/*.vhd*"):
-                self.WriteNormal(f"Parsing file '{file!s}'")
-                document = self.addFile(file, "pretty")
-                self.WriteInfo(
-                    dedent(
-                        """\
-                          libghdl processing time: {: 5.3f} us
-                          DOM translation time:    {:5.3f} us
-                        """
-                    ).format(
-                        document.LibGHDLProcessingTime * 10**6,
-                        document.DOMTranslationTime * 10**6,
-                    )
-                )
+            if args.DefaultLibrary is None:
+                self.WriteWarning(f"Default library is not set.")
+
+            files = []
+            for directoryItem in d.iterdir():
+                if directoryItem.is_dir():
+                    libraryName = directoryItem.name
+                    self.WriteNormal(f"Scanning library '{libraryName}' ...")
+                    for file in directoryItem.glob("**/*.vhd*"):
+                        self.WriteNormal(f"  Reading file '{file!s}'")
+                        document = self.addFile(file, libraryName)
+                        self.WriteInfo(
+                            f"    libghdl processing time: {document.LibGHDLProcessingTime * 10**6: 5.3f} us"
+                        )
+                        self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationTime * 10**6:5.3f} us")
+                elif directoryItem.is_file():
+                    if directoryItem.suffix in (".vhd", ".vhdl"):
+                        files.append(directoryItem)
+
+            if len(files) > 0 and args.DefaultLibrary is None:
+                self.WriteFatal(f"Files in root directory can't ne read, due to missing default library.")
+            else:
+                libraryName = args.DefaultLibrary
+                self.WriteNormal(f"Processing files in root directory for library '{libraryName}' ...")
+                for file in files:
+                    self.WriteNormal(f"  Reading file '{file!s}'")
+                    document = self.addFile(file, libraryName)
+                    self.WriteInfo(f"    libghdl processing time: {document.LibGHDLProcessingTime * 10**6: 5.3f} us")
+                    self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationTime * 10**6:5.3f} us")
 
         if not self._design.Documents:
             self.WriteFatal("No files processed at all.")
@@ -334,7 +355,7 @@ class Application(LineTerminal, ArgParseMixin):
 def main():  # mccabe:disable=MC0001
     """This is the entry point for pyghdl.cli.dom written as a function.
 
-    1. It extracts common flags from the script's arguments list, before :py:class:`~argparse.ArgumentParser` is fully loaded.
+    1. It extracts common flags from the script's arguments list, before :class:`~argparse.ArgumentParser` is fully loaded.
     2. It creates an instance of DOM test application and hands over to a class based execution.
        All is wrapped in a big ``try..except`` block to catch every unhandled exception.
     3. Shutdown the script and return its exit code.
