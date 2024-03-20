@@ -35,6 +35,22 @@ package body Vhdl.Utils is
       return Get_Kind (N) = Iir_Kind_Overflow_Literal;
    end Is_Overflow_Literal;
 
+   function Has_User_Label (N : Iir) return Boolean
+   is
+      Id : constant Name_Id := Get_Identifier (N);
+      Ptr : Thin_String_Ptr;
+   begin
+      if Id = No_Name_Id then
+         return False;
+      end if;
+      Ptr := Name_Table.Get_Name_Ptr (Id);
+      if Ptr (1) in 'A' .. 'Z' then
+         --  A generated label.
+         return False;
+      end if;
+      return True;
+   end Has_User_Label;
+
    function Strip_Literal_Origin (N : Iir) return Iir
    is
       Orig : Iir;

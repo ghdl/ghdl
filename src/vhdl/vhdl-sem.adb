@@ -839,7 +839,7 @@ package body Vhdl.Sem is
                   --  has an alternative label, then it is an error if the
                   --  generate statement label does not contain a generate
                   --  specification that is an alternative label.
-                  if Get_Has_Label (Res) then
+                  if Has_User_Label (Res) then
                      Error_Msg_Sem
                        (+Block_Spec,
                         "alternative label required in block specification");

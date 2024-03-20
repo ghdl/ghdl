@@ -3484,8 +3484,6 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Is_Within_Flag (Flag5)
    --
-   --   Get/Set_Has_Label (Flag6)
-   --
    --   Get/Set_Has_Is (Flag7)
    --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
@@ -3701,7 +3699,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Is_Within_Flag (Flag5)
    --
-   --   Get/Set_Has_Label (Flag6)
+   --   Get/Set_Use_Flag (Flag6)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
    --
@@ -9735,11 +9733,6 @@ package Vhdl.Nodes is
    --  Field: Flag10
    function Get_End_Has_Postponed (Decl : Iir) return Boolean;
    procedure Set_End_Has_Postponed (Decl : Iir; Flag : Boolean);
-
-   --  Layout flag: true if a label is present.
-   --  Field: Flag6
-   function Get_Has_Label (Decl : Iir) return Boolean;
-   procedure Set_Has_Label (Decl : Iir; Flag : Boolean);
 
    --  Layout flag: true if 'begin' is present.
    --  Field: Flag10

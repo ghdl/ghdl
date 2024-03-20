@@ -9283,7 +9283,6 @@ package body Vhdl.Parse is
 
       Set_Location (Res, Loc);
       Set_Label (Res, Label);
-      Set_Has_Label (Res, Label /= Null_Identifier);
 
       if Current_Token = Tok_Is then
          if Flags.Vhdl_Std = Vhdl_87 then
@@ -9805,7 +9804,6 @@ package body Vhdl.Parse is
       Set_Location (Bod);
       Set_Parent (Bod, Parent);
       Set_Alternative_Label (Bod, Label);
-      Set_Has_Label (Bod, Label /= Null_Identifier);
       End_Loc := No_Location;
 
       if Flag_Elocations then

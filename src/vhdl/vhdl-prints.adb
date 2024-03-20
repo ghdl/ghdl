@@ -4118,7 +4118,7 @@ package body Vhdl.Prints is
       Clause := Stmt;
       loop
          Bod := Get_Generate_Statement_Body (Clause);
-         if Get_Has_Label (Bod) then
+         if Has_User_Label (Bod) then
             Disp_Ident (Ctxt, Get_Alternative_Label (Bod));
             Disp_Token (Ctxt, Tok_Colon);
          end if;
@@ -4163,7 +4163,7 @@ package body Vhdl.Prints is
          Start_Hbox (Ctxt);
          Disp_Token (Ctxt, Tok_When);
          Bod := Get_Associated_Block (Assoc);
-         if Get_Has_Label (Bod) then
+         if Has_User_Label (Bod) then
             Disp_Ident (Ctxt, Get_Alternative_Label (Bod));
             Disp_Token (Ctxt, Tok_Colon);
          end if;

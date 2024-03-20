@@ -30,6 +30,10 @@ package Vhdl.Utils is
    function Is_Overflow_Literal (N : Iir) return Boolean;
    pragma Inline (Is_Overflow_Literal);
 
+   --  Return true iff statement N has a label coming from sources
+   --  (and not a generated one).
+   function Has_User_Label (N : Iir) return Boolean;
+
    --  If N is a literal and has a literal origin, return the literal origin.
    --  Otherwise return N.
    --  In other words, return the node as it was.

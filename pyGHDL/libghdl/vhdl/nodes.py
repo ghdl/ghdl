@@ -6693,19 +6693,6 @@ def Set_End_Has_Postponed(obj: Iir, value: Boolean) -> None:
 
 
 @export
-@BindToLibGHDL("vhdl__nodes__get_has_label")
-def Get_Has_Label(obj: Iir) -> Boolean:
-    """"""
-    return 0
-
-
-@export
-@BindToLibGHDL("vhdl__nodes__set_has_label")
-def Set_Has_Label(obj: Iir, value: Boolean) -> None:
-    """"""
-
-
-@export
 @BindToLibGHDL("vhdl__nodes__get_has_begin")
 def Get_Has_Begin(obj: Iir) -> Boolean:
     """"""
