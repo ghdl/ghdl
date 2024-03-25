@@ -59,8 +59,8 @@ def CheckForErrors() -> None:
 
     **Behavior:**
 
-    1. read the error buffer and clear it afterwards
-    2. convert it into a list of internal messages for a :exc:`LibGHDLException`
+    1. read the error buffer and clear it afterwards.
+    2. convert it into a list of internal messages for a :exc:`LibGHDLException`.
     3. raise a :exc:`DOMException` with a nested :exc:`LibGHDLException` as a ``__cause__``.
 
     :raises DOMException: If an error occurred in libghdl.
@@ -86,7 +86,7 @@ def GetIirKindOfNode(node: Iir) -> nodes.Iir_Kind:
     """Return the kind of a node in the IIR tree.
 
     :returns:           The IIR kind of a node.
-    :raises ValueError: If parameter ``node`` is :py:data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
+    :raises ValueError: If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
     """
     if node == Null_Iir:
         raise ValueError("GetIirKindOfNode: Parameter 'node' must not be 'Null_Iir'.")
@@ -99,7 +99,7 @@ def GetIirKindOfNode(node: Iir) -> nodes.Iir_Kind:
 def GetNameOfNode(node: Iir) -> str:
     """Return the Python string from node ``node`` identifier.
 
-    :raises ValueError: If parameter ``node`` is :py:data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
+    :raises ValueError: If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
     """
     if node == Null_Iir:
         raise ValueError("GetNameOfNode: Parameter 'node' must not be 'Null_Iir'.")
@@ -124,8 +124,8 @@ def GetDocumentationOfNode(node: Iir) -> str:
 def GetModeOfNode(node: Iir) -> Mode:
     """Return the mode of a ``node``.
 
-    :raises ValueError:   If parameter ``node`` is :py:data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
-    :raises DOMException: If mode returned by libghdl is not known by :py:data:`__MODE_TRANSLATION`.
+    :raises ValueError:   If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
+    :raises DOMException: If mode returned by libghdl is not known by :data:`__MODE_TRANSLATION`.
     """
     if node == Null_Iir:
         raise ValueError("GetModeOfNode: Parameter 'node' must not be 'Null_Iir'.")
