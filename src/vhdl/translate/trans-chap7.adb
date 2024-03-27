@@ -1709,11 +1709,6 @@ package body Trans.Chap7 is
       Dyn_I : Natural;
       E_Length : O_Enode;
 
-      procedure Nil_El (E : Iir; Is_First : Boolean) is
-      begin
-         null;
-      end Nil_El;
-
       procedure Eval_One (E : Iir; Res_Type : Iir; Copy_El_Layout : Boolean)
       is
          E_Val : O_Enode;
@@ -1901,12 +1896,13 @@ package body Trans.Chap7 is
       Last_Expr : Iir;
       Last_Dyn_Expr : Natural;
 
-      procedure Find_Last_Arr (E : Iir; Is_First : Boolean)
-      is
-         pragma Unreferenced (Is_First);
+      procedure Find_Last_Arr (E : Iir; Is_First : Boolean) is
       begin
          Last_Expr := E;
          if Is_Static_Arr (E) then
+            if Is_First and Is_Unbounded_El then
+               Dyn_I := Dyn_I + 1;
+            end if;
             Last_Dyn_Expr := 0;
          else
             Dyn_I := Dyn_I + 1;
@@ -2132,7 +2128,7 @@ package body Trans.Chap7 is
             Last_Expr := Null_Iir;
             Last_Dyn_Expr := 0;
             Dyn_I := 0;
-            Walk ((Nil_El'Access, Find_Last_Arr'Access));
+            Walk ((Len_El'Access, Find_Last_Arr'Access));
             pragma Assert (Dyn_I = Dyn_Mnodes'Last);
 
             if Last_Dyn_Expr = 0 then
