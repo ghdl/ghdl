@@ -497,6 +497,9 @@ package body Ghdlrun is
         or else Option = "--coverage=stmt"
       then
          Trans.Coverage.Coverage_Level := Trans.Coverage.Coverage_Stmt;
+      elsif Option'Last > 18 and then Option (1 .. 18) = "--coverage-output="
+      then
+         Ghdlcovout.Output_Filename := new String'(Option (19 .. Option'Last));
       elsif Option'Last > 3
         and then Option (Option'First + 1) = 'g'
         and then Is_Generic_Override_Option (Option)

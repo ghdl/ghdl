@@ -14,7 +14,12 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Types; use Types;
+
 package Ghdlcovout is
+   --  Coverage output filename.  If null, a default filename is created.
+   Output_Filename : String_Acc := null;
+
    procedure Collect;
    procedure Write_Coverage_File;
 

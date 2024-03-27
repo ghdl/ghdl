@@ -17,7 +17,6 @@
 with System;
 with Ada.Unchecked_Conversion;
 
-with Types; use Types;
 with Tables;
 with Files_Map;
 with Simple_IO;
@@ -144,22 +143,37 @@ package body Ghdlcovout is
       Fill_Entries;
    end Collect;
 
+   function Open_Coverage_File (C_Filename : String) return Grt.Stdio.FILEs
+   is
+      use Grt.Stdio;
+      F : FILEs;
+      Mode : constant String := "w" & ASCII.NUL;
+   begin
+      F := fopen (C_Filename'Address, Mode'Address);
+      if F = NULL_Stream then
+         Errorout.Error_Msg_Option
+           ("cannot open '"
+              & C_Filename (C_Filename'First .. C_Filename'Last - 1)
+              & "'");
+      end if;
+      return F;
+   end Open_Coverage_File;
+
    procedure Write_Coverage_File
    is
       use Grt.Astdio;
       use Grt.Stdio;
       use Files_Map;
-      Mode : constant String := "w" & ASCII.NUL;
       Now_Ts : constant String := Get_Time_Stamp_String (Get_Os_Time_Stamp);
-      Filename : String := "coverage-" & Now_Ts & ".json" & ASCII.NUL;
       F : FILEs;
       Idx : Positive;
    begin
-      F := fopen (Filename'Address, Mode'Address);
+      if Output_Filename = null then
+         F := Open_Coverage_File ("coverage-" & Now_Ts & ".json" & ASCII.NUL);
+      else
+         F := Open_Coverage_File (Output_Filename.all & ASCII.NUL);
+      end if;
       if F = NULL_Stream then
-         Errorout.Error_Msg_Option
-           ("cannot open '" & Filename (Filename'First .. Filename'Last - 1)
-              & "'");
          return;
       end if;
 
