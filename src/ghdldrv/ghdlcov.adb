@@ -549,7 +549,12 @@ package body Ghdlcov is
       Put_Uns32 (Num_Covered);
       Put ("/");
       Put_Uns32 (Num_Lines);
-      Ratio := Num_Covered * 1000 / Num_Lines;
+      if Num_Lines = 0 then
+         --  Avoid division by 0.
+         Ratio := 0;
+      else
+         Ratio := Num_Covered * 1000 / Num_Lines;
+      end if;
       Put (" ");
       Put_Uns32 (Ratio / 10);
       Put ('.');
