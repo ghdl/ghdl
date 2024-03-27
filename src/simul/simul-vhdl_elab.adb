@@ -333,7 +333,7 @@ package body Simul.Vhdl_Elab is
       Convert_Type_Width (V.Typ);
 
       --  Recompute alias offsets.
-      if Get_Kind (Name) /= Iir_Kind_External_Signal_Name then
+      if Get_Kind (Name) not in Iir_Kinds_External_Name then
          Mark_Expr_Pool (Marker);
          Instance_Pool := Global_Pool'Access;
 
