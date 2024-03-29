@@ -27,8 +27,8 @@ with Options; use Options;
 
 with Ghdlmain; use Ghdlmain;
 
--- with Grt.Types;
-with Grt.Stdio;
+with Grt.Types;
+with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio;
 
 package body Ghdlcov is
@@ -59,6 +59,19 @@ package body Ghdlcov is
       Table_Index_Type => Natural,
       Table_Low_Bound => 1,
       Table_Initial => 8);
+
+   function Fopen_W (Filename : String) return FILEs
+   is
+      Cname : constant String := Filename & ASCII.NUL;
+      Mode : constant String := "w" & ASCII.NUL;
+      F : FILEs;
+   begin
+      F := fopen (Cname'Address, Mode'Address);
+      if F = NULL_Stream then
+         Errorout.Error_Msg_Option ("cannot open " & Filename);
+      end if;
+      return F;
+   end Fopen_W;
 
    package Mini_Json is
       type Token is
@@ -415,7 +428,6 @@ package body Ghdlcov is
    procedure Output_Gcov_File (Rec : File_Record_Acc)
    is
       use Files_Map;
-      use Grt.Stdio;
       use Grt.Astdio;
       use Name_Table;
       Lines : constant Line_Acc := Rec.Lines;
@@ -437,18 +449,10 @@ package body Ghdlcov is
          return;
       end if;
 
-      declare
-         Res_File : constant String := Image (Name) & ".gcov" & ASCII.NUL;
-         Mode : constant String := "w" & ASCII.NUL;
-      begin
-         F := fopen (Res_File'Address, Mode'Address);
-         if F = NULL_Stream then
-            Errorout.Error_Msg_Option
-              ("cannot open "
-                 & Res_File (Res_File'First .. Res_File'Last - 1));
-            return;
-         end if;
-      end;
+      F := Fopen_W (Image (Name) & ".gcov");
+      if F = NULL_Stream then
+         return;
+      end if;
 
       Put_Line (F, "     -:    0:Source:" & Image (Name));
       Put_Line (F, "     -:    0:Working directory:" & Image (Dir));
@@ -499,6 +503,63 @@ package body Ghdlcov is
          Output_Gcov_File (Res_Tables.Table (I));
       end loop;
    end Output_Gcov;
+
+   procedure Output_Gcovr (F : FILEs)
+   is
+      use Grt.Astdio;
+      use Grt.Types;
+      use Name_Table;
+   begin
+      Put_Line (F, "{");
+      Put_Line (F, "  ""gcovr/format_version"": ""0.6"",");
+      Put_Line (F, "  ""files"": [");
+      for I in Res_Tables.First .. Res_Tables.Last loop
+         declare
+            Rec : constant File_Record_Acc := Res_Tables.Table (I);
+            Lines : constant Line_Acc := Rec.Lines;
+            Name, Dir : Name_Id;
+            First : Boolean;
+         begin
+            Name := Rec.Name;
+            Dir := Rec.Dir;
+            Files_Map.Normalize_Pathname (Dir, Name);
+            Put_Line (F, "    {");
+            Put_Line (F, "      ""file"": """
+                        & Image (Dir) & Image (Name) & """,");
+            Put_Line (F, "      ""lines"": [");
+            First := True;
+            for I in Lines'Range loop
+               if Lines (I).Coverage then
+                  if First then
+                     First := False;
+                  else
+                     Put_Line (F, ",");
+                  end if;
+                  Put (F, "        { ""branches"": []");
+                  Put (F, ", ""count"": ");
+                  Put_U32 (F, Boolean'Pos (Lines (I).Covered));
+                  Put (F, ", ""line_number"": ");
+                  Put_U32 (F, Ghdl_U32 (I));
+                  Put (F, " }");
+               end if;
+            end loop;
+            if not First then
+               New_Line (F);
+            end if;
+            Put_Line (F, "      ],");
+            Put_Line (F, "      ""functions"": []");
+
+            Put (F, "    }");
+            if I /= Res_Tables.Last then
+               Put_Line (F, ",");
+            else
+               New_Line (F);
+            end if;
+         end;
+      end loop;
+      Put_Line (F, "  ]");
+      Put_Line (F, "}");
+   end Output_Gcovr;
 
    procedure Output_Lcov is
    begin
@@ -601,7 +662,13 @@ package body Ghdlcov is
       New_Line;
    end Output_Summary;
 
-   type Format_Type is (Format_Gcov, Format_Lcov, Format_Summary);
+   type Format_Type is
+     (
+      Format_Gcov,
+      Format_Lcov,
+      Format_Gcovr,
+      Format_Summary
+     );
 
    type Command_Coverage is new Command_Type with record
       Format : Format_Type := Format_Summary;
@@ -647,6 +714,9 @@ package body Ghdlcov is
       elsif Option = "--format=gcov" then
          Cmd.Format := Format_Gcov;
          Res := Option_Ok;
+      elsif Option = "--format=gcovr" then
+         Cmd.Format := Format_Gcovr;
+         Res := Option_Ok;
       elsif Option = "--format=summary" then
          Cmd.Format := Format_Summary;
          Res := Option_Ok;
@@ -659,16 +729,15 @@ package body Ghdlcov is
    is
       pragma Unreferenced (Cmd);
    begin
-      --  return "coverage [-o FILENAME] COV-FILES...";
-      return "coverage [--format=FORMAT] COV-FILES...";
+      return "coverage [--format=FORMAT] [-o FILENAME] COV-FILES..."
+        & ASCII.LF & "  Gather and format coverage data";
    end Get_Short_Help;
 
    procedure Disp_Long_Help (Cmd : Command_Coverage)
    is
-      --  use Simple_IO;
       pragma Unreferenced (Cmd);
    begin
-      --  Put_Line ("  -o FILENAME   specify result file");
+      Put_Line ("  -o FILENAME      specify result file (for gcovr format)");
       Put_Line (" --format=gcov     create .gcov files in current directory");
       Put_Line (" --format=lcov     output lcov tracefile (for genhtml)");
       Put_Line (" --format=summary  print coverage ratio per line and total");
@@ -686,6 +755,21 @@ package body Ghdlcov is
             Output_Gcov;
          when Format_Lcov =>
             Output_Lcov;
+         when Format_Gcovr =>
+            declare
+               F : FILEs;
+            begin
+               if Cmd.Output_Filename = null then
+                  F := Grt.Stdio.stdout;
+               else
+                  F := Fopen_W (Cmd.Output_Filename.all);
+                  if F = NULL_Stream then
+                     Success := False;
+                     return;
+                  end if;
+               end if;
+               Output_Gcovr (F);
+            end;
          when Format_Summary =>
             Output_Summary;
       end case;
