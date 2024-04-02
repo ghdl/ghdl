@@ -1544,6 +1544,7 @@ package body Synth.Vhdl_Expr is
                            Clk_Left : Net) return Boolean
    is
       N : Net;
+      Val : Valtyp;
    begin
       --  Handle directly the common case (when clock is a simple name).
       if Get_Kind (Left) = Iir_Kind_Simple_Name
@@ -1552,7 +1553,13 @@ package body Synth.Vhdl_Expr is
          return Get_Named_Entity (Left) = Get_Named_Entity (Right);
       end if;
 
-      N := Get_Net (Get_Build (Syn_Inst), Synth_Expression (Syn_Inst, Right));
+      Val := Synth_Expression (Syn_Inst, Right);
+      if Val = No_Valtyp then
+         --  In case of error.
+         return False;
+      end if;
+
+      N := Get_Net (Get_Build (Syn_Inst), Val);
 
       return Same_Net (Clk_Left, N);
    end Is_Same_Clock;
