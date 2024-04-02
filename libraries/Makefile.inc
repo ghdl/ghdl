@@ -115,7 +115,7 @@ VITAL2000_BSRCS := \
   vital2000/memory_b.vhdl
 endif
 
-ANALYZE=$(GHDL) -a $(GHDL_FLAGS)
+ANALYZE=$(XRUN) $(GHDL) -a $(GHDL_FLAGS)
 ANALYZE_DEP=$(GHDL)
 
 STD87_BSRCS := $(addprefix std/v87/,$(STD_SRCS))

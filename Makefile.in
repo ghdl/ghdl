@@ -65,6 +65,7 @@ MV=mv
 SED=sed
 GRT_RANLIB=ranlib
 GHDL_DESC?=tarball
+XRUN=
 
 VHDL_LIB_DIR=$(prefix)/$(libghdldirsuffix)
 
@@ -220,7 +221,7 @@ memsegs_c.o: $(srcdir)/src/ortho/mcode/memsegs_c.c
 	$(CC) -c $(COVERAGE_FLAGS) $(CFLAGS) -o $@ $<
 
 libs.vhdl.mcode: ghdl_mcode$(EXEEXT)
-	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_mcode$(EXEEXT) GHDL_FLAGS="" VHDL_COPY_OBJS=no vhdl.libs.all
+	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL="$(PWD)/ghdl_mcode$(EXEEXT)" XRUN=$(XRUN) GHDL_FLAGS="" VHDL_COPY_OBJS=no vhdl.libs.all
 
 install.mcode.program: install.dirs ghdl_mcode$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_mcode$(EXEEXT) "$(DESTDIR)$(bindir)/ghdl$(EXEEXT)"
