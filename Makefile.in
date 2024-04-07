@@ -464,6 +464,7 @@ install.llvm.libs.false:
 install.llvm.libs.true: install.dirs
 	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libffi-*.dll $(DESTDIR)$(bindir)/
 	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libgcc_s_$(LIBGCC_KIND)-*.dll $(DESTDIR)$(bindir)/
+	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libintl-*.dll $(DESTDIR)$(bindir)/
 	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libiconv-*.dll $(DESTDIR)$(bindir)/
 	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/libLLVM-*.dll $(DESTDIR)$(bindir)/
 	$(INSTALL_PROGRAM) $(MINGW_PREFIX)/bin/liblzma-*.dll $(DESTDIR)$(bindir)/
@@ -493,6 +494,7 @@ uninstall.llvm.libs.false:
 uninstall.llvm.libs.true:
 	$(RM) $(DESTDIR)$(bindir)/libffi-*.dll
 	$(RM) $(DESTDIR)$(bindir)/libgcc_s_$(LIBGCC_KIND)-1.dll
+	$(RM) $(DESTDIR)$(bindir)/libintl-*.dll
 	$(RM) $(DESTDIR)$(bindir)/libiconv-*.dll
 	$(RM) $(DESTDIR)$(bindir)/libLLVM-*.dll
 	$(RM) $(DESTDIR)$(bindir)/liblzma-*.dll
