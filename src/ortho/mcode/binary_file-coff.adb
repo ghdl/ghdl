@@ -62,7 +62,8 @@ package body Binary_File.Coff is
             Res.E_Name := (others => NUL);
             Res.E_Name (1 .. Str'Length) := Str;
          else
-            Res.E := (E_Zeroes => 0, E_Offset => Unsigned_32 (Offset));
+            Res.E := (E_Zeroes => 0,
+                      E_Offset => Unsigned_32 (Offset - Strtab_Offset));
             Offset := Offset + Str'Length + 1;
          end if;
          return Res;
@@ -255,7 +256,11 @@ package body Binary_File.Coff is
                   end if;
             end case;
             Hdr.S_Paddr := 0;
-            Hdr.S_Vaddr := 0;
+            if Sections (I).Sect /= null then
+               Hdr.S_Vaddr := Unsigned_32 (Sections (I).Sect.Img_Off);
+            else
+               Hdr.S_Vaddr := 0;
+            end if;
             Hdr.S_Scnptr := Unsigned_32 (Sections (I).Data_Offset);
             Hdr.S_Relptr := Unsigned_32 (Sections (I).Reloc_Offset);
             Hdr.S_Lnnoptr := 0;

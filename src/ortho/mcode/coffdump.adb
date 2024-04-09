@@ -131,6 +131,9 @@ begin
       Put_Line ("time and date stamp: " & Hex_Image (Hdr.F_Timdat));
       Put_Line ("symtab file pointer: " & Hex_Image (Hdr.F_Symptr));
       Put_Line ("nbr symtab entries:  " & Hex_Image (Hdr.F_Nsyms));
+      Put_Line (" strtab:             "
+                  & Hex_Image (Hdr.F_Symptr
+                                 + Hdr.F_Nsyms * Unsigned_32 (Symesz)));
       Put_Line ("opt header size:     " & Hex_Image (Hdr.F_Opthdr));
       Put_Line ("flags:               " & Hex_Image (Hdr.F_Flags));
 
@@ -208,6 +211,7 @@ begin
                S : Syment := Get_Symbol (I);
             begin
                Put_Line ("Symbol #" & Hex_Image (I));
+               Put_Line ("symbol off  : " & Hex_Image (S.E.E.E_Offset));
                Put_Line ("symbol name : " & Get_Symbol_Name (I));
                Put_Line ("symbol value: " & Hex_Image (S.E_Value));
                Put_Line ("section num : " & Hex_Image (S.E_Scnum)
@@ -269,4 +273,3 @@ begin
       Close (Fd);
    end loop;
 end Coffdump;
-
