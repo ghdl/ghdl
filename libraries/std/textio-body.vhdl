@@ -677,7 +677,7 @@ package body textio is
 	when blank =>
 	  if is_whitespace (c) then
 	    null;
-	  elsif c = 'f' or c = 'T' then
+	  elsif c = 't' or c = 'T' then
 	    res := true;
 	    state := l_tf;
 	  elsif c = 'f' or c = 'F' then
