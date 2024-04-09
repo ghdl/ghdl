@@ -161,12 +161,12 @@ asm ("\n\
 	.type	32\n\
 	.endef\n\
 	.seh_proc	__run_seh\n\
-	.seh_handler	ghdl_SEH_handler,@except\n\
+	.seh_handler	" __USER_LABEL_PREFIX__ "ghdl_SEH_handler,@except\n\
 __run_seh:\n\
 	subq	$40, %rsp\n\
 	.seh_stackalloc	40\n\
 	.seh_endprologue\n\
-	call %rcx\n\
+	callq *%rcx\n\
 	nop\n\
 	addq	$40, %rsp\n\
 	ret\n\
