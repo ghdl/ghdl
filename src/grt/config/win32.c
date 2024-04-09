@@ -94,7 +94,7 @@ get_bt_from_context (struct backtrace_addrs *bt, CONTEXT *ctxt, int skip)
     }
 }
 
-static EXCEPTION_DISPOSITION
+EXCEPTION_DISPOSITION
 ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
 		  void *EstablisherFrame,
 		  struct _CONTEXT* ContextRecord,
