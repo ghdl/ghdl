@@ -102,6 +102,7 @@ package body Ortho_Code.X86.Abi is
       Set_Decl_Reg (Inter, Reg);
       if Flags.Win64 and Reg in Regs_R64 then
          --  Use the normal home location (first reg at offset 8).
+         --  Note: this is overwritten by Ortho_Code.X86.Insns.Gen_Subprg_Insns
          Set_Local_Offset (Inter, Int32 (8 * Abi.Inum));
       else
          Set_Local_Offset (Inter, Abi.Offset);

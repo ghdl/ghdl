@@ -86,6 +86,7 @@ package Ortho_Code.X86.Abi is
 
    --  Target specific data for subprograms.
    type Target_Subprg is record
+      --  Offset in the frame of a temporary slot for fp conversions.
       Fp_Slot : Uns32 := 0;
    end record;
 private
