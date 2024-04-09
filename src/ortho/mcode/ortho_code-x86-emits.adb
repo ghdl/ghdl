@@ -124,6 +124,7 @@ package body Ortho_Code.X86.Emits is
    Opc_Jmp_Short   : constant := 16#eb#;
    Opc_Ret         : constant := 16#c3#;
    Opc_Leave       : constant := 16#c9#;
+   Opc_Nop         : constant := 16#90#;
    Opc_Movsd_Xmm_M64 : constant := 16#10#;  --  Load xmm <- M64
    Opc_Movsd_M64_Xmm : constant := 16#11#;  --  Store M64 <- xmm
    Opc_Cvtsi2sd_Xmm_Rm : constant := 16#2a#;  --  Xmm <- cvt (rm)
@@ -2906,7 +2907,11 @@ package body Ortho_Code.X86.Emits is
       --  Switch to .text section and align the function (to avoid the nested
       --  function trick and for performance).
       Set_Current_Section (Sect_Text);
-      Gen_Pow_Align (2);
+
+      --  Align to 4 bytes (using NOP).
+      while Get_Pc (Sect_Text) mod 4 /= 0 loop
+         Gen_8 (Opc_Nop);
+      end loop;
 
       --  Set symbol.
       Subprg_Decl := Subprg.D_Decl;
