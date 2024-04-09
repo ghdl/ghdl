@@ -129,6 +129,7 @@ package body Ortho_Code.X86.Emits is
    Opc_Movsd_M64_Xmm : constant := 16#11#;  --  Store M64 <- xmm
    Opc_Cvtsi2sd_Xmm_Rm : constant := 16#2a#;  --  Xmm <- cvt (rm)
    Opc_Cvtsd2si_Reg_Xm : constant := 16#2d#;  --  Reg <- cvt (xmm/m64)
+   pragma Unreferenced (Opc_Leave);
 
    procedure Error_Emit (Msg : String; Insn : O_Enode)
    is
@@ -2902,7 +2903,7 @@ package body Ortho_Code.X86.Emits is
       Frame_Size : Unsigned_32;
       Saved_Regs_Size : Unsigned_32;
       Has_Fp_Inter : Boolean;
-      Alloc_Pc : Pc_Type;
+      Set_Frame_Pc, Alloc_Pc : Pc_Type;
    begin
       --  Switch to .text section and align the function (to avoid the nested
       --  function trick and for performance).
@@ -2927,18 +2928,21 @@ package body Ortho_Code.X86.Emits is
       Set_Symbol_Pc (Sym, Is_Global);
       Subprg_Pc := Get_Current_Pc;
 
+      --  Emit prolog
+      --  push %ebp / push %rbp  (offset 0, length 1)
+      Push_Reg (R_Bp);
+
       --  Return address and saved frame pointer are preserved.
       Saved_Regs_Size := 2;
+
+      --  Save preserved registers that are used in the function.
       for R in Preserved_Regs'Range loop
          if Preserved_Regs (R) and Reg_Used (R) then
             Saved_Regs_Size := Saved_Regs_Size + 1;
+            Push_Reg (R);
          end if;
       end loop;
-      if Flags.M64 then
-         Saved_Regs_Size := Saved_Regs_Size * 8;
-      else
-         Saved_Regs_Size := Saved_Regs_Size * 4;
-      end if;
+      Saved_Regs_Size := Saved_Regs_Size * Abi.Ptr_Size;
 
       --  Compute frame size.
       --  Saved_Regs_Size must be added and substracted as the stack boundary
@@ -2950,43 +2954,47 @@ package body Ortho_Code.X86.Emits is
       --  The bytes for saved regs are already allocated.
       Frame_Size := Frame_Size - Saved_Regs_Size;
 
-      --  Emit prolog.
-      --  push %ebp / push %rbp
-      Push_Reg (R_Bp);
+      --  TODO: save nonvol xmm
+
       --  movl %esp, %ebp / movq %rsp, %rbp
       Start_Insn;
       Gen_Rex (16#48#);
       Gen_8 (Opc_Mov_Rm_Reg + 1);
       Gen_8 (2#11_100_101#);
       End_Insn;
+      Set_Frame_Pc := Get_Current_Pc;
 
       --  Save int arguments (only on x86-64).
       Has_Fp_Inter := False;
-      if Flags.M64 then
-         declare
-            Inter : O_Dnode;
-            R : O_Reg;
-         begin
-            Inter := Get_Subprg_Interfaces (Subprg.D_Decl);
-            while Inter /= O_Dnode_Null loop
-               R := Get_Decl_Reg (Inter);
-               if R in Regs_R64 then
-                  Push_Reg (R);
-                  --  Space for arguments was already counted in frame size.
-                  --  As the space is allocated by the push, don't allocate it
-                  --  later.
-                  Frame_Size := Frame_Size - 8;
-               elsif R in Regs_Xmm then
-                  --  Need to save Xmm registers, but later.
-                  Has_Fp_Inter := True;
-               else
-                  pragma Assert (R = R_None);
-                  null;
-               end if;
-               Inter := Get_Interface_Chain (Inter);
-            end loop;
-         end;
-      end if;
+      declare
+         Inter : O_Dnode;
+         R : O_Reg;
+         Off : Int32;
+      begin
+         Inter := Get_Subprg_Interfaces (Subprg.D_Decl);
+         while Inter /= O_Dnode_Null loop
+            R := Get_Decl_Reg (Inter);
+            if R in Regs_R64 then
+               pragma Assert (Flags.M64);
+               Push_Reg (R);
+               --  Space for arguments was already counted in frame size.
+               --  As the space is allocated by the push, don't allocate it
+               --  later.
+               Frame_Size := Frame_Size - 8;
+            elsif R in Regs_Xmm then
+               pragma Assert (Flags.M64);
+               --  Need to save Xmm registers, but later.
+               Has_Fp_Inter := True;
+            else
+               pragma Assert (R = R_None);
+               --  Need to adjust local offset (for saved nonvolatile regs)
+               Off := Get_Local_Offset (Inter);
+               Off := Off + Int32 (Saved_Regs_Size - 2 * Abi.Ptr_Size);
+               Set_Local_Offset (Inter, Off);
+            end if;
+            Inter := Get_Interface_Chain (Inter);
+         end loop;
+      end;
 
       --  subl XXX, %esp / subq XXX, %rsp
       if Frame_Size /= 0 then
@@ -3035,35 +3043,27 @@ package body Ortho_Code.X86.Emits is
          Gen_Call (Mcount_Symbol);
       end if;
 
-      --  Save preserved registers that are used in the function.
-      for R in Preserved_Regs'Range loop
-         if Preserved_Regs (R) and Reg_Used (R) then
-            Push_Reg (R);
-         end if;
-      end loop;
-
       if Flags.Win64 then
          declare
             End_Pc : constant Pc_Type := Get_Current_Pc;
+            Off : Byte;
             Nbr_Unw_Code : Unsigned_8;
          begin
             Set_Current_Section (Sect_Xdata);
             Last_Unwind_Off := Get_Current_Pc;
-            Prealloc (7*2);
+            Prealloc (9);
             --  UNWIND_INFO
             Gen_8 (16#01#);            --  Version(3)=1, Flags(5)=0
             pragma Assert (End_Pc - Subprg_Pc < 256);
             Gen_8 (Byte (End_Pc - Subprg_Pc));  --  Size of prolog
-            Gen_8 (2);                 --  Nbr unwind opcodes
+            Gen_8 (2);                 --  Nbr unwind opcodes (will be patched)
             Gen_8 (16#05#);            --  FrameReg(4)=ebp, FrameRegOff(4)=0*16
-            --  0: push ebp
-            Gen_8 (1);       --  Offset: +1
-            Gen_8 (16#50#);  --  Op: SAVE_NONVOL, Reg: 5 (ebp)
-            --  1: set fp
-            Gen_8 (4);       --  Offset: +3
-            Gen_8 (16#03#);  --  Op: SET_FP_REG
-            Nbr_Unw_Code := 2;
+
+            --  y: save preserved
+            --  TODO
+
             --  x: alloc frame
+            Nbr_Unw_Code := 0;
             if Frame_Size > 0 then
                Gen_8 (Byte (Alloc_Pc - Subprg_Pc));    --  Offset
                if Frame_Size <= 128 then
@@ -3080,8 +3080,33 @@ package body Ortho_Code.X86.Emits is
                   Nbr_Unw_Code := Nbr_Unw_Code + 3;
                end if;
             end if;
-            --  y: save preserved
-            --  TODO
+
+            --  4..: push non vol
+            Off := Byte (Set_Frame_Pc - Subprg_Pc);
+            for R in reverse Preserved_Regs'Range loop
+               if Preserved_Regs (R) and Reg_Used (R) then
+                  Prealloc (2);
+                  Gen_8 (Off);
+                  Gen_8 (16#00# + Byte (R - R_Ax) * 16);
+                  Nbr_Unw_Code := Nbr_Unw_Code + 1;
+                  if R in Regs_R8_R15 then
+                     Off := Off - 2;
+                  else
+                     Off := Off - 1;
+                  end if;
+               end if;
+            end loop;
+
+            --  1: set fp
+            Prealloc (4);
+            Gen_8 (Off);       --  Offset: +3
+            Gen_8 (16#03#);    --  Op: SET_FP_REG
+            Nbr_Unw_Code := Nbr_Unw_Code + 1;
+
+            --  0: push ebp
+            Gen_8 (1);       --  Offset: +1
+            Gen_8 (16#50#);  --  Op: SAVE_NONVOL, Reg: 5 (ebp)
+            Nbr_Unw_Code := Nbr_Unw_Code + 1;
 
             Patch_8 (Last_Unwind_Off + 2, Nbr_Unw_Code);
             Set_Current_Section (Sect_Text);
@@ -3098,13 +3123,6 @@ package body Ortho_Code.X86.Emits is
       Decl : O_Dnode;
       Mode : Mode_Type;
    begin
-      --  Restore registers.
-      for R in reverse Preserved_Regs'Range loop
-         if Preserved_Regs (R) and Reg_Used (R) then
-            Pop_Reg (R);
-         end if;
-      end loop;
-
       Decl := Subprg.D_Decl;
       if Get_Decl_Kind (Decl) = OD_Function then
          Mode := Get_Type_Mode (Get_Decl_Type (Decl));
@@ -3146,8 +3164,23 @@ package body Ortho_Code.X86.Emits is
          end case;
       end if;
 
-      --  leave; ret;
-      Gen_1 (Opc_Leave);
+      --  movl %ebp, %esp / movq %rbp, %rsp
+      Start_Insn;
+      Gen_Rex (16#48#);
+      Gen_8 (Opc_Mov_Rm_Reg + 1);
+      Gen_8 (2#11_101_100#);
+      End_Insn;
+
+      --  Restore registers.
+      for R in reverse Preserved_Regs'Range loop
+         if Preserved_Regs (R) and Reg_Used (R) then
+            Pop_Reg (R);
+         end if;
+      end loop;
+
+      --  pop %ebp
+      Pop_Reg (R_Bp);
+      --  ret
       Gen_1 (Opc_Ret);
 
       if Flag_Debug /= Debug_None then

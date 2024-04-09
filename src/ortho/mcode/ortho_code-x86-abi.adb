@@ -31,9 +31,7 @@ with Binary_File.Memory;
 
 package body Ortho_Code.X86.Abi is
    --  First argument is at %ebp + 8 / %rbp + 16
-   Subprg_Stack_Init : constant Int32 :=
-     Boolean'Pos (Flags.M64) * 16
-     + Boolean'Pos (not Flags.M64) * 8;
+   Subprg_Stack_Init : constant Int32 := Ptr_Size * 2;
 
    procedure Start_Subprogram (Subprg : O_Dnode; Abi : out O_Abi_Subprg)
    is
