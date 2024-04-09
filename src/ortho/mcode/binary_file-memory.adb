@@ -99,6 +99,7 @@ package body Binary_File.Memory is
       type Seg_Size_Array is array (Segment_Kind) of Pc_Type;
       Seg_Size : Seg_Size_Array;
       Seg_Offs : Seg_Size_Array;
+      Seg_Base : Seg_Size_Array;
       Size : Pc_Type;
       Program_Seg : Memsegs.Memseg_Type;
       Program : Byte_Array_Acc;
@@ -135,9 +136,11 @@ package body Binary_File.Memory is
       Program_Seg := Memsegs.Create;
       Memsegs.Resize (Program_Seg, Natural (Size));
       Program := To_Byte_Array_Acc (Memsegs.Get_Address (Program_Seg));
-      Seg_Offs (Seg_Text) := 0;
-      Seg_Offs (Seg_Ro) := Seg_Size (Seg_Text);
-      Seg_Offs (Seg_Data) := Seg_Size (Seg_Text) + Seg_Size (Seg_Ro);
+      Seg_Base (Seg_Text) := 0;
+      Seg_Base (Seg_Ro) := Seg_Size (Seg_Text);
+      Seg_Base (Seg_Data) := Seg_Base (Seg_Ro) + Seg_Size (Seg_Ro);
+
+      Seg_Offs := Seg_Base;
 
       Sect := Section_Chain;
       while Sect /= null loop
@@ -147,7 +150,7 @@ package body Binary_File.Memory is
          begin
             if Seg /= Seg_None then
                --  From segment offset to image offset.
-               Sect.Img_Off := Sect.Img_Off + Seg_Offs (Seg);
+               Sect.Img_Off := Sect.Img_Off + Seg_Base (Seg);
 
                if Sect.Pc > 0 then
                   Off := Pow_Align (Off, Sect.Align);
