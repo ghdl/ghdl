@@ -96,7 +96,7 @@ jobs:
           - 'synth'
         exclude:
           - suite: 'synth'
-            sys: { pkg: 'llvm', sys: 'UCRT64' }
+            sys: { sys: 'UCRT64' }
 
     defaults:
       run:
