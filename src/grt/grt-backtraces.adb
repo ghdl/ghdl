@@ -233,7 +233,7 @@ package body Grt.Backtraces is
       end if;
 
       Unknown := False;
-      for I in Bt.Skip .. Bt.Size loop
+      for I in Bt.Skip .. Bt.Size - 1 loop
          Backtraces.Impl.Symbolizer (To_Address (Bt.Addrs (I)),
                                      Filename, Lineno, Subprg);
          if Subprg = Null_Address
