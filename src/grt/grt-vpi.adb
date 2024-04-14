@@ -115,8 +115,14 @@ package body Grt.Vpi is
 --       dbgNew_Line;
 --    end dbgPut_Line;
 
-   procedure Free is new Ada.Unchecked_Deallocation
-     (Name => vpiHandle, Object => struct_vpiHandle);
+   procedure Free_Handle is new Ada.Unchecked_Deallocation
+      (Name => vpiHandle, Object => struct_vpiHandle);
+
+   procedure Free_Time is new Ada.Unchecked_Deallocation
+      (Name => p_vpi_time, Object => s_vpi_time);
+
+   procedure Free_Value is new Ada.Unchecked_Deallocation
+      (Name => p_vpi_value, Object => s_vpi_value);
 
    ------------------------------------------------------------------------
    -- NUL-terminate strings.
@@ -364,7 +370,24 @@ package body Grt.Vpi is
 -- * * *   V P I   f u n c t i o n s   * * * * * * * * * * * * * * * * * * * *
 -------------------------------------------------------------------------------
 
-   --  Free an handler, when it was not passed by reference.
+   --  Free a handle, checking for attached memory.
+   procedure Free (H : in out vpiHandle) is
+   begin
+      if H = null then
+         return;
+      end if;
+      if H.mType = vpiCallback then
+         if H.Cb.Time /= null then
+            Free_Time (H.Cb.Time);
+         end if;
+         if H.Cb.Value /= null then
+            Free_Value (H.Cb.Value);
+         end if;
+      end if;
+      Free_Handle (H);
+   end Free;
+
+   --  Free an handle, when it was not passed by reference.
    procedure Free_Copy (H : vpiHandle)
    is
       Copy : vpiHandle;
@@ -1568,6 +1591,13 @@ package body Grt.Vpi is
          Trace_Newline;
          Trace_Indent := Trace_Indent + 1;
       end if;
+
+      if Hand.Cb.Time /= null then
+         -- Supply the current simulation time.
+         vpi_get_time (null, Hand.Cb.Time);
+      end if;
+      Res := Hand.Cb.Cb_Rtn (Hand.Cb'Access);
+
       if Flag_Trace then
          Trace_Indent := Trace_Indent - 1;
          Trace_Start ("vpi end callback ");
@@ -1647,6 +1677,10 @@ package body Grt.Vpi is
          --  destroy it.
          --  However, we assume it doesn't remove the next callback...
 
+         if Hand.Cb.Value /= null then
+            -- Supply value before call.
+            vpi_get_value (Hand.Cb.Obj, Hand.Cb.Value);
+         end if;
          Call_Callback (Arg);
       end if;
    end Call_Valuechange_Callback;
@@ -1694,6 +1728,17 @@ package body Grt.Vpi is
 
       --  There is one reference to the callback as it is registered.
       Res.Cb_Refcnt := 1;
+
+      --  Copy caller's Time and Value structs.
+
+      if Res.Cb.Time /= null then
+         Res.Cb.Time := new s_vpi_time;
+         Res.Cb.Time.All := Data.Time.All;
+      end if;
+      if Res.Cb.Value /= null then
+         Res.Cb.Value := new s_vpi_value (Data.Value.Format);
+         Res.Cb.Value.All := Data.Value.All;
+      end if;
 
       case Data.Reason is
          when cbEndOfCompile =>
