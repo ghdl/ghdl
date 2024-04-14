@@ -1,5 +1,10 @@
 ## [Next] 5.0
 
+## [2024-04-14] 4.1
+
+- The mcode backend is now fully supported on Windows x64
+- Coverage output has been improved for being supported by vunit.
+
 ## [2024-03-06] 4.0
 
 - For the mcode backend, elaboration of the designs is now performed
