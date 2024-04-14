@@ -46,7 +46,7 @@ with Grt.Astdio; use Grt.Astdio;
 with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Strings; use Grt.Strings;
 with Grt.Hooks; use Grt.Hooks;
-with Grt.Options;
+with Grt.Options; use Grt.Options;
 with Grt.Vcd; use Grt.Vcd;
 with Grt.Errors; use Grt.Errors;
 with Grt.Rtis; use Grt.Rtis;
@@ -283,8 +283,12 @@ package body Grt.Vpi is
    procedure Trace_Time_Tag (V : Integer) is
    begin
       case V is
+         when vpiScaledRealTime =>
+            Trace ("vpiScaledRealTime");
          when vpiSimTime =>
             Trace ("vpiSimTime");
+         when vpiSuppressTime =>
+            Trace ("vpiSuppressTime");
          when others =>
             Trace (V);
       end case;
@@ -344,10 +348,15 @@ package body Grt.Vpi is
    function Vpi_Time_To_Time (V : s_vpi_time) return Std_Time is
       Res : Std_Time;
    begin
-      if V.mType /= vpiSimTime then
-         raise Program_Error;
-      end if;
-      Res := Std_Time (Unsigned_64 (V.mHigh) * 2 ** 32 + Unsigned_64 (V.mLow));
+      case V.mType is
+         when vpiSCaledRealTime =>
+            Res := Std_Time (Unsigned_64 (V.mReal / Time_Scale_Unit));
+         when vpiSimTime =>
+            Res := Std_Time (Unsigned_64 (V.mHigh) * 2 ** 32);
+            Res := Res + Std_Time (V.mLow);
+         when others =>
+            raise Program_Error;
+      end case;
       return Res;
    end Vpi_Time_To_Time;
 
@@ -1495,7 +1504,6 @@ package body Grt.Vpi is
    is
       function To_Unsigned_64 is
          new Ada.Unchecked_Conversion (Std_Time, Unsigned_64);
-      Res : Std_Time;
       V : Unsigned_64;
    begin
       if Flag_Trace then
@@ -1506,22 +1514,25 @@ package body Grt.Vpi is
          Trace ("}) = ");
       end if;
 
-      if Obj /= null
-        or else Time.mType /= vpiSimTime
-      then
+      if Obj /= null then
          dbgPut_Line ("vpi_get_time: unhandled");
          return;
       end if;
 
-      Res := Current_Time;
+      V := To_Unsigned_64 (Current_Time);
 
-      V := To_Unsigned_64 (Res);
-      Time.mHigh := Unsigned_32 (V / 2 ** 32);
-      Time.mLow  := Unsigned_32 (V mod 2 ** 32);
-      Time.mReal := 0.0;
+      case Time.mType is
+         when vpiScaledRealTime =>
+            Time.mReal := Long_Float (V) * Time_Scale_Unit;
+         when vpiSimTime =>
+            Time.mHigh := Unsigned_32 (V / 2 ** 32);
+            Time.mLow  := Unsigned_32 (V mod 2 ** 32);
+         when others =>
+            null;
+      end case;
 
       if Flag_Trace then
-         Trace_Time (Res);
+         Trace_Time (Current_Time);
          Trace_Newline;
       end if;
    end vpi_get_time;
@@ -1557,7 +1568,6 @@ package body Grt.Vpi is
          Trace_Newline;
          Trace_Indent := Trace_Indent + 1;
       end if;
-      Res := Hand.Cb.Cb_Rtn (Hand.Cb'Access);
       if Flag_Trace then
          Trace_Indent := Trace_Indent - 1;
          Trace_Start ("vpi end callback ");
@@ -1636,6 +1646,7 @@ package body Grt.Vpi is
          --  Note: the call may remove H from the list, or even
          --  destroy it.
          --  However, we assume it doesn't remove the next callback...
+
          Call_Callback (Arg);
       end if;
    end Call_Valuechange_Callback;

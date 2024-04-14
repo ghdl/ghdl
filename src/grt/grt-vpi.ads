@@ -101,7 +101,9 @@ package Grt.Vpi is
    vpiSuppressVal:   constant Integer := 13;
 
    -- codes for type tag of vpi_time structure
-   vpiSimTime:       constant Integer :=  2;
+   vpiScaledRealTime   : constant Integer :=  1;
+   vpiSimTime          : constant Integer :=  2;
+   vpiSuppressTime     : constant Integer :=  3;
 
    -- codes for the reason tag of cb_data structure
    cbValueChange       : constant := 1;

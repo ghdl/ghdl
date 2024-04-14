@@ -71,6 +71,9 @@ package Grt.Options is
    --  Set Time_Resolution_Scale from Flag_String.
    procedure Set_Time_Resolution;
 
+   --  Return the time scale unit.
+   function Time_Scale_Unit return Long_Float;
+
    --  Display options help.
    --  Should not be called directly.
    procedure Help;
