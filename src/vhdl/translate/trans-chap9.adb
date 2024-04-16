@@ -720,7 +720,6 @@ package body Trans.Chap9 is
             New_Assign_Stmt (New_Indexed_Element (Get_Var (Info.Psl_Vect_Var),
                                                   New_Obj_Value (Var_I)),
                              New_Lit (Std_Boolean_True_Node));
-            Inc_Var (Var_I);
          when others =>
             null;
       end case;
