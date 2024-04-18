@@ -1029,11 +1029,6 @@ package body Netlists.Inference is
          end;
       end if;
 
-      Find_Longest_Loop (Val, Prev_Val, Off, Last_Mux, Len);
-      if Len <= 0 then
-         --  No logical loop or self assignment.
-         return Val;
-      end if;
       if Last_Use
         and then Has_One_Connection (Prev_Val)
         and then not Is_Connected (Val)
@@ -1044,6 +1039,23 @@ package body Netlists.Inference is
          --     to infere (because it goes out of scope).
          --   * Prev_val must be connected once (to create a loop).
          --   * Val must not be connected (for variables).
+         return Val;
+      end if;
+
+      if not Flag_Latches and then Get_Id (First_Mux) = Id_Pmux then
+         for I in 1 .. Get_Nbr_Inputs (First_Mux) - 1 loop
+            if Get_Input_Net (First_Mux, I) = Prev_Val then
+               Error_Msg_Netlist
+                 (Loc, "latch infered for net %n (use --latches)",
+                  (1 => +Get_Prev_Val_Name (Prev_Val)));
+            end if;
+         end loop;
+         return Val;
+      end if;
+
+      Find_Longest_Loop (Val, Prev_Val, Off, Last_Mux, Len);
+      if Len <= 0 then
+         --  No logical loop or self assignment.
          return Val;
       end if;
 
