@@ -56,6 +56,11 @@ package Grt.Callbacks is
       Proc : Callback_Acc;
       Arg : System.Address := System.Null_Address);
 
+   -- The handle is freed if it is found in the list.
+   procedure Unregister_Callback_At
+     (List : in out Callback_Time_List;
+      Handle : in out Callback_Handle);
+
    type Callback_Mode is (Timed, Repeat, Oneshot);
    subtype Callback_Non_Timed_Mode is Callback_Mode range Repeat .. Oneshot;
 

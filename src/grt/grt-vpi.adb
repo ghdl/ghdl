@@ -1803,15 +1803,20 @@ package body Grt.Vpi is
            |  cbReadWriteSynch
            |  cbReadOnlySynch =>
             Delete_Callback (Ref.Cb_Handle);
-            Ref.Cb_Refcnt := Ref.Cb_Refcnt - 1;
-            if Ref.Cb_Refcnt > 0 then
-               --  Do not free REF.
-               Ref_Copy := null;
-            end if;
+         when cbAfterDelay =>
+            Unregister_Callback_At (Cb_After_Delay, Ref.Cb_Handle);
          when others =>
             Res := 0;
             Ref_Copy := null;
       end case;
+
+      if Res > 0 then
+         Ref.Cb_Refcnt := Ref.Cb_Refcnt - 1;
+         if Ref.Cb_Refcnt > 0 then
+            --  Do not free REF.
+            Ref_Copy := null;
+         end if;
+      end if;
 
       if Flag_Trace then
          if Ref_Copy = null then

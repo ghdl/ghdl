@@ -78,6 +78,37 @@ package body Grt.Callbacks is
       end if;
    end Register_Callback_At;
 
+   -- The handle is freed if it is found in the list.
+   procedure Unregister_Callback_At
+     (List : in out Callback_Time_List;
+      Handle : in out Callback_Handle)
+   is
+      C : Callback_Handle;
+   begin
+      if List.First = null or Handle = null then
+         return;
+      end if;
+      if List.First = Handle then
+         List.First := Handle.Next;
+         Free_Handle(Handle);
+         Handle := null;
+      else
+         C := List.First;
+         loop
+            if C.Next = Handle then
+               C.Next := Handle.Next;
+               Free_Handle(Handle);
+               Handle := null;
+               exit;
+            else
+               C := C.Next;
+               exit when C = null;
+            end if;
+         end loop;
+      end if;
+      pragma Assert (Handle = null);
+   end Unregister_Callback_At;
+
    procedure Call_Time_Callbacks (List : in out Callback_Time_List)
    is
       C : Callback_Handle;
