@@ -93,6 +93,12 @@ package Vhdl.Sem_Expr is
    --  LRM08 6.5.2 Interface object declarations.
    function Can_Interface_Be_Updated (Inter : Iir) return Boolean;
 
+   --  OBJ is an 'impure' object (variable, signal or file) referenced at
+   --  location LOC.
+   --  Check the pure rules (LRM08 4 Subprograms and packages,
+   --  LRM08 4.3 Subprograms bodies).
+   procedure Sem_Check_Pure (Loc : Iir; Obj : Iir);
+
    --  Check EXPR can be read.
    procedure Check_Read (Expr : Iir);
 

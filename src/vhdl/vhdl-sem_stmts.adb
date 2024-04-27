@@ -526,6 +526,8 @@ package body Vhdl.Sem_Stmts is
          Error_Msg_Sem (+Stmt, "signal name must be static");
       end if;
 
+      Sem_Check_Pure (Target, Target_Object);
+
       --  LRM93 2.1.1.2
       --  A formal signal parameter is a guarded signal if and only if
       --  it is associated with an actual signal that is a guarded
@@ -610,6 +612,8 @@ package body Vhdl.Sem_Stmts is
          Error_Msg_Sem
            (+Target, "element of a target aggregate must be a static name");
       end if;
+
+      Sem_Check_Pure (Target, Target_Object);
    end Check_Simple_Variable_Target;
 
    procedure Check_Target (Stmt : Iir; Target : Iir)

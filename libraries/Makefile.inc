@@ -291,6 +291,8 @@ $(LIBDST_DIR)/src/upf/%.vhdl: $(LIBSRC_DIR)/upf/%.vhdl
 	$(CP) $< $@
 
 
+# -frelaxed-rules is needed as some functions have parameters of record type
+# with access element (not allowed).
 ANALYZE_IEEE08=$(ANALYZE08) -P../.. --work=ieee
 ANALYZE_VITAL08=$(ANALYZE08) -P../.. --work=ieee -frelaxed-rules
 

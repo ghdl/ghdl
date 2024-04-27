@@ -4925,6 +4925,144 @@ package body Vhdl.Sem_Expr is
       end case;
    end Can_Interface_Be_Updated;
 
+   procedure Sem_Check_Pure (Loc : Iir; Obj : Iir)
+   is
+      procedure Update_Impure_Depth (Subprg_Spec : Iir; Depth : Iir_Int32)
+      is
+         Bod : constant Iir := Get_Subprogram_Body (Subprg_Spec);
+      begin
+         if Bod = Null_Iir then
+            return;
+         end if;
+         if Depth < Get_Impure_Depth (Bod) then
+            Set_Impure_Depth (Bod, Depth);
+         end if;
+      end Update_Impure_Depth;
+
+      procedure Error_Pure (Subprg : Iir; Obj : Iir)
+      is
+      begin
+         Error_Msg_Sem_Relaxed
+           (Loc, Warnid_Pure,
+            "reference to %n violate pure rule for %n", (+Obj, +Subprg));
+      end Error_Pure;
+
+      Subprg : constant Iir := Sem_Stmts.Get_Current_Subprogram;
+      Subprg_Body : Iir;
+      Parent : Iir;
+      Decl : Iir;
+   begin
+      --  Apply only in subprograms.
+      if Subprg = Null_Iir then
+         return;
+      end if;
+      case Get_Kind (Subprg) is
+         when Iir_Kinds_Process_Statement
+           | Iir_Kind_Simultaneous_Procedural_Statement =>
+            return;
+         when Iir_Kind_Procedure_Declaration =>
+            --  Exit now if already known as impure.
+            if Get_Purity_State (Subprg) = Impure then
+               return;
+            end if;
+         when Iir_Kind_Function_Declaration =>
+            --  Exit now if impure.
+            if Get_Pure_Flag (Subprg) = False then
+               return;
+            end if;
+         when others =>
+            Error_Kind ("sem_check_pure", Subprg);
+      end case;
+
+      --  Follow aliases.
+      if Get_Kind (Obj) = Iir_Kind_Object_Alias_Declaration then
+         Decl := Get_Object_Prefix (Get_Name (Obj));
+      else
+         Decl := Obj;
+      end if;
+
+      --  Not all objects are impure.
+      case Get_Kind (Decl) is
+         when Iir_Kind_Object_Alias_Declaration =>
+            raise Program_Error;
+         when Iir_Kind_Guard_Signal_Declaration
+           | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Variable_Declaration
+           | Iir_Kind_Interface_File_Declaration =>
+            null;
+         when Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Signal_Declaration =>
+            --  When referenced as a formal name (FIXME: this is an
+            --  approximation), the rules don't apply.
+            if not Get_Is_Within_Flag (Get_Parent (Decl)) then
+               return;
+            end if;
+         when Iir_Kind_File_Declaration
+            | Iir_Kind_External_Signal_Name
+            | Iir_Kind_External_Variable_Name =>
+            --  LRM 93 2.2
+            --  If a pure function is the parent of a given procedure, then
+            --  that procedure must not contain a reference to an explicitly
+            --  declared file object [...]
+            --
+            --  A pure function must not contain a reference to an explicitly
+            --  declared file.
+
+            --  GHDL: likewise for external names: they cannot appear in
+            --   pure functions.
+            if Get_Kind (Subprg) = Iir_Kind_Function_Declaration then
+               Error_Pure (Subprg, Obj);
+            else
+               Set_Purity_State (Subprg, Impure);
+               Set_Impure_Depth (Get_Subprogram_Body (Subprg),
+                                 Iir_Depth_Impure);
+            end if;
+            return;
+         when others =>
+            return;
+      end case;
+
+      --  DECL is declared in the immediate declarative part of the subprogram.
+      Parent := Get_Parent (Decl);
+      Subprg_Body := Get_Subprogram_Body (Subprg);
+      if Parent = Subprg or else Parent = Subprg_Body then
+         return;
+      end if;
+
+      --  Function.
+      if Get_Kind (Subprg) = Iir_Kind_Function_Declaration then
+         Error_Pure (Subprg, Obj);
+         return;
+      end if;
+
+      case Get_Kind (Parent) is
+         when Iir_Kind_Entity_Declaration
+           | Iir_Kind_Architecture_Body
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Body
+           | Iir_Kind_Block_Statement
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_Generate_Statement_Body
+           | Iir_Kinds_Process_Statement
+           | Iir_Kind_Protected_Type_Body =>
+            --  The procedure is impure.
+            Set_Purity_State (Subprg, Impure);
+            Set_Impure_Depth (Subprg_Body, Iir_Depth_Impure);
+            return;
+         when Iir_Kind_Function_Body
+           | Iir_Kind_Procedure_Body =>
+            Update_Impure_Depth
+              (Subprg,
+               Get_Subprogram_Depth (Get_Subprogram_Specification (Parent)));
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration =>
+            Update_Impure_Depth (Subprg, Get_Subprogram_Depth (Parent));
+         when others =>
+            Error_Kind ("sem_check_pure(2)", Parent);
+      end case;
+   end Sem_Check_Pure;
+
    procedure Check_Read_Aggregate (Aggr : Iir)
    is
       Atype : constant Iir := Get_Type (Aggr);
@@ -4970,6 +5108,7 @@ package body Vhdl.Sem_Expr is
             when Iir_Kind_Signal_Declaration
               | Iir_Kind_Variable_Declaration =>
                Set_Use_Flag (Obj, True);
+               Sem_Check_Pure (Expr, Obj);
                return;
             when Iir_Kind_Constant_Declaration
               | Iir_Kind_Interface_Constant_Declaration
@@ -4979,11 +5118,14 @@ package body Vhdl.Sem_Expr is
                return;
             when Iir_Kinds_Quantity_Declaration
               | Iir_Kind_Interface_Quantity_Declaration =>
+               Sem_Check_Pure (Expr, Obj);
                return;
             when Iir_Kinds_External_Name =>
+               Sem_Check_Pure (Expr, Obj);
                return;
             when Iir_Kind_Psl_Endpoint_Declaration
                | Iir_Kind_Psl_Boolean_Parameter =>
+               Sem_Check_Pure (Expr, Obj);
                return;
             when Iir_Kind_File_Declaration
               | Iir_Kind_Interface_File_Declaration =>
@@ -4999,6 +5141,7 @@ package body Vhdl.Sem_Expr is
                if not Can_Interface_Be_Read (Obj) then
                   Error_Msg_Sem (+Expr, "%n cannot be read", +Obj);
                end if;
+               Sem_Check_Pure (Expr, Obj);
                return;
             when Iir_Kind_Interface_View_Declaration =>
                --  Must be refined by the caller.  We don't know here if there
