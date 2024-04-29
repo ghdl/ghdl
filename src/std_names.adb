@@ -698,6 +698,8 @@ package body Std_Names is
       Def ("ceil",               Name_Ceil);
       Def ("floor",              Name_Floor);
       Def ("round",              Name_Round);
+      Def ("trunc",              Name_Trunc);
+      Def ("realmax",            Name_Realmax);
       Def ("exp",                Name_Exp);
       Def ("log",                Name_Log);
       Def ("log2",               Name_Log2);

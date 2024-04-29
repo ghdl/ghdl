@@ -3079,6 +3079,10 @@ package body Synth.Vhdl_Eval is
                  (Pow (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
             end;
 
+         when Iir_Predefined_Ieee_Math_Real_Realmax =>
+            return Create_Memory_Fp64
+              (Fp64'Max (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
+
          when Iir_Predefined_Ieee_Math_Real_Mod =>
             declare
                function Fmod (L, R : Fp64) return Fp64;
@@ -3157,6 +3161,13 @@ package body Synth.Vhdl_Eval is
                pragma Import (C, Round);
             begin
                return Create_Memory_Fp64 (Round (Read_Fp64 (Param1)), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Math_Real_Trunc =>
+            declare
+               function Trunc (Arg : Fp64) return Fp64;
+               pragma Import (C, Trunc);
+            begin
+               return Create_Memory_Fp64 (Trunc (Read_Fp64 (Param1)), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Math_Real_Sin =>
             declare
