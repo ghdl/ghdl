@@ -625,6 +625,11 @@ package body Vhdl.Sem_Stmts is
          Check_Aggregate_Target (Stmt, Target, Nbr);
          Check_Uniq_Aggregate_Associated (Target, Nbr);
       else
+         if Is_Error (Get_Type (Target)) then
+            --  Was already reported.
+            return;
+         end if;
+
          case Get_Kind (Stmt) is
             when Iir_Kind_Variable_Assignment_Statement
               | Iir_Kind_Conditional_Variable_Assignment_Statement
