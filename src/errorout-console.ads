@@ -19,6 +19,9 @@ package Errorout.Console is
    --  if not initialized.
    procedure Set_Program_Name (Name : String);
 
+   --  Likewise, but for non-Ada.
+   procedure Set_Program_Name_With_Len (Str : Thin_String_Ptr; Len : Natural);
+
    --  Report handle for the console.
    procedure Console_Error_Start (E : Error_Record);
    procedure Console_Message (Str : String);

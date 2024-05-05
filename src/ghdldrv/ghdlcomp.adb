@@ -329,10 +329,12 @@ package body Ghdlcomp is
    procedure Common_Compile_Init (Analyze_Only : Boolean) is
    begin
       if Analyze_Only then
+         --  Initialize library path and load std+work libraries.
          if not Setup_Libraries (True) then
             raise Option_Error;
          end if;
       else
+         --  Initialize library path and load std library.
          if not Setup_Libraries (False)
            or else not Libraries.Load_Std_Library
          then
@@ -487,16 +489,88 @@ package body Ghdlcomp is
         & ASCII.LF & "  aliases: -a, analyse";
    end Get_Short_Help;
 
+   function Analyze_File (Id : Name_Id) return Boolean
+   is
+      Design_File : Iir_Design_File;
+      New_Design_File : Iir_Design_File;
+      Unit : Iir;
+      Next_Unit : Iir;
+   begin
+      --  Parse file.
+      Design_File := Load_File_Name (Id);
+      if Errorout.Nbr_Errors > 0
+        and then not Flags.Flag_Force_Analysis
+      then
+         return False;
+      end if;
+
+      New_Design_File := Null_Iir;
+
+      if False then
+         --  Speed up analysis: remove all previous designs.
+         --  However, this is not in the LRM...
+         Libraries.Purge_Design_File (Design_File);
+      end if;
+
+      if Design_File /= Null_Iir then
+         Unit := Get_First_Design_Unit (Design_File);
+         while Unit /= Null_Iir loop
+            --  Analyze unit.
+            Finish_Compilation (Unit, True);
+
+            Next_Unit := Get_Chain (Unit);
+
+            if Errorout.Nbr_Errors = 0
+              or else (Flags.Flag_Force_Analysis
+                         and then Get_Library_Unit (Unit) /= Null_Iir)
+            then
+               Set_Chain (Unit, Null_Iir);
+               Libraries.Add_Design_Unit_Into_Library (Unit);
+               New_Design_File := Get_Design_File (Unit);
+            end if;
+
+            Unit := Next_Unit;
+         end loop;
+
+         if Errorout.Nbr_Errors > 0
+           and then not Flags.Flag_Force_Analysis
+         then
+            return False;
+         end if;
+
+         if New_Design_File = Design_File then
+            pragma Assert (Flags.Flag_Force_Analysis);
+            null;
+         else
+            Free_Iir (Design_File);
+         end if;
+
+         --  Do late analysis checks.
+         if New_Design_File /= Null_Iir then
+            Unit := Get_First_Design_Unit (New_Design_File);
+            while Unit /= Null_Iir loop
+               Vhdl.Sem.Sem_Analysis_Checks_List
+                 (Unit, Is_Warning_Enabled (Warnid_Delayed_Checks));
+               Unit := Get_Chain (Unit);
+            end loop;
+
+            if Errorout.Nbr_Errors > 0
+              and then not Flags.Flag_Force_Analysis
+            then
+               return False;
+            end if;
+         end if;
+      end if;
+
+      return True;
+   end Analyze_File;
+
    procedure Perform_Action (Cmd : in out Command_Analyze;
                              Args : String_Acc_Array;
                              Success : out Boolean)
    is
       pragma Unreferenced (Cmd);
       Id : Name_Id;
-      Design_File : Iir_Design_File;
-      New_Design_File : Iir_Design_File;
-      Unit : Iir;
-      Next_Unit : Iir;
    begin
       Success := False;
 
@@ -513,73 +587,9 @@ package body Ghdlcomp is
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
 
-         --  Parse file.
-         Design_File := Load_File_Name (Id);
-         if Errorout.Nbr_Errors > 0
-           and then not Flags.Flag_Force_Analysis
-         then
+         if not Analyze_File (Id) then
             Success := Flag_Expect_Failure;
             return;
-         end if;
-
-         New_Design_File := Null_Iir;
-
-         if False then
-            --  Speed up analysis: remove all previous designs.
-            --  However, this is not in the LRM...
-            Libraries.Purge_Design_File (Design_File);
-         end if;
-
-         if Design_File /= Null_Iir then
-            Unit := Get_First_Design_Unit (Design_File);
-            while Unit /= Null_Iir loop
-               --  Analyze unit.
-               Finish_Compilation (Unit, True);
-
-               Next_Unit := Get_Chain (Unit);
-
-               if Errorout.Nbr_Errors = 0
-                 or else (Flags.Flag_Force_Analysis
-                            and then Get_Library_Unit (Unit) /= Null_Iir)
-               then
-                  Set_Chain (Unit, Null_Iir);
-                  Libraries.Add_Design_Unit_Into_Library (Unit);
-                  New_Design_File := Get_Design_File (Unit);
-               end if;
-
-               Unit := Next_Unit;
-            end loop;
-
-            if Errorout.Nbr_Errors > 0
-              and then not Flags.Flag_Force_Analysis
-            then
-               Success := Flag_Expect_Failure;
-               return;
-            end if;
-
-            if New_Design_File = Design_File then
-               pragma Assert (Flags.Flag_Force_Analysis);
-               null;
-            else
-               Free_Iir (Design_File);
-            end if;
-
-            --  Do late analysis checks.
-            if New_Design_File /= Null_Iir then
-               Unit := Get_First_Design_Unit (New_Design_File);
-               while Unit /= Null_Iir loop
-                  Vhdl.Sem.Sem_Analysis_Checks_List
-                    (Unit, Is_Warning_Enabled (Warnid_Delayed_Checks));
-                  Unit := Get_Chain (Unit);
-               end loop;
-
-               if Errorout.Nbr_Errors > 0
-                 and then not Flags.Flag_Force_Analysis
-               then
-                  Success := Flag_Expect_Failure;
-                  return;
-               end if;
-            end if;
          end if;
       end loop;
 
@@ -587,7 +597,6 @@ package body Ghdlcomp is
          Success := Flag_Expect_Failure;
          return;
       end if;
-
 
       if Flag_Expect_Failure then
          Success := False;

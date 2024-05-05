@@ -130,6 +130,12 @@ package body Errorout.Console is
       Program_Name := new String'(Name);
    end Set_Program_Name;
 
+   procedure Set_Program_Name_With_Len
+     (Str : Thin_String_Ptr; Len : Natural) is
+   begin
+      Program_Name := new String'(Str (1 .. Len));
+   end Set_Program_Name_With_Len;
+
    procedure Disp_Program_Name is
    begin
       if Program_Name /= null then
