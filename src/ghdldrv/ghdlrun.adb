@@ -21,7 +21,6 @@ with Ada.Command_Line;
 with Interfaces;
 with Interfaces.C;
 
-with Types; use Types;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Ghdlcovout;

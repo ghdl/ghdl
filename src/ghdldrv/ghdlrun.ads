@@ -13,6 +13,8 @@
 --
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
+with Types; use Types;
+
 package Ghdlrun is
    procedure Register_Commands;
 
@@ -20,4 +22,7 @@ private
    --  For Rust:
    --  To be called before any compilation.
    procedure Compile_Init (Analyze_Only : Boolean);
+
+   procedure Compile_Elab
+     (Cmd_Name : String; Args : String_Acc_Array; Opt_Arg : out Natural);
 end Ghdlrun;
