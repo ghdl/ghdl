@@ -23,7 +23,6 @@
 
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Table;
-with System; use System;
 pragma Elaborate_All (Grt.Table);
 
 package body Grt.Files is
