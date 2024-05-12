@@ -4633,7 +4633,7 @@ package body Trans.Chap7 is
             --  1. Copy layout size
             for K in Object_Kind_Type loop
                New_Assign_Stmt (Chap3.Layout_To_Size (Res_El, K),
-                                New_Value (Chap3.Layout_To_Size (Res_El, K)));
+                                New_Value (Chap3.Layout_To_Size (Src_El, K)));
             end loop;
 
             --  2. Recurse on bounds
