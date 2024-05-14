@@ -960,8 +960,12 @@ package body Synth.Vhdl_Stmts is
                Connect (Inp, Get_Net (Ctxt, Val));
             end if;
          end if;
-         Val := Create_Value_Net (First, Targ.Targ_Type);
-         Synth_Assignment (Syn_Inst, Targ, Val, Stmt);
+         if Last /= No_Net then
+            --  Do not assign in case of error.
+            pragma Assert (First /= No_Net);
+            Val := Create_Value_Net (First, Targ.Targ_Type);
+            Synth_Assignment (Syn_Inst, Targ, Val, Stmt);
+         end if;
       end if;
 
       Release_Expr_Pool (Marker);
