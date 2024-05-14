@@ -348,6 +348,40 @@ package body Ghdlcomp is
       end if;
    end Common_Compile_Init;
 
+   function Compile_Elab_Top (Lib_Id : Name_Id;
+                              Prim_Id : Name_Id;
+                              Sec_Id : Name_Id;
+                              Allow_Undef_Generic : Boolean) return Iir
+   is
+      Config : Iir;
+   begin
+      Flags.Flag_Elaborate := True;
+
+      Config := Vhdl.Configuration.Configure (Lib_Id, Prim_Id, Sec_Id);
+      if Config = Null_Iir
+        or else Errorout.Nbr_Errors > 0
+      then
+         return Null_Iir;
+      end if;
+
+      --  Check (and possibly abandon) if entity can be at the top of the
+      --  hierarchy.
+      declare
+         Conf_Unit : constant Iir := Get_Library_Unit (Config);
+         Arch : constant Iir := Get_Named_Entity
+           (Get_Block_Specification (Get_Block_Configuration (Conf_Unit)));
+         Entity : constant Iir := Vhdl.Utils.Get_Entity (Arch);
+      begin
+         Vhdl.Configuration.Check_Entity_Declaration_Top
+           (Entity, Allow_Undef_Generic);
+         if Nbr_Errors > 0 then
+            return Null_Iir;
+         end if;
+      end;
+
+      return Config;
+   end Compile_Elab_Top;
+
    procedure Common_Compile_Elab (Cmd_Name : String;
                                   Args : String_Acc_Array;
                                   Allow_Undef_Generic : Boolean;
@@ -364,29 +398,11 @@ package body Ghdlcomp is
          raise Option_Error;
       end if;
 
-      Flags.Flag_Elaborate := True;
-
-      Config := Vhdl.Configuration.Configure (Lib_Id, Prim_Id, Sec_Id);
-      if Config = Null_Iir
-        or else Errorout.Nbr_Errors > 0
-      then
+      Config := Compile_Elab_Top
+        (Lib_Id, Prim_Id, Sec_Id, Allow_Undef_Generic);
+      if Config = Null_Iir then
          raise Compilation_Error;
       end if;
-
-      --  Check (and possibly abandon) if entity can be at the top of the
-      --  hierarchy.
-      declare
-         Conf_Unit : constant Iir := Get_Library_Unit (Config);
-         Arch : constant Iir := Get_Named_Entity
-           (Get_Block_Specification (Get_Block_Configuration (Conf_Unit)));
-         Entity : constant Iir := Vhdl.Utils.Get_Entity (Arch);
-      begin
-         Vhdl.Configuration.Check_Entity_Declaration_Top
-           (Entity, Allow_Undef_Generic);
-         if Nbr_Errors > 0 then
-            raise Compilation_Error;
-         end if;
-      end;
    end Common_Compile_Elab;
 
    procedure Perform_Action (Cmd : in out Command_Compile;
