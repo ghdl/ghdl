@@ -21,6 +21,7 @@ with Ada.Command_Line;
 with Interfaces;
 with Interfaces.C;
 
+with Types; use Types;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Ghdlcovout;
@@ -128,35 +129,8 @@ package body Ghdlrun is
       end case;
    end Compile_Init;
 
-   procedure Compile_Elab
-     (Cmd_Name : String; Args : String_Acc_Array; Opt_Arg : out Natural)
-   is
-      Config : Iir;
+   procedure Compile_Elab_Setup (Config : Iir) is
    begin
-      Common_Compile_Elab (Cmd_Name, Args, True, Opt_Arg, Config);
-
-      if Run_Mode /= Run_Elab_Jit then
-         --  For compatibility, also handle '-gGEN=VAL' options after the
-         --  top-level unit.
-         --  Handle --expect-failure
-         for I in Opt_Arg .. Args'Last loop
-            declare
-               Arg : String renames Args (I).all;
-               Res : Options.Option_State;
-               pragma Unreferenced (Res);
-            begin
-               if Arg'Length > 3
-                 and then Arg (Arg'First + 1) = 'g'
-                 and then Is_Generic_Override_Option (Arg)
-               then
-                  Res := Decode_Generic_Override_Option (Arg);
-               elsif Arg = "--expect-failure" then
-                  Flag_Expect_Failure := True;
-               end if;
-            end;
-         end loop;
-      end if;
-
       if Time_Resolution = 'a' then
          Time_Resolution := Vhdl.Std_Package.Get_Minimal_Time_Resolution;
          if Time_Resolution = '?' then
@@ -256,6 +230,38 @@ package body Ghdlrun is
       if Flags.Check_Ast_Level > 0 then
          Vhdl.Nodes_GC.Report_Unreferenced;
       end if;
+   end Compile_Elab_Setup;
+
+   procedure Compile_Elab
+     (Cmd_Name : String; Args : String_Acc_Array; Opt_Arg : out Natural)
+   is
+      Config : Iir;
+   begin
+      Common_Compile_Elab (Cmd_Name, Args, True, Opt_Arg, Config);
+
+      if Run_Mode /= Run_Elab_Jit then
+         --  For compatibility, also handle '-gGEN=VAL' options after the
+         --  top-level unit.
+         --  Handle --expect-failure
+         for I in Opt_Arg .. Args'Last loop
+            declare
+               Arg : String renames Args (I).all;
+               Res : Options.Option_State;
+               pragma Unreferenced (Res);
+            begin
+               if Arg'Length > 3
+                 and then Arg (Arg'First + 1) = 'g'
+                 and then Is_Generic_Override_Option (Arg)
+               then
+                  Res := Decode_Generic_Override_Option (Arg);
+               elsif Arg = "--expect-failure" then
+                  Flag_Expect_Failure := True;
+               end if;
+            end;
+         end loop;
+      end if;
+
+      Compile_Elab_Setup (Config);
    end Compile_Elab;
 
    --  Set options.
@@ -278,6 +284,7 @@ package body Ghdlrun is
 --           return To_Ghdl_C_String (T.all'Address);
 --        end Strdup;
    begin
+      --  Argc, Argv and Progname are from Grt.Options.
       Argc := 1 + Args'Length;
       Argv := Malloc
         (size_t (Argc * (Ghdl_C_String'Size / System.Storage_Unit)));
