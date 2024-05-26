@@ -2,8 +2,8 @@
 #include <vpi_user.h>
 #define N_NAMES 12
 
-void
-vpi_proc (void)
+PLI_INT32
+vpi_proc (s_cb_data *cb)
 {
   s_vpi_vlog_info info;
   int i;
@@ -11,12 +11,12 @@ vpi_proc (void)
   int ret = vpi_get_vlog_info(&info);
   if (ret != 1) {
     printf ("Error: Failed to get vlog_info\n");
-    return;
+    return -1;
   }
 
   if (info.argc < 1) {
      printf ("Error: Argc was 0\n");
-     return;
+     return -1;
   }
   printf ("Argc: %d\n", info.argc);
 
@@ -26,15 +26,16 @@ vpi_proc (void)
 
   if (info.product == NULL) {
     printf ("Error: product is NULL\n");
-    return;
+    return -1;
   }
   printf ("Product: %s\n", info.product);
 
   if (info.version == NULL) {
     printf ("Error: version is NULL\n");
-    return;
+    return -1;
   }
   printf ("Version: %s\n", info.version);
+  return 0;
 }
 
 void my_handle_register()
