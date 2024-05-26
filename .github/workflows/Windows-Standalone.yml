@@ -90,9 +90,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {icon: '🟪', sys: 'MINGW32' }
-#          - {icon: '🟦', sys: 'MINGW64' } #! simulation with mcode is not yet supported on win64
-#          - {icon: '🟨', sys: 'UCRT64' } #! experimental; simulation with mcode is not yet supported on win64
+#          - {icon: '🟪', sys: 'MINGW32' }
+          - {icon: '🟦', sys: 'MINGW64' }
+          - {icon: '🟨', sys: 'UCRT64' }
 
     defaults:
       run:
