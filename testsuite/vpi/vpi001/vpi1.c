@@ -2,8 +2,8 @@
 #include <vpi_user.h>
 #define N_NAMES 12
 
-void
-vpi_proc (void)
+PLI_INT32
+vpi_proc (s_cb_data *cb)
 {
   vpiHandle net;
   s_vpi_value val;
@@ -39,12 +39,13 @@ vpi_proc (void)
     if (net == NULL)
         {
         printf ("Error: Failed to find the net %s\n", names[name_index]);
-        return;
+        return -1;
         }
     val.format = vpiBinStrVal;
     vpi_get_value (net, &val);
     printf ("value: %s\n", val.value.str);
   }
+  return 0;
 }
 
 void my_handle_register()
