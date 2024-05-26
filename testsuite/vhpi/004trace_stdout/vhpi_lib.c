@@ -23,7 +23,7 @@ void my_startup()
   time.high = 0;
   time.low = 0;
 
-  vhpi_register_cb(&cb_data, NULL);
+  vhpi_register_cb(&cb_data, 0);
 }
 
 void (*vhpi_startup_routines[]) () =
