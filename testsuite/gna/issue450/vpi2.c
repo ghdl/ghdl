@@ -40,7 +40,7 @@ void printContent (vpiHandle parent)
     }
 }
 
-void printModules()
+PLI_INT32 printModules(s_cb_data *cb)
 {
   vpiHandle topModIterator;
   vpiHandle topModHandle;
@@ -53,7 +53,7 @@ void printModules()
   vpi_printf ("got to here1 \n");
   if (!topModIterator)
     {
-      return;
+      return -1;
     }
 
   /* use vpi_scan to iterate throught modules */
@@ -64,6 +64,8 @@ void printModules()
 
       printContent (topModHandle);
     }
+
+  return 0;
 }
 
 
