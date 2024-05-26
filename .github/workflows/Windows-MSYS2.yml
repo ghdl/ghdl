@@ -17,7 +17,7 @@ jobs:
 #          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32', arch: 'i686' } ! not yet functional
           - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64', arch: 'x86_64' }
           - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64', arch: 'ucrt-x86_64'  } #! experimental
-          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', arch: 'i686'  }
+#          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', arch: 'i686'  } ! no compiler
           - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', arch: 'x86_64' }
           - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64', arch: 'ucrt-x86_64'  }
 
@@ -85,7 +85,7 @@ jobs:
 #          - {icon: '🟪', pkg: 'llvm',  sys: 'MINGW32' } ! not yet functional
           - {icon: '🟦', pkg: 'llvm',  sys: 'MINGW64' }
           - {icon: '🟨', pkg: 'llvm',  sys: 'UCRT64'  } #! experimental
-          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32' }
+#          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32' }
           - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64' }
           - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64'  }
 

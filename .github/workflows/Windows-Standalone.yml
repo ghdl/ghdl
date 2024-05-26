@@ -17,9 +17,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', arch: 'i686' }
-#          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', arch: 'x86_64' } #! simulation with mcode is not yet supported on win64
-          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64', arch: 'ucrt-x86_64'  } #! experimental; simulation with mcode is not yet supported on win64
+#          - {icon: '🟪', pkg: 'mcode', sys: 'MINGW32', arch: 'i686' }
+          - {icon: '🟦', pkg: 'mcode', sys: 'MINGW64', arch: 'x86_64' }
+          - {icon: '🟨', pkg: 'mcode', sys: 'UCRT64', arch: 'ucrt-x86_64'  }
 
     env:
       MINGW_ARCH: ${{ matrix.sys }}
