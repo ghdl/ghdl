@@ -16,7 +16,6 @@ enum VhdlStd {
 struct NameId {
     v: u32,
 }
-const NO_NAMEID: NameId = NameId { v: 0 };
 
 #[repr(transparent)]
 #[derive(Copy, Clone, PartialEq)]
@@ -37,6 +36,9 @@ extern "C" {
 
     #[link_name = "flags__flag_only_elab_warnings"]
     static mut flag_only_elab_warnings: bool;
+
+    #[link_name = "flags__flag_syn_binding"]
+    static mut flag_syn_binding: bool;
 
     #[link_name = "vhdl__scanner__flag_psl_comment"]
     static mut flag_psl_comment: bool;
@@ -98,6 +100,9 @@ extern "C" {
     #[link_name = "libraries__work_library"]
     static mut work_library: VhdlNode;
 
+    #[link_name = "libraries__work_library_name"]
+    static mut work_library_name: NameId;
+
     #[link_name = "libraries__load_work_library"]
     fn load_work_library(empty: bool);
 
@@ -113,6 +118,8 @@ extern "C" {
 }
 
 impl NameId {
+    const NULL: NameId = NameId { v: 0 };
+
     fn from_string(s: &str) -> NameId {
         unsafe { get_identifier_with_len(s.as_ptr(), s.len() as u32) }
     }
@@ -163,6 +170,8 @@ struct VhdlAnalyzeFlags {
     relaxed: bool,
     bootstrap: bool,
     synopsys_pkgs: bool,
+    synth_binding: bool,
+    work_name: NameId,
     psl_comment: bool,
     comment_keyword: bool,
 }
@@ -172,6 +181,8 @@ static DEFAULT_VHDL_FLAGS: VhdlAnalyzeFlags = VhdlAnalyzeFlags {
     relaxed: true,
     bootstrap: false,
     synopsys_pkgs: false,
+    synth_binding: false,
+    work_name: NameId::NULL,
     psl_comment: false,
     comment_keyword: false,
 };
@@ -182,6 +193,8 @@ fn apply_analyze_flags(flags: &VhdlAnalyzeFlags) {
         flag_relaxed = flags.relaxed;
         flag_comment_keyword = flags.comment_keyword;
         flag_psl_comment = flags.psl_comment;
+        flag_syn_binding = flags.synth_binding;
+        work_library_name = flags.work_name;
     }
 }
 
@@ -249,6 +262,17 @@ fn parse_analyze_flags(flags: &mut VhdlAnalyzeFlags, arg: &str) -> Option<ParseS
     if arg == "-fpsl" {
         flags.comment_keyword = true;
         flags.psl_comment = true;
+        return None;
+    }
+    if arg == "--syn-binding" {
+        flags.synth_binding = true;
+        return None;
+    }
+    if arg.starts_with("--work=") {
+        flags.work_name = NameId::from_string(&arg[7..]);
+        return None;
+    }
+    if arg == "-g" {
         return None;
     }
     return Some(ParseStatus::UnknownOption {
@@ -354,8 +378,8 @@ impl Command for CommandRemove {
 fn analyze_elab(args: &[String]) -> Result<Vec<String>, ParseStatus> {
     let mut flags = DEFAULT_VHDL_FLAGS;
     let mut expect_failure = false;
-    let mut unit = NO_NAMEID;
-    let mut arch = NO_NAMEID;
+    let mut unit = NameId::NULL;
+    let mut arch = NameId::NULL;
     let mut runflags = vec![];
 
     // Parse arguments
@@ -370,9 +394,9 @@ fn analyze_elab(args: &[String]) -> Result<Vec<String>, ParseStatus> {
                 return Err(err);
             }
         } else {
-            if unit == NO_NAMEID {
+            if unit == NameId::NULL {
                 unit = NameId::from_string(arg);
-            } else if arch == NO_NAMEID {
+            } else if arch == NameId::NULL {
                 arch = NameId::from_string(arg);
             } else {
                 eprintln!("too many unit names");
@@ -388,7 +412,7 @@ fn analyze_elab(args: &[String]) -> Result<Vec<String>, ParseStatus> {
         flag_elaborate_with_outdated = false;
         flag_only_elab_warnings = true;
     };
-    let top = unsafe { compile_elab_top(NO_NAMEID, unit, arch, false) };
+    let top = unsafe { compile_elab_top(NameId::NULL, unit, arch, false) };
     if top == NULL_VHDLNODE {
         if expect_failure {
             return Result::Err(ParseStatus::CommandExpectedError);
