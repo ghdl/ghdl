@@ -43,7 +43,7 @@ jobs:
         shell: bash
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
@@ -135,7 +135,7 @@ jobs:
            git config --global core.autocrlf input
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: checkout
 

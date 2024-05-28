@@ -41,7 +41,7 @@ jobs:
         shell: bash
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
@@ -119,7 +119,7 @@ jobs:
         shell: bash
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: '📥 Download artifact: package'
         uses: actions/download-artifact@v3

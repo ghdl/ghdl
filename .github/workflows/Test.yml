@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: '🧰 Checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: '📚 Run gnatdoc'
         run: |
@@ -51,7 +51,7 @@ jobs:
     steps:
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: '⛴ Build ghdl/doc'
         run: |
@@ -95,7 +95,7 @@ jobs:
 
     steps:
       - name: '🧰 Checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: '🐍 Setup Python'
         uses: actions/setup-python@v4
@@ -146,7 +146,7 @@ jobs:
     steps:
 
       - name: '🧰 Checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - run: TASK=bullseye+mcode ./scripts/ci-run.sh -c --gplcompat
 
@@ -170,7 +170,7 @@ jobs:
 
     steps:
       - name: '🧰 Checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: '🛳 Build and test GHDL in containers'
         run: |
@@ -203,7 +203,7 @@ jobs:
 
     steps:
       - name: '🧰 Checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: '💾 Cache gnat'
         id: cache-gnat
