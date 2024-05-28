@@ -79,7 +79,7 @@ jobs:
       matrix:
         include:
 #          - {icon: '🟪', sys: 'MINGW32', pyarch: x86 }
-          - {icon: '🟦', sys: 'MINGW64', pyarch: x64 }
+#          - {icon: '🟦', sys: 'MINGW64', pyarch: x64 }
           - {icon: '🟨', sys: 'UCRT64',  pyarch: x64 }
 
     defaults:
