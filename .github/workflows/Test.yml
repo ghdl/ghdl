@@ -161,13 +161,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: 20, backend: mcode }
-          - { os: 22, backend: mcode }
           - { os: 24, backend: mcode }
-#          - { os: 20, backend: llvm-10 }
+          - { os: 22, backend: mcode }
           - { os: 22, backend: llvm-14 }
-#          - { os: 20, backend: gcc-9.4.0 }
           - { os: 22, backend: gcc-12.1.0 }
+          - { os: 20, backend: mcode }
+#          - { os: 20, backend: llvm-10 }
+#          - { os: 20, backend: gcc-9.4.0 }
 
     steps:
       - name: '🧰 Checkout'
