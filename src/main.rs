@@ -194,7 +194,9 @@ fn apply_analyze_flags(flags: &VhdlAnalyzeFlags) {
         flag_comment_keyword = flags.comment_keyword;
         flag_psl_comment = flags.psl_comment;
         flag_syn_binding = flags.synth_binding;
-        work_library_name = flags.work_name;
+        if flags.work_name != NameId::NULL {
+            work_library_name = flags.work_name;
+        }
     }
 }
 
@@ -272,7 +274,8 @@ fn parse_analyze_flags(flags: &mut VhdlAnalyzeFlags, arg: &str) -> Option<ParseS
         flags.work_name = NameId::from_string(&arg[7..]);
         return None;
     }
-    if arg == "-g" {
+    if arg == "-g" || arg == "-O" {
+        //  TODO: for the back-end.
         return None;
     }
     return Some(ParseStatus::UnknownOption {
