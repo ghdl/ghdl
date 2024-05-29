@@ -195,12 +195,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-        - '11'
-#        - '12' # issue1897 fails.  Maybe test 11 build on 12.
-        backend:
-          - mcode
-          - llvm
+        include:
+          - { os: 11, backend: mcode }
+          - { os: 11, backend: llvm }
+          - { os: 12, backend: mcode }
 
     steps:
       - name: '🧰 Checkout'
