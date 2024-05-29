@@ -410,7 +410,8 @@ RUN --mount=type=bind,src=./,target=/tmp/ghdl/ \
 EOF
 		  gend
 	      else
-		  pip3 install -r testsuite/requirements.txt
+		  python3 -m venv my-venv
+		  my-venv/bin/pip install -r testsuite/requirements.txt
 	      fi
               tests+=" pyunit"
               ;;
@@ -435,7 +436,7 @@ EOF
 	  # Run tests in docker container
 	  $RUN "$GHDL_TEST_IMAGE" bash -c "GHDL=ghdl ./testsuite/testsuite.sh $tests"
       else
-	  PATH="$PATH:$(pwd)/install-$(echo "$TASK" | cut -d+ -f2)/usr/local/bin" \
+	  PATH="$PATH:$(pwd)/install-$(echo "$TASK" | cut -d+ -f2)/usr/local/bin" PYTHON="$(pwd)/my-venv/bin/python" \
 	      ./testsuite/testsuite.sh $tests
       fi
   fi
