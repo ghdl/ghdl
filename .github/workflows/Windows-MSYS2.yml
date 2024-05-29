@@ -110,7 +110,6 @@ jobs:
           update: true
           pacboy: >
             diffutils:p
-            gcc:p
             python-pip:p
             python-setuptools:p
 
