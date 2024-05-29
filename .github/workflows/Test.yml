@@ -35,7 +35,7 @@ jobs:
           EOF
 
       - name: '📤 Upload artifact: gnatdoc'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: gnatdoc
           path: gnatdoc
@@ -62,7 +62,7 @@ jobs:
           EOF
 
       - name: '📥 Download artifact: gnatdoc'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: gnatdoc
           path: public/gnatdoc
@@ -78,7 +78,7 @@ jobs:
       #- run: nroff -man doc/_build/man/ghdl.1
 
       - name: '📤 Upload artifact: HTML, LaTeX and man'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: doc
           path: |
@@ -128,7 +128,7 @@ jobs:
         run: python setup.py bdist_wheel
 
       - name: '📤 Upload artifact: pyGHDL'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pyGHDL
           path: dist/
@@ -179,7 +179,7 @@ jobs:
           mv ghdl-*-ubuntu${{ matrix.os }}-*.tgz ghdl-gha-ubuntu-${{ matrix.os }}.04-$(echo ${{ matrix.backend }} | sed 's#-.*##g').tgz
 
       - name: '📤 Upload artifact: package'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu${{ matrix.os }}-${{ matrix.backend }}
           path: ghdl-gha-ubuntu-*.tgz
@@ -230,7 +230,7 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: '10.14'
 
       - name: '📤 Upload artifact: package'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: macos${{ matrix.os }}-${{ matrix.backend }}
           path: ghdl-macos-${{ matrix.os }}-${{ matrix.backend }}.tgz
@@ -268,7 +268,7 @@ jobs:
     steps:
 
       - name: '📥 Download artifacts'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
 

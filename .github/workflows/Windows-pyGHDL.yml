@@ -33,7 +33,7 @@ jobs:
           architecture: ${{ matrix.pyarch }}
 
       - name: '📥 Download artifact: package'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifact
           name: ${{ matrix.sys }}-pre-wheel
@@ -54,7 +54,7 @@ jobs:
           python3 -m pyGHDL.cli.dom version
 
       - name: '📤 Upload artifact: wheel'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.sys }}-wheel
           path: |
@@ -94,7 +94,7 @@ jobs:
           architecture: ${{ matrix.pyarch }}
 
       - name: '📥 Download artifact: package'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifact
           name: ${{ matrix.sys }}-wheel

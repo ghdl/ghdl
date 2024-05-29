@@ -56,7 +56,7 @@ jobs:
           done
 
       - name: '📤 Upload artifact: builddir'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.sys }}-${{ matrix.pkg }}-builddir
           path: |
@@ -64,7 +64,7 @@ jobs:
             scripts/msys2-${{ matrix.pkg }}/msys2-${{ matrix.pkg }}.pkg.tar.gz
 
       - name: '📤 Upload artifact: package'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.sys }}-${{ matrix.pkg }}
           path: scripts/msys2-${{ matrix.pkg }}/mingw-*ghdl*.pkg.tar.zst
@@ -122,7 +122,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: '📥 Download artifact: package'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifact
           name: ${{ matrix.sys.sys }}-${{ matrix.sys.pkg }}

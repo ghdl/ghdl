@@ -65,14 +65,14 @@ jobs:
           zip ghdl-${{matrix.sys}}.zip -r GHDL
 
       - name: '📤 Upload artifact: pre-wheel'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.sys }}-pre-wheel
           path: |
             builddir/pre-wheel-${{matrix.sys}}.zip
 
       - name: '📤 Upload artifact: zip pure-win'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.sys }}-zip-win
           path: |
@@ -100,7 +100,7 @@ jobs:
 
     steps:
       - name: '📥 Download artifact: package'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifact
           name: ${{ matrix.sys }}-zip-win
