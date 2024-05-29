@@ -208,7 +208,7 @@ jobs:
 
       - name: '💾 Cache gnat'
         id: cache-gnat
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: gnat
           key: ${{ runner.os }}-gnat
