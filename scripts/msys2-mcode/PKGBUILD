@@ -10,6 +10,7 @@ license=('GPL2+')
 url='https://github.com/ghdl'
 provides=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}-mcode")
+# libgnat.dll is needed for libghdl.
 depends=(
   "${MINGW_PACKAGE_PREFIX}-gcc-ada"
   "${MINGW_PACKAGE_PREFIX}-zlib"
