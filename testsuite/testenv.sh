@@ -165,10 +165,18 @@ verilog_synth_tb()
 # Check if a C compiler is installed on this system
 c_compiler_is_available ()
 {
-  if [ -z $CC ]; then
-    CC="gcc"
-  fi
-  which $CC
+    if [ -z $CC ]; then
+	if which gcc 2> /dev/null; then
+	    CC=gcc
+	elif which clang 2> /dev/null; then
+	    CC=clang
+	else
+	    CC=cc
+	fi
+    fi
+
+    # Check the presence of the C compiler
+    which $CC
 }
 
 # Check if a feature is present
