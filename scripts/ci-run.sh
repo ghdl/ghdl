@@ -218,7 +218,7 @@ build () {
           echo "$gccURL"
           mkdir gcc-srcs
           curl -L "$gccURL" | tar -xz -C gcc-srcs --strip-components=1
-	  sudo apt-get -y install --no-install-recommends libgmp-dev libmpfr-dev libmpc-dev
+	  apt-get -y install --no-install-recommends libgmp-dev libmpfr-dev libmpc-dev
 
           gend
 
