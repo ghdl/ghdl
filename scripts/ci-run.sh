@@ -48,6 +48,7 @@ set -e
 ISGPL=false
 ISSYNTH=true
 USEDOCKER=false
+SUDO=sudo
 
 # Transform long options to short ones
 for arg in "$@"; do
@@ -65,7 +66,7 @@ done
 # Parse args
 while getopts ":b:p:cdgs" opt; do
   case $opt in
-    d) USEDOCKER=true;;
+    d) USEDOCKER=true; unset SUDO;;
     c) enable_color;;
     b) BACK=$OPTARG ;;
     p) PKG_NAME=$OPTARG;;
@@ -218,7 +219,7 @@ build () {
           echo "$gccURL"
           mkdir gcc-srcs
           curl -L "$gccURL" | tar -xz -C gcc-srcs --strip-components=1
-	  apt-get -y install --no-install-recommends libgmp-dev libmpfr-dev libmpc-dev
+	  $SUDO apt-get -y install --no-install-recommends libgmp-dev libmpfr-dev libmpc-dev
 
           gend
 
