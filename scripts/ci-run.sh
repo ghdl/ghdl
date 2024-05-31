@@ -66,11 +66,11 @@ done
 # Parse args
 while getopts ":b:p:cdgs" opt; do
   case $opt in
-    d) USEDOCKER=true; unset SUDO;;
-    c) enable_color;;
     b) BACK=$OPTARG ;;
-    p) PKG_NAME=$OPTARG;;
+    c) enable_color;;
+    d) USEDOCKER=true; unset SUDO;;
     g) ISGPL=true;;
+    p) PKG_NAME=$OPTARG;;
     s) ISSYNTH=false;;
     \?) printf "$ANSI_RED[CI - args] Invalid option: -$OPTARG $ANSI_NOCOLOR\n" >&2
         exit 1 ;;
@@ -367,7 +367,7 @@ ci_run () {
               -e GHDL_VER_HASH="$(git rev-parse HEAD)" \
               -e CONFIG_OPTS="$CONFIG_OPTS" \
               ghdl/build:"$BUILD_IMAGE_TAG" \
-              bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
+              bash -c "${scriptdir}/ci-run.sh -d $BUILD_CMD_OPTS build"
       else
 	  sudo apt-get update -qq
 	  sudo apt-get -y install --no-install-recommends gnat zlib1g-dev
