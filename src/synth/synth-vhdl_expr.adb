@@ -2521,11 +2521,27 @@ package body Synth.Vhdl_Expr is
                   --  Propagate error.
                   return No_Valtyp;
                end if;
-               if Hook_Signal_Expr /= null
-                 and then (Base.Val.Kind = Value_Signal
-                             or else Base.Val.Kind = Value_Sig_Val)
+               if Base.Val.Kind = Value_Signal
+                 or else Base.Val.Kind = Value_Sig_Val
                then
-                  Base := Hook_Signal_Expr (Base);
+                  if Hook_Signal_Expr /= null then
+                     Base := Hook_Signal_Expr (Base);
+                  elsif Flags.Flag_Relaxed_Rules then
+                     Warning_Msg_Synth
+                       (Warnid_Elaboration, +Expr,
+                        "cannot use signal value during elaboration");
+                     pragma Assert (Dyn.Voff = No_Net);
+                     if Base.Val.Init = null then
+                        --  No default value
+                        Res := Create_Value_Memory
+                          (Typ, Current_Pool);
+                        Write_Value_Default (Res.Val.Mem, Typ);
+                     else
+                        Res := Create_Value_Memtyp
+                          ((Typ, Base.Val.Init.Mem + Off.Mem_Off));
+                     end if;
+                     return Res;
+                  end if;
                end if;
                if Dyn.Voff = No_Net and then Is_Static (Base.Val) then
                   Res := Create_Value_Memtyp
