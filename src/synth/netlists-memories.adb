@@ -18,6 +18,7 @@
 
 with Ada.Unchecked_Deallocation;
 with Errorout; use Errorout;
+with Mutils;
 
 with Grt.Algos;
 
@@ -278,10 +279,12 @@ package body Netlists.Memories is
       Mem_Depth : Uns32;
       Last_Size : Uns32;
       Low_Addr : Net;
+      Is_Pow2 : Boolean;
 
       type Idx_Data is record
          Inst : Instance;
          Addr : Net;
+         Step : Uns32;
       end record;
       type Idx_Array is array (Natural range <>) of Idx_Data;
       Indexes : Idx_Array (1 .. Nbr_Idx);
@@ -301,15 +304,16 @@ package body Netlists.Memories is
             case Get_Id (Inst) is
                when Id_Memidx =>
                   P := P + 1;
-                  Indexes (P) := (Inst => Inst, Addr => No_Net);
+                  Indexes (P) := (Inst => Inst, Addr => No_Net, Step => 0);
                   exit;
                when Id_Addidx =>
                   Inst2 := Get_Input_Instance (Inst, 0);
                   if Get_Id (Inst2) /= Id_Memidx then
+                     --  That's the convention.
                      raise Internal_Error;
                   end if;
                   P := P + 1;
-                  Indexes (P) := (Inst => Inst2, Addr => No_Net);
+                  Indexes (P) := (Inst => Inst2, Addr => No_Net, Step => 0);
                   N := Get_Input_Net (Inst, 1);
                when others =>
                   raise Internal_Error;
@@ -328,6 +332,7 @@ package body Netlists.Memories is
 
       --  Do checks on memidx.
       Last_Size := Mem_Size;
+      Is_Pow2 := True;
       for I in Indexes'Range loop
          declare
             Inst : constant Instance := Indexes (I).Inst;
@@ -352,6 +357,15 @@ package body Netlists.Memories is
                if Step /= Val_Wd then
                   raise Internal_Error;
                end if;
+            else
+               --  As the addresses are concatenated, the step must be
+               --  a power of 2.
+               if not Mutils.Is_Power2 (Uns64 (Step)) then
+                  Is_Pow2 := False;
+                  Info_Msg_Synth
+                    (+Inst, "internal width %v of memory is not a power of 2",
+                     (1 => +Step));
+               end if;
             end if;
 
             --  Check addr width.
@@ -366,20 +380,63 @@ package body Netlists.Memories is
                Sub_Addr1 := Sub_Addr;
             end if;
             Indexes (I).Addr := Sub_Addr1;
+            Indexes (I).Step := Max + 1;
          end;
       end loop;
 
-      --  Lower (just concat addresses).
-      declare
-         use Netlists.Concats;
-         Concat : Concat_Type;
-      begin
-         for I in reverse Indexes'Range loop
-            Append (Concat, Indexes (I).Addr);
-         end loop;
+      --  Lower
+      if Nbr_Idx = 1 then
+         Low_Addr := Indexes (1).Addr;
+      elsif Is_Pow2 then
+         --  (just concat addresses)
+         declare
+            use Netlists.Concats;
+            Concat : Concat_Type;
+         begin
+            for I in reverse Indexes'Range loop
+               Append (Concat, Indexes (I).Addr);
+            end loop;
 
-         Build (Ctxt, Concat, Low_Addr);
-      end;
+            Build (Ctxt, Concat, Low_Addr);
+         end;
+      else
+         declare
+            Step, Nstep : Uns32;
+            Addr_W : Width;
+            Addr : Net;
+            Loc : Location_Type;
+         begin
+            for I in reverse Indexes'Range loop
+               if I = Indexes'Last then
+                  Low_Addr := Indexes (I).Addr;
+                  Step := Indexes (I).Step;
+               else
+                  Nstep := Step * Indexes (I).Step;
+                  if Mutils.Is_Power2 (Uns64 (Step)) then
+                     Low_Addr := Build_Concat2
+                       (Ctxt, Indexes (I).Addr, Low_Addr);
+                  else
+                     --  Compute the new width
+                     Addr_W := Clog2 (Nstep);
+                     Loc := Get_Location (Indexes (I).Inst);
+                     --  Extend low_addr and addr
+                     Addr := Indexes (I).Addr;
+                     Low_Addr := Build2_Uresize (Ctxt, Low_Addr, Addr_W, Loc);
+                     Addr := Build2_Uresize (Ctxt, Addr, Addr_W, Loc);
+                     --  multiply addr
+                     Addr := Build_Dyadic
+                       (Ctxt, Id_Umul, Addr,
+                        Build2_Const_Uns (Ctxt, Uns64 (Step), Addr_W));
+                     Set_Location (Addr, Loc);
+                     --  Add
+                     Low_Addr := Build_Dyadic (Ctxt, Id_Add, Low_Addr, Addr);
+                     Set_Location (Low_Addr, Loc);
+                  end if;
+                  Step := Nstep;
+               end if;
+            end loop;
+         end;
+      end if;
 
       --  Free addidx and memidx.
       if Can_Free then
