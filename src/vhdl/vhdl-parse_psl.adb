@@ -990,17 +990,17 @@ package body Vhdl.Parse_Psl is
                if Prio > Prio_FL_Abort then
                   return Res;
                end if;
-               return Parse_Abort (N_Abort, Res);
+               Res := Parse_Abort (N_Abort, Res);
             when Tok_Sync_Abort =>
                if Prio > Prio_FL_Abort then
                   return Res;
                end if;
-               return Parse_Abort (N_Sync_Abort, Res);
+               Res := Parse_Abort (N_Sync_Abort, Res);
             when Tok_Async_Abort =>
                if Prio > Prio_FL_Abort then
                   return Res;
                end if;
-               return Parse_Abort (N_Async_Abort, Res);
+               Res := Parse_Abort (N_Async_Abort, Res);
             when Tok_Exclam_Mark =>
                N := Create_Node_Loc (N_Strong);
                Set_Property (N, Res);
