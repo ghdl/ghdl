@@ -127,6 +127,7 @@ class IntegerType(VHDLModel_IntegerType, DOMMixin):
 
           type integer is range -2147483648 to 2147483647;
     """
+
     def __init__(self, node: Iir, typeName: str, rng: Union[Range, "Name"]):
         super().__init__(typeName, rng)
         DOMMixin.__init__(self, node)

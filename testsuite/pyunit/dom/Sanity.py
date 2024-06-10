@@ -51,7 +51,9 @@ _SANITY_TESTS_ROOT = _TESTSUITE_ROOT / "sanity"
 design = Design()
 
 
-@mark.parametrize("parameters", [f"{i}:{f.relative_to(_TESTSUITE_ROOT)}" for i, f in enumerate(_SANITY_TESTS_ROOT.glob("**/*.vhdl"))])
+@mark.parametrize(
+    "parameters", [f"{i}:{f.relative_to(_TESTSUITE_ROOT)}" for i, f in enumerate(_SANITY_TESTS_ROOT.glob("**/*.vhdl"))]
+)
 def test_AllVHDLSources(parameters):
     id, file = parameters.split(":")
     filePath = _TESTSUITE_ROOT / file
