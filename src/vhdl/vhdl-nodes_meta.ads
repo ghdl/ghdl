@@ -441,11 +441,11 @@ package Vhdl.Nodes_Meta is
       Field_Psl_Expression,
       Field_Psl_Boolean,
       Field_PSL_Clock,
+      Field_PSL_Abort,
       Field_PSL_NFA,
       Field_PSL_Nbr_States,
       Field_PSL_Clock_Sensitivity,
       Field_PSL_EOS_Flag,
-      Field_PSL_Abort_Flag,
       Field_Count_Expression,
       Field_Clock_Expression,
       Field_Default_Clock,
@@ -1053,11 +1053,11 @@ package Vhdl.Nodes_Meta is
    function Has_Psl_Expression (K : Iir_Kind) return Boolean;
    function Has_Psl_Boolean (K : Iir_Kind) return Boolean;
    function Has_PSL_Clock (K : Iir_Kind) return Boolean;
+   function Has_PSL_Abort (K : Iir_Kind) return Boolean;
    function Has_PSL_NFA (K : Iir_Kind) return Boolean;
    function Has_PSL_Nbr_States (K : Iir_Kind) return Boolean;
    function Has_PSL_Clock_Sensitivity (K : Iir_Kind) return Boolean;
    function Has_PSL_EOS_Flag (K : Iir_Kind) return Boolean;
-   function Has_PSL_Abort_Flag (K : Iir_Kind) return Boolean;
    function Has_Count_Expression (K : Iir_Kind) return Boolean;
    function Has_Clock_Expression (K : Iir_Kind) return Boolean;
    function Has_Default_Clock (K : Iir_Kind) return Boolean;

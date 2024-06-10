@@ -713,15 +713,15 @@ package body Simul.Vhdl_Elab is
             | Iir_Kind_Psl_Endpoint_Declaration =>
             List := Get_PSL_Clock_Sensitivity (Proc);
             Gather_Sensitivity (Inst, Proc_Idx, List);
-            if Get_Kind (Proc) in Iir_Kinds_Psl_Property_Directive
-              and then Get_PSL_Abort_Flag (Proc)
-            then
+            if Get_Kind (Proc) in Iir_Kinds_Psl_Property_Directive then
                declare
                   use PSL.Types;
                   use PSL.Nodes;
-                  Prop : constant PSL_Node := Get_Psl_Property (Proc);
+                  Prop : constant PSL_Node := Get_PSL_Abort (Proc);
                begin
-                  if PSL.Subsets.Is_Async_Abort (Prop) then
+                  if Prop /= Null_PSL_Node
+                    and then PSL.Subsets.Is_Async_Abort (Prop)
+                  then
                      List := Create_Iir_List;
                      Vhdl.Canon_PSL.Canon_Extract_Sensitivity
                        (Get_Boolean (Prop), List);

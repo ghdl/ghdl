@@ -2204,7 +2204,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Psl_Declaration (Field5)
    --
-   --   Get/Set_PSL_Clock (Field7)
+   --   Get/Set_PSL_Clock (Field6)
    --
    --   Get/Set_PSL_NFA (Field8)
    --
@@ -2236,7 +2236,7 @@ package Vhdl.Nodes is
    --   Get/Set_Psl_Declaration (Field5)
    --
    --  Valid only for property declaration.
-   --   Get/Set_PSL_Clock (Field7)
+   --   Get/Set_PSL_Clock (Field6)
    --
    --  Valid only for property declaration without parameters.
    --   Get/Set_PSL_NFA (Field8)
@@ -3557,7 +3557,9 @@ package Vhdl.Nodes is
    --   Get/Set_Report_Expression (Field5)
    --
    --  The following fields are set by canon.
-   --   Get/Set_PSL_Clock (Field7)
+   --   Get/Set_PSL_Clock (Field6)
+   --
+   --   Get/Set_PSL_Abort (Field7)
    --
    --   Get/Set_PSL_NFA (Field8)
    --
@@ -3568,11 +3570,6 @@ package Vhdl.Nodes is
    --
    --  True if at least one of the NFA edge has the EOS flag.
    --   Get/Set_PSL_EOS_Flag (Flag1)
-   --
-   --  True if there is an outer abort is present (but not in the NFA)
-   -- Only for Iir_Kind_Psl_Assert_Directive:
-   -- Only for Iir_Kind_Psl_Assume_Directive:
-   --   Get/Set_PSL_Abort_Flag (Flag2)
    --
    --   Get/Set_Postponed_Flag (Flag3)
    --
@@ -9846,9 +9843,13 @@ package Vhdl.Nodes is
    function Get_Psl_Boolean (N : Iir) return PSL_Node;
    procedure Set_Psl_Boolean (N : Iir; Bool : PSL_Node);
 
-   --  Field: Field7 (uc)
+   --  Field: Field6 (uc)
    function Get_PSL_Clock (N : Iir) return PSL_Node;
    procedure Set_PSL_Clock (N : Iir; Clock : PSL_Node);
+
+   --  Field: Field7 (uc)
+   function Get_PSL_Abort (N : Iir) return PSL_Node;
+   procedure Set_PSL_Abort (N : Iir; Abrt : PSL_Node);
 
    --  Field: Field8 (uc)
    function Get_PSL_NFA (N : Iir) return PSL_NFA;
@@ -9865,10 +9866,6 @@ package Vhdl.Nodes is
    --  Field: Flag1
    function Get_PSL_EOS_Flag (N : Iir) return Boolean;
    procedure Set_PSL_EOS_Flag (N : Iir; Flag : Boolean);
-
-   --  Field: Flag2
-   function Get_PSL_Abort_Flag (N : Iir) return Boolean;
-   procedure Set_PSL_Abort_Flag (N : Iir; Flag : Boolean);
 
    --  Field: Field2
    function Get_Count_Expression (N : Iir) return Iir;

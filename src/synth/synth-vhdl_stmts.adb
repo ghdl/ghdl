@@ -4603,17 +4603,18 @@ package body Synth.Vhdl_Stmts is
 
       Rst := No_Net;
       Has_Async_Abort := False;
-      if Get_Kind (Stmt) in Iir_Kinds_Psl_Property_Directive
-        and then Get_PSL_Abort_Flag (Stmt)
-      then
+      if Get_Kind (Stmt) in Iir_Kinds_Psl_Property_Directive then
          declare
             use PSL.Types;
             use PSL.Subsets;
             use PSL.Nodes;
-            Abort_Prop : constant PSL_Node := Get_Psl_Property (Stmt);
+            Abort_Prop : constant PSL_Node := Get_PSL_Abort (Stmt);
          begin
-            Rst := Synth_PSL_Expression (Syn_Inst, Get_Boolean (Abort_Prop));
-            Has_Async_Abort := Is_Async_Abort (Abort_Prop);
+            if Abort_Prop /= Null_PSL_Node then
+               Rst := Synth_PSL_Expression
+                 (Syn_Inst, Get_Boolean (Abort_Prop));
+               Has_Async_Abort := Is_Async_Abort (Abort_Prop);
+            end if;
          end;
       end if;
 

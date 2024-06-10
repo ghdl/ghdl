@@ -2169,7 +2169,7 @@ package body Vhdl.Canon is
    is
       use PSL.Nodes;
       use PSL.NFAs;
-      Prop : PSL_Node;
+      Prop, Prop1 : PSL_Node;
       Fa : PSL_NFA;
       Final : NFA_State;
    begin
@@ -2179,15 +2179,19 @@ package body Vhdl.Canon is
       Set_Psl_Property (Stmt, Prop);
 
       --  Generate the NFA.
-      case Get_Kind (Prop) is
-         when N_Async_Abort
-            | N_Sync_Abort
-            | N_Abort =>
-            Prop := Get_Property (Prop);
-            Set_PSL_Abort_Flag (Stmt, True);
-         when others =>
-            null;
-      end case;
+      if Get_Kind (Prop) = N_Always then
+         Prop1 := Get_Property (Prop);
+         case Get_Kind (Prop1) is
+            when N_Async_Abort
+              | N_Sync_Abort
+              | N_Abort =>
+               Set_PSL_Abort (Stmt, Prop1);
+               --  Abort will be handled directly
+               Set_Skip_Flag (Prop1, True);
+            when others =>
+               null;
+         end case;
+      end if;
       Fa := PSL.Build.Build_FA (Prop);
       Set_PSL_NFA (Stmt, Fa);
 

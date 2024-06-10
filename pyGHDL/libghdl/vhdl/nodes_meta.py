@@ -497,11 +497,11 @@ class fields(IntEnum):
     Psl_Expression = 377
     Psl_Boolean = 378
     PSL_Clock = 379
-    PSL_NFA = 380
-    PSL_Nbr_States = 381
-    PSL_Clock_Sensitivity = 382
-    PSL_EOS_Flag = 383
-    PSL_Abort_Flag = 384
+    PSL_Abort = 380
+    PSL_NFA = 381
+    PSL_Nbr_States = 382
+    PSL_Clock_Sensitivity = 383
+    PSL_EOS_Flag = 384
     Count_Expression = 385
     Clock_Expression = 386
     Default_Clock = 387
@@ -2925,6 +2925,12 @@ def Has_PSL_Clock(kind: IirKind) -> bool:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes_meta__has_psl_abort")
+def Has_PSL_Abort(kind: IirKind) -> bool:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes_meta__has_psl_nfa")
 def Has_PSL_NFA(kind: IirKind) -> bool:
     """"""
@@ -2945,12 +2951,6 @@ def Has_PSL_Clock_Sensitivity(kind: IirKind) -> bool:
 @export
 @BindToLibGHDL("vhdl__nodes_meta__has_psl_eos_flag")
 def Has_PSL_EOS_Flag(kind: IirKind) -> bool:
-    """"""
-
-
-@export
-@BindToLibGHDL("vhdl__nodes_meta__has_psl_abort_flag")
-def Has_PSL_Abort_Flag(kind: IirKind) -> bool:
     """"""
 
 

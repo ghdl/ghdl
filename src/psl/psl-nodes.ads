@@ -392,7 +392,9 @@ package PSL.Nodes is
    --   Get/Set_Property (Field4)
    --
    --   Get/Set_Boolean (Field3)
-
+   --
+   --  If set, the abort is handled outside the property.
+   --   Get/Set_Skip_Flag (Flag1)
 
    -- N_HDL_Bool (Short)
    --  An HDL expression of boolean type, that could be hashed.
@@ -557,6 +559,10 @@ package PSL.Nodes is
    --  Field: Field3
    function Get_Sequence (N : Node) return Node;
    procedure Set_Sequence (N : Node; S : Node);
+
+   --  Field: Flag1
+   function Get_Skip_Flag (N : Node) return Boolean;
+   procedure Set_Skip_Flag (N : Node; B : Boolean);
 
    --  Field: Flag1
    function Get_Strong_Flag (N : Node) return Boolean;

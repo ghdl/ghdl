@@ -685,6 +685,22 @@ package body PSL.Nodes is
       Set_Field3 (N, S);
    end Set_Sequence;
 
+   function Get_Skip_Flag (N : Node) return Boolean is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Skip_Flag (Get_Kind (N)),
+                     "no field Skip_Flag");
+      return Get_Flag1 (N);
+   end Get_Skip_Flag;
+
+   procedure Set_Skip_Flag (N : Node; B : Boolean) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Skip_Flag (Get_Kind (N)),
+                     "no field Skip_Flag");
+      Set_Flag1 (N, B);
+   end Set_Skip_Flag;
+
    function Get_Strong_Flag (N : Node) return Boolean is
    begin
       pragma Assert (N /= Null_Node);

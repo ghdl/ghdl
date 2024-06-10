@@ -2173,7 +2173,7 @@ package body Simul.Vhdl_Simul is
       E : constant Process_State_Acc := To_Process_State_Acc (Self);
       Has_Abort : constant Boolean :=
         Get_Kind (E.Proc) in Iir_Kinds_Psl_Property_Directive
-        and then Get_PSL_Abort_Flag (E.Proc);
+        and then Get_PSL_Abort (E.Proc) /= Null_PSL_Node;
       Prop : PSL_Node;
       Nvec : Boolean_Vector (E.States.all'Range);
       Marker : Mark_Type;
@@ -2195,7 +2195,7 @@ package body Simul.Vhdl_Simul is
 --      Current_Process := No_Process;
 
       if Has_Abort then
-         Prop := Get_Psl_Property (E.Proc);
+         Prop := Get_PSL_Abort (E.Proc);
          if PSL.Subsets.Is_Async_Abort (Prop) then
             if Execute_Psl_Abort_Condition (E.Instance, Prop) then
                Reset_PSL_State (E);

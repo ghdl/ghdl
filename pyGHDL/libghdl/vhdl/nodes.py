@@ -6979,6 +6979,19 @@ def Set_PSL_Clock(obj: Iir, value: PSLNode) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_psl_abort")
+def Get_PSL_Abort(obj: Iir) -> PSLNode:
+    """"""
+    return 0
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_psl_abort")
+def Set_PSL_Abort(obj: Iir, value: PSLNode) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_psl_nfa")
 def Get_PSL_NFA(obj: Iir) -> PSLNFA:
     """"""
@@ -7027,19 +7040,6 @@ def Get_PSL_EOS_Flag(obj: Iir) -> Boolean:
 @export
 @BindToLibGHDL("vhdl__nodes__set_psl_eos_flag")
 def Set_PSL_EOS_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
-
-
-@export
-@BindToLibGHDL("vhdl__nodes__get_psl_abort_flag")
-def Get_PSL_Abort_Flag(obj: Iir) -> Boolean:
-    """"""
-    return 0
-
-
-@export
-@BindToLibGHDL("vhdl__nodes__set_psl_abort_flag")
-def Set_PSL_Abort_Flag(obj: Iir, value: Boolean) -> None:
     """"""
 
 

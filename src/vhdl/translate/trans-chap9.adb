@@ -661,8 +661,8 @@ package body Trans.Chap9 is
          when Iir_Kind_Psl_Endpoint_Declaration =>
             null;
          when Iir_Kinds_Psl_Property_Directive =>
-            if Get_PSL_Abort_Flag (Stmt) then
-               Abort_Prop := Get_Psl_Property (Stmt);
+            Abort_Prop := Get_PSL_Abort (Stmt);
+            if Abort_Prop /= Null_PSL_Node then
                Has_Async_Abort := Is_Async_Abort (Abort_Prop);
                Has_Sync_Abort := not Has_Async_Abort;
             end if;
@@ -2125,15 +2125,15 @@ package body Trans.Chap9 is
       Register_Signal_List (List, Ghdl_Process_Add_Sensitivity);
 
       --  Register async sensitivity.
-      if Get_Kind (Stmt) in Iir_Kinds_Psl_Property_Directive
-        and then Get_PSL_Abort_Flag (Stmt)
-      then
+      if Get_Kind (Stmt) in Iir_Kinds_Psl_Property_Directive then
          declare
             use PSL.Nodes;
-            Prop : constant PSL_Node := Get_Psl_Property (Stmt);
+            Prop : constant PSL_Node := Get_PSL_Abort (Stmt);
             List : Iir_List;
          begin
-            if PSL.Subsets.Is_Async_Abort (Prop) then
+            if Prop /= Null_PSL_Node
+              and then PSL.Subsets.Is_Async_Abort (Prop)
+            then
                List := Create_Iir_List;
                Vhdl.Canon_PSL.Canon_Extract_Sensitivity
                  (Get_Boolean (Prop), List);

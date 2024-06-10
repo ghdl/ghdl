@@ -7521,7 +7521,7 @@ package body Vhdl.Nodes is
       pragma Assert (N /= Null_Iir);
       pragma Assert (Has_PSL_Clock (Get_Kind (N)),
                      "no field PSL_Clock");
-      return Iir_To_PSL_Node (Get_Field7 (N));
+      return Iir_To_PSL_Node (Get_Field6 (N));
    end Get_PSL_Clock;
 
    procedure Set_PSL_Clock (N : Iir; Clock : PSL_Node) is
@@ -7529,8 +7529,24 @@ package body Vhdl.Nodes is
       pragma Assert (N /= Null_Iir);
       pragma Assert (Has_PSL_Clock (Get_Kind (N)),
                      "no field PSL_Clock");
-      Set_Field7 (N, PSL_Node_To_Iir (Clock));
+      Set_Field6 (N, PSL_Node_To_Iir (Clock));
    end Set_PSL_Clock;
+
+   function Get_PSL_Abort (N : Iir) return PSL_Node is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_PSL_Abort (Get_Kind (N)),
+                     "no field PSL_Abort");
+      return Iir_To_PSL_Node (Get_Field7 (N));
+   end Get_PSL_Abort;
+
+   procedure Set_PSL_Abort (N : Iir; Abrt : PSL_Node) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_PSL_Abort (Get_Kind (N)),
+                     "no field PSL_Abort");
+      Set_Field7 (N, PSL_Node_To_Iir (Abrt));
+   end Set_PSL_Abort;
 
    function Get_PSL_NFA (N : Iir) return PSL_NFA is
    begin
@@ -7595,22 +7611,6 @@ package body Vhdl.Nodes is
                      "no field PSL_EOS_Flag");
       Set_Flag1 (N, Flag);
    end Set_PSL_EOS_Flag;
-
-   function Get_PSL_Abort_Flag (N : Iir) return Boolean is
-   begin
-      pragma Assert (N /= Null_Iir);
-      pragma Assert (Has_PSL_Abort_Flag (Get_Kind (N)),
-                     "no field PSL_Abort_Flag");
-      return Get_Flag2 (N);
-   end Get_PSL_Abort_Flag;
-
-   procedure Set_PSL_Abort_Flag (N : Iir; Flag : Boolean) is
-   begin
-      pragma Assert (N /= Null_Iir);
-      pragma Assert (Has_PSL_Abort_Flag (Get_Kind (N)),
-                     "no field PSL_Abort_Flag");
-      Set_Flag2 (N, Flag);
-   end Set_PSL_Abort_Flag;
 
    function Get_Count_Expression (N : Iir) return Iir is
    begin
