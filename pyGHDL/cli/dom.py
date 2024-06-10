@@ -40,7 +40,7 @@ from textwrap import wrap, dedent
 from pyTooling.Decorators import export
 from pyTooling.TerminalUI import TerminalApplication, Severity
 from pyTooling.Attributes import Attribute
-from pyTooling.Attributes.ArgParse import ArgParseHelperMixin, DefaultHandler, CommandHandler
+from pyTooling.Attributes.ArgParse import ArgParseHelperMixin, DefaultHandler, CommandHandler, CommandLineArgument
 from pyTooling.Attributes.ArgParse.Argument import StringArgument
 from pyTooling.Attributes.ArgParse.Flag import FlagArgument
 
@@ -63,7 +63,7 @@ class SourceAttribute(Attribute):
     def __call__(self, func):
         self._AppendAttribute(
             func,
-            ArgumentAttribute(
+            CommandLineArgument(
                 "-f",
                 "--file",
                 action="append",
@@ -75,7 +75,7 @@ class SourceAttribute(Attribute):
         )
         self._AppendAttribute(
             func,
-            ArgumentAttribute(
+            CommandLineArgument(
                 "-F",
                 "--files",
                 metavar="files",
@@ -87,7 +87,7 @@ class SourceAttribute(Attribute):
         )
         self._AppendAttribute(
             func,
-            ArgumentAttribute(
+            CommandLineArgument(
                 "-D",
                 "--directory",
                 metavar="dir",
@@ -98,7 +98,7 @@ class SourceAttribute(Attribute):
         )
         self._AppendAttribute(
             func,
-            ArgumentAttribute(
+            CommandLineArgument(
                 "-L",
                 "--library",
                 metavar="lib",
@@ -200,18 +200,13 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         self.MainParser.print_help()
 
         self.WriteNormal("")
-        self.exit()
+        self.Exit()
 
     # ----------------------------------------------------------------------------
     # create the sub-parser for the "help" command
     # ----------------------------------------------------------------------------
     @CommandHandler("help", help="Display help page(s) for the given command name.")
-    @StringArgument(
-        metavar="Command",
-        dest="Command",
-        optional=True,
-        help="Print help page(s) for a command.",
-    )
+    @StringArgument(metaName="Command", dest="Command", optional=True, help="Print help page(s) for a command.")
     def HandleHelp(self, args):
         self.PrintHeadline()
 
@@ -226,7 +221,7 @@ class Application(TerminalApplication, ArgParseHelperMixin):
                 self.WriteError(f"Command {args.Command} is unknown.")
 
         self.WriteNormal("")
-        self.exit()
+        self.Exit()
 
     # ----------------------------------------------------------------------------
     # create the sub-parser for the "version" command
@@ -245,7 +240,7 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         for author in authors[1:]:
             self.WriteNormal(f"            {author}")
         self.WriteNormal(f"Version:    {__version__}")
-        self.exit()
+        self.Exit()
 
     # ----------------------------------------------------------------------------
     # Create the sub-parser for the "pretty" command
@@ -341,7 +336,7 @@ class Application(TerminalApplication, ArgParseHelperMixin):
 
         print("\n".join(buffer))
 
-        self.exit()
+        self.Exit()
 
     def addFile(self, filename: Path, library: str) -> Document:
         lib = self._design.GetLibrary(library)
@@ -362,18 +357,23 @@ def main():  # mccabe:disable=MC0001
     """
     from sys import argv as sys_argv
 
-    debug = "-d" in sys_argv
-    verbose = "-v" in sys_argv
-    quiet = "-q" in sys_argv
+    # debug = "-d" in sys_argv
+    # verbose = "-v" in sys_argv
+    # quiet = "-q" in sys_argv
 
     try:
         # handover to a class instance
         app = Application()  # debug, verbose, quiet)
+    except Exception:
+        return
+
+    try:
+        app.CheckPythonVersion((3, 8, 0))
         app.Run()
-        app.exit()
+        app.Exit()
     except PrettyPrintException as ex:
         print(f"PP: {ex!s}")
-        LineTerminal.exit()
+        app.Exit()
 
     except DOMException as ex:
         print(f"DOM: {ex!s}")
@@ -381,29 +381,28 @@ def main():  # mccabe:disable=MC0001
         if ex2 is not None:
             for message in ex2.InternalErrors:
                 print(f"libghdl: {message}")
-            LineTerminal.exit(0)
+            TerminalApplication.Exit(0)
 
-        LineTerminal.exit(6)
+        app.Exit(6)
 
     except LibGHDLException as ex:
         print(f"LIB: {ex!s}")
         for message in ex.InternalErrors:
             print(f"  {message}")
-        LineTerminal.exit(5)
+        app.Exit(5)
 
     except GHDLBaseException as ex:
-        LineTerminal.printExceptionBase(ex)
+        app.PrintExceptionBase(ex)
 
     except NotImplementedError as ex:
-        LineTerminal.printNotImplementedError(ex)
+        app.PrintNotImplementedError(ex)
 
     # except ImportError as ex:
     #     printImportError(ex)
     except Exception as ex:
-        LineTerminal.printException(ex)
+        app.PrintException(ex)
 
 
 # entry point
 if __name__ == "__main__":
-    LineTerminal.versionCheck((3, 6, 0))
     main()
