@@ -20,6 +20,6 @@ begin
   -- This assertion should also hold, but it does not
   -- GHDL seems to implement abort as sync_abort instead of async_abort
   -- See 1850-2010 6.2.1.5.1 abort, async_abort, and sync_abort
-  WITH_async_ABORT_a : assert (always a -> next (b before a)) async_abort d;
+  WITH_async_ABORT_a : assert always (a -> next (b before a)) async_abort d;
 end architecture psl;
 

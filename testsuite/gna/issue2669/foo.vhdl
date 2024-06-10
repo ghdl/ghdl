@@ -14,7 +14,7 @@ architecture arch of foo is
 begin
   assert always (a = '1')       abort (reset = '1') @rising_edge(clk); -- ok
   assert always (a = '1')  sync_abort (reset = '1') @rising_edge(clk); -- ok
---  assert always (a = '1') async_abort (reset = '1') @rising_edge(clk); -- error
-  assert (always a = '1') async_abort (reset = '1') @rising_edge(clk); -- error
+  assert always (a = '1') async_abort (reset = '1') @rising_edge(clk); -- error
+--  assert (always a = '1') async_abort (reset = '1') @rising_edge(clk); -- error
 end arch;
 

@@ -74,15 +74,15 @@ begin
   default clock is rising_edge(clk);
 
   -- This assertion holds
-  WITH_sync_ABORT_a : assert (always a -> next (b before a)) sync_abort c;
+  WITH_sync_ABORT_a : assert always (a -> next (b before a)) sync_abort c;
 
   -- This assertion should also hold, but it does not
   -- GHDL seems to implement abort as sync_abort instead of async_abort
   -- See 1850-2010 6.2.1.5.1 abort, async_abort, and sync_abort
-  WITH_async_ABORT_a : assert (always a -> next (b before a)) async_abort d;
+  WITH_async_ABORT_a : assert always (a -> next (b before a)) async_abort d;
 
   --  According to IEEE 1850-2010 6.2.1.5.1, abort is identical to async_abort
-  WITH_ABORT_a : assert (always a -> next (b before a)) abort d;
+  WITH_ABORT_a : assert always (a -> next (b before a)) abort d;
 
 end architecture psl;
 
