@@ -245,7 +245,7 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
 
 
 @export
-class IfGenerateBranch(VHDLModel_IfGenerateBranch):
+class IfGenerateBranch(VHDLModel_IfGenerateBranch, DOMMixin):
     def __init__(
         self,
         branchNode: Iir,
@@ -282,7 +282,7 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch):
 
 
 @export
-class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch):
+class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch, DOMMixin):
     def __init__(
         self,
         branchNode: Iir,
@@ -319,7 +319,7 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch):
 
 
 @export
-class ElseGenerateBranch(VHDLModel_ElseGenerateBranch):
+class ElseGenerateBranch(VHDLModel_ElseGenerateBranch, DOMMixin):
     def __init__(
         self,
         branchNode: Iir,
