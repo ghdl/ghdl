@@ -46,6 +46,7 @@ if __name__ == "__main__":
 _DictKey = TypeVar("_DictKey")
 _DictValue = TypeVar("_DictValue")
 
+
 def firstValue(d: Dict[_DictKey, _DictValue]) -> _DictValue:
     return next(iter(d.values()))
 

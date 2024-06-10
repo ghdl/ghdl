@@ -319,7 +319,9 @@ class PrettyPrint:
 
         return buffer
 
-    def formatGeneric(self, generic: Union[NamedEntityMixin, GenericInterfaceItemMixin], level: int = 0) -> StringBuffer:
+    def formatGeneric(
+        self, generic: Union[NamedEntityMixin, GenericInterfaceItemMixin], level: int = 0
+    ) -> StringBuffer:
         if isinstance(generic, GenericConstantInterfaceItem):
             return self.formatGenericConstant(generic, level)
         elif isinstance(generic, GenericTypeInterfaceItem):

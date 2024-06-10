@@ -190,6 +190,7 @@ class OpenName(VHDLModel_OpenName, DOMMixin):
 
           open
     """
+
     def __init__(self, node: Iir):
         super().__init__()
         DOMMixin.__init__(self, node)

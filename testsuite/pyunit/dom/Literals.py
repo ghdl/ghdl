@@ -52,6 +52,7 @@ if __name__ == "__main__":
 _DictKey = TypeVar("_DictKey")
 _DictValue = TypeVar("_DictValue")
 
+
 def firstValue(d: Dict[_DictKey, _DictValue]) -> _DictValue:
     return next(iter(d.values()))
 
@@ -60,12 +61,12 @@ class Literals(TestCase):
     _root = Path(__file__).resolve().parent.parent
     _design = Design()
     _packageTemplate = dedent(
-            """\
+        """\
             package package_1 is
               {code}
             end package;
             """
-        )
+    )
 
     def parse(self, filename: Path, code: str) -> ExpressionUnion:
         sourceCode = self._packageTemplate.format(code=code)
@@ -81,9 +82,7 @@ class Literals(TestCase):
         return default
 
     def test_IntegerLiteral(self):
-        _filename: Path = self._root / "{className}.vhdl".format(
-            className=self.__class__.__name__
-        )
+        _filename: Path = self._root / f"{self.__class__.__name__}.vhdl"
 
         constantDeclartion = "constant c0 : integer := 0;"
         expected = (0, 1, 1024, 1048576)

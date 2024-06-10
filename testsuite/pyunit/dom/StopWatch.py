@@ -36,7 +36,11 @@ from textwrap import dedent
 from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
-from pyGHDL.dom.formatting.GraphML import DependencyGraphFormatter, HierarchyGraphFormatter, CompileOrderGraphFormatter  #, ObjectGraphFormatter
+from pyGHDL.dom.formatting.GraphML import (
+    DependencyGraphFormatter,
+    HierarchyGraphFormatter,
+    CompileOrderGraphFormatter,
+)  # , ObjectGraphFormatter
 
 
 if __name__ == "__main__":
@@ -55,39 +59,36 @@ class Designs(TestCase):
         ("lib_Utilities", Path("lib_Utilities/Utilities.pkg.vhdl")),
         ("lib_Utilities", Path("lib_Utilities/Utilities.ctx.vhdl")),
     )
-    _utilityCounterFiles = _utilityPackageFiles + (
-        ("lib_Utilities", Path("lib_Utilities/Counter.vhdl")),
-    )
+    _utilityCounterFiles = _utilityPackageFiles + (("lib_Utilities", Path("lib_Utilities/Counter.vhdl")),)
     _utilityEntityFiles = _utilityCounterFiles + (
         ("lib_Utilities", Path("lib_Utilities/sync_Bits.vhdl")),
         ("lib_Utilities", Path("lib_Utilities/Debouncer.vhdl")),
     )
     _displayPackageFiles = (
-        ("lib_Display",   Path("lib_Display/Display.pkg.vhdl")),
-        ("lib_Display",   Path("lib_Display/Display.ctx.vhdl")),
+        ("lib_Display", Path("lib_Display/Display.pkg.vhdl")),
+        ("lib_Display", Path("lib_Display/Display.ctx.vhdl")),
     )
-    _encoderEntityFiles = (
-        ("lib_Display",   Path("lib_Display/seg7_Encoder.vhdl")),
-    )
-    _displayEntityFiles = _displayPackageFiles + _encoderEntityFiles + (
-        ("lib_Display",   Path("lib_Display/seg7_Display.vhdl")),
-        ("lib_Display",   Path("lib_Display/seg7_Display.cfg.vhdl")),
+    _encoderEntityFiles = (("lib_Display", Path("lib_Display/seg7_Encoder.vhdl")),)
+    _displayEntityFiles = (
+        _displayPackageFiles
+        + _encoderEntityFiles
+        + (
+            ("lib_Display", Path("lib_Display/seg7_Display.vhdl")),
+            ("lib_Display", Path("lib_Display/seg7_Display.cfg.vhdl")),
+        )
     )
     _stopwatchPackageFiles = (
         ("lib_StopWatch", Path("lib_StopWatch/StopWatch.pkg.vhdl")),
         ("lib_StopWatch", Path("lib_StopWatch/StopWatch.ctx.vhdl")),
     )
-    _stopwatchEntityFiles = _stopwatchPackageFiles + (
-        ("lib_StopWatch", Path("lib_StopWatch/StopWatch.vhdl")),
-    )
-    _encoderFiles = _encoderEntityFiles + (
-        ("lib_Pretty",    Path("toplevel.Encoder.vhdl")),
-    )
-    _displayFiles = _utilityCounterFiles + _displayEntityFiles + (
-        ("lib_StopWatch", Path("toplevel.Display.vhdl")),
-    )
-    _stopwatchFiles = _utilityEntityFiles + _displayEntityFiles + _stopwatchEntityFiles + (
-        ("lib_StopWatch", Path("toplevel.StopWatch.vhdl")),
+    _stopwatchEntityFiles = _stopwatchPackageFiles + (("lib_StopWatch", Path("lib_StopWatch/StopWatch.vhdl")),)
+    _encoderFiles = _encoderEntityFiles + (("lib_Pretty", Path("toplevel.Encoder.vhdl")),)
+    _displayFiles = _utilityCounterFiles + _displayEntityFiles + (("lib_StopWatch", Path("toplevel.Display.vhdl")),)
+    _stopwatchFiles = (
+        _utilityEntityFiles
+        + _displayEntityFiles
+        + _stopwatchEntityFiles
+        + (("lib_StopWatch", Path("toplevel.StopWatch.vhdl")),)
     )
 
 
@@ -131,7 +132,9 @@ class CompileOrder(Designs):
             library = design.GetLibrary(lib)
             document = Document(self._stopwatchSourceDirectory / file)
             design.AddDocument(document, library)
-            print(dedent("""\
+            print(
+                dedent(
+                    """\
                 file: {}
                   libghdl processing time: {:5.3f} us
                   DOM translation time:    {:5.3f} us
@@ -148,7 +151,9 @@ class CompileOrder(Designs):
 
         toplevel = [root.Value.Identifier for root in design.HierarchyGraph.IterateRoots()]
 
-        print(dedent("""
+        print(
+            dedent(
+                """
             pyGHDL:
               sum:                       {:5.3f} us
             Analysis:
@@ -160,7 +165,7 @@ class CompileOrder(Designs):
                 pyGHDLTime * 10**6,
                 design._loadDefaultLibraryTime * 10**6,
                 design._analyzeTime * 10**6,
-                toplevel=", ".join(toplevel)
+                toplevel=", ".join(toplevel),
             )
         )
         # print("Compile order:")
