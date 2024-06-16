@@ -4272,6 +4272,19 @@ package body Vhdl.Sem_Expr is
                         Set_Right_Limit (Index_Subtype_Constraint, Expr);
                      when Iir_Kind_Choice_By_Range =>
                         Expr := Get_Choice_Range (Choice);
+                        case Get_Kind (Expr) is
+                           when Iir_Kind_Range_Expression =>
+                              null;
+                           when Iir_Kinds_Denoting_Name =>
+                              Expr := Get_Range_Constraint
+                                (Get_Subtype_Indication
+                                   (Get_Named_Entity (Expr)));
+                           when Iir_Kinds_Array_Attribute =>
+                              null;
+                           when others =>
+                              Error_Kind ("sem_array_aggregate_1(dyn range)",
+                                          Expr);
+                        end case;
                         Set_Range_Constraint (Info.Index_Subtype, Expr);
                         Set_Is_Ref (Info.Index_Subtype, True);
                         -- FIXME: avoid allocation-free.

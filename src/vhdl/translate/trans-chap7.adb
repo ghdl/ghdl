@@ -780,6 +780,12 @@ package body Trans.Chap7 is
          when Iir_Kind_Range_Array_Attribute
            | Iir_Kind_Reverse_Range_Array_Attribute =>
             return Chap14.Translate_Length_Array_Attribute (Expr, Null_Iir);
+         when Iir_Kinds_Denoting_Name =>
+            return Translate_Range_Length
+              (Get_Subtype_Indication (Get_Named_Entity (Expr)));
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition =>
+            return Translate_Range_Length (Get_Range_Constraint (Expr));
          when others =>
             Error_Kind ("translate_range_length", Expr);
       end case;
@@ -5451,7 +5457,7 @@ package body Trans.Chap7 is
          when Iir_Kind_Range_Expression =>
             Translate_Range_Expression (Res, Arange, Range_Type);
          when others =>
-            Error_Kind ("translate_range_ptr", Arange);
+            Error_Kind ("translate_range", Arange);
       end case;
    end Translate_Range;
 
