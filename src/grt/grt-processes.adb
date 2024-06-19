@@ -36,7 +36,6 @@ with Grt.Disp_Signals;
 with Grt.Stats;
 with Grt.Threads; use Grt.Threads;
 pragma Elaborate_All (Grt.Table);
-with Grt.Stdio;
 with Grt.Analog_Solver;
 
 package body Grt.Processes is
