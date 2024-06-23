@@ -1657,7 +1657,8 @@ package body Vhdl.Sem_Stmts is
                when Iir_Kind_Signal_Declaration
                  | Iir_Kind_Guard_Signal_Declaration
                  | Iir_Kinds_Signal_Attribute
-                 | Iir_Kind_Above_Attribute =>
+                 | Iir_Kind_Above_Attribute
+                 | Iir_Kind_External_Signal_Name =>
                   null;
                when Iir_Kind_Interface_Signal_Declaration =>
                   if not Is_Interface_Signal_Readable (Prefix) then
