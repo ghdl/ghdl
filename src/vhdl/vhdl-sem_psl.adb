@@ -41,6 +41,11 @@ with Vhdl.Xrefs; use Vhdl.Xrefs;
 package body Vhdl.Sem_Psl is
    procedure Sem_Psl_Directive_Clock (Stmt : Iir; Prop : in out PSL_Node);
 
+   --  Current clock (either the default one or explicit one).
+   --  Used to check by inner expressions (like builtin prev()) the presence
+   --  of a clock.
+   Current_Clock : PSL_Node;
+
    --  Return TRUE iff Atype is a PSL boolean type.
    --  See PSL1.1 5.1.2  Boolean expressions
    function Is_Psl_Boolean_Type (Atype : Iir) return Boolean
@@ -121,10 +126,10 @@ package body Vhdl.Sem_Psl is
             Clock := Sem_Expression_Wildcard (Clock, Wildcard_Psl_Bit_Type);
             Set_Clock_Expression (Call, Clock);
          else
-            if Current_Psl_Default_Clock = Null_Iir then
-               Error_Msg_Sem (+Call, "no clock for PSL prev builtin");
+            if Current_Clock /= Null_PSL_Node then
+               Set_Default_Clock (Call, Current_Clock);
             else
-               Set_Default_Clock (Call, Current_Psl_Default_Clock);
+               Error_Msg_Sem (+Call, "no clock for PSL prev builtin");
             end if;
          end if;
       end if;
@@ -156,10 +161,10 @@ package body Vhdl.Sem_Psl is
             Clock := Sem_Expression_Wildcard (Clock, Wildcard_Psl_Bit_Type);
             Set_Clock_Expression (Call, Clock);
          else
-            if Current_Psl_Default_Clock = Null_Iir then
+            if Current_Clock = Null_PSL_Node then
                Error_Msg_Sem (+Call, "no clock for %n", +Call);
             else
-               Set_Default_Clock (Call, Current_Psl_Default_Clock);
+               Set_Default_Clock (Call, Current_Clock);
             end if;
          end if;
       end if;
@@ -487,10 +492,16 @@ package body Vhdl.Sem_Psl is
             Set_SERE (Seq, Res);
             return Seq;
          when N_Clocked_SERE =>
-            Res := Sem_Sequence (Get_SERE (Seq));
-            Set_SERE (Seq, Res);
-            Sem_Boolean (Seq);
-            return Seq;
+            declare
+               Prev_Clock : constant PSL_Node := Current_Clock;
+            begin
+               Current_Clock := Get_Boolean (Seq);
+               Res := Sem_Sequence (Get_SERE (Seq));
+               Set_SERE (Seq, Res);
+               Sem_Boolean (Seq);
+               Current_Clock := Prev_Clock;
+               return Seq;
+            end;
          when N_Concat_SERE
            | N_Fusion_SERE
            | N_Within_SERE
@@ -604,12 +615,18 @@ package body Vhdl.Sem_Psl is
             Sem_Property (Prop);
             return Prop;
          when N_Clock_Event =>
-            Sem_Property (Prop);
-            Sem_Boolean (Prop);
-            if not Top then
-               Error_Msg_Sem (+Prop, "inner clock event not supported");
-            end if;
-            return Prop;
+            declare
+               Prev_Clock : constant PSL_Node := Current_Clock;
+            begin
+               Current_Clock := Get_Boolean (Prop);
+               Sem_Property (Prop);
+               Sem_Boolean (Prop);
+               if not Top then
+                  Error_Msg_Sem (+Prop, "inner clock event not supported");
+               end if;
+               Current_Clock := Prev_Clock;
+               return Prop;
+            end;
          when N_Abort
             | N_Async_Abort
             | N_Sync_Abort =>
@@ -741,6 +758,19 @@ package body Vhdl.Sem_Psl is
       end case;
    end Extract_Clock;
 
+   --  Assign Current_Clock, so that inner expression can check if the are
+   --  clocked.
+   --  This is different from Sem_Psl_Directive_Clock which is called after
+   --  analysis of the expression.
+   procedure Set_Current_Clock is
+   begin
+      if Current_Psl_Default_Clock /= Null_Iir then
+         Current_Clock := Get_Psl_Boolean (Current_Psl_Default_Clock);
+      else
+         Current_Clock := Null_PSL_Node;
+      end if;
+   end Set_Current_Clock;
+
    --  Sem a property/sequence/endpoint declaration.
    procedure Sem_Psl_Declaration (Stmt : Iir)
    is
@@ -755,6 +785,8 @@ package body Vhdl.Sem_Psl is
       Xref_Decl (Stmt);
 
       Open_Declarative_Region;
+
+      Set_Current_Clock;
 
       --  Make formal parameters visible.
       Formal := Get_Parameter_List (Decl);
@@ -799,6 +831,8 @@ package body Vhdl.Sem_Psl is
       Set_Visible_Flag (Stmt, True);
 
       Close_Declarative_Region;
+
+      Current_Clock := Null_PSL_Node;
    end Sem_Psl_Declaration;
 
    procedure Sem_Psl_Endpoint_Declaration (Stmt : Iir)
@@ -808,6 +842,8 @@ package body Vhdl.Sem_Psl is
    begin
       Sem_Scopes.Add_Name (Stmt);
       Xref_Decl (Stmt);
+
+      Set_Current_Clock;
 
       pragma Assert (Get_Parameter_List (Decl) = Null_PSL_Node);
       pragma Assert (Get_Kind (Decl) = N_Endpoint_Declaration);
@@ -825,6 +861,8 @@ package body Vhdl.Sem_Psl is
       Set_Expr_Staticness (Stmt, None);
 
       Set_Visible_Flag (Stmt, True);
+
+      Current_Clock := Null_PSL_Node;
    end Sem_Psl_Endpoint_Declaration;
 
    function Rewrite_As_Boolean_Expression (Prop : PSL_Node) return Iir
@@ -938,7 +976,7 @@ package body Vhdl.Sem_Psl is
             Error_Msg_Sem (+Stmt, "no clock for PSL directive");
             Clk := Null_PSL_Node;
          else
-            Clk := Get_Psl_Boolean (Current_Psl_Default_Clock);
+            Clk := Current_Clock;
          end if;
       end if;
       Set_PSL_Clock (Stmt, Clk);
@@ -954,6 +992,8 @@ package body Vhdl.Sem_Psl is
 
       --  Sem report and severity expressions.
       Sem_Report_Statement (Stmt);
+
+      Set_Current_Clock;
 
       Prop := Get_Psl_Property (Stmt);
       Prop := Sem_Property (Prop, True);
@@ -979,6 +1019,8 @@ package body Vhdl.Sem_Psl is
       --  Check simple subset restrictions.
       PSL.Subsets.Check_Simple (Prop);
 
+      Current_Clock := Null_PSL_Node;
+
       return Stmt;
    end Sem_Psl_Assert_Directive;
 
@@ -986,6 +1028,8 @@ package body Vhdl.Sem_Psl is
    is
       Prop : PSL_Node;
    begin
+      Set_Current_Clock;
+
       Prop := Get_Psl_Property (Stmt);
       Prop := Sem_Property (Prop, True);
       Set_Psl_Property (Stmt, Prop);
@@ -996,6 +1040,8 @@ package body Vhdl.Sem_Psl is
 
       --  Check simple subset restrictions.
       PSL.Subsets.Check_Simple (Prop);
+
+      Current_Clock := Null_PSL_Node;
    end Sem_Psl_Assume_Directive;
 
    procedure Sem_Psl_Sequence (Stmt : Iir)
@@ -1031,12 +1077,20 @@ package body Vhdl.Sem_Psl is
    begin
       Sem_Report_Expression (Stmt);
 
+      Set_Current_Clock;
+
       Sem_Psl_Sequence (Stmt);
+
+      Current_Clock := Null_PSL_Node;
    end Sem_Psl_Cover_Directive;
 
    procedure Sem_Psl_Restrict_Directive (Stmt : Iir) is
    begin
+      Set_Current_Clock;
+
       Sem_Psl_Sequence (Stmt);
+
+      Current_Clock := Null_PSL_Node;
    end Sem_Psl_Restrict_Directive;
 
    procedure Sem_Psl_Default_Clock (Stmt : Iir)

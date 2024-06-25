@@ -7644,20 +7644,20 @@ package body Vhdl.Nodes is
       Set_Field4 (N, Clk);
    end Set_Clock_Expression;
 
-   function Get_Default_Clock (N : Iir) return Iir is
+   function Get_Default_Clock (N : Iir) return PSL_Node is
    begin
       pragma Assert (N /= Null_Iir);
       pragma Assert (Has_Default_Clock (Get_Kind (N)),
                      "no field Default_Clock");
-      return Get_Field3 (N);
+      return Iir_To_PSL_Node (Get_Field3 (N));
    end Get_Default_Clock;
 
-   procedure Set_Default_Clock (N : Iir; Clk : Iir) is
+   procedure Set_Default_Clock (N : Iir; Clk : PSL_Node) is
    begin
       pragma Assert (N /= Null_Iir);
       pragma Assert (Has_Default_Clock (Get_Kind (N)),
                      "no field Default_Clock");
-      Set_Field3 (N, Clk);
+      Set_Field3 (N, PSL_Node_To_Iir (Clk));
    end Set_Default_Clock;
 
    function Get_Foreign_Node (N : Iir) return Int32 is

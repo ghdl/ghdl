@@ -1989,11 +1989,13 @@ package body Synth.Vhdl_Expr is
       return Res;
    end Synth_PSL_Expression;
 
-   function Synth_Psl_Function_Clock
-     (Syn_Inst : Synth_Instance_Acc; Call : Node; Ctxt : Context_Acc)
-     return Net
+   function Synth_Psl_Function_Clock (Syn_Inst : Synth_Instance_Acc;
+                                      Call : Node;
+                                      Ctxt : Context_Acc) return Net
    is
+      use PSL.Types;
       Clock   : Node;
+      Iclock  : PSL_Node;
       Clk     : Valtyp;
       Clk_Net : Net;
    begin
@@ -2002,9 +2004,9 @@ package body Synth.Vhdl_Expr is
          Clk := Synth_Expression (Syn_Inst, Clock);
          Clk_Net := Get_Net (Ctxt, Clk);
       else
-         Clock := Get_Default_Clock (Call);
-         pragma Assert (Clock /= Null_Node);
-         Clk_Net := Synth_PSL_Expression (Syn_Inst, Get_Psl_Boolean (Clock));
+         Iclock := Get_Default_Clock (Call);
+         pragma Assert (Iclock /= Null_PSL_Node);
+         Clk_Net := Synth_PSL_Expression (Syn_Inst, Iclock);
       end if;
       return Clk_Net;
    end Synth_Psl_Function_Clock;

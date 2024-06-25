@@ -404,7 +404,7 @@ package body Vhdl.Nodes_Meta is
       Field_PSL_EOS_Flag => Type_Boolean,
       Field_Count_Expression => Type_Iir,
       Field_Clock_Expression => Type_Iir,
-      Field_Default_Clock => Type_Iir,
+      Field_Default_Clock => Type_PSL_Node,
       Field_Foreign_Node => Type_Int32,
       Field_Suspend_State_Index => Type_Int32,
       Field_Suspend_State_Chain => Type_Iir,
@@ -4497,30 +4497,30 @@ package body Vhdl.Nodes_Meta is
       Field_Index_List,
       Field_Base_Name,
       --  Iir_Kind_Psl_Prev
+      Field_Default_Clock,
       Field_Expr_Staticness,
       Field_Type,
       Field_Expression,
       Field_Count_Expression,
       Field_Clock_Expression,
-      Field_Default_Clock,
       --  Iir_Kind_Psl_Stable
+      Field_Default_Clock,
       Field_Expr_Staticness,
       Field_Type,
       Field_Expression,
       Field_Clock_Expression,
-      Field_Default_Clock,
       --  Iir_Kind_Psl_Rose
+      Field_Default_Clock,
       Field_Expr_Staticness,
       Field_Type,
       Field_Expression,
       Field_Clock_Expression,
-      Field_Default_Clock,
       --  Iir_Kind_Psl_Fell
+      Field_Default_Clock,
       Field_Expr_Staticness,
       Field_Type,
       Field_Expression,
       Field_Clock_Expression,
-      Field_Default_Clock,
       --  Iir_Kind_Psl_Onehot
       Field_Expr_Staticness,
       Field_Type,
@@ -6834,8 +6834,6 @@ package body Vhdl.Nodes_Meta is
             return Get_Count_Expression (N);
          when Field_Clock_Expression =>
             return Get_Clock_Expression (N);
-         when Field_Default_Clock =>
-            return Get_Default_Clock (N);
          when Field_Suspend_State_Chain =>
             return Get_Suspend_State_Chain (N);
          when Field_Suspend_State_Last =>
@@ -7318,8 +7316,6 @@ package body Vhdl.Nodes_Meta is
             Set_Count_Expression (N, V);
          when Field_Clock_Expression =>
             Set_Clock_Expression (N, V);
-         when Field_Default_Clock =>
-            Set_Default_Clock (N, V);
          when Field_Suspend_State_Chain =>
             Set_Suspend_State_Chain (N, V);
          when Field_Suspend_State_Last =>
@@ -7942,6 +7938,8 @@ package body Vhdl.Nodes_Meta is
             return Get_PSL_Clock (N);
          when Field_PSL_Abort =>
             return Get_PSL_Abort (N);
+         when Field_Default_Clock =>
+            return Get_Default_Clock (N);
          when others =>
             raise Internal_Error;
       end case;
@@ -7966,6 +7964,8 @@ package body Vhdl.Nodes_Meta is
             Set_PSL_Clock (N, V);
          when Field_PSL_Abort =>
             Set_PSL_Abort (N, V);
+         when Field_Default_Clock =>
+            Set_Default_Clock (N, V);
          when others =>
             raise Internal_Error;
       end case;

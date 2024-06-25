@@ -7071,14 +7071,14 @@ def Set_Clock_Expression(obj: Iir, value: Iir) -> None:
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_default_clock")
-def Get_Default_Clock(obj: Iir) -> Iir:
+def Get_Default_Clock(obj: Iir) -> PSLNode:
     """"""
     return 0
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_default_clock")
-def Set_Default_Clock(obj: Iir, value: Iir) -> None:
+def Set_Default_Clock(obj: Iir, value: PSLNode) -> None:
     """"""
 
 
