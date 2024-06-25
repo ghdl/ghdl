@@ -4505,8 +4505,9 @@ package body Synth.Vhdl_Stmts is
                            Loc : Source.Syn_Src) return Net
    is
       use PSL.NFAs;
+      use PSL.Nodes;
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-      S : NFA_State;
+      S, First : NFA_State;
       S_Num : Int32;
       D_Num : Int32;
       I : Net;
@@ -4518,8 +4519,25 @@ package body Synth.Vhdl_Stmts is
    begin
       D_Arr := new Net_Array'(0 .. Nbr_States - 1 => No_Net);
 
-      --  For each state:
+      --  First state
       S := Get_First_State (NFA);
+
+      --  Check if there is a loop-back with TRUE.
+      --  If so, keep the state to optimize the expression.
+      --  This is necessary for BMC, which assume every dff can be 0 or 1.
+      First := No_State;
+      E := Get_First_Src_Edge (S);
+      while E /= No_Edge loop
+         if Get_Edge_Dest (E) = S
+           and then Get_Kind (Get_Edge_Expr (E)) = N_True
+         then
+            First := S;
+            exit;
+         end if;
+         E := Get_Next_Src_Edge (E);
+      end loop;
+
+      --  For each state:
       while S /= No_State loop
          S_Num := Get_State_Label (S);
          I := Build_Extract_Bit (Ctxt, States, Uns32 (S_Num));
@@ -4533,6 +4551,9 @@ package body Synth.Vhdl_Stmts is
             if N = No_Net then
                --  Anything ?
                Cond := I;
+            elsif S = First then
+               --  Optimize when the first state is always 1.
+               Cond := N;
             else
                Cond := Build_Dyadic (Ctxt, Id_And, I, N);
                Set_Location (Cond, Loc);
