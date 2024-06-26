@@ -218,6 +218,8 @@ package body Grt.Vpi is
             Trace ("vpiNetArray");
          when vpiPort =>
             Trace ("vpiPort");
+         when vpiDirection =>
+            Trace ("vpiDirection");
          when vpiParameter =>
             Trace ("vpiParameter");
          when vpiScope =>
@@ -557,8 +559,16 @@ package body Grt.Vpi is
             | VhpiForGenerateK
             | VhpiCompInstStmtK =>
             return vpiModule;
-         when VhpiPortDeclK
-            | VhpiSigDeclK =>
+         when VhpiPortDeclK =>
+            declare
+               Info : Verilog_Wire_Info;
+            begin
+               Get_Verilog_Wire (Res, Info);
+               if Info.Vtype /= Vcd_Bad then
+                  return vpiPort;
+               end if;
+            end;
+         when VhpiSigDeclK =>
             declare
                Info : Verilog_Wire_Info;
             begin
@@ -646,7 +656,7 @@ package body Grt.Vpi is
    -- vpiHandle  vpi_scan(vpiHandle iter)
    -- Scan the Verilog HDL hierarchy for objects with a one-to-many
    -- relationship.
-   -- see IEEE 1364-2001, chapter 27.36, page 709
+   -- see IEEE Std 1800-2017, chapter 38.40, page 1109
    function Vpi_Scan_Internal (Iter: vpiHandle) return vpiHandle
    is
       Res : VhpiHandleT;
@@ -735,7 +745,7 @@ package body Grt.Vpi is
 
    ------------------------------------------------------------------------
    -- char *vpi_get_str(int property, vpiHandle ref)
-   -- see IEEE 1364-2001, page xxx
+   -- see IEEE Std 1800-2017, page 1061
    Tmpstring2 : String (1 .. 1024);
    function Vpi_Get_Str_Internal (Property : Integer; Ref : vpiHandle)
                                  return Ghdl_C_String
@@ -743,6 +753,75 @@ package body Grt.Vpi is
       Prop : VhpiStrPropertyT;
       Len : Natural;
       Res : Ghdl_C_String;
+
+      procedure Copy_VpiType_CString is
+         R : String renames Tmpstring2;
+         procedure Add (C : Character) is
+         begin
+            Len := Len + 1;
+            if Len <= R'Last then
+               R (Len) := C;
+            end if;
+         end Add;
+
+         procedure Add (Str : String) is
+         begin
+            for I in Str'Range loop
+               Add (Str (I));
+            end loop;
+         end Add;
+
+      begin
+         Len := 0;
+         case Vhpi_Handle_To_Vpi_Prop(Ref.Ref) is
+            when vpiUndefined =>
+               Add ("vpiUndefined");
+            when vpiType =>
+               Add ("vpiType");
+            when vpiName =>
+               Add ("vpiName");
+            when vpiFullName =>
+               Add ("vpiFullName");
+            when vpiSize =>
+               Add ("vpiSize");
+            when vpiTimePrecision =>
+               Add ("vpiTimePrecision");
+            when vpiScalar =>
+               Add ("vpiScalar");
+            when vpiVector =>
+               Add ("vpiVector");
+            when vpiModule =>
+               Add ("vpiModule");
+            when vpiDefFile =>
+               Add ("vpiDefFile");
+            when vpiNet =>
+               Add ("vpiNet");
+            when vpiPort =>
+               Add ("vpiPort");
+            when vpiDirection =>
+               Add ("vpiDirection");
+            when vpiParameter =>
+               Add ("vpiParameter");
+            when vpiScope =>
+               Add ("vpiScope");
+            when vpiInternalScope =>
+               Add ("vpiInternalScope");
+            when vpiLeftRange =>
+               Add ("vpiLeftRange");
+            when vpiRightRange =>
+               Add ("vpiRightRange");
+            when vpiStop =>
+               Add ("vpiStop");
+            when vpiFinish =>
+               Add ("vpiFinish");
+            when vpiReset =>
+               Add ("vpiReset");
+            when others =>
+               return;
+         end case;
+         R (Len + 1) := NUL;
+      end Copy_VpiType_CString;
+
    begin
       if Ref = null then
          return null;
@@ -753,9 +832,15 @@ package body Grt.Vpi is
             Prop := VhpiFullNameP;
          when vpiName =>
             Prop := VhpiNameP;
+         when vpiDefFile =>
+            Prop := VhpiFileNameP;
          when vpiType =>
-            Tmpstring2 (1 .. 4) := "???" & NUL;
-            return To_Ghdl_C_String (Tmpstring2'Address);
+            Copy_VpiType_CString;
+            if Len = 0 then
+               return null;
+            else
+               return To_Ghdl_C_String (Tmpstring2'Address);
+            end if;
          when others =>
             dbgPut_Line ("vpi_get_str: unhandled property");
             return null;
