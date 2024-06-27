@@ -165,6 +165,9 @@ namespace GhdlSynth {
     return res;
   }
 
+  //  Disp ghdl version.
+  extern "C" void ghdlmain__disp_ghdl_version (void);
+
   //  Disp ghdl configuration.
   extern "C" void ghdlcomp__disp_config (void);
 

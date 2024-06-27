@@ -94,6 +94,9 @@ package Ghdlmain is
 
    procedure Main;
 
+   --  Display GHDL version (one line).
+   procedure Disp_Ghdl_Version;
+
    --  Additionnal one-line message displayed by the --version command,
    --  if defined.
    --  Used to customize.

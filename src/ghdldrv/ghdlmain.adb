@@ -309,6 +309,16 @@ package body Ghdlmain is
         & ASCII.LF & "  aliases: -v, --version";
    end Get_Short_Help;
 
+   procedure Disp_Ghdl_Version
+   is
+      use Simple_IO;
+   begin
+      Put ("GHDL ");
+      Put (Version.Ghdl_Ver);
+      Put (' ');
+      Put_Line (Version.Ghdl_Release);
+   end Disp_Ghdl_Version;
+
    procedure Perform_Action (Cmd : in out Command_Version;
                              Args : String_Acc_Array;
                              Success : out Boolean)
@@ -330,10 +340,7 @@ package body Ghdlmain is
          end if;
          return;
       end if;
-      Put ("GHDL ");
-      Put (Version.Ghdl_Ver);
-      Put (' ');
-      Put_Line (Version.Ghdl_Release);
+      Disp_Ghdl_Version;
       Put_Line (" Compiled with " & Bug.Get_Gnat_Version);
       if Version_String /= null then
          Put (" ");
