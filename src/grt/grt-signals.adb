@@ -320,22 +320,22 @@ package body Grt.Signals is
 
    procedure Display_Signal_And_Sources (Sig : in Ghdl_Signal_Ptr) is
    begin
-      Grt.Astdio.Put(Grt.Stdio.Stderr, "Signal ");
-      Disp_Signals.Put_Signal_Name(Grt.Stdio.Stderr, Sig);
-      Grt.Astdio.Put(Grt.Stdio.Stderr, " is driven by :");
-      Grt.Astdio.New_Line(Grt.Stdio.Stderr);
-      if Sig.S.Nbr_Drivers /= 0
-      then
+      Grt.Astdio.Put(Grt.Stdio.stderr, "Signal ");
+      Disp_Signals.Put_Signal_Name(Grt.Stdio.stderr, Sig);
+      Grt.Astdio.Put(Grt.Stdio.stderr, " is driven by :");
+      Grt.Astdio.New_Line(Grt.Stdio.stderr);
+      if Sig.S.Nbr_Drivers /= 0 then
          for I in 0 .. Sig.S.Nbr_Drivers - 1
          loop
-            Grt.Processes.Disp_Process_Name(Grt.Stdio.Stderr, Sig.S.Drivers.all(I).Proc);
-            Grt.Astdio.New_Line(Grt.Stdio.Stderr);
+            Grt.Processes.Disp_Process_Name(
+              Grt.Stdio.stderr,
+              Sig.S.Drivers.all(I).Proc);
+            Grt.Astdio.New_Line(Grt.Stdio.stderr);
          end loop;
       end if;
-      if Sig.Nbr_Ports /= 0
-      then
-         Grt.Astdio.Put(Grt.Stdio.Stderr, "At least one port.");
-         Grt.Astdio.New_Line(Grt.Stdio.Stderr);
+      if Sig.Nbr_Ports /= 0 then
+         Grt.Astdio.Put(Grt.Stdio.stderr, "At least one port.");
+         Grt.Astdio.New_Line(Grt.Stdio.stderr);
       end if;
    end Display_Signal_And_Sources;
 
