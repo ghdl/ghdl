@@ -1089,7 +1089,7 @@ package body Synth.Vhdl_Expr is
 
    procedure Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
-                                 Pfx_Type : Type_Acc;
+                                 Pfx_Typ : Type_Acc;
                                  El_Typ : out Type_Acc;
                                  Voff : out Net;
                                  Off : out Value_Offsets;
@@ -1098,7 +1098,16 @@ package body Synth.Vhdl_Expr is
       Indexes : constant Iir_Flist := Get_Index_List (Name);
       Stride : Uns32;
    begin
-      Synth_Indexes (Syn_Inst, Indexes, Flist_First, Pfx_Type,
+      if Pfx_Typ.Abound.Len = 0 then
+         Error_Msg_Synth (Syn_Inst, Name, "indexing a null array");
+         El_Typ := null;
+         Voff := No_Net;
+         Off := No_Value_Offsets;
+         Error := True;
+         return;
+      end if;
+
+      Synth_Indexes (Syn_Inst, Indexes, Flist_First, Pfx_Typ,
                      El_Typ, Voff, Off, Stride, Error);
    end Synth_Indexed_Name;
 
@@ -2523,6 +2532,7 @@ package body Synth.Vhdl_Expr is
                   --  Propagate error.
                   return No_Valtyp;
                end if;
+
                if Base.Val.Kind = Value_Signal
                  or else Base.Val.Kind = Value_Sig_Val
                then

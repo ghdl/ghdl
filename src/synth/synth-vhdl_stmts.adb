@@ -727,6 +727,10 @@ package body Synth.Vhdl_Stmts is
    is
       V : Valtyp;
    begin
+      if Target.Targ_Type = null then
+         return;
+      end if;
+
       V := Synth_Subtype_Conversion
         (Syn_Inst, Val, Target.Targ_Type, False, Loc);
       pragma Unreferenced (Val);
