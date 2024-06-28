@@ -318,31 +318,46 @@ package body Grt.Signals is
          Disconnect_Time => Bad_Time);
    end Ghdl_Signal_Create_Resolution;
 
-   procedure Check_New_Source (Sig : Ghdl_Signal_Ptr)
-   is
-      use Grt.Stdio;
-      use Grt.Astdio;
+   procedure Display_Signal_And_Sources (Sig : in Ghdl_Signal_Ptr) is
    begin
-      if Sig.S.Nbr_Drivers + Sig.Nbr_Ports > 0 then
+      Grt.Astdio.Put(Grt.Stdio.stderr, "Signal ");
+      Disp_Signals.Put_Signal_Name(Grt.Stdio.stderr, Sig);
+      Grt.Astdio.Put(Grt.Stdio.stderr, " is driven by :");
+      Grt.Astdio.New_Line(Grt.Stdio.stderr);
+      if Sig.S.Nbr_Drivers /= 0 then
+         for I in 0 .. Sig.S.Nbr_Drivers - 1
+         loop
+            Grt.Processes.Disp_Process_Name(
+              Grt.Stdio.stderr,
+              Sig.S.Drivers.all(I).Proc);
+            Grt.Astdio.New_Line(Grt.Stdio.stderr);
+         end loop;
+      end if;
+      if Sig.Nbr_Ports /= 0 then
+         Grt.Astdio.Put(Grt.Stdio.stderr, "At least one port.");
+         Grt.Astdio.New_Line(Grt.Stdio.stderr);
+      end if;
+   end Display_Signal_And_Sources;
+
+   procedure Check_Number_Of_Sources (Sig : in Ghdl_Signal_Ptr) is
+   begin
+      if Sig.S.Nbr_Drivers + Sig.Nbr_Ports > 1 then
          if Sig.S.Resolv = null then
             --  LRM 4.3.1.2 Signal Declaration
             --  It is an error if, after the elaboration of a description, a
             --  signal has multiple sources and it is not a resolved signal.
-            Put (stderr, "for signal: ");
-            Disp_Signals.Put_Signal_Name (stderr, Sig);
-            New_Line (stderr);
-            Error ("several sources for unresolved signal");
+            Display_Signal_And_Sources(Sig);
+            Error("several sources for unresolved signal");
          elsif Sig.S.Mode_Sig = Mode_Buffer and False then
             --  LRM 1.1.1.2  Ports
             --  A BUFFER port may have at most one source.
-
             --  FIXME: this is not true with VHDL-02.
             --  With VHDL-87/93, should also check that: any actual associated
             --  with a formal buffer port may have at most one source.
-            Error ("buffer port which more than one source");
+            Error("buffer port which more than one source");
          end if;
       end if;
-   end Check_New_Source;
+   end Check_Number_Of_Sources;
 
    --  Return True iff signal SIGN has a driver for PROC.
    function Has_Driver (Sign : Ghdl_Signal_Ptr; Proc : Process_Acc)
@@ -378,8 +393,6 @@ package body Grt.Signals is
                         / System.Storage_Unit);
       end Size;
    begin
-      Check_New_Source (Sign);
-
       if Sign.S.Nbr_Drivers = 0 then
          Sign.S.Drivers := Malloc (Size (1));
          Sign.S.Nbr_Drivers := 1;
@@ -391,6 +404,7 @@ package body Grt.Signals is
         (First_Trans => Trans,
          Last_Trans => Trans,
          Proc => Proc);
+      Check_Number_Of_Sources(Sign);
    end Ghdl_Signal_Add_Driver;
 
    procedure Ghdl_Process_Add_Driver (Sign : Ghdl_Signal_Ptr)
@@ -529,8 +543,8 @@ package body Grt.Signals is
                                      Src : Ghdl_Signal_Ptr)
    is
    begin
-      Check_New_Source (Targ);
       Append_Port (Targ, Src);
+      Check_Number_Of_Sources(Targ);
    end Ghdl_Signal_Add_Source;
 
    procedure Ghdl_Signal_Set_Disconnect (Sign : Ghdl_Signal_Ptr;

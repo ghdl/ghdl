@@ -28,6 +28,7 @@ with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Signals; use Grt.Signals;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr;
+with Grt.Stdio;
 
 package Grt.Processes is
    pragma Suppress (All_Checks);
@@ -103,6 +104,8 @@ package Grt.Processes is
    --  Total number of resumed processes.
    function Get_Nbr_Resumed_Processes return Long_Long_Integer;
 
+   -- Display the name of a process.
+   procedure Disp_Process_Name (Stream : Grt.Stdio.FILEs; Proc : Process_Acc);
 
    --  Instance is the parameter of the process procedure.
    --  This is in fact a fully opaque type whose content is private to the
