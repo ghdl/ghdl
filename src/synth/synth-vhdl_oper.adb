@@ -2053,7 +2053,8 @@ package body Synth.Vhdl_Oper is
             return Create_Value_Net (Get_Net (Ctxt, L), Res_Typ);
 
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int
+            | Iir_Predefined_Ieee_Numeric_Std_Unsigned_To_Slv_Nat_Nat =>
             return Synth_Conv_Vector (False);
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Uns_Uns =>
             declare
