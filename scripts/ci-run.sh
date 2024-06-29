@@ -257,7 +257,7 @@ build () {
           exit 1;;
   esac
 
-  if [ "x$IS_MACOS" = "xtrue" ]; then
+  if [ "x$IS_MACOS" = "xtrue" -a "$GITHUB_OS_VER" -ge 13 ]; then
       CONFIG_OPTS+=" LDFLAGS=-Wl,-ld_classic"
   fi
 
