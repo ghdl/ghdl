@@ -226,7 +226,7 @@ jobs:
           fi
           PATH=$PWD/gnat/bin:$PATH
           ./scripts/ci-run.sh -c
-          mv ghdl-*.tgz ghdl-macos-${{ matrix.os }}-${RUNNER_ARCH}-${{ matrix.backend }}.tgz
+          mv ghdl-*.tgz ghdl-macos${{ matrix.os }}-${RUNNER_ARCH}-${{ matrix.backend }}.tgz
         env:
           TASK: macosx+${{ matrix.backend }}
           GITHUB_OS: ${{ runner.os }}
@@ -237,7 +237,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: macos${{ matrix.os }}-${{ matrix.backend }}
-          path: ghdl-macos-${{ matrix.os }}-${{ matrix.backend }}.tgz
+          path: ghdl-macos*.tgz
           if-no-files-found: error
 
 
