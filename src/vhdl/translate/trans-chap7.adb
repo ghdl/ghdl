@@ -1572,7 +1572,8 @@ package body Trans.Chap7 is
       --  Handlers.Handle_El for element leaves.
       procedure Walk (Handlers : Handlers_Type)
       is
-         Walk_Handlers : Handlers_Type;
+         Handle_El : constant Handle_Acc := Handlers.Handle_El;
+         Handle_Arr : constant Handle_Acc := Handlers.Handle_Arr;
          Is_First : Boolean;
 
          --  Call handlers for each leaf of L IMP R.
@@ -1611,7 +1612,7 @@ package body Trans.Chap7 is
                end if;
             end if;
 
-            Walk_Handlers.Handle_Arr (E, Is_First);
+            Handle_Arr (E, Is_First);
             Is_First := False;
          end Walk_Arr;
 
@@ -1623,21 +1624,20 @@ package body Trans.Chap7 is
                   Walk_Arr (R);
                when Iir_Predefined_Array_Element_Concat =>
                   Walk_Arr (L);
-                  Walk_Handlers.Handle_El (R, False);
+                  Handle_El (R, False);
                when Iir_Predefined_Element_Array_Concat =>
-                  Walk_Handlers.Handle_El (L, Is_First);
+                  Handle_El (L, Is_First);
                   Is_First := False;
                   Walk_Arr (R);
                when Iir_Predefined_Element_Element_Concat =>
-                  Walk_Handlers.Handle_El (L, Is_First);
+                  Handle_El (L, Is_First);
                   Is_First := False;
-                  Walk_Handlers.Handle_El (R, False);
+                  Handle_El (R, False);
                when others =>
                   raise Internal_Error;
             end case;
          end Walk_Concat;
       begin
-         Walk_Handlers := Handlers;
          Is_First := True;
          Walk_Concat (Concat_Imp, Left, Right);
       end Walk;
