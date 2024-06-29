@@ -389,6 +389,8 @@ ci_run () {
   # Test
 
   if [ "x$IS_MACOS" = "xtrue" ]; then
+      python3 -m venv ./venv
+      source ./venv/bin/activate
       pip3 install -r testsuite/requirements.txt
       CC=clang \
       PATH="$PATH:$(pwd)/install-$(echo "$TASK" | cut -d+ -f2)/usr/local/bin" \
