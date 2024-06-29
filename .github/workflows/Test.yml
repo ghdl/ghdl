@@ -226,12 +226,12 @@ jobs:
           fi
           PATH=$PWD/gnat/bin:$PATH
           ./scripts/ci-run.sh -c
-          mv ghdl-*.tgz ghdl-macos-${{ matrix.os }}-${{ matrix.backend }}.tgz
+          mv ghdl-*.tgz ghdl-macos-${{ matrix.os }}-${RUNNER_ARCH}-${{ matrix.backend }}.tgz
         env:
           TASK: macosx+${{ matrix.backend }}
           GITHUB_OS: ${{ runner.os }}
           GITHUB_OS_VER: ${{ matrix.os }}
-          MACOSX_DEPLOYMENT_TARGET: '10.15'
+#          MACOSX_DEPLOYMENT_TARGET: '10.15'
 
       - name: '📤 Upload artifact: package'
         uses: actions/upload-artifact@v4
