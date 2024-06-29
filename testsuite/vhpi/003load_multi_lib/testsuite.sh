@@ -6,10 +6,10 @@ analyze mydesign.vhdl
 elab myentity
 
 if c_compiler_is_available && ghdl_has_feature myentity vhpi; then
-  $GHDL --vpi-compile -v gcc -c vhpi_lib1.c
-  $GHDL --vpi-link -v gcc -o vhpi_lib1.vhpi vhpi_lib1.o
-  $GHDL --vpi-compile -v gcc -c vhpi_lib2.c
-  $GHDL --vpi-link -v gcc -o vhpi_lib2.vhpi vhpi_lib2.o
+  $GHDL --vpi-compile -v $CC -c vhpi_lib1.c
+  $GHDL --vpi-link -v $CC -o vhpi_lib1.vhpi vhpi_lib1.o
+  $GHDL --vpi-compile -v $CC -c vhpi_lib2.c
+  $GHDL --vpi-link -v $CC -o vhpi_lib2.vhpi vhpi_lib2.o
 
   add_vpi_path
 
