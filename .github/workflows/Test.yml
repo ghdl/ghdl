@@ -196,9 +196,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - { os: 12, backend: mcode }
           - { os: 13, backend: mcode }
           - { os: 13, backend: llvm }
-          - { os: 12, backend: mcode }
+          - { os: 14, backend: llvm }
 
     steps:
       - name: '🧰 Checkout'
