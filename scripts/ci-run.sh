@@ -257,6 +257,10 @@ build () {
           exit 1;;
   esac
 
+  if [ "x$IS_MACOS" = "xtrue" ]; then
+      CONFIG_OPTS+=" LDFLAGS=-Wl,-ld_classic"
+  fi
+
   if [ ! "`echo $BACK | grep gcc`" ]; then
       gstart "[GHDL - build] Configure"
       run_cmd ../configure $CONFIG_OPTS
