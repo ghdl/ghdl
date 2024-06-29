@@ -2,8 +2,28 @@
 
 set -e
 
-if [ -e gnat/etc/install_ok ] && [ "x$(cat gnat/etc/install_ok)" = "x2019" ]; then
-    echo "gnatgpl already installed"
+echo "ARCH: $RUNNER_ARCH"
+
+case "$RUNNER_ARCH" in
+    X64)
+	gnat_ver=12.1.0-2
+	gnat_arch=x86_64
+	;;
+    ARM64)
+	gnat_ver=14.1.0-3
+	gnat_arch=aarch64
+	;;
+    *)
+	echo "Unknown arch ($RUNNER_ARCH)"
+	exit 1
+	;;
+esac
+
+gnat_name="gnat-${gnat_arch}-darwin-${gnat_ver}"
+gnat_url="https://github.com/alire-project/GNAT-FSF-builds/releases/download/gnat-${gnat_ver}/${gnat_name}.tar.gz"
+
+if [ -e gnat/install_ok ] && [ "$(cat gnat/install_ok)" = "$gnat_name" ]; then
+    echo "gnat already installed"
     exit 0
 fi
 
@@ -15,13 +35,12 @@ if [ -d gnat ]; then
 fi
 
 # Download from community.adacore.com and extract
-wget -q --show-progress --progress=bar:force:noscroll -O dmgfile https://community.download.adacore.com/v1/5a7801fc686e86de838cfaf7071170152d81254d?filename=gnat-community-2019-20190517-x86_64-darwin-bin.dmg
-7z x dmgfile
-installer="gnat-community-2019-20190517-x86_64-darwin-bin/gnat-community-2019-20190517-x86_64-darwin-bin.app/Contents/MacOS/gnat-community-2019-20190517-x86_64-darwin-bin"
+wget -q --show-progress --progress=bar:force:noscroll "$gnat_url"
+tar zxf ${gnat_name}.tar.gz
+mv ${gnat_name} gnat
 
-# Install
-mkdir -p gnat
-chmod +x $installer
-./$installer PREFIX=gnat
+./gnat/bin/gnatls -v
 
-echo "2019" > gnat/etc/install_ok
+rm ${gnat_name}.tar.gz
+
+echo "$gnat_name" > gnat/install_ok
