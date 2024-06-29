@@ -1561,19 +1561,16 @@ package body Trans.Chap7 is
       Static_Length : Int64 := 0;
       Nbr_Dyn_Expr : Natural := 0;
 
-      type Handle_Acc is access procedure (E : Iir; Is_First : Boolean);
-      type Handlers_Type is record
-         Handle_El : Handle_Acc;
-         Handle_Arr : Handle_Acc;
-      end record;
-
       --  Call handlers for each leaf of LEFT CONCAT_IMP RIGHT.
       --  Handlers.Handle_Arr is called for array leaves, and
       --  Handlers.Handle_El for element leaves.
-      procedure Walk (Handlers : Handlers_Type)
+      generic
+         with procedure Handle_El (E : Iir; Is_First : Boolean);
+         with procedure Handle_Arr (E : Iir; Is_First : Boolean);
+      procedure Walk;
+
+      procedure Walk
       is
-         Handle_El : constant Handle_Acc := Handlers.Handle_El;
-         Handle_Arr : constant Handle_Acc := Handlers.Handle_Arr;
          Is_First : Boolean;
 
          --  Call handlers for each leaf of L IMP R.
@@ -1684,11 +1681,14 @@ package body Trans.Chap7 is
          end if;
       end Pre_Walk_Arr;
 
+      procedure Walk_Pre_Walk is new Walk
+        (Handle_El => Pre_Walk_El, Handle_Arr => Pre_Walk_Arr);
+
       --  In order to declare Dyn_Mnodes (below), create a function that can
       --  be called now (not possible with procedures).
       function Call_Pre_Walk return Natural is
       begin
-         Walk ((Pre_Walk_El'Access, Pre_Walk_Arr'Access));
+         Walk_Pre_Walk;
          return Nbr_Dyn_Expr;
       end Call_Pre_Walk;
 
@@ -1989,6 +1989,21 @@ package body Trans.Chap7 is
          end if;
       end Assign_Bounds_Arr_V87;
 
+      procedure Walk_Eval is new Walk
+        (Handle_El => Eval_First_El, Handle_Arr => Eval_Dyn_Arr);
+
+      procedure Walk_Len_Dyn is new Walk
+        (Handle_El => Len_El, Handle_Arr => Len_Dyn_Arr);
+
+      procedure Walk_Assign_Bounds_V87 is new Walk
+        (Handle_El => Assign_Bounds_El_V87,
+         Handle_Arr => Assign_Bounds_Arr_V87);
+
+      procedure Walk_Find_Last is new Walk
+        (Handle_El => Len_El, Handle_Arr => Find_Last_Arr);
+
+      procedure Walk_Assign is new Walk
+        (Handle_El => Assign_El, Handle_Arr => Assign_Arr);
    begin
       --  Bounds
       Var_Bounds := Dv2M
@@ -2011,7 +2026,7 @@ package body Trans.Chap7 is
 
       --  Evaluate all dynamic expressions
       Dyn_I := 0;
-      Walk ((Eval_First_El'Access, Eval_Dyn_Arr'Access));
+      Walk_Eval;
       --  Check that all dynamic expressions have been handled.
       pragma Assert (Dyn_I = Dyn_Mnodes'Last);
 
@@ -2022,7 +2037,7 @@ package body Trans.Chap7 is
          E_Length := O_Enode_Null;
       end if;
       Dyn_I := 0;
-      Walk ((Len_El'Access, Len_Dyn_Arr'Access));
+      Walk_Len_Dyn;
       pragma Assert (Dyn_I = Dyn_Mnodes'Last);
       pragma Assert (E_Length /= O_Enode_Null);
       Var_Length := Create_Temp_Init (Ghdl_Index_Type, E_Length);
@@ -2065,7 +2080,7 @@ package body Trans.Chap7 is
             --  non-null range.
             Dyn_I := 0;
             Assign_Bounds_V87_Done := False;
-            Walk ((Assign_Bounds_El_V87'Access, Assign_Bounds_Arr_V87'Access));
+            Walk_Assign_Bounds_V87;
             for I in reverse 1 .. Dyn_I  loop
                Finish_If_Stmt (Assign_Bounds_Ifs (I));
             end loop;
@@ -2134,7 +2149,7 @@ package body Trans.Chap7 is
             Last_Expr := Null_Iir;
             Last_Dyn_Expr := 0;
             Dyn_I := 0;
-            Walk ((Len_El'Access, Find_Last_Arr'Access));
+            Walk_Find_Last;
             pragma Assert (Dyn_I = Dyn_Mnodes'Last);
 
             if Last_Dyn_Expr = 0 then
@@ -2166,7 +2181,7 @@ package body Trans.Chap7 is
       Open_Temp;
       Var_Off := Create_Temp_Init (Ghdl_Index_Type, New_Lit (Ghdl_Index_0));
       Dyn_I := 0;
-      Walk ((Assign_El'Access, Assign_Arr'Access));
+      Walk_Assign;
       pragma Assert (Dyn_I = Dyn_Mnodes'Last);
       Close_Temp;
 
