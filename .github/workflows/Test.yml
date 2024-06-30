@@ -199,7 +199,7 @@ jobs:
           - { os: 12, backend: mcode }
           - { os: 13, backend: mcode }
           - { os: 13, backend: llvm }
-          - { os: 14, backend: llvm }
+          - { os: 14, backend: llvm-jit }
 
     steps:
       - name: '🧰 Checkout'
@@ -218,7 +218,7 @@ jobs:
 
       - name: '🚧 Build and 🚦 Test GHDL'
         run: |
-          if [ "${{matrix.backend}}" == "llvm" ]; then
+          if expr "${{matrix.backend}}" : "llvm" > /dev/null; then
             brew install llvm
             echo $(brew --prefix llvm)
             echo $(brew --prefix llvm@18)
