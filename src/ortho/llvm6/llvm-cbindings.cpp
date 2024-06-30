@@ -1399,7 +1399,16 @@ new_var_decl(ODnode *Res, OIdent Ident, OStorage Storage, OTnode Atype)
 extern "C" void
 new_var_body(ODnode Res, OStorage Storage, OTnode Atype)
 {
-  abort();
+    switch(Storage) {
+    case O_Storage_Public:
+    case O_Storage_Private:
+      LLVMSetInitializer(Res->Ref, LLVMConstNull(Atype->Ref));
+      break;
+    case O_Storage_External:
+    case O_Storage_Local:
+      abort();
+      break;
+    }
 }
 
 struct ODnodeConst : ODnodeBase {
