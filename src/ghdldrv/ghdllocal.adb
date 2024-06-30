@@ -15,7 +15,7 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Ada.Command_Line;
-with Ada.Directories;
+with Ada.Directories; use Ada.Directories;
 with GNAT.Directory_Operations;
 
 with Simple_IO; use Simple_IO;
@@ -666,21 +666,22 @@ package body Ghdllocal is
         & ASCII.LF & "  alias: --dir";
    end Get_Short_Help;
 
+   --  Subprogram for Command_Dir, but at a top-level to avoid a nested
+   --  subprogram access.
+   procedure Disp_Library_By_File (Search_Item : in Directory_Entry_Type)
+   is
+      File_Name : constant String :=
+        Simple_Name (Directory_Entry => Search_Item);
+      Name : constant String := File_Name (1 .. (File_Name'Last - 9));
+   begin
+      Disp_Library (Name_Table.Get_Identifier (Name));
+   end Disp_Library_By_File;
+
    procedure Perform_Action (Cmd : in out Command_Dir;
                              Args : String_Acc_Array;
                              Success : out Boolean)
    is
-      use Ada.Directories;
       use Flags;
-
-      procedure Disp_Library_By_File (Search_Item : in Directory_Entry_Type)
-      is
-         File_Name : constant String :=
-            Simple_Name (Directory_Entry => Search_Item);
-         Name : constant String := File_Name (1 .. (File_Name'Last - 9));
-      begin
-         Disp_Library (Name_Table.Get_Identifier (Name));
-      end Disp_Library_By_File;
 
       Pattern : String (1 .. 10);
       Filter : constant Filter_Type := (Ordinary_File => True,
