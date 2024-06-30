@@ -243,6 +243,10 @@ build () {
           CXX="clang++"
           CONFIG_OPTS+=" --with-llvm-config CXX=$CXX"
       ;;
+      llvm-jit)
+          CXX="clang++"
+          CONFIG_OPTS+=" --with-llvm-config CXX=$CXX --with-llvm-jit"
+      ;;
       llvm-3.5)
           CXX="clang++"
           CONFIG_OPTS+=" --with-llvm-config=llvm-config-3.5 CXX=$CXX"
