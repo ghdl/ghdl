@@ -229,14 +229,14 @@ install.mcode.program: install.dirs ghdl_mcode$(EXEEXT)
 uninstall.mcode.program:
 	$(RM) "$(DESTDIR)$(bindir)/ghdl$(EXEEXT)"
 
-install.mcode: install.mcode.program install.vhdllib
+install.mcode: install.mcode.program install
 
 install.mcode.deps.dll:
 	for f in $$($(PYTHON) $(srcdir)/scripts/win-dll.py ghdl_mcode$(EXEEXT)); do \
 	  $(INSTALL_PROGRAM) -p $$f "$(DESTDIR)$(bindir)/"; \
 	done
 
-uninstall.mcode: uninstall.mcode.program uninstall.vhdllib
+uninstall.mcode: uninstall.mcode.program
 
 test.mcode: ghdl_mcode$(EXEEXT)
 	cd $(srcdir)/testsuite; GHDL=$(CURDIR)/ghdl_mcode$(EXEEXT) ./testsuite.sh
