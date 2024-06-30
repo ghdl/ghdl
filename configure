@@ -39,7 +39,7 @@ libdirsuffix=lib
 libghdldirsuffix=lib/ghdl
 incdirsuffix=include
 gcc_src_dir=
-llvm_config=
+llvm_config=llvm-config
 backtrace_lib=
 llvm_be=llvm6
 build=
@@ -117,6 +117,7 @@ for opt do
       llvm_config="$optarg/bin/llvm-config";           backend=llvm;;
     --with-llvm-config)     llvm_config="llvm-config"; backend=llvm;;
     --with-llvm-config=*)   llvm_config="$optarg";     backend=llvm;;
+    --with-llvm-jit)        backend=llvm_jit;;
     --with-backtrace-lib=*) backtrace_lib="$optarg";;
     --with-readline)        with_readline="Gnu";;
     --with-sundials=*)      with_sundials=true;
@@ -156,6 +157,7 @@ Options [defaults in brackets]:
   --incdir=INCDIR             C include dir path relative to PREFIX [$incdirsuffix]
   --with-gcc=DIR              use gcc backend from DIR
   --with-llvm-config[=LLVM-CONFIG]  use llvm backend [llvm-config]
+  --with-llvm-jit             use llvm-jit backend
   --with-backtrace-lib=LIB.a  link with libbacktrace LIB.a to display a
                               backtrace on errors (only for llvm).
   --disable-werror            warnings don't stop build
@@ -287,7 +289,7 @@ if test $backend = gcc; then
 fi
 
 # For llvm backend, check llvm-config
-if test $backend = llvm; then
+if test $backend = llvm -o $backend = llvm_jit; then
   # No quotes for llvm_config, so that options (like --link-static) can be
   # added.  As a consequence, spaces in --with-llvm-config= are not allowed
   # for the path.

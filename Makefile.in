@@ -377,7 +377,7 @@ GHDL_LLVM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)
 
 all.llvm: ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT) grt-all libs.vhdl.llvm all.vpi
 
-all.llvm_jit: ghdl_llvm_jit$(EXEEXT)
+all.llvm_jit: ghdl_llvm_jit$(EXEEXT) libs.vhdl.llvm_jit all.vpi
 
 ghdl_llvm_jit$(EXEEXT): GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_llvm_jit$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
@@ -391,8 +391,8 @@ llvm-cbindings.o: $(srcdir)/src/ortho/$(llvm_be)/llvm-cbindings.cpp
 	$(CXX) -c `$(LLVM_CONFIG) --includedir --cxxflags` \
 	  $(COVERAGE_FLAGS) $(CXXFLAGS) -o $@ $<
 
-libs.vhdl.llvmjit: ghdl_llvm_jit$(EXEEXT)
-	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_llvm$(EXEEXT) GHDL_FLAGS="" VHDLLIBS_COPY_OBJS=no vhdl.libs.all
+libs.vhdl.llvm_jit: ghdl_llvm_jit$(EXEEXT)
+	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_llvm_jit$(EXEEXT) GHDL_FLAGS="" VHDLLIBS_COPY_OBJS=no vhdl.libs.all
 
 libs.vhdl.llvm: ghdl_llvm$(EXEEXT) ghdl1-llvm$(EXEEXT)
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_llvm$(EXEEXT) GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-llvm$(EXEEXT) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
@@ -427,6 +427,12 @@ install.llvm.program: install.dirs ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl1-llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl1-llvm$(EXEEXT)
 
+install.llvm_jit.program: install.dirs ghdl_llvm_jit$(EXEEXT)
+	$(INSTALL_PROGRAM) ghdl_llvm_jit$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
+
+uninstall.llvm_jit.program:
+	$(RM) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
+
 test.llvm: ghdl_llvm$(EXEEXT)
 	cd $(srcdir)/testsuite; GHDL=$(CURDIR)/ghdl_llvm$(EXEEXT) ./testsuite.sh
 
@@ -437,6 +443,10 @@ uninstall.llvm.program:
 install.llvm: install.llvm.program install.grt
 
 uninstall.llvm: uninstall.llvm.program uninstall.grt
+
+install.llvm_jit: install.llvm_jit.program
+
+uninstall.llvm_jit: uninstall.llvm_jit.program
 
 ################ For simul (no code generation, interpretation) ##########
 
