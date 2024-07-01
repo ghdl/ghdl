@@ -195,11 +195,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Note: arch is given by the github runner
         include:
-          - { os: 12, backend: mcode }
-          - { os: 13, backend: mcode }
-          - { os: 13, backend: llvm }
-          - { os: 14, backend: llvm-jit }
+          - { os: 12, arch: x86_64, backend: mcode }
+          - { os: 13, arch: x86_64, backend: mcode }
+          - { os: 13, arch: x86_64, backend: llvm }
+          - { os: 14, arch: arm64, backend: llvm-jit }
 
     steps:
       - name: '🧰 Checkout'
@@ -236,7 +237,7 @@ jobs:
       - name: '📤 Upload artifact: package'
         uses: actions/upload-artifact@v4
         with:
-          name: macos${{ matrix.os }}-${{ matrix.backend }}
+          name: macos${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.backend }}
           path: ghdl-macos*.tgz
           if-no-files-found: error
 
