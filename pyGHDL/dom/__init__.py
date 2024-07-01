@@ -108,6 +108,7 @@ class DOMMixin(metaclass=ExtendedType, mixin=True):
 
     def __init__(self, node: Iir) -> None:
         self._iirNode = node
+        self._position = None
 
     @property
     def Position(self) -> Position:
