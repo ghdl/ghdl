@@ -2921,10 +2921,8 @@ llvm_jit_get_address (ODnode decl)
   case ODKConst:
   case ODKVar: {
     const llvm::GlobalValue *gv = dyn_cast<const GlobalValue>(val);
-    SmallString<128> FullName;
 
-    Mangler::getNameWithPrefix(FullName, gv->getName(), EE->getDataLayout());
-    return (void *)EE->getGlobalValueAddress(std::string(FullName));
+    return (void *)EE->getGlobalValueAddress(std::string(gv->getName()));
   }
   case ODKSubprg:
     return EE->getPointerToFunction(dyn_cast<Function>(val));
