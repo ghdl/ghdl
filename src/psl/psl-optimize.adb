@@ -209,7 +209,7 @@ package body PSL.Optimize is
          end if;
          L_S := Get_Edge_State_Reverse (L_E);
          R_S := Get_Edge_State_Reverse (R_E);
-         if L_S /= R_S and then (L_S /= L or else R_S /= R) then
+         if L_S /= R_S and then not (L_S = L and then R_S = R) then
             --  Predecessors are differents and not loop.
             return False;
          end if;
@@ -238,7 +238,7 @@ package body PSL.Optimize is
          Get_Next_Edge => Get_Next_Edge,
          Get_Edge_State_Reverse => Get_Edge_State_Reverse);
 
-      S : NFA_State;
+      S, Next_S : NFA_State;
       E : NFA_Edge;
       E_State, Next_E_State : NFA_State;
       Next_E, Next_Next_E : NFA_Edge;
@@ -248,11 +248,16 @@ package body PSL.Optimize is
       --  Iterate on states.
       S := Get_First_State (N);
       while S /= No_State loop
+         Next_S := Get_Next_State (S);
+
+         --  Sort edges by expression, so that it is easier to check for
+         --  equality.
          Sort_Edges_Reverse (S);
 
-         --  Iterate on incoming edges.
+         --  Iterate on incoming (resp. outgoing) edges.
          E := Get_First_Edge_Reverse (S);
-         while E /= No_Edge loop
+         L_Edge: while E /= No_Edge loop
+            --  Get the source (resp. dest) state of the edge.
             E_State := Get_Edge_State (E);
 
             --  Try to merge E with its successors.
@@ -267,15 +272,21 @@ package body PSL.Optimize is
                   --  remove the duplicate.
                   Remove_Edge (Next_E);
                elsif Are_States_Identical (E_State, Next_E_State) then
+                  --  Two edges (E and Next_E) have the same expressions and
+                  --  coming from (resp. going to) two equivalent states.
                   Merge_State_Reverse (N, E_State, Next_E_State);
+
+                  --  If the current state has been merged, it doesn't exist
+                  --  anymore.  Go to the next state.
+                  exit L_Edge when Next_E_State = S;
                end if;
                Next_E := Next_Next_E;
             end loop;
 
             E := Get_Next_Edge_Reverse (E);
-         end loop;
+         end loop L_Edge;
 
-         S := Get_Next_State (S);
+         S := Next_S;
       end loop;
    end Merge_Identical_States_Gen;
 

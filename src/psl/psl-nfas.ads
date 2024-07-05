@@ -38,7 +38,7 @@ package PSL.NFAs is
    --  Add a new state to an NFA.
    function Add_State (N : NFA) return NFA_State;
 
-   --  Add a transition.
+   --  Add a transition from SRC to DEST on EXPR.
    procedure Add_Edge (Src : NFA_State; Dest : NFA_State; Expr : Node);
    function Add_Edge (Src : NFA_State; Dest : NFA_State; Expr : Node)
                      return NFA_Edge;
