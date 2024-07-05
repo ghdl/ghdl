@@ -127,17 +127,17 @@ package body PSL.Disp_NFAs is
 
    pragma Unreferenced (Debug_NFA);
 
+   procedure Dump_NFA_State (S : NFA_State) is
+   begin
+      Put_Trim (Int32'Image (Get_State_Label (S)));
+      Put ("[");
+      Put_Trim (NFA_State'Image (S));
+      Put ("]");
+   end Dump_NFA_State;
+
    procedure Dump_NFA (N : NFA)
    is
       use PSL.Types;
-      procedure Disp_State (S : NFA_State) is
-      begin
-         Put_Trim (Int32'Image (Get_State_Label (S)));
-         Put ("[");
-         Put_Trim (NFA_State'Image (S));
-         Put ("]");
-      end Disp_State;
-
       S : NFA_State;
       E : NFA_Edge;
    begin
@@ -146,15 +146,15 @@ package body PSL.Disp_NFAs is
       end if;
 
       Put ("start: ");
-      Disp_State (Get_Start_State (N));
+      Dump_NFA_State (Get_Start_State (N));
       Put (", final: ");
-      Disp_State (Get_Final_State (N));
+      Dump_NFA_State (Get_Final_State (N));
       Put (", active: ");
       S := Get_Active_State (N);
       if S = No_State then
          Put ("-");
       else
-         Disp_State (S);
+         Dump_NFA_State (S);
       end if;
       if Get_Epsilon_NFA (N) then
          Put (", epsilon");
@@ -166,18 +166,60 @@ package body PSL.Disp_NFAs is
       S := Get_First_State (N);
       while S /= No_State loop
          E := Get_First_Src_Edge (S);
-         while E /= No_Edge loop
-            Put_Trim (NFA_Edge'Image (E));
-            Put (": ");
-            Disp_State (S);
-            Put (" -> ");
-            Disp_State (Get_Edge_Dest (E));
-            Put (": ");
-            Print_Expr (Get_Edge_Expr (E));
+         if E = No_Edge then
+            Put ("--: ");
+            Dump_NFA_State (S);
+            Put (" no-edge!");
             New_Line;
-            E := Get_Next_Src_Edge (E);
-         end loop;
+         else
+            while E /= No_Edge loop
+               Put_Trim (NFA_Edge'Image (E));
+               Put (": ");
+               Dump_NFA_State (S);
+               Put (" -> ");
+               Dump_NFA_State (Get_Edge_Dest (E));
+               Put (": ");
+               Print_Expr (Get_Edge_Expr (E));
+               New_Line;
+               E := Get_Next_Src_Edge (E);
+            end loop;
+         end if;
          S := Get_Next_State (S);
       end loop;
    end Dump_NFA;
+
+   procedure Dump_NFA_Rev (N : NFA)
+   is
+      use PSL.Types;
+      S : NFA_State;
+      E : NFA_Edge;
+   begin
+      if N = No_NFA then
+         return;
+      end if;
+
+      S := Get_First_State (N);
+      while S /= No_State loop
+         E := Get_First_Dest_Edge (S);
+         if E = No_Edge then
+            Put ("--: ");
+            Dump_NFA_State (S);
+            Put (" no-edge!");
+            New_Line;
+         else
+            while E /= No_Edge loop
+               Put_Trim (NFA_Edge'Image (E));
+               Put (": ");
+               Dump_NFA_State (S);
+               Put (" <- ");
+               Dump_NFA_State (Get_Edge_Src (E));
+               Put (": ");
+               Print_Expr (Get_Edge_Expr (E));
+               New_Line;
+               E := Get_Next_Dest_Edge (E);
+            end loop;
+         end if;
+         S := Get_Next_State (S);
+      end loop;
+   end Dump_NFA_Rev;
 end PSL.Disp_NFAs;

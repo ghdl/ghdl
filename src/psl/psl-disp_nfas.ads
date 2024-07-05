@@ -28,4 +28,5 @@ package PSL.Disp_NFAs is
 
    --  For debug.
    procedure Dump_NFA (N : NFA);
+   procedure Dump_NFA_Rev (N : NFA);
 end PSL.Disp_NFAs;
