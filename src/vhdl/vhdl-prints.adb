@@ -2407,7 +2407,8 @@ package body Vhdl.Prints is
          when N_Booleans
            | N_Name_Decl =>
             Print_Expr (Ctxt, Prop);
-         when N_Sequences =>
+         when N_Sequences
+           | N_Sequence_Instance =>
             Print_Sequence (Ctxt, Prop, Parent_Prio);
          when N_Property_Instance =>
             Disp_Ident (Ctxt, Get_Identifier (Get_Declaration (Prop)));

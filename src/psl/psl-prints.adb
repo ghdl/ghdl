@@ -423,7 +423,8 @@ package body PSL.Prints is
          when N_Booleans
            | N_Name_Decl =>
             Print_Expr (Prop);
-         when N_Sequences =>
+         when N_Sequences
+           | N_Sequence_Instance =>
             Print_Sequence (Prop, Parent_Prio);
          when N_Property_Instance =>
             Put (Image (Get_Identifier (Get_Declaration (Prop))));
