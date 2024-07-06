@@ -34,6 +34,7 @@ SOEXT=@SOEXT@
 PIC_FLAGS=@PIC_FLAGS@
 gcc_src_dir=@gcc_src_dir@
 LLVM_CONFIG=@llvm_config@
+LLVM_LDFLAGS=@LLVM_LDFLAGS@
 LDFLAGS=@LDFLAGS@
 LIBBACKTRACE=@backtrace_lib@
 llvm_be=@llvm_be@
@@ -385,7 +386,7 @@ ghdl_llvm_jit$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
 	$(GNATMAKE) -o $@ $(GHDL_LLVM_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb \
 	 $(GNAT_BARGS) -largs llvm-cbindings.o $(GRT_ADD_OBJS) \
 	 $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) --LINK=$(CXX) \
-	 `$(LLVM_CONFIG) --ldflags --libs --system-libs` $(LDFLAGS)
+	 $(LLVM_LDFLAGS) $(LDFLAGS)
 
 llvm-cbindings.o: $(srcdir)/src/ortho/$(llvm_be)/llvm-cbindings.cpp
 	$(CXX) -c `$(LLVM_CONFIG) --includedir --cxxflags` \
@@ -413,6 +414,7 @@ ghdl1-llvm$(EXEEXT): version.ads $(GRT_SYNTH_OBJS) force
 	 GNATLFLAGS="$(GRT_SYNTH_OBJS)" \
 	 LDFLAGS="$(LDFLAGS)" \
 	 LLVM_CONFIG="$(LLVM_CONFIG)" CXX="$(CXX)" \
+	 LLVM_LDFLAGS='$(LLVM_LDFLAGS)' \
 	 CXXFLAGS="$(COVERAGE_FLAGS) $(CXXFLAGS)" \
 	 GNATMAKE="$(GNATMAKE)" all
 

@@ -34,6 +34,7 @@ GNATMAKE=${GNATMAKE:-gnatmake}
 ADA_FLAGS=${ADA_FLAGS:-}
 MAKE=${MAKE:-make}
 LDFLAGS=${LDFLAGS:-}
+LLVM_LDFLAGS=${LLVM_LDFLAGS:-'`$(LLVM_CONFIG) --ldflags --libs --system-libs`'}
 prefix=/usr/local
 libdirsuffix=lib
 libghdldirsuffix=lib/ghdl
@@ -69,6 +70,7 @@ enable_gplcompat enable_libghdl libghdl_version ghdl_version
 with_sundials sundials_incflags sundials_ldflags
 COMPILER_GCC COMPILER_DEBUG COMPILER_MCODE COMPILER_LLVM POST_PROCESSOR
 INSTALL_PREFIX LIBDIR_SUFFIX LIBGHDLDIR_SUFFIX INCDIR_SUFFIX
+LLVM_LDFLAGS
 "
 
 # Find srcdir
@@ -102,7 +104,7 @@ check_version()
 for opt do
   optarg=`expr x"$opt" : 'x[^=]*=\(.*\)'`
   case "$opt" in
-    CC=*|CFLAGS=*|GNATMAKE=*|LDFLAGS=*|CXX=*)
+    CC=*|CFLAGS=*|GNATMAKE=*|LDFLAGS=*|CXX=*|LLVM_LDFLAGS=*)
       optvar=`expr x"$opt" : 'x\([^=]*\)=.*'`
       eval $optvar=\"$optarg\"
       ;;
@@ -396,7 +398,7 @@ rm -f config.status
   echo subst_vars=\"$subst_vars\"
   for v in $subst_vars; do
     eval vval=\$$v
-    echo $v=\"$vval\"
+    echo $v=\'$vval\'
   done
   subst_files="Makefile default_paths.ads ghdl.gpr scripts/gcc/Make-lang.in"
   echo "for f in $subst_files; do"
