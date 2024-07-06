@@ -195,7 +195,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Note: arch is given by the github runner
+        # Note: arch is given by the github runner (could be runner.arch)
         include:
           - { os: 12, arch: x86_64, backend: mcode }
           - { os: 13, arch: x86_64, backend: mcode }
@@ -220,6 +220,7 @@ jobs:
       - name: '🚧 Build and 🚦 Test GHDL'
         run: |
           if expr "${{matrix.backend}}" : "llvm" > /dev/null; then
+            brew install zstd
             brew install llvm
             echo $(brew --prefix llvm)
             echo $(brew --prefix llvm@18)

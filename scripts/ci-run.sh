@@ -264,6 +264,9 @@ build () {
   if [ "x$IS_MACOS" = "xtrue" -a "$GITHUB_OS_VER" -ge 13 ]; then
       # Use classic ld and not lld (which simply crashes)
       CONFIG_OPTS+=" LDFLAGS=-Wl,-ld_classic"
+      # Use static libs (including libzstd) and dead-strip (to avoid libz3)
+      libzstd=$(brew --prefix zstd)/lib/libzstd.a
+      export LLVM_LDFLAGS="$(llvm-config --link-static --libfiles --system-libs | sed -e s@-lzstd@$libzstd@) -Wl,-dead_strip,-dead_strip_dylibs"
   fi
 
   if [ ! "`echo $BACK | grep gcc`" ]; then
@@ -302,14 +305,27 @@ build () {
 
   #--- build tools versions
 
-  {
-      make --version | grep 'Make'
-      gnatls --version | grep 'GNATLS'
-      gcc --version | grep 'gcc'
-      if [ "$CXX" != "" ]; then
-          $CXX --version | grep 'clang'
-      fi
-  } > BUILD_TOOLS
+  gstart "[GHDL - info] Info about tools"
+
+  uname -s
+
+  if [ "x$IS_MACOS" = "xtrue" ]; then
+      echo "ghdl:"
+      otool -L $INSTALL_DIR/usr/local/bin/ghdl
+      echo "libghdlvpi:"
+      otool -L $INSTALL_DIR//usr/local/lib/libghdlvpi.dylib
+  else
+      ldd $INSTALL_DIR/usr/local/bin/ghdl
+  fi
+
+  make --version | grep 'Make'
+  gnatls --version | grep 'GNATLS'
+  gcc --version | grep 'gcc'
+  if [ "$CXX" != "" ]; then
+      $CXX --version | grep 'clang'
+  fi
+
+  gend
 
   #---
 
@@ -464,7 +480,7 @@ EOF
 echo "command: $0 $@"
 
 unset IS_MACOS
-if [ "$GITHUB_OS" = "macOS" ]; then
+if [ $(uname -s) = "Darwin" ]; then
   IS_MACOS="true"
 fi
 
