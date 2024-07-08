@@ -344,6 +344,8 @@ package body Vhdl.Sem_Psl is
                end if;
                return Res;
             when Iir_Kind_Function_Call
+              | Iir_Kind_Type_Conversion
+              | Iir_Kind_Qualified_Expression
               | Iir_Kind_Indexed_Name
               | Iir_Kind_Selected_Element
               | Iir_Kinds_Expression_Attribute =>
