@@ -1043,13 +1043,15 @@ package body Netlists.Inference is
       end if;
 
       if not Flag_Latches and then Get_Id (First_Mux) = Id_Pmux then
-         for I in 1 .. Get_Nbr_Inputs (First_Mux) - 1 loop
-            if Get_Input_Net (First_Mux, I) = Prev_Val then
-               Error_Msg_Netlist
-                 (Loc, "latch infered for net %n (use --latches)",
-                  (1 => +Get_Prev_Val_Name (Prev_Val)));
-            end if;
-         end loop;
+         if not Is_False_Loop (Prev_Val) then
+            for I in 1 .. Get_Nbr_Inputs (First_Mux) - 1 loop
+               if Get_Input_Net (First_Mux, I) = Prev_Val then
+                  Error_Msg_Netlist
+                    (Loc, "latch infered for net %n (use --latches)",
+                    (1 => +Get_Prev_Val_Name (Prev_Val)));
+               end if;
+            end loop;
+         end if;
          return Val;
       end if;
 
