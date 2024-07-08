@@ -25,6 +25,7 @@ with PSL.Hash;
 with PSL.Rewrites;
 with PSL.Errors; use PSL.Errors;
 
+with Vhdl.Sem;
 with Vhdl.Sem_Expr;
 with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;
 with Vhdl.Sem_Scopes;
@@ -1325,11 +1326,60 @@ package body Vhdl.Sem_Psl is
          end if;
       end if;
 
+      Item := Get_Vunit_Item_Chain (Unit);
+      while Item /= Null_Iir loop
+         case Get_Kind (Item) is
+            when Iir_Kind_Psl_Assert_Directive
+               | Iir_Kind_Psl_Assume_Directive
+               | Iir_Kind_Psl_Restrict_Directive
+               | Iir_Kind_Psl_Cover_Directive
+               | Iir_Kinds_Concurrent_Signal_Assignment
+               | Iir_Kinds_Process_Statement
+               | Iir_Kinds_Generate_Statement
+               | Iir_Kind_Block_Statement
+               | Iir_Kind_Concurrent_Procedure_Call_Statement
+               | Iir_Kind_Component_Instantiation_Statement =>
+               declare
+                  Label : constant Name_Id := Get_Label (Item);
+               begin
+                  if Label /= Null_Identifier then
+                     Sem_Scopes.Add_Name (Item);
+                     Sem_Scopes.Name_Visible (Item);
+                     Xref_Decl (Item);
+                  end if;
+               end;
+            when Iir_Kind_PSL_Inherit_Spec =>
+               null;
+            when Iir_Kind_Psl_Declaration
+               | Iir_Kind_Psl_Default_Clock =>
+               null;
+            when Iir_Kind_Signal_Declaration
+               | Iir_Kind_Constant_Declaration
+               | Iir_Kind_Type_Declaration
+               | Iir_Kind_Subtype_Declaration
+               | Iir_Kind_Anonymous_Type_Declaration
+               | Iir_Kind_Function_Declaration
+               | Iir_Kind_Procedure_Declaration
+               | Iir_Kind_Function_Body
+               | Iir_Kind_Procedure_Body
+               | Iir_Kind_Attribute_Declaration
+               | Iir_Kind_Attribute_Specification
+               | Iir_Kind_Object_Alias_Declaration
+               | Iir_Kind_Non_Object_Alias_Declaration =>
+               null;
+            when others =>
+               Error_Kind ("sem_psl_verification_unit(1)", Item);
+         end case;
+         Item := Get_Chain (Item);
+      end loop;
+
       Attr_Spec_Chain := Null_Iir;
       Prev_Item := Null_Iir;
       Item := Get_Vunit_Item_Chain (Unit);
       while Item /= Null_Iir loop
          case Get_Kind (Item) is
+            when Iir_Kind_Use_Clause =>
+               Sem.Sem_Use_Clause (Item);
             when Iir_Kind_PSL_Inherit_Spec =>
                Sem_Psl_Inherit_Spec (Item);
             when Iir_Kind_Psl_Default_Clock =>
