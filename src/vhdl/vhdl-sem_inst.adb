@@ -19,6 +19,7 @@ with Vhdl.Nodes_Priv;
 with Vhdl.Nodes_Meta;
 with Types; use Types;
 with Files_Map;
+with Vhdl.Sem_Types;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Sem_Utils;
@@ -1075,18 +1076,23 @@ package body Vhdl.Sem_Inst is
             --  Replace the incomplete interface type by the actual subtype
             --  indication.
             declare
-               Inter_Type_Def : constant Iir := Get_Type (Orig_Inter);
+               Orig_Inter_Def : constant Iir := Get_Type (Orig_Inter);
+               Inter_Def : constant Iir :=
+                 Get_Interface_Type_Definition (Inter);
                Actual_Type : constant Iir := Get_Actual_Type (Assoc);
                Assoc_Subprg_Chain : Iir;
                Inter_Subprg_Chain : Iir;
             begin
-               Set_Instance (Inter_Type_Def, Actual_Type);
+               Set_Instance (Orig_Inter_Def, Actual_Type);
                --  The associated type is a forward reference, so it can
                --  be set to the actual type (which can be defined later,
                --  as an anonymous typ in the association).
                --  Let the type be an interface type definition.
-               Set_Associated_Type (Get_Interface_Type_Definition (Inter),
-                                    Actual_Type);
+               Set_Associated_Type (Inter_Def, Actual_Type);
+
+               Set_Constraint_State
+                 (Inter_Def,
+                  Sem_Types.Get_Subtype_Indication_Constraint (Actual_Type));
 
                --  Also associate subprograms.
                Assoc_Subprg_Chain := Get_Subprogram_Association_Chain (Assoc);
@@ -1277,9 +1283,56 @@ package body Vhdl.Sem_Inst is
       Instantiate_Package (Inter, Pkg, True);
    end Instantiate_Interface_Package_Declaration;
 
+   function Has_Unbounded_Type_Interface (Header : Iir) return Boolean
+   is
+      Inter : Iir;
+      Def : Iir;
+   begin
+      Inter := Get_Generic_Chain (Header);
+      while Inter /= Null_Iir loop
+         if Get_Kind (Inter) = Iir_Kind_Interface_Type_Declaration then
+            Def := Get_Interface_Type_Definition (Inter);
+            Def := Get_Associated_Type (Def);
+            if Get_Kind (Def) in Iir_Kinds_Composite_Type_Definition
+              and then Get_Constraint_State (Def) /= Fully_Constrained
+            then
+               return True;
+            end if;
+         end if;
+         Inter := Get_Chain (Inter);
+      end loop;
+      return False;
+   end Has_Unbounded_Type_Interface;
+
+   procedure Reanalyze_Instantiated_Declarations (Chain : Iir)
+   is
+      Decl : Iir;
+   begin
+      Decl := Chain;
+      while Decl /= Null_Iir loop
+         case Get_Kind (Decl) is
+            when Iir_Kind_Type_Declaration =>
+               --  Adjust constraints, staticness...
+               Sem_Types.Reanalyze_Type_Definition
+                 (Get_Type_Definition (Decl));
+            when Iir_Kinds_Subprogram_Declaration =>
+               --  TODO: check no access type in interfaces ?
+               null;
+            when others =>
+               --  Error_Kind ("reanalyze_instantiated_declarations", Decl);
+               null;
+         end case;
+         Decl := Get_Chain (Decl);
+      end loop;
+   end Reanalyze_Instantiated_Declarations;
+
    procedure Instantiate_Package_Declaration (Inst : Iir; Pkg : Iir) is
    begin
       Instantiate_Package (Inst, Pkg, False);
+
+      if Has_Unbounded_Type_Interface (Inst) then
+         Reanalyze_Instantiated_Declarations (Get_Declaration_Chain (Inst));
+      end if;
    end Instantiate_Package_Declaration;
 
    --  Adjust references to interfaces:

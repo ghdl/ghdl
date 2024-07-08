@@ -668,9 +668,13 @@ package body Vhdl.Sem_Decls is
       Set_Type_Declarator (Def, Inter);
       Set_Type (Inter, Def);
       Set_Interface_Type_Definition (Inter, Def);
+
+      --  Default for uninstantiated interface types, modified during
+      --  instantiation.
       Set_Type_Staticness (Def, None);
       Set_Resolved_Flag (Def, False);
       Set_Signal_Type_Flag (Def, True);
+      Set_Constraint_State (Def, Fully_Constrained);
       Set_Has_Signal_Flag (Def, False);
 
       --  Create operations for the interface type.

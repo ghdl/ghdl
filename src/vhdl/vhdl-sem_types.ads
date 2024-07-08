@@ -29,6 +29,10 @@ package Vhdl.Sem_Types is
 
    function Sem_Type_Definition (Def: Iir; Decl: Iir) return Iir;
 
+   --  Called by sem_inst, in case of not fully bounded interface type.
+   --  Need to adjust constrained_state.
+   procedure Reanalyze_Type_Definition (Def : Iir);
+
    --  Check restrictions on access type DEF.
    procedure Check_Access_Type_Restrictions (Def : Iir; D_Type : Iir);
 
@@ -48,6 +52,12 @@ package Vhdl.Sem_Types is
    --  Return TRUE iff FUNC is a resolution function.
    --  If ATYPE is not NULL_IIR, type must match.
    function Is_A_Resolution_Function (Func: Iir; Atype: Iir) return Boolean;
+
+   --  Get the constraint state from a subtype indication.
+   --  It cannot be directly inferred from the type, the subtype indication
+   --  must be considered in order to handle 'Subtype.
+   function Get_Subtype_Indication_Constraint (Ind : Iir)
+                                              return Iir_Constraint;
 
    --  Return a subtype definition copy of DEF.
    --  This is used when an alias of DEF is required (eg: subtype a is b).

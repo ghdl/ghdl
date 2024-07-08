@@ -766,18 +766,25 @@ package body Vhdl.Sem_Types is
    --    composite subtype or is a fully constrained composite subtype.
    procedure Update_Record_Constraint (Constraint : in out Iir_Constraint;
                                        Composite_Found : in out Boolean;
-                                       El_Type : Iir) is
+                                       El_Type : Iir)
+   is
+      El_State : Iir_Constraint;
    begin
-      if Get_Kind (El_Type) not in Iir_Kinds_Composite_Type_Definition then
-         pragma Assert (Composite_Found or Constraint = Fully_Constrained);
-         return;
-      end if;
+      case Get_Kind (El_Type) is
+         when Iir_Kinds_Composite_Type_Definition =>
+            El_State := Get_Constraint_State (El_Type);
+         when Iir_Kind_Interface_Type_Definition =>
+            El_State := Fully_Constrained;
+         when others =>
+            pragma Assert (Composite_Found or Constraint = Fully_Constrained);
+            return;
+      end case;
 
       if Composite_Found then
          case Constraint is
             when Fully_Constrained
               | Unconstrained =>
-               if Get_Constraint_State (El_Type) /= Constraint then
+               if El_State  /= Constraint then
                   Constraint := Partially_Constrained;
                end if;
             when Partially_Constrained =>
@@ -785,7 +792,7 @@ package body Vhdl.Sem_Types is
          end case;
       else
          Composite_Found := True;
-         Constraint := Get_Constraint_State (El_Type);
+         Constraint := El_State;
       end if;
    end Update_Record_Constraint;
 
@@ -796,6 +803,10 @@ package body Vhdl.Sem_Types is
    is
       Atype : Iir;
    begin
+      if Ind = Null_Iir then
+         return Fully_Constrained;
+      end if;
+
       case Get_Kind (Ind) is
          when Iir_Kind_Subtype_Attribute =>
             --  Always fully constrained.
@@ -806,14 +817,12 @@ package body Vhdl.Sem_Types is
             if Is_Error (Atype) then
                return Fully_Constrained;
             end if;
-            Atype := Get_Type (Atype);
-            if Get_Kind (Atype) in Iir_Kinds_Composite_Type_Definition then
-               return Get_Constraint_State (Atype);
-            else
-               return Fully_Constrained;
-            end if;
+            return Get_Subtype_Indication_Constraint (Get_Type (Atype));
          when Iir_Kind_Array_Subtype_Definition
-           | Iir_Kind_Record_Subtype_Definition =>
+           | Iir_Kind_Record_Subtype_Definition
+           | Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Interface_Type_Definition =>
             return Get_Constraint_State (Ind);
          when Iir_Kinds_Scalar_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition =>
@@ -970,6 +979,44 @@ package body Vhdl.Sem_Types is
       return Def;
    end Sem_Enumeration_Type_Definition;
 
+   procedure Sem_Record_Type_Definition_Flags (Def: Iir)
+   is
+      El_List : constant Iir_Flist := Get_Elements_Declaration_List (Def);
+      El : Iir;
+      El_Type : Iir;
+      Resolved_Flag : Boolean;
+      Type_Staticness : Iir_Staticness;
+      Constraint : Iir_Constraint;
+      Composite_Found : Boolean;
+   begin
+      Resolved_Flag := True;
+      Type_Staticness := Locally;
+      Constraint := Fully_Constrained;
+      Composite_Found := False;
+      Set_Signal_Type_Flag (Def, True);
+
+      if El_List /= Null_Iir_Flist then
+         for I in Flist_First .. Flist_Last (El_List) loop
+            El := Get_Nth_Element (El_List, I);
+            El_Type := Get_Type (El);
+            if El_Type /= Null_Iir then
+               Check_No_File_Type (El_Type, El);
+               if not Get_Signal_Type_Flag (El_Type) then
+                  Set_Signal_Type_Flag (Def, False);
+               end if;
+               Resolved_Flag :=
+                 Resolved_Flag and Get_Resolved_Flag (El_Type);
+               Type_Staticness := Min (Type_Staticness,
+                                       Get_Type_Staticness (El_Type));
+               Update_Record_Constraint (Constraint, Composite_Found, El_Type);
+            end if;
+         end loop;
+      end if;
+      Set_Resolved_Flag (Def, Resolved_Flag);
+      Set_Type_Staticness (Def, Type_Staticness);
+      Set_Constraint_State (Def, Constraint);
+   end Sem_Record_Type_Definition_Flags;
+
    function Sem_Record_Type_Definition (Def: Iir) return Iir
    is
       --  Analyzed type of previous element
@@ -979,24 +1026,15 @@ package body Vhdl.Sem_Types is
       Last : Integer;
       El : Iir;
       El_Type : Iir;
-      Resolved_Flag : Boolean;
-      Type_Staticness : Iir_Staticness;
-      Constraint : Iir_Constraint;
-      Composite_Found : Boolean;
    begin
       --  LRM 10.1
       --  5. A record type declaration,
       Open_Declarative_Region;
 
-      Resolved_Flag := True;
       Last_Type := Null_Iir;
-      Type_Staticness := Locally;
-      Constraint := Fully_Constrained;
-      Composite_Found := False;
-      Set_Signal_Type_Flag (Def, True);
 
       if El_List = Null_Iir_Flist then
-         --  Avoid a crash is no elements.
+         --  Avoid a crash if no elements.
          Last := Flist_First - 1;
       else
          Last := Flist_Last (El_List);
@@ -1016,10 +1054,6 @@ package body Vhdl.Sem_Types is
          end if;
          if El_Type /= Null_Iir then
             Set_Type (El, El_Type);
-            Check_No_File_Type (El_Type, El);
-            if not Get_Signal_Type_Flag (El_Type) then
-               Set_Signal_Type_Flag (Def, False);
-            end if;
 
             --  LRM93 3.2.1.1
             --  The same requirement [must define a constrained array
@@ -1034,22 +1068,13 @@ package body Vhdl.Sem_Types is
                   "element declaration of unconstrained %n is not allowed",
                   +El_Type);
             end if;
-            Resolved_Flag :=
-              Resolved_Flag and Get_Resolved_Flag (El_Type);
-            Type_Staticness := Min (Type_Staticness,
-                                    Get_Type_Staticness (El_Type));
-            Update_Record_Constraint (Constraint, Composite_Found, El_Type);
-         else
-            Type_Staticness := None;
          end if;
          Sem_Scopes.Add_Name (El);
          Name_Visible (El);
          Xref_Decl (El);
       end loop;
       Close_Declarative_Region;
-      Set_Resolved_Flag (Def, Resolved_Flag);
-      Set_Type_Staticness (Def, Type_Staticness);
-      Set_Constraint_State (Def, Constraint);
+      Sem_Record_Type_Definition_Flags (Def);
       return Def;
    end Sem_Record_Type_Definition;
 
@@ -2889,4 +2914,21 @@ package body Vhdl.Sem_Types is
             return True;
       end case;
    end Is_Composite_Nature;
+
+   procedure Reanalyze_Type_Definition (Def : Iir) is
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kind_Record_Type_Definition =>
+            Sem_Record_Type_Definition_Flags (Def);
+         when Iir_Kind_Array_Type_Definition =>
+            --  TODO: signal_type, resolve_flag.
+            Set_Constraint_State (Def, Get_Array_Type_Constraint (Def));
+         when Iir_Kind_Protected_Type_Declaration =>
+            null;
+         when others =>
+            --  Error_Kind ("reanalyze_type_definition", Def);
+            null;
+      end case;
+   end Reanalyze_Type_Definition;
+
 end Vhdl.Sem_Types;

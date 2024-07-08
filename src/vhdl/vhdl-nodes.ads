@@ -2838,6 +2838,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Type_Staticness (State1)
    --
+   --   Get/Set_Constraint_State (State2)
+   --
    --   Get/Set_Resolved_Flag (Flag1)
    --
    --   Get/Set_Signal_Type_Flag (Flag2)

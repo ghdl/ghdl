@@ -1168,10 +1168,21 @@ package body Vhdl.Utils is
                       Iir_Kind_Record_Subtype_Definition);
    end Is_Record_Type;
 
+   --  Like Get_Constraint_State but for any type.
+   --  Always return Fully_Constrained for non composite types.
+   function Get_Type_Constraint_State (Def : Iir) return Iir_Constraint is
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kinds_Composite_Type_Definition =>
+            return Get_Constraint_State (Def);
+         when others =>
+            return Fully_Constrained;
+      end case;
+   end Get_Type_Constraint_State;
+
    function Is_Fully_Constrained_Type (Def : Iir) return Boolean is
    begin
-      return Get_Kind (Def) not in Iir_Kinds_Composite_Type_Definition
-        or else Get_Constraint_State (Def) = Fully_Constrained;
+      return Get_Type_Constraint_State (Def) = Fully_Constrained;
    end Is_Fully_Constrained_Type;
 
    function Is_Object_Fully_Constrained (Decl : Iir) return Boolean is
