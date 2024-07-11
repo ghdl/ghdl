@@ -5341,7 +5341,8 @@ package body Vhdl.Evaluation is
                                  Is_Instance);
             when Iir_Kind_For_Generate_Statement =>
                Path_Instance := El;
-            when Iir_Kind_If_Generate_Statement =>
+            when Iir_Kind_If_Generate_Statement
+              | Iir_Kind_Component_Instantiation_Statement =>
                Path_Add_Element (Get_Parent (El), Is_Instance);
                Path_Add_Name (El);
                Path_Add (":");
