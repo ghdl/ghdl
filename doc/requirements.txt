@@ -7,7 +7,7 @@ python-dateutil>=2.8.2
 autoapi>=2.0.1
 myst-parser
 sphinx_fontawesome>=0.0.6
-sphinx_autodoc_typehints >= 1.24.0
+sphinx_autodoc_typehints ~= 2.2
 
 # Theme
 furo

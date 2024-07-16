@@ -1,1 +1,1 @@
-pyTooling ~= 6.3
+pyTooling ~= 6.5
