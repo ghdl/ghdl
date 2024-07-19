@@ -295,11 +295,14 @@ package body Trans.Chap1 is
                exit;
             when Iir_Kind_Block_Statement
               | Iir_Kind_Case_Generate_Statement
+              | Iir_Kind_For_Generate_Statement
               | Iir_Kind_Component_Instantiation_Statement =>
                --  No specific access, continue.
                Parent := Grand_Parent;
             when Iir_Kind_Generate_Statement_Body =>
-               if Get_Kind (Grand_Parent) = Iir_Kind_Case_Generate_Statement
+               if Kind_In (Grand_Parent,
+                           Iir_Kind_Case_Generate_Statement,
+                           Iir_Kind_For_Generate_Statement)
                then
                   P_Info := Get_Info (Parent);
                   if Is_Push then
