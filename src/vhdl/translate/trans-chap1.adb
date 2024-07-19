@@ -296,30 +296,24 @@ package body Trans.Chap1 is
             when Iir_Kind_Block_Statement
               | Iir_Kind_Case_Generate_Statement
               | Iir_Kind_For_Generate_Statement
+              | Iir_Kind_If_Generate_Statement
               | Iir_Kind_Component_Instantiation_Statement =>
                --  No specific access, continue.
                Parent := Grand_Parent;
             when Iir_Kind_Generate_Statement_Body =>
-               if Kind_In (Grand_Parent,
-                           Iir_Kind_Case_Generate_Statement,
-                           Iir_Kind_For_Generate_Statement)
-               then
-                  P_Info := Get_Info (Parent);
-                  if Is_Push then
-                     Set_Scope_Via_Field_Ptr (P_Info.Block_Scope,
-                                              Block_Info.Block_Origin_Field,
-                                              Block_Info.Block_Scope'Access);
-                  else
-                     Clear_Scope (P_Info.Block_Scope);
-                  end if;
-
-                  --  Recurse
-                  Push_Pop_Instantiated_Architecture_Scope
-                    (Parent, P_Info, Is_Push);
-                  return;
+               P_Info := Get_Info (Parent);
+               if Is_Push then
+                  Set_Scope_Via_Field_Ptr (P_Info.Block_Scope,
+                                           Block_Info.Block_Origin_Field,
+                                           Block_Info.Block_Scope'Access);
                else
-                  Parent := Grand_Parent;
+                  Clear_Scope (P_Info.Block_Scope);
                end if;
+
+               --  Recurse
+               Push_Pop_Instantiated_Architecture_Scope
+                 (Parent, P_Info, Is_Push);
+               return;
             when others =>
                --  TODO
                Error_Kind ("push_pop_instantiated_architecture_scope", Parent);
