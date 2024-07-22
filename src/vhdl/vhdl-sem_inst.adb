@@ -260,32 +260,36 @@ package body Vhdl.Sem_Inst is
                S : constant Iir := Get_Iir (N, F);
                R : Iir;
             begin
-               case Get_Field_Attribute (F) is
-                  when Attr_None =>
-                     R := Instantiate_Iir (S, False);
-                  when Attr_Ref =>
-                     R := Instantiate_Iir (S, True);
-                  when Attr_Maybe_Ref =>
-                     R := Instantiate_Iir (S, Get_Is_Ref (N));
-                  when Attr_Forward_Ref =>
-                     --  Must be explicitly handled in Instantiate_Iir, as it
-                     --  requires special handling.
-                     raise Internal_Error;
-                  when Attr_Maybe_Forward_Ref =>
-                     if Get_Is_Forward_Ref (N) then
-                        --  Likewise: must be explicitly handled.
-                        raise Internal_Error;
-                     else
+               if S = Null_Iir then
+                  R := Null_Iir;
+               else
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        R := Instantiate_Iir (S, False);
+                     when Attr_Ref =>
                         R := Instantiate_Iir (S, True);
-                     end if;
-                  when Attr_Chain =>
-                     R := Instantiate_Iir_Chain (S);
-                  when Attr_Chain_Next =>
-                     R := Null_Iir;
-                  when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
-                     --  Can only appear in list.
-                     raise Internal_Error;
-               end case;
+                     when Attr_Maybe_Ref =>
+                        R := Instantiate_Iir (S, Get_Is_Ref (N));
+                     when Attr_Forward_Ref =>
+                        --  Must be explicitly handled in Instantiate_Iir, as
+                        --  it requires special handling.
+                        raise Internal_Error;
+                     when Attr_Maybe_Forward_Ref =>
+                        if Get_Is_Forward_Ref (N) then
+                           --  Likewise: must be explicitly handled.
+                           raise Internal_Error;
+                        else
+                           R := Instantiate_Iir (S, True);
+                        end if;
+                     when Attr_Chain =>
+                        R := Instantiate_Iir_Chain (S);
+                     when Attr_Chain_Next =>
+                        R := Null_Iir;
+                     when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
+                        --  Can only appear in list.
+                        raise Internal_Error;
+                  end case;
+               end if;
                Set_Iir (Res, F, R);
             end;
          when Type_Iir_List =>
