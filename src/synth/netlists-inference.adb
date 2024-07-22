@@ -509,6 +509,11 @@ package body Netlists.Inference is
    --  Build the FF (or the RAM).
    --
    --  CLOCK_MUX is the mux whose input 0 is the loop and clock for selector.
+   --  It is the last mux of the chain.
+   --
+   --  VAL is the value to be assigned.
+   --  PREV_VAL is the output of the signal which is assigned but also the
+   --   value of the loop.  OFF is the offset in the signal.
    function Infere_FF (Ctxt : Context_Acc;
                        Val : Net;
                        Prev_Val : Net;
@@ -521,7 +526,6 @@ package body Netlists.Inference is
       O : constant Net := Get_Output (Clock_Mux, 0);
       Mux_Loc : constant Location_Type := Get_Location (Clock_Mux);
       W : constant Width := Get_Width (Val);
-      Loop_Off : Uns32;
       Data : Net;
       Res : Net;
       Sig : Instance;
@@ -536,8 +540,8 @@ package body Netlists.Inference is
    begin
       --  Create and return the DFF.
 
-      --  1. Remove the mux that creates the loop (will be replaced by the
-      --     dff).
+      --  1. Remove the mux CLOCK_MUX that creates the loop (will be
+      --     replaced by the dff).
       Infere_FF_Mux (Ctxt, Prev_Val, Off, W, Clock_Mux, Els, Data);
 
       --  If the signal declaration has an initial value, get it.
@@ -559,7 +563,6 @@ package body Netlists.Inference is
       --  mux.  In theory, there can be many set/reset with a defined order.
       Rst_Val := No_Net;
       Rst := No_Net;
-      Loop_Off := Off;
       declare
          Mux : Instance;
          Sel : Net;
@@ -569,7 +572,9 @@ package body Netlists.Inference is
          Mux_Rst_Val : Net;
          Prev_Input : Input;
          Snk : Input;
+         Loop_Off, Prev_Off : Uns32;
       begin
+         Loop_Off := Off;
          Prev_Mux := Clock_Mux;
 
          --  LAST_MUX is the last handled mux and LAST_OUT its output.
@@ -581,6 +586,8 @@ package body Netlists.Inference is
          while Last_Out /= Val loop
             Snk := Get_First_Sink (Last_Out);
 
+            --  Search for the right driver.
+            Prev_Off := Loop_Off;
             loop
                Mux := Get_Input_Parent (Snk);
                case Get_Id (Mux) is
@@ -601,6 +608,31 @@ package body Netlists.Inference is
                end case;
                Snk := Get_Next_Sink (Snk);
             end loop;
+
+            --  TODO: improve
+            --  Cannot immediately extract the right value (there are multiple
+            --  choices).
+            declare
+               Nxt_Snk : constant Input := Get_Next_Sink (Snk);
+               Nxt_Inst : Instance;
+               Eloc : Location_Type;
+            begin
+               if Nxt_Snk /= No_Input then
+                  Nxt_Inst := Get_Input_Parent (Nxt_Snk);
+                  loop
+                     if Get_Id (Nxt_Inst) /= Id_Extract then
+                        Eloc := Get_Location (Nxt_Inst);
+                     elsif Extract_Overlap (Nxt_Inst, Prev_Off, W) then
+                        Eloc := Loc;
+                     else
+                        exit;
+                     end if;
+                     Error_Msg_Netlist
+                       (Eloc, "intermediate value of the FF is read");
+                     exit;
+                  end loop;
+               end if;
+            end;
 
             --  Search for the 'right' driver.
             --  if not Has_One_Connection (Last_Out)
@@ -667,7 +699,11 @@ package body Netlists.Inference is
                end if;
 
                if Prev_Mux /= No_Instance then
-                  Remove_Instance (Prev_Mux);
+                  --  Clean up.
+                  if not Is_Connected (Get_Output (Prev_Mux, 0)) then
+                     --  But do not crash if the intermediate value is reused.
+                     Remove_Instance (Prev_Mux);
+                  end if;
                end if;
                Prev_Mux := Mux;
             else
@@ -683,7 +719,11 @@ package body Netlists.Inference is
 
                   --  Remove the last mux.  Will free this mux.
                   if Prev_Mux /= No_Instance then
-                     Remove_Instance (Prev_Mux);
+                     if not Is_Connected (Get_Output (Prev_Mux, 0)) then
+                        --  But do not crash if the intermediate value
+                        --  is reused.
+                        Remove_Instance (Prev_Mux);
+                     end if;
                   end if;
                   Prev_Mux := Mux;
                else

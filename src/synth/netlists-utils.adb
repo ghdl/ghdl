@@ -283,6 +283,15 @@ package body Netlists.Utils is
                        Get_Input_Net (Rinst, 0));
    end Same_Clock;
 
+   function Extract_Overlap (Extr_Inst : Instance; Off : Uns32; W : Width)
+                            return Boolean
+   is
+      Ext_Off : constant Uns32 := Get_Param_Uns32 (Extr_Inst, 0);
+      Ext_W : constant Width := Get_Width (Get_Output (Extr_Inst, 0));
+   begin
+      return Off + W > Ext_Off and Ext_Off + Ext_W > Off;
+   end Extract_Overlap;
+
    procedure Copy_Instance_Attributes (Dest : Instance; Src : Instance)
    is
       Attr : Attribute;

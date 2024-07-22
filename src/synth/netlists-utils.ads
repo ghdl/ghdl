@@ -91,6 +91,10 @@ package Netlists.Utils is
    --  an edge detector.
    function Same_Clock (L, R : Net) return Boolean;
 
+   --  Return true iff the extraction intersect [OFF; OFF+W-1)
+   function Extract_Overlap (Extr_Inst : Instance; Off : Uns32; W : Width)
+                            return Boolean;
+
    --  If N is the output of a signal or isignal, return the driver of the
    --  input.
    function Skip_Signal (N : Net) return Net;
