@@ -1,0 +1,33 @@
+module {m2} $top
+  module {m101} \spi_slave
+    input \spi_clk;
+    input \spi_en;
+    output \spi_out;
+    %1.\bit_cnt:$o{n5w32} := $isignal{i5} (
+      .$i{p3}: %17:$o{n20w32} := $mux2{i20} (
+          .$s{p24}: %4:$o{n7w1},
+          .$i0{p25}: %16:$o{n19w32} := 32'uh00000000,
+          .$i1{p26}: %8:$o{n11w32}),
+      .$init{p4}: %2:$o{n4w32} := 32'uh80000000)
+    %4:$o{n7w1} := $not{i7} (
+      .$i{p6}: \spi_en{n2w1})
+    %8:$o{n11w32} := $mux2{i11} (
+      .$s{p10}: %5:$o{n8w1} := $posedge{i8} (
+          .$i{p7}: \spi_clk{n1w1}),
+      .$i0{p11}: %1.\bit_cnt:$o{n5w32},
+      .$i1{p12}: %7:$o{n10w32} := $add{i10} (
+          .$a{p8}: %1.\bit_cnt:$o{n5w32},
+          .$b{p9}: %6:$o{n9w32} := 32'uh00000001))
+    %15:$o{n18w1} := $mux2{i18} (
+      .$s{p21}: %4:$o{n7w1},
+      .$i0{p22}: %14:$o{n17w1} := 1'uh0,
+      .$i1{p23}: %12:$o{n15w1} := $mux2{i15} (
+          .$s{p16}: %13:$o{n16w1} := $and{i16} (
+              .$a{p19}: %9:$o{n12w1} := $negedge{i12} (
+                  .$i{p13}: \spi_clk{n1w1}),
+              .$b{p20}: %11:$o{n14w1} := $sgt{i14} (
+                  .$a{p14}: %8:$o{n11w32},
+                  .$b{p15}: %10:$o{n13w32} := 32'uh00000005)),
+          .$i0{p17}: %15:$o{n18w1},
+          .$i1{p18}: \spi_en{n2w1}))
+    \spi_out := %15:$o{n18w1}
