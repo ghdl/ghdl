@@ -17,6 +17,7 @@ with Vhdl.Nodes;
 
 package Ghdlrun is
    procedure Register_Commands;
+   procedure Register_Help_Commands;
 
 private
    --  For Rust:

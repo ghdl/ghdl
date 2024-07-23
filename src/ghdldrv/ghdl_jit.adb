@@ -38,5 +38,6 @@ begin
    Ghdlcov.Register_Commands;
    Ghdllib.Register_Commands;
    Ghdlmain.Register_Commands;
+   Ghdlrun.Register_Help_Commands;
    Ghdlmain.Main;
 end Ghdl_Jit;

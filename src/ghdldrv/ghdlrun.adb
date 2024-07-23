@@ -443,7 +443,9 @@ package body Ghdlrun is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "run-help"
+      return Name = "help-run"
+        or else Name = "--help-run"
+        or else Name = "run-help"
         or else Name = "--run-help";
    end Decode_Command;
 
@@ -451,9 +453,9 @@ package body Ghdlrun is
    is
       pragma Unreferenced (Cmd);
    begin
-      return "run-help"
+      return "help-run"
         & ASCII.LF & "  Display help for RUNOPTS options"
-        & ASCII.LF & "  alias: --run-help";
+        & ASCII.LF & "  alias: --help-run, --run-help, run-help";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Run_Help;
@@ -550,6 +552,10 @@ package body Ghdlrun is
                          Disp_Help'Access);
       Ghdlcomp.Register_Commands;
       Translation.Register_Translation_Back_End;
-      Register_Command (new Command_Run_Help);
    end Register_Commands;
+
+   procedure Register_Help_Commands is
+   begin
+      Register_Command (new Command_Run_Help);
+   end Register_Help_Commands;
 end Ghdlrun;
