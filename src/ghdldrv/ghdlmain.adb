@@ -602,7 +602,7 @@ package body Ghdlmain is
 
       --  Handle case of no argument
       if Argument_Count = 0 then
-         Error ("missing command, try " & Command_Name & " 'help'");
+         Error ("missing command, try: " & Command_Name & " help");
          raise Option_Error;
       end if;
 
