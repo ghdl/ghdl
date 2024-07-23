@@ -1203,11 +1203,11 @@ package body Elab.Vhdl_Insts is
                                    Get_Port_Map_Aspect_Chain (Bind));
       pragma Assert (Is_Expr_Pool_Empty);
 
+      Add_To_Elab_Units (E_Arch);
+
       if Flag_Elab_Sub_Instances then
          Elab_Instance_Body (Sub_Inst);
       end if;
-
-      Add_To_Elab_Units (E_Arch);
    end Elab_Component_Instantiation_Statement;
 
    procedure Elab_Design_Instantiation_Statement
