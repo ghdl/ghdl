@@ -174,6 +174,9 @@ package Elab.Vhdl_Context is
    procedure Create_Interface_Type
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Typ : Type_Acc; Def : Node);
 
+   procedure Create_Interface_Subprg
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Subprg : Node);
+
    --  Force the value of DECL, without checking for elaboration order.
    --  It is for deferred constants.
    procedure Create_Object_Force
@@ -213,6 +216,9 @@ package Elab.Vhdl_Context is
                                  Decl : Node;
                                  Typ : out Type_Acc;
                                  Def : out Node);
+
+   function Get_Interface_Subprogram (Syn_Inst : Synth_Instance_Acc;
+                                      Decl : Node) return Node;
 
    function Get_Sub_Instance
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node) return Synth_Instance_Acc;
@@ -269,6 +275,9 @@ private
       --  A subtype indication.
       Obj_Subtype,
 
+      --  A subprogram
+      Obj_Subprg,
+
       --  A sub-instance or a package.
       Obj_Instance,
 
@@ -285,6 +294,8 @@ private
          when Obj_Subtype =>
             T_Typ : Type_Acc;
             T_Def : Node;
+         when Obj_Subprg =>
+            S_Decl : Node;
          when Obj_Instance =>
             I_Inst : Synth_Instance_Acc;
          when Obj_Marker =>

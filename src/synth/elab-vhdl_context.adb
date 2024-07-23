@@ -446,6 +446,17 @@ package body Elab.Vhdl_Context is
                                        T_Def => Def);
    end Create_Interface_Type;
 
+   procedure Create_Interface_Subprg
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Subprg : Node)
+   is
+      Info : constant Sim_Info_Acc := Get_Ann (Decl);
+   begin
+      Create_Object (Syn_Inst, Info.Slot, 1);
+      pragma Assert (Syn_Inst.Objects (Info.Slot).Kind = Obj_None);
+      Syn_Inst.Objects (Info.Slot) := (Kind => Obj_Subprg,
+                                       S_Decl => Subprg);
+   end Create_Interface_Subprg;
+
    procedure Create_Package_Object (Syn_Inst : Synth_Instance_Acc;
                                     Decl : Node;
                                     Inst : Synth_Instance_Acc;
@@ -748,6 +759,16 @@ package body Elab.Vhdl_Context is
       Typ := Obj_Inst.Objects (Info.Slot).T_Typ;
       Def := Obj_Inst.Objects (Info.Slot).T_Def;
    end Get_Interface_Type;
+
+   function Get_Interface_Subprogram (Syn_Inst : Synth_Instance_Acc;
+                                      Decl : Node) return Node
+   is
+      Info : constant Sim_Info_Acc := Get_Ann (Decl);
+      Obj_Inst : Synth_Instance_Acc;
+   begin
+      Obj_Inst := Get_Instance_By_Scope (Syn_Inst, Info.Scope);
+      return Obj_Inst.Objects (Info.Slot).S_Decl;
+   end Get_Interface_Subprogram;
 
    procedure Set_Caller_Instance (Syn_Inst : Synth_Instance_Acc;
                                   Caller : Synth_Instance_Acc) is

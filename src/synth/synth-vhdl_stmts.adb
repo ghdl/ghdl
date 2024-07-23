@@ -3053,11 +3053,11 @@ package body Synth.Vhdl_Stmts is
 
    function Synth_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
                                    Call : Node;
+                                   Imp : Node;
                                    Init : Association_Iterator_Init)
                                   return Valtyp
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-      Imp  : constant Node := Get_Implementation (Call);
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
       Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
       Obj : Node;
@@ -3138,10 +3138,8 @@ package body Synth.Vhdl_Stmts is
    end Synth_Subprogram_Call;
 
    function Synth_Subprogram_Call
-     (Syn_Inst : Synth_Instance_Acc; Call : Node) return Valtyp
+     (Syn_Inst : Synth_Instance_Acc; Call : Node; Imp : Node) return Valtyp
    is
-      Imp : constant Node := Get_Implementation (Call);
-
       --  The corresponding body (for a package instantiation, this could be
       --  the shared body of the uninstantiated package).
       Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
@@ -3157,7 +3155,7 @@ package body Synth.Vhdl_Stmts is
       Init : Association_Iterator_Init;
    begin
       Init := Association_Iterator_Build (Inter_Chain, Assoc_Chain);
-      return Synth_Subprogram_Call (Syn_Inst, Call, Init);
+      return Synth_Subprogram_Call (Syn_Inst, Call, Imp, Init);
    end Synth_Subprogram_Call;
 
    function Synth_User_Operator (Syn_Inst : Synth_Instance_Acc;
@@ -3170,7 +3168,7 @@ package body Synth.Vhdl_Stmts is
       Init : Association_Iterator_Init;
    begin
       Init := Association_Iterator_Build (Inter_Chain, Left_Expr, Right_Expr);
-      return Synth_Subprogram_Call (Syn_Inst, Expr, Init);
+      return Synth_Subprogram_Call (Syn_Inst, Expr, Imp, Init);
    end Synth_User_Operator;
 
    procedure Synth_Implicit_Procedure_Call
@@ -3215,7 +3213,7 @@ package body Synth.Vhdl_Stmts is
                Error_Msg_Synth
                  (Syn_Inst, Stmt, "call to foreign %n is not supported", +Imp);
             else
-               Res := Synth_Subprogram_Call (Syn_Inst, Call);
+               Res := Synth_Subprogram_Call (Syn_Inst, Call, Imp);
                pragma Assert (Res = No_Valtyp);
             end if;
          when others =>
@@ -4403,47 +4401,44 @@ package body Synth.Vhdl_Stmts is
    end Synth_Process_Statement;
 
    function Synth_User_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp is
-   begin
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node; Imp : Node) return Valtyp
+   is
       --  Is it a call to an ieee function ?
-      declare
-         Imp  : constant Node := Get_Implementation (Expr);
-         Pkg : constant Node := Get_Parent (Imp);
-         Unit : Node;
-         Lib : Node;
-      begin
-         if Get_Kind (Pkg) = Iir_Kind_Package_Declaration
-           and then not Is_Uninstantiated_Package (Pkg)
-         then
-            Unit := Get_Parent (Pkg);
-            if Get_Kind (Unit) = Iir_Kind_Design_Unit then
-               Lib := Get_Library (Get_Design_File (Unit));
-               if Get_Identifier (Lib) = Std_Names.Name_Ieee then
-                  case Get_Identifier (Pkg) is
-                     when Std_Names.Name_Std_Logic_1164
-                        | Std_Names.Name_Numeric_Std
-                        | Std_Names.Name_Numeric_Bit
-                        | Std_Names.Name_Numeric_Std_Unsigned
-                        | Std_Names.Name_Math_Real
-                        | Std_Names.Name_Std_Logic_Unsigned
-                        | Std_Names.Name_Std_Logic_Signed
-                        | Std_Names.Name_Std_Logic_Misc
-                        | Std_Names.Name_Std_Logic_Arith =>
-                        Error_Msg_Synth
-                          (Syn_Inst, Expr,
-                           "unhandled call to ieee function %i", +Imp);
-                        Set_Error (Syn_Inst);
-                        return No_Valtyp;
-                     when others =>
-                        --  Other ieee packages are handled as normal packages.
-                        null;
-                  end case;
-               end if;
+      Pkg : constant Node := Get_Parent (Imp);
+      Unit : Node;
+      Lib : Node;
+   begin
+      if Get_Kind (Pkg) = Iir_Kind_Package_Declaration
+        and then not Is_Uninstantiated_Package (Pkg)
+      then
+         Unit := Get_Parent (Pkg);
+         if Get_Kind (Unit) = Iir_Kind_Design_Unit then
+            Lib := Get_Library (Get_Design_File (Unit));
+            if Get_Identifier (Lib) = Std_Names.Name_Ieee then
+               case Get_Identifier (Pkg) is
+                  when Std_Names.Name_Std_Logic_1164
+                    | Std_Names.Name_Numeric_Std
+                    | Std_Names.Name_Numeric_Bit
+                    | Std_Names.Name_Numeric_Std_Unsigned
+                    | Std_Names.Name_Math_Real
+                    | Std_Names.Name_Std_Logic_Unsigned
+                    | Std_Names.Name_Std_Logic_Signed
+                    | Std_Names.Name_Std_Logic_Misc
+                    | Std_Names.Name_Std_Logic_Arith =>
+                     Error_Msg_Synth
+                       (Syn_Inst, Expr,
+                        "unhandled call to ieee function %i", +Imp);
+                     Set_Error (Syn_Inst);
+                     return No_Valtyp;
+                  when others =>
+                     --  Other ieee packages are handled as normal packages.
+                     null;
+               end case;
             end if;
          end if;
-      end;
+      end if;
 
-      return Synth_Subprogram_Call (Syn_Inst, Expr);
+      return Synth_Subprogram_Call (Syn_Inst, Expr, Imp);
    end Synth_User_Function_Call;
 
    procedure Synth_Concurrent_Assertion_Statement

@@ -348,8 +348,7 @@ package body Elab.Vhdl_Annotations is
             Create_Object_Info
               (Block_Info, Get_Interface_Type_Definition (Decl));
          when Iir_Kinds_Interface_Subprogram_Declaration =>
-            --  Macro-expanded
-            null;
+            Create_Object_Info (Block_Info, Decl);
          when Iir_Kind_Interface_Quantity_Declaration
            | Iir_Kind_Interface_Terminal_Declaration =>
             Error_Kind ("annotate_interface_declaration", Decl);

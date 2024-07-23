@@ -238,7 +238,20 @@ package body Elab.Vhdl_Insts is
                raise Internal_Error;
 
             when Iir_Kinds_Interface_Subprogram_Declaration =>
-               null;
+               declare
+                  Act : Node;
+               begin
+                  case Get_Kind (Assoc) is
+                     when Iir_Kind_Association_Element_Open =>
+                        Act := Get_Open_Actual (Assoc);
+                     when Iir_Kind_Association_Element_Subprogram =>
+                        Act := Get_Actual (Assoc);
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+                  Act := Strip_Denoting_Name (Act);
+                  Create_Interface_Subprg (Sub_Inst, Inter, Act);
+               end;
          end case;
 
          Next_Association_Interface (Assoc, Assoc_Inter);

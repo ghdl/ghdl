@@ -2639,15 +2639,22 @@ package body Synth.Vhdl_Expr is
                Get_Subtype_Object (Syn_Inst, Get_Type (Get_Type_Mark (Expr))));
          when Iir_Kind_Function_Call =>
             declare
-               Imp : constant Node := Get_Implementation (Expr);
+               Imp : Node;
             begin
+               Imp := Get_Implementation (Expr);
+               --  Handle interface function.
+               while Get_Kind (Imp) = Iir_Kind_Interface_Function_Declaration
+               loop
+                  Imp := Get_Interface_Subprogram (Syn_Inst, Imp);
+               end loop;
+
                case Get_Implicit_Definition (Imp) is
                   when Iir_Predefined_Operators
                      | Iir_Predefined_Ieee_Numeric_Std_Binary_Operators
                      | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Operators =>
                      return Synth_Operator_Function_Call (Syn_Inst, Expr);
                   when Iir_Predefined_None =>
-                     return Synth_User_Function_Call (Syn_Inst, Expr);
+                     return Synth_User_Function_Call (Syn_Inst, Expr, Imp);
                   when others =>
                      return Synth_Predefined_Function_Call (Syn_Inst, Expr);
                end case;

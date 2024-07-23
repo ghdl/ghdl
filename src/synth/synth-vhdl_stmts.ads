@@ -113,7 +113,7 @@ package Synth.Vhdl_Stmts is
                                Loc : Node) return Valtyp;
 
    function Synth_User_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node; Imp : Node) return Valtyp;
 
    --  Operation implemented by a user function.
    function Synth_User_Operator (Syn_Inst : Synth_Instance_Acc;

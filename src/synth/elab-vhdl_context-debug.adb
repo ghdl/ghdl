@@ -42,6 +42,9 @@ package body Elab.Vhdl_Context.Debug is
                Put ("subtype");
                Put (": ");
                Debug_Typ (Inst.Objects (I).T_Typ);
+            when Obj_Subprg =>
+               Put ("subprg");
+               New_Line;
             when Obj_Instance =>
                Put ("instance");
                New_Line;
