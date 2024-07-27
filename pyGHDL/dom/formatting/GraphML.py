@@ -25,7 +25,7 @@ class Formatter:  # (metaclass=ExtendedType):
     NODE_COLORS: typing.ClassVar[Dict[Flag, str]]
     EDGE_COLORS: typing.ClassVar[Dict[Flag, str]]
 
-    def __init__(self, graph: Graph):
+    def __init__(self, graph: Graph) -> None:
         self._graph = graph
 
     @abstractmethod

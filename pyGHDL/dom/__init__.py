@@ -50,7 +50,7 @@ class Position:
     _line: int
     _column: int
 
-    def __init__(self, filename: Path, line: int, column: int):
+    def __init__(self, filename: Path, line: int, column: int) -> None:
         self._filename = filename
         self._line = line
         self._column = column
@@ -72,14 +72,29 @@ class Position:
 
     @property
     def Filename(self) -> Path:
+        """
+        Read-only property to access the filename this source code position referres to (:attr:`_filename`).
+
+        :returns: The source code position's filename.
+        """
         return self._filename
 
     @property
     def Line(self) -> int:
+        """
+        Read-only property to access the line number this source code position referres to (:attr:`_line`).
+
+        :returns: The source code position's line.
+        """
         return self._line
 
     @property
     def Column(self) -> int:
+        """
+        Read-only property to access the column this source code position referres to (:attr:`_column`).
+
+        :returns: The source code position's column.
+        """
         return self._column
 
     def __str__(self):
@@ -89,13 +104,20 @@ class Position:
 @export
 class DOMMixin(metaclass=ExtendedType, mixin=True):
     _iirNode: Iir
-    _position: Position = None
+    _position: Position
 
-    def __init__(self, node: Iir):
+    def __init__(self, node: Iir) -> None:
         self._iirNode = node
 
     @property
     def Position(self) -> Position:
+        """
+        Cached read-only property to access an IIR's position in source code (:attr:`_position`).
+
+        If :attr:`_position` is None, resolve the position object from :attr:`_iirNode`
+
+        :returns: The IIR's position in the source file.
+        """
         if self._position is None:
             self._position = Position.parse(self._iirNode)
 

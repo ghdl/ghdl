@@ -61,6 +61,8 @@ from pyTooling.Decorators import export
 
 @export
 class GHDLBaseException(Exception):
+    """Base exception derived from :exc:`Exception <python:Exception>` for all custom exceptions."""
+
     @property
     def message(self) -> str:
         return str(self)

@@ -90,7 +90,7 @@ class Design(VHDLModel_Design):
     _analyzeTime: float
 
     @InheritDocString(VHDLModel_Design)
-    def __init__(self, name: str = None):
+    def __init__(self, name: str = None) -> None:
         super().__init__(name)
 
         self.__ghdl_init()
@@ -153,7 +153,7 @@ class Document(VHDLModel_Document):
         vhdlVersion: VHDLVersion = VHDLVersion.VHDL2008,
         dontParse: bool = False,
         dontTranslate: bool = False,
-    ):
+    ) -> None:
         super().__init__(path)
 
         self._filename = path
