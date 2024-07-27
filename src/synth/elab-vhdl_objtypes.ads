@@ -346,7 +346,7 @@ package Elab.Vhdl_Objtypes is
    --  Return the element of a vector/array/unbounded_array.
    function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc;
 
-   --  Return True if TYP is bounded (at top level!).
+   --  Return True if TYP is fully bounded.
    function Is_Bounded_Type (Typ : Type_Acc) return Boolean;
 
    function Are_Types_Equal (L, R : Type_Acc) return Boolean;
