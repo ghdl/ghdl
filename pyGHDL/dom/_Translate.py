@@ -30,15 +30,19 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module offers helper functions to translate often used IIR substructures to pyGHDL.dom (pyVHDLModel) constructs.
+"""
+
 from typing import List, Generator, Type
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel import Name
 from pyVHDLModel.Base import ModelEntity, Direction, ExpressionUnion
+from pyVHDLModel.Name import Name
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Association import AssociationItem
-from pyVHDLModel.Interface import GenericInterfaceItem, PortInterfaceItem, ParameterInterfaceItem
+from pyVHDLModel.Interface import GenericInterfaceItemMixin, PortInterfaceItemMixin, ParameterInterfaceItemMixin
 from pyVHDLModel.Type import BaseType
 from pyVHDLModel.Sequential import SequentialStatement
 from pyVHDLModel.Concurrent import ConcurrentStatement
@@ -61,7 +65,7 @@ from pyGHDL.dom.Sequential import (
 
 from pyGHDL.dom import Position, DOMException
 from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
-from pyGHDL.dom.Names import (
+from pyGHDL.dom.Name import (
     SimpleName,
     SelectedName,
     AttributeName,
@@ -167,6 +171,16 @@ from pyGHDL.dom.PSL import DefaultClock
 
 @export
 def GetName(node: Iir) -> Name:
+    """
+    Translates a *name* IIR node to a :class:`~pyVHDLModel.Name.Name`.
+
+    A name can be a *simple name* or complex name consisting of *selected*, *parenthesis*, *attribute*, ... *names*.
+    Complex names are composed as a chain of name objects, which can be traversed using the
+    :attr:`~pyVHDLModel.Name.Name.Prefix` property.
+
+    :param node: The name IIR node to translate.
+    :return:     A name object.
+    """
     kind = GetIirKindOfNode(node)
     if kind == nodes.Iir_Kind.Simple_Name:
         name = GetNameOfNode(node)
@@ -195,10 +209,7 @@ def GetAssociations(node: Iir) -> List:
     for item in utils.chain_iter(nodes.Get_Association_Chain(node)):
         kind = GetIirKindOfNode(item)
 
-        if kind in (
-            nodes.Iir_Kind.Association_Element_By_Expression,
-            nodes.Iir_Kind.Association_Element_By_Name,
-        ):
+        if kind in (nodes.Iir_Kind.Association_Element_By_Expression, nodes.Iir_Kind.Association_Element_By_Name):
             actual = nodes.Get_Actual(item)
             expr = GetExpressionFromNode(actual)
 
@@ -295,12 +306,35 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
 
 @export
 def GetSubtypeIndicationFromNode(node: Iir, entity: str, name: str) -> Symbol:
+    """
+    Extracts the subtype indication from an IIR node and translates it to a :class:`~pyVHDLModel.Symbol.Symbol`.
+
+    .. note::
+
+       This function calls :func:`GetSubtypeIndicationFromIndicationNode`.
+
+       This function should be used directly if :pycode:`nodes.Get_Subtype_Indication(...)` was already called or a
+       subtype indication is return by another getter.
+
+    :param node:   The IIR node to get the subtype indication from.
+    :param entity: The entity kind the subtype indication is extracted from (e.g. ``constant``). Used in exception messages.
+    :param name:   The entity's name the subtype indication is extracted from (e.g. ``BITS``). Used in exception messages.
+    :returns:      A symbol representing a reference to a type/subtype and possible array or record constraints.
+    """
     subtypeIndicationNode = nodes.Get_Subtype_Indication(node)
     return GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode, entity, name)
 
 
 @export
 def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: str, name: str) -> Symbol:
+    """
+    Translate a subtype indication to a :class:`~pyVHDLModel.Symbol.Symbol`.
+
+    :param subtypeIndicationNode: The subtype indication IIR node.
+    :param entity: The entity kind the subtype indication is extracted from (e.g. ``constant``). Used in exception messages.
+    :param name:   The entity's name the subtype indication is extracted from (e.g. ``BITS``). Used in exception messages.
+    :returns:      A symbol representing a reference to a type/subtype and possible array or record constraints.
+    """
     if subtypeIndicationNode is nodes.Null_Iir:
         raise ValueError("Parameter 'subtypeIndicationNode' is 'Null_Iir'.")
 
@@ -338,7 +372,7 @@ def GetScalarConstrainedSubtypeFromNode(
     # Check if RangeExpression. Might also be an AttributeName (see §3.1)
     if GetIirKindOfNode(rangeConstraint) == nodes.Iir_Kind.Range_Expression:
         r = GetRangeFromNode(rangeConstraint)
-    # todo: Get actual range from AttributeName node?
+    # TODO: Get actual range from AttributeName node?
 
     return ConstrainedScalarSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, r)
 
@@ -358,12 +392,19 @@ def GetCompositeConstrainedSubtypeFromNode(
 @export
 def GetSubtypeFromNode(subtypeNode: Iir) -> Symbol:
     subtypeName = GetNameOfNode(subtypeNode)
+    symbol = GetSubtypeIndicationFromNode(subtypeNode, "subtype", subtypeName)
 
-    return Subtype(subtypeNode, subtypeName)
+    return Subtype(subtypeNode, subtypeName, symbol)
 
 
 @export
 def GetRangeFromNode(node: Iir) -> Range:
+    """
+    Translate a range IIR node to a :class:`~pyVHDLModel.Base.Range`.
+
+    :param node: The IIR node representing a range.
+    :return:     The translated range object.
+    """
     direction = nodes.Get_Direction(node)
     leftBound = nodes.Get_Left_Limit_Expr(node)
     rightBound = nodes.Get_Right_Limit_Expr(node)
@@ -434,6 +475,12 @@ __EXPRESSION_TRANSLATION = {
 
 @export
 def GetExpressionFromNode(node: Iir) -> ExpressionUnion:
+    """
+    Translates an expression IIR node to an :class:`~pyVHDLModel.Expression.BaseExpression`.
+
+    :param node: The IIR node representing an expression.
+    :return:     The translated expression.
+    """
     kind = GetIirKindOfNode(node)
 
     try:
@@ -446,9 +493,13 @@ def GetExpressionFromNode(node: Iir) -> ExpressionUnion:
 
 
 @export
-def GetGenericsFromChainedNodes(
-    nodeChain: Iir,
-) -> Generator[GenericInterfaceItem, None, None]:
+def GetGenericsFromChainedNodes(nodeChain: Iir) -> Generator[GenericInterfaceItemMixin, None, None]:
+    """
+    Translates a chain of generics (IIR nodes) to a sequence of :class:`pyVHDLModel.Interface.GenericInterfaceItem`.
+
+    :param nodeChain: The IIR node representing the first generic in the chain.
+    :return:          A generator returning generic interface items.
+    """
     from pyGHDL.dom.InterfaceItem import (
         GenericTypeInterfaceItem,
         GenericPackageInterfaceItem,
@@ -505,9 +556,13 @@ def GetGenericsFromChainedNodes(
 
 
 @export
-def GetPortsFromChainedNodes(
-    nodeChain: Iir,
-) -> Generator[PortInterfaceItem, None, None]:
+def GetPortsFromChainedNodes(nodeChain: Iir) -> Generator[PortInterfaceItemMixin, None, None]:
+    """
+    Translates a chain of ports (IIR nodes) to a sequence of :class:`pyVHDLModel.Interface.PortInterfaceItem`.
+
+    :param nodeChain: The IIR node representing the first port in the chain.
+    :return:          A generator returning port interface items.
+    """
     furtherIdentifiers = []
     port = nodeChain
     while port != nodes.Null_Iir:
@@ -546,9 +601,13 @@ def GetPortsFromChainedNodes(
 
 
 @export
-def GetParameterFromChainedNodes(
-    nodeChain: Iir,
-) -> Generator[ParameterInterfaceItem, None, None]:
+def GetParameterFromChainedNodes(nodeChain: Iir) -> Generator[ParameterInterfaceItemMixin, None, None]:
+    """
+    Translates a chain of parameters (IIR nodes) to a sequence of :class:`pyVHDLModel.Interface.ParameterInterfaceItem`.
+
+    :param nodeChain: The IIR node representing the first parameter in the chain.
+    :return:          A generator returning parameter interface items.
+    """
     identifiers = []
     parameter = nodeChain
     while parameter != nodes.Null_Iir:
@@ -601,34 +660,32 @@ def GetParameterFromChainedNodes(
 
 
 def GetMapAspect(mapAspect: Iir, cls: Type, entity: str) -> Generator[AssociationItem, None, None]:
-    for generic in utils.chain_iter(mapAspect):
-        kind = GetIirKindOfNode(generic)
+    for item in utils.chain_iter(mapAspect):
+        kind = GetIirKindOfNode(item)
         if kind is nodes.Iir_Kind.Association_Element_By_Expression:
-            formalNode = nodes.Get_Formal(generic)
+            formalNode = nodes.Get_Formal(item)
             if formalNode is nodes.Null_Iir:
                 formal = None
             else:
                 formal = GetName(formalNode)
 
-            actual = GetExpressionFromNode(nodes.Get_Actual(generic))
+            actual = GetExpressionFromNode(nodes.Get_Actual(item))
 
-            yield cls(generic, actual, formal)
+            yield cls(item, actual, formal)
         elif kind is nodes.Iir_Kind.Association_Element_Open:
-            formalNode = nodes.Get_Formal(generic)
+            formalNode = nodes.Get_Formal(item)
             if formalNode is nodes.Null_Iir:
                 formal = None
             else:
                 formal = GetName(formalNode)
 
-            yield cls(generic, OpenName(generic), formal)
+            yield cls(item, OpenName(item), formal)
         else:
-            pos = Position.parse(generic)
+            pos = Position.parse(item)
             raise DOMException(f"Unknown association kind '{kind.name}' in {entity} map at line {pos.Line}.")
 
 
-def GetGenericMapAspect(
-    genericMapAspect: Iir,
-) -> Generator[GenericAssociationItem, None, None]:
+def GetGenericMapAspect(genericMapAspect: Iir) -> Generator[GenericAssociationItem, None, None]:
     return GetMapAspect(genericMapAspect, GenericAssociationItem, "generic")
 
 
@@ -636,9 +693,7 @@ def GetPortMapAspect(portMapAspect: Iir) -> Generator[PortAssociationItem, None,
     return GetMapAspect(portMapAspect, PortAssociationItem, "port")
 
 
-def GetParameterMapAspect(
-    parameterMapAspect: Iir,
-) -> Generator[ParameterAssociationItem, None, None]:
+def GetParameterMapAspect(parameterMapAspect: Iir) -> Generator[ParameterAssociationItem, None, None]:
     return GetMapAspect(parameterMapAspect, ParameterAssociationItem, "parameter")
 
 

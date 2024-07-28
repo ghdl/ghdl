@@ -31,9 +31,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 from enum import IntEnum, unique
-from pyTooling.Decorators import export
 from ctypes import c_int32, c_uint32, c_int64, c_double, c_bool
 from typing import TypeVar
+
+from pyTooling.Decorators import export
 
 __all__ = [
     "ErrorIndex",

@@ -49,6 +49,7 @@ enable_werror=false
 enable_checks=true
 enable_gplcompat=unknown
 enable_libghdl=true
+enable_standalone=false
 enable_synth=true
 with_readline=None
 with_sundials=false
@@ -58,6 +59,7 @@ default_pic=false
 EXEEXT=
 SOEXT=.so
 PIC_FLAGS=-fPIC
+LIBGCC_KIND=
 
 show_help=no
 progname=$0
@@ -65,8 +67,8 @@ progname=$0
 subst_vars="CC CXX AR GNATMAKE ADA_FLAGS MAKE CFLAGS CXXFLAGS LDFLAGS build
 srcdir abs_srcdir prefix backend backend_version libdirsuffix libghdldirsuffix
 incdirsuffix gcc_src_dir llvm_config llvm_be backtrace_lib
-build_mode EXEEXT SOEXT PIC_FLAGS default_pic enable_werror enable_checks
-enable_gplcompat enable_libghdl libghdl_version ghdl_version
+build_mode EXEEXT SOEXT PIC_FLAGS LIBGCC_KIND default_pic enable_werror enable_checks
+enable_gplcompat enable_libghdl enable_standalone libghdl_version ghdl_version
 with_sundials sundials_incflags sundials_ldflags
 COMPILER_GCC COMPILER_DEBUG COMPILER_MCODE COMPILER_LLVM POST_PROCESSOR
 INSTALL_PREFIX LIBDIR_SUFFIX LIBGHDLDIR_SUFFIX INCDIR_SUFFIX
@@ -134,6 +136,8 @@ for opt do
     --disable-gplcompat)    enable_gplcompat=false;;
     --enable-libghdl)       enable_libghdl=true;;
     --disable-libghdl)      enable_libghdl=false;;
+    --enable-standalone)    enable_standalone=true;;
+    --disable-standalone)   enable_standalone=false;;
     --enable-synth)         enable_synth=true;;
     --disable-synth)        enable_synth=false;;
     --default-pic)          default_pic=true;;
@@ -341,9 +345,11 @@ fi
 # Define default file extensions for Windows or Linux-like systems and
 # use -fPIC or not.
 case "$build" in
-  *mingw* | *cygwin* | *windows-gnu*) SOEXT=".dll";   EXEEXT=".exe"; PIC_FLAGS="";;
-  *darwin*)           SOEXT=".dylib"; EXEEXT="";     PIC_FLAGS="";;
-  *)                  SOEXT=".so";    EXEEXT="";     PIC_FLAGS="-fPIC";;
+  *i686*mingw*)             SOEXT=".dll";   EXEEXT=".exe"; PIC_FLAGS="";      LIBGCC_KIND="dw2";;
+  *x86_64*mingw*)           SOEXT=".dll";   EXEEXT=".exe"; PIC_FLAGS="";      LIBGCC_KIND="seh";;
+  *cygwin* | *windows-gnu*) SOEXT=".dll";   EXEEXT=".exe"; PIC_FLAGS="";      LIBGCC_KIND="";;
+  *darwin*)                 SOEXT=".dylib"; EXEEXT="";     PIC_FLAGS="";      LIBGCC_KIND="";;
+  *)                        SOEXT=".so";    EXEEXT="";     PIC_FLAGS="-fPIC"; LIBGCC_KIND="";;
 esac
 
 # Define libghdl_version

@@ -50,7 +50,7 @@ from pyGHDL.dom._Utils import GetNameOfNode
 
 @export
 class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
-    def __init__(self, node: Iir):
+    def __init__(self, node: Iir) -> None:
         super().__init__()
         DOMMixin.__init__(self, node)
 
@@ -61,7 +61,7 @@ class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
 
 @export
 class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str):
+    def __init__(self, node: Iir, value: str) -> None:
         super().__init__(value)
         DOMMixin.__init__(self, node)
 
@@ -73,7 +73,7 @@ class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
 
 @export
 class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: int):
+    def __init__(self, node: Iir, value: int) -> None:
         super().__init__(value)
         DOMMixin.__init__(self, node)
 
@@ -85,7 +85,7 @@ class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
 
 @export
 class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: float):
+    def __init__(self, node: Iir, value: float) -> None:
         super().__init__(value)
         DOMMixin.__init__(self, node)
 
@@ -97,7 +97,7 @@ class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
 
 @export
 class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: int, unitName: str):
+    def __init__(self, node: Iir, value: int, unitName: str) -> None:
         super().__init__(value, unitName)
         DOMMixin.__init__(self, node)
 
@@ -112,7 +112,7 @@ class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
 
 @export
 class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: int, unitName: float):
+    def __init__(self, node: Iir, value: int, unitName: float) -> None:
         super().__init__(value, unitName)
         DOMMixin.__init__(self, node)
 
@@ -127,7 +127,7 @@ class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
 
 @export
 class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str):
+    def __init__(self, node: Iir, value: str) -> None:
         super().__init__(value)
         DOMMixin.__init__(self, node)
 
@@ -140,7 +140,7 @@ class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
 
 @export
 class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str):
+    def __init__(self, node: Iir, value: str) -> None:
         super().__init__(value)
         DOMMixin.__init__(self, node)
 

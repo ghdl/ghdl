@@ -30,11 +30,14 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived name classes from :mod:`pyVHDLModel.Name`.
+"""
 from typing import List
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel.Name import Name
+from pyVHDLModel.Name import Name as VHDLModel_Name
 from pyVHDLModel.Name import SimpleName as VHDLModel_SimpleName
 from pyVHDLModel.Name import ParenthesisName as VHDLModel_ParenthesisName
 from pyVHDLModel.Name import IndexedName as VHDLModel_IndexedName
@@ -50,55 +53,144 @@ from pyGHDL.dom import DOMMixin
 
 @export
 class SimpleName(VHDLModel_SimpleName, DOMMixin):
-    def __init__(self, node: Iir, identifier: str):
+    """
+    Represents a single name (identifier) to a language entity.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Name.SimpleName`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          ieee
+    """
+
+    def __init__(self, node: Iir, identifier: str) -> None:
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
 
 @export
 class ParenthesisName(VHDLModel_ParenthesisName, DOMMixin):
-    def __init__(self, node: Iir, prefix: Name, associations: List):
+    """
+    Represents a parenthesis (index access or function call) following a name.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Name.ParenthesisName`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          arr(0)
+          -- ^^^
+    """
+
+    def __init__(self, node: Iir, prefix: VHDLModel_Name, associations: List) -> None:
         super().__init__(prefix, associations)
         DOMMixin.__init__(self, node)
 
 
 @export
 class IndexedName(VHDLModel_IndexedName, DOMMixin):
-    def __init__(self, node: Iir, identifier: str):
+    def __init__(self, node: Iir, identifier: str) -> None:
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
 
 @export
 class SlicedName(VHDLModel_SlicedName, DOMMixin):
-    def __init__(self, node: Iir, identifier: str):
+    """
+    Represents a slice following a name.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Name.SlicedName`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          arr(7 downto 0)
+          -- ^^^^^^^^^^^^
+    """
+
+    def __init__(self, node: Iir, identifier: str) -> None:
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
 
 @export
 class SelectedName(VHDLModel_SelectedName, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, prefix: Name):
+    """
+    Represents a name following a name in dot-notation.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Name.SelectedName`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          rec.elem
+          -- ^^^^^
+    """
+
+    def __init__(self, node: Iir, identifier: str, prefix: VHDLModel_Name) -> None:
         super().__init__(identifier, prefix)
         DOMMixin.__init__(self, node)
 
 
 @export
 class AttributeName(VHDLModel_AttributeName, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, prefix: Name):
+    """
+    Represents a name following a name in tick-notation.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Name.AttributeName`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          arr'length
+          -- ^^^^^^^
+    """
+
+    def __init__(self, node: Iir, identifier: str, prefix: VHDLModel_Name) -> None:
         super().__init__(identifier, prefix)
         DOMMixin.__init__(self, node)
 
 
 @export
 class AllName(VHDLModel_AllName, DOMMixin):
-    def __init__(self, node: Iir, prefix: Name):
+    """
+    Represents a keyword ``all`` following a name in dot-notation.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Name.AllName`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          ptr.all
+          -- ^^^^
+    """
+
+    def __init__(self, node: Iir, prefix: VHDLModel_Name) -> None:
         super().__init__(prefix)
         DOMMixin.__init__(self, node)
 
 
 @export
 class OpenName(VHDLModel_OpenName, DOMMixin):
-    def __init__(self, node: Iir):
+    """
+    Represents the keyword ``open`` used as a special name.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Name.OpenName`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          open
+    """
+
+    def __init__(self, node: Iir) -> None:
         super().__init__()
         DOMMixin.__init__(self, node)
