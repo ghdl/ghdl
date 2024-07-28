@@ -767,11 +767,12 @@ package body Vhdl.Sem_Inst is
             when Iir_Kind_Interface_Constant_Declaration =>
                declare
                   Is_Ref : constant Boolean := Get_Is_Ref (Inter);
+                  Ind : Iir;
                begin
-                  Set_Type (Res, Get_Type (Inter));
-                  Set_Subtype_Indication
-                    (Res,
-                     Instantiate_Iir (Get_Subtype_Indication (Inter), Is_Ref));
+                  Ind := Instantiate_Iir (Get_Subtype_Indication (Inter),
+                                          Is_Ref);
+                  Set_Subtype_Indication (Res, Ind);
+                  Set_Type (Res, Get_Type_Of_Subtype_Indication (Ind));
                   Set_Mode (Res, Get_Mode (Inter));
                   Set_Has_Mode (Res, Get_Has_Mode (Inter));
                   Set_Has_Class (Res, Get_Has_Class (Inter));
@@ -1050,9 +1051,9 @@ package body Vhdl.Sem_Inst is
                   --  Check if the interface type was declared in the same
                   --  interface list: must have the same parent.
                   if Get_Parent (Get_Type_Declarator (Formal_Type))
-                    = Get_Parent (Orig_Inter)
+                    = Get_Parent (Inter)
                   then
-                     Set_Type (Inter, Get_Instance (Formal_Type));
+                     Set_Type (Inter, Get_Associated_Type (Formal_Type));
                   end if;
                end if;
             end;
