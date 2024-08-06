@@ -3,7 +3,7 @@
 --
 -- A generic counter module used in the StopWatch example.
 --
-context work.StopWatch_ctx;
+context work.Display_ctx;
 
 
 -- Encoder that translates from 4-bit binary (BCD) to 7-segment code.

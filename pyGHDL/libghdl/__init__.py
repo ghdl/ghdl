@@ -35,7 +35,7 @@ Python binding and low-level API for shared library ``libghdl``.
 In case of an error, a :exc:`LibGHDLException` is raised.
 """
 from ctypes import c_char_p, CDLL
-from sys import platform as sys_platform, version_info as sys_version_info
+from sys import platform as sys_platform, version_info as sys_version_info, version_info
 from os import environ as os_environ
 from pathlib import Path
 from shutil import which
@@ -112,6 +112,7 @@ def _get_libghdl_path():
     5. Try when running from the build directory.
     """
     basename = _get_libghdl_name()
+    investigatedPaths: List[Path] = []
 
     # Try GHDL_PREFIX
     # GHDL_PREFIX is the prefix of the vhdl libraries, so remove the
@@ -119,14 +120,18 @@ def _get_libghdl_path():
     r = os_environ.get("GHDL_PREFIX")
     try:
         return _check_libghdl_libdir(Path(r).parent, basename)
-    except (TypeError, FileNotFoundError):
+    except FileNotFoundError:
+        investigatedPaths.append(Path(r).parent)
+    except TypeError:
         pass
 
     # Try VUNIT_GHDL_PATH (path of the ghdl binary when using VUnit).
     r = os_environ.get("VUNIT_GHDL_PATH")
     try:
         return _check_libghdl_bindir(Path(r), basename)
-    except (TypeError, FileNotFoundError):
+    except FileNotFoundError:
+        investigatedPaths.append(Path(r))
+    except TypeError:
         pass
 
     # Try GHDL (name/path of the ghdl binary)
@@ -134,25 +139,34 @@ def _get_libghdl_path():
     r = which(r)
     try:
         return _check_libghdl_bindir(Path(r).parent, basename)
-    except (TypeError, FileNotFoundError):
+    except FileNotFoundError:
+        investigatedPaths.append(Path(r).parent)
+    except TypeError:
         pass
 
     # Try within libghdl/ python installation
     r = Path(__file__)
     try:
         return _check_libghdl_bindir(r.parent, basename)
-    except (TypeError, FileNotFoundError):
+    except FileNotFoundError:
+        investigatedPaths.append(r.parent)
+    except TypeError:
         pass
 
     # Try when running from the build directory
     r = (r.parent / "../../lib").resolve()
     try:
         return _check_libghdl_libdir(r, basename)
-    except (TypeError, FileNotFoundError):
+    except FileNotFoundError:
+        investigatedPaths.append(r)
+    except TypeError:
         pass
 
     # Failed.
-    raise Exception(f"Cannot find libghdl {basename}")
+    ex = Exception(f"Cannot find libghdl {basename}")
+    if version_info >= (3, 11):  # pragma: no cover
+        ex.add_note(f"""Searched in '{"', '".join(str(p) for p in investigatedPaths)}'""")
+    raise ex
 
 
 @export

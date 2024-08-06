@@ -10,7 +10,11 @@ use     IEEE.numeric_std.all;
 library lib_Utilities;
 use     lib_Utilities.Utilities_pkg.all;
 
-use     work.StopWatch_pkg.all;
+library lib_Display;
+use     lib_Display.Display_pkg.all;
+
+library lib_StopWatch;
+use     lib_StopWatch.StopWatch_pkg.all;
 
 
 entity toplevel is
@@ -83,7 +87,7 @@ begin
 	Start <= Deb_Start_re;
 
 	-- Stopwatch
-	sw: entity work.Stopwatch
+	sw: entity lib_StopWatch.Stopwatch
 		generic map (
 			CLOCK_PERIOD  => CLOCK_PERIOD,
 

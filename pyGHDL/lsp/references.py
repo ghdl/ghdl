@@ -29,7 +29,7 @@ def find_def(n, loc):
         nodes.Iir_Kind.Selected_Name,
         nodes.Iir_Kind.Attribute_Name,
         nodes.Iir_Kind.Selected_Element,
-    ):
+    ) -> None:
         n_loc = nodes.Get_Location(n)
         if loc >= n_loc:
             ident = nodes.Get_Identifier(n)
