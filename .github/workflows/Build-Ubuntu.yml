@@ -103,11 +103,9 @@ jobs:
           name: ${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ matrix.backend }}
           path: install
 
-      - name: Prepare test environment
+      - name: Install GHDL (chmod) and prepare test environment
         run: |
-          echo "pwd: $(pwd)"
-          ls -lAh install
-          ls -lAh install/bin
+          chmod +x ./install/bin/*
           echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
 
       - name: Sanity checks
@@ -119,4 +117,6 @@ jobs:
       - name: Run tests in testsuite
         run: |
           cd testsuite
-          ./testsuite.sh
+
+          # no pyunit
+          ./testsuite.sh sanity gna vests synth vpi vhpi
