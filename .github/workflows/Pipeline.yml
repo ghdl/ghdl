@@ -88,28 +88,28 @@ jobs:
         ]
       ubuntu_artifact: ghdl-ubuntu
 
-#  macOS:
-#    uses: ./.github/workflows/Build-MacOS.yml
-#    with:
-#      jobs: "[{'icon': 'x', 'backend': 'llvm'}]"
-##      jobs: |
-##        [
-##          {'icon': 'x', 'backend': 'mcode'},
-##          {'icon': 'y', 'backend': 'llvm' }
-##        ]
-#      macos_artifact: ghdl-macos
-#
-#  Windows:
-#    uses: ./.github/workflows/Build-MSYS2.yml
-#    with:
+  macOS:
+    uses: ./.github/workflows/Build-MacOS.yml
+    with:
+      jobs: "[{'icon': 'x', 'backend': 'llvm'}]"
 #      jobs: |
 #        [
-#          {'icon': 'Mx', 'runtime': 'MINGW64', 'backend': 'mcode'},
-#          {'icon': 'My', 'runtime': 'MINGW64', 'backend': 'llvm' },
-#          {'icon': 'Ux', 'runtime': 'UCRT64',  'backend': 'mcode'},
-#          {'icon': 'Uy', 'runtime': 'UCRT64',  'backend': 'llvm' }
+#          {'icon': 'x', 'backend': 'mcode'},
+#          {'icon': 'y', 'backend': 'llvm' }
 #        ]
-#      windows_artifact: ghdl-windows
+      macos_artifact: ghdl-macos
+
+  Windows:
+    uses: ./.github/workflows/Build-MSYS2.yml
+    with:
+      jobs: |
+        [
+          {'icon': 'Mx', 'runtime': 'MINGW64', 'backend': 'mcode'},
+          {'icon': 'My', 'runtime': 'MINGW64', 'backend': 'llvm' },
+          {'icon': 'Ux', 'runtime': 'UCRT64',  'backend': 'mcode'},
+          {'icon': 'Uy', 'runtime': 'UCRT64',  'backend': 'llvm' }
+        ]
+      windows_artifact: ghdl-windows
 
 #  Python:
 #    uses: ./.github/workflows/Build-pyGHDL.yml
@@ -131,14 +131,14 @@ jobs:
 #      - Sphinx
 #    uses: ./.github/workflows/Publish-GitHubPages.yml
 
-#  Release:
-#    runs-on: ubuntu-24.04
-#    needs:
-#      - Ubuntu
-#      - macOS
-#      - Windows
+  Release:
+    runs-on: ubuntu-24.04
+    needs:
+      - Ubuntu
+      - macOS
+      - Windows
 #      - Python
 #      - PublishToGitHubPages
-#    steps:
-#      - name: "Dummy"
-#        run: echo "Dummy"
+    steps:
+      - name: "Dummy"
+        run: echo "Dummy"
