@@ -1,0 +1,13 @@
+name: Auto-generating and assembling main documentation (Sphinx)
+
+on:
+  workflow_call:
+
+jobs:
+  Documentation:
+    name: '📓 Documentation'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: '🧰 Checkout'
+        uses: actions/checkout@v4
