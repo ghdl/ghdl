@@ -8,4 +8,17 @@ jobs:
   Ubuntu:
     uses: ./.github/workflows/Build-Ubuntu.yml
     with:
-      jobs: "[{'icon': 'x', 'backend': 'mcode'}, {'icon': 'y', 'backend': 'llvm'}]"
+      jobs: |
+        [
+          {'icon': 'x', 'backend': 'mcode'},
+          {'icon': 'y', 'backend': 'llvm' }
+        ]
+
+  macOS:
+    uses: ./.github/workflows/Build-MacOS.yml
+    with:
+      jobs: |
+        [
+          {'icon': 'x', 'backend': 'mcode'},
+          {'icon': 'y', 'backend': 'llvm' }
+        ]
