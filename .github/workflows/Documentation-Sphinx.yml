@@ -2,12 +2,101 @@ name: Auto-generating and assembling main documentation (Sphinx)
 
 on:
   workflow_call:
+    inputs:
+      python_version:
+        description: 'Python version.'
+        required: false
+        default: '3.12'
+        type: string
+      requirements:
+        description: 'Python dependencies to be installed through pip.'
+        required: false
+        default: '-r doc/requirements.txt'
+        type: string
+      doc_directory:
+        description: 'Path to the directory containing documentation (Sphinx working directory).'
+        required: false
+        default: 'doc'
+        type: string
+      html_artifact:
+        description: 'Name of the HTML documentation artifact.'
+        required: true
+        type: string
+      document:
+        description: 'LaTeX root document without *.tex extension.'
+        required: true
+        type: string
+      latex_artifact:
+        description: 'Name of the LaTeX documentation artifact.'
+        required: true
+        type: string
+      pdf_artifact:
+        description: 'Name of the PDF documentation artifact.'
+        required: true
+        type: string
 
 jobs:
-  Documentation:
-    name: '📓 Documentation'
+  Sphinx:
+    name: '📓 Sphinx to LaTeX and HTML'
     runs-on: ubuntu-latest
 
     steps:
       - name: '🧰 Checkout'
         uses: actions/checkout@v4
+
+      - name: '🐍 Setup Python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: '🔧 Install dependencies'
+        run: |
+          python -m pip install --disable-pip-version-check ${{ inputs.requirements }}
+
+      - name: '📓 Compile HTML documentation'
+        run: |
+          cd ${{ inputs.doc_directory }}
+          make html
+
+      - name: '📓 Compile LaTeX documentation'
+        run: |
+          cd ${{ inputs.doc_directory }}
+          make html
+
+      - name: '📤 Upload artifact: HTML'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.html_artifact }}
+          path: doc/_build/html
+
+      - name: '📤 Upload artifact: LaTeX'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.latex_artifact }}
+          path: doc/_build/latex
+            doc/_build/man
+
+  LaTeX:
+    name: 📓 Converting LaTeX Documentation to PDF
+    runs-on: ubuntu-24.04
+    steps:
+      - name: 📥 Download artifacts '${{ inputs.latex_artifact }}' from 'Sphinx' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.latex_artifact }}
+          path: latex
+
+      - name: Compile LaTeX document
+        uses: xu-cheng/latex-action@master
+        with:
+          working_directory: latex
+          root_file: ${{ inputs.document }}.tex
+
+      - name: 📤 Upload 'PDF Documentation' artifact
+        uses: actions/upload-artifact@v4
+        if: inputs.pdf_artifact != ''
+        with:
+          name: ${{ inputs.pdf_artifact }}
+          path: ${{ inputs.document }}.pdf
+          if-no-files-found: error
+          retention-days: 1

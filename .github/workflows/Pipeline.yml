@@ -43,6 +43,11 @@ jobs:
 
   Sphinx:
     uses: ./.github/workflows/Documentation-Sphinx.yml
+    with:
+      html_artifact: 'documentation-html'
+      document: 'GHDL'
+      latex_artifact: 'documentation-latex'
+      pdf_artifact: 'documentation-pdf'
 
   PublishToGitHubPages:
     needs:
