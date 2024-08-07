@@ -68,6 +68,23 @@ jobs:
           cd build/${{ matrix.backend }}
           sudo make install
 
+      - name: 📋 Write requirements file
+        run: |
+          ls -lAh
+          echo "libgnat-13" >> ubuntu.requirements
+          if [ '${{ matrix.backend }}' == 'llvm' ]; then
+            echo "libllvm18" >> ubuntu.requirements
+          fi
+          sudo cp ubuntu.requirements ./install
+
+      - name: Run 'sanity' from testsuite
+        run: |
+          export GHDL=$(pwd)/install/bin/ghdl
+          cd testsuite
+
+          # no pyunit
+          ./testsuite.sh sanity
+
       - name: 📤 Upload '${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ matrix.backend }}' artifact
         uses: actions/upload-artifact@v4
         with:
@@ -106,11 +123,11 @@ jobs:
       - name: Install GHDL (chmod) and prepare test environment
         run: |
           chmod +x ./install/bin/*
+          sudo xargs -r -a ./install/ubuntu.requirements apt-get install -y --no-install-recommends
           echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Sanity checks
+      - name: Version check
         run: |
-          echo "PATH:       $PATH"
           echo "which ghdl: $(which ghdl)"
           ghdl version
 

@@ -82,6 +82,28 @@ jobs:
           cd build/${{ matrix.backend }}
           make install
 
+      - name: 📋 Write requirements file
+        run: |
+          cd install
+          ls -lAh
+          if [ '${{ matrix.runtime }}' == 'mingw64' ]; then
+            MSYS2_PREFIX=mingw64/mingw-w64-x86_64
+          elif [ '${{ matrix.runtime }}' == 'ucrt64' ]; then
+            MSYS2_PREFIX=ucrt64/mingw-w64-ucrt-x86_64
+          fi
+          echo "${MSYS2_PREFIX}-gcc-ada" >> ${{ matrix.runtime }}.requirements
+          if [ '${{ matrix.backend }}' == 'llvm' ]; then
+           echo "${MSYS2_PREFIX}-llvm-libs" >> ${{ matrix.runtime }}.requirements
+          fi
+
+      - name: Run 'sanity' from testsuite
+        run: |
+          export GHDL=$(pwd)/install/bin/ghdl
+          cd testsuite
+
+          # no pyunit
+          ./testsuite.sh sanity
+
       - name: 📤 Upload '${{ inputs.windows_artifact }}-${{ matrix.runtime }}-${{ matrix.backend }}' artifact
         uses: actions/upload-artifact@v4
         with:
@@ -130,11 +152,11 @@ jobs:
       - name: Install GHDL (chmod) and prepare test environment
         run: |
           chmod +x ./install/bin/*
+          xargs -r -a ./install/${{ matrix.runtime }}.requirements pacman -S --noconfirm
           echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Sanity checks
+      - name: Version check
         run: |
-          echo "PATH:       $PATH"
           echo "which ghdl: $(which ghdl)"
           ghdl version
 
