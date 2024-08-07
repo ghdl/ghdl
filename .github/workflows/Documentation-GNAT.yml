@@ -1,0 +1,13 @@
+name: Auto-generating Ada Documentation (GNATdoc)
+
+on:
+  workflow_call:
+
+jobs:
+  GNATdoc:
+    name: '📚 GNATdoc'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: '🧰 Checkout'
+        uses: actions/checkout@v4

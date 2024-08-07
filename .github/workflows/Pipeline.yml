@@ -33,3 +33,15 @@ jobs:
           {'icon': 'Ux', 'runtime': 'UCRT64',  'backend': 'mcode'},
           {'icon': 'Uy', 'runtime': 'UCRT64',  'backend': 'llvm' }
         ]
+
+  GNATdoc:
+    uses: ./.github/workflows/Documentation-GNAT.yml
+
+  Sphinx:
+    uses: ./.github/workflows/Documentation-Sphinx.yml
+
+  PublishToGitHubPages:
+    needs:
+      - GNATdoc
+      - Sphinx
+    uses: ./.github/workflows/Publish-GitHubPages.yml

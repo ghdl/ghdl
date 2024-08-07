@@ -1,0 +1,21 @@
+name: Assemble documentation for GitHub Pages
+
+on:
+  workflow_call:
+#    inputs:
+#      jobs:
+#        description: 'JSON list with environment fields, naming the system and backend for compilation.'
+#        required: true
+#        type: string
+
+jobs:
+  Publish:
+    name: Publish documentation to GitHub Pages
+    runs-on: "ubuntu-24.04"
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - run: echo "Publish"
