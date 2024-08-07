@@ -5,6 +5,79 @@ on:
   pull_request:
 
 jobs:
+# Building
+#   Ubuntu (x86-64)
+#     mcode
+#     mcode + GPL
+#     llvm
+#     llvm-jit
+#     gcc
+#   macOS (x86-64)
+#     mcode
+#     llvm
+#     llvm-jit
+#   macOS (aarch64)
+#     llvm
+#     llvm-jit
+#   Windows (x86-64)
+#     MinGW64
+#       mcode
+#       llvm
+#       llvm-jit
+#     UCRT64
+#       mcode
+#       llvm
+#       llvm-jit
+
+# Documentation
+#   GNAT
+#   Sphinx
+#     HTML
+#     LaTeX
+#     man
+#   PDF
+
+# Testing from artifact
+#   Ubuntu - mcode
+#   Ubuntu - llvm
+#   Ubuntu - gcc
+#   macOS -  llvm
+#   UCRT64 - llvm
+
+# Windows Standalone - ZIP
+#   UCRT64 - mcode
+#   UCRT64 - llvm
+
+# Sanity Check Windows Standalone
+#   simple simulation
+
+# pyGHDL wheel
+#   Python 3.10
+#     Windows
+#     Linux
+#     macOS
+#   Python 3.11
+#     Windows
+#     Linux
+#     macOS
+#   Python 3.12
+#     Windows
+#     Linux
+#     macOS
+
+# Python code coverage
+# Publish results
+# Python test results
+#   merge
+
+# Sanity Check pyGHDL
+#
+
+# Release Page (on tag)
+#   Assets
+
+#
+
   Ubuntu:
     uses: ./.github/workflows/Build-Ubuntu.yml
     with:
@@ -13,56 +86,59 @@ jobs:
           {'icon': 'x', 'backend': 'mcode'},
           {'icon': 'y', 'backend': 'llvm' }
         ]
+      ubuntu_artifact: ghdl-ubuntu
 
-  macOS:
-    uses: ./.github/workflows/Build-MacOS.yml
-    with:
-      jobs: "[{'icon': 'x', 'backend': 'llvm'}]"
+#  macOS:
+#    uses: ./.github/workflows/Build-MacOS.yml
+#    with:
+#      jobs: "[{'icon': 'x', 'backend': 'llvm'}]"
+##      jobs: |
+##        [
+##          {'icon': 'x', 'backend': 'mcode'},
+##          {'icon': 'y', 'backend': 'llvm' }
+##        ]
+#      macos_artifact: ghdl-macos
+#
+#  Windows:
+#    uses: ./.github/workflows/Build-MSYS2.yml
+#    with:
 #      jobs: |
 #        [
-#          {'icon': 'x', 'backend': 'mcode'},
-#          {'icon': 'y', 'backend': 'llvm' }
+#          {'icon': 'Mx', 'runtime': 'MINGW64', 'backend': 'mcode'},
+#          {'icon': 'My', 'runtime': 'MINGW64', 'backend': 'llvm' },
+#          {'icon': 'Ux', 'runtime': 'UCRT64',  'backend': 'mcode'},
+#          {'icon': 'Uy', 'runtime': 'UCRT64',  'backend': 'llvm' }
 #        ]
+#      windows_artifact: ghdl-windows
 
-  Windows:
-    uses: ./.github/workflows/Build-MSYS2.yml
-    with:
-      jobs: |
-        [
-          {'icon': 'Mx', 'runtime': 'MINGW64', 'backend': 'mcode'},
-          {'icon': 'My', 'runtime': 'MINGW64', 'backend': 'llvm' },
-          {'icon': 'Ux', 'runtime': 'UCRT64',  'backend': 'mcode'},
-          {'icon': 'Uy', 'runtime': 'UCRT64',  'backend': 'llvm' }
-        ]
+#  Python:
+#    uses: ./.github/workflows/Build-pyGHDL.yml
+#
+#  GNATdoc:
+#    uses: ./.github/workflows/Documentation-GNAT.yml
+#
+#  Sphinx:
+#    uses: ./.github/workflows/Documentation-Sphinx.yml
+#    with:
+#      html_artifact: 'documentation-html'
+#      document: 'GHDL'
+#      latex_artifact: 'documentation-latex'
+#      pdf_artifact: 'documentation-pdf'
 
-  Python:
-    uses: ./.github/workflows/Build-pyGHDL.yml
+#  PublishToGitHubPages:
+#    needs:
+#      - GNATdoc
+#      - Sphinx
+#    uses: ./.github/workflows/Publish-GitHubPages.yml
 
-  GNATdoc:
-    uses: ./.github/workflows/Documentation-GNAT.yml
-
-  Sphinx:
-    uses: ./.github/workflows/Documentation-Sphinx.yml
-    with:
-      html_artifact: 'documentation-html'
-      document: 'GHDL'
-      latex_artifact: 'documentation-latex'
-      pdf_artifact: 'documentation-pdf'
-
-  PublishToGitHubPages:
-    needs:
-      - GNATdoc
-      - Sphinx
-    uses: ./.github/workflows/Publish-GitHubPages.yml
-
-  Release:
-    runs-on: ubuntu-24.04
-    needs:
-      - Ubuntu
-      - macOS
-      - Windows
-      - Python
-      - PublishToGitHubPages
-    steps:
-      - name: "Dummy"
-        run: echo "Dummy"
+#  Release:
+#    runs-on: ubuntu-24.04
+#    needs:
+#      - Ubuntu
+#      - macOS
+#      - Windows
+#      - Python
+#      - PublishToGitHubPages
+#    steps:
+#      - name: "Dummy"
+#        run: echo "Dummy"

@@ -7,11 +7,20 @@ on:
         description: 'JSON list with environment fields, naming the system and backend for compilation.'
         required: true
         type: string
+      windows_image:
+        description: 'Name of the Windows image.'
+        required: false
+        default: 'windows-latest'
+        type: string
+      windows_artifact:
+        description: 'Name of the Windows build artifact.'
+        required: true
+        type: string
 
 jobs:
   Build:
     name: Build GHDL on Windows Server + MSYS2
-    runs-on: windows-latest
+    runs-on: ${{ inputs.windows_image }}
 
     env:
       msys2_packages: "make"
@@ -61,7 +70,7 @@ jobs:
           NPROC=$(nproc)
           GNATMAKE="gnatmake -j$NPROC" \
           MAKE="make -j$NPROC" \
-          ../../configure --prefix=../../install/ghdl-${{ matrix.runtime }}-${{ matrix.backend }} $LLVM_ARGS
+          ../../configure --prefix=../../install $LLVM_ARGS
 
       - name: 🔨 Make
         run: |
@@ -73,30 +82,21 @@ jobs:
           cd build/${{ matrix.backend }}
           make install
 
-      - name: Debug
-        run: |
-          ls -lAh ./install
-          ls -lAh ./install/ghdl-${{ matrix.runtime }}-${{ matrix.backend }}
-          ls -lAh ./install/ghdl-${{ matrix.runtime }}-${{ matrix.backend }}/bin
-
-      - name: 📤 Upload 'GHDL' artifact
+      - name: 📤 Upload '${{ inputs.windows_artifact }}-${{ matrix.runtime }}-${{ matrix.backend }}' artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ghdl-windows-${{ matrix.runtime }}-${{ matrix.backend }}
-          path: ./install/ghdl-${{ matrix.runtime }}-${{ matrix.backend }}/
+          name: ${{ inputs.windows_artifact }}-${{ matrix.runtime }}-${{ matrix.backend }}
+          path: ./install
           if-no-files-found: error
           retention-days: 1
 
   Test:
     name: Test GHDL on Windows Server + MSYS2
-    runs-on: windows-latest
+    runs-on: ${{ inputs.windows_image }}
     needs:
       - Build
 
     env:
-      msys2_packages: ""
-      common_packages: ""
-      mcode_packages: ""
       llvm_packages: "llvm:p"
 
     strategy:
@@ -119,11 +119,31 @@ jobs:
         with:
           msystem: ${{ matrix.runtime }}
           update: true
-          install: ${{ env.msys2_packages }}
-          pacboy: "${{ env.common_packages }} ${{ env.mcode_packages }} ${{ env.llvm_packages }}"
+          pacboy: "${{ env.llvm_packages }}"
+
+      - name: 📥 Download artifacts '${{ inputs.windows_artifact }}-${{ matrix.runtime }}-${{ matrix.backend }}' from 'Build' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.windows_artifact }}-${{ matrix.runtime }}-${{ matrix.backend }}
+          path: install
+
+      - name: Prepare test environment
+        run: |
+          echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Sanity checks
+        run: |
+          echo "PATH:       $PATH"
+          echo "which ghdl: $(which ghdl)"
+          ghdl version
+
+      - name: Run tests in testsuite
+        run: |
+          cd testsuite
+          ./testsuite.sh
 
   Package:
-    name: Test GHDL on Windows Server + MSYS2
+    name: Package GHDL on Windows Server + MSYS2
     runs-on: windows-latest
     needs:
       - Build

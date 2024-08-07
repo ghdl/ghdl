@@ -79,6 +79,9 @@ jobs:
   LaTeX:
     name: 📓 Converting LaTeX Documentation to PDF
     runs-on: ubuntu-24.04
+    needs:
+      - Sphinx
+
     steps:
       - name: 📥 Download artifacts '${{ inputs.latex_artifact }}' from 'Sphinx' job
         uses: actions/download-artifact@v4

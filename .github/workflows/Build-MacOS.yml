@@ -7,16 +7,25 @@ on:
         description: 'JSON list with environment fields, naming the system and backend for compilation.'
         required: true
         type: string
+      macos_image:
+        description: 'Name of the macOS image.'
+        required: false
+        default: 'macos-latest'
+        type: string
       gnat_version:
         description: 'Version of the downloaded GNAT compiler (pre-compiled) from https://github.com/alire-project/GNAT-FSF-builds'
         required: false
         default: '14.1.0-3'
         type: string
+      macos_artifact:
+        description: 'Name of the macOS build artifact.'
+        required: true
+        type: string
 
 jobs:
   Build:
     name: Build GHDL on macOS 14.0 (aarch64)
-    runs-on: macos-latest
+    runs-on: ${{ inputs.macos_image }}
 
     strategy:
       fail-fast: false
@@ -41,6 +50,7 @@ jobs:
           brew install llvm
 
           echo "LLVM_BINARY_PATH=$(brew --prefix llvm)/bin" >> $GITHUB_ENV
+
       - name: Install GNAT
         run: |
           GNAT_NAME="gnat-${{ env.GNAT_ARCH }}-darwin-${{ inputs.gnat_version }}"
@@ -59,7 +69,7 @@ jobs:
 
           echo "GNAT_BINARY_PATH=$(pwd)/gnat/bin" >> $GITHUB_ENV
 
-      - name: Prepare build environemnt
+      - name: Prepare build environment
         run: |
           mkdir -p build/${{ matrix.backend }}
           echo "PATH=$GNAT_BINARY_PATH:$LLVM_BINARY_PATH:$PATH" >> $GITHUB_ENV
@@ -86,7 +96,7 @@ jobs:
           GNATMAKE="gnatmake -j$NPROC" \
           MAKE="make -j$NPROC" \
           LDFLAGS=-Wl,-ld_classic \
-          ../../configure --prefix=/opt/ghdl-${{ matrix.backend }} $LLVM_ARGS
+          ../../configure --prefix=../../install $LLVM_ARGS
 
       - name: 🔨 Make
         run: |
@@ -98,17 +108,17 @@ jobs:
           cd build/${{ matrix.backend }}
           sudo make install
 
-      - name: 📤 Upload 'GHDL' artifact
+      - name: 📤 Upload '${{ inputs.macos_artifact }}-14.0-aarch64-${{ matrix.backend }}' artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ghdl-macos-14.0-aarch64-${{ matrix.backend }}
-          path: /opt/ghdl-${{ matrix.backend }}/
+          name: ${{ inputs.macos_artifact }}-14.0-aarch64-${{ matrix.backend }}
+          path: ./install
           if-no-files-found: error
           retention-days: 1
 
   Test:
     name: Test GHDL on macOS 14.0 (aarch64)
-    runs-on: macos-latest
+    runs-on: ${{ inputs.macos_image }}
     needs:
       - Build
 
@@ -129,3 +139,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ghdl/ghdl
+
+      - name: 📥 Download artifacts '${{ inputs.macos_artifact }}-14.0-aarch64-${{ matrix.backend }}' from 'Build' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.macos_artifact }}-14.0-aarch64-${{ matrix.backend }}
+          path: install
+
+      - name: Prepare test environment
+        run: |
+          echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Sanity checks
+        run: |
+          echo "PATH:       $PATH"
+          echo "which ghdl: $(which ghdl)"
+          ghdl version
+
+      - name: Run tests in testsuite
+        run: |
+          cd testsuite
+          ./testsuite.sh
