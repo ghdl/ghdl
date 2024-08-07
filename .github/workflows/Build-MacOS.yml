@@ -1,0 +1,107 @@
+name: Building on macOS 14 (aarch64) (Matrix)
+
+on:
+  workflow_call:
+    inputs:
+      jobs:
+        description: 'JSON list with environment fields, naming the system and backend for compilation.'
+        required: true
+        type: string
+      gnat_version:
+        description: 'Version of the downloaded GNAT compiler (pre-compiled) from https://github.com/alire-project/GNAT-FSF-builds'
+        required: false
+        default: '14.1.0-3'
+        type: string
+
+jobs:
+  CompileMacOS:
+    name: Compile GHDL on macOS 14.0 (aarch64)
+    runs-on: macos-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(inputs.jobs) }}
+
+    env:
+      GNAT_ARCH: "aarch64"
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ghdl/ghdl
+
+      - name: Install dependencies
+        run: |
+          brew install llvm
+
+          echo "LLVM_BINARY_PATH=$(brew --prefix llvm)/bin" >> $GITHUB_ENV
+      - name: Install GNAT
+        run: |
+          GNAT_NAME="gnat-${{ env.GNAT_ARCH }}-darwin-${{ inputs.gnat_version }}"
+          GNAT_URL="https://github.com/alire-project/GNAT-FSF-builds/releases/download/gnat-${{ inputs.gnat_version }}/${GNAT_NAME}.tar.gz"
+
+          echo "Downloading GNAT ${{ inputs.gnat_version }} (${{ env.GNAT_ARCH }}) from '$GNAT_URL'"
+          wget -q --show-progress --progress=bar:force:noscroll -O GNAT.tar.gz "$GNAT_URL"
+          test $? -ne 0 && echo -e "ERROR: Downloading '$GNAT_URL'" && exit 1
+          ls -lAh
+
+          tar -zxf GNAT.tar.gz && rm GNAT.tar.gz
+          test $? -ne 0 && echo -e "ERROR: Extracting 'GNAT.tar.gz'" && exit 1
+          mv ${GNAT_NAME} gnat
+
+          ./gnat/bin/gnatls -v
+
+          echo "GNAT_BINARY_PATH=$(pwd)/gnat/bin" >> $GITHUB_ENV
+
+      - name: Prepare build environemnt
+        run: |
+          mkdir -p build/${{ matrix.backend }}
+          echo "PATH=$GNAT_BINARY_PATH:$LLVM_BINARY_PATH:$PATH" >> $GITHUB_ENV
+
+      - name: Check build environemnt
+        run: |
+          echo $PATH
+          echo "which gnat:        $(which gnat) ($($(which gnat) --version))"
+          echo "which gnatmake:    $(which gnatmake) ($($(which gnatmake) --version))"
+          echo "which llvm-config: $(which llvm-config) ($($(which llvm-config) --version))"
+
+      - name: ⚙ Configure
+        run: |
+          cd build/${{ matrix.backend }}
+          [ '${{ matrix.backend }}' == 'llvm' ] && LLVM_ARGS='--with-llvm-config' || unset LLVM_ARGS
+
+          # Use static libs (including libzstd) and dead-strip (to avoid libz3)
+          libzstd=$(brew --prefix zstd)/lib/libzstd.a
+          export LLVM_LDFLAGS="$(llvm-config --link-static --libfiles --system-libs | sed -e s@-lzstd@$libzstd@) -Wl,-dead_strip,-dead_strip_dylibs"
+          echo $LLVM_LDFLAGS
+
+          # Use classic ld and not lld (which simply crashes)
+          NPROC=$(sysctl -n hw.logicalcpu)
+          GNATMAKE="gnatmake -j$NPROC" \
+          MAKE="make -j$NPROC" \
+          LDFLAGS=-Wl,-ld_classic \
+          ../../configure --prefix=/opt/ghdl-${{ matrix.backend }} $LLVM_ARGS
+
+      - name: 🔨 Make
+        run: |
+          cd build/${{ matrix.backend }}
+          make
+
+      - name: 📋 Install
+        run: |
+          cd build/${{ matrix.backend }}
+          sudo make install
+
+      - name: 📤 Upload 'GHDL' artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghdl-macos-14.0-aarch64-${{ matrix.backend }}
+          path: /opt/ghdl-${{ matrix.backend }}/
+          if-no-files-found: error
+          retention-days: 1
