@@ -9,8 +9,8 @@ on:
         type: string
 
 jobs:
-  CompileUbuntu:
-    name: Compile GHDL on Ubuntu 2024.04 (LTS)
+  Build:
+    name: Build GHDL on Ubuntu 2024.04 (LTS)
     runs-on: "ubuntu-24.04"
 
     strategy:
@@ -66,3 +66,24 @@ jobs:
           path: /opt/ghdl-${{ matrix.backend }}/
           if-no-files-found: error
           retention-days: 1
+
+  Test:
+    name: Test GHDL on Ubuntu 2024.04 (LTS)
+    runs-on: "ubuntu-24.04"
+    needs:
+      - Build
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(inputs.jobs) }}
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ghdl/ghdl

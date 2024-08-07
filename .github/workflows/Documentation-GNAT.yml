@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  GNATdoc:
+  Documentation:
     name: '📚 GNATdoc'
     runs-on: ubuntu-latest
 
