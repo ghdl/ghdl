@@ -1,0 +1,68 @@
+name: Building on Ubuntu 24.04 (Matrix)
+
+on:
+  workflow_call:
+    inputs:
+      jobs:
+        description: 'JSON list with environment fields, naming the system and backend for compilation.'
+        required: true
+        type: string
+
+jobs:
+  CompileUbuntu:
+    name: Compile GHDL on Ubuntu 2024.04 (LTS)
+    runs-on: "ubuntu-24.04"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(inputs.jobs) }}
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ghdl/ghdl
+
+      - name: 🔧 Install dependencies
+        run: |
+          [ '${{ matrix.backend }}' == 'llvm' ] && LLVM_ARGS='llvm clang' || unset LLVM_ARGS
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc g++ gnat $LLVM_ARGS
+
+      - name: Prepare build environemnt
+        run: |
+          mkdir -p build/${{ matrix.backend }}
+          ./configure --help
+
+      - name: ⚙ Configure
+        run: |
+          cd build/${{ matrix.backend }}
+          [ '${{ matrix.backend }}' == 'llvm' ] && LLVM_ARGS='--with-llvm-config' || unset LLVM_ARGS
+
+          NPROC=$(nproc)
+          GNATMAKE="gnatmake -j$NPROC" \
+          MAKE="make -j$NPROC" \
+          ../../configure --prefix=/opt/ghdl-${{ matrix.backend }} $LLVM_ARGS
+
+      - name: 🔨 Make
+        run: |
+          cd build/${{ matrix.backend }}
+          make
+
+      - name: 📋 Install
+        run: |
+          cd build/${{ matrix.backend }}
+          sudo make install
+
+      - name: 📤 Upload 'GHDL' artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghdl-ubuntu-24.04-x86_64-${{ matrix.backend }}
+          path: /opt/ghdl-${{ matrix.backend }}/
+          if-no-files-found: error
+          retention-days: 1

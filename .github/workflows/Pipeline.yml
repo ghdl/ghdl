@@ -1,0 +1,11 @@
+name: Build, Package and Test GHDL
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  Ubuntu:
+    uses: ./.github/workflows/Build-Ubuntu.yml
+    with:
+      jobs: "[{'icon': 'x', 'backend': 'mcode'}, {'icon': 'y', 'backend': 'llvm'}]"
