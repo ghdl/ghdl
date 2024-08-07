@@ -22,3 +22,14 @@ jobs:
           {'icon': 'x', 'backend': 'mcode'},
           {'icon': 'y', 'backend': 'llvm' }
         ]
+
+  Windows:
+    uses: ./.github/workflows/Build-MSYS2.yml
+    with:
+      jobs: |
+        [
+          {'icon': 'Mx', 'runtime': 'MINGW64', 'backend': 'mcode'},
+          {'icon': 'My', 'runtime': 'MINGW64', 'backend': 'llvm' },
+          {'icon': 'Ux', 'runtime': 'UCRT64',  'backend': 'mcode'},
+          {'icon': 'Uy', 'runtime': 'UCRT64',  'backend': 'llvm' }
+        ]
