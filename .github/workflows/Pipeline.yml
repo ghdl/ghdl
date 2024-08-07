@@ -17,7 +17,7 @@ jobs:
   macOS:
     uses: ./.github/workflows/Build-MacOS.yml
     with:
-      jobs: "[{'icon': 'x', 'backend': 'mcode'}]"
+      jobs: "[{'icon': 'x', 'backend': 'llvm'}]"
 #      jobs: |
 #        [
 #          {'icon': 'x', 'backend': 'mcode'},
@@ -34,6 +34,9 @@ jobs:
           {'icon': 'Ux', 'runtime': 'UCRT64',  'backend': 'mcode'},
           {'icon': 'Uy', 'runtime': 'UCRT64',  'backend': 'llvm' }
         ]
+
+  Python:
+    uses: ./.github/workflows/Build-pyGHDL.yml
 
   GNATdoc:
     uses: ./.github/workflows/Documentation-GNAT.yml
@@ -53,6 +56,7 @@ jobs:
       - Ubuntu
       - macOS
       - Windows
+      - Python
       - PublishToGitHubPages
     steps:
       - name: "Dummy"
