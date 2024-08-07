@@ -17,11 +17,12 @@ jobs:
   macOS:
     uses: ./.github/workflows/Build-MacOS.yml
     with:
-      jobs: |
-        [
-          {'icon': 'x', 'backend': 'mcode'},
-          {'icon': 'y', 'backend': 'llvm' }
-        ]
+      jobs: "[{'icon': 'x', 'backend': 'mcode'}]"
+#      jobs: |
+#        [
+#          {'icon': 'x', 'backend': 'mcode'},
+#          {'icon': 'y', 'backend': 'llvm' }
+#        ]
 
   Windows:
     uses: ./.github/workflows/Build-MSYS2.yml
@@ -45,3 +46,14 @@ jobs:
       - GNATdoc
       - Sphinx
     uses: ./.github/workflows/Publish-GitHubPages.yml
+
+  Release:
+    runs-on: ubuntu-24.04
+    needs:
+      - Ubuntu
+      - macOS
+      - Windows
+      - PublishToGitHubPages
+    steps:
+      - name: "Dummy"
+        run: echo "Dummy"

@@ -9,8 +9,8 @@ on:
         type: string
 
 jobs:
-  CompileWindows:
-    name: Compile GHDL on Windows Server
+  Build:
+    name: Build GHDL on Windows Server + MSYS2
     runs-on: windows-latest
 
     env:
@@ -86,3 +86,99 @@ jobs:
           path: ./install/ghdl-${{ matrix.runtime }}-${{ matrix.backend }}/
           if-no-files-found: error
           retention-days: 1
+
+  Test:
+    name: Test GHDL on Windows Server + MSYS2
+    runs-on: windows-latest
+    needs:
+      - Build
+
+    env:
+      msys2_packages: ""
+      common_packages: ""
+      mcode_packages: ""
+      llvm_packages: "llvm:p"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(inputs.jobs) }}
+
+    defaults:
+      run:
+        shell: "msys2 {0}"
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ghdl/ghdl
+
+      - name: '🟦 Setup MSYS2 for ${{ matrix.runtime }}'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.runtime }}
+          update: true
+          install: ${{ env.msys2_packages }}
+          pacboy: "${{ env.common_packages }} ${{ env.mcode_packages }} ${{ env.llvm_packages }}"
+
+  Package:
+    name: Test GHDL on Windows Server + MSYS2
+    runs-on: windows-latest
+    needs:
+      - Build
+
+    env:
+      msys2_packages: ""
+      common_packages: ""
+      mcode_packages: ""
+      llvm_packages: "llvm:p"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(inputs.jobs) }}
+
+    defaults:
+      run:
+        shell: "msys2 {0}"
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ghdl/ghdl
+
+      - name: '🟦 Setup MSYS2 for ${{ matrix.runtime }}'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.runtime }}
+          update: true
+          install: ${{ env.msys2_packages }}
+          pacboy: "${{ env.common_packages }} ${{ env.mcode_packages }} ${{ env.llvm_packages }}"
+
+  Install:
+    name: Install and Test GHDL on Windows Server + MSYS2
+    runs-on: windows-latest
+    needs:
+      - Package
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(inputs.jobs) }}
+
+    defaults:
+      run:
+        shell: "msys2 {0}"
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ghdl/ghdl
+
+      - name: '🟦 Setup MSYS2 for ${{ matrix.runtime }}'
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
