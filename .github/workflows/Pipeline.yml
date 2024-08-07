@@ -104,10 +104,10 @@ jobs:
     with:
       jobs: |
         [
-          {'icon': 'Mx', 'runtime': 'MINGW64', 'backend': 'mcode'},
-          {'icon': 'My', 'runtime': 'MINGW64', 'backend': 'llvm' },
-          {'icon': 'Ux', 'runtime': 'UCRT64',  'backend': 'mcode'},
-          {'icon': 'Uy', 'runtime': 'UCRT64',  'backend': 'llvm' }
+          {'icon': 'Mx', 'runtime': 'mingw64', 'backend': 'mcode'},
+          {'icon': 'My', 'runtime': 'mingw64', 'backend': 'llvm' },
+          {'icon': 'Ux', 'runtime': 'ucrt64',  'backend': 'mcode'},
+          {'icon': 'Uy', 'runtime': 'ucrt64',  'backend': 'llvm' }
         ]
       windows_artifact: ghdl-windows
 

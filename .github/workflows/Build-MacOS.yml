@@ -108,6 +108,14 @@ jobs:
           cd build/${{ matrix.backend }}
           sudo make install
 
+      - name: Run 'sanity' from testsuite
+        run: |
+          export GHDL=$(pwd)/install/bin/ghdl
+          cd testsuite
+
+          # no pyunit
+          ./testsuite.sh sanity
+
       - name: 📤 Upload '${{ inputs.macos_artifact }}-14.0-aarch64-${{ matrix.backend }}' artifact
         uses: actions/upload-artifact@v4
         with:
