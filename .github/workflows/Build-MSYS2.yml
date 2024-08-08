@@ -16,6 +16,10 @@ on:
         description: 'GHDL backend'
         required: true
         type: string
+      testsuites:
+        description: 'GHDL testsuites'
+        required: true
+        type: string
       windows_artifact:
         description: 'Name of the Windows build artifact.'
         required: true
@@ -163,7 +167,12 @@ jobs:
           cd testsuite
 
           # no pyunit
-          ./testsuite.sh sanity gna vests synth vpi vhpi
+          if [ '${{ inputs.testsuites }}' == 'all' ]; then
+            TESTSUITES="sanity gna vests synth vpi vhpi"
+          else
+            TESTSUITES="${{ inputs.testsuites }}"
+          fi
+          ./testsuite.sh $TESTSUITES
 
   Package:
     name: Package GHDL on Windows Server + MSYS2
