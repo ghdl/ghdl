@@ -100,7 +100,6 @@ jobs:
         with:
           name: ${{ inputs.latex_artifact }}
           path: doc/_build/latex
-            doc/_build/man
 
   LaTeX:
     name: 📓 Converting LaTeX Documentation to PDF

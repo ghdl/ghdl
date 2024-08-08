@@ -34,6 +34,7 @@
 # ============================================================================
 #
 from pathlib             import Path
+from setuptools          import setup
 from pyTooling.Licensing import GPL_2_0_or_later
 from pyTooling.Packaging import DescribePythonPackageHostedOnGitHub
 
@@ -43,30 +44,32 @@ packageDirectory = packageName
 packageInformationFile = Path(f"{packageDirectory}/__init__.py")
 requirementsFile = Path(f"{packageDirectory}/requirements.txt")
 
-DescribePythonPackageHostedOnGitHub(
-    packageName=packageName,
-    description="Python binding for GHDL and high-level APIs (incl. LSP).",
-    license=GPL_2_0_or_later,
-    gitHubNamespace=gitHubNamespace,
-    sourceFileWithVersion=packageInformationFile,
-    requirementsFile=requirementsFile,
-    developmentStatus="beta",
-    classifiers=[
-        "Operating System :: MacOS",
-        "Operating System :: Microsoft :: Windows :: Windows 10",
-        "Operating System :: POSIX :: Linux",
-        "Intended Audience :: Developers",
-        "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
-        "Topic :: Software Development :: Code Generators",
-        "Topic :: Software Development :: Compilers",
-        "Topic :: Software Development :: Testing",
-        "Topic :: Utilities",
-    ],
-    consoleScripts={
-        "ghdl-ls": "pyGHDL.cli.lsp:main",
-        "ghdl-dom": "pyGHDL.cli.dom:main"
-    },
-    dataFiles={
-        packageName: ["py.typed"]
-    }
+setup(
+    **DescribePythonPackageHostedOnGitHub(
+        packageName=packageName,
+        description="Python binding for GHDL and high-level APIs (incl. LSP).",
+        license=GPL_2_0_or_later,
+        gitHubNamespace=gitHubNamespace,
+        sourceFileWithVersion=packageInformationFile,
+        requirementsFile=requirementsFile,
+        developmentStatus="beta",
+        classifiers=[
+            "Operating System :: MacOS",
+            "Operating System :: Microsoft :: Windows :: Windows 10",
+            "Operating System :: POSIX :: Linux",
+            "Intended Audience :: Developers",
+            "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+            "Topic :: Software Development :: Code Generators",
+            "Topic :: Software Development :: Compilers",
+            "Topic :: Software Development :: Testing",
+            "Topic :: Utilities",
+        ],
+        consoleScripts={
+            "ghdl-ls": "pyGHDL.cli.lsp:main",
+            "ghdl-dom": "pyGHDL.cli.dom:main"
+        },
+        dataFiles={
+            packageName: ["py.typed"]
+        }
+    )
 )
