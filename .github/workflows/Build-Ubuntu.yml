@@ -12,6 +12,10 @@ on:
         description: 'GHDL backend'
         required: true
         type: string
+      testsuites:
+        description: 'GHDL testsuites'
+        required: true
+        type: string
       ubuntu_artifact:
         description: 'Name of the Ubuntu build artifact.'
         required: true
@@ -142,7 +146,12 @@ jobs:
           cd testsuite
 
           # no pyunit
-          ./testsuite.sh sanity gna vests synth vpi vhpi
+          if [ '${{ inputs.testsuites }}' == 'all' ]; then
+            TESTSUITES="sanity gna vests synth vpi vhpi"
+          else
+            TESTSUITES="${{ inputs.testsuites }}"
+          fi
+          ./testsuite.sh $TESTSUITES
 
   Sphinx:
     uses: ./.github/workflows/Documentation-Sphinx.yml

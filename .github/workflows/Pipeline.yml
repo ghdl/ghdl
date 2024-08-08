@@ -84,10 +84,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {'icon': 'x', 'backend': 'mcode'}
-          - {'icon': 'y', 'backend': 'llvm' }
+          - {'icon': 'x', 'backend': 'mcode', 'testsuites': 'all'}
+          - {'icon': 'y', 'backend': 'llvm',  'testsuites': 'all'}
     with:
       backend: ${{ matrix.backend }}
+      testsuites: ${{ matrix.testsuites }}
       ubuntu_artifact: ghdl-ubuntu
       html_artifact: 'documentation-html'
       latex_document: 'ghdl'
@@ -97,12 +98,13 @@ jobs:
   macOS:
     uses: ./.github/workflows/Build-MacOS.yml
     with:
-      jobs: "[{'icon': 'x', 'backend': 'llvm'}]"
+      jobs: "[{'icon': 'x', 'backend': 'llvm', 'testsuites': 'all'}]"
 #      jobs: |
 #        [
-#          {'icon': 'x', 'backend': 'mcode'},
-#          {'icon': 'y', 'backend': 'llvm' }
+#          {'icon': 'x', 'backend': 'mcode', 'testsuites': 'all'},
+#          {'icon': 'y', 'backend': 'llvm',  'testsuites': 'all'}
 #        ]
+#      testsuites: ${{ matrix.testsuites }}
       macos_artifact: ghdl-macos
 
   Windows:
@@ -111,13 +113,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {'icon': 'Mx', 'runtime': 'mingw64', 'backend': 'mcode'}
-          - {'icon': 'My', 'runtime': 'mingw64', 'backend': 'llvm' }
-          - {'icon': 'Ux', 'runtime': 'ucrt64',  'backend': 'mcode'}
-          - {'icon': 'Uy', 'runtime': 'ucrt64',  'backend': 'llvm' }
+          - {'icon': 'Mx', 'runtime': 'mingw64', 'backend': 'mcode', 'testsuites': 'all'}
+          - {'icon': 'My', 'runtime': 'mingw64', 'backend': 'llvm',  'testsuites': 'sanity gna vpi vhpi'}    # no vests
+          - {'icon': 'Ux', 'runtime': 'ucrt64',  'backend': 'mcode', 'testsuites': 'all'}
+          - {'icon': 'Uy', 'runtime': 'ucrt64',  'backend': 'llvm',  'testsuites': 'sanity gna vpi vhpi'}    # no vests, synth
     with:
       runtime: ${{ matrix.runtime }}
       backend: ${{ matrix.backend }}
+      testsuites: ${{ matrix.testsuites }}
       windows_artifact: ghdl-windows
 
   Python:
