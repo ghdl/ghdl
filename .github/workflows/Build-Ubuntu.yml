@@ -3,14 +3,14 @@ name: Building on Ubuntu 24.04 (Matrix)
 on:
   workflow_call:
     inputs:
-      jobs:
-        description: 'JSON list with environment fields, naming the system and backend for compilation.'
-        required: true
-        type: string
       ubuntu_image:
         description: 'Name of the Ubuntu image.'
         required: false
         default: 'ubuntu-24.04'
+        type: string
+      backend:
+        description: 'GHDL backend'
+        required: true
         type: string
       ubuntu_artifact:
         description: 'Name of the Ubuntu build artifact.'
@@ -21,11 +21,6 @@ jobs:
   Build:
     name: Build GHDL on Ubuntu 2024.04 (LTS)
     runs-on: ${{ inputs.ubuntu_image }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJson(inputs.jobs) }}
 
     defaults:
       run:
@@ -39,19 +34,19 @@ jobs:
 
       - name: 🔧 Install dependencies
         run: |
-          [ '${{ matrix.backend }}' == 'llvm' ] && LLVM_ARGS='llvm clang' || unset LLVM_ARGS
+          [ '${{ inputs.backend }}' == 'llvm' ] && LLVM_ARGS='llvm clang' || unset LLVM_ARGS
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends gcc g++ gnat $LLVM_ARGS
 
       - name: Prepare build environment
         run: |
-          mkdir -p build/${{ matrix.backend }}
+          mkdir -p build/${{ inputs.backend }}
           ./configure --help
 
       - name: ⚙ Configure
         run: |
-          cd build/${{ matrix.backend }}
-          [ '${{ matrix.backend }}' == 'llvm' ] && LLVM_ARGS='--with-llvm-config' || unset LLVM_ARGS
+          cd build/${{ inputs.backend }}
+          [ '${{ inputs.backend }}' == 'llvm' ] && LLVM_ARGS='--with-llvm-config' || unset LLVM_ARGS
 
           NPROC=$(nproc)
           GNATMAKE="gnatmake -j$NPROC" \
@@ -60,19 +55,19 @@ jobs:
 
       - name: 🔨 Make
         run: |
-          cd build/${{ matrix.backend }}
+          cd build/${{ inputs.backend }}
           make
 
       - name: 📋 Install
         run: |
-          cd build/${{ matrix.backend }}
+          cd build/${{ inputs.backend }}
           sudo make install
 
       - name: 📋 Write requirements file
         run: |
           ls -lAh
           echo "libgnat-13" >> ubuntu.requirements
-          if [ '${{ matrix.backend }}' == 'llvm' ]; then
+          if [ '${{ inputs.backend }}' == 'llvm' ]; then
             echo "libllvm18" >> ubuntu.requirements
           fi
           sudo cp ubuntu.requirements ./install
@@ -85,10 +80,10 @@ jobs:
           # no pyunit
           ./testsuite.sh sanity
 
-      - name: 📤 Upload '${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ matrix.backend }}' artifact
+      - name: 📤 Upload '${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ inputs.backend }}' artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ matrix.backend }}
+          name: ${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ inputs.backend }}
           path: ./install
           if-no-files-found: error
           retention-days: 1
@@ -98,11 +93,6 @@ jobs:
     runs-on: ${{ inputs.ubuntu_image }}
     needs:
       - Build
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJson(inputs.jobs) }}
 
     defaults:
       run:
@@ -114,10 +104,10 @@ jobs:
         with:
           repository: ghdl/ghdl
 
-      - name: 📥 Download artifacts '${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ matrix.backend }}' from 'Build' job
+      - name: 📥 Download artifacts '${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ inputs.backend }}' from 'Build' job
         uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ matrix.backend }}
+          name: ${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ inputs.backend }}
           path: install
 
       - name: Install GHDL (chmod) and prepare test environment
