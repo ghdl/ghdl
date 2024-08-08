@@ -90,7 +90,7 @@ jobs:
       backend: ${{ matrix.backend }}
       ubuntu_artifact: ghdl-ubuntu
       html_artifact: 'documentation-html'
-      latex_document: 'GHDL'
+      latex_document: 'ghdl'
       latex_artifact: 'documentation-latex'
       pdf_artifact: 'documentation-pdf'
 

@@ -52,7 +52,7 @@ jobs:
 
       - name: '🔧 Install dependencies'
         run: |
-          python -m pip install --disable-pip-version-check "pyTooling[packaging]<5.0" wheel
+          python -m pip install --disable-pip-version-check "pyTooling[packaging]" wheel
 
       - name: 🔨 Build Python package (source distribution)
         run: python setup.py sdist
