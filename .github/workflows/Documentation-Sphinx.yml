@@ -3,6 +3,15 @@ name: Auto-generating and assembling main documentation (Sphinx)
 on:
   workflow_call:
     inputs:
+      ubuntu_image:
+        description: 'Name of the Ubuntu image.'
+        required: false
+        default: 'ubuntu-24.04'
+        type: string
+      ghdl_artifact:
+        description: 'Name of the GHDL artifact for Ubuntu.'
+        required: true
+        type: string
       python_version:
         description: 'Python version.'
         required: false
@@ -38,11 +47,28 @@ on:
 jobs:
   Sphinx:
     name: '📓 Sphinx to LaTeX and HTML'
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.ubuntu_image }}
 
     steps:
       - name: '🧰 Checkout'
         uses: actions/checkout@v4
+
+      - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.ghdl_artifact }}
+          path: install
+
+      - name: Install GHDL (chmod) and prepare test environment
+        run: |
+          chmod +x ./install/bin/*
+          sudo xargs -r -a ./install/ubuntu.requirements apt-get install -y --no-install-recommends
+          echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Version check
+        run: |
+          echo "which ghdl: $(which ghdl)"
+          ghdl version
 
       - name: '🐍 Setup Python'
         uses: actions/setup-python@v5
@@ -61,7 +87,7 @@ jobs:
       - name: '📓 Compile LaTeX documentation'
         run: |
           cd ${{ inputs.doc_directory }}
-          make html
+          make latex
 
       - name: '📤 Upload artifact: HTML'
         uses: actions/upload-artifact@v4
@@ -78,7 +104,7 @@ jobs:
 
   LaTeX:
     name: 📓 Converting LaTeX Documentation to PDF
-    runs-on: ubuntu-24.04
+    runs-on: ${{ inputs.ubuntu_image }}
     needs:
       - Sphinx
 

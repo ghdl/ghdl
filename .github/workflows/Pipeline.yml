@@ -124,7 +124,10 @@ jobs:
 #
   Sphinx:
     uses: ./.github/workflows/Documentation-Sphinx.yml
+    needs:
+      - Ubuntu
     with:
+      ghdl_artifact: ghdl-ubuntu-24.04-x86_64-mcode
       html_artifact: 'documentation-html'
       document: 'GHDL'
       latex_artifact: 'documentation-latex'
