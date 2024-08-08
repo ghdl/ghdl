@@ -80,12 +80,14 @@ jobs:
 
   Ubuntu:
     uses: ./.github/workflows/Build-Ubuntu.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {'icon': 'x', 'backend': 'mcode'}
+          - {'icon': 'y', 'backend': 'llvm' }
     with:
-      jobs: |
-        [
-          {'icon': 'x', 'backend': 'mcode'},
-          {'icon': 'y', 'backend': 'llvm' }
-        ]
+      backend: ${{ matrix.backend }}
       ubuntu_artifact: ghdl-ubuntu
 
   macOS:
