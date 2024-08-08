@@ -16,6 +16,22 @@ on:
         description: 'Name of the Ubuntu build artifact.'
         required: true
         type: string
+      html_artifact:
+        description: 'Name of the HTML documentation artifact.'
+        required: true
+        type: string
+      latex_document:
+        description: 'LaTeX root document without *.tex extension.'
+        required: true
+        type: string
+      latex_artifact:
+        description: 'Name of the LaTeX documentation artifact.'
+        required: true
+        type: string
+      pdf_artifact:
+        description: 'Name of the PDF documentation artifact.'
+        required: true
+        type: string
 
 jobs:
   Build:
@@ -127,3 +143,15 @@ jobs:
 
           # no pyunit
           ./testsuite.sh sanity gna vests synth vpi vhpi
+
+  Sphinx:
+    uses: ./.github/workflows/Documentation-Sphinx.yml
+    needs:
+      - build
+    if: inputs.backend == 'mcode'
+    with:
+      ghdl_artifact: ${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ inputs.backend }}
+      html_artifact: ${{ inputs.html_artifact }}
+      latex_document: ${{ inputs.latex_document }}
+      latex_artifact: ${{ inputs.latex_artifact }}
+      pdf_artifact: ${{ inputs.pdf_artifact }}
