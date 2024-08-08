@@ -1,4 +1,5 @@
 -r ../dom/requirements.txt
 
+# pyTooling[packaging] ~= 6.5
 pyTooling>=4.0.1, <5.0
 pyAttributes>=2.3.2
