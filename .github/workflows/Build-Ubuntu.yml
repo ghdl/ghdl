@@ -1,4 +1,4 @@
-name: Building on Ubuntu 24.04 (Matrix)
+name: Building on Ubuntu 24.04
 
 on:
   workflow_call:

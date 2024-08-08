@@ -103,35 +103,38 @@ jobs:
 
   Windows:
     uses: ./.github/workflows/Build-MSYS2.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {'icon': 'Mx', 'runtime': 'mingw64', 'backend': 'mcode'}
+          - {'icon': 'My', 'runtime': 'mingw64', 'backend': 'llvm' }
+          - {'icon': 'Ux', 'runtime': 'ucrt64',  'backend': 'mcode'}
+          - {'icon': 'Uy', 'runtime': 'ucrt64',  'backend': 'llvm' }
     with:
-      jobs: |
-        [
-          {'icon': 'Mx', 'runtime': 'mingw64', 'backend': 'mcode'},
-          {'icon': 'My', 'runtime': 'mingw64', 'backend': 'llvm' },
-          {'icon': 'Ux', 'runtime': 'ucrt64',  'backend': 'mcode'},
-          {'icon': 'Uy', 'runtime': 'ucrt64',  'backend': 'llvm' }
-        ]
+      runtime: ${{ matrix.runtime }}
+      backend: ${{ matrix.backend }}
       windows_artifact: ghdl-windows
 
-#  Python:
-#    uses: ./.github/workflows/Build-pyGHDL.yml
-#
+  Python:
+    uses: ./.github/workflows/Build-pyGHDL.yml
+
 #  GNATdoc:
 #    uses: ./.github/workflows/Documentation-GNAT.yml
 #
-#  Sphinx:
-#    uses: ./.github/workflows/Documentation-Sphinx.yml
-#    with:
-#      html_artifact: 'documentation-html'
-#      document: 'GHDL'
-#      latex_artifact: 'documentation-latex'
-#      pdf_artifact: 'documentation-pdf'
+  Sphinx:
+    uses: ./.github/workflows/Documentation-Sphinx.yml
+    with:
+      html_artifact: 'documentation-html'
+      document: 'GHDL'
+      latex_artifact: 'documentation-latex'
+      pdf_artifact: 'documentation-pdf'
 
-#  PublishToGitHubPages:
-#    needs:
+  PublishToGitHubPages:
+    needs:
 #      - GNATdoc
-#      - Sphinx
-#    uses: ./.github/workflows/Publish-GitHubPages.yml
+      - Sphinx
+    uses: ./.github/workflows/Publish-GitHubPages.yml
 
   Release:
     runs-on: ubuntu-24.04
@@ -139,8 +142,8 @@ jobs:
       - Ubuntu
       - macOS
       - Windows
-#      - Python
-#      - PublishToGitHubPages
+      - Python
+      - PublishToGitHubPages
     steps:
       - name: "Dummy"
         run: echo "Dummy"
