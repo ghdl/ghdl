@@ -743,6 +743,10 @@ package body Vhdl.Configuration is
       Name := Get_Architecture (Hier_Name);
       if Name /= Null_Node then
          Name := Get_Named_Entity (Name);
+         if Name = Null_Iir then
+            --  Architecture name is unknown.
+            return;
+         end if;
          pragma Assert (Get_Kind (Name) = Iir_Kind_Architecture_Body);
       else
          Name := Get_Entity_Name (Hier_Name);
