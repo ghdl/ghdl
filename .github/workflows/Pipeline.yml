@@ -7,10 +7,7 @@ on:
 jobs:
 # Building
 #   Ubuntu (x86-64)
-#     mcode
 #     mcode + GPL
-#     llvm
-#     llvm-jit
 #     gcc
 #   macOS (x86-64)
 #     mcode
@@ -21,28 +18,9 @@ jobs:
 #     llvm-jit
 #   Windows (x86-64)
 #     MinGW64
-#       mcode
-#       llvm
 #       llvm-jit
 #     UCRT64
-#       mcode
-#       llvm
 #       llvm-jit
-
-# Documentation
-#   GNAT
-#   Sphinx
-#     HTML
-#     LaTeX
-#     man
-#   PDF
-
-# Testing from artifact
-#   Ubuntu - mcode
-#   Ubuntu - llvm
-#   Ubuntu - gcc
-#   macOS -  llvm
-#   UCRT64 - llvm
 
 # Windows Standalone - ZIP
 #   UCRT64 - mcode
@@ -84,13 +62,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {'icon': '🐧🟨', 'backend': 'mcode',    'ubuntu_image': 'ubuntu-22.04', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🐧🟨', 'backend': 'llvm',     'ubuntu_image': 'ubuntu-22.04', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🐧🟨', 'backend': 'llvm-jit', 'ubuntu_image': 'ubuntu-22.04', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟨', 'backend': 'mcode',    'ubuntu_image': 'ubuntu-22.04', 'testsuites': 'all' }  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟨', 'backend': 'llvm',     'ubuntu_image': 'ubuntu-22.04', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟨', 'backend': 'llvm-jit', 'ubuntu_image': 'ubuntu-22.04', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
 #          - {'icon': '🐧🟨', 'backend': 'gcc',      'ubuntu_image': 'ubuntu-22.04', 'testsuites': 'all' }    # 'all', 'none' or list of testsuites
-          - {'icon': '🐧🟩', 'backend': 'mcode',    'ubuntu_image': 'ubuntu-24.04', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🐧🟩', 'backend': 'llvm',     'ubuntu_image': 'ubuntu-24.04', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🐧🟩', 'backend': 'llvm-jit', 'ubuntu_image': 'ubuntu-24.04', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟩', 'backend': 'mcode',    'ubuntu_image': 'ubuntu-24.04', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟩', 'backend': 'llvm',     'ubuntu_image': 'ubuntu-24.04', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟩', 'backend': 'llvm-jit', 'ubuntu_image': 'ubuntu-24.04', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
           - {'icon': '🐧🟩', 'backend': 'gcc',      'ubuntu_image': 'ubuntu-24.04', 'testsuites': 'all' }    # 'all', 'none' or list of testsuites
     with:
       ubuntu_image:    ${{ matrix.ubuntu_image }}
@@ -108,12 +86,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {'icon': '🍎🟧', 'backend': 'mode', 'macos_image': 'macos-12', 'gnat_arch': 'x86_64',  'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🍎🟧', 'backend': 'llvm', 'macos_image': 'macos-12', 'gnat_arch': 'x86_64',  'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🍎🟨', 'backend': 'mode', 'macos_image': 'macos-13', 'gnat_arch': 'x86_64',  'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🍎🟨', 'backend': 'llvm', 'macos_image': 'macos-13', 'gnat_arch': 'x86_64',  'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
-#          - {'icon': '🍏🟩', 'backend': 'mode', 'macos_image': 'macos-14', 'gnat_arch': 'aarch64', 'gnat_version': '14.1.0-3', 'testsuites': 'none'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🍏🟩', 'backend': 'llvm', 'macos_image': 'macos-14', 'gnat_arch': 'aarch64', 'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🍎🟧', 'backend': 'mode',     'macos_image': 'macos-12', 'gnat_arch': 'x86_64',  'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🍎🟧', 'backend': 'llvm',     'macos_image': 'macos-12', 'gnat_arch': 'x86_64',  'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🍎🟨', 'backend': 'mode',     'macos_image': 'macos-13', 'gnat_arch': 'x86_64',  'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🍎🟨', 'backend': 'llvm',     'macos_image': 'macos-13', 'gnat_arch': 'x86_64',  'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🍏🟩', 'backend': 'mode',     'macos_image': 'macos-14', 'gnat_arch': 'aarch64', 'gnat_version': '14.1.0-3', 'testsuites': 'none'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🍏🟩', 'backend': 'llvm',     'macos_image': 'macos-14', 'gnat_arch': 'aarch64', 'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🍏🟩', 'backend': 'llvm-jit', 'macos_image': 'macos-14', 'gnat_arch': 'aarch64', 'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
     with:
       macos_image:    ${{ matrix.macos_image }}
       gnat_arch:      ${{ matrix.gnat_arch }}
@@ -128,11 +107,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {'icon': '🪟', 'backend': 'mcode', 'runtime': 'mingw32', 'testsuites': 'all'}  # No gcc-ada package for MinGW32, support was dropped
-          - {'icon': '🪟', 'backend': 'mcode', 'runtime': 'mingw64', 'testsuites': 'none'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🪟', 'backend': 'llvm',  'runtime': 'mingw64', 'testsuites': 'none'}  # sanity gna vpi vhpi'}    # no vests
-          - {'icon': '🪟', 'backend': 'mcode', 'runtime': 'ucrt64',  'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🪟', 'backend': 'llvm',  'runtime': 'ucrt64',  'testsuites': 'none'}  # sanity gna vpi vhpi'}    # no vests, synth
+#          - {'icon': '🪟', 'backend': 'mcode',    'runtime': 'mingw32', 'testsuites': 'all'}  # No gcc-ada package for MinGW32, support was dropped
+          - {'icon': '🪟', 'backend': 'mcode',    'runtime': 'mingw64', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🪟', 'backend': 'llvm',     'runtime': 'mingw64', 'testsuites': 'all'}  # sanity gna vpi vhpi'}    # no vests
+          - {'icon': '🪟', 'backend': 'llvm-jit', 'runtime': 'mingw64', 'testsuites': 'all'}  # sanity gna vpi vhpi'}    # no vests
+          - {'icon': '🪟', 'backend': 'mcode',    'runtime': 'ucrt64',  'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🪟', 'backend': 'llvm',     'runtime': 'ucrt64',  'testsuites': 'all'}  # sanity gna vpi vhpi'}    # no vests, synth
+          - {'icon': '🪟', 'backend': 'llvm-jit', 'runtime': 'ucrt64',  'testsuites': 'all'}  # sanity gna vpi vhpi'}    # no vests, synth
     with:
       runtime:          ${{ matrix.runtime }}
       backend:          ${{ matrix.backend }}
@@ -152,6 +133,19 @@ jobs:
           - {'base_image': 'debian:slim',  'ghdl_artifact': 'ghdl-ubuntu-24.04-x86_64-llvm'}
     with:
       base_image:    ${{ matrix.base_image }}
+      ghdl_artifact: ${{ matrix.ghdl_artifact }}
+
+  Standalone:
+    uses: ./.github/workflows/Package-Windows.yml
+    needs:
+      - Windows
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {'ghdl_artifact': 'ghdl-windows-ucrt64-mcode'}
+          - {'ghdl_artifact': 'ghdl-windows-ucrt64-llvm'}
+    with:
       ghdl_artifact: ${{ matrix.ghdl_artifact }}
 
   Python:
@@ -195,6 +189,8 @@ jobs:
       - Ubuntu
       - macOS
       - Windows
+      - Docker
+      - Standalone
       - PublishToGitHubPages
       - pyGHDL
     steps:
@@ -207,6 +203,8 @@ jobs:
       - Ubuntu
       - macOS
       - Windows
+      - Docker
+      - Standalone
       - PublishToGitHubPages
       - pyGHDL
     steps:
