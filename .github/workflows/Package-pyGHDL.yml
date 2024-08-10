@@ -60,7 +60,7 @@ jobs:
       - name: Copy libghdl files
         run: |
           mkdir -p lib
-          cp -v install/lib/libghdl*.so lib
+          cp -v install/lib/libghdl-*.so lib
 
 #      - name: '📤 Upload artifact: pyGHDL'
 #        uses: actions/upload-artifact@v4
