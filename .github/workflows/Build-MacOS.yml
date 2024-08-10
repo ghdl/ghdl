@@ -130,6 +130,8 @@ jobs:
     needs:
       - Build
 
+    if: inputs.testsuites != 'none'
+
     strategy:
       fail-fast: false
       matrix:
