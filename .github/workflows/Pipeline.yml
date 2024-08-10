@@ -84,8 +84,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {'icon': 'x', 'backend': 'mcode', 'testsuites': 'none'}  # 'all', 'none' or list of testsuites
-#          - {'icon': 'y', 'backend': 'llvm',  'testsuites': 'none'}  # 'all', 'none' or list of testsuites
+          - {'icon': 'x', 'backend': 'mcode',    'testsuites': 'none'}  # 'all', 'none' or list of testsuites
+#          - {'icon': 'y', 'backend': 'llvm',     'testsuites': 'none'}  # 'all', 'none' or list of testsuites
+#          - {'icon': 'y', 'backend': 'llvm-jit', 'testsuites': 'all' }  # 'all', 'none' or list of testsuites
+          - {'icon': 'y', 'backend': 'gcc',      'testsuites': 'all' }  # 'all', 'none' or list of testsuites
     with:
       backend: ${{ matrix.backend }}
       testsuites: ${{ matrix.testsuites }}
