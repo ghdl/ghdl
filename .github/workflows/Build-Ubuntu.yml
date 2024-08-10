@@ -54,9 +54,22 @@ jobs:
 
       - name: 🔧 Install dependencies
         run: |
-          [ '${{ inputs.backend }}' == 'llvm' ] && LLVM_ARGS='llvm clang' || unset LLVM_ARGS
+          [ '${{ inputs.backend }}' == 'llvm' ]     && APT_ARGS='llvm clang'                        || unset LLVM_ARGS
+          [ '${{ inputs.backend }}' == 'llvm-jit' ] && APT_ARGS='llvm clang'                        || unset LLVM_ARGS
+          [ '${{ inputs.backend }}' == 'gcc' ]      && APT_ARGS='libgmp-dev libmpfr-dev libmpc-dev' || unset LLVM_ARGS
+
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends gcc g++ gnat $LLVM_ARGS
+          sudo apt-get install -y --no-install-recommends gcc g++ gnat $APT_ARGS
+
+      - name: "Download GCC sources"
+        if: inputs.backend == 'gcc'
+        run: |
+          GCC_VERSION="14.2.0"
+          GCC_URL="https://github.com/gcc-mirror/gcc/archive/refs/tags/releases/gcc-${GCC_VERSION}.tar.gz"
+          echo "GCC download URL: $GCC_URL"
+          mkdir -p gcc-srcs
+          curl -L "$GCC_URL" | tar -xz -C gcc-srcs --strip-components=1
+          ls -lAh gcc-srcs
 
       - name: Prepare build environment
         run: |
@@ -66,28 +79,59 @@ jobs:
       - name: ⚙ Configure
         run: |
           cd build/${{ inputs.backend }}
-          [ '${{ inputs.backend }}' == 'llvm' ] && LLVM_ARGS='--with-llvm-config' || unset LLVM_ARGS
+
+          [ '${{ inputs.backend }}' == 'llvm' ]     && CONFIG_ARGS='--with-llvm-config CXX=clang++'                 || unset LLVM_ARGS
+          [ '${{ inputs.backend }}' == 'llvm-jit' ] && CONFIG_ARGS='--with-llvm-config --with-llvm-jit CXX=clang++' || unset LLVM_ARGS
+          [ '${{ inputs.backend }}' == 'gcc' ]      && CONFIG_ARGS='--with-gcc=../../gcc-srcs'                      || unset LLVM_ARGS
 
           NPROC=$(nproc)
           GNATMAKE="gnatmake -j$NPROC" \
           MAKE="make -j$NPROC" \
-          ../../configure --prefix=../../install $LLVM_ARGS
+          ../../configure --prefix=../../install $CONFIG_ARGS
+
+      - name: Copy sources
+        if: inputs.backend == 'gcc'
+        run: |
+          cd build/${{ inputs.backend }}
+          make -j$(nproc) copy-sources
+
+      - name: Configure GCC
+        if: inputs.backend == 'gcc'
+        run: |
+          mkdir gcc-objs
+          cd gcc-objs
+
+          ../gcc-srcs/configure \
+            --enable-languages=c,vhdl \
+            --disable-bootstrap \
+            --disable-lto \
+            --disable-multilib \
+            --disable-libssp \
+            --disable-libgomp \
+            --disable-libquadmath \
+            "$(gcc -v 2>&1 | grep -o -- --enable-default-pie)"
 
       - name: 🔨 Make
         run: |
           cd build/${{ inputs.backend }}
-          make
+          make -j$(nproc)
+
+      - name: 🔨 Make ghdllib
+        if: inputs.backend == 'gcc'
+        run: |
+          cd build/${{ inputs.backend }}
+          make -j$(nproc) ghdllib
 
       - name: 📋 Install
         run: |
           cd build/${{ inputs.backend }}
-          sudo make install
+          sudo make -j$(nproc) install
 
       - name: 📋 Write requirements file
         run: |
           ls -lAh
           echo "libgnat-13" >> ubuntu.requirements
-          if [ '${{ inputs.backend }}' == 'llvm' ]; then
+          if [ '${{ inputs.backend }}' == 'llvm' || '${{ inputs.backend }}' == 'llvm-jit' ]; then
             echo "libllvm18" >> ubuntu.requirements
           fi
           sudo cp ubuntu.requirements ./install
@@ -109,51 +153,14 @@ jobs:
           retention-days: 1
 
   Test:
-    name: Test GHDL on Ubuntu 2024.04 (LTS)
-    runs-on: ${{ inputs.ubuntu_image }}
+    uses: ./.github/workflows/Test-Ubuntu.yml
     needs:
-      - Build
-
+      - build
     if: inputs.testsuites != 'none'
-
-    defaults:
-      run:
-        shell: bash
-
-    steps:
-      - name: ⏬ Checkout repository
-        uses: actions/checkout@v4
-        with:
-          repository: ghdl/ghdl
-
-      - name: 📥 Download artifacts '${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ inputs.backend }}' from 'Build' job
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ inputs.backend }}
-          path: install
-
-      - name: Install GHDL (chmod) and prepare test environment
-        run: |
-          chmod +x ./install/bin/*
-          sudo xargs -r -a ./install/ubuntu.requirements apt-get install -y --no-install-recommends
-          echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Version check
-        run: |
-          echo "which ghdl: $(which ghdl)"
-          ghdl version
-
-      - name: Run tests in testsuite
-        run: |
-          cd testsuite
-
-          # no pyunit
-          if [ '${{ inputs.testsuites }}' == 'all' ]; then
-            TESTSUITES="sanity gna vests synth vpi vhpi"
-          else
-            TESTSUITES="${{ inputs.testsuites }}"
-          fi
-          ./testsuite.sh $TESTSUITES
+    with:
+      ubuntu_image:  ${{ inputs.ubuntu_image }}
+      ghdl_artifact: ${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ inputs.backend }}
+      testsuites:    ${{ inputs.testsuites }}
 
   Sphinx:
     uses: ./.github/workflows/Documentation-Sphinx.yml

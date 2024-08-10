@@ -1,0 +1,64 @@
+name: Building on Ubuntu 24.04
+
+on:
+  workflow_call:
+    inputs:
+      ubuntu_image:
+        description: 'Name of the Ubuntu image.'
+        required: false
+        default: 'ubuntu-24.04'
+        type: string
+      ghdl_artifact:
+        description: 'Name of the GHDL artifact.'
+        required: true
+        type: string
+      testsuites:
+        description: 'GHDL testsuites'
+        required: true
+        type: string
+
+jobs:
+  Test:
+    name: Test GHDL on Ubuntu 2024.04 (LTS)
+    runs-on: ${{ inputs.ubuntu_image }}
+
+    if: inputs.testsuites != 'none'
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ghdl/ghdl
+
+      - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.ghdl_artifact }}
+          path: install
+
+      - name: Install GHDL (chmod) and prepare test environment
+        run: |
+          chmod +x ./install/bin/*
+          sudo xargs -r -a ./install/ubuntu.requirements apt-get install -y --no-install-recommends
+          echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Version check
+        run: |
+          echo "which ghdl: $(which ghdl)"
+          ghdl version
+
+      - name: Run tests in testsuite
+        run: |
+          cd testsuite
+
+          # no pyunit
+          if [ '${{ inputs.testsuites }}' == 'all' ]; then
+            TESTSUITES="sanity gna vests synth vpi vhpi"
+          else
+            TESTSUITES="${{ inputs.testsuites }}"
+          fi
+          ./testsuite.sh $TESTSUITES
