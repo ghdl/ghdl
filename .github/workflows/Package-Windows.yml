@@ -1,0 +1,35 @@
+name: Package GHDL as Standalone ZIP
+
+on:
+  workflow_call:
+    inputs:
+      windows_image:
+        description: 'Name of the Windows image.'
+        required: false
+        default: 'windows-latest'
+        type: string
+      ghdl_artifact:
+        description: 'Name of the GHDL artifact.'
+        required: true
+        type: string
+
+jobs:
+  Standalone:
+    name: Package GHDL as Standalone ZIP file
+    runs-on: ${{ inputs.windows_image }}
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ghdl/ghdl
+
+      - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.ghdl_artifact }}
+          path: install

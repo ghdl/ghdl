@@ -129,9 +129,18 @@ jobs:
       - name: 📋 Write requirements file
         run: |
           ls -lAh
-          echo "libgnat-13" >> ubuntu.requirements
+          if [ '${{ inputs.ubuntu_image }}' == 'ubuntu-22.04' ]; then
+            echo "libgnat-10" >> ubuntu.requirements
+          else
+            echo "libgnat-13" >> ubuntu.requirements
+          fi
+
           if [ '${{ inputs.backend }}' == 'llvm' || '${{ inputs.backend }}' == 'llvm-jit' ]; then
-            echo "libllvm18" >> ubuntu.requirements
+            if [ '${{ inputs.ubuntu_image }}' == 'ubuntu-22.04' ]; then
+              echo "libllvm" >> ubuntu.requirements
+            else
+              echo "libllvm18" >> ubuntu.requirements
+            fi
           fi
           sudo cp ubuntu.requirements ./install
 
@@ -165,7 +174,7 @@ jobs:
     uses: ./.github/workflows/Documentation-Sphinx.yml
     needs:
       - build
-    if: inputs.backend == 'mcode'
+    if: inputs.ubuntu_image == 'ubuntu-24.04' && inputs.backend == 'mcode'
     with:
       ghdl_artifact: ${{ inputs.ubuntu_artifact }}-${{ inputs.backend }}
       html_artifact: ${{ inputs.html_artifact }}

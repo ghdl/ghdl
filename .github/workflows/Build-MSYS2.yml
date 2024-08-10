@@ -72,7 +72,8 @@ jobs:
       - name: ⚙ Configure
         run: |
           cd build/${{ inputs.backend }}
-          [ '${{ inputs.backend }}' == 'llvm' ] && LLVM_ARGS='--with-llvm-config' || unset LLVM_ARGS
+          [ '${{ inputs.backend }}' == 'llvm' ] && LLVM_ARGS='--with-llvm-config CXX=clang++'                 || unset LLVM_ARGS
+          [ '${{ inputs.backend }}' == 'llvm' ] && LLVM_ARGS='--with-llvm-config --with-llvm-jit CXX=clang++' || unset LLVM_ARGS
 
           NPROC=$(nproc)
           GNATMAKE="gnatmake -j$NPROC" \
