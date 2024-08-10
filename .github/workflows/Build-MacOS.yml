@@ -1,12 +1,8 @@
-name: Building on macOS 14 (aarch64) (Matrix)
+name: Building on macOS 14 (aarch64)
 
 on:
   workflow_call:
     inputs:
-      jobs:
-        description: 'JSON list with environment fields, naming the system and backend for compilation.'
-        required: true
-        type: string
       macos_image:
         description: 'Name of the macOS image.'
         required: false
@@ -17,6 +13,14 @@ on:
         required: false
         default: '14.1.0-3'
         type: string
+      backend:
+        description: 'GHDL backend'
+        required: true
+        type: string
+      testsuites:
+        description: 'GHDL testsuites'
+        required: true
+        type: string
       macos_artifact:
         description: 'Name of the macOS build artifact.'
         required: true
@@ -26,11 +30,6 @@ jobs:
   Build:
     name: Build GHDL on macOS 14.0 (aarch64)
     runs-on: ${{ inputs.macos_image }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJson(inputs.jobs) }}
 
     env:
       GNAT_ARCH: "aarch64"
@@ -125,51 +124,11 @@ jobs:
           retention-days: 1
 
   Test:
-    name: Test GHDL on macOS 14.0 (aarch64)
-    runs-on: ${{ inputs.macos_image }}
+    uses: ./.github/workflows/Test-Ubuntu.yml
     needs:
-      - Build
-
+      - build
     if: inputs.testsuites != 'none'
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJson(inputs.jobs) }}
-
-    env:
-      GNAT_ARCH: "aarch64"
-
-    defaults:
-      run:
-        shell: bash
-
-    steps:
-      - name: ⏬ Checkout repository
-        uses: actions/checkout@v4
-        with:
-          repository: ghdl/ghdl
-
-      - name: 📥 Download artifacts '${{ inputs.macos_artifact }}-14.0-aarch64-${{ matrix.backend }}' from 'Build' job
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ inputs.macos_artifact }}-14.0-aarch64-${{ matrix.backend }}
-          path: install
-
-      - name: Install GHDL (chmod) and prepare test environment
-        run: |
-          chmod +x ./install/bin/*
-          echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Sanity checks
-        run: |
-          echo "PATH:       $PATH"
-          echo "which ghdl: $(which ghdl)"
-          ghdl version
-
-      - name: Run tests in testsuite
-        run: |
-          cd testsuite
-
-          # no pyunit
-          ./testsuite.sh sanity gna vests synth vpi vhpi
+    with:
+      os_image:      ${{ inputs.macos_image }}
+      ghdl_artifact: ${{ inputs.macos_artifact }}-14.0-aarch64-${{ matrix.backend }}
+      testsuites:    ${{ inputs.testsuites }}

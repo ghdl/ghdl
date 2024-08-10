@@ -97,17 +97,17 @@ jobs:
       latex_artifact: '' # 'documentation-latex'
       pdf_artifact:   '' # 'documentation-pdf'
 
-#  macOS:
-#    uses: ./.github/workflows/Build-MacOS.yml
-#    with:
-#      jobs: "[{'icon': 'x', 'backend': 'llvm', 'testsuites': 'none'}]"
-##      jobs: |
-##        [
-##          {'icon': 'x', 'backend': 'mcode', 'testsuites': 'all'},
-##          {'icon': 'y', 'backend': 'llvm',  'testsuites': 'all'}
-##        ]
-##      testsuites: ${{ matrix.testsuites }}
-#      macos_artifact: ghdl-macos
+  macOS:
+    uses: ./.github/workflows/Build-MacOS.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+#          - {'icon': 'x', 'backend': 'mode', 'testsuites': 'none'}
+          - {'icon': 'x', 'backend': 'llvm', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+    with:
+      macos_artifact: ghdl-macos
+      testsuites: ${{ matrix.testsuites }}
 
   Windows:
     uses: ./.github/workflows/Build-MSYS2.yml
