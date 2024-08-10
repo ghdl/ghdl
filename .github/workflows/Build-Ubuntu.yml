@@ -1,12 +1,11 @@
-name: Building on Ubuntu 24.04
+name: Building on Ubuntu
 
 on:
   workflow_call:
     inputs:
       ubuntu_image:
         description: 'Name of the Ubuntu image.'
-        required: false
-        default: 'ubuntu-24.04'
+        required: true
         type: string
       backend:
         description: 'GHDL backend'
@@ -39,7 +38,7 @@ on:
 
 jobs:
   Build:
-    name: Build GHDL on Ubuntu 2024.04 (LTS)
+    name: Build GHDL on '${{ inputs.ubuntu_image }}'
     runs-on: ${{ inputs.ubuntu_image }}
 
     defaults:
@@ -144,10 +143,10 @@ jobs:
           # no pyunit
           ./testsuite.sh sanity
 
-      - name: 📤 Upload '${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ inputs.backend }}' artifact
+      - name: 📤 Upload '${{ inputs.ubuntu_artifact }}-${{ inputs.backend }}' artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ inputs.backend }}
+          name: ${{ inputs.ubuntu_artifact }}-${{ inputs.backend }}
           path: ./install
           if-no-files-found: error
           retention-days: 1
@@ -159,7 +158,7 @@ jobs:
     if: inputs.testsuites != 'none'
     with:
       os_image:      ${{ inputs.ubuntu_image }}
-      ghdl_artifact: ${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ inputs.backend }}
+      ghdl_artifact: ${{ inputs.ubuntu_artifact }}-${{ inputs.backend }}
       testsuites:    ${{ inputs.testsuites }}
 
   Sphinx:
@@ -168,7 +167,7 @@ jobs:
       - build
     if: inputs.backend == 'mcode'
     with:
-      ghdl_artifact: ${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ inputs.backend }}
+      ghdl_artifact: ${{ inputs.ubuntu_artifact }}-${{ inputs.backend }}
       html_artifact: ${{ inputs.html_artifact }}
       latex_document: ${{ inputs.latex_document }}
       latex_artifact: ${{ inputs.latex_artifact }}

@@ -1,17 +1,19 @@
-name: Building on macOS 14 (aarch64)
+name: Building on macOS
 
 on:
   workflow_call:
     inputs:
       macos_image:
         description: 'Name of the macOS image.'
-        required: false
-        default: 'macos-latest'
+        required: true
+        type: string
+      gnat_arch:
+        description: 'Architecture of the downloaded GNAT compiler (pre-compiled) from https://github.com/alire-project/GNAT-FSF-builds'
+        required: true
         type: string
       gnat_version:
         description: 'Version of the downloaded GNAT compiler (pre-compiled) from https://github.com/alire-project/GNAT-FSF-builds'
-        required: false
-        default: '14.1.0-3'
+        required: true
         type: string
       backend:
         description: 'GHDL backend'
@@ -28,11 +30,8 @@ on:
 
 jobs:
   Build:
-    name: Build GHDL on macOS 14.0 (aarch64)
+    name: Build GHDL on '${{ inputs.macos_image }}'
     runs-on: ${{ inputs.macos_image }}
-
-    env:
-      GNAT_ARCH: "aarch64"
 
     defaults:
       run:
@@ -52,10 +51,10 @@ jobs:
 
       - name: Install GNAT
         run: |
-          GNAT_NAME="gnat-${{ env.GNAT_ARCH }}-darwin-${{ inputs.gnat_version }}"
+          GNAT_NAME="gnat-${{ inputs.gnat_arch }}-darwin-${{ inputs.gnat_version }}"
           GNAT_URL="https://github.com/alire-project/GNAT-FSF-builds/releases/download/gnat-${{ inputs.gnat_version }}/${GNAT_NAME}.tar.gz"
 
-          echo "Downloading GNAT ${{ inputs.gnat_version }} (${{ env.GNAT_ARCH }}) from '$GNAT_URL'"
+          echo "Downloading GNAT ${{ inputs.gnat_version }} (${{ inputs.gnat_arch }}) from '$GNAT_URL'"
           wget -q --show-progress --progress=bar:force:noscroll -O GNAT.tar.gz "$GNAT_URL"
           test $? -ne 0 && echo -e "ERROR: Downloading '$GNAT_URL'" && exit 1
           ls -lAh
@@ -70,7 +69,7 @@ jobs:
 
       - name: Prepare build environment
         run: |
-          mkdir -p build/${{ matrix.backend }}
+          mkdir -p build/${{ inputs.backend }}
           echo "PATH=$GNAT_BINARY_PATH:$LLVM_BINARY_PATH:$PATH" >> $GITHUB_ENV
 
       - name: Check build environemnt
@@ -82,8 +81,8 @@ jobs:
 
       - name: ⚙ Configure
         run: |
-          cd build/${{ matrix.backend }}
-          [ '${{ matrix.backend }}' == 'llvm' ] && LLVM_ARGS='--with-llvm-config' || unset LLVM_ARGS
+          cd build/${{ inputs.backend }}
+          [ '${{ inputs.backend }}' == 'llvm' ] && LLVM_ARGS='--with-llvm-config' || unset LLVM_ARGS
 
           # Use static libs (including libzstd) and dead-strip (to avoid libz3)
           libzstd=$(brew --prefix zstd)/lib/libzstd.a
@@ -99,12 +98,12 @@ jobs:
 
       - name: 🔨 Make
         run: |
-          cd build/${{ matrix.backend }}
+          cd build/${{ inputs.backend }}
           make
 
       - name: 📋 Install
         run: |
-          cd build/${{ matrix.backend }}
+          cd build/${{ inputs.backend }}
           sudo make install
 
       - name: Run 'sanity' from testsuite
@@ -115,10 +114,10 @@ jobs:
           # no pyunit
           ./testsuite.sh sanity
 
-      - name: 📤 Upload '${{ inputs.macos_artifact }}-14.0-aarch64-${{ matrix.backend }}' artifact
+      - name: 📤 Upload '${{ inputs.macos_artifact }}-${{ inputs.backend }}' artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.macos_artifact }}-14.0-aarch64-${{ matrix.backend }}
+          name: ${{ inputs.macos_artifact }}-${{ inputs.backend }}
           path: ./install
           if-no-files-found: error
           retention-days: 1
@@ -130,5 +129,5 @@ jobs:
     if: inputs.testsuites != 'none'
     with:
       os_image:      ${{ inputs.macos_image }}
-      ghdl_artifact: ${{ inputs.macos_artifact }}-14.0-aarch64-${{ matrix.backend }}
+      ghdl_artifact: ${{ inputs.macos_artifact }}-${{ inputs.backend }}
       testsuites:    ${{ inputs.testsuites }}

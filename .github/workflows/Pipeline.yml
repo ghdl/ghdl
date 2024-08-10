@@ -84,18 +84,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {'icon': 'x', 'backend': 'mcode',    'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
-#          - {'icon': 'y', 'backend': 'llvm',     'testsuites': 'none'}  # 'all', 'none' or list of testsuites
-#          - {'icon': 'y', 'backend': 'llvm-jit', 'testsuites': 'all' }  # 'all', 'none' or list of testsuites
-          - {'icon': 'y', 'backend': 'gcc',      'testsuites': 'all' }  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟨', 'backend': 'mcode',    'ubuntu_image': 'ubuntu-22.04', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟨', 'backend': 'llvm',     'ubuntu_image': 'ubuntu-22.04', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟨', 'backend': 'llvm-jit', 'ubuntu_image': 'ubuntu-22.04', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟨', 'backend': 'gcc',      'ubuntu_image': 'ubuntu-22.04', 'testsuites': 'all' }    # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟩', 'backend': 'mcode',    'ubuntu_image': 'ubuntu-24.04', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟩', 'backend': 'llvm',     'ubuntu_image': 'ubuntu-24.04', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟩', 'backend': 'llvm-jit', 'ubuntu_image': 'ubuntu-24.04', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟩', 'backend': 'gcc',      'ubuntu_image': 'ubuntu-24.04', 'testsuites': 'all' }    # 'all', 'none' or list of testsuites
     with:
-      backend: ${{ matrix.backend }}
-      testsuites: ${{ matrix.testsuites }}
-      ubuntu_artifact: ghdl-ubuntu
+      ubuntu_image:    ${{ matrix.ubuntu_image }}
+      backend:         ${{ matrix.backend }}
+      testsuites:      ${{ matrix.testsuites }}
+      ubuntu_artifact: ghdl-${{ matrix.ubuntu_image }}-x86_64
       html_artifact:  'documentation-html'
       latex_document: 'ghdl'
-      latex_artifact: '' # 'documentation-latex'
-      pdf_artifact:   '' # 'documentation-pdf'
+      latex_artifact: 'documentation-latex'
+      pdf_artifact:   'documentation-pdf'
 
   macOS:
     uses: ./.github/workflows/Build-MacOS.yml
@@ -103,11 +108,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-#          - {'icon': 'x', 'backend': 'mode', 'testsuites': 'none'}
-          - {'icon': 'x', 'backend': 'llvm', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🍎🟧', 'backend': 'mode', 'macos_image': 'macos-12', 'gnat_arch': 'x86_64',  'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🍎🟧', 'backend': 'llvm', 'macos_image': 'macos-12', 'gnat_arch': 'x86_64',  'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🍎🟨', 'backend': 'mode', 'macos_image': 'macos-13', 'gnat_arch': 'x86_64',  'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🍎🟨', 'backend': 'llvm', 'macos_image': 'macos-13', 'gnat_arch': 'x86_64',  'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🍏🟩', 'backend': 'mode', 'macos_image': 'macos-14', 'gnat_arch': 'aarch64', 'gnat_version': '14.1.0-3', 'testsuites': 'none'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🍏🟩', 'backend': 'llvm', 'macos_image': 'macos-14', 'gnat_arch': 'aarch64', 'gnat_version': '14.1.0-3', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
     with:
-      macos_artifact: ghdl-macos
-      testsuites: ${{ matrix.testsuites }}
+      macos_image:    ${{ matrix.macos_image }}
+      gnat_arch:      ${{ matrix.gnat_arch }}
+      gnat_version:   ${{ matrix.gnat_version }}
+      backend:        ${{ matrix.backend }}
+      testsuites:     ${{ matrix.testsuites }}
+      macos_artifact: ghdl-${{ matrix.macos_image }}-${{ matrix.gnat_arch }}
 
   Windows:
     uses: ./.github/workflows/Build-MSYS2.yml
@@ -115,17 +128,31 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {'icon': 'Mx', 'runtime': 'mingw32', 'backend': 'mcode', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
-#          - {'icon': 'Mx', 'runtime': 'mingw64', 'backend': 'mcode', 'testsuites': 'none'}  # 'all', 'none' or list of testsuites
-#          - {'icon': 'My', 'runtime': 'mingw64', 'backend': 'llvm',  'testsuites': 'none'}  # sanity gna vpi vhpi'}    # no vests
-#          - {'icon': 'Ux', 'runtime': 'ucrt64',  'backend': 'mcode', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
-#          - {'icon': 'Uy', 'runtime': 'ucrt64',  'backend': 'llvm',  'testsuites': 'none'}  # sanity gna vpi vhpi'}    # no vests, synth
+          - {'icon': '🪟', 'backend': 'mcode', 'runtime': 'mingw32', 'testsuites': 'all'}  # No gcc-ada package for MinGW32, support was dropped
+          - {'icon': '🪟', 'backend': 'mcode', 'runtime': 'mingw64', 'testsuites': 'none'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🪟', 'backend': 'llvm',  'runtime': 'mingw64', 'testsuites': 'none'}  # sanity gna vpi vhpi'}    # no vests
+          - {'icon': '🪟', 'backend': 'mcode', 'runtime': 'ucrt64',  'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🪟', 'backend': 'llvm',  'runtime': 'ucrt64',  'testsuites': 'none'}  # sanity gna vpi vhpi'}    # no vests, synth
     with:
-      runtime: ${{ matrix.runtime }}
-      backend: ${{ matrix.backend }}
-      testsuites: ${{ matrix.testsuites }}
+      runtime:          ${{ matrix.runtime }}
+      backend:          ${{ matrix.backend }}
+      testsuites:       ${{ matrix.testsuites }}
       windows_artifact: ghdl-windows
       pacman_artifact:  ''
+
+  Docker:
+    uses: ./.github/workflows/Image-Docker.yml
+    needs:
+      - Ubuntu
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {'base_image': 'ubuntu:24.04', 'ghdl_artifact': 'ghdl-ubuntu-24.04-x86_64-llvm'}
+          - {'base_image': 'debian:slim',  'ghdl_artifact': 'ghdl-ubuntu-24.04-x86_64-llvm'}
+    with:
+      base_image:    ${{ matrix.base_image }}
+      ghdl_artifact: ${{ matrix.ghdl_artifact }}
 
   Python:
     uses: ./.github/workflows/Build-pyGHDL.yml
@@ -166,7 +193,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - Ubuntu
-#      - macOS
+      - macOS
       - Windows
       - PublishToGitHubPages
       - pyGHDL
@@ -178,7 +205,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - Ubuntu
-#      - macOS
+      - macOS
       - Windows
       - PublishToGitHubPages
       - pyGHDL
