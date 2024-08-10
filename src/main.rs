@@ -172,6 +172,7 @@ struct VhdlAnalyzeFlags {
     synopsys_pkgs: bool,
     synth_binding: bool,
     work_name: NameId,
+    work_dir: NameId,
     psl_comment: bool,
     comment_keyword: bool,
 }
@@ -183,6 +184,7 @@ static DEFAULT_VHDL_FLAGS: VhdlAnalyzeFlags = VhdlAnalyzeFlags {
     synopsys_pkgs: false,
     synth_binding: false,
     work_name: NameId::NULL,
+    work_dir: NameId::NULL,
     psl_comment: false,
     comment_keyword: false,
 };
@@ -196,6 +198,9 @@ fn apply_analyze_flags(flags: &VhdlAnalyzeFlags) {
         flag_syn_binding = flags.synth_binding;
         if flags.work_name != NameId::NULL {
             work_library_name = flags.work_name;
+        }
+        if flags.work_dir != NameId::NULL {
+            work_directory = flags.work_dir;
         }
     }
 }
@@ -272,6 +277,21 @@ fn parse_analyze_flags(flags: &mut VhdlAnalyzeFlags, arg: &str) -> Option<ParseS
     }
     if arg.starts_with("--work=") {
         flags.work_name = NameId::from_string(&arg[7..]);
+        return None;
+    }
+    if arg.starts_with("--workdir=") {
+        let val = &arg[10..];
+        const SEP: char = std::path::MAIN_SEPARATOR;
+        if val == "." {
+            flags.work_dir = NameId::NULL;
+        } else if val.chars().last().unwrap() == SEP {
+            flags.work_dir = NameId::from_string(val);
+        } else {
+            let mut dir = String::with_capacity(val.len() + 1);
+            dir.push_str(val);
+            dir.push(SEP);
+            flags.work_dir = NameId::from_string(&dir);
+        }
         return None;
     }
     if arg == "-g" || arg == "-O" {
@@ -506,12 +526,55 @@ fn get_parser(args: &[String]) -> Result<(), ParseStatus> {
     return Err(ParseStatus::UnknownCommand);
 }
 
+fn expand_args(args : Vec<String>) -> io::Result<Vec<String>>
+{
+    //  Check if there is one arg to expand
+    let mut need_expand = false;
+    for arg in &args {
+        if arg.starts_with('@') {
+            need_expand = true;
+            break;
+        }
+    }
+    if !need_expand {
+        return Ok(args);
+    }
+    let mut res = Vec::<String>::new();
+    for arg in args {
+        if arg.starts_with('@') {
+            use std::io::BufRead;
+            let filename = &arg[1..];
+            let file;
+            match std::fs::File::open(filename) {
+                Ok(f) => { file = f; }
+                Err(e) => { eprintln!("cannot open {filename}: {e}"); return Err(e); }
+            }
+            let reader = std::io::BufReader::new(file);
+            for line in reader.lines() {
+                res.push(line?);
+            }
+        }
+        else {
+            res.push(arg);
+        }
+    }
+    return Ok(res);
+}
+
 fn main() {
     unsafe {
         ghdl_rust_init();
     }
 
-    let args: Vec<String> = env::args().collect();
+    let init_args : Vec<String> = env::args().collect();
+    let args : Vec<String>;
+    match expand_args(init_args) {
+        Ok(eargs) => { args = eargs; }
+        Err(_) => {
+            std::process::exit(1);
+        }
+    }
+
     let progname = &args[0];
 
     if args.len() < 2 {
