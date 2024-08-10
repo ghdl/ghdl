@@ -121,7 +121,7 @@ jobs:
 
   Test:
     name:
-    uses: ./.github/workflows/Test-Ubuntu.yml
+    uses: ./.github/workflows/Test-GHDL.yml
     needs:
       - build
     if: inputs.testsuites != 'none'

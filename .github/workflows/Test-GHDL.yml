@@ -1,0 +1,94 @@
+name: Testing GHDL
+
+on:
+  workflow_call:
+    inputs:
+      os_image:
+        description: 'Name of the OS image.'
+        required: false
+        default: 'ubuntu-24.04'
+        type: string
+      runtime:
+        description: 'Used runtime if MSYS2.'
+        required: false
+        default: ''
+        type: string
+      shell:
+        description: 'Used shell'
+        required: false
+        default: 'bash'
+        type: string
+      ghdl_artifact:
+        description: 'Name of the GHDL artifact.'
+        required: true
+        type: string
+      testsuites:
+        description: 'GHDL testsuites'
+        required: true
+        type: string
+
+jobs:
+  Test:
+    name: Test GHDL on '${{ inputs.os_image }}'
+    runs-on: ${{ inputs.os_image }}
+
+    if: inputs.testsuites != 'none'
+
+    defaults:
+      run:
+        shell: ${{ inputs.shell }}
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          repository: ghdl/ghdl
+
+      - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
+        if: inputs.runtime != ''
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ inputs.runtime }}
+          update: true
+          pacboy: "diffutils:p"
+
+      - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.ghdl_artifact }}
+          path: install
+
+      - name: Install GHDL (chmod) and prepare test environment (Ubuntu)
+        if: inputs.runtime == ''
+        run: |
+          chmod +x ./install/bin/*
+          sudo xargs -r -a ./install/ubuntu.requirements apt-get install -y --no-install-recommends
+          echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Install GHDL (chmod) and prepare test environment (MSYS2)
+        if: inputs.runtime != ''
+        run: |
+          chmod +x ./install/bin/*
+          xargs -r -a ./install/${{ inputs.runtime }}.requirements pacman -S --noconfirm
+          echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
+          cat $GITHUB_ENV
+
+      - name: Version check
+        run: |
+          echo "PATH=$PATH"
+          [ '${{ inputs.runtime }}' != '' ] && export PATH=$(pwd)/install/bin:$PATH
+          echo "which ghdl: $(which ghdl)"
+          ghdl version
+
+      - name: Run tests in testsuite
+        run: |
+          [ '${{ inputs.runtime }}' != '' ] && export PATH=$(pwd)/install/bin:$PATH
+          cd testsuite
+
+          # no pyunit
+          if [ '${{ inputs.testsuites }}' == 'all' ]; then
+            TESTSUITES="sanity gna vests synth vpi vhpi"
+          else
+            TESTSUITES="${{ inputs.testsuites }}"
+          fi
+          ./testsuite.sh $TESTSUITES
