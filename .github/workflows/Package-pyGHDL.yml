@@ -1,0 +1,70 @@
+name: Packaging pyGHDL with libghdl (standalone)
+
+on:
+  workflow_call:
+    inputs:
+      jobs:
+        description: 'JSON list with environment fields, naming the system and backend for compilation.'
+        required: true
+        type: string
+      ubuntu_image:
+        description: 'Name of the Ubuntu image.'
+        required: false
+        default: 'ubuntu-24.04'
+        type: string
+      python_version:
+        description: 'Python version for pyGHDL testing.'
+        required: true
+        type: string
+
+jobs:
+  Tests:
+    name: '🐍 Test pyGHDL'
+    runs-on: ${{ inputs.ubuntu_image }}
+
+    steps:
+      - name: '🧰 Checkout'
+        uses: actions/checkout@v4
+
+      - name: '🐍 Setup Python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+  Package:
+    name: '🐍 Package pyGHDL for ${{ matrix.os }} and Python ${{ matrix.python_version }}'
+    runs-on: ${{ matrix.os_image }}
+    needs:
+      - Tests
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(inputs.jobs) }}
+
+    steps:
+      - name: '🧰 Checkout'
+        uses: actions/checkout@v4
+
+      - name: '🐍 Setup Python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python_version }}
+
+      - name: 📥 Download artifacts '${{ matrix.ghdl_artifact }}' from 'Build' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.ghdl_artifact }}
+          path: install
+
+      - name: Copy libghdl files
+        run: |
+          mkdir -p lib
+          cp -v install/lib/libghdl*.so lib
+
+#      - name: '📤 Upload artifact: pyGHDL'
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: pyGHDL
+#          path: dist/
+#          if-no-files-found: error

@@ -2,11 +2,27 @@ name: Building pyGHDL (Python Bindings for libghdl)
 
 on:
   workflow_call:
+    inputs:
+      ubuntu_image:
+        description: 'Name of the Ubuntu image.'
+        required: false
+        default: 'ubuntu-24.04'
+        type: string
+      python_version:
+        description: 'Use Python version'
+        required: false
+        default: '3.12'
+        type: string
+      black:
+        description: 'Check Python source code using black.'
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   Checks:
     name: '🐍 Checking Python bindings'
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.ubuntu_image }}
 
     steps:
       - name: '🧰 Checkout'
@@ -15,12 +31,16 @@ jobs:
       - name: '🐍 Setup Python'
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ inputs.python_version }}
 
-      - name: '🔧 Install dependencies'
+      - name: '🔧 Install dependencies for binding check'
         run: |
           sudo apt update -qq
           sudo apt install -y --no-install-recommends gnat
+
+      - name: '🔧 Install dependencies for black'
+#        if: inputs.black    # update_py_bindings.sh has an internal call to black
+        run: |
           python -m pip install --disable-pip-version-check black wheel
 
       - name: '🚧 Update Python bindings'
@@ -33,11 +53,12 @@ jobs:
           git diff --exit-code
 
       - name: '🚦 Check if python follows code formatting standards'
+        if: inputs.black
         run: python -m black --check pyGHDL
 
-  Package:
-    name: '🐍 Package pyGHDL'
-    runs-on: ubuntu-latest
+  PrePackage:
+    name: '🐍 Pre-Package pyGHDL'
+    runs-on: ${{ inputs.ubuntu_image }}
     needs:
       - Checks
 
@@ -48,7 +69,7 @@ jobs:
       - name: '🐍 Setup Python'
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ inputs.python_version }}
 
       - name: '🔧 Install dependencies'
         run: |

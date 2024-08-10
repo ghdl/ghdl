@@ -114,6 +114,8 @@ jobs:
     needs:
       - Build
 
+    if: inputs.testsuites != 'none'
+
     defaults:
       run:
         shell: bash

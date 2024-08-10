@@ -29,7 +29,8 @@ on:
         type: string
       html_artifact:
         description: 'Name of the HTML documentation artifact.'
-        required: true
+        required: false
+        default: ''
         type: string
       latex_document:
         description: 'LaTeX root document without *.tex extension.'
@@ -37,17 +38,21 @@ on:
         type: string
       latex_artifact:
         description: 'Name of the LaTeX documentation artifact.'
-        required: true
+        required: false
+        default: ''
         type: string
       pdf_artifact:
         description: 'Name of the PDF documentation artifact.'
-        required: true
+        required: false
+        default: ''
         type: string
 
 jobs:
   Sphinx:
     name: '📓 Sphinx to LaTeX and HTML'
     runs-on: ${{ inputs.ubuntu_image }}
+
+    if: inputs.html_artifact != '' || inputs.latex_artifact != ''
 
     steps:
       - name: '🧰 Checkout'
@@ -80,23 +85,27 @@ jobs:
           python -m pip install --disable-pip-version-check ${{ inputs.requirements }}
 
       - name: '📓 Compile HTML documentation'
+        if: inputs.html_artifact != ''
         run: |
           cd ${{ inputs.doc_directory }}
           make html
 
       - name: '📓 Compile LaTeX documentation'
+        if: inputs.latex_artifact != ''
         run: |
           cd ${{ inputs.doc_directory }}
           make latex
 
       - name: '📤 Upload artifact: HTML'
         uses: actions/upload-artifact@v4
+        if: inputs.html_artifact != ''
         with:
           name: ${{ inputs.html_artifact }}
           path: doc/_build/html
 
       - name: '📤 Upload artifact: LaTeX'
         uses: actions/upload-artifact@v4
+        if: inputs.latex_artifact != ''
         with:
           name: ${{ inputs.latex_artifact }}
           path: doc/_build/latex
@@ -106,6 +115,8 @@ jobs:
     runs-on: ${{ inputs.ubuntu_image }}
     needs:
       - Sphinx
+
+    if: inputs.latex_artifact != '' && inputs.pdf_artifact != ''
 
     steps:
       - name: 📥 Download artifacts '${{ inputs.latex_artifact }}' from 'Sphinx' job

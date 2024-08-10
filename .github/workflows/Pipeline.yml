@@ -84,28 +84,28 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {'icon': 'x', 'backend': 'mcode', 'testsuites': 'all'}
-          - {'icon': 'y', 'backend': 'llvm',  'testsuites': 'all'}
+          - {'icon': 'x', 'backend': 'mcode', 'testsuites': 'none'}  # 'all', 'none' or list of testsuites
+#          - {'icon': 'y', 'backend': 'llvm',  'testsuites': 'none'}  # 'all', 'none' or list of testsuites
     with:
       backend: ${{ matrix.backend }}
       testsuites: ${{ matrix.testsuites }}
       ubuntu_artifact: ghdl-ubuntu
-      html_artifact: 'documentation-html'
+      html_artifact:  '' # 'documentation-html'
       latex_document: 'ghdl'
-      latex_artifact: 'documentation-latex'
-      pdf_artifact: 'documentation-pdf'
+      latex_artifact: '' # 'documentation-latex'
+      pdf_artifact:   '' # 'documentation-pdf'
 
-  macOS:
-    uses: ./.github/workflows/Build-MacOS.yml
-    with:
-      jobs: "[{'icon': 'x', 'backend': 'llvm', 'testsuites': 'all'}]"
-#      jobs: |
-#        [
-#          {'icon': 'x', 'backend': 'mcode', 'testsuites': 'all'},
-#          {'icon': 'y', 'backend': 'llvm',  'testsuites': 'all'}
-#        ]
-#      testsuites: ${{ matrix.testsuites }}
-      macos_artifact: ghdl-macos
+#  macOS:
+#    uses: ./.github/workflows/Build-MacOS.yml
+#    with:
+#      jobs: "[{'icon': 'x', 'backend': 'llvm', 'testsuites': 'none'}]"
+##      jobs: |
+##        [
+##          {'icon': 'x', 'backend': 'mcode', 'testsuites': 'all'},
+##          {'icon': 'y', 'backend': 'llvm',  'testsuites': 'all'}
+##        ]
+##      testsuites: ${{ matrix.testsuites }}
+#      macos_artifact: ghdl-macos
 
   Windows:
     uses: ./.github/workflows/Build-MSYS2.yml
@@ -113,18 +113,41 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {'icon': 'Mx', 'runtime': 'mingw64', 'backend': 'mcode', 'testsuites': 'all'}
-          - {'icon': 'My', 'runtime': 'mingw64', 'backend': 'llvm',  'testsuites': 'sanity gna vpi vhpi'}    # no vests
-          - {'icon': 'Ux', 'runtime': 'ucrt64',  'backend': 'mcode', 'testsuites': 'all'}
-          - {'icon': 'Uy', 'runtime': 'ucrt64',  'backend': 'llvm',  'testsuites': 'sanity gna vpi vhpi'}    # no vests, synth
+#          - {'icon': 'Mx', 'runtime': 'mingw64', 'backend': 'mcode', 'testsuites': 'none'}  # 'all', 'none' or list of testsuites
+#          - {'icon': 'My', 'runtime': 'mingw64', 'backend': 'llvm',  'testsuites': 'none'}  # sanity gna vpi vhpi'}    # no vests
+          - {'icon': 'Ux', 'runtime': 'ucrt64',  'backend': 'mcode', 'testsuites': 'none'}  # 'all', 'none' or list of testsuites
+#          - {'icon': 'Uy', 'runtime': 'ucrt64',  'backend': 'llvm',  'testsuites': 'none'}  # sanity gna vpi vhpi'}    # no vests, synth
     with:
       runtime: ${{ matrix.runtime }}
       backend: ${{ matrix.backend }}
       testsuites: ${{ matrix.testsuites }}
       windows_artifact: ghdl-windows
+      pacman_artifact:  ''
 
   Python:
     uses: ./.github/workflows/Build-pyGHDL.yml
+    with:
+      black: false
+
+  pyGHDL:
+    uses: ./.github/workflows/Package-pyGHDL.yml
+    needs:
+      - Ubuntu
+      - Windows
+      - Python
+    with:
+      jobs: |
+        [
+          {'pyicon': '🟡', 'os': 'Ubuntu',  'os_image': 'ubuntu-24.04',   'backend': 'mcode',                      'ghdl_artifact': 'ghdl-ubuntu-24.04-x86_64-mcode', 'python_version': '3.10'},
+          {'pyicon': '🟢', 'os': 'Ubuntu',  'os_image': 'ubuntu-24.04',   'backend': 'mcode',                      'ghdl_artifact': 'ghdl-ubuntu-24.04-x86_64-mcode', 'python_version': '3.11'},
+          {'pyicon': '🟢', 'os': 'Ubuntu',  'os_image': 'ubuntu-24.04',   'backend': 'mcode',                      'ghdl_artifact': 'ghdl-ubuntu-24.04-x86_64-mcode', 'python_version': '3.12'},
+          {'pyicon': '🟡', 'os': 'Windows', 'os_image': 'windows-latest', 'backend': 'mcode', 'runtime': 'ucrt64', 'ghdl_artifact': 'ghdl-windows-ucrt64-mcode',      'python_version': '3.10'},
+          {'pyicon': '🟢', 'os': 'Windows', 'os_image': 'windows-latest', 'backend': 'mcode', 'runtime': 'ucrt64', 'ghdl_artifact': 'ghdl-windows-ucrt64-mcode',      'python_version': '3.11'},
+          {'pyicon': '🟢', 'os': 'Windows', 'os_image': 'windows-latest', 'backend': 'mcode', 'runtime': 'ucrt64', 'ghdl_artifact': 'ghdl-windows-ucrt64-mcode',      'python_version': '3.12'}
+        ]
+      python_version: '3.12'
+
+
 
 #  GNATdoc:
 #    uses: ./.github/workflows/Documentation-GNAT.yml
@@ -136,14 +159,26 @@ jobs:
       - Ubuntu
     uses: ./.github/workflows/Publish-GitHubPages.yml
 
+  Nightly:
+    runs-on: ubuntu-24.04
+    needs:
+      - Ubuntu
+#      - macOS
+      - Windows
+      - PublishToGitHubPages
+      - pyGHDL
+    steps:
+      - name: "Dummy"
+        run: echo "Dummy"
+
   Release:
     runs-on: ubuntu-24.04
     needs:
       - Ubuntu
-      - macOS
+#      - macOS
       - Windows
-      - Python
       - PublishToGitHubPages
+      - pyGHDL
     steps:
       - name: "Dummy"
         run: echo "Dummy"

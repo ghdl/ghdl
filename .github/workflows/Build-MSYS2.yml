@@ -24,6 +24,10 @@ on:
         description: 'Name of the Windows build artifact.'
         required: true
         type: string
+      pacman_artifact:
+        description: 'Name of the MSYS2 package artifact.'
+        required: true
+        type: string
 
 jobs:
   Build:
@@ -121,6 +125,8 @@ jobs:
     needs:
       - Build
 
+    if: inputs.testsuites != 'none'
+
     env:
       common_packages: "diffutils:p"
 
@@ -180,6 +186,8 @@ jobs:
     needs:
       - Build
 
+    if: inputs.pacman_artifact != ''
+
     env:
       msys2_packages: ""
       common_packages: ""
@@ -209,6 +217,8 @@ jobs:
     runs-on: windows-latest
     needs:
       - Package
+
+    if: inputs.pacman_artifact != ''
 
     defaults:
       run:
