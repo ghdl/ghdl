@@ -115,9 +115,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - {'icon': 'Mx', 'runtime': 'mingw32', 'backend': 'mcode', 'testsuites': 'all'}  # 'all', 'none' or list of testsuites
 #          - {'icon': 'Mx', 'runtime': 'mingw64', 'backend': 'mcode', 'testsuites': 'none'}  # 'all', 'none' or list of testsuites
 #          - {'icon': 'My', 'runtime': 'mingw64', 'backend': 'llvm',  'testsuites': 'none'}  # sanity gna vpi vhpi'}    # no vests
-          - {'icon': 'Ux', 'runtime': 'ucrt64',  'backend': 'mcode', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
+#          - {'icon': 'Ux', 'runtime': 'ucrt64',  'backend': 'mcode', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
 #          - {'icon': 'Uy', 'runtime': 'ucrt64',  'backend': 'llvm',  'testsuites': 'none'}  # sanity gna vpi vhpi'}    # no vests, synth
     with:
       runtime: ${{ matrix.runtime }}
