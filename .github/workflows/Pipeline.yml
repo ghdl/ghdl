@@ -84,7 +84,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {'icon': 'x', 'backend': 'mcode',    'testsuites': 'none'}  # 'all', 'none' or list of testsuites
+          - {'icon': 'x', 'backend': 'mcode',    'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
 #          - {'icon': 'y', 'backend': 'llvm',     'testsuites': 'none'}  # 'all', 'none' or list of testsuites
 #          - {'icon': 'y', 'backend': 'llvm-jit', 'testsuites': 'all' }  # 'all', 'none' or list of testsuites
           - {'icon': 'y', 'backend': 'gcc',      'testsuites': 'all' }  # 'all', 'none' or list of testsuites
@@ -92,7 +92,7 @@ jobs:
       backend: ${{ matrix.backend }}
       testsuites: ${{ matrix.testsuites }}
       ubuntu_artifact: ghdl-ubuntu
-      html_artifact:  '' # 'documentation-html'
+      html_artifact:  'documentation-html'
       latex_document: 'ghdl'
       latex_artifact: '' # 'documentation-latex'
       pdf_artifact:   '' # 'documentation-pdf'
@@ -117,7 +117,7 @@ jobs:
         include:
 #          - {'icon': 'Mx', 'runtime': 'mingw64', 'backend': 'mcode', 'testsuites': 'none'}  # 'all', 'none' or list of testsuites
 #          - {'icon': 'My', 'runtime': 'mingw64', 'backend': 'llvm',  'testsuites': 'none'}  # sanity gna vpi vhpi'}    # no vests
-          - {'icon': 'Ux', 'runtime': 'ucrt64',  'backend': 'mcode', 'testsuites': 'none'}  # 'all', 'none' or list of testsuites
+          - {'icon': 'Ux', 'runtime': 'ucrt64',  'backend': 'mcode', 'testsuites': 'sanity'}  # 'all', 'none' or list of testsuites
 #          - {'icon': 'Uy', 'runtime': 'ucrt64',  'backend': 'llvm',  'testsuites': 'none'}  # sanity gna vpi vhpi'}    # no vests, synth
     with:
       runtime: ${{ matrix.runtime }}

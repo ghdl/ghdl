@@ -158,7 +158,7 @@ jobs:
       - build
     if: inputs.testsuites != 'none'
     with:
-      ubuntu_image:  ${{ inputs.ubuntu_image }}
+      os_image:      ${{ inputs.ubuntu_image }}
       ghdl_artifact: ${{ inputs.ubuntu_artifact }}-24.04-x86_64-${{ inputs.backend }}
       testsuites:    ${{ inputs.testsuites }}
 
