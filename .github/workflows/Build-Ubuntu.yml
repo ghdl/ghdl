@@ -53,9 +53,9 @@ jobs:
 
       - name: 🔧 Install dependencies
         run: |
-          [ '${{ inputs.backend }}' == 'llvm' ]     && APT_ARGS='llvm clang'                        || unset LLVM_ARGS
-          [ '${{ inputs.backend }}' == 'llvm-jit' ] && APT_ARGS='llvm clang'                        || unset LLVM_ARGS
-          [ '${{ inputs.backend }}' == 'gcc' ]      && APT_ARGS='libgmp-dev libmpfr-dev libmpc-dev' || unset LLVM_ARGS
+          [ '${{ inputs.backend }}' == 'llvm' ]     && APT_ARGS='llvm clang'
+          [ '${{ inputs.backend }}' == 'llvm-jit' ] && APT_ARGS='llvm clang'
+          [ '${{ inputs.backend }}' == 'gcc' ]      && APT_ARGS='libgmp-dev libmpfr-dev libmpc-dev'
 
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends gcc g++ gnat $APT_ARGS
@@ -79,9 +79,9 @@ jobs:
         run: |
           cd build/${{ inputs.backend }}
 
-          [ '${{ inputs.backend }}' == 'llvm' ]     && CONFIG_ARGS='--with-llvm-config CXX=clang++'                 || unset LLVM_ARGS
-          [ '${{ inputs.backend }}' == 'llvm-jit' ] && CONFIG_ARGS='--with-llvm-config --with-llvm-jit CXX=clang++' || unset LLVM_ARGS
-          [ '${{ inputs.backend }}' == 'gcc' ]      && CONFIG_ARGS='--with-gcc=../../gcc-srcs'                      || unset LLVM_ARGS
+          [ '${{ inputs.backend }}' == 'llvm' ]     && CONFIG_ARGS='--with-llvm-config CXX=clang++'
+          [ '${{ inputs.backend }}' == 'llvm-jit' ] && CONFIG_ARGS='--with-llvm-config --with-llvm-jit CXX=clang++'
+          [ '${{ inputs.backend }}' == 'gcc' ]      && CONFIG_ARGS='--with-gcc=../../gcc-srcs'
 
           NPROC=$(nproc)
           GNATMAKE="gnatmake -j$NPROC" \
