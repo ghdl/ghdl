@@ -179,15 +179,16 @@ jobs:
         ]
       python_version: '3.12'
 
+  GNATdoc:
+    uses: ./.github/workflows/Documentation-GNAT.yml
+    with:
+      ubuntu_image: "ubuntu-20.04"      # gnat-gps (incl. GNATdoc) is limited to Ubuntu 20.04
+      html_artifact: "ghdl-gnatdoc"
 
-
-#  GNATdoc:
-#    uses: ./.github/workflows/Documentation-GNAT.yml
-#
 
   PublishToGitHubPages:
     needs:
-#      - GNATdoc
+      - GNATdoc
       - Ubuntu
     uses: ./.github/workflows/Publish-GitHubPages.yml
 
