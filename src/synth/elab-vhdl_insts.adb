@@ -1015,6 +1015,7 @@ package body Elab.Vhdl_Insts is
       Arch : Node;
       Config : Node)
    is
+      use Elab.Vhdl_Annotations;
       Sub_Inst : Synth_Instance_Acc;
       E_Ent : Node;
       E_Arch : Node;
@@ -1022,17 +1023,30 @@ package body Elab.Vhdl_Insts is
       if Flag_Macro_Expand_Instance
         and then Get_Macro_Expand_Flag (Entity)
       then
-         E_Ent := Vhdl.Sem_Inst.Instantiate_Entity_Declaration (Entity, Stmt);
-         E_Arch := Vhdl.Sem_Inst.Instantiate_Architecture
-           (Arch, E_Ent, Stmt, Stmt);
-         Elab.Vhdl_Annotations.Instantiate_Annotate (E_Ent);
-         Elab.Vhdl_Annotations.Instantiate_Annotate (E_Arch);
+         E_Ent := Get_Instantiated_Header (Stmt);
+         if E_Ent /= Null_Node
+           and then Elab.Vhdl_Annotations.Get_Ann (E_Ent) /= null
+         then
+            --  Was already instantiated
+            --  Do not re-instantiate the entity.
+            --  TODO: use a hash map for the architecture.
+            E_Arch := Vhdl.Sem_Inst.Instantiate_Architecture
+              (Arch, E_Ent, Stmt, Stmt);
+            Elab.Vhdl_Annotations.Instantiate_Annotate (E_Arch);
+         else
+            E_Ent := Vhdl.Sem_Inst.Instantiate_Entity_Declaration
+              (Entity, Stmt);
+            E_Arch := Vhdl.Sem_Inst.Instantiate_Architecture
+              (Arch, E_Ent, Stmt, Stmt);
+            Elab.Vhdl_Annotations.Instantiate_Annotate (E_Ent);
+            Elab.Vhdl_Annotations.Instantiate_Annotate (E_Arch);
 
-         --  TODO: remove previous Instantiated_Header.
-         Set_Instantiated_Header (Stmt, E_Ent);
+            --  TODO: remove previous Instantiated_Header.
+            Set_Instantiated_Header (Stmt, E_Ent);
 
-         pragma Assert (Get_Parent (E_Ent) = Null_Iir);
-         Set_Parent (E_Ent, Stmt);
+            pragma Assert (Get_Parent (E_Ent) = Null_Iir);
+            Set_Parent (E_Ent, Stmt);
+         end if;
       else
          E_Ent := Entity;
          E_Arch := Arch;
