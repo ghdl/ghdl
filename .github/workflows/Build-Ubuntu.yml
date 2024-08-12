@@ -79,9 +79,16 @@ jobs:
         run: |
           cd build/${{ inputs.backend }}
 
-          [ '${{ inputs.backend }}' == 'llvm' ]     && CONFIG_ARGS='--with-llvm-config CXX=clang++'
-          [ '${{ inputs.backend }}' == 'llvm-jit' ] && CONFIG_ARGS='--with-llvm-config --with-llvm-jit CXX=clang++'
-          [ '${{ inputs.backend }}' == 'gcc' ]      && CONFIG_ARGS='--with-gcc=../../gcc-srcs'
+          if ${{ startsWith(inputs.backend, 'llvm') }}; then
+            CONFIG_ARGS="--with-llvm-config"
+            if ${{ endsWith(inputs.backend, 'jit') }}; then
+              CONFIG_ARGS="$CONFIG_ARGS --with-llvm-jit"
+            fi
+            CONFIG_ARGS="$CONFIG_ARGS CXX=clang++"
+          elif ${{ startsWith(inputs.backend, 'gcc') }}; then
+            CONFIG_ARGS="--with-gcc=../../gcc-srcs"
+          fi
+          echo "CONFIG_ARGS=$CONFIG_ARGS"
 
           NPROC=$(nproc)
           GNATMAKE="gnatmake -j$NPROC" \

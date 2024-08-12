@@ -80,6 +80,20 @@ jobs:
           echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
           cat $GITHUB_ENV
 
+      - name: Dependency check (Linux, MSYS2)
+        if: startsWith(inputs.os_image, 'ubuntu') || startsWith(inputs.os_image, 'windows')
+        run: |
+          ldd ./install/bin/ghdl*
+          ldd ./install/lib/libghdl-*
+          ldd ./install/lib/libghdlvpi*
+
+      - name: Dependency check (macOS)
+        if: startsWith(inputs.os_image, 'macos')
+        run: |
+          otool -L ./install/bin/ghdl*
+          otool -L ./install/lib/libghdl-*
+          otool -L ./install/lib/libghdlvpi*
+
       - name: Version check
         run: |
           echo "PATH=$PATH"

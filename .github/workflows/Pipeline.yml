@@ -60,7 +60,7 @@ jobs:
     uses: ./.github/workflows/Parameters.yml
     with:
       name:       "ghdl"
-#      testsuites: "sanity"         # disable parameter to fall back to 'all'
+      testsuites: "sanity"         # disable parameter to fall back to 'all'
 
   Ubuntu:
     uses: ./.github/workflows/Build-Ubuntu.yml
