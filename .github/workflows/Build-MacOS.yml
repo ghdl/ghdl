@@ -82,20 +82,32 @@ jobs:
       - name: ⚙ Configure
         run: |
           cd build/${{ inputs.backend }}
-          [ '${{ inputs.backend }}' == 'llvm' ]     && LLVM_ARGS='--with-llvm-config CXX=clang++'
-          [ '${{ inputs.backend }}' == 'llvm-jit' ] && LLVM_ARGS='--with-llvm-config --with-llvm-jit CXX=clang++'
+
+          if [ '${{ inputs.macos_image }}' == 'macos-14' ]; then
+            CONFIG_LDFLAGS="-Wl,-ld_classic"
+          fi
+          echo "LDFLAGS=$CONFIG_LDFLAGS"
+
+          if ${{ startsWith(inputs.backend, 'llvm') }}; then
+            CONFIG_ARGS="--with-llvm-config"
+            if ${{ endsWith(inputs.backend, 'jit') }}; then
+              CONFIG_ARGS="$CONFIG_ARGS --with-llvm-jit"
+            fi
+            # CONFIG_ARGS="$CONFIG_ARGS CXX=clang++"
+          fi
+          echo "CONFIG_ARGS=$CONFIG_ARGS"
 
           # Use static libs (including libzstd) and dead-strip (to avoid libz3)
           libzstd=$(brew --prefix zstd)/lib/libzstd.a
           export LLVM_LDFLAGS="$(llvm-config --link-static --libfiles --system-libs | sed -e s@-lzstd@$libzstd@) -Wl,-dead_strip,-dead_strip_dylibs"
-          echo $LLVM_LDFLAGS
+          echo "LLVM_LDFLAGS=$LLVM_LDFLAGS"
 
           # Use classic ld and not lld (which simply crashes)
           NPROC=$(sysctl -n hw.logicalcpu)
           GNATMAKE="gnatmake -j$NPROC" \
           MAKE="make -j$NPROC" \
-          LDFLAGS=-Wl,-ld_classic \
-          ../../configure --prefix=../../install $LLVM_ARGS
+          LDFLAGS=$CONFIG_LDFLAGS \
+          ../../configure --prefix=../../install $CONFIG_ARGS
 
       - name: 🔨 Make
         run: |

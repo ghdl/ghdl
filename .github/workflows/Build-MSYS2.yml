@@ -72,13 +72,20 @@ jobs:
       - name: ⚙ Configure
         run: |
           cd build/${{ inputs.backend }}
-          [ '${{ inputs.backend }}' == 'llvm' ]     && LLVM_ARGS='--with-llvm-config CXX=clang++'
-          [ '${{ inputs.backend }}' == 'llvm-jit' ] && LLVM_ARGS='--with-llvm-config --with-llvm-jit CXX=clang++'
+
+          if ${{ startsWith(inputs.backend, 'llvm') }}; then
+            CONFIG_ARGS="--with-llvm-config"
+            if ${{ endsWith(inputs.backend, 'jit') }}; then
+              CONFIG_ARGS="$CONFIG_ARGS --with-llvm-jit"
+            fi
+            CONFIG_ARGS="$CONFIG_ARGS CXX=clang++"
+          fi
+          echo "CONFIG_ARGS=$CONFIG_ARGS"
 
           NPROC=$(nproc)
           GNATMAKE="gnatmake -j$NPROC" \
           MAKE="make -j$NPROC" \
-          ../../configure --prefix=../../install $LLVM_ARGS
+          ../../configure --prefix=../../install $CONFIG_ARGS
 
       - name: 🔨 Make
         run: |
@@ -100,7 +107,7 @@ jobs:
             MSYS2_PREFIX=ucrt64/mingw-w64-ucrt-x86_64
           fi
           echo "${MSYS2_PREFIX}-gcc-ada" >> ${{ inputs.runtime }}.requirements
-          if [ '${{ inputs.backend }}' == 'llvm' ]; then
+          if ${{ startsWith(inputs.backend, 'llvm') }}; then
            echo "${MSYS2_PREFIX}-llvm-libs" >> ${{ inputs.runtime }}.requirements
           fi
 
