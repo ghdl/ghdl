@@ -248,6 +248,8 @@ package body Ghdlsynth is
          Flag_Debug_Noexpand := True;
       elsif Option = "-dn" then
          Flag_Debug_Nonull := True;
+      elsif Option = "-ds" then
+         Flag_Debug_Stats := True;
       elsif Option = "-t" then
          Flag_Trace_Statements := True;
       elsif Option = "-i" then

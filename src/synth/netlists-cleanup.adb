@@ -17,12 +17,14 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Std_Names;
+with Simple_IO;
 
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates;
 with Netlists.Locations; use Netlists.Locations;
 
 with Synth.Errors; use Synth.Errors;
+with Synth.Flags;
 
 package body Netlists.Cleanup is
    --  Return False iff INST has no outputs (and INST is not Id_Free).
@@ -245,6 +247,8 @@ package body Netlists.Cleanup is
       --  Table of new gates to be inspected.
       Inspect : Instance_Tables.Instance;
 
+      Num : Uns32;
+
       Inst : Instance;
       Inp : Input;
    begin
@@ -327,6 +331,7 @@ package body Netlists.Cleanup is
       end loop;
 
       --  3.  Remove unused instances; unmark used instances.
+      Num := 0;
       Instance_Tables.Free (Inspect);
       declare
          Next_Inst : Instance;
@@ -351,6 +356,7 @@ package body Netlists.Cleanup is
                Append_Instance (M, Inst);
             else
                --  Instance was not marked, disconnect it.
+               Num := Num + 1;
                for I in 1 .. Get_Nbr_Inputs (Inst) loop
                   Inp := Get_Input (Inst, I - 1);
                   if Get_Driver (Inp) /= No_Net then
@@ -383,6 +389,11 @@ package body Netlists.Cleanup is
             end loop;
          end if;
       end;
+
+      if Synth.Flags.Flag_Debug_Stats then
+         Simple_IO.Put_Line_Err
+           ("clean up:" & Uns32'Image(Num) & " instances removed");
+      end if;
    end Mark_And_Sweep;
 
    procedure Replace_Null_Inputs (Ctxt : Context_Acc; M : Module)

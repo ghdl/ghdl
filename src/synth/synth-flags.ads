@@ -57,6 +57,9 @@ package Synth.Flags is
    --  Do not transform null net to null X.
    Flag_Debug_Nonull : Boolean := False;
 
+   --  Disp some stats.
+   Flag_Debug_Stats : Boolean := False;
+
    Flag_Trace_Statements : Boolean := False;
 
    --  Display source of elaborated design.
