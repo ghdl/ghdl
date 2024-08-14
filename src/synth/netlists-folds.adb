@@ -289,6 +289,10 @@ package body Netlists.Folds is
          return I;
       end if;
 
+      if True then
+         return Build_Extract (Ctxt, I, Off, W);
+      end if;
+
       case Get_Id (Inst) is
          when Id_Extract =>
             return Build2_Extract_Push

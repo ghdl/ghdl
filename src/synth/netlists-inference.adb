@@ -436,6 +436,39 @@ package body Netlists.Inference is
       return Res;
    end Infere_FF_Create;
 
+
+   procedure Push_Extract (Ctxt : Context_Acc;
+                           Val : in out Net;
+                           Off : Uns32;
+                           Last_Mux : in out Instance;
+                           W : Width)
+   is
+      Inst : constant Instance := Get_Net_Parent (Val);
+   begin
+      case Get_Id (Inst) is
+         when Id_Mux2 =>
+            declare
+               Res : Net;
+               I0, I1 : Net;
+               Mux : Instance;
+            begin
+               I0 := Get_Input_Net (Inst, 1);
+               Push_Extract (Ctxt, I0, Off, Last_Mux, W);
+               I1 := Get_Input_Net (Inst, 2);
+               Push_Extract (Ctxt, I1, Off, Last_Mux, W);
+               Res := Build_Mux2 (Ctxt, Get_Input_Net (Inst, 0), I0, I1);
+               Mux := Get_Net_Parent (Res);
+               Set_Location (Mux, Get_Location (Inst));
+               if Inst = Last_Mux then
+                  Last_Mux := Mux;
+               end if;
+               Val := Res;
+            end;
+         when others =>
+            Val := Build_Extract (Ctxt, Val, Off, W);
+      end case;
+   end Push_Extract;
+
    --  Remove the Mux2 and handle the 'else' branch.
    procedure Infere_FF_Mux (Ctxt : Context_Acc;
                             Prev_Val : Net;
@@ -449,6 +482,7 @@ package body Netlists.Inference is
       Sel      : constant Input := Get_Mux2_Sel (Last_Mux);
       I0       : constant Input := Get_Mux2_I0 (Last_Mux);
       I1       : constant Input := Get_Mux2_I1 (Last_Mux);
+      Els2     : Net;
       Els_Inst : Instance;
       Els_Clk  : Net;
       Els_En   : Net;
@@ -463,6 +497,12 @@ package body Netlists.Inference is
          --  The 'else' part is not a loop.  It should be a second FF for a
          --  DDR (not yet supported) or a true-dual-port RAM.
          Els_Inst := Get_Net_Parent (Els);
+         if Get_Id (Els_Inst) = Id_Extract then
+            pragma Assert (Get_Param_Uns32 (Els_Inst, 0) = Off);
+            Els2 := Get_Input_Net (Els_Inst, 0);
+            Push_Extract (Ctxt, Els2, Off, Els_Inst, Get_Width (Els));
+            Els_Inst := Get_Net_Parent (Els2);
+         end if;
          if Get_Id (Els_Inst) = Id_Mux2 then
             Extract_Clock (Ctxt, Get_Driver (Get_Mux2_Sel (Els_Inst)),
                            Els_Clk, Els_En);
@@ -1035,6 +1075,7 @@ package body Netlists.Inference is
       Sel : Input;
       Clk : Net;
       Enable : Net;
+      Val2 : Net;
       Res : Net;
    begin
       if Get_First_Sink (Prev_Val) = No_Input then
@@ -1101,18 +1142,29 @@ package body Netlists.Inference is
          return Val;
       end if;
 
+      First_Mux := Get_Net_Parent (Val);
+      if Get_Id (First_Mux) = Id_Extract then
+         pragma Assert (Get_Param_Uns32 (First_Mux, 0) = Off);
+         Val2 := Get_Input_Net (First_Mux, 0);
+         Push_Extract (Ctxt, Val2, Off, Last_Mux, Get_Width (Val));
+      else
+         Val2 := Val;
+      end if;
+
+      pragma Unreferenced (Val);
+
       --  So there is a logical loop.
       Sel := Get_Mux2_Sel (Last_Mux);
       Extract_Clock (Ctxt, Get_Driver (Sel), Clk, Enable);
       if Clk = No_Net then
          --  No clock -> latch or combinational loop
-         Res := Infere_Latch (Ctxt, Val, Prev_Val, Last_Mux, Last_Use, Loc);
+         Res := Infere_Latch (Ctxt, Val2, Prev_Val, Last_Mux, Last_Use, Loc);
       else
          --  Clock -> FF
-         First_Mux := Get_Net_Parent (Val);
+         First_Mux := Get_Net_Parent (Val2);
          pragma Assert (Get_Id (First_Mux) = Id_Mux2);
 
-         Res := Infere_FF (Ctxt, Val, Prev_Val, Off, Last_Mux,
+         Res := Infere_FF (Ctxt, Val2, Prev_Val, Off, Last_Mux,
                            Clk, Enable, Loc);
       end if;
 
