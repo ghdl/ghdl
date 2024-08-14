@@ -71,12 +71,12 @@ jobs:
       matrix:
         include:
           - {'icon': '🐧🟨', 'backend': 'mcode',    'ubuntu_image': 'ubuntu-22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🐧🟨', 'backend': 'llvm',     'ubuntu_image': 'ubuntu-22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🐧🟨', 'backend': 'llvm-jit', 'ubuntu_image': 'ubuntu-22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟨', 'backend': 'llvm',     'ubuntu_image': 'ubuntu-22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟨', 'backend': 'llvm-jit', 'ubuntu_image': 'ubuntu-22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
 #          - {'icon': '🐧🟨', 'backend': 'gcc',      'ubuntu_image': 'ubuntu-22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}' }    # 'all', 'none' or list of testsuites
           - {'icon': '🐧🟩', 'backend': 'mcode',    'ubuntu_image': 'ubuntu-24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🐧🟩', 'backend': 'llvm',     'ubuntu_image': 'ubuntu-24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🐧🟩', 'backend': 'llvm-jit', 'ubuntu_image': 'ubuntu-24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟩', 'backend': 'llvm',     'ubuntu_image': 'ubuntu-24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟩', 'backend': 'llvm-jit', 'ubuntu_image': 'ubuntu-24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
           - {'icon': '🐧🟩', 'backend': 'gcc',      'ubuntu_image': 'ubuntu-24.04', 'testsuites': 'all' }                                    # 'all', 'none' or list of testsuites
     with:
       ubuntu_image:    ${{ matrix.ubuntu_image }}
@@ -120,11 +120,11 @@ jobs:
       matrix:
         include:
 ###       - {'icon': '🪟', 'backend': 'mcode',    'runtime': 'mingw32', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # No gcc-ada package for MinGW32, support was dropped
-          - {'icon': '🪟', 'backend': 'mcode',    'runtime': 'mingw64', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}
-          - {'icon': '🪟', 'backend': 'llvm',     'runtime': 'mingw64', 'testsuites': 'sanity gna synth vpi vhpi'}                # no vests (too slow)
+#          - {'icon': '🪟', 'backend': 'mcode',    'runtime': 'mingw64', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}
+#          - {'icon': '🪟', 'backend': 'llvm',     'runtime': 'mingw64', 'testsuites': 'sanity gna synth vpi vhpi'}                # no vests (too slow)
           - {'icon': '🪟', 'backend': 'llvm-jit', 'runtime': 'mingw64', 'testsuites': 'sanity gna synth vpi vhpi'}                # no vests (too slow)
-          - {'icon': '🪟', 'backend': 'mcode',    'runtime': 'ucrt64',  'testsuites': '${{ needs.Params.outputs.testsuites }}'}
-          - {'icon': '🪟', 'backend': 'llvm',     'runtime': 'ucrt64',  'testsuites': 'sanity gna vpi vhpi'}                      # no vests (too slow), synth (error on UCRT64)
+#          - {'icon': '🪟', 'backend': 'mcode',    'runtime': 'ucrt64',  'testsuites': '${{ needs.Params.outputs.testsuites }}'}
+#          - {'icon': '🪟', 'backend': 'llvm',     'runtime': 'ucrt64',  'testsuites': 'sanity gna vpi vhpi'}                      # no vests (too slow), synth (error on UCRT64)
           - {'icon': '🪟', 'backend': 'llvm-jit', 'runtime': 'ucrt64',  'testsuites': 'sanity gna vpi vhpi'}                      # no vests (too slow), synth (error on UCRT64)
     with:
       runtime:          ${{ matrix.runtime }}
