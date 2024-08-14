@@ -436,7 +436,8 @@ package body Netlists.Inference is
       return Res;
    end Infere_FF_Create;
 
-
+   --  Push extract after mux2.
+   --  This is a kind of reduction.
    procedure Push_Extract (Ctxt : Context_Acc;
                            Val : in out Net;
                            Off : Uns32;

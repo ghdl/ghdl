@@ -76,12 +76,6 @@ package Netlists.Folds is
    function Build2_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
 
-   --  Likewise, but if I is an output of a mux2, build the extract gates
-   --  on the input of the mux2 (recursively).
-   --  The purpose is to keep the control flow of the mux2 tree.
-   function Build2_Extract_Push
-     (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
-
    --  Return A -> B  ==  !A || B
    function Build2_Imp (Ctxt : Context_Acc; A, B : Net; Loc : Location_Type)
                        return Net;

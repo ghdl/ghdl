@@ -1343,7 +1343,7 @@ package body Synth.Environment is
 
       --  If no seq assign, return current value.
       if First_Seq = No_Seq_Assign then
-         return Build2_Extract_Push (Ctxt, Wire_Rec.Gate, Off, Wd);
+         return Build2_Extract (Ctxt, Wire_Rec.Gate, Off, Wd);
       end if;
 
       --  If the current value is static, just return it.
@@ -1404,8 +1404,8 @@ package body Synth.Environment is
                           (Cur_Wd, Pw - (Cur_Off - Pr.Offset));
                         Append
                           (Vec,
-                           Build2_Extract_Push (Ctxt, Pr.Value,
-                                                Cur_Off - Pr.Offset, Cur_Wd));
+                           Build2_Extract (Ctxt, Pr.Value,
+                                           Cur_Off - Pr.Offset, Cur_Wd));
                      end if;
                      exit;
                   end if;
@@ -1430,8 +1430,8 @@ package body Synth.Environment is
                      Seq := Get_Assign_Prev (Seq);
                      if Seq = No_Seq_Assign then
                         --  Extract from gate.
-                        Append (Vec, Build2_Extract_Push (Ctxt, Wire_Rec.Gate,
-                                                          Cur_Off, Cur_Wd));
+                        Append (Vec, Build2_Extract (Ctxt, Wire_Rec.Gate,
+                                                     Cur_Off, Cur_Wd));
                         exit;
                      end if;
                      if Get_Assign_Is_Static (Seq) then
@@ -2014,9 +2014,9 @@ package body Synth.Environment is
                   --           |----------||
                   --          P.Off        P.Next
                   --  Shrink EL.
-                  P.Value := Build2_Extract_Push (Ctxt, P.Value,
-                                                  Off => V_Next - P.Offset,
-                                                  W => P_Next - V_Next);
+                  P.Value := Build2_Extract (Ctxt, P.Value,
+                                             Off => V_Next - P.Offset,
+                                             W => P_Next - V_Next);
                   P.Offset := V_Next;
                   if not Inserted then
                      if Last_El /= No_Partial_Assign then
@@ -2036,9 +2036,9 @@ package body Synth.Environment is
                   --           |----------||
                   --          P.Off        P.Next
                   --  Shrink EL.
-                  P.Value := Build2_Extract_Push (Ctxt, P.Value,
-                                                  Off => 0,
-                                                  W => V.Offset - P.Offset);
+                  P.Value := Build2_Extract (Ctxt, P.Value,
+                                             Off => 0,
+                                             W => V.Offset - P.Offset);
                   pragma Assert (not Inserted);
                   V.Next := P.Next;
                   P.Next := Asgn;
@@ -2054,14 +2054,14 @@ package body Synth.Environment is
                   pragma Assert (not Inserted);
                   Partial_Assign_Table.Append
                     ((Next => P.Next,
-                      Value => Build2_Extract_Push (Ctxt, P.Value,
-                                                    Off => V_Next - P.Offset,
-                                                    W => P_Next - V_Next),
+                      Value => Build2_Extract (Ctxt, P.Value,
+                                               Off => V_Next - P.Offset,
+                                               W => P_Next - V_Next),
                       Offset => V_Next));
                   V.Next := Partial_Assign_Table.Last;
-                  P.Value := Build2_Extract_Push (Ctxt, P.Value,
-                                                  Off => 0,
-                                                  W => V.Offset - P.Offset);
+                  P.Value := Build2_Extract (Ctxt, P.Value,
+                                             Off => 0,
+                                             W => V.Offset - P.Offset);
                   P.Next := Asgn;
                   Inserted := True;
                   --  No more possible overlaps.
