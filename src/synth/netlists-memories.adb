@@ -1244,13 +1244,16 @@ package body Netlists.Memories is
                      Sub_Status : Get_Next_Status;
                      Sub_Res : Instance;
                   begin
-                     if Mux_Out = O then
+                     if Mux_Out = O or else Get_Mark_Flag (Pinst) then
                         --  Avoid simple infinite recursion
                         Status := Status_None;
                         Res := No_Instance;
                         return;
                      end if;
-                     Get_Next_Non_Extract (Mux_Out, Sub_Status, Sub_Res);
+                     Set_Mark_Flag (Pinst, True);
+                     Get_Next_Non_Extract
+                       (Mux_Out, Sub_Status, Sub_Res);
+                     Set_Mark_Flag (Pinst, False);
                      --  Expect Dyn_Extract, so no next.
                      if Sub_Status /= Status_None then
                         Status := Status_Multiple;
