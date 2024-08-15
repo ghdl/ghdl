@@ -50,7 +50,6 @@ jobs:
       - name: ⏬ Checkout repository
         uses: actions/checkout@v4
         with:
-          repository: ghdl/ghdl
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
 
@@ -157,24 +156,56 @@ jobs:
 
     if: inputs.pacman_artifact != ''
 
+    env:
+      common_packages: "binutils:p"
 
     defaults:
       run:
         shell: "msys2 {0}"
 
     steps:
+      - name: '⚙ git config'
+        shell: bash
+        run: git config --global core.autocrlf input
+
       - name: ⏬ Checkout repository
         uses: actions/checkout@v4
-        with:
-          repository: ghdl/ghdl
 
       - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
         uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ inputs.runtime }}
           update: true
-          install: ${{ env.msys2_packages }}
-          pacboy: "${{ env.common_packages }} ${{ env.mcode_packages }} ${{ env.llvm_packages }}"
+          pacboy: "${{ env.common_packages }}"
+
+      - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.Build.outputs.ghdl_artifact }}
+          path: install
+
+      - name: Cleanup
+        run: |
+          rm -v install/*.requirements
+
+      - name: '🚧 Build package'
+        run: |
+          echo "pwd=$(pwd)"
+          cd dist/msys2/${{ inputs.backend }}
+          makepkg-mingw --noconfirm --noprogressbar -sCLf
+
+          echo "================================================================================"
+          echo "ls -lAh $(pwd)"
+          ls -lAh $(pwd)
+          echo "================================================================================"
+
+      - name: 📤 Upload '${{ inputs.pacman_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}' artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.pacman_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}
+          path: dist/msys2/${{ inputs.backend }}/*.pkg.tar.zst
+          if-no-files-found: error
+          retention-days: 1
 
   Install:
     name: Install and Test GHDL on Windows Server + MSYS2
@@ -191,8 +222,6 @@ jobs:
     steps:
       - name: ⏬ Checkout repository
         uses: actions/checkout@v4
-        with:
-          repository: ghdl/ghdl
 
       - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
         uses: msys2/setup-msys2@v2
