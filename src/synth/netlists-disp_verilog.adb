@@ -73,6 +73,8 @@ package body Netlists.Disp_Verilog is
          when Sname_Version =>
             Put ("n");
             Put_Name_Version (N);
+         when Sname_Unused =>
+            raise Program_Error;
       end case;
    end Put_Name_1;
 

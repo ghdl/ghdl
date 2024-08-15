@@ -37,6 +37,9 @@ package Netlists is
    --  without copying the whole prefix.
    type Sname_Kind is
      (
+      --  Unused kind (use the position 0 to avoid a compiler bug).
+      Sname_Unused,
+
       --  The name adds a suffix to an existing name.  Simple names (without
       --  prefix) are in this kind, with a null prefix.
       Sname_User,

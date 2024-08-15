@@ -136,6 +136,8 @@ package body Netlists.Dump is
          when Sname_Version =>
             Put ("%");
             Put_Uns32 (Get_Sname_Version (N));
+         when Sname_Unused =>
+            raise Program_Error;
       end case;
    end Dump_Name;
 

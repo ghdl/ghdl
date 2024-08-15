@@ -56,6 +56,8 @@ package body Netlists.Errors is
          when Sname_Version =>
             Output_Message ("n");
             Output_Uns32 (Get_Sname_Version (N));
+         when Sname_Unused =>
+            raise Program_Error;
       end case;
    end Output_Name_1;
 
