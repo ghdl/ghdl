@@ -94,9 +94,6 @@ jobs:
           - 'gna'
           - 'vests'
           - 'synth'
-        exclude:
-          - suite: 'synth'
-            sys: { sys: 'UCRT64' }
 
     defaults:
       run:
