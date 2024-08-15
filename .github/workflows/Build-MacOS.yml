@@ -43,7 +43,6 @@ jobs:
       - name: ⏬ Checkout repository
         uses: actions/checkout@v4
         with:
-          repository: ghdl/ghdl
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
 
