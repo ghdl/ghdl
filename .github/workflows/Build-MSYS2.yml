@@ -36,7 +36,7 @@ jobs:
 
     env:
       msys2_packages: "make"
-      common_packages: "gcc:p gcc-ada:p diffutils:p"
+      common_packages: "gcc:p gcc-ada:p diffutils:p zlib:p"
       mcode_packages: ""
       llvm_packages: "llvm:p clang:p"
 
@@ -49,6 +49,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ghdl/ghdl
+          # The command 'git describe' (used for version) needs the history.
+          fetch-depth: 0
 
       - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
         uses: msys2/setup-msys2@v2
