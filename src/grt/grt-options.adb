@@ -210,6 +210,12 @@ package body Grt.Options is
          return -1;
       end if;
       while Scale < Time_Resolution_Scale loop
+         if Time >= Integer_64'Last / 1000 then
+            Error_S ("time value '");
+            Diag_C (Str);
+            Error_E ("' is too large");
+            return -1;
+         end if;
          Time := Time * 1000;
          Scale := Scale + 1;
       end loop;
