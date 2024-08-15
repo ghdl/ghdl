@@ -5096,7 +5096,7 @@ package body Synth.Vhdl_Stmts is
       Item : Node;
    begin
       Unit_Sname := New_Sname_User (Get_Identifier (Unit),
-                                    Get_Sname (Syn_Inst));
+                                    Get_Sname (Parent_Inst));
       Set_Extra (Syn_Inst, Parent_Inst, Unit_Sname);
       Mark (M, Proc_Pool);
 
