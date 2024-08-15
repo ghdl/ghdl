@@ -32,6 +32,8 @@ jobs:
   Build:
     name: Build GHDL on '${{ inputs.macos_image }}'
     runs-on: ${{ inputs.macos_image }}
+    outputs:
+      ghdl_artifact: ${{ steps.artifact_name.outputs.ghdl_artifact }}
 
     defaults:
       run:
@@ -44,6 +46,12 @@ jobs:
           repository: ghdl/ghdl
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
+
+      - name: Assemble artifact name
+        id: artifact_name
+        run: |
+          echo "ghdl_artifact=${{ inputs.macos_artifact }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
+
 
       - name: Install dependencies
         run: |
@@ -144,5 +152,5 @@ jobs:
     if: inputs.testsuites != 'none'
     with:
       os_image:      ${{ inputs.macos_image }}
-      ghdl_artifact: ${{ inputs.macos_artifact }}-${{ inputs.backend }}
+      ghdl_artifact: ${{ needs.Build.outputs.ghdl_artifact }}
       testsuites:    ${{ inputs.testsuites }}
