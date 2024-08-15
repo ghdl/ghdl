@@ -40,6 +40,8 @@ jobs:
   Build:
     name: Build GHDL on '${{ inputs.ubuntu_image }}'
     runs-on: ${{ inputs.ubuntu_image }}
+    outputs:
+      ghdl_artifact: ${{ steps.artifact_name.outputs.ghdl_artifact }}
 
     defaults:
       run:
@@ -52,6 +54,11 @@ jobs:
           repository: ghdl/ghdl
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
+
+      - name: Assemble artifact name
+        id: artifact_name
+        run: |
+          echo "ghdl_artifact=${{ inputs.ubuntu_artifact }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
 
       - name: 🔧 Install dependencies
         run: |
@@ -169,7 +176,7 @@ jobs:
 
           if ${{ startsWith(inputs.backend, 'llvm') }}; then
             if ${{ endsWith(inputs.ubuntu_image, '22.04') }}; then
-              echo "libllvm" >> ubuntu.requirements
+              echo "libllvm15" >> ubuntu.requirements
             elif ${{ endsWith(inputs.ubuntu_image, '24.04') }}; then
               echo "libllvm18" >> ubuntu.requirements
             else
@@ -202,7 +209,7 @@ jobs:
     if: inputs.testsuites != 'none'
     with:
       os_image:      ${{ inputs.ubuntu_image }}
-      ghdl_artifact: ${{ inputs.ubuntu_artifact }}-${{ inputs.backend }}
+      ghdl_artifact: ${{ needs.Build.outputs.ghdl_artifact }}
       testsuites:    ${{ inputs.testsuites }}
 
   Sphinx:
