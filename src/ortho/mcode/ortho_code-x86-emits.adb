@@ -3067,14 +3067,17 @@ package body Ortho_Code.X86.Emits is
             if Frame_Size > 0 then
                Gen_8 (Byte (Alloc_Pc - Subprg_Pc));    --  Offset
                if Frame_Size <= 128 then
+                  --  Alloc small
                   Gen_8 (16#02# + Byte (Frame_Size - 8) / 8 * 16);
                   Nbr_Unw_Code := Nbr_Unw_Code + 1;
                elsif Frame_Size < 512 * 1024 - 8 then
-                  Gen_8 (16#02#);
+                  --  Alloc large, operation info = 0
+                  Gen_8 (16#01#);
                   Gen_16 (Frame_Size / 8);
                   Nbr_Unw_Code := Nbr_Unw_Code + 2;
                else
-                  Gen_8 (16#12#);
+                  --  Alloc large, operation info = 1
+                  Gen_8 (16#11#);
                   Gen_16 ((Frame_Size / 8) mod 16#1_0000#);
                   Gen_16 ((Frame_Size / 8) / 16#1_0000#);
                   Nbr_Unw_Code := Nbr_Unw_Code + 3;
