@@ -42,6 +42,9 @@ extern "C" {
     #[link_name = "flags__flag_syn_binding"]
     static mut flag_syn_binding: bool;
 
+    #[link_name = "flags__flag_synopsys"]
+    static mut flag_synopsys: bool;
+
     #[link_name = "vhdl__scanner__flag_psl_comment"]
     static mut flag_psl_comment: bool;
 
@@ -223,6 +226,7 @@ fn apply_analyze_flags(flags: &VhdlAnalyzeFlags) {
         flag_comment_keyword = flags.comment_keyword;
         flag_psl_comment = flags.psl_comment;
         flag_syn_binding = flags.synth_binding;
+        flag_synopsys = flags.synopsys_pkgs;
         if flags.work_name != NameId::NULL {
             work_library_name = flags.work_name;
         }
@@ -298,11 +302,11 @@ fn parse_analyze_flags(flags: &mut VhdlAnalyzeFlags, arg: &str) -> Option<ParseS
         flags.bootstrap = true;
         return None;
     }
-    if arg == "-fsynopsys" {
+    if arg == "-fsynopsys" || arg == "--ieee=synopsys" {
         flags.synopsys_pkgs = true;
         return None;
     }
-    if arg == "-frelaxed" {
+    if arg == "-frelaxed" || arg == "-frelaxed-rules" {
         flags.relaxed = true;
         return None;
     }
@@ -349,6 +353,52 @@ fn parse_analyze_flags(flags: &mut VhdlAnalyzeFlags, arg: &str) -> Option<ParseS
     });
 }
 
+fn analyze(args: &[String], save: bool) -> Result<(), ParseStatus> {
+    let mut status = true;
+    let mut flags = VhdlAnalyzeFlags::default();
+    let mut expect_failure = false;
+    let mut files = vec![];
+
+    // Parse arguments
+    for arg in &args[1..] {
+        if arg == "--expect-failure" {
+            expect_failure = true;
+        } else {
+            match parse_analyze_flags(&mut flags, &arg) {
+                None => {}
+                Some(ParseStatus::NotOption) => files.push(arg.clone()),
+                Some(err) => return Err(err),
+            }
+        }
+    }
+
+    // Initialize
+    apply_analyze_flags(&flags);
+    unsafe {
+        compile_init(true);
+    };
+
+    // And analyze every file
+    for file in &files {
+        let id = unsafe { get_identifier_with_len(file.as_ptr(), file.len() as u32) };
+        eprintln!("analyze {file}\n");
+        status = unsafe { analyze_file(id) };
+        if !status {
+            break;
+        }
+    }
+
+    // Save the library on success
+    if status && save {
+        unsafe { save_work_library() };
+    }
+    return if status == !expect_failure {
+        Ok(())
+    } else {
+        Err(ParseStatus::OptionError)
+    };
+}
+
 trait Command {
     fn get_command(&self) -> &'static [&'static str];
     fn execute(&self, args: &[String]) -> Result<(), ParseStatus>;
@@ -362,49 +412,19 @@ impl Command for CommandAnalyze {
     }
 
     fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
-        let mut status = true;
-        let mut flags = VhdlAnalyzeFlags::default();
-        let mut expect_failure = false;
-        let mut files = vec![];
+        analyze(args, true)
+    }
+}
 
-        // Parse arguments
-        for arg in &args[1..] {
-            if arg == "--expect-failure" {
-                expect_failure = true;
-            } else {
-                match parse_analyze_flags(&mut flags, &arg) {
-                    None => {}
-                    Some(ParseStatus::NotOption) => files.push(arg.clone()),
-                    Some(err) => return Err(err),
-                }
-            }
-        }
+struct CommandSyntax {}
 
-        // Initialize
-        apply_analyze_flags(&flags);
-        unsafe {
-            compile_init(true);
-        };
+impl Command for CommandSyntax {
+    fn get_command(&self) -> &'static [&'static str] {
+        return &["syntax", "-s"];
+    }
 
-        // And analyze every file
-        for file in &files {
-            let id = unsafe { get_identifier_with_len(file.as_ptr(), file.len() as u32) };
-            eprintln!("analyze {file}\n");
-            status = unsafe { analyze_file(id) };
-            if !status {
-                break;
-            }
-        }
-
-        // Save the library on success
-        if status {
-            unsafe { save_work_library() };
-        }
-        return if status == !expect_failure {
-            Ok(())
-        } else {
-            Err(ParseStatus::OptionError)
-        };
+    fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
+        analyze(args, false)
     }
 }
 
@@ -558,6 +578,7 @@ impl Command for CommandRun {
 
 const COMMANDS: &[&dyn Command] = &[
     &CommandAnalyze {},
+    &CommandSyntax {},
     &CommandElab {},
     &CommandRun {},
     &CommandRemove {},
