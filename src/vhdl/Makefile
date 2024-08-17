@@ -20,6 +20,7 @@
 
 PNODES=../../scripts/pnodes.py
 PNODESPY=../../scripts/pnodespy.py
+PNODESRS=../../scripts/pnodesrs.py
 PYTHON=python3
 
 DEPS=vhdl-nodes.ads vhdl-nodes.adb.in $(PNODES)
@@ -35,7 +36,8 @@ GEN_FILES=vhdl-nodes.adb \
   ../../pyGHDL/libghdl/vhdl/tokens.py \
   ../../pyGHDL/libghdl/vhdl/elocations.py \
   ../../pyGHDL/libghdl/errorout.py \
-  ../../pyGHDL/libghdl/std_names.py
+  ../../pyGHDL/libghdl/std_names.py \
+  ../errorout_def.rs
 
 NODES_FLAGS=--node-file=vhdl-nodes.ads --field-file=vhdl-nodes.adb.in \
   --template-file=vhdl-nodes.adb.in --kind-file=vhdl-nodes.ads \
@@ -111,6 +113,11 @@ vhdl-elocations_meta.adb: vhdl-elocations_meta.adb.in vhdl-elocations.ads $(DEPS
 	$(RM) $@
 	$(PNODESPY) $(ELOCATIONS_FLAGS) libghdl-errorout > $@
 	$(PYTHON) -m black $@
+	chmod -w $@
+
+../errorout_def.rs: $(PNODESRS) ../errorout.ads
+	$(RM) $@
+	$(PNODESRS) $(ELOCATIONS_FLAGS) errorout > $@
 	chmod -w $@
 
 clean:

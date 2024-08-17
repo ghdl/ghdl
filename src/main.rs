@@ -1,4 +1,6 @@
 use std::{env, ffi, fs, io, iter, os};
+mod errorout_def;
+mod errorout;
 
 #[derive(Clone, Copy)]
 #[repr(u8)]
@@ -94,6 +96,12 @@ extern "C" {
     #[link_name = "errorout__console__install_handler"]
     fn errorout_console_install_handler();
 
+    #[link_name = "errorout__warning_error"]
+    fn warning_error(id: u8, as_error: bool);
+
+    #[link_name = "errorout__enable_warning"]
+    fn enable_warning(id: u8, as_error: bool);
+
     #[link_name = "libraries__work_directory"]
     static mut work_directory: NameId;
 
@@ -165,6 +173,19 @@ fn library_to_filename(lib: VhdlNode, std: VhdlStd) -> String {
 }
 
 #[derive(Clone, Copy)]
+enum WarnValue {
+    Default,
+    Enable,
+    Disable,
+}
+
+#[derive(Clone, Copy)]
+struct WarnState {
+    enable: WarnValue,
+    error: WarnValue,
+}
+
+#[derive(Clone, Copy)]
 struct VhdlAnalyzeFlags {
     std: VhdlStd,
     relaxed: bool,
@@ -175,19 +196,25 @@ struct VhdlAnalyzeFlags {
     work_dir: NameId,
     psl_comment: bool,
     comment_keyword: bool,
+    warnings: [WarnState; crate::errorout::WARNID_USIZE],
 }
 
-static DEFAULT_VHDL_FLAGS: VhdlAnalyzeFlags = VhdlAnalyzeFlags {
-    std: VhdlStd::Vhdl93,
-    relaxed: true,
-    bootstrap: false,
-    synopsys_pkgs: false,
-    synth_binding: false,
-    work_name: NameId::NULL,
-    work_dir: NameId::NULL,
-    psl_comment: false,
-    comment_keyword: false,
-};
+impl Default for VhdlAnalyzeFlags {
+    fn default() -> Self {
+        Self {
+         std: VhdlStd::Vhdl93,
+         relaxed: true,
+        bootstrap: false,
+        synopsys_pkgs: false,
+        synth_binding: false,
+        work_name: NameId::NULL,
+        work_dir: NameId::NULL,
+        psl_comment: false,
+        comment_keyword: false,
+        warnings: [WarnState {enable: WarnValue::Default, error: WarnValue::Default}; crate::errorout::WARNID_USIZE],
+        }
+    }
+}
 
 fn apply_analyze_flags(flags: &VhdlAnalyzeFlags) {
     unsafe {
@@ -201,6 +228,19 @@ fn apply_analyze_flags(flags: &VhdlAnalyzeFlags) {
         }
         if flags.work_dir != NameId::NULL {
             work_directory = flags.work_dir;
+        }
+        for (i, w) in flags.warnings.iter().enumerate() {
+            let id = crate::errorout::MSGID_FIRST_WARNID + (i as u8);
+            match w.error {
+                WarnValue::Default => {},
+                WarnValue::Enable => { warning_error(id, true); },
+                WarnValue::Disable => { warning_error(id, false); },
+            }
+            match w.enable {
+                WarnValue::Default => {},
+                WarnValue::Enable => { enable_warning(id, true); },
+                WarnValue::Disable => {enable_warning(id, false); },
+            }
         }
     }
 }
@@ -298,6 +338,12 @@ fn parse_analyze_flags(flags: &mut VhdlAnalyzeFlags, arg: &str) -> Option<ParseS
         //  TODO: for the back-end.
         return None;
     }
+    if arg == "-Werror" {
+        for w in flags.warnings.iter_mut() {
+            w.error = WarnValue::Enable;
+        }
+        return None;
+    }
     return Some(ParseStatus::UnknownOption {
         msg: arg.to_string(),
     });
@@ -317,7 +363,7 @@ impl Command for CommandAnalyze {
 
     fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
         let mut status = true;
-        let mut flags = DEFAULT_VHDL_FLAGS;
+        let mut flags = VhdlAnalyzeFlags::default();
         let mut expect_failure = false;
         let mut files = vec![];
 
@@ -370,7 +416,7 @@ impl Command for CommandRemove {
     }
 
     fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
-        let mut flags = DEFAULT_VHDL_FLAGS;
+        let mut flags = VhdlAnalyzeFlags::default();
 
         for arg in &args[1..] {
             match parse_analyze_flags(&mut flags, &arg) {
@@ -399,7 +445,7 @@ impl Command for CommandRemove {
 }
 
 fn analyze_elab(args: &[String]) -> Result<Vec<String>, ParseStatus> {
-    let mut flags = DEFAULT_VHDL_FLAGS;
+    let mut flags = VhdlAnalyzeFlags::default();
     let mut expect_failure = false;
     let mut unit = NameId::NULL;
     let mut arch = NameId::NULL;
