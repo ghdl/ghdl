@@ -150,7 +150,10 @@ jobs:
 
   Package:
     name: Package GHDL on Windows Server + MSYS2
-    runs-on: windows-latest
+    runs-on: ${{ inputs.windows_image }}
+    outputs:
+      pacman_artifact: ${{ steps.artifact_name.outputs.pacman_artifact }}
+
     needs:
       - Build
 
@@ -164,10 +167,6 @@ jobs:
         shell: "msys2 {0}"
 
     steps:
-      - name: '⚙ git config'
-        shell: bash
-        run: git config --global core.autocrlf input
-
       - name: ⏬ Checkout repository
         uses: actions/checkout@v4
 
@@ -178,15 +177,22 @@ jobs:
           update: true
           pacboy: "${{ env.common_packages }}"
 
+      - name: Assemble artifact name
+        id: artifact_name
+        run: |
+          echo "pacman_artifact=${{ inputs.pacman_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
+
       - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
         uses: actions/download-artifact@v4
         with:
           name: ${{ needs.Build.outputs.ghdl_artifact }}
           path: install
 
-      - name: Cleanup
+      - name: Install GHDL (chmod) and remove unneeded files from artifact
         run: |
-          rm -v install/*.requirements
+          rm -v    ./install/*.requirements
+          chmod +x ./install/bin/*
+          ls -lAh  ./install
 
       - name: '🚧 Build package'
         run: |
@@ -199,17 +205,17 @@ jobs:
           ls -lAh $(pwd)
           echo "================================================================================"
 
-      - name: 📤 Upload '${{ inputs.pacman_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}' artifact
+      - name: 📤 Upload '${{ steps.artifact_name.outputs.pacman_artifact }}' artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.pacman_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}
+          name: ${{ steps.artifact_name.outputs.pacman_artifact }}
           path: dist/msys2/${{ inputs.backend }}/*.pkg.tar.zst
           if-no-files-found: error
           retention-days: 1
 
-  Install:
+  InstallPackage:
     name: Install and Test GHDL on Windows Server + MSYS2
-    runs-on: windows-latest
+    runs-on: ${{ inputs.windows_image }}
     needs:
       - Package
 
@@ -227,3 +233,23 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           update: true
+          pacboy: "diffutils:p"
+
+      - name: 📥 Download artifacts '${{ needs.Package.outputs.pacman_artifact }}' from 'Package' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.Package.outputs.pacman_artifact }}
+          path: pacman
+
+      - name: Install pkg.tar.zst package
+        run: pacman -U --noconfirm pacman/*.pkg.tar.zst
+
+      - name: Verify installation
+        run: |
+          echo "which ghdl: $(which ghdl)"
+          ghdl version
+
+      - name: Run tests
+        run: |
+          cd testsuite
+          ./testsuite.sh sanity

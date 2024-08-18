@@ -2,7 +2,7 @@ _realname=ghdl
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}-llvm")
 provides=("${MINGW_PACKAGE_PREFIX}-${_realname}")
-pkgver=5.0.0-dev
+pkgver=5.0.0.dev
 pkgrel=1
 pkgdesc="GHDL: the open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL (llvm backend) (mingw-w64)"
 arch=('any')
@@ -40,8 +40,8 @@ package() {
   sed -s "s|${PREFIX_DEPS}|${MINGW_PREFIX}|g" -i "${pkgdir}"${MINGW_PREFIX}/lib/libghdl.link
   sed -s "s|${PREFIX_DEPS}|${MINGW_PREFIX}|g" -i "${pkgdir}"${MINGW_PREFIX}/lib/ghdl/grt.lst
 
-  # License
-  install -Dm644 "${srcdir}"/${_realname}-${pkgver}/doc/licenses.rst "${pkgdir}"${MINGW_PREFIX}/share/licenses/${_realname}-llvm/licenses.rst
+#   # License
+#   install -Dm644 "${srcdir}"/${_realname}-${pkgver}/doc/licenses.rst "${pkgdir}"${MINGW_PREFIX}/share/licenses/${_realname}-llvm/licenses.rst
 
 
   echo "--------------------------------------------------------------------------------"

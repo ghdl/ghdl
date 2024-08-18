@@ -1,10 +1,10 @@
 _realname=ghdl
 pkgbase=mingw-w64-${_realname}
-pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}-mcode")
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}-llvm-jit")
 provides=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=5.0.0.dev
 pkgrel=1
-pkgdesc="GHDL: the open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL (mcode backend) (mingw-w64)"
+pkgdesc="GHDL: the open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL (llvm backend) (mingw-w64)"
 arch=('any')
 mingw_arch=('mingw64' 'ucrt64' 'clang64')
 url='https://github.com/ghdl/ghdl'
@@ -13,6 +13,7 @@ groups=("${MINGW_PACKAGE_PREFIX}-eda")
 # libgnat.dll is needed for libghdl.
 depends=(
   "${MINGW_PACKAGE_PREFIX}-gcc-ada"
+  "${MINGW_PACKAGE_PREFIX}-llvm-libs"
   "${MINGW_PACKAGE_PREFIX}-zlib"
 )
 makedepends=
@@ -37,9 +38,10 @@ package() {
 
   local PREFIX_DEPS=$(cygpath -am ${MINGW_PREFIX})
   sed -s "s|${PREFIX_DEPS}|${MINGW_PREFIX}|g" -i "${pkgdir}"${MINGW_PREFIX}/lib/libghdl.link
+#   sed -s "s|${PREFIX_DEPS}|${MINGW_PREFIX}|g" -i "${pkgdir}"${MINGW_PREFIX}/lib/ghdl/grt.lst
 
 #   # License
-#   install -Dm644 "${srcdir}"/${_realname}-${pkgver}/doc/licenses.rst "${pkgdir}"${MINGW_PREFIX}/share/licenses/${_realname}-mcode/licenses.rst
+#   install -Dm644 "${srcdir}"/${_realname}-${pkgver}/doc/licenses.rst "${pkgdir}"${MINGW_PREFIX}/share/licenses/${_realname}-llvm/licenses.rst
 
 
   echo "--------------------------------------------------------------------------------"
