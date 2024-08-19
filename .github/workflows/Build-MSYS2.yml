@@ -34,11 +34,12 @@ jobs:
     name: Build GHDL on Windows Server + MSYS2
     runs-on: ${{ inputs.windows_image }}
     outputs:
-      ghdl_artifact: ${{ steps.artifact_name.outputs.ghdl_artifact }}
+      ghdl_artifact:   ${{ steps.artifact_name.outputs.ghdl_artifact }}
+      pacman_artifact: ${{ steps.artifact_name.outputs.pacman_artifact }}
 
     env:
       msys2_packages: "make"
-      common_packages: "gcc:p gcc-ada:p diffutils:p zlib:p"
+      common_packages: "gcc:p gcc-ada:p binutils:p diffutils:p zlib:p"
       mcode_packages: ""
       llvm_packages: "llvm:p clang:p"
 
@@ -65,6 +66,7 @@ jobs:
         id: artifact_name
         run: |
           echo "ghdl_artifact=${{ inputs.windows_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
+          echo "pacman_artifact=${{ inputs.pacman_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
 
       - name: Check build environemnt
         run: |
@@ -105,7 +107,36 @@ jobs:
           cd build/${{ inputs.backend }}
           make install
 
+      - name: '📦 Build package'
+        if: inputs.pacman_artifact != ''
+        run: |
+          cd dist/msys2/${{ inputs.backend }}
+          makepkg-mingw --noconfirm --noprogressbar -sCLf
+
+          echo "================================================================================"
+          echo "ls -lAh $(pwd)"
+          ls -lAh $(pwd)
+          echo "================================================================================"
+
+      - name: 📤 Upload '${{ steps.artifact_name.outputs.pacman_artifact }}' artifact
+        uses: actions/upload-artifact@v4
+        if: inputs.pacman_artifact != ''
+        with:
+          name: ${{ steps.artifact_name.outputs.pacman_artifact }}
+          path: dist/msys2/${{ inputs.backend }}/*.pkg.tar.zst
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Run 'sanity' from testsuite
+        run: |
+          export GHDL=$(pwd)/install/bin/ghdl
+          cd testsuite
+
+          # no pyunit
+          ./testsuite.sh sanity
+
       - name: 📋 Write requirements file
+        if: inputs.windows_artifact != ''
         run: |
           cd install
           ls -lAh
@@ -119,16 +150,9 @@ jobs:
            echo "${MSYS2_PREFIX}-llvm-libs" >> ${{ inputs.runtime }}.requirements
           fi
 
-      - name: Run 'sanity' from testsuite
-        run: |
-          export GHDL=$(pwd)/install/bin/ghdl
-          cd testsuite
-
-          # no pyunit
-          ./testsuite.sh sanity
-
       - name: 📤 Upload '${{ steps.artifact_name.outputs.ghdl_artifact }}' artifact
         uses: actions/upload-artifact@v4
+        if: inputs.windows_artifact != ''
         with:
           name: ${{ steps.artifact_name.outputs.ghdl_artifact }}
           path: ./install
@@ -148,19 +172,13 @@ jobs:
       ghdl_artifact: ${{ needs.Build.outputs.ghdl_artifact }}
       testsuites:    ${{ inputs.testsuites }}
 
-  Package:
-    name: Package GHDL on Windows Server + MSYS2
+  InstallPackage:
+    name: Install and Test GHDL on Windows Server + MSYS2
     runs-on: ${{ inputs.windows_image }}
-    outputs:
-      pacman_artifact: ${{ steps.artifact_name.outputs.pacman_artifact }}
-
     needs:
       - Build
 
     if: inputs.pacman_artifact != ''
-
-    env:
-      common_packages: "binutils:p"
 
     defaults:
       run:
@@ -175,70 +193,12 @@ jobs:
         with:
           msystem: ${{ inputs.runtime }}
           update: true
-          pacboy: "${{ env.common_packages }}"
-
-      - name: Assemble artifact name
-        id: artifact_name
-        run: |
-          echo "pacman_artifact=${{ inputs.pacman_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
-
-      - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.Build.outputs.ghdl_artifact }}
-          path: install
-
-      - name: Install GHDL (chmod) and remove unneeded files from artifact
-        run: |
-          rm -v    ./install/*.requirements
-          chmod +x ./install/bin/*
-          ls -lAh  ./install
-
-      - name: '🚧 Build package'
-        run: |
-          echo "pwd=$(pwd)"
-          cd dist/msys2/${{ inputs.backend }}
-          makepkg-mingw --noconfirm --noprogressbar -sCLf
-
-          echo "================================================================================"
-          echo "ls -lAh $(pwd)"
-          ls -lAh $(pwd)
-          echo "================================================================================"
-
-      - name: 📤 Upload '${{ steps.artifact_name.outputs.pacman_artifact }}' artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.artifact_name.outputs.pacman_artifact }}
-          path: dist/msys2/${{ inputs.backend }}/*.pkg.tar.zst
-          if-no-files-found: error
-          retention-days: 1
-
-  InstallPackage:
-    name: Install and Test GHDL on Windows Server + MSYS2
-    runs-on: ${{ inputs.windows_image }}
-    needs:
-      - Package
-
-    if: inputs.pacman_artifact != ''
-
-    defaults:
-      run:
-        shell: "msys2 {0}"
-
-    steps:
-      - name: ⏬ Checkout repository
-        uses: actions/checkout@v4
-
-      - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
-        uses: msys2/setup-msys2@v2
-        with:
-          update: true
           pacboy: "diffutils:p"
 
-      - name: 📥 Download artifacts '${{ needs.Package.outputs.pacman_artifact }}' from 'Package' job
+      - name: 📥 Download artifacts '${{ needs.Build.outputs.pacman_artifact }}' from 'Package' job
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.Package.outputs.pacman_artifact }}
+          name: ${{ needs.Build.outputs.pacman_artifact }}
           path: pacman
 
       - name: Install pkg.tar.zst package
