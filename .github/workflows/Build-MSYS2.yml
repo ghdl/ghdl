@@ -212,4 +212,11 @@ jobs:
       - name: Run tests
         run: |
           cd testsuite
-          ./testsuite.sh sanity
+
+          # no pyunit
+          if [ '${{ inputs.testsuites }}' == 'all' ]; then
+            TESTSUITES="sanity gna vests synth vpi vhpi"
+          else
+            TESTSUITES="${{ inputs.testsuites }}"
+          fi
+          ./testsuite.sh $TESTSUITES
