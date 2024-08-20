@@ -20,14 +20,31 @@ on:
         description: 'GHDL testsuites'
         required: true
         type: string
-      windows_artifact:
-        description: 'Name of the Windows build artifact.'
-        required: true
+      msys2_artifact:
+        description: 'Name of the MSYS2 build artifact.'
+        required: false
+        default: ''
         type: string
       pacman_artifact:
         description: 'Name of the MSYS2 package artifact.'
-        required: true
+        required: false
+        default: ''
         type: string
+      windows_artifact:
+        description: 'Name of the standalone artifact.'
+        required: false
+        default: ''
+        type: string
+    outputs:
+      ghdl_msys2_artifact:
+        description: "Artifact name for compiled GHDL for MSYS2."
+        value: ${{ jobs.Build.outputs.ghdl_artifact }}
+      ghdl_pacman_artifact:
+        description: "Artifact name for packaged GHDL for pacman (MSYS2)."
+        value: ${{ jobs.Build.outputs.pacman_artifact }}
+      ghdl_windows_artifact:
+        description: "Artifact name for standalone GHDL for Windows."
+        value: ${{ jobs.Build.outputs.windows_artifact }}
 
 jobs:
   Build:
@@ -36,6 +53,7 @@ jobs:
     outputs:
       ghdl_artifact:   ${{ steps.artifact_name.outputs.ghdl_artifact }}
       pacman_artifact: ${{ steps.artifact_name.outputs.pacman_artifact }}
+      windows_artifact: ${{ steps.artifact_name.outputs.windows_artifact }}
 
     env:
       msys2_packages: "make"
@@ -65,8 +83,9 @@ jobs:
       - name: Assemble artifact name
         id: artifact_name
         run: |
-          echo "ghdl_artifact=${{ inputs.windows_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
+          echo "ghdl_artifact=${{ inputs.msys2_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
           echo "pacman_artifact=${{ inputs.pacman_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
+          echo "windows_artifact=${{ inputs.windows_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
 
       - name: Check build environemnt
         run: |
@@ -136,7 +155,7 @@ jobs:
           ./testsuite.sh sanity
 
       - name: 📋 Write requirements file
-        if: inputs.windows_artifact != ''
+        if: inputs.msys2_artifact != ''
         run: |
           cd install
           ls -lAh
@@ -152,15 +171,56 @@ jobs:
 
       - name: 📤 Upload '${{ steps.artifact_name.outputs.ghdl_artifact }}' artifact
         uses: actions/upload-artifact@v4
-        if: inputs.windows_artifact != ''
+        if: inputs.msys2_artifact != ''
         with:
           name: ${{ steps.artifact_name.outputs.ghdl_artifact }}
           path: ./install
           if-no-files-found: error
           retention-days: 1
 
+      - name: Copy and check dependency (MSYS2)
+        if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
+        run: |
+          GetMinGWLibraries() {
+            ldd "$1" | while IFS="" read -r dependency; do
+              fields=($dependency)
+              dep="${fields[2]}"
+              if [[ "$dep" == /"${MSYSTEM,,}"/* ]]; then
+                echo "$dep"
+                GetMinGWLibraries "${MSYSTEM_PREFIX}/${dep#"/${MSYSTEM,,}/"}"
+              fi
+            done
+          }
+
+          for executable in ./install/bin/*.exe; do
+            echo "read dependencies of '${executable}'"
+            ldd ${executable}
+            echo "copy dependencies ..."
+            for dependency in $(GetMinGWLibraries ${executable}); do
+              cp -v "$dependency" ./install/bin
+            done
+          done
+
+          for library in ./install/lib/*.dll; do
+            echo "read dependencies of '${library}'"
+            ldd ${library}
+            echo "copy dependencies ..."
+            for dependency in $(GetMinGWLibraries ${library}); do
+              cp -v "$dependency" ./install/lib
+            done
+          done
+
+      - name: 📤 Upload '${{ steps.artifact_name.outputs.windows_artifact }}' artifact
+        uses: actions/upload-artifact@v4
+        if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
+        with:
+          name: ${{ steps.artifact_name.outputs.windows_artifact }}
+          path: ./install
+          if-no-files-found: error
+          retention-days: 1
+
   Test:
-    name:
+#    name: Test GHDL on Windows Server + MSYS2
     uses: ./.github/workflows/Test-GHDL.yml
     needs:
       - Build
@@ -210,6 +270,7 @@ jobs:
           ghdl version
 
       - name: Run tests
+        if: inputs.testsuites != 'none'
         run: |
           cd testsuite
 
@@ -220,3 +281,43 @@ jobs:
             TESTSUITES="${{ inputs.testsuites }}"
           fi
           ./testsuite.sh $TESTSUITES
+
+  StandalonePackage:
+    name: Install GHDL on Windows Server
+    runs-on: ${{ inputs.windows_image }}
+    needs:
+      - Build
+
+    if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📥 Download artifacts '${{ needs.Build.outputs.windows_artifact }}' from 'Package' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.Build.outputs.windows_artifact }}
+          path: install
+
+      - name: Verify installation
+        run: |
+          $env:PATH="$($pwd.Path)\install\bin;${env:PATH}"
+
+          echo "which ghdl: $(which ghdl)"
+          ghdl version
+
+#      - name: Run tests
+#        if: inputs.testsuites != 'none'
+#        run: |
+#          $env:PATH="$($pwd.Path)\install\bin;${env:PATH}"
+#
+#          cd testsuite
+#
+#          # no pyunit
+#          if ('${{ inputs.testsuites }}' == 'all') {
+#            $TESTSUITES = "sanity gna vests synth vpi vhpi"
+#          } else {
+#            $TESTSUITES = "${{ inputs.testsuites }}"
+#          }
+#          ./testsuite.sh $TESTSUITES
