@@ -27,6 +27,10 @@ on:
         description: 'Name of the macOS build artifact.'
         required: true
         type: string
+    outputs:
+      ghdl_macos_artifact:
+        description: "Artifact name for compiled GHDL for macOS."
+        value: ${{ jobs.Build.outputs.ghdl_artifact }}
 
 jobs:
   Build:
