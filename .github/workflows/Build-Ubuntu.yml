@@ -221,6 +221,24 @@ jobs:
       ghdl_artifact: ${{ needs.Build.outputs.ghdl_artifact }}
       testsuites:    ${{ inputs.testsuites }}
 
+  Docker:
+    uses: ./.github/workflows/Image-Docker.yml
+    needs:
+      - Build
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {'ubuntu_version': '22.04', 'backend': 'mcode'}
+          - {'ubuntu_version': '24.04', 'backend': 'mcode'}
+          - {'ubuntu_version': '22.04', 'backend': 'llvm'}
+          - {'ubuntu_version': '24.04', 'backend': 'llvm'}
+    with:
+      ubuntu_version: ${{ matrix.ubuntu_version }}
+      backend:        ${{ matrix.backend }}
+      ghdl_artifact:  ${{ needs.Build.outputs.ghdl_artifact }}
+      testsuites:     ${{ inputs.testsuites }}
+
   Sphinx:
     uses: ./.github/workflows/Documentation-Sphinx.yml
     needs:

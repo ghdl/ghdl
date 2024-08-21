@@ -8,12 +8,20 @@ on:
         required: false
         default: 'ubuntu-24.04'
         type: string
-      base_image:
-        description: 'Name of Docker base-image.'
-        required: true
-        type: string
       ghdl_artifact:
         description: 'Name of the GHDL artifact.'
+        required: true
+        type: string
+      ubuntu_version:
+        description: 'Version of used Ubuntu for the artifact.'
+        required: true
+        type: string
+      backend:
+        description: 'GHDL backend.'
+        required: true
+        type: string
+      testsuites:
+        description: 'GHDL testsuites'
         required: true
         type: string
 
@@ -21,6 +29,7 @@ jobs:
   Ubuntu:
     name: Package GHDL as Docker Image
     runs-on: ${{ inputs.ubuntu_image }}
+    if: contains(inputs.ghdl_artifact, inputs.ubuntu_version) && endsWith(inputs.ghdl_artifact, inputs.backend)
 
     defaults:
       run:
@@ -34,4 +43,33 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.ghdl_artifact }}
-          path: install
+          path: ./dist/docker/install
+
+      - name: Building GHDL image
+        id: build
+        run: |
+          base="ubuntu:${{ inputs.ubuntu_version }}"
+          base_image=${base%:*}
+          base_image_tag=${base#*:}
+
+          image="ghdl"
+          image_tag="5.0.0-dev-${{ inputs.backend }}-${base_image}-${base_image_tag}"
+
+          echo "ghdl_image=${image}" >> $GITHUB_OUTPUT
+          echo "ghdl_image_tag=${image_tag}" >> $GITHUB_OUTPUT
+
+          echo "Building docker file './dist/docker/Dockerfile.${base_image}' ..."
+          docker build \
+            --file ./dist/docker/Dockerfile.${base_image} \
+            --build-arg IMAGE=${base_image} \
+            --build-arg IMAGE_TAG=${base_image_tag} \
+            --tag "${image}:${image_tag}" \
+            ./dist/docker
+
+      - name: Checking GHDL image
+        run: |
+          docker container run --rm ${{ steps.build.outputs.ghdl_image }}:${{ steps.build.outputs.ghdl_image_tag }} 'echo "which ghdl: $(which ghdl)"; ghdl version'
+
+      - name: Testing GHDL image
+        run: |
+          docker container run --rm -v $(pwd):/data ${{ steps.build.outputs.ghdl_image }}:${{ steps.build.outputs.ghdl_image_tag }} 'cd /data/testsuite; ./testsuite.sh ${{ inputs.testsuites }}'
