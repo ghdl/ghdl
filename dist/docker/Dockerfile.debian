@@ -1,0 +1,45 @@
+ARG IMAGE
+ARG IMAGE_TAG
+ARG GHDL_VERSION
+
+FROM ${IMAGE}:${IMAGE_TAG}
+
+LABEL ghdl_version="${GHDL_VERSION}"
+
+# Changing default shell to Bash (for within Dockerfile)
+SHELL ["/bin/bash", "-l", "-c"]
+
+# Disable install-recommends and install-suggests for apt
+RUN echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf \
+ && echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf
+
+RUN apt-mark manual '.*' \
+ && echo -e "\e[34mInstalled Packages:\e[0m" \
+ && echo -e "\e[34m--------------------------------------------------------------------------------\e[0m" \
+ && apt-mark showmanual | sort | while read -r line; do echo -e "\e[36m  ${line}\e[0m"; done \
+ && echo -e "\e[34m--------------------------------------------------------------------------------\e[0m"
+
+ENV DEBIAN_FRONTEND="noninteractive"
+
+# Install dependencies via apt-get
+RUN --mount=type=bind,target=/context \
+    apt-get update \
+ && xargs --no-run-if-empty -a /context/debian.packages -- apt-get install -y --no-install-recommends \
+ && xargs --no-run-if-empty -a /context/install/ubuntu.requirements -- apt-get install -y --no-install-recommends \
+ && rm -rf /var/lib/apt/lists/* \
+ && apt-get clean
+
+# Copy and install GHDL into /opt/ghdl
+RUN --mount=type=bind,target=/context \
+    mkdir -p /opt/ghdl \
+ && cp -v -R /context/install/* /opt/ghdl \
+ && chmod +x /opt/ghdl/bin/*
+
+ENV PATH=/opt/ghdl/bin:$PATH
+
+# Check GHDL installation
+RUN echo "PATH=${PATH}" \
+ && echo "which ghdl: $(which ghdl)" \
+ && ghdl version
+
+ENTRYPOINT ["/bin/bash", "-c"]

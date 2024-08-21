@@ -18,7 +18,6 @@ jobs:
 #     llvm-jit
 
 # Windows Standalone - ZIP
-#   UCRT64 - mcode
 #   UCRT64 - llvm
 
 # Sanity Check Windows Standalone
@@ -78,9 +77,9 @@ jobs:
       backend:         ${{ matrix.backend }}
       testsuites:      ${{ matrix.testsuites }}
       ubuntu_artifact: ${{ needs.Params.outputs.basename }}-${{ matrix.ubuntu_image }}-x86_64
-      html_artifact:  'documentation-html'
+#      html_artifact:  'documentation-html'
       latex_document: 'ghdl'
-      latex_artifact: 'documentation-latex'
+#      latex_artifact: 'documentation-latex'
 #      pdf_artifact:   'documentation-pdf'
 
   macOS:
@@ -115,34 +114,19 @@ jobs:
       matrix:
         include:
 ###       - {'icon': '🪟', 'backend': 'mcode',    'runtime': 'mingw32', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # No gcc-ada package for MinGW32, support was dropped
-          - {'icon': '🪟', 'backend': 'mcode',    'runtime': 'mingw64', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}
-          - {'icon': '🪟', 'backend': 'llvm',     'runtime': 'mingw64', 'testsuites': 'gna synth vpi vhpi'}                # no vests (too slow)
-          - {'icon': '🪟', 'backend': 'llvm-jit', 'runtime': 'mingw64', 'testsuites': 'vpi vhpi'}                          # gna and synth fail (#2726); no vests (too slow)
+#          - {'icon': '🪟', 'backend': 'mcode',    'runtime': 'mingw64', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}
+#          - {'icon': '🪟', 'backend': 'llvm',     'runtime': 'mingw64', 'testsuites': 'gna synth vpi vhpi'}                # no vests (too slow)
+#          - {'icon': '🪟', 'backend': 'llvm-jit', 'runtime': 'mingw64', 'testsuites': 'vpi vhpi'}                          # gna and synth fail (#2726); no vests (too slow)
           - {'icon': '🪟', 'backend': 'mcode',    'runtime': 'ucrt64',  'testsuites': '${{ needs.Params.outputs.testsuites }}'}
-          - {'icon': '🪟', 'backend': 'llvm',     'runtime': 'ucrt64',  'testsuites': 'gna synth vpi vhpi'}                # no vests (too slow)
-          - {'icon': '🪟', 'backend': 'llvm-jit', 'runtime': 'ucrt64',  'testsuites': 'vpi vhpi'}                          # gna and synth fail (#2726); no vests (too slow)
+#          - {'icon': '🪟', 'backend': 'llvm',     'runtime': 'ucrt64',  'testsuites': 'gna synth vpi vhpi'}                # no vests (too slow)
+#          - {'icon': '🪟', 'backend': 'llvm-jit', 'runtime': 'ucrt64',  'testsuites': 'vpi vhpi'}                          # gna and synth fail (#2726); no vests (too slow)
     with:
       runtime:          ${{ matrix.runtime }}
       backend:          ${{ matrix.backend }}
       testsuites:       ${{ matrix.testsuites }}
       msys2_artifact:   ${{ needs.Params.outputs.basename }}-msys2
-      pacman_artifact:  ${{ needs.Params.outputs.basename }}-pacman
-      windows_artifact: ${{ needs.Params.outputs.basename }}-windows
-
-  Docker:
-    uses: ./.github/workflows/Image-Docker.yml
-    needs:
-      - Params
-      - Ubuntu
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - {'base_image': 'ubuntu:24.04', 'ghdl_artifact': '${{ needs.Params.outputs.basename }}-ubuntu-24.04-x86_64-llvm'}
-          - {'base_image': 'debian:slim',  'ghdl_artifact': '${{ needs.Params.outputs.basename }}-ubuntu-24.04-x86_64-llvm'}
-    with:
-      base_image:    ${{ matrix.base_image }}
-      ghdl_artifact: ${{ matrix.ghdl_artifact }}
+#      pacman_artifact:  ${{ needs.Params.outputs.basename }}-pacman
+#      windows_artifact: ${{ needs.Params.outputs.basename }}-windows
 
   Python:
     uses: ./.github/workflows/Build-pyGHDL.yml
@@ -187,7 +171,6 @@ jobs:
       - Ubuntu
       - macOS
       - Windows
-      - Docker
       - PublishToGitHubPages
       - pyGHDL
     steps:
@@ -200,7 +183,6 @@ jobs:
       - Ubuntu
       - macOS
       - Windows
-      - Docker
       - PublishToGitHubPages
       - pyGHDL
     steps:
