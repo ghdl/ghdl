@@ -29,6 +29,7 @@ jobs:
   Ubuntu:
     name: Package GHDL as Docker Image
     runs-on: ${{ inputs.ubuntu_image }}
+    # IF statement was moved from Build-Ubuntu.yml:jobs:Docker to here, because values from ${{ matrix... }} are not accessible
     if: contains(inputs.ghdl_artifact, inputs.ubuntu_version) && endsWith(inputs.ghdl_artifact, inputs.backend)
 
     defaults:
