@@ -183,6 +183,7 @@ jobs:
           fi
 
           if ${{ startsWith(inputs.backend, 'llvm') }}; then
+            echo "gcc" >> ubuntu.requirements
             if ${{ endsWith(inputs.ubuntu_image, '22.04') }}; then
               echo "libllvm15" >> ubuntu.requirements
             elif ${{ endsWith(inputs.ubuntu_image, '24.04') }}; then
@@ -228,11 +229,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - {'ubuntu_version': '22.04', 'backend': 'mcode'}
-          - {'ubuntu_version': '24.04', 'backend': 'mcode'}
-          - {'ubuntu_version': '22.04', 'backend': 'llvm'}
-          - {'ubuntu_version': '24.04', 'backend': 'llvm'}
+        ubuntu_version: ['22.04', '24.04']
+        backend:        ['mcode', 'llvm' ]
     with:
       ubuntu_version: ${{ matrix.ubuntu_version }}
       backend:        ${{ matrix.backend }}

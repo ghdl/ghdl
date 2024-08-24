@@ -60,7 +60,7 @@ jobs:
         if: startsWith(inputs.os_image, 'ubuntu')
         run: |
           chmod +x ./install/bin/*
-          sudo xargs -r -a ./install/ubuntu.requirements apt-get install -y --no-install-recommends
+          sudo xargs --no-run-if-empty -a ./install/ubuntu.requirements -- apt-get install -y --no-install-recommends
           echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
 
       - name: Install GHDL (chmod) and prepare test environment (macOS)
@@ -74,7 +74,7 @@ jobs:
         if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
         run: |
           chmod +x ./install/bin/*
-          xargs -r -a ./install/${{ inputs.runtime }}.requirements pacman -S --noconfirm
+          xargs --no-run-if-empty -a ./install/${{ inputs.runtime }}.requirements -- pacman -S --noconfirm
           echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
           cat $GITHUB_ENV
 
