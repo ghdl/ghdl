@@ -38,9 +38,7 @@ RUN --mount=type=bind,target=/context \
 ENV PATH=/opt/ghdl/bin:$PATH
 
 # Check GHDL installation
-RUN ls -lAh /opt/ghdl \
- && ls -lAh /opt/ghdl/bin \
- && echo "PATH=${PATH}" \
+RUN echo "PATH=${PATH}" \
  && echo "which ghdl: $(which ghdl)" \
  && ghdl version
 
