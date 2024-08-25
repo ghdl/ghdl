@@ -51,8 +51,8 @@ jobs:
     name: Build GHDL on Windows Server + MSYS2
     runs-on: ${{ inputs.windows_image }}
     outputs:
-      ghdl_artifact:   ${{ steps.artifact_name.outputs.ghdl_artifact }}
-      pacman_artifact: ${{ steps.artifact_name.outputs.pacman_artifact }}
+      ghdl_artifact:    ${{ steps.artifact_name.outputs.ghdl_artifact }}
+      pacman_artifact:  ${{ steps.artifact_name.outputs.pacman_artifact }}
       windows_artifact: ${{ steps.artifact_name.outputs.windows_artifact }}
 
     env:

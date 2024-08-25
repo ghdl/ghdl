@@ -34,6 +34,9 @@ jobs:
   Ubuntu:
     name: Package GHDL as Docker Image
     runs-on: ${{ inputs.ubuntu_image }}
+    outputs:
+      ghdl_image: ${{ steps.build.outputs.ghdl_image }}
+
     # IF statement was moved from Build-Ubuntu.yml:jobs:Docker to here, because values from ${{ matrix... }} are not accessible
     if: contains(inputs.ghdl_artifact, inputs.ubuntu_version) && endsWith(inputs.ghdl_artifact, inputs.backend)
 
@@ -58,7 +61,7 @@ jobs:
           base_image=${base%:*}
           base_image_tag=${base#*:}
 
-          image_ns="${{ secrets.DOCKERHUB_NAMESPACE }}"
+          image_ns="${{ vars.DOCKERHUB_NAMESPACE }}"
           image_name="${{ inputs.dockerhub_image }}"
           image_tag="5.0.0-dev-${{ inputs.backend }}-${base_image}-${base_image_tag}"
           image="${image_ns}/${image_name}:${image_tag}"
@@ -76,15 +79,31 @@ jobs:
             --tag "${image}" \
             ./dist/docker
 
+          echo "Docker image '${image}' has $(docker image inspect $1 --format='{{.Size}}' | numfmt --to=iec --format '%.2f' ${image})"
+
       - name: Checking GHDL image '${{ steps.build.outputs.ghdl_image }}'
         run: |
           docker container run --rm ${{ steps.build.outputs.ghdl_image }} 'echo "which ghdl: $(which ghdl)"; ghdl version'
 
       - name: Login and push to Docker Hub
         run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ vars.DOCKERHUB_USERNAME }} --password-stdin
+          echo "Docker image '${{ steps.build.outputs.ghdl_image }}' has $(docker image inspect $1 --format='{{.Size}}' | numfmt --to=iec --format '%.2f' ${{ steps.build.outputs.ghdl_image }})"
           docker push ${{ steps.build.outputs.ghdl_image }}
 
       - name: Testing GHDL image
         run: |
           docker container run --rm -v $(pwd):/data ${{ steps.build.outputs.ghdl_image }} 'cd /data/testsuite; ./testsuite.sh ${{ inputs.testsuites }}'
+
+  TestDocker:
+    uses: ./.github/workflows/Test-Docker.yml
+    needs:
+      - Ubuntu
+
+    # IF statement was moved from Build-Ubuntu.yml:jobs:Docker to here, because values from ${{ matrix... }} are not accessible
+    if: contains(inputs.ghdl_artifact, inputs.ubuntu_version) && endsWith(inputs.ghdl_artifact, inputs.backend)
+
+    with:
+      os_image:   ${{ inputs.ubuntu_image }}
+      ghdl_image: ${{ needs.Ubuntu.outputs.ghdl_image }}
+      testsuites: ${{ inputs.testsuites }}
