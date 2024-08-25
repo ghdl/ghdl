@@ -259,6 +259,7 @@ jobs:
         ubuntu_version: ['22.04', '24.04']
         backend:        ['mcode', 'llvm' ]
     with:
+      ubuntu_image:        ${{ inputs.ubuntu_image }}
       ghdl_artifact:       ${{ needs.Build.outputs.ghdl_artifact }}
       ubuntu_version:      ${{ matrix.ubuntu_version }}
       backend:             ${{ matrix.backend }}
