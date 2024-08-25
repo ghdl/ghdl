@@ -41,34 +41,3 @@ GHDL is configured by ``configure`` and built by ``make``.
    $ ../configure --prefix=PREFIX
    $ make
    $ make install
-
-.. _BUILD:mcode:GNATGPL-Windows:
-
-GNAT GPL: Windows
-=================
-
-.. rubric:: Requirements
-
-* GNAT GPL from http://libre.adacore.com
-* PowerShell 4
-* PowerShell Community Extensions (PSCX)
-
-.. rubric:: `compile.ps1`
-
-.. code-block::
-
-   Commands          Description
-   --------------------------------------------------------------------
-   -Help             Display the integrated help pages
-   -Clean            Clean up all files and directories
-   -Compile          Compile GHDL
-   -Install          Install all files into a directory (xcopy deployment)
-   -Uninstall        Uninstall all files from a directory
-   -Update           Update files in the installation directory
-   -CreatePackage    create an installer package
-
-   Install options:
-   -InstallPath      Installation directory
-
-   CreatePackage options:
-   -Zip              Create a zip-file for xcopy deployment

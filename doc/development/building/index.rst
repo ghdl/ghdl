@@ -16,19 +16,14 @@ or cloned with ``git clone`` from GitHub. GitHub offers HTTPS and SSH as transfe
 further details.
 
 .. IMPORTANT::
-   Since GHDL is written in `Ada`, independently of the code generator you use, a compiler is required. Most GNU/Linux package
-   managers provide ``gcc-ada`` or ``gcc-gnat`` (which could be outdated). Alternatively, `GNU Ada compiler`, `GNAT GPL`, can be downloaded
-   without registration from `libre.adacore.com <http://libre.adacore.com/tools/gnat-gpl-edition/>`_ (2014, or later; for x86, 32 or 64 bits).
-
-.. HINT::
-   The download page of *GNAT Community Edition* provides the latest version (x86, 64 bits), with a graphical installer
-   (``chmod +x *.bin`` and execute it). Alternatively, you can find a link to *More packages, platforms, versions and sources*
-   at the bottom of the page, where versions previous to 2018 are available as binaries ready to be installed
-   (`untar` and run the `doinstall` script). In any case, you must add ``<GNAT_INSTALL_DIR>/bin`` to your ``PATH``.
+   Since GHDL is written in `Ada`, independently of the code generator
+   you use, a compiler is required. Most GNU/Linux package managers
+   provide ``gcc-ada`` or ``gcc-gnat`` (which could be outdated).
+   MSYS2 also provides ``gcc-ada`` for `MinGW64` and `UCRT64`.
 
 .. ATTENTION::
    Since ``v0.37``, GHDL's synthesis features require GCC >=8.1, due to some new GNAT features which are not available in
-   previous releases. Users with older versions (who don't need synthesis) can configure GHDL with option ``--disable-synth``.
+   previous releases.
 
 GHDL currently supports three different back-ends (code generators):
 
@@ -75,9 +70,6 @@ created.
 		$ cd ghdl-objs
 		$ ../path/to/ghdl/configure ...
 
-.. HINT ::
-  On Windows, building GHDL with mcode backend and GNAT GPL 32 bit seems to be the only way to get a standalone native
-  executable straightaway. MINGW/MSYS2 builds depend on the environment/runtime. See :ghdlsharp:`1560`.
 
 .. HINT ::
   For MacOS 10.15 (Catalina), see :ghdlsharp:`1368` for workarounds to link failures.
