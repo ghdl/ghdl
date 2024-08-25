@@ -37,6 +37,7 @@ with Elab.Vhdl_Decls; use Elab.Vhdl_Decls;
 with Elab.Vhdl_Files;
 with Elab.Vhdl_Prot;
 with Elab.Vhdl_Expr;
+with Elab.Vhdl_Insts;
 
 with Synth.Flags;
 with Synth.Vhdl_Environment; use Synth.Vhdl_Environment.Env;
@@ -823,6 +824,21 @@ package body Synth.Vhdl_Decls is
 
                Synth_Declarations
                  (Pkg_Inst, Get_Declaration_Chain (Decl), Is_Subprg);
+            end;
+
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            declare
+               Pkg_Inst : Synth_Instance_Acc;
+               Bod : Node;
+            begin
+               Elab.Vhdl_Insts.Elab_Package_Instantiation_Assoc
+                 (Syn_Inst, Decl, Pkg_Inst, Bod);
+               Synth_Declarations
+                 (Pkg_Inst, Get_Declaration_Chain (Decl), Is_Subprg);
+               if Bod /= Null_Node then
+                  Synth_Declarations
+                    (Pkg_Inst, Get_Declaration_Chain (Bod), Is_Subprg);
+               end if;
             end;
 
          when Iir_Kind_Suspend_State_Declaration =>

@@ -298,12 +298,13 @@ package body Elab.Vhdl_Insts is
       Elab_Declarations (Pkg_Inst, Get_Declaration_Chain (Bod));
    end Elab_Package_Body;
 
-   procedure Elab_Package_Instantiation
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
+   procedure Elab_Package_Instantiation_Assoc
+     (Parent_Inst : Synth_Instance_Acc;
+      Pkg : Node;
+      Sub_Inst : out Synth_Instance_Acc;
+      Bod : out Node)
    is
       Uninst : constant Node := Get_Uninstantiated_Package_Decl (Pkg);
-      Bod : Node;
-      Sub_Inst : Synth_Instance_Acc;
    begin
       Sub_Inst := Create_Package_Instance (Parent_Inst, Pkg);
 
@@ -327,25 +328,30 @@ package body Elab.Vhdl_Insts is
         (Sub_Inst, Parent_Inst,
          Get_Generic_Chain (Pkg), Get_Generic_Map_Aspect_Chain (Pkg));
 
-      Elab_Declarations (Sub_Inst, Get_Declaration_Chain (Pkg));
-
       if Bod /= Null_Node then
          --  Macro expanded package instantiation.
-         if Get_Immediate_Body_Flag (Pkg) then
-            Elab_Declarations
-              (Sub_Inst, Get_Declaration_Chain (Bod));
+         if not Get_Immediate_Body_Flag (Pkg) then
+            --  Body will be elaborated later.
+            Bod := Null_Node;
          end if;
       else
          --  Shared body
-         declare
-            Uninst_Bod : constant Node := Get_Package_Body (Uninst);
-         begin
-            --  Synth declarations of (optional) body.
-            if Uninst_Bod /= Null_Node then
-               Elab_Declarations
-                 (Sub_Inst, Get_Declaration_Chain (Uninst_Bod));
-            end if;
-         end;
+         Bod := Get_Package_Body (Uninst);
+      end if;
+   end Elab_Package_Instantiation_Assoc;
+
+   procedure Elab_Package_Instantiation
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
+   is
+      Bod : Node;
+      Sub_Inst : Synth_Instance_Acc;
+   begin
+      Elab_Package_Instantiation_Assoc (Parent_Inst, Pkg, Sub_Inst, Bod);
+
+      Elab_Declarations (Sub_Inst, Get_Declaration_Chain (Pkg));
+
+      if Bod /= Null_Node then
+         Elab_Declarations (Sub_Inst, Get_Declaration_Chain (Bod));
       end if;
    end Elab_Package_Instantiation;
 

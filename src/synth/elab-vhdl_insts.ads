@@ -53,6 +53,14 @@ package Elab.Vhdl_Insts is
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
    procedure Elab_Package_Body
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node);
+
+   --  Return the body to be elaborated.
+   procedure Elab_Package_Instantiation_Assoc
+     (Parent_Inst : Synth_Instance_Acc;
+      Pkg : Node;
+      Sub_Inst : out Synth_Instance_Acc;
+      Bod : out Node);
+   --  Elaborate the body.
    procedure Elab_Package_Instantiation
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
    procedure Elab_Package_Instantiation_Body
