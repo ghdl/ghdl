@@ -1,6 +1,7 @@
 use std::{env, ffi, fs, io, iter, os};
 mod errorout_def;
 mod errorout;
+mod vhdl;
 
 #[derive(Clone, Copy)]
 #[repr(u8)]
@@ -425,6 +426,66 @@ impl Command for CommandSyntax {
 
     fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
         analyze(args, false)
+    }
+}
+
+struct CommandImport {}
+
+impl Command for CommandImport {
+    fn get_command(&self) -> &'static [&'static str] {
+        return &["import", "-i"];
+    }
+
+    fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
+        let mut status = true;
+        let mut flags = VhdlAnalyzeFlags::default();
+        let mut expect_failure = false;
+        let mut files = vec![];
+        let mut got_file = false;
+
+        // Parse arguments
+        for arg in &args[1..] {
+            if got_file {
+                files.push(arg.clone());
+            }
+            else if arg == "--expect-failure" {
+                expect_failure = true;
+            } else {
+                match parse_analyze_flags(&mut flags, &arg) {
+                    None => {}
+                    Some(ParseStatus::NotOption) => {got_file = true; files.push(arg.clone()); },
+                    Some(err) => return Err(err),
+                }
+            }
+        }
+
+        // Initialize
+        apply_analyze_flags(&flags);
+        unsafe {
+            compile_init(true);
+        };
+
+        // And analyze every file
+        for file in &files {
+            if file.starts_with("--work=") {
+
+            }
+            let id = unsafe { get_identifier_with_len(file.as_ptr(), file.len() as u32) };
+            status = unsafe { analyze_file(id) };
+            if !status {
+                break;
+            }
+        }
+
+        // Save the library on success
+        if status {
+            unsafe { save_work_library() };
+        }
+        return if status == !expect_failure {
+            Ok(())
+        } else {
+            Err(ParseStatus::OptionError)
+        };
     }
 }
 

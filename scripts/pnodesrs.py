@@ -46,58 +46,67 @@ def print_file_header(includeIntEnumUnique=True, includeBindToLibGHDL=True):
 
 
 def do_class_kinds():
-    print_enum(pnodes.prefix_name.rstrip("_"), pnodes.kinds)
-    print(dedent("""
-
-        @export
-        class Iir_Kinds:
-        """), end=''
-    )
+    typ = "Kind"
+    print(f"#[derive(PartialEq, PartialOrd)]")
+    print_enum(typ, pnodes.kinds)
+    print(f"impl {typ} {{")
     for k, v in pnodes.kinds_ranges.items():
-        print(f"    {k} = [")
-        for e in v:
-            print(f"        Iir_Kind.{e},")
-        print("    ]")
+        print(f"    fn is_{k.lower()}(self: Self) -> bool {{")
+        print(f"        self >= {typ}::{v[0]} && self <= {typ}::{v[-1]}")
+        print(f"    }}")
         print()
-
+    print(f"}}")
 
 def do_iirs_subprg():
-    classname = "vhdl__nodes"
-    print(dedent(f"""
-
-        @export
-        @BindToLibGHDL("{classname}__get_kind")
-        def Get_Kind(node: Iir) -> IirKind:
-            \"\"\"Get node kind.\"\"\"
-            return 0
-
-        @export
-        @BindToLibGHDL("{classname}__get_location")
-        def Get_Location(node: Iir) -> LocationType:
-            \"\"\"\"\"\"
-            return 0
-        """)
-    )
+    pfx = "vhdl__nodes"
+    print(f'type Iir = u32;')
+    print(f'type FileChecksumId = u32;')
+    print(f'type TimeStampId = u32;')
+    print(f'type SourceFileEntry = u32;')
+    print(f'type DateType = u32;')
+    print(f'type NameId = u32;')
+    print(f'type SourcePtr = u32;')
+    print(f'type String8Id = u32;')
+    print(f'type PSLNode = u32;')
+    print(f'type PSLNFA = u32;')
+    print(f'type Tok = u8;') # FIXME
+    print(f'pub enum TriStateType {{')
+    print(f'   Unknown,')
+    print(f'   False,')
+    print(f'   True,')
+    print(f'}}')
+    print(f'pub enum DirectionType {{')
+    print(f'   To,')
+    print(f'   Downto,')
+    print(f'}}')
+    print()
+    print(f'extern "C" {{')
+    print(f'  #[link_name = "{pfx}__get_kind"]')
+    print(f"  fn get_kind(n: u32) -> Kind;")
+    print()
+    print(f'  #[link_name = "{pfx}__get_location"]')
+    print(f"  fn get_location(n: u32) -> u32;")
+    print()
+    typmap = {'TokenType': 'Tok',
+              'Boolean' : 'bool',
+              'Int32': 'i32',
+              'Int64': 'i64',
+              'Fp64': 'f64',
+              }
     for k in pnodes.funcs:
         # Don't use the Iir_* subtypes (as they are not described).
         rtype = k.rtype.replace("_", "") if not k.rtype.startswith("Iir_") else "Iir"
         # Exceptions...
-        if rtype == "TokenType":
-            rtype = "Tok"
+        rtype = typmap.get(rtype, rtype)
 
-        print(dedent(f"""
-            @export
-            @BindToLibGHDL("{classname}__get_{k.name.lower()}")
-            def Get_{k.name}(obj: Iir) -> {rtype}:
-                \"\"\"\"\"\"
-                return 0
-            @export
-            @BindToLibGHDL("{classname}__set_{k.name.lower()}")
-            def Set_{k.name}(obj: Iir, value: {rtype}) -> None:
-                \"\"\"\"\"\"
-            """)
-        )
-
+        name = k.name.lower()
+        print(f'  #[link_name = "{pfx}__get_{name}"]')
+        print(f"  fn get_{name}(n: u32) -> {rtype};")
+        print()
+        print(f'  #[link_name = "{pfx}__set_{name}"]')
+        print(f"  fn set_{name}(n: u32, v: {rtype});")
+        print()
+    print(f"}}")
 
 def do_libghdl_elocations():
     classname = "vhdl__elocations"
@@ -188,57 +197,7 @@ def read_spec_enum(type_name, prefix, class_name):
     print_enum(class_name, toks)
 
 
-def do_libghdl_nodes():
-    print_file_header()
-    print(dedent("""\
-        from typing import TypeVar
-        from ctypes import c_int32
-        from pyGHDL.libghdl._types import (
-            Iir,
-            IirKind,
-            LocationType,
-            FileChecksumId,
-            TimeStampId,
-            SourceFileEntry,
-            NameId,
-            TriStateType,
-            SourcePtr,
-            Int32,
-            Int64,
-            Fp64,
-            String8Id,
-            Boolean,
-            DirectionType,
-            PSLNode,
-            PSLNFA,
-        )
-        from pyGHDL.libghdl.vhdl.tokens import Tok
-
-        __all__ = [
-            "Null_Iir",
-            "Null_Iir_List",
-            "Iir_List_All",
-            "Null_Iir_Flist",
-            "Iir_Flist_Others",
-            "Iir_Flist_All",
-        ]
-
-        Null_Iir = 0
-        \"\"\"
-        Null element for an IIR node reference.
-        \"\"\"
-
-        Null_Iir_List = 0
-        Iir_List_All = 1
-
-        Null_Iir_Flist = 0
-        Iir_Flist_Others = 1
-        Iir_Flist_All = 2
-
-        DateType = TypeVar("DateType", bound=c_int32)
-        """), end=''
-    )
-
+def do_nodes():
     do_class_kinds()
     read_spec_enum("Iir_Mode", "Iir_", "Iir_Mode")
     read_spec_enum("Scalar_Size", "", "ScalarSize")
@@ -398,7 +357,7 @@ def do_errorout():
 pnodes.actions.update(
     {
         "class-kinds": do_class_kinds,
-        "libghdl-nodes": do_libghdl_nodes,
+        "nodes": do_nodes,
         "libghdl-meta": do_libghdl_meta,
         "libghdl-names": do_libghdl_names,
         "libghdl-tokens": do_libghdl_tokens,
