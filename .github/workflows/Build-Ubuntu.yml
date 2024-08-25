@@ -259,10 +259,12 @@ jobs:
         ubuntu_version: ['22.04', '24.04']
         backend:        ['mcode', 'llvm' ]
     with:
-      ubuntu_version: ${{ matrix.ubuntu_version }}
-      backend:        ${{ matrix.backend }}
-      ghdl_artifact:  ${{ needs.Build.outputs.ghdl_artifact }}
-      testsuites:     ${{ inputs.testsuites }}
+      ghdl_artifact:       ${{ needs.Build.outputs.ghdl_artifact }}
+      ubuntu_version:      ${{ matrix.ubuntu_version }}
+      backend:             ${{ matrix.backend }}
+#      dockerhub_image:     ghdl-test
+      testsuites:          ${{ inputs.testsuites }}
+    secrets: inherit
 
   Sphinx:
     uses: ./.github/workflows/Documentation-Sphinx.yml

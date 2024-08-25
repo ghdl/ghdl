@@ -20,6 +20,11 @@ on:
         description: 'GHDL backend.'
         required: true
         type: string
+      dockerhub_image:
+        description: 'Docker Hub image name.'
+        required: false
+        default: 'ghdl'
+        type: string
       testsuites:
         description: 'GHDL testsuites'
         required: true
@@ -53,24 +58,33 @@ jobs:
           base_image=${base%:*}
           base_image_tag=${base#*:}
 
-          image="ghdl"
+          image_ns="${{ secrets.DOCKERHUB_NAMESPACE }}"
+          image_name="${{ inputs.dockerhub_image }}"
           image_tag="5.0.0-dev-${{ inputs.backend }}-${base_image}-${base_image_tag}"
+          image="${image_ns}/${image_name}:${image_tag}"
 
-          echo "ghdl_image=${image}" >> $GITHUB_OUTPUT
+          echo "ghdl_image_ns=${image_ns}" >> $GITHUB_OUTPUT
+          echo "ghdl_image_name=${image_name}" >> $GITHUB_OUTPUT
           echo "ghdl_image_tag=${image_tag}" >> $GITHUB_OUTPUT
+          echo "ghdl_image=${image}" >> $GITHUB_OUTPUT
 
           echo "Building docker file './dist/docker/Dockerfile.${base_image}' ..."
           docker build \
             --file ./dist/docker/Dockerfile.${base_image} \
             --build-arg IMAGE=${base_image} \
             --build-arg IMAGE_TAG=${base_image_tag} \
-            --tag "${image}:${image_tag}" \
+            --tag "${image}" \
             ./dist/docker
 
-      - name: Checking GHDL image
+      - name: Checking GHDL image '${{ steps.build.outputs.ghdl_image }}'
         run: |
-          docker container run --rm ${{ steps.build.outputs.ghdl_image }}:${{ steps.build.outputs.ghdl_image_tag }} 'echo "which ghdl: $(which ghdl)"; ghdl version'
+          docker container run --rm ${{ steps.build.outputs.ghdl_image }} 'echo "which ghdl: $(which ghdl)"; ghdl version'
+
+      - name: Login and push to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+          docker push ${{ steps.build.outputs.ghdl_image }}
 
       - name: Testing GHDL image
         run: |
-          docker container run --rm -v $(pwd):/data ${{ steps.build.outputs.ghdl_image }}:${{ steps.build.outputs.ghdl_image_tag }} 'cd /data/testsuite; ./testsuite.sh ${{ inputs.testsuites }}'
+          docker container run --rm -v $(pwd):/data ${{ steps.build.outputs.ghdl_image }} 'cd /data/testsuite; ./testsuite.sh ${{ inputs.testsuites }}'
