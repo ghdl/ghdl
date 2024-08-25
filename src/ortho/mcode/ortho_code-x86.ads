@@ -181,7 +181,5 @@ package Ortho_Code.X86 is
      (R_Di | R_Si | R_Bx | R_R12 | R_R13 | R_R14 | R_R15 => True,
       others => False);
    Preserved_Xmm_Win64 : constant Regs_Xmm64_Bitmap :=
-     (R_Xmm6 | R_Xmm7 | R_Xmm8 | R_Xmm9 | R_Xmm10 | R_Xmm11
-        | R_Xmm12 | R_Xmm13 | R_Xmm14 | R_Xmm15 => True,
-      others => False);
+     (R_Xmm6 .. R_Xmm15 => True, others => False);
 end Ortho_Code.X86;
