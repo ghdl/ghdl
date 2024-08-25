@@ -1414,6 +1414,15 @@ package body Trans.Chap2 is
                Object_Static => Src.Object_Static,
                Object_Var => Instantiate_Var (Src.Object_Var),
                Object_Rti => Src.Object_Rti);
+         when Kind_Alias =>
+            Dest.all :=
+              (Kind => Kind_Alias,
+               Mark => False,
+               Alias_Var => (Mode_Value =>
+                               Instantiate_Var (Src.Alias_Var (Mode_Value)),
+                             Mode_Signal =>
+                               Instantiate_Var (Src.Alias_Var (Mode_Signal))),
+               Alias_Kind => Src.Alias_Kind);
          when Kind_Signal =>
             pragma Assert (Src.Signal_Driver = Null_Var);
             pragma Assert (Src.Signal_Function = O_Dnode_Null);
