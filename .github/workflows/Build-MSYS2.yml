@@ -35,6 +35,11 @@ on:
         required: false
         default: ''
         type: string
+      libghdl_artifact:
+        description: 'Name of the libghdl artifact.'
+        required: false
+        default: ''
+        type: string
     outputs:
       ghdl_msys2_artifact:
         description: "Artifact name for compiled GHDL for MSYS2."
@@ -55,12 +60,6 @@ jobs:
       pacman_artifact:  ${{ steps.artifact_name.outputs.pacman_artifact }}
       windows_artifact: ${{ steps.artifact_name.outputs.windows_artifact }}
 
-    env:
-      msys2_packages: "make"
-      common_packages: "gcc:p gcc-ada:p binutils:p diffutils:p zlib:p"
-      mcode_packages: ""
-      llvm_packages: "llvm:p clang:p"
-
     defaults:
       run:
         shell: "msys2 {0}"
@@ -72,13 +71,33 @@ jobs:
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
 
+      - name: Compute pacboy packages
+        id: pacboy
+        shell: bash
+        run: |
+          # Generic packages installed in MSYS2
+          echo "msys2_packages=make tree" >> $GITHUB_OUTPUT
+
+          # Runtime (and backend) specific packages
+          common_packages="gcc:p gcc-ada:p binutils:p diffutils:p zlib:p"
+          mcode_packages=""
+          llvm_packages="llvm:p clang:p"
+
+          if ${{ startsWith(inputs.backend, 'mcode') }}; then
+            echo "pacboy_packages=${common_packages} ${mcode_packages}" >> $GITHUB_OUTPUT
+          elif ${{ startsWith(inputs.backend, 'llvm') }}; then
+            echo "pacboy_packages=${common_packages} ${llvm_packages}" >> $GITHUB_OUTPUT
+          else
+            echo "pacboy_packages=${common_packages}" >> $GITHUB_OUTPUT
+          fi
+
       - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
         uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ inputs.runtime }}
           update: true
-          install: ${{ env.msys2_packages }}
-          pacboy: ${{ env.common_packages }} ${{ env.mcode_packages }} ${{ env.llvm_packages }}
+          install: ${{ steps.pacboy.outputs.msys2_packages }}
+          pacboy: ${{ steps.pacboy.outputs.pacboy_packages }}
 
       - name: Assemble artifact name
         id: artifact_name
@@ -86,12 +105,15 @@ jobs:
           echo "ghdl_artifact=${{ inputs.msys2_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
           echo "pacman_artifact=${{ inputs.pacman_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
           echo "windows_artifact=${{ inputs.windows_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
+          echo "libghdl_artifact=${{ inputs.libghdl_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
 
       - name: Check build environemnt
         run: |
           echo "which gnat:        $(which gnat) ($($(which gnat) --version))"
           echo "which gnatmake:    $(which gnatmake) ($($(which gnatmake) --version))"
-          echo "which llvm-config: $(which llvm-config) ($($(which llvm-config) --version))"
+          if ${{ startsWith(inputs.runtime, 'llvm') }}; then
+            echo "which llvm-config: $(which llvm-config) ($($(which llvm-config) --version))"
+          fi
 
       - name: Prepare build environemnt
         run: |
@@ -119,12 +141,16 @@ jobs:
       - name: 🔨 Make
         run: |
           cd build/${{ inputs.backend }}
-          make
+          make -j$(nproc)
 
       - name: 📋 Install
         run: |
           cd build/${{ inputs.backend }}
           make install
+
+      - name: List './install' directory as tree
+        run: |
+          tree ./install
 
       - name: '📦 Build package'
         if: inputs.pacman_artifact != ''
@@ -169,6 +195,11 @@ jobs:
            echo "${MSYS2_PREFIX}-llvm-libs" >> ${{ inputs.runtime }}.requirements
           fi
 
+      - name: List dependencies
+        if: inputs.msys2_artifact != ''
+        run: |
+          cat ./install/*.requirements
+
       - name: 📤 Upload '${{ steps.artifact_name.outputs.ghdl_artifact }}' artifact
         uses: actions/upload-artifact@v4
         if: inputs.msys2_artifact != ''
@@ -178,8 +209,74 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      - name: Copy and check dependency (MSYS2)
+      - name: Copy and check dependency (MSYS2) for standalone usage
         if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
+        run: |
+          cp -r ./install ./standalone
+
+          GetMinGWLibraries() {
+            ldd "$1" | while IFS="" read -r dependency; do
+              fields=($dependency)
+              dep="${fields[2]}"
+              if [[ "$dep" == /"${MSYSTEM,,}"/* ]]; then
+                echo "$dep"
+                GetMinGWLibraries "${MSYSTEM_PREFIX}/${dep#"/${MSYSTEM,,}/"}"
+              fi
+            done
+          }
+
+          for executable in ./standalone/bin/*.exe; do
+            echo "read dependencies of '${executable}'"
+            ldd ${executable}
+            echo "copy dependencies ..."
+            for dependency in $(GetMinGWLibraries ${executable}); do
+              cp -v "$dependency" ./standalone/bin
+            done
+          done
+
+          for library in ./standalone/lib/*.dll; do
+            echo "read dependencies of '${library}'"
+            ldd ${library}
+            echo "copy dependencies ..."
+            for dependency in $(GetMinGWLibraries ${library}); do
+              cp -v "$dependency" ./standalone/lib
+            done
+          done
+
+      - name: List './standalone' directory as tree
+        if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
+        run: |
+          tree ./standalone
+
+      - name: 📤 Upload '${{ steps.artifact_name.outputs.windows_artifact }}' artifact
+        uses: actions/upload-artifact@v4
+        if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
+        with:
+          name: ${{ steps.artifact_name.outputs.windows_artifact }}
+          path: ./standalone
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Remove binaries, libraries and other files for libghdl
+        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
+        run: |
+          rm -Rf ./install/bin
+          rm -Rf ./install/include
+          rm -Rf ./install/lib/ghdl/vendors
+          rm -Rf ./install/lib/*.a
+          rm -Rf ./install/lib/*.link
+          rm -Rf ./install/lib/libghdlvpi.dll
+          rm -Rf ./install/lib/libghw.dll
+          rm -Rf ./install/*.requirements
+
+      - name: List './install' directory as tree
+        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
+        run: |
+          tree ./install
+          ldd ./install/lib/*.dll
+
+      - name: Copy and check dependency (MSYS2)
+        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
         run: |
           GetMinGWLibraries() {
             ldd "$1" | while IFS="" read -r dependency; do
@@ -192,15 +289,6 @@ jobs:
             done
           }
 
-          for executable in ./install/bin/*.exe; do
-            echo "read dependencies of '${executable}'"
-            ldd ${executable}
-            echo "copy dependencies ..."
-            for dependency in $(GetMinGWLibraries ${executable}); do
-              cp -v "$dependency" ./install/bin
-            done
-          done
-
           for library in ./install/lib/*.dll; do
             echo "read dependencies of '${library}'"
             ldd ${library}
@@ -210,11 +298,11 @@ jobs:
             done
           done
 
-      - name: 📤 Upload '${{ steps.artifact_name.outputs.windows_artifact }}' artifact
+      - name: 📤 Upload '${{ steps.artifact_name.outputs.libghdl_artifact }}' artifact
         uses: actions/upload-artifact@v4
-        if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
+        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
         with:
-          name: ${{ steps.artifact_name.outputs.windows_artifact }}
+          name: ${{ steps.artifact_name.outputs.libghdl_artifact }}
           path: ./install
           if-no-files-found: error
           retention-days: 1

@@ -3,39 +3,36 @@ name: Packaging pyGHDL with libghdl (standalone)
 on:
   workflow_call:
     inputs:
+      os:
+        description: 'Name of the OS.'
+        required: true
+        type: string
+      os_image:
+        description: 'Name of the OS image.'
+        required: true
+        type: string
+      runtime:
+        description: 'Name of the MSYS2 runtime.'
+        required: false
+        default: ''
+        type: string
+      backend:
+        description: 'Name of the GHDL backend.'
+        required: true
+        type: string
       jobs:
         description: 'JSON list with environment fields, naming the system and backend for compilation.'
         required: true
         type: string
-      ubuntu_image:
-        description: 'Name of the Ubuntu image.'
-        required: false
-        default: 'ubuntu-24.04'
-        type: string
-      python_version:
-        description: 'Python version for pyGHDL testing.'
+      libghdl_artifact:
+        description: 'Name of the libghdl artifact.'
         required: true
         type: string
 
 jobs:
-  Tests:
-    name: '🐍 Test pyGHDL'
-    runs-on: ${{ inputs.ubuntu_image }}
-
-    steps:
-      - name: '🧰 Checkout'
-        uses: actions/checkout@v4
-
-      - name: '🐍 Setup Python'
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ inputs.python_version }}
-
   Package:
-    name: '🐍 Package pyGHDL for ${{ matrix.os }} and Python ${{ matrix.python_version }}'
-    runs-on: ${{ matrix.os_image }}
-    needs:
-      - Tests
+    name: '🐍 Package pyGHDL for ${{ inputs.os }} and Python ${{ matrix.python_version }}'
+    runs-on: ${{ inputs.os_image }}
 
     strategy:
       fail-fast: false
@@ -51,16 +48,31 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
 
-      - name: 📥 Download artifacts '${{ matrix.ghdl_artifact }}' from 'Build' job
+      - name: '🔧 Install dependencies'
+        run: |
+          python -m pip install --disable-pip-version-check "pyTooling[packaging]" wheel
+
+      - name: 📥 Download artifacts '${{ inputs.libghdl_artifact }}-${{ inputs.backend }}' from 'Build' job
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.ghdl_artifact }}
+          name: ${{ inputs.libghdl_artifact }}-${{ inputs.backend }}
           path: install
 
       - name: Copy libghdl files
         run: |
-          mkdir -p lib
-          cp -v install/lib/libghdl-*.so lib
+          cp -Recurse install/lib pyGHDL
+
+#      - name: 🔨 Build Python package (source distribution)
+#        run: python setup.py sdist
+
+      - name: 🔨 Build Python package (binary distribution - wheel)
+        run: python setup.py bdist_wheel
+
+      - name: Debug
+        run: |
+          tree /F /A pyGHDL
+          tree /F /A dist
+          tar -tf dist\pyGHDL-5.0.0.dev0-py3-none-any.whl
 
 #      - name: '📤 Upload artifact: pyGHDL'
 #        uses: actions/upload-artifact@v4
