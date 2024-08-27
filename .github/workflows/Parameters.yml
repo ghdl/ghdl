@@ -12,8 +12,12 @@ on:
         required: false
         default: 'ubuntu-24.04'
         type: string
-      name:
-        description: 'Base-name of all artifacts.'
+      package_name:
+        description: 'Base-name of all GHDL artifacts.'
+        required: true
+        type: string
+      library_name:
+        description: 'Base-name of all libghdl artifacts.'
         required: true
         type: string
       testsuites:
@@ -23,9 +27,12 @@ on:
         type: string
 
     outputs:
-      basename:
-        description: "Artifact basename."
-        value: ${{ inputs.name }}
+      ghdl_basename:
+        description: "Artifact basename for GHDL."
+        value: ${{ inputs.package_name }}
+      libghdl_basename:
+        description: "Artifact basename for libghdl."
+        value: ${{ inputs.library_name }}
       testsuites:
         description: "List of GHDL testsuites to execute while testing (space separated)."
         value: ${{ jobs.Parameters.outputs.testsuites }}
