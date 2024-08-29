@@ -37,9 +37,6 @@ jobs:
     outputs:
       ghdl_image: ${{ steps.build.outputs.ghdl_image }}
 
-    # IF statement was moved from Build-Ubuntu.yml:jobs:Docker to here, because values from ${{ matrix... }} are not accessible
-    if: contains(inputs.ghdl_artifact, inputs.ubuntu_version) && endsWith(inputs.ghdl_artifact, inputs.backend)
-
     defaults:
       run:
         shell: bash
@@ -99,10 +96,6 @@ jobs:
     uses: ./.github/workflows/Test-Docker.yml
     needs:
       - Ubuntu
-
-    # IF statement was moved from Build-Ubuntu.yml:jobs:Docker to here, because values from ${{ matrix... }} are not accessible
-    if: contains(inputs.ghdl_artifact, inputs.ubuntu_version) && endsWith(inputs.ghdl_artifact, inputs.backend)
-
     with:
       os_image:   ${{ inputs.ubuntu_image }}
       ghdl_image: ${{ needs.Ubuntu.outputs.ghdl_image }}

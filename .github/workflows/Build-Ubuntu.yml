@@ -3,8 +3,8 @@ name: Building on Ubuntu
 on:
   workflow_call:
     inputs:
-      ubuntu_image:
-        description: 'Name of the Ubuntu image.'
+      ubuntu_version:
+        description: 'Version of the Ubuntu image.'
         required: true
         type: string
       backend:
@@ -47,8 +47,8 @@ on:
 
 jobs:
   Build:
-    name: Build GHDL on '${{ inputs.ubuntu_image }}'
-    runs-on: ${{ inputs.ubuntu_image }}
+    name: Build GHDL on 'ubuntu-${{ inputs.ubuntu_version }}'
+    runs-on: ubuntu-${{ inputs.ubuntu_version }}
     outputs:
       ghdl_artifact: ${{ steps.artifact_name.outputs.ghdl_artifact }}
 
@@ -245,25 +245,19 @@ jobs:
       - Build
     if: inputs.testsuites != 'none'
     with:
-      os_image:      ${{ inputs.ubuntu_image }}
+      os_image:      ubuntu-${{ inputs.ubuntu_version }}
       ghdl_artifact: ${{ needs.Build.outputs.ghdl_artifact }}
       testsuites:    ${{ inputs.testsuites }}
 
   Docker:
-    uses: ./.github/workflows/Image-Docker.yml
+    uses: ./.github/workflows/Package-Docker.yml
     needs:
       - Build
-    strategy:
-      fail-fast: false
-      matrix:
-        ubuntu_version: ['22.04', '24.04']
-        backend:        ['mcode', 'llvm' ]
     with:
-      ubuntu_image:        ${{ inputs.ubuntu_image }}
+      ubuntu_image:        ubuntu-${{ inputs.ubuntu_version }}
       ghdl_artifact:       ${{ needs.Build.outputs.ghdl_artifact }}
-      ubuntu_version:      ${{ matrix.ubuntu_version }}
-      backend:             ${{ matrix.backend }}
-#      dockerhub_image:     ghdl-test
+      ubuntu_version:      ${{ inputs.ubuntu_version }}
+      backend:             ${{ inputs.backend }}
       testsuites:          ${{ inputs.testsuites }}
     secrets: inherit
 
