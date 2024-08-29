@@ -36,6 +36,9 @@ package body Vhdl.Sem_Assocs is
       N_Assoc : Iir;
       Actual : Iir;
    begin
+      if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
+         return Assoc;
+      end if;
       Actual := Get_Actual (Assoc);
       case Get_Kind (Inter) is
          when Iir_Kind_Interface_Package_Declaration =>
@@ -1928,10 +1931,15 @@ package body Vhdl.Sem_Assocs is
    function Sem_Association_Subprogram_Open (Inter : Iir; Loc : Iir)
                                             return Iir
    is
+      Default : constant Iir := Get_Default_Subprogram (Inter);
       Res : Iir;
    begin
-      Res := Sem_Identifier_Name
-        (Get_Identifier (Inter), Loc, False, False);
+      if Default /= Null_Iir then
+         Res := Get_Named_Entity (Default);
+      else
+         Res := Sem_Identifier_Name
+           (Get_Identifier (Inter), Loc, False, False);
+      end if;
       if Is_Error (Res) then
          return Null_Iir;
       end if;

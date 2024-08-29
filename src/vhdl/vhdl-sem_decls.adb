@@ -698,9 +698,95 @@ package body Vhdl.Sem_Decls is
       Xref_Decl (Inter);
    end Sem_Interface_Type_Declaration;
 
-   procedure Sem_Interface_Subprogram_Declaration (Inter : Iir) is
+   --  LRM 4.10 Conformance rule
+   --  Two subprogram declarations are said to have conforming profiles if
+   --  and only if both are procedures or both are functions, the parameter
+   --  and result type profiles of the subprograms are the same and, at each
+   --  parameter position, the corresponding parameters have the same class
+   --  and mode.
+   function Is_Conforming_Profile (L, R : Iir) return Boolean
+   is
+      Inter_L, Inter_R : Iir;
+   begin
+      --  TODO: Skip aliases ?
+      --  TODO: Handle enumerations ?
+      --  TODO: what about generic subprograms ?
+
+      if Is_Function_Declaration (L) then
+         if not Is_Function_Declaration (R) then
+            return False;
+         end if;
+         if Get_Base_Type (Get_Return_Type (L))
+           /= Get_Base_Type (Get_Return_Type (R))
+         then
+            return False;
+         end if;
+      else
+         pragma Assert (Is_Procedure_Declaration (L));
+         if not Is_Procedure_Declaration (R) then
+            return False;
+         end if;
+      end if;
+
+      Inter_L := Get_Interface_Declaration_Chain (L);
+      Inter_R := Get_Interface_Declaration_Chain (R);
+      loop
+         exit when Inter_L = Null_Iir and Inter_R = Null_Iir;
+         if Inter_L = Null_Iir or Inter_R = Null_Iir then
+            return False;
+         end if;
+         --  Same parameter type profile.
+         if Get_Base_Type (Get_Type (Inter_L))
+           /= Get_Base_Type (Get_Type (Inter_R))
+         then
+            return False;
+         end if;
+
+         --  Same class.
+         if Get_Kind (Inter_L) /= Get_Kind (Inter_R) then
+            return False;
+         end if;
+
+         --  Same mode.
+         if Get_Mode (Inter_L) /= Get_Mode (Inter_R) then
+            return False;
+         end if;
+
+         Inter_L := Get_Chain (Inter_L);
+         Inter_R := Get_Chain (Inter_R);
+      end loop;
+      return True;
+   end Is_Conforming_Profile;
+
+   procedure Sem_Interface_Subprogram_Declaration (Inter : Iir)
+   is
+      Def : Iir;
+      Res : Iir;
    begin
       Sem_Subprogram_Specification (Inter);
+
+      Def := Get_Default_Subprogram (Inter);
+      if Def /= Null_Iir then
+         Sem_Name (Def);
+         Res := Get_Named_Entity (Def);
+         case Get_Kind (Res) is
+            when Iir_Kind_Error =>
+               null;
+            when Iir_Kind_Overload_List =>
+               raise Internal_Error;
+            when Iir_Kinds_Subprogram_Declaration =>
+               if not Is_Conforming_Profile (Res, Inter) then
+                  Error_Msg_Sem (+Def, "different profile for %n", +Res);
+                  Res := Create_Error (Res);
+               end if;
+            when others =>
+               Error_Msg_Sem
+                 (+Def, "name %i doesn't denote a subprogram", +Def);
+               Res := Create_Error (Res);
+         end case;
+         Set_Named_Entity (Def, Res);
+      end if;
+
       Sem_Scopes.Add_Name (Inter);
       Xref_Decl (Inter);
    end Sem_Interface_Subprogram_Declaration;

@@ -1097,6 +1097,7 @@ package body Vhdl.Canon is
       Assoc_El, Prev_Assoc_El, Next_Assoc_El : Iir;
       Formal : Iir;
       Assoc_Chain : Iir;
+      Default : Iir;
 
       Found : Boolean;
    begin
@@ -1180,6 +1181,14 @@ package body Vhdl.Canon is
          Set_Artificial_Flag (Assoc_El, True);
          Set_Whole_Association_Flag (Assoc_El, True);
          Location_Copy (Assoc_El, Loc);
+
+         if Get_Kind (Inter) in Iir_Kinds_Interface_Subprogram_Declaration then
+            Default := Get_Named_Entity (Get_Default_Subprogram (Inter));
+            if not Is_Error (Default) then
+               Set_Open_Actual (Assoc_El, Default);
+               Set_Use_Flag (Default, True);
+            end if;
+         end if;
 
          if Canon_Flag_Set_Assoc_Formals then
             Set_Formal (Assoc_El, Inter);
@@ -1808,7 +1817,9 @@ package body Vhdl.Canon is
       --  when generating code at once for the whole design, otherwise this
       --  may create discrepencies in translate structures due to states.
       Is_Sensitized :=
-        (Get_Wait_State (Imp) = False) and Flags.Flag_Whole_Analyze;
+        Get_Kind (Imp) /= Iir_Kind_Interface_Procedure_Declaration
+        and then Get_Wait_State (Imp) = False
+        and then Flags.Flag_Whole_Analyze;
 
       --  LRM93 9.3
       --  The equivalent process statement has also no sensitivity list, an

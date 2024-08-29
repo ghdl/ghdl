@@ -383,7 +383,7 @@ package body Vhdl.Sem is
    end Can_Collapse_Signals;
 
    --  INTER_PARENT contains generics interfaces;
-   --  ASSOC_PARENT constains generic aspects.
+   --  ASSOC_PARENT contains generic aspects.
    function Sem_Generic_Association_Chain
      (Inter_Parent : Iir; Assoc_Parent : Iir) return Boolean
    is
