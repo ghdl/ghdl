@@ -20,22 +20,19 @@ jobs:
 # Windows Standalone - ZIP
 #   UCRT64 - llvm
 
-# Sanity Check Windows Standalone
-#   simple simulation
-
 # pyGHDL wheel
-#   Python 3.10
-#     Windows
-#     Linux
-#     macOS
-#   Python 3.11
-#     Windows
-#     Linux
-#     macOS
-#   Python 3.12
-#     Windows
-#     Linux
-#     macOS
+#   Windows
+#     Python 3.10
+#     Python 3.11
+#     Python 3.12
+#   Linux
+#     Python 3.10
+#     Python 3.11
+#     Python 3.12
+#   macOS
+#     Python 3.10
+#     Python 3.11
+#     Python 3.12
 
 # Python code coverage
 # Publish results
@@ -47,8 +44,6 @@ jobs:
 
 # Release Page (on tag)
 #   Assets
-
-#
 
   Params:
     uses: ./.github/workflows/Parameters.yml
@@ -65,16 +60,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-#          - {'icon': '🐧🟨', 'backend': 'mcode',    'ubuntu_image': 'ubuntu-22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-#          - {'icon': '🐧🟨', 'backend': 'llvm',     'ubuntu_image': 'ubuntu-22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-#          - {'icon': '🐧🟨', 'backend': 'llvm-jit', 'ubuntu_image': 'ubuntu-22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-#          - {'icon': '🐧🟨', 'backend': 'gcc',      'ubuntu_image': 'ubuntu-22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🐧🟩', 'backend': 'mcode',    'ubuntu_image': 'ubuntu-24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-#          - {'icon': '🐧🟩', 'backend': 'llvm',     'ubuntu_image': 'ubuntu-24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-#          - {'icon': '🐧🟩', 'backend': 'llvm-jit', 'ubuntu_image': 'ubuntu-24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-#          - {'icon': '🐧🟩', 'backend': 'gcc',      'ubuntu_image': 'ubuntu-24.04', 'testsuites': 'all' }                                    # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟨', 'backend': 'mcode',    'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟨', 'backend': 'llvm',     'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟨', 'backend': 'llvm-jit', 'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟨', 'backend': 'gcc',      'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟩', 'backend': 'mcode',    'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟩', 'backend': 'llvm',     'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟩', 'backend': 'llvm-jit', 'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟩', 'backend': 'gcc',      'ubuntu_version': '24.04', 'testsuites': 'all' }                                    # 'all', 'none' or list of testsuites
     with:
-      ubuntu_image:    ${{ matrix.ubuntu_image }}
+      ubuntu_version:  ${{ matrix.ubuntu_version }}
       backend:         ${{ matrix.backend }}
       testsuites:      ${{ matrix.testsuites }}
       ubuntu_artifact: ${{ needs.Params.outputs.ghdl_basename }}-${{ matrix.ubuntu_image }}-x86_64
@@ -135,8 +130,6 @@ jobs:
 
   Python:
     uses: ./.github/workflows/Build-pyGHDL.yml
-    needs:
-      - Params
     with:
       black: false
 
@@ -144,15 +137,14 @@ jobs:
     uses: ./.github/workflows/Package-pyGHDL.yml
     needs:
       - Params
-      - Ubuntu
+#      - Ubuntu
       - Windows
-      - Python
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {'icon': '🪟', 'os': 'Windows', 'os_iamge': 'windows-latest', 'libghdl_artifact': 'msys2-ucrt64'}
-          - {'icon': '🪟', 'os': 'Ubuntu',  'os_iamge': 'ubuntu-24.04',   'libghdl_artifact': 'ubuntu-24.04'}
+          - {'icon': '🪟', 'os': 'Windows', 'os_image': 'windows-latest', 'libghdl_artifact': 'msys2-ucrt64'}
+#          - {'icon': '🪟', 'os': 'Ubuntu',  'os_image': 'ubuntu-24.04',   'libghdl_artifact': 'ubuntu-24.04'}
     with:
       os:               ${{ matrix.os }}
       os_image:         ${{ matrix.os_image }}
@@ -186,6 +178,7 @@ jobs:
       - macOS
       - Windows
       - PublishToGitHubPages
+      - Python
       - pyGHDL
     steps:
       - name: "Dummy"
@@ -198,6 +191,7 @@ jobs:
       - macOS
       - Windows
       - PublishToGitHubPages
+      - Python
       - pyGHDL
     steps:
       - name: "Dummy"
