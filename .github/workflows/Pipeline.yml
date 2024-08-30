@@ -50,6 +50,7 @@ jobs:
     with:
       package_name: "ghdl"
       library_name: "libghdl"
+      pyghdl_name:  "pyGHDL"
       testsuites:   "sanity"         # disable parameter to fall back to 'all'
 
   Ubuntu:
@@ -72,7 +73,7 @@ jobs:
       ubuntu_version:  ${{ matrix.ubuntu_version }}
       backend:         ${{ matrix.backend }}
       testsuites:      ${{ matrix.testsuites }}
-      ubuntu_artifact: ${{ needs.Params.outputs.ghdl_basename }}-${{ matrix.ubuntu_image }}-x86_64
+      ubuntu_artifact: ${{ needs.Params.outputs.ghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
       html_artifact:  'documentation-html'
       latex_document: 'ghdl'
       latex_artifact: 'documentation-latex'
@@ -143,13 +144,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {'icon': '🪟', 'os': 'Windows', 'os_image': 'windows-latest', 'libghdl_artifact': 'msys2-ucrt64'}
+          - {'icon': '🪟', 'os': 'Windows', 'os_image': 'windows-latest', 'libghdl_artifact': 'msys2-ucrt64', 'pyghdl_artifact': 'win-amd64'}
 #          - {'icon': '🪟', 'os': 'Ubuntu',  'os_image': 'ubuntu-24.04',   'libghdl_artifact': 'ubuntu-24.04'}
     with:
       os:               ${{ matrix.os }}
       os_image:         ${{ matrix.os_image }}
       backend:          'mcode'
       libghdl_artifact: ${{ needs.Params.outputs.libghdl_basename }}-${{ matrix.libghdl_artifact }}
+      pyghdl_artifact:  ${{ needs.Params.outputs.pyghdl_basename }}-${{ matrix.pyghdl_artifact }}
       jobs: |
         [
           {'pyicon': '🟡', 'python_version': '3.10'},
