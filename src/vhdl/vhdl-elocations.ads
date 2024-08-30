@@ -656,6 +656,8 @@ package Vhdl.Elocations is
 
    -- Iir_Kind_Pathname_Element (None)
 
+   -- Iir_Kind_Box_Name (None)
+
    -----------------
    --  Attributes --
    -----------------

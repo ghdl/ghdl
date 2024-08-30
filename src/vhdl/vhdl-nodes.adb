@@ -1204,6 +1204,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Absolute_Pathname
            | Iir_Kind_Relative_Pathname
            | Iir_Kind_Pathname_Element
+           | Iir_Kind_Box_Name
            | Iir_Kind_Base_Attribute
            | Iir_Kind_Subtype_Attribute
            | Iir_Kind_Element_Attribute

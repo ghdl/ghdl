@@ -390,6 +390,8 @@ package body Vhdl.Errors is
          when Iir_Kind_Reference_Name =>
             --  Shouldn't happen.
             return "name";
+         when Iir_Kind_Box_Name =>
+            return "<>";
          when Iir_Kind_External_Constant_Name =>
             return "external constant name";
          when Iir_Kind_External_Signal_Name =>

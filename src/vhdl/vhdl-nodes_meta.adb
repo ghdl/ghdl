@@ -1770,6 +1770,8 @@ package body Vhdl.Nodes_Meta is
             return "relative_pathname";
          when Iir_Kind_Pathname_Element =>
             return "pathname_element";
+         when Iir_Kind_Box_Name =>
+            return "box_name";
          when Iir_Kind_Base_Attribute =>
             return "base_attribute";
          when Iir_Kind_Subtype_Attribute =>
@@ -5174,6 +5176,7 @@ package body Vhdl.Nodes_Meta is
       Field_Pathname_Suffix,
       Field_Named_Entity,
       Field_Pathname_Expression,
+      --  Iir_Kind_Box_Name
       --  Iir_Kind_Base_Attribute
       Field_Prefix,
       Field_Type,
@@ -5832,6 +5835,7 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_Absolute_Pathname => 2211,
       Iir_Kind_Relative_Pathname => 2212,
       Iir_Kind_Pathname_Element => 2217,
+      Iir_Kind_Box_Name => 2217,
       Iir_Kind_Base_Attribute => 2219,
       Iir_Kind_Subtype_Attribute => 2224,
       Iir_Kind_Element_Attribute => 2229,

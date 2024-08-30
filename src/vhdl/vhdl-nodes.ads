@@ -4635,6 +4635,11 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Expr_Staticness (State1)
 
+
+   -- Iir_Kind_Box_Name (Short)
+   --
+   --  <> when used as a default name in interface subprogram default.
+
    -- Iir_Kind_Selected_Name (Short)
    --
    --   Get/Set_Prefix (Field0)
@@ -5433,6 +5438,8 @@ package Vhdl.Nodes is
       Iir_Kind_Absolute_Pathname,
       Iir_Kind_Relative_Pathname,
       Iir_Kind_Pathname_Element,
+
+      Iir_Kind_Box_Name,
 
    -- Attributes
       Iir_Kind_Base_Attribute,

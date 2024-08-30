@@ -360,6 +360,7 @@ package body Vhdl.Utils is
                | Iir_Kind_Aggregate_Info
                | Iir_Kind_Entity_Class
                | Iir_Kind_Signature
+               | Iir_Kind_Box_Name
                | Iir_Kind_Break_Element
                | Iir_Kind_Reference_Name
                | Iir_Kind_Package_Header

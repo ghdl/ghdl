@@ -279,6 +279,7 @@ pub enum Kind {
     Absolute_Pathname,
     Relative_Pathname,
     Pathname_Element,
+    Box_Name,
     Base_Attribute,
     Subtype_Attribute,
     Element_Attribute,
@@ -337,7 +338,7 @@ pub enum Kind {
 }
 
 impl Kind {
-    const VALUES: [Self; 334] = [
+    const VALUES: [Self; 335] = [
         Self::Unused,
         Self::Error,
         Self::Design_File,
@@ -617,6 +618,7 @@ impl Kind {
         Self::Absolute_Pathname,
         Self::Relative_Pathname,
         Self::Pathname_Element,
+        Self::Box_Name,
         Self::Base_Attribute,
         Self::Subtype_Attribute,
         Self::Element_Attribute,
@@ -674,7 +676,7 @@ impl Kind {
         Self::Attribute_Name,
     ];
 
-    const IMAGES: [&'static str; 334] = [
+    const IMAGES: [&'static str; 335] = [
         "unused",
         "error",
         "design_file",
@@ -954,6 +956,7 @@ impl Kind {
         "absolute_pathname",
         "relative_pathname",
         "pathname_element",
+        "box_name",
         "base_attribute",
         "subtype_attribute",
         "element_attribute",
