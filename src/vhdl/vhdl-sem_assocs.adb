@@ -1934,11 +1934,11 @@ package body Vhdl.Sem_Assocs is
       Default : constant Iir := Get_Default_Subprogram (Inter);
       Res : Iir;
    begin
-      if Default /= Null_Iir then
-         Res := Get_Named_Entity (Default);
-      else
+      if Get_Kind (Default) = Iir_Kind_Box_Name then
          Res := Sem_Identifier_Name
            (Get_Identifier (Inter), Loc, False, False);
+      else
+         Res := Get_Named_Entity (Default);
       end if;
       if Is_Error (Res) then
          return Null_Iir;
@@ -2836,9 +2836,7 @@ package body Vhdl.Sem_Assocs is
                   Res : Iir;
                   Ref : Iir;
                begin
-                  if Finish
-                    and then Get_Kind (Def) = Iir_Kind_Reference_Name
-                  then
+                  if Finish and then Get_Kind (Def) = Iir_Kind_Box_Name then
                      --  Resolve now the default subprogram (as we have the
                      --  context for that).
                      Res := Sem_Association_Subprogram_Open (Inter, Loc);

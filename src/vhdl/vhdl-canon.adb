@@ -1183,10 +1183,15 @@ package body Vhdl.Canon is
          Location_Copy (Assoc_El, Loc);
 
          if Get_Kind (Inter) in Iir_Kinds_Interface_Subprogram_Declaration then
-            Default := Get_Named_Entity (Get_Default_Subprogram (Inter));
-            if not Is_Error (Default) then
+            Default := Get_Default_Subprogram (Inter);
+            if Default /= Null_Iir then
+               if Get_Kind (Default) /= Iir_Kind_Box_Name then
+                  Default := Get_Named_Entity (Default);
+                  if not Is_Error (Default) then
+                     Set_Use_Flag (Default, True);
+                  end if;
+               end if;
                Set_Open_Actual (Assoc_El, Default);
-               Set_Use_Flag (Default, True);
             end if;
          end if;
 

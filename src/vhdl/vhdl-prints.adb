@@ -1738,7 +1738,7 @@ package body Vhdl.Prints is
          Default := Get_Default_Subprogram (Subprg);
          if Default /= Null_Iir then
             Disp_Token (Ctxt, Tok_Is);
-            if Get_Kind (Default) = Iir_Kind_Reference_Name then
+            if Get_Kind (Default) = Iir_Kind_Box_Name then
                Disp_Token (Ctxt, Tok_Box);
             else
                Print (Ctxt, Default);

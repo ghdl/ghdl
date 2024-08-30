@@ -766,7 +766,7 @@ package body Vhdl.Sem_Decls is
       Sem_Subprogram_Specification (Inter);
 
       Def := Get_Default_Subprogram (Inter);
-      if Def /= Null_Iir then
+      if Def /= Null_Iir and then Get_Kind (Def) /= Iir_Kind_Box_Name then
          Sem_Name (Def);
          Res := Get_Named_Entity (Def);
          case Get_Kind (Res) is

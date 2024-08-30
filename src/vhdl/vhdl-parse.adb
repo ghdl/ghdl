@@ -2647,7 +2647,7 @@ package body Vhdl.Parse is
          Scan;
 
          if Current_Token = Tok_Box then
-            Def := Create_Iir (Iir_Kind_Reference_Name);
+            Def := Create_Iir (Iir_Kind_Box_Name);
             Set_Location (Def);
 
             --  Skip '<>'.
