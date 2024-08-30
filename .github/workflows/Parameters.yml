@@ -20,6 +20,10 @@ on:
         description: 'Base-name of all libghdl artifacts.'
         required: true
         type: string
+      pyghdl_name:
+        description: 'Base-name of all pyghdl artifacts.'
+        required: true
+        type: string
       testsuites:
         description: "List of GHDL testsuites to execute while testing (space separated). Alternatively: 'all' or 'none'"
         required: false
@@ -33,6 +37,9 @@ on:
       libghdl_basename:
         description: "Artifact basename for libghdl."
         value: ${{ inputs.library_name }}
+      pyghdl_basename:
+        description: "Artifact basename for pyghdl."
+        value: ${{ inputs.pyghdl_name }}
       testsuites:
         description: "List of GHDL testsuites to execute while testing (space separated)."
         value: ${{ jobs.Parameters.outputs.testsuites }}

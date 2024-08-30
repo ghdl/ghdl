@@ -28,6 +28,10 @@ on:
         description: 'Name of the libghdl artifact.'
         required: true
         type: string
+      pyghdl_artifact:
+        description: 'Name of the pyghdl artifact.'
+        required: true
+        type: string
 
 jobs:
   Package:
@@ -40,6 +44,11 @@ jobs:
         include: ${{ fromJson(inputs.jobs) }}
 
     steps:
+      - name: Assemble artifact name
+        id: artifact_name
+        run: |
+          echo "pyghdl_artifact=${{ inputs.pyghdl_artifact }}-py${{ matrix.python_version }}" >> $env:GITHUB_OUTPUT
+
       - name: '🧰 Checkout'
         uses: actions/checkout@v4
 
@@ -62,21 +71,54 @@ jobs:
         run: |
           cp -Recurse install/lib pyGHDL
 
-#      - name: 🔨 Build Python package (source distribution)
-#        run: python setup.py sdist
-
       - name: 🔨 Build Python package (binary distribution - wheel)
         run: python setup.py bdist_wheel
 
-      - name: Debug
-        run: |
-          tree /F /A pyGHDL
-          tree /F /A dist
-          tar -tf dist\pyGHDL-5.0.0.dev0-py3-none-any.whl
+#      - name: Debug
+#        run: |
+#          tree /F /A pyGHDL
+#          tree /F /A dist
+#          tar -tf dist\pyGHDL*.whl
 
-#      - name: '📤 Upload artifact: pyGHDL'
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: pyGHDL
-#          path: dist/
-#          if-no-files-found: error
+      - name: '📤 Upload artifact: ${{ steps.artifact_name.outputs.pyghdl_artifact }}'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact_name.outputs.pyghdl_artifact }}
+          path: dist/pyGHDL*.whl
+          if-no-files-found: error
+
+  Test:
+    name: '🐍 Test pyGHDL on ${{ inputs.os }} and Python ${{ matrix.python_version }}'
+    runs-on: ${{ inputs.os_image }}
+
+    needs:
+      - Package
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(inputs.jobs) }}
+
+    steps:
+      - name: Assemble artifact name
+        id: artifact_name
+        run: |
+          echo "pyghdl_artifact=${{ inputs.pyghdl_artifact }}-py${{ matrix.python_version }}" >> $env:GITHUB_OUTPUT
+
+      - name: '🧰 Checkout'
+        uses: actions/checkout@v4
+
+      - name: '🐍 Setup Python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python_version }}
+
+      - name: 📥 Download artifacts '${{ steps.artifact_name.outputs.pyghdl_artifact }}' from 'Package' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.artifact_name.outputs.pyghdl_artifact }}
+          path: wheels
+
+      - name: '🔧 Install dependencies'
+        run: |
+          python -m pip install --disable-pip-version-check (Get-Item .\wheels\pyGHDL-*.whl).FullName
