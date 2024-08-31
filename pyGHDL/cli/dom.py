@@ -52,15 +52,11 @@ from pyAttributes.ArgParseAttributes import (
     SwitchArgumentAttribute,
 )
 
-from pyGHDL import GHDLBaseException
+from pyGHDL import GHDLBaseException, __version__, __copyright__, __author__, __email__
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.formatting.prettyprint import PrettyPrint, PrettyPrintException
 
-__author__ = "Tristan Gingold"
-__copyright__ = "Copyright (C) 2019-2021 Tristan Gingold"
 __maintainer__ = "Tristan Gingold"
-__email__ = ""
-__version__ = "0.0.0"
 __status__ = "Alpha"
 __license__ = ""
 

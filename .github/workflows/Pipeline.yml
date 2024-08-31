@@ -143,21 +143,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - {'icon': '🪟', 'os': 'Windows', 'os_image': 'windows-latest', 'libghdl_artifact': 'msys2-ucrt64', 'pyghdl_artifact': 'win-amd64'}
-#          - {'icon': '🪟', 'os': 'Ubuntu',  'os_image': 'ubuntu-24.04',   'libghdl_artifact': 'ubuntu-24.04'}
+        os:
+          - {'icon': '🪟', 'name': 'Windows', 'image': 'windows-latest', 'libghdl_artifact': 'msys2-ucrt64', 'pyghdl_artifact': 'Windows-x86_64'}
+#          - {'icon': '🪟', 'name': 'Ubuntu',  'image': 'ubuntu-24.04',   'libghdl_artifact': 'ubuntu-24.04'}
+        py:
+          - {'icon': '🟠', 'version': "3.9"}
+          - {'icon': '🟡', 'version': "3.10"}
+          - {'icon': '🟢', 'version': "3.11"}
+#          - {'icon': '🟢', 'version': "3.12"}
     with:
-      os:               ${{ matrix.os }}
-      os_image:         ${{ matrix.os_image }}
-      backend:          'mcode'
-      libghdl_artifact: ${{ needs.Params.outputs.libghdl_basename }}-${{ matrix.libghdl_artifact }}
-      pyghdl_artifact:  ${{ needs.Params.outputs.pyghdl_basename }}-${{ matrix.pyghdl_artifact }}
-      jobs: |
-        [
-          {'pyicon': '🟡', 'python_version': '3.10'},
-          {'pyicon': '🟢', 'python_version': '3.11'},
-          {'pyicon': '🟢', 'python_version': '3.12'}
-        ]
+      os_name:          ${{ matrix.os.name }}
+      os_image:         ${{ matrix.os.image }}
+      python_icon:      ${{ matrix.py.icon }}
+      python_version:   ${{ matrix.py.version }}
+      libghdl_artifact: ${{ needs.Params.outputs.libghdl_basename }}-${{ matrix.os.libghdl_artifact }}
+      pyghdl_artifact:  ${{ needs.Params.outputs.pyghdl_basename }}-${{ matrix.os.pyghdl_artifact }}-Python-${{ matrix.py.version }}
     secrets: inherit
 
 #  GNATdoc:

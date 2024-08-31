@@ -3,7 +3,7 @@ name: Packaging pyGHDL with libghdl (standalone)
 on:
   workflow_call:
     inputs:
-      os:
+      os_name:
         description: 'Name of the OS.'
         required: true
         type: string
@@ -11,18 +11,18 @@ on:
         description: 'Name of the OS image.'
         required: true
         type: string
-      runtime:
-        description: 'Name of the MSYS2 runtime.'
-        required: false
-        default: ''
+      python_icon:
+        description: 'Name of the OS image.'
+        required: true
+        type: string
+      python_version:
+        description: 'Python version to use for püackaging.'
+        required: true
         type: string
       backend:
         description: 'Name of the GHDL backend.'
-        required: true
-        type: string
-      jobs:
-        description: 'JSON list with environment fields, naming the system and backend for compilation.'
-        required: true
+        required: false
+        default: 'mcode'
         type: string
       libghdl_artifact:
         description: 'Name of the libghdl artifact.'
@@ -32,30 +32,52 @@ on:
         description: 'Name of the pyghdl artifact.'
         required: true
         type: string
+      unittest_xml_artifact:
+        description: 'Name of the pyghdl artifact.'
+        required: false
+        default: 'pyGHDL-unittest-xml'
+        type: string
+      coverage_config:
+        description: 'Name of the pyghdl artifact.'
+        required: false
+        default: ''
+        type: string
+      coverage_sqlite_artifact:
+        description: 'Name of the pyghdl artifact.'
+        required: false
+        default: ''
+        type: string
+      coverage_xml_artifact:
+        description: 'Name of the pyghdl artifact.'
+        required: false
+        default: ''
+        type: string
+      coverage_json_artifact:
+        description: 'Name of the pyghdl artifact.'
+        required: false
+        default: ''
+        type: string
+      coverage_html_artifact:
+        description: 'Name of the pyghdl artifact.'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   Package:
-    name: '🐍 Package pyGHDL for ${{ inputs.os }} and Python ${{ matrix.python_version }}'
+    name: '🐍${{ inputs.python_icon }} Package pyGHDL for ${{ inputs.os_name }} and Python ${{ inputs.python_version }}'
     runs-on: ${{ inputs.os_image }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJson(inputs.jobs) }}
+    outputs:
+      pyghdl_artifact: ${{ inputs.pyghdl_artifact }}
 
     steps:
-      - name: Assemble artifact name
-        id: artifact_name
-        run: |
-          echo "pyghdl_artifact=${{ inputs.pyghdl_artifact }}-py${{ matrix.python_version }}" >> $env:GITHUB_OUTPUT
-
       - name: '🧰 Checkout'
         uses: actions/checkout@v4
 
       - name: '🐍 Setup Python'
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python_version }}
+          python-version: ${{ inputs.python_version }}
 
       - name: '🔧 Install dependencies'
         run: |
@@ -69,56 +91,170 @@ jobs:
 
       - name: Copy libghdl files
         run: |
-          cp -Recurse install/lib pyGHDL
+          cp -Recurse install/lib/* pyGHDL/lib
 
       - name: 🔨 Build Python package (binary distribution - wheel)
         run: python setup.py bdist_wheel
 
-#      - name: Debug
-#        run: |
-#          tree /F /A pyGHDL
-#          tree /F /A dist
-#          tar -tf dist\pyGHDL*.whl
-
-      - name: '📤 Upload artifact: ${{ steps.artifact_name.outputs.pyghdl_artifact }}'
+      - name: '📤 Upload artifact: ${{ inputs.pyghdl_artifact }}'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.artifact_name.outputs.pyghdl_artifact }}
+          name: ${{ inputs.pyghdl_artifact }}
           path: dist/pyGHDL*.whl
           if-no-files-found: error
 
   Test:
-    name: '🐍 Test pyGHDL on ${{ inputs.os }} and Python ${{ matrix.python_version }}'
+    name: '🐍${{ inputs.python_icon }} Test pyGHDL on ${{ inputs.os_name }} and Python ${{ inputs.python_version }}'
     runs-on: ${{ inputs.os_image }}
-
     needs:
       - Package
 
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJson(inputs.jobs) }}
-
     steps:
-      - name: Assemble artifact name
-        id: artifact_name
-        run: |
-          echo "pyghdl_artifact=${{ inputs.pyghdl_artifact }}-py${{ matrix.python_version }}" >> $env:GITHUB_OUTPUT
-
       - name: '🧰 Checkout'
         uses: actions/checkout@v4
+        with:
+          path: ghdl
+
+      - name: Prepare testsuite
+        run: |
+          mkdir pyGHDL
+          cp ghdl\pyGHDL\requirements.txt pyGHDL
+          mkdir pyGHDL\cli
+          cp ghdl\pyGHDL\cli\requirements.txt pyGHDL\cli
+          mkdir pyGHDL\dom
+          cp ghdl\pyGHDL\dom\requirements.txt pyGHDL\dom
+          mkdir pyGHDL\libghdl
+          cp ghdl\pyGHDL\libghdl\requirements.txt pyGHDL\libghdl
+          mkdir pyGHDL\lsp
+          cp ghdl\pyGHDL\lsp\requirements.txt pyGHDL\lsp
+          cp -Recurse ghdl\testsuite .
+
+          Remove-Item -Force -Recurse ghdl
 
       - name: '🐍 Setup Python'
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python_version }}
+          python-version: ${{ inputs.python_version }}
 
-      - name: 📥 Download artifacts '${{ steps.artifact_name.outputs.pyghdl_artifact }}' from 'Package' job
+      - name: 📥 Download artifacts '${{ inputs.pyghdl_artifact }}' from 'Package' job
         uses: actions/download-artifact@v4
         with:
-          name: ${{ steps.artifact_name.outputs.pyghdl_artifact }}
+          name: ${{ inputs.pyghdl_artifact }}
           path: wheels
 
       - name: '🔧 Install dependencies'
         run: |
-          python -m pip install --disable-pip-version-check (Get-Item .\wheels\pyGHDL-*.whl).FullName
+          python -m pip install -v --disable-pip-version-check (Get-Item .\wheels\pyGHDL-*.whl).FullName
+          python -m pip install --disable-pip-version-check -r testsuite\requirements.txt
+
+      - name: List pyGHDL installation directory
+        run: |
+          tree /F /A ${env:Python3_ROOT_DIR}\Lib\site-packages\pyGHDL
+
+      - name: Sanity check ghdl-lsp
+        run: |
+          echo "Testing Python module:"
+          python -m pyGHDL.cli.lsp --version
+
+          echo ""
+          echo "Testing entrypoint (executable):"
+          ghdl-ls --version
+
+      - name: Sanity check ghdl-dom
+        run: |
+          echo "Testing Python module:"
+          python -m pyGHDL.cli.dom version
+
+          echo ""
+          echo "Testing entrypoint (executable):"
+          ghdl-dom version
+
+      - name: '🚦 Testsuite: pyunit'
+        run: |
+          $PYTEST_ARGS = if ("${{ inputs.unittest_xml_artifact }}") { "--junitxml=report/unit/TestReportSummary.xml" } else { "" }
+          if ("${{ inputs.coverage_config }}") {
+            Write-Host "coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP --color=yes testsuite/pyunit"
+            coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit
+          } else {
+            Write-Host "python -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit"
+            python -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit
+          }
+
+      - name: Convert coverage to XML format (Cobertura)
+        if: inputs.coverage_xml_artifact != ''
+        continue-on-error: true
+        run: coverage xml --data-file=.coverage
+
+      - name: Convert coverage to JSON format
+        if: inputs.coverage_json_artifact != ''
+        continue-on-error: true
+        run: coverage json --data-file=.coverage
+
+#      - name: Convert coverage to HTML format
+#        if: inputs.coverage_html_artifact != ''
+#        continue-on-error: true
+#        run: |
+#          coverage html --data-file=.coverage -d ${{ steps.getVariables.outputs.coverage_report_html_directory }}
+#          rm ${{ steps.getVariables.outputs.coverage_report_html_directory }}/.gitignore
+
+# Upload artifacts
+
+      - name: 📤 Upload 'TestReportSummary.xml' artifact
+        if: inputs.unittest_xml_artifact != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.unittest_xml_artifact }}-${{ inputs.python_version }}
+          path: report/unit/TestReportSummary.xml
+          if-no-files-found: error
+          retention-days: 1
+
+#      - name: 📤 Upload 'Unit Tests HTML Report' artifact
+#        if: inputs.unittest_html_artifact != ''
+#        continue-on-error: true
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ${{ inputs.unittest_html_artifact }}-${{ inputs.python_version }}
+#          path: ${{ steps.getVariables.outputs.unittest_report_html_directory }}
+#          if-no-files-found: error
+#          retention-days: 1
+
+      - name: 📤 Upload 'Coverage SQLite Database' artifact
+        if: inputs.coverage_sqlite_artifact != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.coverage_sqlite_artifact }}-${{ inputs.python_version }}
+          path: .coverage
+          if-no-files-found: error
+          retention-days: 1
+
+#      - name: 📤 Upload 'Coverage XML Report' artifact
+#        if: inputs.coverage_xml_artifact != ''
+#        continue-on-error: true
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ${{ inputs.coverage_xml_artifact }}-${{ inputs.python_version }}
+#          path: ${{ steps.getVariables.outputs.coverage_report_xml }}
+#          if-no-files-found: error
+#          retention-days: 1
+
+#      - name: 📤 Upload 'Coverage JSON Report' artifact
+#        if: inputs.coverage_json_artifact != ''
+#        continue-on-error: true
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ${{ inputs.coverage_json_artifact }}-${{ inputs.python_version }}
+#          path: ${{ steps.getVariables.outputs.coverage_report_json }}
+#          if-no-files-found: error
+#          retention-days: 1
+
+#      - name: 📤 Upload 'Coverage HTML Report' artifact
+#        if: inputs.coverage_html_artifact != ''
+#        continue-on-error: true
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ${{ inputs.coverage_html_artifact }}-${{ inputs.python_version }}
+#          path: ${{ steps.getVariables.outputs.coverage_report_html_directory }}
+#          if-no-files-found: error
+#          retention-days: 1

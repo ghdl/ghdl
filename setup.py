@@ -67,7 +67,6 @@ if libGHDLDirectory.exists():
     additional["include_package_data"] = True
     additional["distclass"] = BinaryDistribution
 
-
 setup(
     **DescribePythonPackageHostedOnGitHub(
         packageName=packageName,
