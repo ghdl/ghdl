@@ -265,7 +265,7 @@ jobs:
     uses: ./.github/workflows/Documentation-Sphinx.yml
     needs:
       - Build
-    if: inputs.ubuntu_image == 'ubuntu-24.04' && inputs.backend == 'mcode' && ( inputs.html_artifact != '' || inputs.latex_artifact != '')
+    if: inputs.ubuntu_version == '24.04' && inputs.backend == 'mcode' && ( inputs.html_artifact != '' || inputs.latex_artifact != '')
     with:
       ghdl_artifact:  ${{ needs.Build.outputs.ghdl_artifact }}
       html_artifact:  ${{ inputs.html_artifact }}
