@@ -37,6 +37,7 @@ package body PSL.Nodes_Meta is
       Field_High_Bound => Type_Node,
       Field_Number => Type_Node,
       Field_Value => Type_Uns32,
+      Field_Origin => Type_Node,
       Field_Boolean => Type_Node,
       Field_Decl => Type_Node,
       Field_HDL_Node => Type_HDL_Node,
@@ -102,6 +103,8 @@ package body PSL.Nodes_Meta is
             return "number";
          when Field_Value =>
             return "value";
+         when Field_Origin =>
+            return "origin";
          when Field_Boolean =>
             return "boolean";
          when Field_Decl =>
@@ -317,6 +320,8 @@ package body PSL.Nodes_Meta is
          when Field_Number =>
             return Attr_None;
          when Field_Value =>
+            return Attr_None;
+         when Field_Origin =>
             return Attr_None;
          when Field_Boolean =>
             return Attr_None;
@@ -605,7 +610,8 @@ package body PSL.Nodes_Meta is
       Field_Chain,
       --  N_Inf
       --  N_Number
-      Field_Value
+      Field_Value,
+      Field_Origin
      );
 
    Fields_Of_Nodes_Last : constant array (Nkind) of Integer :=
@@ -676,7 +682,7 @@ package body PSL.Nodes_Meta is
       N_Name => 182,
       N_Name_Decl => 184,
       N_Inf => 184,
-      N_Number => 185
+      N_Number => 186
      );
 
    function Get_Fields (K : Nkind) return Fields_Array
@@ -860,6 +866,8 @@ package body PSL.Nodes_Meta is
             return Get_High_Bound (N);
          when Field_Number =>
             return Get_Number (N);
+         when Field_Origin =>
+            return Get_Origin (N);
          when Field_Boolean =>
             return Get_Boolean (N);
          when Field_Decl =>
@@ -916,6 +924,8 @@ package body PSL.Nodes_Meta is
             Set_High_Bound (N, V);
          when Field_Number =>
             Set_Number (N, V);
+         when Field_Origin =>
+            Set_Origin (N, V);
          when Field_Boolean =>
             Set_Boolean (N, V);
          when Field_Decl =>
@@ -1280,6 +1290,11 @@ package body PSL.Nodes_Meta is
    begin
       return K = N_Number;
    end Has_Value;
+
+   function Has_Origin (K : Nkind) return Boolean is
+   begin
+      return K = N_Number;
+   end Has_Origin;
 
    function Has_Boolean (K : Nkind) return Boolean is
    begin

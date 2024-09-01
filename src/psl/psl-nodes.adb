@@ -813,6 +813,22 @@ package body PSL.Nodes is
       Set_Field1 (N, Uns32_To_Node (Val));
    end Set_Value;
 
+   function Get_Origin (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Origin (Get_Kind (N)),
+                     "no field Origin");
+      return Get_Field2 (N);
+   end Get_Origin;
+
+   procedure Set_Origin (N : Node; Val : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Origin (Get_Kind (N)),
+                     "no field Origin");
+      Set_Field2 (N, Val);
+   end Set_Origin;
+
    function Get_Boolean (N : Node) return Node is
    begin
       pragma Assert (N /= Null_Node);

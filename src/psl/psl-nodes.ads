@@ -263,6 +263,8 @@ package PSL.Nodes is
    -- N_Number (Short)
    --
    --   Get/Set_Value (Field1)
+   --
+   --   Get/Set_Origin (Field2)
 
    -- N_Braced_SERE (Short)
    --
@@ -591,6 +593,10 @@ package PSL.Nodes is
    --  Field: Field1 (uc)
    function Get_Value (N : Node) return Uns32;
    procedure Set_Value (N : Node; Val : Uns32);
+
+   --  Field: Field2
+   function Get_Origin (N : Node) return Node;
+   procedure Set_Origin (N : Node; Val : Node);
 
    --  Field: Field3
    function Get_Boolean (N : Node) return Node;

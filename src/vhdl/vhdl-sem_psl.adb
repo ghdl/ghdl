@@ -434,20 +434,40 @@ package body Vhdl.Sem_Psl is
    is
       use Vhdl.Sem_Expr;
       use Vhdl.Std_Package;
-      Expr : Iir;
    begin
       case Get_Kind (N) is
          when N_Inf
            | N_Number =>
             return N;
          when N_HDL_Expr =>
-            Expr := Get_HDL_Node (N);
-            Expr := Sem_Expression_Wildcard
-              (Expr, Wildcard_Any_Integer_Type);
-            Expr := Eval_Expr (Expr);
-            Set_HDL_Node (N, Expr);
+            declare
+               N2 : PSL_Node;
+               Expr : Iir;
+               Val : Int64;
+            begin
+               Expr := Get_HDL_Node (N);
+               Expr := Sem_Expression_Wildcard
+                 (Expr, Wildcard_Any_Integer_Type);
+               Expr := Eval_Expr (Expr);
+               Set_HDL_Node (N, Expr);
 
-            return N;
+               if Get_Expr_Staticness (Expr) = Locally then
+                  N2 := Create_Node (N_Number);
+                  Set_Location (N2, Get_Location (Expr));
+                  Set_Origin (N2, N);
+                  Val := Get_Value (Expr);
+                  if Val < 0 or else Val > Int64 (Uns32'Last) then
+                     Error_Msg_Sem (+N, "number is too large");
+                     Val := 0;
+                  end if;
+                  Set_Value (N2, Uns32 (Val));
+
+                  return N2;
+               else
+                  return N;
+               end if;
+            end;
+
          when others =>
             raise Internal_Error;
       end case;

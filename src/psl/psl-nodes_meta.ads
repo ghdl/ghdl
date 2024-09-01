@@ -54,6 +54,7 @@ package PSL.Nodes_Meta is
       Field_High_Bound,
       Field_Number,
       Field_Value,
+      Field_Origin,
       Field_Boolean,
       Field_Decl,
       Field_HDL_Node,
@@ -160,6 +161,7 @@ package PSL.Nodes_Meta is
    function Has_High_Bound (K : Nkind) return Boolean;
    function Has_Number (K : Nkind) return Boolean;
    function Has_Value (K : Nkind) return Boolean;
+   function Has_Origin (K : Nkind) return Boolean;
    function Has_Boolean (K : Nkind) return Boolean;
    function Has_Decl (K : Nkind) return Boolean;
    function Has_HDL_Node (K : Nkind) return Boolean;
