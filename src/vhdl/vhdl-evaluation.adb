@@ -3283,7 +3283,7 @@ package body Vhdl.Evaluation is
                      return Build_Discrete (Int64 (Res.Val), Orig);
                   else
                      Warning_Msg_Sem
-                       (Warnid_Runtime_Error, +Get_Parameter (Orig),
+                       (Warnid_Runtime_Error, +Orig,
                         "incorrect parameter for value attribute");
                      return Build_Overflow (Orig);
                   end if;
