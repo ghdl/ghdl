@@ -20,6 +20,11 @@ on:
         required: false
         default: ''
         type: string
+      libghdl_artifact:
+        description: 'Name of the libghdl artifact.'
+        required: false
+        default: ''
+        type: string
       html_artifact:
         description: 'Name of the HTML documentation artifact.'
         required: false
@@ -67,6 +72,7 @@ jobs:
         id: artifact_name
         run: |
           echo "ghdl_artifact=${{ inputs.ubuntu_artifact }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
+          echo "libghdl_artifact=${{ inputs.libghdl_artifact }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
 
       - name: 🔧 Install dependencies
         run: |
@@ -171,6 +177,7 @@ jobs:
           sudo make -j$(nproc) install
 
       - name: 📋 Write requirements file
+        id: requirements
         run: |
           GCC_VERSION="$(gcc --version | grep gcc)"
           echo "gcc --version:         ${GCC_VERSION}"
@@ -220,7 +227,11 @@ jobs:
           echo -e "\e[36mCollected requirements:\e[0m"
           cat ubuntu.requirements | while read -r line; do echo -e "\e[36m  ${line}\e[0m"; done
 
-          sudo cp ubuntu.requirements ./install
+          sudo install -m 644 -p ubuntu.requirements ./install/
+
+          echo "GCC_MAJOR_VERSION=${GCC_MAJOR_VERSION}" >> $GITHUB_OUTPUT
+          echo "GNAT_MAJOR_VERSION=${GNAT_MAJOR_VERSION}" >> $GITHUB_OUTPUT
+          echo "LLVM_MAJOR_VERSION=${LLVM_MAJOR_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Run 'sanity' from testsuite
         run: |
@@ -235,6 +246,34 @@ jobs:
         if: inputs.ubuntu_artifact != ''
         with:
           name: ${{ steps.artifact_name.outputs.ghdl_artifact }}
+          path: ./install
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Remove binaries, libraries and other files for libghdl
+        if: inputs.ubuntu_version == '24.04' && inputs.backend == 'mcode'
+        run: |
+          sudo chown -R runner:docker ./install
+          rm -Rf ./install/bin
+          rm -Rf ./install/include
+          rm -Rf ./install/lib/ghdl/vendors
+          rm -Rf ./install/lib/*.a
+          rm -Rf ./install/lib/*.link
+          rm -Rf ./install/lib/libghdlvpi.so
+          rm -Rf ./install/lib/libghw.so
+          rm -Rf ./install/*.requirements
+
+      - name: Copy additional dependencies
+        if: inputs.ubuntu_version == '24.04' && inputs.backend == 'mcode'
+        run: |
+          # libgnat
+          cp -v /lib/x86_64-linux-gnu/libgnat-${{ steps.requirements.outputs.GNAT_MAJOR_VERSION }}.so ./install/lib
+
+      - name: 📤 Upload '${{ steps.artifact_name.outputs.libghdl_artifact }}' artifact
+        uses: actions/upload-artifact@v4
+        if: inputs.ubuntu_version == '24.04' && inputs.backend == 'mcode'
+        with:
+          name: ${{ steps.artifact_name.outputs.libghdl_artifact }}
           path: ./install
           if-no-files-found: error
           retention-days: 1

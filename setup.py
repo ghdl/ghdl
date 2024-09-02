@@ -55,6 +55,7 @@ additional = {}
 libGHDLDirectory = sourceDirectory / "lib"
 if libGHDLDirectory.exists():
     dataFiles.extend(libGHDLDirectory.rglob("lib*.dll"))
+    dataFiles.extend(libGHDLDirectory.rglob("lib*.so"))
     ghdlDirectory = libGHDLDirectory / "ghdl"
     dataFiles.extend(ghdlDirectory.rglob("**/*.vhdl"))
     dataFiles.extend(ghdlDirectory.rglob("**/*.cf"))
