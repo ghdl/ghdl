@@ -89,7 +89,13 @@ jobs:
           name: ${{ inputs.libghdl_artifact }}-${{ inputs.backend }}
           path: install
 
-      - name: Copy libghdl files
+      - name: Copy libghdl files (Ubuntu)
+        if: startsWith(inputs.os_image, 'ubuntu')
+        run: |
+          cp -r install/lib/* pyGHDL/lib
+
+      - name: Copy libghdl files (Windows)
+        if: startsWith(inputs.os_image, 'windows')
         run: |
           cp -Recurse install/lib/* pyGHDL/lib
 
@@ -115,7 +121,25 @@ jobs:
         with:
           path: ghdl
 
-      - name: Prepare testsuite
+      - name: Prepare testsuite (Ubuntu)
+        if: startsWith(inputs.os_image, 'ubuntu')
+        run: |
+          mkdir pyGHDL
+          cp ghdl/pyGHDL/requirements.txt pyGHDL
+          mkdir pyGHDL/cli
+          cp ghdl/pyGHDL/cli/requirements.txt pyGHDL/cli
+          mkdir pyGHDL/dom
+          cp ghdl/pyGHDL/dom/requirements.txt pyGHDL/dom
+          mkdir pyGHDL/libghdl
+          cp ghdl/pyGHDL/libghdl/requirements.txt pyGHDL/libghdl
+          mkdir pyGHDL/lsp
+          cp ghdl/pyGHDL/lsp/requirements.txt pyGHDL/lsp
+          cp -r ghdl/testsuite .
+
+          rm -Rf ghdl
+
+      - name: Prepare testsuite (Windows)
+        if: startsWith(inputs.os_image, 'windows')
         run: |
           mkdir pyGHDL
           cp ghdl\pyGHDL\requirements.txt pyGHDL
@@ -142,14 +166,29 @@ jobs:
           name: ${{ inputs.pyghdl_artifact }}
           path: wheels
 
-      - name: '🔧 Install dependencies'
+      - name: 🔧 Install dependencies (Ubuntu)
+        if: startsWith(inputs.os_image, 'ubuntu')
+        run: |
+          sudo apt-get install -y --no-install-recommends libgnat-13
+          python -m pip install -v --disable-pip-version-check ./wheels/pyGHDL-*.whl
+          python -m pip install --disable-pip-version-check -r testsuite/requirements.txt
+
+      - name: 🔧 Install dependencies (Windows)
+        if: startsWith(inputs.os_image, 'windows')
         run: |
           python -m pip install -v --disable-pip-version-check (Get-Item .\wheels\pyGHDL-*.whl).FullName
           python -m pip install --disable-pip-version-check -r testsuite\requirements.txt
 
-      - name: List pyGHDL installation directory
+      - name: List pyGHDL installation directory (Ubuntu)
+        if: startsWith(inputs.os_image, 'ubuntu')
         run: |
-          tree /F /A ${env:Python3_ROOT_DIR}\Lib\site-packages\pyGHDL
+          ls -lAh ${Python3_ROOT_DIR}/lib/python3.*/site-packages/pyGHDL/lib
+          tree ${Python3_ROOT_DIR}/lib/python3.*/site-packages/pyGHDL
+
+#      - name: List pyGHDL installation directory (Windows)
+#        if: startsWith(inputs.os_image, 'windows')
+#        run: |
+#          tree /F /A ${env:Python3_ROOT_DIR}\Lib\site-packages\pyGHDL
 
       - name: Sanity check ghdl-lsp
         run: |
@@ -169,7 +208,8 @@ jobs:
           echo "Testing entrypoint (executable):"
           ghdl-dom version
 
-      - name: '🚦 Testsuite: pyunit'
+      - name: '🚦 Testsuite: pyunit (Windows)'
+        if: startsWith(inputs.os_image, 'windows')
         run: |
           $PYTEST_ARGS = if ("${{ inputs.unittest_xml_artifact }}") { "--junitxml=report/unit/TestReportSummary.xml" } else { "" }
           if ("${{ inputs.coverage_config }}") {
