@@ -1172,6 +1172,46 @@ package body Vhdl.Sem_Decls is
       end case;
    end Is_Global_Object;
 
+   procedure Check_Object_Declaration (Decl : Iir)
+   is
+      Atype : constant Iir := Get_Type (Decl);
+   begin
+      case Get_Kind (Decl) is
+         when Iir_Kind_Constant_Declaration =>
+            null;
+
+         when Iir_Kind_Variable_Declaration
+           | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Free_Quantity_Declaration =>
+            --  LRM93 3.2.1.1 / LRM08 5.3.2.2
+            --  For a variable or signal declared by an object declaration, the
+            --  subtype indication of the corresponding object declaration
+            --  must define a constrained array subtype.
+            declare
+               Ind : constant Iir := Get_Subtype_Indication (Decl);
+            begin
+               if not (Is_Valid (Ind)
+                         and then Kind_In (Ind, Iir_Kind_Subtype_Attribute,
+                                           Iir_Kind_Element_Attribute))
+                 and then not Is_Fully_Constrained_Type (Atype)
+               then
+                  Report_Start_Group;
+                  Error_Msg_Sem
+                    (+Decl,
+                     "declaration of %n with unconstrained %n is not allowed",
+                     (+Decl, +Atype));
+                  if Get_Default_Value (Decl) /= Null_Iir then
+                     Error_Msg_Sem (+Decl, "(even with a default value)");
+                  end if;
+                  Report_End_Group;
+               end if;
+            end;
+
+         when others =>
+            Error_Kind ("sem_object_declaration(2)", Decl);
+      end case;
+   end Check_Object_Declaration;
+
    --  LAST_DECL is set only if DECL is part of a list of declarations (they
    --  share the same type and the same default value).
    procedure Sem_Object_Declaration (Decl: Iir; Last_Decl : Iir)
@@ -1336,6 +1376,15 @@ package body Vhdl.Sem_Decls is
                Set_Expr_Staticness (Decl, Staticness);
             end if;
 
+            --  LRM93 3.2.1.1
+            --  For a constant declared by an object declaration, the index
+            --  ranges are defined by the initial value, if the subtype of the
+            --  constant is unconstrained; otherwise they are defined by this
+            --  subtype.
+            if Default_Value /= Null_Iir then
+               Sem_Object_Type_From_Value (Decl, Default_Value);
+            end if;
+
          when Iir_Kind_Signal_Declaration =>
             --  LRM93 4.3.1.2
             --  It is also an error if a guarded signal of a scalar type is
@@ -1404,47 +1453,7 @@ package body Vhdl.Sem_Decls is
             Error_Kind ("sem_object_declaration", Decl);
       end case;
 
-      case Get_Kind (Decl) is
-         when Iir_Kind_Constant_Declaration =>
-            --  LRM93 3.2.1.1
-            --  For a constant declared by an object declaration, the index
-            --  ranges are defined by the initial value, if the subtype of the
-            --  constant is unconstrained; otherwise they are defined by this
-            --  subtype.
-            if Default_Value /= Null_Iir then
-               Sem_Object_Type_From_Value (Decl, Default_Value);
-            end if;
-
-         when Iir_Kind_Variable_Declaration
-           | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Free_Quantity_Declaration =>
-            --  LRM93 3.2.1.1 / LRM08 5.3.2.2
-            --  For a variable or signal declared by an object declaration, the
-            --  subtype indication of the corresponding object declaration
-            --  must define a constrained array subtype.
-            declare
-               Ind : constant Iir := Get_Subtype_Indication (Decl);
-            begin
-               if not (Is_Valid (Ind)
-                         and then Kind_In (Ind, Iir_Kind_Subtype_Attribute,
-                                           Iir_Kind_Element_Attribute))
-                 and then not Is_Fully_Constrained_Type (Atype)
-               then
-                  Report_Start_Group;
-                  Error_Msg_Sem
-                    (+Decl,
-                     "declaration of %n with unconstrained %n is not allowed",
-                     (+Decl, +Atype));
-                  if Default_Value /= Null_Iir then
-                     Error_Msg_Sem (+Decl, "(even with a default value)");
-                  end if;
-                  Report_End_Group;
-               end if;
-            end;
-
-         when others =>
-            Error_Kind ("sem_object_declaration(2)", Decl);
-      end case;
+      Check_Object_Declaration (Decl);
    end Sem_Object_Declaration;
 
    procedure Sem_File_Declaration (Decl: Iir_File_Declaration; Last_Decl : Iir)

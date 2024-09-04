@@ -20,6 +20,7 @@ with Vhdl.Nodes_Meta;
 with Types; use Types;
 with Files_Map;
 with Vhdl.Sem_Types;
+with Vhdl.Sem_Decls;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Sem_Utils;
@@ -1323,6 +1324,11 @@ package body Vhdl.Sem_Inst is
             when Iir_Kinds_Subprogram_Declaration =>
                --  TODO: check no access type in interfaces ?
                null;
+            when Iir_Kind_Protected_Type_Body =>
+               Reanalyze_Instantiated_Declarations
+                 (Get_Declaration_Chain (Decl));
+            when Iir_Kind_Variable_Declaration =>
+               Sem_Decls.Check_Object_Declaration (Decl);
             when others =>
                --  Error_Kind ("reanalyze_instantiated_declarations", Decl);
                null;
@@ -1424,6 +1430,7 @@ package body Vhdl.Sem_Inst is
    function Instantiate_Package_Body (Inst : Iir) return Iir
    is
       Pkg : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
+      Hdr : constant Iir := Get_Package_Header (Pkg);
       Prev_Instance_File : constant Source_File_Entry := Instance_File;
       Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
       Bod : constant Iir := Get_Package_Body (Pkg);
@@ -1439,7 +1446,7 @@ package body Vhdl.Sem_Inst is
       Set_Instance (Pkg, Inst);
 
       --  Redirect references to interfaces.
-      Instantiate_Interface_References (Get_Package_Header (Pkg), Inst, Inst);
+      Instantiate_Interface_References (Hdr, Inst, Inst);
 
       Set_Instance_On_Chain
         (Get_Declaration_Chain (Pkg), Get_Declaration_Chain (Inst));
@@ -1461,6 +1468,10 @@ package body Vhdl.Sem_Inst is
       --  Restore.
       Instance_File := Prev_Instance_File;
       Restore_Origin (Mark);
+
+      if Has_Unbounded_Type_Interface (Inst) then
+         Reanalyze_Instantiated_Declarations (Get_Declaration_Chain (Res));
+      end if;
 
       return Res;
    end Instantiate_Package_Body;
