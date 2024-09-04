@@ -47,6 +47,7 @@ from pyTooling.Exceptions import ToolingException
 
 from pyGHDL import GHDLBaseException
 from pyGHDL import __version__ as ghdlVersion
+
 # from pyGHDL.libghdl._decorator import BindToLibGHDL
 from pyGHDL.libghdl._types import Iir
 
@@ -154,13 +155,16 @@ def _get_libghdl_path() -> Path:
         if not resourcePath.exists():
             from pyTooling.Exceptions import ToolingException
 
-            raise ToolingException(f"Resource file '{filename}' not found in resource '{module}'.") from FileNotFoundError(f"{resourcePath}")
+            raise ToolingException(
+                f"Resource file '{filename}' not found in resource '{module}'."
+            ) from FileNotFoundError(f"{resourcePath}")
 
         return resourcePath
 
     # TODO: simplify code, see other uses above for find relative to package file
     try:
         from pyGHDL import lib as ResourcePackage
+
         return getResourceFile(ResourcePackage, libGHDLSharedLibraryFile)
     except ToolingException as ex:
         searchedAt.append(f"  Tried pyGHDL.lib resource directory: {ex.__cause__!s}")

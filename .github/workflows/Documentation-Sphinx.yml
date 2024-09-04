@@ -67,6 +67,7 @@ jobs:
       - name: Install GHDL (chmod) and prepare test environment
         run: |
           chmod +x ./install/bin/*
+          cp -r -v ./install/lib/* pyGHDL/lib
           sudo xargs --no-run-if-empty -a ./install/ubuntu.requirements -- apt-get install -y --no-install-recommends
           echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
 

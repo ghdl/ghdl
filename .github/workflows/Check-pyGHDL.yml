@@ -1,4 +1,4 @@
-name: Building pyGHDL (Python Bindings for libghdl)
+name: Checking pyGHDL (Python Bindings for libghdl)
 
 on:
   workflow_call:
@@ -54,4 +54,4 @@ jobs:
 
       - name: '🚦 Check if python follows code formatting standards'
         if: inputs.black
-        run: python -m black --check pyGHDL
+        run: python -m black --check --diff --color pyGHDL
