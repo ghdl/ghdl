@@ -4921,7 +4921,8 @@ package body Synth.Vhdl_Stmts is
             Areapools.Release (Areapools.Empty_Marker, Wireval_Pool);
          when Iir_Kinds_Process_Statement =>
             Synth_Process_Statement (Syn_Inst, Stmt);
-         when Iir_Kind_If_Generate_Statement =>
+         when Iir_Kind_If_Generate_Statement
+            | Iir_Kind_Case_Generate_Statement =>
             Synth_If_Generate_Statement (Syn_Inst, Stmt);
          when Iir_Kind_For_Generate_Statement =>
             Synth_For_Generate_Statement (Syn_Inst, Stmt);
