@@ -92,7 +92,7 @@ jobs:
       - name: Copy libghdl files (Ubuntu)
         if: startsWith(inputs.os_image, 'ubuntu')
         run: |
-          cp -r install/lib/* pyGHDL/lib
+          cp -r -v install/lib/* pyGHDL/lib
 
       - name: Copy libghdl files (Windows)
         if: startsWith(inputs.os_image, 'windows')
@@ -125,15 +125,15 @@ jobs:
         if: startsWith(inputs.os_image, 'ubuntu')
         run: |
           mkdir pyGHDL
-          cp ghdl/pyGHDL/requirements.txt pyGHDL
+          cp -v ghdl/pyGHDL/requirements.txt pyGHDL
           mkdir pyGHDL/cli
-          cp ghdl/pyGHDL/cli/requirements.txt pyGHDL/cli
+          cp -v ghdl/pyGHDL/cli/requirements.txt pyGHDL/cli
           mkdir pyGHDL/dom
-          cp ghdl/pyGHDL/dom/requirements.txt pyGHDL/dom
+          cp -v ghdl/pyGHDL/dom/requirements.txt pyGHDL/dom
           mkdir pyGHDL/libghdl
-          cp ghdl/pyGHDL/libghdl/requirements.txt pyGHDL/libghdl
+          cp -v ghdl/pyGHDL/libghdl/requirements.txt pyGHDL/libghdl
           mkdir pyGHDL/lsp
-          cp ghdl/pyGHDL/lsp/requirements.txt pyGHDL/lsp
+          cp -v ghdl/pyGHDL/lsp/requirements.txt pyGHDL/lsp
           cp -r ghdl/testsuite .
 
           rm -Rf ghdl
