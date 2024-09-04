@@ -774,8 +774,17 @@ package body Synth.Environment is
             --  We don't know, so assume yes.
             return True;
          when Id_Signal
-            | Id_Isignal =>
-            return Is_Tribuf_Net (Get_Input_Net (Inst, 0));
+           | Id_Isignal =>
+            declare
+               Inp : constant Net := Get_Input_Net (Inst, 0);
+            begin
+               if Inp = No_Net then
+                  return False;
+               else
+                  --  Testcase ?
+                  return Is_Tribuf_Net (Inp);
+               end if;
+            end;
          when others =>
             return False;
       end case;
