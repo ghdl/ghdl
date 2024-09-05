@@ -2060,7 +2060,7 @@ package body Ghdllocal is
       Next_Arg : Natural;
    begin
       Extract_Elab_Unit
-        ("--elab-order", True, Args, Next_Arg, Lib_Id, Prim_Id, Sec_Id);
+        ("--elab-order", False, Args, Next_Arg, Lib_Id, Prim_Id, Sec_Id);
       if Prim_Id = Null_Identifier
         or else not Setup_Libraries (True)
       then
