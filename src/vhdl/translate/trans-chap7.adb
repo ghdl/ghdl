@@ -3439,6 +3439,7 @@ package body Trans.Chap7 is
       Index_List : Iir_Flist;
       Aggr_El_Type  : Iir;
       Final      : Boolean;
+      Is_Flat    : Boolean;
 
       --  Assign EXPR to current position (defined by index VAR_INDEX), and
       --  update VAR_INDEX.  Handles sub-aggregates.
@@ -3564,7 +3565,10 @@ package body Trans.Chap7 is
             Range_Ptr := Chap3.Bounds_To_Range
               (Chap3.Get_Composite_Bounds (Targ), Aggr_Type, Dim);
             Len_Tmp := M2E (Chap3.Range_To_Length (Range_Ptr));
-            if P /= 0 then
+            if Is_Flat then
+               Len_Tmp := New_Dyadic_Op
+                 (ON_Sub_Ov, Len_Tmp, New_Obj_Value (Var_Index));
+            elsif P /= 0 then
                Len_Tmp := New_Dyadic_Op
                  (ON_Sub_Ov,
                   Len_Tmp, New_Lit (New_Index_Lit (Unsigned_64 (P))));
@@ -3751,8 +3755,10 @@ package body Trans.Chap7 is
       if Get_Nbr_Elements (Index_List) = Dim then
          Aggr_El_Type := Get_Element_Subtype (Aggr_Type);
          Final:= True;
+         Is_Flat := Dim = 1;
       else
          Final := False;
+         Is_Flat := False;
       end if;
 
       Assocs := Get_Association_Choices_Chain (Aggr);
