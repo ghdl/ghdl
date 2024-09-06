@@ -118,6 +118,23 @@ echo "> args: $@"
 # Run a testsuite
 do_test() {
   case $1 in
+    help)
+    	echo "Usage:"
+    	echo "  ./testsuite.sh                     run all testsuites"
+    	echo "  ./testsuite.sh <suite>             run single testsuite"
+    	echo "  ./testsuite.sh <suite> <suite> ... run multiple testsuites"
+
+    	echo "Supported testsuites:"
+    	echo " * sanity"
+    	echo " * gna"
+    	echo " * synth"
+    	echo " * vpi"
+    	echo " * vhpi"
+    	echo " * vests"
+    	echo " * pyunit"
+    	echo ""
+    	exit
+    	;;
     sanity|gna|synth|vpi|vhpi)
       gstart "[GHDL - test] $1"
       cd "$1"
