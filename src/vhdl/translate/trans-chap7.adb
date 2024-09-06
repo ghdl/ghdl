@@ -3566,6 +3566,9 @@ package body Trans.Chap7 is
               (Chap3.Get_Composite_Bounds (Targ), Aggr_Type, Dim);
             Len_Tmp := M2E (Chap3.Range_To_Length (Range_Ptr));
             if Is_Flat then
+               --  Used in presence of a vector whose length is not locally
+               --  static.  In that case the aggregate is known to have only
+               --  one dimension.
                Len_Tmp := New_Dyadic_Op
                  (ON_Sub_Ov, Len_Tmp, New_Obj_Value (Var_Index));
             elsif P /= 0 then
