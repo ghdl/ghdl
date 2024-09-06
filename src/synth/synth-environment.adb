@@ -914,6 +914,7 @@ package body Synth.Environment is
                                           Wire_Rec : Wire_Id_Record;
                                           Value : out Net)
    is
+      Gate : constant Instance := Get_Net_Parent (Wire_Rec.Gate);
       Inp : Conc_Assign;
       Inp_Off : Uns32;
       Inp_Wd : Width;
@@ -1038,11 +1039,25 @@ package body Synth.Environment is
                end;
             else
                --  There is a hole.
-               pragma Assert (Inp_Off > Data.Res_Off);
-               Warning_No_Assignment
-                 (Wire_Rec.Decl, Data.Res_Off, Inp_Off - 1);
-               Finalize_Assignment_Append
-                 (Data, Build_Const_Z (Ctxt, Inp_Off - Data.Res_Off));
+               declare
+                  Unk : Net;
+               begin
+                  pragma Assert (Inp_Off > Data.Res_Off);
+                  case Get_Id (Gate) is
+                     when Gates.Id_Isignal
+                       | Gates.Id_Ioutput =>
+                        --  Note: as the init value is a const, it might be
+                        --  more efficient to recreate a const gate.
+                        Unk := Build2_Extract
+                          (Ctxt, Get_Input_Net (Gate, 1),
+                           Data.Res_Off, Inp_Off - Data.Res_Off);
+                     when others =>
+                        Warning_No_Assignment
+                          (Wire_Rec.Decl, Data.Res_Off, Inp_Off - 1);
+                        Unk := Build_Const_Z (Ctxt, Inp_Off - Data.Res_Off);
+                  end case;
+                  Finalize_Assignment_Append (Data, Unk);
+               end;
             end if;
          else
             --  Overlap: multiple inputs at this offset.
