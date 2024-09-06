@@ -1,4 +1,4 @@
-name: Building on macOS
+name: Building GHDL on macOS
 
 on:
   workflow_call:

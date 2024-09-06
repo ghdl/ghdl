@@ -3,14 +3,12 @@
 sphinx ~= 7.4
 python-dateutil ~= 2.8
 
-# pyTooling[packaging] ~= 6.5
-pyTooling>=4.0.1, <5.0
-setuptools
+pyTooling[terminal] ~= 6.5
 
 # Sphinx Extenstions
 autoapi ~= 2.0
 myst-parser ~= 4.0
-sphinx_autodoc_typehints ~= 2.2
+sphinx_autodoc_typehints ~= 2.3
 
 # Theme
 furo

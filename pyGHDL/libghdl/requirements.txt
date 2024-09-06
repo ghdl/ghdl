@@ -1,2 +1,1 @@
-# pyTooling[packaging] ~= 6.5
-pyTooling>=4.0.1, <5.0
+pyTooling[terminal] ~= 6.5

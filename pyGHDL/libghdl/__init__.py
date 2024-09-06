@@ -41,7 +41,7 @@ from pathlib import Path
 from shutil import which
 from typing import List, Optional
 
-from pyTooling.Common import CurrentPlatform
+from pyTooling.Platform import CurrentPlatform
 from pyTooling.Decorators import export
 from pyTooling.Exceptions import ToolingException
 

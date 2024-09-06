@@ -38,7 +38,7 @@ from pyVHDLModel import Name
 from pyVHDLModel.Base import ModelEntity, Direction, ExpressionUnion
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Association import AssociationItem
-from pyVHDLModel.Interface import GenericInterfaceItem, PortInterfaceItem, ParameterInterfaceItem
+from pyVHDLModel.Interface import GenericInterfaceItemMixin, PortInterfaceItemMixin, ParameterInterfaceItemMixin
 from pyVHDLModel.Type import BaseType
 from pyVHDLModel.Sequential import SequentialStatement
 from pyVHDLModel.Concurrent import ConcurrentStatement
@@ -358,8 +358,9 @@ def GetCompositeConstrainedSubtypeFromNode(
 @export
 def GetSubtypeFromNode(subtypeNode: Iir) -> Symbol:
     subtypeName = GetNameOfNode(subtypeNode)
+    symbol = GetSubtypeIndicationFromNode(subtypeNode, "subtype", subtypeName)
 
-    return Subtype(subtypeNode, subtypeName)
+    return Subtype(subtypeNode, subtypeName, symbol)
 
 
 @export
@@ -448,7 +449,7 @@ def GetExpressionFromNode(node: Iir) -> ExpressionUnion:
 @export
 def GetGenericsFromChainedNodes(
     nodeChain: Iir,
-) -> Generator[GenericInterfaceItem, None, None]:
+) -> Generator[GenericInterfaceItemMixin, None, None]:
     from pyGHDL.dom.InterfaceItem import (
         GenericTypeInterfaceItem,
         GenericPackageInterfaceItem,
@@ -507,7 +508,7 @@ def GetGenericsFromChainedNodes(
 @export
 def GetPortsFromChainedNodes(
     nodeChain: Iir,
-) -> Generator[PortInterfaceItem, None, None]:
+) -> Generator[PortInterfaceItemMixin, None, None]:
     furtherIdentifiers = []
     port = nodeChain
     while port != nodes.Null_Iir:
@@ -548,7 +549,7 @@ def GetPortsFromChainedNodes(
 @export
 def GetParameterFromChainedNodes(
     nodeChain: Iir,
-) -> Generator[ParameterInterfaceItem, None, None]:
+) -> Generator[ParameterInterfaceItemMixin, None, None]:
     identifiers = []
     parameter = nodeChain
     while parameter != nodes.Null_Iir:
