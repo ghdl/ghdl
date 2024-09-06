@@ -1,4 +1,4 @@
-name: Building on Ubuntu
+name: Building GHDL and libghdl on Ubuntu
 
 on:
   workflow_call:
@@ -282,7 +282,7 @@ jobs:
     uses: ./.github/workflows/Test-GHDL.yml
     needs:
       - Build
-    if: inputs.testsuites != 'none'
+    if: inputs.ubuntu_artifact != '' && inputs.testsuites != 'none'
     with:
       os_image:      ubuntu-${{ inputs.ubuntu_version }}
       ghdl_artifact: ${{ needs.Build.outputs.ghdl_artifact }}
@@ -292,6 +292,7 @@ jobs:
     uses: ./.github/workflows/Package-Docker.yml
     needs:
       - Build
+    if: inputs.ubuntu_artifact != ''
     with:
       ubuntu_image:        ubuntu-${{ inputs.ubuntu_version }}
       ghdl_artifact:       ${{ needs.Build.outputs.ghdl_artifact }}

@@ -1,4 +1,4 @@
-name: Building on Windows with MSYS2
+name: Building GHDL and libghdl on Windows with MSYS2
 
 on:
   workflow_call:
@@ -312,7 +312,7 @@ jobs:
     uses: ./.github/workflows/Test-GHDL.yml
     needs:
       - Build
-    if: inputs.testsuites != 'none'
+    if: inputs.msys2_artifact != '' && inputs.testsuites != 'none'
     with:
       os_image:      ${{ inputs.windows_image }}
       runtime:       ${{ inputs.runtime }}
@@ -325,7 +325,6 @@ jobs:
     runs-on: ${{ inputs.windows_image }}
     needs:
       - Build
-
     if: inputs.pacman_artifact != ''
 
     defaults:
@@ -375,7 +374,6 @@ jobs:
     runs-on: ${{ inputs.windows_image }}
     needs:
       - Build
-
     if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
 
     steps:
