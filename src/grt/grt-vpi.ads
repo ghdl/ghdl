@@ -20,6 +20,7 @@
 
 with System; use System;
 with Interfaces; use Interfaces;
+-- with Interfaces.C.Pointers;
 with Ada.Unchecked_Conversion;
 with Grt.Types; use Grt.Types;
 with Grt.Avhpi; use Grt.Avhpi;
@@ -146,6 +147,16 @@ package Grt.Vpi is
    pragma Convention (C, s_vpi_time);
    type p_vpi_time is access s_vpi_time;
 
+   type s_vpi_vecval is record
+      aval : Unsigned_32; -- PLI_INT32 in the standard, but a bit mask
+      bval : Unsigned_32;
+   end record;
+   pragma Convention (C, s_vpi_vecval);
+   type p_vpi_vecval is access s_vpi_vecval; -- Should be array
+
+   procedure Increment_p_vpi_vecval (Ptr : in out p_vpi_vecval);
+   pragma Import (C, Increment_p_vpi_vecval, "Increment_p_vpi_vecval");
+
    -- typedef struct t_vpi_value
    -- { int format;
    --   union
@@ -174,7 +185,8 @@ package Grt.Vpi is
          when vpiRealVal=>
             Real_M : Ghdl_F64;
             --when vpiTimeVal=>     mTime:     p_vpi_time;
-            --when vpiVectorVal=>   mVector:   p_vpi_vecval;
+         when vpiVectorVal=>
+            Vector: p_vpi_vecval;
             --when vpiStrengthVal=> mStrength: p_vpi_strengthval;
          when others =>
             null;
@@ -238,6 +250,11 @@ package Grt.Vpi is
    -- void  vpi_get_value(vpiHandle expr, p_vpi_value value);
    procedure vpi_get_value (Expr : vpiHandle; Value : p_vpi_value);
    pragma Export (C, vpi_get_value, "vpi_get_value");
+
+   -- Ugly, but C can do allocation on the fly with an auto.  Ada???
+   -- void  vpi_vec_callback_helper (p_cb_data cb, int Len);
+   procedure vpi_vec_callback_helper (cb : p_cb_data; Len : Integer);
+   pragma Import (C, vpi_vec_callback_helper, "vpi_get_value_vec_helper");
 
    -- void  vpi_get_time(vpiHandle obj, s_vpi_time*t);
    procedure vpi_get_time (Obj: vpiHandle; Time: p_vpi_time);

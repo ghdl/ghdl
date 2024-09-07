@@ -182,3 +182,28 @@ vpi_control (int op, ...)
 
   return res;
 }
+
+/* Increment a pointer to struct s_vpi_vecval.  This is a work-round
+ * for undefined reference problems with "ghdl -e" when trying to use
+ * Interfaces.C.Pointers.
+ */
+
+void Increment_p_vpi_vecval (p_vpi_vecval *ppv) { (*ppv)++; }
+
+/* Call vpi_get_value() with some temporary vector space, then
+ * make a VPI callback with the data.
+ */
+
+void vpi_get_value_vec_helper (p_cb_data cb, int len)
+{
+    p_vpi_value         vp;
+    p_vpi_vecval        save_vec;
+    struct t_vpi_vecval space[len];
+
+    vp = cb->value;
+    save_vec = vp->value.vector;
+    vp->value.vector = space;
+    vpi_get_value (cb->obj, vp);
+    (*cb->cb_rtn)(cb);
+    vp->value.vector = save_vec;
+}
