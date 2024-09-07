@@ -20,25 +20,24 @@ with Dyn_Interning;
 --  This generic package provides a factory to build unique objects.
 --  Get will return an existing object or create a new one.
 generic
-   --  Parameters of the object to be created.
-   type Params_Type (<>) is private;
+   --  Key of the object to be created.
+   type Key_Type (<>) is private;
 
    --  Object to be built and stored.
    type Object_Type is private;
 
-   --  Reduce PARAMS to a small value.
+   --  Reduce KEY to a small value.
    --  The required property is: Hash(P1) /= Hash(P2) => P1 /= P2.
-   with function Hash (Params : Params_Type) return Hash_Value_Type;
+   with function Hash (Key : Key_Type) return Hash_Value_Type;
 
-   --  Create an object from PARAMS.
-   with function Build (Params : Params_Type) return Object_Type;
+   --  Create an object from KEY.
+   with function Build (Key : Key_Type) return Object_Type;
 
-   --  Return True iff OBJ is the object corresponding to PARAMS.
-   with function Equal (Obj : Object_Type; Params : Params_Type)
-                       return Boolean;
+   --  Return True iff OBJ is the object corresponding to KEY.
+   with function Equal (Obj : Object_Type; Key : Key_Type) return Boolean;
 package Interning is
    package Implementation is new Dyn_Interning
-     (Params_Type => Params_Type,
+     (Key_Type => Key_Type,
       Object_Type => Object_Type,
       Hash => Hash,
       Build => Build,
@@ -58,7 +57,7 @@ package Interning is
 
    --  If there is already an existing object for PARAMS, return it.
    --  Otherwise create it.
-   function Get (Params : Params_Type) return Object_Type;
+   function Get (Key : Key_Type) return Object_Type;
 
    --  Get the number of elements in the table.
    function Last_Index return Index_Type;

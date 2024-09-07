@@ -62,7 +62,7 @@ package body Synth.Vhdl_Foreign is
    end Shlib_Equal;
 
    package Shlib_Interning is new Interning
-     (Params_Type => String,
+     (Key_Type => String,
       Object_Type => Shlib_Object_Type,
       Hash => Hash.String_Hash,
       Build => Shlib_Build,
@@ -127,7 +127,7 @@ package body Synth.Vhdl_Foreign is
    end Sym_Hash;
 
    package Sym_Interning is new Interning
-     (Params_Type => Node,
+     (Key_Type => Node,
       Object_Type => Sym_Object_Type,
       Hash => Sym_Hash,
       Build => Sym_Build,

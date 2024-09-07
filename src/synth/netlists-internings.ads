@@ -22,7 +22,7 @@ package Netlists.Internings is
    function Id_Instance (Param : Instance) return Instance;
 
    package Dyn_Instance_Interning is new Dyn_Interning
-     (Params_Type => Instance,
+     (Key_Type => Instance,
       Object_Type => Instance,
       Hash => Netlists.Hash,
       Build => Id_Instance,

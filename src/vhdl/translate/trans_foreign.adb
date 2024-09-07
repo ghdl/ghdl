@@ -37,7 +37,7 @@ package body Trans_Foreign is
    end Shlib_Equal;
 
    package Shlib_Interning is new Interning
-     (Params_Type => String,
+     (Key_Type => String,
       Object_Type => Shlib_Object_Type,
       Hash => Hash.String_Hash,
       Build => Shlib_Build,

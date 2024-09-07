@@ -24,11 +24,11 @@ package body Dyn_Interning is
    end Build_No_Value;
 
    procedure Get
-     (Inst : in out Instance; Params : Params_Type; Res : out Object_Type)
+     (Inst : in out Instance; Key : Key_Type; Res : out Object_Type)
    is
       Idx : Index_Type;
    begin
-      Get_Index (Inst, Params, Idx);
+      Get_Index (Inst, Key, Idx);
       Res := Get_By_Index (Inst, Idx);
    end Get;
 end Dyn_Interning;

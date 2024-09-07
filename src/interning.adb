@@ -22,11 +22,11 @@ package body Interning is
       Implementation.Init (Inst);
    end Init;
 
-   function Get (Params : Params_Type) return Object_Type
+   function Get (Key : Key_Type) return Object_Type
    is
       Res : Object_Type;
    begin
-      Implementation.Get (Inst, Params, Res);
+      Implementation.Get (Inst, Key, Res);
       return Res;
    end Get;
 

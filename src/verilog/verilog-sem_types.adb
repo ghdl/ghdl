@@ -118,7 +118,7 @@ package body Verilog.Sem_Types is
    end Packed_Array_Build;
 
    package Packed_Array_Interning is new Interning
-     (Params_Type => Array_Params,
+     (Key_Type => Array_Params,
       Object_Type => Node,
       Hash => Array_Hash,
       Build => Packed_Array_Build,
@@ -152,7 +152,7 @@ package body Verilog.Sem_Types is
    end Array_Build;
 
    package Array_Interning is new Interning
-     (Params_Type => Array_Params,
+     (Key_Type => Array_Params,
       Object_Type => Node,
       Hash => Array_Hash,
       Build => Array_Build,
@@ -189,7 +189,7 @@ package body Verilog.Sem_Types is
    end Dynamic_Array_Equal;
 
    package Dynamic_Array_Interning is new Interning
-     (Params_Type => Node,
+     (Key_Type => Node,
       Object_Type => Node,
       Hash => Dynamic_Array_Hash,
       Build => Dynamic_Array_Build,
@@ -234,7 +234,7 @@ package body Verilog.Sem_Types is
    end Assoc_Array_Equal;
 
    package Assoc_Array_Interning is new Interning
-     (Params_Type => Assoc_Array_Params,
+     (Key_Type => Assoc_Array_Params,
       Object_Type => Node,
       Hash => Assoc_Array_Hash,
       Build => Assoc_Array_Build,
@@ -278,7 +278,7 @@ package body Verilog.Sem_Types is
    end Queue_Equal;
 
    package Queue_Interning is new Interning
-     (Params_Type => Queue_Params,
+     (Key_Type => Queue_Params,
       Object_Type => Node,
       Hash => Queue_Hash,
       Build => Queue_Build,
@@ -1101,7 +1101,7 @@ package body Verilog.Sem_Types is
    end Class_Build;
 
    package Class_Interning is new Interning
-     (Params_Type => Class_Params,
+     (Key_Type => Class_Params,
       Object_Type => Node,
       Hash => Class_Hash,
       Build => Class_Build,

@@ -591,7 +591,7 @@ package body Synth.Vhdl_Insts is
    end Build;
 
    package Insts_Interning is new Interning
-     (Params_Type => Inst_Params,
+     (Key_Type => Inst_Params,
       Object_Type => Inst_Object,
       Hash => Hash,
       Build => Build,
