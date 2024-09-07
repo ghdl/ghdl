@@ -658,6 +658,30 @@ package body Netlists.Disp_Verilog is
       end if;
    end Disp_Extract;
 
+   procedure Disp_Attributes (Attrs : Attribute)
+   is
+      Attr : Attribute;
+      Val : Pval;
+   begin
+      Put ("(* ");
+         Attr := Attrs;
+         loop
+            Put_Id (Get_Attribute_Name (Attr));
+            Put ('=');
+            Val := Get_Attribute_Pval (Attr);
+            case Get_Attribute_Type (Attr) is
+               when Param_Pval_String =>
+                  Disp_Pval_String (Val);
+               when others =>
+                  Disp_Pval (Val);
+            end case;
+            Attr := Get_Attribute_Next (Attr);
+            exit when Attr = No_Attribute;
+            Put (", ");
+         end loop;
+         Put (" *) ");
+   end Disp_Attributes;
+
    procedure Disp_Memory (Mem : Instance)
    is
       Ports : constant Net := Get_Output (Mem, 0);
@@ -704,7 +728,11 @@ package body Netlists.Disp_Verilog is
       Depth := Get_Width (Ports) / Data_W;
 
       --  Declare the memory.
-      Put ("  reg ");
+      Put ("  ");
+      if Has_Instance_Attribute (Mem) then
+         Disp_Attributes (Get_Instance_First_Attribute (Mem));
+      end if;
+      Put ("reg ");
       Put_Type (Data_W);
       Put_Name (Get_Instance_Name (Mem));
       Put_Type (Depth);
@@ -1277,9 +1305,7 @@ package body Netlists.Disp_Verilog is
 
    procedure Disp_Module_Port (Desc : Port_Desc;
                                Attrs : Attribute;
-                               First : in out Boolean)
-   is
-      Attr : Attribute;
+                               First : in out Boolean) is
    begin
       if not (Desc.W /= 0 or Flag_Null_Wires) then
          return;
@@ -1294,17 +1320,7 @@ package body Netlists.Disp_Verilog is
       end if;
 
       if Attrs /= No_Attribute then
-         Put ("(* ");
-         Attr := Attrs;
-         loop
-            Put_Id (Get_Attribute_Name (Attr));
-            Put ('=');
-            Disp_Pval (Get_Attribute_Pval (Attr));
-            Attr := Get_Attribute_Next (Attr);
-            exit when Attr = No_Attribute;
-            Put (", ");
-         end loop;
-         Put (" *) ");
+         Disp_Attributes (Attrs);
       end if;
 
       case Desc.Dir is
