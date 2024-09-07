@@ -16,6 +16,7 @@
 
 with Types; use Types;
 with Dyn_Tables;
+with Hash; use Hash;
 
 --  An hash-table is a map of a Key to an Element.
 --  This generic package provides a type (Instance) that implements this
