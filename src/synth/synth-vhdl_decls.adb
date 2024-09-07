@@ -88,6 +88,8 @@ package body Synth.Vhdl_Decls is
          return Param_Pval_String;
       elsif Btype = Time_Type_Definition then
          return Param_Pval_Time_Ps;
+      elsif Btype = Boolean_Type_Definition then
+         return Param_Pval_Boolean;
       else
          case Get_Kind (Btype) is
             when Iir_Kind_Integer_Type_Definition =>

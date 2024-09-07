@@ -20,6 +20,7 @@ with Simple_IO; use Simple_IO;
 with Utils_IO; use Utils_IO;
 with Types_Utils; use Types_Utils;
 with Files_Map;
+with Dyn_Maps;
 
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Iterators; use Netlists.Iterators;
@@ -704,6 +705,66 @@ package body Netlists.Disp_Vhdl is
       end if;
    end Disp_Extract;
 
+   procedure Disp_Attribute_Decl (Attr : Attribute)
+   is
+      Kind  : Param_Type;
+   begin
+      Put ("  attribute ");
+      Put_Id (Get_Attribute_Name (Attr));
+      Put (" : ");
+      Kind := Get_Attribute_Type (Attr);
+      case Kind is
+         when Param_Invalid
+           | Param_Uns32 =>
+            Put ("??");
+         when Param_Pval_String =>
+            Put ("string");
+         when Param_Pval_Boolean =>
+            Put ("boolean");
+         when Param_Pval_Vector
+           | Param_Pval_Integer
+           | Param_Pval_Real
+           | Param_Pval_Time_Ps =>
+            Put ("integer");
+      end case;
+      Put_Line (";");
+   end Disp_Attribute_Decl;
+
+   procedure Disp_Attribute (Attr : Attribute; Inst : Instance; Akind : String)
+   is
+      Kind  : Param_Type;
+      Val   : Pval;
+   begin
+      Put ("  attribute ");
+      Put_Id (Get_Attribute_Name (Attr));
+      Put (" of ");
+      Put_Name (Get_Instance_Name (Inst));
+      Put (" : ");
+      Put (Akind);
+      Put (" is ");
+      Kind := Get_Attribute_Type (Attr);
+      Val := Get_Attribute_Pval (Attr);
+      case Kind is
+         when Param_Invalid
+           | Param_Uns32 =>
+            Put ("??");
+         when Param_Pval_String =>
+            Disp_Pval_String (Val);
+         when Param_Pval_Boolean =>
+            if Read_Pval (Val, 0) /= (0, 0) then
+               Put ("true");
+            else
+               Put ("false");
+            end if;
+         when Param_Pval_Vector
+           | Param_Pval_Integer
+           | Param_Pval_Real
+           | Param_Pval_Time_Ps =>
+            Disp_Pval_Binary (Val);
+      end case;
+      Put_Line (";");
+   end Disp_Attribute;
+
    procedure Disp_Memory (Mem : Instance)
    is
       Ports : constant Net := Get_Output (Mem, 0);
@@ -785,6 +846,21 @@ package body Netlists.Disp_Vhdl is
          end;
       else
          Put_Line (";");
+      end if;
+
+      if Has_Instance_Attribute (Mem) then
+         declare
+            Attr  : Attribute;
+         begin
+            Attr := Get_Instance_First_Attribute (Mem);
+            while Attr /= No_Attribute loop
+               Put ("  ");
+               Disp_Attribute_Decl (Attr);
+               Put ("  ");
+               Disp_Attribute (Attr, Mem, "variable");
+               Attr := Get_Attribute_Next (Attr);
+            end loop;
+         end;
       end if;
 
       Put_Line ("  begin");
@@ -1346,52 +1422,50 @@ package body Netlists.Disp_Vhdl is
       end case;
    end Disp_Instance_Inline;
 
-   procedure Disp_Architecture_Attributes (Inst : Instance)
-   is
-      Attrs : constant Attribute := Get_Instance_First_Attribute (Inst);
-      Attr  : Attribute;
-      Kind  : Param_Type;
-      Val   : Pval;
+   function Hash_Name_Id (V : Name_Id) return Hash_Value_Type is
    begin
-      Attr := Attrs;
-      while Attr /= No_Attribute loop
-         Put ("  -- attribute ");
-         Put_Id (Get_Attribute_Name (Attr));
-         Put (" of ");
-         Put_Name (Get_Instance_Name (Inst));
-         Put (" is ");
-         Kind := Get_Attribute_Type (Attr);
-         Val := Get_Attribute_Pval (Attr);
-         case Kind is
-            when Param_Invalid
-              | Param_Uns32 =>
-               Put ("??");
-            when Param_Pval_String =>
-               Disp_Pval_String (Val);
-            when Param_Pval_Vector
-              | Param_Pval_Integer
-              | Param_Pval_Boolean
-              | Param_Pval_Real
-              | Param_Pval_Time_Ps =>
-               Disp_Pval_Binary (Val);
-         end case;
-         Put_Line (";");
-         Attr := Get_Attribute_Next (Attr);
-      end loop;
-   end Disp_Architecture_Attributes;
+      return Hash_Value_Type (V);
+   end Hash_Name_Id;
+
+   function Build_Name_Id (Key : Name_Id) return Name_Id is
+   begin
+      return Key;
+   end Build_Name_Id;
+
+   function Build_Value (Key : Name_Id) return Boolean
+   is
+      pragma Unreferenced (Key);
+   begin
+      return False;
+   end Build_Value;
+
+   package Attr_Maps is new Dyn_Maps
+     (Key_Type => Name_Id,
+      Object_Type => Name_Id,
+      Value_Type => Boolean,
+      Hash => Hash_Name_Id,
+      Build => Build_Name_Id,
+      Build_Value => Build_Value,
+      Equal => "=");
 
    procedure Disp_Architecture_Declarations (M : Module)
    is
+      Map : Attr_Maps.Instance;
       Id : Module_Id;
+      With_Attr : Boolean;
    begin
+      Attr_Maps.Init (Map);
+
       --  Display signal declarations.
       --  There are as many signals as gate outputs.
       for Inst of Instances (M) loop
+         With_Attr := True;
          Id := Get_Id (Inst);
          case Id is
             when Id_Memory
               | Id_Memory_Init =>
                --  For memories: skip the chain.
+               With_Attr := False;
                null;
             when Id_Mem_Wr_Sync =>
                --  For memories: skip the chain.
@@ -1467,10 +1541,32 @@ package body Netlists.Disp_Vhdl is
                end if;
          end case;
 
-         if Has_Instance_Attribute (Inst) then
-            Disp_Architecture_Attributes (Inst);
+         if With_Attr and then Has_Instance_Attribute (Inst) then
+            declare
+               Attrs : constant Attribute :=
+                 Get_Instance_First_Attribute (Inst);
+               Name_Idx : Attr_Maps.Index_Type;
+               Attr  : Attribute;
+               Name  : Name_Id;
+            begin
+               Attr := Attrs;
+               while Attr /= No_Attribute loop
+                  Name := Get_Attribute_Name (Attr);
+                  --  Maybe declare the attribute.
+                  Attr_Maps.Get_Index (Map, Name, Name_Idx);
+                  if not Attr_Maps.Get_Value (Map, Name_Idx) then
+                     Disp_Attribute_Decl (Attr);
+                     Attr_Maps.Set_Value (Map, Name_Idx, True);
+                  end if;
+
+                  Disp_Attribute (Attr, Inst, "signal");
+                  Attr := Get_Attribute_Next (Attr);
+               end loop;
+            end;
          end if;
       end loop;
+
+      Attr_Maps.Free (Map);
    end Disp_Architecture_Declarations;
 
    procedure Disp_Architecture_Statements (M : Module)
