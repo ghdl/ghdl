@@ -62,7 +62,7 @@ package body Verilog.Sem_Upwards is
    end Map_Build_Value;
 
    package Name_Maps is new Dyn_Maps
-     (Params_Type => Name_Id,
+     (Key_Type => Name_Id,
       Object_Type => Name_Id,
       Value_Type  => Cell_Index,
       Hash => Map_Hash,

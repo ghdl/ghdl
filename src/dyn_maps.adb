@@ -67,7 +67,7 @@ package body Dyn_Maps is
    end Expand;
 
    function Get_Index_With_Hash
-     (Inst : Instance; Params : Params_Type; Hash_Value : Hash_Value_Type)
+     (Inst : Instance; Key : Key_Type; Hash_Value : Hash_Value_Type)
      return Index_Type
    is
       Hash_Index : Hash_Value_Type;
@@ -80,7 +80,7 @@ package body Dyn_Maps is
          declare
             E : Element_Wrapper renames Inst.Els.Table (Idx);
          begin
-            if E.Hash = Hash_Value and then Equal (E.Obj, Params) then
+            if E.Hash = Hash_Value and then Equal (E.Obj, Key) then
                return Idx;
             end if;
             Idx := E.Next;
@@ -90,25 +90,25 @@ package body Dyn_Maps is
       return No_Index;
    end Get_Index_With_Hash;
 
-   function Get_Index_Soft (Inst : Instance; Params : Params_Type)
+   function Get_Index_Soft (Inst : Instance; Key : Key_Type)
                            return Index_Type is
    begin
       --  Check if the package was initialized.
       pragma Assert (Inst.Hash_Table /= null);
 
-      return Get_Index_With_Hash (Inst, Params, Hash (Params));
+      return Get_Index_With_Hash (Inst, Key, Hash (Key));
    end Get_Index_Soft;
 
    procedure Get_Index
-     (Inst : in out Instance; Params : Params_Type; Idx : out Index_Type)
+     (Inst : in out Instance; Key : Key_Type; Idx : out Index_Type)
    is
-      Hash_Value : constant Hash_Value_Type := Hash (Params);
+      Hash_Value : constant Hash_Value_Type := Hash (Key);
       Hash_Index : Hash_Value_Type;
    begin
       --  Check if the package was initialized.
       pragma Assert (Inst.Hash_Table /= null);
 
-      Idx := Get_Index_With_Hash (Inst, Params, Hash_Value);
+      Idx := Get_Index_With_Hash (Inst, Key, Hash_Value);
       if Idx /= No_Index then
          return;
       end if;
@@ -127,7 +127,7 @@ package body Dyn_Maps is
          Res : Object_Type;
          Val : Value_Type;
       begin
-         Res := Build (Params);
+         Res := Build (Key);
          Val := Build_Value (Res);
 
          --  Insert.

@@ -32,7 +32,7 @@ with Dyn_Tables;
 generic
    --  Key for an object to be searched, extended with parameters to be able
    --  to create the object if not found.
-   type Params_Type (<>) is private;
+   type Key_Type (<>) is private;
 
    --  Key stored.  The key is not mutable.
    type Object_Type is private;
@@ -41,19 +41,18 @@ generic
    --  for comparision.
    type Value_Type is private;
 
-   --  Reduce PARAMS to a small value.
+   --  Reduce KEY to a small value.
    --  The required property is: Hash(P1) /= Hash(P2) => P1 /= P2.
-   with function Hash (Params : Params_Type) return Hash_Value_Type;
+   with function Hash (Key : Key_Type) return Hash_Value_Type;
 
-   --  Create an object from PARAMS.
-   with function Build (Params : Params_Type) return Object_Type;
+   --  Create an object from KEY.
+   with function Build (Key : Key_Type) return Object_Type;
 
    --  Initial value of the object.  Called when an object is created.
    with function Build_Value (Obj : Object_Type) return Value_Type;
 
    --  Return True iff OBJ is the object corresponding to PARAMS.
-   with function Equal (Obj : Object_Type; Params : Params_Type)
-                       return Boolean;
+   with function Equal (Obj : Object_Type; Key : Key_Type) return Boolean;
 package Dyn_Maps is
    type Instance is limited private;
 
@@ -70,11 +69,10 @@ package Dyn_Maps is
    --  Otherwise create it.
    --  The index is doesn't change over the lifetime of the map.
    procedure Get_Index
-     (Inst : in out Instance; Params : Params_Type; Idx : out Index_Type);
+     (Inst : in out Instance; Key : Key_Type; Idx : out Index_Type);
 
    --  Return No_Index if not found.
-   function Get_Index_Soft (Inst : Instance; Params : Params_Type)
-                           return Index_Type;
+   function Get_Index_Soft (Inst : Instance; Key : Key_Type) return Index_Type;
 
    --  Get the number of elements in the table.
    function Last_Index (Inst : Instance) return Index_Type;

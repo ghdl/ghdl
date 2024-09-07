@@ -1206,7 +1206,7 @@ package body Netlists is
    end Instance_Attribute_Build_Value;
 
    package Instances_Attribute_Maps is new Dyn_Maps
-     (Params_Type => Instance,
+     (Key_Type => Instance,
       Object_Type => Instance,
       Value_Type => Attribute,
       Hash => Instance_Attribute_Hash,
@@ -1319,7 +1319,7 @@ package body Netlists is
    end Port_Attribute_Build_Value;
 
    package Ports_Attribute_Maps is new Dyn_Maps
-     (Params_Type => Port_Desc_Idx,
+     (Key_Type => Port_Desc_Idx,
       Object_Type => Port_Desc_Idx,
       Value_Type => Attribute,
       Hash => Port_Attribute_Hash,

@@ -40,7 +40,7 @@ package Dyn_Interning is
    function Build_No_Value (Obj : Object_Type) return No_Value_Type;
 
    package Map is new Dyn_Maps
-     (Params_Type => Key_Type,
+     (Key_Type    => Key_Type,
       Object_Type => Object_Type,
       Value_Type  => No_Value_Type,
       Hash        => Hash,

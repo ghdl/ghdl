@@ -224,7 +224,7 @@ package body Simul.Fst is
    end Build_Value;
 
    package Enum_Maps is new Dyn_Maps
-     (Params_Type => Node,
+     (Key_Type => Node,
       Object_Type => Node,
       Value_Type => fstEnumHandle,
       Hash => Hash_Node,
