@@ -144,7 +144,10 @@ jobs:
           mkdir gcc-objs
           cd gcc-objs
 
+          ../gcc-srcs/configure --help
+
           ../gcc-srcs/configure \
+            --prefix=$(pwd)/gcc \
             --enable-languages=c,vhdl \
             --disable-bootstrap \
             --disable-lto \
@@ -159,6 +162,12 @@ jobs:
         run: |
           cd gcc-objs
           make -j$(nproc)
+
+      - name: 🔨 Install GCC
+        if: inputs.backend == 'gcc'
+        run: |
+          cd gcc-objs
+          make -j$(nproc) install
 
       - name: 🔨 Make
         run: |
