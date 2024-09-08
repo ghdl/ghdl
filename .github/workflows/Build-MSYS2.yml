@@ -17,9 +17,10 @@ on:
         required: true
         type: string
       testsuites:
-        description: 'GHDL testsuites'
+        description: 'GHDL testsuites to run'
         required: true
         type: string
+    # Parameters created build artifacts
       msys2_artifact:
         description: 'Name of the MSYS2 build artifact.'
         required: false
@@ -71,7 +72,7 @@ jobs:
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
 
-      - name: Compute pacboy packages
+      - name: 🖉 Compute pacboy packages
         id: pacboy
         shell: bash
         run: |
@@ -99,7 +100,7 @@ jobs:
           install: ${{ steps.pacboy.outputs.msys2_packages }}
           pacboy: ${{ steps.pacboy.outputs.pacboy_packages }}
 
-      - name: Assemble artifact name
+      - name: 🖉 Assemble artifact name
         id: artifact_name
         run: |
           echo "ghdl_artifact=${{ inputs.msys2_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
@@ -172,7 +173,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      - name: Run 'sanity' from testsuite
+      - name: "🚦 Run testsuite: 'sanity'"
         run: |
           export GHDL=$(pwd)/install/bin/ghdl
           cd testsuite

@@ -18,7 +18,7 @@ jobs:
     runs-on: ${{ inputs.ubuntu_image }}
 
     steps:
-      - name: '🧰 Checkout'
+      - name: '⏬ Checkout'
         uses: actions/checkout@v4
 
       - name: 🔧 Install dependencies
@@ -36,7 +36,7 @@ jobs:
         run: |
           make -j$(nproc)
 
-      - name: '📚 Run GNATdoc'
+      - name: '📓 Run GNATdoc'
         run: |
           echo "GNATdoc: $(which gnatdoc) ($($(which gnatdoc) --version))"
 

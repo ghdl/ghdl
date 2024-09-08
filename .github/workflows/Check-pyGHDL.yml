@@ -25,7 +25,7 @@ jobs:
     runs-on: ${{ inputs.ubuntu_image }}
 
     steps:
-      - name: '🧰 Checkout'
+      - name: '⏬ Checkout'
         uses: actions/checkout@v4
 
       - name: '🐍 Setup Python'

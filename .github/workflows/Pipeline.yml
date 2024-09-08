@@ -67,10 +67,10 @@ jobs:
       testsuites:       ${{ matrix.testsuites }}
 #      ubuntu_artifact:  ${{ needs.Params.outputs.ghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
       libghdl_artifact: ${{ needs.Params.outputs.libghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
-#      html_artifact:   'documentation-html'
+#      html_artifact:   'documentation-HTML'
 #      latex_document:  'ghdl'
-#      latex_artifact:  'documentation-latex'
-##      pdf_artifact:    'documentation-pdf'
+#      latex_artifact:  'documentation-LaTeX'
+##      pdf_artifact:    'documentation-PDF'
     secrets: inherit
 
   macOS:
@@ -116,16 +116,36 @@ jobs:
       runtime:          ${{ matrix.runtime }}
       backend:          ${{ matrix.backend }}
       testsuites:       ${{ matrix.testsuites }}
-#      msys2_artifact:   ${{ needs.Params.outputs.ghdl_basename }}-msys2
-#      pacman_artifact:  ${{ needs.Params.outputs.ghdl_basename }}-pacman
-#      windows_artifact: ${{ needs.Params.outputs.ghdl_basename }}-windows
-      libghdl_artifact: ${{ needs.Params.outputs.libghdl_basename }}-msys2
+#      msys2_artifact:   ${{ needs.Params.outputs.ghdl_basename }}-MSYS2
+#      pacman_artifact:  ${{ needs.Params.outputs.ghdl_basename }}-Pacman
+#      windows_artifact: ${{ needs.Params.outputs.ghdl_basename }}-Windows
+      libghdl_artifact: ${{ needs.Params.outputs.libghdl_basename }}-MSYS2
     secrets: inherit
 
   Python:
     uses: ./.github/workflows/Check-pyGHDL.yml
+    needs:
+      - Params
 #    with:
 #      black: false
+
+  StaticTypeCheck:
+    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r1
+    needs:
+      - Params
+    with:
+      requirements: mypy lxml
+      commands: |
+        mypy --html-report htmlmypy -p pyGHDL
+      html_report: 'htmlmypy'
+      html_artifact: 'pyGHDL-typing-HTML'
+
+  DocCoverage:
+    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@r1
+    needs:
+      - Params
+    with:
+      directory: pyGHDL
 
   pyGHDL:
     uses: ./.github/workflows/Package-pyGHDL.yml
@@ -139,7 +159,7 @@ jobs:
         os:
           - {'icon': '🐧', 'name': 'Ubuntu',  'image': 'ubuntu-24.04',   'libghdl_artifact': 'ubuntu-24.04-x86_64', 'pyghdl_artifact': 'Ubuntu-24.04-x86_64'}
 ###       - {'icon': '🍏', 'name': 'macOS',   'image': 'macos-14',       'libghdl_artifact': 'macos-14-aarch64',    'pyghdl_artifact': 'macOS-14-aarch64'}
-          - {'icon': '🪟', 'name': 'Windows', 'image': 'windows-latest', 'libghdl_artifact': 'msys2-ucrt64',        'pyghdl_artifact': 'Windows-x86_64'}
+          - {'icon': '🪟', 'name': 'Windows', 'image': 'windows-latest', 'libghdl_artifact': 'MSYS2-ucrt64',        'pyghdl_artifact': 'Windows-x86_64'}
         py:
           - {'icon': '🟠', 'version': "3.9"}
           - {'icon': '🟡', 'version': "3.10"}
@@ -152,7 +172,40 @@ jobs:
       python_version:   ${{ matrix.py.version }}
       libghdl_artifact: ${{ needs.Params.outputs.libghdl_basename }}-${{ matrix.os.libghdl_artifact }}
       pyghdl_artifact:  ${{ needs.Params.outputs.pyghdl_basename }}-${{ matrix.os.pyghdl_artifact }}-Python-${{ matrix.py.version }}
+      unittest_xml_artifact: 'pyGHDL-Unittest-XML'
+      coverage: true
+      coverage_sqlite_artifact: 'pyGHDL-Coverage-SQLite'
+#      coverage_xml_artifact: 'pyGHDL-Coverage-XML'
+#      coverage_json_artifact: 'pyGHDL-Coverage-JSON'
+#      coverage_html_artifact: 'pyGHDL-Coverage-HTML'
     secrets: inherit
+
+  PublishCoverageResults:
+    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r1
+    needs:
+      - pyGHDL
+    with:
+      coverage_json_artifact: 'pyGHDL-Coverage-JSON'
+      coverage_html_artifact: 'pyGHDL-Coverage-HTML'
+    secrets:
+      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+
+  PublishTestResults:
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@dev
+    needs:
+      - pyGHDL
+    with:
+      merged_junit_artifact: 'pyGHDL-Unittest-XML'
+      additional_merge_args: '"--pytest=rewrite-dunder-init;reduce-depth:pytest.testsuite.pyunit"'
+
+  IntermediateCleanUp:
+    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r1
+    needs:
+      - PublishCoverageResults
+      - PublishTestResults
+    with:
+      sqlite_coverage_artifacts_prefix: 'pyGHDL-Coverage-SQLite-'
+      xml_unittest_artifacts_prefix: 'pyGHDL-Unittest-XML-'
 
 #  GNATdoc:
 #    uses: ./.github/workflows/Documentation-GNAT.yml
@@ -175,7 +228,10 @@ jobs:
       - Windows
       - PublishToGitHubPages
       - Python
-      - pyGHDL
+      - StaticTypeCheck
+      - DocCoverage
+      - PublishCoverageResults
+      - PublishTestResults
     steps:
       - name: "Dummy"
         run: echo "Dummy"
@@ -188,7 +244,10 @@ jobs:
       - Windows
       - PublishToGitHubPages
       - Python
-      - pyGHDL
+      - StaticTypeCheck
+      - DocCoverage
+      - PublishCoverageResults
+      - PublishTestResults
     steps:
       - name: "Dummy"
         run: echo "Dummy"

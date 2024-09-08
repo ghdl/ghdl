@@ -12,9 +12,10 @@ on:
         required: true
         type: string
       testsuites:
-        description: 'GHDL testsuites'
+        description: 'GHDL testsuites to run'
         required: true
         type: string
+    # Parameters created build artifacts
       ubuntu_artifact:
         description: 'Name of the Ubuntu build artifact.'
         required: false
@@ -25,6 +26,7 @@ on:
         required: false
         default: ''
         type: string
+    # Parameters for documentation generation
       html_artifact:
         description: 'Name of the HTML documentation artifact.'
         required: false
@@ -68,7 +70,7 @@ jobs:
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
 
-      - name: Assemble artifact name
+      - name: 🖉 Assemble artifact name
         id: artifact_name
         run: |
           echo "ghdl_artifact=${{ inputs.ubuntu_artifact }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
@@ -107,7 +109,7 @@ jobs:
           mkdir -p build/${{ inputs.backend }}
           ./configure --help
 
-      - name: ⚙ Configure
+      - name: ⚙ Configure GHDL
         run: |
           cd build/${{ inputs.backend }}
 
@@ -132,13 +134,13 @@ jobs:
           MAKE="make -j$NPROC" \
           ../../configure --prefix=../../install $CONFIG_ARGS
 
-      - name: Copy sources
+      - name: Copy sources (only GCC backend)
         if: inputs.backend == 'gcc'
         run: |
           cd build/${{ inputs.backend }}
           make -j$(nproc) copy-sources
 
-      - name: Configure GCC
+      - name: ⚙ Configure GCC (only GCC backend)
         if: inputs.backend == 'gcc'
         run: |
           mkdir gcc-objs
@@ -157,30 +159,30 @@ jobs:
             --disable-libquadmath \
             "$(gcc -v 2>&1 | grep -o -- --enable-default-pie)"
 
-      - name: 🔨 Make GCC
+      - name: 🏭 Make GCC (only GCC backend)
         if: inputs.backend == 'gcc'
         run: |
           cd gcc-objs
           make -j$(nproc)
 
-      - name: 🔨 Install GCC
+      - name: 🏭 Install GCC (only GCC backend)
         if: inputs.backend == 'gcc'
         run: |
           cd gcc-objs
           make -j$(nproc) install
 
-      - name: 🔨 Make
+      - name: 🔨 Make GHDL
         run: |
           cd build/${{ inputs.backend }}
           make -j$(nproc)
 
-      - name: 🔨 Make ghdllib
+      - name: 🔨 Make ghdllib (only GCC backend)
         if: inputs.backend == 'gcc'
         run: |
           cd build/${{ inputs.backend }}
           make -j$(nproc) ghdllib
 
-      - name: 📋 Install
+      - name: 📋 Install GHDL
         run: |
           cd build/${{ inputs.backend }}
           sudo make -j$(nproc) install
@@ -242,12 +244,12 @@ jobs:
           echo "GNAT_MAJOR_VERSION=${GNAT_MAJOR_VERSION}" >> $GITHUB_OUTPUT
           echo "LLVM_MAJOR_VERSION=${LLVM_MAJOR_VERSION}" >> $GITHUB_OUTPUT
 
-      - name: Run 'sanity' from testsuite
+      - name: "🚦 Run testsuite: 'sanity'"
         run: |
           export GHDL=$(pwd)/install/bin/ghdl
           cd testsuite
 
-          # no pyunit
+          # only sanity tests, no pyunit (yet)
           ./testsuite.sh sanity
 
       - name: 📤 Upload '${{ steps.artifact_name.outputs.ghdl_artifact }}' artifact
@@ -259,7 +261,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      - name: Remove binaries, libraries and other files for libghdl
+      - name: Remove binaries, libraries and other files for libghdl (only mcode backend)
         if: inputs.ubuntu_version == '24.04' && inputs.backend == 'mcode'
         run: |
           sudo chown -R runner:docker ./install
@@ -272,13 +274,13 @@ jobs:
           rm -Rf ./install/lib/libghw.so
           rm -Rf ./install/*.requirements
 
-      - name: Copy additional dependencies
+      - name: Copy additional dependencies (only mcode backend)
         if: inputs.ubuntu_version == '24.04' && inputs.backend == 'mcode'
         run: |
           # libgnat
           cp -v /lib/x86_64-linux-gnu/libgnat-${{ steps.requirements.outputs.GNAT_MAJOR_VERSION }}.so ./install/lib
 
-      - name: 📤 Upload '${{ steps.artifact_name.outputs.libghdl_artifact }}' artifact
+      - name: 📤 Upload '${{ steps.artifact_name.outputs.libghdl_artifact }}' artifact (only mcode backend)
         uses: actions/upload-artifact@v4
         if: inputs.ubuntu_version == '24.04' && inputs.backend == 'mcode'
         with:
