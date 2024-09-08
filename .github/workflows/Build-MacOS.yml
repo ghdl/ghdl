@@ -20,9 +20,10 @@ on:
         required: true
         type: string
       testsuites:
-        description: 'GHDL testsuites'
+        description: 'GHDL testsuites to run'
         required: true
         type: string
+    # Parameters created build artifacts
       macos_artifact:
         description: 'Name of the macOS build artifact.'
         required: true
@@ -50,19 +51,18 @@ jobs:
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
 
-      - name: Assemble artifact name
+      - name: 🖉 Assemble artifact name
         id: artifact_name
         run: |
           echo "ghdl_artifact=${{ inputs.macos_artifact }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
 
-
-      - name: Install dependencies
+      - name: 🔧 Install dependencies
         run: |
           brew install llvm
 
           echo "LLVM_BINARY_PATH=$(brew --prefix llvm)/bin" >> $GITHUB_ENV
 
-      - name: Install GNAT
+      - name: 🔧 Install GNAT
         run: |
           GNAT_NAME="gnat-${{ inputs.gnat_arch }}-darwin-${{ inputs.gnat_version }}"
           GNAT_URL="https://github.com/alire-project/GNAT-FSF-builds/releases/download/gnat-${{ inputs.gnat_version }}/${GNAT_NAME}.tar.gz"
@@ -132,7 +132,7 @@ jobs:
           cd build/${{ inputs.backend }}
           sudo make install
 
-      - name: Run 'sanity' from testsuite
+      - name: "🚦 Run testsuite: 'sanity'"
         run: |
           export GHDL=$(pwd)/install/bin/ghdl
           cd testsuite

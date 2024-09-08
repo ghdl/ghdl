@@ -35,13 +35,13 @@ on:
       unittest_xml_artifact:
         description: 'Name of the pyghdl artifact.'
         required: false
-        default: 'pyGHDL-unittest-xml'
-        type: string
-      coverage_config:
-        description: 'Name of the pyghdl artifact.'
-        required: false
         default: ''
         type: string
+      coverage:
+        description: 'Collect code coverage.'
+        required: false
+        default: true
+        type: boolean
       coverage_sqlite_artifact:
         description: 'Name of the pyghdl artifact.'
         required: false
@@ -71,7 +71,7 @@ jobs:
       pyghdl_artifact: ${{ inputs.pyghdl_artifact }}
 
     steps:
-      - name: '🧰 Checkout'
+      - name: '⏬ Checkout'
         uses: actions/checkout@v4
 
       - name: '🐍 Setup Python'
@@ -99,7 +99,7 @@ jobs:
         run: |
           cp -Recurse install/lib/* pyGHDL/lib
 
-      - name: 🔨 Build Python package (binary distribution - wheel)
+      - name: 📦 Build Python package (binary distribution - wheel)
         run: python setup.py bdist_wheel
 
       - name: '📤 Upload artifact: ${{ inputs.pyghdl_artifact }}'
@@ -116,7 +116,7 @@ jobs:
       - Package
 
     steps:
-      - name: '🧰 Checkout'
+      - name: '⏬ Checkout'
         uses: actions/checkout@v4
         with:
           path: ghdl
@@ -135,6 +135,7 @@ jobs:
           mkdir pyGHDL/lsp
           cp -v ghdl/pyGHDL/lsp/requirements.txt pyGHDL/lsp
           cp -r ghdl/testsuite .
+          cp -v ghdl/pyproject.toml .
 
           rm -Rf ghdl
 
@@ -152,6 +153,7 @@ jobs:
           mkdir pyGHDL\lsp
           cp ghdl\pyGHDL\lsp\requirements.txt pyGHDL\lsp
           cp -Recurse ghdl\testsuite .
+          cp ghdl\pyproject.toml .
 
           Remove-Item -Force -Recurse ghdl
 
@@ -208,43 +210,92 @@ jobs:
           echo "Testing entrypoint (executable):"
           ghdl-dom version
 
+      - name: 🧰 Install dependencies (Ubuntu)
+        if: inputs.coverage
+        run: |
+          python -m pip install --disable-pip-version-check tomli
+
+      - name: 🔁 Extract configurations from pyproject.toml
+        if: inputs.coverage
+        id: getVariables
+        shell: python
+        run: |
+          from os       import getenv
+          from pathlib  import Path
+          from sys      import version
+          from textwrap import dedent
+
+          print(f"Python: {version}")
+
+          from tomli import load as tomli_load
+
+          htmlDirectory = Path("htmlcov")
+          xmlFile =  Path("./coverage.xml")
+          jsonFile = Path("./coverage.json")
+
+          # Read output paths from 'pyproject.toml' file
+          pyProjectFile =  Path("pyproject.toml")
+          if pyProjectFile.exists():
+            with pyProjectFile.open("rb") as file:
+              pyProjectSettings = tomli_load(file)
+
+            htmlDirectory = Path(pyProjectSettings["tool"]["coverage"]["html"]["directory"])
+            xmlFile       = Path(pyProjectSettings["tool"]["coverage"]["xml"]["output"])
+            jsonFile      = Path(pyProjectSettings["tool"]["coverage"]["json"]["output"])
+          else:
+            print(f"File '{pyProjectFile}' not found.")
+            print(f"::error title=FileNotFound::File '{pyProjectFile}' not found.")
+            exit(1)
+
+          # Write jobs to special file
+          github_output = Path(getenv("GITHUB_OUTPUT"))
+          print(f"GITHUB_OUTPUT: {github_output}")
+          with github_output.open("a+", encoding="utf-8") as f:
+            f.write(dedent(f"""\
+              unittest_report_html_directory={htmlDirectory}
+              coverage_report_html_directory={htmlDirectory.as_posix()}
+              coverage_report_xml={xmlFile}
+              coverage_report_json={jsonFile}
+            """))
+
+          print(f"DEBUG:\n  html={htmlDirectory}\n  xml={xmlFile}\n  json={jsonFile}")
+
+      - name: '🚦 Testsuite: pyunit (Ubuntu)'
+        if: startsWith(inputs.os_image, 'ubuntu')
+        run: |
+          export PYTHONPATH=$(pwd)
+
+          [ -n '${{ inputs.unittest_xml_artifact }}' ] && PYTEST_ARGS='--junitxml=report/unit/TestReportSummary.xml' || unset PYTEST_ARGS
+          if ${{ inputs.coverage }}; then
+            echo "coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp"
+            coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp
+          else
+            echo "python -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp"
+            python -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp
+          fi
+
       - name: '🚦 Testsuite: pyunit (Windows)'
         if: startsWith(inputs.os_image, 'windows')
         run: |
+          $env:PYTHONPATH = (Get-Location).ToString()
+
           $PYTEST_ARGS = if ("${{ inputs.unittest_xml_artifact }}") { "--junitxml=report/unit/TestReportSummary.xml" } else { "" }
-          if ("${{ inputs.coverage_config }}") {
-            Write-Host "coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP --color=yes testsuite/pyunit"
-            coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit
+          if ($${{ inputs.coverage }}) {
+            Write-Host "coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp"
+            coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp
           } else {
-            Write-Host "python -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit"
-            python -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit
+            Write-Host "python -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp"
+            python -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp
           }
 
-      - name: Convert coverage to XML format (Cobertura)
-        if: inputs.coverage_xml_artifact != ''
-        continue-on-error: true
-        run: coverage xml --data-file=.coverage
-
-      - name: Convert coverage to JSON format
-        if: inputs.coverage_json_artifact != ''
-        continue-on-error: true
-        run: coverage json --data-file=.coverage
-
-#      - name: Convert coverage to HTML format
-#        if: inputs.coverage_html_artifact != ''
-#        continue-on-error: true
-#        run: |
-#          coverage html --data-file=.coverage -d ${{ steps.getVariables.outputs.coverage_report_html_directory }}
-#          rm ${{ steps.getVariables.outputs.coverage_report_html_directory }}/.gitignore
-
-# Upload artifacts
+# Upload test result artifacts
 
       - name: 📤 Upload 'TestReportSummary.xml' artifact
         if: inputs.unittest_xml_artifact != ''
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.unittest_xml_artifact }}-${{ inputs.python_version }}
+          name: ${{ inputs.unittest_xml_artifact }}-${{ inputs.os_name }}-${{ inputs.python_version }}
           path: report/unit/TestReportSummary.xml
           if-no-files-found: error
           retention-days: 1
@@ -259,38 +310,69 @@ jobs:
 #          if-no-files-found: error
 #          retention-days: 1
 
+# Convert coverage results
+
+      - name: Debug
+        if: startsWith(inputs.os_image, 'ubuntu')
+        run: |
+          ls -lAh .
+
+      - name: Report code coverage
+        if: inputs.coverage
+        run: coverage report --rcfile=pyproject.toml --data-file=.coverage
+
+      - name: Convert coverage to XML format (Cobertura)
+        if: inputs.coverage && inputs.coverage_xml_artifact != ''
+        continue-on-error: true
+        run: coverage xml --data-file=.coverage
+
+      - name: Convert coverage to JSON format
+        if: inputs.coverage && inputs.coverage_json_artifact != ''
+        continue-on-error: true
+        run: coverage json --data-file=.coverage
+
+#      - name: Convert coverage to HTML format
+#        if: inputs.coverage && inputs.coverage_html_artifact != ''
+#        continue-on-error: true
+#        run: |
+#          coverage html --data-file=.coverage -d ${{ steps.getVariables.outputs.coverage_report_html_directory }}
+#          rm ${{ steps.getVariables.outputs.coverage_report_html_directory }}/.gitignore
+
+# Upload coverage result artifacts
+
       - name: 📤 Upload 'Coverage SQLite Database' artifact
-        if: inputs.coverage_sqlite_artifact != ''
+        if: inputs.coverage && inputs.coverage_sqlite_artifact != ''
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.coverage_sqlite_artifact }}-${{ inputs.python_version }}
+          name: ${{ inputs.coverage_sqlite_artifact }}-${{ inputs.os_name }}-${{ inputs.python_version }}
           path: .coverage
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 1
 
-#      - name: 📤 Upload 'Coverage XML Report' artifact
-#        if: inputs.coverage_xml_artifact != ''
-#        continue-on-error: true
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: ${{ inputs.coverage_xml_artifact }}-${{ inputs.python_version }}
-#          path: ${{ steps.getVariables.outputs.coverage_report_xml }}
-#          if-no-files-found: error
-#          retention-days: 1
+      - name: 📤 Upload 'Coverage XML Report' artifact
+        if: inputs.coverage && inputs.coverage_xml_artifact != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.coverage_xml_artifact }}-${{ inputs.os_name }}-${{ inputs.python_version }}
+          path: ${{ steps.getVariables.outputs.coverage_report_xml }}
+          if-no-files-found: error
+          retention-days: 1
 
-#      - name: 📤 Upload 'Coverage JSON Report' artifact
-#        if: inputs.coverage_json_artifact != ''
-#        continue-on-error: true
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: ${{ inputs.coverage_json_artifact }}-${{ inputs.python_version }}
-#          path: ${{ steps.getVariables.outputs.coverage_report_json }}
-#          if-no-files-found: error
-#          retention-days: 1
+      - name: 📤 Upload 'Coverage JSON Report' artifact
+        if: inputs.coverage && inputs.coverage_json_artifact != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.coverage_json_artifact }}-${{ inputs.os_name }}-${{ inputs.python_version }}
+          path: ${{ steps.getVariables.outputs.coverage_report_json }}
+          if-no-files-found: error
+          retention-days: 1
 
 #      - name: 📤 Upload 'Coverage HTML Report' artifact
-#        if: inputs.coverage_html_artifact != ''
+#        if: inputs.coverage && inputs.coverage_html_artifact != ''
 #        continue-on-error: true
 #        uses: actions/upload-artifact@v4
 #        with:

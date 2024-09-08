@@ -55,7 +55,7 @@ jobs:
     if: inputs.html_artifact != '' || inputs.latex_artifact != ''
 
     steps:
-      - name: '🧰 Checkout'
+      - name: '⏬ Checkout'
         uses: actions/checkout@v4
 
       - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
