@@ -16,8 +16,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Simple_IO; use Simple_IO;
-with Utils_IO; use Utils_IO;
+with Outputs; use Outputs;
 with Types_Utils; use Types_Utils;
 with Files_Map;
 
@@ -38,15 +37,15 @@ package body Netlists.Disp_Verilog is
    procedure Put_Type (W : Width) is
    begin
       if W > 1 then
-         Put ("[");
-         Put_Uns32 (W - 1);
-         Put (":0] ");
+         Wr ("[");
+         Wr_Uns32 (W - 1);
+         Wr (":0] ");
       end if;
    end Put_Type;
 
    procedure Put_Name_Version (N : Sname) is
    begin
-      Put_Uns32 (Get_Sname_Version (N));
+      Wr_Uns32 (Get_Sname_Version (N));
    end Put_Name_Version;
 
    procedure Put_Name_1 (N : Sname)
@@ -55,14 +54,14 @@ package body Netlists.Disp_Verilog is
    begin
       --  Do not crash on No_Name.
       if N = No_Sname then
-         Put ("*nil*");
+         Wr ("*nil*");
          return;
       end if;
 
       Prefix := Get_Sname_Prefix (N);
       if Prefix /= No_Sname then
          Put_Name_1 (Prefix);
-         Put ("_");
+         Wr ("_");
       end if;
 
       case Get_Sname_Kind (N) is
@@ -71,7 +70,7 @@ package body Netlists.Disp_Verilog is
          when Sname_Artificial =>
             Put_Id (Get_Sname_Suffix (N));
          when Sname_Version =>
-            Put ("n");
+            Wr ("n");
             Put_Name_Version (N);
       end case;
    end Put_Name_1;
@@ -80,7 +79,7 @@ package body Netlists.Disp_Verilog is
    begin
       --  Do not crash on No_Name.
       if N = No_Sname then
-         Put ("*nil*");
+         Wr ("*nil*");
          return;
       end if;
 
@@ -97,7 +96,7 @@ package body Netlists.Disp_Verilog is
    begin
       --  Do not crash on No_Name.
       if N = No_Sname then
-         Put ("*nil*");
+         Wr ("*nil*");
          return;
       end if;
 
@@ -105,14 +104,14 @@ package body Netlists.Disp_Verilog is
       if Get_Sname_Kind (N) in Sname_User .. Sname_Artificial  then
          Put_Name (N);
       else
-         Put ("*err*");
+         Wr ("*err*");
       end if;
    end Put_Interface_Name;
 
    procedure Disp_Net_Name (N : Net) is
    begin
       if N = No_Net then
-         Put ("<unassigned>");
+         Wr ("<unassigned>");
          return;
       end if;
 
@@ -137,7 +136,7 @@ package body Netlists.Disp_Verilog is
                   null;
                when others =>
                   Port_Name := Get_Output_Desc (M, Idx).Name;
-                  Put ("_");
+                  Wr ("_");
                   Put_Interface_Name (Port_Name);
             end case;
          end if;
@@ -149,11 +148,11 @@ package body Netlists.Disp_Verilog is
       Pvlen : constant Uns32 := Get_Pval_Length (Pv);
    begin
       if Pvlen = 0 then
-         Put ('"');
-         Put ('"');
+         Wr ('"');
+         Wr ('"');
       else
-         Put_Uns32 (Pvlen);
-         Put ("'b");
+         Wr_Uns32 (Pvlen);
+         Wr ("'b");
          Disp_Pval_Binary_Digits (Pv);
       end if;
    end Disp_Pval;
@@ -169,12 +168,12 @@ package body Netlists.Disp_Verilog is
       Param : Param_Desc;
       Desc : Port_Desc;
    begin
-      Put ("  ");
+      Wr ("  ");
 
       --  Gate name
       Name := Get_Module_Name (Imod);
       if Get_Id (Imod) < Id_User_None then
-         Put (" gate_");
+         Wr (" gate_");
          pragma Assert (Get_Sname_Kind (Name) = Sname_Artificial
                           and then Get_Sname_Prefix (Name) = No_Sname);
          Put_Id (Get_Sname_Suffix (Name));
@@ -183,40 +182,40 @@ package body Netlists.Disp_Verilog is
       end if;
 
       if Get_Nbr_Params (Imod) /= 0 then
-         Put_Line (" #(");
+         Wr_Line (" #(");
          for P in 1 .. Get_Nbr_Params (Inst) loop
             Param := Get_Param_Desc (Imod, P - 1);
             if P > 1 then
-               Put_Line (",");
+               Wr_Line (",");
             end if;
-            Put ("    .");
+            Wr ("    .");
             Put_Interface_Name (Param.Name);
-            Put ("(");
+            Wr ("(");
             case Param.Typ is
                when Param_Uns32 =>
-                  Put_Uns32 (Get_Param_Uns32 (Inst, P - 1));
+                  Wr_Uns32 (Get_Param_Uns32 (Inst, P - 1));
                when Param_Types_Pval =>
                   Disp_Pval (Get_Param_Pval (Inst, P - 1));
                when Param_Invalid =>
-                  Put ("*invalid*");
+                  Wr ("*invalid*");
             end case;
-            Put (")");
+            Wr (")");
          end loop;
-         Put_Line (")");
-         Put ("    ");
+         Wr_Line (")");
+         Wr ("    ");
       else
-         Put (" ");
+         Wr (" ");
       end if;
 
       --  Instance name
       Name := Get_Instance_Name (Inst);
       if Get_Sname_Kind (Name) = Sname_Version then
-         Put ("inst_");
+         Wr ("inst_");
          Put_Name_Version (Name);
       else
          Put_Name (Name);
       end if;
-      Put_Line (" (");
+      Wr_Line (" (");
 
       First := True;
       --  Inputs
@@ -228,35 +227,35 @@ package body Netlists.Disp_Verilog is
             if First then
                First := False;
             else
-               Put_Line (",");
+               Wr_Line (",");
             end if;
-            Put ("    ");
+            Wr ("    ");
             if Idx < Max_Idx then
-               Put (".");
+               Wr (".");
                Put_Interface_Name (Get_Input_Desc (Imod, Idx).Name);
-               Put ("(");
+               Wr ("(");
             end if;
             Disp_Net_Name (Get_Driver (I));
             if Idx < Max_Idx then
-               Put (")");
+               Wr (")");
             end if;
          end if;
          Idx := Idx + 1;
       end loop;
       --  Outputs
       Idx := 0;
-      for O of Outputs (Inst) loop
+      for O of Outputs_Iterate (Inst) loop
          Desc := Get_Output_Desc (Imod, Idx);
          Idx := Idx + 1;
          if Flag_Null_Wires or else Desc.W /= 0 then
             if First then
                First := False;
             else
-               Put_Line (",");
+               Wr_Line (",");
             end if;
-            Put ("    .");
+            Wr ("    .");
             Put_Interface_Name (Desc.Name);
-            Put ("(");
+            Wr ("(");
             declare
                I : Input;
             begin
@@ -265,16 +264,16 @@ package body Netlists.Disp_Verilog is
                   Disp_Net_Name (O);
                end if;
             end;
-            Put (")");
+            Wr (")");
          end if;
       end loop;
-      Put_Line (");");
+      Wr_Line (");");
    end Disp_Instance_Gate;
 
    procedure Disp_Binary_Lit (Va : Uns32; Zx : Uns32; Wd : Width) is
    begin
-      Put_Uns32 (Wd);
-      Put ("'b");
+      Wr_Uns32 (Wd);
+      Wr ("'b");
       Disp_Binary_Digits (Va, Zx, Natural (Wd));
    end Disp_Binary_Lit;
 
@@ -284,8 +283,8 @@ package body Netlists.Disp_Verilog is
       Nd : constant Width := W / 32;
       Ld : constant Natural := Natural (W mod 32);
    begin
-      Put_Uns32 (W);
-      Put ("'b");
+      Wr_Uns32 (W);
+      Wr ("'b");
       if Ld > 0 then
          Disp_Binary_Digits (Get_Param_Uns32 (Inst, Param_Idx (Nd)), 0, Ld);
       end if;
@@ -301,8 +300,8 @@ package body Netlists.Disp_Verilog is
       Nd : constant Width := W / 32;
       Ld : constant Natural := Natural (W mod 32);
    begin
-      Put_Uns32 (W);
-      Put ("'b");
+      Wr_Uns32 (W);
+      Wr ("'b");
       if Ld > 0 then
          Disp_Binary_Digits (Get_Param_Uns32 (Inst, Param_Idx (2 * Nd)),
                              Get_Param_Uns32 (Inst, Param_Idx (2 * Nd + 1)),
@@ -318,9 +317,9 @@ package body Netlists.Disp_Verilog is
 
    procedure Disp_X_Lit (W : Width; C : Character) is
    begin
-      Put_Uns32 (W);
-      Put ("'b");
-      Put (C);
+      Wr_Uns32 (W);
+      Wr ("'b");
+      Wr (C);
    end Disp_X_Lit;
 
    procedure Disp_Extract (Inst : Instance);
@@ -392,7 +391,7 @@ package body Netlists.Disp_Verilog is
          when others =>
             raise Internal_Error;
       end case;
-      Put (Bchar (Zx * 2 + Val));
+      Wr (Bchar (Zx * 2 + Val));
    end Disp_Const_Bit;
 
    procedure Disp_Memory_Init
@@ -407,21 +406,21 @@ package body Netlists.Disp_Verilog is
             null;
       end case;
 
-      Put_Line ("  initial begin");
+      Wr_Line ("  initial begin");
       for I in reverse 0 .. Depth - 1 loop
-         Put ("    ");
+         Wr ("    ");
          Put_Name (Get_Instance_Name (Mem));
-         Put ("[");
-         Put_Uns32 (I);
-         Put ("] = ");
-         Put_Uns32 (W);
-         Put ("'b");
+         Wr ("[");
+         Wr_Uns32 (I);
+         Wr ("] = ");
+         Wr_Uns32 (W);
+         Wr ("'b");
          for J in reverse 0 .. W - 1 loop
             Disp_Const_Bit (Inst, I * W + J);
          end loop;
-         Put_Line (";");
+         Wr_Line (";");
       end loop;
-      Put_Line ("    end");
+      Wr_Line ("    end");
    end Disp_Memory_Init;
 
    function Need_Name (Inst : Instance) return Boolean
@@ -502,7 +501,7 @@ package body Netlists.Disp_Verilog is
       Net_Inst : Instance;
    begin
       if N = No_Net then
-         Put ("<unassigned>");
+         Wr ("<unassigned>");
          return;
       end if;
 
@@ -515,13 +514,13 @@ package body Netlists.Disp_Verilog is
             when Conv_None =>
                Disp_Constant_Inline (Net_Inst);
             when Conv_Unsigned =>
-               Put ("$unsigned(");
+               Wr ("$unsigned(");
                Disp_Constant_Inline (Net_Inst);
-               Put (")");
+               Wr (")");
             when Conv_Signed =>
-               Put ("$signed(");
+               Wr ("$signed(");
                Disp_Constant_Inline (Net_Inst);
-               Put (")");
+               Wr (")");
             when Conv_Edge
               | Conv_Clock =>
                --  Not expected: a constant is not an edge.
@@ -534,21 +533,21 @@ package body Netlists.Disp_Verilog is
             when Conv_Edge =>
                case Edge_Module_Id (Get_Id (Net_Inst)) is
                   when Id_Posedge =>
-                     Put ("posedge ");
+                     Wr ("posedge ");
                   when Id_Negedge =>
-                     Put ("negedge ");
+                     Wr ("negedge ");
                end case;
                Disp_Net_Name (Get_Input_Net (Net_Inst, 0));
             when Conv_Clock =>
                Disp_Net_Name (Get_Input_Net (Net_Inst, 0));
             when Conv_Unsigned =>
-               Put ("$unsigned(");
+               Wr ("$unsigned(");
                Disp_Net_Name (N);
-               Put (")");
+               Wr (")");
             when Conv_Signed =>
-               Put ("$signed(");
+               Wr ("$signed(");
                Disp_Net_Name (N);
-               Put (")");
+               Wr (")");
          end case;
       end if;
    end Disp_Net_Expr;
@@ -607,15 +606,15 @@ package body Netlists.Disp_Verilog is
                   Disp_Net_Expr (N, Inst, Conv);
                when 'n' =>
                   V := Val (Idx);
-                  Put_Uns32 (V);
+                  Wr_Uns32 (V);
                when 'p' =>
                   V := Get_Param_Uns32 (Inst, Param_Idx (Idx));
                   case Conv is
                      when Conv_None
                        | Conv_Unsigned =>
-                        Put_Uns32 (V);
+                        Wr_Uns32 (V);
                      when Conv_Signed =>
-                        Put_Int32 (To_Int32 (V));
+                        Wr_Int32 (To_Int32 (V));
                      when Conv_Edge
                        | Conv_Clock =>
                         raise Internal_Error;
@@ -630,7 +629,7 @@ package body Netlists.Disp_Verilog is
 
             I := I + 2;
          else
-            Put (C);
+            Wr (C);
             I := I + 1;
          end if;
       end loop;
@@ -663,11 +662,11 @@ package body Netlists.Disp_Verilog is
       Attr : Attribute;
       Val : Pval;
    begin
-      Put ("(* ");
+      Wr ("(* ");
          Attr := Attrs;
          loop
             Put_Id (Get_Attribute_Name (Attr));
-            Put ('=');
+            Wr ('=');
             Val := Get_Attribute_Pval (Attr);
             case Get_Attribute_Type (Attr) is
                when Param_Pval_String =>
@@ -677,9 +676,9 @@ package body Netlists.Disp_Verilog is
             end case;
             Attr := Get_Attribute_Next (Attr);
             exit when Attr = No_Attribute;
-            Put (", ");
+            Wr (", ");
          end loop;
-         Put (" *) ");
+         Wr (" *) ");
    end Disp_Attributes;
 
    procedure Disp_Memory (Mem : Instance)
@@ -728,15 +727,15 @@ package body Netlists.Disp_Verilog is
       Depth := Get_Width (Ports) / Data_W;
 
       --  Declare the memory.
-      Put ("  ");
+      Wr ("  ");
       if Has_Instance_Attribute (Mem) then
          Disp_Attributes (Get_Instance_First_Attribute (Mem));
       end if;
-      Put ("reg ");
+      Wr ("reg ");
       Put_Type (Data_W);
       Put_Name (Get_Instance_Name (Mem));
       Put_Type (Depth);
-      Put_Line("; // memory");
+      Wr_Line("; // memory");
 
       --  Initialization
       if Get_Id (Mem) = Id_Memory_Init then
@@ -798,21 +797,21 @@ package body Netlists.Disp_Verilog is
       Disp_Template ("  always @*" & NL &
                        "    case (\i0)" & NL, Inst);
       for I in 1 .. W loop
-         Put ("      ");
+         Wr ("      ");
          --  One hot encoding.
-         Put_Uns32 (W);
-         Put ("'b");
+         Wr_Uns32 (W);
+         Wr ("'b");
          for J in 1 .. W loop
             if I = J then
-               Put ('1');
+               Wr ('1');
             else
-               Put ('0');
+               Wr ('0');
             end if;
          end loop;
          Disp_Template (": \o0 = ", Inst);
          Disp_Net_Expr
            (Get_Input_Net (Inst, Port_Idx (2 + W - I)), Inst, Conv_None);
-         Put_Line (";");
+         Wr_Line (";");
       end loop;
       Disp_Template ("      default: \o0 = \i1;" & NL, Inst);
       Disp_Template ("    endcase" & NL, Inst);
@@ -831,14 +830,14 @@ package body Netlists.Disp_Verilog is
             Col : Natural;
          begin
             Files_Map.Location_To_Position (Loc, File, Line, Col);
-            Put ("  /* ");
+            Wr ("  /* ");
             Put_Id (File);
-            Put (':');
-            Put_Uns32 (Uns32 (Line));
-            Put (':');
-            Put_Uns32 (Uns32 (Col));
-            Put ("  */");
-            New_Line;
+            Wr (':');
+            Wr_Uns32 (Uns32 (Line));
+            Wr (':');
+            Wr_Uns32 (Uns32 (Col));
+            Wr ("  */");
+            Wr_Line;
          end;
       end if;
       case Id is
@@ -864,7 +863,7 @@ package body Netlists.Disp_Verilog is
                Put_Name (Get_Output_Name (Get_Module (Iinst),
                                           Get_Port_Idx (Inp)));
             end;
-            Put ("; // (inout - read)" & NL);
+            Wr ("; // (inout - read)" & NL);
          when Id_Signal =>
             Disp_Template ("  assign \o0 = \i0; // (signal)" & NL, Inst);
          when Id_Isignal =>
@@ -894,7 +893,7 @@ package body Netlists.Disp_Verilog is
          when Id_Extract =>
             Disp_Template ("  assign \o0 = ", Inst);
             Disp_Extract (Inst);
-            Put_Line (";");
+            Wr_Line (";");
          when Id_Memidx =>
             declare
                Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
@@ -939,7 +938,7 @@ package body Netlists.Disp_Verilog is
                --  P0: offset
                Iw : constant Width := Get_Width (Get_Input_Net (Inst, 1));
             begin
-               Put ("  always @* begin // (dyn_insert)" & NL);
+               Wr ("  always @* begin // (dyn_insert)" & NL);
                Disp_Template ("    \o0 = \i0;" & NL, Inst);
                if Id = Id_Dyn_Insert_En then
                   --  TODO: fix indentation.
@@ -956,7 +955,7 @@ package body Netlists.Disp_Verilog is
            | Id_Const_X =>
             Disp_Template ("  \o0 <= ", Inst);
             Disp_Constant_Inline (Inst);
-            Put_Line (";");
+            Wr_Line (";");
          when Id_Const_Bit =>
             null;
          when Id_Adff
@@ -1102,7 +1101,7 @@ package body Netlists.Disp_Verilog is
             begin
                pragma Assert (Ow > Iw);
                Disp_Template ("  assign \o0 = {", Inst);
-               Put_Uns32 (Ow - Iw);
+               Wr_Uns32 (Ow - Iw);
                Disp_Template ("'b0, \i0};  //  uext" & NL, Inst);
             end;
          when Id_Sextend =>
@@ -1183,13 +1182,13 @@ package body Netlists.Disp_Verilog is
                   N : constant Net := Get_Output (Inst, 1);
                begin
                   if Id = Id_Mem_Rd_Sync then
-                     Put ("  reg ");
+                     Wr ("  reg ");
                   else
-                     Put ("  wire ");
+                     Wr ("  wire ");
                   end if;
                   Put_Type (Get_Width (N));
                   Disp_Net_Name (N);
-                  Put_Line ("; // mem_rd");
+                  Wr_Line ("; // mem_rd");
                end;
             when others =>
                if Is_Self_Instance (Inst)
@@ -1227,7 +1226,7 @@ package body Netlists.Disp_Verilog is
                   end if;
 
                   --  Display reg/wire for each output.
-                  for N of Outputs (Inst) loop
+                  for N of Outputs_Iterate (Inst) loop
                      W := Get_Width (N);
                      if Flag_Null_Wires or W /= 0 then
                         case Id is
@@ -1238,25 +1237,25 @@ package body Netlists.Disp_Verilog is
                              | Id_Dlatch
                              | Id_Isignal =>
                               --  As expected
-                              Put ("  reg ");
+                              Wr ("  reg ");
                            when Id_Mux4
                              | Id_Pmux
                              | Id_Dyn_Insert
                              | Id_Dyn_Insert_En =>
                               --  Implemented by a process
-                              Put ("  reg ");
+                              Wr ("  reg ");
                            when Constant_Module_Id =>
-                              Put ("  localparam ");
+                              Wr ("  localparam ");
                            when others =>
-                              Put ("  wire ");
+                              Wr ("  wire ");
                         end case;
                         Put_Type (Get_Width (N));
                         Disp_Net_Name (N);
                         if Id in Constant_Module_Id then
-                           Put (" = ");
+                           Wr (" = ");
                            Disp_Constant_Inline (Inst);
                         end if;
-                        Put_Line (";");
+                        Wr_Line (";");
                      end if;
                   end loop;
                end if;
@@ -1277,11 +1276,11 @@ package body Netlists.Disp_Verilog is
          for I of Inputs (Self_Inst) loop
             Desc := Get_Output_Desc (M, Idx);
             if Desc.W /= 0 or Flag_Null_Wires then
-               Put ("  assign ");
+               Wr ("  assign ");
                Put_Name (Desc.Name);
-               Put (" = ");
+               Wr (" = ");
                Disp_Net_Name (Get_Driver (I));
-               Put_Line (";");
+               Wr_Line (";");
             end if;
             Idx := Idx + 1;
          end loop;
@@ -1312,11 +1311,11 @@ package body Netlists.Disp_Verilog is
       end if;
 
       if First then
-         Put ("  (");
+         Wr ("  (");
          First := False;
       else
-         Put_Line (",");
-         Put ("   ");
+         Wr_Line (",");
+         Wr ("   ");
       end if;
 
       if Attrs /= No_Attribute then
@@ -1325,11 +1324,11 @@ package body Netlists.Disp_Verilog is
 
       case Desc.Dir is
          when Port_In =>
-            Put ("input  ");
+            Wr ("input  ");
          when Port_Out =>
-            Put ("output ");
+            Wr ("output ");
          when Port_Inout =>
-            Put ("inout  ");
+            Wr ("inout  ");
       end case;
       Put_Type (Desc.W);
       Put_Name (Desc.Name);
@@ -1353,9 +1352,9 @@ package body Netlists.Disp_Verilog is
          Disp_Module_Port (Desc, Attr, First);
       end loop;
       if not First then
-         Put (")");
+         Wr (")");
       end if;
-      Put_Line (";");
+      Wr_Line (";");
    end Disp_Module_Ports;
 
    procedure Disp_Module_Parameters (M : Module)
@@ -1368,15 +1367,15 @@ package body Netlists.Disp_Verilog is
       end if;
       for I in 1 .. Nbr loop
          if I = 1 then
-            Put_Line ("  #(parameter");
+            Wr_Line ("  #(parameter");
          else
-            Put_Line (",");
+            Wr_Line (",");
          end if;
          Desc := Get_Param_Desc (M, I - 1);
-         Put ("    ");
+         Wr ("    ");
          Put_Name (Desc.Name);
       end loop;
-      Put_Line (")");
+      Wr_Line (")");
    end Disp_Module_Parameters;
 
    procedure Disp_Verilog_Module (M : Module)
@@ -1389,9 +1388,9 @@ package body Netlists.Disp_Verilog is
       end if;
 
       --  Module id and name.
-      Put ("module ");
+      Wr ("module ");
       Put_Name (Get_Module_Name (M));
-      New_Line;
+      Wr_Line;
 
       Disp_Module_Parameters (M);
 
@@ -1401,8 +1400,8 @@ package body Netlists.Disp_Verilog is
          Disp_Module_Declarations (M);
          Disp_Module_Statements (M);
       end if;
-      Put_Line ("endmodule");
-      New_Line;
+      Wr_Line ("endmodule");
+      Wr_Line;
    end Disp_Verilog_Module;
 
    procedure Disp_Verilog (M : Module; Is_Top : Boolean) is

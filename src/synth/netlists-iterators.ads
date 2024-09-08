@@ -118,7 +118,7 @@ package Netlists.Iterators is
                   Next => Outputs_Next,
                   Has_Element => Outputs_Has_Element,
                   Element => Outputs_Element);
-   function Outputs (Inst : Instance) return Outputs_Iterator;
+   function Outputs_Iterate (Inst : Instance) return Outputs_Iterator;
 
    function Outputs_First (It : Outputs_Iterator) return Outputs_Cursor;
    function Outputs_Next (It : Outputs_Iterator; Cur : Outputs_Cursor)

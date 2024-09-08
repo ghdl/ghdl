@@ -16,8 +16,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Simple_IO; use Simple_IO;
-with Utils_IO; use Utils_IO;
+with Outputs; use Outputs;
 with Types; use Types;
 with Name_Table;
 
@@ -36,22 +35,22 @@ package body Synth.Disp_Vhdl is
    procedure Disp_Signal (Desc : Port_Desc) is
    begin
       if Desc.W > 1 then
-         Put ("  subtype typ");
+         Wr ("  subtype typ");
          Put_Name (Desc.Name);
-         Put (" is ");
+         Wr (" is ");
          Put_Type (Desc.W);
-         Put_Line (";");
+         Wr_Line (";");
       end if;
-      Put ("  signal ");
+      Wr ("  signal ");
       Put_Name (Desc.Name);
-      Put (": ");
+      Wr (": ");
       if Desc.W > 1 then
-         Put ("typ");
+         Wr ("typ");
          Put_Name (Desc.Name);
       else
          Put_Type (Desc.W);
       end if;
-      Put_Line (";");
+      Wr_Line (";");
    end Disp_Signal;
 
    procedure Disp_Ports_As_Signals (M : Module)
@@ -76,21 +75,21 @@ package body Synth.Disp_Vhdl is
       if Full then
          return;
       end if;
-      Put (" (");
+      Wr (" (");
       if W > 1 then
-         Put_Uns32 (Off + W - 1);
-         Put (" downto ");
+         Wr_Uns32 (Off + W - 1);
+         Wr (" downto ");
       end if;
-      Put_Uns32 (Off);
-      Put (')');
+      Wr_Uns32 (Off);
+      Wr (')');
    end Disp_Pfx;
 
    procedure Disp_In_Lhs
      (Mname : String; Off : Uns32; W : Width; Full : Boolean) is
    begin
-      Put ("  wrap_" & Mname);
+      Wr ("  wrap_" & Mname);
       Disp_Pfx (Off, W, Full);
-      Put (" <= ");
+      Wr (" <= ");
    end Disp_In_Lhs;
 
    function Is_Std_Logic_Array (Btype : Node) return Boolean is
@@ -115,84 +114,84 @@ package body Synth.Disp_Vhdl is
             if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
                --  Nothing to do.
                Disp_In_Lhs (Mname, Off, 1, Full);
-               Put_Line (Pfx & ";");
+               Wr_Line (Pfx & ";");
             else
                --  Any other enum.
                W := Typ.W;
                Disp_In_Lhs (Mname, Off, W, Full);
                if W = 1 then
-                  Put ("'0' when ");
+                  Wr ("'0' when ");
                else
-                  Put ("std_logic_vector(to_unsigned(");
+                  Wr ("std_logic_vector(to_unsigned(");
                end if;
-               Put (Name_Table.Image (Get_Identifier
+               Wr (Name_Table.Image (Get_Identifier
                                         (Get_Type_Declarator (Ptype))));
-               Put ("'pos (" & Pfx & ")");
+               Wr ("'pos (" & Pfx & ")");
                if W = 1 then
-                  Put (" = 0 else '1';");
+                  Wr (" = 0 else '1';");
                else
-                  Put ("," & Width'Image (W) & "));");
+                  Wr ("," & Width'Image (W) & "));");
                end if;
-               New_Line;
+               Wr_Line;
             end if;
          when Iir_Kind_Integer_Type_Definition =>
             --  FIXME: signed or unsigned ?
             W := Typ.W;
             Disp_In_Lhs (Mname, Off, W, Full);
             if W > 1 then
-               Put ("std_logic_vector(");
+               Wr ("std_logic_vector(");
             end if;
             if Typ.Drange.Is_Signed then
-               Put ("to_signed(");
+               Wr ("to_signed(");
             else
-               Put ("to_unsigned(");
+               Wr ("to_unsigned(");
             end if;
-            Put (Pfx & "," & Width'Image (W) & ")");
+            Wr (Pfx & "," & Width'Image (W) & ")");
             if W > 1 then
-               Put (")");
+               Wr (")");
             elsif W = 1 then
-               Put ("(0)");
+               Wr ("(0)");
             end if;
-            Put_Line (";");
+            Wr_Line (";");
          when Iir_Kind_Array_Type_Definition =>
             if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
                --  Nothing to do.
                W := Typ.Abound.Len;
                Disp_In_Lhs (Mname, Off, W, Full);
-               Put (Pfx);
+               Wr (Pfx);
                if W = 1 then
                   --  This is an array of length 1.  A scalar is used in the
                   --  netlist.
-                  Put (" (" & Pfx & "'left)");
+                  Wr (" (" & Pfx & "'left)");
                end if;
-               Put_Line (";");
+               Wr_Line (";");
             elsif Is_Std_Logic_Array (Btype) then
                W := Typ.Abound.Len;
                Disp_In_Lhs (Mname, Off, W, Full);
                if W > 1 then
                   if Full then
-                     Put ("typwrap_");
-                     Put (Mname);
+                     Wr ("typwrap_");
+                     Wr (Mname);
                   else
-                     Put ("std_logic_vector");
+                     Wr ("std_logic_vector");
                   end if;
-                  Put ("(");
+                  Wr ("(");
                end if;
-               Put (Pfx);
+               Wr (Pfx);
                if W = 1 then
                   --  This is an array of length 1.  A scalar is used in the
                   --  netlist.
-                  Put (" (" & Pfx & "'left)");
+                  Wr (" (" & Pfx & "'left)");
                end if;
                if W > 1 then
-                  Put (')');
+                  Wr (')');
                end if;
-               Put_Line (";");
+               Wr_Line (";");
             elsif Btype = Vhdl.Std_Package.Bit_Vector_Type_Definition then
                W := Typ.Abound.Len;
                Disp_In_Lhs (Mname, Off, W, Full);
-               Put ("to_stdlogicvector (" & Pfx & ")");
-               Put_Line (";");
+               Wr ("to_stdlogicvector (" & Pfx & ")");
+               Wr_Line (";");
             else
                --  Any array.
                declare
@@ -278,7 +277,7 @@ package body Synth.Disp_Vhdl is
    procedure Disp_Out_Rhs
      (Mname : String; Off : Uns32; W : Width; Full : Boolean) is
    begin
-      Put ("wrap_" & Mname);
+      Wr ("wrap_" & Mname);
       Disp_Pfx (Off, W, Full);
    end Disp_Out_Rhs;
 
@@ -296,85 +295,85 @@ package body Synth.Disp_Vhdl is
    begin
       case Get_Kind (Btype) is
          when Iir_Kind_Enumeration_Type_Definition =>
-            Put ("  " & Pfx & " <= ");
+            Wr ("  " & Pfx & " <= ");
             if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
                --  Nothing to do.
                Disp_Out_Rhs (Mname, Off, 1, Full);
-               Put_Line (";");
+               Wr_Line (";");
             elsif Btype = Vhdl.Std_Package.Boolean_Type_Definition then
                Disp_Out_Rhs (Mname, Off, 1, Full);
-               Put_Line (" = '1';");
+               Wr_Line (" = '1';");
             elsif Btype = Vhdl.Std_Package.Bit_Type_Definition then
-               Put ("to_bit (");
+               Wr ("to_bit (");
                Disp_Out_Rhs (Mname, Off, 1, Full);
-               Put_Line (");");
+               Wr_Line (");");
             else
                --  Any other enum.
                W := Typ.W;
-               Put (Name_Table.Image (Get_Identifier
+               Wr (Name_Table.Image (Get_Identifier
                                         (Get_Type_Declarator (Ptype))));
-               Put ("'val (to_integer(unsigned");
+               Wr ("'val (to_integer(unsigned");
                if W = 1 then
-                  Put ("'(0 => ");
+                  Wr ("'(0 => ");
                else
-                  Put ('(');
+                  Wr ('(');
                end if;
                Disp_Out_Rhs (Mname, Off, W, Full);
-               Put_Line (")));");
+               Wr_Line (")));");
             end if;
          when Iir_Kind_Integer_Type_Definition =>
             --  FIXME: signed or unsigned ?
             W := Typ.W;
-            Put ("  " & Pfx & " <= to_integer (");
+            Wr ("  " & Pfx & " <= to_integer (");
             if Typ.Drange.Is_Signed then
-               Put ("signed");
+               Wr ("signed");
             else
-               Put ("unsigned");
+               Wr ("unsigned");
             end if;
             if W = 1 then
-               Put ("'(0 => ");
+               Wr ("'(0 => ");
             else
-               Put (" (");
+               Wr (" (");
             end if;
             Disp_Out_Rhs (Mname, Off, W, Full);
-            Put_Line ("));");
+            Wr_Line ("));");
          when Iir_Kind_Array_Type_Definition =>
             if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
                --  Nothing to do.
                W := Typ.Abound.Len;
-               Put ("  " & Pfx);
+               Wr ("  " & Pfx);
                if W = 1 then
-                  Put (" (" & Pfx & "'left)");
+                  Wr (" (" & Pfx & "'left)");
                end if;
-               Put (" <= ");
+               Wr (" <= ");
                Disp_Out_Rhs (Mname, Off, W, Full);
-               Put_Line (";");
+               Wr_Line (";");
             elsif Btype = Vhdl.Std_Package.Bit_Vector_Type_Definition then
                --  Nothing to do.
                W := Typ.Abound.Len;
-               Put ("  " & Pfx & " <= ");
+               Wr ("  " & Pfx & " <= ");
                if W = 1 then
                   --  This is an array of length 1.  A scalar is used in the
                   --  netlist.
-                  Put ("(0 => to_bit (");
+                  Wr ("(0 => to_bit (");
                else
-                  Put ("to_bitvector (");
+                  Wr ("to_bitvector (");
                end if;
                Disp_Out_Rhs (Mname, Off, W, Full);
                if W = 1 then
-                  Put (')');
+                  Wr (')');
                end if;
-               Put_Line (");");
+               Wr_Line (");");
             elsif Is_Std_Logic_Array (Btype) then
                --  unsigned, signed or a compatible array.
                W := Typ.Abound.Len;
-               Put ("  " & Pfx);
+               Wr ("  " & Pfx);
                if W = 1 then
-                  Put ("(" & Pfx & "'left) <= ");
+                  Wr ("(" & Pfx & "'left) <= ");
                   Disp_Out_Rhs (Mname, Off, W, Full);
-                  Put_Line (";");
+                  Wr_Line (";");
                else
-                  Put (" <= ");
+                  Wr (" <= ");
                   --  First the first non-anonymous parent type of the prefix.
                   --  We could directly use the base type, but:
                   --  * it is less intuitive
@@ -391,11 +390,11 @@ package body Synth.Disp_Vhdl is
                         exit when Type_Decl /= Null_Node;
                         Pfx_Type := Get_Parent_Type (Pfx_Type);
                      end loop;
-                     Put (Name_Table.Image (Get_Identifier (Type_Decl)));
+                     Wr (Name_Table.Image (Get_Identifier (Type_Decl)));
                   end;
-                  Put ("(");
+                  Wr ("(");
                   Disp_Out_Rhs (Mname, Off, W, Full);
-                  Put_Line (");");
+                  Wr_Line (");");
                end if;
             else
                declare
@@ -555,7 +554,7 @@ package body Synth.Disp_Vhdl is
             end loop;
          end;
       end;
-      New_Line;
+      Wr_Line;
 
       --  Rename ports.
       declare
@@ -581,17 +580,17 @@ package body Synth.Disp_Vhdl is
          end loop;
       end;
 
-      Put_Line ("library ieee;");
-      Put_Line ("use ieee.std_logic_1164.all;");
-      Put_Line ("use ieee.numeric_std.all;");
-      New_Line;
-      Put ("architecture rtl of ");
-      Put (Name_Table.Image (Get_Identifier (Ent)));
-      Put_Line (" is");
+      Wr_Line ("library ieee;");
+      Wr_Line ("use ieee.std_logic_1164.all;");
+      Wr_Line ("use ieee.numeric_std.all;");
+      Wr_Line;
+      Wr ("architecture rtl of ");
+      Wr (Name_Table.Image (Get_Identifier (Ent)));
+      Wr_Line (" is");
       Disp_Ports_As_Signals (Main);
       Disp_Architecture_Declarations (Main);
 
-      Put_Line ("begin");
+      Wr_Line ("begin");
       if Inst /= null then
          --  TODO: add assert for the value of the generics.
          null;
@@ -618,6 +617,6 @@ package body Synth.Disp_Vhdl is
       end;
 
       Disp_Architecture_Statements (Main);
-      Put_Line ("end rtl;");
+      Wr_Line ("end rtl;");
    end Disp_Vhdl_Wrapper;
 end Synth.Disp_Vhdl;

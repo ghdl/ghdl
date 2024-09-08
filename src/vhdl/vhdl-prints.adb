@@ -21,6 +21,7 @@
 with Ada.Unchecked_Deallocation;
 
 with Types; use Types;
+with Outputs;
 with Simple_IO;
 with Flags; use Flags;
 with Name_Table;
@@ -5418,7 +5419,7 @@ package body Vhdl.Prints is
       is
          pragma Unreferenced (Ctxt);
       begin
-         Simple_IO.Put (C);
+         Outputs.Wr (C);
       end Put;
 
       procedure Start_Hbox (Ctxt : in out Simple_Ctxt) is

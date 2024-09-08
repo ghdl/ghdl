@@ -26,6 +26,7 @@ with Errorout;
 with Errorout.Console;
 with Bug;
 with Simple_IO;
+with Outputs;
 
 with Libraries;
 with Flags;
@@ -73,6 +74,7 @@ package body Ghdlsynth is
       Disp_Inline : Boolean := True;
       Disp_Id : Boolean := True;
       Oformat     : Out_Format := Format_Default;
+      Ofile       : String_Acc := null;
 
       Flag_Stats : Boolean := False;
 
@@ -213,6 +215,8 @@ package body Ghdlsynth is
          Cmd.Disp_Inline := False;
       elsif Option = "--disp-noid" then
          Cmd.Disp_Id := False;
+      elsif Option'Length > 3 and then Option (1 .. 3) = "-o=" then
+         Cmd.Ofile := new String'(Option (4 .. Option'Last));
       elsif Option'Length > 6 and then Option (1 .. 6) = "--out=" then
          if Option (7 .. Option'Last) = "raw" then
             Cmd.Oformat := Format_Raw;
@@ -461,6 +465,15 @@ package body Ghdlsynth is
          Format := Default;
       end if;
 
+      if Format = Format_None then
+         return;
+      end if;
+
+      if not Outputs.Open_File (Cmd.Ofile) then
+         Errorout.Error_Msg_Option ("cannot open '" & Cmd.Ofile.all & "'");
+         return;
+      end if;
+
       case Format is
          when Format_Default =>
             raise Internal_Error;
@@ -490,6 +503,8 @@ package body Ghdlsynth is
             Netlists.Rename.Rename_Module (Res, Language_Verilog);
             Netlists.Disp_Verilog.Disp_Verilog (Res);
       end case;
+
+      Outputs.Close;
    end Disp_Design;
 
    function Ghdl_Synth

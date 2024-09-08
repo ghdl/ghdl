@@ -15,6 +15,7 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Simple_IO;
+with Outputs;
 with Errorout; use Errorout;
 with Types; use Types;
 with Std_Names;
@@ -38,7 +39,9 @@ with Vhdl.Back_End; use Vhdl.Back_End;
 with Elab.Vhdl_Objtypes;
 
 package body Options is
-   procedure Initialize is
+   procedure Initialize
+   is
+      Res : Boolean;
    begin
       Name_Table.Initialize;
       Std_Names.Std_Names_Initialize;
@@ -52,6 +55,10 @@ package body Options is
       PSL.Nodes.Init (Libraries.Library_Location);
       PSL.Dump_Tree.Dump_Hdl_Node := Vhdl.Disp_Tree.Disp_Tree_For_Psl'Access;
       Vhdl.Errors.Initialize;
+
+      --  Just in case of debug.
+      Res := Outputs.Open_File (null);
+      pragma Assert (Res);
    end Initialize;
 
    procedure Finalize is

@@ -16,8 +16,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Simple_IO; use Simple_IO;
-with Utils_IO; use Utils_IO;
+with Outputs; use Outputs;
 with Name_Table;
 with Files_Map;
 
@@ -29,17 +28,17 @@ with Netlists.Locations;
 package body Netlists.Dump is
    procedure Put_Width (W : Width) is
    begin
-      Put_Trim (Width'Image (W));
+      Wr_Trim (Width'Image (W));
    end Put_Width;
 
    procedure Put_Id (N : Name_Id) is
    begin
-      Put (Name_Table.Image (N));
+      Wr (Name_Table.Image (N));
    end Put_Id;
 
    procedure Disp_Binary_Digit (Va : Uns32; Zx : Uns32; I : Natural) is
    begin
-      Put (Bchar (((Va / 2**I) and 1) + ((Zx / 2**I) and 1) * 2));
+      Wr (Bchar (((Va / 2**I) and 1) + ((Zx / 2**I) and 1) * 2));
    end Disp_Binary_Digit;
 
    procedure Disp_Binary_Digits (Va : Uns32; Zx : Uns32; W : Natural) is
@@ -71,9 +70,9 @@ package body Netlists.Dump is
 
    procedure Disp_Pval_Binary (Pv : Pval) is
    begin
-      Put ('"');
+      Wr ('"');
       Disp_Pval_Binary_Digits (Pv);
-      Put ('"');
+      Wr ('"');
    end Disp_Pval_Binary;
 
    procedure Disp_Pval_String (Pv : Pval)
@@ -84,7 +83,7 @@ package body Netlists.Dump is
       Off : Uns32;
       C   : Uns32;
    begin
-      Put ('"');
+      Wr ('"');
       if Len > 0 then
          V := Read_Pval (Pv, (Len - 1) / 32);
          for I in reverse 0 .. (Len / 8) - 1 loop
@@ -94,18 +93,18 @@ package body Netlists.Dump is
             end if;
             pragma Assert (V.Zx = 0);
             C := Shift_Right (V.Val, Natural (8 * Off)) and 16#ff#;
-            Put (Character'Val (C));
+            Wr (Character'Val (C));
          end loop;
       end if;
-      Put ('"');
+      Wr ('"');
    end Disp_Pval_String;
 
    procedure Disp_Instance_Id (Inst : Instance) is
    begin
       if Flag_Disp_Id then
-         Put ("{i");
-         Put_Trim (Instance'Image (Inst));
-         Put ('}');
+         Wr ("{i");
+         Wr_Trim (Instance'Image (Inst));
+         Wr ('}');
       end if;
    end Disp_Instance_Id;
 
@@ -116,26 +115,26 @@ package body Netlists.Dump is
    begin
       --  Do not crash on No_Name.
       if N = No_Sname then
-         Put ("*nil*");
+         Wr ("*nil*");
          return;
       end if;
 
       Prefix := Get_Sname_Prefix (N);
       if Prefix /= No_Sname then
          Dump_Name (Prefix);
-         Put (".");
+         Wr (".");
       end if;
 
       case Get_Sname_Kind (N) is
          when Sname_User =>
-            Put ("\");
-            Put (Image (Get_Sname_Suffix (N)));
+            Wr ("\");
+            Wr (Image (Get_Sname_Suffix (N)));
          when Sname_Artificial =>
-            Put ("$");
+            Wr ("$");
             Put_Id (Get_Sname_Suffix (N));
          when Sname_Version =>
-            Put ("%");
-            Put_Uns32 (Get_Sname_Version (N));
+            Wr ("%");
+            Wr_Uns32 (Get_Sname_Version (N));
       end case;
    end Dump_Name;
 
@@ -146,20 +145,20 @@ package body Netlists.Dump is
       M : constant Module := Get_Module (Inst);
    begin
       Dump_Name (Get_Instance_Name (Inst));
-      Put ('.');
+      Wr ('.');
       if Is_Self_Instance (Inst) then
          Dump_Name (Get_Output_Desc (M, Idx).Name);
       else
          if Idx < Get_Nbr_Inputs (M) then
             Dump_Name (Get_Input_Desc (M, Idx).Name);
          else
-            Put_Trim (Port_Nbr'Image (Idx));
+            Wr_Trim (Port_Nbr'Image (Idx));
          end if;
       end if;
       if With_Id then
-         Put ("{p");
-         Put_Trim (Input'Image (I));
-         Put ('}');
+         Wr ("{p");
+         Wr_Trim (Input'Image (I));
+         Wr ('}');
       end if;
    end Dump_Input_Name;
 
@@ -169,18 +168,18 @@ package body Netlists.Dump is
       Idx : constant Port_Idx := Get_Port_Idx (N);
    begin
       Dump_Name (Get_Instance_Name (Inst));
-      Put ('.');
+      Wr ('.');
       if Is_Self_Instance (Inst) then
          Dump_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
       else
          Dump_Name (Get_Output_Desc (Get_Module (Inst), Idx).Name);
       end if;
       if With_Id then
-         Put ("{n");
-         Put_Trim (Net'Image (N));
-         Put ('w');
+         Wr ("{n");
+         Wr_Trim (Net'Image (N));
+         Wr ('w');
          Put_Width (Get_Width (N));
-         Put ('}');
+         Wr ('}');
       end if;
    end Dump_Net_Name;
 
@@ -191,21 +190,21 @@ package body Netlists.Dump is
       if Desc.Name /= No_Sname then
          --  Const_Bit/Log gates have anonymous parameters.
          Dump_Name (Desc.Name);
-         Put ('=');
+         Wr ('=');
       end if;
 
       case Desc.Typ is
          when Param_Invalid =>
-            Put ("invalid");
+            Wr ("invalid");
          when Param_Uns32 =>
-            Put_Uns32 (Get_Param_Uns32 (Inst, Idx));
+            Wr_Uns32 (Get_Param_Uns32 (Inst, Idx));
          when Param_Pval_Vector
             | Param_Pval_String
             | Param_Pval_Integer
             | Param_Pval_Real
             | Param_Pval_Time_Ps
             | Param_Pval_Boolean =>
-            Put ("generic");
+            Wr ("generic");
       end case;
    end Dump_Parameter;
 
@@ -220,19 +219,19 @@ package body Netlists.Dump is
       while Attr /= No_Attribute loop
          pragma Assert (Has_Instance_Attribute (Inst));
 
-         Put_Indent (Indent);
-         Put ("attribute ");
+         Wr_Indent (Indent);
+         Wr ("attribute ");
          Put_Id (Get_Attribute_Name (Attr));
-         Put (" of ");
+         Wr (" of ");
          Dump_Name (Get_Instance_Name (Inst));
          Disp_Instance_Id (Inst);
-         Put (" := ");
+         Wr (" := ");
          Kind := Get_Attribute_Type (Attr);
          Val := Get_Attribute_Pval (Attr);
          case Kind is
             when Param_Invalid
               | Param_Uns32 =>
-               Put ("??");
+               Wr ("??");
             when Param_Pval_String =>
                Disp_Pval_String (Val);
             when Param_Pval_Vector
@@ -242,7 +241,7 @@ package body Netlists.Dump is
               | Param_Pval_Time_Ps =>
                Disp_Pval_Binary (Val);
          end case;
-         Put_Line (";");
+         Wr_Line (";");
          Attr := Get_Attribute_Next (Attr);
       end loop;
    end Dump_Attributes;
@@ -257,45 +256,45 @@ package body Netlists.Dump is
             Line : Positive;
             Col : Natural;
          begin
-            Put_Indent (Indent);
-            Put ("# ");
+            Wr_Indent (Indent);
+            Wr ("# ");
             Files_Map.Location_To_Position (Loc, File, Line, Col);
-            Put (Name_Table.Image (File));
-            Put (':');
-            Put_Uns32 (Uns32 (Line));
-            Put (':');
-            Put_Uns32 (Uns32 (Col));
-            New_Line;
+            Wr (Name_Table.Image (File));
+            Wr (':');
+            Wr_Uns32 (Uns32 (Line));
+            Wr (':');
+            Wr_Uns32 (Uns32 (Col));
+            Wr_Line;
          end;
       end if;
 
       Dump_Attributes (Inst, Indent);
 
-      Put_Indent (Indent);
-      Put ("instance ");
+      Wr_Indent (Indent);
+      Wr ("instance ");
       Dump_Name (Get_Instance_Name (Inst));
       Disp_Instance_Id (Inst);
-      Put (": ");
+      Wr (": ");
       Dump_Name (Get_Module_Name (Get_Module (Inst)));
-      New_Line;
+      Wr_Line;
 
       if Get_Nbr_Params (Inst) > 0 then
-         Put_Indent (Indent + 1);
-         Put ("parameters");
+         Wr_Indent (Indent + 1);
+         Wr ("parameters");
          for P in Params (Inst) loop
             pragma Warnings (Off, P);
-            Put (' ');
+            Wr (' ');
             Dump_Parameter (Inst, Get_Param_Idx (P));
          end loop;
-         New_Line;
+         Wr_Line;
       end if;
 
       if Get_Nbr_Inputs (Inst) > 0 then
          for I of Inputs (Inst) loop
-            Put_Indent (Indent + 1);
-            Put ("input ");
+            Wr_Indent (Indent + 1);
+            Wr ("input ");
             Dump_Input_Name (I, True);
-            Put (" <- ");
+            Wr (" <- ");
             declare
                N : constant Net := Get_Driver (I);
             begin
@@ -303,32 +302,32 @@ package body Netlists.Dump is
                   Dump_Net_Name (N, True);
                end if;
             end;
-            New_Line;
+            Wr_Line;
          end loop;
       end if;
 
       if Get_Nbr_Outputs (Inst) > 0 then
-         Put_Indent (Indent + 1);
-         Put ("outputs");
-         for O of Outputs (Inst) loop
-            Put (' ');
+         Wr_Indent (Indent + 1);
+         Wr ("outputs");
+         for O of Outputs_Iterate (Inst) loop
+            Wr (' ');
             Dump_Net_Name (O, True);
          end loop;
-         New_Line;
+         Wr_Line;
       end if;
    end Dump_Instance;
 
    procedure Disp_Width (W : Width) is
    begin
       if W /= 1 then
-         Put ('[');
+         Wr ('[');
          if W = 0 then
-            Put ('?');
+            Wr ('?');
          else
             Put_Width (W - 1);
-            Put (":0");
+            Wr (":0");
          end if;
-         Put (']');
+         Wr (']');
       end if;
    end Disp_Width;
 
@@ -336,67 +335,67 @@ package body Netlists.Dump is
    begin
       case Dir is
          when Port_In =>
-            Put ("input");
+            Wr ("input");
          when Port_Out =>
-            Put ("output");
+            Wr ("output");
          when Port_Inout =>
             raise Internal_Error;
       end case;
-      Put (' ');
+      Wr (' ');
       Dump_Name (Desc.Name);
       Disp_Width (Desc.W);
-      Put (';');
-      New_Line;
+      Wr (';');
+      Wr_Line;
    end Dump_Module_Port;
 
    procedure Dump_Module_Header (M : Module; Indent : Natural := 0) is
    begin
       --  Module id and name.
-      Put_Indent (Indent);
-      Put ("module ");
+      Wr_Indent (Indent);
+      Wr ("module ");
       if Flag_Disp_Id then
-         Put ("{m");
-         Put_Trim (Module'Image (M));
-         Put ("} ");
+         Wr ("{m");
+         Wr_Trim (Module'Image (M));
+         Wr ("} ");
       end if;
       Dump_Name (Get_Module_Name (M));
-      New_Line;
+      Wr_Line;
 
       --  Parameters.
       for P of Params_Desc (M) loop
-         Put_Indent (Indent + 1);
-         Put ("parameter");
-         Put (' ');
+         Wr_Indent (Indent + 1);
+         Wr ("parameter");
+         Wr (' ');
          Dump_Name (P.Name);
-         Put (": ");
+         Wr (": ");
          case P.Typ is
             when Param_Invalid =>
-               Put ("invalid");
+               Wr ("invalid");
             when Param_Uns32 =>
-               Put ("uns32");
+               Wr ("uns32");
             when Param_Pval_Vector =>
-               Put ("pval.vector");
+               Wr ("pval.vector");
             when Param_Pval_String =>
-               Put ("pval.string");
+               Wr ("pval.string");
             when Param_Pval_Integer =>
-               Put ("pval.integer");
+               Wr ("pval.integer");
             when Param_Pval_Real =>
-               Put ("pval.real");
+               Wr ("pval.real");
             when Param_Pval_Time_Ps =>
-               Put ("pval.time.ps");
+               Wr ("pval.time.ps");
             when Param_Pval_Boolean =>
-               Put ("pval.boolean");
+               Wr ("pval.boolean");
          end case;
-         New_Line;
+         Wr_Line;
       end loop;
 
       --  Ports.
       for I in 1 .. Get_Nbr_Inputs (M) loop
-         Put_Indent (Indent + 1);
+         Wr_Indent (Indent + 1);
          Dump_Module_Port (Get_Input_Desc (M, I - 1), Port_In);
       end loop;
       for I in 1 .. Get_Nbr_Outputs (M) loop
-         Put_Indent (Indent + 1);
+         Wr_Indent (Indent + 1);
          Dump_Module_Port (Get_Output_Desc (M, I - 1), Port_Out);
       end loop;
    end Dump_Module_Header;
@@ -422,8 +421,8 @@ package body Netlists.Dump is
       end loop;
 
       for N of Nets (M) loop
-         Put_Indent (Indent + 1);
-         Put ("connect ");
+         Wr_Indent (Indent + 1);
+         Wr ("connect ");
          Dump_Net_Name (N, True);
 
          declare
@@ -432,22 +431,22 @@ package body Netlists.Dump is
             First := True;
             for S of Sinks (N) loop
                if First then
-                  Put (" -> ");
+                  Wr (" -> ");
                   First := False;
                else
-                  Put (", ");
+                  Wr (", ");
                end if;
                Dump_Input_Name (S, True);
             end loop;
          end;
-         New_Line;
+         Wr_Line;
       end loop;
    end Dump_Module;
 
    procedure Disp_Net_Name (N : Net) is
    begin
       if N = No_Net then
-         Put ("?");
+         Wr ("?");
       else
          declare
             Inst : constant Instance := Get_Net_Parent (N);
@@ -457,7 +456,7 @@ package body Netlists.Dump is
                Dump_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
             else
                Dump_Name (Get_Instance_Name (Inst));
-               Put (':');
+               Wr (':');
                Dump_Name (Get_Output_Desc (Get_Module (Inst), Idx).Name);
             end if;
          end;
@@ -466,11 +465,11 @@ package body Netlists.Dump is
 
    procedure Put_Net_Width (N : Net) is
    begin
-      Put ("{n");
-      Put_Trim (Net'Image (N));
-      Put ('w');
-      Put_Uns32 (Get_Width (N));
-      Put ('}');
+      Wr ("{n");
+      Wr_Trim (Net'Image (N));
+      Wr ('w');
+      Wr_Uns32 (Get_Width (N));
+      Wr ('}');
    end Put_Net_Width;
 
    procedure Dump_Net_Name_And_Width (N : Net)
@@ -478,7 +477,7 @@ package body Netlists.Dump is
       W : Width;
    begin
       if N = No_Net then
-         Put ("?");
+         Wr ("?");
       else
          Disp_Net_Name (N);
 
@@ -487,9 +486,9 @@ package body Netlists.Dump is
             Put_Net_Width (N);
          else
             if W /= 1 then
-               Put ('[');
-               Put_Uns32 (W);
-               Put (']');
+               Wr ('[');
+               Wr_Uns32 (W);
+               Wr (']');
             end if;
          end if;
 
@@ -537,7 +536,7 @@ package body Netlists.Dump is
       Drv_Inst : Instance;
    begin
       if Drv = No_Net then
-         Put ('?');
+         Wr ('?');
       else
          Drv_Inst := Get_Net_Parent (Drv);
          if Flag_Disp_Inline and then Can_Inline (Drv_Inst) then
@@ -555,11 +554,11 @@ package body Netlists.Dump is
    procedure Debug_Net (N : Net) is
    begin
       if N = No_Net then
-         Put ('?');
+         Wr ('?');
       else
          Disp_Instance (Get_Net_Parent (N), False, 0);
       end if;
-      New_Line;
+      Wr_Line;
    end Debug_Net;
 
    pragma Unreferenced (Debug_Net);
@@ -582,7 +581,7 @@ package body Netlists.Dump is
                   I : Natural;
                begin
                   Put_Width (W);
-                  Put ("'uh");
+                  Wr ("'uh");
                   V := Get_Param_Uns32 (Inst, 0);
                   if W >= 32 then
                      I := 8;
@@ -591,7 +590,7 @@ package body Netlists.Dump is
                   end if;
                   while I > 0 loop
                      I := I - 1;
-                     Put (Xdigits (Shift_Right (V, I * 4) and 15));
+                     Wr (Xdigits (Shift_Right (V, I * 4) and 15));
                   end loop;
                end;
                return;
@@ -602,13 +601,13 @@ package body Netlists.Dump is
                   Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
                begin
                   Disp_Driver (Get_Input_Net (Inst, 0), Indent);
-                  Put ('[');
+                  Wr ('[');
                   if W > 1 then
-                     Put_Uns32 (Off + W - 1);
-                     Put (':');
+                     Wr_Uns32 (Off + W - 1);
+                     Wr (':');
                   end if;
-                  Put_Uns32 (Off);
-                  Put (']');
+                  Wr_Uns32 (Off);
+                  Wr (']');
                   return;
                end;
 
@@ -628,16 +627,16 @@ package body Netlists.Dump is
             Val   : Pval;
          begin
             Attr := Get_Instance_First_Attribute (Inst);
-            Put ("(* ");
+            Wr ("(* ");
             loop
                Put_Id (Get_Attribute_Name (Attr));
-               Put ("=");
+               Wr ("=");
                Kind := Get_Attribute_Type (Attr);
                Val := Get_Attribute_Pval (Attr);
                case Kind is
                   when Param_Invalid
                     | Param_Uns32 =>
-                     Put ("??");
+                     Wr ("??");
                   when Param_Pval_String =>
                      Disp_Pval_String (Val);
                   when Param_Pval_Vector
@@ -649,9 +648,9 @@ package body Netlists.Dump is
                end case;
                Attr := Get_Attribute_Next (Attr);
                exit when Attr = No_Attribute;
-               Put (", ");
+               Wr (", ");
             end loop;
-            Put (" *)");
+            Wr (" *)");
          end;
       end if;
 
@@ -660,21 +659,21 @@ package body Netlists.Dump is
             First : Boolean;
          begin
             First := True;
-            Put (" #(");
+            Wr (" #(");
             for P in Params (Inst) loop
                pragma Warnings (Off, P);
                if not First then
-                  Put (", ");
+                  Wr (", ");
                end if;
                First := False;
                Dump_Parameter (Inst, Get_Param_Idx (P));
             end loop;
-            Put (")");
+            Wr (")");
          end;
       end if;
 
       if With_Name then
-         Put (' ');
+         Wr (' ');
          Dump_Name (Get_Instance_Name (Inst));
       end if;
 
@@ -687,27 +686,27 @@ package body Netlists.Dump is
          Desc : Port_Desc;
       begin
          if Nbr_Inputs > 0 then
-            Put (" (");
+            Wr (" (");
             for Idx in 0 .. Nbr_Inputs - 1 loop
                I := Get_Input (Inst, Idx);
                if Idx > 0 then
-                  Put (",");
+                  Wr (",");
                end if;
-               New_Line;
-               Put_Indent (Indent);
+               Wr_Line;
+               Wr_Indent (Indent);
 
                --  Input name.
                if Idx < Nbr_Fixed_Inputs then
                   Desc := Get_Input_Desc (M, Idx);
                   if Desc.Name /= No_Sname then
-                     Put ('.');
+                     Wr ('.');
                      Dump_Name (Desc.Name);
                      if Flag_Disp_Id then
-                        Put ("{p");
-                        Put_Trim (Input'Image (I));
-                        Put ('}');
+                        Wr ("{p");
+                        Wr_Trim (Input'Image (I));
+                        Wr ('}');
                      end if;
-                     Put (": ");
+                     Wr (": ");
                   end if;
                end if;
 
@@ -715,12 +714,12 @@ package body Netlists.Dump is
                Drv := Get_Driver (I);
 
                if Drv = No_Net then
-                  Put ('?');
+                  Wr ('?');
                else
                   Disp_Driver (Drv, Indent + 1);
                end if;
             end loop;
-            Put (')');
+            Wr (')');
          end if;
       end;
    end Disp_Instance;
@@ -732,21 +731,21 @@ package body Netlists.Dump is
             null;
          when 1 =>
             Dump_Net_Name_And_Width (Get_Output (Inst, 0));
-            Put (" := ");
+            Wr (" := ");
          when others =>
             declare
                First : Boolean;
             begin
                First := True;
-               Put ('(');
-               for O of Outputs (Inst) loop
+               Wr ('(');
+               for O of Outputs_Iterate (Inst) loop
                   if not First then
-                     Put (", ");
+                     Wr (", ");
                   end if;
                   First := False;
                   Dump_Net_Name_And_Width (O);
                end loop;
-               Put (") := ");
+               Wr (") := ");
             end;
       end case;
 
@@ -767,9 +766,9 @@ package body Netlists.Dump is
 
       for Inst of Instances (M) loop
          if not (Flag_Disp_Inline and then Can_Inline (Inst)) then
-            Put_Indent (Indent + 1);
+            Wr_Indent (Indent + 1);
             Disp_Instance_Assign (Inst, Indent + 1);
-            New_Line;
+            Wr_Line;
          end if;
       end loop;
 
@@ -780,9 +779,9 @@ package body Netlists.Dump is
       begin
          if Self /= No_Instance then
             for I of Inputs (Self) loop
-               Put_Indent (Indent + 1);
+               Wr_Indent (Indent + 1);
                Dump_Name (Get_Output_Desc (M, Get_Port_Idx (I)).Name);
-               Put (" := ");
+               Wr (" := ");
                Drv := Get_Driver (I);
                if False then
                   Disp_Driver (Drv, 0);
@@ -792,7 +791,7 @@ package body Netlists.Dump is
                      Put_Net_Width (Drv);
                   end if;
                end if;
-               New_Line;
+               Wr_Line;
             end loop;
          end if;
       end;

@@ -230,10 +230,10 @@ package body Netlists.Iterators is
       return Get_Output (It.Inst, Cur.Idx);
    end Outputs_Element;
 
-   function Outputs (Inst : Instance) return Outputs_Iterator is
+   function Outputs_Iterate (Inst : Instance) return Outputs_Iterator is
    begin
       return Outputs_Iterator'(Inst => Inst);
-   end Outputs;
+   end Outputs_Iterate;
 
    function Params_First (It : Params_Iterator) return Params_Cursor is
    begin
