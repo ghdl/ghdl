@@ -51,7 +51,7 @@ jobs:
           name: ${{ inputs.ghdl_artifact }}
           path: ./dist/docker/install
 
-      - name: Building GHDL image
+      - name: 🐋 Building GHDL image
         id: build
         run: |
           base="ubuntu:${{ inputs.ubuntu_version }}"
@@ -78,17 +78,17 @@ jobs:
 
           echo "Docker image '${image}' has $(docker image inspect $1 --format='{{.Size}}' | numfmt --to=iec --format '%.2f' ${image})"
 
-      - name: Checking GHDL image '${{ steps.build.outputs.ghdl_image }}'
+      - name: ☑ Checking GHDL image '${{ steps.build.outputs.ghdl_image }}'
         run: |
           docker container run --rm ${{ steps.build.outputs.ghdl_image }} 'echo "which ghdl: $(which ghdl)"; ghdl version'
 
-      - name: Login and push to Docker Hub
+      - name: 🔑 Login and push to Docker Hub
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ vars.DOCKERHUB_USERNAME }} --password-stdin
           echo "Docker image '${{ steps.build.outputs.ghdl_image }}' has $(docker image inspect $1 --format='{{.Size}}' | numfmt --to=iec --format '%.2f' ${{ steps.build.outputs.ghdl_image }})"
           docker push ${{ steps.build.outputs.ghdl_image }}
 
-      - name: Testing GHDL image
+      - name: 🚦 Testing GHDL image
         run: |
           docker container run --rm -v $(pwd):/data ${{ steps.build.outputs.ghdl_image }} 'cd /data/testsuite; ./testsuite.sh ${{ inputs.testsuites }}'
 

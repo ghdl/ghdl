@@ -32,32 +32,12 @@ on:
         description: 'Name of the pyghdl artifact.'
         required: true
         type: string
+      pyunit_testsuites:
+        description: 'Name of the pyunit testsuites.'
+        required: false
+        default: 'testsuite/pyunit'
+        type: string
       unittest_xml_artifact:
-        description: 'Name of the pyghdl artifact.'
-        required: false
-        default: ''
-        type: string
-      coverage:
-        description: 'Collect code coverage.'
-        required: false
-        default: true
-        type: boolean
-      coverage_sqlite_artifact:
-        description: 'Name of the pyghdl artifact.'
-        required: false
-        default: ''
-        type: string
-      coverage_xml_artifact:
-        description: 'Name of the pyghdl artifact.'
-        required: false
-        default: ''
-        type: string
-      coverage_json_artifact:
-        description: 'Name of the pyghdl artifact.'
-        required: false
-        default: ''
-        type: string
-      coverage_html_artifact:
         description: 'Name of the pyghdl artifact.'
         required: false
         default: ''
@@ -266,13 +246,8 @@ jobs:
           export PYTHONPATH=$(pwd)
 
           [ -n '${{ inputs.unittest_xml_artifact }}' ] && PYTEST_ARGS='--junitxml=report/unit/TestReportSummary.xml' || unset PYTEST_ARGS
-          if ${{ inputs.coverage }}; then
-            echo "coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp"
-            coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp
-          else
-            echo "python -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp"
-            python -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp
-          fi
+          echo "python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+          python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
 
       - name: '🚦 Testsuite: pyunit (Windows)'
         if: startsWith(inputs.os_image, 'windows')
@@ -280,13 +255,8 @@ jobs:
           $env:PYTHONPATH = (Get-Location).ToString()
 
           $PYTEST_ARGS = if ("${{ inputs.unittest_xml_artifact }}") { "--junitxml=report/unit/TestReportSummary.xml" } else { "" }
-          if ($${{ inputs.coverage }}) {
-            Write-Host "coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp"
-            coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp
-          } else {
-            Write-Host "python -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp"
-            python -m pytest -raP $PYTEST_ARGS --color=yes testsuite/pyunit/libghdl testsuite/pyunit/lsp
-          }
+          Write-Host "python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+          python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
 
 # Upload test result artifacts
 
@@ -307,76 +277,5 @@ jobs:
 #        with:
 #          name: ${{ inputs.unittest_html_artifact }}-${{ inputs.python_version }}
 #          path: ${{ steps.getVariables.outputs.unittest_report_html_directory }}
-#          if-no-files-found: error
-#          retention-days: 1
-
-# Convert coverage results
-
-      - name: Debug
-        if: startsWith(inputs.os_image, 'ubuntu')
-        run: |
-          ls -lAh .
-
-      - name: Report code coverage
-        if: inputs.coverage
-        run: coverage report --rcfile=pyproject.toml --data-file=.coverage
-
-      - name: Convert coverage to XML format (Cobertura)
-        if: inputs.coverage && inputs.coverage_xml_artifact != ''
-        continue-on-error: true
-        run: coverage xml --data-file=.coverage
-
-      - name: Convert coverage to JSON format
-        if: inputs.coverage && inputs.coverage_json_artifact != ''
-        continue-on-error: true
-        run: coverage json --data-file=.coverage
-
-#      - name: Convert coverage to HTML format
-#        if: inputs.coverage && inputs.coverage_html_artifact != ''
-#        continue-on-error: true
-#        run: |
-#          coverage html --data-file=.coverage -d ${{ steps.getVariables.outputs.coverage_report_html_directory }}
-#          rm ${{ steps.getVariables.outputs.coverage_report_html_directory }}/.gitignore
-
-# Upload coverage result artifacts
-
-      - name: 📤 Upload 'Coverage SQLite Database' artifact
-        if: inputs.coverage && inputs.coverage_sqlite_artifact != ''
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ inputs.coverage_sqlite_artifact }}-${{ inputs.os_name }}-${{ inputs.python_version }}
-          path: .coverage
-          include-hidden-files: true
-          if-no-files-found: error
-          retention-days: 1
-
-      - name: 📤 Upload 'Coverage XML Report' artifact
-        if: inputs.coverage && inputs.coverage_xml_artifact != ''
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ inputs.coverage_xml_artifact }}-${{ inputs.os_name }}-${{ inputs.python_version }}
-          path: ${{ steps.getVariables.outputs.coverage_report_xml }}
-          if-no-files-found: error
-          retention-days: 1
-
-      - name: 📤 Upload 'Coverage JSON Report' artifact
-        if: inputs.coverage && inputs.coverage_json_artifact != ''
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ inputs.coverage_json_artifact }}-${{ inputs.os_name }}-${{ inputs.python_version }}
-          path: ${{ steps.getVariables.outputs.coverage_report_json }}
-          if-no-files-found: error
-          retention-days: 1
-
-#      - name: 📤 Upload 'Coverage HTML Report' artifact
-#        if: inputs.coverage && inputs.coverage_html_artifact != ''
-#        continue-on-error: true
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: ${{ inputs.coverage_html_artifact }}-${{ inputs.python_version }}
-#          path: ${{ steps.getVariables.outputs.coverage_report_html_directory }}
 #          if-no-files-found: error
 #          retention-days: 1
