@@ -47,6 +47,37 @@ on:
         required: false
         default: ''
         type: string
+    # Parameters for pyGHDL unit testing and code coverage collection
+      python_version:
+        description: 'Python version for pyGHDL testing.'
+        required: false
+        default: '3.12'
+        type: string
+      pyunit_testsuites:
+        description: 'Name of the pyunit testsuites.'
+        required: false
+        default: 'testsuite/pyunit'
+        type: string
+      unittesting:
+        description: 'Run unit tests.'
+        required: false
+        default: true
+        type: boolean
+      unittest_xml_artifact:
+        description: 'Name of the pyghdl artifact.'
+        required: false
+        default: ''
+        type: string
+      coverage:
+        description: 'Collect code coverage.'
+        required: false
+        default: true
+        type: boolean
+      coverage_sqlite_artifact:
+        description: 'Name of the pyghdl artifact.'
+        required: false
+        default: ''
+        type: string
     outputs:
       ghdl_ubuntu_artifact:
         description: "Artifact name for compiled GHDL for ubuntu."
@@ -94,7 +125,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends $APT_ARGS
 
-      - name: "Download GCC sources"
+      - name: Download GCC sources
         if: inputs.backend == 'gcc'
         run: |
           GCC_VERSION="13.3.0"
@@ -261,7 +292,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-      - name: Remove binaries, libraries and other files for libghdl (only mcode backend)
+      - name: ✂ Remove binaries, libraries and other files for libghdl (only mcode backend)
         if: inputs.ubuntu_version == '24.04' && inputs.backend == 'mcode'
         run: |
           sudo chown -R runner:docker ./install
@@ -286,6 +317,114 @@ jobs:
         with:
           name: ${{ steps.artifact_name.outputs.libghdl_artifact }}
           path: ./install
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Install libghdl into pyGHDL/lib (only mcode backend)
+        if: (inputs.unittesting || inputs.coverage) && inputs.backend == 'mcode'
+        run: |
+          cp -r -v ./install/lib/* ./pyGHDL/lib
+
+      - name: 🐍 Setup Python (only mcode backend)
+        uses: actions/setup-python@v5
+        if: (inputs.unittesting || inputs.coverage) && inputs.backend == 'mcode'
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: 🧰 Install dependencies (only mcode backend)
+        if: (inputs.unittesting || inputs.coverage) && inputs.backend == 'mcode'
+        run: |
+          python -m pip install --disable-pip-version-check tomli
+          python -m pip install --disable-pip-version-check -r testsuite/requirements.txt
+
+      - name: 🔁 Extract configurations from pyproject.toml (only mcode backend)
+        if: inputs.coverage && inputs.backend == 'mcode'
+        id: getVariables
+        shell: python
+        run: |
+          from os       import getenv
+          from pathlib  import Path
+          from sys      import version
+          from textwrap import dedent
+
+          print(f"Python: {version}")
+
+          from tomli import load as tomli_load
+
+          htmlDirectory = Path("htmlcov")
+          xmlFile =  Path("./coverage.xml")
+          jsonFile = Path("./coverage.json")
+
+          # Read output paths from 'pyproject.toml' file
+          pyProjectFile =  Path("pyproject.toml")
+          if pyProjectFile.exists():
+            with pyProjectFile.open("rb") as file:
+              pyProjectSettings = tomli_load(file)
+
+            htmlDirectory = Path(pyProjectSettings["tool"]["coverage"]["html"]["directory"])
+            xmlFile       = Path(pyProjectSettings["tool"]["coverage"]["xml"]["output"])
+            jsonFile      = Path(pyProjectSettings["tool"]["coverage"]["json"]["output"])
+          else:
+            print(f"File '{pyProjectFile}' not found.")
+            print(f"::error title=FileNotFound::File '{pyProjectFile}' not found.")
+            exit(1)
+
+          # Write jobs to special file
+          github_output = Path(getenv("GITHUB_OUTPUT"))
+          print(f"GITHUB_OUTPUT: {github_output}")
+          with github_output.open("a+", encoding="utf-8") as f:
+            f.write(dedent(f"""\
+              unittest_report_html_directory={htmlDirectory}
+              coverage_report_html_directory={htmlDirectory.as_posix()}
+              coverage_report_xml={xmlFile}
+              coverage_report_json={jsonFile}
+            """))
+
+          print(f"DEBUG:\n  html={htmlDirectory}\n  xml={xmlFile}\n  json={jsonFile}")
+
+      - name: "🚦 Testsuite: 'pyunit' (only mcode backend)"
+        if: (inputs.unittesting || inputs.coverage) && inputs.backend == 'mcode'
+        run: |
+          export PYTHONPATH=$(pwd)
+
+          [ -n '${{ inputs.unittest_xml_artifact }}' ] && PYTEST_ARGS='--junitxml=report/unit/TestReportSummary.xml' || unset PYTEST_ARGS
+          if ${{ inputs.coverage }}; then
+            echo "coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+            coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
+          elif ${{ inputs.unittesting }}; then
+            echo "python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+            python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
+          else
+            echo "::error title=InternalError::Reached impossible execution path."
+            exit 1
+          fi
+
+# Upload test result artifacts
+
+      - name: 📤 Upload 'TestReportSummary.xml' artifact (only mcode backend)
+        if: inputs.unittesting && inputs.backend == 'mcode' && inputs.unittest_xml_artifact != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.unittest_xml_artifact }}-Ubuntu-${{ inputs.ubuntu_version }}-${{ inputs.python_version }}
+          path: report/unit/TestReportSummary.xml
+          if-no-files-found: error
+          retention-days: 1
+
+# Convert and upload coverage results as artifact
+
+      - name: Report code coverage (only mcode backend)
+        if: inputs.coverage && inputs.backend == 'mcode'
+        run: coverage report --rcfile=pyproject.toml --data-file=.coverage
+
+      - name: 📤 Upload 'Coverage SQLite Database' artifact (only mcode backend)
+        if: inputs.coverage && inputs.backend == 'mcode' && inputs.coverage_sqlite_artifact != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.coverage_sqlite_artifact }}-Ubuntu-${{ inputs.ubuntu_version }}-${{ inputs.python_version }}
+          path: .coverage
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 1
 
