@@ -1023,7 +1023,7 @@ package body Netlists.Disp_Verilog is
          when Id_Lsr =>
             Disp_Template ("  assign \o0 = \i0 >> \i1;" & NL, Inst);
          when Id_Asr =>
-            Disp_Template ("  assign \o0 = \si0 >> \i1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \si0 >>> \i1;" & NL, Inst);
          when Id_Rol =>
             Disp_Template
               ("  \o0 <= std_logic_vector "
