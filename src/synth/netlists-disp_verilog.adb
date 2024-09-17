@@ -1015,7 +1015,7 @@ package body Netlists.Disp_Verilog is
          when Id_Umod =>
             Disp_Template ("  assign \o0 = \i0 % \i1; // umod" & NL, Inst);
          when Id_Sdiv =>
-            Disp_Template ("  assign \o0 = \i0 / \i1; // sdiv" & NL, Inst);
+            Disp_Template ("  assign \o0 = \si0 / \si1; // sdiv" & NL, Inst);
          when Id_Udiv =>
             Disp_Template ("  assign \o0 = \i0 / \i1; // udiv" & NL, Inst);
          when Id_Lsl =>
