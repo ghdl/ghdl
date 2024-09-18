@@ -54,7 +54,7 @@ GHDL is free software:
   - GHDL is available through the default package manager on most distributions: Debian/Ubuntu, Fedora, Arch Linux, MSYS2, etc.
   - After each succesful CI run, [nightly](https://github.com/ghdl/ghdl/releases/tag/nightly) tarballs/zipfiles for Ubuntu and Windows (MSYS2) are updated.
   - For using GHDL in CI, [setup-ghdl-ci](https://github.com/ghdl/setup-ghdl-ci) is provided. It is a GitHub Action (see [github.com/features/actions](https://github.com/features/actions)) to setup GHDL in just 3 lines.
-- You may use containers from [ghdl/docker](https://github.com/ghdl/docker) or [hdl/containers](https://github.com/hdl/containers), in case your didn't find a suitable release.
+- You may use containers from [ghdl/docker](https://github.com/ghdl/docker) or [hdl/containers](https://github.com/hdl/containers), in case you didn't find a suitable release.
 - Build GHDL yourself! See [ghdl.github.io/ghdl: Building GHDL](https:///ghdl.github.io/ghdl/development/building/index.html).
 
 # Project structure
