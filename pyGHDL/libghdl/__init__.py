@@ -81,12 +81,7 @@ def _get_libghdl_name() -> Path:
     """
     version = ghdlVersion.replace("-", "_").replace(".", "_")
 
-    # BUGFIX for pyTooling v6.5.x, will be fixed with v6.6.x
-    extension = CurrentPlatform.SharedLibraryExtension
-    if extension == "lib":
-        extension = "dylib"
-
-    return Path(f"libghdl-{version}.{extension}")
+    return Path(f"libghdl-{version}.{CurrentPlatform.DynamicLibraryExtension}")
 
 
 @export

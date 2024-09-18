@@ -3,7 +3,7 @@
 sphinx ~= 7.4
 python-dateutil ~= 2.8
 
-pyTooling[terminal] ~= 6.5
+pyTooling[terminal] ~= 6.6
 
 # Sphinx Extenstions
 autoapi ~= 2.0
