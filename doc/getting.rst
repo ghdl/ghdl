@@ -39,7 +39,7 @@ these vendor libraries, if the vendor tool is present in the environment. There
 are also popular simulation and verification libraries like OSVVM [#f1]_ or
 UVVM [#f2]_, which can be pre-compiled, too.
 
-The compilation scripts are writen in the shell languages: *PowerShell* for
+The compilation scripts are written in the shell languages: *PowerShell* for
 *Windows™* and *Bash* for *GNU/Linux*, *MacOS* and *MSYS2*/*MinGW*. The
 compile scripts can colorize the GHDL warning and error lines with the help
 of ``grc/grcat`` [#f4]_.
