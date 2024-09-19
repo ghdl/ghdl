@@ -14,4 +14,4 @@ sphinx_autodoc_typehints ~= 2.3
 furo
 
 # BuildTheDocs Extensions (mostly patched Sphinx extensions)
-btd.sphinx.autoprogram>=0.1.7.post1
+#btd.sphinx.autoprogram>=0.1.7.post1

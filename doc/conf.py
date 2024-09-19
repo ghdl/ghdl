@@ -190,7 +190,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     # BuildTheDocs extensions
-    'btd.sphinx.autoprogram',
+#    'btd.sphinx.autoprogram',
     # Other extensions
     'exec',
     'myst_parser',
