@@ -49,37 +49,6 @@ jobs:
       pyghdl_name:  "pyGHDL"
       testsuites:   "sanity"         # disable parameter to fall back to 'all'
 
-  Ubuntu:
-    uses: ./.github/workflows/Build-Ubuntu.yml
-    needs:
-      - Params
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-#          - {'icon': '🐧🟨', 'backend': 'mcode',    'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-#          - {'icon': '🐧🟨', 'backend': 'llvm',     'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-#          - {'icon': '🐧🟨', 'backend': 'llvm-jit', 'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-#          - {'icon': '🐧🟨', 'backend': 'gcc',      'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🐧🟩', 'backend': 'mcode',    'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-#          - {'icon': '🐧🟩', 'backend': 'llvm',     'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-#          - {'icon': '🐧🟩', 'backend': 'llvm-jit', 'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-#          - {'icon': '🐧🟩', 'backend': 'gcc',      'ubuntu_version': '24.04', 'testsuites': 'all' }                                    # 'all', 'none' or list of testsuites
-    with:
-      ubuntu_version:   ${{ matrix.ubuntu_version }}
-      backend:          ${{ matrix.backend }}
-      testsuites:       ${{ matrix.testsuites }}
-      ubuntu_artifact:  ${{ needs.Params.outputs.ghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
-      libghdl_artifact: ${{ needs.Params.outputs.libghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
-      html_artifact:   'documentation-HTML'
-      latex_document:  'ghdl'
-      latex_artifact:  'documentation-LaTeX'
-##      pdf_artifact:    'documentation-PDF'
-      pyunit_testsuites:        'testsuite/pyunit/libghdl testsuite/pyunit/lsp'
-      unittest_xml_artifact:    'pyGHDL-Unittest-XML'
-      coverage_sqlite_artifact: 'pyGHDL-Coverage-SQLite'
-    secrets: inherit
-
   macOS:
     uses: ./.github/workflows/Build-MacOS.yml
     needs:
@@ -96,12 +65,86 @@ jobs:
 #          - {'icon': '🍏🟩', 'backend': 'llvm',     'macos_image': 'macos-14', 'gnat_arch': 'aarch64', 'gnat_version': '14.1.0-3', 'testsuites': 'none'}  # '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
           - {'icon': '🍏🟩', 'backend': 'llvm-jit', 'macos_image': 'macos-14', 'gnat_arch': 'aarch64', 'gnat_version': '14.1.0-3', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
     with:
-      macos_image:    ${{ matrix.macos_image }}
-      gnat_arch:      ${{ matrix.gnat_arch }}
-      gnat_version:   ${{ matrix.gnat_version }}
-      backend:        ${{ matrix.backend }}
-      testsuites:     ${{ matrix.testsuites }}
-      macos_artifact: ${{ needs.Params.outputs.ghdl_basename }}-${{ matrix.macos_image }}-${{ matrix.gnat_arch }}
+      macos_image:              ${{ matrix.macos_image }}
+      gnat_arch:                ${{ matrix.gnat_arch }}
+      gnat_version:             ${{ matrix.gnat_version }}
+      backend:                  ${{ matrix.backend }}
+      testsuites:               ${{ matrix.testsuites }}
+      macos_artifact:           ${{ needs.Params.outputs.ghdl_basename }}-${{ matrix.macos_image }}-${{ matrix.gnat_arch }}
+      pyunit_testsuites:        'testsuite/pyunit/libghdl testsuite/pyunit/lsp'
+      unittest_xml_artifact:    'pyGHDL-Unittest-XML'
+      coverage_sqlite_artifact: 'pyGHDL-Coverage-SQLite'
+    secrets: inherit
+
+  # "-fast" matrix jobs where split of, to enhance overall runtime.
+  # dependent jobs (pyGHDL, documentation, etc.) are enabled earlier.
+  Ubuntu-fast:
+    uses: ./.github/workflows/Build-Ubuntu.yml
+    needs:
+      - Params
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+#          - {'icon': '🐧🟨', 'backend': 'mcode',    'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟩', 'backend': 'mcode',    'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+    with:
+      ubuntu_version:           ${{ matrix.ubuntu_version }}
+      backend:                  ${{ matrix.backend }}
+      testsuites:               ${{ matrix.testsuites }}
+      ubuntu_artifact:          ${{ needs.Params.outputs.ghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
+      libghdl_artifact:         ${{ needs.Params.outputs.libghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
+      pyunit_testsuites:        'testsuite/pyunit/libghdl testsuite/pyunit/lsp'
+      unittest_xml_artifact:    'pyGHDL-Unittest-XML'
+      coverage_sqlite_artifact: 'pyGHDL-Coverage-SQLite'
+    secrets: inherit
+
+  Ubuntu:
+    uses: ./.github/workflows/Build-Ubuntu.yml
+    needs:
+      - Params
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+###       - {'icon': '🐧🟨', 'backend': 'mcode',    'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+          - {'icon': '🐧🟨', 'backend': 'llvm',     'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟨', 'backend': 'llvm-jit', 'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟨', 'backend': 'gcc',      'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+###       - {'icon': '🐧🟩', 'backend': 'mcode',    'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟩', 'backend': 'llvm',     'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟩', 'backend': 'llvm-jit', 'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+#          - {'icon': '🐧🟩', 'backend': 'gcc',      'ubuntu_version': '24.04', 'testsuites': 'all' }                                    # 'all', 'none' or list of testsuites
+    with:
+      ubuntu_version:           ${{ matrix.ubuntu_version }}
+      backend:                  ${{ matrix.backend }}
+      testsuites:               ${{ matrix.testsuites }}
+      ubuntu_artifact:          ${{ needs.Params.outputs.ghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
+      libghdl_artifact:         ${{ needs.Params.outputs.libghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
+      pyunit_testsuites:        'testsuite/pyunit/libghdl testsuite/pyunit/lsp'
+      unittest_xml_artifact:    'pyGHDL-Unittest-XML'
+      coverage_sqlite_artifact: 'pyGHDL-Coverage-SQLite'
+    secrets: inherit
+
+  # "-fast" matrix jobs where split of, to enhance overall runtime.
+  # dependent jobs (pyGHDL, documentation, etc.) are enabled earlier.
+  Windows-fast:
+    uses: ./.github/workflows/Build-MSYS2.yml
+    needs:
+      - Params
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {'icon': '🪟', 'runtime': 'ucrt64',  'backend': 'mcode',    'testsuites': '${{ needs.Params.outputs.testsuites }}'}
+    with:
+      runtime:                  ${{ matrix.runtime }}
+      backend:                  ${{ matrix.backend }}
+      testsuites:               ${{ matrix.testsuites }}
+      msys2_artifact:           ${{ needs.Params.outputs.ghdl_basename }}-MSYS2
+      pacman_artifact:          ${{ needs.Params.outputs.ghdl_basename }}-Pacman
+      windows_artifact:         ${{ needs.Params.outputs.ghdl_basename }}-Windows
+      libghdl_artifact:         ${{ needs.Params.outputs.libghdl_basename }}-MSYS2
       pyunit_testsuites:        'testsuite/pyunit/libghdl testsuite/pyunit/lsp'
       unittest_xml_artifact:    'pyGHDL-Unittest-XML'
       coverage_sqlite_artifact: 'pyGHDL-Coverage-SQLite'
@@ -119,17 +162,17 @@ jobs:
 #          - {'icon': '🪟', 'runtime': 'mingw64', 'backend': 'mcode',    'testsuites': '${{ needs.Params.outputs.testsuites }}'}
 #          - {'icon': '🪟', 'runtime': 'mingw64', 'backend': 'llvm',     'testsuites': 'sanity gna synth vpi vhpi'}                # no vests (too slow)
 #          - {'icon': '🪟', 'runtime': 'mingw64', 'backend': 'llvm-jit', 'testsuites': 'sanity vpi vhpi'}                          # gna and synth fail (#2726); no vests (too slow)
-          - {'icon': '🪟', 'runtime': 'ucrt64',  'backend': 'mcode',    'testsuites': '${{ needs.Params.outputs.testsuites }}'}
-#          - {'icon': '🪟', 'runtime': 'ucrt64',  'backend': 'llvm',     'testsuites': 'sanity gna synth vpi vhpi'}                # no vests (too slow)
+###       - {'icon': '🪟', 'runtime': 'ucrt64',  'backend': 'mcode',    'testsuites': '${{ needs.Params.outputs.testsuites }}'}
+          - {'icon': '🪟', 'runtime': 'ucrt64',  'backend': 'llvm',     'testsuites': 'sanity gna synth vpi vhpi'}                # no vests (too slow)
 #          - {'icon': '🪟', 'runtime': 'ucrt64',  'backend': 'llvm-jit', 'testsuites': 'sanity vpi vhpi'}                          # gna and synth fail (#2726); no vests (too slow)
     with:
-      runtime:          ${{ matrix.runtime }}
-      backend:          ${{ matrix.backend }}
-      testsuites:       ${{ matrix.testsuites }}
-      msys2_artifact:   ${{ needs.Params.outputs.ghdl_basename }}-MSYS2
-      pacman_artifact:  ${{ needs.Params.outputs.ghdl_basename }}-Pacman
-      windows_artifact: ${{ needs.Params.outputs.ghdl_basename }}-Windows
-      libghdl_artifact: ${{ needs.Params.outputs.libghdl_basename }}-MSYS2
+      runtime:                  ${{ matrix.runtime }}
+      backend:                  ${{ matrix.backend }}
+      testsuites:               ${{ matrix.testsuites }}
+      msys2_artifact:           ${{ needs.Params.outputs.ghdl_basename }}-MSYS2
+      pacman_artifact:          ${{ needs.Params.outputs.ghdl_basename }}-Pacman
+      windows_artifact:         ${{ needs.Params.outputs.ghdl_basename }}-Windows
+      libghdl_artifact:         ${{ needs.Params.outputs.libghdl_basename }}-MSYS2
       pyunit_testsuites:        'testsuite/pyunit/libghdl testsuite/pyunit/lsp'
       unittest_xml_artifact:    'pyGHDL-Unittest-XML'
       coverage_sqlite_artifact: 'pyGHDL-Coverage-SQLite'
@@ -164,8 +207,8 @@ jobs:
     uses: ./.github/workflows/Package-pyGHDL.yml
     needs:
       - Params
-      - Ubuntu
-      - Windows
+      - Ubuntu-fast
+      - Windows-fast
     strategy:
       fail-fast: false
       matrix:
@@ -179,12 +222,12 @@ jobs:
 #          - {'icon': '🟢', 'version': "3.11"}
           - {'icon': '🟢', 'version': "3.12"}
     with:
-      os_name:          ${{ matrix.os.name }}
-      os_image:         ${{ matrix.os.image }}
-      python_icon:      ${{ matrix.py.icon }}
-      python_version:   ${{ matrix.py.version }}
-      libghdl_artifact: ${{ needs.Params.outputs.libghdl_basename }}-${{ matrix.os.libghdl_artifact }}
-      pyghdl_artifact:  ${{ needs.Params.outputs.pyghdl_basename }}-${{ matrix.os.pyghdl_artifact }}-Python-${{ matrix.py.version }}
+      os_name:               ${{ matrix.os.name }}
+      os_image:              ${{ matrix.os.image }}
+      python_icon:           ${{ matrix.py.icon }}
+      python_version:        ${{ matrix.py.version }}
+      libghdl_artifact:      ${{ needs.Params.outputs.libghdl_basename }}-${{ matrix.os.libghdl_artifact }}
+      pyghdl_artifact:       ${{ needs.Params.outputs.pyghdl_basename }}-${{ matrix.os.pyghdl_artifact }}-Python-${{ matrix.py.version }}
       pyunit_testsuites:     'testsuite/pyunit/libghdl testsuite/pyunit/lsp'
       unittest_xml_artifact: 'pyGHDL-Unittest-XML'
     secrets: inherit
@@ -192,9 +235,10 @@ jobs:
   PublishCoverageResults:
     uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r1
     needs:
-      - Ubuntu
       - macOS
-      - Windows
+      - Ubuntu-fast
+      - Windows-fast
+###   - pyGHDL         # pyGHDL is installed into site-packages, where no coverage is collected -> empty coverage report
     with:
       coverage_json_artifact: 'pyGHDL-Coverage-JSON'
       coverage_html_artifact: 'pyGHDL-Coverage-HTML'
@@ -204,9 +248,9 @@ jobs:
   PublishTestResults:
     uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@dev
     needs:
-      - Ubuntu
       - macOS
-      - Windows
+      - Ubuntu-fast
+      - Windows-fast
       - pyGHDL
     with:
       merged_junit_artifact: 'pyGHDL-Unittest-XML'
@@ -227,18 +271,37 @@ jobs:
 #      ubuntu_image:  "ubuntu-20.04"            # gnat-gps (incl. GNATdoc) is limited to Ubuntu 20.04
 #      html_artifact: "documentation-gnatdoc"
 
+  Sphinx:
+    uses: ./.github/workflows/Documentation-Sphinx.yml
+    needs:
+      - Params
+      - Ubuntu-fast
+      - PublishCoverageResults
+      - PublishTestResults
+    with:
+      ghdl_artifact:  ${{ needs.Params.outputs.ghdl_basename }}-ubuntu-24.04-x86_64-mcode
+      html_artifact:  'documentation-HTML'
+      latex_document: 'ghdl'
+      latex_artifact: 'documentation-LaTeX'
+##      pdf_artifact:    'documentation-PDF'
 
   PublishToGitHubPages:
-    needs:
-#      - GNATdoc
-      - Ubuntu
     uses: ./.github/workflows/Publish-GitHubPages.yml
+    needs:
+      - Sphinx
+      - PublishCoverageResults
+    with:
+      documentation: 'documentation-HTML'
+      coverage:      'pyGHDL-Coverage-HTML'
+      typing:        'pyGHDL-typing-HTML'
 
   Nightly:
     runs-on: ubuntu-24.04
     needs:
-      - Ubuntu
       - macOS
+      - Ubuntu-fast
+      - Ubuntu
+      - Windows-fast
       - Windows
       - PublishToGitHubPages
       - Python
@@ -250,11 +313,14 @@ jobs:
       - name: "Dummy"
         run: echo "Dummy"
 
-  Release:
-    runs-on: ubuntu-24.04
+  ReleasePage:
+    uses: pyTooling/Actions/.github/workflows/Release.yml@r1
+    if: startsWith(github.ref, 'refs/tags')
     needs:
-      - Ubuntu
       - macOS
+      - Ubuntu-fast
+      - Ubuntu
+      - Windows-fast
       - Windows
       - PublishToGitHubPages
       - Python
@@ -262,6 +328,3 @@ jobs:
       - DocCoverage
       - PublishCoverageResults
       - PublishTestResults
-    steps:
-      - name: "Dummy"
-        run: echo "Dummy"

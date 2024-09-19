@@ -83,6 +83,7 @@ jobs:
 
       - name: '🔧 Install dependencies'
         run: |
+          sudo xargs --no-run-if-empty -a ./doc/ubuntu.requirements -- apt-get install -y --no-install-recommends
           python -m pip install --disable-pip-version-check ${{ inputs.requirements }}
 
       - name: '📓 Compile HTML documentation'
