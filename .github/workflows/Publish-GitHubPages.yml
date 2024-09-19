@@ -2,20 +2,65 @@ name: Assemble documentation for GitHub Pages
 
 on:
   workflow_call:
-#    inputs:
-#      jobs:
-#        description: 'JSON list with environment fields, naming the system and backend for compilation.'
-#        required: true
-#        type: string
+    inputs:
+      ubuntu_image:
+        description: 'Name of the Ubuntu image.'
+        required: false
+        default: 'ubuntu-24.04'
+        type: string
+      documentation:
+        description: 'Name of the documentation artifact.'
+        required: true
+        type: string
+      coverage:
+        description: 'Name of the pyGHDL coverage artifact.'
+        required: false
+        default: ''
+        type: string
+      typing:
+        description: 'Name of the pyGHDL typing artifact.'
+        required: false
+        default: ''
+        type: string
 
 jobs:
-  Publish:
-    name: Publish documentation to GitHub Pages
-    runs-on: "ubuntu-24.04"
-
-    defaults:
-      run:
-        shell: bash
+  PublishToGitHubPages:
+    name: 📚 Publish to GH-Pages
+    runs-on: ${{ inputs.ubuntu_image }}
 
     steps:
-      - run: echo "Publish"
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📥 Download artifacts '${{ inputs.documentation }}' from 'Sphinx' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.documentation }}
+          path: public
+
+      - name: 📥 Download artifacts '${{ inputs.coverage }}' from 'PublishCoverageResults' job
+        if: ${{ inputs.coverage != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.coverage }}
+          path: public/coverage
+
+      - name: 📥 Download artifacts '${{ inputs.typing }}' from 'StaticTypeCheck' job
+        if: ${{ inputs.typing != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.typing }}
+          path: public/typing
+
+      - name: '📓 Publish site to GitHub Pages'
+        if: github.event_name != 'pull_request'
+        run: |
+          cd public
+          touch .nojekyll
+          git init
+          cp ../.git/config ./.git/config
+          git add .
+          git config --local user.email "BuildTheDocs@GitHubActions"
+          git config --local user.name "GitHub Actions"
+          git commit -a -m "update ${{ github.sha }}"
+          git push -u origin +HEAD:gh-pages

@@ -26,27 +26,6 @@ on:
         required: false
         default: ''
         type: string
-    # Parameters for documentation generation
-      html_artifact:
-        description: 'Name of the HTML documentation artifact.'
-        required: false
-        default: ''
-        type: string
-      latex_document:
-        description: 'LaTeX root document without *.tex extension.'
-        required: false
-        default: ''
-        type: string
-      latex_artifact:
-        description: 'Name of the LaTeX documentation artifact.'
-        required: false
-        default: ''
-        type: string
-      pdf_artifact:
-        description: 'Name of the PDF documentation artifact.'
-        required: false
-        default: ''
-        type: string
     # Parameters for pyGHDL unit testing and code coverage collection
       python_version:
         description: 'Python version for pyGHDL testing.'
@@ -450,15 +429,3 @@ jobs:
       backend:             ${{ inputs.backend }}
       testsuites:          ${{ inputs.testsuites }}
     secrets: inherit
-
-  Sphinx:
-    uses: ./.github/workflows/Documentation-Sphinx.yml
-    needs:
-      - Build
-    if: inputs.ubuntu_version == '24.04' && inputs.backend == 'mcode' && ( inputs.html_artifact != '' || inputs.latex_artifact != '')
-    with:
-      ghdl_artifact:  ${{ needs.Build.outputs.ghdl_artifact }}
-      html_artifact:  ${{ inputs.html_artifact }}
-      latex_document: ${{ inputs.latex_document }}
-      latex_artifact: ${{ inputs.latex_artifact }}
-      pdf_artifact:   ${{ inputs.pdf_artifact }}

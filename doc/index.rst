@@ -27,4 +27,4 @@ GHDL
 .. include:: toc.rst
 
 .. include:: ../NEWS.md
-  :parser: myst_parser.sphinx_
+   :parser: myst_parser.sphinx_
