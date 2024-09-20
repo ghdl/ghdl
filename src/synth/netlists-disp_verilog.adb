@@ -157,6 +157,37 @@ package body Netlists.Disp_Verilog is
       end if;
    end Disp_Pval;
 
+   procedure Disp_Pval_String (Pv : Pval)
+   is
+      Len : constant Uns32 := Get_Pval_Length (Pv);
+      V : Logic_32;
+      Woff : Uns32;
+      Boff : Natural;
+   begin
+      pragma Assert (Len mod 8 = 0);
+      if Len = 0 then
+         Wr ('"');
+         Wr ('"');
+      else
+         Woff := (Len - 1) / 32;
+         Boff := Natural ((Len - 1) - Woff * 32);
+         Wr ('"');
+         V := Read_Pval (Pv, Woff);
+         loop
+            Wr (Character'Val (Shift_Right (V.Val, Boff - 7) and 16#ff#));
+            if Boff = 7 then
+               exit when Woff = 0;
+               Boff := 31;
+               Woff := Woff - 1;
+               V := Read_Pval (Pv, Woff);
+            else
+               Boff := Boff - 8;
+            end if;
+         end loop;
+         Wr ('"');
+      end if;
+   end Disp_Pval_String;
+
    procedure Disp_Instance_Gate (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
@@ -194,7 +225,13 @@ package body Netlists.Disp_Verilog is
             case Param.Typ is
                when Param_Uns32 =>
                   Wr_Uns32 (Get_Param_Uns32 (Inst, P - 1));
-               when Param_Types_Pval =>
+               when Param_Pval_String =>
+                  Disp_Pval_String (Get_Param_Pval (Inst, P - 1));
+               when Param_Pval_Vector
+                 | Param_Pval_Integer
+                 | Param_Pval_Real
+                 | Param_Pval_Time_Ps
+                 | Param_Pval_Boolean =>
                   Disp_Pval (Get_Param_Pval (Inst, P - 1));
                when Param_Invalid =>
                   Wr ("*invalid*");
