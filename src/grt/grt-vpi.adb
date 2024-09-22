@@ -355,7 +355,7 @@ package body Grt.Vpi is
       Res : Std_Time;
    begin
       case V.mType is
-         when vpiSCaledRealTime =>
+         when vpiScaledRealTime =>
             Res := Std_Time (Unsigned_64 (V.mReal / Time_Scale_Unit));
          when vpiSimTime =>
             Res := Std_Time (Unsigned_64 (V.mHigh) * 2 ** 32);
@@ -1173,7 +1173,7 @@ package body Grt.Vpi is
       Len, Chunks, Bits, Base : Ghdl_Index_Type;
       A, Aall, B, Ball : Unsigned_32;
       Pointer : p_vpi_vecval;
-    begin
+   begin
       Info := Get_Value_Obj (Obj);
 
       case Info.Vtype is
@@ -1300,7 +1300,7 @@ package body Grt.Vpi is
          when vpiStringVal =>   dbgPut_Line ("vpi_get_value: vpiStringVal");
          when vpiTimeVal =>     dbgPut_Line ("vpi_get_value: vpiTimeVal");
          when vpiVectorVal =>
-	    Vpi_Get_Value_Vecval (Expr.Ref, Value.Vector);
+            Vpi_Get_Value_Vecval (Expr.Ref, Value.Vector);
          when vpiStrengthVal => dbgPut_Line ("vpi_get_value: vpiStrengthVal");
          when others =>         dbgPut_Line ("vpi_get_value: unknown mFormat");
       end case;
@@ -1509,8 +1509,8 @@ package body Grt.Vpi is
                   Vec (Base + J) := 'X';
                end if;
             end if;
-           Va := Shift_Right_Arithmetic (Va, 1);
-           Vb := Shift_Right_Arithmetic (Vb, 1);
+            Va := Shift_Right_Arithmetic (Va, 1);
+            Vb := Shift_Right_Arithmetic (Vb, 1);
          end loop;
          Base := Base + Bits;
          Increment_p_vpi_vecval (Pointer);
@@ -1799,7 +1799,7 @@ package body Grt.Vpi is
          Hand.Cb_Refcnt := Hand.Cb_Refcnt + 1;
          if Hand.Cb.Value /= null then
             -- Supply value before call.  May need to allocate vector space.
-            if (Hand.Cb.Value.format = vpiVectorVal) then
+            if (Hand.Cb.Value.Format = vpiVectorVal) then
                -- Storage for the vector must be allocated first.
                declare
                   Len : Integer;
@@ -1876,11 +1876,11 @@ package body Grt.Vpi is
 
       if Res.Cb.Time /= null then
          Res.Cb.Time := new s_vpi_time;
-         Res.Cb.Time.All := Data.Time.All;
+         Res.Cb.Time.all := Data.Time.all;
       end if;
       if Res.Cb.Value /= null then
          Res.Cb.Value := new s_vpi_value (Data.Value.Format);
-         Res.Cb.Value.All := Data.Value.All;
+         Res.Cb.Value.all := Data.Value.all;
       end if;
 
       case Data.Reason is
