@@ -34,6 +34,8 @@ static void my_handle_register(void)
 
   cb.reason = cbEndOfCompile;
   cb.cb_rtn = &vpi_proc;
+  cb.time = NULL;
+  cb.value = NULL;
   cb.user_data = NULL;
   if (vpi_register_cb (&cb) == NULL)
     vpi_printf ("cannot register EndOfCompile call back\n");
