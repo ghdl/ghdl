@@ -23,6 +23,17 @@
 
 This directory contains the sources of GHDL, the open-source analyzer, compiler, simulator and (experimental) synthesizer for [VHDL](https://en.wikipedia.org/wiki/VHDL), a Hardware Description Language ([HDL](https://en.wikipedia.org/wiki/Hardware_description_language)). GHDL is not an interpreter: it allows you to analyse and elaborate sources for generating machine code from your design. Native program execution is the only way for high speed simulation.
 
+# Table of Contents
+
+- [Main Features](#main-features) 
+- [Third-Party Integrations](#third-party-integrations)
+- [Getting GHDL](#getting-ghdl)
+- [Benefits of Using GHDL](#benefits-of-using-ghdl)
+- [Contributing](#contributing)
+- [Project Structure](#project-structure)
+  - [Regular Users](#regular-users)
+  - [Advanced Users](#advanced-users)
+
 # Main features
 
 Full support for the [1987](https://ieeexplore.ieee.org/document/26487/), [1993](https://ieeexplore.ieee.org/document/392561/), [2002](https://ieeexplore.ieee.org/document/1003477/) versions of the [IEEE](https://www.ieee.org) [1076](https://standards.ieee.org/ieee/1076/10800/) VHDL standard, and partial for the [2008](https://ieeexplore.ieee.org/document/4772740/) and [2019](https://ieeexplore.ieee.org/document/8938196/) revisions.
