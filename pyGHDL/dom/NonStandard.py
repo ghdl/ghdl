@@ -40,7 +40,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from pyGHDL.dom.Names import SimpleName
+from pyGHDL.dom.Name import SimpleName
 from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel import VHDLVersion
@@ -86,8 +86,11 @@ from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationM
 
 @export
 class Design(VHDLModel_Design):
+    _loadDefaultLibraryTime: float
+    _analyzeTime: float
+
     @InheritDocString(VHDLModel_Design)
-    def __init__(self, name: str = None):
+    def __init__(self, name: str = None) -> None:
         super().__init__(name)
 
         self.__ghdl_init()
@@ -108,7 +111,9 @@ class Design(VHDLModel_Design):
 
         # Finish initialization. This will load the standard package.
         if libghdl_analyze_init_status() != 0:
-            raise LibGHDLException("Error initializing 'libghdl'.")
+            raise DOMException("Error initializing 'pyGHDL.dom'.") from LibGHDLException(
+                "Error initializing 'libghdl'."
+            )
 
     def LoadDefaultLibraries(self):
         t1 = time.perf_counter()
@@ -148,7 +153,7 @@ class Document(VHDLModel_Document):
         vhdlVersion: VHDLVersion = VHDLVersion.VHDL2008,
         dontParse: bool = False,
         dontTranslate: bool = False,
-    ):
+    ) -> None:
         super().__init__(path)
 
         self._filename = path
@@ -179,19 +184,25 @@ class Document(VHDLModel_Document):
                 self.__domTranslateTime = time.perf_counter() - t1
 
     def __loadFromPath(self):
-        with self._filename.open("r", encoding=ENCODING) as file:
-            self.__loadFromString(file.read())
+        try:
+            with self._filename.open("r", encoding=ENCODING) as file:
+                self.__loadFromString(file.read())
+        except FileNotFoundError as ex:
+            raise DOMException(f"Sourcefile '{self._filename}' not found.") from ex
 
     def __loadFromString(self, sourceCode: str):
         sourcesBytes = sourceCode.encode(ENCODING)
         sourceLength = len(sourcesBytes)
         bufferLength = sourceLength + 128
-        self.__ghdlFileID = name_table.Get_Identifier(str(self._filename))
         dirId = name_table.Null_Identifier
-        self.__ghdlSourceFileEntry = files_map.Reserve_Source_File(dirId, self.__ghdlFileID, bufferLength)
-        files_map_editor.Fill_Text(self.__ghdlSourceFileEntry, ctypes.c_char_p(sourcesBytes), sourceLength)
+        self.__ghdlFileID = name_table.Get_Identifier(str(self._filename))
+        if files_map.Find_Source_File(dirId, self.__ghdlFileID) == files_map.No_Source_File_Entry:
+            self.__ghdlSourceFileEntry = files_map.Reserve_Source_File(dirId, self.__ghdlFileID, bufferLength)
+            files_map_editor.Fill_Text(self.__ghdlSourceFileEntry, ctypes.c_char_p(sourcesBytes), sourceLength)
 
-        CheckForErrors()
+            CheckForErrors()
+        else:
+            raise DOMException(f"Source file '{self._filename}' already loaded.")
 
     def translate(self):
         firstUnit = nodes.Get_First_Design_Unit(self.__ghdlFile)

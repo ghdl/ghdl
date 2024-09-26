@@ -81,21 +81,21 @@ from pyGHDL.dom.Symbol import (
 
 @export
 class GenericAssociationItem(VHDLModel_GenericAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None):
+    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None) -> None:
         super().__init__(actual, formal)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
 class PortAssociationItem(VHDLModel_PortAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None):
+    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None) -> None:
         super().__init__(actual, formal)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
 class ParameterAssociationItem(VHDLModel_ParameterAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None):
+    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None) -> None:
         super().__init__(actual, formal)
         DOMMixin.__init__(self, associationNode)
 
@@ -109,7 +109,7 @@ class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
         componentSymbol: ComponentInstantiationSymbol,
         genericAssociations: Iterable[AssociationItem] = None,
         portAssociations: Iterable[AssociationItem] = None,
-    ):
+    ) -> None:
         super().__init__(label, componentSymbol, genericAssociations, portAssociations)
         DOMMixin.__init__(self, instantiationNode)
 
@@ -134,7 +134,7 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         architectureSymbol: ArchitectureSymbol = None,  # TODO: merge both symbols ?
         genericAssociations: Iterable[AssociationItem] = None,
         portAssociations: Iterable[AssociationItem] = None,
-    ):
+    ) -> None:
         super().__init__(label, entitySymbol, architectureSymbol, genericAssociations, portAssociations)
         DOMMixin.__init__(self, instantiationNode)
 
@@ -165,7 +165,7 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
         configurationSymbol: ConfigurationInstantiationSymbol,
         genericAssociations: Iterable[AssociationItem] = None,
         portAssociations: Iterable[AssociationItem] = None,
-    ):
+    ) -> None:
         super().__init__(label, configurationSymbol, genericAssociations, portAssociations)
         DOMMixin.__init__(self, instantiationNode)
 
@@ -190,7 +190,7 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         label: str,
         declaredItems: Iterable = None,
         statements: Iterable["ConcurrentStatement"] = None,
-    ):
+    ) -> None:
         super().__init__(label, None, declaredItems, statements)
         DOMMixin.__init__(self, blockNode)
 
@@ -218,7 +218,7 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
         declaredItems: Iterable = None,
         statements: Iterable[SequentialStatement] = None,
         sensitivityList: Iterable[Symbol] = None,
-    ):
+    ) -> None:
         super().__init__(label, declaredItems, statements, sensitivityList)
         DOMMixin.__init__(self, processNode)
 
@@ -245,7 +245,7 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
 
 
 @export
-class IfGenerateBranch(VHDLModel_IfGenerateBranch):
+class IfGenerateBranch(VHDLModel_IfGenerateBranch, DOMMixin):
     def __init__(
         self,
         branchNode: Iir,
@@ -253,7 +253,7 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch):
         declaredItems: Iterable = None,
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
-    ):
+    ) -> None:
         super().__init__(condition, declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, branchNode)
 
@@ -282,7 +282,7 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch):
 
 
 @export
-class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch):
+class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch, DOMMixin):
     def __init__(
         self,
         branchNode: Iir,
@@ -290,7 +290,7 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch):
         declaredItems: Iterable = None,
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
-    ):
+    ) -> None:
         super().__init__(condition, declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, branchNode)
 
@@ -319,14 +319,14 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch):
 
 
 @export
-class ElseGenerateBranch(VHDLModel_ElseGenerateBranch):
+class ElseGenerateBranch(VHDLModel_ElseGenerateBranch, DOMMixin):
     def __init__(
         self,
         branchNode: Iir,
         declaredItems: Iterable = None,
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
-    ):
+    ) -> None:
         super().__init__(declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, branchNode)
 
@@ -361,7 +361,7 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
         ifBranch: IfGenerateBranch,
         elsifBranches: Iterable[ElsifGenerateBranch] = None,
         elseBranch: ElseGenerateBranch = None,
-    ):
+    ) -> None:
         super().__init__(label, ifBranch, elsifBranches, elseBranch)
         DOMMixin.__init__(self, generateNode)
 
@@ -389,14 +389,14 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
 
 @export
 class IndexedGenerateChoice(VHDLModel_IndexedGenerateChoice, DOMMixin):
-    def __init__(self, node: Iir, expression: ExpressionUnion):
+    def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
         super().__init__(expression)
         DOMMixin.__init__(self, node)
 
 
 @export
 class RangedGenerateChoice(VHDLModel_RangedGenerateChoice, DOMMixin):
-    def __init__(self, node: Iir, rng: Range):
+    def __init__(self, node: Iir, rng: Range) -> None:
         super().__init__(rng)
         DOMMixin.__init__(self, node)
 
@@ -410,7 +410,7 @@ class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
         declaredItems: Iterable = None,
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
-    ):
+    ) -> None:
         super().__init__(choices, declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, node)
 
@@ -444,7 +444,7 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
         declaredItems: Iterable = None,
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
-    ):
+    ) -> None:
         super().__init__(declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, caseNode)
 
@@ -478,7 +478,7 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
         label: str,
         expression: ExpressionUnion,
         cases: Iterable[ConcurrentCase],
-    ):
+    ) -> None:
         super().__init__(label, expression, cases)
         DOMMixin.__init__(self, generateNode)
 
@@ -572,7 +572,7 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
         rng: Range,
         declaredItems: Iterable = None,
         statements: Iterable[ConcurrentStatement] = None,
-    ):
+    ) -> None:
         super().__init__(label, loopIndex, rng, declaredItems, statements)
         DOMMixin.__init__(self, generateNode)
 
@@ -616,7 +616,7 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
 
 @export
 class WaveformElement(VHDLModel_WaveformElement, DOMMixin):
-    def __init__(self, waveNode: Iir, expression: ExpressionUnion, after: ExpressionUnion):
+    def __init__(self, waveNode: Iir, expression: ExpressionUnion, after: ExpressionUnion) -> None:
         super().__init__(expression, after)
         DOMMixin.__init__(self, waveNode)
 
@@ -643,7 +643,7 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
         label: str,
         target: Symbol,
         waveform: Iterable[WaveformElement],
-    ):
+    ) -> None:
         super().__init__(label, target, waveform)
         DOMMixin.__init__(self, assignmentNode)
 
@@ -669,7 +669,7 @@ class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
         label: str,
         procedureName: Symbol,
         parameterMappings: Iterable,
-    ):
+    ) -> None:
         super().__init__(label, procedureName, parameterMappings)
         DOMMixin.__init__(self, callNode)
 
@@ -695,7 +695,7 @@ class ConcurrentAssertStatement(VHDLModel_ConcurrentAssertStatement, DOMMixin):
         message: ExpressionUnion = None,
         severity: ExpressionUnion = None,
         label: str = None,
-    ):
+    ) -> None:
         super().__init__(condition, message, severity, label)
         DOMMixin.__init__(self, assertNode)
 

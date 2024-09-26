@@ -59,11 +59,7 @@ class Instantiate(TestCase):
 
             elif nodes.Get_Kind(libraryUnit) == nodes.Iir_Kind.Architecture_Body:
                 architectureName = self.getIdentifier(libraryUnit)
-                self.assertEqual(
-                    "rtl",
-                    architectureName,
-                    f"expected architecture name 'rtl', got '{architectureName}'"
-                )
+                self.assertEqual("rtl", architectureName, f"expected architecture name 'rtl', got '{architectureName}'")
 
             else:
                 self.fail("Unknown unit.")
