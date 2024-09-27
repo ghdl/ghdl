@@ -794,17 +794,12 @@ package body Simul.Vhdl_Elab is
       end if;
    end Increment_View_Nbr_Sources;
 
-   procedure Gather_Connections (Port_Inst : Synth_Instance_Acc;
-                                 Ports : Node;
-                                 Assoc_Inst : Synth_Instance_Acc;
-                                 Assocs : Node)
+   procedure Gather_Connection_By_Name (Port_Inst : Synth_Instance_Acc;
+                                        Inter : Node;
+                                        Assoc_Inst : Synth_Instance_Acc;
+                                        Assoc : Node)
    is
       use Synth.Vhdl_Stmts;
-      Prev_Instance_Pool : constant Areapools.Areapool_Acc := Instance_Pool;
-      Marker : Mark_Type;
-      Assoc_Inter : Node;
-      Assoc : Node;
-      Inter : Node;
       Formal : Node;
       Formal_Base : Valtyp;
       Actual_Base : Valtyp;
@@ -813,9 +808,134 @@ package body Simul.Vhdl_Elab is
       Typ : Type_Acc;
       Off : Value_Offsets;
       Conn : Connect_Entry;
-      List : Iir_List;
       Formal_Ep, Actual_Ep : Sub_Signal_Type;
       Is_Collapsed : Boolean;
+   begin
+      Formal := Get_Formal (Assoc);
+      if Formal = Null_Iir then
+         Formal := Inter;
+      end if;
+      Synth_Assignment_Prefix (Port_Inst, Formal, Formal_Base, Typ, Off);
+      Typ := Unshare (Typ, Global_Pool'Access);
+      Formal_Sig := Formal_Base.Val.S;
+      Formal_Ep := (Formal_Sig, Off, Typ);
+
+      Synth_Assignment_Prefix
+        (Assoc_Inst, Get_Actual (Assoc), Actual_Base, Typ, Off);
+      Typ := Unshare (Typ, Global_Pool'Access);
+      Actual_Sig := Actual_Base.Val.S;
+      Actual_Ep := (Actual_Sig, Off, Typ);
+
+      --  TODO: partial collapse.
+      Is_Collapsed := Get_Collapse_Signal_Flag (Assoc)
+        and then Formal_Ep.Offs.Mem_Off = 0
+        and then Formal_Ep.Typ.W = Formal_Base.Typ.W;
+      pragma Assert
+        (not Is_Collapsed or else Formal_Ep.Typ.W >= Actual_Ep.Typ.W);
+
+      Conn :=
+        (Formal => Formal_Ep,
+         Formal_Link => Signals_Table.Table (Formal_Sig).Connect,
+         Actual => Actual_Ep,
+         Actual_Link => Signals_Table.Table (Actual_Sig).Connect,
+         Collapsed => Is_Collapsed,
+         Assoc => Assoc,
+         Assoc_Inst => Assoc_Inst);
+
+      if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
+         --  TODO: increase nbr sources
+         declare
+            View : Iir;
+            Reversed : Boolean;
+         begin
+            Get_Mode_View_From_Name (Formal, View, Reversed);
+            Increment_View_Nbr_Sources (View, Reversed, Actual_Ep);
+         end;
+      else
+         --  LRM08 6.4.2.3 Signal declarations
+         --  [...], each source is either a driver or an OUT, INOUT,
+         --  BUFFER, or LINKAGE port [...]
+         if Get_Mode (Inter) /= Iir_In_Mode then
+            Increment_Nbr_Sources (Actual_Ep, Assoc);
+         end if;
+      end if;
+
+      Connect_Table.Append (Conn);
+
+      Signals_Table.Table (Formal_Sig).Connect := Connect_Table.Last;
+      Signals_Table.Table (Actual_Sig).Connect := Connect_Table.Last;
+
+      --  Collapse
+      if Is_Collapsed then
+         --  Full collapse.
+         pragma Assert (Signals_Table.Table (Formal_Sig).Collapsed_By
+                          = No_Signal_Index);
+         pragma Assert (Formal_Sig > Actual_Sig);
+         Signals_Table.Table (Formal_Sig).Collapsed_By := Actual_Sig;
+         Signals_Table.Table (Formal_Sig).Collapsed_Offs :=
+           Actual_Ep.Offs;
+      end if;
+   end Gather_Connection_By_Name;
+
+   procedure Gather_Connection_By_Expr (Port_Inst : Synth_Instance_Acc;
+                                        Inter : Node;
+                                        Assoc_Inst : Synth_Instance_Acc;
+                                        Assoc : Node)
+   is
+      Formal : Node;
+      Conn : Connect_Entry;
+      Formal_Ep, Actual_Ep : Sub_Signal_Type;
+      List : Iir_List;
+   begin
+      Formal := Get_Formal (Assoc);
+      if Formal = Null_Iir then
+         Formal := Inter;
+      end if;
+      Formal_Ep := Compute_Sub_Signal (Port_Inst, Formal);
+
+      Actual_Ep := (No_Signal_Index, No_Value_Offsets, null);
+
+      Conn :=
+        (Formal => Formal_Ep,
+         Formal_Link => Signals_Table.Table (Formal_Ep.Base).Connect,
+         Actual => Actual_Ep,
+         Actual_Link => No_Connect_Index,
+         Collapsed => False,
+         Assoc => Assoc,
+         Assoc_Inst => Assoc_Inst);
+
+      Connect_Table.Append (Conn);
+
+      Signals_Table.Table (Formal_Ep.Base).Connect := Connect_Table.Last;
+
+      if Get_Expr_Staticness (Get_Actual (Assoc)) < Globally then
+         --  Create a process to assign the expression to the port.
+         Processes_Table.Append
+           ((Proc => Assoc,
+             Inst => Assoc_Inst,
+             Drivers => No_Driver_Index,
+             Sensitivity => No_Sensitivity_Index));
+
+         Add_Process_Driver (Processes_Table.Last, Formal_Ep, Assoc);
+
+         List := Create_Iir_List;
+         Vhdl.Canon.Canon_Extract_Sensitivity_Expression
+           (Get_Actual (Assoc), List, False);
+         Gather_Sensitivity (Assoc_Inst, Processes_Table.Last, List);
+         Destroy_Iir_List (List);
+      end if;
+   end Gather_Connection_By_Expr;
+
+   procedure Gather_Connections (Port_Inst : Synth_Instance_Acc;
+                                 Ports : Node;
+                                 Assoc_Inst : Synth_Instance_Acc;
+                                 Assocs : Node)
+   is
+      Prev_Instance_Pool : constant Areapools.Areapool_Acc := Instance_Pool;
+      Marker : Mark_Type;
+      Assoc_Inter : Node;
+      Assoc : Node;
+      Inter : Node;
    begin
       --  Associations may have expressions and function calls.
       Mark_Expr_Pool (Marker);
@@ -827,116 +947,15 @@ package body Simul.Vhdl_Elab is
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_By_Name =>
                Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-               Formal := Get_Formal (Assoc);
-               if Formal = Null_Iir then
-                  Formal := Inter;
-               end if;
-               Synth_Assignment_Prefix
-                 (Port_Inst, Formal, Formal_Base, Typ, Off);
-               Typ := Unshare (Typ, Global_Pool'Access);
-               Formal_Sig := Formal_Base.Val.S;
-               Formal_Ep := (Formal_Sig, Off, Typ);
-
-               Synth_Assignment_Prefix
-                 (Assoc_Inst, Get_Actual (Assoc), Actual_Base, Typ, Off);
-               Typ := Unshare (Typ, Global_Pool'Access);
-               Actual_Sig := Actual_Base.Val.S;
-               Actual_Ep := (Actual_Sig, Off, Typ);
-
-               --  TODO: partial collapse.
-               Is_Collapsed := Get_Collapse_Signal_Flag (Assoc)
-                 and then Formal_Ep.Offs.Mem_Off = 0
-                 and then Formal_Ep.Typ.W = Formal_Base.Typ.W;
-               pragma Assert
-                 (not Is_Collapsed
-                    or else Formal_Ep.Typ.W >= Actual_Ep.Typ.W);
-
-               Conn :=
-                 (Formal => Formal_Ep,
-                  Formal_Link => Signals_Table.Table (Formal_Sig).Connect,
-                  Actual => Actual_Ep,
-                  Actual_Link => Signals_Table.Table (Actual_Sig).Connect,
-                  Collapsed => Is_Collapsed,
-                  Assoc => Assoc,
-                  Assoc_Inst => Assoc_Inst);
-
-               if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
-                  --  TODO: increase nbr sources
-                  declare
-                     View : Iir;
-                     Reversed : Boolean;
-                  begin
-                     Get_Mode_View_From_Name (Formal, View, Reversed);
-                     Increment_View_Nbr_Sources (View, Reversed, Actual_Ep);
-                  end;
-               else
-                  --  LRM08 6.4.2.3 Signal declarations
-                  --  [...], each source is either a driver or an OUT, INOUT,
-                  --  BUFFER, or LINKAGE port [...]
-                  if Get_Mode (Inter) /= Iir_In_Mode then
-                     Increment_Nbr_Sources (Actual_Ep, Assoc);
-                  end if;
-               end if;
-
-               Connect_Table.Append (Conn);
-
-               Signals_Table.Table (Formal_Sig).Connect := Connect_Table.Last;
-               Signals_Table.Table (Actual_Sig).Connect := Connect_Table.Last;
-
-               --  Collapse
-               if Is_Collapsed then
-                  --  Full collapse.
-                  pragma Assert (Signals_Table.Table (Formal_Sig).Collapsed_By
-                                   = No_Signal_Index);
-                  pragma Assert (Formal_Sig > Actual_Sig);
-                  Signals_Table.Table (Formal_Sig).Collapsed_By := Actual_Sig;
-                  Signals_Table.Table (Formal_Sig).Collapsed_Offs :=
-                    Actual_Ep.Offs;
-               end if;
+               Gather_Connection_By_Name
+                 (Port_Inst, Inter, Assoc_Inst, Assoc);
             when Iir_Kind_Association_Element_Open
               | Iir_Kind_Association_Element_By_Individual =>
                null;
             when Iir_Kind_Association_Element_By_Expression =>
                Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-               Formal := Get_Formal (Assoc);
-               if Formal = Null_Iir then
-                  Formal := Inter;
-               end if;
-               Formal_Ep := Compute_Sub_Signal (Port_Inst, Formal);
-
-               Actual_Ep := (No_Signal_Index, No_Value_Offsets, null);
-
-               Conn :=
-                 (Formal => Formal_Ep,
-                  Formal_Link => Signals_Table.Table (Formal_Ep.Base).Connect,
-                  Actual => Actual_Ep,
-                  Actual_Link => No_Connect_Index,
-                  Collapsed => False,
-                  Assoc => Assoc,
-                  Assoc_Inst => Assoc_Inst);
-
-               Connect_Table.Append (Conn);
-
-               Signals_Table.Table (Formal_Ep.Base).Connect :=
-                 Connect_Table.Last;
-
-               if Get_Expr_Staticness (Get_Actual (Assoc)) < Globally then
-                  --  Create a process to assign the expression to the port.
-                  Processes_Table.Append
-                    ((Proc => Assoc,
-                      Inst => Assoc_Inst,
-                      Drivers => No_Driver_Index,
-                      Sensitivity => No_Sensitivity_Index));
-
-                  Add_Process_Driver
-                    (Processes_Table.Last, Formal_Ep, Assoc);
-
-                  List := Create_Iir_List;
-                  Vhdl.Canon.Canon_Extract_Sensitivity_Expression
-                    (Get_Actual (Assoc), List, False);
-                  Gather_Sensitivity (Assoc_Inst, Processes_Table.Last, List);
-                  Destroy_Iir_List (List);
-               end if;
+               Gather_Connection_By_Expr
+                 (Port_Inst, Inter, Assoc_Inst, Assoc);
             when others =>
                Error_Kind ("gather_connections", Assoc);
          end case;

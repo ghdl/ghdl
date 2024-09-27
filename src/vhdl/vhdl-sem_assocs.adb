@@ -962,6 +962,8 @@ package body Vhdl.Sem_Assocs is
          declare
             Index_Constraint : Iir;
             Index_Subtype_Constraint : Iir;
+            Indiv_Assoc : Iir;
+            Dir : Direction_Type;
          begin
             --  Create an index subtype.
             case Get_Kind (Base_Index) is
@@ -983,8 +985,23 @@ package body Vhdl.Sem_Assocs is
             Location_Copy (Index_Subtype_Constraint, Actual);
             Set_Range_Constraint (Actual_Index, Index_Subtype_Constraint);
             Set_Type_Staticness (Actual_Index, Locally);
-            Set_Direction (Index_Subtype_Constraint,
-                           Get_Direction (Index_Constraint));
+
+            --  LRM08 5.3.2.2 Index constraints and discrete ranges
+            --  e) 2) If the subtype index range is undefed, and the interface
+            --  object or subelement [...] is associated by a single
+            --  association element in which the formal designator is a slice
+            --  name, then the direction of the index range of the object is
+            --  that of the corresponding index subtype of the interface
+            --  object.
+            Indiv_Assoc := Get_Individual_Association_Chain (Assoc);
+            if Get_Chain (Indiv_Assoc) = Null_Iir
+              and then Get_Kind (Indiv_Assoc) = Iir_Kind_Choice_By_Range
+            then
+               Dir := Get_Direction (Get_Choice_Range (Indiv_Assoc));
+            else
+               Dir := Get_Direction (Index_Constraint);
+            end if;
+            Set_Direction (Index_Subtype_Constraint, Dir);
 
             --  For ownership purpose, the bounds must be copied otherwise
             --  they would be referenced before being defined.  This is non
@@ -992,7 +1009,7 @@ package body Vhdl.Sem_Assocs is
             Low := Copy_Constant (Low);
             High := Copy_Constant (High);
 
-            case Get_Direction (Index_Constraint) is
+            case Dir is
                when Dir_To =>
                   Set_Left_Limit (Index_Subtype_Constraint, Low);
                   Set_Left_Limit_Expr (Index_Subtype_Constraint, Low);
