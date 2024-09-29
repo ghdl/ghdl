@@ -825,20 +825,20 @@ package body Trans.Chap5 is
 
             --  Allocate storage of ports.
             --  (Only once for each port, individual association are ignored).
-            Open_Temp;
-            case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
-               when Iir_Kind_Association_Element_By_Individual
-                 | Iir_Kind_Association_Element_Open =>
-                  pragma Assert (Get_Whole_Association_Flag (Assoc));
-                  Chap4.Elab_Signal_Declaration_Storage (Formal, False);
-               when Iir_Kind_Association_Element_By_Expression
-                  | Iir_Kind_Association_Element_By_Name =>
-                  if Get_Whole_Association_Flag (Assoc) then
+            if Get_Whole_Association_Flag (Assoc) then
+               Open_Temp;
+               case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc))
+               is
+                  when Iir_Kind_Association_Element_By_Individual
+                    | Iir_Kind_Association_Element_Open =>
+                     Chap4.Elab_Signal_Declaration_Storage (Formal, False);
+                  when Iir_Kind_Association_Element_By_Expression
+                    | Iir_Kind_Association_Element_By_Name =>
                      Chap4.Elab_Signal_Declaration_Storage
                        (Formal, Get_Collapse_Signal_Flag (Assoc));
-                  end if;
-            end case;
-            Close_Temp;
+               end case;
+               Close_Temp;
+            end if;
 
             --  Create or copy signals.
             Open_Temp;
@@ -884,9 +884,10 @@ package body Trans.Chap5 is
                when Iir_Kind_Association_Element_Open
                  | Iir_Kind_Association_Element_By_Individual =>
                   --  Create non-collapsed signals.
-                  pragma Assert (Get_Whole_Association_Flag (Assoc));
-                  Chap4.Elab_Signal_Declaration_Object
-                    (Formal, Block_Parent, False);
+                  if Get_Whole_Association_Flag (Assoc) then
+                     Chap4.Elab_Signal_Declaration_Object
+                       (Formal, Block_Parent, False);
+                  end if;
             end case;
             Close_Temp;
          end;

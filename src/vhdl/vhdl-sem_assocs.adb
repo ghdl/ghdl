@@ -1541,8 +1541,9 @@ package body Vhdl.Sem_Assocs is
          --  It is an error if an actual of open is associated with a
          --  formal that is associated individually.
          if Get_Whole_Association_Flag (Assoc) = False then
-            Error_Msg_Sem
-              (+Assoc, "cannot associate individually with open");
+            --  TODO: check with resolved signals
+            Error_Msg_Sem_Relaxed
+              (Assoc, Warnid_Open_Assoc, "individual association with open");
          end if;
 
          Formal := Get_Formal (Assoc);

@@ -1,8 +1,8 @@
 pub const MSGID_NOTE: u8 = 0;
 pub const MSGID_FIRST_WARNID: u8 = 1;
-pub const MSGID_WARNING: u8 = 38;
-pub const MSGID_ERROR: u8 = 39;
-pub const MSGID_FATAL: u8 = 40;
+pub const MSGID_WARNING: u8 = 39;
+pub const MSGID_ERROR: u8 = 40;
+pub const MSGID_FATAL: u8 = 41;
 
 pub enum Warnid {
     Library,
@@ -37,6 +37,7 @@ pub enum Warnid {
     Attribute,
     Useless,
     MissingAssoc,
+    OpenAssoc,
     Conformance,
     UnkeptAttribute,
     UnhandledAttribute,
@@ -45,7 +46,7 @@ pub enum Warnid {
 }
 
 impl Warnid {
-    const VALUES: [Self; 37] = [
+    const VALUES: [Self; 38] = [
         Self::Library,
         Self::DeprecatedOption,
         Self::UnexpectedOption,
@@ -78,6 +79,7 @@ impl Warnid {
         Self::Attribute,
         Self::Useless,
         Self::MissingAssoc,
+        Self::OpenAssoc,
         Self::Conformance,
         Self::UnkeptAttribute,
         Self::UnhandledAttribute,
@@ -85,7 +87,7 @@ impl Warnid {
         Self::Elaboration,
     ];
 
-    const IMAGES: [&'static str; 37] = [
+    const IMAGES: [&'static str; 38] = [
         "library",
         "deprecatedoption",
         "unexpectedoption",
@@ -118,6 +120,7 @@ impl Warnid {
         "attribute",
         "useless",
         "missingassoc",
+        "openassoc",
         "conformance",
         "unkeptattribute",
         "unhandledattribute",
@@ -125,4 +128,4 @@ impl Warnid {
         "elaboration",
     ];
 }
-pub const WARNID_USIZE: usize = 37;
+pub const WARNID_USIZE: usize = 38;

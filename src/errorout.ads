@@ -133,6 +133,9 @@ package Errorout is
       --  Missing association for a formal.
       Warnid_Missing_Assoc,
 
+      --  Open inidividual association.
+      Warnid_Open_Assoc,
+
       --  Lexical conformance
       Warnid_Conformance,
 
@@ -355,6 +358,7 @@ private
         | Warnid_Elaboration | Warnid_Conformance
         | Warnid_Unkept_Attribute | Warnid_Unhandled_Attribute
         | Warnid_Logic_Loop
+        | Warnid_Open_Assoc
         | Msgid_Warning  => (Enabled => True, Error => False),
       Warnid_Delta_Cycle | Warnid_Body | Warnid_Static | Warnid_Nested_Comment
         | Warnid_Universal | Warnid_Port_Bounds

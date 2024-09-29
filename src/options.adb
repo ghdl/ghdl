@@ -419,6 +419,8 @@ package body Options is
                P ("useless construct");
             when Warnid_Missing_Assoc =>
                P ("missing association");
+            when Warnid_Open_Assoc =>
+               P ("open individual association");
             when Warnid_Conformance =>
                P ("violation of conformance rules");
             when Warnid_Unkept_Attribute =>
