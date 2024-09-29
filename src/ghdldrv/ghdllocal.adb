@@ -1882,7 +1882,9 @@ package body Ghdllocal is
       Top := Vhdl.Configuration.Find_Top_Entity
         (Libraries.Work_Library, Libraries.Command_Line_Location);
       if Top = Null_Node then
-         Ghdlmain.Error ("no top unit found");
+         if Errorout.Nbr_Errors = 0 then
+            Ghdlmain.Error ("no top unit found");
+         end if;
          return;
       end if;
       Errorout.Report_Msg (Msgid_Note, Option, No_Source_Coord,
