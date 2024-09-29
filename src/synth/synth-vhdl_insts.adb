@@ -605,9 +605,15 @@ package body Synth.Vhdl_Insts is
       Value : Node;
       Spec : Node;
       Attr_Decl : Node;
+      Lib : Node;
       Val : Node;
    begin
       if Arch = Null_Node then
+         return True;
+      end if;
+
+      Lib := Get_Library (Get_Design_File (Get_Design_Unit (Arch)));
+      if Get_Vendor_Library_Flag (Lib) then
          return True;
       end if;
 
