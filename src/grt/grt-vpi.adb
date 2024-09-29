@@ -1876,7 +1876,14 @@ package body Grt.Vpi is
       case Data.Reason is
          when cbEndOfCompile
            | cbStartOfSimulation
-           | cbReadOnlySynch
+           | cbEndOfSimulation =>
+            --  1364-2005 27.33.3 Simulator action or feature callbacks
+            --  The only fields in the s_cb_data structure that need to be
+            --  setup for simulation action or feature callbacks are the
+            --  reason, cb_rtn and user_data (if desired) fields.
+            Res.Cb.Value := null;
+            Res.Cb.Time := null;
+         when cbReadOnlySynch
            | cbReadWriteSynch
            | cbAfterDelay
            | cbNextSimTime =>

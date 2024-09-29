@@ -105,9 +105,9 @@ endofcompile_proc (struct t_cb_data *compile_cb)
   cb.reason = cbValueChange;
   cb.cb_rtn = &vpi_clk_proc;
   cb.user_data = NULL;
-  cb.value = NULL;
-  cb.time = NULL;
   cb.obj = clk;
+  cb.time = NULL;
+  cb.value = NULL;
   if (vpi_register_cb (&cb) == NULL)
     vpi_printf ("cannot register ValueChange call back\n");
 
@@ -122,8 +122,6 @@ static void my_handle_register(void)
 
   cb.reason = cbEndOfCompile;
   cb.cb_rtn = &endofcompile_proc;
-  cb.value = NULL;
-  cb.time = NULL;
   cb.user_data = NULL;
   if (vpi_register_cb (&cb) == NULL)
     vpi_printf ("cannot register EndOfCompile call back\n");

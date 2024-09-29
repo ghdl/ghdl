@@ -89,8 +89,6 @@ void my_handle_register()
 
   cb.reason = cbEndOfCompile;
   cb.cb_rtn = &printModules;
-  cb.time = NULL;
-  cb.value = NULL;
   cb.user_data = NULL;
   if (vpi_register_cb (&cb) == NULL)
     vpi_printf ("cannot register EndOfCompile call back\n");
