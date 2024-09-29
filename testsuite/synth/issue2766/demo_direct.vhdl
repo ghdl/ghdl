@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 library unisim;
 
-entity demo is
+entity demo_direct is
 		port (
 		i, ib: in std_logic;
 		o: out std_logic
@@ -10,7 +10,7 @@ entity demo is
 );
 end entity;
 
-architecture demo of demo is
+architecture demo of demo_direct is
 
 begin
 

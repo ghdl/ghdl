@@ -2,12 +2,15 @@
 
 . ../../testenv.sh
 
-analyze --work=unisim unisim.vhdl
-analyze demo_comp.vhdl
-synth --vendor-library=unisim demo_comp > syn_demo_comp.vhdl
-grep -F ' work.ibufds ' syn_demo_comp.vhdl
-synth --vendor-library=unisim --out=verilog demo_comp > syn_demo_comp.v
-grep -F ' ibufds ' syn_demo_comp.v
+analyze --work=unisim vcomponents.vhdl ibufds.vhdl
+
+for f in demo_comp demo_direct; do
+    analyze $f.vhdl
+    synth --vendor-library=unisim $f > syn_$f.vhdl
+    grep -F ' work.ibufds ' syn_$f.vhdl
+    synth --vendor-library=unisim --out=verilog $f > syn_$f.v
+    grep -F ' ibufds ' syn_$f.v
+done
 
 clean
 clean unisim

@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 library unisim;
-use unisim.unisim.all;
+use unisim.vcomponents.all;
 
 entity demo_comp is
 		port (

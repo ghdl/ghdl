@@ -1,7 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-package unisim is
+package vcomponents is
   component ibufds is
     generic(
         DIFF_TERM: boolean := true;
