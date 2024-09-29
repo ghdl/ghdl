@@ -169,15 +169,20 @@ package body Netlists.Disp_Vhdl is
       else
          Put_Name (Name);
       end if;
+      Wr (" : ");
       --  Gate name
       Name := Get_Module_Name (Imod);
       if Get_Id (Imod) < Id_User_None then
-         Wr (" : gsynth.gate_");
+         Wr ("gsynth.gate_");
          pragma Assert (Get_Sname_Kind (Name) = Sname_Artificial
                           and then Get_Sname_Prefix (Name) = No_Sname);
          Put_Id (Get_Sname_Suffix (Name));
       else
-         Wr (" : entity work.");
+         --  Even for blackbox, we assume the definition is in the work
+         --  library.  This might be correct or not.
+         --  The alternative would be to output all the blackboxes as
+         --  components.
+         Wr ("entity work.");
          Put_Name (Name);
       end if;
 
