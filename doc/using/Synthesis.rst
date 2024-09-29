@@ -112,7 +112,9 @@ In addition to those options, there are some synthesis specific options.
 
 .. option:: --vendor-library=NAME
 
-  Any unit from library NAME is a black box.
+  Any entity from library NAME is a black box.  No warning is emitted for
+  an instantiation of an unbounded component if the component is declared in
+  library NAME.
 
   Example::
 
