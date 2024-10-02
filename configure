@@ -323,6 +323,7 @@ if test $backend = llvm -o $backend = llvm_jit; then
        check_version 16.0 $llvm_version ||
        check_version 17.0 $llvm_version ||
        check_version 18.1 $llvm_version ||
+       check_version 19. $llvm_version ||
        false; then
     echo "Debugging is enabled with llvm $llvm_version"
   else
