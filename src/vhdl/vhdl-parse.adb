@@ -10636,6 +10636,9 @@ package body Vhdl.Parse is
             when others =>
                --  FIXME: improve message:
                Unexpected ("simultaneous statement list");
+
+               --  Be sure to make progress...
+               Scan;
                Resync_To_End_Of_Statement;
                if Current_Token = Tok_Semi_Colon then
                   Scan;
