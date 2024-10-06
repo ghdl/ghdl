@@ -30,7 +30,7 @@ with Synth.Flags; use Synth.Flags;
 package Synthesis is
    function Synth_Design (Design : Iir;
                           Inst : Synth_Instance_Acc;
-                          Encoding : Name_Encoding) return Module;
+                          Encoding : Name_Encoding) return Base_Instance_Acc;
 
    --  Run cleanup/memory extraction/expand passes on M.
    procedure Instance_Passes (Ctxt : Context_Acc; M : Module);

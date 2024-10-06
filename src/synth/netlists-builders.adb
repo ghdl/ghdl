@@ -1469,6 +1469,19 @@ package body Netlists.Builders is
       return O;
    end Build_Nop;
 
+   procedure Insert_Nop (Ctxt : Context_Acc; Drv : Net)
+   is
+      Wd : constant Width := Get_Width (Drv);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Nop);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Wd);
+      Redirect_Inputs (Drv, O);
+      Connect (Get_Input (Inst, 0), Drv);
+   end Insert_Nop;
+
    function Build_Enable (Ctxt : Context_Acc) return Net
    is
       Inst : Instance;

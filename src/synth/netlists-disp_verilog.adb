@@ -188,6 +188,31 @@ package body Netlists.Disp_Verilog is
       end if;
    end Disp_Pval_String;
 
+   --  If DRV drives a single Id_Nop return the output of the Nop gate.
+   --  This gate is used to simple rename the output.
+   function Is_Nop_Drv (Drv : Net) return Net
+   is
+      Inp : Input;
+      Parent : Instance;
+   begin
+      Inp := Get_First_Sink (Drv);
+      if Inp = No_Input then
+         --  Not connected.
+         return No_Net;
+      end if;
+      if Get_Next_Sink (Inp) /= No_Input then
+         --  Not a single output.
+         return No_Net;
+      end if;
+
+      Parent := Get_Input_Parent (Inp);
+      if Get_Id (Parent) = Id_Nop then
+         return Get_Output (Parent, 0);
+      else
+         return No_Net;
+      end if;
+   end Is_Nop_Drv;
+
    procedure Disp_Instance_Gate (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
@@ -295,10 +320,18 @@ package body Netlists.Disp_Verilog is
             Wr ("(");
             declare
                I : Input;
+               Nop : Net;
             begin
                I := Get_First_Sink (O);
                if I /= No_Input then
-                  Disp_Net_Name (O);
+                  --  Output is connected.
+                  Nop := Is_Nop_Drv (O);
+                  if Nop /= No_Net then
+                     --  Output has been renamed.
+                     Disp_Net_Name (Nop);
+                  else
+                     Disp_Net_Name (O);
+                  end if;
                end if;
             end;
             Wr (")");
@@ -917,7 +950,7 @@ package body Netlists.Disp_Verilog is
          when Id_Port =>
             Disp_Template ("  \o0 <= \i0; -- (port)" & NL, Inst);
          when Id_Nop =>
-            Disp_Template ("  \o0 <= \i0; -- (nop)" & NL, Inst);
+            Disp_Template ("  \o0 <= \i0; //(nop)" & NL, Inst);
          when Id_Enable =>
             Disp_Template ("  \o0 <= \i0; -- (enable)" & NL, Inst);
          when Id_Not =>
@@ -930,7 +963,7 @@ package body Netlists.Disp_Verilog is
          when Id_Extract =>
             Disp_Template ("  assign \o0 = ", Inst);
             Disp_Extract (Inst);
-            Wr_Line (";");
+            Wr_Line ("; // extract");
          when Id_Memidx =>
             declare
                Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
@@ -1189,18 +1222,59 @@ package body Netlists.Disp_Verilog is
                Inst);
          when Id_Resolver =>
             Disp_Template
-              ("  assign \o0 = \i0;" & NL, Inst);
+              ("  assign \o0 = \i0; \\(resolver)" & NL, Inst);
             Disp_Template
-              ("  assign \o0 = \i1;" & NL, Inst);
+              ("  assign \o0 = \i1; \\(resolver)" & NL, Inst);
          when others =>
             Disp_Instance_Gate (Inst);
       end case;
    end Disp_Instance_Inline;
 
+   --  Display declaration of output O of instance INST.
+   --  Can be a 'wire' or a 'reg' or nothing.
+   procedure Disp_Module_Output (Inst : Instance; Id : Module_Id; O : Net)
+   is
+      W : constant Width := Get_Width (O);
+   begin
+      if W = 0 and not Flag_Null_Wires then
+         return;
+      end if;
+      case Id is
+         when Id_Dff
+           | Id_Idff
+           | Id_Adff
+           | Id_Iadff
+           | Id_Dlatch
+           | Id_Isignal =>
+            --  As expected
+            Wr ("  reg ");
+         when Id_Mux4
+           | Id_Pmux
+           | Id_Dyn_Insert
+           | Id_Dyn_Insert_En =>
+            --  Implemented by a process
+            Wr ("  reg ");
+         when Constant_Module_Id =>
+            Wr ("  localparam ");
+         when Id_User_None .. Module_Id'Last =>
+            if Is_Nop_Drv (O) /= No_Net then
+               return;
+            end if;
+         when others =>
+            Wr ("  wire ");
+      end case;
+      Put_Type (W);
+      Disp_Net_Name (O);
+      if Id in Constant_Module_Id then
+         Wr (" = ");
+         Disp_Constant_Inline (Inst);
+      end if;
+      Wr_Line (";");
+   end Disp_Module_Output;
+
    procedure Disp_Module_Declarations (M : Module)
    is
       Id : Module_Id;
-      W : Width;
    begin
       for Inst of Instances (M) loop
          Id := Get_Id (Inst);
@@ -1264,36 +1338,7 @@ package body Netlists.Disp_Verilog is
 
                   --  Display reg/wire for each output.
                   for N of Outputs_Iterate (Inst) loop
-                     W := Get_Width (N);
-                     if Flag_Null_Wires or W /= 0 then
-                        case Id is
-                           when Id_Dff
-                             | Id_Idff
-                             | Id_Adff
-                             | Id_Iadff
-                             | Id_Dlatch
-                             | Id_Isignal =>
-                              --  As expected
-                              Wr ("  reg ");
-                           when Id_Mux4
-                             | Id_Pmux
-                             | Id_Dyn_Insert
-                             | Id_Dyn_Insert_En =>
-                              --  Implemented by a process
-                              Wr ("  reg ");
-                           when Constant_Module_Id =>
-                              Wr ("  localparam ");
-                           when others =>
-                              Wr ("  wire ");
-                        end case;
-                        Put_Type (Get_Width (N));
-                        Disp_Net_Name (N);
-                        if Id in Constant_Module_Id then
-                           Wr (" = ");
-                           Disp_Constant_Inline (Inst);
-                        end if;
-                        Wr_Line (";");
-                     end if;
+                     Disp_Module_Output (Inst, Id, N);
                   end loop;
                end if;
          end case;
@@ -1308,16 +1353,18 @@ package body Netlists.Disp_Verilog is
       declare
          Idx : Port_Idx;
          Desc : Port_Desc;
+         Drv : Net;
       begin
          Idx := 0;
          for I of Inputs (Self_Inst) loop
             Desc := Get_Output_Desc (M, Idx);
             if Desc.W /= 0 or Flag_Null_Wires then
+               Drv := Get_Driver (I);
                Wr ("  assign ");
                Put_Name (Desc.Name);
                Wr (" = ");
-               Disp_Net_Name (Get_Driver (I));
-               Wr_Line (";");
+               Disp_Net_Name (Drv);
+               Wr_Line ("; //(module output)");
             end if;
             Idx := Idx + 1;
          end loop;
@@ -1333,6 +1380,9 @@ package body Netlists.Disp_Verilog is
                if (not Flag_Merge_Edge) or else Need_Edge (Inst) then
                   Disp_Instance_Inline (Inst);
                end if;
+            when Id_Nop =>
+               --  Inserted by netlists.rename to avoid escaping.
+               null;
             when others =>
                Disp_Instance_Inline (Inst);
          end case;

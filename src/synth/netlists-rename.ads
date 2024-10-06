@@ -16,6 +16,9 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Netlists.Builders; use Netlists.Builders;
+
 package Netlists.Rename is
-   procedure Rename_Module (M : Module; Lang : Language_Type);
+   procedure Rename_Module
+     (Ctxt : Context_Acc; M : Module; Lang : Language_Type);
 end Netlists.Rename;

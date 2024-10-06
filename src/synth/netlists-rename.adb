@@ -20,24 +20,20 @@ with Name_Table;
 with Std_Names;
 
 with Netlists.Gates; use Netlists.Gates;
-with Netlists.Utils; use Netlists.Utils;
 
 package body Netlists.Rename is
-   function Rename_Sname (Name : Sname; Lang : Language_Type) return Sname
+   function Is_Keyword (Name : Sname; Lang : Language_Type) return Boolean
    is
-      use Name_Table;
       use Std_Names;
       Id : Name_Id;
-      Res : String (1 .. 12);
-      Len : Positive;
    begin
       --  Only user names can clash.
       if Get_Sname_Kind (Name) /= Sname_User then
-         return Name;
+         return False;
       end if;
       --  If prefixed, it cannot clash with a reserved identifier.
       if Get_Sname_Prefix (Name) /= No_Sname then
-         return Name;
+         return False;
       end if;
 
       Id := Get_Sname_Suffix (Name);
@@ -46,7 +42,7 @@ package body Netlists.Rename is
 
       case Id is
          when Name_First_Verilog .. Name_Last_V2001 =>
-            null;
+            return True;
          when Name_Xnor
            | Name_Nor
            | Name_Nand
@@ -64,12 +60,25 @@ package body Netlists.Rename is
            | Name_Not
            | Name_While
            | Name_Wait =>
-            null;
+            return True;
          when others =>
             --  Not a keyword
-            return Name;
+            return False;
       end case;
+   end Is_Keyword;
 
+   function Rename_Sname (Name : Sname; Lang : Language_Type) return Sname
+   is
+      use Name_Table;
+      Id : Name_Id;
+      Res : String (1 .. 12);
+      Len : Positive;
+   begin
+      if not Is_Keyword (Name, Lang) then
+         return Name;
+      end if;
+
+      Id := Get_Sname_Suffix (Name);
       Len := Get_Name_Length (Id);
       Res (2 .. Len + 1) := Image (Id);
       Res (1) := '\';
@@ -78,10 +87,12 @@ package body Netlists.Rename is
       return New_Sname_User (Id, No_Sname);
    end Rename_Sname;
 
-   procedure Rename_User_Module (M : Module; Lang : Language_Type)
+   procedure Rename_User_Module
+     (Ctxt : Context_Acc; M : Module; Lang : Language_Type)
    is
       Port : Port_Desc;
       Inst : Instance;
+      Inst_Mod : Module;
    begin
       --  Rename inputs and outputs.
       for I in 1 .. Get_Nbr_Inputs (M) loop
@@ -98,11 +109,29 @@ package body Netlists.Rename is
       --  Rename some instances.
       Inst := Get_First_Instance (M);
       while Inst /= No_Instance loop
-         case Get_Id (Inst) is
+         Inst_Mod := Get_Module (Inst);
+         case Get_Id (Inst_Mod) is
             when Id_Signal
               | Id_Isignal =>
                Set_Instance_Name
                  (Inst, Rename_Sname (Get_Instance_Name (Inst), Lang));
+            when Id_User_None .. Module_Id'Last =>
+               declare
+                  So : Net;
+                  Sm : Module;
+               begin
+                  Set_Parent (Ctxt, M);
+                  Sm := Get_Module (Inst);
+                  for I in 1 .. Get_Nbr_Outputs (Sm) loop
+                     --  If an output is a keyword, it cannot be used to
+                     --  declare a net.  Add a Nop to rename it.
+                     Port := Get_Output_Desc (Sm, I - 1);
+                     if Is_Keyword (Port.Name, Lang) then
+                        So := Get_Output (Inst, I - 1);
+                        Insert_Nop (Ctxt, So);
+                     end if;
+                  end loop;
+               end;
             when others =>
                null;
          end case;
@@ -113,14 +142,15 @@ package body Netlists.Rename is
       --  rename parameters ?
    end Rename_User_Module;
 
-   procedure Rename_Module (M : Module; Lang : Language_Type)
+   procedure Rename_Module
+     (Ctxt : Context_Acc; M : Module; Lang : Language_Type)
    is
       Sm : Module;
    begin
       Sm := Get_First_Sub_Module (M);
       while Sm /= No_Module loop
          if Get_Id (Sm) >= Id_User_None then
-            Rename_User_Module (Sm, Lang);
+            Rename_User_Module (Ctxt, Sm, Lang);
          end if;
          Sm := Get_Next_Sub_Module (Sm);
       end loop;
