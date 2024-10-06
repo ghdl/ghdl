@@ -174,7 +174,7 @@ However, we suggest every contributor to update the remote URLs in their local c
 
 ## 0.30
 
-Never released, swith to Dunoon Edition.
+Never released, switch to Dunoon Edition.
 
 ## [2010-01-09] 0.29
 
