@@ -9457,7 +9457,6 @@ package body Verilog.Parse is
       Attr : Node;
    begin
       Res := Create_Node (N_Module);
-      Set_Token_Location (Res);
 
       if Attrs /= Null_Node then
          Set_Attributes_Chain (Res, Attrs);
@@ -9470,6 +9469,8 @@ package body Verilog.Parse is
 
       --  Skip 'module'.
       Scan;
+
+      Set_Token_Location (Res);
 
       Push_Scope (Res, Old_Scope);
 
