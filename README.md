@@ -21,7 +21,7 @@
   -->
 </p>
 
-This directory contains the sources of GHDL, the open-source analyzer, compiler, simulator and (experimental) synthesizer for [VHDL](https://en.wikipedia.org/wiki/VHDL), a Hardware Description Language ([HDL](https://en.wikipedia.org/wiki/Hardware_description_language)). GHDL is not an interpreter: it allows you to analyse and elaborate sources for generating machine code from your design. Native program execution is the only way for high speed simulation.
+This directory contains the sources of GHDL, the open-source analyzer, compiler, simulator and (experimental) synthesizer for [VHDL](https://en.wikipedia.org/wiki/VHDL), a Hardware Description Language ([HDL](https://en.wikipedia.org/wiki/Hardware_description_language)). GHDL is not an interpreter: it allows you to analyse and elaborate sources for generating machine code from your design. Native program execution is the only way for high-speed simulation.
 
 # Table of Contents
 
@@ -49,7 +49,7 @@ Can write waveforms to [GHW](https://ghdl.github.io/ghdl/using/Simulation.html?h
 Co-simulation with foreign applications is supported through Verilog Procedural Interface (VPI) and/or VHPIDIRECT. See [ghdl.github.io/ghdl-cosim](https://ghdl.github.io/ghdl-cosim).
 
 Can synthesize arbitrarily complex VHDL designs into a VHDL 1993 netlist, which can be implicitly or
-explicitly used in open source or vendor synthesis frameworks.
+explicitly used in open-source or vendor synthesis frameworks.
 
 GHDL is free software:
 
@@ -128,7 +128,7 @@ For more detailed guidelines, refer to our [Contributing Guide](https://github.c
 
 - `libghdl` is a shared library that includes a subset of the regular features plus some features to be used by extension tools (i.e. `pyGHDL`). This is built along with the regular GHDL and it supports both non-synthesisable and synthesisable code. Nonetheless, this is not for users, but for tools built on top of the core. When configured along with `--enable-synth`, this shared library includes synthesis features too.
 
-- [pyGHDL](pyGHDL) is a Python interface to `libghdl`. Currently, it is only used by `ghdl-ls`; however, it can be useful for advanced users which are willing to build Python utilities based on GHDL. There is work in progress for binding libghdl to [pyVHDLModel](https://github.com/vhdl/pyVHDLModel) (see `pyGHDL.dom`).
+- [pyGHDL](pyGHDL) is a Python interface to `libghdl`. Currently, it is only used by `ghdl-ls`; however, it can be useful for advanced users who are willing to build Python utilities based on GHDL. There is work in progress for binding libghdl to [pyVHDLModel](https://github.com/vhdl/pyVHDLModel) (see `pyGHDL.dom`).
 
 <p align="center">
   <a title="Codecov - Branch Coverage" href="https://codecov.io/gh/ghdl/ghdl"><img alt="Codecov - Branch Coverage" src="https://img.shields.io/codecov/c/github/ghdl/ghdl?longCache=true&style=flat-square&logo=Codecov&logoColor=fff"></a><!--
