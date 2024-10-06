@@ -75,7 +75,15 @@ package body Verilog.Vhdl_Export is
          Err : Boolean;
       begin
          Name := Name_Table.Image (Id);
-         Vhdl.Scanner.Convert_Identifier (Name, Err);
+         if Name (1) = '\' then
+            --  Verilog escaped identifier
+            --  Replace ending space with '\'.
+            Name (Id_Len) := '\';
+            Err := False;
+         else
+            Vhdl.Scanner.Convert_Identifier (Name, Err);
+         end if;
+
          if not Err then
             New_Id := Name_Table.Get_Identifier (Name);
          else
