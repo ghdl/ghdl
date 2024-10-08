@@ -1260,6 +1260,7 @@ package body Netlists.Disp_Verilog is
             if Is_Nop_Drv (O) /= No_Net then
                return;
             end if;
+            Wr ("  wire ");
          when others =>
             Wr ("  wire ");
       end case;
