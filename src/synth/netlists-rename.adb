@@ -22,17 +22,33 @@ with Std_Names;
 with Netlists.Gates; use Netlists.Gates;
 
 package body Netlists.Rename is
+   function Is_Simple_Sname (Name : Sname) return Boolean is
+   begin
+      --  Only user names can clash.
+      return Get_Sname_Kind (Name) = Sname_User
+        and then Get_Sname_Prefix (Name) = No_Sname;
+   end Is_Simple_Sname;
+
+   function Is_Escaped (Name : Sname; Lang : Language_Type) return Boolean
+   is
+      pragma Unreferenced (Lang);
+      use Name_Table;
+      Id : Name_Id;
+   begin
+      if not Is_Simple_Sname (Name) then
+         return False;
+      end if;
+
+      Id := Get_Sname_Suffix (Name);
+      return Get_Name_Ptr (Id)(1) = '\';
+   end Is_Escaped;
+
    function Is_Keyword (Name : Sname; Lang : Language_Type) return Boolean
    is
       use Std_Names;
       Id : Name_Id;
    begin
-      --  Only user names can clash.
-      if Get_Sname_Kind (Name) /= Sname_User then
-         return False;
-      end if;
-      --  If prefixed, it cannot clash with a reserved identifier.
-      if Get_Sname_Prefix (Name) /= No_Sname then
+      if not Is_Simple_Sname (Name) then
          return False;
       end if;
 
@@ -94,12 +110,9 @@ package body Netlists.Rename is
       return New_Sname_User (Id, No_Sname);
    end Rename_Sname;
 
-   procedure Rename_User_Module
-     (Ctxt : Context_Acc; M : Module; Lang : Language_Type)
+   procedure Rename_User_Module (M : Module; Lang : Language_Type)
    is
       Port : Port_Desc;
-      Inst : Instance;
-      Inst_Mod : Module;
    begin
       --  Rename inputs and outputs.
       for I in 1 .. Get_Nbr_Inputs (M) loop
@@ -113,6 +126,17 @@ package body Netlists.Rename is
          Set_Output_Desc (M, I - 1, Port);
       end loop;
 
+      --  rename module name ?
+      --  rename parameters ?
+   end Rename_User_Module;
+
+   procedure Rename_User_Instance
+     (Ctxt : Context_Acc; M : Module; Lang : Language_Type)
+   is
+      Port : Port_Desc;
+      Inst : Instance;
+      Inst_Mod : Module;
+   begin
       --  Rename some instances.
       Inst := Get_First_Instance (M);
       while Inst /= No_Instance loop
@@ -133,7 +157,7 @@ package body Netlists.Rename is
                      --  If an output is a keyword, it cannot be used to
                      --  declare a net.  Add a Nop to rename it.
                      Port := Get_Output_Desc (Sm, I - 1);
-                     if Is_Keyword (Port.Name, Lang) then
+                     if Is_Escaped (Port.Name, Lang) then
                         So := Get_Output (Inst, I - 1);
                         Insert_Nop (Ctxt, So);
                      end if;
@@ -144,20 +168,27 @@ package body Netlists.Rename is
          end case;
          Inst := Get_Next_Instance (Inst);
       end loop;
-
-      --  rename module name ?
-      --  rename parameters ?
-   end Rename_User_Module;
+   end Rename_User_Instance;
 
    procedure Rename_Module
      (Ctxt : Context_Acc; M : Module; Lang : Language_Type)
    is
       Sm : Module;
    begin
+      --  First the module declarations.
       Sm := Get_First_Sub_Module (M);
       while Sm /= No_Module loop
          if Get_Id (Sm) >= Id_User_None then
-            Rename_User_Module (Ctxt, Sm, Lang);
+            Rename_User_Module (Sm, Lang);
+         end if;
+         Sm := Get_Next_Sub_Module (Sm);
+      end loop;
+
+      --  Then the body.
+      Sm := Get_First_Sub_Module (M);
+      while Sm /= No_Module loop
+         if Get_Id (Sm) >= Id_User_None then
+            Rename_User_Instance (Ctxt, Sm, Lang);
          end if;
          Sm := Get_Next_Sub_Module (Sm);
       end loop;
