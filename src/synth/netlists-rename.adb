@@ -38,32 +38,39 @@ package body Netlists.Rename is
 
       Id := Get_Sname_Suffix (Name);
 
-      pragma Assert (Lang = Language_Verilog);
-
-      case Id is
-         when Name_First_Verilog .. Name_Last_V2001 =>
-            return True;
-         when Name_Xnor
-           | Name_Nor
-           | Name_Nand
-           | Name_Xor
-           | Name_Or
-           | Name_And
-           | Name_Begin
-           | Name_Case
-           | Name_Else
-           | Name_End
-           | Name_For
-           | Name_Function
-           | Name_If
-           | Name_Inout
-           | Name_Not
-           | Name_While
-           | Name_Wait =>
-            return True;
-         when others =>
-            --  Not a keyword
-            return False;
+      case Lang is
+         when Language_Unknown =>
+            raise Internal_Error;
+         when Language_Psl =>
+            raise Internal_Error;
+         when Language_Vhdl =>
+            return Id in Name_Id_Vhdl19_Reserved_Words;
+         when Language_Verilog =>
+            case Id is
+               when Name_First_Verilog .. Name_Last_V2001 =>
+                  return True;
+               when Name_Xnor
+                 | Name_Nor
+                 | Name_Nand
+                 | Name_Xor
+                 | Name_Or
+                 | Name_And
+                 | Name_Begin
+                 | Name_Case
+                 | Name_Else
+                 | Name_End
+                 | Name_For
+                 | Name_Function
+                 | Name_If
+                 | Name_Inout
+                 | Name_Not
+                 | Name_While
+                 | Name_Wait =>
+                  return True;
+               when others =>
+                  --  Not a keyword
+                  return False;
+            end case;
       end case;
    end Is_Keyword;
 
