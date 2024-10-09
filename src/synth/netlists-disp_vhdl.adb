@@ -135,18 +135,15 @@ package body Netlists.Disp_Vhdl is
             M := Get_Module (Inst);
             Id := Get_Id (M);
             case Id is
-               when Id_Signal
-                 | Id_Isignal =>
-                  --  No suffix for signals (it's 'o').
-                  null;
-               when others =>
+               when Id_Inout
+                 | Id_Iinout
+                 | Id_User_None .. Module_Id'Last =>
+                  --  Gates with multiple outputs.
+                  Wr ("_c_");
                   Port_Name := Get_Output_Desc (M, Idx).Name;
-                  if Id >= Id_User_None then
-                     Wr ("_c_");
-                  else
-                     Wr ("_");
-                  end if;
                   Put_Interface_Name (Port_Name);
+               when others =>
+                  null;
             end case;
          end if;
       end;
