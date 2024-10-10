@@ -3571,10 +3571,6 @@ package body Vhdl.Sem_Expr is
       --  aggregate.
       if Flags.Vhdl_Std >= Vhdl_08
         and then Is_One_Dimensional_Array_Type (A_Type)
-        and then
-        (not Flag_Relaxed_Rules
-           or else (Get_Kind (Element_Type)
-                      in Iir_Kinds_Scalar_Type_And_Subtype_Definition))
       then
          Elements_Types_List := Create_Iir_List;
          Append_Element (Elements_Types_List, Element_Type);
@@ -3620,6 +3616,9 @@ package body Vhdl.Sem_Expr is
               or else not Kind_In (El, Iir_Kind_Choice_By_None,
                                    Iir_Kind_Choice_By_Range)
               or else Get_Kind (El_Expr) = Iir_Kind_Aggregate
+              or else (Flag_Relaxed_Rules
+                         and then
+                         Get_Kind (El_Expr) = Iir_Kind_Concatenation_Operator)
             then
                Expr := Sem_Expression (El_Expr, Element_Type);
             else
