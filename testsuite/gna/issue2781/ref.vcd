@@ -1,0 +1,28 @@
+$version
+  GHDL v0
+$end
+$timescale
+  1 fs
+$end
+$scope module standard $end
+$upscope $end
+$scope module textio $end
+$upscope $end
+$scope module std_logic_1164 $end
+$upscope $end
+$scope module numeric_std $end
+$upscope $end
+$scope module env $end
+$upscope $end
+$scope module b1 $end
+$scope module dut $end
+$var reg 8 ! c[7:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+bUUUUUUUU !
+#10000000
+b11111111 !
+#20000000
+b00000000 !
