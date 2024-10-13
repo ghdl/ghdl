@@ -408,7 +408,8 @@ package body Grt.Vpi is
       Error : AvhpiErrorT;
    begin
       case aType is
-         when vpiPort | vpiNet =>
+         when vpiPort
+            | vpiNet =>
             Rel := VhpiDecls;
          when vpiModule =>
             if Ref = null then
@@ -581,7 +582,30 @@ package body Grt.Vpi is
       return Res;
    end vpi_get;
 
-   function Vhpi_Handle_To_Vpi_Prop (Res : VhpiHandleT) return Integer is
+   function Vhpi_Handle_To_Vpi_Net (Res : VhpiHandleT) return Integer
+   is
+      Info : Verilog_Wire_Info;
+   begin
+      Get_Verilog_Wire (Res, Info);
+      case Info.Vtype is
+         when Vcd_Enum8
+           | Vcd_Bool
+           | Vcd_Var_Vectors
+           | Vcd_Integer32
+           | Vcd_Bit
+           | Vcd_Stdlogic =>
+            return vpiNet;
+         when Vcd_Array =>
+            return vpiNetArray;
+         when Vcd_Bad
+           | Vcd_Struct
+           | Vcd_Float64 =>
+            return vpiUndefined;
+      end case;
+   end Vhpi_Handle_To_Vpi_Net;
+
+   function Vhpi_Handle_To_Vpi_Prop (Res : VhpiHandleT; Irel : Integer)
+                                    return Integer is
    begin
       case Vhpi_Get_Kind (Res) is
          when VhpiEntityDeclK
@@ -592,35 +616,20 @@ package body Grt.Vpi is
             | VhpiCompInstStmtK =>
             return vpiModule;
          when VhpiPortDeclK =>
-            declare
-               Info : Verilog_Wire_Info;
-            begin
-               Get_Verilog_Wire (Res, Info);
-               if Info.Vtype /= Vcd_Bad then
-                  return vpiPort;
-               end if;
-            end;
+            if Irel = vpiPort then
+               declare
+                  Info : Verilog_Wire_Info;
+               begin
+                  Get_Verilog_Wire (Res, Info);
+                  if Info.Vtype /= Vcd_Bad then
+                     return vpiPort;
+                  end if;
+               end;
+            else
+               return Vhpi_Handle_To_Vpi_Net (Res);
+            end if;
          when VhpiSigDeclK =>
-            declare
-               Info : Verilog_Wire_Info;
-            begin
-               Get_Verilog_Wire (Res, Info);
-               case Info.Vtype is
-                  when Vcd_Enum8
-                    | Vcd_Bool
-                    | Vcd_Var_Vectors
-                    | Vcd_Integer32
-                    | Vcd_Bit
-                    | Vcd_Stdlogic =>
-                     return vpiNet;
-                  when Vcd_Array =>
-                     return vpiNetArray;
-                  when Vcd_Bad
-                    | Vcd_Struct
-                    | Vcd_Float64 =>
-                     return vpiUndefined;
-               end case;
-            end;
+            return Vhpi_Handle_To_Vpi_Net (Res);
          when VhpiGenericDeclK =>
             declare
                Info : Verilog_Wire_Info;
@@ -676,7 +685,7 @@ package body Grt.Vpi is
    is
       Prop : Integer;
    begin
-      Prop := Vhpi_Handle_To_Vpi_Prop (H);
+      Prop := Vhpi_Handle_To_Vpi_Prop (H, vpiUndefined);
       if Prop /= vpiUndefined then
          return Build_vpiHandle (H, Prop);
       else
@@ -734,7 +743,7 @@ package body Grt.Vpi is
          Vhpi_Scan (Iter.Ref, Res, Error);
          exit when Error /= AvhpiErrorOk;
 
-         Kind := Vhpi_Handle_To_Vpi_Prop (Res);
+         Kind := Vhpi_Handle_To_Vpi_Prop (Res, Iter.mType);
          if Kind /= vpiUndefined
            and then (Kind = Expected_Kind
                        or (Kind = vpiPort and Expected_Kind = vpiNet))
@@ -805,7 +814,7 @@ package body Grt.Vpi is
 
       begin
          Len := 0;
-         case Vhpi_Handle_To_Vpi_Prop(Ref.Ref) is
+         case Vhpi_Handle_To_Vpi_Prop (Ref.Ref, vpiUndefined) is
             when vpiUndefined =>
                Add ("vpiUndefined");
             when vpiType =>
