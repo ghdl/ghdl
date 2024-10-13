@@ -21,7 +21,7 @@ There are a few GHDL commands which are seldom useful.
 .. index:: cmd help
 
 Help [``-h``]
------------------
+-------------
 
 .. option:: --help, -h
 
@@ -36,7 +36,7 @@ switch, then options for that second command are displayed::
 .. index:: cmd help-options
 
 Help [``--help-options``]
------------------
+-------------------------
 
 .. option:: --help-options,
 
@@ -48,7 +48,7 @@ analysis options.
 .. index:: cmd help-warnings
 
 Help [``--help-warnings``]
------------------
+--------------------------
 
 .. option:: --help-warnings,
 
@@ -60,7 +60,7 @@ and those which are enabled by default.
 .. index:: cmd display configuration
 
 Display config [``--disp-config``]
---------------------------------------
+----------------------------------
 
 .. option:: --disp-config <[options]>
 
@@ -70,7 +70,7 @@ Display the program paths and options used by GHDL. This may be useful to track 
 .. index:: display ``std.standard``
 
 Display standard [``--disp-standard``]
-------------------------------------------
+--------------------------------------
 
 .. option:: --disp-standard <[options]>
 
@@ -79,7 +79,7 @@ Display the ``std.standard`` package.
 .. index:: cmd version
 
 Version [``--version``]
----------------------------
+-----------------------
 
 .. option:: --version, -v
 
@@ -94,7 +94,7 @@ These are not analyzed, therefore, they work even if a file has semantic errors.
 .. index:: cmd file format
 
 Format [``fmt``]
------------------------
+----------------
 
 .. option:: fmt <file>
 
@@ -104,7 +104,7 @@ Format on the standard output the input file.
 .. index:: vhdl to html
 
 Pretty print [``--pp-html``]
---------------------------------
+----------------------------
 
 .. option:: --pp-html <[options] file...>
 
@@ -115,7 +115,7 @@ The style of the html file can be modified with the :option:`--format` option.
 .. index:: cmd file find
 
 Find [``-f``]
------------------
+-------------
 
 .. option:: -f <file...>
 
@@ -125,7 +125,7 @@ Design units marked with two stars are candidates to be at the apex of a design 
 .. index:: cmd file chop
 
 Chop [``--chop``]
----------------------
+-----------------
 
 .. option:: --chop <files...>
 
@@ -148,7 +148,7 @@ The size of the executable is reduced too.
 .. index:: cmd file lines
 
 Lines [``--lines``]
------------------------
+-------------------
 
 .. option:: --lines <files...>
 
@@ -202,7 +202,7 @@ GCC/LLVM only commands
 .. index:: cmd GCC/LLVM binding
 
 Bind [``--bind``]
----------------------
+-----------------
 
 .. option:: --bind <[options] [library.]top_unit [arch]>
 
@@ -220,7 +220,7 @@ This command should be used only when the main entry point is not GHDL.
 .. index:: cmd GCC/LLVM linking
 
 Link [``--link``]
----------------------
+-----------------
 
 .. option:: --link <[options] [library.]top_unit [arch]>
 

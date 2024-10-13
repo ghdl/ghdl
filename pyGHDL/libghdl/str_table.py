@@ -45,7 +45,7 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 @BindToLibGHDL("str_table__string8_address")
 def _String8_Address(Id: String8Id) -> c_char_p:
     """"""
-    return ""
+    return ""  # pragma: no cover
 
 
 @export

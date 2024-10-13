@@ -26,7 +26,7 @@ grt-backtraces-impl.ads
 grt-files
 grt-files.in
 grt.lst
-lib/
+#/lib/
 libghdl-*.so
 libghdl.a
 libghdl.bind
@@ -71,8 +71,11 @@ __pycache__/
 *.py[cod]
 
 # Python installation packages
-dist/
-pyGHDL.egg-info/
+/pyGHDL/lib/**/*
+/pyGHDL/lib/**/*.*
+!/pyGHDL/lib/__init__.py
+/dist/*.whl
+/pyGHDL.egg-info/
 
 # Coverage.py
 .coverage
@@ -80,10 +83,10 @@ pyGHDL.egg-info/
 coverage.xml
 
 # Sphinx
-doc/_build/
-doc/_theme/
-doc/pyGHDL/**/*.*
-!doc/pyGHDL/index.rst
+/doc/_build/
+/doc/_theme/
+/doc/pyGHDL/**/*.*
+!/doc/pyGHDL/index.rst
 
 # IntelliJ project files
 /.idea/workspace.xml

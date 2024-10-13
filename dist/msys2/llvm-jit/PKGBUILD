@@ -1,0 +1,56 @@
+_realname=ghdl
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}-llvm-jit")
+provides=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=5.0.0.dev
+pkgrel=1
+pkgdesc="GHDL: the open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL (llvm backend) (mingw-w64)"
+arch=('any')
+mingw_arch=('mingw64' 'ucrt64' 'clang64')
+url='https://github.com/ghdl/ghdl'
+license=('spdx:GPL-2.0-or-later')
+groups=("${MINGW_PACKAGE_PREFIX}-eda")
+# libgnat.dll is needed for libghdl.
+depends=(
+  "${MINGW_PACKAGE_PREFIX}-gcc-ada"
+  "${MINGW_PACKAGE_PREFIX}-llvm-libs"
+  "${MINGW_PACKAGE_PREFIX}-zlib"
+)
+makedepends=
+checkdepends=
+options=(!emptydirs)
+
+build() {
+  echo "build() [SKIP] No build. Pre-compiled artifact will be used."
+  echo "build() pwd=$(pwd)"
+}
+
+package() {
+  echo "package() [CHECK] List artifact contents ..."
+  echo "package() pwd=$(pwd)"
+  echo "--------------------------------------------------------------------------------"
+  echo "ls -lAh ../../../../install"
+  ls -lAh ../../../../install
+  echo "--------------------------------------------------------------------------------"
+
+  mkdir -p "${pkgdir}${MINGW_PREFIX}"
+  cp -v -R ../../../../install/* ${pkgdir}/${MINGW_PREFIX}
+
+  local PREFIX_DEPS=$(cygpath -am ${MINGW_PREFIX})
+  sed -s "s|${PREFIX_DEPS}|${MINGW_PREFIX}|g" -i "${pkgdir}"${MINGW_PREFIX}/lib/libghdl.link
+#   sed -s "s|${PREFIX_DEPS}|${MINGW_PREFIX}|g" -i "${pkgdir}"${MINGW_PREFIX}/lib/ghdl/grt.lst
+
+#   # License
+#   install -Dm644 "${srcdir}"/${_realname}-${pkgver}/doc/licenses.rst "${pkgdir}"${MINGW_PREFIX}/share/licenses/${_realname}-llvm/licenses.rst
+
+
+  echo "--------------------------------------------------------------------------------"
+  ls -lAh ${pkgdir}
+  echo "--------------------------------------------------------------------------------"
+  ls -lAh ${pkgdir}/${MINGW_PREFIX}
+  echo "--------------------------------------------------------------------------------"
+  ls -lAh ${pkgdir}/${MINGW_PREFIX}/bin
+  echo "--------------------------------------------------------------------------------"
+  ls -lAh ${pkgdir}/${MINGW_PREFIX}/lib
+  echo "--------------------------------------------------------------------------------"
+}

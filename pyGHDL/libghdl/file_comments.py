@@ -61,7 +61,7 @@ def Find_First_Comment(File: SourceFileEntry, N: c_uint32) -> Comment_Index:
     :param File: Source file for node
     :return:     The first comment index, or No_Comment_Index if none.
     """
-    return 0
+    return 0  # pragma: no cover
 
 
 @export

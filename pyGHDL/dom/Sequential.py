@@ -63,7 +63,7 @@ from pyGHDL.dom.Concurrent import WaveformElement, ParameterAssociationItem  # T
 
 
 @export
-class IfBranch(VHDLModel_IfBranch):
+class IfBranch(VHDLModel_IfBranch, DOMMixin):
     def __init__(
         self,
         branchNode: Iir,
@@ -88,7 +88,7 @@ class IfBranch(VHDLModel_IfBranch):
 
 
 @export
-class ElsifBranch(VHDLModel_ElsifBranch):
+class ElsifBranch(VHDLModel_ElsifBranch, DOMMixin):
     def __init__(
         self,
         branchNode: Iir,
@@ -113,7 +113,7 @@ class ElsifBranch(VHDLModel_ElsifBranch):
 
 
 @export
-class ElseBranch(VHDLModel_ElseBranch):
+class ElseBranch(VHDLModel_ElseBranch, DOMMixin):
     def __init__(
         self,
         branchNode: Iir,
