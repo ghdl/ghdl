@@ -1215,7 +1215,7 @@ package body Vhdl.Utils is
       end if;
 
       --  That's also true if the object is declared with a subtype attribute.
-      Base := Get_Base_Name (Obj);
+      Base := Get_Object_Prefix (Obj);
       case Get_Kind (Base) is
          when Iir_Kind_Variable_Declaration
             | Iir_Kind_Signal_Declaration
@@ -1223,7 +1223,8 @@ package body Vhdl.Utils is
             | Iir_Kind_Interface_Variable_Declaration
             | Iir_Kind_Interface_Signal_Declaration
             | Iir_Kind_Object_Alias_Declaration
-            | Iir_Kind_Interface_Constant_Declaration =>
+            | Iir_Kind_Interface_Constant_Declaration
+            | Iir_Kinds_External_Name =>
             declare
                Ind : constant Iir := Get_Subtype_Indication (Base);
             begin
