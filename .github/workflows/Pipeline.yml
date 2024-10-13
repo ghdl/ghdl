@@ -254,7 +254,7 @@ jobs:
       - pyGHDL
     with:
       merged_junit_artifact: 'pyGHDL-Unittest-XML'
-      additional_merge_args: '"--pytest=rewrite-dunder-init;reduce-depth:pytest.testsuite.pyunit"'
+      additional_merge_args: '-d "--render=tree" "--name=pyGHDL" "--pytest=rewrite-dunder-init;reduce-depth:pytest.testsuite.pyunit;split:pytest"'
 
   IntermediateCleanUp:
     uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r1

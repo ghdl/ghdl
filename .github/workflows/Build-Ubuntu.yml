@@ -96,7 +96,8 @@ jobs:
           elif ${{ startsWith(inputs.backend, 'gcc') }}; then
             APT_ARGS="$APT_ARGS libgmp-dev libmpfr-dev libmpc-dev libgettextpo-dev flex"
           else
-            echo "Unknown backend!"
+            echo "Unknown GHDL backend!"
+            echo "::error title=Dependencies::Unknown GHDL backend."
             exit 1
           fi
           echo "APT_ARGS=$APT_ARGS"
@@ -208,6 +209,7 @@ jobs:
             GCC_MAJOR_VERSION=${BASH_REMATCH[2]}
           else
             echo "Can't parse GCC's major version!"
+            echo "::error title=GCC Version::Can't parse GCC's major version."
             exit 1
           fi
 
@@ -219,6 +221,7 @@ jobs:
             GNAT_MAJOR_VERSION=${BASH_REMATCH[1]}
           else
             echo "Can't parse GNAT's major version!"
+            echo "::error title=GNAT Version::Can't parse GNAT's major version."
             exit 1
           fi
 
@@ -235,6 +238,7 @@ jobs:
               LLVM_MAJOR_VERSION=${BASH_REMATCH[1]}
             else
               echo "Can't parse LLVM's major version!"
+              echo "::error title=LLVM Version::Can't parse LLVM's major version."
               exit 1
             fi
 

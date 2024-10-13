@@ -22,6 +22,7 @@ namespace_packages = true
 html_report = "report/typing"
 
 [tool.pytest.ini_options]
+addopts = "--tb=native"
 # Don't set 'python_classes = *' otherwise, pytest doesn't search for classes
 # derived from unittest.Testcase
 python_files = "*"
