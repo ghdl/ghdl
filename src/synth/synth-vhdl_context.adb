@@ -391,9 +391,16 @@ package body Synth.Vhdl_Context is
       return Create_Value_Net (To_Uns32 (N), Pool);
    end Create_Value_Net;
 
+   function Create_Value_Net (N : Net;
+                              Ntype : Type_Acc;
+                              Pool : Areapool_Acc) return Valtyp is
+   begin
+      return (Ntype, Create_Value_Net (N, Pool));
+   end Create_Value_Net;
+
    function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp is
    begin
-      return (Ntype, Create_Value_Net (N, Current_Pool));
+      return Create_Value_Net (N, Ntype, Current_Pool);
    end Create_Value_Net;
 
    function Create_Value_Dyn_Alias (Obj : Value_Acc;
