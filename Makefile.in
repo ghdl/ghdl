@@ -551,7 +551,9 @@ uninstall.libghdl:
 	$(RM) $(DESTDIR)$(libdir)/$(libghdl_name)
 	$(RM) $(DESTDIR)$(libdir)/libghdl.a
 	$(RM) $(DESTDIR)$(libdir)/libghdl.link
+	$(RM) $(DESTDIR)$(libdir)/libghdl$(SOEXT)
 	$(RM) $(DESTDIR)$(libdir)/libghw.dll
+	$(RM) $(DESTDIR)$(libdir)/libghw$(SOEXT)
 	$(RM) $(incdirsuffix)/ghdl/synth.h
 	$(RM) $(incdirsuffix)/ghdl/synth_gates.h
 
