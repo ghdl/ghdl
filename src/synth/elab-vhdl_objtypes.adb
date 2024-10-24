@@ -569,6 +569,8 @@ package body Elab.Vhdl_Objtypes is
            | Type_Array
            | Type_Array_Unbounded =>
             return Arr_Type.Arr_El;
+         when Type_Slice =>
+            return Arr_Type.Slice_El;
          when Type_Unbounded_Array
            | Type_Unbounded_Vector =>
             return Arr_Type.Uarr_El;
