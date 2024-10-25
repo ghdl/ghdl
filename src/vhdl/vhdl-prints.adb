@@ -5651,6 +5651,8 @@ package body Vhdl.Prints is
             Disp_Name_Of (Ctxt, N);
             --  FIXME: need first interface.
             Disp_Interface_Mode_And_Type (Ctxt, N);
+         when Iir_Kind_Iterator_Declaration =>
+            Disp_Parameter_Specification (Ctxt, N);
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
             Disp_Subprogram_Declaration (Ctxt, N, False);
