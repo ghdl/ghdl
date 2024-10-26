@@ -2937,9 +2937,6 @@ package body Grt.Signals is
 --             end loop;
 --          end Disp_Offs;
 
-         type Propag_Array is array (Signal_Net_Type range <>)
-           of Propagation_Type;
-
          procedure Deallocate is new Ada.Unchecked_Deallocation
            (Object => Forward_Build_Type, Name => Forward_Build_Acc);
 
@@ -2964,7 +2961,14 @@ package body Grt.Signals is
          Offs (0) := Last_Off + 1;
 
          declare
-            Propag : Propag_Array (1 .. Last_Off);  --  := (others => 0);
+            type Propag_Array is array (Signal_Net_Type range <>)
+              of Propagation_Type;
+            type Propag_Array_Acc is access Propag_Array;
+
+            procedure Deallocate is new Ada.Unchecked_Deallocation
+              (Propag_Array, Propag_Array_Acc);
+
+            Propag : Propag_Array_Acc := new Propag_Array (1 .. Last_Off);
          begin
             for I in Propagation.First .. Propagation.Last loop
                Net := Get_Propagation_Net (I);
@@ -2984,6 +2988,7 @@ package body Grt.Signals is
                   Propagation.Table (I) := Propag (I);
                end if;
             end loop;
+            Deallocate (Propag);
          end;
          for I in 1 .. Last_Signal_Net loop
             --  Ignore holes.
