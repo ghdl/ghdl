@@ -1679,11 +1679,14 @@ package body Trans.Rtis is
             Val        : O_Cnode;
             El_Const   : O_Dnode;
             Mode       : Natural;
-            Mark       : Id_Mark_Type;
+            Mark, Mark2 : Id_Mark_Type;
          begin
             Push_Identifier_Prefix (Mark, Get_Identifier (El));
 
+            Push_Identifier_Prefix (Mark2, "ET");
             Type_Rti := Generate_Type_Definition (El_Type);
+            Pop_Identifier_Prefix (Mark2);
+
             Max_Depth := Rti_Depth_Type'Max
               (Max_Depth, Get_Info (El_Type).B.Rti_Max_Depth);
 
