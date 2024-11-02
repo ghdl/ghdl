@@ -1747,7 +1747,7 @@ package body Trans.Chap2 is
 
          case Get_Kind (Inter) is
             when Iir_Kind_Interface_Constant_Declaration =>
-               null;
+               Instantiate_Iir_Info (Get_Subtype_Indication (Inter));
 
             when Iir_Kind_Interface_Package_Declaration =>
                Instantiate_Iir_Generic_Chain_Info (Get_Generic_Chain (Inter));
