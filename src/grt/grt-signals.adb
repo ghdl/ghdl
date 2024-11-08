@@ -1947,9 +1947,6 @@ package body Grt.Signals is
       end if;
    end Ghdl_Signal_Driving_Value_F64;
 
-   type Force_Kind is (Force, Release);
-   type Force_Mode is (Force_Effective, Force_Driving);
-
    type Force_Value (Kind : Force_Kind);
    type Force_Value_Acc is access Force_Value;
 
@@ -2130,25 +2127,28 @@ package body Grt.Signals is
                                                    F64 => Val)));
    end Ghdl_Signal_Force_Effective_F64;
 
-   procedure Ghdl_Signal_Force_Driving_Any (Sig : Ghdl_Signal_Ptr;
-                                            Val : Value_Union) is
+   procedure Ghdl_Signal_Force_Any (Sig : Ghdl_Signal_Ptr;
+                                    Kind : Force_Kind;
+                                    Mode : Force_Mode;
+                                    Val : Value_Union)
+   is
+      F : Force_Value_Acc;
    begin
-      Append_Force_Value (new Force_Value'(Kind => Force,
-                                           Mode => Force_Driving,
-                                           Next => null,
-                                           Sig => Sig,
-                                           Val => Val));
-   end Ghdl_Signal_Force_Driving_Any;
-
-   procedure Ghdl_Signal_Force_Effective_Any (Sig : Ghdl_Signal_Ptr;
-                                              Val : Value_Union) is
-   begin
-      Append_Force_Value (new Force_Value'(Kind => Force,
-                                           Mode => Force_Effective,
-                                           Next => null,
-                                           Sig => Sig,
-                                           Val => Val));
-   end Ghdl_Signal_Force_Effective_Any;
+      case Kind is
+         when Force =>
+            F := new Force_Value'(Kind => Force,
+                                  Mode => Mode,
+                                  Next => null,
+                                  Sig => Sig,
+                                  Val => Val);
+         when Release =>
+            F := new Force_Value'(Kind => Release,
+                                  Mode => Mode,
+                                  Next => null,
+                                  Sig => Sig);
+      end case;
+      Append_Force_Value (F);
+   end Ghdl_Signal_Force_Any;
 
    --  Chain of saved value of signals being forced.
    Saved_Forced_Head : Force_Value_Acc;

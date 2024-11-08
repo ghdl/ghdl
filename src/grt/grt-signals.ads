@@ -628,10 +628,13 @@ package Grt.Signals is
    procedure Ghdl_Process_Add_Port_Driver
      (Sign : Ghdl_Signal_Ptr; Val : Value_Union);
 
-   procedure Ghdl_Signal_Force_Driving_Any (Sig : Ghdl_Signal_Ptr;
-                                            Val : Value_Union);
-   procedure Ghdl_Signal_Force_Effective_Any (Sig : Ghdl_Signal_Ptr;
-                                              Val : Value_Union);
+   type Force_Kind is (Force, Release);
+   type Force_Mode is (Force_Effective, Force_Driving);
+
+   procedure Ghdl_Signal_Force_Any (Sig : Ghdl_Signal_Ptr;
+                                    Kind : Force_Kind;
+                                    Mode : Force_Mode;
+                                    Val : Value_Union);
 
    --  For B1
    function Ghdl_Create_Signal_B1 (Val_Ptr : Ghdl_Value_Ptr;
