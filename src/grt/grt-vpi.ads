@@ -225,6 +225,15 @@ package Grt.Vpi is
    end record;
    pragma Convention (C, s_cb_data);
 
+   -- Flags for vpi_put_value
+   vpiNoDelay            : constant Integer := 1;
+   vpiInertialDelay      : constant Integer := 2;
+   vpiTransportDelay     : constant Integer := 3;
+   vpiPureTransportDelay : constant Integer := 4;
+   vpiForceFlag          : constant Integer := 5;
+   vpiReleaseFlag        : constant Integer := 6;
+   vpiCancelEvent        : constant Integer := 7;
+
    -- vpiHandle  vpi_iterate(int type, vpiHandle ref)
    function vpi_iterate (aType : Integer; Ref : vpiHandle) return vpiHandle;
    pragma Export (C, vpi_iterate, "vpi_iterate");

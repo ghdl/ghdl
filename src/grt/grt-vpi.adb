@@ -300,6 +300,28 @@ package body Grt.Vpi is
       end case;
    end Trace_Time_Tag;
 
+   procedure Trace_Put_Flags (V : Integer) is
+   begin
+      case V is
+         when vpiNoDelay =>
+            Trace ("vpiNoDelay");
+         when vpiInertialDelay =>
+            Trace ("vpiInertialDelay");
+         when vpiTransportDelay =>
+            Trace ("vpiTransportDelay");
+         when vpiPureTransportDelay =>
+            Trace ("vpiPureTransportDelay");
+         when vpiForceFlag =>
+            Trace ("vpiForceFlag");
+         when vpiReleaseFlag =>
+            Trace ("vpiReleaseFlag");
+         when vpiCancelEvent =>
+            Trace ("vpiCancelEvent");
+         when others =>
+            Trace (V);
+      end case;
+   end Trace_Put_Flags;
+
    procedure Trace (H : vpiHandle)
    is
       function To_Address is
@@ -1329,8 +1351,20 @@ package body Grt.Vpi is
    type Std_Ulogic_Array is array (Ghdl_Index_Type range <>) of Std_Ulogic;
 
    procedure Ii_Vpi_Put_Value (Info : Verilog_Wire_Info;
-                               Vec : Std_Ulogic_Array) is
+                               Vec : Std_Ulogic_Array;
+                               Kind : Force_Kind)
+   is
+      Mode : Force_Mode;
    begin
+      case Info.Val is
+         when Vcd_Effective =>
+            Mode := Force_Effective;
+         when others =>
+            --  Force_Driving sets both the driving and the
+            --  effective value.
+            Mode := Force_Driving;
+      end case;
+
       case Info.Vtype is
          when Vcd_Bad
             | Vcd_Array
@@ -1341,67 +1375,54 @@ package body Grt.Vpi is
            | Vcd_Bitvector =>
             for J in Vec'Range loop
                declare
-                  V : constant Ghdl_B1 :=
-                    Ghdl_B1 (Vec (J) = '1' or Vec (J) = 'H');
+                  Val : Value_Union;
                begin
-                  case Vcd_Value_Valid (Info.Val) is
-                     when Vcd_Effective =>
-                        Ghdl_Signal_Force_Effective_B1
-                          (To_Signal_Arr_Ptr (Info.Ptr)(J), V);
-                     when Vcd_Driving =>
-                        --  Force_Driving sets both the driving and the
-                        --  effective value.
-                        Ghdl_Signal_Force_Driving_B1
-                          (To_Signal_Arr_Ptr (Info.Ptr)(J), V);
-                     when Vcd_Variable =>
-                        Verilog_Wire_Val (Info, J).B1 := V;
-                  end case;
+                  Val.B1 := Ghdl_B1 (Vec (J) = '1' or Vec (J) = 'H');
+                  if Info.Val = Vcd_Variable then
+                     Verilog_Wire_Val (Info, J).B1 := Val.B1;
+                  else
+                     Ghdl_Signal_Force_Any
+                       (To_Signal_Arr_Ptr (Info.Ptr)(J), Kind, Mode, Val);
+                  end if;
                end;
             end loop;
          when Vcd_Stdlogic
            | Vcd_Stdlogic_Vector =>
             for J in Vec'Range loop
                declare
-                  V : constant Ghdl_E8 := Std_Ulogic'Pos (Vec (J));
+                  Val : Value_Union;
                begin
-                  case Vcd_Value_Valid (Info.Val) is
-                     when Vcd_Effective =>
-                        Ghdl_Signal_Force_Effective_E8
-                          (To_Signal_Arr_Ptr (Info.Ptr)(J), V);
-                     when Vcd_Driving =>
-                        Ghdl_Signal_Force_Driving_E8
-                          (To_Signal_Arr_Ptr (Info.Ptr)(J), V);
-                     when Vcd_Variable =>
-                        Verilog_Wire_Val (Info, J).E8 := V;
-                  end case;
+                  Val.E8 := Std_Ulogic'Pos (Vec (J));
+                  if Info.Val = Vcd_Variable then
+                     Verilog_Wire_Val (Info, J).E8 := Val.E8;
+                  else
+                     Ghdl_Signal_Force_Any
+                       (To_Signal_Arr_Ptr (Info.Ptr)(J), Kind, Mode, Val);
+                  end if;
                end;
             end loop;
          when Vcd_Enum8 =>
             declare
-               V : Ghdl_E8;
+               V : Value_Union;
             begin
-               V := 0;
+               V.E8 := 0;
                for I in reverse Vec'Range loop
                   if Vec (I) = '1' or Vec (I) = 'H' then
                      --  Ok, handles 'X', 'Z'... like '0'.
-                     V := V or Shift_Left (1, Natural (Vec'Last - I));
+                     V.E8 := V.E8 or Shift_Left (1, Natural (Vec'Last - I));
                   end if;
                end loop;
-               case Vcd_Value_Valid (Info.Val) is
-                  when Vcd_Effective =>
-                     Ghdl_Signal_Force_Effective_E8
-                       (To_Signal_Arr_Ptr (Info.Ptr)(0), V);
-                  when Vcd_Driving =>
-                     Ghdl_Signal_Force_Driving_E8
-                       (To_Signal_Arr_Ptr (Info.Ptr)(0), V);
-                  when Vcd_Variable =>
-                     Verilog_Wire_Val (Info).E8 := V;
-               end case;
+               if Info.Val = Vcd_Variable then
+                  Verilog_Wire_Val (Info).E8 := V.E8;
+               else
+                  Ghdl_Signal_Force_Any
+                    (To_Signal_Arr_Ptr (Info.Ptr)(0), Kind, Mode, V);
+               end if;
             end;
          when Vcd_Integer32 =>
             declare
                R : Ghdl_U32;
-               V : Ghdl_I32;
+               V : Value_Union;
             begin
                R := 0;
                --  FIXME: what about sign extension ?
@@ -1413,17 +1434,13 @@ package body Grt.Vpi is
                      R := R or 1;
                   end if;
                end loop;
-               V := To_Ghdl_I32 (R);
-               case Vcd_Value_Valid (Info.Val) is
-                  when Vcd_Effective =>
-                     Ghdl_Signal_Force_Effective_I32
-                       (To_Signal_Arr_Ptr (Info.Ptr)(0), V);
-                  when Vcd_Driving =>
-                     Ghdl_Signal_Force_Driving_I32
-                       (To_Signal_Arr_Ptr (Info.Ptr)(0), V);
-                  when Vcd_Variable =>
-                     Verilog_Wire_Val (Info).I32 := V;
-               end case;
+               V.I32 := To_Ghdl_I32 (R);
+               if Info.Val = Vcd_Variable then
+                  Verilog_Wire_Val (Info).I32 := V.I32;
+               else
+                  Ghdl_Signal_Force_Any
+                    (To_Signal_Arr_Ptr (Info.Ptr)(0), Kind, Mode, V);
+               end if;
             end;
 
          when Vcd_Float64 =>
@@ -1433,7 +1450,8 @@ package body Grt.Vpi is
 
    procedure Ii_Vpi_Put_Value_Int (Info : Verilog_Wire_Info;
                                    Len  : Ghdl_Index_Type;
-                                   Val : Unsigned_32)
+                                   Val : Unsigned_32;
+                                   Kind : Force_Kind)
    is
       V : Unsigned_32;
       Vec : Std_Ulogic_Array (0 .. Len - 1);
@@ -1447,12 +1465,13 @@ package body Grt.Vpi is
          end if;
          V := Shift_Right_Arithmetic (V, 1);
       end loop;
-      Ii_Vpi_Put_Value (Info, Vec);
+      Ii_Vpi_Put_Value (Info, Vec, Kind);
    end Ii_Vpi_Put_Value_Int;
 
    procedure Ii_Vpi_Put_Value_Bin_Str (Info : Verilog_Wire_Info;
                                        Len : Ghdl_Index_Type;
-                                       Str : Ghdl_C_String)
+                                       Str : Ghdl_C_String;
+                                       Kind : Force_Kind)
    is
       Slen : constant Natural := strlen (Str);
       Soff : Integer;
@@ -1480,12 +1499,13 @@ package body Grt.Vpi is
          end if;
          Vec (J) := V;
       end loop;
-      Ii_Vpi_Put_Value (Info, Vec);
+      Ii_Vpi_Put_Value (Info, Vec, Kind);
    end Ii_Vpi_Put_Value_Bin_Str;
 
    procedure Ii_Vpi_Put_Value_Vecval (Info : Verilog_Wire_Info;
                                       Len  : Ghdl_Index_Type;
-                                      Val : p_vpi_vecval)
+                                      Val : p_vpi_vecval;
+                                      Kind : Force_Kind)
    is
       Va, Vb : Unsigned_32;
       Vec : Std_Ulogic_Array (0 .. Len - 1);
@@ -1524,7 +1544,7 @@ package body Grt.Vpi is
          Base := Base + Bits;
          Increment_p_vpi_vecval (Pointer);
       end loop;
-      Ii_Vpi_Put_Value (Info, Vec);
+      Ii_Vpi_Put_Value (Info, Vec, Kind);
    end Ii_Vpi_Put_Value_Vecval;
 
    -- vpiHandle vpi_put_value(vpiHandle obj, p_vpi_value value,
@@ -1532,25 +1552,37 @@ package body Grt.Vpi is
    function vpi_put_value (aObj : vpiHandle;
                            aValue : p_vpi_value;
                            aWhen : p_vpi_time;
-                           aFlags : integer)
-                         return vpiHandle
+                           aFlags : integer) return vpiHandle
    is
       pragma Unreferenced (aWhen);
-      pragma Unreferenced (aFlags);
 
       Info : Verilog_Wire_Info;
       Len  : Ghdl_Index_Type;
+      Kind : Force_Kind;
    begin
       if Flag_Trace then
          Trace_Start ("vpi_put_value (");
          Trace (aObj);
          Trace (", ");
          Trace_Value (aValue);
+         Trace (", ");
+         Trace_Put_Flags (aFlags);
          Trace (")");
          Trace_Newline;
       end if;
 
       Reset_Error;
+
+      if aFlags = vpiNoDelay or aFlags = vpiInertialDelay then
+         Kind := Force; --  FIXME
+      elsif aFlags = vpiForceFlag then
+         Kind := Force;
+      elsif aFlags = vpiReleaseFlag then
+         Kind := Release;
+      else
+         dbgPut_Line ("vpi_put_value: unknown flags");
+         return null;
+      end if;
 
       -- A very simple write procedure for VPI.
       -- Basically, it accepts bin_str values, integers and vpiVecval
@@ -1623,7 +1655,7 @@ package body Grt.Vpi is
          when vpiObjTypeVal =>
             dbgPut_Line ("vpi_put_value: vpiObjTypeVal");
          when vpiBinStrVal =>
-            Ii_Vpi_Put_Value_Bin_Str (Info, Len, aValue.Str);
+            Ii_Vpi_Put_Value_Bin_Str (Info, Len, aValue.Str, Kind);
          when vpiOctStrVal =>
             dbgPut_Line ("vpi_put_value: vpiNet, vpiOctStrVal");
          when vpiDecStrVal =>
@@ -1634,7 +1666,7 @@ package body Grt.Vpi is
             dbgPut_Line ("vpi_put_value: vpiNet, vpiScalarVal");
          when vpiIntVal =>
             Ii_Vpi_Put_Value_Int
-              (Info, Len, To_Unsigned_32 (aValue.Integer_m));
+              (Info, Len, To_Unsigned_32 (aValue.Integer_m), Kind);
          when vpiRealVal =>
             dbgPut_Line("vpi_put_value: vpiRealVal");
          when vpiStringVal =>
@@ -1642,7 +1674,7 @@ package body Grt.Vpi is
          when vpiTimeVal =>
             dbgPut_Line("vpi_put_value: vpiTimeVal");
          when vpiVectorVal =>
-            Ii_Vpi_Put_Value_Vecval (Info, Len, aValue.Vector);
+            Ii_Vpi_Put_Value_Vecval (Info, Len, aValue.Vector, Kind);
          when vpiStrengthVal =>
             dbgPut_Line("vpi_put_value: vpiStrengthVal");
          when others =>
