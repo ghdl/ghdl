@@ -291,13 +291,6 @@ package Grt.Signals is
       Is_Drv_Forced : Boolean;
       Is_Eff_Forced : Boolean;
 
-      --  True if a force is being scheduled for the current cycle.
-      --  This flag is set when a force is applied and cleared when all force
-      --  are applied.  The purpose of it is to discard release for the same
-      --  cycle as force have the priority over release.
-      Is_Drv_Force_Scheduled : Boolean;
-      Is_Eff_Force_Scheduled : Boolean;
-
       --  Set only on an implicit signal when the signal will stay active on
       --  the next cycle.  For example, 'Quiet(0ns) or 'Stable(0ns) are
       --  generally active for 2 cycles, as they are first False and then True.
@@ -628,7 +621,7 @@ package Grt.Signals is
    procedure Ghdl_Process_Add_Port_Driver
      (Sign : Ghdl_Signal_Ptr; Val : Value_Union);
 
-   type Force_Kind is (Force, Release);
+   type Force_Kind is (Force, Release, Deposite);
    type Force_Mode is (Force_Effective, Force_Driving);
 
    procedure Ghdl_Signal_Force_Any (Sig : Ghdl_Signal_Ptr;

@@ -242,8 +242,6 @@ package body Grt.Signals is
                                         Is_Dumped => False,
                                         Is_Drv_Forced => False,
                                         Is_Eff_Forced => False,
-                                        Is_Drv_Force_Scheduled => False,
-                                        Is_Eff_Force_Scheduled => False,
                                         RO_Event => False,
                                         Implicit_Active_Next => False,
                                         Seen => False,
@@ -674,8 +672,6 @@ package body Grt.Signals is
                                                Is_Dumped => False,
                                                Is_Drv_Forced => False,
                                                Is_Eff_Forced => False,
-                                               Is_Drv_Force_Scheduled => False,
-                                               Is_Eff_Force_Scheduled => False,
                                                RO_Event => False,
                                                Implicit_Active_Next => False,
                                                Seen => False,
@@ -1955,7 +1951,7 @@ package body Grt.Signals is
       Next : Force_Value_Acc;
       Sig  : Ghdl_Signal_Ptr;
       case Kind is
-         when Force =>
+         when Force | Deposite =>
             Val : aliased Value_Union;
          when Release =>
             null;
@@ -1966,22 +1962,32 @@ package body Grt.Signals is
      (Force_Value, Force_Value_Acc);
 
    --  Chain of forced values for the next cycle.
-   Force_Value_First : Force_Value_Acc;
-   Force_Value_Last : Force_Value_Acc;
+   type Force_Value_Chain is record
+      First : Force_Value_Acc;
+      Last : Force_Value_Acc;
+   end record;
 
-   procedure Append_Force_Value (F : Force_Value_Acc) is
+   Force_Chain : Force_Value_Chain;
+   Release_Chain : Force_Value_Chain;
+   Deposite_Chain : Force_Value_Chain;
+   Override_Present : Boolean;
+
+   procedure Append_Force_Value (Chain : in out Force_Value_Chain;
+                                 F : Force_Value_Acc) is
    begin
-      if Force_Value_First = null then
-         Force_Value_First := F;
+      if Chain.First = null then
+         Chain.First := F;
       else
-         Force_Value_Last.Next := F;
+         Chain.Last.Next := F;
       end if;
-      Force_Value_Last := F;
+      Chain.Last := F;
+      Override_Present := True;
    end Append_Force_Value;
 
    procedure Ghdl_Signal_Release_Eff (Sig : Ghdl_Signal_Ptr) is
    begin
-      Append_Force_Value (new Force_Value'(Kind => Release,
+      Append_Force_Value (Release_Chain,
+                          new Force_Value'(Kind => Release,
                                            Mode => Force_Effective,
                                            Next => null,
                                            Sig => Sig));
@@ -1989,7 +1995,8 @@ package body Grt.Signals is
 
    procedure Ghdl_Signal_Release_Drv (Sig : Ghdl_Signal_Ptr) is
    begin
-      Append_Force_Value (new Force_Value'(Kind => Release,
+      Append_Force_Value (Release_Chain,
+                          new Force_Value'(Kind => Release,
                                            Mode => Force_Driving,
                                            Next => null,
                                            Sig => Sig));
@@ -1998,7 +2005,8 @@ package body Grt.Signals is
    procedure Ghdl_Signal_Force_Driving_B1 (Sig : Ghdl_Signal_Ptr;
                                            Val : Ghdl_B1) is
    begin
-      Append_Force_Value (new Force_Value'(Kind => Force,
+      Append_Force_Value (Force_Chain,
+                          new Force_Value'(Kind => Force,
                                            Mode => Force_Driving,
                                            Next => null,
                                            Sig => Sig,
@@ -2009,7 +2017,8 @@ package body Grt.Signals is
    procedure Ghdl_Signal_Force_Effective_B1 (Sig : Ghdl_Signal_Ptr;
                                              Val : Ghdl_B1) is
    begin
-      Append_Force_Value (new Force_Value'(Kind => Force,
+      Append_Force_Value (Force_Chain,
+                          new Force_Value'(Kind => Force,
                                            Mode => Force_Effective,
                                            Next => null,
                                            Sig => Sig,
@@ -2020,7 +2029,8 @@ package body Grt.Signals is
    procedure Ghdl_Signal_Force_Driving_E8 (Sig : Ghdl_Signal_Ptr;
                                            Val : Ghdl_E8) is
    begin
-      Append_Force_Value (new Force_Value'(Kind => Force,
+      Append_Force_Value (Force_Chain,
+                          new Force_Value'(Kind => Force,
                                            Mode => Force_Driving,
                                            Next => null,
                                            Sig => Sig,
@@ -2031,7 +2041,8 @@ package body Grt.Signals is
    procedure Ghdl_Signal_Force_Effective_E8 (Sig : Ghdl_Signal_Ptr;
                                              Val : Ghdl_E8) is
    begin
-      Append_Force_Value (new Force_Value'(Kind => Force,
+      Append_Force_Value (Force_Chain,
+                          new Force_Value'(Kind => Force,
                                            Mode => Force_Effective,
                                            Next => null,
                                            Sig => Sig,
@@ -2042,7 +2053,8 @@ package body Grt.Signals is
    procedure Ghdl_Signal_Force_Driving_E32 (Sig : Ghdl_Signal_Ptr;
                                             Val : Ghdl_E32) is
    begin
-      Append_Force_Value (new Force_Value'(Kind => Force,
+      Append_Force_Value (Force_Chain,
+                          new Force_Value'(Kind => Force,
                                            Mode => Force_Driving,
                                            Next => null,
                                            Sig => Sig,
@@ -2053,7 +2065,8 @@ package body Grt.Signals is
    procedure Ghdl_Signal_Force_Effective_E32 (Sig : Ghdl_Signal_Ptr;
                                               Val : Ghdl_E32) is
    begin
-      Append_Force_Value (new Force_Value'(Kind => Force,
+      Append_Force_Value (Force_Chain,
+                          new Force_Value'(Kind => Force,
                                            Mode => Force_Effective,
                                            Next => null,
                                            Sig => Sig,
@@ -2064,7 +2077,8 @@ package body Grt.Signals is
    procedure Ghdl_Signal_Force_Driving_I32 (Sig : Ghdl_Signal_Ptr;
                                             Val : Ghdl_I32) is
    begin
-      Append_Force_Value (new Force_Value'(Kind => Force,
+      Append_Force_Value (Force_Chain,
+                          new Force_Value'(Kind => Force,
                                            Mode => Force_Driving,
                                            Next => null,
                                            Sig => Sig,
@@ -2075,7 +2089,8 @@ package body Grt.Signals is
    procedure Ghdl_Signal_Force_Effective_I32 (Sig : Ghdl_Signal_Ptr;
                                               Val : Ghdl_I32) is
    begin
-      Append_Force_Value (new Force_Value'(Kind => Force,
+      Append_Force_Value (Force_Chain,
+                          new Force_Value'(Kind => Force,
                                            Mode => Force_Effective,
                                            Next => null,
                                            Sig => Sig,
@@ -2086,7 +2101,8 @@ package body Grt.Signals is
    procedure Ghdl_Signal_Force_Driving_I64 (Sig : Ghdl_Signal_Ptr;
                                             Val : Ghdl_I64) is
    begin
-      Append_Force_Value (new Force_Value'(Kind => Force,
+      Append_Force_Value (Force_Chain,
+                          new Force_Value'(Kind => Force,
                                            Mode => Force_Driving,
                                            Next => null,
                                            Sig => Sig,
@@ -2097,7 +2113,8 @@ package body Grt.Signals is
    procedure Ghdl_Signal_Force_Effective_I64 (Sig : Ghdl_Signal_Ptr;
                                               Val : Ghdl_I64) is
    begin
-      Append_Force_Value (new Force_Value'(Kind => Force,
+      Append_Force_Value (Force_Chain,
+                          new Force_Value'(Kind => Force,
                                            Mode => Force_Effective,
                                            Next => null,
                                            Sig => Sig,
@@ -2108,7 +2125,8 @@ package body Grt.Signals is
    procedure Ghdl_Signal_Force_Driving_F64 (Sig : Ghdl_Signal_Ptr;
                                             Val : Ghdl_F64) is
    begin
-      Append_Force_Value (new Force_Value'(Kind => Force,
+      Append_Force_Value (Force_Chain,
+                          new Force_Value'(Kind => Force,
                                            Mode => Force_Driving,
                                            Next => null,
                                            Sig => Sig,
@@ -2119,7 +2137,8 @@ package body Grt.Signals is
    procedure Ghdl_Signal_Force_Effective_F64 (Sig : Ghdl_Signal_Ptr;
                                               Val : Ghdl_F64) is
    begin
-      Append_Force_Value (new Force_Value'(Kind => Force,
+      Append_Force_Value (Force_Chain,
+                          new Force_Value'(Kind => Force,
                                            Mode => Force_Effective,
                                            Next => null,
                                            Sig => Sig,
@@ -2135,19 +2154,27 @@ package body Grt.Signals is
       F : Force_Value_Acc;
    begin
       case Kind is
+         when Deposite =>
+            F := new Force_Value'(Kind => Deposite,
+                                  Mode => Mode,
+                                  Next => null,
+                                  Sig => Sig,
+                                  Val => Val);
+            Append_Force_Value (Deposite_Chain, F);
          when Force =>
             F := new Force_Value'(Kind => Force,
                                   Mode => Mode,
                                   Next => null,
                                   Sig => Sig,
                                   Val => Val);
+            Append_Force_Value (Force_Chain, F);
          when Release =>
             F := new Force_Value'(Kind => Release,
                                   Mode => Mode,
                                   Next => null,
                                   Sig => Sig);
+            Append_Force_Value (Release_Chain, F);
       end case;
-      Append_Force_Value (F);
    end Ghdl_Signal_Force_Any;
 
    --  Chain of saved value of signals being forced.
@@ -2259,7 +2286,7 @@ package body Grt.Signals is
       if Signal_Active_Chain.Link /= null then
          return Current_Time;
       end if;
-      if Force_Value_First /= null then
+      if Override_Present then
          return Current_Time;
       end if;
 
@@ -3334,6 +3361,7 @@ package body Grt.Signals is
       end loop;
    end Set_Effective_Value;
 
+   --  Propagate signal SIG_NET (for connections or attributes).
    procedure Run_Propagation (Sig_Net : Ghdl_Signal_Ptr)
    is
       Net : constant Signal_Net_Type := Sig_Net.Net;
@@ -3667,6 +3695,7 @@ package body Grt.Signals is
 --       end loop;
    end Reset_Active_Flag;
 
+   --  Update active signal SIG.
    procedure Update_A_Signal (Sig : Ghdl_Signal_Ptr)
    is
       Trans : Transaction_Acc;
@@ -3684,9 +3713,9 @@ package body Grt.Signals is
       --  c) If S is driving-value foced, the driving value of S is unchanged
       --     from its previous value; no further steps are required.
       --     Otherwise, proceed to step d).
-      --  d) If a driving-value deposit is scheduled for S or for a signal of
+      --  d) If a driving-value deposite is scheduled for S or for a signal of
       --     which S is a subelement, the driving value of S is the driving
-      --     deposite value for S or the element of the driving deposit for
+      --     deposite value for S or the element of the driving deposite for
       --     the signal of which S is a subelement, as appropriate; no further
       --     steps are requited.  Otherwise, proceed to step e) or f), as
       --     appropriate;
@@ -3778,6 +3807,22 @@ package body Grt.Signals is
       end case;
    end Update_A_Signal;
 
+   --  Called by Update_Signals after force/release/deposite has changed the
+   --  driving or effective value of a signal.
+   --  The value should be propagated.
+   procedure Mark_Force_Active (Sig : Ghdl_Signal_Ptr) is
+   begin
+      --  If already in the active chain, it means that a driver is
+      --  also active.  Do not do anything particular.
+      Insert_Active_Chain (Sig);
+
+      if Sig.Net in Signal_Net_Defined then
+         --  Mark SIG as active so that propagation will execute
+         --  just below.
+         Mark_Active (Sig);
+      end if;
+   end Mark_Force_Active;
+
    procedure Update_Signals
    is
       Sig : Ghdl_Signal_Ptr;
@@ -3793,88 +3838,120 @@ package body Grt.Signals is
       --  A signal is said to be active during a given simulation cycle if
       --  ...
       --  - A force, a deposite, or a release is scheduled for the signal.
-      if Force_Value_First /= null then
+      if Override_Present then
          declare
             Fv : Force_Value_Acc;
             Next_Fv : Force_Value_Acc;
+            Discard : Boolean;
          begin
-            Fv := Force_Value_First;
+            --  Release
+            Fv := Release_Chain.First;
             while Fv /= null loop
                Sig := Fv.Sig;
-
-               case Fv.Kind is
-                  when Force =>
-                     --  TODO: warn if forced many times in the same cycle ?
-                     case Fv.Mode is
-                        when Force_Driving =>
-                           if not Sig.Flags.Is_Drv_Forced then
-                              --  Save old value.
-                              Save_Forced_Value
-                                (Sig, Sig.Driving_Value, Force_Driving);
-                           end if;
-                           Sig.Flags.Is_Drv_Forced := True;
-                           Sig.Flags.Is_Drv_Force_Scheduled := True;
-                           Sig.Driving_Value := Fv.Val;
-                        when Force_Effective =>
-                           if not Sig.Flags.Is_Eff_Forced then
-                              --  Save old value.
-                              Save_Forced_Value
-                                (Sig, Sig.Value_Ptr.all, Force_Effective);
-                           end if;
-                           Sig.Flags.Is_Eff_Forced := True;
-                           Sig.Flags.Is_Eff_Force_Scheduled := True;
-                           Set_Effective_Value (Sig, Fv.Val);
-                     end case;
-                  when Release =>
-                     case Fv.Mode is
-                        when Force_Driving =>
-                           if not Sig.Flags.Is_Drv_Force_Scheduled
-                             and then Sig.Flags.Is_Drv_Forced
-                           then
-                              Sig.Driving_Value := Get_Forced_Old_Value
-                                (Sig, Force_Driving);
-                              Sig.Flags.Is_Drv_Forced := False;
-                           end if;
-                        when Force_Effective =>
-                           if not Sig.Flags.Is_Eff_Force_Scheduled
-                             and then Sig.Flags.Is_Eff_Forced
-                           then
-                              Set_Effective_Value
-                                (Sig,
-                                 Get_Forced_Old_Value (Sig, Force_Effective));
-                              Sig.Flags.Is_Eff_Forced := False;
-                           end if;
-                     end case;
+               pragma Assert (Fv.Kind = Release);
+               case Fv.Mode is
+                  when Force_Driving =>
+                     if Sig.Flags.Is_Drv_Forced then
+                        Sig.Driving_Value := Get_Forced_Old_Value
+                          (Sig, Force_Driving);
+                        Sig.Flags.Is_Drv_Forced := False;
+                     end if;
+                  when Force_Effective =>
+                     if Sig.Flags.Is_Eff_Forced then
+                        Set_Effective_Value
+                          (Sig,
+                           Get_Forced_Old_Value (Sig, Force_Effective));
+                        Sig.Flags.Is_Eff_Forced := False;
+                     end if;
                end case;
 
-               --  If alredy in the active chain, it means that a driver is
-               --  also active.  Do not do anything particular.
-               if Sig.Net in Signal_Net_Defined then
-                  --  Mark SIG as active so that propagation will execute
-                  --  just below.
-                  Mark_Active (Sig);
-               end if;
-               Insert_Active_Chain (Sig);
-
-               Fv := Fv.Next;
-            end loop;
-
-            --  Free force/release.  This is done after to clear the
-            --  schedule flags.
-            --  Not highly efficient, but there shouldn't be a lot of force /
-            --  release, and it allows to detect force+release 'conflicts'.
-            Fv := Force_Value_First;
-            while Fv /= null loop
-               Fv.Sig.Flags.Is_Drv_Force_Scheduled := False;
-               Fv.Sig.Flags.Is_Eff_Force_Scheduled := False;
+               Mark_Force_Active (Sig);
 
                Next_Fv := Fv.Next;
                Free (Fv);
                Fv := Next_Fv;
             end loop;
-            Force_Value_First := null;
-            Force_Value_Last := null;
+            Release_Chain.First := null;
+            Release_Chain.Last := null;
+
+            --  Force.
+            Fv := Force_Chain.First;
+            while Fv /= null loop
+               Sig := Fv.Sig;
+               pragma Assert (Fv.Kind = Force);
+               --  TODO: warn if forced many times in the same cycle ?
+               case Fv.Mode is
+                  when Force_Driving =>
+                     if not Sig.Flags.Is_Drv_Forced then
+                        --  Save old value.
+                        Save_Forced_Value
+                          (Sig, Sig.Driving_Value, Force_Driving);
+                     end if;
+                     Sig.Flags.Is_Drv_Forced := True;
+                     Sig.Driving_Value := Fv.Val;
+                  when Force_Effective =>
+                     if not Sig.Flags.Is_Eff_Forced then
+                        --  Save old value.
+                        Save_Forced_Value
+                          (Sig, Sig.Value_Ptr.all, Force_Effective);
+                     end if;
+                     Sig.Flags.Is_Eff_Forced := True;
+                     Set_Effective_Value (Sig, Fv.Val);
+               end case;
+
+               Mark_Force_Active (Sig);
+
+               Next_Fv := Fv.Next;
+               Free  (Fv);
+               Fv := Next_Fv;
+            end loop;
+            Force_Chain.First := null;
+            Force_Chain.Last := null;
+
+            --  Deposite
+            Fv := Deposite_Chain.First;
+            Deposite_Chain.Last := null;
+            while Fv /= null loop
+               Sig := Fv.Sig;
+               pragma Assert (Fv.Kind = Deposite);
+               Discard := False;
+               --  The signal is marked force during the update and
+               --  propagation.
+               case Fv.Mode is
+                  when Force_Driving =>
+                     if not Sig.Flags.Is_Drv_Forced then
+                        Sig.Flags.Is_Drv_Forced := True;
+                        Sig.Driving_Value := Fv.Val;
+                     else
+                        Discard := True;
+                     end if;
+                  when Force_Effective =>
+                     if not Sig.Flags.Is_Eff_Forced then
+                        Sig.Flags.Is_Eff_Forced := True;
+                        Set_Effective_Value (Sig, Fv.Val);
+                     else
+                        Discard := True;
+                     end if;
+               end case;
+
+               Next_Fv := Fv.Next;
+
+               if Discard then
+                  Free (Fv);
+               else
+                  Mark_Force_Active (Sig);
+                  if Deposite_Chain.Last = null then
+                     Deposite_Chain.First := Fv;
+                  else
+                     Deposite_Chain.Last.Next := Fv;
+                  end if;
+                  Deposite_Chain.Last := Fv;
+                  Fv.Next := null;
+               end if;
+               Fv := Next_Fv;
+            end loop;
          end;
+         Override_Present := False;
       end if;
 
       --  For each active signal.
@@ -3894,6 +3971,30 @@ package body Grt.Signals is
 
          Sig := Next_Sig;
       end loop;
+
+      if Deposite_Chain.First /= null then
+         declare
+            Fv : Force_Value_Acc;
+            Next_Fv : Force_Value_Acc;
+         begin
+            Fv := Deposite_Chain.First;
+            while Fv /= null loop
+               Sig := Fv.Sig;
+               case Fv.Mode is
+                  when Force_Driving =>
+                     Sig.Flags.Is_Drv_Forced := False;
+                  when Force_Effective =>
+                     Sig.Flags.Is_Eff_Forced := False;
+               end case;
+
+               Next_Fv := Fv.Next;
+               Free (Fv);
+               Fv := Next_Fv;
+            end loop;
+            Deposite_Chain.First := null;
+            Deposite_Chain.Last := null;
+         end;
+      end if;
 
       --  Un-mark updated nets.
       Sig := Update_Clear_Chain;
@@ -3916,6 +4017,7 @@ package body Grt.Signals is
       end loop;
    end Update_Signals;
 
+   --  Propagate the value of a signal during initialization.
    procedure Run_Propagation_Init (Start : Signal_Net_Type)
    is
       I : Signal_Net_Type;
@@ -4077,6 +4179,7 @@ package body Grt.Signals is
       Signal_Active_Chain := Signal_End;
       Future_List := Signal_End;
       Update_Clear_Chain := Signal_End;
+      Override_Present := False;
    end Init;
 
 end Grt.Signals;

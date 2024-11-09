@@ -1574,7 +1574,7 @@ package body Grt.Vpi is
       Reset_Error;
 
       if aFlags = vpiNoDelay or aFlags = vpiInertialDelay then
-         Kind := Force; --  FIXME
+         Kind := Deposite;
       elsif aFlags = vpiForceFlag then
          Kind := Force;
       elsif aFlags = vpiReleaseFlag then

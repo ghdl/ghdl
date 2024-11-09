@@ -318,6 +318,8 @@ package body Simul.Vhdl_Simul is
                   Fval := To_Ghdl_Value (Val);
                when Release =>
                   Fval.B1 := False;
+               when Deposite =>
+                  raise Internal_Error;
             end case;
             case Mode is
                when Iir_Force_In =>
