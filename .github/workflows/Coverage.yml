@@ -68,6 +68,8 @@ jobs:
   coverage-publish:
     name: '📮 Publish coverage report'
     runs-on: ubuntu-latest
+# Disabled because Coverage is disabled.
+    if: false
 
     needs:
       - coverage
