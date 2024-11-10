@@ -3683,12 +3683,14 @@ package body Trans.Chap3 is
    is
       L_List : constant Iir_Flist := Get_Elements_Declaration_List (L_Type);
       R_List : constant Iir_Flist := Get_Elements_Declaration_List (R_Type);
+      L_El, R_El : Iir;
       Res : Tri_State_Type;
    begin
       Res := True;
       for I in Flist_First .. Flist_Last (L_List) loop
-         case Locally_Types_Match (Get_Type (Get_Nth_Element (L_List, I)),
-                                   Get_Type (Get_Nth_Element (R_List, I))) is
+         L_El := Get_Type (Get_Nth_Element (L_List, I));
+         R_El := Get_Type (Get_Nth_Element (R_List, I));
+         case Locally_Types_Match (L_El, R_El) is
             when False =>
                return False;
             when True =>
@@ -3707,6 +3709,7 @@ package body Trans.Chap3 is
       if L_Type = R_Type then
          return True;
       end if;
+
       case Get_Kind (L_Type) is
          when Iir_Kind_Array_Subtype_Definition =>
             return Locally_Array_Match (L_Type, R_Type);
