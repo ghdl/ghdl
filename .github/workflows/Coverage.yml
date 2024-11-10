@@ -68,13 +68,12 @@ jobs:
   coverage-publish:
     name: '📮 Publish coverage report'
     runs-on: ubuntu-latest
-# Disabled because Coverage is disabled.
-    if: false
 
     needs:
       - coverage
 
-    if: always() && github.repository == 'ghdl/ghdl' && github.event_name != 'pull_request'
+# Disabled because Coverage is disabled.
+    if: always() && github.repository == 'ghdl/ghdl' && github.event_name != 'pull_request' && false
 
     steps:
 
