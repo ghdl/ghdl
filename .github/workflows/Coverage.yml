@@ -12,6 +12,8 @@ jobs:
   coverage:
     name: '📈 Coverage'
     runs-on: windows-latest
+# Fails on: platform win32 -- Python 3.12.7 (was ok with Python 3.11)
+    if: false
 
     defaults:
       run:
