@@ -34,6 +34,7 @@ with PSL.Errors; use PSL.Errors;
 
 with Trans_Analyzes;
 with Trans.Chap1;
+with Trans.Chap2;
 with Trans.Chap3;
 with Trans.Chap4;
 with Trans.Chap5;
@@ -2406,10 +2407,32 @@ package body Trans.Chap9 is
       declare
          use Chap5;
          Entity_Map : Map_Env;
+         Inst_Hdr : Iir;
       begin
+         --  If the entity has an instantiated header (because it has generic
+         --  packages), this instantiated header (in fact the instantiated
+         --  entity) needs to be used for the mapping as it has correct types.
+         --  Simply instantiate infos.
+         if Get_Kind (Mapping) = Iir_Kind_Component_Instantiation_Statement
+         then
+            Inst_Hdr := Get_Instantiated_Header (Mapping);
+            if Inst_Hdr = Null_Iir then
+               Inst_Hdr := Entity;
+            else
+               Push_Instantiate_Var_Scope
+                 (Entity_Info.Block_Scope'Access,
+                  Entity_Info.Block_Scope'Access);
+               Chap2.Instantiate_Info_Entity (Inst_Hdr);
+               Pop_Instantiate_Var_Scope
+                 (Entity_Info.Block_Scope'Access);
+            end if;
+         else
+            Inst_Hdr := Entity;
+         end if;
+
          Entity_Map.Scope_Ptr := Entity_Info.Block_Scope'Access;
          Set_Scope_Via_Param_Ptr (Entity_Map.Scope, Var_Sub);
-         Chap5.Elab_Map_Aspect (Entity, Mapping, Entity, Entity_Map);
+         Chap5.Elab_Map_Aspect (Inst_Hdr, Mapping, Inst_Hdr, Entity_Map);
          Clear_Scope (Entity_Map.Scope);
       end;
 

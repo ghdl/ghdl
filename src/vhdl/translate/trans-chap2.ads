@@ -54,6 +54,8 @@ package Trans.Chap2 is
    --  package_instantiation_declaration
    procedure Instantiate_Info_Package (Inst : Iir);
 
+   procedure Instantiate_Info_Entity (Inst : Iir);
+
    --  Elaborate packages that DESIGN_UNIT depends on (except std.standard).
    procedure Elab_Dependence (Design_Unit: Iir_Design_Unit);
 

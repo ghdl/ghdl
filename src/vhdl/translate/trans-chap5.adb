@@ -16,6 +16,7 @@
 
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Sem_Inst;
 with Trans.Chap2;
 with Trans.Chap3;
 with Trans.Chap4;
@@ -947,10 +948,15 @@ package body Trans.Chap5 is
                   when Iir_Kind_Interface_Package_Declaration =>
                      --  The package interface have generics and implicitly
                      --  defines an instantiated package.
-                     pragma Assert
-                       (Get_Generic_Map_Aspect_Chain (Formal) /= Null_Iir);
                      Set_Map_Env (Formal_Env);
-                     Chap2.Elab_Package_Instantiation_Declaration (Formal);
+                     if Get_Generic_Map_Aspect_Chain (Formal) /= Null_Iir then
+                        Chap2.Elab_Package_Instantiation_Declaration (Formal);
+                     else
+                        --  Incompletly instantiated formal.
+                        --  TODO: fix in canon ?
+                        Chap2.Elab_Package_Instantiation_Declaration
+                          (Vhdl.Sem_Inst.Get_Origin (Formal));
+                     end if;
                      Set_Map_Env (Actual_Env);
                   when Iir_Kinds_Interface_Subprogram_Declaration =>
                      --  Expanded.

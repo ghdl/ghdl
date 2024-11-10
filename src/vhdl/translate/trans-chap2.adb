@@ -1788,6 +1788,12 @@ package body Trans.Chap2 is
         (Info.Package_Instance_Spec_Scope'Access);
    end Instantiate_Info_Package;
 
+   procedure Instantiate_Info_Entity (Inst : Iir) is
+   begin
+      Instantiate_Iir_Generic_Chain_Info (Get_Generic_Chain (Inst));
+      Instantiate_Iir_Chain_Info (Get_Port_Chain (Inst));
+   end Instantiate_Info_Entity;
+
    procedure Update_Info_Package (Inst : Iir)
    is
       Spec     : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
