@@ -6582,6 +6582,10 @@ package body Vhdl.Parse is
       then
          -- This is a subtype_indication.
          Res := Create_Iir (Iir_Kind_Allocator_By_Subtype);
+         if Get_Kind (Expr) in Iir_Kinds_Denoting_Name then
+            --  Complete the name.
+            Expr := Parse_Name_Suffix (Expr);
+         end if;
          Expr := Parse_Subtype_Indication (Expr);
          Set_Subtype_Indication (Res, Expr);
       else
