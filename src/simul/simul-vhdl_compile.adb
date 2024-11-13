@@ -1222,18 +1222,7 @@ package body Simul.Vhdl_Compile is
            | Iir_Kind_Procedure_Body =>
             null;
          when Iir_Kind_Protected_Type_Body =>
-            --  Only subprograms spec.
-            declare
-               El : Node;
-            begin
-               El := Get_Declaration_Chain (Decl);
-               while El /= Null_Node loop
-                  if Get_Kind (El) in Iir_Kinds_Subprogram_Declaration then
-                     Build_Decl_Instance (Mem, Inst, El);
-                  end if;
-                  El := Get_Chain (El);
-               end loop;
-            end;
+            null;
          when Iir_Kind_Attribute_Declaration =>
             null;
          when Iir_Kind_Attribute_Specification =>
