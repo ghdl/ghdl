@@ -356,6 +356,7 @@ jobs:
           python3 -m pip install --disable-pip-version-check tomli
           python3 -m pip install --disable-pip-version-check -r testsuite/requirements.txt
 
+      # TODO: replace with https://github.com/pyTooling/Actions/blob/dev/.github/workflows/ExtractConfiguration.yml
       - name: 🔁 Extract configurations from pyproject.toml (only mcode backend)
         if: inputs.coverage && inputs.backend == 'mcode'
         id: getVariables

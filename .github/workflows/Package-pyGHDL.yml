@@ -195,6 +195,7 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check tomli
 
+      # TODO: replace with https://github.com/pyTooling/Actions/blob/dev/.github/workflows/ExtractConfiguration.yml
       - name: 🔁 Extract configurations from pyproject.toml
         if: inputs.coverage
         id: getVariables
