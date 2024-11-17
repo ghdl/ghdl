@@ -302,6 +302,8 @@ package Grt.Signals is
 
       Unused1 : Boolean;
       Unused2 : Boolean;
+      Unused3 : Boolean;
+      Unused4 : Boolean;
    end record;
    pragma Pack (Ghdl_Signal_Flags);
 

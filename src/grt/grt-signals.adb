@@ -3910,6 +3910,7 @@ package body Grt.Signals is
 
             --  Deposite
             Fv := Deposite_Chain.First;
+            Deposite_Chain.First := null;
             Deposite_Chain.Last := null;
             while Fv /= null loop
                Sig := Fv.Sig;
