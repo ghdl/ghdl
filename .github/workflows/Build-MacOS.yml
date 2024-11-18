@@ -94,6 +94,7 @@ jobs:
           echo "LLVM_BINARY_PATH=$(brew --prefix llvm)/bin" >> $GITHUB_ENV
 
       - name: 🔧 Install GNAT
+        id: gnat
         run: |
           GNAT_NAME="gnat-${{ inputs.gnat_arch }}-darwin-${{ inputs.gnat_version }}"
           GNAT_URL="https://github.com/alire-project/GNAT-FSF-builds/releases/download/gnat-${{ inputs.gnat_version }}/${GNAT_NAME}.tar.gz"
@@ -101,19 +102,42 @@ jobs:
           echo "Downloading GNAT ${{ inputs.gnat_version }} (${{ inputs.gnat_arch }}) from '$GNAT_URL'"
           wget -q --show-progress --progress=bar:force:noscroll -O GNAT.tar.gz "$GNAT_URL"
           test $? -ne 0 && echo -e "ERROR: Downloading '$GNAT_URL'" && exit 1
-          ls -lAh
 
+          echo "Extracting GNAT.tar.gz ..."
           tar -zxf GNAT.tar.gz && rm GNAT.tar.gz
           test $? -ne 0 && echo -e "ERROR: Extracting 'GNAT.tar.gz'" && exit 1
+
+          echo "Renaming ${GNAT_NAME} to './gnat ..."
           mv ${GNAT_NAME} gnat
 
-          ./gnat/bin/gnatls -v
-
           echo "GNAT_BINARY_PATH=$(pwd)/gnat/bin" >> $GITHUB_ENV
+
+          echo ""
+          echo "Listing $(pwd)/gnat/lib/*.dylib ..."
+          ls -lAh $(pwd)/gnat/lib/*.dylib
+          echo ""
+          echo "Listing $(pwd)/gnat/lib/gcc/*/*/adalib/*.dylib ..."
+          ls -lAh $(pwd)/gnat/lib/gcc/*/*/adalib/*.dylib
+          echo ""
+
+          GNAT_VERSION="$(./gnat/bin/gnatls --version | grep GNATLS)"
+          echo "gnatls --version:      ${GNAT_VERSION}"
+          regex='GNATLS ([0-9]+)\.([0-9]+)\.([0-9]+)'
+          if [[ "${GNAT_VERSION}" =~ $regex ]]; then
+            # echo "GNAT major version: ${BASH_REMATCH[1]}"
+            GNAT_MAJOR_VERSION=${BASH_REMATCH[1]}
+          else
+            echo "Can't parse GNAT's major version!"
+            echo "::error title=GNAT Version::Can't parse GNAT's major version."
+            exit 1
+          fi
+
+          echo "GNAT_MAJOR_VERSION=${GNAT_MAJOR_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Prepare build environment
         run: |
           mkdir -p build/${{ inputs.backend }}
+
           echo "PATH=$GNAT_BINARY_PATH:$LLVM_BINARY_PATH:$PATH" >> $GITHUB_ENV
 
       - name: ☑ Check build environemnt
@@ -162,6 +186,14 @@ jobs:
         run: |
           cd build/${{ inputs.backend }}
           sudo make install
+          sudo install -m 755 -p ${GNAT_BINARY_PATH}/../lib/libgcc_s.*.*.dylib ../../install/bin/
+          sudo install -m 755 -p ${GNAT_BINARY_PATH}/../lib/libgcc_s.*.*.dylib ../../install/lib/
+          sudo install -m 755 -p ${GNAT_BINARY_PATH}/../lib/gcc/*-apple-darwin*/${{ steps.gnat.outputs.GNAT_MAJOR_VERSION }}.*/adalib/libgnat-${{ steps.gnat.outputs.GNAT_MAJOR_VERSION }}.dylib ../../install/lib/
+
+      - name: 📋 Debug
+        run: |
+          ls -lAh install
+          ls -lAh install/bin
 
       - name: "🚦 Run testsuite: 'sanity'"
         run: |

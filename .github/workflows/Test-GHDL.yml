@@ -88,6 +88,13 @@ jobs:
       - name: Dependency check (macOS)
         if: startsWith(inputs.os_image, 'macos')
         run: |
+          echo "Listing ./install/bin ..."
+          ls -lAh ./install/bin
+          echo ""
+          echo "Listing ./install/lib ..."
+          ls -lAh ./install/lib
+          echo ""
+
           otool -L ./install/bin/ghdl*
           otool -L ./install/lib/libghdl-*
           otool -L ./install/lib/libghdlvpi*
