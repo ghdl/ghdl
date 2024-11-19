@@ -67,6 +67,7 @@ jobs:
           echo "ghdl_image_name=${image_name}" >> $GITHUB_OUTPUT
           echo "ghdl_image_tag=${image_tag}" >> $GITHUB_OUTPUT
           echo "ghdl_image=${image}" >> $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
 
           echo "Building docker file './dist/docker/Dockerfile.${base_image}' ..."
           docker build \
