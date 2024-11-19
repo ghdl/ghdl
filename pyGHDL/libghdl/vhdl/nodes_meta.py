@@ -25,7 +25,7 @@ def get_fields_first(K: IirKind) -> int:
 
     :param K: Node to get first array index from.
     """
-    return 0
+    return 0  # pragma: no cover
 
 
 @export
@@ -42,14 +42,14 @@ def get_fields_last(K: IirKind) -> int:
 
     :param K: Node to get last array index from.
     """
-    return 0
+    return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes_meta__get_field_by_index")
 def get_field_by_index(K: IirKind) -> int:
     """"""
-    return 0
+    return 0  # pragma: no cover
 
 
 @export

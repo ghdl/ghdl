@@ -323,6 +323,6 @@ class FileType(VHDLModel_FileType, DOMMixin):
 
 @export
 class Subtype(VHDLModel_Subtype, DOMMixin):
-    def __init__(self, node: Iir, subtypeName: str):
-        super().__init__(subtypeName)
+    def __init__(self, node: Iir, subtypeName: str, symbol: Symbol):
+        super().__init__(subtypeName, symbol)
         DOMMixin.__init__(self, node)

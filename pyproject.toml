@@ -1,10 +1,76 @@
 [build-system]
 requires = [
-    "pyTooling >= 4.0.1, <5.0",
-    "setuptools >= 62.3.3",
-    "wheel >= 0.38.1"
+  "setuptools ~= 75.5",
+  "wheel ~= 0.45",
+  "pyTooling ~= 8.0"
 ]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 120
+target-version = ['py39', 'py310', 'py311', 'py312', 'py313']
+
+[tool.mypy]
+files = ["pyGHDL"]
+python_version = "3.13"
+#ignore_missing_imports = true
+strict = true
+pretty = true
+show_error_context = true
+show_error_codes = true
+namespace_packages = true
+html_report = "report/typing"
+
+[tool.pytest.ini_options]
+addopts = "--tb=native"
+# Don't set 'python_classes = *' otherwise, pytest doesn't search for classes
+# derived from unittest.Testcase
+python_files = "*"
+python_functions = "test_*"
+filterwarnings = [
+	"error::DeprecationWarning",
+	"error::PendingDeprecationWarning"
+]
+
+[tool.interrogate]
+color = true
+verbose = 1             # possible values: 0 (minimal output), 1 (-v), 2 (-vv)
+fail-under = 59
+exclude = [
+	"build",
+	"dist",
+	"doc",
+	"testsuite",
+	"setup.py"
+]
+ignore-setters = true
+
+[tool.coverage.run]
+branch = true
+relative_files = true
+omit = [
+	"*site-packages*",
+	"setup.py",
+	"testsuite/pyunit/*"
+]
+
+[tool.coverage.report]
+skip_covered = false
+skip_empty = true
+exclude_lines = [
+	"pragma: no cover",
+	"raise NotImplementedError"
+]
+omit = [
+	"tests/*"
+]
+
+[tool.coverage.xml]
+output = "report/coverage/coverage.xml"
+
+[tool.coverage.json]
+output = "report/coverage/coverage.json"
+
+[tool.coverage.html]
+directory = "report/coverage/html"
+title="Code Coverage of pyGHDL"

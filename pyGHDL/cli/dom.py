@@ -37,30 +37,20 @@ from pathlib import Path
 from platform import system as platform_system
 from textwrap import wrap, dedent
 
-from pyGHDL.dom import DOMException
-
-from pyGHDL.libghdl import LibGHDLException
 from pyTooling.Decorators import export
-from pyTooling.TerminalUI import LineTerminal, Severity
-from pyAttributes import Attribute
-from pyAttributes.ArgParseAttributes import (
-    ArgParseMixin,
-    CommonSwitchArgumentAttribute,
-    DefaultAttribute,
-    CommandAttribute,
-    ArgumentAttribute,
-    SwitchArgumentAttribute,
-)
+from pyTooling.Attributes import Attribute
+from pyTooling.Attributes.ArgParse import ArgParseHelperMixin, DefaultHandler, CommandHandler, CommandLineArgument
+from pyTooling.Attributes.ArgParse.Argument import StringArgument
+from pyTooling.Attributes.ArgParse.Flag import FlagArgument
+from pyTooling.TerminalUI import TerminalApplication, Severity
 
-from pyGHDL import GHDLBaseException
+from pyGHDL import GHDLBaseException, __version__, __copyright__, __author__
+from pyGHDL.libghdl import LibGHDLException
+from pyGHDL.dom import DOMException
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.formatting.prettyprint import PrettyPrint, PrettyPrintException
 
-__author__ = "Tristan Gingold"
-__copyright__ = "Copyright (C) 2019-2021 Tristan Gingold"
 __maintainer__ = "Tristan Gingold"
-__email__ = ""
-__version__ = "0.0.0"
 __status__ = "Alpha"
 __license__ = ""
 
@@ -69,7 +59,7 @@ class SourceAttribute(Attribute):
     def __call__(self, func):
         self._AppendAttribute(
             func,
-            ArgumentAttribute(
+            CommandLineArgument(
                 "-f",
                 "--file",
                 action="append",
@@ -81,7 +71,7 @@ class SourceAttribute(Attribute):
         )
         self._AppendAttribute(
             func,
-            ArgumentAttribute(
+            CommandLineArgument(
                 "-F",
                 "--files",
                 metavar="files",
@@ -93,7 +83,7 @@ class SourceAttribute(Attribute):
         )
         self._AppendAttribute(
             func,
-            ArgumentAttribute(
+            CommandLineArgument(
                 "-D",
                 "--directory",
                 metavar="dir",
@@ -106,7 +96,7 @@ class SourceAttribute(Attribute):
 
 
 @export
-class Application(LineTerminal, ArgParseMixin):
+class Application(TerminalApplication, ArgParseHelperMixin):
     HeadLine = "pyGHDL.dom - Test Application"
 
     # load platform information (Windows, Linux, Darwin, ...)
@@ -147,7 +137,7 @@ class Application(LineTerminal, ArgParseMixin):
                 kwargs["width"] = textWidth
                 super().__init__(*args, **kwargs)
 
-        ArgParseMixin.__init__(
+        ArgParseHelperMixin.__init__(
             self,
             description=description,
             epilog=epilog,
@@ -175,7 +165,7 @@ class Application(LineTerminal, ArgParseMixin):
                 {HEADLINE}{line}
                 {headline: ^80s}
                 {line}"""
-            ).format(line="=" * 80, headline=self.HeadLine, **LineTerminal.Foreground)
+            ).format(line="=" * 80, headline=self.HeadLine, **TerminalApplication.Foreground)
         )
 
     # ============================================================================
@@ -183,31 +173,25 @@ class Application(LineTerminal, ArgParseMixin):
     # ============================================================================
     # common arguments valid for all commands
     # ----------------------------------------------------------------------------
-    @CommonSwitchArgumentAttribute("-d", "--debug", dest="debug", help="Enable debug mode.")
-    @CommonSwitchArgumentAttribute("-v", "--verbose", dest="verbose", help="Print out detailed messages.")
-    @CommonSwitchArgumentAttribute("-q", "--quiet", dest="quiet", help="Reduce messages to a minimum.")
+    @FlagArgument("-d", "--debug", dest="debug", help="Enable debug mode.")
+    @FlagArgument("-v", "--verbose", dest="verbose", help="Print out detailed messages.")
+    @FlagArgument("-q", "--quiet", dest="quiet", help="Reduce messages to a minimum.")
     def Run(self):
-        ArgParseMixin.Run(self)
+        ArgParseHelperMixin.Run(self)
 
-    @DefaultAttribute()
+    @DefaultHandler()
     def HandleDefault(self, _):
         self.PrintHeadline()
         self.MainParser.print_help()
 
         self.WriteNormal("")
-        self.exit()
+        self.Exit()
 
     # ----------------------------------------------------------------------------
     # create the sub-parser for the "help" command
     # ----------------------------------------------------------------------------
-    @CommandAttribute("help", help="Display help page(s) for the given command name.")
-    @ArgumentAttribute(
-        metavar="Command",
-        dest="Command",
-        type=str,
-        nargs="?",
-        help="Print help page(s) for a command.",
-    )
+    @CommandHandler("help", help="Display help page(s) for the given command name.")
+    @StringArgument(metaName="Command", dest="Command", optional=True, help="Print help page(s) for a command.")
     def HandleHelp(self, args):
         self.PrintHeadline()
 
@@ -222,12 +206,12 @@ class Application(LineTerminal, ArgParseMixin):
                 self.WriteError(f"Command {args.Command} is unknown.")
 
         self.WriteNormal("")
-        self.exit()
+        self.Exit()
 
     # ----------------------------------------------------------------------------
     # create the sub-parser for the "version" command
     # ----------------------------------------------------------------------------
-    @CommandAttribute("version", help="Display tool and version information.")
+    @CommandHandler("version", help="Display tool and version information.")
     def HandleInfo(self, args):
         self.PrintHeadline()
 
@@ -241,12 +225,12 @@ class Application(LineTerminal, ArgParseMixin):
         for author in authors[1:]:
             self.WriteNormal(f"            {author}")
         self.WriteNormal(f"Version:    {__version__}")
-        self.exit()
+        self.Exit()
 
     # ----------------------------------------------------------------------------
     # Create the sub-parser for the "pretty" command
     # ----------------------------------------------------------------------------
-    @CommandAttribute(
+    @CommandHandler(
         "pretty",
         help="Pretty-print the DOM to console.",
         description="Translate a source file into a DOM and pretty-print the DOM.",
@@ -320,7 +304,7 @@ class Application(LineTerminal, ArgParseMixin):
 
         print("\n".join(buffer))
 
-        self.exit()
+        self.Exit()
 
     def addFile(self, filename: Path, library: str) -> Document:
         lib = self._design.GetLibrary(library)
@@ -334,25 +318,30 @@ class Application(LineTerminal, ArgParseMixin):
 def main():  # mccabe:disable=MC0001
     """This is the entry point for pyghdl.cli.dom written as a function.
 
-    1. It extracts common flags from the script's arguments list, before :py:class:`~argparse.ArgumentParser` is fully loaded.
+    1. It extracts common flags from the script's arguments list, before :class:`~argparse.ArgumentParser` is fully loaded.
     2. It creates an instance of DOM test application and hands over to a class based execution.
        All is wrapped in a big ``try..except`` block to catch every unhandled exception.
     3. Shutdown the script and return its exit code.
     """
     from sys import argv as sys_argv
 
-    debug = "-d" in sys_argv
-    verbose = "-v" in sys_argv
-    quiet = "-q" in sys_argv
+    # debug = "-d" in sys_argv
+    # verbose = "-v" in sys_argv
+    # quiet = "-q" in sys_argv
 
     try:
         # handover to a class instance
         app = Application()  # debug, verbose, quiet)
+    except Exception:
+        return
+
+    try:
+        app.CheckPythonVersion((3, 8, 0))
         app.Run()
-        app.exit()
+        app.Exit()
     except PrettyPrintException as ex:
         print(f"PP: {ex!s}")
-        LineTerminal.exit()
+        app.Exit()
 
     except DOMException as ex:
         print(f"DOM: {ex!s}")
@@ -360,29 +349,28 @@ def main():  # mccabe:disable=MC0001
         if ex2 is not None:
             for message in ex2.InternalErrors:
                 print(f"libghdl: {message}")
-            LineTerminal.exit(0)
+            TerminalApplication.Exit(0)
 
-        LineTerminal.exit(6)
+        app.Exit(6)
 
     except LibGHDLException as ex:
         print(f"LIB: {ex!s}")
         for message in ex.InternalErrors:
             print(f"  {message}")
-        LineTerminal.exit(5)
+        app.Exit(5)
 
     except GHDLBaseException as ex:
-        LineTerminal.printExceptionBase(ex)
+        app.PrintExceptionBase(ex)
 
     except NotImplementedError as ex:
-        LineTerminal.printNotImplementedError(ex)
+        app.PrintNotImplementedError(ex)
 
     # except ImportError as ex:
     #     printImportError(ex)
     except Exception as ex:
-        LineTerminal.printException(ex)
+        app.PrintException(ex)
 
 
 # entry point
 if __name__ == "__main__":
-    LineTerminal.versionCheck((3, 6, 0))
     main()

@@ -35,7 +35,7 @@ from typing import List, Union
 from pyTooling.Decorators import export
 
 from pyVHDLModel.Base import NamedEntityMixin
-from pyVHDLModel.Interface import GenericInterfaceItem, PortInterfaceItem
+from pyVHDLModel.Interface import GenericInterfaceItemMixin, PortInterfaceItemMixin
 from pyVHDLModel.Subprogram import Function
 from pyVHDLModel.Object import BaseConstant, WithDefaultExpressionMixin
 from pyVHDLModel.Type import BaseType, FullType
@@ -319,7 +319,9 @@ class PrettyPrint:
 
         return buffer
 
-    def formatGeneric(self, generic: Union[NamedEntityMixin, GenericInterfaceItem], level: int = 0) -> StringBuffer:
+    def formatGeneric(
+        self, generic: Union[NamedEntityMixin, GenericInterfaceItemMixin], level: int = 0
+    ) -> StringBuffer:
         if isinstance(generic, GenericConstantInterfaceItem):
             return self.formatGenericConstant(generic, level)
         elif isinstance(generic, GenericTypeInterfaceItem):
@@ -329,7 +331,7 @@ class PrettyPrint:
                 f"Unhandled generic kind '{generic.__class__.__name__}' for generic '{generic.Identifiers[0]}'."
             )
 
-    def formatPort(self, port: Union[NamedEntityMixin, PortInterfaceItem], level: int = 0) -> StringBuffer:
+    def formatPort(self, port: Union[NamedEntityMixin, PortInterfaceItemMixin], level: int = 0) -> StringBuffer:
         if isinstance(port, PortSignalInterfaceItem):
             return self.formatPortSignal(port, level)
         else:

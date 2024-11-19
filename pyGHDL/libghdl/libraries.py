@@ -80,7 +80,7 @@ def Get_Libraries_Chain() -> Iir_Library_Declaration:
 
     :return: undocumented
     """
-    return 0
+    return 0  # pragma: no cover
 
 
 @export
@@ -125,7 +125,7 @@ def Find_Entity_For_Component(Name: NameId) -> Iir_Design_Unit:
     :param Name: Entity name to search for.
     :return:     undocumented
     """
-    return 0
+    return 0  # pragma: no cover
 
 
 @export
@@ -137,7 +137,7 @@ def Get_Library_No_Create(Ident: NameId) -> Iir_Library_Declaration:
     :param Ident: Library to look for.
     :return:      Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if it doesn't exist.
     """
-    return 0
+    return 0  # pragma: no cover
 
 
 @export
@@ -150,7 +150,7 @@ def Get_Library(Ident: NameId, Loc: LocationType, Force: bool) -> Iir_Library_De
     :param Loc: Location in case of errors.
     :return:      Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if it doesn't exist.
     """
-    return 0
+    return 0  # pragma: no cover
 
 
 @export
@@ -163,7 +163,7 @@ def Find_Primary_Unit(Library: Iir_Library_Declaration, Name: NameId) -> Iir_Des
     :param Name:    Primary unit to search for.
     :return:        undocumented
     """
-    return 0
+    return 0  # pragma: no cover
 
 
 @export
@@ -174,4 +174,3 @@ def Load_Work_Library(Empty: bool) -> None:
 
     :param Empty: If set, just create it.
     """
-    return

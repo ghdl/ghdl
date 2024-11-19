@@ -95,7 +95,7 @@ def Get_Nbr_Messages() -> ErrorIndex:
 
     :return: Number of messages available.
     """
-    return 0
+    return 0  # pragma: no cover
 
 
 @export
@@ -112,7 +112,7 @@ def Get_Error_Record(Idx: ErrorIndex) -> Error_Message:
 # @export
 @BindToLibGHDL("errorout__memory__get_error_message_addr")
 def _Get_Error_Message(Idx: ErrorIndex) -> c_char_p:
-    return ""
+    return ""  # pragma: no cover
 
 
 @export
