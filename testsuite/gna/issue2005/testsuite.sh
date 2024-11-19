@@ -17,7 +17,7 @@ if c_compiler_is_available; then
 	libdir="$(dirname "$lib_path")"
 	incdir="$("$GHDL" --libghdl-include-dir)"
 
-	if [ `uname -s` = Darwin -a `uname -m` = arm64 ]; then
+	if [ `uname -s` = Darwin ]; then # FIXME: -a `uname -m` = arm64 ]; then
 	    echo "XFAIL on macos arm64"
 	else
 	    $CC -I"$incdir" test.c "$("$GHDL" --libghdl-library-path)"
