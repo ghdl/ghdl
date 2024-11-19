@@ -19,14 +19,14 @@ def getJSON(tag='all'):
    return d
 
 #
-# Print two versions of each shield. Onee for 'html' (`image::`) and one for 'latex' (`replace::`)
+# Print two versions of each shield. One for 'html' (`image::`) and one for 'latex' (`replace::`)
 #
 
 def printShieldSrc(label, alt, img, target, latex=False):
    if latex:
       if label[-6:] == '/total':
          label = label[:-6]
-      idx = re.compile('[\W_]+').sub('', label)
+      idx = re.compile(r"[\W_]+").sub('', label)
       print(f"""
 .. |l{idx}| replace:: `{label}`_
 .. _{label}: {target}

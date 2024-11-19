@@ -63,7 +63,7 @@ def _Replace_Text(
     :param Text_Length:  Type: ``Source_Ptr``
     :return:             Return True in case of success, False in case of failure (the gap is too small).
     """
-    return False
+    return False  # pragma: no cover
 
 
 @export

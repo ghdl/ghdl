@@ -38,7 +38,7 @@
 import ctypes
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional as Nullable
 
 from pyGHDL.dom.Names import SimpleName
 from pyTooling.Decorators import export, InheritDocString
@@ -49,7 +49,6 @@ from pyVHDLModel import Library as VHDLModel_Library
 from pyVHDLModel import Document as VHDLModel_Document
 
 from pyGHDL.libghdl import (
-    ENCODING,
     initialize as libghdl_initialize,
     finalize as libghdl_finalize,
     set_option as libghdl_set_option,
@@ -86,9 +85,15 @@ from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationM
 
 @export
 class Design(VHDLModel_Design):
+    _loadDefaultLibraryTime: Nullable[float]
+    _analyzeTime: Nullable[float]
+
     @InheritDocString(VHDLModel_Design)
     def __init__(self, name: str = None):
         super().__init__(name)
+
+        self._loadDefaultLibraryTime = None
+        self._analyzeTime = None
 
         self.__ghdl_init()
 

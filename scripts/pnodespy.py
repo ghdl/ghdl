@@ -36,8 +36,8 @@ def print_file_header(includeIntEnumUnique=True, includeBindToLibGHDL=True):
             # Call 'make' in 'src/vhdl' to regenerate:
             #
         """) + "{sysImports}from pyTooling.Decorators import export\n{moduleImports}".format(
-            sysImports = "from enum import IntEnum, unique\n" if includeIntEnumUnique else "",
-            moduleImports = "\nfrom pyGHDL.libghdl._decorator import BindToLibGHDL\n" if includeBindToLibGHDL else "",
+            sysImports="from enum import IntEnum, unique\n" if includeIntEnumUnique else "",
+            moduleImports="\nfrom pyGHDL.libghdl._decorator import BindToLibGHDL\n" if includeBindToLibGHDL else "",
         )
     )
 
@@ -66,13 +66,13 @@ def do_iirs_subprg():
         @BindToLibGHDL("{classname}__get_kind")
         def Get_Kind(node: Iir) -> IirKind:
             \"\"\"Get node kind.\"\"\"
-            return 0
+            return 0  # pragma: no cover
 
         @export
         @BindToLibGHDL("{classname}__get_location")
         def Get_Location(node: Iir) -> LocationType:
             \"\"\"\"\"\"
-            return 0
+            return 0  # pragma: no cover
         """)
     )
     for k in pnodes.funcs:
@@ -87,7 +87,7 @@ def do_iirs_subprg():
             @BindToLibGHDL("{classname}__get_{k.name.lower()}")
             def Get_{k.name}(obj: Iir) -> {rtype}:
                 \"\"\"\"\"\"
-                return 0
+                return 0  # pragma: no cover
             @export
             @BindToLibGHDL("{classname}__set_{k.name.lower()}")
             def Set_{k.name}(obj: Iir, value: {rtype}) -> None:
@@ -269,7 +269,7 @@ def do_libghdl_meta():
 
             :param K: Node to get first array index from.
             \"\"\"
-            return 0
+            return 0  # pragma: no cover
 
 
         @export
@@ -286,13 +286,13 @@ def do_libghdl_meta():
 
             :param K: Node to get last array index from.
             \"\"\"
-            return 0
+            return 0  # pragma: no cover
 
         @export
         @BindToLibGHDL("vhdl__nodes_meta__get_field_by_index")
         def get_field_by_index(K: IirKind) -> int:
             \"\"\"\"\"\"
-            return 0
+            return 0  # pragma: no cover
 
         @export
         def get_field_type(*args):

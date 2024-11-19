@@ -35,19 +35,23 @@ Python binding and low-level API for shared library ``libghdl``.
 In case of an error, a :exc:`LibGHDLException` is raised.
 """
 from ctypes import c_char_p, CDLL
-from sys import platform as sys_platform, version_info as sys_version_info
+from sys import version_info as sys_version_info
 from os import environ as os_environ
 from pathlib import Path
 from shutil import which
 from typing import List, Optional
 
 from pyTooling.Decorators import export
+from pyTooling.Common import getResourceFile
+from pyTooling.Platform import CurrentPlatform
+from pyTooling.Exceptions import ToolingException
 
 from pyGHDL import GHDLBaseException
-from pyGHDL.libghdl._types import Iir
+from pyGHDL import __version__ as ghdlVersion
 
 # from pyGHDL.libghdl._decorator import BindToLibGHDL
-from pyGHDL import __version__ as ghdlVersion
+from pyGHDL.libghdl._types import Iir
+
 
 Nullable = Optional
 
@@ -71,35 +75,18 @@ class LibGHDLException(GHDLBaseException):
 
 @export
 def _get_libghdl_name() -> Path:
-    """Get the name of the libghdl library (with version and extension)."""
+    """
+    Get the filename of the libghdl shared library file (incl. version and file extension).
+
+    :returns: Filename of the shared library file.
+    """
     version = ghdlVersion.replace("-", "_").replace(".", "_")
-    ext = {"win32": "dll", "cygwin": "dll", "msys": "dll", "darwin": "dylib"}.get(sys_platform, "so")
-    return Path(f"libghdl-{version}.{ext}")
+
+    return Path(f"libghdl-{version}.{CurrentPlatform.DynamicLibraryExtension}")
 
 
 @export
-def _check_libghdl_libdir(libdir: Path, basename: Path) -> Path:
-    """Returns libghdl path in :obj:`libdir`, if found."""
-    if libdir is None:
-        raise ValueError("Parameter 'libdir' is None.")
-    # print('libghdl: check in {}'.format(libdir))
-    res = libdir / basename
-    if res.exists():
-        return res
-
-    raise FileNotFoundError(str(res))
-
-
-@export
-def _check_libghdl_bindir(bindir: Path, basename: Path) -> Path:
-    if bindir is None:
-        raise ValueError("Parameter 'bindir' is None.")
-
-    return _check_libghdl_libdir((bindir / "../lib").resolve(), basename)
-
-
-@export
-def _get_libghdl_path():
+def _get_libghdl_path() -> Path:
     """\
     Locate the directory where the shared library is installed.
 
@@ -108,64 +95,96 @@ def _get_libghdl_path():
     1. `GHDL_PREFIX` - directory (prefix) of the vhdl libraries.
     2. `VUNIT_GHDL_PATH` - path of the `ghdl` binary when using VUnit.
     3. `GHDL` - name of, or path to the `ghdl` binary.
-    4. Try within `libghdl/` Python installation.
+    4. Try within `pyGHDL/lib` Python installation.
     5. Try when running from the build directory.
     """
-    basename = _get_libghdl_name()
+
+    def _check_libghdl_libdir(libDirectory: Path, libraryFilename: Path) -> Path:
+        libGHDLSharedLibraryFile = libDirectory / libraryFilename
+        if not libGHDLSharedLibraryFile.exists():
+            raise FileNotFoundError(f"{libGHDLSharedLibraryFile}")
+
+        return libGHDLSharedLibraryFile
+
+    def _check_libghdl_bindir(binDirectory: Path, libraryFilename: Path) -> Path:
+        libDirectory = (binDirectory / "../lib").resolve()
+        return _check_libghdl_libdir(libDirectory, libraryFilename)
+
+    libGHDLSharedLibraryFile = _get_libghdl_name()
+    searchedAt = []
 
     # Try GHDL_PREFIX
     # GHDL_PREFIX is the prefix of the vhdl libraries, so remove the
     # last path component.
-    r = os_environ.get("GHDL_PREFIX")
-    try:
-        return _check_libghdl_libdir(Path(r).parent, basename)
-    except (TypeError, FileNotFoundError):
-        pass
-
-    # Try VUNIT_GHDL_PATH (path of the ghdl binary when using VUnit).
-    r = os_environ.get("VUNIT_GHDL_PATH")
-    try:
-        return _check_libghdl_bindir(Path(r), basename)
-    except (TypeError, FileNotFoundError):
-        pass
+    if (varGHDLPrefix := os_environ.get("GHDL_PREFIX")) is None:
+        searchedAt.append(f"  Checked variable 'GHDL_PREFIX':      not set")
+    else:
+        searchedAt.append(f"  Tried variable 'GHDL_PREFIX':        {varGHDLPrefix}")
+        ghdlPrefix = Path(varGHDLPrefix)
+        try:
+            return _check_libghdl_libdir(ghdlPrefix.parent, libGHDLSharedLibraryFile)
+        except FileNotFoundError:
+            pass
 
     # Try GHDL (name/path of the ghdl binary)
-    r = os_environ.get("GHDL", "ghdl")
-    r = which(r)
-    try:
-        return _check_libghdl_bindir(Path(r).parent, basename)
-    except (TypeError, FileNotFoundError):
-        pass
+    if (varGHDL := os_environ.get("GHDL")) is None:
+        searchedAt.append(f"  Checked variable 'GHDL':             not set.")
+    else:
+        searchedAt.append(f"  Tried variable 'GHDL':               {varGHDL}")
+        try:
+            ghdl = Path(varGHDL)
+            return _check_libghdl_bindir(ghdl.parent, libGHDLSharedLibraryFile)
+        except (TypeError, FileNotFoundError):
+            pass
 
-    # Try within libghdl/ python installation
-    r = Path(__file__)
+    # Try VUNIT_GHDL_PATH (path of the ghdl binary when using VUnit).
+    if (varVUnitGHDLPath := os_environ.get("VUNIT_GHDL_PATH")) is None:
+        searchedAt.append(f"  Checked variable 'VUNIT_GHDL_PATH':  not set.")
+    else:
+        searchedAt.append(f"  Tried variable 'VUNIT_GHDL_PATH':    {varVUnitGHDLPath}")
+        vunitGHDLPath = Path(varVUnitGHDLPath)
+        try:
+            return _check_libghdl_bindir(vunitGHDLPath, libGHDLSharedLibraryFile)
+        except FileNotFoundError:
+            pass
+
+    # TODO: simplify code, see other uses above for find relative to package file
     try:
-        return _check_libghdl_bindir(r.parent, basename)
+        from pyGHDL import lib as ResourcePackage
+
+        return getResourceFile(ResourcePackage, libGHDLSharedLibraryFile)
+    except ToolingException as ex:
+        searchedAt.append(f"  Tried pyGHDL.lib resource directory: {ex.__cause__!s}")
+
+    # Try GHDL (name/path of the ghdl binary)
+    try:
+        whichGHDL = which(varGHDL)
+        searchedAt.append(f"  Tried 'which ghdl':                  {whichGHDL}")
+        ghdl = Path(whichGHDL)
+        return _check_libghdl_bindir(ghdl.parent, libGHDLSharedLibraryFile)
     except (TypeError, FileNotFoundError):
         pass
 
     # Try when running from the build directory
-    r = (r.parent / "../../lib").resolve()
     try:
-        return _check_libghdl_libdir(r, basename)
+        libDirectory = (Path(__file__).parent / "../../lib").resolve()
+        searchedAt.append(f"  Relative to build directory:         {libDirectory}")
+        return _check_libghdl_libdir(libDirectory, libGHDLSharedLibraryFile)
     except (TypeError, FileNotFoundError):
         pass
 
     # Failed.
-    raise Exception(f"Cannot find libghdl {basename}")
+    ex = LibGHDLException(f"Cannot find pyGHDL shared library '{libGHDLSharedLibraryFile}'.")
+    if sys_version_info >= (3, 11):  # pragma: no cover
+        for search in searchedAt:
+            ex.add_note(search)
+    raise ex
 
 
 @export
 def _initialize():
     # Load the shared library
     _libghdl_path = _get_libghdl_path()
-
-    # Add DLL search path(s)
-    if sys_platform == "win32" and sys_version_info.major == 3 and sys_version_info.minor >= 8:
-        from os import add_dll_directory as os_add_dll_directory
-
-        p1 = _libghdl_path.parent.parent / "bin"
-        os_add_dll_directory(str(p1))
 
     # Load libghdl shared object
     libghdl = CDLL(str(_libghdl_path))

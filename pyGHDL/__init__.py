@@ -56,11 +56,26 @@ __copyright__ = "2002-2024, Tristan Gingold and contributors"
 __license__ = "GNU General Public License v2"
 __keywords__ = ["vhdl", "parser", "compiler", "simulator", "ghdl"]
 
+from sys import version_info
+from typing import List
+
 from pyTooling.Decorators import export
 
 
 @export
 class GHDLBaseException(Exception):
+    # WORKAROUND: for Python <3.11
+    # Implementing a dummy method for Python versions before
+    if version_info < (3, 11):  # pragma: no cover
+        __notes__: List[str]
+
+        def __init__(self, *args):
+            super().__init__(*args)
+            self.__notes__ = []
+
+        def add_note(self, message: str) -> None:
+            self.__notes__.append(message)
+
     @property
     def message(self) -> str:
         return str(self)

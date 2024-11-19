@@ -33,6 +33,7 @@
 from typing import List, Union
 
 from pyTooling.Decorators import export
+from pyTooling.MetaClasses import ExtendedType
 
 from pyVHDLModel.Base import ExpressionUnion
 from pyVHDLModel.Symbol import Symbol
@@ -103,7 +104,7 @@ from pyGHDL.dom.Aggregates import (
 )
 
 
-class _ParseUnaryExpressionMixin:
+class _ParseUnaryExpressionMixin(metaclass=ExtendedType, mixin=True):
     @classmethod
     def parse(cls, node: Iir) -> VHDLModel_UnaryExpression:
         from pyGHDL.dom._Translate import GetExpressionFromNode
@@ -112,7 +113,7 @@ class _ParseUnaryExpressionMixin:
         return cls(node, operand)
 
 
-class _ParseBinaryExpressionMixin:
+class _ParseBinaryExpressionMixin(metaclass=ExtendedType, mixin=True):
     @classmethod
     def parse(cls, node: Iir) -> VHDLModel_BinaryExpression:
         from pyGHDL.dom._Translate import GetExpressionFromNode
