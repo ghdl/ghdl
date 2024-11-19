@@ -28,6 +28,8 @@
 
 #if defined(__APPLE__) || defined(__OpenBSD__)
 #define MAP_ANONYMOUS MAP_ANON
+#elif defined(__NetBSD__)
+/* none */
 #else
 #define HAVE_MREMAP
 #endif

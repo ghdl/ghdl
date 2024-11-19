@@ -438,6 +438,7 @@ if test $backend = mcode; then
     *mingw32*) ortho_flags="Flags_Windows${mcode64}" ;;
     *linux*)   ortho_flags="Flags_Linux${mcode64}" ;;
     *openbsd*) ortho_flags="Flags_Macosx${mcode64}" ;;
+    *netbsd*)  ortho_flags="Flags_Macosx${mcode64}" ;;
     *) echo "Unsupported $build build for mcode"; exit 1;;
   esac
   echo "Generate ortho_code-x86-flags.ads"
