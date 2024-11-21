@@ -699,7 +699,7 @@ The pyVHDLModel Documentation@footnote{https://vhdl.github.io/pyVHDLModel/index.
 
 
 Package managers of many popular distributions provide pre-built packages of GHDL. This is the case for @cite{apt}
-(Debian/Ubuntu), @cite{dnf} (Fedora), @cite{pacman} (Arch Linux, MSYS2) or @cite{brew} (macOS). Since GHDL supports three different backends
+(Debian/Ubuntu), @cite{dnf} (Fedora), @cite{pacman} (Arch Linux, MSYS2), @cite{brew} (macOS) or @cite{guix}. Since GHDL supports three different backends
 and two library sets (`regular' or `GPL-compatible'), at least six packages with different features might be available in
 each package manager.
 

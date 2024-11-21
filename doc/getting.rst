@@ -7,7 +7,7 @@ Package managers
 ****************
 
 Package managers of many popular distributions provide pre-built packages of GHDL. This is the case for `apt`
-(Debian/Ubuntu), `dnf` (Fedora), `pacman` (Arch Linux, MSYS2) or `brew` (macOS). Since GHDL supports three different backends
+(Debian/Ubuntu), `dnf` (Fedora), `pacman` (Arch Linux, MSYS2), `brew` (macOS) or `guix`. Since GHDL supports three different backends
 and two library sets (*regular* or *GPL-compatible*), at least six packages with different features might be available in
 each package manager.
 
