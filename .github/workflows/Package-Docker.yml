@@ -34,6 +34,7 @@ jobs:
   Ubuntu:
     name: Package GHDL as Docker Image
     runs-on: ${{ inputs.ubuntu_image }}
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
     outputs:
       ghdl_image: ${{ steps.build.outputs.ghdl_image }}
 
@@ -84,6 +85,7 @@ jobs:
           docker container run --rm ${{ steps.build.outputs.ghdl_image }} 'echo "which ghdl: $(which ghdl)"; ghdl version'
 
       - name: 🔑 Login and push to Docker Hub
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ vars.DOCKERHUB_USERNAME }} --password-stdin
           echo "Docker image '${{ steps.build.outputs.ghdl_image }}' has $(docker image inspect $1 --format='{{.Size}}' | numfmt --to=iec --format '%.2f' ${{ steps.build.outputs.ghdl_image }})"
@@ -97,6 +99,7 @@ jobs:
     uses: ./.github/workflows/Test-Docker.yml
     needs:
       - Ubuntu
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
     with:
       os_image:   ${{ inputs.ubuntu_image }}
       ghdl_image: ${{ needs.Ubuntu.outputs.ghdl_image }}
