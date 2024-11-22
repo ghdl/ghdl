@@ -248,6 +248,7 @@ jobs:
       - Ubuntu-fast
       - Windows-fast
       - pyGHDL
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
     with:
       merged_junit_artifact: 'pyGHDL-Unittest-XML'
       additional_merge_args: '-d "--render=tree" "--name=pyGHDL" "--pytest=rewrite-dunder-init;reduce-depth:pytest.testsuite.pyunit;split:pytest"'
