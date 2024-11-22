@@ -1,0 +1,344 @@
+name: Building GHDL on macOS
+
+on:
+  workflow_call:
+    inputs:
+      macos_image:
+        description: 'Name of the macOS image.'
+        required: true
+        type: string
+      gnat_arch:
+        description: 'Architecture of the downloaded GNAT compiler (pre-compiled) from https://github.com/alire-project/GNAT-FSF-builds'
+        required: true
+        type: string
+      gnat_version:
+        description: 'Version of the downloaded GNAT compiler (pre-compiled) from https://github.com/alire-project/GNAT-FSF-builds'
+        required: true
+        type: string
+      backend:
+        description: 'GHDL backend'
+        required: true
+        type: string
+      testsuites:
+        description: 'GHDL testsuites to run'
+        required: true
+        type: string
+    # Parameters created build artifacts
+      macos_artifact:
+        description: 'Name of the macOS build artifact.'
+        required: true
+        type: string
+    # Parameters for pyGHDL unit testing and code coverage collection
+      python_version:
+        description: 'Python version for pyGHDL testing.'
+        required: false
+        default: '3.12'
+        type: string
+      pyunit_testsuites:
+        description: 'Name of the pyunit testsuites.'
+        required: false
+        default: 'testsuite/pyunit'
+        type: string
+      unittesting:
+        description: 'Run unit tests.'
+        required: false
+        default: true
+        type: boolean
+      unittest_xml_artifact:
+        description: 'Name of the pyghdl artifact.'
+        required: false
+        default: ''
+        type: string
+      coverage:
+        description: 'Collect code coverage.'
+        required: false
+        default: true
+        type: boolean
+      coverage_sqlite_artifact:
+        description: 'Name of the pyghdl artifact.'
+        required: false
+        default: ''
+        type: string
+    outputs:
+      ghdl_macos_artifact:
+        description: "Artifact name for compiled GHDL for macOS."
+        value: ${{ jobs.Build.outputs.ghdl_artifact }}
+
+jobs:
+  Build:
+    name: Build GHDL on '${{ inputs.macos_image }}'
+    runs-on: ${{ inputs.macos_image }}
+    outputs:
+      ghdl_artifact: ${{ steps.artifact_name.outputs.ghdl_artifact }}
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # The command 'git describe' (used for version) needs the history.
+          fetch-depth: 0
+
+      - name: 🖉 Assemble artifact name
+        id: artifact_name
+        run: |
+          echo "ghdl_artifact=${{ inputs.macos_artifact }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
+
+      - name: 🔧 Install dependencies
+        run: |
+          brew install llvm
+
+          echo "LLVM_BINARY_PATH=$(brew --prefix llvm)/bin" >> $GITHUB_ENV
+
+      - name: 🔧 Install GNAT
+        id: gnat
+        run: |
+          GNAT_NAME="gnat-${{ inputs.gnat_arch }}-darwin-${{ inputs.gnat_version }}"
+          GNAT_URL="https://github.com/alire-project/GNAT-FSF-builds/releases/download/gnat-${{ inputs.gnat_version }}/${GNAT_NAME}.tar.gz"
+
+          echo "Downloading GNAT ${{ inputs.gnat_version }} (${{ inputs.gnat_arch }}) from '$GNAT_URL'"
+          wget -q --show-progress --progress=bar:force:noscroll -O GNAT.tar.gz "$GNAT_URL"
+          test $? -ne 0 && echo -e "ERROR: Downloading '$GNAT_URL'" && exit 1
+
+          echo "Extracting GNAT.tar.gz ..."
+          tar -zxf GNAT.tar.gz && rm GNAT.tar.gz
+          test $? -ne 0 && echo -e "ERROR: Extracting 'GNAT.tar.gz'" && exit 1
+
+          echo "Renaming ${GNAT_NAME} to './gnat ..."
+          mv ${GNAT_NAME} gnat
+
+          echo "GNAT_BINARY_PATH=$(pwd)/gnat/bin" >> $GITHUB_ENV
+
+          echo ""
+          echo "Listing $(pwd)/gnat/lib/*.dylib ..."
+          ls -lAh $(pwd)/gnat/lib/*.dylib
+          echo ""
+          echo "Listing $(pwd)/gnat/lib/gcc/*/*/adalib/*.dylib ..."
+          ls -lAh $(pwd)/gnat/lib/gcc/*/*/adalib/*.dylib
+          echo ""
+
+          GNAT_VERSION="$(./gnat/bin/gnatls --version | grep GNATLS)"
+          echo "gnatls --version:      ${GNAT_VERSION}"
+          regex='GNATLS ([0-9]+)\.([0-9]+)\.([0-9]+)'
+          if [[ "${GNAT_VERSION}" =~ $regex ]]; then
+            # echo "GNAT major version: ${BASH_REMATCH[1]}"
+            GNAT_MAJOR_VERSION=${BASH_REMATCH[1]}
+          else
+            echo "Can't parse GNAT's major version!"
+            echo "::error title=GNAT Version::Can't parse GNAT's major version."
+            exit 1
+          fi
+
+          echo "GNAT_MAJOR_VERSION=${GNAT_MAJOR_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Prepare build environment
+        run: |
+          mkdir -p build/${{ inputs.backend }}
+
+          echo "PATH=$GNAT_BINARY_PATH:$LLVM_BINARY_PATH:$PATH" >> $GITHUB_ENV
+
+      - name: ☑ Check build environemnt
+        run: |
+          echo $PATH
+          echo "which gnat:        $(which gnat) ($($(which gnat) --version))"
+          echo "which gnatmake:    $(which gnatmake) ($($(which gnatmake) --version))"
+          echo "which llvm-config: $(which llvm-config) ($($(which llvm-config) --version))"
+
+      - name: ⚙ Configure
+        run: |
+          cd build/${{ inputs.backend }}
+
+          if [ '${{ inputs.macos_image }}' == 'macos-13' ]; then
+            CONFIG_LDFLAGS="-Wl,-ld_classic"
+          fi
+          echo "LDFLAGS=$CONFIG_LDFLAGS"
+
+          if ${{ startsWith(inputs.backend, 'llvm') }}; then
+            CONFIG_ARGS="--with-llvm-config"
+            if ${{ endsWith(inputs.backend, 'jit') }}; then
+              CONFIG_ARGS="$CONFIG_ARGS --with-llvm-jit"
+            fi
+            # CONFIG_ARGS="$CONFIG_ARGS CXX=clang++"
+          fi
+          echo "CONFIG_ARGS=$CONFIG_ARGS"
+
+          # Use static libs (including libzstd) and dead-strip (to avoid libz3)
+          libzstd=$(brew --prefix zstd)/lib/libzstd.a
+          export LLVM_LDFLAGS="$(llvm-config --link-static --libfiles --system-libs | sed -e s@-lzstd@$libzstd@) -Wl,-dead_strip,-dead_strip_dylibs"
+          echo "LLVM_LDFLAGS=$LLVM_LDFLAGS"
+
+          # Use classic ld and not lld (which simply crashes)
+          NPROC=$(sysctl -n hw.logicalcpu)
+          GNATMAKE="gnatmake -j$NPROC" \
+          MAKE="make -j$NPROC" \
+          LDFLAGS=$CONFIG_LDFLAGS \
+          ../../configure --prefix=../../install $CONFIG_ARGS
+
+      - name: 🔨 Make
+        run: |
+          cd build/${{ inputs.backend }}
+          make
+
+      - name: 📋 Install
+        run: |
+          cd build/${{ inputs.backend }}
+          sudo make install
+          sudo install -m 755 -p ${GNAT_BINARY_PATH}/../lib/libgcc_s.*.*.dylib ../../install/bin/
+          sudo install -m 755 -p ${GNAT_BINARY_PATH}/../lib/libgcc_s.*.*.dylib ../../install/lib/
+          sudo install -m 755 -p ${GNAT_BINARY_PATH}/../lib/gcc/*-apple-darwin*/${{ steps.gnat.outputs.GNAT_MAJOR_VERSION }}.*/adalib/libgnat-${{ steps.gnat.outputs.GNAT_MAJOR_VERSION }}.dylib ../../install/lib/
+
+      - name: 📋 Debug
+        run: |
+          ls -lAh install
+          ls -lAh install/bin
+
+      - name: "🚦 Run testsuite: 'sanity'"
+        run: |
+          export GHDL=$(pwd)/install/bin/ghdl
+          cd testsuite
+
+          # no pyunit
+          ./testsuite.sh sanity
+
+      - name: 📤 Upload '${{ inputs.macos_artifact }}-${{ inputs.backend }}' artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.macos_artifact }}-${{ inputs.backend }}
+          path: ./install
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: ✂ Remove binaries, libraries and other files for libghdl (only mcode backend)
+        if: inputs.macos_image == 'macos-13' && inputs.backend == 'mcode'
+        run: |
+          sudo chown -R runner:staff ./install
+          rm -Rf ./install/bin
+          rm -Rf ./install/include
+          rm -Rf ./install/lib/ghdl/vendors
+          rm -Rf ./install/lib/*.a
+          rm -Rf ./install/lib/*.link
+          rm -Rf ./install/lib/libghdlvpi.dylib
+          rm -Rf ./install/lib/libghw.dylib
+          rm -Rf ./install/*.requirements
+
+      - name: Install libghdl into pyGHDL/lib (only mcode backend)
+        if: (inputs.unittesting || inputs.coverage) && inputs.backend == 'mcode'
+        run: |
+          cp -r -v ./install/lib/* ./pyGHDL/lib
+
+      - name: 🐍 Setup Python (only mcode backend)
+        uses: actions/setup-python@v5
+        if: (inputs.unittesting || inputs.coverage) && inputs.backend == 'mcode'
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: 🧰 Install dependencies (only mcode backend)
+        if: (inputs.unittesting || inputs.coverage) && inputs.backend == 'mcode'
+        run: |
+          python -m pip install --disable-pip-version-check tomli
+          python -m pip install --disable-pip-version-check -r testsuite/requirements.txt
+
+      # TODO: replace with https://github.com/pyTooling/Actions/blob/dev/.github/workflows/ExtractConfiguration.yml
+      - name: 🔁 Extract configurations from pyproject.toml (only mcode backend)
+        if: inputs.coverage && inputs.backend == 'mcode'
+        id: getVariables
+        shell: python
+        run: |
+          from os       import getenv
+          from pathlib  import Path
+          from sys      import version
+          from textwrap import dedent
+
+          print(f"Python: {version}")
+
+          from tomli import load as tomli_load
+
+          htmlDirectory = Path("htmlcov")
+          xmlFile =  Path("./coverage.xml")
+          jsonFile = Path("./coverage.json")
+
+          # Read output paths from 'pyproject.toml' file
+          pyProjectFile =  Path("pyproject.toml")
+          if pyProjectFile.exists():
+            with pyProjectFile.open("rb") as file:
+              pyProjectSettings = tomli_load(file)
+
+            htmlDirectory = Path(pyProjectSettings["tool"]["coverage"]["html"]["directory"])
+            xmlFile       = Path(pyProjectSettings["tool"]["coverage"]["xml"]["output"])
+            jsonFile      = Path(pyProjectSettings["tool"]["coverage"]["json"]["output"])
+          else:
+            print(f"File '{pyProjectFile}' not found.")
+            print(f"::error title=FileNotFound::File '{pyProjectFile}' not found.")
+            exit(1)
+
+          # Write jobs to special file
+          github_output = Path(getenv("GITHUB_OUTPUT"))
+          print(f"GITHUB_OUTPUT: {github_output}")
+          with github_output.open("a+", encoding="utf-8") as f:
+            f.write(dedent(f"""\
+              unittest_report_html_directory={htmlDirectory}
+              coverage_report_html_directory={htmlDirectory.as_posix()}
+              coverage_report_xml={xmlFile}
+              coverage_report_json={jsonFile}
+            """))
+
+          print(f"DEBUG:\n  html={htmlDirectory}\n  xml={xmlFile}\n  json={jsonFile}")
+
+      - name: "🚦 Testsuite: 'pyunit' (only mcode backend)"
+        if: (inputs.unittesting || inputs.coverage) && inputs.backend == 'mcode'
+        run: |
+          export PYTHONPATH=$(pwd)
+
+          [ -n '${{ inputs.unittest_xml_artifact }}' ] && PYTEST_ARGS='--junitxml=report/unit/TestReportSummary.xml' || unset PYTEST_ARGS
+          if ${{ inputs.coverage }}; then
+            echo "coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+            coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
+          elif ${{ inputs.unittesting }}; then
+            echo "python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+            python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
+          else
+            echo "::error title=InternalError::Reached impossible execution path."
+            exit 1
+          fi
+
+# Upload test result artifacts
+
+      - name: 📤 Upload 'TestReportSummary.xml' artifact (only mcode backend)
+        if: inputs.unittesting && inputs.backend == 'mcode' && inputs.unittest_xml_artifact != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.unittest_xml_artifact }}-${{ inputs.macos_image }}-${{ inputs.python_version }}
+          path: report/unit/TestReportSummary.xml
+          if-no-files-found: error
+          retention-days: 1
+
+# Convert and upload coverage results as artifact
+
+      - name: Report code coverage (only mcode backend)
+        if: inputs.coverage && inputs.backend == 'mcode'
+        run: coverage report --rcfile=pyproject.toml --data-file=.coverage
+
+      - name: 📤 Upload 'Coverage SQLite Database' artifact (only mcode backend)
+        if: inputs.coverage && inputs.backend == 'mcode' && inputs.coverage_sqlite_artifact != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.coverage_sqlite_artifact }}-${{ inputs.macos_image }}-${{ inputs.python_version }}
+          path: .coverage
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  Test:
+    uses: ./.github/workflows/Test-GHDL.yml
+    needs:
+      - Build
+    if: inputs.testsuites != 'none'
+    with:
+      os_image:      ${{ inputs.macos_image }}
+      ghdl_artifact: ${{ needs.Build.outputs.ghdl_artifact }}
+      testsuites:    ${{ inputs.testsuites }}

@@ -1,0 +1,282 @@
+name: Packaging pyGHDL with libghdl (standalone)
+
+on:
+  workflow_call:
+    inputs:
+      os_name:
+        description: 'Name of the OS.'
+        required: true
+        type: string
+      os_image:
+        description: 'Name of the OS image.'
+        required: true
+        type: string
+      python_icon:
+        description: 'Name of the OS image.'
+        required: true
+        type: string
+      python_version:
+        description: 'Python version to use for püackaging.'
+        required: true
+        type: string
+      backend:
+        description: 'Name of the GHDL backend.'
+        required: false
+        default: 'mcode'
+        type: string
+      libghdl_artifact:
+        description: 'Name of the libghdl artifact.'
+        required: true
+        type: string
+      pyghdl_artifact:
+        description: 'Name of the pyghdl artifact.'
+        required: true
+        type: string
+      pyunit_testsuites:
+        description: 'Name of the pyunit testsuites.'
+        required: false
+        default: 'testsuite/pyunit'
+        type: string
+      unittest_xml_artifact:
+        description: 'Name of the pyghdl artifact.'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  Package:
+    name: '🐍${{ inputs.python_icon }} Package pyGHDL for ${{ inputs.os_name }} and Python ${{ inputs.python_version }}'
+    runs-on: ${{ inputs.os_image }}
+    outputs:
+      pyghdl_artifact: ${{ inputs.pyghdl_artifact }}
+
+    steps:
+      - name: '⏬ Checkout'
+        uses: actions/checkout@v4
+
+      - name: '🐍 Setup Python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: '🔧 Install dependencies'
+        run: |
+          python -m pip install --disable-pip-version-check "pyTooling[packaging]" wheel
+
+      - name: 📥 Download artifacts '${{ inputs.libghdl_artifact }}-${{ inputs.backend }}' from 'Build' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.libghdl_artifact }}-${{ inputs.backend }}
+          path: install
+
+      - name: Copy libghdl files (Ubuntu)
+        if: startsWith(inputs.os_image, 'ubuntu')
+        run: |
+          cp -r -v install/lib/* pyGHDL/lib
+
+      - name: Copy libghdl files (Windows)
+        if: startsWith(inputs.os_image, 'windows')
+        run: |
+          cp -Recurse install/lib/* pyGHDL/lib
+
+      - name: 📦 Build Python package (binary distribution - wheel)
+        run: python setup.py bdist_wheel
+
+      - name: '📤 Upload artifact: ${{ inputs.pyghdl_artifact }}'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.pyghdl_artifact }}
+          path: dist/pyGHDL*.whl
+          if-no-files-found: error
+
+  Test:
+    name: '🐍${{ inputs.python_icon }} Test pyGHDL on ${{ inputs.os_name }} and Python ${{ inputs.python_version }}'
+    runs-on: ${{ inputs.os_image }}
+    needs:
+      - Package
+
+    steps:
+      - name: '⏬ Checkout'
+        uses: actions/checkout@v4
+        with:
+          path: ghdl
+
+      - name: Prepare testsuite (Ubuntu)
+        if: startsWith(inputs.os_image, 'ubuntu')
+        run: |
+          mkdir pyGHDL
+          cp -v ghdl/pyGHDL/requirements.txt pyGHDL
+          mkdir pyGHDL/cli
+          cp -v ghdl/pyGHDL/cli/requirements.txt pyGHDL/cli
+          mkdir pyGHDL/dom
+          cp -v ghdl/pyGHDL/dom/requirements.txt pyGHDL/dom
+          mkdir pyGHDL/libghdl
+          cp -v ghdl/pyGHDL/libghdl/requirements.txt pyGHDL/libghdl
+          mkdir pyGHDL/lsp
+          cp -v ghdl/pyGHDL/lsp/requirements.txt pyGHDL/lsp
+          cp -r ghdl/testsuite .
+          cp -v ghdl/pyproject.toml .
+
+          rm -Rf ghdl
+
+      - name: Prepare testsuite (Windows)
+        if: startsWith(inputs.os_image, 'windows')
+        run: |
+          mkdir pyGHDL
+          cp ghdl\pyGHDL\requirements.txt pyGHDL
+          mkdir pyGHDL\cli
+          cp ghdl\pyGHDL\cli\requirements.txt pyGHDL\cli
+          mkdir pyGHDL\dom
+          cp ghdl\pyGHDL\dom\requirements.txt pyGHDL\dom
+          mkdir pyGHDL\libghdl
+          cp ghdl\pyGHDL\libghdl\requirements.txt pyGHDL\libghdl
+          mkdir pyGHDL\lsp
+          cp ghdl\pyGHDL\lsp\requirements.txt pyGHDL\lsp
+          cp -Recurse ghdl\testsuite .
+          cp ghdl\pyproject.toml .
+
+          Remove-Item -Force -Recurse ghdl
+
+      - name: '🐍 Setup Python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: 📥 Download artifacts '${{ inputs.pyghdl_artifact }}' from 'Package' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.pyghdl_artifact }}
+          path: wheels
+
+      - name: 🔧 Install dependencies (Ubuntu)
+        if: startsWith(inputs.os_image, 'ubuntu')
+        run: |
+          sudo apt-get install -y --no-install-recommends libgnat-13
+          python -m pip install -v --disable-pip-version-check ./wheels/pyGHDL-*.whl
+          python -m pip install --disable-pip-version-check -r testsuite/requirements.txt
+
+      - name: 🔧 Install dependencies (Windows)
+        if: startsWith(inputs.os_image, 'windows')
+        run: |
+          python -m pip install -v --disable-pip-version-check (Get-Item .\wheels\pyGHDL-*.whl).FullName
+          python -m pip install --disable-pip-version-check -r testsuite\requirements.txt
+
+      - name: List pyGHDL installation directory (Ubuntu)
+        if: startsWith(inputs.os_image, 'ubuntu')
+        run: |
+          ls -lAh ${Python3_ROOT_DIR}/lib/python3.*/site-packages/pyGHDL/lib
+          tree ${Python3_ROOT_DIR}/lib/python3.*/site-packages/pyGHDL
+
+#      - name: List pyGHDL installation directory (Windows)
+#        if: startsWith(inputs.os_image, 'windows')
+#        run: |
+#          tree /F /A ${env:Python3_ROOT_DIR}\Lib\site-packages\pyGHDL
+
+      - name: Sanity check ghdl-lsp
+        run: |
+          echo "Testing Python module:"
+          python -m pyGHDL.cli.lsp --version
+
+          echo ""
+          echo "Testing entrypoint (executable):"
+          ghdl-ls --version
+
+      - name: Sanity check ghdl-dom
+        run: |
+          echo "Testing Python module:"
+          python -m pyGHDL.cli.dom version
+
+          echo ""
+          echo "Testing entrypoint (executable):"
+          ghdl-dom version
+
+      - name: 🧰 Install dependencies (Ubuntu)
+        if: inputs.coverage
+        run: |
+          python -m pip install --disable-pip-version-check tomli
+
+      # TODO: replace with https://github.com/pyTooling/Actions/blob/dev/.github/workflows/ExtractConfiguration.yml
+      - name: 🔁 Extract configurations from pyproject.toml
+        if: inputs.coverage
+        id: getVariables
+        shell: python
+        run: |
+          from os       import getenv
+          from pathlib  import Path
+          from sys      import version
+          from textwrap import dedent
+
+          print(f"Python: {version}")
+
+          from tomli import load as tomli_load
+
+          htmlDirectory = Path("htmlcov")
+          xmlFile =  Path("./coverage.xml")
+          jsonFile = Path("./coverage.json")
+
+          # Read output paths from 'pyproject.toml' file
+          pyProjectFile =  Path("pyproject.toml")
+          if pyProjectFile.exists():
+            with pyProjectFile.open("rb") as file:
+              pyProjectSettings = tomli_load(file)
+
+            htmlDirectory = Path(pyProjectSettings["tool"]["coverage"]["html"]["directory"])
+            xmlFile       = Path(pyProjectSettings["tool"]["coverage"]["xml"]["output"])
+            jsonFile      = Path(pyProjectSettings["tool"]["coverage"]["json"]["output"])
+          else:
+            print(f"File '{pyProjectFile}' not found.")
+            print(f"::error title=FileNotFound::File '{pyProjectFile}' not found.")
+            exit(1)
+
+          # Write jobs to special file
+          github_output = Path(getenv("GITHUB_OUTPUT"))
+          print(f"GITHUB_OUTPUT: {github_output}")
+          with github_output.open("a+", encoding="utf-8") as f:
+            f.write(dedent(f"""\
+              unittest_report_html_directory={htmlDirectory}
+              coverage_report_html_directory={htmlDirectory.as_posix()}
+              coverage_report_xml={xmlFile}
+              coverage_report_json={jsonFile}
+            """))
+
+          print(f"DEBUG:\n  html={htmlDirectory}\n  xml={xmlFile}\n  json={jsonFile}")
+
+      - name: '🚦 Testsuite: pyunit (Ubuntu)'
+        if: startsWith(inputs.os_image, 'ubuntu')
+        run: |
+          export PYTHONPATH=$(pwd)
+
+          [ -n '${{ inputs.unittest_xml_artifact }}' ] && PYTEST_ARGS='--junitxml=report/unit/TestReportSummary.xml' || unset PYTEST_ARGS
+          echo "python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+          python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
+
+      - name: '🚦 Testsuite: pyunit (Windows)'
+        if: startsWith(inputs.os_image, 'windows')
+        run: |
+          $env:PYTHONPATH = (Get-Location).ToString()
+
+          $PYTEST_ARGS = if ("${{ inputs.unittest_xml_artifact }}") { "--junitxml=report/unit/TestReportSummary.xml" } else { "" }
+          Write-Host "python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+          python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
+
+# Upload test result artifacts
+
+      - name: 📤 Upload 'TestReportSummary.xml' artifact
+        if: inputs.unittest_xml_artifact != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.unittest_xml_artifact }}-${{ inputs.os_name }}-${{ inputs.python_version }}
+          path: report/unit/TestReportSummary.xml
+          if-no-files-found: error
+          retention-days: 1
+
+#      - name: 📤 Upload 'Unit Tests HTML Report' artifact
+#        if: inputs.unittest_html_artifact != ''
+#        continue-on-error: true
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ${{ inputs.unittest_html_artifact }}-${{ inputs.python_version }}
+#          path: ${{ steps.getVariables.outputs.unittest_report_html_directory }}
+#          if-no-files-found: error
+#          retention-days: 1

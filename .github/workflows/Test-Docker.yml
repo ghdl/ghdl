@@ -1,0 +1,47 @@
+name: Testing GHDL's Docker images
+
+on:
+  workflow_call:
+    inputs:
+      os_image:
+        description: 'Name of the VM image.'
+        required: true
+        type: string
+      ghdl_image:
+        description: 'Name of the GHDL image.'
+        required: true
+        type: string
+      testsuites:
+        description: 'GHDL testsuites'
+        required: true
+        type: string
+
+jobs:
+  Test:
+    name: Test GHDL's Docker image on '${{ inputs.os_image }}'
+    runs-on: ${{ inputs.os_image }}
+    container:
+      image: ${{ inputs.ghdl_image }}
+
+    if: inputs.testsuites != 'none'
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Version check
+        run: |
+          echo "which ghdl: $(which ghdl)"
+          ghdl version
+
+      - name: Run tests in testsuite
+        run: |
+          cd testsuite
+
+          # no pyunit
+          if [ '${{ inputs.testsuites }}' == 'all' ]; then
+            TESTSUITES="sanity gna vests synth vpi vhpi"
+          else
+            TESTSUITES="${{ inputs.testsuites }}"
+          fi
+          ./testsuite.sh $TESTSUITES

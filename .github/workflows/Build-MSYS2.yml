@@ -1,0 +1,551 @@
+name: Building GHDL and libghdl on Windows with MSYS2
+
+on:
+  workflow_call:
+    inputs:
+      windows_version:
+        description: 'Version of the Windows image.'
+        required: false
+        default: '2022'
+        type: string
+      runtime:
+        description: 'MSYS2 runtime'
+        required: true
+        type: string
+      backend:
+        description: 'GHDL backend'
+        required: true
+        type: string
+      testsuites:
+        description: 'GHDL testsuites to run'
+        required: true
+        type: string
+    # Parameters created build artifacts
+      msys2_artifact:
+        description: 'Name of the MSYS2 build artifact.'
+        required: false
+        default: ''
+        type: string
+      pacman_artifact:
+        description: 'Name of the MSYS2 package artifact.'
+        required: false
+        default: ''
+        type: string
+      windows_artifact:
+        description: 'Name of the standalone artifact.'
+        required: false
+        default: ''
+        type: string
+      libghdl_artifact:
+        description: 'Name of the libghdl artifact.'
+        required: false
+        default: ''
+        type: string
+    # Parameters for pyGHDL unit testing and code coverage collection
+      python_version:
+        description: 'Python version for pyGHDL testing.'
+        required: false
+        default: '3.11'
+        type: string
+      pyunit_testsuites:
+        description: 'Name of the pyunit testsuites.'
+        required: false
+        default: 'testsuite/pyunit'
+        type: string
+      unittesting:
+        description: 'Run unit tests.'
+        required: false
+        default: true
+        type: boolean
+      unittest_xml_artifact:
+        description: 'Name of the pyghdl artifact.'
+        required: false
+        default: ''
+        type: string
+      coverage:
+        description: 'Collect code coverage.'
+        required: false
+        default: true
+        type: boolean
+      coverage_sqlite_artifact:
+        description: 'Name of the pyghdl artifact.'
+        required: false
+        default: ''
+        type: string
+    outputs:
+      ghdl_msys2_artifact:
+        description: "Artifact name for compiled GHDL for MSYS2."
+        value: ${{ jobs.Build.outputs.ghdl_artifact }}
+      ghdl_pacman_artifact:
+        description: "Artifact name for packaged GHDL for pacman (MSYS2)."
+        value: ${{ jobs.Build.outputs.pacman_artifact }}
+      ghdl_windows_artifact:
+        description: "Artifact name for standalone GHDL for Windows."
+        value: ${{ jobs.Build.outputs.windows_artifact }}
+
+jobs:
+  Build:
+    name: Build GHDL on Windows Server + MSYS2
+    runs-on: windows-${{ inputs.windows_version }}
+    outputs:
+      ghdl_artifact:    ${{ steps.artifact_name.outputs.ghdl_artifact }}
+      pacman_artifact:  ${{ steps.artifact_name.outputs.pacman_artifact }}
+      windows_artifact: ${{ steps.artifact_name.outputs.windows_artifact }}
+
+    defaults:
+      run:
+        shell: "msys2 {0}"
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # The command 'git describe' (used for version) needs the history.
+          fetch-depth: 0
+
+      - name: 🖉 Compute pacboy packages
+        id: pacboy
+        shell: bash
+        run: |
+          # Generic packages installed in MSYS2
+          echo "msys2_packages=make tree" >> $GITHUB_OUTPUT
+
+          # Runtime (and backend) specific packages
+          common_packages="python:p python-pip:p gcc:p gcc-ada:p binutils:p diffutils:p zlib:p"
+          mcode_packages=""
+          llvm_packages="llvm:p clang:p"
+
+          if ${{ startsWith(inputs.backend, 'mcode') }}; then
+            echo "pacboy_packages=${common_packages} ${mcode_packages}" >> $GITHUB_OUTPUT
+          elif ${{ startsWith(inputs.backend, 'llvm') }}; then
+            echo "pacboy_packages=${common_packages} ${llvm_packages}" >> $GITHUB_OUTPUT
+          else
+            echo "pacboy_packages=${common_packages}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ inputs.runtime }}
+          update: true
+          install: ${{ steps.pacboy.outputs.msys2_packages }}
+          pacboy: ${{ steps.pacboy.outputs.pacboy_packages }}
+
+      - name: 🖉 Assemble artifact name
+        id: artifact_name
+        run: |
+          echo "ghdl_artifact=${{ inputs.msys2_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
+          echo "pacman_artifact=${{ inputs.pacman_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
+          echo "windows_artifact=${{ inputs.windows_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
+          echo "libghdl_artifact=${{ inputs.libghdl_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
+
+      - name: ☑ Check build environemnt
+        run: |
+          echo "which gnat:        $(which gnat) ($($(which gnat) --version))"
+          echo "which gnatmake:    $(which gnatmake) ($($(which gnatmake) --version))"
+          if ${{ startsWith(inputs.runtime, 'llvm') }}; then
+            echo "which llvm-config: $(which llvm-config) ($($(which llvm-config) --version))"
+          fi
+
+      - name: Prepare build environemnt
+        run: |
+          mkdir -p build/${{ inputs.backend }}
+          mkdir -p install
+
+      - name: ⚙ Configure
+        run: |
+          cd build/${{ inputs.backend }}
+
+          if ${{ startsWith(inputs.backend, 'llvm') }}; then
+            CONFIG_ARGS="--with-llvm-config"
+            if ${{ endsWith(inputs.backend, 'jit') }}; then
+              CONFIG_ARGS="$CONFIG_ARGS --with-llvm-jit"
+            fi
+            CONFIG_ARGS="$CONFIG_ARGS CXX=clang++"
+          fi
+          echo "CONFIG_ARGS=$CONFIG_ARGS"
+
+          NPROC=$(nproc)
+          GNATMAKE="gnatmake -j$NPROC" \
+          MAKE="make -j$NPROC" \
+          ../../configure --prefix=../../install $CONFIG_ARGS
+
+      - name: 🔨 Make
+        run: |
+          cd build/${{ inputs.backend }}
+          make -j$(nproc)
+
+      - name: 📋 Install
+        run: |
+          cd build/${{ inputs.backend }}
+          make install
+
+      - name: List './install' directory as tree
+        run: |
+          tree ./install
+
+      - name: '📦 Build package'
+        if: inputs.pacman_artifact != ''
+        run: |
+          cd dist/msys2/${{ inputs.backend }}
+          makepkg-mingw --noconfirm --noprogressbar -sCLf
+
+          echo "================================================================================"
+          echo "ls -lAh $(pwd)"
+          ls -lAh $(pwd)
+          echo "================================================================================"
+
+      - name: 📤 Upload '${{ steps.artifact_name.outputs.pacman_artifact }}' artifact
+        uses: actions/upload-artifact@v4
+        if: inputs.pacman_artifact != ''
+        with:
+          name: ${{ steps.artifact_name.outputs.pacman_artifact }}
+          path: dist/msys2/${{ inputs.backend }}/*.pkg.tar.zst
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: "🚦 Run testsuite: 'sanity'"
+        run: |
+          export GHDL=$(pwd)/install/bin/ghdl
+          cd testsuite
+
+          # no pyunit
+          ./testsuite.sh sanity
+
+      - name: 📋 Write requirements file
+        if: inputs.msys2_artifact != ''
+        run: |
+          cd install
+          ls -lAh
+          if [ '${{ inputs.runtime }}' == 'mingw64' ]; then
+            MSYS2_PREFIX=mingw64/mingw-w64-x86_64
+          elif [ '${{ inputs.runtime }}' == 'ucrt64' ]; then
+            MSYS2_PREFIX=ucrt64/mingw-w64-ucrt-x86_64
+          fi
+          echo "${MSYS2_PREFIX}-gcc-ada" >> ${{ inputs.runtime }}.requirements
+          if ${{ startsWith(inputs.backend, 'llvm') }}; then
+           echo "${MSYS2_PREFIX}-llvm-libs" >> ${{ inputs.runtime }}.requirements
+          fi
+
+      - name: List dependencies
+        if: inputs.msys2_artifact != ''
+        run: |
+          cat ./install/*.requirements
+
+      - name: 📤 Upload '${{ steps.artifact_name.outputs.ghdl_artifact }}' artifact
+        uses: actions/upload-artifact@v4
+        if: inputs.msys2_artifact != ''
+        with:
+          name: ${{ steps.artifact_name.outputs.ghdl_artifact }}
+          path: ./install
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: 🗐 Copy and check dependency (MSYS2) for standalone usage
+        if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
+        run: |
+          cp -r ./install ./standalone
+
+          GetMinGWLibraries() {
+            ldd "$1" | while IFS="" read -r dependency; do
+              fields=($dependency)
+              dep="${fields[2]}"
+              if [[ "$dep" == /"${MSYSTEM,,}"/* ]]; then
+                echo "$dep"
+                GetMinGWLibraries "${MSYSTEM_PREFIX}/${dep#"/${MSYSTEM,,}/"}"
+              fi
+            done
+          }
+
+          for executable in ./standalone/bin/*.exe; do
+            echo "read dependencies of '${executable}'"
+            ldd ${executable}
+            echo "copy dependencies ..."
+            for dependency in $(GetMinGWLibraries ${executable}); do
+              cp -v "$dependency" ./standalone/bin
+            done
+          done
+
+          for library in ./standalone/lib/*.dll; do
+            echo "read dependencies of '${library}'"
+            ldd ${library}
+            echo "copy dependencies ..."
+            for dependency in $(GetMinGWLibraries ${library}); do
+              cp -v "$dependency" ./standalone/lib
+            done
+          done
+
+      - name: List './standalone' directory as tree
+        if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
+        run: |
+          tree ./standalone
+
+      - name: 📤 Upload '${{ steps.artifact_name.outputs.windows_artifact }}' artifact
+        uses: actions/upload-artifact@v4
+        if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
+        with:
+          name: ${{ steps.artifact_name.outputs.windows_artifact }}
+          path: ./standalone
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: ✂ Remove binaries, libraries and other files for libghdl
+        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
+        run: |
+          rm -Rf ./install/bin
+          rm -Rf ./install/include
+          rm -Rf ./install/lib/ghdl/vendors
+          rm -Rf ./install/lib/*.a
+          rm -Rf ./install/lib/*.link
+          rm -Rf ./install/lib/libghdlvpi.dll
+          rm -Rf ./install/lib/libghw.dll
+          rm -Rf ./install/*.requirements
+
+      - name: List './install' directory as tree
+        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
+        run: |
+          tree ./install
+          ldd ./install/lib/*.dll
+
+      - name: Copy and check dependency (MSYS2)
+        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
+        run: |
+          GetMinGWLibraries() {
+            ldd "$1" | while IFS="" read -r dependency; do
+              fields=($dependency)
+              dep="${fields[2]}"
+              if [[ "$dep" == /"${MSYSTEM,,}"/* ]]; then
+                echo "$dep"
+                GetMinGWLibraries "${MSYSTEM_PREFIX}/${dep#"/${MSYSTEM,,}/"}"
+              fi
+            done
+          }
+
+          for library in ./install/lib/*.dll; do
+            echo "read dependencies of '${library}'"
+            ldd ${library}
+            echo "copy dependencies ..."
+            for dependency in $(GetMinGWLibraries ${library}); do
+              cp -v "$dependency" ./install/lib
+            done
+          done
+
+      - name: 📤 Upload '${{ steps.artifact_name.outputs.libghdl_artifact }}' artifact
+        uses: actions/upload-artifact@v4
+        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
+        with:
+          name: ${{ steps.artifact_name.outputs.libghdl_artifact }}
+          path: ./install
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Install libghdl into pyGHDL/lib (only mcode backend)
+        if: (inputs.unittesting || inputs.coverage) && inputs.backend == 'mcode'
+        run: |
+          cp -r -v ./install/lib/* ./pyGHDL/lib
+
+#      - name: 🐍 Setup Python (only mcode backend)
+#        uses: actions/setup-python@v5
+#        if: (inputs.unittesting || inputs.coverage) && inputs.backend == 'mcode'
+#        with:
+#          python-version: ${{ inputs.python_version }}
+
+      - name: 🧰 Install dependencies (only mcode backend)
+        if: (inputs.unittesting || inputs.coverage) && inputs.backend == 'mcode'
+        run: |
+          python3 -m pip install --disable-pip-version-check tomli
+          python3 -m pip install --disable-pip-version-check -r testsuite/requirements.txt
+
+      # TODO: replace with https://github.com/pyTooling/Actions/blob/dev/.github/workflows/ExtractConfiguration.yml
+      - name: 🔁 Extract configurations from pyproject.toml (only mcode backend)
+        if: inputs.coverage && inputs.backend == 'mcode'
+        id: getVariables
+        shell: python
+        run: |
+          from os       import getenv
+          from pathlib  import Path
+          from sys      import version
+          from textwrap import dedent
+
+          print(f"Python: {version}")
+
+          from tomli import load as tomli_load
+
+          htmlDirectory = Path("htmlcov")
+          xmlFile =  Path("./coverage.xml")
+          jsonFile = Path("./coverage.json")
+
+          # Read output paths from 'pyproject.toml' file
+          pyProjectFile =  Path("pyproject.toml")
+          if pyProjectFile.exists():
+            with pyProjectFile.open("rb") as file:
+              pyProjectSettings = tomli_load(file)
+
+            htmlDirectory = Path(pyProjectSettings["tool"]["coverage"]["html"]["directory"])
+            xmlFile       = Path(pyProjectSettings["tool"]["coverage"]["xml"]["output"])
+            jsonFile      = Path(pyProjectSettings["tool"]["coverage"]["json"]["output"])
+          else:
+            print(f"File '{pyProjectFile}' not found.")
+            print(f"::error title=FileNotFound::File '{pyProjectFile}' not found.")
+            exit(1)
+
+          # Write jobs to special file
+          github_output = Path(getenv("GITHUB_OUTPUT"))
+          print(f"GITHUB_OUTPUT: {github_output}")
+          with github_output.open("a+", encoding="utf-8") as f:
+            f.write(dedent(f"""\
+              unittest_report_html_directory={htmlDirectory}
+              coverage_report_html_directory={htmlDirectory.as_posix()}
+              coverage_report_xml={xmlFile}
+              coverage_report_json={jsonFile}
+            """))
+
+          print(f"DEBUG:\n  html={htmlDirectory}\n  xml={xmlFile}\n  json={jsonFile}")
+
+      - name: "🚦 Testsuite: 'pyunit' (only mcode backend)"
+        if: (inputs.unittesting || inputs.coverage) && inputs.backend == 'mcode'
+        run: |
+          export PYTHONPATH=$(pwd)
+
+          [ -n '${{ inputs.unittest_xml_artifact }}' ] && PYTEST_ARGS='--junitxml=report/unit/TestReportSummary.xml' || unset PYTEST_ARGS
+          if ${{ inputs.coverage }}; then
+            echo "coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+            coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
+          elif ${{ inputs.unittesting }}; then
+            echo "python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+            python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
+          else
+            echo "::error title=InternalError::Reached impossible execution path."
+            exit 1
+          fi
+
+# Upload test result artifacts
+
+      - name: 📤 Upload 'TestReportSummary.xml' artifact (only mcode backend)
+        if: inputs.unittesting && inputs.backend == 'mcode' && inputs.unittest_xml_artifact != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.unittest_xml_artifact }}-Windows-${{ inputs.windows_version }}-${{ inputs.python_version }}
+          path: report/unit/TestReportSummary.xml
+          if-no-files-found: error
+          retention-days: 1
+
+# Convert and upload coverage results as artifact
+
+      - name: Report code coverage (only mcode backend)
+        if: inputs.coverage && inputs.backend == 'mcode'
+        run: coverage report --rcfile=pyproject.toml --data-file=.coverage
+
+      - name: 📤 Upload 'Coverage SQLite Database' artifact (only mcode backend)
+        if: inputs.coverage && inputs.backend == 'mcode' && inputs.coverage_sqlite_artifact != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.coverage_sqlite_artifact }}-Windows-${{ inputs.windows_version }}-${{ inputs.python_version }}
+          path: .coverage
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+
+  Test:
+#    name: Test GHDL on Windows Server + MSYS2
+    uses: ./.github/workflows/Test-GHDL.yml
+    needs:
+      - Build
+    if: inputs.msys2_artifact != '' && inputs.testsuites != 'none'
+    with:
+      os_image:      windows-${{ inputs.windows_version }}
+      runtime:       ${{ inputs.runtime }}
+      shell:         "msys2 {0}"
+      ghdl_artifact: ${{ needs.Build.outputs.ghdl_artifact }}
+      testsuites:    ${{ inputs.testsuites }}
+
+  InstallPackage:
+    name: Install and Test GHDL on Windows Server + MSYS2
+    runs-on: windows-${{ inputs.windows_version }}
+    needs:
+      - Build
+    if: inputs.pacman_artifact != ''
+
+    defaults:
+      run:
+        shell: "msys2 {0}"
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+
+      - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ inputs.runtime }}
+          update: true
+          pacboy: "diffutils:p"
+
+      - name: 📥 Download artifacts '${{ needs.Build.outputs.pacman_artifact }}' from 'Package' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.Build.outputs.pacman_artifact }}
+          path: pacman
+
+      - name: Install pkg.tar.zst package
+        run: pacman -U --noconfirm pacman/*.pkg.tar.zst
+
+      - name: Verify installation
+        run: |
+          echo "which ghdl: $(which ghdl)"
+          ghdl version
+
+      - name: Run tests
+        if: inputs.testsuites != 'none'
+        run: |
+          cd testsuite
+
+          # no pyunit
+          if [ '${{ inputs.testsuites }}' == 'all' ]; then
+            TESTSUITES="sanity gna vests synth vpi vhpi"
+          else
+            TESTSUITES="${{ inputs.testsuites }}"
+          fi
+          ./testsuite.sh $TESTSUITES
+
+  StandalonePackage:
+    name: Install GHDL on Windows Server
+    runs-on: windows-${{ inputs.windows_version }}
+    needs:
+      - Build
+    if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
+
+    steps:
+      - name: ⏬ Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📥 Download artifacts '${{ needs.Build.outputs.windows_artifact }}' from 'Package' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.Build.outputs.windows_artifact }}
+          path: install
+
+      - name: Verify installation
+        run: |
+          $env:PATH="$($pwd.Path)\install\bin;${env:PATH}"
+
+          echo "which ghdl: $(which ghdl)"
+          ghdl version
+
+#      - name: Run tests
+#        if: inputs.testsuites != 'none'
+#        run: |
+#          $env:PATH="$($pwd.Path)\install\bin;${env:PATH}"
+#
+#          cd testsuite
+#
+#          # no pyunit
+#          if ('${{ inputs.testsuites }}' == 'all') {
+#            $TESTSUITES = "sanity gna vests synth vpi vhpi"
+#          } else {
+#            $TESTSUITES = "${{ inputs.testsuites }}"
+#          }
+#          ./testsuite.sh $TESTSUITES

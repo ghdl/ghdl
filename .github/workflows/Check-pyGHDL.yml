@@ -1,0 +1,57 @@
+name: Checking pyGHDL (Python Bindings for libghdl)
+
+on:
+  workflow_call:
+    inputs:
+      ubuntu_image:
+        description: 'Name of the Ubuntu image.'
+        required: false
+        default: 'ubuntu-24.04'
+        type: string
+      python_version:
+        description: 'Use Python version'
+        required: false
+        default: '3.12'
+        type: string
+      black:
+        description: 'Check Python source code using black.'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  Checks:
+    name: '🐍 Checking Python bindings'
+    runs-on: ${{ inputs.ubuntu_image }}
+
+    steps:
+      - name: '⏬ Checkout'
+        uses: actions/checkout@v4
+
+      - name: '🐍 Setup Python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: '🔧 Install dependencies for binding check'
+        run: |
+          sudo apt update -qq
+          sudo apt install -y --no-install-recommends gnat
+
+      - name: '🔧 Install dependencies for black'
+#        if: inputs.black    # update_py_bindings.sh has an internal call to black
+        run: |
+          python -m pip install --disable-pip-version-check black wheel
+
+      - name: '🚧 Update Python bindings'
+        run: ./scripts/update_py_bindings.sh
+
+      - name: '🚦 Check if Python bindings changed'
+        run: |
+          git diff --stat
+          echo "NOTE: Bindings can be updated by executing ./scripts/update_py_bindings.sh (see previous step)"
+          git diff --exit-code
+
+      - name: '🚦 Check if python follows code formatting standards'
+        if: inputs.black
+        run: python -m black --check --diff --color pyGHDL
