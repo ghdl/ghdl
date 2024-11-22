@@ -177,11 +177,9 @@ jobs:
     uses: ./.github/workflows/Check-pyGHDL.yml
     needs:
       - Params
-#    with:
-#      black: false
 
   StaticTypeCheck:
-    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r1
+    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r2
     needs:
       - Params
     with:
@@ -192,7 +190,7 @@ jobs:
       html_artifact: 'pyGHDL-typing-HTML'
 
   DocCoverage:
-    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@r1
+    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@r2
     needs:
       - Params
     with:
@@ -229,7 +227,7 @@ jobs:
     secrets: inherit
 
   PublishCoverageResults:
-    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r1
+    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r2
     needs:
       - macOS
       - Ubuntu-fast
@@ -248,13 +246,13 @@ jobs:
       - Ubuntu-fast
       - Windows-fast
       - pyGHDL
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
     with:
       merged_junit_artifact: 'pyGHDL-Unittest-XML'
       additional_merge_args: '-d "--render=tree" "--name=pyGHDL" "--pytest=rewrite-dunder-init;reduce-depth:pytest.testsuite.pyunit;split:pytest"'
+      publish: ${{ github.event_name != 'pull_request' }}
 
   IntermediateCleanUp:
-    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r1
+    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r2
     needs:
       - PublishCoverageResults
       - PublishTestResults
@@ -311,7 +309,7 @@ jobs:
         run: echo "Dummy"
 
   ReleasePage:
-    uses: pyTooling/Actions/.github/workflows/Release.yml@r1
+    uses: pyTooling/Actions/.github/workflows/Release.yml@r2
     if: startsWith(github.ref, 'refs/tags')
     needs:
       - macOS
