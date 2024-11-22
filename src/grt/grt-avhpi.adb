@@ -1087,7 +1087,8 @@ package body Grt.Avhpi is
                                      Res : out VhpiHandleT;
                                      Error : out AvhpiErrorT)
    is
-      Base_Type, El_Type : VhpiHandleT;
+      Base_Type, Atype, El_Type : VhpiHandleT;
+      Obj, Addr, Bounds : Address;
    begin
       --  Default error.
       Error := AvhpiErrorNotImplemented;
@@ -1100,24 +1101,30 @@ package body Grt.Avhpi is
          Error := AvhpiErrorBadRel;
          return;
       end if;
+      Vhpi_Handle (VhpiSubtype, Ref, Atype, Error);
+      if Error /= AvhpiErrorOk then
+         return;
+      end if;
       Vhpi_Handle (VhpiElemSubtype, Base_Type, El_Type, Error);
       if Error /= AvhpiErrorOk then
          return;
       end if;
-      Res := (Kind => VhpiIndexedNameK,
-              Ctxt => Ref.Ctxt,
-              N_Addr => Avhpi_Get_Address (Ref),
-              N_Type => El_Type.Atype,
-              N_Idx => Ghdl_Index_Type (Index),
-              N_Obj => Ref.Obj);
-      if Res.N_Addr = Null_Address then
+      Obj := Avhpi_Get_Address (Ref);
+      Object_To_Base_Bounds (Avhpi_Get_Rti (Atype), Obj, Addr, Bounds);
+      if Addr = Null_Address then
          Error := AvhpiErrorBadRel;
          return;
       end if;
       --  Note: the index is a flat index (ie an offset).
       --  TODO: check with length ?
-      Res.N_Addr := Add_Index (Res.Ctxt, Res.N_Addr, Res.N_Obj, Res.N_Type,
-                               Ghdl_Index_Type (Index));
+      Addr := Add_Index (Ref.Ctxt, Addr, Ref.Obj, El_Type.Atype,
+                         Ghdl_Index_Type (Index));
+      Res := (Kind => VhpiIndexedNameK,
+              Ctxt => Ref.Ctxt,
+              N_Addr => Addr,
+              N_Type => El_Type.Atype,
+              N_Idx => Ghdl_Index_Type (Index),
+              N_Obj => Ref.Obj);
    end Indexed_Names_By_Index;
 
    procedure Vhpi_Handle_By_Index (Rel : VhpiOneToManyT;

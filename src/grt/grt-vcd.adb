@@ -413,9 +413,23 @@ package body Grt.Vcd is
       end if;
 
       Rti := Avhpi_Get_Rti (Sig_Type);
+
       Sig_Addr := Avhpi_Get_Address (Sig);
-      Object_To_Base_Bounds (Rti, Sig_Addr, Base, Bounds);
-      Sig_Addr := Base;
+
+      case Vhpi_Get_Kind (Sig) is
+         when VhpiIndexedNameK =>
+            Bounds := Null_Address;
+         when VhpiPortDeclK
+            | VhpiSigDeclK
+            | VhpiGenericDeclK
+            | VhpiConstDeclK =>
+            Object_To_Base_Bounds (Rti, Sig_Addr, Base, Bounds);
+            Sig_Addr := Base;
+         when others =>
+            Info := (Vtype => Vcd_Bad,
+                     Val => Vcd_Effective, Ptr => Null_Address);
+            return;
+      end case;
 
       case Rti.Kind is
          when Ghdl_Rtik_Type_B1

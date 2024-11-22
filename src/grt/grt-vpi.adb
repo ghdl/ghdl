@@ -859,6 +859,8 @@ package body Grt.Vpi is
                Add ("vpiDefFile");
             when vpiNet =>
                Add ("vpiNet");
+            when vpiNetArray =>
+               Add ("vpiNetArray");
             when vpiPort =>
                Add ("vpiPort");
             when vpiDirection =>
