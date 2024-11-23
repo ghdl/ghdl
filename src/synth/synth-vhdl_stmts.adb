@@ -3816,7 +3816,10 @@ package body Synth.Vhdl_Stmts is
             Set_Error (C.Inst);
          else
             if C.Nbr_Ret = 0 then
-               C.Ret_Value := Val;
+               --  Copy a result of the function call.
+               --  The result can be a local variable which will be released.
+               --  It can also be an alias of a local variable.
+               C.Ret_Value := Unshare_Result (Val);
                if not Is_Bounded_Type (C.Ret_Typ) then
                   --  The function was declared with an unconstrained
                   --  return type.  Now that a value has been returned,
@@ -3829,14 +3832,14 @@ package body Synth.Vhdl_Stmts is
                      Set_Width (C.Ret_Init, C.Ret_Typ.W);
                   end if;
                end if;
+            elsif Is_Dyn then
+               --  In case of multiple return, the value is not valid anymore.
+               --  TODO: the value can be kept if it is the same and its type
+               --  is the same.
+               C.Ret_Value := No_Valtyp;
             end if;
             if Is_Dyn then
                Phi_Assign_Net (Ctxt, C.W_Val, Get_Net (Ctxt, Val), 0);
-            else
-               --  Copy a result of the function call.
-               --  The result can be a local variable which will be released.
-               --  It can also be an alias of a local variable.
-               C.Ret_Value := Unshare_Result (C.Ret_Value);
             end if;
          end if;
       end if;
