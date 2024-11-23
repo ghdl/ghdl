@@ -36,6 +36,7 @@ from typing import List, Any, Generator
 
 from pyTooling.Decorators import export
 
+from pyGHDL.libghdl._decorator import BindToLibGHDL
 from pyGHDL.libghdl._decorator import EnumLookupTable
 from pyGHDL.libghdl._types import NameId
 import pyGHDL.libghdl.name_table as name_table
@@ -455,3 +456,8 @@ def sequential_iter(n) -> Generator[Any, None, None]:
         return
     else:
         raise Exception("Unknown node of kind {}".format(kind_image(k)))
+
+@export
+@BindToLibGHDL("elab__vhdl_insts__elab_top_unit")
+def elab_top_unit(config: int) -> int:
+    return 0    
