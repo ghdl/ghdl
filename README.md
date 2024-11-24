@@ -72,7 +72,7 @@ Together, these third-party integrations make GHDL a comprehensive tool for digi
 # Getting GHDL
 
 - Pre-built packages:
-  - GHDL is available through the default package manager on most major distributions: Debian/Ubuntu, Fedora, Arch Linux, and MSYS2 for Windows. You can install GHDL directly through these package managers, making the installation process straightforward for most users.
+  - GHDL is available through the default package manager on most major distributions: Debian/Ubuntu, Fedora, Arch Linux, Guix, and MSYS2 for Windows. You can install GHDL directly through these package managers, making the installation process straightforward for most users.
   - After each successful CI run, [nightly](https://github.com/ghdl/ghdl/releases/tag/nightly) tarballs/zipfiles for Ubuntu and Windows (MSYS2) are updated. These nightly builds provide access to the latest features and updates, which may not yet be available in the package manager repositories.
   - If you need to set up GHDL in a Continuous Integration (CI) pipeline, the [setup-ghdl-ci](https://github.com/ghdl/setup-ghdl-ci) GitHub Action allows you to configure GHDL with minimal effort. It provides a simple and efficient way to integrate GHDL into your CI workflows with just a few lines of configuration.
 
@@ -82,8 +82,8 @@ Together, these third-party integrations make GHDL a comprehensive tool for digi
 - **Building GHDL from Source**:  
   Advanced users can opt to build GHDL from source, allowing for customization and access to experimental features. Building from source can also be useful for platforms or configurations not covered by pre-built packages. The [Building GHDL guide](https://ghdl.github.io/ghdl/development/building/index.html) provides detailed instructions on how to compile GHDL, including selecting your preferred backend (LLVM, GCC, or mcode). This process gives users full control over their setup and allows them to tailor GHDL to their specific needs.
 
-- **Platform-Specific Notes**:  
-  - **Linux**: GHDL is supported across a wide range of Linux distributions. It can be installed using common package managers like `apt`, `dnf`, or `pacman`, depending on the distribution. Installation is typically straightforward, and pre-built packages are updated regularly.
+- **Platform-Specific Notes**:
+  - **Linux**: GHDL is supported across a wide range of Linux distributions. It can be installed using common package managers like `apt`, `dnf`, `pacman` or `guix`, depending on the distribution. Installation is typically straightforward, and pre-built packages are updated regularly.
   - **Windows**: For Windows users, GHDL can be installed through MSYS2, a Unix-like environment for Windows. This provides a similar experience to using GHDL on Linux, and MSYS2 ensures that dependencies are properly managed. The [MSYS2 documentation](https://www.msys2.org/) offers detailed guidance on setting up the environment.
   - **macOS**: On macOS, GHDL can be easily installed using Homebrew, a popular package manager. This allows macOS users to get started with GHDL without needing to build from source. Alternatively, for more customization, macOS users can follow the build-from-source instructions.
 
