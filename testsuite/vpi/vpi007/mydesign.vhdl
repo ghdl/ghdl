@@ -13,5 +13,6 @@ begin
   begin
     wait for 1 ms;
     out1 <= 17;
+    wait;
   end process;
 end arch;
