@@ -20,6 +20,11 @@ on:
         description: 'GHDL backend.'
         required: true
         type: string
+      publish:
+        description: 'Publish Docker image to Docker Hub.'
+        required: false
+        default: true
+        type: boolean
       dockerhub_image:
         description: 'Docker Hub image name.'
         required: false
@@ -34,7 +39,6 @@ jobs:
   Ubuntu:
     name: Package GHDL as Docker Image
     runs-on: ${{ inputs.ubuntu_image }}
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
     outputs:
       ghdl_image: ${{ steps.build.outputs.ghdl_image }}
 
@@ -71,35 +75,36 @@ jobs:
           cat $GITHUB_OUTPUT
 
           echo "Building docker file './dist/docker/Dockerfile.${base_image}' ..."
-          docker build \
+          docker buildx build \
             --file ./dist/docker/Dockerfile.${base_image} \
             --build-arg IMAGE=${base_image} \
             --build-arg IMAGE_TAG=${base_image_tag} \
-            --tag "${image}" \
+            --tag "ghdl:current" \
             ./dist/docker
 
-          echo "Docker image '${image}' has $(docker image inspect $1 --format='{{.Size}}' | numfmt --to=iec --format '%.2f' ${image})"
+          echo "Docker image 'ghdl:current' has $(docker image inspect $1 --format='{{.Size}}' | numfmt --to=iec --format '%.2f' ${image})"
 
-      - name: ☑ Checking GHDL image '${{ steps.build.outputs.ghdl_image }}'
+      - name: ☑ Checking GHDL image 'ghdl:current'
         run: |
-          docker container run --rm ${{ steps.build.outputs.ghdl_image }} 'echo "which ghdl: $(which ghdl)"; ghdl version'
+          docker container run --rm ghdl:current 'echo "which ghdl: $(which ghdl)"; ghdl version'
 
       - name: 🔑 Login and push to Docker Hub
-        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
+        if: inputs.publish
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ vars.DOCKERHUB_USERNAME }} --password-stdin
+          docker image tag ghdl:current ${{ steps.build.outputs.ghdl_image }}
           echo "Docker image '${{ steps.build.outputs.ghdl_image }}' has $(docker image inspect $1 --format='{{.Size}}' | numfmt --to=iec --format '%.2f' ${{ steps.build.outputs.ghdl_image }})"
-          docker push ${{ steps.build.outputs.ghdl_image }}
+          docker image push ${{ steps.build.outputs.ghdl_image }}
 
       - name: 🚦 Testing GHDL image
         run: |
-          docker container run --rm -v $(pwd):/data ${{ steps.build.outputs.ghdl_image }} 'cd /data/testsuite; ./testsuite.sh ${{ inputs.testsuites }}'
+          docker container run --rm -v $(pwd):/data ghdl:current 'cd /data/testsuite; ./testsuite.sh ${{ inputs.testsuites }}'
 
   TestDocker:
     uses: ./.github/workflows/Test-Docker.yml
     needs:
       - Ubuntu
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
+    if: inputs.publish
     with:
       os_image:   ${{ inputs.ubuntu_image }}
       ghdl_image: ${{ needs.Ubuntu.outputs.ghdl_image }}

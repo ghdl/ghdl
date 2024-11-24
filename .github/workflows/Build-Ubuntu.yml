@@ -432,5 +432,6 @@ jobs:
       ghdl_artifact:       ${{ needs.Build.outputs.ghdl_artifact }}
       ubuntu_version:      ${{ inputs.ubuntu_version }}
       backend:             ${{ inputs.backend }}
+      publish:             ${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/')) }}
       testsuites:          ${{ inputs.testsuites }}
     secrets: inherit
