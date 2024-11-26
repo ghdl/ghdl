@@ -191,6 +191,8 @@ jobs:
   osx:
     name: '🚧🚦🍎 macOS ${{ matrix.os }} ${{ matrix.backend }}'
     runs-on: 'macOS-${{ matrix.os }}'
+# Disable, now done by the new pipeline.
+    if: false
 
     strategy:
       fail-fast: false
