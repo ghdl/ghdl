@@ -314,24 +314,31 @@ jobs:
       nightly_name: testing
       prerelease: true
       assets: |
-        ghdl-Pacman-mingw64-llvm:mingw-w64-x86_64-ghdl-llvm-5.0.0.dev-1-any.pkg.tar.zst:GHDL - v5.0.0-dev0 - LLVM backend for MSYS2/MinGW64
-        ghdl-Pacman-mingw64-llvm-jit:mingw-w64-x86_64-ghdl-llvm-jit-5.0.0.dev-1-any.pkg.tar.zst:GHDL - v5.0.0-dev0 - LLVM-JIT backend for MSYS2/MinGW64
-        ghdl-Pacman-mingw64-mcode:mingw-w64-x86_64-ghdl-mcode-5.0.0.dev-1-any.pkg.tar.zst:GHDL - v5.0.0-dev0 - mcode backend for MSYS2/MinGW64
-        ghdl-Pacman-ucrt64-llvm:mingw-w64-ucrt-x86_64-ghdl-llvm-5.0.0.dev-1-any.pkg.tar.zst:GHDL - v5.0.0-dev0 - LLVM backend for MSYS2/UCRT64
-        ghdl-Pacman-ucrt64-llvm-jit:mingw-w64-ucrt-x86_64-ghdl-llvm-jit-5.0.0.dev-1-any.pkg.tar.zst:GHDL - v5.0.0-dev0 - LLVM-JIT backend for MSYS2/UCRT64
-        ghdl-Pacman-ucrt64-mcode:mingw-w64-ucrt-x86_64-ghdl-mcode-5.0.0.dev-1-any.pkg.tar.zst:GHDL - v5.0.0-dev0 - mcode backend for MSYS2/UCRT64
-        ghdl-Windows-mingw64-mcode:!ghdl-mcode-5.0.0.dev0-mingw64.zip:GHDL - v5.0.0-dev0 - mcode backend for Windows (x86-64, MinGW64)
-        ghdl-Windows-ucrt64-mcode:!ghdl-mcode-5.0.0.dev0-ucrt64.zip:GHDL - v5.0.0-dev0 - mcode backend for Windows (x86-64, UCRT64)
-        pyGHDL-Ubuntu-24.04-x86_64-Python-3.9:pyGHDL-5.0.0.dev0-cp39-cp39-linux_x86_64.whl:pyGHDL - v5.0.0-dev0 - Wheel for Python 3.9 on Ubuntu 24.04 (x86-64)
-        pyGHDL-Ubuntu-24.04-x86_64-Python-3.10:pyGHDL-5.0.0.dev0-cp310-cp310-linux_x86_64.whl:pyGHDL - v5.0.0-dev0 - Wheel for Python 3.10 on Ubuntu 24.04 (x86-64)
-        pyGHDL-Ubuntu-24.04-x86_64-Python-3.11:pyGHDL-5.0.0.dev0-cp311-cp311-linux_x86_64.whl:pyGHDL - v5.0.0-dev0 - Wheel for Python 3.11 on Ubuntu 24.04 (x86-64)
-        pyGHDL-Ubuntu-24.04-x86_64-Python-3.12:pyGHDL-5.0.0.dev0-cp312-cp312-linux_x86_64.whl:pyGHDL - v5.0.0-dev0 - Wheel for Python 3.12 on Ubuntu 24.04 (x86-64)
-        pyGHDL-Ubuntu-24.04-x86_64-Python-3.13:pyGHDL-5.0.0.dev0-cp313-cp313-linux_x86_64.whl:pyGHDL - v5.0.0-dev0 - Wheel for Python 3.13 on Ubuntu 24.04 (x86-64)
-        pyGHDL-Windows-x86_64-Python-3.9:pyGHDL-5.0.0.dev0-cp39-cp39-win_amd64.whl:pyGHDL - v5.0.0-dev0 - Wheel for Python 3.9 on Windows (x86-64)
-        pyGHDL-Windows-x86_64-Python-3.10:pyGHDL-5.0.0.dev0-cp310-cp310-win_amd64.whl:pyGHDL - v5.0.0-dev0 - Wheel for Python 3.10 on Windows (x86-64)
-        pyGHDL-Windows-x86_64-Python-3.11:pyGHDL-5.0.0.dev0-cp311-cp311-win_amd64.whl:pyGHDL - v5.0.0-dev0 - Wheel for Python 3.11 on Windows (x86-64)
-        pyGHDL-Windows-x86_64-Python-3.12:pyGHDL-5.0.0.dev0-cp312-cp312-win_amd64.whl:pyGHDL - v5.0.0-dev0 - Wheel for Python 3.12 on Windows (x86-64)
-        pyGHDL-Windows-x86_64-Python-3.13:pyGHDL-5.0.0.dev0-cp313-cp313-win_amd64.whl:pyGHDL - v5.0.0-dev0 - Wheel for Python 3.13 on Windows (x86-64)
+        ghdl-macos-13-x86_64-llvm:            !ghdl-llvm-5.0.0.dev0-macos13-x86_64.tgz:                        GHDL - v5.0.0-dev0 - llvm backend for macOS 13 (x86-64)
+        ghdl-macos-13-x86_64-mcode:           !ghdl-mcode-5.0.0.dev0-macos13-x86_64.tgz:                       GHDL - v5.0.0-dev0 - mcode backend for macOS 13 (x86-64)
+        ghdl-macos-14-aarch64-llvm:           !ghdl-llvm-5.0.0.dev0-macos14-aarch64.tgz:                       GHDL - v5.0.0-dev0 - llvm backend for macOS 14 (aarch64)
+        ghdl-macos-14-aarch64-llvm-jit:       !ghdl-llvm-jit-5.0.0.dev0-macos14-aarch64.tgz:                   GHDL - v5.0.0-dev0 - llvm-jit backend for macOS 14 (aarch64)
+        ghdl-ubuntu-24.04-x86_64-llvm:        !ghdl-llvm-5.0.0.dev0-ubuntu24.04-x86_64.tgz:                    GHDL - v5.0.0-dev0 - llvm backend for Ubuntu 24.04 LTS (x86-64)
+        ghdl-ubuntu-24.04-x86_64-llvm-jit:    !ghdl-llvm-jit-5.0.0.dev0-ubuntu24.04-x86_64.tgz:                GHDL - v5.0.0-dev0 - llvm-jit backend for Ubuntu 24.04 LTS (x86-64)
+        ghdl-ubuntu-24.04-x86_64-mcode:       !ghdl-mcode-5.0.0.dev0-ubuntu24.04-x86_64.tgz:                   GHDL - v5.0.0-dev0 - mcode backend for Ubuntu 24.04 LTS (x86-64)
+        ghdl-Pacman-mingw64-llvm:              mingw-w64-x86_64-ghdl-llvm-5.0.0.dev-1-any.pkg.tar.zst:         GHDL - v5.0.0-dev0 - LLVM backend for MSYS2/MinGW64
+        ghdl-Pacman-mingw64-llvm-jit:          mingw-w64-x86_64-ghdl-llvm-jit-5.0.0.dev-1-any.pkg.tar.zst:     GHDL - v5.0.0-dev0 - LLVM-JIT backend for MSYS2/MinGW64
+        ghdl-Pacman-mingw64-mcode:             mingw-w64-x86_64-ghdl-mcode-5.0.0.dev-1-any.pkg.tar.zst:        GHDL - v5.0.0-dev0 - mcode backend for MSYS2/MinGW64
+        ghdl-Pacman-ucrt64-llvm:               mingw-w64-ucrt-x86_64-ghdl-llvm-5.0.0.dev-1-any.pkg.tar.zst:    GHDL - v5.0.0-dev0 - LLVM backend for MSYS2/UCRT64
+        ghdl-Pacman-ucrt64-llvm-jit:           mingw-w64-ucrt-x86_64-ghdl-llvm-jit-5.0.0.dev-1-any.pkg.tar.zst:GHDL - v5.0.0-dev0 - LLVM-JIT backend for MSYS2/UCRT64
+        ghdl-Pacman-ucrt64-mcode:              mingw-w64-ucrt-x86_64-ghdl-mcode-5.0.0.dev-1-any.pkg.tar.zst:   GHDL - v5.0.0-dev0 - mcode backend for MSYS2/UCRT64
+        ghdl-Windows-mingw64-mcode:           !ghdl-mcode-5.0.0.dev0-mingw64.zip:                              GHDL - v5.0.0-dev0 - mcode backend for Windows (x86-64, MinGW64)
+        ghdl-Windows-ucrt64-mcode:            !ghdl-mcode-5.0.0.dev0-ucrt64.zip:                               GHDL - v5.0.0-dev0 - mcode backend for Windows (x86-64, UCRT64)
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.9: pyGHDL-5.0.0.dev0-cp39-cp39-linux_x86_64.whl:                   pyGHDL - v5.0.0-dev0 - Wheel for Python 3.9 on Ubuntu 24.04 (x86-64)
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.10:pyGHDL-5.0.0.dev0-cp310-cp310-linux_x86_64.whl:                 pyGHDL - v5.0.0-dev0 - Wheel for Python 3.10 on Ubuntu 24.04 (x86-64)
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.11:pyGHDL-5.0.0.dev0-cp311-cp311-linux_x86_64.whl:                 pyGHDL - v5.0.0-dev0 - Wheel for Python 3.11 on Ubuntu 24.04 (x86-64)
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.12:pyGHDL-5.0.0.dev0-cp312-cp312-linux_x86_64.whl:                 pyGHDL - v5.0.0-dev0 - Wheel for Python 3.12 on Ubuntu 24.04 (x86-64)
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.13:pyGHDL-5.0.0.dev0-cp313-cp313-linux_x86_64.whl:                 pyGHDL - v5.0.0-dev0 - Wheel for Python 3.13 on Ubuntu 24.04 (x86-64)
+        pyGHDL-Windows-x86_64-Python-3.9:      pyGHDL-5.0.0.dev0-cp39-cp39-win_amd64.whl:                      pyGHDL - v5.0.0-dev0 - Wheel for Python 3.9 on Windows (x86-64)
+        pyGHDL-Windows-x86_64-Python-3.10:     pyGHDL-5.0.0.dev0-cp310-cp310-win_amd64.whl:                    pyGHDL - v5.0.0-dev0 - Wheel for Python 3.10 on Windows (x86-64)
+        pyGHDL-Windows-x86_64-Python-3.11:     pyGHDL-5.0.0.dev0-cp311-cp311-win_amd64.whl:                    pyGHDL - v5.0.0-dev0 - Wheel for Python 3.11 on Windows (x86-64)
+        pyGHDL-Windows-x86_64-Python-3.12:     pyGHDL-5.0.0.dev0-cp312-cp312-win_amd64.whl:                    pyGHDL - v5.0.0-dev0 - Wheel for Python 3.12 on Windows (x86-64)
+        pyGHDL-Windows-x86_64-Python-3.13:     pyGHDL-5.0.0.dev0-cp313-cp313-win_amd64.whl:                    pyGHDL - v5.0.0-dev0 - Wheel for Python 3.13 on Windows (x86-64)
 
 
   ReleasePage:
