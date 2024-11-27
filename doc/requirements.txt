@@ -6,7 +6,7 @@ python-dateutil ~= 2.8
 # Sphinx Extenstions
 autoapi ~= 2.0
 myst-parser ~= 4.0
-sphinx_autodoc_typehints ~= 2.3
+sphinx_autodoc_typehints ~= 2.5
 
 # Theme
 furo
