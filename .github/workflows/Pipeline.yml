@@ -304,14 +304,30 @@ jobs:
       - DocCoverage
       - PublishCoverageResults
       - PublishTestResults
-    if: github.ref == 'refs/tags/testing'
+    if: github.ref == 'refs/tags/nightly'
     secrets: inherit
     permissions:
       contents: write
       actions: write
       attestations: write
     with:
-      nightly_name: testing
+      nightly_name: nightly
+      nightly_description: |
+        This *nightly* release contains all latest and important artifacts created by GHDL's CI pipeline.
+
+        # GHDL 5.0.0-dev0
+
+        The following asset categories are provided for GHDL:
+        * macOS x64-64 builds as TAR/GZ file
+        * macOS aarch64 builds as TAR/GZ file
+        * Ubuntu 24.04 LTS builds as TAR/GZ file
+        * Windows builds for standalone usage (without MSYS2) as ZIP file
+        * MSYS2 packages as TAR/ZST file
+
+        # pyGHDL 5.0.0-dev0
+        The following asset categories are provided for pyGHDL:
+        * Platform specific Python wheel package for Ubuntu incl. `pyGHDL...so`
+        * Platform specific Python wheel package for Windows incl. `pyGHDL...dll`
       prerelease: true
       assets: |
         ghdl-macos-13-x86_64-llvm:            !ghdl-llvm-5.0.0.dev0-macos13-x86_64.tgz:                        GHDL - v5.0.0-dev0 - llvm backend for macOS 13 (x86-64)
