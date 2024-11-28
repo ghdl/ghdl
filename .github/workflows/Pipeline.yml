@@ -315,7 +315,13 @@ jobs:
       nightly_description: |
         This *nightly* release contains all latest and important artifacts created by GHDL's CI pipeline.
 
-        # GHDL 5.0.0-dev0
+        # GHDL 5.0.0-dev
+
+        GHDL offers the simulator and synthesis tool for VHDL. GHDL can be build for various backends:
+        * `gcc` - using the GCC compiler framework
+        * `mcode` - in memory code generation
+        * `llvm` - using the LLVM compiler framework
+        * `llvm-jit` - using the LLVM compiler framework, but in memory
 
         The following asset categories are provided for GHDL:
         * macOS x64-64 builds as TAR/GZ file
@@ -324,27 +330,33 @@ jobs:
         * Windows builds for standalone usage (without MSYS2) as ZIP file
         * MSYS2 packages as TAR/ZST file
 
-        # pyGHDL 5.0.0-dev0
+        # pyGHDL 5.0.0-dev
+
+        The Python package `pyGHDL` offers Python binding (`pyGHDL.libghdl`) to a `libghdl` shared library (`*.so`/`*.dll`).
+        In addition to the low-level binding layer, pyGHDL offers:
+        * a Language Server Protocol (LSP) instance for e.g. live code checking by editors
+        * a Code Document Object Model (CodeDOM) based on [pyVHDLModel](https://github.com/VHDL/pyVHDLModel)
+
         The following asset categories are provided for pyGHDL:
         * Platform specific Python wheel package for Ubuntu incl. `pyGHDL...so`
         * Platform specific Python wheel package for Windows incl. `pyGHDL...dll`
       prerelease: true
       assets: |
-        ghdl-macos-13-x86_64-llvm:            !ghdl-llvm-5.0.0.dev0-macos13-x86_64.tgz:                        GHDL - v5.0.0-dev - macOS 13 (x86-64) - llvm backend
-        ghdl-macos-13-x86_64-mcode:           !ghdl-mcode-5.0.0.dev0-macos13-x86_64.tgz:                       GHDL - v5.0.0-dev - macOS 13 (x86-64) - mcode backend
-        ghdl-macos-14-aarch64-llvm:           !ghdl-llvm-5.0.0.dev0-macos14-aarch64.tgz:                       GHDL - v5.0.0-dev - macOS 14 (aarch64) - llvm backend
-        ghdl-macos-14-aarch64-llvm-jit:       !ghdl-llvm-jit-5.0.0.dev0-macos14-aarch64.tgz:                   GHDL - v5.0.0-dev - macOS 14 (aarch64) - llvm-jit backend
-        ghdl-ubuntu-24.04-x86_64-llvm:        !ghdl-llvm-5.0.0.dev0-ubuntu24.04-x86_64.tgz:                    GHDL - v5.0.0-dev - Ubuntu 24.04 (x86-64, LTS) - llvm backend
-        ghdl-ubuntu-24.04-x86_64-llvm-jit:    !ghdl-llvm-jit-5.0.0.dev0-ubuntu24.04-x86_64.tgz:                GHDL - v5.0.0-dev - Ubuntu 24.04 (x86-64, LTS) - llvm-jit backend
-        ghdl-ubuntu-24.04-x86_64-mcode:       !ghdl-mcode-5.0.0.dev0-ubuntu24.04-x86_64.tgz:                   GHDL - v5.0.0-dev - Ubuntu 24.04 (x86-64, LTS) - mcode backend
+        ghdl-macos-13-x86_64-llvm:            !ghdl-llvm-5.0.0-dev-macos13-x86_64.tgz:                         GHDL - v5.0.0-dev - macOS 13 (x86-64) - llvm backend
+        ghdl-macos-13-x86_64-mcode:           !ghdl-mcode-5.0.0-dev-macos13-x86_64.tgz:                        GHDL - v5.0.0-dev - macOS 13 (x86-64) - mcode backend
+        ghdl-macos-14-aarch64-llvm:           !ghdl-llvm-5.0.0-dev-macos14-aarch64.tgz:                        GHDL - v5.0.0-dev - macOS 14 (aarch64) - llvm backend
+        ghdl-macos-14-aarch64-llvm-jit:       !ghdl-llvm-jit-5.0.0-dev-macos14-aarch64.tgz:                    GHDL - v5.0.0-dev - macOS 14 (aarch64) - llvm-jit backend
+        ghdl-ubuntu-24.04-x86_64-llvm:        !ghdl-llvm-5.0.0-dev-ubuntu24.04-x86_64.tgz:                     GHDL - v5.0.0-dev - Ubuntu 24.04 (x86-64, LTS) - llvm backend
+        ghdl-ubuntu-24.04-x86_64-llvm-jit:    !ghdl-llvm-jit-5.0.0-dev-ubuntu24.04-x86_64.tgz:                 GHDL - v5.0.0-dev - Ubuntu 24.04 (x86-64, LTS) - llvm-jit backend
+        ghdl-ubuntu-24.04-x86_64-mcode:       !ghdl-mcode-5.0.0-dev-ubuntu24.04-x86_64.tgz:                    GHDL - v5.0.0-dev - Ubuntu 24.04 (x86-64, LTS) - mcode backend
         ghdl-Pacman-mingw64-llvm:              mingw-w64-x86_64-ghdl-llvm-5.0.0.dev-1-any.pkg.tar.zst:         GHDL - v5.0.0-dev - MSYS2/MinGW64 - LLVM backend
         ghdl-Pacman-mingw64-llvm-jit:          mingw-w64-x86_64-ghdl-llvm-jit-5.0.0.dev-1-any.pkg.tar.zst:     GHDL - v5.0.0-dev - MSYS2/MinGW64 - LLVM-JIT backend
         ghdl-Pacman-mingw64-mcode:             mingw-w64-x86_64-ghdl-mcode-5.0.0.dev-1-any.pkg.tar.zst:        GHDL - v5.0.0-dev - MSYS2/MinGW64 - mcode backend
         ghdl-Pacman-ucrt64-llvm:               mingw-w64-ucrt-x86_64-ghdl-llvm-5.0.0.dev-1-any.pkg.tar.zst:    GHDL - v5.0.0-dev - MSYS2/UCRT64 - LLVM backend
         ghdl-Pacman-ucrt64-llvm-jit:           mingw-w64-ucrt-x86_64-ghdl-llvm-jit-5.0.0.dev-1-any.pkg.tar.zst:GHDL - v5.0.0-dev - MSYS2/UCRT64 - LLVM-JIT backend
         ghdl-Pacman-ucrt64-mcode:              mingw-w64-ucrt-x86_64-ghdl-mcode-5.0.0.dev-1-any.pkg.tar.zst:   GHDL - v5.0.0-dev - MSYS2/UCRT64 - mcode backend
-        ghdl-Windows-mingw64-mcode:           !ghdl-mcode-5.0.0.dev0-mingw64.zip:                              GHDL - v5.0.0-dev - Windows (x86-64, MinGW64, standalone) - mcode backend
-        ghdl-Windows-ucrt64-mcode:            !ghdl-mcode-5.0.0.dev0-ucrt64.zip:                               GHDL - v5.0.0-dev - Windows (x86-64, UCRT64, standalone) - mcode backend
+        ghdl-Windows-mingw64-mcode:           !ghdl-mcode-5.0.0-dev-mingw64.zip:                               GHDL - v5.0.0-dev - Windows (x86-64, MinGW64, standalone) - mcode backend
+        ghdl-Windows-ucrt64-mcode:            !ghdl-mcode-5.0.0-dev-ucrt64.zip:                                GHDL - v5.0.0-dev - Windows (x86-64, UCRT64, standalone) - mcode backend
         pyGHDL-Ubuntu-24.04-x86_64-Python-3.9: pyGHDL-5.0.0.dev0-cp39-cp39-linux_x86_64.whl:                   pyGHDL - v5.0.0-dev - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.9
         pyGHDL-Ubuntu-24.04-x86_64-Python-3.10:pyGHDL-5.0.0.dev0-cp310-cp310-linux_x86_64.whl:                 pyGHDL - v5.0.0-dev - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.10
         pyGHDL-Ubuntu-24.04-x86_64-Python-3.11:pyGHDL-5.0.0.dev0-cp311-cp311-linux_x86_64.whl:                 pyGHDL - v5.0.0-dev - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.11
