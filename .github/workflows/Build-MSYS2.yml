@@ -426,7 +426,7 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.unittest_xml_artifact }}-Windows-${{ inputs.windows_version }}-${{ inputs.python_version }}
+          name: ${{ inputs.unittest_xml_artifact }}-Windows-${{ inputs.windows_version }}-${{ inputs.runtime }}-${{ inputs.python_version }}
           path: report/unit/TestReportSummary.xml
           if-no-files-found: error
           retention-days: 1
@@ -442,7 +442,7 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.coverage_sqlite_artifact }}-Windows-${{ inputs.windows_version }}-${{ inputs.python_version }}
+          name: ${{ inputs.coverage_sqlite_artifact }}-Windows-${{ inputs.windows_version }}-${{ inputs.runtime }}-${{ inputs.python_version }}
           path: .coverage
           include-hidden-files: true
           if-no-files-found: error
