@@ -48,11 +48,11 @@ on:
         type: string
 
 jobs:
-  Sphinx:
-    name: '📓 Sphinx to LaTeX and HTML'
+  HTML:
+    name: '📓 Sphinx to HTML'
     runs-on: ${{ inputs.ubuntu_image }}
 
-    if: inputs.html_artifact != '' || inputs.latex_artifact != ''
+    if: inputs.html_artifact != ''
 
     steps:
       - name: '⏬ Checkout'
@@ -92,18 +92,56 @@ jobs:
           cd ${{ inputs.doc_directory }}
           make html
 
-      - name: '📓 Compile LaTeX documentation'
-        if: inputs.latex_artifact != ''
-        run: |
-          cd ${{ inputs.doc_directory }}
-          make latex
-
       - name: '📤 Upload artifact: HTML'
         uses: actions/upload-artifact@v4
         if: inputs.html_artifact != ''
         with:
           name: ${{ inputs.html_artifact }}
           path: doc/_build/html
+
+  LaTeX:
+    name: '📓 Sphinx to LaTeX'
+    runs-on: ${{ inputs.ubuntu_image }}
+
+    if: inputs.latex_artifact != ''
+
+    steps:
+      - name: '⏬ Checkout'
+        uses: actions/checkout@v4
+
+      - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.ghdl_artifact }}
+          path: install
+
+      - name: Install GHDL (chmod) and prepare test environment
+        run: |
+          chmod +x ./install/bin/*
+          cp -r -v ./install/lib/* pyGHDL/lib
+          sudo xargs --no-run-if-empty -a ./install/ubuntu.requirements -- apt-get install -y --no-install-recommends
+          echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
+
+      - name: Version check
+        run: |
+          echo "which ghdl: $(which ghdl)"
+          ghdl version
+
+      - name: '🐍 Setup Python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: '🔧 Install dependencies'
+        run: |
+          sudo xargs --no-run-if-empty -a ./doc/ubuntu.requirements -- apt-get install -y --no-install-recommends
+          python -m pip install --disable-pip-version-check ${{ inputs.requirements }}
+
+      - name: '📓 Compile LaTeX documentation'
+        if: inputs.latex_artifact != ''
+        run: |
+          cd ${{ inputs.doc_directory }}
+          make latex
 
       - name: '📤 Upload artifact: LaTeX'
         uses: actions/upload-artifact@v4
@@ -112,11 +150,11 @@ jobs:
           name: ${{ inputs.latex_artifact }}
           path: doc/_build/latex
 
-  LaTeX:
+  PDF:
     name: 📓 Converting LaTeX Documentation to PDF
     runs-on: ${{ inputs.ubuntu_image }}
     needs:
-      - Sphinx
+      - LaTeX
 
     if: inputs.latex_artifact != '' && inputs.pdf_artifact != ''
 
