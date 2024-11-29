@@ -7,6 +7,11 @@ on:
         description: 'Version of the Ubuntu image.'
         required: true
         type: string
+      gcc_version:
+        description: 'Version of the Ubuntu image.'
+        required: false
+        default: ''
+        type: string
       backend:
         description: 'GHDL backend'
         required: true
@@ -88,7 +93,7 @@ jobs:
 
       - name: 🔧 Install dependencies
         run: |
-          APT_ARGS="gcc g++ gnat"
+          APT_ARGS="gcc${{ inputs.gcc_version }} g++${{ inputs.gcc_version }} gnat${{ inputs.gcc_version }}"
           if ${{ startsWith(inputs.backend, 'mcode') }}; then
             APT_ARGS="$APT_ARGS"
           elif ${{ startsWith(inputs.backend, 'llvm') }}; then
@@ -108,7 +113,7 @@ jobs:
       - name: Download GCC sources
         if: inputs.backend == 'gcc'
         run: |
-          GCC_VERSION="13.3.0"
+          GCC_VERSION="12.1.0"
           GCC_URL="https://github.com/gcc-mirror/gcc/archive/refs/tags/releases/gcc-${GCC_VERSION}.tar.gz"
           echo "GCC download URL: $GCC_URL"
           mkdir -p gcc-srcs
