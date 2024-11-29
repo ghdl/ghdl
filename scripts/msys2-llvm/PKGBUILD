@@ -18,10 +18,12 @@ depends=(
 makedepends=(
   "${MINGW_PACKAGE_PREFIX}-clang"
 )
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-pip")
 
 build() {
-  mkdir "${srcdir}/builddir"
-  cd "${srcdir}/builddir"
+  echo '::group::Build'
+  mkdir "${srcdir}/build-${CARCH}"
+  cd "${srcdir}/build-${CARCH}"
   export CC=clang
   export CXX=clang++
   ../../../../configure \
@@ -32,10 +34,20 @@ build() {
     --enable-libghdl \
     --enable-synth
   make GNATMAKE="gnatmake -j$(nproc)"
+  echo '::endgroup::'
+}
+
+check() {
+  cd "${srcdir}/build-${CARCH}"
+  make install.vpi.local
+  pip3 install -r ../../../../testsuite/requirements.txt
+  GHDL="${srcdir}/build-${CARCH}/bin/ghdl" make test
 }
 
 package() {
-  cd "${srcdir}/builddir"
+  echo '::group::Package'
+  cd "${srcdir}/build-${CARCH}"
   mkdir -p "${pkgdir}${MINGW_PREFIX}/lib"
   make DESTDIR="${pkgdir}" install
+  echo '::endgroup::'
 }
