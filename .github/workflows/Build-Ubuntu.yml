@@ -143,7 +143,7 @@ jobs:
           NPROC=$(nproc)
           GNATMAKE="gnatmake -j$NPROC" \
           MAKE="make -j$NPROC" \
-          ../../configure --prefix=../../install $CONFIG_ARGS
+          ../../configure --prefix=$(pwd)/../../install $CONFIG_ARGS
 
       - name: Copy sources (only GCC backend)
         if: inputs.backend == 'gcc'
@@ -157,10 +157,11 @@ jobs:
           mkdir gcc-objs
           cd gcc-objs
 
-          ../gcc-srcs/configure --help
+          # ../gcc-srcs/configure --help
+          # ../gcc-srcs/gcc/configure --help
 
           ../gcc-srcs/configure \
-            --prefix=$(pwd)/gcc \
+            --prefix=$(pwd)/../install \
             --enable-languages=c,vhdl \
             --disable-bootstrap \
             --disable-lto \
@@ -168,6 +169,8 @@ jobs:
             --disable-libssp \
             --disable-libgomp \
             --disable-libquadmath \
+            --disable-libatomic \
+            --disable-plugin \
             "$(gcc -v 2>&1 | grep -o -- --enable-default-pie)"
 
       - name: 🏭 Make GCC (only GCC backend)
@@ -181,6 +184,17 @@ jobs:
         run: |
           cd gcc-objs
           make -j$(nproc) install
+          # Cleanup: remove useless part
+          cd ../install
+          rm -rf share
+          rm -rf include
+          # Remove libraries and include
+          rm -rf lib/gcc lib64
+          # Keep only ghdl binary
+          for f in bin/*; do [ "$f" = "bin/ghdl" ] || rm $f; done
+          # Keep only ghdl1
+          for f in libexec/gcc/*/*/*; do case $f in */ghdl1) ;; *) rm -rf $f;; esac; done
+          ls -lR ../install
 
       - name: 🔨 Make GHDL
         run: |
@@ -242,11 +256,14 @@ jobs:
               exit 1
             fi
 
-            # echo "gcc-${GCC_MAJOR_VERSION}" >> ubuntu.requirements
+            echo "libllvm${LLVM_MAJOR_VERSION}" >> ubuntu.requirements
+          fi
+
+          # For backend requiring compiler
+          if ${{ inputs.backend == 'gcc' || inputs.backend == 'llvm' }}; then
             echo "gcc" >> ubuntu.requirements
             echo "libc-dev" >> ubuntu.requirements
             echo "zlib1g-dev" >> ubuntu.requirements
-            echo "libllvm${LLVM_MAJOR_VERSION}" >> ubuntu.requirements
           fi
 
           echo -e "\e[36mCollected requirements:\e[0m"

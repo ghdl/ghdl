@@ -74,6 +74,8 @@ jobs:
           echo "ghdl_image=${image}" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
 
+          chmod +x ./dist/docker/install/libexec/gcc/*/*/*1 || true
+
           echo "Building docker file './dist/docker/Dockerfile.${base_image}' ..."
           docker buildx build \
             --file ./dist/docker/Dockerfile.${base_image} \
