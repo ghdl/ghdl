@@ -84,7 +84,7 @@ jobs:
             --tag "ghdl:current" \
             ./dist/docker
 
-          echo "Docker image 'ghdl:current' has $(docker image inspect $1 --format='{{.Size}}' | numfmt --to=iec --format '%.2f' ${image})"
+          echo "Docker image 'ghdl:current' has $(docker image inspect ghdl:current --format='{{.Size}}' | numfmt --to=iec --format '%.2f')"
 
       - name: ☑ Checking GHDL image 'ghdl:current'
         run: |
@@ -95,7 +95,8 @@ jobs:
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ vars.DOCKERHUB_USERNAME }} --password-stdin
           docker image tag ghdl:current ${{ steps.build.outputs.ghdl_image }}
-          echo "Docker image '${{ steps.build.outputs.ghdl_image }}' has $(docker image inspect $1 --format='{{.Size}}' | numfmt --to=iec --format '%.2f' ${{ steps.build.outputs.ghdl_image }})"
+
+          echo "Docker image '${{ steps.build.outputs.ghdl_image }}' has $(docker image inspect ${{ steps.build.outputs.ghdl_image }} --format='{{.Size}}' | numfmt --to=iec --format '%.2f')"
           docker image push ${{ steps.build.outputs.ghdl_image }}
 
       - name: 🚦 Testing GHDL image

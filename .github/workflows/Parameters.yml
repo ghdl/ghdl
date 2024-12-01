@@ -31,6 +31,15 @@ on:
         type: string
 
     outputs:
+      ghdl_version:
+        description: "GHDL's version."
+        value: ${{ jobs.Parameters.outputs.ghdl_version }}
+      pyghdl_version:
+        description: "pyGHDL's version."
+        value: ${{ jobs.Parameters.outputs.pyghdl_version }}
+      pacghdl_version:
+        description: "GHDL's version for MSYS2."
+        value: ${{ jobs.Parameters.outputs.pacghdl_version }}
       ghdl_basename:
         description: "Artifact basename for GHDL."
         value: ${{ inputs.package_name }}
@@ -48,9 +57,15 @@ jobs:
   Parameters:
     runs-on: ${{ inputs.ubuntu_image }}
     outputs:
-      testsuites: ${{ steps.params.outputs.testsuites }}
+      testsuites:      ${{ steps.params.outputs.testsuites }}
+      ghdl_version:    ${{ steps.params.outputs.ghdl_version }}
+      pyghdl_version:  ${{ steps.params.outputs.pyghdl_version }}
+      pacghdl_version: ${{ steps.params.outputs.pacghdl_version }}
 
     steps:
+      - name: '⏬ Checkout'
+        uses: actions/checkout@v4
+
       - name: Generate 'params' and 'python_jobs'
         id: params
         run: |
@@ -59,3 +74,23 @@ jobs:
           else
             echo "testsuites=${{ inputs.testsuites }}" >> $GITHUB_OUTPUT
           fi
+
+          ghdl_version=$(grep "^ghdl_version=\".*\"$" ./configure)
+          ghdl_version=${ghdl_version/ghdl_version=/}
+          ghdl_version=${ghdl_version//\"/}
+          echo "GHDL version: $ghdl_version"
+          echo "ghdl_version=$ghdl_version" >> $GITHUB_OUTPUT
+
+          pyghdl_version=${ghdl_version/-dev/.dev0}
+          echo "pyghdl_version=$pyghdl_version" >> $GITHUB_OUTPUT
+
+          pacghdl_version=${ghdl_version/-dev/.dev-1}
+          echo "pacghdl_version=$pacghdl_version" >> $GITHUB_OUTPUT
+
+          cat $GITHUB_OUTPUT
+
+      - name: Check variables
+        run: |
+          echo "ghdl_version:    ${{ steps.params.outputs.ghdl_version }}"
+          echo "pyghdl_version:  ${{ steps.params.outputs.pyghdl_version }}"
+          echo "pacghdl_version: ${{ steps.params.outputs.pacghdl_version }}"
