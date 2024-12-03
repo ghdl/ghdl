@@ -153,11 +153,11 @@ package body Ghdlcov is
                   return Tok_Colon;
                when ',' =>
                   return Tok_Comma;
-               when ''' =>
+               when '"' =>
                   loop
                      C := Buf (Pos);
                      Pos := Pos + 1;
-                     if C = ''' then
+                     if C = '"' then
                         return Tok_String;
                      elsif C < ' ' or C > '~' then
                         return Tok_Error;
@@ -315,7 +315,7 @@ package body Ghdlcov is
       -- result:
       Scan_Expect_String ("result");
       Scan_Expect (Tok_Colon);
-      Scan_Expect (Tok_Lbrac);
+      Scan_Expect (Tok_Lcurl);
 
       loop
          Scan_Expect (Tok_String);
@@ -325,7 +325,7 @@ package body Ghdlcov is
          L (Lineno).Coverage := True;
          L (Lineno).Covered := Get_Number = 1;
          Tok := Scan;
-         exit when Tok = Tok_Rbrac;
+         exit when Tok = Tok_Rcurl;
          Expect (Tok, Tok_Comma);
       end loop;
 
@@ -342,11 +342,11 @@ package body Ghdlcov is
 
       --  Skip header.
       loop
+         Scan_Expect (Tok_String);
+         Scan_Expect (Tok_Colon);
          Tok := Scan;
          exit when Tok = Tok_Lbrac;
          Expect (Tok, Tok_String);
-         Scan_Expect (Tok_Colon);
-         Scan_Expect (Tok_String);
          Scan_Expect (Tok_Comma);
       end loop;
 
