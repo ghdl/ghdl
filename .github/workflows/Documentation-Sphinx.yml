@@ -59,14 +59,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
-        uses: actions/download-artifact@v4
+        uses: pyTooling/download-artifact@v4
         with:
           name: ${{ inputs.ghdl_artifact }}
           path: install
 
-      - name: Install GHDL (chmod) and prepare test environment
+      - name: Prepare test environment
         run: |
-          chmod +x ./install/bin/*
           cp -r -v ./install/lib/* pyGHDL/lib
           sudo xargs --no-run-if-empty -a ./install/ubuntu.requirements -- apt-get install -y --no-install-recommends
           echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
@@ -93,11 +92,12 @@ jobs:
           make html
 
       - name: '📤 Upload artifact: HTML'
-        uses: actions/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v4
         if: inputs.html_artifact != ''
         with:
           name: ${{ inputs.html_artifact }}
-          path: doc/_build/html
+          working-directory: doc/_build/html
+          path: "*"
 
   LaTeX:
     name: '📓 Sphinx to LaTeX'
@@ -110,14 +110,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
-        uses: actions/download-artifact@v4
+        uses: pyTooling/download-artifact@v4
         with:
           name: ${{ inputs.ghdl_artifact }}
           path: install
 
-      - name: Install GHDL (chmod) and prepare test environment
+      - name: Prepare test environment
         run: |
-          chmod +x ./install/bin/*
           cp -r -v ./install/lib/* pyGHDL/lib
           sudo xargs --no-run-if-empty -a ./install/ubuntu.requirements -- apt-get install -y --no-install-recommends
           echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
@@ -144,11 +143,12 @@ jobs:
           make latex
 
       - name: '📤 Upload artifact: LaTeX'
-        uses: actions/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v4
         if: inputs.latex_artifact != ''
         with:
           name: ${{ inputs.latex_artifact }}
-          path: doc/_build/latex
+          working-directory: doc/_build/latex
+          path: "*"
 
   PDF:
     name: 📓 Converting LaTeX Documentation to PDF
@@ -160,7 +160,7 @@ jobs:
 
     steps:
       - name: 📥 Download artifacts '${{ inputs.latex_artifact }}' from 'Sphinx' job
-        uses: actions/download-artifact@v4
+        uses: pyTooling/download-artifact@v4
         with:
           name: ${{ inputs.latex_artifact }}
           path: latex
@@ -172,10 +172,10 @@ jobs:
           root_file: ${{ inputs.latex_document }}.tex
 
       - name: 📤 Upload 'PDF Documentation' artifact
-        uses: actions/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v4
         if: inputs.pdf_artifact != ''
         with:
           name: ${{ inputs.pdf_artifact }}
           path: ${{ inputs.document }}.pdf
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 7

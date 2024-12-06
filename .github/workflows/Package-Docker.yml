@@ -51,10 +51,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
-        uses: actions/download-artifact@v4
+        uses: pyTooling/download-artifact@v4
         with:
           name: ${{ inputs.ghdl_artifact }}
-          path: ./dist/docker/install
+          path: dist/docker/install
 
       - name: 🐋 Building GHDL image
         id: build
@@ -73,8 +73,6 @@ jobs:
           echo "ghdl_image_tag=${image_tag}" >> $GITHUB_OUTPUT
           echo "ghdl_image=${image}" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
-
-          chmod +x ./dist/docker/install/libexec/gcc/*/*/*1 || true
 
           echo "Building docker file './dist/docker/Dockerfile.${base_image}' ..."
           docker buildx build \
