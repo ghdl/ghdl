@@ -88,6 +88,7 @@ package body Ghdlcovout is
          return;
       end if;
 
+      --  Read counters after execution
       Counters := To_Byte_Array_Thin_Ptr
         (Ortho_Jit.Get_Address (Trans_Decls.Ghdl_Cov_Counters));
 
@@ -185,7 +186,9 @@ package body Ghdlcovout is
       Put_Line (F, " ""outputs"": [");
 
       Idx := Cov_Tables.First;
-      while Idx < Cov_Tables.Last loop
+      loop
+         exit when Idx > Cov_Tables.Last;
+
          --  Gather per file.
          declare
             use Grt.Types;
@@ -215,14 +218,11 @@ package body Ghdlcovout is
             Put_Line (F, """,");
             Put_Line (F, "   ""mode"": ""stmt"",");
 
-            --  Find the max line.
-            Nidx := Idx + 1;
+            --  Find the last line that belongs to this file.
+            Nidx := Idx;
             loop
                exit when Nidx = Cov_Tables.Last;
-               if Cov_Tables.Table (Nidx).Loc >= Last_Loc then
-                  Nidx := Nidx - 1;
-                  exit;
-               end if;
+               exit when Cov_Tables.Table (Nidx + 1).Loc >= Last_Loc;
                Nidx := Nidx + 1;
             end loop;
             Line := Ghdl_I32 (Location_File_To_Line

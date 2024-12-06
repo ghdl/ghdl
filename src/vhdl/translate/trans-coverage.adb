@@ -73,7 +73,7 @@ package body Trans.Coverage is
          return;
       end if;
 
-      Len := Cover_Tables.Last (Cover_Table);
+      Len := Cover_Tables.Last (Cover_Table) + 1;
 
       Atype := New_Array_Subtype
         (Ghdl_Bool_Array_Type, Ghdl_Bool_Type,
