@@ -2010,7 +2010,8 @@ package body Synth.Vhdl_Stmts is
                   --  But for memory value, do not copy the content, as it is
                   --  a reference.
                   Obj := Create_Value_Memory
-                    (Get_Memtyp (Info.Obj), Instance_Pool);
+                    ((Info.Targ_Type, Get_Memory (Info.Obj)),
+                    Instance_Pool);
                else
                   Obj := Unshare (Info.Obj, Instance_Pool);
                end if;
@@ -2724,7 +2725,9 @@ package body Synth.Vhdl_Stmts is
            and then
            Get_Kind (Assoc) /= Iir_Kind_Association_Element_By_Individual
          then
+            --  Get the saved actual
             Targ := Get_Value (Caller_Inst, Assoc);
+
             Formal := Get_Formal (Assoc);
             Conv := Get_Formal_Conversion (Assoc);
 
@@ -2739,24 +2742,35 @@ package body Synth.Vhdl_Stmts is
                  (Caller_Inst, Conv, Val, Targ.Typ);
             end if;
 
-            if Targ.Val.Kind = Value_Dyn_Alias then
-               Synth_Assignment_Memory
-                 (Caller_Inst, Targ.Val.D_Obj,
-                  Targ.Val.D_Poff, Targ.Val.D_Ptyp,
-                  Get_Value_Dyn_Alias_Voff (Targ.Val), Targ.Val.D_Eoff,
-                  Val, Assoc);
-            else
-               Synth_Assignment_Simple
-                 (Caller_Inst, Targ, No_Value_Offsets, Val, Assoc);
+            if Val /= No_Valtyp
+              and then Val.Typ.Kind in Type_Scalars
+            then
+               Val := Synth_Subtype_Conversion
+                 (Caller_Inst, Val, Targ.Typ, False, Assoc);
+            end if;
+
+            if Val /= No_Valtyp then
+               if Targ.Val.Kind = Value_Dyn_Alias then
+                  Synth_Assignment_Memory
+                    (Caller_Inst, Targ.Val.D_Obj,
+                    Targ.Val.D_Poff, Targ.Val.D_Ptyp,
+                    Get_Value_Dyn_Alias_Voff (Targ.Val), Targ.Val.D_Eoff,
+                    Val, Assoc);
+               else
+                  Synth_Assignment_Simple
+                    (Caller_Inst, Targ, No_Value_Offsets, Val, Assoc);
+               end if;
             end if;
 
             Release_Expr_Pool (Marker);
 
             --  Free wire used for out/inout interface variables.
-            if Val.Val.Kind = Value_Wire then
-               W := Get_Value_Wire (Val.Val);
-               Phi_Discard_Wires (W, No_Wire_Id);
-               Free_Wire (W);
+            if Val /= No_Valtyp then
+               if Val.Val.Kind = Value_Wire then
+                  W := Get_Value_Wire (Val.Val);
+                  Phi_Discard_Wires (W, No_Wire_Id);
+                  Free_Wire (W);
+               end if;
             end if;
 
             Destroy_Object (D, Assoc);
