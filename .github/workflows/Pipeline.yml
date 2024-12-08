@@ -171,7 +171,7 @@ jobs:
       - Params
 
   StaticTypeCheck:
-    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@dev
+    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r3
     needs:
       - Params
     with:
@@ -182,7 +182,7 @@ jobs:
       html_artifact: 'pyGHDL-typing-HTML'
 
   DocCoverage:
-    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@dev
+    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@r3
     needs:
       - Params
     with:
@@ -219,32 +219,34 @@ jobs:
     secrets: inherit
 
   PublishCoverageResults:
-    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@dev
+    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r3
     needs:
       - macOS
       - Ubuntu-fast
       - Windows-fast
 ###   - pyGHDL         # pyGHDL is installed into site-packages, where no coverage is collected -> empty coverage report
     with:
+      coverage_artifacts_pattern: '*-Coverage-SQLite-*'
       coverage_json_artifact: 'pyGHDL-Coverage-JSON'
       coverage_html_artifact: 'pyGHDL-Coverage-HTML'
     secrets:
       codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
   PublishTestResults:
-    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@dev
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r3
     needs:
       - macOS
       - Ubuntu-fast
       - Windows-fast
       - pyGHDL
     with:
+      unittest_artifacts_pattern: '*-Unittest-XML-*'
       merged_junit_artifact: 'pyGHDL-Unittest-XML'
       additional_merge_args: '-d "--render=tree" "--name=pyGHDL" "--pytest=rewrite-dunder-init;reduce-depth:pytest.testsuite.pyunit;split:pytest"'
       publish: ${{ github.event_name != 'pull_request' }}
 
   IntermediateCleanUp:
-    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@dev
+    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r3
     needs:
       - PublishCoverageResults
       - PublishTestResults
@@ -283,7 +285,7 @@ jobs:
       typing:        'pyGHDL-typing-HTML'
 
   Nightly:
-    uses: pyTooling/Actions/.github/workflows/NightlyRelease.yml@dev
+    uses: pyTooling/Actions/.github/workflows/NightlyRelease.yml@r3
     needs:
       - Params
       - macOS
@@ -367,7 +369,7 @@ jobs:
 
 
   ReleasePage:
-    uses: pyTooling/Actions/.github/workflows/Release.yml@dev
+    uses: pyTooling/Actions/.github/workflows/Release.yml@r3
     if: startsWith(github.ref, 'refs/tags')
     needs:
       - macOS
