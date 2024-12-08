@@ -405,7 +405,7 @@ package body Netlists.Cleanup is
    begin
       Null_X := No_Net;
 
-      Inst := Get_First_Instance (M);
+      Inst := Get_Self_Instance (M);
       while Inst /= No_Instance loop
          for I in 1 .. Get_Nbr_Inputs (Inst) loop
             Inp := Get_Input (Inst, I - 1);
