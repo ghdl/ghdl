@@ -353,6 +353,8 @@ package body Ghdlrun is
 
             Trans_Link.Link;
 
+            Trans.Coverage.Cover_Finalize;
+
             Def (Trans_Decls.Ghdl_Allocate,
                  Grt.Heap.Ghdl_Allocate'Address);
             Def (Trans_Decls.Ghdl_Deallocate,
@@ -381,10 +383,16 @@ package body Ghdlrun is
             Elaborate_Proc :=
               Conv (Ortho_Jit.Get_Address (Trans_Decls.Ghdl_Elaborate));
 
-            Ortho_Jit.Finish;
+            declare
+               use Trans.Coverage;
+            begin
+               if Coverage_Level = Coverage_None then
+                  Ortho_Jit.Finish;
 
-            Translation.Finalize;
-            Options.Finalize;
+                  Translation.Finalize;
+                  Options.Finalize;
+               end if;
+            end;
 
             if Flag_Verbose then
                Put_Line ("Starting simulation");
