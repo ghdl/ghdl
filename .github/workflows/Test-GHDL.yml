@@ -51,31 +51,27 @@ jobs:
           pacboy: "diffutils:p"
 
       - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
-        uses: actions/download-artifact@v4
+        uses: pyTooling/download-artifact@v4
         with:
           name: ${{ inputs.ghdl_artifact }}
           path: install
 
-      - name: Install GHDL (chmod) and prepare test environment (Ubuntu)
+      - name: Prepare test environment (Ubuntu)
         if: startsWith(inputs.os_image, 'ubuntu')
         run: |
-          chmod +x ./install/bin/*
-          chmod +x ./install/libexec/gcc/*/*/*1 || true
           sudo xargs --no-run-if-empty -a ./install/ubuntu.requirements -- apt-get install -y --no-install-recommends
           echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
           ls -lR install
 
-      - name: Install GHDL (chmod) and prepare test environment (macOS)
+      - name: Prepare test environment (macOS)
         if: startsWith(inputs.os_image, 'macos')
         run: |
-          chmod +x ./install/bin/*
           echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
           cat $GITHUB_ENV
 
-      - name: Install GHDL (chmod) and prepare test environment (MSYS2)
+      - name: Prepare test environment (MSYS2)
         if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
         run: |
-          chmod +x ./install/bin/*
           xargs --no-run-if-empty -a ./install/${{ inputs.runtime }}.requirements -- pacman -S --noconfirm
           echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
           cat $GITHUB_ENV

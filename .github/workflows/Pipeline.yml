@@ -5,11 +5,6 @@ on:
   pull_request:
 
 jobs:
-# Building
-#   Ubuntu (x86-64)
-#     mcode + GPL
-#     gcc
-
 # Windows Standalone - ZIP
 #   UCRT64 - llvm
 
@@ -18,9 +13,6 @@ jobs:
 #     Python 3.10
 #     Python 3.11
 #     Python 3.12
-
-# Release Page (on tag)
-#   Assets
 
 # cleanups
 #   libghdl-
@@ -105,11 +97,11 @@ jobs:
 ###       - {'icon': '🐧🟨', 'backend': 'mcode',    'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites     # used by Ubuntu-fast
           - {'icon': '🐧🟨', 'backend': 'llvm',     'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
           - {'icon': '🐧🟨', 'backend': 'llvm-jit', 'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-##        - {'icon': '🐧🟨', 'backend': 'gcc',      'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites     # currently broken
+          - {'icon': '🐧🟨', 'backend': 'gcc',      'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
 ###       - {'icon': '🐧🟩', 'backend': 'mcode',    'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites     # used by Ubuntu-fast
           - {'icon': '🐧🟩', 'backend': 'llvm',     'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
           - {'icon': '🐧🟩', 'backend': 'llvm-jit', 'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🐧🟩', 'backend': 'gcc',      'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites     # currently broken
+          - {'icon': '🐧🟩', 'backend': 'gcc',      'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
     with:
       ubuntu_version:           ${{ matrix.ubuntu_version }}
       backend:                  ${{ matrix.backend }}
@@ -179,7 +171,7 @@ jobs:
       - Params
 
   StaticTypeCheck:
-    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r2
+    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r3
     needs:
       - Params
     with:
@@ -190,7 +182,7 @@ jobs:
       html_artifact: 'pyGHDL-typing-HTML'
 
   DocCoverage:
-    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@r2
+    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@r3
     needs:
       - Params
     with:
@@ -227,32 +219,34 @@ jobs:
     secrets: inherit
 
   PublishCoverageResults:
-    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r2
+    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r3
     needs:
       - macOS
       - Ubuntu-fast
       - Windows-fast
 ###   - pyGHDL         # pyGHDL is installed into site-packages, where no coverage is collected -> empty coverage report
     with:
+      coverage_artifacts_pattern: '*-Coverage-SQLite-*'
       coverage_json_artifact: 'pyGHDL-Coverage-JSON'
       coverage_html_artifact: 'pyGHDL-Coverage-HTML'
     secrets:
       codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
   PublishTestResults:
-    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@dev
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r3
     needs:
       - macOS
       - Ubuntu-fast
       - Windows-fast
       - pyGHDL
     with:
+      unittest_artifacts_pattern: '*-Unittest-XML-*'
       merged_junit_artifact: 'pyGHDL-Unittest-XML'
       additional_merge_args: '-d "--render=tree" "--name=pyGHDL" "--pytest=rewrite-dunder-init;reduce-depth:pytest.testsuite.pyunit;split:pytest"'
       publish: ${{ github.event_name != 'pull_request' }}
 
   IntermediateCleanUp:
-    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r2
+    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r3
     needs:
       - PublishCoverageResults
       - PublishTestResults
@@ -291,7 +285,7 @@ jobs:
       typing:        'pyGHDL-typing-HTML'
 
   Nightly:
-    uses: pyTooling/Actions/.github/workflows/NightlyRelease.yml@dev
+    uses: pyTooling/Actions/.github/workflows/NightlyRelease.yml@r3
     needs:
       - Params
       - macOS
@@ -317,7 +311,7 @@ jobs:
       nightly_description: |
         This *nightly* release contains all latest and important artifacts created by GHDL's CI pipeline.
 
-        # GHDL ${{ needs.Params.outputs.ghdl_version }}
+        # GHDL %ghdl%
 
         GHDL offers the simulator and synthesis tool for VHDL. GHDL can be build for various backends:
         * `gcc` - using the GCC compiler framework
@@ -332,7 +326,11 @@ jobs:
         * Windows builds for standalone usage (without MSYS2) as ZIP file
         * MSYS2 packages as TAR/ZST file
 
-        # pyGHDL ${{ needs.Params.outputs.ghdl_version }}
+        ## Docker Images
+
+        Latest docker images at pushed to [Docker Hub - ghdl/ghdl:latest](https://hub.docker.com/r/ghdl/ghdl/tags).
+
+        # pyGHDL %ghdl%
 
         The Python package `pyGHDL` offers Python binding (`pyGHDL.libghdl`) to a `libghdl` shared library (`*.so`/`*.dll`).
         In addition to the low-level binding layer, pyGHDL offers:
@@ -371,7 +369,7 @@ jobs:
 
 
   ReleasePage:
-    uses: pyTooling/Actions/.github/workflows/Release.yml@r2
+    uses: pyTooling/Actions/.github/workflows/Release.yml@r3
     if: startsWith(github.ref, 'refs/tags')
     needs:
       - macOS
