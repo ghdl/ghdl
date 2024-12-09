@@ -204,12 +204,15 @@ jobs:
           ./testsuite.sh sanity
 
       - name: 📤 Upload '${{ inputs.macos_artifact }}-${{ inputs.backend }}' artifact
-        uses: actions/upload-artifact@v4
+#        uses: actions/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v4
         with:
           name: ${{ inputs.macos_artifact }}-${{ inputs.backend }}
-          path: ./install
+          working-directory: install
+          path: "*"
+#          path: install
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 7
 
       - name: ✂ Remove binaries, libraries and other files for libghdl (only mcode backend)
         if: inputs.macos_image == 'macos-13' && inputs.backend == 'mcode'
@@ -309,10 +312,13 @@ jobs:
       - name: 📤 Upload 'TestReportSummary.xml' artifact (only mcode backend)
         if: inputs.unittesting && inputs.backend == 'mcode' && inputs.unittest_xml_artifact != ''
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+#        uses: actions/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v4
         with:
           name: ${{ inputs.unittest_xml_artifact }}-${{ inputs.macos_image }}-${{ inputs.python_version }}
-          path: report/unit/TestReportSummary.xml
+          working-directory: report/unit
+          path: TestReportSummary.xml
+#          path: report/unit/TestReportSummary.xml
           if-no-files-found: error
           retention-days: 1
 
@@ -325,7 +331,8 @@ jobs:
       - name: 📤 Upload 'Coverage SQLite Database' artifact (only mcode backend)
         if: inputs.coverage && inputs.backend == 'mcode' && inputs.coverage_sqlite_artifact != ''
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+#        uses: actions/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v4
         with:
           name: ${{ inputs.coverage_sqlite_artifact }}-${{ inputs.macos_image }}-${{ inputs.python_version }}
           path: .coverage
