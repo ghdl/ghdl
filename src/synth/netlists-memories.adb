@@ -626,14 +626,10 @@ package body Netlists.Memories is
       end if;
 
       Concat := Get_Input_Parent (Get_First_Sink (Extr_Out));
-      case Get_Id (Concat) is
-         when Concat_Module_Id
-           |  Id_Concatn =>
-            null;
-         when others =>
-            --  Not a concat.
-            return;
-      end case;
+      if not (Get_Id (Concat) in Concat_Module_Id) then
+         --  Not a concat.
+         return;
+      end if;
 
       Concat_Out := Get_Output (Concat, 0);
       if not Has_One_Connection (Concat_Out) then
@@ -730,14 +726,10 @@ package body Netlists.Memories is
          --  The Mux2 output is connected to a concat.
          Concat_Inp := Get_First_Sink (Mux_Out);
          Concat := Get_Input_Parent (Concat_Inp);
-         case Get_Id (Concat) is
-            when Concat_Module_Id
-               | Id_Concatn =>
-               null;
-            when others =>
-               --  Not a concat.
-               return;
-         end case;
+         if not (Get_Id (Concat) in Concat_Module_Id) then
+            --  Not a concat.
+            return;
+         end if;
 
          --  The concat is connected to a dff.
          Concat_Out := Get_Output (Concat, 0);

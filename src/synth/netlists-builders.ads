@@ -239,7 +239,6 @@ private
       M_Monadic : Module_Arr (Monadic_Module_Id);
       M_Compare : Module_Arr (Compare_Module_Id);
       M_Concat : Module_Arr (Concat_Module_Id);
-      M_Concatn : Module;
       M_Const_UB32 : Module;
       M_Const_SB32 : Module;
       M_Const_UL32 : Module;

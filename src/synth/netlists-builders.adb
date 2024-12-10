@@ -123,7 +123,7 @@ package body Netlists.Builders is
         (Ctxt.Design,
          New_Sname_Artificial (Get_Identifier ("concatn")),
          Id_Concatn, 0, 1, 1);
-      Ctxt.M_Concatn := Res;
+      Ctxt.M_Concat (Id_Concatn) := Res;
       Set_Ports_Desc (Res, Inputs (1 .. 0), Outputs);
       Set_Params_Desc
         (Res, (0 => (New_Sname_Artificial (Get_Identifier ("n")),
@@ -1129,7 +1129,7 @@ package body Netlists.Builders is
       Inst : Instance;
       O : Net;
    begin
-      Inst := New_Var_Instance (Ctxt.Parent, Ctxt.M_Concatn,
+      Inst := New_Var_Instance (Ctxt.Parent, Ctxt.M_Concat (Id_Concatn),
                                 New_Internal_Name (Ctxt),
                                 Port_Nbr (Nbr_Inputs), 1, 1);
       Set_Param_Uns32 (Inst, 0, Nbr_Inputs);
