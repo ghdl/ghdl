@@ -22,6 +22,7 @@ with Simple_IO;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates;
 with Netlists.Locations; use Netlists.Locations;
+with Netlists.Concats;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Flags;
@@ -396,17 +397,47 @@ package body Netlists.Cleanup is
       end if;
    end Mark_And_Sweep;
 
+   procedure Replace_Concat_Null_Inputs (Ctxt : Context_Acc; Inst : Instance)
+   is
+      use Netlists.Concats;
+      Conc : Concat_Type;
+      Inp : Input;
+      Drv : Net;
+      Res : Net;
+   begin
+      for I in reverse 1 .. Get_Nbr_Inputs (Inst) loop
+         Inp := Get_Input (Inst, I - 1);
+         Drv := Get_Driver (Inp);
+         if Drv /= No_Net then
+            Disconnect (Inp);
+            if Get_Width (Drv) /= 0 then
+               Append (Conc, Drv);
+            end if;
+         end if;
+      end loop;
+
+      Build (Ctxt, Conc, Res);
+      Redirect_Inputs (Get_Output (Inst, 0), Res);
+      Remove_Instance (Inst);
+   end Replace_Concat_Null_Inputs;
+
    procedure Replace_Null_Inputs (Ctxt : Context_Acc; M : Module)
    is
       Inst : Instance;
       Drv : Net;
       Inp : Input;
       Null_X : Net;
+      Has_Null : Boolean;
    begin
       Null_X := No_Net;
 
+      --  For each sub-instance, including the self one (in order to deal
+      --  with null outputs):
       Inst := Get_Self_Instance (M);
       while Inst /= No_Instance loop
+         Has_Null := False;
+
+         --  For each inputs of the sub-instance:
          for I in 1 .. Get_Nbr_Inputs (Inst) loop
             Inp := Get_Input (Inst, I - 1);
             Drv := Get_Driver (Inp);
@@ -416,8 +447,13 @@ package body Netlists.Cleanup is
                end if;
                Disconnect (Inp);
                Connect (Inp, Null_X);
+               Has_Null := True;
             end if;
          end loop;
+
+         if Has_Null and then Get_Id (Inst) in Gates.Concat_Module_Id then
+            Replace_Concat_Null_Inputs (Ctxt, Inst);
+         end if;
 
          Inst := Get_Next_Instance (Inst);
       end loop;
