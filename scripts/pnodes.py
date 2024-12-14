@@ -95,7 +95,7 @@ def read_fields(file):
 
     # Read formats
     l = lr.get()
-    pat_field_name = re.compile("      Format_(\w+),?\n")
+    pat_field_name = re.compile(r"      Format_(\w+),?\n")
     while l != "     );\n":
         m = pat_field_name.match(l)
         if m is None:
@@ -108,8 +108,8 @@ def read_fields(file):
 
     # Read fields
     l = lr.get()
-    pat_fields = re.compile("   -- Fields of Format_(\w+):\n")
-    pat_field_desc = re.compile("   --   (\w+) : (\w+).*\n")
+    pat_fields = re.compile(r"   -- Fields of Format_(\w+):\n")
+    pat_field_desc = re.compile(r"   --   (\w+) : (\w+).*\n")
     common_desc = {}
 
     # Read until common fields.
@@ -168,8 +168,8 @@ def read_kinds(filename):
         raise ParseError(lr, 'no open parenthesis after "type ' + type_name + '"')
 
     # Read literals
-    pat_node = re.compile("      " + prefix_name + "(\w+),?( +-- .*)?\n")
-    pat_comment = re.compile("( +-- .*)?\n")
+    pat_node = re.compile("      " + prefix_name + r"(\w+),?( +-- .*)?\n")
+    pat_comment = re.compile(r"( +-- .*)?\n")
     while True:
         l = lr.get()
         if l == "     );\n":
@@ -319,10 +319,10 @@ def read_methods(filename):
 #  (one description may describe several nodes).
 # A comment start at column 2 or 4 or later.
 def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
-    pat_only = re.compile("   -- Only for " + prefix_name + "(\w+):\n")
-    pat_only_bad = re.compile("   -- *Only for.*\n")
-    pat_field = re.compile("   --   Get/Set_(\w+) \((Alias )?([\w,]+)\)\n")
-    pat_comment = re.compile("   --(|  [^ ].*|    .*)\n")
+    pat_only = re.compile(r"   -- Only for " + prefix_name + r"(\w+):\n")
+    pat_only_bad = re.compile(r"   -- *Only for.*\n")
+    pat_field = re.compile(r"   --   Get/Set_(\w+) \((Alias )?([\w,]+)\)\n")
+    pat_comment = re.compile(r"   --(|  [^ ].*|    .*)\n")
 
     # Create nodes
     cur_nodes = []
@@ -412,10 +412,10 @@ def read_nodes(filename, kinds, kinds_ranges, fields, funcs):
     while lr.get() != "   -- Start of " + type_name + ".\n":
         pass
 
-    pat_decl = re.compile("   -- " + prefix_name + "(\w+) \((\w+)\)\n")
-    pat_decls = re.compile("   -- " + prefix_range_name + "(\w+) \((\w+)\)\n")
-    pat_comment_line = re.compile("   --+\n")
-    pat_comment_box = re.compile("   --(  .*)?\n")
+    pat_decl = re.compile(r"   -- " + prefix_name + r"(\w+) \((\w+)\)\n")
+    pat_decls = re.compile(r"   -- " + prefix_range_name + r"(\w+) \((\w+)\)\n")
+    pat_comment_line = re.compile(r"   --+\n")
+    pat_comment_box = re.compile(r"   --(  .*)?\n")
     while True:
         l = lr.get()
         if l == "   -- End of " + type_name + ".\n":
