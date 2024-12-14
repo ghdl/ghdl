@@ -42,7 +42,8 @@ package Trans.Coverage is
    function Cover_Decision (N : Iir; Val : O_Enode) return O_Enode;
 
    type Coverage_Entry is record
-      N : Iir;
+      Loc : Location_Type;
+      Covered : Boolean;
    end record;
 
    package Cover_Tables is new Dyn_Tables

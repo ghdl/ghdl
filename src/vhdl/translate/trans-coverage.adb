@@ -14,6 +14,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Files_Map;
+
 with Trans_Decls; use Trans_Decls;
 
 package body Trans.Coverage is
@@ -40,14 +42,31 @@ package body Trans.Coverage is
          New_Lit (Ghdl_Bool_True_Node));
    end Gen_Cover;
 
-   procedure Cover_Statement (N : Iir) is
+   function Get_Cover_Location (N : Iir) return Location_Type
+   is
+      Loc, N_Loc : Location_Type;
+   begin
+      Loc := Get_Location (N);
+      loop
+         N_Loc := Files_Map.Location_Instance_To_Location (Loc);
+         exit when N_Loc = No_Location;
+         Loc := N_Loc;
+      end loop;
+      return Loc;
+   end Get_Cover_Location;
+
+   procedure Cover_Statement (N : Iir)
+   is
+      Covered : Boolean;
    begin
       if not Coverage_On then
          return;
       end if;
 
-      Cover_Tables.Append (Cover_Table, (N => N));
-      if not Get_Covered_Flag (N) then
+      Covered := Get_Covered_Flag (N);
+
+      Cover_Tables.Append (Cover_Table, (Get_Cover_Location (N), Covered));
+      if not Covered then
          Gen_Cover (Cover_Tables.Last (Cover_Table));
       end if;
    end Cover_Statement;
@@ -58,7 +77,7 @@ package body Trans.Coverage is
          return Val;
       end if;
 
-      Cover_Tables.Append (Cover_Table, (N => N));
+      Cover_Tables.Append (Cover_Table, (Get_Cover_Location (N), False));
       Gen_Cover (Cover_Tables.Last (Cover_Table));
 
       return Val;

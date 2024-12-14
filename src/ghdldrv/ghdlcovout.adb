@@ -23,8 +23,6 @@ with Simple_IO;
 with Errorout;
 with Name_Table;
 
-with Vhdl.Nodes; use Vhdl.Nodes;
-
 with Grt.Algos;
 with Grt.Types;
 with Grt.Stdio;
@@ -39,9 +37,6 @@ package body Ghdlcovout is
    type Coverage_Entry is record
       --  Location of the coverage point (without instantiation).
       Loc : Location_Type;
-
-      --  Original statement/decision.
-      N : Node;
 
       --  Coverage result.
       Res_T : Boolean;
@@ -92,26 +87,17 @@ package body Ghdlcovout is
       Counters := To_Byte_Array_Thin_Ptr
         (Ortho_Jit.Get_Address (Trans_Decls.Ghdl_Cov_Counters));
 
+      --  Fill from entries in Trans.Coverage
       Cov_Tables.Reserve (Last + 1);
       for I in Cover_Tables.First .. Cover_Tables.Last (Cover_Table) loop
          declare
             use Grt.Types;
             Ce : Trans.Coverage.Coverage_Entry renames Cover_Table.Table (I);
          begin
-            Loc := Get_Location (Ce.N);
-            loop
-               N_Loc := Files_Map.Location_Instance_To_Location (Loc);
-               exit when N_Loc = No_Location;
-               Loc := N_Loc;
-            end loop;
+            Loc := Ce.Loc;
 
-            E := (N => Ce.N,
-                  Loc => Loc,
-                  Res_T => Counters (I) /= 0);
-
-            if Get_Covered_Flag (Ce.N) then
-               E.Res_T := True;
-            end if;
+            E := (Loc => Loc,
+                  Res_T => Counters (I) /= 0 or Ce.Covered);
 
             Cov_Tables.Append (E);
          end;
