@@ -423,7 +423,7 @@ package body Netlists.Cleanup is
 
    procedure Replace_Null_Inputs (Ctxt : Context_Acc; M : Module)
    is
-      Inst : Instance;
+      Inst, Next_Inst : Instance;
       Drv : Net;
       Inp : Input;
       Null_X : Net;
@@ -436,6 +436,7 @@ package body Netlists.Cleanup is
       Inst := Get_Self_Instance (M);
       while Inst /= No_Instance loop
          Has_Null := False;
+         Next_Inst := Get_Next_Instance (Inst);
 
          --  For each inputs of the sub-instance:
          for I in 1 .. Get_Nbr_Inputs (Inst) loop
@@ -455,7 +456,7 @@ package body Netlists.Cleanup is
             Replace_Concat_Null_Inputs (Ctxt, Inst);
          end if;
 
-         Inst := Get_Next_Instance (Inst);
+         Inst := Next_Inst;
       end loop;
    end Replace_Null_Inputs;
 
