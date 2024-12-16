@@ -83,11 +83,10 @@ jobs:
         run: python setup.py bdist_wheel
 
       - name: '📤 Upload artifact: ${{ inputs.pyghdl_artifact }}'
-        uses: pyTooling/upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.pyghdl_artifact }}
-          working-directory: dist
-          path: pyGHDL*.whl
+          path: dist/pyGHDL*.whl
           if-no-files-found: error
 
   Test:

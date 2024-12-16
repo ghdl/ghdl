@@ -196,12 +196,11 @@ jobs:
           echo "================================================================================"
 
       - name: 📤 Upload '${{ steps.artifact_name.outputs.pacman_artifact }}' artifact
-        uses: pyTooling/upload-artifact@v4
+        uses: actions/upload-artifact@v4
         if: inputs.pacman_artifact != ''
         with:
           name: ${{ steps.artifact_name.outputs.pacman_artifact }}
-          working-directory: dist/msys2/${{ inputs.backend }}
-          path: "*.pkg.tar.zst"
+          path: dist/msys2/${{ inputs.backend }}/*.pkg.tar.zst
           if-no-files-found: error
           retention-days: 7
 
