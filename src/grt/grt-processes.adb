@@ -410,6 +410,10 @@ package body Grt.Processes is
          --  LRM93 8.1
          Error ("negative timeout clause", Filename, Line);
       end if;
+      if Current_Time > Std_Time'Last - Time then
+         --  Timeout beyond the end of simulation
+         return;
+      end if;
       Proc.Timeout := Current_Time + Time;
       Update_Process_First_Timeout (Proc);
    end Ghdl_Process_Wait_Set_Timeout;
