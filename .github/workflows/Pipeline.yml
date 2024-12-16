@@ -369,18 +369,88 @@ jobs:
         pyGHDL-Windows-x86_64-Python-3.13:      pyGHDL-%pyghdl%-cp313-cp313-win_amd64.whl:                    pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.13
 
 
-  ReleasePage:
-    uses: pyTooling/Actions/.github/workflows/Release.yml@r3
-    if: startsWith(github.ref, 'refs/tags')
+  Release:
+    uses: pyTooling/Actions/.github/workflows/NightlyRelease.yml@r3
+    if: startsWith(github.ref, 'refs/tags/v')
     needs:
+      - Params
       - macOS
       - Ubuntu-fast
       - Ubuntu
       - Windows-fast
       - Windows
-      - PublishToGitHubPages
       - Python
-      - StaticTypeCheck
-      - DocCoverage
+#      - PublishToGitHubPages
+#      - StaticTypeCheck
+#      - DocCoverage
       - PublishCoverageResults
       - PublishTestResults
+    secrets: inherit
+    permissions:
+      contents: write
+      actions: write
+      attestations: write
+    with:
+      prerelease: true
+      replacements: |
+        ghdl=${{ needs.Params.outputs.ghdl_version }}
+        pyghdl=${{ needs.Params.outputs.pyghdl_version }}
+        pacghdl=${{ needs.Params.outputs.pacghdl_version }}
+      nightly_name: nightly
+      nightly_description: |
+        # GHDL %ghdl%
+
+        GHDL offers the simulator and synthesis tool for VHDL. GHDL can be build for various backends:
+        * `gcc` - using the GCC compiler framework
+        * `mcode` - in memory code generation
+        * `llvm` - using the LLVM compiler framework
+        * `llvm-jit` - using the LLVM compiler framework, but in memory
+
+        The following asset categories are provided for GHDL:
+        * macOS x64-64 builds as TAR/GZ file
+        * macOS aarch64 builds as TAR/GZ file
+        * Ubuntu 24.04 LTS builds as TAR/GZ file
+        * Windows builds for standalone usage (without MSYS2) as ZIP file
+        * MSYS2 packages as TAR/ZST file
+
+        ## Docker Images
+
+        Latest docker images at pushed to [Docker Hub - ghdl/ghdl:latest](https://hub.docker.com/r/ghdl/ghdl/tags).
+
+        # pyGHDL %ghdl%
+
+        The Python package `pyGHDL` offers Python binding (`pyGHDL.libghdl`) to a `libghdl` shared library (`*.so`/`*.dll`).
+        In addition to the low-level binding layer, pyGHDL offers:
+        * a Language Server Protocol (LSP) instance for e.g. live code checking by editors
+        * a Code Document Object Model (CodeDOM) based on [pyVHDLModel](https://github.com/VHDL/pyVHDLModel)
+
+        The following asset categories are provided for pyGHDL:
+        * Platform specific Python wheel package for Ubuntu incl. `pyGHDL...so`
+        * Platform specific Python wheel package for Windows incl. `pyGHDL...dll`
+      assets: |
+        ghdl-macos-13-x86_64-llvm:             $ghdl-llvm-%ghdl%-macos13-x86_64.tar.gz:                       GHDL - v%ghdl% - macOS 13 (x86-64) - llvm backend
+        ghdl-macos-13-x86_64-mcode:            $ghdl-mcode-%ghdl%-macos13-x86_64.tar.gz:                      GHDL - v%ghdl% - macOS 13 (x86-64) - mcode backend
+        ghdl-macos-14-aarch64-llvm:            $ghdl-llvm-%ghdl%-macos14-aarch64.tar.gz:                      GHDL - v%ghdl% - macOS 14 (aarch64) - llvm backend
+        ghdl-macos-14-aarch64-llvm-jit:        $ghdl-llvm-jit-%ghdl%-macos14-aarch64.tar.gz:                  GHDL - v%ghdl% - macOS 14 (aarch64) - llvm-jit backend
+        ghdl-ubuntu-24.04-x86_64-gcc:          $ghdl-gcc-%ghdl%-ubuntu24.04-x86_64.tar.gz:                    GHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - gcc backend
+        ghdl-ubuntu-24.04-x86_64-llvm:         $ghdl-llvm-%ghdl%-ubuntu24.04-x86_64.tar.gz:                   GHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - llvm backend
+        ghdl-ubuntu-24.04-x86_64-llvm-jit:     $ghdl-llvm-jit-%ghdl%-ubuntu24.04-x86_64.tar.gz:               GHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - llvm-jit backend
+        ghdl-ubuntu-24.04-x86_64-mcode:        $ghdl-mcode-%ghdl%-ubuntu24.04-x86_64.tar.gz:                  GHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - mcode backend
+        ghdl-Pacman-mingw64-llvm:               mingw-w64-x86_64-ghdl-llvm-%pacghdl%-any.pkg.tar.zst:         GHDL - v%ghdl% - MSYS2/MinGW64 - LLVM backend
+        ghdl-Pacman-mingw64-llvm-jit:           mingw-w64-x86_64-ghdl-llvm-jit-%pacghdl%-any.pkg.tar.zst:     GHDL - v%ghdl% - MSYS2/MinGW64 - LLVM-JIT backend
+        ghdl-Pacman-mingw64-mcode:              mingw-w64-x86_64-ghdl-mcode-%pacghdl%-any.pkg.tar.zst:        GHDL - v%ghdl% - MSYS2/MinGW64 - mcode backend
+        ghdl-Pacman-ucrt64-llvm:                mingw-w64-ucrt-x86_64-ghdl-llvm-%pacghdl%-any.pkg.tar.zst:    GHDL - v%ghdl% - MSYS2/UCRT64 - LLVM backend
+        ghdl-Pacman-ucrt64-llvm-jit:            mingw-w64-ucrt-x86_64-ghdl-llvm-jit-%pacghdl%-any.pkg.tar.zst:GHDL - v%ghdl% - MSYS2/UCRT64 - LLVM-JIT backend
+        ghdl-Pacman-ucrt64-mcode:               mingw-w64-ucrt-x86_64-ghdl-mcode-%pacghdl%-any.pkg.tar.zst:   GHDL - v%ghdl% - MSYS2/UCRT64 - mcode backend
+        ghdl-Windows-mingw64-mcode:            !ghdl-mcode-%ghdl%-mingw64.zip:                                GHDL - v%ghdl% - Windows (x86-64, MinGW64, standalone) - mcode backend
+        ghdl-Windows-ucrt64-mcode:             !ghdl-mcode-%ghdl%-ucrt64.zip:                                 GHDL - v%ghdl% - Windows (x86-64, UCRT64, standalone) - mcode backend
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.9:  pyGHDL-%pyghdl%-cp39-cp39-linux_x86_64.whl:                   pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.9
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.10: pyGHDL-%pyghdl%-cp310-cp310-linux_x86_64.whl:                 pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.10
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.11: pyGHDL-%pyghdl%-cp311-cp311-linux_x86_64.whl:                 pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.11
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.12: pyGHDL-%pyghdl%-cp312-cp312-linux_x86_64.whl:                 pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.12
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.13: pyGHDL-%pyghdl%-cp313-cp313-linux_x86_64.whl:                 pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.13
+        pyGHDL-Windows-x86_64-Python-3.9:       pyGHDL-%pyghdl%-cp39-cp39-win_amd64.whl:                      pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.9
+        pyGHDL-Windows-x86_64-Python-3.10:      pyGHDL-%pyghdl%-cp310-cp310-win_amd64.whl:                    pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.10
+        pyGHDL-Windows-x86_64-Python-3.11:      pyGHDL-%pyghdl%-cp311-cp311-win_amd64.whl:                    pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.11
+        pyGHDL-Windows-x86_64-Python-3.12:      pyGHDL-%pyghdl%-cp312-cp312-win_amd64.whl:                    pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.12
+        pyGHDL-Windows-x86_64-Python-3.13:      pyGHDL-%pyghdl%-cp313-cp313-win_amd64.whl:                    pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.13
