@@ -404,6 +404,7 @@ package body Vhdl.Sem_Expr is
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Range_Array_Attribute
            | Iir_Kind_Reverse_Range_Array_Attribute
+           | Iir_Kind_Base_Attribute
            | Iir_Kind_Subtype_Attribute
            | Iir_Kind_Element_Attribute
            | Iir_Kind_Element_Declaration
