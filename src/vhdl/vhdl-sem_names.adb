@@ -1124,7 +1124,15 @@ package body Vhdl.Sem_Names is
          end if;
          if Dim < 1 or else Dim > Int64 (Get_Nbr_Elements (Indexes_List))
          then
-            Error_Msg_Sem (+Attr, "parameter value out of bound");
+            if Dim < 1 then
+               Error_Msg_Sem
+                 (+Attr, "dimension parameter must be greater than 0");
+            else
+               Error_Msg_Sem
+                 (+Attr,
+                 "dimension parameter greater than the array dimension");
+            end if;
+            Parameter := Create_Error (Parameter);
             Dim := 1;
          end if;
          Index_Type := Get_Index_Type (Indexes_List, Natural (Dim - 1));

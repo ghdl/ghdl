@@ -2823,10 +2823,6 @@ package body Vhdl.Evaluation is
 
       Dim := Eval_Attribute_Parameter_Or_1 (Attr);
       Indexes := Get_Index_Subtype_List (Prefix_Type);
-      if Dim < 1 or else Dim > Get_Nbr_Elements (Indexes) then
-         --  Error already displayed in sem_name.
-         Dim := 1;
-      end if;
       return Get_Nth_Element (Indexes, Dim - 1);
    end Eval_Array_Attribute;
 
