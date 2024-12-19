@@ -65,7 +65,7 @@ from pyGHDL.dom.Subprogram import Function, Procedure
 
 @export
 class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
-    def __init__(self, node: Iir, identifier: str):
+    def __init__(self, node: Iir, identifier: str) -> None:
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
@@ -92,7 +92,7 @@ class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
           type integer is (lit_1, lit2, ...);
     """
 
-    def __init__(self, node: Iir, identifier: str, literals: List[EnumerationLiteral]):
+    def __init__(self, node: Iir, identifier: str, literals: List[EnumerationLiteral]) -> None:
         super().__init__(identifier, literals)
         DOMMixin.__init__(self, node)
 
@@ -128,7 +128,7 @@ class IntegerType(VHDLModel_IntegerType, DOMMixin):
           type integer is range -2147483648 to 2147483647;
     """
 
-    def __init__(self, node: Iir, typeName: str, rng: Union[Range, "Name"]):
+    def __init__(self, node: Iir, typeName: str, rng: Union[Range, "Name"]) -> None:
         super().__init__(typeName, rng)
         DOMMixin.__init__(self, node)
 
@@ -158,7 +158,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
         rng: Union[Range, Name],
         primaryUnit: str,
         units: List[Tuple[str, PhysicalIntegerLiteral]],
-    ):
+    ) -> None:
         super().__init__(typeName, rng, primaryUnit, units)
         DOMMixin.__init__(self, node)
 
@@ -217,7 +217,7 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
           type bit_vector is array(natural range <>) of bit;
     """
 
-    def __init__(self, node: Iir, identifier: str, indices: List, elementSubtype: Symbol):
+    def __init__(self, node: Iir, identifier: str, indices: List, elementSubtype: Symbol) -> None:
         super().__init__(identifier, indices, elementSubtype)
         DOMMixin.__init__(self, node)
 
@@ -271,7 +271,7 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
           -- end record;
     """
 
-    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol):
+    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol) -> None:
         super().__init__(identifiers, subtype)
         DOMMixin.__init__(self, node)
 
@@ -313,7 +313,7 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
           end record;
     """
 
-    def __init__(self, node: Iir, identifier: str, elements: List[RecordTypeElement] = None):
+    def __init__(self, node: Iir, identifier: str, elements: List[RecordTypeElement] = None) -> None:
         super().__init__(identifier, elements)
         DOMMixin.__init__(self, node)
 
@@ -378,7 +378,7 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
           end protected;
     """
 
-    def __init__(self, node: Iir, identifier: str, methods: Union[List, Iterator] = None):
+    def __init__(self, node: Iir, identifier: str, methods: Union[List, Iterator] = None) -> None:
         super().__init__(identifier, methods)
         DOMMixin.__init__(self, node)
 
@@ -421,7 +421,7 @@ class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
           end protected body;
     """
 
-    def __init__(self, node: Iir, identifier: str, declaredItems: Union[List, Iterator] = None):
+    def __init__(self, node: Iir, identifier: str, declaredItems: Union[List, Iterator] = None) -> None:
         super().__init__(identifier, declaredItems)
         DOMMixin.__init__(self, node)
 
@@ -460,7 +460,7 @@ class AccessType(VHDLModel_AccessType, DOMMixin):
           type line is access string;
     """
 
-    def __init__(self, node: Iir, identifier: str, designatedSubtype: Symbol):
+    def __init__(self, node: Iir, identifier: str, designatedSubtype: Symbol) -> None:
         super().__init__(identifier, designatedSubtype)
         DOMMixin.__init__(self, node)
 
@@ -495,7 +495,7 @@ class FileType(VHDLModel_FileType, DOMMixin):
           type text is file of string;
     """
 
-    def __init__(self, node: Iir, identifier: str, designatedSubtype: Symbol):
+    def __init__(self, node: Iir, identifier: str, designatedSubtype: Symbol) -> None:
         super().__init__(identifier, designatedSubtype)
         DOMMixin.__init__(self, node)
 
@@ -527,6 +527,6 @@ class Subtype(VHDLModel_Subtype, DOMMixin):
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.Subtype`.
     """
 
-    def __init__(self, node: Iir, subtypeName: str, symbol: Symbol):
+    def __init__(self, node: Iir, subtypeName: str, symbol: Symbol) -> None:
         super().__init__(subtypeName, symbol)
         DOMMixin.__init__(self, node)

@@ -209,10 +209,7 @@ def GetAssociations(node: Iir) -> List:
     for item in utils.chain_iter(nodes.Get_Association_Chain(node)):
         kind = GetIirKindOfNode(item)
 
-        if kind in (
-            nodes.Iir_Kind.Association_Element_By_Expression,
-            nodes.Iir_Kind.Association_Element_By_Name,
-        ):
+        if kind in (nodes.Iir_Kind.Association_Element_By_Expression, nodes.Iir_Kind.Association_Element_By_Name):
             actual = nodes.Get_Actual(item)
             expr = GetExpressionFromNode(actual)
 
@@ -375,7 +372,7 @@ def GetScalarConstrainedSubtypeFromNode(
     # Check if RangeExpression. Might also be an AttributeName (see §3.1)
     if GetIirKindOfNode(rangeConstraint) == nodes.Iir_Kind.Range_Expression:
         r = GetRangeFromNode(rangeConstraint)
-    # todo: Get actual range from AttributeName node?
+    # TODO: Get actual range from AttributeName node?
 
     return ConstrainedScalarSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, r)
 

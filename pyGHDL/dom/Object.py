@@ -73,7 +73,7 @@ class Constant(VHDLModel_Constant, DOMMixin):
         subtype: Symbol,
         defaultExpression: ExpressionUnion,
         documentation: str = None,
-    ):
+    ) -> None:
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
@@ -115,7 +115,7 @@ class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
           constant BITS : positive;
     """
 
-    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None):
+    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 
@@ -154,7 +154,7 @@ class Variable(VHDLModel_Variable, DOMMixin):
         subtype: Symbol,
         defaultExpression: ExpressionUnion,
         documentation: str = None,
-    ):
+    ) -> None:
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
@@ -193,7 +193,7 @@ class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
           shared variable counter : counter_pt;
     """
 
-    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None):
+    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 
@@ -232,7 +232,7 @@ class Signal(VHDLModel_Signal, DOMMixin):
         subtype: Symbol,
         defaultExpression: ExpressionUnion,
         documentation: str = None,
-    ):
+    ) -> None:
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
@@ -269,7 +269,7 @@ class File(VHDLModel_File, DOMMixin):
           file INPUT : TEXT;
     """
 
-    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None):
+    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 

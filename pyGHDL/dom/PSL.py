@@ -57,7 +57,7 @@ class VerificationUnit(VHDLModel_VerificationUnit, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-    ):
+    ) -> None:
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
@@ -76,7 +76,7 @@ class VerificationProperty(VHDLModel_VerificationProperty, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-    ):
+    ) -> None:
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
@@ -95,7 +95,7 @@ class VerificationMode(VHDLModel_VerificationMode, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-    ):
+    ) -> None:
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
@@ -114,7 +114,7 @@ class DefaultClock(VHDLModel_DefaultClock, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-    ):
+    ) -> None:
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
