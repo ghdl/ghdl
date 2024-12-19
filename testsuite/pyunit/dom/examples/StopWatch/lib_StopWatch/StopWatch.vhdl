@@ -10,6 +10,9 @@ use     IEEE.numeric_std.all;
 library lib_Utilities;
 use     lib_Utilities.Utilities_pkg.all;
 
+library lib_Display;
+use     lib_Display.Display_pkg.all;
+
 use     work.StopWatch_pkg.all;
 
 
