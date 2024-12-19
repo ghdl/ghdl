@@ -40,7 +40,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional as Nullable
 
-from pyGHDL.dom.Names import SimpleName
+from pyGHDL.dom.Name import SimpleName
 from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel import VHDLVersion
@@ -89,7 +89,7 @@ class Design(VHDLModel_Design):
     _analyzeTime: Nullable[float]
 
     @InheritDocString(VHDLModel_Design)
-    def __init__(self, name: str = None):
+    def __init__(self, name: str = None) -> None:
         super().__init__(name)
 
         self._loadDefaultLibraryTime = None
@@ -153,7 +153,7 @@ class Document(VHDLModel_Document):
         vhdlVersion: VHDLVersion = VHDLVersion.VHDL2008,
         dontParse: bool = False,
         dontTranslate: bool = False,
-    ):
+    ) -> None:
         super().__init__(path)
 
         self._filename = path

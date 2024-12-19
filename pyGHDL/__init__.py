@@ -64,6 +64,8 @@ from pyTooling.Decorators import export
 
 @export
 class GHDLBaseException(Exception):
+    """Base exception derived from :exc:`Exception <python:Exception>` for all custom exceptions."""
+
     # WORKAROUND: for Python <3.11
     # Implementing a dummy method for Python versions before
     if version_info < (3, 11):  # pragma: no cover

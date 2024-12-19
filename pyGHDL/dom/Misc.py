@@ -46,7 +46,7 @@ from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
 
 @export
 class Alias(VHDLModel_Alias, DOMMixin):
-    def __init__(self, node: Iir, aliasName: str, documentation: str = None):
+    def __init__(self, node: Iir, aliasName: str, documentation: str = None) -> None:
         super().__init__(aliasName, documentation)
         DOMMixin.__init__(self, node)
 
