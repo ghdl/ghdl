@@ -40,7 +40,7 @@ from pyTooling.Licensing      import GPL_2_0_or_later
 from pyTooling.Packaging      import DescribePythonPackageHostedOnGitHub
 
 gitHubNamespace = "ghdl"
-packageName =  "pyGHDL"
+packageName = "pyGHDL"
 packageDirectory = packageName
 packageInformationFile = Path(f"{packageDirectory}/__init__.py")
 requirementsFile = Path(f"{packageDirectory}/requirements.txt")
