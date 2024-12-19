@@ -202,7 +202,7 @@ jobs:
           name: ${{ steps.artifact_name.outputs.pacman_artifact }}
           path: dist/msys2/${{ inputs.backend }}/*.pkg.tar.zst
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 7
 
       - name: "🚦 Run testsuite: 'sanity'"
         run: |
@@ -233,13 +233,14 @@ jobs:
           cat ./install/*.requirements
 
       - name: 📤 Upload '${{ steps.artifact_name.outputs.ghdl_artifact }}' artifact
-        uses: actions/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v4
         if: inputs.msys2_artifact != ''
         with:
           name: ${{ steps.artifact_name.outputs.ghdl_artifact }}
-          path: ./install
+          working-directory: install
+          path: "*"
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 7
 
       - name: 🗐 Copy and check dependency (MSYS2) for standalone usage
         if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
@@ -281,13 +282,14 @@ jobs:
           tree ./standalone
 
       - name: 📤 Upload '${{ steps.artifact_name.outputs.windows_artifact }}' artifact
-        uses: actions/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v4
         if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
         with:
           name: ${{ steps.artifact_name.outputs.windows_artifact }}
-          path: ./standalone
+          working-directory: standalone
+          path: "*"
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 7
 
       - name: ✂ Remove binaries, libraries and other files for libghdl
         if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
@@ -331,11 +333,12 @@ jobs:
           done
 
       - name: 📤 Upload '${{ steps.artifact_name.outputs.libghdl_artifact }}' artifact
-        uses: actions/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v4
         if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
         with:
           name: ${{ steps.artifact_name.outputs.libghdl_artifact }}
-          path: ./install
+          working-directory: install
+          path: "*"
           if-no-files-found: error
           retention-days: 1
 
@@ -424,10 +427,11 @@ jobs:
       - name: 📤 Upload 'TestReportSummary.xml' artifact (only mcode backend)
         if: inputs.unittesting && inputs.backend == 'mcode' && inputs.unittest_xml_artifact != ''
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v4
         with:
           name: ${{ inputs.unittest_xml_artifact }}-Windows-${{ inputs.windows_version }}-${{ inputs.runtime }}-${{ inputs.python_version }}
-          path: report/unit/TestReportSummary.xml
+          working-directory: report/unit
+          path: TestReportSummary.xml
           if-no-files-found: error
           retention-days: 1
 
@@ -440,7 +444,7 @@ jobs:
       - name: 📤 Upload 'Coverage SQLite Database' artifact (only mcode backend)
         if: inputs.coverage && inputs.backend == 'mcode' && inputs.coverage_sqlite_artifact != ''
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v4
         with:
           name: ${{ inputs.coverage_sqlite_artifact }}-Windows-${{ inputs.windows_version }}-${{ inputs.runtime }}-${{ inputs.python_version }}
           path: .coverage
@@ -485,7 +489,7 @@ jobs:
           pacboy: "diffutils:p"
 
       - name: 📥 Download artifacts '${{ needs.Build.outputs.pacman_artifact }}' from 'Package' job
-        uses: actions/download-artifact@v4
+        uses: pyTooling/download-artifact@v4
         with:
           name: ${{ needs.Build.outputs.pacman_artifact }}
           path: pacman
@@ -523,7 +527,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 📥 Download artifacts '${{ needs.Build.outputs.windows_artifact }}' from 'Package' job
-        uses: actions/download-artifact@v4
+        uses: pyTooling/download-artifact@v4
         with:
           name: ${{ needs.Build.outputs.windows_artifact }}
           path: install

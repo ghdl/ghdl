@@ -64,7 +64,7 @@ jobs:
           python -m pip install --disable-pip-version-check "pyTooling[packaging]" wheel
 
       - name: 📥 Download artifacts '${{ inputs.libghdl_artifact }}-${{ inputs.backend }}' from 'Build' job
-        uses: actions/download-artifact@v4
+        uses: pyTooling/download-artifact@v4
         with:
           name: ${{ inputs.libghdl_artifact }}-${{ inputs.backend }}
           path: install
@@ -143,7 +143,7 @@ jobs:
           python-version: ${{ inputs.python_version }}
 
       - name: 📥 Download artifacts '${{ inputs.pyghdl_artifact }}' from 'Package' job
-        uses: actions/download-artifact@v4
+        uses: pyTooling/download-artifact@v4
         with:
           name: ${{ inputs.pyghdl_artifact }}
           path: wheels
@@ -264,17 +264,18 @@ jobs:
       - name: 📤 Upload 'TestReportSummary.xml' artifact
         if: inputs.unittest_xml_artifact != ''
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v4
         with:
           name: ${{ inputs.unittest_xml_artifact }}-${{ inputs.os_name }}-${{ inputs.python_version }}
-          path: report/unit/TestReportSummary.xml
+          working-directory: report/unit
+          path: TestReportSummary.xml
           if-no-files-found: error
           retention-days: 1
 
 #      - name: 📤 Upload 'Unit Tests HTML Report' artifact
 #        if: inputs.unittest_html_artifact != ''
 #        continue-on-error: true
-#        uses: actions/upload-artifact@v4
+#        uses: pyTooling/upload-artifact@v4
 #        with:
 #          name: ${{ inputs.unittest_html_artifact }}-${{ inputs.python_version }}
 #          path: ${{ steps.getVariables.outputs.unittest_report_html_directory }}
