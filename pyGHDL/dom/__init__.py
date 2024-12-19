@@ -50,7 +50,7 @@ class Position:
     _line: int
     _column: int
 
-    def __init__(self, filename: Path, line: int, column: int):
+    def __init__(self, filename: Path, line: int, column: int) -> None:
         self._filename = filename
         self._line = line
         self._column = column
@@ -106,7 +106,7 @@ class DOMMixin(metaclass=ExtendedType, mixin=True):
     _iirNode: Iir
     _position: Position = None
 
-    def __init__(self, node: Iir):
+    def __init__(self, node: Iir) -> None:
         self._iirNode = node
 
     @property

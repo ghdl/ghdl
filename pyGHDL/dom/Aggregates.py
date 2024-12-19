@@ -56,34 +56,34 @@ from pyGHDL.dom.Range import Range
 
 @export
 class SimpleAggregateElement(VHDLModel_SimpleAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, expression: ExpressionUnion):
+    def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
         super().__init__(expression)
         DOMMixin.__init__(self, node)
 
 
 @export
 class IndexedAggregateElement(VHDLModel_IndexedAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, index: ExpressionUnion, expression: ExpressionUnion):
+    def __init__(self, node: Iir, index: ExpressionUnion, expression: ExpressionUnion) -> None:
         super().__init__(index, expression)
         DOMMixin.__init__(self, node)
 
 
 @export
 class RangedAggregateElement(VHDLModel_RangedAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, rng: Range, expression: ExpressionUnion):
+    def __init__(self, node: Iir, rng: Range, expression: ExpressionUnion) -> None:
         super().__init__(rng, expression)
         DOMMixin.__init__(self, node)
 
 
 @export
 class NamedAggregateElement(VHDLModel_NamedAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, name: Symbol, expression: ExpressionUnion):
+    def __init__(self, node: Iir, name: Symbol, expression: ExpressionUnion) -> None:
         super().__init__(name, expression)
         DOMMixin.__init__(self, node)
 
 
 @export
 class OthersAggregateElement(VHDLModel_OthersAggregateElement, DOMMixin):
-    def __init__(self, node: Iir, expression: ExpressionUnion):
+    def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
         super().__init__(expression)
         DOMMixin.__init__(self, node)

@@ -76,7 +76,7 @@ class LibraryReferenceSymbol(VHDLModel_LibraryReferenceSymbol, DOMMixin):
     """
 
     @InheritDocString(VHDLModel_LibraryReferenceSymbol)
-    def __init__(self, identifierNode: Iir, name: Name):
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -97,7 +97,7 @@ class PackageReferenceSymbol(VHDLModel_PackageReferenceSymbol, DOMMixin):
     """
 
     @InheritDocString(VHDLModel_PackageReferenceSymbol)
-    def __init__(self, identifierNode: Iir, name: Name):
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -118,7 +118,7 @@ class ContextReferenceSymbol(VHDLModel_ContextReferenceSymbol, DOMMixin):
     """
 
     @InheritDocString(VHDLModel_ContextReferenceSymbol)
-    def __init__(self, identifierNode: Iir, name: Name):
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -139,7 +139,7 @@ class PackageMemberReferenceSymbol(VHDLModel_PackageMemberReferenceSymbol, DOMMi
     """
 
     @InheritDocString(VHDLModel_PackageMemberReferenceSymbol)
-    def __init__(self, identifierNode: Iir, name: Name):
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -160,7 +160,7 @@ class AllPackageMembersReferenceSymbol(VHDLModel_AllPackageMembersReferenceSymbo
     """
 
     @InheritDocString(VHDLModel_AllPackageMembersReferenceSymbol)
-    def __init__(self, identifierNode: Iir, name: Name):
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -181,7 +181,7 @@ class EntityInstantiationSymbol(VHDLModel_EntityInstantiationSymbol, DOMMixin):
     """
 
     @InheritDocString(VHDLModel_EntityInstantiationSymbol)
-    def __init__(self, identifierNode: Iir, name: Name):
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -202,7 +202,7 @@ class ComponentInstantiationSymbol(VHDLModel_ComponentInstantiationSymbol, DOMMi
     """
 
     @InheritDocString(VHDLModel_ComponentInstantiationSymbol)
-    def __init__(self, identifierNode: Iir, name: Name):
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -223,7 +223,7 @@ class ConfigurationInstantiationSymbol(VHDLModel_ConfigurationInstantiationSymbo
     """
 
     @InheritDocString(VHDLModel_ConfigurationInstantiationSymbol)
-    def __init__(self, identifierNode: Iir, name: Name):
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -246,7 +246,7 @@ class EntitySymbol(VHDLModel_EntitySymbol, DOMMixin):
     """
 
     @InheritDocString(VHDLModel_EntitySymbol)
-    def __init__(self, identifierNode: Iir, name: Name):
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -254,7 +254,7 @@ class EntitySymbol(VHDLModel_EntitySymbol, DOMMixin):
 @export
 class ArchitectureSymbol(VHDLModel_ArchitectureSymbol, DOMMixin):
     @InheritDocString(VHDLModel_ArchitectureSymbol)
-    def __init__(self, identifierNode: Iir, name: Name):
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -276,7 +276,7 @@ class PackageSymbol(VHDLModel_PackageSymbol, DOMMixin):
     """
 
     @InheritDocString(VHDLModel_PackageSymbol)
-    def __init__(self, identifierNode: Iir, name: Name):
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -288,7 +288,7 @@ class PackageSymbol(VHDLModel_PackageSymbol, DOMMixin):
 @export
 class SimpleSubtypeSymbol(VHDLModel_SimpleSubtypeSymbol, DOMMixin):
     @InheritDocString(VHDLModel_SimpleSubtypeSymbol)
-    def __init__(self, node: Iir, subtypeName: Name):
+    def __init__(self, node: Iir, subtypeName: Name) -> None:
         super().__init__(subtypeName)
         DOMMixin.__init__(self, node)
 
@@ -296,7 +296,7 @@ class SimpleSubtypeSymbol(VHDLModel_SimpleSubtypeSymbol, DOMMixin):
 @export
 class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, DOMMixin):
     @InheritDocString(VHDLModel_ConstrainedScalarSubtypeSymbol)
-    def __init__(self, node: Iir, subtypeName: Name, rng: Range = None):
+    def __init__(self, node: Iir, subtypeName: Name, rng: Range = None) -> None:
         super().__init__(subtypeName)  # , rng)  # XXX: hacked
         DOMMixin.__init__(self, node)
 
@@ -308,7 +308,7 @@ class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, D
 @export
 class ConstrainedCompositeSubtypeSymbol(VHDLModel_ConstrainedCompositeSubtypeSymbol, DOMMixin):
     @InheritDocString(VHDLModel_ConstrainedCompositeSubtypeSymbol)
-    def __init__(self, node: Iir, subtypeName: Name, constraints: List = None):
+    def __init__(self, node: Iir, subtypeName: Name, constraints: List = None) -> None:
         super().__init__(subtypeName)  # , constraints)  # XXX: hacked
         DOMMixin.__init__(self, node)
 
@@ -320,7 +320,7 @@ class ConstrainedCompositeSubtypeSymbol(VHDLModel_ConstrainedCompositeSubtypeSym
 @export
 class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbol, DOMMixin):
     @InheritDocString(VHDLModel_SimpleObjectOrFunctionCallSymbol)
-    def __init__(self, node: Iir, name: Name):
+    def __init__(self, node: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, node)
 
@@ -336,7 +336,7 @@ class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbo
 @export
 class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSymbol, DOMMixin):
     @InheritDocString(VHDLModel_IndexedObjectOrFunctionCallSymbol)
-    def __init__(self, node: Iir, name: Name):
+    def __init__(self, node: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, node)
 

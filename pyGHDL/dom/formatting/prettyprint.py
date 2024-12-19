@@ -103,7 +103,7 @@ class PrettyPrintException(GHDLBaseException):
 class PrettyPrint:
     # _buffer: StringBuffer
     #
-    # def __init__(self):
+    # def __init__(self) -> None:
     #     self._buffer = []
 
     def CleanupDocumentationBlocks(self, documentationContent: str, level: int = 0):
