@@ -313,4 +313,5 @@ class MultiLine(Base):
         """More exhaustive"""
         self.checkFile(self._root / "Complex_MultiLine.vhdl")
 
+
 # Empty line before to easy cut & put

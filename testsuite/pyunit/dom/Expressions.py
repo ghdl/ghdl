@@ -57,12 +57,12 @@ class Expressions(TestCase):
     _root = Path(__file__).resolve().parent.parent
     _design = Design()
     _packageTemplate = dedent(
-            """\
-            package package_1 is
-              {code}
-            end package;
-            """
-        )
+        """\
+        package package_1 is
+          {code}
+        end package;
+        """
+    )
 
     def parse(self, filename: Path, code: str) -> Expression:
         sourceCode = self._packageTemplate.format(code=code)
