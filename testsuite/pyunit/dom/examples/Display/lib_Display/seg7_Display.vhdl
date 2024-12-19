@@ -10,7 +10,7 @@ use     IEEE.numeric_std.all;
 library lib_Utilities;
 use     lib_Utilities.Utilities_pkg.all;
 
-use     work.StopWatch_pkg.all;
+use     work.Display_pkg.all;
 
 
 entity seg7_Display is
@@ -86,7 +86,6 @@ begin
 
 			Seg7Code  => Seg7_Segments
 		);
-
 
 	Seg7_Selects <= bin2onehot(Digit_Select, DIGITS);
 end architecture;

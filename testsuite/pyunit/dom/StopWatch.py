@@ -33,17 +33,15 @@
 from time import perf_counter_ns as time_perf_counter
 from pathlib import Path
 from textwrap import dedent
-from typing import Dict, List
 from unittest import TestCase
 
-from pyTooling.Graph import Vertex
-
-import pyVHDLModel
-import pyVHDLModel.DesignUnit
 from pyGHDL.dom.NonStandard import Design, Document
-from pyGHDL.dom.formatting.GraphML import DependencyGraphFormatter, HierarchyGraphFormatter, CompileOrderGraphFormatter
-from pyGHDL.dom.formatting.prettyprint import PrettyPrint
-from pyVHDLModel import DependencyGraphVertexKind, DependencyGraphEdgeKind, Library
+from pyGHDL.dom.formatting.GraphML import (
+    DependencyGraphFormatter,
+    HierarchyGraphFormatter,
+    CompileOrderGraphFormatter,
+)  # , ObjectGraphFormatter
+
 
 if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
@@ -53,34 +51,44 @@ if __name__ == "__main__":
 
 class Designs(TestCase):
     _root = Path(__file__).resolve().parent.parent
-    _sourceDirectory: Path = _root / "dom/examples/StopWatch"
+    _encoderSourceDirectory: Path = _root / "dom/examples/Encoder"
+    _displaySourceDirectory: Path = _root / "dom/examples/Display"
+    _stopwatchSourceDirectory: Path = _root / "dom/examples/StopWatch"
 
-    _packageFiles = (
-        ("lib_Utilities", Path("Utilities.pkg.vhdl")),
-        ("lib_Utilities", Path("Utilities.ctx.vhdl")),
-        ("lib_StopWatch", Path("StopWatch.pkg.vhdl")),
-        ("lib_StopWatch", Path("StopWatch.ctx.vhdl")),
+    _utilityPackageFiles = (
+        ("lib_Utilities", Path("lib_Utilities/Utilities.pkg.vhdl")),
+        ("lib_Utilities", Path("lib_Utilities/Utilities.ctx.vhdl")),
     )
-    _encoderFiles = _packageFiles + (
-        ("lib_StopWatch", Path("seg7_Encoder.vhdl")),
-        ("lib_StopWatch", Path("toplevel.Encoder.vhdl")),
+    _utilityCounterFiles = _utilityPackageFiles + (("lib_Utilities", Path("lib_Utilities/Counter.vhdl")),)
+    _utilityEntityFiles = _utilityCounterFiles + (
+        ("lib_Utilities", Path("lib_Utilities/sync_Bits.vhdl")),
+        ("lib_Utilities", Path("lib_Utilities/Debouncer.vhdl")),
     )
-    _displayFiles = _packageFiles + (
-        ("lib_StopWatch", Path("Counter.vhdl")),
-        ("lib_StopWatch", Path("seg7_Encoder.vhdl")),
-        ("lib_StopWatch", Path("seg7_Display.vhdl")),
-        ("lib_StopWatch", Path("seg7_Display.cfg.vhdl")),
-        ("lib_StopWatch", Path("toplevel.Display.vhdl")),
+    _displayPackageFiles = (
+        ("lib_Display", Path("lib_Display/Display.pkg.vhdl")),
+        ("lib_Display", Path("lib_Display/Display.ctx.vhdl")),
     )
-    _stopwatchFiles = _packageFiles + (
-        ("lib_Utilities", Path("Counter.vhdl")),
-        ("lib_StopWatch", Path("seg7_Encoder.vhdl")),
-        ("lib_StopWatch", Path("seg7_Display.vhdl")),
-        ("lib_StopWatch", Path("seg7_Display.cfg.vhdl")),
-        ("lib_StopWatch", Path("StopWatch.vhdl")),
-        ("lib_Utilities", Path("sync_Bits.vhdl")),
-        ("lib_Utilities", Path("Debouncer.vhdl")),
-        ("lib_StopWatch", Path("toplevel.StopWatch.vhdl")),
+    _encoderEntityFiles = (("lib_Display", Path("lib_Display/seg7_Encoder.vhdl")),)
+    _displayEntityFiles = (
+        _displayPackageFiles
+        + _encoderEntityFiles
+        + (
+            ("lib_Display", Path("lib_Display/seg7_Display.vhdl")),
+            ("lib_Display", Path("lib_Display/seg7_Display.cfg.vhdl")),
+        )
+    )
+    _stopwatchPackageFiles = (
+        ("lib_StopWatch", Path("lib_StopWatch/StopWatch.pkg.vhdl")),
+        ("lib_StopWatch", Path("lib_StopWatch/StopWatch.ctx.vhdl")),
+    )
+    _stopwatchEntityFiles = _stopwatchPackageFiles + (("lib_StopWatch", Path("lib_StopWatch/StopWatch.vhdl")),)
+    _encoderFiles = _encoderEntityFiles + (("lib_Pretty", Path("toplevel.Encoder.vhdl")),)
+    _displayFiles = _utilityCounterFiles + _displayEntityFiles + (("lib_StopWatch", Path("toplevel.Display.vhdl")),)
+    _stopwatchFiles = (
+        _utilityEntityFiles
+        + _displayEntityFiles
+        + _stopwatchEntityFiles
+        + (("lib_StopWatch", Path("toplevel.StopWatch.vhdl")),)
     )
 
 
@@ -89,7 +97,7 @@ class Display(Designs):
         design = Design()
         for lib, file in self._encoderFiles:
             library = design.GetLibrary(lib)
-            document = Document(self._sourceDirectory / file)
+            document = Document(self._encoderSourceDirectory / file)
             design.AddDocument(document, library)
 
         self.assertEqual(len(self._encoderFiles), len(design.Documents))
@@ -98,7 +106,8 @@ class Display(Designs):
         design = Design()
         for lib, file in self._displayFiles:
             library = design.GetLibrary(lib)
-            document = Document(self._sourceDirectory / file)
+            print(file)
+            document = Document(self._displaySourceDirectory / file)
             design.AddDocument(document, library)
 
         self.assertEqual(len(self._displayFiles), len(design.Documents))
@@ -107,7 +116,7 @@ class Display(Designs):
         design = Design()
         for lib, file in self._stopwatchFiles:
             library = design.GetLibrary(lib)
-            document = Document(self._sourceDirectory / file)
+            document = Document(self._stopwatchSourceDirectory / file)
             design.AddDocument(document, library)
 
         self.assertEqual(len(self._stopwatchFiles), len(design.Documents))
@@ -121,9 +130,11 @@ class CompileOrder(Designs):
         t1 = time_perf_counter()
         for lib, file in self._stopwatchFiles:
             library = design.GetLibrary(lib)
-            document = Document(self._sourceDirectory / file)
+            document = Document(self._stopwatchSourceDirectory / file)
             design.AddDocument(document, library)
-            print(dedent("""\
+            print(
+                dedent(
+                    """\
                 file: {}
                   libghdl processing time: {:5.3f} us
                   DOM translation time:    {:5.3f} us
@@ -140,24 +151,26 @@ class CompileOrder(Designs):
 
         toplevel = [root.Value.Identifier for root in design.HierarchyGraph.IterateRoots()]
 
-        print(dedent("""
+        print(
+            dedent(
+                """
             pyGHDL:
               sum:                       {:5.3f} us
             Analysis:
               default library load time: {:5.3f} us
               dependency analysis time:  {:5.3f} us
-            Toplevel:                    {toplevel}
-            Compile order:\
+            Toplevel:                    {toplevel}\
             """
             ).format(
                 pyGHDLTime * 10**6,
                 design._loadDefaultLibraryTime * 10**6,
                 design._analyzeTime * 10**6,
-                toplevel=", ".join(toplevel)
+                toplevel=", ".join(toplevel),
             )
         )
-        for i, vertex in enumerate(design.IterateDocumentsInCompileOrder()):
-            print(f"  {i:<2}: {vertex.Value.Path.relative_to(Path.cwd())}")
+        # print("Compile order:")
+        # for i, document in enumerate(design.IterateDocumentsInCompileOrder()):
+        #     print(f"  {i:<2}: {document.Path.relative_to(Path.cwd())}")
 
         graphML = Path("dependencies.graphml")
         dependencyFormatter = DependencyGraphFormatter(design.DependencyGraph)
@@ -170,6 +183,10 @@ class CompileOrder(Designs):
         graphML = Path("compileorder.graphml")
         compileOrderFormatter = CompileOrderGraphFormatter(design.CompileOrderGraph)
         compileOrderFormatter.WriteGraphML(graphML)
+
+        # graphML = Path("objects.graphml")
+        # objectGraphFormatter = ObjectGraphFormatter(design.ObjectGraph)
+        # objectGraphFormatter.WriteGraphML(graphML)
 
         # PP = PrettyPrint()
         # buffer = []
