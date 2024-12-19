@@ -340,7 +340,9 @@ class Context(VHDLModel_Context, DOMMixin):
 
 @export
 class Configuration(VHDLModel_Configuration, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, contextItems: Iterable[Context] = None, documentation: str = None) -> None:
+    def __init__(
+        self, node: Iir, identifier: str, contextItems: Iterable[Context] = None, documentation: str = None
+    ) -> None:
         super().__init__(identifier, contextItems, documentation)
         DOMMixin.__init__(self, node)
 
