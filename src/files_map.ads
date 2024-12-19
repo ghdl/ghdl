@@ -46,6 +46,11 @@ package Files_Map is
    function Read_Source_File (Directory : Name_Id; Name : Name_Id)
                               return Source_File_Entry;
 
+   --  Find a source_file by DIRECTORY and NAME.
+   --  Return No_Source_File_Entry if not already opened.
+   function Find_Source_File (Directory : Name_Id; Name: Name_Id)
+                             return Source_File_Entry;
+
    --  Reserve an entry, but do not read any file.
    --  The length should includes the two terminal EOT.
    function Reserve_Source_File
