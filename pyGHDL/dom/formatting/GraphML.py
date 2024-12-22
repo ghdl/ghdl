@@ -1,8 +1,11 @@
+from enum import Flag
 from pathlib import Path
 from textwrap import dedent
-from typing import Dict, List
+from typing import Dict, List, ClassVar
 
+from pyTooling.Decorators import export
 from pyTooling.Graph import Graph, Vertex
+from pyTooling.MetaClasses import abstractmethod, ExtendedType
 
 from pyVHDLModel import (
     DependencyGraphVertexKind,
@@ -12,9 +15,23 @@ from pyVHDLModel import (
 )
 
 
-class DependencyGraphFormatter:
+@export
+class Formatter:  # (metaclass=ExtendedType):
     _graph: Graph
 
+    NODE_COLORS: ClassVar[Dict[Flag, str]]
+    EDGE_COLORS: ClassVar[Dict[Flag, str]]
+
+    def __init__(self, graph: Graph) -> None:
+        self._graph = graph
+
+    @abstractmethod
+    def WriteGraphML(self, path: Path):
+        pass
+
+
+@export
+class DependencyGraphFormatter(Formatter):
     NODE_COLORS = {
         DependencyGraphVertexKind.Document: "#999999",
         DependencyGraphVertexKind.Library: "#99ccff",
@@ -37,9 +54,6 @@ class DependencyGraphFormatter:
         DependencyGraphEdgeKind.ComponentInstantiation: "#000000",
         DependencyGraphEdgeKind.ConfigurationInstantiation: "#000000",
     }
-
-    def __init__(self, graph: Graph):
-        self._graph = graph
 
     def WriteGraphML(self, path: Path):
         with path.open("w") as file:
@@ -142,9 +156,8 @@ class DependencyGraphFormatter:
             )
 
 
-class HierarchyGraphFormatter:
-    _graph: Graph
-
+@export
+class HierarchyGraphFormatter(Formatter):
     NODE_COLORS = {
         DependencyGraphVertexKind.Document: "#999999",
         DependencyGraphVertexKind.Library: "#99ccff",
@@ -167,9 +180,6 @@ class HierarchyGraphFormatter:
         DependencyGraphEdgeKind.ComponentInstantiation: "#000000",
         DependencyGraphEdgeKind.ConfigurationInstantiation: "#000000",
     }
-
-    def __init__(self, graph: Graph):
-        self._graph = graph
 
     def WriteGraphML(self, path: Path):
         with path.open("w") as file:
@@ -247,9 +257,8 @@ class HierarchyGraphFormatter:
             )
 
 
-class CompileOrderGraphFormatter:
-    _graph: Graph
-
+@export
+class CompileOrderGraphFormatter(Formatter):
     NODE_COLORS = {
         DependencyGraphVertexKind.Document: "#999999",
         DependencyGraphVertexKind.Library: "#99ccff",
@@ -273,11 +282,7 @@ class CompileOrderGraphFormatter:
         DependencyGraphEdgeKind.ConfigurationInstantiation: "#000000",
     }
 
-    def __init__(self, graph: Graph):
-        self._graph = graph
-
     def WriteGraphML(self, path: Path):
-        print(path.absolute())
         with path.open("w") as file:
             file.write(
                 dedent(
