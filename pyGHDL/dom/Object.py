@@ -30,6 +30,9 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived object classes from :mod:`pyVHDLModel.Object`.
+"""
 from typing import Union, List, Iterable
 
 from pyTooling.Decorators import export
@@ -51,6 +54,18 @@ from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
 
 @export
 class Constant(VHDLModel_Constant, DOMMixin):
+    """
+    Represents a *constant*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Object.Constant`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          constant BITS : positive := 8;
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -88,6 +103,18 @@ class Constant(VHDLModel_Constant, DOMMixin):
 
 @export
 class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
+    """
+    Represents a *deferred constant*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Object.DeferredConstant`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          constant BITS : positive;
+    """
+
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None):
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
@@ -108,6 +135,18 @@ class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
 
 @export
 class Variable(VHDLModel_Variable, DOMMixin):
+    """
+    Represents a *variable*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Object.Variable`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          variable result : natural := 0;
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -142,6 +181,18 @@ class Variable(VHDLModel_Variable, DOMMixin):
 
 @export
 class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
+    """
+    Represents a *shared variable*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Object.SharedVariable`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          shared variable counter : counter_pt;
+    """
+
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None):
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
@@ -162,6 +213,18 @@ class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
 
 @export
 class Signal(VHDLModel_Signal, DOMMixin):
+    """
+    Represents a *signal*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Object.Signal`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          signal counter : unsigned := (others => '0');
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -194,6 +257,18 @@ class Signal(VHDLModel_Signal, DOMMixin):
 
 @export
 class File(VHDLModel_File, DOMMixin):
+    """
+    Represents a *file*.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Object.File`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          file INPUT : TEXT;
+    """
+
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None):
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)

@@ -40,7 +40,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional as Nullable
 
-from pyGHDL.dom.Names import SimpleName
+from pyGHDL.dom.Name import SimpleName
 from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel import VHDLVersion

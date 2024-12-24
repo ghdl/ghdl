@@ -46,7 +46,7 @@ from pyGHDL.libghdl.vhdl.tokens import Tok
 from pyGHDL.dom import DOMMixin, Position, DOMException, Expression
 from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode, GetDocumentationOfNode
 from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
-from pyGHDL.dom.Names import SimpleName
+from pyGHDL.dom.Name import SimpleName
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 
 
