@@ -65,7 +65,7 @@ class SimpleName(VHDLModel_SimpleName, DOMMixin):
           ieee
     """
 
-    def __init__(self, node: Iir, identifier: str):
+    def __init__(self, node: Iir, identifier: str) -> None:
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
@@ -85,14 +85,14 @@ class ParenthesisName(VHDLModel_ParenthesisName, DOMMixin):
           -- ^^^
     """
 
-    def __init__(self, node: Iir, prefix: VHDLModel_Name, associations: List):
+    def __init__(self, node: Iir, prefix: VHDLModel_Name, associations: List) -> None:
         super().__init__(prefix, associations)
         DOMMixin.__init__(self, node)
 
 
 @export
 class IndexedName(VHDLModel_IndexedName, DOMMixin):
-    def __init__(self, node: Iir, identifier: str):
+    def __init__(self, node: Iir, identifier: str) -> None:
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
@@ -112,7 +112,7 @@ class SlicedName(VHDLModel_SlicedName, DOMMixin):
           -- ^^^^^^^^^^^^
     """
 
-    def __init__(self, node: Iir, identifier: str):
+    def __init__(self, node: Iir, identifier: str) -> None:
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
@@ -132,7 +132,7 @@ class SelectedName(VHDLModel_SelectedName, DOMMixin):
           -- ^^^^^
     """
 
-    def __init__(self, node: Iir, identifier: str, prefix: VHDLModel_Name):
+    def __init__(self, node: Iir, identifier: str, prefix: VHDLModel_Name) -> None:
         super().__init__(identifier, prefix)
         DOMMixin.__init__(self, node)
 
@@ -152,7 +152,7 @@ class AttributeName(VHDLModel_AttributeName, DOMMixin):
           -- ^^^^^^^
     """
 
-    def __init__(self, node: Iir, identifier: str, prefix: VHDLModel_Name):
+    def __init__(self, node: Iir, identifier: str, prefix: VHDLModel_Name) -> None:
         super().__init__(identifier, prefix)
         DOMMixin.__init__(self, node)
 
@@ -172,7 +172,7 @@ class AllName(VHDLModel_AllName, DOMMixin):
           -- ^^^^
     """
 
-    def __init__(self, node: Iir, prefix: VHDLModel_Name):
+    def __init__(self, node: Iir, prefix: VHDLModel_Name) -> None:
         super().__init__(prefix)
         DOMMixin.__init__(self, node)
 
@@ -191,6 +191,6 @@ class OpenName(VHDLModel_OpenName, DOMMixin):
           open
     """
 
-    def __init__(self, node: Iir):
+    def __init__(self, node: Iir) -> None:
         super().__init__()
         DOMMixin.__init__(self, node)

@@ -52,7 +52,7 @@ from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 
 @export
 class Attribute(VHDLModel_Attribute, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, subtype: Symbol, documentation: str = None):
+    def __init__(self, node: Iir, identifier: str, subtype: Symbol, documentation: str = None) -> None:
         super().__init__(identifier, subtype, documentation)
         DOMMixin.__init__(self, node)
 
@@ -102,7 +102,7 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
         entityClass: EntityClass,
         expression: Expression,
         documentation: str = None,
-    ):
+    ) -> None:
         super().__init__(identifiers, attribute, entityClass, expression, documentation)
         DOMMixin.__init__(self, node)
 
