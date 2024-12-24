@@ -238,7 +238,20 @@ def Get_Buffer_Length(File: SourceFileEntry) -> int:
     """
 
 
-# @export
+@export
+@BindToLibGHDL("files_map__find_source_file")
+def Find_Source_File(Directory: NameId, Name: NameId) -> SourceFileEntry:
+    """
+    Return an existing entry for a filename.
+
+    :param Directory: ``Null_Identifier`` for :obj:`DirectoryId` means current directory.
+    :param Name:      File name
+    :return:          Return ``No_Source_File_Entry``, if the file is not already open.
+    """
+    return 0
+
+
+@export
 @BindToLibGHDL("files_map__read_source_file")
 def Read_Source_File(Directory: NameId, Name: NameId) -> SourceFileEntry:
     """
