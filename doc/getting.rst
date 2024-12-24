@@ -483,7 +483,7 @@ For PowerShell Scripts:
 
 .. container:: footnotes
 
-	 .. rubric:: Footnotes
+   .. rubric:: Footnotes
 
    .. [#f1] OSVVM http://github.com/OSVVM/OSVVM
    .. [#f2] UVVM https://github.com/UVVM/UVVM_All

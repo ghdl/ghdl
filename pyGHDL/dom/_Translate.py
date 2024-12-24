@@ -602,28 +602,28 @@ def GetParameterFromChainedNodes(
 
 
 def GetMapAspect(mapAspect: Iir, cls: Type, entity: str) -> Generator[AssociationItem, None, None]:
-    for generic in utils.chain_iter(mapAspect):
-        kind = GetIirKindOfNode(generic)
+    for item in utils.chain_iter(mapAspect):
+        kind = GetIirKindOfNode(item)
         if kind is nodes.Iir_Kind.Association_Element_By_Expression:
-            formalNode = nodes.Get_Formal(generic)
+            formalNode = nodes.Get_Formal(item)
             if formalNode is nodes.Null_Iir:
                 formal = None
             else:
                 formal = GetName(formalNode)
 
-            actual = GetExpressionFromNode(nodes.Get_Actual(generic))
+            actual = GetExpressionFromNode(nodes.Get_Actual(item))
 
-            yield cls(generic, actual, formal)
+            yield cls(item, actual, formal)
         elif kind is nodes.Iir_Kind.Association_Element_Open:
-            formalNode = nodes.Get_Formal(generic)
+            formalNode = nodes.Get_Formal(item)
             if formalNode is nodes.Null_Iir:
                 formal = None
             else:
                 formal = GetName(formalNode)
 
-            yield cls(generic, OpenName(generic), formal)
+            yield cls(item, OpenName(item), formal)
         else:
-            pos = Position.parse(generic)
+            pos = Position.parse(item)
             raise DOMException(f"Unknown association kind '{kind.name}' in {entity} map at line {pos.Line}.")
 
 
