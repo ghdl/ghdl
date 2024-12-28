@@ -735,7 +735,7 @@ package body Vhdl.Sem_Names is
       Suffix: Iir;
       Slice_Type : Iir;
       Expr_Type : Iir;
-      Staticness : Iir_Staticness;
+      Staticness, Expr_Staticness : Iir_Staticness;
       Prefix_Rng : Iir;
       Suffix_Rng : Iir;
    begin
@@ -824,8 +824,15 @@ package body Vhdl.Sem_Names is
 
       --  LRM93 7.4.1
       --  A slice is never a locally static expression.
-      Set_Expr_Staticness
-        (Name, Min (Min (Staticness, Get_Expr_Staticness (Prefix)), Globally));
+      --
+      --  LRM08 9.4 Static expressions
+      --  o) A slice name whose prefix is a locally static primary and whose
+      --    discrete range is a locally static discrete range
+      Expr_Staticness := Min (Staticness, Get_Expr_Staticness (Prefix));
+      if Vhdl_Std < Vhdl_08 then
+         Expr_Staticness := Min (Expr_Staticness, Globally);
+      end if;
+      Set_Expr_Staticness (Name, Expr_Staticness);
       Set_Name_Staticness
         (Name, Min (Staticness, Get_Name_Staticness (Prefix)));
 

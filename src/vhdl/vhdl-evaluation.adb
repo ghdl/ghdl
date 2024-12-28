@@ -3496,6 +3496,7 @@ package body Vhdl.Evaluation is
       Prefix := Get_Prefix (Expr);
       Prefix := Eval_Static_Expr (Prefix);
 
+      --  Eval indexes
       declare
          Prefix_Type : constant Iir := Get_Type (Prefix);
          Indexes_Type : constant Iir_Flist :=
@@ -3532,6 +3533,43 @@ package body Vhdl.Evaluation is
             Error_Kind ("eval_indexed_name", Prefix);
       end case;
    end Eval_Indexed_Name;
+
+   function Eval_Slice_Name (Expr : Iir) return Iir
+   is
+      Suffix : constant Iir := Get_Suffix (Expr);
+      Len : constant Int64 := Eval_Discrete_Range_Length (Suffix);
+      Rng : constant Iir := Eval_Static_Range (Suffix);
+      Prefix : Iir;
+      Dir : Direction_Type;
+      Left, Right : Iir;
+      Pos : Iir_Index32;
+   begin
+      if Len = 0 then
+         return Build_String (Null_String8, 0, Expr);
+      end if;
+
+      Prefix := Get_Prefix (Expr);
+      Prefix := Eval_Static_Expr (Prefix);
+
+      Eval_Range_Bounds (Suffix, Dir, Left, Right);
+
+      Pos := Eval_Pos_In_Range (Rng, Left);
+
+      case Get_Kind (Prefix) is
+         when Iir_Kind_String_Literal8 =>
+            declare
+               use Str_Table;
+               Str_Id : constant String8_Id := Get_String8_Id (Prefix);
+            begin
+               return Build_String (String8_Substring (Str_Id, Int32 (Pos)),
+                 Nat32 (Len), Expr);
+            end;
+         when Iir_Kind_Overflow_Literal =>
+            return Build_Overflow (Expr, Get_Type (Expr));
+         when others =>
+            Error_Kind ("eval_slice_name", Prefix);
+      end case;
+   end Eval_Slice_Name;
 
    function Eval_Indexed_Aggregate_By_Offset
      (Aggr : Iir; Off : Iir_Index32; Dim : Natural := 0) return Iir
@@ -3715,6 +3753,8 @@ package body Vhdl.Evaluation is
             return Eval_Selected_Element (Expr);
          when Iir_Kind_Indexed_Name =>
             return Eval_Indexed_Name (Expr);
+         when Iir_Kind_Slice_Name =>
+            return Eval_Slice_Name (Expr);
 
          when Iir_Kind_Parenthesis_Expression =>
             return Eval_Static_Expr_Orig (Get_Expression (Expr), Orig);
