@@ -56,6 +56,9 @@ package Str_Table is
    --  valid anymore.
    function String8_Address (Id : String8_Id) return System.Address;
 
+   --  Return a substring of a string (just add the offset OFF).
+   function String8_Substring (Id : String8_Id; Off : Nat32) return String8_Id;
+
    --  Free all the memory
    procedure Finalize;
 

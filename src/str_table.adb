@@ -86,6 +86,12 @@ package body Str_Table is
       return String8_Table.Table (Id)'Address;
    end String8_Address;
 
+   function String8_Substring (Id : String8_Id; Off : Nat32) return String8_Id
+   is
+   begin
+      return Id + String8_Id (Off);
+   end String8_Substring;
+
    procedure Initialize is
    begin
       String8_Table.Init;
