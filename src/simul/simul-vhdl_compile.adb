@@ -62,6 +62,7 @@ with Trans.Coverage;
 with Grt.Types; use Grt.Types;
 with Grt.Processes;
 with Grt.Signals;
+with Grt.Backtraces.Jit;
 
 with Grt.Rtis;
 with Grtlink;
@@ -2171,6 +2172,8 @@ package body Simul.Vhdl_Compile is
             end if;
          end;
       end if;
+
+      Grt.Backtraces.Jit.Symbolizer_Proc := Ortho_Jit.Symbolize'Access;
 
       --  Note: we don't want to finish ortho_jit as we still need to have
       --  access to the symbols.
