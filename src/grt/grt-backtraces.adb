@@ -25,6 +25,9 @@ with System;
 with Grt.Types; use Grt.Types;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Errors; use Grt.Errors;
+with Grt.Signals;
+with Grt.Processes;
+with Grt.Threads;
 with Grt.Backtraces.Impl;
 
 package body Grt.Backtraces is
@@ -219,12 +222,24 @@ package body Grt.Backtraces is
    procedure Put_Err_Backtrace (Bt : Backtrace_Addrs)
    is
       use System;
+      use Grt.Signals;
+      use Grt.Threads;
+      use Grt.Processes;
+
+      Proc : Process_Acc;
 
       Filename : Address;
       Lineno : Natural;
       Subprg : Address;
       Unknown : Boolean;
    begin
+      Proc := Get_Current_Process;
+      if Proc /= null then
+         Diag_C ("  instance: ");
+         Disp_Process_Name_Hook.all (Get_Error_Stream, Proc);
+         Newline_Err;
+      end if;
+
       if Bt.Size = 0
         or else Bt.Skip >= Bt.Size
       then

@@ -316,24 +316,24 @@ package body Grt.Signals is
          Disconnect_Time => Bad_Time);
    end Ghdl_Signal_Create_Resolution;
 
-   procedure Display_Signal_And_Sources (Sig : in Ghdl_Signal_Ptr) is
+   procedure Display_Signal_And_Sources (Sig : in Ghdl_Signal_Ptr)
+   is
+      use Grt.Astdio;
    begin
-      Grt.Astdio.Put(Grt.Stdio.stderr, "Signal ");
+      Put (Grt.Stdio.stderr, "Signal ");
       Disp_Signals.Put_Signal_Name(Grt.Stdio.stderr, Sig);
-      Grt.Astdio.Put(Grt.Stdio.stderr, " is driven by :");
-      Grt.Astdio.New_Line(Grt.Stdio.stderr);
+      Put (Grt.Stdio.stderr, " is driven by :");
+      New_Line (Grt.Stdio.stderr);
       if Sig.S.Nbr_Drivers /= 0 then
-         for I in 0 .. Sig.S.Nbr_Drivers - 1
-         loop
-            Grt.Processes.Disp_Process_Name(
-              Grt.Stdio.stderr,
-              Sig.S.Drivers.all(I).Proc);
-            Grt.Astdio.New_Line(Grt.Stdio.stderr);
+         for I in 0 .. Sig.S.Nbr_Drivers - 1 loop
+            Disp_Process_Name_Hook.all
+              (Grt.Stdio.stderr, Sig.S.Drivers.all(I).Proc);
+            New_Line (Grt.Stdio.stderr);
          end loop;
       end if;
       if Sig.Nbr_Ports /= 0 then
-         Grt.Astdio.Put(Grt.Stdio.stderr, "At least one port.");
-         Grt.Astdio.New_Line(Grt.Stdio.stderr);
+         Put (Grt.Stdio.stderr, "At least one port.");
+         New_Line (Grt.Stdio.stderr);
       end if;
    end Display_Signal_And_Sources;
 

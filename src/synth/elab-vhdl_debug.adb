@@ -24,6 +24,9 @@ with Std_Names;
 with Errorout;
 with Debuggers; use Debuggers;
 
+with Grt.Types;
+with Grt.Astdio;
+
 with Elab.Debugger; use Elab.Debugger;
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Annotations;
@@ -58,51 +61,70 @@ package body Elab.Vhdl_Debug is
                             & Natural'Image (Line));
    end Put_Stmt_Trace;
 
-   procedure Disp_Integer_Value (Val : Int64; Btype : Node)
+   procedure Disp_Integer_Value (Stream : Grt.Stdio.FILEs;
+                                 Val : Int64;
+                                 Btype : Node)
    is
+      use Grt.Types;
+      use Grt.Astdio;
+
       pragma Unreferenced (Btype);
    begin
-      Put_Int64 (Val);
+      Put_I64 (Stream, Ghdl_I64 (Val));
    end Disp_Integer_Value;
 
-   procedure Disp_Enumeration_Value (Val : Int64; Btype : Node)
+   procedure Disp_Enumeration_Value (Stream : Grt.Stdio.FILEs;
+                                     Val : Int64;
+                                     Btype : Node)
    is
+      use Grt.Astdio;
+
       Pos : constant Natural := Natural (Val);
       Enums : constant Node_Flist :=
         Get_Enumeration_Literal_List (Btype);
       Id : constant Name_Id :=
         Get_Identifier (Get_Nth_Element (Enums, Pos));
    begin
-      Put (Name_Table.Image (Id));
+      Put (Stream, Name_Table.Image (Id));
    end Disp_Enumeration_Value;
 
-   procedure Disp_Physical_Value (Val : Int64; Btype : Node)
+   procedure Disp_Physical_Value (Stream : Grt.Stdio.FILEs;
+                                  Val : Int64;
+                                  Btype : Node)
    is
+      use Grt.Types;
+      use Grt.Astdio;
       Id : constant Name_Id := Get_Identifier (Get_Primary_Unit (Btype));
    begin
-      Put_Int64 (Val);
-      Put (' ');
-      Put (Name_Table.Image (Id));
+      Put_I64 (Stream, Ghdl_I64 (Val));
+      Put (Stream, ' ');
+      Put (Stream, Name_Table.Image (Id));
    end Disp_Physical_Value;
 
-   procedure Disp_Float_Value (Val : Fp64; Btype : Node)
+   procedure Disp_Float_Value (Stream : Grt.Stdio.FILEs;
+                               Val : Fp64;
+                               Btype : Node)
    is
+      use Grt.Types;
+      use Grt.Astdio;
       pragma Unreferenced (Btype);
    begin
-      Put_Fp64 (Val);
+      Put_F64 (Stream, Ghdl_F64 (Val));
    end Disp_Float_Value;
 
-   procedure Disp_Discrete_Value (Val : Int64; Btype : Node) is
+   procedure Disp_Discrete_Value (Stream : Grt.Stdio.FILEs;
+                                  Val : Int64;
+                                  Btype : Node) is
    begin
       case Get_Kind (Btype) is
          when Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Integer_Subtype_Definition =>
-            Disp_Integer_Value (Val, Btype);
+            Disp_Integer_Value (Stream, Val, Btype);
          when Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
-            Disp_Enumeration_Value (Val, Btype);
+            Disp_Enumeration_Value (Stream, Val, Btype);
          when Iir_Kind_Physical_Type_Definition =>
-            Disp_Physical_Value (Val, Btype);
+            Disp_Physical_Value (Stream, Val, Btype);
          when others =>
             Vhdl.Errors.Error_Kind ("disp_discrete_value", Btype);
       end case;
@@ -229,7 +251,8 @@ package body Elab.Vhdl_Debug is
          when Type_Discrete
            | Type_Bit
            | Type_Logic =>
-            Disp_Discrete_Value (Read_Discrete (M), Get_Base_Type (Vtype));
+            Disp_Discrete_Value
+              (Grt.Stdio.stdout, Read_Discrete (M), Get_Base_Type (Vtype));
          when Type_Vector =>
             Disp_Value_Vector (M, Vtype, M.Typ.Abound);
          when Type_Array =>
@@ -311,11 +334,11 @@ package body Elab.Vhdl_Debug is
 
    procedure Disp_Discrete_Range (Rng : Discrete_Range_Type; Vtype : Node) is
    begin
-      Disp_Discrete_Value (Rng.Left, Vtype);
+      Disp_Discrete_Value (Grt.Stdio.stdout, Rng.Left, Vtype);
       Put (' ');
       Put_Dir (Rng.Dir);
       Put (' ');
-      Disp_Discrete_Value (Rng.Right, Vtype);
+      Disp_Discrete_Value (Grt.Stdio.stdout, Rng.Right, Vtype);
    end Disp_Discrete_Range;
 
    procedure Disp_Type (Typ : Type_Acc; Vtype : Node)
@@ -1163,7 +1186,8 @@ package body Elab.Vhdl_Debug is
 
       case Get_Kind (Parent_Scope) is
          when Iir_Kind_Architecture_Body
-           | Iir_Kind_Block_Statement =>
+           | Iir_Kind_Block_Statement
+           | Iir_Kinds_Process_Statement =>
             return Inst;
          when Iir_Kind_Component_Declaration =>
             if Components then
@@ -1195,9 +1219,12 @@ package body Elab.Vhdl_Debug is
       return Get_Instance_Parent (Pre_Parent);
    end Get_Instance_Path_Parent;
 
-   procedure Disp_Instance_Path (Inst : Synth_Instance_Acc;
+   procedure Disp_Instance_Path (Stream : Grt.Stdio.FILEs;
+                                 Inst : Synth_Instance_Acc;
                                  Components : Boolean := False)
    is
+      use Grt.Astdio;
+
       Pre_Parent_Inst : constant Synth_Instance_Acc :=
         Skip_Instance_Parent (Inst, Components);
       Parent_Inst : Synth_Instance_Acc;
@@ -1207,23 +1234,28 @@ package body Elab.Vhdl_Debug is
    begin
       if Pre_Parent_Inst = null then
          --  The top unit
-         Put ('/');
+         Put (Stream, '/');
          Parent_Scope := Get_Source_Scope (Inst);
          if Get_Kind (Parent_Scope) = Iir_Kind_Package_Declaration then
             Scope := Parent_Scope;
          else
             Scope := Get_Entity (Parent_Scope);
          end if;
-         Put (Image (Get_Identifier (Scope)));
+         Put (Stream, Image (Get_Identifier (Scope)));
          return;
       end if;
 
       Parent_Inst := Get_Instance_Parent (Pre_Parent_Inst);
       Parent_Scope := Get_Source_Scope (Parent_Inst);
-      Disp_Instance_Path (Parent_Inst, Components);
-      Put ('/');
+      Disp_Instance_Path (Stream, Parent_Inst, Components);
 
       Scope := Get_Source_Scope (Inst);
+      if Scope = Null_Node then
+         return;
+      end if;
+
+      Put (Stream, '/');
+
       if Get_Kind (Scope) in Iir_Kinds_Process_Statement then
          --  The name to display is the name of the process.
          Stmt := Scope;
@@ -1239,16 +1271,16 @@ package body Elab.Vhdl_Debug is
            (Parent_Inst, Get_Concurrent_Statement_Chain (Parent_Scope),
             Pre_Parent_Inst);
       end if;
-      Put (Image (Get_Identifier (Stmt)));
+      Put (Stream, Image (Get_Identifier (Stmt)));
       if Get_Kind (Stmt) = Iir_Kind_For_Generate_Statement then
          declare
             It : constant Node := Get_Parameter_Specification (Stmt);
             It_Type : constant Node := Get_Type (It);
             Val : constant Valtyp := Get_Value (Inst, It);
          begin
-            Put ("(");
-            Disp_Discrete_Value (Read_Discrete (Val), It_Type);
-            Put (")");
+            Put (Stream, "(");
+            Disp_Discrete_Value (Stream, Read_Discrete (Val), It_Type);
+            Put (Stream, ")");
          end;
       end if;
    end Disp_Instance_Path;

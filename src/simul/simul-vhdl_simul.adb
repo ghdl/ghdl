@@ -61,6 +61,7 @@ with Grt.Processes;
 with Grt.Errors;
 with Grt.Severity;
 with Grt.Lib;
+with Grt.Stdio;
 with Grt.Astdio;
 with Grt.Analog_Solver;
 with Grt.Sundials;
@@ -1962,7 +1963,8 @@ package body Simul.Vhdl_Simul is
 
       if Synth.Flags.Flag_Trace_Statements then
          Put ("run process: ");
-         Elab.Vhdl_Debug.Disp_Instance_Path (Process.Top_Instance);
+         Elab.Vhdl_Debug.Disp_Instance_Path
+           (Grt.Stdio.stdout, Process.Top_Instance);
          Put_Line (" (" & Vhdl.Errors.Disp_Location (Process.Proc) & ")");
       end if;
 

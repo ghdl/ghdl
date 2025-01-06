@@ -88,6 +88,10 @@ package Grt.Processes is
    Time_Domain : constant Ghdl_U8 := 1;
    Frequency_Domain : constant Ghdl_U8 := 0;
 
+   type Disp_Process_Name_Acc is access
+     procedure (Stream : Grt.Stdio.FILEs; Proc : Grt.Signals.Process_Acc);
+   Disp_Process_Name_Hook : Disp_Process_Name_Acc;
+
    type Process_Type is private;
    --  type Process_Acc is access all Process_Type;
 
@@ -103,9 +107,6 @@ package Grt.Processes is
 
    --  Total number of resumed processes.
    function Get_Nbr_Resumed_Processes return Long_Long_Integer;
-
-   -- Display the name of a process.
-   procedure Disp_Process_Name (Stream : Grt.Stdio.FILEs; Proc : Process_Acc);
 
    --  Instance is the parameter of the process procedure.
    --  This is in fact a fully opaque type whose content is private to the

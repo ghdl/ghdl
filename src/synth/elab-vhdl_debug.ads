@@ -17,6 +17,8 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 with Types; use Types;
 
+with Grt.Stdio;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Nodes_Walk; use Vhdl.Nodes_Walk;
 
@@ -27,12 +29,22 @@ package Elab.Vhdl_Debug is
    procedure Disp_Memtyp (M : Memtyp; Vtype : Node);
    function Walk_Declarations (Cb : Walk_Cb) return Walk_Status;
 
-   procedure Disp_Integer_Value (Val : Int64; Btype : Node);
-   procedure Disp_Enumeration_Value (Val : Int64; Btype : Node);
-   procedure Disp_Physical_Value (Val : Int64; Btype : Node);
-   procedure Disp_Float_Value (Val : Fp64; Btype : Node);
+   procedure Disp_Integer_Value (Stream : Grt.Stdio.FILEs;
+                                 Val : Int64;
+                                 Btype : Node);
+   procedure Disp_Float_Value (Stream : Grt.Stdio.FILEs;
+                               Val : Fp64;
+                               Btype : Node);
 
-   procedure Disp_Discrete_Value (Val : Int64; Btype : Node);
+   procedure Disp_Enumeration_Value (Stream : Grt.Stdio.FILEs;
+                                     Val : Int64;
+                                     Btype : Node);
+   procedure Disp_Physical_Value (Stream : Grt.Stdio.FILEs;
+                                  Val : Int64;
+                                  Btype : Node);
+   procedure Disp_Discrete_Value (Stream : Grt.Stdio.FILEs;
+                                  Val : Int64;
+                                  Btype : Node);
 
    procedure Disp_Declaration_Objects
      (Instance : Synth_Instance_Acc; Decl_Chain : Iir; Indent : Natural := 0);
@@ -53,7 +65,8 @@ package Elab.Vhdl_Debug is
 
    --  Disp full path name of INST.
    --  If COMPONENTS is true, also display components
-   procedure Disp_Instance_Path (Inst : Synth_Instance_Acc;
+   procedure Disp_Instance_Path (Stream : Grt.Stdio.FILEs;
+                                 Inst : Synth_Instance_Acc;
                                  Components : Boolean := False);
 
    procedure Put_Stmt_Trace (Stmt : Iir);

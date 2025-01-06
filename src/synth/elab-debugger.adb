@@ -23,6 +23,7 @@ with Name_Table;
 with Str_Table;
 
 with Grt.Types; use Grt.Types;
+with Grt.Stdio;
 
 with Vhdl.Errors;
 with Vhdl.Utils;
@@ -629,7 +630,7 @@ package body Elab.Debugger is
    is
       pragma Unreferenced (Line);
    begin
-      Disp_Instance_Path (Current_Instance);
+      Disp_Instance_Path (Grt.Stdio.stdout, Current_Instance);
       New_Line;
    end Print_Hierarchy_Path;
 

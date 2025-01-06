@@ -40,6 +40,7 @@ with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Prot;
 with Elab.Vhdl_Heap;
 with Elab.Vhdl_Insts;
+with Elab.Vhdl_Debug;
 
 with Synth.Vhdl_Expr;
 with Synth.Vhdl_Stmts;
@@ -62,9 +63,11 @@ with Trans.Coverage;
 with Grt.Types; use Grt.Types;
 with Grt.Processes;
 with Grt.Signals;
+with Grt.Stdio;
 with Grt.Backtraces.Jit;
-
+with Grt.Rtis_Addr;
 with Grt.Rtis;
+
 with Grtlink;
 
 with Ortho_Nodes; use Ortho_Nodes;
@@ -1967,27 +1970,31 @@ package body Simul.Vhdl_Compile is
 
       for I in Processes_Table.First .. Processes_Table.Last loop
          declare
-            P : Process_State_Type renames Processes_State (I);
-            Proc : constant Node := Processes_Table.Table (I).Proc;
+            use System;
+            S : Process_State_Type renames Processes_State (I);
+            P : Proc_Record_Type renames Processes_Table.Table (I);
+            Proc : constant Node := P.Proc;
+            Proc_Addr : constant Address :=
+              Processes_Table.Table (I).Inst.all'Address;
          begin
             case Get_Kind (Proc) is
                when Iir_Kind_Sensitized_Process_Statement =>
                   if Get_Postponed_Flag (Proc) then
                      Grt.Processes.Ghdl_Postponed_Sensitized_Process_Register
-                       (P.This, P.Subprg, null, System.Null_Address);
+                       (S.This, S.Subprg, null, Proc_Addr);
                   else
                      Grt.Processes.Ghdl_Sensitized_Process_Register
-                       (P.This, P.Subprg, null, System.Null_Address);
+                       (S.This, S.Subprg, null, Proc_Addr);
                   end if;
                   Simul.Vhdl_Simul.Register_Sensitivity (I);
                   Create_Process_Drivers (I);
                when Iir_Kind_Process_Statement =>
                   if Get_Postponed_Flag (Proc) then
                      Grt.Processes.Ghdl_Postponed_Process_Register
-                       (P.This, P.Subprg, null, System.Null_Address);
+                       (S.This, S.Subprg, null, Proc_Addr);
                   else
                      Grt.Processes.Ghdl_Process_Register
-                       (P.This, P.Subprg, null, System.Null_Address);
+                       (S.This, S.Subprg, null, Proc_Addr);
                   end if;
                   Create_Process_Drivers (I);
                when Iir_Kind_Psl_Assert_Directive
@@ -1995,7 +2002,7 @@ package body Simul.Vhdl_Compile is
                  | Iir_Kind_Psl_Cover_Directive
                  | Iir_Kind_Psl_Endpoint_Declaration =>
                   Grt.Processes.Ghdl_Sensitized_Process_Register
-                    (P.This, P.Subprg, null, System.Null_Address);
+                    (S.This, S.Subprg, null, Proc_Addr);
                   --  TODO: also async sensitivity ?
                   Simul.Vhdl_Simul.Register_Sensitivity (I);
                   --  Finalizer.
@@ -2004,14 +2011,14 @@ package body Simul.Vhdl_Compile is
                   begin
                      if Info.Psl_Proc_Final_Subprg /= O_Dnode_Null then
                         Grt.Processes.Ghdl_Finalize_Register
-                          (P.This,
+                          (S.This,
                            To_Proc_Acc
                              (Get_Address (Info.Psl_Proc_Final_Subprg)));
                      end if;
                   end;
                when Iir_Kind_Association_Element_By_Expression =>
                   Grt.Processes.Ghdl_Sensitized_Process_Register
-                    (P.This, P.Subprg, null, System.Null_Address);
+                    (S.This, S.Subprg, null, Proc_Addr);
                   Simul.Vhdl_Simul.Register_Sensitivity (I);
                   --  TODO: support direct drivers for inertial assocs
                   Simul.Vhdl_Simul.Create_Process_Drivers (I);
@@ -2040,6 +2047,27 @@ package body Simul.Vhdl_Compile is
          Def (Ortho, Res);
       end if;
    end Foreign_Hook;
+
+   procedure Disp_Process_Name (Stream : Grt.Stdio.FILEs;
+                                Proc : Grt.Signals.Process_Acc)
+   is
+      use System;
+      use Grt.Processes;
+      use Grt.Rtis_Addr;
+      use Grt.Rtis;
+
+      function To_Synth_Instance_Acc is new Ada.Unchecked_Conversion
+        (Address, Synth_Instance_Acc);
+
+      Proc_Rti : Rti_Context;
+      Sproc : Synth_Instance_Acc;
+   begin
+      Proc_Rti := Get_Rti_Context (Proc);
+      pragma Assert (Proc_Rti.Block = null);
+
+      Sproc := To_Synth_Instance_Acc (Proc_Rti.Base);
+      Elab.Vhdl_Debug.Disp_Instance_Path (Stream, Sproc);
+   end Disp_Process_Name;
 
    procedure Simulation
    is
@@ -2185,6 +2213,8 @@ package body Simul.Vhdl_Compile is
       --  Set hooks for debugger.
       Synth.Vhdl_Expr.Hook_Signal_Expr :=
         Simul.Vhdl_Simul.Hook_Signal_Expr'Access;
+
+      Grt.Processes.Disp_Process_Name_Hook := Disp_Process_Name'Access;
 
       Simul.Main.Simulation;
    end Simulation;

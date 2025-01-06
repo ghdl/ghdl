@@ -47,6 +47,7 @@ with Grt.Processes;
 with Grt.Signals; use Grt.Signals;
 with Grt.Disp_Signals;
 with Grt.Rtis_Addr;
+with Grt.Stdio;
 
 package body Simul.Vhdl_Debug is
 
@@ -89,7 +90,8 @@ package body Simul.Vhdl_Debug is
       Put (" [");
       Put_Uns32 (Uns32 (D.Proc));
       Put ("] ");
-      Disp_Instance_Path (Processes_Table.Table (D.Proc).Inst);
+      Disp_Instance_Path
+        (Grt.Stdio.stdout, Processes_Table.Table (D.Proc).Inst);
       New_Line;
       Put ("    noff: ");
       Put_Uns32 (D.Sig.Offs.Net_Off);
@@ -135,41 +137,45 @@ package body Simul.Vhdl_Debug is
 
    procedure Disp_Value (Value_Ptr : Ghdl_Value_Ptr;
                          Mode : Mode_Type;
-                         Btype : Node) is
+                         Btype : Node)
+   is
+      use Grt.Stdio;
    begin
       case Mode is
          when Mode_B1 =>
-            Disp_Enumeration_Value (Ghdl_B1'Pos (Value_Ptr.B1), Btype);
+            Disp_Enumeration_Value (stdout, Ghdl_B1'Pos (Value_Ptr.B1), Btype);
          when Mode_E8 =>
-            Disp_Enumeration_Value (Int64 (Value_Ptr.E8), Btype);
+            Disp_Enumeration_Value (stdout, Int64 (Value_Ptr.E8), Btype);
          when Mode_E32 =>
-            Disp_Enumeration_Value (Int64 (Value_Ptr.E32), Btype);
+            Disp_Enumeration_Value (stdout, Int64 (Value_Ptr.E32), Btype);
          when Mode_I32 =>
-            Disp_Integer_Value (Int64 (Value_Ptr.I32), Btype);
+            Disp_Integer_Value (stdout, Int64 (Value_Ptr.I32), Btype);
          when Mode_I64 =>
-            Disp_Integer_Value (Int64 (Value_Ptr.I64), Btype);
+            Disp_Integer_Value (stdout, Int64 (Value_Ptr.I64), Btype);
          when Mode_F64 =>
-            Disp_Float_Value (Fp64 (Value_Ptr.F64), Btype);
+            Disp_Float_Value (stdout, Fp64 (Value_Ptr.F64), Btype);
       end case;
    end Disp_Value;
 
    procedure Disp_Value (Value : Value_Union;
                          Mode : Mode_Type;
-                         Btype : Node) is
+                         Btype : Node)
+   is
+      use Grt.Stdio;
    begin
       case Mode is
          when Mode_B1 =>
-            Disp_Enumeration_Value (Ghdl_B1'Pos (Value.B1), Btype);
+            Disp_Enumeration_Value (stdout, Ghdl_B1'Pos (Value.B1), Btype);
          when Mode_E8 =>
-            Disp_Enumeration_Value (Int64 (Value.E8), Btype);
+            Disp_Enumeration_Value (stdout, Int64 (Value.E8), Btype);
          when Mode_E32 =>
-            Disp_Enumeration_Value (Int64 (Value.E32), Btype);
+            Disp_Enumeration_Value (stdout, Int64 (Value.E32), Btype);
          when Mode_I32 =>
-            Disp_Integer_Value (Int64 (Value.I32), Btype);
+            Disp_Integer_Value (stdout, Int64 (Value.I32), Btype);
          when Mode_I64 =>
-            Disp_Integer_Value (Int64 (Value.I64), Btype);
+            Disp_Integer_Value (stdout, Int64 (Value.I64), Btype);
          when Mode_F64 =>
-            Disp_Float_Value (Fp64 (Value.F64), Btype);
+            Disp_Float_Value (stdout, Fp64 (Value.F64), Btype);
       end case;
    end Disp_Value;
 
@@ -366,7 +372,7 @@ package body Simul.Vhdl_Debug is
 
    procedure Put_Signal_Name (Inst : Synth_Instance_Acc; Decl : Node) is
    begin
-      Disp_Instance_Path (Inst, True);
+      Disp_Instance_Path (Grt.Stdio.stdout, Inst, True);
       Put ('/');
 
       case Get_Kind (Decl) is
@@ -749,7 +755,7 @@ package body Simul.Vhdl_Debug is
             Put_Int32 (Int32 (I));
             Put (": ");
 
-            Disp_Instance_Path (Q.Inst, True);
+            Disp_Instance_Path (Grt.Stdio.stdout, Q.Inst, True);
             Put ('/');
             Disp_Quantity_Prefix (Q.Decl);
             Put ("  type: ");
@@ -777,7 +783,7 @@ package body Simul.Vhdl_Debug is
             Put_Int32 (Int32 (I));
             Put (": ");
 
-            Disp_Instance_Path (T.Inst, True);
+            Disp_Instance_Path (Grt.Stdio.stdout, T.Inst, True);
             Put ('/');
             Put (Image (Get_Identifier (T.Decl)));
             Put ("  across: ");
@@ -806,7 +812,7 @@ package body Simul.Vhdl_Debug is
             Put_Int32 (Int32 (I));
             Put (": ");
 
-            Disp_Instance_Path (S.Inst, True);
+            Disp_Instance_Path (Grt.Stdio.stdout, S.Inst, True);
             New_Line;
          end;
       end loop;
@@ -861,7 +867,7 @@ package body Simul.Vhdl_Debug is
    begin
       Put_Uns32 (Uns32 (Idx));
       Put (": ");
-      Disp_Instance_Path (Proc.Inst);
+      Disp_Instance_Path (Grt.Stdio.stdout, Proc.Inst);
       --  TODO: display label for non-process.
       Put ("  (");
       Put (Vhdl.Errors.Disp_Location (Proc.Proc));

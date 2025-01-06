@@ -24,12 +24,6 @@
 with Grt.Errors; use Grt.Errors;
 with Grt.Backtraces;
 
-with Grt.Signals;
-with Grt.Rtis_Addr;
-with Grt.Threads;
-with Grt.Processes;
-with Grt.Rtis_Utils;
-
 package body Grt.Errors_Exec is
    procedure Error_Call_Stack (Str : String; Skip : Natural)
    is
@@ -40,27 +34,9 @@ package body Grt.Errors_Exec is
       Error_E_Call_Stack (Bt);
    end Error_Call_Stack;
 
-   procedure Error_E_Call_Stack (Bt : Backtrace_Addrs)
-   is
-      use Grt.Signals;
-      use Grt.Rtis_Addr;
-      use Grt.Threads;
-      use Grt.Processes;
-      use Grt.Rtis_Utils;
-      Proc : Process_Acc;
-      Proc_Rti : Rti_Context;
+   procedure Error_E_Call_Stack (Bt : Backtrace_Addrs) is
    begin
       Newline_Err;
-
-      Proc := Get_Current_Process;
-      if Proc /= null then
-         Proc_Rti := Get_Rti_Context (Proc);
-         if Proc_Rti /= Null_Context then
-            Diag_C ("in process ");
-            Put (Get_Error_Stream, Proc_Rti);
-            Newline_Err;
-         end if;
-      end if;
 
       Grt.Backtraces.Put_Err_Backtrace (Bt);
 

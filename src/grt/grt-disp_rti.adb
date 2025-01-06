@@ -28,6 +28,7 @@ with Grt.Errors; use Grt.Errors;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
 with Grt.Signals;
+with Grt.Processes;
 
 package body Grt.Disp_Rti is
    procedure Disp_Kind (Kind : Ghdl_Rtik);
@@ -1438,6 +1439,18 @@ package body Grt.Disp_Rti is
       P (" --dump-rti         dump Run Time Information");
    end Disp_Rti_Help;
 
+   procedure Disp_Process_Name (Stream : FILEs; Proc : Grt.Signals.Process_Acc)
+   is
+      use Grt.Processes;
+
+      Proc_Rti : Rti_Context;
+   begin
+      Proc_Rti := Get_Rti_Context (Proc);
+      if Proc_Rti /= Null_Context then
+         Put (Stream, Proc_Rti);
+      end if;
+   end Disp_Process_Name;
+
    Disp_Rti_Hooks : aliased constant Hooks_Type :=
      (Desc => new String'("dump-rti: implement --dump-rti"),
       Option => Disp_Rti_Option'Access,
@@ -1449,6 +1462,7 @@ package body Grt.Disp_Rti is
    procedure Register is
    begin
       Register_Hooks (Disp_Rti_Hooks'Access);
+      Grt.Processes.Disp_Process_Name_Hook := Disp_Process_Name'Access;
    end Register;
 
 end Grt.Disp_Rti;
