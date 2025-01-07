@@ -519,7 +519,13 @@ package body Netlists.Disp_Vhdl is
    end Need_Edge;
 
    type Conv_Type is
-     (Conv_None, Conv_Slv, Conv_Unsigned, Conv_Signed, Conv_Edge, Conv_Clock);
+     (Conv_None,
+     Conv_Slv, Conv_Unsigned, Conv_Signed,
+     Conv_Edge, Conv_Clock,
+
+     --  Only for input: disp the net (prepended by ", ") if it's a real net;
+     --  do not display constant expressions.
+     Conv_Sensitivity);
 
    procedure Disp_Net_Expr (N : Net; Inst : Instance; Conv : Conv_Type)
    is
@@ -558,11 +564,16 @@ package body Netlists.Disp_Vhdl is
               | Conv_Clock =>
                --  Not expected: a constant is not an edge.
                raise Internal_Error;
+            when Conv_Sensitivity =>
+               null;
          end case;
       else
          case Conv is
             when Conv_None
               | Conv_Slv =>
+               Disp_Net_Name (N);
+            when Conv_Sensitivity =>
+               Wr (", ");
                Disp_Net_Name (N);
             when Conv_Edge =>
                case Edge_Module_Id (Get_Id (Net_Inst)) is
@@ -640,6 +651,9 @@ package body Netlists.Disp_Vhdl is
                when 'c' =>
                   Conv := Conv_Clock;
                   I := I + 1;
+               when 'S' =>
+                  Conv := Conv_Sensitivity;
+                  I := I + 1;
                when others =>
                   Conv := Conv_None;
             end case;
@@ -665,7 +679,8 @@ package body Netlists.Disp_Vhdl is
                      when Conv_Signed =>
                         Wr_Int32 (To_Int32 (V));
                      when Conv_Edge
-                       | Conv_Clock =>
+                       | Conv_Clock
+                       | Conv_Sensitivity =>
                         raise Internal_Error;
                   end case;
                when 'l' =>
@@ -1124,7 +1139,7 @@ package body Netlists.Disp_Vhdl is
             null;
          when Id_Adff
            | Id_Iadff =>
-            Disp_Template ("  process (\ci0, \i2)" & NL &
+            Disp_Template ("  process (\ci0, \i2\Si3)" & NL &
                            "  begin" & NL &
                            "    if \i2 = '1' then" & NL &
                            "      \o0 <= \i3;" & NL &
