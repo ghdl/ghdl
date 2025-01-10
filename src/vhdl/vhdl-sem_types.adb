@@ -827,7 +827,9 @@ package body Vhdl.Sem_Types is
          when Iir_Kinds_Scalar_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_File_Type_Definition
-           | Iir_Kind_File_Subtype_Definition =>
+           | Iir_Kind_File_Subtype_Definition
+           | Iir_Kind_Access_Type_Definition
+           | Iir_Kind_Access_Subtype_Definition =>
             return Fully_Constrained;
          when Iir_Kind_Error =>
             --  Why not ?
