@@ -176,17 +176,17 @@ package body Vhdl.Configuration is
          begin
             Bod := Libraries.Find_Secondary_Unit (Unit, Null_Identifier);
             if Get_Need_Body (Lib_Unit) then
-               if not Flags.Flag_Elaborate_With_Outdated then
-                  --  LIB_UNIT requires a body.
-                  if Bod = Null_Iir then
-                     Error_Msg_Elab
-                       (Lib_Unit, "body of %n was never analyzed", +Lib_Unit);
-                  elsif Get_Date (Bod) < Get_Date (Unit) then
-                     --  Cannot use BOD as location, as the location may not
-                     --  exist.
-                     Error_Msg_Elab (Lib_Unit, "%n is outdated", +Bod);
-                     Bod := Null_Iir;
-                  end if;
+               --  LIB_UNIT requires a body.
+               if Bod = Null_Iir then
+                  Error_Msg_Elab
+                    (Lib_Unit, "body of %n was never analyzed", +Lib_Unit);
+               elsif not Flags.Flag_Elaborate_With_Outdated
+                 and then Get_Date (Bod) < Get_Date (Unit)
+               then
+                  --  Cannot use BOD as location, as the location may not
+                  --  exist.
+                  Error_Msg_Elab (Lib_Unit, "%n is outdated", +Bod);
+                  Bod := Null_Iir;
                end if;
             else
                if Bod /= Null_Iir
