@@ -3243,21 +3243,32 @@ package body Vhdl.Sem is
          return;
       end if;
 
+      --  Add dependency to the package body
       --  FIXME: unless the parent is a package declaration library unit, the
       --  design unit depends on the body.
-      if Get_Need_Body (Pkg) and then not Is_Nested_Package (Pkg) then
-         Bod := Get_Package_Body (Pkg);
+      if not Is_Nested_Package (Pkg) then
+         --  Find the body
+         Bod := Libraries.Find_Secondary_Unit
+           (Get_Design_Unit (Pkg), Null_Identifier);
          if Is_Null (Bod) then
+            --  It's an error if the body is required
+            if Get_Need_Body (Pkg) then
+               Error_Msg_Sem (+Decl, "cannot find package body of %n", +Pkg);
+            end if;
+         else
+            --  As there is a body, the unit depends on it.
+            --  Force the need body flag, so that the body will be expanded
+            --  if needed
+            Set_Need_Body (Pkg, True);
+            --  TODO: load only if the package is macro expanded
             Bod := Load_Secondary_Unit
               (Get_Design_Unit (Pkg), Null_Identifier, Decl);
-         else
-            Bod := Get_Design_Unit (Bod);
+            if Bod /= Null_Iir then
+               Add_Dependence (Bod);
+            end if;
          end if;
-         if Is_Null (Bod) then
-            Error_Msg_Sem (+Decl, "cannot find package body of %n", +Pkg);
-         else
-            Add_Dependence (Bod);
-         end if;
+      else
+         Bod := Null_Iir;
       end if;
 
       --  Instantiate the declaration after analyse of the body.  So that
@@ -3274,7 +3285,7 @@ package body Vhdl.Sem is
          Set_Immediate_Body_Flag (Decl, False);
          Mark_Declarations_Elaborated (Decl, False);
       else
-         if Get_Need_Body (Pkg) then
+         if Get_Need_Body (Pkg) or else Bod /= Null_Iir then
             Set_Immediate_Body_Flag (Decl, True);
          end if;
       end if;
