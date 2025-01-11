@@ -596,6 +596,7 @@ package body Trans.Chap3 is
    begin
       Start_Record_Aggr (List, Binfo.B.Bounds_Type);
 
+      --  Range of each index.
       for I in Flist_First .. Flist_Last (Indexes_List) loop
          Index := Get_Index_Type (Indexes_List, I);
          New_Record_Aggr_El
@@ -637,6 +638,7 @@ package body Trans.Chap3 is
          Bel := Get_Nth_Element (El_Blist, I);
          Bel_Info := Get_Info (Bel);
          if Bel_Info.Field_Bound /= O_Fnode_Null then
+            --  Offset of each unbounded fields (* 2 if can have signal)
             for Kind in Mode_Value .. Type_To_Last_Object_Kind (Base_Type)
             loop
                if Info.Ortho_Type (Kind) /= O_Tnode_Null then

@@ -842,10 +842,12 @@ package body Elab.Vhdl_Objtypes is
 
    --  Compute size and alignment for bounds of TYP.
    procedure Update_Bounds_Size (Typ : Type_Acc;
+                                 Has_Signal : Boolean;
                                  Sz : in out Size_Type;
                                  Al : in out Palign_Type);
 
    procedure Update_Layout_Size (Typ : Type_Acc;
+                                 Has_Signal : Boolean;
                                  Sz : in out Size_Type;
                                  Al : in out Palign_Type) is
    begin
@@ -866,14 +868,14 @@ package body Elab.Vhdl_Objtypes is
                --  Layout of an array is sizes + bounds.
                B_Sz := 2 * Ghdl_Index_Sz;
                B_Al := Ghdl_Index_Al;
-               Update_Bounds_Size (Typ, B_Sz, B_Al);
+               Update_Bounds_Size (Typ, Has_Signal, B_Sz, B_Al);
                Sz := Align (Sz, B_Al);
                Sz := Sz + B_Sz;
                Al := Palign_Type'Max (Al, B_Al);
             end;
          when Type_Unbounded_Record =>
             --  Same as bounds.
-            Update_Bounds_Size (Typ, Sz, Al);
+            Update_Bounds_Size (Typ, Has_Signal, Sz, Al);
          when Type_Slice
            | Type_File
            | Type_Protected =>
@@ -882,6 +884,7 @@ package body Elab.Vhdl_Objtypes is
    end Update_Layout_Size;
 
    procedure Update_Bounds_Size (Typ : Type_Acc;
+                                 Has_Signal : Boolean;
                                  Sz : in out Size_Type;
                                  Al : in out Palign_Type) is
    begin
@@ -893,7 +896,7 @@ package body Elab.Vhdl_Objtypes is
            | Type_Access =>
             null;
          when Type_Array_Unbounded =>
-            Update_Bounds_Size (Typ.Arr_El, Sz, Al);
+            Update_Bounds_Size (Typ.Arr_El, Has_Signal, Sz, Al);
          when Type_Unbounded_Array
            | Type_Unbounded_Vector =>
             declare
@@ -927,10 +930,10 @@ package body Elab.Vhdl_Objtypes is
 
                if not Typ.Ulast then
                   --  Continue with next index.
-                  Update_Bounds_Size (Typ.Uarr_El, Sz, Al);
+                  Update_Bounds_Size (Typ.Uarr_El, Has_Signal, Sz, Al);
                else
                   --  Continue with the element.
-                  Update_Layout_Size (Typ.Uarr_El, Sz, Al);
+                  Update_Layout_Size (Typ.Uarr_El, Has_Signal, Sz, Al);
                end if;
 
             end;
@@ -947,9 +950,13 @@ package body Elab.Vhdl_Objtypes is
                      El : Rec_El_Type renames Typ.Rec.E (I);
                   begin
                      if not El.Typ.Is_Static then
-                        --  Add offset field (alignment is ok).
-                        B_Sz := B_Sz + Ghdl_Index_Sz;
-                        Update_Layout_Size (El.Typ, B_Sz, B_Al);
+                        --  Add offset fields (val and sig, alignment is ok).
+                        if Has_Signal then
+                           B_Sz := B_Sz + 2 * Ghdl_Index_Sz;
+                        else
+                           B_Sz := B_Sz + Ghdl_Index_Sz;
+                        end if;
+                        Update_Layout_Size (El.Typ, Has_Signal, B_Sz, B_Al);
                      end if;
                   end;
                end loop;
@@ -964,18 +971,21 @@ package body Elab.Vhdl_Objtypes is
       end case;
    end Update_Bounds_Size;
 
-   function Compute_Bounds_Size (Typ : Type_Acc) return Size_Type
+   function Compute_Bounds_Size (Typ : Type_Acc; Has_Signal : Boolean)
+                                return Size_Type
    is
       Res : Size_Type;
       Al : Palign_Type;
    begin
       Res := 0;
       Al := 0;
-      Update_Bounds_Size (Typ, Res, Al);
+      Update_Bounds_Size (Typ, Has_Signal, Res, Al);
       return Res;
    end Compute_Bounds_Size;
 
-   function Create_Access_Type (Parent_Type : Type_Acc; Acc_Type : Type_Acc)
+   function Create_Access_Type (Parent_Type : Type_Acc;
+                                Acc_Type : Type_Acc;
+                                Has_Signal : Boolean)
                                return Type_Acc
    is
       subtype Access_Type_Type is Type_Type (Type_Access);
@@ -991,7 +1001,7 @@ package body Elab.Vhdl_Objtypes is
       else
          Type_Sz := Compute_Size_Type (Acc_Type);
          if Parent_Type = null then
-            Bnd_Sz := Compute_Bounds_Size (Acc_Type);
+            Bnd_Sz := Compute_Bounds_Size (Acc_Type, Has_Signal);
          else
             Bnd_Sz := Parent_Type.Acc_Bnd_Sz;
          end if;
@@ -1009,11 +1019,13 @@ package body Elab.Vhdl_Objtypes is
                                                 Acc_Bnd_Sz => Bnd_Sz)));
    end Create_Access_Type;
 
-   procedure Complete_Access_Type (Acc_Type : Type_Acc; Des_Typ : Type_Acc) is
+   procedure Complete_Access_Type (Acc_Type : Type_Acc;
+                                   Des_Typ : Type_Acc;
+                                   Has_Signal : Boolean) is
    begin
       Acc_Type.Acc_Acc := Des_Typ;
       Acc_Type.Acc_Type_Sz := Compute_Size_Type (Des_Typ);
-      Acc_Type.Acc_Bnd_Sz := Compute_Bounds_Size (Des_Typ);
+      Acc_Type.Acc_Bnd_Sz := Compute_Bounds_Size (Des_Typ, Has_Signal);
    end Complete_Access_Type;
 
    function Create_File_Type (File_Type : Type_Acc) return Type_Acc

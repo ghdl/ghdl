@@ -386,7 +386,9 @@ package body Elab.Vhdl_Types is
            (Syn_Inst, Des_Type, null);
       end if;
 
-      Typ := Create_Access_Type (null, Des_Typ);
+      Typ := Create_Access_Type
+        (null, Des_Typ, (Get_Signal_Type_Flag (Des_Type)
+                         and then Get_Has_Signal_Flag (Des_Type)));
       return Typ;
    end Synth_Access_Type_Definition;
 
@@ -394,6 +396,8 @@ package body Elab.Vhdl_Types is
                                           Incomp : Node;
                                           Des_Def : Node)
    is
+      Has_Signal : constant Boolean :=
+        Get_Signal_Type_Flag (Des_Def) and then Get_Has_Signal_Flag (Des_Def);
       Des_Typ : Type_Acc;
       Acc : Node;
       Acc_Typ : Type_Acc;
@@ -404,7 +408,7 @@ package body Elab.Vhdl_Types is
       Acc := Get_Incomplete_Type_Ref_Chain (Incomp);
       while Acc /= Null_Node loop
          Acc_Typ := Get_Subtype_Object (Syn_Inst, Acc);
-         Complete_Access_Type (Acc_Typ, Des_Typ);
+         Complete_Access_Type (Acc_Typ, Des_Typ, Has_Signal);
          Acc := Get_Incomplete_Type_Ref_Chain (Acc);
       end loop;
    end Elab_Incomplete_Type_Finish;
@@ -830,7 +834,7 @@ package body Elab.Vhdl_Types is
             begin
                Acc_Typ := Synth_Subtype_Indication
                  (Syn_Inst, Get_Designated_Type (Atype));
-               return Create_Access_Type (Parent_Typ, Acc_Typ);
+               return Create_Access_Type (Parent_Typ, Acc_Typ, False);
             end;
          when Iir_Kind_File_Subtype_Definition =>
             --  Same as parent.
