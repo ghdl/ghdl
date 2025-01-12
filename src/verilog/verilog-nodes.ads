@@ -4635,10 +4635,12 @@ package Verilog.Nodes is
    function Get_Expr_Origin (N : Node) return Node;
    procedure Set_Expr_Origin (N : Node; Orig : Node);
 
+   --  Index (of the least significant word) in verilog.bn_tables
    --  Field: Field1 (uc)
    function Get_Bignum_Index (N : Node) return Bn_Index;
    procedure Set_Bignum_Index (N : Node; Idx : Bn_Index);
 
+   --  Number of bits
    --  Field: Field2 (uc)
    function Get_Bignum_Len (N : Node) return Uns32;
    procedure Set_Bignum_Len (N : Node; Len : Uns32);

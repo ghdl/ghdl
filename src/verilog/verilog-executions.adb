@@ -2069,6 +2069,27 @@ package body Verilog.Executions is
                   end case;
                end loop;
             end;
+         when N_Bignum =>
+            declare
+               Etype : Node;
+            begin
+               Etype := Get_Expr_Type (Expr);
+               loop
+                  case Get_Kind (Etype) is
+                     when N_Log_Packed_Array_Cst =>
+                        Compute_Bignum (To_Logvec_Ptr (Dest), Expr);
+                        exit;
+--                     when N_Bit_Packed_Array_Cst =>
+--                        Compute_Bignum (To_Bitvec_Ptr (Dest), Expr);
+--                        exit;
+                     when N_Enum_Type =>
+                        Etype := Get_Enum_Base_Type (Etype);
+                     when others =>
+                        Error_Kind
+                          ("execute_expression(bignum)", Get_Expr_Type (Expr));
+                  end case;
+               end loop;
+            end;
          when N_Real_Number =>
             Execute_Real_Number (Dest, Expr);
          when N_Unbased_Literal =>

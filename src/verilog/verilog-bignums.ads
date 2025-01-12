@@ -119,6 +119,9 @@ package Verilog.Bignums is
    procedure Compute_Unbased_Literal (Dest : Bitvec_Ptr; Num : Node);
    procedure Compute_Unbased_Literal (Dest : Logic_Ptr; Num : Node);
 
+   --  Convert an N_Bignum node to DEST.
+   procedure Compute_Bignum (Dest : Logvec_Ptr; Num : Node);
+
    --  Evaluate VAL as a conditional predicate.
    function Compute_Predicate (Val : Logvec_Ptr; Width : Width_Type)
                               return Tri_State_Type;

@@ -16,6 +16,7 @@
 
 with Simple_IO;
 
+with Verilog.Bn_Tables;
 with Verilog.Errors; use Verilog.Errors;
 
 
@@ -181,6 +182,7 @@ package body Verilog.Bignums is
       end if;
 
       --  Sign extend
+      --  FIXME: We assume the number has already been extended.
       if (Ezx and 1) = 1 then
          Ezx := not 0;
          Eval := Shift_Right_Arithmetic
@@ -194,7 +196,7 @@ package body Verilog.Bignums is
             Eval := 0;
          end if;
       end if;
-      for I in 2 .. Digit_Index (Sz / Digit_Width) - 1 loop
+      for I in 2 .. To_Last (Sz) loop
          Dest (I) := (Val => Eval, Zx => Ezx);
       end loop;
    end Compute_Number;
@@ -216,6 +218,22 @@ package body Verilog.Bignums is
          raise Internal_Error;
       end if;
    end Compute_Number;
+
+   procedure Compute_Bignum (Dest : Logvec_Ptr; Num : Node)
+   is
+      Etype : constant Node := Get_Expr_Type (Num);
+      pragma Assert (Get_Kind (Etype) = N_Log_Packed_Array_Cst
+                       or else Get_Kind (Etype) = N_Enum_Type);
+      Sz : constant Width_Type := Get_Type_Width (Etype);
+      Len : constant Uns32 := Get_Bignum_Len (Num);
+      Idx : constant Bn_Index := Get_Bignum_Index (Num);
+      Last : constant Digit_Index := To_Last (Sz);
+      pragma Assert (Sz = Width_Type (Len));
+   begin
+      for I in 0 .. Last loop
+         Dest (I) := Verilog.Bn_Tables.Bn_Table.Table (Idx + Bn_Index (I));
+      end loop;
+   end Compute_Bignum;
 
    procedure Compute_Unbased_Literal (Dest : Logvec_Ptr; Num : Node)
    is

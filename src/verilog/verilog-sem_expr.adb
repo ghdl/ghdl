@@ -2234,7 +2234,8 @@ package body Verilog.Sem_Expr is
       Ntype : Node;
    begin
       case Get_Kind (Expr) is
-         when N_Number =>
+         when N_Number
+           | N_Bignum =>
             --  At this time, numbers don't have a type.
             --  FIXME: why is it not true ?
             Ntype := Get_Expr_Type (Expr);
@@ -2506,6 +2507,7 @@ package body Verilog.Sem_Expr is
 
       case Get_Kind (Expr) is
          when N_Number
+            | N_Bignum
             | N_Computed_Number
             | N_String_Literal
             | N_Aggregate_Literal =>

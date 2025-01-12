@@ -40,6 +40,7 @@ package body Verilog.Sem_Eval is
       loop
          case Get_Kind (Res) is
             when N_Number
+               | N_Bignum
                | N_Computed_Number
                | N_Unbased_Literal
                | N_Real_Number
