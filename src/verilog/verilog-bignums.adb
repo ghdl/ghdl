@@ -163,19 +163,40 @@ package body Verilog.Bignums is
       pragma Assert (Get_Kind (Etype) = N_Log_Packed_Array_Cst
                        or else Get_Kind (Etype) = N_Enum_Type);
       Sz : constant Width_Type := Get_Type_Width (Etype);
+      Eval, Ezx : Uns32;
    begin
       pragma Assert (Digit_Width = 32);
+      Dest (0) := (Val => Get_Number_Lo_Val (Num),
+                   Zx => Get_Number_Lo_Zx (Num));
       if Sz <= Digit_Width then
-         Dest (0) := (Val => Get_Number_Lo_Val (Num),
-                      Zx => Get_Number_Lo_Zx (Num));
-      elsif Sz <= 2 * Digit_Width then
-         Dest (0) := (Val => Get_Number_Lo_Val (Num),
-                      Zx => Get_Number_Lo_Zx (Num));
-         Dest (1) := (Val => Get_Number_Hi_Val (Num),
-                      Zx => Get_Number_Hi_Zx (Num));
-      else
-         raise Internal_Error;
+         return;
       end if;
+
+      Eval := Get_Number_Hi_Val (Num);
+      Ezx := Get_Number_Hi_Zx (Num);
+      Dest (1) := (Val => Eval,
+                   Zx => Ezx);
+      if Sz <= 2 * Digit_Width then
+         return;
+      end if;
+
+      --  Sign extend
+      if (Ezx and 1) = 1 then
+         Ezx := not 0;
+         Eval := Shift_Right_Arithmetic
+           (Shift_Left (Eval, Digit_Width - 1), Digit_Width - 1);
+      else
+         Ezx := 0;
+         if Get_Signed_Flag (Num) then
+            Eval := Shift_Right_Arithmetic
+              (Shift_Left (Eval, Digit_Width - 1), Digit_Width - 1);
+         else
+            Eval := 0;
+         end if;
+      end if;
+      for I in 2 .. Digit_Index (Sz / Digit_Width) - 1 loop
+         Dest (I) := (Val => Eval, Zx => Ezx);
+      end loop;
    end Compute_Number;
 
    procedure Compute_Number (Dest : Bitvec_Ptr; Num : Node)
