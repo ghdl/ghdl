@@ -260,6 +260,7 @@ package body Trans.Chap7 is
                Assoc : Iir;
                El : Iir;
                Bel : Iir;
+               Etype : Iir;
             begin
                Start_Record_Aggr
                  (List, Get_Ortho_Type (Aggr_Type, Mode_Value));
@@ -274,9 +275,20 @@ package body Trans.Chap7 is
                      if Is_Static_Type (Get_Info (Get_Type (Bel))) = Static
                      then
                         El := Get_Associated_Expr (Assoc);
+                        Etype := Get_Type (El);
+                        if Get_Kind (Etype)
+                          in Iir_Kinds_Discrete_Type_Definition
+                        then
+                           --  If the type is discrete, there can be an
+                           --  implicit conversion.
+                           --  If the type is composite, the type of the
+                           --  expression should be kept in case of unbounded
+                           --  element type (we don't want the unbounded
+                           --  representation).
+                           Etype := Get_Type (Bel);
+                        end if;
                         New_Record_Aggr_El
-                          (List,
-                           Translate_Static_Expression (El, Get_Type (El)));
+                          (List, Translate_Static_Expression (El, Etype));
                      end if;
                      Assoc := Get_Chain (Assoc);
                   end loop;
@@ -3822,7 +3834,7 @@ package body Trans.Chap7 is
       Assoc := Get_Association_Choices_Chain (Aggr);
       while Assoc /= Null_Iir loop
          --  Get the associated expression, possibly from the first choice
-         --  in a lidt of choices.
+         --  in a list of choices.
          N_El_Expr := Get_Associated_Expr (Assoc);
          if N_El_Expr /= Null_Iir then
             El_Expr := N_El_Expr;
