@@ -63,7 +63,7 @@ jobs:
           investigate: true
 
       - name: Verify GHDL version via Bash
-        if: matrix.name == 'Linux' || matrix.name == 'macOS' || ( matrix.name == 'Windows' && matrix.runtime == '' )
+        if: matrix.name == 'Ubuntu' || matrix.name == 'macOS' || ( matrix.name == 'Windows' && matrix.runtime == '' )
         shell: bash   # ${{ steps.detect.outputs.shell }}
         run: |
           ANSI_LIGHT_RED=$'\x1b[91m'
@@ -73,7 +73,7 @@ jobs:
           printf "which ghdl: %s\n" "$(which ghdl)"
 
           expected="${{ inputs.ghdl_version }}"
-          printf "%s\n" "Verify GHDL version '${expected}' ..."
+          printf "%s" "Verify GHDL version '${expected}' ... "
           if [[ "$(ghdl --version | head -n 1)" =~ ${expected//./\\.} ]]; then
             printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
           else
@@ -95,7 +95,7 @@ jobs:
           printf "which ghdl: %s\n" "$(which ghdl)"
 
           expected="${{ inputs.ghdl_version }}"
-          printf "%s" "Verify GHDL version '${expected}' ..."
+          printf "%s" "Verify GHDL version '${expected}' ... "
           if [[ "$(ghdl --version | head -n 1)" =~ ${expected//./\\.} ]]; then
             printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
           else
