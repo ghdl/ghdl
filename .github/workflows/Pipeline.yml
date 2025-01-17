@@ -308,6 +308,7 @@ jobs:
         pyghdl=${{ needs.Params.outputs.pyghdl_version }}
         pacghdl=${{ needs.Params.outputs.pacghdl_version }}
       nightly_name: nightly
+      nightly_title: "Nightly Release"
       nightly_description: |
         This *nightly* release contains all latest and important artifacts created by GHDL's CI pipeline.
 
@@ -459,3 +460,12 @@ jobs:
         pyGHDL-Windows-x86_64-Python-3.11:      pyGHDL-%pyghdl%-cp311-cp311-win_amd64.whl:                    pyGHDL,windows,2022,x86-64,py3.11,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.11
         pyGHDL-Windows-x86_64-Python-3.12:      pyGHDL-%pyghdl%-cp312-cp312-win_amd64.whl:                    pyGHDL,windows,2022,x86-64,py3.12,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.12
         pyGHDL-Windows-x86_64-Python-3.13:      pyGHDL-%pyghdl%-cp313-cp313-win_amd64.whl:                    pyGHDL,windows,2022,x86-64,py3.13,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.13
+
+  Test-SetupGHDL:
+    uses: ./.github/workflows/Test-SetupGHDL.yml
+    needs:
+      - Params
+      - Nightly
+    if: github.ref == 'refs/tags/nightly'
+    with:
+      ghdl_version: ${{ needs.Params.outputs.ghdl_version }}

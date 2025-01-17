@@ -39,15 +39,15 @@ jobs:
           path: public
 
       - name: 📥 Download artifacts '${{ inputs.coverage }}' from 'PublishCoverageResults' job
-        if: ${{ inputs.coverage != '' }}
         uses: pyTooling/download-artifact@v4
+        if: ${{ inputs.coverage != '' }}
         with:
           name: ${{ inputs.coverage }}
           path: public/coverage
 
       - name: 📥 Download artifacts '${{ inputs.typing }}' from 'StaticTypeCheck' job
-        if: ${{ inputs.typing != '' }}
         uses: pyTooling/download-artifact@v4
+        if: ${{ inputs.typing != '' }}
         with:
           name: ${{ inputs.typing }}
           path: public/typing

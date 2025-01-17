@@ -1,0 +1,113 @@
+name: Verification of setup-ghdl
+
+on:
+  workflow_call:
+    inputs:
+      ghdl_version:
+        description: 'Version of the GHDL.'
+        required: true
+        type: string
+
+jobs:
+  Setup-GHDL-Nightly:
+    name: ${{ matrix.icon }} Setup GHDL ${{ matrix.backend }} on ${{ matrix.name }}
+    runs-on: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+#         - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-20.04', 'runtime': '',        'shell': 'bash',      'backend': 'mcode'}
+#         - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'shell': 'bash',      'backend': 'xcode'}
+          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'shell': 'bash',      'backend': 'mcode'}
+          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'shell': 'bash',      'backend': 'llvm'}
+          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'shell': 'bash',      'backend': 'llvm-jit'}
+          - {'icon': '🐧',   'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'runtime': '',        'shell': 'bash',      'backend': 'gcc'}
+#         - {'icon': '🍎',   'name': 'macOS',   'image': 'macos-13',     'runtime': '',        'shell': 'bash',      'backend': 'gcc'}
+          - {'icon': '🍎',   'name': 'macOS',   'image': 'macos-13',     'runtime': '',        'shell': 'bash',      'backend': 'mcode'}
+          - {'icon': '🍎',   'name': 'macOS',   'image': 'macos-13',     'runtime': '',        'shell': 'bash',      'backend': 'llvm'}
+          - {'icon': '🍏',   'name': 'macOS',   'image': 'macos-14',     'runtime': '',        'shell': 'bash',      'backend': 'llvm'}
+          - {'icon': '🪟',   'name': 'Windows', 'image': 'windows-2022', 'runtime': '',        'shell': 'bash',      'backend': 'mcode'}
+#         - {'icon': '🪟⬛', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'mingw32', 'shell': 'bash',      'backend': 'mcode'}
+          - {'icon': '🪟🟦', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'mingw64', 'shell': 'msys2 {0}', 'backend': 'mcode'}
+          - {'icon': '🪟🟦', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'mingw64', 'shell': 'msys2 {0}', 'backend': 'llvm'}
+          - {'icon': '🪟🟦', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'mingw64', 'shell': 'msys2 {0}', 'backend': 'llvm-jit'}
+          - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'shell': 'msys2 {0}', 'backend': 'mcode'}
+          - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'shell': 'msys2 {0}', 'backend': 'llvm'}
+          - {'icon': '🪟🟨', 'name': 'Windows', 'image': 'windows-2022', 'runtime': 'ucrt64',  'shell': 'msys2 {0}', 'backend': 'llvm-jit'}
+
+    steps:
+#      - name: Detect correct shell
+#        id: detect
+#        shell: bash
+#        run: |
+#          # Detect correct shell
+#          if [[ "${{ matrix.name }}" == "Windows" && "${{ matrix.runtime }}" != "" ]]; then
+#            printf "shell=msys2 {0}" >> $GITHUB_OUTPUT
+#          else
+#            printf "shell=bash" >> $GITHUB_OUTPUT
+#          fi
+
+      - name: '🟦 Setup MSYS2 for ${{ matrix.runtime }}'
+        uses: msys2/setup-msys2@v2
+        if: matrix.runtime != ''
+        with:
+          msystem: ${{ matrix.runtime }}
+          update: true
+
+      - name: Setup GHDL ${{ matrix.backend }}
+        uses: ghdl/setup-ghdl@v1
+        with:
+          version: nightly
+          backend: ${{ matrix.backend }}
+          runtime: ${{ matrix.runtime }}
+          investigate: true
+
+      - name: Verify GHDL version via Bash
+        if: matrix.name == 'Ubuntu' || matrix.name == 'macOS' || ( matrix.name == 'Windows' && matrix.runtime == '' )
+        shell: bash   # ${{ steps.detect.outputs.shell }}
+        run: |
+          ANSI_LIGHT_RED=$'\x1b[91m'
+          ANSI_LIGHT_GREEN=$'\x1b[92m'
+          ANSI_NOCOLOR=$'\x1b[0m'
+
+          printf "which ghdl: %s\n" "$(which ghdl)"
+
+          expected="${{ inputs.ghdl_version }}"
+          printf "%s" "Verify GHDL version '${expected}' ... "
+          if [[ "$(ghdl --version | head -n 1)" =~ ${expected//./\\.} ]]; then
+            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+          else
+            printf "${ANSI_LIGHT_RED}%s\${ANSI_NOCOLOR}n" "[FAILED]"
+            printf "::warning title=%s::%s\n" "Test-SetupGHDL" "GHDL version doesn't match."
+
+            ghdl --version
+          fi
+
+      - name: Verify GHDL version via Bash
+        if: matrix.name == 'Windows' && matrix.runtime != ''
+        # BUG: GitHub Action doesn't accept contexts for shell
+        shell: "msys2 {0}"   # ${{ steps.detect.outputs.shell }}
+        run: |
+          ANSI_LIGHT_RED=$'\x1b[91m'
+          ANSI_LIGHT_GREEN=$'\x1b[92m'
+          ANSI_NOCOLOR=$'\x1b[0m'
+
+          printf "which ghdl: %s\n" "$(which ghdl)"
+
+          expected="${{ inputs.ghdl_version }}"
+          printf "%s" "Verify GHDL version '${expected}' ... "
+          if [[ "$(ghdl --version | head -n 1)" =~ ${expected//./\\.} ]]; then
+            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
+          else
+            printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
+            printf "::warning title=%s::%s\n" "Test-SetupGHDL" "GHDL version doesn't match."
+
+            ghdl --version
+          fi
+
+      - name: Verify on Windows (native)
+        if: matrix.name == 'Windows' && matrix.runtime == ''
+        shell: powershell
+        run: |
+          echo $(Get-Command ghdl).Source
+          ghdl --version

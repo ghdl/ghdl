@@ -341,8 +341,8 @@ jobs:
 
       # TODO: replace with https://github.com/pyTooling/Actions/blob/dev/.github/workflows/ExtractConfiguration.yml
       - name: 🔁 Extract configurations from pyproject.toml (only mcode backend)
-        if: inputs.coverage && inputs.backend == 'mcode'
         id: getVariables
+        if: inputs.coverage && inputs.backend == 'mcode'
         shell: python
         run: |
           from os       import getenv
@@ -405,9 +405,9 @@ jobs:
 # Upload test result artifacts
 
       - name: 📤 Upload 'TestReportSummary.xml' artifact (only mcode backend)
+        uses: pyTooling/upload-artifact@v4
         if: inputs.unittesting && inputs.backend == 'mcode' && inputs.unittest_xml_artifact != ''
         continue-on-error: true
-        uses: pyTooling/upload-artifact@v4
         with:
           name: ${{ inputs.unittest_xml_artifact }}-Ubuntu-${{ inputs.ubuntu_version }}-${{ inputs.python_version }}
           working-directory: report/unit
@@ -422,9 +422,9 @@ jobs:
         run: coverage report --rcfile=pyproject.toml --data-file=.coverage
 
       - name: 📤 Upload 'Coverage SQLite Database' artifact (only mcode backend)
+        uses: pyTooling/upload-artifact@v4
         if: inputs.coverage && inputs.backend == 'mcode' && inputs.coverage_sqlite_artifact != ''
         continue-on-error: true
-        uses: pyTooling/upload-artifact@v4
         with:
           name: ${{ inputs.coverage_sqlite_artifact }}-Ubuntu-${{ inputs.ubuntu_version }}-${{ inputs.python_version }}
           path: .coverage

@@ -1,12 +1,12 @@
 -r ../pyGHDL/requirements.txt
 
-sphinx ~= 8.0
-python-dateutil ~= 2.8
+sphinx ~= 8.1
+python-dateutil ~= 2.9
 
 # Sphinx Extenstions
 autoapi ~= 2.0
 myst-parser ~= 4.0
-sphinx_autodoc_typehints ~= 2.3
+sphinx_autodoc_typehints ~= 3.0
 
 # Theme
 furo

@@ -197,8 +197,8 @@ jobs:
 
       # TODO: replace with https://github.com/pyTooling/Actions/blob/dev/.github/workflows/ExtractConfiguration.yml
       - name: 🔁 Extract configurations from pyproject.toml
-        if: inputs.coverage
         id: getVariables
+        if: inputs.coverage
         shell: python
         run: |
           from os       import getenv
@@ -262,9 +262,9 @@ jobs:
 # Upload test result artifacts
 
       - name: 📤 Upload 'TestReportSummary.xml' artifact
+        uses: pyTooling/upload-artifact@v4
         if: inputs.unittest_xml_artifact != ''
         continue-on-error: true
-        uses: pyTooling/upload-artifact@v4
         with:
           name: ${{ inputs.unittest_xml_artifact }}-${{ inputs.os_name }}-${{ inputs.python_version }}
           working-directory: report/unit
