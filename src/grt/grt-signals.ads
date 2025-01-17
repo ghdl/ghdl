@@ -300,10 +300,12 @@ package Grt.Signals is
       --  algorithm that use it, it must be cleared.
       Seen : Boolean;
 
+      --  Temporary flags used during update
+      Is_Drv_Deposit : Boolean;
+      Is_Eff_Deposit : Boolean;
+
       Unused1 : Boolean;
       Unused2 : Boolean;
-      Unused3 : Boolean;
-      Unused4 : Boolean;
    end record;
    pragma Pack (Ghdl_Signal_Flags);
 

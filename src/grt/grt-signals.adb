@@ -3920,15 +3920,21 @@ package body Grt.Signals is
                --  propagation.
                case Fv.Mode is
                   when Force_Driving =>
-                     if not Sig.Flags.Is_Drv_Forced then
+                     if not Sig.Flags.Is_Drv_Forced
+                       or else Sig.Flags.Is_Drv_Deposit
+                     then
                         Sig.Flags.Is_Drv_Forced := True;
+                        Sig.Flags.Is_Drv_Deposit := True;
                         Sig.Driving_Value := Fv.Val;
                      else
                         Discard := True;
                      end if;
                   when Force_Effective =>
-                     if not Sig.Flags.Is_Eff_Forced then
+                     if not Sig.Flags.Is_Eff_Forced
+                       or else Sig.Flags.Is_Eff_Deposit
+                     then
                         Sig.Flags.Is_Eff_Forced := True;
+                        Sig.Flags.Is_Eff_Deposit := True;
                         Set_Effective_Value (Sig, Fv.Val);
                      else
                         Discard := True;
@@ -3937,6 +3943,8 @@ package body Grt.Signals is
 
                Next_Fv := Fv.Next;
 
+               --  Keep the transaction to clear Is_XX_Forced flags, but
+               --  only if it was used (as it will clear the Forced flags)
                if Discard then
                   Free (Fv);
                else
@@ -3974,6 +3982,7 @@ package body Grt.Signals is
       end loop;
 
       if Deposite_Chain.First /= null then
+         --  Clear Is_XX_Forced flags
          declare
             Fv : Force_Value_Acc;
             Next_Fv : Force_Value_Acc;
@@ -3984,8 +3993,10 @@ package body Grt.Signals is
                case Fv.Mode is
                   when Force_Driving =>
                      Sig.Flags.Is_Drv_Forced := False;
+                     Sig.Flags.Is_Drv_Deposit := False;
                   when Force_Effective =>
                      Sig.Flags.Is_Eff_Forced := False;
+                     Sig.Flags.Is_Eff_Deposit := False;
                end case;
 
                Next_Fv := Fv.Next;
