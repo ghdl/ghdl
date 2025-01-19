@@ -1345,8 +1345,8 @@ package body Verilog.Nodes_Meta is
             return "unbased_literal";
          when N_Time_Literal =>
             return "time_literal";
-         when N_1step_Literal =>
-            return "1step_literal";
+         when N_Step_Literal =>
+            return "step_literal";
          when N_Infinity =>
             return "infinity";
          when N_Real_Number =>
@@ -4048,7 +4048,7 @@ package body Verilog.Nodes_Meta is
       Field_Timescale,
       Field_Type_Owner,
       Field_Is_Constant,
-      --  N_1step_Literal
+      --  N_Step_Literal
       Field_Expr_Type,
       Field_Type_Owner,
       Field_Is_Constant,
@@ -4857,7 +4857,7 @@ package body Verilog.Nodes_Meta is
       N_Bignum => 1656,
       N_Unbased_Literal => 1662,
       N_Time_Literal => 1668,
-      N_1step_Literal => 1671,
+      N_Step_Literal => 1671,
       N_Infinity => 1674,
       N_Real_Number => 1678,
       N_Scale_Number => 1683,
@@ -8858,7 +8858,7 @@ package body Verilog.Nodes_Meta is
            | N_Bignum
            | N_Unbased_Literal
            | N_Time_Literal
-           | N_1step_Literal
+           | N_Step_Literal
            | N_Infinity
            | N_Real_Number
            | N_Scale_Number
@@ -9109,7 +9109,7 @@ package body Verilog.Nodes_Meta is
            | N_Bignum
            | N_Unbased_Literal
            | N_Time_Literal
-           | N_1step_Literal
+           | N_Step_Literal
            | N_Infinity
            | N_Real_Number
            | N_Scale_Number
@@ -10401,7 +10401,7 @@ package body Verilog.Nodes_Meta is
            | N_Bignum
            | N_Unbased_Literal
            | N_Time_Literal
-           | N_1step_Literal
+           | N_Step_Literal
            | N_Infinity
            | N_Real_Number
            | N_Scale_Number

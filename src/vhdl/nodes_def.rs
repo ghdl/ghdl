@@ -1,4 +1,8 @@
+#![allow(non_camel_case_types, dead_code)]
+use crate::types::*;
+
 #[derive(PartialEq, PartialOrd)]
+#[repr(u16)]
 pub enum Kind {
     Unused,
     Error,
@@ -1340,6 +1344,7 @@ impl Kind {
     }
 
 }
+#[repr(u8)]
 pub enum Iir_Mode {
     Unknown_Mode,
     Linkage_Mode,
@@ -1368,6 +1373,7 @@ impl Iir_Mode {
         "in_mode",
     ];
 }
+#[repr(u8)]
 pub enum ScalarSize {
     Scalar_8,
     Scalar_16,
@@ -1390,6 +1396,7 @@ impl ScalarSize {
         "scalar_64",
     ];
 }
+#[repr(u8)]
 pub enum Iir_Staticness {
     Unknown,
     None,
@@ -1412,6 +1419,7 @@ impl Iir_Staticness {
         "locally",
     ];
 }
+#[repr(u8)]
 pub enum Iir_Constraint {
     Unconstrained,
     Partially_Constrained,
@@ -1431,6 +1439,7 @@ impl Iir_Constraint {
         "fully_constrained",
     ];
 }
+#[repr(u8)]
 pub enum Iir_Delay_Mechanism {
     Inertial_Delay,
     Transport_Delay,
@@ -1447,6 +1456,7 @@ impl Iir_Delay_Mechanism {
         "transport_delay",
     ];
 }
+#[repr(u8)]
 pub enum DateStateType {
     Extern,
     Disk,
@@ -1469,6 +1479,7 @@ impl DateStateType {
         "analyze",
     ];
 }
+#[repr(u8)]
 pub enum NumberBaseType {
     Base_None,
     Base_2,
@@ -1494,6 +1505,7 @@ impl NumberBaseType {
         "base_16",
     ];
 }
+#[repr(u16)]
 pub enum Iir_Predefined {
     Error,
     Boolean_And,
@@ -3782,21 +3794,16 @@ impl Iir_Predefined {
     ];
 }
 type Iir = u32;
-type FileChecksumId = u32;
-type TimeStampId = u32;
-type SourceFileEntry = u32;
-type DateType = u32;
-type NameId = u32;
-type SourcePtr = u32;
-type String8Id = u32;
 type PSLNode = u32;
 type PSLNFA = u32;
 type Tok = u8;
+#[repr(u8)]
 pub enum TriStateType {
    Unknown,
    False,
    True,
 }
+#[repr(u8)]
 pub enum DirectionType {
    To,
    Downto,

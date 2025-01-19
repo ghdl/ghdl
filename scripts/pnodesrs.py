@@ -15,6 +15,13 @@ libname = "libghdl"
 
 
 def print_enum(name, vals):
+    if len(vals) < 256:
+        repr = 8
+    elif len(vals) < 65536:
+        repr = 16
+    else:
+        repr = 32
+    print(f"#[repr(u{repr})]")
     print(f"pub enum {name} {{")
     for k in vals:
         print(f"    {k},")
@@ -57,24 +64,26 @@ def do_class_kinds():
         print()
     print(f"}}")
 
-def do_iirs_subprg():
+def do_vhdl_subprg():
     pfx = "vhdl__nodes"
     print(f'type Iir = u32;')
-    print(f'type FileChecksumId = u32;')
-    print(f'type TimeStampId = u32;')
-    print(f'type SourceFileEntry = u32;')
-    print(f'type DateType = u32;')
-    print(f'type NameId = u32;')
-    print(f'type SourcePtr = u32;')
-    print(f'type String8Id = u32;')
+#    print(f'type FileChecksumId = u32;')
+#    print(f'type TimeStampId = u32;')
+#    print(f'type SourceFileEntry = u32;')
+#    print(f'type DateType = u32;')
+#    print(f'type NameId = u32;')
+#    print(f'type SourcePtr = u32;')
+#    print(f'type String8Id = u32;')
     print(f'type PSLNode = u32;')
     print(f'type PSLNFA = u32;')
     print(f'type Tok = u8;') # FIXME
+    print(f'#[repr(u8)]')
     print(f'pub enum TriStateType {{')
     print(f'   Unknown,')
     print(f'   False,')
     print(f'   True,')
     print(f'}}')
+    print(f'#[repr(u8)]')
     print(f'pub enum DirectionType {{')
     print(f'   To,')
     print(f'   Downto,')
@@ -188,16 +197,22 @@ def read_enum(filename, type_name, prefix, g=lambda m: m.group(1)):
                 lr,
                 f"{filename}:{ lr.lineno}: incorrect line in enum {type_name}"
             )
+    if not toks:
+        raise pnodes.ParseError("", f"enum {type_name} not found")
     return toks
 
 
 def read_spec_enum(type_name, prefix, class_name):
-    """Read an enumeration declaration from iirs.ads."""
+    """Read an enumeration declaration from kind file."""
     toks = read_enum(pnodes.kind_file, type_name, prefix)
     print_enum(class_name, toks)
 
 
-def do_nodes():
+def do_vhdl_nodes():
+    """Convert vhdl-nodes.ads"""
+    print("#![allow(non_camel_case_types, dead_code)]")
+    print("use crate::types::*;")
+    print()
     do_class_kinds()
     read_spec_enum("Iir_Mode", "Iir_", "Iir_Mode")
     read_spec_enum("Scalar_Size", "", "ScalarSize")
@@ -207,7 +222,86 @@ def do_nodes():
     read_spec_enum("Date_State_Type", "Date_", "DateStateType")
     read_spec_enum("Number_Base_Type", "", "NumberBaseType")
     read_spec_enum("Iir_Predefined_Functions", "Iir_Predefined_", "Iir_Predefined")
-    do_iirs_subprg()
+    do_vhdl_subprg()
+
+
+def do_verilog_subprg():
+    pfx = "verilog__nodes"
+#    print(f'type Node = u32;')
+#    print(f'type FileChecksumId = u32;')
+#    print(f'type TimeStampId = u32;')
+#    print(f'type SourceFileEntry = u32;')
+#    print(f'type DateType = u32;')
+#    print(f'type NameId = u32;')
+#    print(f'type SourcePtr = u32;')
+#    print(f'type String8Id = u32;')
+#    print(f'type PSLNode = u32;')
+#    print(f'type PSLNFA = u32;')
+#    print(f'type Tok = u8;') # FIXME
+#    print(f'#[repr(u8)]')
+#    print(f'pub enum TriStateType {{')
+#    print(f'   Unknown,')
+#    print(f'   False,')
+#    print(f'   True,')
+#    print(f'}}')
+#    print(f'#[repr(u8)]')
+#    print(f'pub enum DirectionType {{')
+#    print(f'   To,')
+#    print(f'   Downto,')
+#    print(f'}}')
+    print()
+    print(f'extern "C" {{')
+    print(f'  #[link_name = "{pfx}__get_kind"]')
+    print(f"  fn get_kind(n: Node) -> Kind;")
+    print()
+    print(f'  #[link_name = "{pfx}__get_location"]')
+    print(f"  fn get_location(n: Node) -> u32;")
+    print()
+    typmap = {'Boolean' : 'bool',
+              'Int32': 'i32',
+              'Int64': 'i64',
+              'Fp64': 'f64',
+              'Uns32': 'u32',
+              }
+    for k in pnodes.funcs:
+        # Don't use the Iir_* subtypes (as they are not described).
+        rtype = k.rtype.replace("_", "").replace("Type","")
+        # Exceptions...
+        rtype = typmap.get(rtype, rtype)
+
+        name = k.name.lower()
+        print(f'  #[link_name = "{pfx}__get_{name}"]')
+        print(f"  fn get_{name}(n: Node) -> {rtype};")
+        print()
+        print(f'  #[link_name = "{pfx}__set_{name}"]')
+        print(f"  fn set_{name}(n: Node, v: {rtype});")
+        print()
+    print(f"}}")
+
+
+def do_verilog_nodes():
+    """Convert verilog-nodes.ads"""
+    print("#![allow(non_camel_case_types, dead_code)]")
+    print()
+    print("use crate::verilog::Node;")
+    print("use crate::types::*;")
+    print("use crate::verilog::types::*;")
+    do_class_kinds()
+    read_spec_enum("Violation_Type", "Violation_", "Violation")
+    read_spec_enum("Visibility_Type", "Visibility_", "Visibility")
+    read_spec_enum("DPI_Spec_Type", "DPI_", "DPISpec")
+    read_spec_enum("Edge_Type", "Edge_", "Edge")
+    read_spec_enum("Base_Type", "Base_", "Base")
+    read_spec_enum("Lifetime_Type", "Life_", "Lifetime")
+    read_spec_enum("Join_Type", "Join_", "Join")
+    read_spec_enum("Udp_Symbol", "", "UdpSymbol")
+    read_spec_enum("Polarity_Type", "Polarity_", "Polarity")
+    read_spec_enum("Udp_Kind", "Udp_", "UdpKind")
+    read_spec_enum("Conv_Ops", "Convop_", "ConvOps")
+    read_spec_enum("Binary_Ops", "Binop_", "BinaryOps")
+    read_spec_enum("Unary_Ops", "Unop_", "UnaryOps")
+    print("pub type SysTfId = u32;")
+    do_verilog_subprg()
 
 
 def do_libghdl_meta():
@@ -331,6 +425,7 @@ def do_libghdl_tokens():
 
 
 def do_errorout():
+    print("#![allow(dead_code)]")
     toks = read_enum(
         "../errorout.ads",
         "Msgid_Type",
@@ -356,13 +451,14 @@ def do_errorout():
 
 pnodes.actions.update(
     {
+        "vhdl-nodes": do_vhdl_nodes,
+        "errorout": do_errorout,
+        "verilog-nodes": do_verilog_nodes,
         "class-kinds": do_class_kinds,
-        "nodes": do_nodes,
         "libghdl-meta": do_libghdl_meta,
         "libghdl-names": do_libghdl_names,
         "libghdl-tokens": do_libghdl_tokens,
         "libghdl-elocs": do_libghdl_elocations,
-        "errorout": do_errorout,
     }
 )
 

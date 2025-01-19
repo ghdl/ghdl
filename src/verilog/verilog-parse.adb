@@ -1091,7 +1091,7 @@ package body Verilog.Parse is
          if Val /= 1.0 then
             Error_Msg_Parse ("'step' delay can only be '1step'");
          end if;
-         Res := Create_Node (N_1step_Literal);
+         Res := Create_Node (N_Step_Literal);
          Set_Location (Res, Loc);
 
          --  Skip identifier.

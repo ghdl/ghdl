@@ -123,7 +123,7 @@ vhdl-elocations_meta.adb: vhdl-elocations_meta.adb.in vhdl-elocations.ads $(DEPS
 
 nodes_def.rs: $(PNODESRS) vhdl-nodes.ads vhdl-nodes.adb.in
 	$(RM) $@
-	$(PNODESRS) $(NODES_FLAGS) nodes > $@
+	$(PNODESRS) $(NODES_FLAGS) vhdl-nodes > $@
 	chmod -w $@
 
 clean:

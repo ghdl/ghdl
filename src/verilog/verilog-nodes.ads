@@ -300,7 +300,7 @@ package Verilog.Nodes is
       N_Bignum,
       N_Unbased_Literal,
       N_Time_Literal,
-      N_1step_Literal,
+      N_Step_Literal,
       N_Infinity,
       N_Real_Number,
       N_Scale_Number,
@@ -3935,7 +3935,7 @@ package Verilog.Nodes is
    --
    --   Get/Set_Is_Constant (Flag4)
 
-   -- N_1step_Literal (Short)
+   -- N_Step_Literal (Short)
    --
    --   Get/Set_Expr_Type (Field3)
    --

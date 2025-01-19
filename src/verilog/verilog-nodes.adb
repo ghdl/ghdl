@@ -796,7 +796,7 @@ package body Verilog.Nodes is
            | N_Bignum
            | N_Unbased_Literal
            | N_Time_Literal
-           | N_1step_Literal
+           | N_Step_Literal
            | N_Infinity
            | N_Real_Number
            | N_Scale_Number

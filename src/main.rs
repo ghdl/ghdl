@@ -1,7 +1,9 @@
 use std::{env, ffi, fs, io, iter, os};
+mod types;
 mod errorout_def;
 mod errorout;
 mod vhdl;
+mod verilog;
 
 #[derive(Clone, Copy)]
 #[repr(u8)]
@@ -176,6 +178,7 @@ fn library_to_filename(lib: VhdlNode, std: VhdlStd) -> String {
     res
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Copy)]
 enum WarnValue {
     Default,
@@ -401,14 +404,14 @@ fn analyze(args: &[String], save: bool) -> Result<(), ParseStatus> {
 }
 
 trait Command {
-    fn get_command(&self) -> &'static [&'static str];
+    fn get_names(&self) -> &'static [&'static str];
     fn execute(&self, args: &[String]) -> Result<(), ParseStatus>;
 }
 
 struct CommandAnalyze {}
 
 impl Command for CommandAnalyze {
-    fn get_command(&self) -> &'static [&'static str] {
+    fn get_names(&self) -> &'static [&'static str] {
         return &["analyze", "-a"];
     }
 
@@ -420,7 +423,7 @@ impl Command for CommandAnalyze {
 struct CommandSyntax {}
 
 impl Command for CommandSyntax {
-    fn get_command(&self) -> &'static [&'static str] {
+    fn get_names(&self) -> &'static [&'static str] {
         return &["syntax", "-s"];
     }
 
@@ -432,7 +435,7 @@ impl Command for CommandSyntax {
 struct CommandImport {}
 
 impl Command for CommandImport {
-    fn get_command(&self) -> &'static [&'static str] {
+    fn get_names(&self) -> &'static [&'static str] {
         return &["import", "-i"];
     }
 
@@ -492,7 +495,7 @@ impl Command for CommandImport {
 struct CommandRemove {}
 
 impl Command for CommandRemove {
-    fn get_command(&self) -> &'static [&'static str] {
+    fn get_names(&self) -> &'static [&'static str] {
         return &["--remove"];
     }
 
@@ -582,7 +585,7 @@ fn analyze_elab(args: &[String]) -> Result<Vec<String>, ParseStatus> {
 struct CommandElab {}
 
 impl Command for CommandElab {
-    fn get_command(&self) -> &'static [&'static str] {
+    fn get_names(&self) -> &'static [&'static str] {
         return &["-e", "elab", "--elab"];
     }
 
@@ -598,7 +601,7 @@ impl Command for CommandElab {
 struct CommandRun {}
 
 impl Command for CommandRun {
-    fn get_command(&self) -> &'static [&'static str] {
+    fn get_names(&self) -> &'static [&'static str] {
         return &["-r", "run", "--elab-run"];
     }
 
@@ -637,18 +640,37 @@ impl Command for CommandRun {
     }
 }
 
+struct CommandVerilog2Vhdl {}
+
+impl Command for CommandVerilog2Vhdl {
+    fn get_names(&self) -> &'static [&'static str] {
+        return &["verilog2vhdl"];
+    }
+
+    fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
+        for arg in &args[1..] {
+            //  Parse verilog file
+            //  compile
+            //  convert to vhdl
+            //  print
+        }
+        return Err(ParseStatus::CommandError)
+    }
+}
+
 const COMMANDS: &[&dyn Command] = &[
     &CommandAnalyze {},
     &CommandSyntax {},
     &CommandElab {},
     &CommandRun {},
     &CommandRemove {},
+    &CommandVerilog2Vhdl {},
 ];
 
-fn get_parser(args: &[String]) -> Result<(), ParseStatus> {
-    for parser in COMMANDS {
-        if parser.get_command().into_iter().any(|&cmd| cmd == args[0]) {
-            return parser.execute(args);
+fn execute_command(args: &[String]) -> Result<(), ParseStatus> {
+    for cmd in COMMANDS {
+        if cmd.get_names().into_iter().any(|&name| name == args[0]) {
+            return cmd.execute(args);
         }
     }
     return Err(ParseStatus::UnknownCommand);
@@ -694,6 +716,7 @@ fn main() {
         ghdl_rust_init();
     }
 
+    //  Collect and expand options, read response files
     let init_args : Vec<String> = env::args().collect();
     let args : Vec<String>;
     match expand_args(init_args) {
@@ -718,7 +741,8 @@ fn main() {
         options_initialize();
     };
 
-    match get_parser(&args[1..]) {
+    //  Execute the command
+    match execute_command(&args[1..]) {
         Ok(()) => {}
         Err(ParseStatus::UnknownCommand) => {
             eprintln!("unknown command '{command}', try {progname} help");

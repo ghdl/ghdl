@@ -1,9 +1,11 @@
+#![allow(dead_code)]
 pub const MSGID_NOTE: u8 = 0;
 pub const MSGID_FIRST_WARNID: u8 = 1;
 pub const MSGID_WARNING: u8 = 39;
 pub const MSGID_ERROR: u8 = 40;
 pub const MSGID_FATAL: u8 = 41;
 
+#[repr(u8)]
 pub enum Warnid {
     Library,
     DeprecatedOption,
