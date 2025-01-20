@@ -616,7 +616,7 @@ package float_generic_pkg is
     expon       : out UNRESOLVED_SIGNED;  -- NOTE:  Add 1 to get the real exponent!
     sign        : out STD_ULOGIC);
 
-  -- Normalize takes a fraction and and exponent and converts them into
+  -- Normalize takes a fraction and exponent and converts them into
   -- a floating point number.  Does the shifting and the rounding.
   -- Exponent is assumed to be biased by -1
 
