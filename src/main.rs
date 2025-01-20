@@ -647,9 +647,19 @@ impl Command for CommandVerilog2Vhdl {
         return &["verilog2vhdl"];
     }
 
+
     fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
+        unsafe {
+            verilog::errors_initialize();
+            verilog::scans_init_paths();
+            verilog::sem_scopes_init();
+            verilog::sem_types_create_basetypes();
+            verilog::vpi_initialize();
+        }
+
         for arg in &args[1..] {
             //  Parse verilog file
+            let id = NameId::from_string(arg);
             //  compile
             //  convert to vhdl
             //  print
