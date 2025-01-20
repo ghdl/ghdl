@@ -46,8 +46,8 @@ package Verilog.Scans is
    --  Handle translate on/off.
    Flag_Pragma_Comment : Boolean := False;
 
-   --  Init the set of pathes.
-   procedure Init_Pathes;
+   --  Init the set of paths.
+   procedure Init_Paths;
 
    --  Add DIR in the set of include directories.
    procedure Add_Incdir (Dir : String);

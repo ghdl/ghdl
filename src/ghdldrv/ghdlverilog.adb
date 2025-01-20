@@ -60,7 +60,7 @@ package body Ghdlverilog is
       pragma Unreferenced (Analyze_Only);
    begin
       Verilog.Errors.Initialize;
-      Verilog.Scans.Init_Pathes;
+      Verilog.Scans.Init_Paths;
       Verilog.Sem_Scopes.Init;
       Verilog.Sem_Types.Create_Basetypes;
 

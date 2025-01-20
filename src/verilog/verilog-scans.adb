@@ -1661,12 +1661,12 @@ package body Verilog.Scans is
       Table_Low_Bound => 1,
       Table_Initial => 4);
 
-   procedure Init_Pathes is
+   procedure Init_Paths is
    begin
       Pathes.Append (Files_Map.Get_Home_Directory);
 
       Bignum_Table.Init (Bn_Table, 64);
-   end Init_Pathes;
+   end Init_Paths;
 
    procedure Add_Incdir (Dir : String)
    is
