@@ -103,7 +103,7 @@ C) std_logic_1164_additions - Additions to the package "ieee.std_logic_1164"
       assert (slv = "101") report "result was " & to_string(slv) severity note;
    12) to_hstring and to_ostring function (std_(u)logic_vector to hex or octal
       string)
-D) numeric_std_additions - additions the the package "ieee.numeric_std"
+D) numeric_std_additions - additions the package "ieee.numeric_std"
    Usage Model:
    use ieee.std_logic_1164.all;
    use ieee.numeric_std.all;
