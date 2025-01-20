@@ -44,15 +44,18 @@ def get_fields_last(K: IirKind) -> int:
     """
     return 0  # pragma: no cover
 
+
 @export
 @BindToLibGHDL("vhdl__nodes_meta__get_field_by_index")
 def get_field_by_index(K: IirKind) -> int:
     """"""
     return 0  # pragma: no cover
 
+
 @export
 def get_field_type(*args):
     return libghdl.vhdl__nodes_meta__get_field_type(*args)
+
 
 @export
 def get_field_attribute(*args):
@@ -639,7 +642,6 @@ def Get_Token_Type(node, field):
 
 def Get_Tri_State_Type(node, field):
     return libghdl.vhdl__nodes_meta__get_tri_state_type(node, field)
-
 
 
 @export
@@ -2998,4 +3000,3 @@ def Has_Suspend_State_Last(kind: IirKind) -> bool:
 @BindToLibGHDL("vhdl__nodes_meta__has_suspend_state_decl")
 def Has_Suspend_State_Decl(kind: IirKind) -> bool:
     """"""
-
