@@ -488,6 +488,8 @@ package body Files_Map is
       end if;
    end Get_Pathname;
 
+   --  If NAME contains a directory separator, move it to the DIRECTORY name.
+   --  At the return point, NAME has no directory components.
    procedure Normalize_Pathname
      (Directory : in out Name_Id; Name : in out Name_Id)
    is
@@ -844,6 +846,18 @@ package body Files_Map is
 
       return Res;
    end Read_Source_File;
+
+   function Read_Source_File_Normalize (Directory : Name_Id; Name: Name_Id)
+                                       return Source_File_Entry
+   is
+      Dir_Norm, Name_Norm : Name_Id;
+   begin
+      Dir_Norm := Directory;
+      Name_Norm := Name;
+      Normalize_Pathname (Dir_Norm, Name_Norm);
+
+      return Read_Source_File (Dir_Norm, Name_Norm);
+   end Read_Source_File_Normalize;
 
    procedure Discard_Source_File (File : Source_File_Entry)
    is

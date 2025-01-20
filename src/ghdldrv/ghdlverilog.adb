@@ -77,7 +77,6 @@ package body Ghdlverilog is
    procedure Load_Verilog_File (Filename : String)
    is
       Id : Name_Id;
-      Dir_Id : Name_Id;
       Sfe : Source_File_Entry;
       Res : Vlg_Node;
    begin
@@ -86,9 +85,7 @@ package body Ghdlverilog is
 
       --  Load the file.
       Id := Name_Table.Get_Identifier (Filename);
-      Dir_Id := Null_Identifier;
-      Files_Map.Normalize_Pathname (Dir_Id, Id);
-      Sfe := Files_Map.Read_Source_File (Dir_Id, Id);
+      Sfe := Files_Map.Read_Source_File_Normalize (Null_Identifier, Id);
       if Sfe = No_Source_File_Entry then
          Error_Msg_Option ("cannot open %i", (1 => +Id));
          return;

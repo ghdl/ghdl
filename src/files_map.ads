@@ -34,17 +34,16 @@ package Files_Map is
    --  Otherwise, return the concatenation of DIRECTORY and NAME.
    function Get_Pathname (Directory : Name_Id; Name : Name_Id) return String;
 
-   --  If NAME contains a directory separator, move it to the DIRECTORY name.
-   --  At the return point, NAME has no directory components.
-   procedure Normalize_Pathname
-     (Directory : in out Name_Id; Name : in out Name_Id);
-
    --  Return an entry for a filename.  Null_Identifier for DIRECTORY means
    --  current directory.
    --  Load the filename if necessary.
    --  Return No_Source_File_Entry if the file does not exist.
    function Read_Source_File (Directory : Name_Id; Name : Name_Id)
                               return Source_File_Entry;
+
+   --  Same as Read_Source_File, but first normalize DIRECTORY and NAME.
+   function Read_Source_File_Normalize (Directory : Name_Id; Name: Name_Id)
+                                       return Source_File_Entry;
 
    --  Find a source_file by DIRECTORY and NAME.
    --  Return No_Source_File_Entry if not already opened.

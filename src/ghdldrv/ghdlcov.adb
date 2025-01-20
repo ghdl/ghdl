@@ -45,8 +45,10 @@ package body Ghdlcov is
      (Line_Array, Line_Acc);
 
    type File_Record is record
+      --  Name and Dir are normalized
       Name : Name_Id;
       Dir : Name_Id;
+
       Checksum : File_Checksum_String;
 
       Lines : Line_Acc;
@@ -261,6 +263,7 @@ package body Ghdlcov is
             Dir := Name_Table.Get_Identifier (Get_String);
          end if;
       end;
+
       Scan_Expect (Tok_Comma);
 
       --  sha1: xx
@@ -431,7 +434,6 @@ package body Ghdlcov is
       use Grt.Astdio;
       use Name_Table;
       Lines : constant Line_Acc := Rec.Lines;
-      Name, Dir : Name_Id;
       Sfe : Source_File_Entry;
       F : FILEs;
       Buf : File_Buffer_Acc;
@@ -439,23 +441,20 @@ package body Ghdlcov is
       Epos : Source_Ptr;
       Line : Positive;
    begin
-      Name := Rec.Name;
-      Dir := Rec.Dir;
-      Normalize_Pathname (Dir, Name);
-      Sfe := Read_Source_File (Dir, Name);
+      Sfe := Read_Source_File (Rec.Dir, Rec.Name);
       if Sfe = No_Source_File_Entry then
          Errorout.Error_Msg_Option
-           ("cannot open source file " & Image (Name) & '"');
+           ("cannot open source file " & Image (Rec.Name) & '"');
          return;
       end if;
 
-      F := Fopen_W (Image (Name) & ".gcov");
+      F := Fopen_W (Image (Rec.Name) & ".gcov");
       if F = NULL_Stream then
          return;
       end if;
 
-      Put_Line (F, "     -:    0:Source:" & Image (Name));
-      Put_Line (F, "     -:    0:Working directory:" & Image (Dir));
+      Put_Line (F, "     -:    0:Source:" & Image (Rec.Name));
+      Put_Line (F, "     -:    0:Working directory:" & Image (Rec.Dir));
 
       Line := 1;
       Buf := Get_File_Source (Sfe);
@@ -517,15 +516,11 @@ package body Ghdlcov is
          declare
             Rec : constant File_Record_Acc := Res_Tables.Table (I);
             Lines : constant Line_Acc := Rec.Lines;
-            Name, Dir : Name_Id;
             First : Boolean;
          begin
-            Name := Rec.Name;
-            Dir := Rec.Dir;
-            Files_Map.Normalize_Pathname (Dir, Name);
             Put_Line (F, "    {");
             Put_Line (F, "      ""file"": """
-                        & Image (Dir) & Image (Name) & """,");
+                        & Image (Rec.Dir) & Image (Rec.Name) & """,");
             Put_Line (F, "      ""lines"": [");
             First := True;
             for I in Lines'Range loop
@@ -570,13 +565,9 @@ package body Ghdlcov is
             use Name_Table;
             Rec : constant File_Record_Acc := Res_Tables.Table (I);
             Lines : constant Line_Acc := Rec.Lines;
-            Name, Dir : Name_Id;
             Fn_Cov : Boolean;
          begin
-            Name := Rec.Name;
-            Dir := Rec.Dir;
-            Files_Map.Normalize_Pathname (Dir, Name);
-            Put_Line ("SF:" & Image (Dir) & Image (Name));
+            Put_Line ("SF:" & Image (Rec.Dir) & Image (Rec.Name));
             --  No functions...
             Put_Line ("FN:1:file");
             Fn_Cov := False;

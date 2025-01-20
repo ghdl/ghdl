@@ -47,7 +47,6 @@ procedure Dump_Edif is
    Cmd : Cmd_Type;
 
    Id : Name_Id;
-   Dir_Id : Name_Id;
    Sfe : Source_File_Entry;
 begin
    Set_Exit_Status (Failure);
@@ -88,9 +87,7 @@ begin
    while N <= Argument_Count loop
       --  Load the file.
       Id := Name_Table.Get_Identifier (Argument (N));
-      Dir_Id := Null_Identifier;
-      Files_Map.Normalize_Pathname (Dir_Id, Id);
-      Sfe := Files_Map.Read_Source_File (Dir_Id, Id);
+      Sfe := Files_Map.Read_Source_File_Normalize (Null_Identifier, Id);
       if Sfe = No_Source_File_Entry then
          Error_Msg_Option ("cannot open " & Argument (N));
       end if;
