@@ -1985,13 +1985,28 @@ package body Synth.Vhdl_Expr is
                end if;
                Res := Build_Dyadic (Ctxt, Id_Or, Lv, Rv);
             end;
+         when N_Imp_Bool =>
+            --  A imp B  ==  not A or B
+            declare
+               Lv, Rv : Net;
+            begin
+               pragma Assert (Loc /= No_Location);
+               Lv := Synth_PSL_Expression (Syn_Inst, Get_Left (Expr));
+               Rv := Synth_PSL_Expression (Syn_Inst, Get_Right (Expr));
+               if Lv = No_Net or Rv = No_Net then
+                  return No_Net;
+               end if;
+               Lv := Build_Monadic (Ctxt, Id_Not, Lv);
+               Netlists.Locations.Set_Location (Get_Net_Parent (Lv), Loc);
+               Res := Build_Dyadic (Ctxt, Id_Or, Lv, Rv);
+            end;
          when N_True =>
             Res := Build_Const_UB32 (Ctxt, 1, 1);
          when N_False
            | N_EOS =>
             Res := Build_Const_UB32 (Ctxt, 0, 1);
          when others =>
-            PSL.Errors.Error_Kind ("synth_psl_expr", Expr);
+            PSL.Errors.Error_Kind ("synth_psl_expression", Expr);
             return No_Net;
       end case;
       Netlists.Locations.Set_Location (Get_Net_Parent (Res), Loc);
