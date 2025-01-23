@@ -492,11 +492,17 @@ package body Vhdl.Sem_Stmts is
       Targ_Obj_Kind := Get_Kind (Target_Prefix);
       case Targ_Obj_Kind is
          when Iir_Kind_Interface_Signal_Declaration =>
-            if not Iir_Mode_Writable (Get_Mode (Target_Prefix)) then
-               Error_Msg_Sem
-                 (+Target, "%n can't be assigned", +Target_Prefix);
-            else
-               if Add_Driver then
+            --  LRM08 6.5.2 Interface object declarations
+            --  IN. [...] but it shalle not be updated by a simple waveform
+            --  assignment, a conditional waveform assignment, a selected
+            --  waveform assignment, a concurrent signal assignment, [or a
+            --  variable assignment].
+            if Add_Driver then
+               --  Not a force/release assignment.
+               if not Iir_Mode_Writable (Get_Mode (Target_Prefix)) then
+                  Error_Msg_Sem
+                    (+Target, "%n can't be assigned", +Target_Prefix);
+               else
                   Sem_Add_Driver (Target_Object, Stmt);
                end if;
             end if;
