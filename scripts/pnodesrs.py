@@ -64,9 +64,49 @@ def do_class_kinds():
         print()
     print(f"}}")
 
+def common_subprg_import_header(pfx, nname):
+    print(f'extern "C" {{')
+    print(f'  #[link_name = "{pfx}__create_{nname}"]')
+    print(f"  fn create(k: Kind) -> Node;")
+    print()
+    print(f'  #[link_name = "{pfx}__get_kind"]')
+    print(f"  fn get_kind(n: Node) -> Kind;")
+    print()
+    print(f'  #[link_name = "{pfx}__get_location"]')
+    print(f"  fn get_location(n: Node) -> Location;")
+    print()
+    print(f'  #[link_name = "{pfx}__set_location"]')
+    print(f"  fn set_location(n: Node, loc: Location);")
+    print()
+
+def common_subprg_impl_header():
+    print()
+    print(f'impl Node {{')
+    print(f'  pub const NULL: Self = Node(0);')
+    print()
+    print(f'  pub fn new(k: Kind) -> Self {{')
+    print(f'    unsafe {{ create(k) }}')
+    print(f'  }}')
+    print()
+    print(f'  pub fn kind(self: Self) -> Kind {{')
+    print(f'    unsafe {{ get_kind(self) }}')
+    print(f'  }}')
+    print()
+    print(f'  pub fn location(self: Self) -> Location {{')
+    print(f'    unsafe {{ get_location(self) }}')
+    print(f'  }}')
+    print()
+    print(f'  pub fn set_location(self: Self, loc: Location) {{')
+    print(f'    unsafe {{ set_location(self, loc) }}')
+    print(f'  }}')
+    print()
+
 def do_vhdl_subprg():
     pfx = "vhdl__nodes"
-    print(f'type Iir = u32;')
+    print(f'#[repr(transparent)]')
+    print(f'#[derive(Copy, Clone, PartialEq)]')
+    print(f'pub struct Node(u32);')
+#    print(f'type Iir = u32;')
 #    print(f'type FileChecksumId = u32;')
 #    print(f'type TimeStampId = u32;')
 #    print(f'type SourceFileEntry = u32;')
@@ -89,19 +129,16 @@ def do_vhdl_subprg():
     print(f'   Downto,')
     print(f'}}')
     print()
-    print(f'extern "C" {{')
-    print(f'  #[link_name = "{pfx}__get_kind"]')
-    print(f"  fn get_kind(n: u32) -> Kind;")
-    print()
-    print(f'  #[link_name = "{pfx}__get_location"]')
-    print(f"  fn get_location(n: u32) -> u32;")
-    print()
+    common_subprg_import_header(pfx, "iir")
     typmap = {'TokenType': 'Tok',
               'Boolean' : 'bool',
               'Int32': 'i32',
               'Int64': 'i64',
               'Fp64': 'f64',
+              'Iir': 'Node',
               }
+    namemap = {'type': 'typed'}
+
     for k in pnodes.funcs:
         # Don't use the Iir_* subtypes (as they are not described).
         rtype = k.rtype.replace("_", "") if not k.rtype.startswith("Iir_") else "Iir"
@@ -110,10 +147,29 @@ def do_vhdl_subprg():
 
         name = k.name.lower()
         print(f'  #[link_name = "{pfx}__get_{name}"]')
-        print(f"  fn get_{name}(n: u32) -> {rtype};")
+        print(f"  fn get_{name}(n: Node) -> {rtype};")
         print()
         print(f'  #[link_name = "{pfx}__set_{name}"]')
-        print(f"  fn set_{name}(n: u32, v: {rtype});")
+        print(f"  fn set_{name}(n: Node, v: {rtype});")
+        print()
+    print(f"}}")
+
+    common_subprg_impl_header()
+    for k in pnodes.funcs:
+        # Don't use the Iir_* subtypes (as they are not described).
+        rtype = k.rtype.replace("_", "") if not k.rtype.startswith("Iir_") else "Iir"
+        # Exceptions...
+        rtype = typmap.get(rtype, rtype)
+
+        name = k.name.lower()
+        rname = namemap.get(name, name)
+        print(f'  pub fn {rname}(self: Self) -> {rtype} {{')
+        print(f'    unsafe {{ get_{name}(self) }}')
+        print(f'  }}')
+        print()
+        print(f'  pub fn set_{rname}(self: Self, v : {rtype}) {{')
+        print(f'    unsafe {{ set_{name}(self, v); }}')
+        print(f'  }}')
         print()
     print(f"}}")
 
@@ -212,6 +268,8 @@ def do_vhdl_nodes():
     """Convert vhdl-nodes.ads"""
     print("#![allow(non_camel_case_types, dead_code)]")
     print("use crate::types::*;")
+    print("use crate::files_map::{Location, SourceFileEntry};")
+    print("use crate::NameId;")
     print()
     do_class_kinds()
     read_spec_enum("Iir_Mode", "Iir_", "Iir_Mode")
@@ -227,36 +285,8 @@ def do_vhdl_nodes():
 
 def do_verilog_subprg():
     pfx = "verilog__nodes"
-#    print(f'type Node = u32;')
-#    print(f'type FileChecksumId = u32;')
-#    print(f'type TimeStampId = u32;')
-#    print(f'type SourceFileEntry = u32;')
-#    print(f'type DateType = u32;')
-#    print(f'type NameId = u32;')
-#    print(f'type SourcePtr = u32;')
-#    print(f'type String8Id = u32;')
-#    print(f'type PSLNode = u32;')
-#    print(f'type PSLNFA = u32;')
-#    print(f'type Tok = u8;') # FIXME
-#    print(f'#[repr(u8)]')
-#    print(f'pub enum TriStateType {{')
-#    print(f'   Unknown,')
-#    print(f'   False,')
-#    print(f'   True,')
-#    print(f'}}')
-#    print(f'#[repr(u8)]')
-#    print(f'pub enum DirectionType {{')
-#    print(f'   To,')
-#    print(f'   Downto,')
-#    print(f'}}')
     print()
-    print(f'extern "C" {{')
-    print(f'  #[link_name = "{pfx}__get_kind"]')
-    print(f"  fn get_kind(n: Node) -> Kind;")
-    print()
-    print(f'  #[link_name = "{pfx}__get_location"]')
-    print(f"  fn get_location(n: Node) -> u32;")
-    print()
+    common_subprg_import_header(pfx, "node")
     typmap = {'Boolean' : 'bool',
               'Int32': 'i32',
               'Int64': 'i64',
@@ -277,15 +307,39 @@ def do_verilog_subprg():
         print(f"  fn set_{name}(n: Node, v: {rtype});")
         print()
     print(f"}}")
+    
+    common_subprg_impl_header()
+    for k in pnodes.funcs:
+        # Don't use the Iir_* subtypes (as they are not described).
+        rtype = k.rtype.replace("_", "").replace("Type","")
+        # Exceptions...
+        rtype = typmap.get(rtype, rtype)
+
+        name = k.name.lower()
+        print(f'  pub fn {name}(self: Self) -> {rtype} {{')
+        print(f'    unsafe {{ get_{name}(self) }}')
+        print(f'  }}')
+        print()
+        print(f'  pub fn set_{name}(self: Self, v : {rtype}) {{')
+        print(f'    unsafe {{ set_{name}(self, v); }}')
+        print(f'  }}')
+        print()
+    print(f"}}")
 
 
 def do_verilog_nodes():
     """Convert verilog-nodes.ads"""
     print("#![allow(non_camel_case_types, dead_code)]")
     print()
-    print("use crate::verilog::Node;")
     print("use crate::types::*;")
     print("use crate::verilog::types::*;")
+    print("use crate::files_map::Location;")
+    print("use crate::NameId;")
+    print()
+    print("#[repr(transparent)]")
+    print("#[derive(Copy, Clone, PartialEq)]")
+    print("pub struct Node(u32);")
+    print()
     do_class_kinds()
     read_spec_enum("Violation_Type", "Violation_", "Violation")
     read_spec_enum("Visibility_Type", "Visibility_", "Visibility")

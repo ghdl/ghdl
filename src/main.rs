@@ -4,6 +4,10 @@ mod errorout_def;
 mod errorout;
 mod vhdl;
 mod verilog;
+mod files_map;
+
+use vhdl::nodes_def::Node as VhdlNode;
+use files_map::SourceFileEntry;
 
 #[derive(Clone, Copy)]
 #[repr(u8)]
@@ -18,16 +22,8 @@ enum VhdlStd {
 
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
-struct NameId {
-    v: u32,
-}
-
-#[repr(transparent)]
-#[derive(Copy, Clone, PartialEq)]
-struct VhdlNode {
-    v: u32,
-}
-const NULL_VHDLNODE: VhdlNode = VhdlNode { v: 0 };
+struct NameId(u32);
+// const NULL_NAMEID: NameId = NameId(0);
 
 extern "C" {
     #[link_name = "flags__vhdl_std"]
@@ -74,6 +70,9 @@ extern "C" {
 
     #[link_name = "name_table__get_name_ptr"]
     fn get_name_ptr(id: NameId) -> *const u8;
+
+    #[link_name = "files_map__read_source_file_normalize"]
+    fn read_source_file_normalize(dir: NameId, file: NameId) -> SourceFileEntry;
 
     #[link_name = "ghdlcomp__compile_elab_top"]
     fn compile_elab_top(
@@ -123,16 +122,13 @@ extern "C" {
     #[link_name = "libraries__save_work_library"]
     fn save_work_library();
 
-    #[link_name = "vhdl__nodes__get_identifier"]
-    fn get_identifier(n: VhdlNode) -> NameId;
-
     //  From binder file
     #[link_name = "ghdl_rust_init"]
     fn ghdl_rust_init();
 }
 
 impl NameId {
-    const NULL: NameId = NameId { v: 0 };
+    const NULL: NameId = NameId(0);
 
     fn from_string(s: &str) -> NameId {
         unsafe { get_identifier_with_len(s.as_ptr(), s.len() as u32) }
@@ -151,13 +147,8 @@ impl NameId {
     }
 }
 
-impl VhdlNode {
-    fn get_identifier(&self) -> NameId {
-        unsafe { get_identifier(*self) }
-    }
-}
 fn library_to_filename(lib: VhdlNode, std: VhdlStd) -> String {
-    let mut res = lib.get_identifier().to_string();
+    let mut res = lib.identifier().to_string();
 
     res.push_str("-obj");
     match std {
@@ -566,7 +557,7 @@ fn analyze_elab(args: &[String]) -> Result<Vec<String>, ParseStatus> {
         flag_only_elab_warnings = true;
     };
     let top = unsafe { compile_elab_top(NameId::NULL, unit, arch, false) };
-    if top == NULL_VHDLNODE {
+    if top == VhdlNode::NULL {
         if expect_failure {
             return Result::Err(ParseStatus::CommandExpectedError);
         }
@@ -647,7 +638,6 @@ impl Command for CommandVerilog2Vhdl {
         return &["verilog2vhdl"];
     }
 
-
     fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
         unsafe {
             verilog::errors_initialize();
@@ -660,9 +650,24 @@ impl Command for CommandVerilog2Vhdl {
         for arg in &args[1..] {
             //  Parse verilog file
             let id = NameId::from_string(arg);
-            //  compile
-            //  convert to vhdl
-            //  print
+            unsafe {
+                let sfe = read_source_file_normalize(NameId::NULL, id);
+                if sfe == SourceFileEntry::NULL {
+                    eprintln!("Cannot read {}", arg);
+                    return Result::Err(ParseStatus::OptionError);
+                }
+
+                //  compile
+                let vlg_top = verilog::parse_file(sfe);
+
+                verilog::sem_compilation_unit(vlg_top);
+
+                //  convert to vhdl
+                let vhd_top = verilog::export_file(vlg_top);
+
+                //  print
+                vhdl::disp_vhdl(vhd_top);
+            }
         }
         return Err(ParseStatus::CommandError)
     }
