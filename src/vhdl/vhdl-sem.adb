@@ -261,7 +261,8 @@ package body Vhdl.Sem is
             end if;
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Guard_Signal_Declaration =>
+           | Iir_Kind_Guard_Signal_Declaration
+           | Iir_Kind_External_Signal_Name =>
             null;
          when Iir_Kind_Object_Alias_Declaration =>
             return Get_Resolver (Get_Name (Obj));

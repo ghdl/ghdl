@@ -4683,6 +4683,12 @@ package Vhdl.Nodes is
    -- Only for Iir_Kind_External_Signal_Name:
    --   Get/Set_After_Drivers_Flag (Flag5)
    --
+   -- Only for Iir_Kind_External_Signal_Name:
+   --   Get/Set_Guarded_Signal_Flag (Flag8)
+   --
+   -- Only for Iir_Kind_External_Signal_Name:
+   --   Get/Set_Signal_Kind (Flag9)
+   --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
