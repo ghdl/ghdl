@@ -5,6 +5,7 @@ mod errorout;
 mod vhdl;
 mod verilog;
 mod files_map;
+mod std_names;
 
 use vhdl::nodes_def::Node as VhdlNode;
 use files_map::SourceFileEntry;

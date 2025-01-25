@@ -1,4 +1,5 @@
 pub mod nodes_def;
+pub mod nodes_utils;
 
 use nodes_def::Node;
 
