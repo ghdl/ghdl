@@ -360,7 +360,7 @@ pub enum Kind {
 }
 
 impl Kind {
-    const VALUES: [Self; 345] = [
+    pub const VALUES: [Self; 345] = [
         Self::Error,
         Self::Error_Expr,
         Self::Timescale_Directive,
@@ -708,7 +708,7 @@ impl Kind {
         Self::Goto,
     ];
 
-    const IMAGES: [&'static str; 345] = [
+    pub const IMAGES: [&'static str; 345] = [
         "error",
         "error_expr",
         "timescale_directive",
@@ -1227,14 +1227,14 @@ pub enum Violation {
 }
 
 impl Violation {
-    const VALUES: [Self; 4] = [
+    pub const VALUES: [Self; 4] = [
         Self::None,
         Self::Unique,
         Self::Unique0,
         Self::Priority,
     ];
 
-    const IMAGES: [&'static str; 4] = [
+    pub const IMAGES: [&'static str; 4] = [
         "none",
         "unique",
         "unique0",
@@ -1250,14 +1250,14 @@ pub enum Visibility {
 }
 
 impl Visibility {
-    const VALUES: [Self; 4] = [
+    pub const VALUES: [Self; 4] = [
         Self::None,
         Self::Public,
         Self::Protected,
         Self::Local,
     ];
 
-    const IMAGES: [&'static str; 4] = [
+    pub const IMAGES: [&'static str; 4] = [
         "none",
         "public",
         "protected",
@@ -1272,13 +1272,13 @@ pub enum DPISpec {
 }
 
 impl DPISpec {
-    const VALUES: [Self; 3] = [
+    pub const VALUES: [Self; 3] = [
         Self::Unknown,
         Self::DPI_C,
         Self::DPI,
     ];
 
-    const IMAGES: [&'static str; 3] = [
+    pub const IMAGES: [&'static str; 3] = [
         "unknown",
         "dpi_c",
         "dpi",
@@ -1293,14 +1293,14 @@ pub enum Edge {
 }
 
 impl Edge {
-    const VALUES: [Self; 4] = [
+    pub const VALUES: [Self; 4] = [
         Self::None,
         Self::Posedge,
         Self::Negedge,
         Self::Any,
     ];
 
-    const IMAGES: [&'static str; 4] = [
+    pub const IMAGES: [&'static str; 4] = [
         "none",
         "posedge",
         "negedge",
@@ -1316,14 +1316,14 @@ pub enum Base {
 }
 
 impl Base {
-    const VALUES: [Self; 4] = [
+    pub const VALUES: [Self; 4] = [
         Self::Binary,
         Self::Octal,
         Self::Decimal,
         Self::Hexa,
     ];
 
-    const IMAGES: [&'static str; 4] = [
+    pub const IMAGES: [&'static str; 4] = [
         "binary",
         "octal",
         "decimal",
@@ -1337,12 +1337,12 @@ pub enum Lifetime {
 }
 
 impl Lifetime {
-    const VALUES: [Self; 2] = [
+    pub const VALUES: [Self; 2] = [
         Self::Static,
         Self::Automatic,
     ];
 
-    const IMAGES: [&'static str; 2] = [
+    pub const IMAGES: [&'static str; 2] = [
         "static",
         "automatic",
     ];
@@ -1355,13 +1355,13 @@ pub enum Join {
 }
 
 impl Join {
-    const VALUES: [Self; 3] = [
+    pub const VALUES: [Self; 3] = [
         Self::All,
         Self::Any,
         Self::None,
     ];
 
-    const IMAGES: [&'static str; 3] = [
+    pub const IMAGES: [&'static str; 3] = [
         "all",
         "any",
         "none",
@@ -1383,7 +1383,7 @@ pub enum UdpSymbol {
 }
 
 impl UdpSymbol {
-    const VALUES: [Self; 11] = [
+    pub const VALUES: [Self; 11] = [
         Self::Udp_0,
         Self::Udp_1,
         Self::Udp_X,
@@ -1397,7 +1397,7 @@ impl UdpSymbol {
         Self::Udp_No,
     ];
 
-    const IMAGES: [&'static str; 11] = [
+    pub const IMAGES: [&'static str; 11] = [
         "udp_0",
         "udp_1",
         "udp_x",
@@ -1419,13 +1419,13 @@ pub enum Polarity {
 }
 
 impl Polarity {
-    const VALUES: [Self; 3] = [
+    pub const VALUES: [Self; 3] = [
         Self::Unknown,
         Self::Positive,
         Self::Negative,
     ];
 
-    const IMAGES: [&'static str; 3] = [
+    pub const IMAGES: [&'static str; 3] = [
         "unknown",
         "positive",
         "negative",
@@ -1439,13 +1439,13 @@ pub enum UdpKind {
 }
 
 impl UdpKind {
-    const VALUES: [Self; 3] = [
+    pub const VALUES: [Self; 3] = [
         Self::Combinational,
         Self::Level_Sensitive,
         Self::Edge_Sensitive,
     ];
 
-    const IMAGES: [&'static str; 3] = [
+    pub const IMAGES: [&'static str; 3] = [
         "combinational",
         "level_sensitive",
         "edge_sensitive",
@@ -1497,7 +1497,7 @@ pub enum ConvOps {
 }
 
 impl ConvOps {
-    const VALUES: [Self; 41] = [
+    pub const VALUES: [Self; 41] = [
         Self::None,
         Self::Lv_Zext,
         Self::Lv_Sext,
@@ -1541,7 +1541,7 @@ impl ConvOps {
         Self::Fp64_Sbv,
     ];
 
-    const IMAGES: [&'static str; 41] = [
+    pub const IMAGES: [&'static str; 41] = [
         "none",
         "lv_zext",
         "lv_sext",
@@ -1625,7 +1625,7 @@ pub enum BinaryOps {
 }
 
 impl BinaryOps {
-    const VALUES: [Self; 35] = [
+    pub const VALUES: [Self; 35] = [
         Self::Unknown,
         Self::Logic_And,
         Self::Logic_Or,
@@ -1663,7 +1663,7 @@ impl BinaryOps {
         Self::Right_Ashift,
     ];
 
-    const IMAGES: [&'static str; 35] = [
+    pub const IMAGES: [&'static str; 35] = [
         "unknown",
         "logic_and",
         "logic_or",
@@ -1717,7 +1717,7 @@ pub enum UnaryOps {
 }
 
 impl UnaryOps {
-    const VALUES: [Self; 11] = [
+    pub const VALUES: [Self; 11] = [
         Self::Plus,
         Self::Minus,
         Self::Bit_Neg,
@@ -1731,7 +1731,7 @@ impl UnaryOps {
         Self::Red_Nxor,
     ];
 
-    const IMAGES: [&'static str; 11] = [
+    pub const IMAGES: [&'static str; 11] = [
         "plus",
         "minus",
         "bit_neg",

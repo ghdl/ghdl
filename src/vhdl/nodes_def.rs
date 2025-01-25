@@ -344,7 +344,7 @@ pub enum Kind {
 }
 
 impl Kind {
-    const VALUES: [Self; 335] = [
+    pub const VALUES: [Self; 335] = [
         Self::Unused,
         Self::Error,
         Self::Design_File,
@@ -682,7 +682,7 @@ impl Kind {
         Self::Attribute_Name,
     ];
 
-    const IMAGES: [&'static str; 335] = [
+    pub const IMAGES: [&'static str; 335] = [
         "unused",
         "error",
         "design_file",
@@ -1347,7 +1347,7 @@ impl Kind {
 
 }
 #[repr(u8)]
-pub enum Iir_Mode {
+pub enum Mode {
     Unknown_Mode,
     Linkage_Mode,
     Buffer_Mode,
@@ -1356,8 +1356,8 @@ pub enum Iir_Mode {
     In_Mode,
 }
 
-impl Iir_Mode {
-    const VALUES: [Self; 6] = [
+impl Mode {
+    pub const VALUES: [Self; 6] = [
         Self::Unknown_Mode,
         Self::Linkage_Mode,
         Self::Buffer_Mode,
@@ -1366,7 +1366,7 @@ impl Iir_Mode {
         Self::In_Mode,
     ];
 
-    const IMAGES: [&'static str; 6] = [
+    pub const IMAGES: [&'static str; 6] = [
         "unknown_mode",
         "linkage_mode",
         "buffer_mode",
@@ -1384,14 +1384,14 @@ pub enum ScalarSize {
 }
 
 impl ScalarSize {
-    const VALUES: [Self; 4] = [
+    pub const VALUES: [Self; 4] = [
         Self::Scalar_8,
         Self::Scalar_16,
         Self::Scalar_32,
         Self::Scalar_64,
     ];
 
-    const IMAGES: [&'static str; 4] = [
+    pub const IMAGES: [&'static str; 4] = [
         "scalar_8",
         "scalar_16",
         "scalar_32",
@@ -1399,22 +1399,22 @@ impl ScalarSize {
     ];
 }
 #[repr(u8)]
-pub enum Iir_Staticness {
+pub enum Staticness {
     Unknown,
     None,
     Globally,
     Locally,
 }
 
-impl Iir_Staticness {
-    const VALUES: [Self; 4] = [
+impl Staticness {
+    pub const VALUES: [Self; 4] = [
         Self::Unknown,
         Self::None,
         Self::Globally,
         Self::Locally,
     ];
 
-    const IMAGES: [&'static str; 4] = [
+    pub const IMAGES: [&'static str; 4] = [
         "unknown",
         "none",
         "globally",
@@ -1429,33 +1429,133 @@ pub enum Iir_Constraint {
 }
 
 impl Iir_Constraint {
-    const VALUES: [Self; 3] = [
+    pub const VALUES: [Self; 3] = [
         Self::Unconstrained,
         Self::Partially_Constrained,
         Self::Fully_Constrained,
     ];
 
-    const IMAGES: [&'static str; 3] = [
+    pub const IMAGES: [&'static str; 3] = [
         "unconstrained",
         "partially_constrained",
         "fully_constrained",
     ];
 }
 #[repr(u8)]
-pub enum Iir_Delay_Mechanism {
+pub enum DelayMechanism {
     Inertial_Delay,
     Transport_Delay,
 }
 
-impl Iir_Delay_Mechanism {
-    const VALUES: [Self; 2] = [
+impl DelayMechanism {
+    pub const VALUES: [Self; 2] = [
         Self::Inertial_Delay,
         Self::Transport_Delay,
     ];
 
-    const IMAGES: [&'static str; 2] = [
+    pub const IMAGES: [&'static str; 2] = [
         "inertial_delay",
         "transport_delay",
+    ];
+}
+#[repr(u8)]
+pub enum PureState {
+    Unknown,
+    Pure,
+    Maybe_Impure,
+    Impure,
+}
+
+impl PureState {
+    pub const VALUES: [Self; 4] = [
+        Self::Unknown,
+        Self::Pure,
+        Self::Maybe_Impure,
+        Self::Impure,
+    ];
+
+    pub const IMAGES: [&'static str; 4] = [
+        "unknown",
+        "pure",
+        "maybe_impure",
+        "impure",
+    ];
+}
+#[repr(u8)]
+pub enum AllSensitized {
+    Unknown,
+    No_Signal,
+    Read_Signal,
+    Invalid_Signal,
+}
+
+impl AllSensitized {
+    pub const VALUES: [Self; 4] = [
+        Self::Unknown,
+        Self::No_Signal,
+        Self::Read_Signal,
+        Self::Invalid_Signal,
+    ];
+
+    pub const IMAGES: [&'static str; 4] = [
+        "unknown",
+        "no_signal",
+        "read_signal",
+        "invalid_signal",
+    ];
+}
+#[repr(u8)]
+pub enum SignalKind {
+    Register_Kind,
+    Bus_Kind,
+}
+
+impl SignalKind {
+    pub const VALUES: [Self; 2] = [
+        Self::Register_Kind,
+        Self::Bus_Kind,
+    ];
+
+    pub const IMAGES: [&'static str; 2] = [
+        "register_kind",
+        "bus_kind",
+    ];
+}
+#[repr(u8)]
+pub enum Constraint {
+    Unconstrained,
+    Partially_Constrained,
+    Fully_Constrained,
+}
+
+impl Constraint {
+    pub const VALUES: [Self; 3] = [
+        Self::Unconstrained,
+        Self::Partially_Constrained,
+        Self::Fully_Constrained,
+    ];
+
+    pub const IMAGES: [&'static str; 3] = [
+        "unconstrained",
+        "partially_constrained",
+        "fully_constrained",
+    ];
+}
+#[repr(u8)]
+pub enum ForceMode {
+    Force_In,
+    Force_Out,
+}
+
+impl ForceMode {
+    pub const VALUES: [Self; 2] = [
+        Self::Force_In,
+        Self::Force_Out,
+    ];
+
+    pub const IMAGES: [&'static str; 2] = [
+        "force_in",
+        "force_out",
     ];
 }
 #[repr(u8)]
@@ -1467,14 +1567,14 @@ pub enum DateStateType {
 }
 
 impl DateStateType {
-    const VALUES: [Self; 4] = [
+    pub const VALUES: [Self; 4] = [
         Self::Extern,
         Self::Disk,
         Self::Parse,
         Self::Analyze,
     ];
 
-    const IMAGES: [&'static str; 4] = [
+    pub const IMAGES: [&'static str; 4] = [
         "extern",
         "disk",
         "parse",
@@ -1491,7 +1591,7 @@ pub enum NumberBaseType {
 }
 
 impl NumberBaseType {
-    const VALUES: [Self; 5] = [
+    pub const VALUES: [Self; 5] = [
         Self::Base_None,
         Self::Base_2,
         Self::Base_8,
@@ -1499,7 +1599,7 @@ impl NumberBaseType {
         Self::Base_16,
     ];
 
-    const IMAGES: [&'static str; 5] = [
+    pub const IMAGES: [&'static str; 5] = [
         "base_none",
         "base_2",
         "base_8",
@@ -1508,7 +1608,7 @@ impl NumberBaseType {
     ];
 }
 #[repr(u16)]
-pub enum Iir_Predefined {
+pub enum PredefinedFunctions {
     Error,
     Boolean_And,
     Boolean_Or,
@@ -2270,8 +2370,8 @@ pub enum Iir_Predefined {
     Ieee_Std_Logic_Misc_Xnor_Reduce_Suv,
 }
 
-impl Iir_Predefined {
-    const VALUES: [Self; 759] = [
+impl PredefinedFunctions {
+    pub const VALUES: [Self; 759] = [
         Self::Error,
         Self::Boolean_And,
         Self::Boolean_Or,
@@ -3033,7 +3133,7 @@ impl Iir_Predefined {
         Self::Ieee_Std_Logic_Misc_Xnor_Reduce_Suv,
     ];
 
-    const IMAGES: [&'static str; 759] = [
+    pub const IMAGES: [&'static str; 759] = [
         "error",
         "boolean_and",
         "boolean_or",
@@ -3798,15 +3898,23 @@ impl Iir_Predefined {
 #[repr(transparent)]
 #[derive(Copy, Clone, PartialEq)]
 pub struct Node(u32);
+
+#[repr(transparent)]
+#[derive(Copy, Clone, PartialEq)]
+pub struct Flist(u32);
 type PSLNode = u32;
 type PSLNFA = u32;
 type Tok = u8;
+type List = u32;
+type Index32 = i32;
+
 #[repr(u8)]
 pub enum TriStateType {
    Unknown,
    False,
    True,
 }
+
 #[repr(u8)]
 pub enum DirectionType {
    To,
@@ -3825,6 +3933,15 @@ extern "C" {
 
   #[link_name = "vhdl__nodes__set_location"]
   fn set_location(n: Node, loc: Location);
+
+  #[link_name = "vhdl__flists__create_flist"]
+  fn create_flist(len: u32) -> Flist;
+
+  #[link_name = "vhdl__flists__set_nth_element"]
+  fn set_nth_element(flist: Flist, idx: u32, el: Node);
+
+  #[link_name = "vhdl__flists__get_nth_element"]
+  fn get_nth_element(flist: Flist, idx: u32) -> Node;
 
   #[link_name = "vhdl__nodes__get_first_design_unit"]
   fn get_first_design_unit(n: Node) -> Node;
@@ -3911,16 +4028,16 @@ extern "C" {
   fn set_context_items(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_dependence_list"]
-  fn get_dependence_list(n: Node) -> Node;
+  fn get_dependence_list(n: Node) -> List;
 
   #[link_name = "vhdl__nodes__set_dependence_list"]
-  fn set_dependence_list(n: Node, v: Node);
+  fn set_dependence_list(n: Node, v: List);
 
   #[link_name = "vhdl__nodes__get_analysis_checks_list"]
-  fn get_analysis_checks_list(n: Node) -> Node;
+  fn get_analysis_checks_list(n: Node) -> List;
 
   #[link_name = "vhdl__nodes__set_analysis_checks_list"]
-  fn set_analysis_checks_list(n: Node, v: Node);
+  fn set_analysis_checks_list(n: Node, v: List);
 
   #[link_name = "vhdl__nodes__get_date_state"]
   fn get_date_state(n: Node) -> DateStateType;
@@ -3971,10 +4088,10 @@ extern "C" {
   fn set_value(n: Node, v: i64);
 
   #[link_name = "vhdl__nodes__get_enum_pos"]
-  fn get_enum_pos(n: Node) -> Node;
+  fn get_enum_pos(n: Node) -> i32;
 
   #[link_name = "vhdl__nodes__set_enum_pos"]
-  fn set_enum_pos(n: Node, v: Node);
+  fn set_enum_pos(n: Node, v: i32);
 
   #[link_name = "vhdl__nodes__get_physical_literal"]
   fn get_physical_literal(n: Node) -> Node;
@@ -3989,10 +4106,10 @@ extern "C" {
   fn set_fp_value(n: Node, v: f64);
 
   #[link_name = "vhdl__nodes__get_simple_aggregate_list"]
-  fn get_simple_aggregate_list(n: Node) -> Node;
+  fn get_simple_aggregate_list(n: Node) -> Flist;
 
   #[link_name = "vhdl__nodes__set_simple_aggregate_list"]
-  fn set_simple_aggregate_list(n: Node, v: Node);
+  fn set_simple_aggregate_list(n: Node, v: Flist);
 
   #[link_name = "vhdl__nodes__get_string8_id"]
   fn get_string8_id(n: Node) -> String8Id;
@@ -4067,10 +4184,10 @@ extern "C" {
   fn set_entity_class(n: Node, v: Tok);
 
   #[link_name = "vhdl__nodes__get_entity_name_list"]
-  fn get_entity_name_list(n: Node) -> Node;
+  fn get_entity_name_list(n: Node) -> Flist;
 
   #[link_name = "vhdl__nodes__set_entity_name_list"]
-  fn set_entity_name_list(n: Node, v: Node);
+  fn set_entity_name_list(n: Node, v: Flist);
 
   #[link_name = "vhdl__nodes__get_attribute_designator"]
   fn get_attribute_designator(n: Node) -> Node;
@@ -4097,16 +4214,16 @@ extern "C" {
   fn set_static_attribute_flag(n: Node, v: bool);
 
   #[link_name = "vhdl__nodes__get_signal_list"]
-  fn get_signal_list(n: Node) -> Node;
+  fn get_signal_list(n: Node) -> Flist;
 
   #[link_name = "vhdl__nodes__set_signal_list"]
-  fn set_signal_list(n: Node, v: Node);
+  fn set_signal_list(n: Node, v: Flist);
 
   #[link_name = "vhdl__nodes__get_quantity_list"]
-  fn get_quantity_list(n: Node) -> Node;
+  fn get_quantity_list(n: Node) -> Flist;
 
   #[link_name = "vhdl__nodes__set_quantity_list"]
-  fn set_quantity_list(n: Node, v: Node);
+  fn set_quantity_list(n: Node, v: Flist);
 
   #[link_name = "vhdl__nodes__get_designated_entity"]
   fn get_designated_entity(n: Node) -> Node;
@@ -4463,10 +4580,10 @@ extern "C" {
   fn set_reference_terminal_flag(n: Node, v: bool);
 
   #[link_name = "vhdl__nodes__get_mode"]
-  fn get_mode(n: Node) -> Node;
+  fn get_mode(n: Node) -> Mode;
 
   #[link_name = "vhdl__nodes__set_mode"]
-  fn set_mode(n: Node, v: Node);
+  fn set_mode(n: Node, v: Mode);
 
   #[link_name = "vhdl__nodes__get_guarded_signal_flag"]
   fn get_guarded_signal_flag(n: Node) -> bool;
@@ -4475,10 +4592,10 @@ extern "C" {
   fn set_guarded_signal_flag(n: Node, v: bool);
 
   #[link_name = "vhdl__nodes__get_signal_kind"]
-  fn get_signal_kind(n: Node) -> Node;
+  fn get_signal_kind(n: Node) -> SignalKind;
 
   #[link_name = "vhdl__nodes__set_signal_kind"]
-  fn set_signal_kind(n: Node, v: Node);
+  fn set_signal_kind(n: Node, v: SignalKind);
 
   #[link_name = "vhdl__nodes__get_base_name"]
   fn get_base_name(n: Node) -> Node;
@@ -4529,28 +4646,28 @@ extern "C" {
   fn set_subprogram_body(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_overload_number"]
-  fn get_overload_number(n: Node) -> Node;
+  fn get_overload_number(n: Node) -> i32;
 
   #[link_name = "vhdl__nodes__set_overload_number"]
-  fn set_overload_number(n: Node, v: Node);
+  fn set_overload_number(n: Node, v: i32);
 
   #[link_name = "vhdl__nodes__get_subprogram_depth"]
-  fn get_subprogram_depth(n: Node) -> Node;
+  fn get_subprogram_depth(n: Node) -> i32;
 
   #[link_name = "vhdl__nodes__set_subprogram_depth"]
-  fn set_subprogram_depth(n: Node, v: Node);
+  fn set_subprogram_depth(n: Node, v: i32);
 
   #[link_name = "vhdl__nodes__get_subprogram_hash"]
-  fn get_subprogram_hash(n: Node) -> Node;
+  fn get_subprogram_hash(n: Node) -> i32;
 
   #[link_name = "vhdl__nodes__set_subprogram_hash"]
-  fn set_subprogram_hash(n: Node, v: Node);
+  fn set_subprogram_hash(n: Node, v: i32);
 
   #[link_name = "vhdl__nodes__get_impure_depth"]
-  fn get_impure_depth(n: Node) -> Node;
+  fn get_impure_depth(n: Node) -> i32;
 
   #[link_name = "vhdl__nodes__set_impure_depth"]
-  fn set_impure_depth(n: Node, v: Node);
+  fn set_impure_depth(n: Node, v: i32);
 
   #[link_name = "vhdl__nodes__get_return_type"]
   fn get_return_type(n: Node) -> Node;
@@ -4559,10 +4676,10 @@ extern "C" {
   fn set_return_type(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_implicit_definition"]
-  fn get_implicit_definition(n: Node) -> Node;
+  fn get_implicit_definition(n: Node) -> PredefinedFunctions;
 
   #[link_name = "vhdl__nodes__set_implicit_definition"]
-  fn set_implicit_definition(n: Node, v: Node);
+  fn set_implicit_definition(n: Node, v: PredefinedFunctions);
 
   #[link_name = "vhdl__nodes__get_uninstantiated_subprogram_name"]
   fn get_uninstantiated_subprogram_name(n: Node) -> Node;
@@ -4637,10 +4754,10 @@ extern "C" {
   fn set_file_open_kind(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_element_position"]
-  fn get_element_position(n: Node) -> Node;
+  fn get_element_position(n: Node) -> Index32;
 
   #[link_name = "vhdl__nodes__set_element_position"]
-  fn set_element_position(n: Node, v: Node);
+  fn set_element_position(n: Node, v: Index32);
 
   #[link_name = "vhdl__nodes__get_use_clause_chain"]
   fn get_use_clause_chain(n: Node) -> Node;
@@ -4697,10 +4814,10 @@ extern "C" {
   fn set_associated_type(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_enumeration_literal_list"]
-  fn get_enumeration_literal_list(n: Node) -> Node;
+  fn get_enumeration_literal_list(n: Node) -> Flist;
 
   #[link_name = "vhdl__nodes__set_enumeration_literal_list"]
-  fn set_enumeration_literal_list(n: Node, v: Node);
+  fn set_enumeration_literal_list(n: Node, v: Flist);
 
   #[link_name = "vhdl__nodes__get_entity_class_entry_chain"]
   fn get_entity_class_entry_chain(n: Node) -> Node;
@@ -4709,10 +4826,10 @@ extern "C" {
   fn set_entity_class_entry_chain(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_group_constituent_list"]
-  fn get_group_constituent_list(n: Node) -> Node;
+  fn get_group_constituent_list(n: Node) -> Flist;
 
   #[link_name = "vhdl__nodes__set_group_constituent_list"]
-  fn set_group_constituent_list(n: Node, v: Node);
+  fn set_group_constituent_list(n: Node, v: Flist);
 
   #[link_name = "vhdl__nodes__get_unit_chain"]
   fn get_unit_chain(n: Node) -> Node;
@@ -4895,34 +5012,34 @@ extern "C" {
   fn set_is_character_type(n: Node, v: bool);
 
   #[link_name = "vhdl__nodes__get_nature_staticness"]
-  fn get_nature_staticness(n: Node) -> Node;
+  fn get_nature_staticness(n: Node) -> Staticness;
 
   #[link_name = "vhdl__nodes__set_nature_staticness"]
-  fn set_nature_staticness(n: Node, v: Node);
+  fn set_nature_staticness(n: Node, v: Staticness);
 
   #[link_name = "vhdl__nodes__get_type_staticness"]
-  fn get_type_staticness(n: Node) -> Node;
+  fn get_type_staticness(n: Node) -> Staticness;
 
   #[link_name = "vhdl__nodes__set_type_staticness"]
-  fn set_type_staticness(n: Node, v: Node);
+  fn set_type_staticness(n: Node, v: Staticness);
 
   #[link_name = "vhdl__nodes__get_constraint_state"]
-  fn get_constraint_state(n: Node) -> Node;
+  fn get_constraint_state(n: Node) -> Constraint;
 
   #[link_name = "vhdl__nodes__set_constraint_state"]
-  fn set_constraint_state(n: Node, v: Node);
+  fn set_constraint_state(n: Node, v: Constraint);
 
   #[link_name = "vhdl__nodes__get_index_subtype_list"]
-  fn get_index_subtype_list(n: Node) -> Node;
+  fn get_index_subtype_list(n: Node) -> Flist;
 
   #[link_name = "vhdl__nodes__set_index_subtype_list"]
-  fn set_index_subtype_list(n: Node, v: Node);
+  fn set_index_subtype_list(n: Node, v: Flist);
 
   #[link_name = "vhdl__nodes__get_index_subtype_definition_list"]
-  fn get_index_subtype_definition_list(n: Node) -> Node;
+  fn get_index_subtype_definition_list(n: Node) -> Flist;
 
   #[link_name = "vhdl__nodes__set_index_subtype_definition_list"]
-  fn set_index_subtype_definition_list(n: Node, v: Node);
+  fn set_index_subtype_definition_list(n: Node, v: Flist);
 
   #[link_name = "vhdl__nodes__get_element_subtype_indication"]
   fn get_element_subtype_indication(n: Node) -> Node;
@@ -4949,10 +5066,10 @@ extern "C" {
   fn set_element_subnature(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_index_constraint_list"]
-  fn get_index_constraint_list(n: Node) -> Node;
+  fn get_index_constraint_list(n: Node) -> Flist;
 
   #[link_name = "vhdl__nodes__set_index_constraint_list"]
-  fn set_index_constraint_list(n: Node, v: Node);
+  fn set_index_constraint_list(n: Node, v: Flist);
 
   #[link_name = "vhdl__nodes__get_array_element_constraint"]
   fn get_array_element_constraint(n: Node) -> Node;
@@ -4973,10 +5090,10 @@ extern "C" {
   fn set_has_element_constraint_flag(n: Node, v: bool);
 
   #[link_name = "vhdl__nodes__get_elements_declaration_list"]
-  fn get_elements_declaration_list(n: Node) -> Node;
+  fn get_elements_declaration_list(n: Node) -> Flist;
 
   #[link_name = "vhdl__nodes__set_elements_declaration_list"]
-  fn set_elements_declaration_list(n: Node, v: Node);
+  fn set_elements_declaration_list(n: Node, v: Flist);
 
   #[link_name = "vhdl__nodes__get_elements_definition_chain"]
   fn get_elements_definition_chain(n: Node) -> Node;
@@ -4985,10 +5102,10 @@ extern "C" {
   fn set_elements_definition_chain(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_elements_definition_list"]
-  fn get_elements_definition_list(n: Node) -> Node;
+  fn get_elements_definition_list(n: Node) -> Flist;
 
   #[link_name = "vhdl__nodes__set_elements_definition_list"]
-  fn set_elements_definition_list(n: Node, v: Node);
+  fn set_elements_definition_list(n: Node, v: Flist);
 
   #[link_name = "vhdl__nodes__get_owned_elements_chain"]
   fn get_owned_elements_chain(n: Node) -> Node;
@@ -5009,10 +5126,10 @@ extern "C" {
   fn set_designated_subtype_indication(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_index_list"]
-  fn get_index_list(n: Node) -> Node;
+  fn get_index_list(n: Node) -> Flist;
 
   #[link_name = "vhdl__nodes__set_index_list"]
-  fn set_index_list(n: Node, v: Node);
+  fn set_index_list(n: Node, v: Flist);
 
   #[link_name = "vhdl__nodes__get_reference"]
   fn get_reference(n: Node) -> Node;
@@ -5081,10 +5198,10 @@ extern "C" {
   fn set_guard(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_delay_mechanism"]
-  fn get_delay_mechanism(n: Node) -> Node;
+  fn get_delay_mechanism(n: Node) -> DelayMechanism;
 
   #[link_name = "vhdl__nodes__set_delay_mechanism"]
-  fn set_delay_mechanism(n: Node, v: Node);
+  fn set_delay_mechanism(n: Node, v: DelayMechanism);
 
   #[link_name = "vhdl__nodes__get_reject_time_expression"]
   fn get_reject_time_expression(n: Node) -> Node;
@@ -5093,10 +5210,10 @@ extern "C" {
   fn set_reject_time_expression(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_force_mode"]
-  fn get_force_mode(n: Node) -> Node;
+  fn get_force_mode(n: Node) -> ForceMode;
 
   #[link_name = "vhdl__nodes__set_force_mode"]
-  fn set_force_mode(n: Node, v: Node);
+  fn set_force_mode(n: Node, v: ForceMode);
 
   #[link_name = "vhdl__nodes__get_has_force_mode"]
   fn get_has_force_mode(n: Node) -> bool;
@@ -5105,10 +5222,10 @@ extern "C" {
   fn set_has_force_mode(n: Node, v: bool);
 
   #[link_name = "vhdl__nodes__get_sensitivity_list"]
-  fn get_sensitivity_list(n: Node) -> Node;
+  fn get_sensitivity_list(n: Node) -> List;
 
   #[link_name = "vhdl__nodes__set_sensitivity_list"]
-  fn set_sensitivity_list(n: Node, v: Node);
+  fn set_sensitivity_list(n: Node, v: List);
 
   #[link_name = "vhdl__nodes__get_process_origin"]
   fn get_process_origin(n: Node) -> Node;
@@ -5159,10 +5276,10 @@ extern "C" {
   fn set_postponed_flag(n: Node, v: bool);
 
   #[link_name = "vhdl__nodes__get_callees_list"]
-  fn get_callees_list(n: Node) -> Node;
+  fn get_callees_list(n: Node) -> List;
 
   #[link_name = "vhdl__nodes__set_callees_list"]
-  fn set_callees_list(n: Node, v: Node);
+  fn set_callees_list(n: Node, v: List);
 
   #[link_name = "vhdl__nodes__get_passive_flag"]
   fn get_passive_flag(n: Node) -> bool;
@@ -5183,10 +5300,10 @@ extern "C" {
   fn set_wait_state(n: Node, v: TriStateType);
 
   #[link_name = "vhdl__nodes__get_all_sensitized_state"]
-  fn get_all_sensitized_state(n: Node) -> Node;
+  fn get_all_sensitized_state(n: Node) -> AllSensitized;
 
   #[link_name = "vhdl__nodes__set_all_sensitized_state"]
-  fn set_all_sensitized_state(n: Node, v: Node);
+  fn set_all_sensitized_state(n: Node, v: AllSensitized);
 
   #[link_name = "vhdl__nodes__get_seen_flag"]
   fn get_seen_flag(n: Node) -> bool;
@@ -5225,10 +5342,10 @@ extern "C" {
   fn set_has_signal_flag(n: Node, v: bool);
 
   #[link_name = "vhdl__nodes__get_purity_state"]
-  fn get_purity_state(n: Node) -> Node;
+  fn get_purity_state(n: Node) -> PureState;
 
   #[link_name = "vhdl__nodes__set_purity_state"]
-  fn set_purity_state(n: Node, v: Node);
+  fn set_purity_state(n: Node, v: PureState);
 
   #[link_name = "vhdl__nodes__get_elab_flag"]
   fn get_elab_flag(n: Node) -> bool;
@@ -5387,10 +5504,10 @@ extern "C" {
   fn set_guard_decl(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_guard_sensitivity_list"]
-  fn get_guard_sensitivity_list(n: Node) -> Node;
+  fn get_guard_sensitivity_list(n: Node) -> List;
 
   #[link_name = "vhdl__nodes__set_guard_sensitivity_list"]
-  fn set_guard_sensitivity_list(n: Node, v: Node);
+  fn set_guard_sensitivity_list(n: Node, v: List);
 
   #[link_name = "vhdl__nodes__get_attribute_implicit_chain"]
   fn get_attribute_implicit_chain(n: Node) -> Node;
@@ -5513,10 +5630,10 @@ extern "C" {
   fn set_component_name(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_instantiation_list"]
-  fn get_instantiation_list(n: Node) -> Node;
+  fn get_instantiation_list(n: Node) -> Flist;
 
   #[link_name = "vhdl__nodes__set_instantiation_list"]
-  fn set_instantiation_list(n: Node, v: Node);
+  fn set_instantiation_list(n: Node, v: Flist);
 
   #[link_name = "vhdl__nodes__get_entity_aspect"]
   fn get_entity_aspect(n: Node) -> Node;
@@ -5549,10 +5666,10 @@ extern "C" {
   fn set_referenced_name(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_expr_staticness"]
-  fn get_expr_staticness(n: Node) -> Node;
+  fn get_expr_staticness(n: Node) -> Staticness;
 
   #[link_name = "vhdl__nodes__set_expr_staticness"]
-  fn set_expr_staticness(n: Node, v: Node);
+  fn set_expr_staticness(n: Node, v: Staticness);
 
   #[link_name = "vhdl__nodes__get_scalar_size"]
   fn get_scalar_size(n: Node) -> ScalarSize;
@@ -5603,10 +5720,10 @@ extern "C" {
   fn set_group_template_name(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_name_staticness"]
-  fn get_name_staticness(n: Node) -> Node;
+  fn get_name_staticness(n: Node) -> Staticness;
 
   #[link_name = "vhdl__nodes__set_name_staticness"]
-  fn set_name_staticness(n: Node, v: Node);
+  fn set_name_staticness(n: Node, v: Staticness);
 
   #[link_name = "vhdl__nodes__get_prefix"]
   fn get_prefix(n: Node) -> Node;
@@ -5747,10 +5864,10 @@ extern "C" {
   fn set_aggr_dynamic_flag(n: Node, v: bool);
 
   #[link_name = "vhdl__nodes__get_aggr_min_length"]
-  fn get_aggr_min_length(n: Node) -> Node;
+  fn get_aggr_min_length(n: Node) -> i32;
 
   #[link_name = "vhdl__nodes__set_aggr_min_length"]
-  fn set_aggr_min_length(n: Node, v: Node);
+  fn set_aggr_min_length(n: Node, v: i32);
 
   #[link_name = "vhdl__nodes__get_aggr_low_limit"]
   fn get_aggr_low_limit(n: Node) -> Node;
@@ -5807,10 +5924,10 @@ extern "C" {
   fn set_matching_flag(n: Node, v: bool);
 
   #[link_name = "vhdl__nodes__get_choice_staticness"]
-  fn get_choice_staticness(n: Node) -> Node;
+  fn get_choice_staticness(n: Node) -> Staticness;
 
   #[link_name = "vhdl__nodes__set_choice_staticness"]
-  fn set_choice_staticness(n: Node, v: Node);
+  fn set_choice_staticness(n: Node, v: Staticness);
 
   #[link_name = "vhdl__nodes__get_procedure_call"]
   fn get_procedure_call(n: Node) -> Node;
@@ -5891,10 +6008,10 @@ extern "C" {
   fn set_is_within_flag(n: Node, v: bool);
 
   #[link_name = "vhdl__nodes__get_type_marks_list"]
-  fn get_type_marks_list(n: Node) -> Node;
+  fn get_type_marks_list(n: Node) -> Flist;
 
   #[link_name = "vhdl__nodes__set_type_marks_list"]
-  fn set_type_marks_list(n: Node, v: Node);
+  fn set_type_marks_list(n: Node, v: Flist);
 
   #[link_name = "vhdl__nodes__get_implicit_alias_flag"]
   fn get_implicit_alias_flag(n: Node) -> bool;
@@ -5915,10 +6032,10 @@ extern "C" {
   fn set_attribute_signature(n: Node, v: Node);
 
   #[link_name = "vhdl__nodes__get_overload_list"]
-  fn get_overload_list(n: Node) -> Node;
+  fn get_overload_list(n: Node) -> List;
 
   #[link_name = "vhdl__nodes__set_overload_list"]
-  fn set_overload_list(n: Node, v: Node);
+  fn set_overload_list(n: Node, v: List);
 
   #[link_name = "vhdl__nodes__get_simple_name_identifier"]
   fn get_simple_name_identifier(n: Node) -> NameId;
@@ -6125,10 +6242,10 @@ extern "C" {
   fn set_psl_nbr_states(n: Node, v: i32);
 
   #[link_name = "vhdl__nodes__get_psl_clock_sensitivity"]
-  fn get_psl_clock_sensitivity(n: Node) -> Node;
+  fn get_psl_clock_sensitivity(n: Node) -> List;
 
   #[link_name = "vhdl__nodes__set_psl_clock_sensitivity"]
-  fn set_psl_clock_sensitivity(n: Node, v: Node);
+  fn set_psl_clock_sensitivity(n: Node, v: List);
 
   #[link_name = "vhdl__nodes__get_psl_eos_flag"]
   fn get_psl_eos_flag(n: Node) -> bool;
@@ -6317,19 +6434,19 @@ impl Node {
     unsafe { set_context_items(self, v); }
   }
 
-  pub fn dependence_list(self: Self) -> Node {
+  pub fn dependence_list(self: Self) -> List {
     unsafe { get_dependence_list(self) }
   }
 
-  pub fn set_dependence_list(self: Self, v : Node) {
+  pub fn set_dependence_list(self: Self, v : List) {
     unsafe { set_dependence_list(self, v); }
   }
 
-  pub fn analysis_checks_list(self: Self) -> Node {
+  pub fn analysis_checks_list(self: Self) -> List {
     unsafe { get_analysis_checks_list(self) }
   }
 
-  pub fn set_analysis_checks_list(self: Self, v : Node) {
+  pub fn set_analysis_checks_list(self: Self, v : List) {
     unsafe { set_analysis_checks_list(self, v); }
   }
 
@@ -6397,11 +6514,11 @@ impl Node {
     unsafe { set_value(self, v); }
   }
 
-  pub fn enum_pos(self: Self) -> Node {
+  pub fn enum_pos(self: Self) -> i32 {
     unsafe { get_enum_pos(self) }
   }
 
-  pub fn set_enum_pos(self: Self, v : Node) {
+  pub fn set_enum_pos(self: Self, v : i32) {
     unsafe { set_enum_pos(self, v); }
   }
 
@@ -6421,11 +6538,11 @@ impl Node {
     unsafe { set_fp_value(self, v); }
   }
 
-  pub fn simple_aggregate_list(self: Self) -> Node {
+  pub fn simple_aggregate_list(self: Self) -> Flist {
     unsafe { get_simple_aggregate_list(self) }
   }
 
-  pub fn set_simple_aggregate_list(self: Self, v : Node) {
+  pub fn set_simple_aggregate_list(self: Self, v : Flist) {
     unsafe { set_simple_aggregate_list(self, v); }
   }
 
@@ -6525,11 +6642,11 @@ impl Node {
     unsafe { set_entity_class(self, v); }
   }
 
-  pub fn entity_name_list(self: Self) -> Node {
+  pub fn entity_name_list(self: Self) -> Flist {
     unsafe { get_entity_name_list(self) }
   }
 
-  pub fn set_entity_name_list(self: Self, v : Node) {
+  pub fn set_entity_name_list(self: Self, v : Flist) {
     unsafe { set_entity_name_list(self, v); }
   }
 
@@ -6565,19 +6682,19 @@ impl Node {
     unsafe { set_static_attribute_flag(self, v); }
   }
 
-  pub fn signal_list(self: Self) -> Node {
+  pub fn signal_list(self: Self) -> Flist {
     unsafe { get_signal_list(self) }
   }
 
-  pub fn set_signal_list(self: Self, v : Node) {
+  pub fn set_signal_list(self: Self, v : Flist) {
     unsafe { set_signal_list(self, v); }
   }
 
-  pub fn quantity_list(self: Self) -> Node {
+  pub fn quantity_list(self: Self) -> Flist {
     unsafe { get_quantity_list(self) }
   }
 
-  pub fn set_quantity_list(self: Self, v : Node) {
+  pub fn set_quantity_list(self: Self, v : Flist) {
     unsafe { set_quantity_list(self, v); }
   }
 
@@ -7053,11 +7170,11 @@ impl Node {
     unsafe { set_reference_terminal_flag(self, v); }
   }
 
-  pub fn mode(self: Self) -> Node {
+  pub fn mode(self: Self) -> Mode {
     unsafe { get_mode(self) }
   }
 
-  pub fn set_mode(self: Self, v : Node) {
+  pub fn set_mode(self: Self, v : Mode) {
     unsafe { set_mode(self, v); }
   }
 
@@ -7069,11 +7186,11 @@ impl Node {
     unsafe { set_guarded_signal_flag(self, v); }
   }
 
-  pub fn signal_kind(self: Self) -> Node {
+  pub fn signal_kind(self: Self) -> SignalKind {
     unsafe { get_signal_kind(self) }
   }
 
-  pub fn set_signal_kind(self: Self, v : Node) {
+  pub fn set_signal_kind(self: Self, v : SignalKind) {
     unsafe { set_signal_kind(self, v); }
   }
 
@@ -7141,35 +7258,35 @@ impl Node {
     unsafe { set_subprogram_body(self, v); }
   }
 
-  pub fn overload_number(self: Self) -> Node {
+  pub fn overload_number(self: Self) -> i32 {
     unsafe { get_overload_number(self) }
   }
 
-  pub fn set_overload_number(self: Self, v : Node) {
+  pub fn set_overload_number(self: Self, v : i32) {
     unsafe { set_overload_number(self, v); }
   }
 
-  pub fn subprogram_depth(self: Self) -> Node {
+  pub fn subprogram_depth(self: Self) -> i32 {
     unsafe { get_subprogram_depth(self) }
   }
 
-  pub fn set_subprogram_depth(self: Self, v : Node) {
+  pub fn set_subprogram_depth(self: Self, v : i32) {
     unsafe { set_subprogram_depth(self, v); }
   }
 
-  pub fn subprogram_hash(self: Self) -> Node {
+  pub fn subprogram_hash(self: Self) -> i32 {
     unsafe { get_subprogram_hash(self) }
   }
 
-  pub fn set_subprogram_hash(self: Self, v : Node) {
+  pub fn set_subprogram_hash(self: Self, v : i32) {
     unsafe { set_subprogram_hash(self, v); }
   }
 
-  pub fn impure_depth(self: Self) -> Node {
+  pub fn impure_depth(self: Self) -> i32 {
     unsafe { get_impure_depth(self) }
   }
 
-  pub fn set_impure_depth(self: Self, v : Node) {
+  pub fn set_impure_depth(self: Self, v : i32) {
     unsafe { set_impure_depth(self, v); }
   }
 
@@ -7181,11 +7298,11 @@ impl Node {
     unsafe { set_return_type(self, v); }
   }
 
-  pub fn implicit_definition(self: Self) -> Node {
+  pub fn implicit_definition(self: Self) -> PredefinedFunctions {
     unsafe { get_implicit_definition(self) }
   }
 
-  pub fn set_implicit_definition(self: Self, v : Node) {
+  pub fn set_implicit_definition(self: Self, v : PredefinedFunctions) {
     unsafe { set_implicit_definition(self, v); }
   }
 
@@ -7285,11 +7402,11 @@ impl Node {
     unsafe { set_file_open_kind(self, v); }
   }
 
-  pub fn element_position(self: Self) -> Node {
+  pub fn element_position(self: Self) -> Index32 {
     unsafe { get_element_position(self) }
   }
 
-  pub fn set_element_position(self: Self, v : Node) {
+  pub fn set_element_position(self: Self, v : Index32) {
     unsafe { set_element_position(self, v); }
   }
 
@@ -7365,11 +7482,11 @@ impl Node {
     unsafe { set_associated_type(self, v); }
   }
 
-  pub fn enumeration_literal_list(self: Self) -> Node {
+  pub fn enumeration_literal_list(self: Self) -> Flist {
     unsafe { get_enumeration_literal_list(self) }
   }
 
-  pub fn set_enumeration_literal_list(self: Self, v : Node) {
+  pub fn set_enumeration_literal_list(self: Self, v : Flist) {
     unsafe { set_enumeration_literal_list(self, v); }
   }
 
@@ -7381,11 +7498,11 @@ impl Node {
     unsafe { set_entity_class_entry_chain(self, v); }
   }
 
-  pub fn group_constituent_list(self: Self) -> Node {
+  pub fn group_constituent_list(self: Self) -> Flist {
     unsafe { get_group_constituent_list(self) }
   }
 
-  pub fn set_group_constituent_list(self: Self, v : Node) {
+  pub fn set_group_constituent_list(self: Self, v : Flist) {
     unsafe { set_group_constituent_list(self, v); }
   }
 
@@ -7629,43 +7746,43 @@ impl Node {
     unsafe { set_is_character_type(self, v); }
   }
 
-  pub fn nature_staticness(self: Self) -> Node {
+  pub fn nature_staticness(self: Self) -> Staticness {
     unsafe { get_nature_staticness(self) }
   }
 
-  pub fn set_nature_staticness(self: Self, v : Node) {
+  pub fn set_nature_staticness(self: Self, v : Staticness) {
     unsafe { set_nature_staticness(self, v); }
   }
 
-  pub fn type_staticness(self: Self) -> Node {
+  pub fn type_staticness(self: Self) -> Staticness {
     unsafe { get_type_staticness(self) }
   }
 
-  pub fn set_type_staticness(self: Self, v : Node) {
+  pub fn set_type_staticness(self: Self, v : Staticness) {
     unsafe { set_type_staticness(self, v); }
   }
 
-  pub fn constraint_state(self: Self) -> Node {
+  pub fn constraint_state(self: Self) -> Constraint {
     unsafe { get_constraint_state(self) }
   }
 
-  pub fn set_constraint_state(self: Self, v : Node) {
+  pub fn set_constraint_state(self: Self, v : Constraint) {
     unsafe { set_constraint_state(self, v); }
   }
 
-  pub fn index_subtype_list(self: Self) -> Node {
+  pub fn index_subtype_list(self: Self) -> Flist {
     unsafe { get_index_subtype_list(self) }
   }
 
-  pub fn set_index_subtype_list(self: Self, v : Node) {
+  pub fn set_index_subtype_list(self: Self, v : Flist) {
     unsafe { set_index_subtype_list(self, v); }
   }
 
-  pub fn index_subtype_definition_list(self: Self) -> Node {
+  pub fn index_subtype_definition_list(self: Self) -> Flist {
     unsafe { get_index_subtype_definition_list(self) }
   }
 
-  pub fn set_index_subtype_definition_list(self: Self, v : Node) {
+  pub fn set_index_subtype_definition_list(self: Self, v : Flist) {
     unsafe { set_index_subtype_definition_list(self, v); }
   }
 
@@ -7701,11 +7818,11 @@ impl Node {
     unsafe { set_element_subnature(self, v); }
   }
 
-  pub fn index_constraint_list(self: Self) -> Node {
+  pub fn index_constraint_list(self: Self) -> Flist {
     unsafe { get_index_constraint_list(self) }
   }
 
-  pub fn set_index_constraint_list(self: Self, v : Node) {
+  pub fn set_index_constraint_list(self: Self, v : Flist) {
     unsafe { set_index_constraint_list(self, v); }
   }
 
@@ -7733,11 +7850,11 @@ impl Node {
     unsafe { set_has_element_constraint_flag(self, v); }
   }
 
-  pub fn elements_declaration_list(self: Self) -> Node {
+  pub fn elements_declaration_list(self: Self) -> Flist {
     unsafe { get_elements_declaration_list(self) }
   }
 
-  pub fn set_elements_declaration_list(self: Self, v : Node) {
+  pub fn set_elements_declaration_list(self: Self, v : Flist) {
     unsafe { set_elements_declaration_list(self, v); }
   }
 
@@ -7749,11 +7866,11 @@ impl Node {
     unsafe { set_elements_definition_chain(self, v); }
   }
 
-  pub fn elements_definition_list(self: Self) -> Node {
+  pub fn elements_definition_list(self: Self) -> Flist {
     unsafe { get_elements_definition_list(self) }
   }
 
-  pub fn set_elements_definition_list(self: Self, v : Node) {
+  pub fn set_elements_definition_list(self: Self, v : Flist) {
     unsafe { set_elements_definition_list(self, v); }
   }
 
@@ -7781,11 +7898,11 @@ impl Node {
     unsafe { set_designated_subtype_indication(self, v); }
   }
 
-  pub fn index_list(self: Self) -> Node {
+  pub fn index_list(self: Self) -> Flist {
     unsafe { get_index_list(self) }
   }
 
-  pub fn set_index_list(self: Self, v : Node) {
+  pub fn set_index_list(self: Self, v : Flist) {
     unsafe { set_index_list(self, v); }
   }
 
@@ -7877,11 +7994,11 @@ impl Node {
     unsafe { set_guard(self, v); }
   }
 
-  pub fn delay_mechanism(self: Self) -> Node {
+  pub fn delay_mechanism(self: Self) -> DelayMechanism {
     unsafe { get_delay_mechanism(self) }
   }
 
-  pub fn set_delay_mechanism(self: Self, v : Node) {
+  pub fn set_delay_mechanism(self: Self, v : DelayMechanism) {
     unsafe { set_delay_mechanism(self, v); }
   }
 
@@ -7893,11 +8010,11 @@ impl Node {
     unsafe { set_reject_time_expression(self, v); }
   }
 
-  pub fn force_mode(self: Self) -> Node {
+  pub fn force_mode(self: Self) -> ForceMode {
     unsafe { get_force_mode(self) }
   }
 
-  pub fn set_force_mode(self: Self, v : Node) {
+  pub fn set_force_mode(self: Self, v : ForceMode) {
     unsafe { set_force_mode(self, v); }
   }
 
@@ -7909,11 +8026,11 @@ impl Node {
     unsafe { set_has_force_mode(self, v); }
   }
 
-  pub fn sensitivity_list(self: Self) -> Node {
+  pub fn sensitivity_list(self: Self) -> List {
     unsafe { get_sensitivity_list(self) }
   }
 
-  pub fn set_sensitivity_list(self: Self, v : Node) {
+  pub fn set_sensitivity_list(self: Self, v : List) {
     unsafe { set_sensitivity_list(self, v); }
   }
 
@@ -7981,11 +8098,11 @@ impl Node {
     unsafe { set_postponed_flag(self, v); }
   }
 
-  pub fn callees_list(self: Self) -> Node {
+  pub fn callees_list(self: Self) -> List {
     unsafe { get_callees_list(self) }
   }
 
-  pub fn set_callees_list(self: Self, v : Node) {
+  pub fn set_callees_list(self: Self, v : List) {
     unsafe { set_callees_list(self, v); }
   }
 
@@ -8013,11 +8130,11 @@ impl Node {
     unsafe { set_wait_state(self, v); }
   }
 
-  pub fn all_sensitized_state(self: Self) -> Node {
+  pub fn all_sensitized_state(self: Self) -> AllSensitized {
     unsafe { get_all_sensitized_state(self) }
   }
 
-  pub fn set_all_sensitized_state(self: Self, v : Node) {
+  pub fn set_all_sensitized_state(self: Self, v : AllSensitized) {
     unsafe { set_all_sensitized_state(self, v); }
   }
 
@@ -8069,11 +8186,11 @@ impl Node {
     unsafe { set_has_signal_flag(self, v); }
   }
 
-  pub fn purity_state(self: Self) -> Node {
+  pub fn purity_state(self: Self) -> PureState {
     unsafe { get_purity_state(self) }
   }
 
-  pub fn set_purity_state(self: Self, v : Node) {
+  pub fn set_purity_state(self: Self, v : PureState) {
     unsafe { set_purity_state(self, v); }
   }
 
@@ -8285,11 +8402,11 @@ impl Node {
     unsafe { set_guard_decl(self, v); }
   }
 
-  pub fn guard_sensitivity_list(self: Self) -> Node {
+  pub fn guard_sensitivity_list(self: Self) -> List {
     unsafe { get_guard_sensitivity_list(self) }
   }
 
-  pub fn set_guard_sensitivity_list(self: Self, v : Node) {
+  pub fn set_guard_sensitivity_list(self: Self, v : List) {
     unsafe { set_guard_sensitivity_list(self, v); }
   }
 
@@ -8453,11 +8570,11 @@ impl Node {
     unsafe { set_component_name(self, v); }
   }
 
-  pub fn instantiation_list(self: Self) -> Node {
+  pub fn instantiation_list(self: Self) -> Flist {
     unsafe { get_instantiation_list(self) }
   }
 
-  pub fn set_instantiation_list(self: Self, v : Node) {
+  pub fn set_instantiation_list(self: Self, v : Flist) {
     unsafe { set_instantiation_list(self, v); }
   }
 
@@ -8501,11 +8618,11 @@ impl Node {
     unsafe { set_referenced_name(self, v); }
   }
 
-  pub fn expr_staticness(self: Self) -> Node {
+  pub fn expr_staticness(self: Self) -> Staticness {
     unsafe { get_expr_staticness(self) }
   }
 
-  pub fn set_expr_staticness(self: Self, v : Node) {
+  pub fn set_expr_staticness(self: Self, v : Staticness) {
     unsafe { set_expr_staticness(self, v); }
   }
 
@@ -8573,11 +8690,11 @@ impl Node {
     unsafe { set_group_template_name(self, v); }
   }
 
-  pub fn name_staticness(self: Self) -> Node {
+  pub fn name_staticness(self: Self) -> Staticness {
     unsafe { get_name_staticness(self) }
   }
 
-  pub fn set_name_staticness(self: Self, v : Node) {
+  pub fn set_name_staticness(self: Self, v : Staticness) {
     unsafe { set_name_staticness(self, v); }
   }
 
@@ -8765,11 +8882,11 @@ impl Node {
     unsafe { set_aggr_dynamic_flag(self, v); }
   }
 
-  pub fn aggr_min_length(self: Self) -> Node {
+  pub fn aggr_min_length(self: Self) -> i32 {
     unsafe { get_aggr_min_length(self) }
   }
 
-  pub fn set_aggr_min_length(self: Self, v : Node) {
+  pub fn set_aggr_min_length(self: Self, v : i32) {
     unsafe { set_aggr_min_length(self, v); }
   }
 
@@ -8845,11 +8962,11 @@ impl Node {
     unsafe { set_matching_flag(self, v); }
   }
 
-  pub fn choice_staticness(self: Self) -> Node {
+  pub fn choice_staticness(self: Self) -> Staticness {
     unsafe { get_choice_staticness(self) }
   }
 
-  pub fn set_choice_staticness(self: Self, v : Node) {
+  pub fn set_choice_staticness(self: Self, v : Staticness) {
     unsafe { set_choice_staticness(self, v); }
   }
 
@@ -8957,11 +9074,11 @@ impl Node {
     unsafe { set_is_within_flag(self, v); }
   }
 
-  pub fn type_marks_list(self: Self) -> Node {
+  pub fn type_marks_list(self: Self) -> Flist {
     unsafe { get_type_marks_list(self) }
   }
 
-  pub fn set_type_marks_list(self: Self, v : Node) {
+  pub fn set_type_marks_list(self: Self, v : Flist) {
     unsafe { set_type_marks_list(self, v); }
   }
 
@@ -8989,11 +9106,11 @@ impl Node {
     unsafe { set_attribute_signature(self, v); }
   }
 
-  pub fn overload_list(self: Self) -> Node {
+  pub fn overload_list(self: Self) -> List {
     unsafe { get_overload_list(self) }
   }
 
-  pub fn set_overload_list(self: Self, v : Node) {
+  pub fn set_overload_list(self: Self, v : List) {
     unsafe { set_overload_list(self, v); }
   }
 
@@ -9269,11 +9386,11 @@ impl Node {
     unsafe { set_psl_nbr_states(self, v); }
   }
 
-  pub fn psl_clock_sensitivity(self: Self) -> Node {
+  pub fn psl_clock_sensitivity(self: Self) -> List {
     unsafe { get_psl_clock_sensitivity(self) }
   }
 
-  pub fn set_psl_clock_sensitivity(self: Self, v : Node) {
+  pub fn set_psl_clock_sensitivity(self: Self, v : List) {
     unsafe { set_psl_clock_sensitivity(self, v); }
   }
 
@@ -9349,4 +9466,13 @@ impl Node {
     unsafe { set_suspend_state_decl(self, v); }
   }
 
+}
+impl Flist {
+  pub fn new(len: u32) -> Self {
+    unsafe { create_flist(len) }
+  }
+
+  pub fn set(self: Self, idx: u32, el: Node) {
+    unsafe { set_nth_element(self, idx, el); }
+  }
 }

@@ -312,40 +312,7 @@ def do_libghdl_meta():
 
 
 def do_libghdl_names():
-    pat_name_first = re.compile(r"   Name_(\w+)\s+: constant Name_Id := (\d+);")
-    pat_name_def = re.compile(r"   Name_(\w+)\s+:\s+constant Name_Id :=\s+Name_(\w+)( \+ (\d+))?;")
-    dict = {}
-    lr = pnodes.linereader("../std_names.ads")
-    while True:
-        line = lr.get()
-        m = pat_name_first.match(line)
-        if m:
-            name_def = m.group(1)
-            val = int(m.group(2))
-            dict[name_def] = val
-            res = [(name_def, val)]
-            break
-    val_max = 1
-    while True:
-        line = lr.get()
-        if line == "end Std_Names;\n":
-            break
-        if line.endswith(":=\n"):
-            line = line.rstrip() + lr.get()
-        m = pat_name_def.match(line)
-        if m:
-            name_def = m.group(1)
-            name_ref = m.group(2)
-            val = m.group(4)
-            if not val:
-                val = 0
-            val_ref = dict.get(name_ref, None)
-            if not val_ref:
-                raise pnodes.ParseError(lr, f"name {name_ref} not found")
-            val = val_ref + int(val)
-            val_max = max(val_max, val)
-            dict[name_def] = val
-            res.append((name_def, val))
+    res = pnodes.read_std_names()
     print_file_header(includeIntEnumUnique=False, includeBindToLibGHDL=False)
     print(dedent("""
 

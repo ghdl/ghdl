@@ -6743,7 +6743,13 @@ package Vhdl.Nodes is
    --    set to IMPURE.  Only at the end of body analysis and only if the
    --    callee list is empty, the state can be set either to MAYBE_IMPURE or
    --    PURE.
-   type Iir_Pure_State is (Unknown, Pure, Maybe_Impure, Impure);
+   type Iir_Pure_State is
+     (
+      Unknown,
+      Pure,
+      Maybe_Impure,
+      Impure
+     );
 
    --  State of subprograms for validity of use in all-sensitized process.
    --  INVALID_SIGNAL means that the subprogram is in a package and
@@ -6760,7 +6766,12 @@ package Vhdl.Nodes is
    --    all-sensitized process but there is no need to track this call.
    --  UNKNOWN means that the state is not yet defined.
    type Iir_All_Sensitized is
-     (Unknown, No_Signal, Read_Signal, Invalid_Signal);
+     (
+      Unknown,
+      No_Signal,
+      Read_Signal,
+      Invalid_Signal
+     );
 
    --  Constraint state of a type.
    --  See LRM08 5.1 for definition.

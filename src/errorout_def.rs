@@ -48,7 +48,7 @@ pub enum Warnid {
 }
 
 impl Warnid {
-    const VALUES: [Self; 38] = [
+    pub const VALUES: [Self; 38] = [
         Self::Library,
         Self::DeprecatedOption,
         Self::UnexpectedOption,
@@ -89,7 +89,7 @@ impl Warnid {
         Self::Elaboration,
     ];
 
-    const IMAGES: [&'static str; 38] = [
+    pub const IMAGES: [&'static str; 38] = [
         "library",
         "deprecatedoption",
         "unexpectedoption",
