@@ -11,8 +11,6 @@ try:
 except:
     import pnodes
 
-libname = "libghdl"
-
 
 def print_enum(name, vals):
     if len(vals) < 256:
@@ -203,35 +201,9 @@ def do_vhdl_subprg():
     print('    }')
     print('}')
 
-def do_libghdl_elocations():
-    classname = "vhdl__elocations"
-    print_file_header(includeIntEnumUnique=False, includeBindToLibGHDL=False)
-    print("from pyGHDL.libghdl import libghdl")
-    print()
-    for k in pnodes.funcs:
-        print(dedent(f"""
-            @export
-            def Get_{k.name}(obj):
-                return {libname}.{classname}__get_{k.name.lower()}(obj)
-            @export
-            def Set_{k.name}(obj, value) -> None:
-                {libname}.{classname}__set_{k.name.lower()}(obj, value)
-            """)
-        )
-
 
 def do_class_types():
     print_enum("types", pnodes.get_types())
-
-
-def do_types_subprg():
-    print()
-    for k in pnodes.get_types():
-        print(dedent(f"""
-            def Get_{k}(node, field):
-                return {libname}.vhdl__nodes_meta__get_{k.lower()}(node, field)
-            """)
-        )
 
 
 def do_has_subprg():
@@ -284,22 +256,26 @@ def do_vhdl_nodes():
     do_vhdl_subprg()
 
 
-def do_verilog_subprg():
-    pfx = "verilog__nodes"
-    print()
-    common_subprg_import_header(pfx, "node")
+def convert_verilog_type_name(rtype):
     typmap = {'Boolean' : 'bool',
               'Int32': 'i32',
               'Int64': 'i64',
               'Fp64': 'f64',
               'Uns32': 'u32',
               }
-    for k in pnodes.funcs:
-        # Don't use the Iir_* subtypes (as they are not described).
-        rtype = k.rtype.replace("_", "").replace("Type","")
-        # Exceptions...
-        rtype = typmap.get(rtype, rtype)
+    # Rename '_' and 'Type'
+    rtype = rtype.replace("_", "").replace("Type","")
+    # Exceptions...
+    rtype = typmap.get(rtype, rtype)
+    return rtype
 
+
+def do_verilog_subprg():
+    pfx = "verilog__nodes"
+    print()
+    common_subprg_import_header(pfx, "node")
+    for k in pnodes.funcs:
+        rtype = convert_verilog_type_name(k.rtype)
         name = k.name.lower()
         print(f'    #[link_name = "{pfx}__get_{name}"]')
         print(f"    fn get_{name}(n: Node) -> {rtype};")
@@ -311,11 +287,7 @@ def do_verilog_subprg():
 
     common_subprg_impl_header()
     for k in pnodes.funcs:
-        # Don't use the Iir_* subtypes (as they are not described).
-        rtype = k.rtype.replace("_", "").replace("Type","")
-        # Exceptions...
-        rtype = typmap.get(rtype, rtype)
-
+        rtype = convert_verilog_type_name(k.rtype)
         name = k.name.lower()
         print(f'    pub fn {name}(self: Self) -> {rtype} {{')
         print(f'        unsafe {{ get_{name}(self) }}')
@@ -359,70 +331,6 @@ def do_verilog_nodes():
     do_verilog_subprg()
 
 
-def do_libghdl_meta():
-    print_file_header()
-    print(dedent("""\
-        from pyGHDL.libghdl import libghdl
-        from pyGHDL.libghdl._types import IirKind
-
-
-        # From nodes_meta
-        @export
-        @BindToLibGHDL("vhdl__nodes_meta__get_fields_first")
-        def get_fields_first(K: IirKind) -> int:
-            \"\"\"
-            Return the list of fields for node :obj:`K`.
-
-            In Ada ``Vhdl.Nodes_Meta.Get_Fields`` returns a ``Fields_Array``. To emulate
-            this array access, the API provides ``get_fields_first`` and :func:`get_fields_last`.
-
-            The fields are sorted: first the non nodes/list of nodes, then the
-            nodes/lists that aren't reference, and then the reference.
-
-            :param K: Node to get first array index from.
-            \"\"\"
-            return 0
-
-
-        @export
-        @BindToLibGHDL("vhdl__nodes_meta__get_fields_last")
-        def get_fields_last(K: IirKind) -> int:
-            \"\"\"
-            Return the list of fields for node :obj:`K`.
-
-            In Ada ``Vhdl.Nodes_Meta.Get_Fields`` returns a ``Fields_Array``. To emulate
-            this array access, the API provides :func:`get_fields_first` and ``get_fields_last``.
-
-            The fields are sorted: first the non nodes/list of nodes, then the
-            nodes/lists that aren't reference, and then the reference.
-
-            :param K: Node to get last array index from.
-            \"\"\"
-            return 0
-
-        @export
-        @BindToLibGHDL("vhdl__nodes_meta__get_field_by_index")
-        def get_field_by_index(K: IirKind) -> int:
-            \"\"\"\"\"\"
-            return 0
-
-        @export
-        def get_field_type(*args):
-            return libghdl.vhdl__nodes_meta__get_field_type(*args)
-
-        @export
-        def get_field_attribute(*args):
-            return libghdl.vhdl__nodes_meta__get_field_attribute(*args)
-        """), end=''
-    )
-
-    do_class_types()
-    do_class_field_attributes()
-    do_class_fields()
-    do_types_subprg()
-    do_has_subprg()
-
-
 def do_std_names():
     res = pnodes.read_std_names()
     print('#![allow(dead_code)]')
@@ -432,12 +340,6 @@ def do_std_names():
 #        if n in ["False", "True", "None"]:
 #            n = "N" + n
         print(f"pub const {n.upper()}: NameId = NameId({v});")
-
-
-def do_libghdl_tokens():
-    print_file_header(includeBindToLibGHDL=False)
-    toks = pnodes.read_enum("vhdl-tokens.ads", "Token_Type", "Tok_")
-    print_enum("Tok", toks)
 
 
 def do_errorout():
@@ -472,9 +374,6 @@ pnodes.actions.update(
         "verilog-nodes": do_verilog_nodes,
         "std_names": do_std_names,
         "class-kinds": do_class_kinds,
-        "libghdl-meta": do_libghdl_meta,
-        "libghdl-tokens": do_libghdl_tokens,
-        "libghdl-elocs": do_libghdl_elocations,
     }
 )
 
