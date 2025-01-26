@@ -77,6 +77,19 @@ def common_subprg_import_header(pfx, nname):
     print(f"    fn set_location(n: Node, loc: Location);")
     print()
 
+def common_subprg_import(pnodes, pfx, nname, convert):
+    common_subprg_import_header(pfx, nname)
+    for k in pnodes.funcs:
+        rtype = convert(k.rtype)
+        name = k.name.lower()
+        print(f'    #[link_name = "{pfx}__get_{name}"]')
+        print(f"    fn get_{name}(n: Node) -> {rtype};")
+        print()
+        print(f'    #[link_name = "{pfx}__set_{name}"]')
+        print(f"    fn set_{name}(n: Node, v: {rtype});")
+        print()
+
+
 def common_subprg_impl_header():
     print()
     print(f'impl Node {{')
@@ -98,6 +111,24 @@ def common_subprg_impl_header():
     print(f'        unsafe {{ set_location(self, loc) }}')
     print(f'    }}')
     print()
+
+def common_subprg_impl(pnodes, convert):
+    namemap = {'type': 'typed'}
+    common_subprg_impl_header()
+    for k in pnodes.funcs:
+        rtype = convert(k.rtype)
+
+        name = k.name.lower()
+        rname = namemap.get(name, name)
+        print(f'    pub fn {rname}(self: Self) -> {rtype} {{')
+        print(f'        unsafe {{ get_{name}(self) }}')
+        print(f'    }}')
+        print()
+        print(f'    pub fn set_{rname}(self: Self, v : {rtype}) {{')
+        print(f'        unsafe {{ set_{name}(self, v); }}')
+        print(f'    }}')
+        print()
+    print(f"}}")
 
 def convert_vhdl_type_name(rtype):
     typmap = {'TokenType': 'Tok',
@@ -151,9 +182,8 @@ def do_vhdl_subprg():
     print(f'    Downto,')
     print(f'}}')
     print()
-    common_subprg_import_header(pfx, "iir")
-    namemap = {'type': 'typed'}
 
+    common_subprg_import(pnodes, pfx, "iir", convert_vhdl_type_name)
     print('    #[link_name = "vhdl__flists__create_flist"]')
     print('    fn create_flist(len: u32) -> Flist;')
     print()
@@ -163,33 +193,9 @@ def do_vhdl_subprg():
     print('    #[link_name = "vhdl__flists__get_nth_element"]')
     print('    fn get_nth_element(flist: Flist, idx: u32) -> Node;')
     print()
-
-    for k in pnodes.funcs:
-        rtype = convert_vhdl_type_name(k.rtype)
-        name = k.name.lower()
-        print(f'    #[link_name = "{pfx}__get_{name}"]')
-        print(f"    fn get_{name}(n: Node) -> {rtype};")
-        print()
-        print(f'    #[link_name = "{pfx}__set_{name}"]')
-        print(f"    fn set_{name}(n: Node, v: {rtype});")
-        print()
     print(f"}}")
 
-    common_subprg_impl_header()
-    for k in pnodes.funcs:
-        rtype = convert_vhdl_type_name(k.rtype)
-
-        name = k.name.lower()
-        rname = namemap.get(name, name)
-        print(f'    pub fn {rname}(self: Self) -> {rtype} {{')
-        print(f'        unsafe {{ get_{name}(self) }}')
-        print(f'    }}')
-        print()
-        print(f'    pub fn set_{rname}(self: Self, v : {rtype}) {{')
-        print(f'        unsafe {{ set_{name}(self, v); }}')
-        print(f'    }}')
-        print()
-    print(f"}}")
+    common_subprg_impl(pnodes, convert_vhdl_type_name)
 
     print('impl Flist {')
     print('    pub fn new(len: u32) -> Self {')
@@ -273,31 +279,10 @@ def convert_verilog_type_name(rtype):
 def do_verilog_subprg():
     pfx = "verilog__nodes"
     print()
-    common_subprg_import_header(pfx, "node")
-    for k in pnodes.funcs:
-        rtype = convert_verilog_type_name(k.rtype)
-        name = k.name.lower()
-        print(f'    #[link_name = "{pfx}__get_{name}"]')
-        print(f"    fn get_{name}(n: Node) -> {rtype};")
-        print()
-        print(f'    #[link_name = "{pfx}__set_{name}"]')
-        print(f"    fn set_{name}(n: Node, v: {rtype});")
-        print()
+    common_subprg_import(pnodes, pfx, "node", convert_verilog_type_name)
     print(f"}}")
 
-    common_subprg_impl_header()
-    for k in pnodes.funcs:
-        rtype = convert_verilog_type_name(k.rtype)
-        name = k.name.lower()
-        print(f'    pub fn {name}(self: Self) -> {rtype} {{')
-        print(f'        unsafe {{ get_{name}(self) }}')
-        print(f'    }}')
-        print()
-        print(f'    pub fn set_{name}(self: Self, v : {rtype}) {{')
-        print(f'        unsafe {{ set_{name}(self, v); }}')
-        print(f'    }}')
-        print()
-    print(f"}}")
+    common_subprg_impl(pnodes, convert_verilog_type_name)
 
 
 def do_verilog_nodes():

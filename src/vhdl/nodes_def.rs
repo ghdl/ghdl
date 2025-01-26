@@ -3934,15 +3934,6 @@ extern "C" {
     #[link_name = "vhdl__nodes__set_location"]
     fn set_location(n: Node, loc: Location);
 
-    #[link_name = "vhdl__flists__create_flist"]
-    fn create_flist(len: u32) -> Flist;
-
-    #[link_name = "vhdl__flists__set_nth_element"]
-    fn set_nth_element(flist: Flist, idx: u32, el: Node);
-
-    #[link_name = "vhdl__flists__get_nth_element"]
-    fn get_nth_element(flist: Flist, idx: u32) -> Node;
-
     #[link_name = "vhdl__nodes__get_first_design_unit"]
     fn get_first_design_unit(n: Node) -> Node;
 
@@ -6300,6 +6291,15 @@ extern "C" {
 
     #[link_name = "vhdl__nodes__set_suspend_state_decl"]
     fn set_suspend_state_decl(n: Node, v: Node);
+
+    #[link_name = "vhdl__flists__create_flist"]
+    fn create_flist(len: u32) -> Flist;
+
+    #[link_name = "vhdl__flists__set_nth_element"]
+    fn set_nth_element(flist: Flist, idx: u32, el: Node);
+
+    #[link_name = "vhdl__flists__get_nth_element"]
+    fn get_nth_element(flist: Flist, idx: u32) -> Node;
 
 }
 
