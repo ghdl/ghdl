@@ -4815,6 +4815,8 @@ package body Vhdl.Prints is
          when Iir_Kind_Design_Unit =>
             Start_Node (Ctxt, N);
             Disp_Design_Unit (Ctxt, N);
+         when Iir_Kind_Component_Declaration =>
+            Disp_Component_Declaration (Ctxt, N);
          when Iir_Kind_Enumeration_Type_Definition =>
             Disp_Enumeration_Type_Definition (Ctxt, N);
          when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>

@@ -632,11 +632,11 @@ impl Command for CommandRun {
     }
 }
 
-struct CommandVerilog2Vhdl {}
+struct CommandVerilog2Comp {}
 
-impl Command for CommandVerilog2Vhdl {
+impl Command for CommandVerilog2Comp {
     fn get_names(&self) -> &'static [&'static str] {
-        return &["verilog2vhdl"];
+        return &["verilog2comp"];
     }
 
     fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
@@ -665,10 +665,10 @@ impl Command for CommandVerilog2Vhdl {
                 verilog::sem_compilation_unit(vlg_top);
 
                 //  convert to vhdl
-                let vhd_top = verilog::export_file(vlg_top);
+                let chain = verilog::export_file(vlg_top);
 
-                //  print
-                vhdl::disp_vhdl(vhd_top);
+                //  print (the first one)
+                vhdl::disp_vhdl(chain);
             }
         }
         return Err(ParseStatus::CommandError)
@@ -681,7 +681,7 @@ const COMMANDS: &[&dyn Command] = &[
     &CommandElab {},
     &CommandRun {},
     &CommandRemove {},
-    &CommandVerilog2Vhdl {},
+    &CommandVerilog2Comp {},
 ];
 
 fn execute_command(args: &[String]) -> Result<(), ParseStatus> {

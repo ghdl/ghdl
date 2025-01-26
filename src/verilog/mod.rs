@@ -7,8 +7,10 @@ use crate::SourceFileEntry;
 
 mod nodes_def;
 mod types;
+mod nodes_utils;
 
 use nodes_def::{BinaryOps, Kind, Node};
+use nodes_utils::Chain;
 
 extern "C" {
     #[link_name = "verilog__flags__flag_keep_parentheses"]
@@ -211,48 +213,22 @@ fn convert_module(vlg: Node, vhd: VhdNode) {
 }
 
 pub fn export_file(file: Node) -> VhdNode {
-    //  Create the vhdl file and set locations
-    let vh_file = VhdNode::new(VhdKind::Design_File);
-    let loc = file.location();
-    let sfe = loc.to_file();
-    vh_file.set_location(loc);
-    vh_file.set_design_file_source(sfe);
-    vh_file.set_design_file_filename(sfe.file_name());
-    vh_file.set_design_file_directory(sfe.directory_name());
-    let mut last = VhdNode::NULL;
+    let mut chain = Chain::new();
 
-    //  TODO: check ieee.std_logic_1164 is loaded
     //  Convert modules
     let mut vln = file.descriptions();
     while vln != Node::NULL {
         if vln.kind() == Kind::Module {
-            //  Create the design unit
-            let unit = VhdNode::new(VhdKind::Design_Unit);
-            unit.set_location(vln.location());
-            unit.set_design_file(vh_file);
-            unit.set_identifier(vln.identifier());
-            unit.set_date(4); // TODO: convert Date constants
-            unit.set_date_state(crate::vhdl::nodes_def::DateStateType::Extern);
+            //  Create a component
+            let comp = VhdNode::new(VhdKind::Component_Declaration);
+            comp.set_location(vln.location());
+            comp.set_identifier(vln.identifier());
 
-            // Create the entity
-            let ent = VhdNode::new(VhdKind::Entity_Declaration);
-            ent.set_location(vln.location());
-            unit.set_library_unit(ent);
-            ent.set_design_unit(unit);
-            ent.set_identifier(vln.identifier());
+            convert_module(vln, comp);
 
-            convert_module(vln, ent);
-
-            //  Append design unit
-            if last == VhdNode::NULL {
-                vh_file.set_first_design_unit(unit);
-            } else {
-                last.set_chain(unit)
-            }
-            last = unit;
+            chain.append(comp);
         }
         vln = vln.chain();
     }
-    vh_file.set_last_design_unit(last);
-    return vh_file;
+    return chain.head();
 }

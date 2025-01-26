@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::NameId;
 
 #[repr(transparent)]
