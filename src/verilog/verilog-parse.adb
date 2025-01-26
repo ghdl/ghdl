@@ -3038,6 +3038,7 @@ package body Verilog.Parse is
    --  type (T being a typedef or a class) or declaration of T with an
    --  implicit type.
    procedure Data_Type_To_Identifier (Id : out Name_Id;
+                                      Loc : out Location_Type;
                                       Decl_Type : in out Type_Node)
    is
       pragma Assert (Decl_Type.Own);
@@ -3046,6 +3047,7 @@ package body Verilog.Parse is
       case Get_Kind (Typ) is
          when N_Name =>
             Id := Get_Identifier (Typ);
+            Loc := Get_Location (Typ);
             Free_Node (Typ);
             Decl_Type := (Implicit_Typedef, False);
          when N_Packed_Array =>
@@ -3059,10 +3061,11 @@ package body Verilog.Parse is
                if not Get_Type_Owner (Typ) then
                   Error_Msg_Parse (+Typ, "missing identifier");
                   Id := Null_Identifier;
+                  Loc := No_Location;
                   return;
                end if;
                Pfx_Type := (Pfx, True);
-               Data_Type_To_Identifier (Id, Pfx_Type);
+               Data_Type_To_Identifier (Id, Loc, Pfx_Type);
                Res := Create_Node (N_Array);
                Location_Copy (Res, Typ);
                Set_Msb (Res, Get_Msb (Typ));
@@ -3081,9 +3084,11 @@ package body Verilog.Parse is
      (Decl : Node; Decl_Type : in out Type_Node)
    is
       Id : Name_Id;
+      Loc : Location_Type;
    begin
-      Data_Type_To_Identifier (Id, Decl_Type);
+      Data_Type_To_Identifier (Id, Loc, Decl_Type);
       Set_Identifier (Decl, Id);
+      Set_Location (Decl, Loc);
    end Data_Type_To_Identifier;
 
    --  1800-2017 6.18 User-defined types
@@ -8275,8 +8280,7 @@ package body Verilog.Parse is
                Port_Id := Null_Identifier;
                Port_Loc := Get_Token_Location;
             else
-               Port_Loc := Get_Location (Port_Type.Typ);
-               Data_Type_To_Identifier (Port_Id, Port_Type);
+               Data_Type_To_Identifier (Port_Id, Port_Loc, Port_Type);
             end if;
 
             --  Scan unpacked_dimension / variable_dimension.
