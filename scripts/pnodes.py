@@ -871,6 +871,39 @@ def do_meta_body():
         else:
             print(l)
 
+
+def read_enum(filename, type_name, prefix, g=lambda m: m.group(1)):
+    """Read an enumeration declaration :param type_name:
+    from :param filename:."""
+    pat_decl = re.compile(r"   type {0} is$".format(type_name))
+    pat_enum = re.compile(r"      {0}(\w+),?( *-- .*)?$".format(prefix))
+    pat_comment = re.compile(r" *-- .*$")
+    lr = linereader(filename)
+    while not pat_decl.match(lr.get()):
+        pass
+    line = lr.get()
+    if line != "     (\n":
+        raise ParseError(lr, f"{filename}:{lr.lineno}: missing open parenthesis")
+    toks = []
+    while True:
+        line = lr.get()
+        if line == "     );\n":
+            break
+        m = pat_enum.match(line)
+        if m:
+            toks.append(g(m))
+        elif pat_comment.match(line):
+            pass
+        elif line == "\n":
+            pass
+        else:
+            print(line, file=sys.stderr)
+            raise ParseError(
+                lr,
+                f"{filename}:{ lr.lineno}: incorrect line in enum {type_name}"
+            )
+    return toks
+
 def read_std_names():
     pat_name_first = re.compile(r"   Name_(\w+)\s+: constant Name_Id := (\d+);")
     pat_name_def = re.compile(r"   Name_(\w+)\s+:\s+constant Name_Id :=\s+Name_(\w+)( \+ (\d+))?;")

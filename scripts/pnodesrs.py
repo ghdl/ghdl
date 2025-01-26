@@ -254,43 +254,9 @@ def do_class_fields():
     print_enum("fields", [f.name for f in pnodes.funcs])
 
 
-def read_enum(filename, type_name, prefix, g=lambda m: m.group(1)):
-    """Read an enumeration declaration from :param filename:."""
-    pat_decl = re.compile(r"   type {0} is$".format(type_name))
-    pat_enum = re.compile(r"      {0}(\w+),?( *-- .*)?$".format(prefix))
-    pat_comment = re.compile(r" *-- .*$")
-    lr = pnodes.linereader(filename)
-    while not pat_decl.match(lr.get()):
-        pass
-    line = lr.get()
-    if line != "     (\n":
-        raise pnodes.ParseError(lr, f"{filename}:{lr.lineno}: missing open parenthesis")
-    toks = []
-    while True:
-        line = lr.get()
-        if line == "     );\n":
-            break
-        m = pat_enum.match(line)
-        if m:
-            toks.append(g(m))
-        elif pat_comment.match(line):
-            pass
-        elif line == "\n":
-            pass
-        else:
-            print(line, file=sys.stderr)
-            raise pnodes.ParseError(
-                lr,
-                f"{filename}:{ lr.lineno}: incorrect line in enum {type_name}"
-            )
-    if not toks:
-        raise pnodes.ParseError("", f"enum {type_name} not found")
-    return toks
-
-
 def read_spec_enum(type_name, prefix, class_name):
     """Read an enumeration declaration from kind file."""
-    toks = read_enum(pnodes.kind_file, type_name, prefix)
+    toks = pnodes.read_enum(pnodes.kind_file, type_name, prefix)
     print_enum(class_name, toks)
 
 
@@ -470,13 +436,13 @@ def do_std_names():
 
 def do_libghdl_tokens():
     print_file_header(includeBindToLibGHDL=False)
-    toks = read_enum("vhdl-tokens.ads", "Token_Type", "Tok_")
+    toks = pnodes.read_enum("vhdl-tokens.ads", "Token_Type", "Tok_")
     print_enum("Tok", toks)
 
 
 def do_errorout():
     print("#![allow(dead_code)]")
-    toks = read_enum(
+    toks = pnodes.read_enum(
         "../errorout.ads",
         "Msgid_Type",
         "(Msgid|Warnid)_",
