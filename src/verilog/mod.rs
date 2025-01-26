@@ -1,14 +1,19 @@
-use crate::SourceFileEntry;
 use crate::std_names;
-use crate::vhdl::nodes_def::{Kind as VhdKind, Node as VhdNode, Mode as VhdMode, DirectionType, Flist as VhdFlist};
+use crate::vhdl::nodes_def::{
+    DirectionType, Flist as VhdFlist, Kind as VhdKind, Mode as VhdMode, Node as VhdNode,
+};
 use crate::vhdl::nodes_utils::Chain as VhdChain;
+use crate::SourceFileEntry;
 
 mod nodes_def;
 mod types;
 
-use nodes_def::{Node, Kind};
+use nodes_def::{BinaryOps, Kind, Node};
 
 extern "C" {
+    #[link_name = "verilog__flags__flag_keep_parentheses"]
+    pub static mut flag_keep_parentheses: bool;
+
     #[link_name = "verilog__errors__initialize"]
     pub fn errors_initialize();
 
@@ -31,6 +36,13 @@ extern "C" {
     pub fn sem_compilation_unit(unit: Node);
 }
 
+fn convert_binary_op(expr: Node, kind: VhdKind) -> VhdNode {
+    let res = VhdNode::new(kind);
+    res.set_left(convert_expr(expr.left()));
+    res.set_right(convert_expr(expr.right()));
+    return res;
+}
+
 fn convert_expr(expr: Node) -> VhdNode {
     match expr.kind() {
         Kind::Number => {
@@ -41,12 +53,44 @@ fn convert_expr(expr: Node) -> VhdNode {
             res.set_value(expr.number_lo_val() as i64);
             res
         }
-        _ => { eprint!("convert_expr: cannot handle {}\n", Kind::IMAGES[expr.kind() as usize]);
-        VhdNode::NULL
+        Kind::Binary_Op => match expr.binary_op() {
+            BinaryOps::Sub => convert_binary_op(expr, VhdKind::Substraction_Operator),
+            BinaryOps::Umul => convert_binary_op(expr, VhdKind::Multiplication_Operator),
+            _ => {
+                eprint!(
+                    "convert_binary_op: cannot handle {}\n",
+                    BinaryOps::IMAGES[expr.binary_op() as usize]
+                );
+                return VhdNode::NULL;
+            }
+        },
+        Kind::Name => {
+            let res = VhdNode::new(VhdKind::Simple_Name);
+            res.set_location(expr.location());
+            res.set_identifier(expr.identifier());
+            return res;
+        }
+        Kind::Parenthesis_Expr => {
+            let res = VhdNode::new(VhdKind::Parenthesis_Expression);
+            res.set_location(expr.location());
+            res.set_expression(convert_expr(expr.expression()));
+            return res;
+        }
+        _ => {
+            eprint!(
+                "convert_expr: cannot handle {}\n",
+                Kind::IMAGES[expr.kind() as usize]
+            );
+            VhdNode::NULL
         }
     }
 }
-fn convert_type(dtype: Node, parent: VhdNode) -> VhdNode {
+fn convert_type(dtype: Node) -> VhdNode {
+    if dtype == Node::NULL {
+        let base = VhdNode::new(VhdKind::Simple_Name);
+        base.set_identifier(std_names::STRING);
+        return base;
+    }
     match dtype.kind() {
         Kind::Packed_Array => {
             let loc = dtype.location();
@@ -72,7 +116,12 @@ fn convert_type(dtype: Node, parent: VhdNode) -> VhdNode {
 
             return res;
         }
-        _ => { eprint!("convert_type: cannot handle {}\n", Kind::IMAGES[dtype.kind() as usize]);}
+        _ => {
+            eprint!(
+                "convert_type: cannot handle {}\n",
+                Kind::IMAGES[dtype.kind() as usize]
+            );
+        }
     }
     VhdNode::NULL
 }
@@ -82,9 +131,31 @@ fn convert_decl(decl: Node, kind: VhdKind, mode: VhdMode, parent: VhdNode, chain
     res.set_location(decl.location());
     res.set_identifier(decl.identifier());
     res.set_mode(mode);
-    res.set_has_mode(true);
+    if kind != VhdKind::Interface_Constant_Declaration {
+        res.set_has_mode(true);
+    }
     res.set_parent(parent);
-    res.set_subtype_indication(convert_type(decl.data_type(), parent));
+
+    let dtype = decl.data_type();
+    let mut vtype = VhdNode::NULL;
+    if decl.kind() == Kind::Parameter {
+        let expr = decl.expression();
+        if expr != Node::NULL {
+            if dtype == Node::NULL {
+                match expr.kind() {
+                    Kind::Number => {
+                        vtype = VhdNode::new(VhdKind::Simple_Name);
+                        vtype.set_identifier(std_names::INTEGER);
+                    }
+                    _ => {}
+                }
+            }
+            res.set_default_value(convert_expr(expr));
+        }
+    } else {
+        vtype = convert_type(dtype);
+    }
+    res.set_subtype_indication(vtype);
 
     chain.append(res);
 }
@@ -94,16 +165,36 @@ fn convert_decls(decls: Node, parent: VhdNode, generics: &mut VhdChain, ports: &
     while n != Node::NULL {
         match n.kind() {
             Kind::Parameter => {
-                convert_decl(n, VhdKind::Interface_Constant_Declaration, VhdMode::In_Mode, parent, generics);
+                convert_decl(
+                    n,
+                    VhdKind::Interface_Constant_Declaration,
+                    VhdMode::In_Mode,
+                    parent,
+                    generics,
+                );
             }
             Kind::Input => {
-                convert_decl(n, VhdKind::Interface_Signal_Declaration, VhdMode::In_Mode, parent, ports);
+                convert_decl(
+                    n,
+                    VhdKind::Interface_Signal_Declaration,
+                    VhdMode::In_Mode,
+                    parent,
+                    ports,
+                );
             }
             Kind::Output => {
-                convert_decl(n, VhdKind::Interface_Signal_Declaration, VhdMode::Out_Mode, parent, ports);
+                convert_decl(
+                    n,
+                    VhdKind::Interface_Signal_Declaration,
+                    VhdMode::Out_Mode,
+                    parent,
+                    ports,
+                );
             }
             Kind::Wire => {}
-            _ => {eprint!("unhandled {}\n", Kind::IMAGES[n.kind() as usize]);}
+            _ => {
+                eprint!("unhandled {}\n", Kind::IMAGES[n.kind() as usize]);
+            }
         }
         n = n.chain();
     }
@@ -155,8 +246,7 @@ pub fn export_file(file: Node) -> VhdNode {
             //  Append design unit
             if last == VhdNode::NULL {
                 vh_file.set_first_design_unit(unit);
-            }
-            else {
+            } else {
                 last.set_chain(unit)
             }
             last = unit;

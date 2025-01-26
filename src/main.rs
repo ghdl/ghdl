@@ -646,6 +646,7 @@ impl Command for CommandVerilog2Vhdl {
             verilog::sem_scopes_init();
             verilog::sem_types_create_basetypes();
             verilog::vpi_initialize();
+            verilog::flag_keep_parentheses = true;
         }
 
         for arg in &args[1..] {
