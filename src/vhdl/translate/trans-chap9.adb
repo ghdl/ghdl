@@ -2562,7 +2562,6 @@ package body Trans.Chap9 is
                end loop;
             end;
          when Iir_Kind_Case_Generate_Statement =>
-            --  FIXME: handle one-dimensional expressions.
             declare
                Expr : constant Iir := Get_Expression (Stmt);
                Expr_Type : constant Iir := Get_Type (Expr);
