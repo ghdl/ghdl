@@ -1240,6 +1240,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Has_Is (Flag7)
    --
+   --  Should always be true
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
