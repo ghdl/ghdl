@@ -2568,7 +2568,9 @@ package body Trans.Chap9 is
                Expr_Type : constant Iir := Get_Type (Expr);
                Base_Type : constant Iir := Get_Base_Type (Expr_Type);
                Tinfo : constant Type_Info_Acc := Get_Info (Base_Type);
-               E : O_Dnode;
+               Is_String : constant Boolean :=
+                 Get_Kind (Base_Type) = Iir_Kind_Array_Type_Definition;
+               E : Mnode;
                Alt : Iir;
                Cur_Alt : Iir;
                Cond : O_Enode;
@@ -2576,13 +2578,21 @@ package body Trans.Chap9 is
                Var_Rng : O_Dnode;
                Rng : Mnode;
                C1, C2 : O_Enode;
+               Ch_Expr : Mnode;
                Blk       : O_If_Block;
+               Eq_Func : Iir;
             begin
                Open_Temp;
                Alt := Get_Case_Statement_Alternative_Chain (Stmt);
-               E := Create_Temp_Init
-                 (Tinfo.Ortho_Type (Mode_Value),
-                  Chap7.Translate_Expression (Expr, Base_Type));
+               E := Chap7.Translate_Expression (Expr, Base_Type);
+               E := Stabilize (E, True);
+
+               if Is_String then
+                  Eq_Func := Chap7.Find_Predefined_Function
+                    (Base_Type, Iir_Predefined_Array_Equality);
+               else
+                  Eq_Func := Null_Iir;
+               end if;
 
                loop
                   Open_Temp;
@@ -2596,12 +2606,17 @@ package body Trans.Chap9 is
                            pragma Assert (Get_Chain (Alt) = Null_Iir);
                            Sub_Cond := O_Enode_Null;
                         when Iir_Kind_Choice_By_Expression =>
-                           Sub_Cond := New_Compare_Op
-                             (ON_Eq,
-                              New_Obj_Value (E),
-                              Chap7.Translate_Expression
-                                (Get_Choice_Expression (Alt), Base_Type),
-                              Ghdl_Bool_Type);
+                           Ch_Expr := Chap7.Translate_Expression
+                             (Get_Choice_Expression (Alt), Base_Type);
+
+                           if Is_String then
+                              Sub_Cond := Chap8.Translate_Simple_String_Choice
+                                (E, Ch_Expr, Eq_Func);
+                           else
+                              Sub_Cond := New_Compare_Op
+                                (ON_Eq, M2E (E), M2E (Ch_Expr),
+                                Ghdl_Bool_Type);
+                           end if;
                         when Iir_Kind_Choice_By_Range =>
                            Var_Rng := Create_Temp (Tinfo.B.Range_Type);
                            Rng := Dv2M (Var_Rng, Tinfo, Mode_Value,
@@ -2620,12 +2635,12 @@ package body Trans.Chap9 is
                                 (ON_And,
                                  New_Compare_Op
                                    (ON_Ge,
-                                    New_Obj_Value (E),
+                                    M2E (E),
                                     M2E (Chap3.Range_To_Left (Rng)),
                                     Ghdl_Bool_Type),
                                  New_Compare_Op
                                    (ON_Le,
-                                    New_Obj_Value (E),
+                                    M2E (E),
                                     M2E (Chap3.Range_To_Right (Rng)),
                                     Ghdl_Bool_Type)));
                            C2 := New_Dyadic_Op
@@ -2639,12 +2654,12 @@ package body Trans.Chap9 is
                                 (ON_And,
                                  New_Compare_Op
                                    (ON_Le,
-                                    New_Obj_Value (E),
+                                    M2E (E),
                                     M2E (Chap3.Range_To_Left (Rng)),
                                     Ghdl_Bool_Type),
                                  New_Compare_Op
                                    (ON_Ge,
-                                    New_Obj_Value (E),
+                                    M2E (E),
                                     M2E (Chap3.Range_To_Right (Rng)),
                                     Ghdl_Bool_Type)));
                            Sub_Cond := New_Dyadic_Op (ON_Or, C1, C2);

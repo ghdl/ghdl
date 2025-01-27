@@ -1875,6 +1875,20 @@ package body Trans.Chap8 is
       end;
    end Translate_String_Case_Statement_Dichotomy;
 
+   --  Find the declaration of equality function for unidim case statements.
+   function Find_String_Case_Statement_Equality (Stmt : Iir; Base_Type : Iir)
+                                                return Iir
+   is
+      Func_Def : Iir_Predefined_Functions;
+   begin
+      if Get_Matching_Flag (Stmt) then
+         Func_Def := Iir_Predefined_Std_Ulogic_Array_Match_Equality;
+      else
+         Func_Def := Iir_Predefined_Array_Equality;
+      end if;
+      return Chap7.Find_Predefined_Function (Base_Type, Func_Def);
+   end Find_String_Case_Statement_Equality;
+
    --  Case statement whose expression is an unidim array.
    --  Translate into if/elsif statements (linear search).
    procedure Translate_String_Case_Statement_Linear
@@ -1889,9 +1903,7 @@ package body Trans.Chap8 is
 
       Cond_Var : O_Dnode;
 
-      Func_Def : Iir_Predefined_Functions;
       Func : Iir;
-
 
       procedure Translate_String_Choice (Choice : Iir)
       is
@@ -1952,13 +1964,7 @@ package body Trans.Chap8 is
       Translate_String_Case_Statement_Common
         (Stmt, Choices, Len_Type, Base_Type, Expr_Node, Val_Node);
 
-      if Get_Matching_Flag (Stmt) then
-         Func_Def := Iir_Predefined_Std_Ulogic_Array_Match_Equality;
-      else
-         Func_Def := Iir_Predefined_Array_Equality;
-      end if;
-      Func := Chap7.Find_Predefined_Function
-        (Get_Base_Type (Len_Type), Func_Def);
+      Func := Find_String_Case_Statement_Equality (Stmt, Base_Type);
 
       Cond_Var := Create_Temp (Std_Boolean_Type_Node);
 

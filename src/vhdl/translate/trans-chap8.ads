@@ -59,6 +59,12 @@ package Trans.Chap8 is
    --  Return true if there is a return statement in the chain.
    function Translate_Statements_Chain_Has_Return (First : Iir) return Boolean;
 
+   --  Translate a choice by expression for unidim types.
+   --  Also used by case generate
+   function Translate_Simple_String_Choice (Expr : Mnode;
+                                            Val  : Mnode;
+                                            Func : Iir) return O_Enode;
+
    --  Create a case branch for CHOICE.
    --  Used by case statement and aggregates.
    procedure Translate_Case_Choice
