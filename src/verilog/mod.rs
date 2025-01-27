@@ -223,6 +223,7 @@ pub fn export_file(file: Node) -> VhdNode {
             let comp = VhdNode::new(VhdKind::Component_Declaration);
             comp.set_location(vln.location());
             comp.set_identifier(vln.identifier());
+            comp.set_end_has_reserved_id(true);
 
             convert_module(vln, comp);
 
