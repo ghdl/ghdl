@@ -1325,10 +1325,12 @@ package body Elab.Vhdl_Insts is
                --  Only for simulation, expect override.
                Val := Create_Value_Default (Inter_Typ);
             end if;
-            pragma Assert (Is_Static (Val.Val));
-            Val := Unshare (Val, Instance_Pool);
-            Val.Typ := Unshare_Type_Instance (Val.Typ, Inter_Typ);
-            Create_Object (Top_Inst, Inter, Val);
+            if Val /= No_Valtyp then
+               pragma Assert (Is_Static (Val.Val));
+               Val := Unshare (Val, Instance_Pool);
+               Val.Typ := Unshare_Type_Instance (Val.Typ, Inter_Typ);
+               Create_Object (Top_Inst, Inter, Val);
+            end if;
             Release_Expr_Pool (Em);
          end;
          Inter := Get_Chain (Inter);
