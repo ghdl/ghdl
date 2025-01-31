@@ -69,28 +69,24 @@ package body Grt.Change_Generics is
       Err := True;
    end Ghdl_Value_E8_Char;
 
-   --  Override for unconstrained array generic.
-   procedure Override_Generic_Array (Obj_Rti : Ghdl_Rtin_Object_Acc;
-                                     Arr_Rti : Ghdl_Rtin_Type_Array_Acc;
-                                     Ctxt : Rti_Context;
-                                     Over : Generic_Override_Acc)
+   function Override_Generic_Array_Base (Arr_Rti : Ghdl_Rtin_Type_Array_Acc;
+                                         Over : Generic_Override_Acc)
+                                        return Ghdl_E8_Array_Base_Ptr
    is
       El_Rti : constant Ghdl_Rti_Access := Arr_Rti.Element;
       Idx_Rti : constant Ghdl_Rti_Access := Arr_Rti.Indexes (0);
+      Len : constant Ghdl_Index_Type := Over.Value'Length;
       El_Base_Rti : Ghdl_Rti_Access;
       Idx_Base_Rti : Ghdl_Rti_Access;
-      St_Rng, Rng : Ghdl_Range_Ptr;
       Arr : Ghdl_E8_Array_Base_Ptr;
       Err : Boolean;
-      Len : Ghdl_Index_Type;
-      Uc_Array : Ghdl_Uc_Array_Acc;
    begin
       --  Check array type:
       --  - Must be one dimension
       if Arr_Rti.Nbr_Dim /= 1 then
          Error_Override ("multi-dimension array not supported for "
                            & "override of generic", Over);
-         return;
+         return null;
       end if;
       --  - Index must be a scalar integer
       if Idx_Rti.Kind /= Ghdl_Rtik_Subtype_Scalar then
@@ -100,7 +96,7 @@ package body Grt.Change_Generics is
       if Idx_Base_Rti.Kind /= Ghdl_Rtik_Type_I32 then
          Error_Override ("non Integer array index not supported for "
                            & "override of generic", Over);
-         return;
+         return null;
       end if;
       --  - Element must be E8 enum.
       if El_Rti.Kind = Ghdl_Rtik_Subtype_Scalar then
@@ -111,26 +107,46 @@ package body Grt.Change_Generics is
       if El_Base_Rti.Kind /= Ghdl_Rtik_Type_E8 then
          Error_Override ("non enumerated element type not supported for "
                            & "override of generic", Over);
-         return;
+         return null;
       end if;
 
       --  The real work can start.
-      St_Rng := To_Ghdl_Range_Ptr
-        (Loc_To_Addr (Idx_Rti.Depth,
-                      To_Ghdl_Rtin_Subtype_Scalar_Acc (Idx_Rti).Range_Loc,
-                      Ctxt));
 
       --  Create the value.
-      Len := Over.Value'Length;
       Arr := To_Ghdl_E8_Array_Base_Ptr (Ghdl_Malloc (Len));
       for I in Over.Value'range loop
          Ghdl_Value_E8_Char (Arr (Ghdl_Index_Type (I - Over.Value'First)), Err,
                              Over.Value (I), El_Base_Rti);
          if Err then
             Error_Override ("invalid character for override of generic", Over);
-            return;
+            return null;
          end if;
       end loop;
+
+      return Arr;
+   end Override_Generic_Array_Base;
+
+   --  Override for unconstrained array generic.
+   procedure Override_Generic_Array (Obj_Rti : Ghdl_Rtin_Object_Acc;
+                                     Arr_Rti : Ghdl_Rtin_Type_Array_Acc;
+                                     Ctxt : Rti_Context;
+                                     Over : Generic_Override_Acc)
+   is
+      Idx_Rti : constant Ghdl_Rti_Access := Arr_Rti.Indexes (0);
+      Len : constant Ghdl_Index_Type := Over.Value'Length;
+      St_Rng, Rng : Ghdl_Range_Ptr;
+      Arr : Ghdl_E8_Array_Base_Ptr;
+      Uc_Array : Ghdl_Uc_Array_Acc;
+   begin
+      Arr := Override_Generic_Array_Base (Arr_Rti, Over);
+      if Arr = null then
+         return;
+      end if;
+
+      St_Rng := To_Ghdl_Range_Ptr
+        (Loc_To_Addr (Idx_Rti.Depth,
+                      To_Ghdl_Rtin_Subtype_Scalar_Acc (Idx_Rti).Range_Loc,
+                      Ctxt));
 
       --  Create the range.
       Rng := new Ghdl_Range_Type (Mode_I32);
@@ -151,6 +167,42 @@ package body Grt.Change_Generics is
       Uc_Array.all := (Base => Arr (0)'Address,
                        Bounds => Rng.all'Address);
    end Override_Generic_Array;
+
+   procedure Override_Generic_Array_Subtype
+     (Obj_Rti : Ghdl_Rtin_Object_Acc;
+      Arr_Rti : Ghdl_Rtin_Subtype_Composite_Acc;
+      Ctxt : Rti_Context;
+      Over : Generic_Override_Acc)
+   is
+      use System;
+      Len : constant Ghdl_Index_Type := Over.Value'Length;
+      Bt : constant Ghdl_Rtin_Type_Array_Acc :=
+        To_Ghdl_Rtin_Type_Array_Acc (Arr_Rti.Basetype);
+      Layout : Address;
+      Bounds : Address;
+      Rng : Ghdl_Range_Ptr;
+      Idx_Base : Ghdl_Rti_Access;
+      Res : Ghdl_E8_Array_Base_Ptr;
+      Obj : Address;
+   begin
+      Layout := Loc_To_Addr (Arr_Rti.Common.Depth, Arr_Rti.Layout, Ctxt);
+      Bounds := Array_Layout_To_Bounds (Layout);
+
+      Idx_Base := Get_Base_Type (Bt.Indexes (0));
+      Extract_Range (Bounds, Idx_Base, Rng);
+
+      if Rng.I32.Len /= Len then
+         Error_Override ("incorrect length for generic override of", Over);
+         return;
+      end if;
+
+      Res := Override_Generic_Array_Base (Bt, Over);
+      Obj := Loc_To_Addr (Obj_Rti.Common.Depth, Obj_Rti.Loc, Ctxt);
+      for I in 1 .. Len loop
+         To_Ghdl_Value_Ptr (Obj).E8 := Res (I - 1);
+         Obj := Obj + Ghdl_Index_Type'(1);
+      end loop;
+   end Override_Generic_Array_Subtype;
 
    procedure Override_Generic_I32 (Obj_Rti : Ghdl_Rtin_Object_Acc;
                                    Ctxt : Rti_Context;
@@ -293,6 +345,10 @@ package body Grt.Change_Generics is
                        ("unhandled type for generic override of", Over);
                end case;
             end;
+         when Ghdl_Rtik_Subtype_Array =>
+            Override_Generic_Array_Subtype
+              (Obj_Rti, To_Ghdl_Rtin_Subtype_Composite_Acc (Type_Rti),
+              Ctxt, Over);
          when others =>
             Error_Override ("unhandled type for generic override of", Over);
       end case;
