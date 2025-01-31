@@ -1302,7 +1302,7 @@ package body Vhdl.Configuration is
             Set_Is_Ref (Get_Chain (Gen), False);
          end if;
       end if;
-      Set_Location (Res, No_Location);
+      Set_Location (Res, Libraries.Command_Line_Location);
       Set_Default_Value (Gen, Res);
    end Override_Generic;
 

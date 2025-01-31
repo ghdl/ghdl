@@ -29,6 +29,7 @@ with Str_Table;
 with Std_Names; use Std_Names;
 with Files_Map;
 with File_Comments;
+with Libraries;
 
 with Vhdl.Types; use Vhdl.Types;
 with Vhdl.Errors; use Vhdl.Errors;
@@ -187,6 +188,7 @@ package body Vhdl.Prints is
         and then not Is_Character (Id)
         and then Loc /= No_Location
         and then Loc /= Std_Package.Std_Location
+        and then Loc /= Libraries.Command_Line_Location
       then
          Disp_From_Source
            (Ctxt, Loc, Int32 (Get_Name_Length (Id)), Tok_Identifier);
