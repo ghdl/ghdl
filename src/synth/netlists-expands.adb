@@ -409,8 +409,8 @@ package body Netlists.Expands is
                   Off := Next_Off;
                   return;
                end if;
-               Count (I).Val := 0;
-               Off := Count (I - 1).Val;
+               Off := Off - C.Val;
+               C.Val := 0;
             end;
          end loop;
       end loop;
