@@ -132,30 +132,35 @@ package body Netlists.Expands is
 
    --  Extract address from memidx/addidx and disconnect those gates.
    procedure Extract_Address
-     (Ctxt : Context_Acc; Addr_Net : Net; Ndims : Natural; Addr : out Net)
+     (Ctxt : Context_Acc; Addr_Net : Net; Ndims : Int32; Addr : out Net)
    is
-      Res_Arr : Net_Array (1 .. Int32 (Ndims));
-      P : Int32;
       Inst, Inst1 : Instance;
       Inp : Input;
       N : Net;
+      Max : Uns32;
+      Max_Width : Width;
+      Part_Addr : Net;
    begin
-      P := 1;
+      --  Avoid warnings
+      Max := 0;
+      Max_Width := 0;
+
       N := Addr_Net;
-      loop
+      --  Dimension 1 is the least significant part of the address
+      for I in 1 .. Ndims loop
          Inst := Get_Net_Parent (N);
          case Get_Id (Inst) is
             when Id_Memidx =>
                --  Must be the last one!
                Inst1 := Inst;
             when Id_Addidx =>
-               --  Extract memidx.
+               --  Extract memidx (LSB)
                Inp := Get_Input (Inst, 1);
                Inst1 := Get_Net_Parent (Get_Driver (Inp));
                pragma Assert (Get_Id (Inst1) = Id_Memidx);
                Disconnect (Inp);
 
-               --  Extract next.
+               --  Extract next (MSB)
                Inp := Get_Input (Inst, 0);
                N := Get_Driver (Inp);
                Disconnect (Inp);
@@ -169,14 +174,33 @@ package body Netlists.Expands is
 
          --  INST1 is a memidx.
          Inp := Get_Input (Inst1, 0);
-         Res_Arr (P) := Get_Driver (Inp);
-         P := P + 1;
-
-         exit when Inst1 = Inst;
+         Part_Addr := Get_Driver (Inp);
+         if I = 1 then
+            Addr := Part_Addr;
+         else
+            if 2**Natural (Max_Width) /= Max + 1 then
+               --  Not a power of 2!
+               declare
+                  W : constant Width := Get_Width (Addr) + Max_Width;
+                  Loc : constant Location_Type := Get_Location (Inst1);
+                  Mul : Net;
+               begin
+                  Mul := Build2_Const_Uns (Ctxt, Uns64 (Max + 1), W);
+                  Addr := Build2_Uresize (Ctxt, Addr, W, Loc);
+                  Addr := Build_Dyadic (Ctxt, Id_Umul, Addr, Mul);
+                  Set_Location (Addr, Loc);
+                  Part_Addr := Build2_Uresize (Ctxt, Part_Addr, W, Loc);
+                  Addr := Build_Dyadic (Ctxt, Id_Add, Addr, Part_Addr);
+                  Set_Location (Addr, Loc);
+               end;
+            else
+               Addr := Build_Concat2 (Ctxt, Part_Addr, Addr);
+            end if;
+         end if;
+         Max := Get_Param_Uns32 (Inst1, 1);
+         Max_Width := Clog2 (Max + 1);
       end loop;
-      pragma Assert (P = Res_Arr'Last + 1);
-
-      Addr := Build2_Concat (Ctxt, Res_Arr);
+      pragma Assert (Inst = Inst1);
    end Extract_Address;
 
    procedure Truncate_Address
@@ -239,7 +263,7 @@ package body Netlists.Expands is
 
          --  3. build mux tree
          Disconnect (Get_Input (Inst, 1));
-         Extract_Address (Ctxt, Addr_Net, Ndims, Addr);
+         Extract_Address (Ctxt, Addr_Net, Int32 (Ndims), Addr);
          Truncate_Address (Ctxt, Addr, Nbr_Els);
          Def := No_Net;
          Synth_Case (Ctxt, Addr, Els.all, Def, Res, Loc);
@@ -255,6 +279,8 @@ package body Netlists.Expands is
       Remove_Instance (Inst);
    end Expand_Dyn_Extract;
 
+   --  Generate address decoder so that:
+   --  Net_Arr(N) = (addr = N)
    procedure Generate_Decoder (Ctxt : Context_Acc;
                                Addr : Net;
                                Net_Arr : out Net_Array;
@@ -443,7 +469,7 @@ package body Netlists.Expands is
       --  Generate decoder.
       Net_Arr := new Net_Array(0 .. Int32 (Nbr_Els - 1));
       Disconnect (Get_Input (Inst, 2));  --  Disconnect address
-      Extract_Address (Ctxt, Addr_Net, Ndims, Addr);
+      Extract_Address (Ctxt, Addr_Net, Int32 (Ndims), Addr);
       Truncate_Address (Ctxt, Addr, Nbr_Els);
       Generate_Decoder (Ctxt, Addr, Net_Arr.all, Loc);
 
