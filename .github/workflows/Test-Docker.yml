@@ -39,6 +39,7 @@ jobs:
 
       - name: Version check
         run: |
+          printf "BASH_VERSION=%s\n" "${BASH_VERSION}"
           printf "which ghdl: %s\n" "$(which ghdl)"
 
           printf "Verify GHDL_VERSION=%s " "${GHDL_VERSION}"
@@ -54,16 +55,16 @@ jobs:
             printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[PASSED]"
           else
             printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
-            printf "::warning title=%s::%s\n" "Test-Docker" "GHDL_BACKEND doesn't match. (actual: ${GHDL_BACKEND} != expected: ${{ inputs.ghdl_backend }})""
+            printf "::warning title=%s::%s\n" "Test-Docker" "GHDL_BACKEND doesn't match. (actual: ${GHDL_BACKEND} != expected: ${{ inputs.ghdl_backend }})"
           fi
 
           expected="${{ inputs.ghdl_version }}"
-          printf "%s" "Verify GHDL version '${expected}' ... "
+          printf "Verify GHDL version '%s' ... " "${expected}"
           if [[ "$(ghdl --version | head -n 1)" =~ ${expected//./\\.} ]]; then
             printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[PASSED]"
           else
             printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
-            printf "::warning title=%s::%s\n" "Test-Docker" "GHDL version doesn't match. (actual: $(ghdl --version | head -n 1) =~ expected: ${{ inputs.ghdl_version }})""
+            printf "::warning title=%s::%s\n" "Test-Docker" "GHDL version doesn't match. (actual: $(ghdl --version | head -n 1) =~ expected: ${{ inputs.ghdl_version }})"
 
             ghdl --version
           fi

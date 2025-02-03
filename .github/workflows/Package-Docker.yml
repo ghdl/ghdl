@@ -94,7 +94,7 @@ jobs:
 
       - name: ☑ Checking GHDL image 'ghdl:current'
         run: |
-          docker container run --rm ghdl:current 'printf "which ghdl: %s\n" "$(which ghdl)"; ghdl version'
+          docker container run --rm ghdl:current 'printf "BASH_VERSION=%s\n" "${BASH_VERSION}"; printf "which ghdl: %s\n" "$(which ghdl)"; ghdl version'
 
       - name: 🔑 Login and push to Docker Hub
         if: inputs.publish

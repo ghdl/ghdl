@@ -273,7 +273,7 @@ jobs:
           fi
 
           printf "\x1b[36mCollected requirements:\x1b[0m\n"
-          cat ubuntu.requirements | while read -r line; do printf "\x1b[36m  %s\x1b[0m" "${line}"; done
+          cat ubuntu.requirements | while read -r line; do printf "\x1b[36m  %s\x1b[0m\n" "${line}"; done
 
           sudo install -m 644 -p ubuntu.requirements ./install/
 
