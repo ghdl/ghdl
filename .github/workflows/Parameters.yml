@@ -256,35 +256,40 @@ jobs:
             tag="${ref:10}"
 
             printf "Tag check:\n"
+            if [[ "${tag}" == "${{ inputs.test_tag }}" ]]; then
+              is_tagged_test="true"
 
-            printf "  Check if tag is on release branch '%s' ... " "${{ inputs.release_branch }}"
-            git branch --remotes --contains $(git rev-parse --verify "tags/${tag}~0") | grep "origin/${{ inputs.release_branch }}" > /dev/null
-            if [[ $? -eq 0 ]]; then
-              printf "${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}\n"
+              printf "  Check if tag is on release branch '%s' ... [skipped]" "${{ inputs.release_branch }}"
             else
-              printf "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}\n"
-              printf "${ANSI_LIGHT_RED}Tag '%s' isn't on branch '%s'.${ANSI_NOCOLOR}\n" "${tag}" "${{ inputs.release_branch }}"
-              printf "::error title=TagCheck::Tag '%s' isn't on branch '%s'.\n" "${tag}" "${{ inputs.release_branch }}"
-              exit 1
-            fi
+              printf "  Check if tag is on release branch '%s' ... " "${{ inputs.release_branch }}"
+              git branch --remotes --contains $(git rev-parse --verify "tags/${tag}~0") | grep "origin/${{ inputs.release_branch }}" > /dev/null
+              if [[ $? -eq 0 ]]; then
+                printf "${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}\n"
+              else
+                printf "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}\n"
+                printf "${ANSI_LIGHT_RED}Tag '%s' isn't on branch '%s'.${ANSI_NOCOLOR}\n" "${tag}" "${{ inputs.release_branch }}"
+                printf "::error title=TagCheck::Tag '%s' isn't on branch '%s'.\n" "${tag}" "${{ inputs.release_branch }}"
+                exit 1
+              fi
 
-            NIGHTLY_TAG_PATTERN='^${{ inputs.nightly_tag_pattern }}$'
-            RELEASE_TAG_PATTERN='^${{ inputs.release_tag_pattern }}$'
-            printf "  Check tag name against regexp '%s' ... " "${RELEASE_TAG_PATTERN}"
-            if [[ "${tag}" =~ NIGHTLY_TAG_PATTERN ]]; then
-              printf "${ANSI_LIGHT_GREEN}[NIGHTLY]${ANSI_NOCOLOR}\n"
-              is_nightly_tag="true"
-            elif [[ "${tag}" =~ $RELEASE_TAG_PATTERN ]]; then
-              printf "${ANSI_LIGHT_GREEN}[RELEASE]${ANSI_NOCOLOR}\n"
-              version="${tag}"
-              is_release_tag="true"
-            else
-              printf "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}\n"
-              printf "${ANSI_LIGHT_RED}Tag name '%s' doesn't conform to regexp${ANSI_NOCOLOR}\n" "${tag}"
-              printf "  ${ANSI_LIGHT_RED}nightly tag: %s${ANSI_NOCOLOR}\n" "${NIGHTLY_TAG_PATTERN}"
-              printf "  ${ANSI_LIGHT_RED}release tag: %s${ANSI_NOCOLOR}\n" "${RELEASE_TAG_PATTERN}"
-              printf "::error title=RexExpCheck::Tag name '%s' doesn't conform to regexp '%s' nor '%s'.\n" "${tag}" "${NIGHTLY_TAG_PATTERN}" "${RELEASE_TAG_PATTERN}"
-              exit 1
+              NIGHTLY_TAG_PATTERN='^${{ inputs.nightly_tag_pattern }}$'
+              RELEASE_TAG_PATTERN='^${{ inputs.release_tag_pattern }}$'
+              printf "  Check tag name against regexp '%s' ... " "${RELEASE_TAG_PATTERN}"
+              if [[ "${tag}" =~ NIGHTLY_TAG_PATTERN ]]; then
+                printf "${ANSI_LIGHT_GREEN}[NIGHTLY]${ANSI_NOCOLOR}\n"
+                is_nightly_tag="true"
+              elif [[ "${tag}" =~ $RELEASE_TAG_PATTERN ]]; then
+                printf "${ANSI_LIGHT_GREEN}[RELEASE]${ANSI_NOCOLOR}\n"
+                version="${tag}"
+                is_release_tag="true"
+              else
+                printf "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}\n"
+                printf "${ANSI_LIGHT_RED}Tag name '%s' doesn't conform to regexp${ANSI_NOCOLOR}\n" "${tag}"
+                printf "  ${ANSI_LIGHT_RED}nightly tag: %s${ANSI_NOCOLOR}\n" "${NIGHTLY_TAG_PATTERN}"
+                printf "  ${ANSI_LIGHT_RED}release tag: %s${ANSI_NOCOLOR}\n" "${RELEASE_TAG_PATTERN}"
+                printf "::error title=RexExpCheck::Tag name '%s' doesn't conform to regexp '%s' nor '%s'.\n" "${tag}" "${NIGHTLY_TAG_PATTERN}" "${RELEASE_TAG_PATTERN}"
+                exit 1
+              fi
             fi
           elif [[ "${ref:0:10}" == "refs/pull/" ]]; then
             ref_kind="pullrequest"
@@ -294,10 +299,6 @@ jobs:
             printf "${ANSI_LIGHT_RED}Unknown Git reference '%s'.${ANSI_NOCOLOR}\n" "${{ github.ref }}"
             printf "::error title=Classify Commit::Unknown Git reference '%s'.\n" "${{ github.ref }}"
             exit 1
-          fi
-
-          if [[ "${ref_kind}" == "tag" && "${tag}" == "${{ inputs.test_tag }}" ]]; then
-            is_tagged_test="true"
           fi
 
           tee --append "${GITHUB_OUTPUT}" <<EOF

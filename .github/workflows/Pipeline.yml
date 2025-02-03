@@ -299,7 +299,7 @@ jobs:
 
   Nightly:
     uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r5
-    if: github.ref == 'refs/tags/nightly'
+    if: needs.Params.outputs.is_nightly_tag == 'true' || needs.Params.outputs.is_tagged_test == 'true'
     needs:
       - Params
       - macOS
@@ -313,8 +313,8 @@ jobs:
       contents: write
       actions:  write
     with:
-      tag:   "nightly"
-      title: "Nightly Release"
+      tag:   ${{ needs.Params.outputs.tag }}
+      title: "Nightly Release (test)"
       mode:  "nightly"
       description: |
         This *nightly* release contains all latest and important artifacts created by GHDL's CI pipeline.
@@ -454,7 +454,7 @@ jobs:
           - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'mcode'}
           - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'}
           - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm-jit'}
-    if: (needs.Params.outputs.is_release_tag == 'true' || github.ref == 'refs/tags/nightly') && !failure() && !cancelled()
+    if: (needs.Params.outputs.is_release_tag == 'true' || needs.Params.outputs.is_nightly_tag == 'true' || needs.Params.outputs.is_tagged_test == 'true') && !failure() && !cancelled()
     with:
       os_image:              ${{ matrix.image }}
       os_name:               ${{ matrix.name }}
