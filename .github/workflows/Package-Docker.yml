@@ -94,7 +94,7 @@ jobs:
 
       - name: ☑ Checking GHDL image 'ghdl:current'
         run: |
-          docker container run --rm ghdl:current 'printf "BASH_VERSION=%s\n" "${BASH_VERSION}"; printf "which ghdl: %s\n" "$(which ghdl)"; ghdl version'
+          docker container run --rm ghdl:current -c 'printf "ActiveShell: %s (%s)\n" "$(readlink /proc/$$/exe)" "${BASH_VERSION}"; printf "which ghdl: %s\n" "$(which ghdl)"; ghdl version'
 
       - name: 🔑 Login and push to Docker Hub
         if: inputs.publish
@@ -107,7 +107,7 @@ jobs:
 
       - name: 🚦 Testing GHDL image
         run: |
-          docker container run --rm -v $(pwd):/data ghdl:current 'cd /data/testsuite; ./testsuite.sh ${{ inputs.testsuites }}'
+          docker container run --rm -v $(pwd):/data ghdl:current -c 'cd /data/testsuite; ./testsuite.sh ${{ inputs.testsuites }}'
 
   TestDocker:
     uses: ./.github/workflows/Test-Docker.yml

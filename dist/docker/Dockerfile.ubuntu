@@ -13,6 +13,9 @@ LABEL ghdl_backend="${GHDL_BACKEND}"
 # Changing default shell to Bash (for within Dockerfile)
 SHELL ["/bin/bash", "-l", "-c"]
 
+# Switch from Dash to Bash
+RUN ln -sf /bin/bash /bin/sh
+
 # Disable install-recommends and install-suggests for apt
 RUN printf 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf \
  && printf 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf
@@ -48,5 +51,3 @@ ENV GHDL_VERSION="${GHDL_VERSION}"
 RUN printf "PATH=%s\n" "${PATH}" \
  && printf "which ghdl: %s\n" "$(which ghdl)" \
  && ghdl version
-
-ENTRYPOINT ["/bin/bash", "-c"]
