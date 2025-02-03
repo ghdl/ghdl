@@ -20,6 +20,10 @@ on:
         description: 'GHDL backend.'
         required: true
         type: string
+      version:
+        description: 'GHDL version.'
+        required: true
+        type: string
       publish:
         description: 'Publish Docker image to Docker Hub.'
         required: false
@@ -65,7 +69,7 @@ jobs:
 
           image_ns="${{ vars.DOCKERHUB_NAMESPACE }}"
           image_name="${{ inputs.dockerhub_image }}"
-          image_tag="5.0.0-dev-${{ inputs.backend }}-${base_image}-${base_image_tag}"
+          image_tag="${{ inputs.version }}-${{ inputs.backend }}-${base_image}-${base_image_tag}"
           image="${image_ns}/${image_name}:${image_tag}"
 
           echo "ghdl_image_ns=${image_ns}" >> $GITHUB_OUTPUT
@@ -79,6 +83,7 @@ jobs:
             --file ./dist/docker/Dockerfile.${base_image} \
             --build-arg IMAGE=${base_image} \
             --build-arg IMAGE_TAG=${base_image_tag} \
+            --build-arg GHDL_VERSION=${{ inputs.version }} \
             --tag "ghdl:current" \
             ./dist/docker
 

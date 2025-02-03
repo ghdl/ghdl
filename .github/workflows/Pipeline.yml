@@ -78,6 +78,7 @@ jobs:
     with:
       ubuntu_version:           ${{ matrix.ubuntu_version }}
       backend:                  ${{ matrix.backend }}
+      version:                  ${{ needs.Params.outputs.ghdl_version }}
       testsuites:               ${{ matrix.testsuites }}
       ubuntu_artifact:          ${{ needs.Params.outputs.ghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
       libghdl_artifact:         ${{ needs.Params.outputs.libghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
@@ -105,6 +106,7 @@ jobs:
     with:
       ubuntu_version:           ${{ matrix.ubuntu_version }}
       backend:                  ${{ matrix.backend }}
+      version:                  ${{ needs.Params.outputs.ghdl_version }}
       testsuites:               ${{ matrix.testsuites }}
       ubuntu_artifact:          ${{ needs.Params.outputs.ghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
       libghdl_artifact:         ${{ needs.Params.outputs.libghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64

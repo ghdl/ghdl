@@ -11,6 +11,10 @@ on:
         description: 'GHDL backend'
         required: true
         type: string
+      version:
+        description: 'GHDL version'
+        required: true
+        type: string
       testsuites:
         description: 'GHDL testsuites to run'
         required: true
@@ -452,6 +456,7 @@ jobs:
       ghdl_artifact:       ${{ needs.Build.outputs.ghdl_artifact }}
       ubuntu_version:      ${{ inputs.ubuntu_version }}
       backend:             ${{ inputs.backend }}
+      version:             ${{ inputs.version }}
       publish:             ${{ github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/')) }}
       testsuites:          ${{ inputs.testsuites }}
     secrets: inherit
