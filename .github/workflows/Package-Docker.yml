@@ -16,11 +16,11 @@ on:
         description: 'Version of used Ubuntu for the artifact.'
         required: true
         type: string
-      backend:
+      ghdl_backend:
         description: 'GHDL backend.'
         required: true
         type: string
-      version:
+      ghdl_version:
         description: 'GHDL version.'
         required: true
         type: string
@@ -69,37 +69,40 @@ jobs:
 
           image_ns="${{ vars.DOCKERHUB_NAMESPACE }}"
           image_name="${{ inputs.dockerhub_image }}"
-          image_tag="${{ inputs.version }}-${{ inputs.backend }}-${base_image}-${base_image_tag}"
+          image_tag="${{ inputs.ghdl_version }}-${{ inputs.ghdl_backend }}-${base_image}-${base_image_tag}"
           image="${image_ns}/${image_name}:${image_tag}"
 
-          echo "ghdl_image_ns=${image_ns}" >> $GITHUB_OUTPUT
-          echo "ghdl_image_name=${image_name}" >> $GITHUB_OUTPUT
-          echo "ghdl_image_tag=${image_tag}" >> $GITHUB_OUTPUT
-          echo "ghdl_image=${image}" >> $GITHUB_OUTPUT
-          cat $GITHUB_OUTPUT
+          tee "${GITHUB_OUTPUT}" <<EOF
+          ghdl_image_ns=${image_ns}
+          ghdl_image_name=${image_name}
+          ghdl_image_tag=${image_tag}
+          ghdl_image=${image}
+          EOF
 
-          echo "Building docker file './dist/docker/Dockerfile.${base_image}' ..."
+          dockerfile="./dist/docker/Dockerfile.${base_image}"
+          printf "Building docker file '%s' ...\n" "${dockerfile}"
           docker buildx build \
-            --file ./dist/docker/Dockerfile.${base_image} \
+            --file "${dockerfile}" \
             --build-arg IMAGE=${base_image} \
             --build-arg IMAGE_TAG=${base_image_tag} \
-            --build-arg GHDL_VERSION=${{ inputs.version }} \
+            --build-arg GHDL_VERSION=${{ inputs.ghdl_version }} \
+            --build-arg GHDL_BACKEND=${{ inputs.ghdl_backend }} \
             --tag "ghdl:current" \
             ./dist/docker
 
-          echo "Docker image 'ghdl:current' has $(docker image inspect ghdl:current --format='{{.Size}}' | numfmt --to=iec --format '%.2f')"
+          printf "Docker image 'ghdl:current' has %s\n" "$(docker image inspect ghdl:current --format='{{.Size}}' | numfmt --to=iec --format '%.2f')"
 
       - name: ☑ Checking GHDL image 'ghdl:current'
         run: |
-          docker container run --rm ghdl:current 'echo "which ghdl: $(which ghdl)"; ghdl version'
+          docker container run --rm ghdl:current 'printf "which ghdl: %s\n" "$(which ghdl)"; ghdl version'
 
       - name: 🔑 Login and push to Docker Hub
         if: inputs.publish
         run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ vars.DOCKERHUB_USERNAME }} --password-stdin
+          printf "%s" "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ vars.DOCKERHUB_USERNAME }} --password-stdin
           docker image tag ghdl:current ${{ steps.build.outputs.ghdl_image }}
 
-          echo "Docker image '${{ steps.build.outputs.ghdl_image }}' has $(docker image inspect ${{ steps.build.outputs.ghdl_image }} --format='{{.Size}}' | numfmt --to=iec --format '%.2f')"
+          printf "Docker image '%s' has %s\n" "${{ steps.build.outputs.ghdl_image }}" "$(docker image inspect ${{ steps.build.outputs.ghdl_image }} --format='{{.Size}}' | numfmt --to=iec --format '%.2f')"
           docker image push ${{ steps.build.outputs.ghdl_image }}
 
       - name: 🚦 Testing GHDL image
@@ -112,6 +115,8 @@ jobs:
       - Ubuntu
     if: inputs.publish
     with:
-      os_image:   ${{ inputs.ubuntu_image }}
-      ghdl_image: ${{ needs.Ubuntu.outputs.ghdl_image }}
-      testsuites: ${{ inputs.testsuites }}
+      os_image:     ${{ inputs.ubuntu_image }}
+      ghdl_image:   ${{ needs.Ubuntu.outputs.ghdl_image }}
+      ghdl_backend: ${{ inputs.ghdl_backend }}
+      ghdl_version: ${{ inputs.ghdl_version }}
+      testsuites:   ${{ inputs.testsuites }}

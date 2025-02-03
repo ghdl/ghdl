@@ -11,6 +11,14 @@ on:
         description: 'Name of the GHDL image.'
         required: true
         type: string
+      ghdl_version:
+        description: 'GHDL version.'
+        required: true
+        type: string
+      ghdl_backend:
+        description: 'GHDL backend.'
+        required: true
+        type: string
       testsuites:
         description: 'GHDL testsuites'
         required: true
@@ -31,8 +39,34 @@ jobs:
 
       - name: Version check
         run: |
-          echo "which ghdl: $(which ghdl)"
-          ghdl version
+          printf "which ghdl: %s\n" "$(which ghdl)"
+
+          printf "Verify GHDL_VERSION=%s " "${GHDL_VERSION}"
+          if [[ "${GHDL_VERSION}" == "${{ inputs.ghdl_version }}" ]]; then
+            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[PASSED]"
+          else
+            printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
+            printf "::warning title=%s::%s\n" "Test-Docker" "GHDL_VERSION doesn't match. (actual: ${GHDL_VERSION} != expected: ${{ inputs.ghdl_version }})"
+          fi
+
+          printf "Verify GHDL_BACKEND=%s " "${GHDL_BACKEND}"
+          if [[ "${GHDL_BACKEND}" == "${{ inputs.ghdl_backend }}" ]]; then
+            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[PASSED]"
+          else
+            printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
+            printf "::warning title=%s::%s\n" "Test-Docker" "GHDL_BACKEND doesn't match. (actual: ${GHDL_BACKEND} != expected: ${{ inputs.ghdl_backend }})""
+          fi
+
+          expected="${{ inputs.ghdl_version }}"
+          printf "%s" "Verify GHDL version '${expected}' ... "
+          if [[ "$(ghdl --version | head -n 1)" =~ ${expected//./\\.} ]]; then
+            printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[PASSED]"
+          else
+            printf "${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "[FAILED]"
+            printf "::warning title=%s::%s\n" "Test-Docker" "GHDL version doesn't match. (actual: $(ghdl --version | head -n 1) =~ expected: ${{ inputs.ghdl_version }})""
+
+            ghdl --version
+          fi
 
       - name: Run tests in testsuite
         run: |
