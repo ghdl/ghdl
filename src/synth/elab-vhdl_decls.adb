@@ -171,7 +171,31 @@ package body Elab.Vhdl_Decls is
    is
       Obj_Typ : Type_Acc;
    begin
-      Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
+      case Get_Kind (Decl) is
+         when Iir_Kind_Delayed_Attribute =>
+            --  Extract the type from the prefix.
+            --  The type of the implicit signal may be a non-declared subtype
+            --  (eg: the prefix is an indexed array, or a record element)
+            declare
+               Pfx : constant Node := Get_Prefix (Decl);
+               Marker : Mark_Type;
+               Base : Valtyp;
+               Off : Value_Offsets;
+            begin
+               Mark_Expr_Pool (Marker);
+
+               if Get_Kind (Pfx) in Iir_Kinds_External_Name then
+                  Base := Exec_External_Name (Syn_Inst, Pfx);
+                  Obj_Typ := Base.Typ;
+               else
+                  Synth_Assignment_Prefix (Syn_Inst, Pfx, Base, Obj_Typ, Off);
+               end if;
+               Obj_Typ := Unshare (Obj_Typ, Instance_Pool);
+               Release_Expr_Pool (Marker);
+            end;
+         when others =>
+            Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
+      end case;
       Create_Signal (Syn_Inst, Decl, Obj_Typ, null);
    end Elab_Implicit_Signal_Declaration;
 
