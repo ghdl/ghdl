@@ -8,6 +8,8 @@ synth_tb record_bug
 
 synth_tb record_bug2
 
+synth_tb record_bug3
+
 do_bug4()
 {
     i=$1
