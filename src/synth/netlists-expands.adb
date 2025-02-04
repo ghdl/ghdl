@@ -186,10 +186,10 @@ package body Netlists.Expands is
                   Mul : Net;
                begin
                   Mul := Build2_Const_Uns (Ctxt, Uns64 (Max + 1), W);
-                  Addr := Build2_Uresize (Ctxt, Addr, W, Loc);
-                  Addr := Build_Dyadic (Ctxt, Id_Umul, Addr, Mul);
-                  Set_Location (Addr, Loc);
                   Part_Addr := Build2_Uresize (Ctxt, Part_Addr, W, Loc);
+                  Part_Addr := Build_Dyadic (Ctxt, Id_Umul, Part_Addr, Mul);
+                  Set_Location (Part_Addr, Loc);
+                  Addr := Build2_Uresize (Ctxt, Addr, W, Loc);
                   Addr := Build_Dyadic (Ctxt, Id_Add, Addr, Part_Addr);
                   Set_Location (Addr, Loc);
                end;
