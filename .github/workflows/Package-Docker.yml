@@ -90,11 +90,14 @@ jobs:
             --tag "ghdl:current" \
             ./dist/docker
 
+          printf "Entrypoint: %s\n" "$(docker inspect -f '{{.Config.Entrypoint}}' ghdl:current)"
+          printf "Cmd:        %s\n" "$(docker inspect -f '{{.Config.Cmd}}'        ghdl:current)"
+
           printf "Docker image 'ghdl:current' has %s\n" "$(docker image inspect ghdl:current --format='{{.Size}}' | numfmt --to=iec --format '%.2f')"
 
       - name: ☑ Checking GHDL image 'ghdl:current'
         run: |
-          docker container run --rm ghdl:current -c 'printf "ActiveShell: %s (%s)\n" "$(readlink /proc/$$/exe)" "${BASH_VERSION}"; printf "which ghdl: %s\n" "$(which ghdl)"; ghdl version'
+          docker container run --rm ghdl:current /bin/bash -c 'printf "ActiveShell: %s (%s)\n" "$(readlink /proc/$$/exe)" "${BASH_VERSION}"; printf "which ghdl: %s\n" "$(which ghdl)"; ghdl version'
 
       - name: 🔑 Login and push to Docker Hub
         if: inputs.publish
@@ -107,7 +110,7 @@ jobs:
 
       - name: 🚦 Testing GHDL image
         run: |
-          docker container run --rm -v $(pwd):/data ghdl:current -c 'cd /data/testsuite; ./testsuite.sh ${{ inputs.testsuites }}'
+          docker container run --rm -v $(pwd):/data ghdl:current /bin/bash -c 'cd /data/testsuite; ./testsuite.sh ${{ inputs.testsuites }}'
 
   TestDocker:
     uses: ./.github/workflows/Test-Docker.yml

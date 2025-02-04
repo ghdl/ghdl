@@ -1,3 +1,5 @@
+# check=skip=InvalidDefaultArgInFrom;error=true
+
 ARG IMAGE
 ARG IMAGE_TAG
 ARG GHDL_VERSION
