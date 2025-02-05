@@ -35,6 +35,9 @@ with Synth.Vhdl_Expr;
 with Trans_Analyzes;
 
 package body Simul.Vhdl_Elab is
+   --  Number of implicit signals declared in processes
+   Nbr_Proc_Signals : Signal_Index_Type;
+
    procedure Gather_Processes_1 (Inst : Synth_Instance_Acc);
 
    procedure Convert_Type_Width (T : Type_Acc) is
@@ -519,7 +522,8 @@ package body Simul.Vhdl_Elab is
            | Iir_Kind_Use_Clause
            | Iir_Kind_Mode_View_Declaration
            | Iir_Kind_Group_Template_Declaration
-           | Iir_Kind_Group_Declaration =>
+           | Iir_Kind_Group_Declaration
+           | Iir_Kind_Suspend_State_Declaration =>
             null;
 
          when Iir_Kind_Package_Instantiation_Declaration =>
@@ -1002,6 +1006,27 @@ package body Simul.Vhdl_Elab is
       pragma Assert (Areapools.Is_Empty (Expr_Pool));
    end Gather_Connections_Instantiation_Statement;
 
+   --  Count number of extra implicit signals declared within processes.
+   procedure Count_Process_Implicit_Signals (Decls : Node)
+   is
+      Decl : Node;
+      El : Node;
+   begin
+      Decl := Decls;
+      while Decl /= Null_Node loop
+         if Get_Kind (Decl) = Iir_Kind_Attribute_Implicit_Declaration then
+            El := Get_Attribute_Implicit_Chain (Decl);
+            while El /= Null_Node loop
+               if Get_Kind (El) in Iir_Kinds_AMS_Signal_Attribute then
+                  Nbr_Proc_Signals := Nbr_Proc_Signals + 1;
+               end if;
+               El := Get_Attr_Chain (El);
+            end loop;
+         end if;
+         Decl := Get_Chain (Decl);
+      end loop;
+   end Count_Process_Implicit_Signals;
+
    procedure Gather_Processes_Stmt
      (Inst : Synth_Instance_Acc; Stmt : Node) is
    begin
@@ -1071,6 +1096,7 @@ package body Simul.Vhdl_Elab is
                                      Sensitivity => No_Sensitivity_Index));
             --  Do not yet compute drivers or sensitivity as it may depends
             --  on declarations within the process.
+            Count_Process_Implicit_Signals (Get_Declaration_Chain (Stmt));
          when Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Psl_Declaration =>
             null;
@@ -1185,7 +1211,14 @@ package body Simul.Vhdl_Elab is
       pragma Assert (Areapools.Is_Empty (Expr_Pool));
    end Gather_Processes_1;
 
-   procedure Gather_Processes (Top : Synth_Instance_Acc) is
+   procedure Gather_Processes (Top : Synth_Instance_Acc)
+   is
+      Null_Entry : constant Signal_Entry :=
+        (Signal_None, Null_Node, null, null, null, null, null,
+         No_Sensitivity_Index,
+         No_Signal_Index, No_Value_Offsets,
+         No_Connect_Index, False);
+      Nbr_Signals : constant Signal_Index_Type := Get_Nbr_Signal;
    begin
       pragma Assert (Areapools.Is_Empty (Expr_Pool));
 
@@ -1194,14 +1227,11 @@ package body Simul.Vhdl_Elab is
       Drivers_Table.Init;
 
       --  Init Signals_Table.
-      Signals_Table.Set_Last (Get_Nbr_Signal);
+      Signals_Table.Set_Last (Nbr_Signals);
       for I in Signals_Table.First .. Signals_Table.Last loop
-         Signals_Table.Table (I) :=
-           (Signal_None, Null_Node, null, null, null, null, null,
-            No_Sensitivity_Index,
-            No_Signal_Index, No_Value_Offsets,
-            No_Connect_Index, False);
+         Signals_Table.Table (I) := Null_Entry;
       end loop;
+      Nbr_Proc_Signals := 0;
 
       --  Gather declarations of top-level packages.
       declare
@@ -1222,6 +1252,14 @@ package body Simul.Vhdl_Elab is
 
       --  For the debugger.
       Top_Instance := Top;
+
+      --  Extra implicit signals
+      if Nbr_Proc_Signals > 0 then
+         Signals_Table.Set_Last (Nbr_Signals + Nbr_Proc_Signals);
+         for I in Nbr_Signals + 1 .. Nbr_Signals + Nbr_Proc_Signals loop
+            Signals_Table.Table (I) := Null_Entry;
+         end loop;
+      end if;
    end Gather_Processes;
 
    procedure Compute_Sources is
@@ -1314,6 +1352,9 @@ package body Simul.Vhdl_Elab is
             Synth.Vhdl_Decls.Synth_Declarations
               (Proc_Inst, Get_Declaration_Chain (Proc), True);
             exit when Is_Error (Proc_Inst);
+
+            --  For implicit signals
+            Gather_Processes_Decls (Proc_Inst, Get_Declaration_Chain (Proc));
 
             pragma Assert (Is_Expr_Pool_Empty);
             Gather_Process_Drivers (Proc_Inst, Proc, I);

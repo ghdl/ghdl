@@ -2603,7 +2603,9 @@ package body Vhdl.Sem_Stmts is
       Close_Declarative_Region;
    end Sem_Case_Generate_Statement;
 
-   procedure Sem_Process_Statement (Proc: Iir) is
+   procedure Sem_Process_Statement (Proc: Iir)
+   is
+      Implicit : Implicit_Declaration_Type;
    begin
       Set_Is_Within_Flag (Proc, True);
 
@@ -2611,9 +2613,14 @@ package body Vhdl.Sem_Stmts is
       --  8. A process statement
       Open_Declarative_Region;
 
+      --  Implicit signals may depend on constant elaborated within a process
+      --  (eg: s'delayed(my_const))
+      Push_Signals_Declarative_Part (Implicit, Proc);
+
       -- Sem declarations
       Sem_Sequential_Statements (Proc, Proc);
 
+      Pop_Signals_Declarative_Part (Implicit);
       Close_Declarative_Region;
 
       Set_Is_Within_Flag (Proc, False);

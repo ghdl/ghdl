@@ -27,6 +27,9 @@ package Elab.Vhdl_Decls is
    procedure Elab_File_Declaration (Syn_Inst : Synth_Instance_Acc;
                                     Decl : Node);
 
+   procedure Elab_Attribute_Implicit_Declaration
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node);
+
    procedure Elab_Declaration (Syn_Inst : Synth_Instance_Acc;
                                Decl : Node;
                                Force_Init : Boolean;

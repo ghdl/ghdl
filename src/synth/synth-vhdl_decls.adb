@@ -790,8 +790,8 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Configuration_Specification =>
             null;
          when Iir_Kind_Attribute_Implicit_Declaration =>
-            --  Not supported by synthesis.
-            null;
+            Elab.Vhdl_Decls.Elab_Attribute_Implicit_Declaration
+              (Syn_Inst, Decl);
          when Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration =>
             null;

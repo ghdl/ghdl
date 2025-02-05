@@ -166,6 +166,20 @@ package body Elab.Vhdl_Decls is
       Create_Object (Syn_Inst, Decl, Res);
    end Elab_Free_Quantity_Declaration;
 
+   procedure Elab_External_Name (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+   is
+      Obj_Typ : Type_Acc;
+      Res : Valtyp;
+   begin
+      Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
+
+      Res := Create_Value_Alias
+        (No_Valtyp, No_Value_Offsets, Obj_Typ, Instance_Pool);
+
+      --  For elaboration: Base, Offset and reshaped bounds.
+      Create_Object (Syn_Inst, Decl, Res);
+   end Elab_External_Name;
+
    procedure Elab_Implicit_Signal_Declaration (Syn_Inst : Synth_Instance_Acc;
                                                Decl : Node)
    is
@@ -193,6 +207,9 @@ package body Elab.Vhdl_Decls is
                Obj_Typ := Unshare (Obj_Typ, Instance_Pool);
                Release_Expr_Pool (Marker);
             end;
+         when Iir_Kinds_External_Name =>
+            Elab_External_Name (Syn_Inst, Decl);
+            return;
          when others =>
             Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
       end case;
@@ -313,19 +330,17 @@ package body Elab.Vhdl_Decls is
       Release_Expr_Pool (Marker);
    end Elab_Object_Alias_Declaration;
 
-   procedure Elab_External_Name (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+   procedure Elab_Attribute_Implicit_Declaration
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
-      Obj_Typ : Type_Acc;
-      Res : Valtyp;
+      El : Node;
    begin
-      Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
-
-      Res := Create_Value_Alias
-        (No_Valtyp, No_Value_Offsets, Obj_Typ, Instance_Pool);
-
-      --  For elaboration: Base, Offset and reshaped bounds.
-      Create_Object (Syn_Inst, Decl, Res);
-   end Elab_External_Name;
+      El := Get_Attribute_Implicit_Chain (Decl);
+      while El /= Null_Node loop
+         Elab_Implicit_Signal_Declaration (Syn_Inst, El);
+         El := Get_Attr_Chain (El);
+      end loop;
+   end Elab_Attribute_Implicit_Declaration;
 
    procedure Elab_Declaration (Syn_Inst : Synth_Instance_Acc;
                                Decl : Node;
@@ -408,15 +423,7 @@ package body Elab.Vhdl_Decls is
          when Iir_Kind_Configuration_Specification =>
             null;
          when Iir_Kind_Attribute_Implicit_Declaration =>
-            declare
-               El : Node;
-            begin
-               El := Get_Attribute_Implicit_Chain (Decl);
-               while El /= Null_Node loop
-                  Elab_Declaration (Syn_Inst, El, Force_Init, Last_Type);
-                  El := Get_Attr_Chain (El);
-               end loop;
-            end;
+            Elab_Attribute_Implicit_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Nature_Declaration =>
             Elab_Nature_Definition (Syn_Inst, Get_Nature (Decl));
          when Iir_Kind_Free_Quantity_Declaration =>
@@ -430,12 +437,10 @@ package body Elab.Vhdl_Decls is
          when Iir_Kind_Terminal_Declaration =>
             Elab_Terminal_Declaration (Syn_Inst, Decl);
          when Iir_Kinds_Signal_Attribute =>
-            Elab_Implicit_Signal_Declaration (Syn_Inst, Decl);
+            --  Handled by Attribute_Implicit_Declaration
+            raise Program_Error;
          when Iir_Kind_Disconnection_Specification =>
             null;
-
-         when Iir_Kinds_External_Name =>
-            Elab_External_Name (Syn_Inst, Decl);
 
          when Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration =>
