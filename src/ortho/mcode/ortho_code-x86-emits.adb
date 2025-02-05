@@ -3084,8 +3084,16 @@ package body Ortho_Code.X86.Emits is
                end if;
             end if;
 
-            --  4..: push non vol
+
             Off := Byte (Set_Frame_Pc - Subprg_Pc);
+            --  set fp
+            Prealloc (4);
+            Gen_8 (Off);       --  Offset
+            Gen_8 (16#03#);    --  Op: SET_FP_REG
+            Nbr_Unw_Code := Nbr_Unw_Code + 1;
+
+            --  push non vol
+            Off := Off - 3;
             for R in reverse Preserved_Regs'Range loop
                if Preserved_Regs (R) and Reg_Used (R) then
                   Prealloc (2);
@@ -3100,18 +3108,20 @@ package body Ortho_Code.X86.Emits is
                end if;
             end loop;
 
-            --  1: set fp
-            Prealloc (4);
-            Gen_8 (Off);       --  Offset: +3
-            Gen_8 (16#03#);    --  Op: SET_FP_REG
-            Nbr_Unw_Code := Nbr_Unw_Code + 1;
-
             --  0: push ebp
             Gen_8 (1);       --  Offset: +1
             Gen_8 (16#50#);  --  Op: SAVE_NONVOL, Reg: 5 (ebp)
             Nbr_Unw_Code := Nbr_Unw_Code + 1;
 
             Patch_8 (Last_Unwind_Off + 2, Nbr_Unw_Code);
+
+            if Nbr_Unw_Code mod 2 = 1 then
+               --  Pad for alignment
+               Prealloc (2);
+               Gen_8 (0);
+               Gen_8 (0);
+            end if;
+
             Set_Current_Section (Sect_Text);
          end;
       end if;
