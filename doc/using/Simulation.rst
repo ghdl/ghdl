@@ -202,7 +202,7 @@ Here is the list of the most useful options. For further info, see :ref:`DEV:Deb
 Export waveforms
 ================
 
-.. NOTE:: All the waveform formats supported by GHDL are also supported by `GTKWave <http://gtkwave.sourceforge.net/>`__.
+.. NOTE:: All the waveform formats supported by GHDL are also supported by `GTKWave <http://gtkwave.sourceforge.net/>`__ and `Surfer <https://surfer-project.org/>`__.
 
 .. option:: --read-wave-opt=<FILENAME>
 
