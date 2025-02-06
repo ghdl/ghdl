@@ -1,23 +1,32 @@
+# check=skip=InvalidDefaultArgInFrom;error=true
+
 ARG IMAGE
 ARG IMAGE_TAG
 ARG GHDL_VERSION
+ARG GHDL_BACKEND
 
 FROM ${IMAGE}:${IMAGE_TAG}
+ARG GHDL_VERSION
+ARG GHDL_BACKEND
 
 LABEL ghdl_version="${GHDL_VERSION}"
+LABEL ghdl_backend="${GHDL_BACKEND}"
 
 # Changing default shell to Bash (for within Dockerfile)
 SHELL ["/bin/bash", "-l", "-c"]
 
+# Switch from Dash to Bash
+RUN ln -sf /bin/bash /bin/sh
+
 # Disable install-recommends and install-suggests for apt
-RUN echo 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf \
- && echo 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf
+RUN printf 'APT::Install-Recommends "false";' >> /etc/apt/apt.conf \
+ && printf 'APT::Install-Suggests "false";' >> /etc/apt/apt.conf
 
 RUN apt-mark manual '.*' \
- && echo -e "\e[34mInstalled Packages:\e[0m" \
- && echo -e "\e[34m--------------------------------------------------------------------------------\e[0m" \
- && apt-mark showmanual | sort | while read -r line; do echo -e "\e[36m  ${line}\e[0m"; done \
- && echo -e "\e[34m--------------------------------------------------------------------------------\e[0m"
+ && printf "\x1b[34mInstalled Packages:\x1b[0m\n" \
+ && printf "\x1b[34m--------------------------------------------------------------------------------\x1b[0m\n" \
+ && apt-mark showmanual | sort | while read -r line; do printf "\x1b[36m  %s\x1b[0m\n" "${line}"; done \
+ && printf "\x1b[34m--------------------------------------------------------------------------------\x1b[0m\n"
 
 ENV DEBIAN_FRONTEND="noninteractive"
 
@@ -37,9 +46,10 @@ RUN --mount=type=bind,target=/context \
 
 ENV PATH=/opt/ghdl/bin:$PATH
 
-# Check GHDL installation
-RUN echo "PATH=${PATH}" \
- && echo "which ghdl: $(which ghdl)" \
- && ghdl version
+ENV GHDL_BACKEND="${GHDL_BACKEND}"
+ENV GHDL_VERSION="${GHDL_VERSION}"
 
-ENTRYPOINT ["/bin/bash", "-c"]
+# Check GHDL installation
+RUN printf "PATH=%s\n" "${PATH}" \
+ && printf "which ghdl: %s\n" "$(which ghdl)" \
+ && ghdl version
