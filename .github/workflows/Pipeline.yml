@@ -464,10 +464,37 @@ jobs:
         pyGHDL-Windows-x86_64-Python-3.13:      pyGHDL-%pyghdl%-cp313-cp313-win_amd64.whl:                    pyGHDL,windows,2022,x86-64,py3.13,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.13
 
   Test-SetupGHDL:
+    name: ${{ matrix.icon }} Setup GHDL ${{ matrix.backend }} on ${{ matrix.os_name }}
     uses: ./.github/workflows/Test-SetupGHDL.yml
     needs:
       - Params
       - Nightly
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+#         - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-20.04', runtime: '',        backend: 'mcode'}
+#         - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'xcode'}
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'mcode'}
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm'}
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm-jit'}
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'gcc'}
+#         - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'gcc'}
+          - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'mcode'}
+          - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'llvm'}
+          - {icon: '🍏',   name: 'macOS',   image: 'macos-14',     runtime: '',        backend: 'llvm'}
+          - {icon: '🪟',   name: 'Windows', image: 'windows-2022', runtime: '',        backend: 'mcode'}
+#         - {icon: '🪟⬛', name: 'Windows', image: 'windows-2022', runtime: 'mingw32', backend: 'mcode'}
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'mcode'}
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm'}
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm-jit'}
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'mcode'}
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'}
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm-jit'}
     if: github.ref == 'refs/tags/nightly'
     with:
+      os_image:     ${{ matrix.image }}
+      os_name:      ${{ matrix.name }}
+      runtime:      ${{ matrix.runtime }}
       ghdl_version: ${{ needs.Params.outputs.ghdl_version }}
+      ghdl_backend: ${{ matrix.backend }}
