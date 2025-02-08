@@ -23,7 +23,7 @@ on:
 
 jobs:
   Setup-GHDL-Nightly:
-    name: ${{ matrix.icon }} Setup GHDL ${{ inputs.backend }} on ${{ inputs.os_name }}
+    name: Setup GHDL ${{ inputs.ghdl_backend }} on ${{ inputs.os_name }} ${{ inputs.runtime }}
     runs-on: ${{ inputs.os_image }}
 
     steps:
@@ -38,23 +38,23 @@ jobs:
 #            printf "shell=bash" >> $GITHUB_OUTPUT
 #          fi
 
-      - name: '🟦 Setup MSYS2 for ${{ matrix.runtime }}'
+      - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
         uses: msys2/setup-msys2@v2
         if: inputs.runtime != ''
         with:
           msystem: ${{ inputs.runtime }}
           update: true
 
-      - name: Setup GHDL ${{ inputs.backend }}
+      - name: Setup GHDL ${{ inputs.ghdl_backend }}
         uses: ghdl/setup-ghdl@v1
         with:
           version: nightly
-          backend: ${{ inputs.backend }}
+          backend: ${{ inputs.ghdl_backend }}
           runtime: ${{ inputs.runtime }}
           investigate: true
 
       - name: Verify GHDL version via Bash
-        if: inputs.name == 'Ubuntu' || inputs.name == 'macOS' || ( inputs.name == 'Windows' && inputs.runtime == '' )
+        if: inputs.os_name == 'Ubuntu' || inputs.os_name == 'macOS' || ( inputs.os_name == 'Windows' && inputs.runtime == '' )
         shell: bash   # ${{ steps.detect.outputs.shell }}
         run: |
           ANSI_LIGHT_RED=$'\x1b[91m'
@@ -75,7 +75,7 @@ jobs:
           fi
 
       - name: Verify GHDL version via Bash
-        if: inputs.name == 'Windows' && inputs.runtime != ''
+        if: inputs.os_name == 'Windows' && inputs.runtime != ''
         # BUG: GitHub Action doesn't accept contexts for shell
         shell: "msys2 {0}"   # ${{ steps.detect.outputs.shell }}
         run: |
@@ -97,7 +97,7 @@ jobs:
           fi
 
       - name: Verify on Windows (native)
-        if: inputs.name == 'Windows' && inputs.runtime == ''
+        if: inputs.os_name == 'Windows' && inputs.runtime == ''
         shell: powershell
         run: |
           echo $(Get-Command ghdl).Source
