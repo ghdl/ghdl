@@ -33,17 +33,11 @@
 from time import perf_counter_ns as time_perf_counter
 from pathlib import Path
 from textwrap import dedent
-from typing import Dict, List
 from unittest import TestCase
 
-from pyTooling.Graph import Vertex
-
-import pyVHDLModel
-import pyVHDLModel.DesignUnit
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.formatting.GraphML import DependencyGraphFormatter, HierarchyGraphFormatter, CompileOrderGraphFormatter
-from pyGHDL.dom.formatting.prettyprint import PrettyPrint
-from pyVHDLModel import DependencyGraphVertexKind, DependencyGraphEdgeKind, Library
+
 
 if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
@@ -156,8 +150,8 @@ class CompileOrder(Designs):
                 toplevel=", ".join(toplevel)
             )
         )
-        for i, vertex in enumerate(design.IterateDocumentsInCompileOrder()):
-            print(f"  {i:<2}: {vertex.Value.Path.relative_to(Path.cwd())}")
+        for i, document in enumerate(design.IterateDocumentsInCompileOrder()):
+            print(f"  {i:<2}: {document.Path.relative_to(Path.cwd())}")
 
         graphML = Path("dependencies.graphml")
         dependencyFormatter = DependencyGraphFormatter(design.DependencyGraph)

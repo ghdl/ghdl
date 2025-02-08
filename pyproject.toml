@@ -2,7 +2,7 @@
 requires = [
   "setuptools ~= 75.5",
   "wheel ~= 0.45",
-  "pyTooling ~= 8.0"
+  "pyTooling ~= 8.1"
 ]
 build-backend = "setuptools.build_meta"
 
@@ -20,6 +20,9 @@ show_error_context = true
 show_error_codes = true
 namespace_packages = true
 html_report = "report/typing"
+
+[tool.pytest]
+junit_xml = "report/unit/TestReportSummary.xml"
 
 [tool.pytest.ini_options]
 addopts = "--tb=native"
