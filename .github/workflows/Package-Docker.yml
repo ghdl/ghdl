@@ -80,6 +80,11 @@ jobs:
           EOF
 
           dockerfile="./dist/docker/Dockerfile.${base_image}"
+          githubOrg="${{ github.repository_owner }}"
+          githubRepo="${{ github.repository }}"
+          githubRepo="${githubRepo##*/}"
+          githubUrl="${{ github.server_url }}/${{ github.repository }}"
+          githubDoc="https://${githubOrg}.github.io/${githubRepo}/"
           printf "Building docker file '%s' ...\n" "${dockerfile}"
           docker buildx build \
             --file "${dockerfile}" \
@@ -87,11 +92,21 @@ jobs:
             --build-arg IMAGE_TAG=${base_image_tag} \
             --build-arg GHDL_VERSION=${{ inputs.ghdl_version }} \
             --build-arg GHDL_BACKEND=${{ inputs.ghdl_backend }} \
+            --label "org.opencontainers.image.vendor=Tristan Gingold and contributors" \
+            --label "org.opencontainers.image.authors=Tristan Gingold <tgingold@free.fr>" \
+            --label "org.opencontainers.image.url=${githubUrl}" \
+            --label "org.opencontainers.image.documentation=${githubDoc}" \
+            --label "org.opencontainers.image.source=${{ github.repositoryUrl }}" \
+            --label "org.opencontainers.image.revision=${{ github.sha }}" \
+            --label "org.opencontainers.image.version=${{ inputs.ghdl_version }}" \
+            --label "org.opencontainers.image.description=GHDL ${{ inputs.ghdl_version }} - ${{ inputs.ghdl_backend }}" \
             --tag "ghdl:current" \
             ./dist/docker
 
           printf "Entrypoint: %s\n" "$(docker inspect -f '{{.Config.Entrypoint}}' ghdl:current)"
           printf "Cmd:        %s\n" "$(docker inspect -f '{{.Config.Cmd}}'        ghdl:current)"
+          printf "Image labels:\n"
+          docker inspect ghdl:current | jq -r '.[0].Config.Labels | to_entries | map("  " + .key + "=" + .value) | join("\n")'
 
           printf "Docker image 'ghdl:current' has %s\n" "$(docker image inspect ghdl:current --format='{{.Size}}' | numfmt --to=iec --format '%.2f')"
 
