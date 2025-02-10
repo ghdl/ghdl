@@ -41,12 +41,12 @@ jobs:
       matrix:
         include:
 # macOS-13 is the last Intel x86_64 release
-          - {'icon': '🍎🟨', 'backend': 'mcode',    'macos_image': 'macos-13', 'gnat_arch': 'x86_64',  'gnat_version': '14.2.0-1', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🍎🟨', 'backend': 'llvm',     'macos_image': 'macos-13', 'gnat_arch': 'x86_64',  'gnat_version': '14.2.0-1', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+          - {icon: '🍎🟨', backend: 'mcode',    macos_image: 'macos-13', gnat_arch: 'x86_64',  gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+          - {icon: '🍎🟨', backend: 'llvm',     macos_image: 'macos-13', gnat_arch: 'x86_64',  gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
 # macOS-14 is the latest ARM v9 release
-###       - {'icon': '🍏🟩', 'backend': 'mcode',    'macos_image': 'macos-14', 'gnat_arch': 'aarch64', 'gnat_version': '14.2.0-1', 'testsuites': 'none'}                                    # mcode not yet supported for aarch64
-          - {'icon': '🍏🟩', 'backend': 'llvm',     'macos_image': 'macos-14', 'gnat_arch': 'aarch64', 'gnat_version': '14.2.0-1', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🍏🟩', 'backend': 'llvm-jit', 'macos_image': 'macos-14', 'gnat_arch': 'aarch64', 'gnat_version': '14.2.0-1', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+###       - {icon: '🍏🟩', backend: 'mcode',    macos_image: 'macos-14', gnat_arch: 'aarch64', gnat_version: '14.2.0-1', testsuites: 'none'}                                    # mcode not yet supported for aarch64
+          - {icon: '🍏🟩', backend: 'llvm',     macos_image: 'macos-14', gnat_arch: 'aarch64', gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+          - {icon: '🍏🟩', backend: 'llvm-jit', macos_image: 'macos-14', gnat_arch: 'aarch64', gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
 # macOS-15 is beta (broken/missing types in C)
 ###       - {'icon': '🍏🟩', 'backend': 'mcode',    'macos_image': 'macos-15', 'gnat_arch': 'aarch64', 'gnat_version': '14.2.0-1', 'testsuites': 'none'}                                    # mcode not yet supported for aarch64
 ##        - {'icon': '🍏🟩', 'backend': 'llvm',     'macos_image': 'macos-15', 'gnat_arch': 'aarch64', 'gnat_version': '14.2.0-1', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
@@ -73,8 +73,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {'icon': '🐧🟨', 'backend': 'mcode',    'ubuntu_version': '22.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-          - {'icon': '🐧🟩', 'backend': 'mcode',    'ubuntu_version': '24.04', 'testsuites': '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+          - {icon: '🐧🟨', backend: 'mcode',    ubuntu_version: '22.04', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+          - {icon: '🐧🟩', backend: 'mcode',    ubuntu_version: '24.04', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
     with:
       ubuntu_version:           ${{ matrix.ubuntu_version }}
       ghdl_backend:             ${{ matrix.backend }}
@@ -125,7 +125,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {'icon': '🪟', 'runtime': 'ucrt64',  'backend': 'mcode',    'testsuites': '${{ needs.Params.outputs.testsuites }}'}
+          - {icon: '🪟', runtime: 'ucrt64',  backend: 'mcode',    testsuites: '${{ needs.Params.outputs.testsuites }}'}
     with:
       runtime:                  ${{ matrix.runtime }}
       backend:                  ${{ matrix.backend }}
@@ -147,13 +147,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-###       - {'icon': '🪟', 'runtime': 'mingw32', 'backend': 'mcode',    'testsuites': '${{ needs.Params.outputs.testsuites }}'}   # No gcc-ada package for MinGW32, support was dropped
-          - {'icon': '🪟', 'runtime': 'mingw64', 'backend': 'mcode',    'testsuites': '${{ needs.Params.outputs.testsuites }}'}
-          - {'icon': '🪟', 'runtime': 'mingw64', 'backend': 'llvm',     'testsuites': 'sanity gna synth vpi vhpi'}                # no vests (too slow)
-          - {'icon': '🪟', 'runtime': 'mingw64', 'backend': 'llvm-jit', 'testsuites': 'sanity vpi vhpi'}                          # gna and synth fail (#2726); no vests (too slow)
-###       - {'icon': '🪟', 'runtime': 'ucrt64',  'backend': 'mcode',    'testsuites': '${{ needs.Params.outputs.testsuites }}'}   # used by Windows-fast
-          - {'icon': '🪟', 'runtime': 'ucrt64',  'backend': 'llvm',     'testsuites': 'sanity gna synth vpi vhpi'}                # no vests (too slow)
-          - {'icon': '🪟', 'runtime': 'ucrt64',  'backend': 'llvm-jit', 'testsuites': 'sanity vpi vhpi'}                          # gna and synth fail (#2726); no vests (too slow)
+###       - {icon: '🪟', runtime: 'mingw32', backend: 'mcode',    testsuites: '${{ needs.Params.outputs.testsuites }}'}   # No gcc-ada package for MinGW32, support was dropped
+          - {icon: '🪟', runtime: 'mingw64', backend: 'mcode',    testsuites: '${{ needs.Params.outputs.testsuites }}'}
+          - {icon: '🪟', runtime: 'mingw64', backend: 'llvm',     testsuites: 'sanity gna synth vpi vhpi'}                # no vests (too slow)
+          - {icon: '🪟', runtime: 'mingw64', backend: 'llvm-jit', testsuites: 'sanity vpi vhpi'}                          # gna and synth fail (#2726); no vests (too slow)
+###       - {icon: '🪟', runtime: 'ucrt64',  backend: 'mcode',    testsuites: '${{ needs.Params.outputs.testsuites }}'}   # used by Windows-fast
+          - {icon: '🪟', runtime: 'ucrt64',  backend: 'llvm',     testsuites: 'sanity gna synth vpi vhpi'}                # no vests (too slow)
+          - {icon: '🪟', runtime: 'ucrt64',  backend: 'llvm-jit', testsuites: 'sanity vpi vhpi'}                          # gna and synth fail (#2726); no vests (too slow)
     with:
       runtime:                  ${{ matrix.runtime }}
       backend:                  ${{ matrix.backend }}
@@ -200,15 +200,15 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - {'icon': '🐧', 'name': 'Ubuntu',  'image': 'ubuntu-24.04', 'libghdl_artifact': 'ubuntu-24.04-x86_64', 'pyghdl_artifact': 'Ubuntu-24.04-x86_64'}
-###       - {'icon': '🍏', 'name': 'macOS',   'image': 'macos-14',     'libghdl_artifact': 'macos-14-aarch64',    'pyghdl_artifact': 'macOS-14-aarch64'}
-          - {'icon': '🪟', 'name': 'Windows', 'image': 'windows-2022', 'libghdl_artifact': 'MSYS2-ucrt64',        'pyghdl_artifact': 'Windows-x86_64'}
+          - {icon: '🐧', name: 'Ubuntu',  image: 'ubuntu-24.04', libghdl_artifact: 'ubuntu-24.04-x86_64', pyghdl_artifact: 'Ubuntu-24.04-x86_64'}
+###       - {icon: '🍏', name: 'macOS',   image: 'macos-14',     libghdl_artifact: 'macos-14-aarch64',    pyghdl_artifact: 'macOS-14-aarch64'}
+          - {icon: '🪟', name: 'Windows', image: 'windows-2022', libghdl_artifact: 'MSYS2-ucrt64',        pyghdl_artifact: 'Windows-x86_64'}
         py:
-          - {'icon': '🔴', 'version': "3.9"}
-          - {'icon': '🟠', 'version': "3.10"}
-          - {'icon': '🟡', 'version': "3.11"}
-          - {'icon': '🟢', 'version': "3.12"}
-          - {'icon': '🟢', 'version': "3.13"}
+          - {icon: '🔴', version: "3.9"}
+          - {icon: '🟠', version: "3.10"}
+          - {icon: '🟡', version: "3.11"}
+          - {icon: '🟢', version: "3.12"}
+          - {icon: '🟢', version: "3.13"}
     with:
       os_name:               ${{ matrix.os.name }}
       os_image:              ${{ matrix.os.image }}
@@ -464,10 +464,37 @@ jobs:
         pyGHDL-Windows-x86_64-Python-3.13:      pyGHDL-%pyghdl%-cp313-cp313-win_amd64.whl:                    pyGHDL,windows,2022,x86-64,py3.13,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.13
 
   Test-SetupGHDL:
+#    name: ${{ matrix.icon }} Setup GHDL ${{ matrix.backend }} on ${{ matrix.os_name }}
     uses: ./.github/workflows/Test-SetupGHDL.yml
     needs:
       - Params
       - Nightly
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+#         - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-20.04', runtime: '',        backend: 'mcode'}
+#         - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'xcode'}
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'mcode'}
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm'}
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm-jit'}
+          - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'gcc'}
+#         - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'gcc'}
+          - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'mcode'}
+          - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'llvm'}
+          - {icon: '🍏',   name: 'macOS',   image: 'macos-14',     runtime: '',        backend: 'llvm'}
+          - {icon: '🪟',   name: 'Windows', image: 'windows-2022', runtime: '',        backend: 'mcode'}
+#         - {icon: '🪟⬛', name: 'Windows', image: 'windows-2022', runtime: 'mingw32', backend: 'mcode'}
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'mcode'}
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm'}
+          - {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', runtime: 'mingw64', backend: 'llvm-jit'}
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'mcode'}
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'}
+          - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm-jit'}
     if: github.ref == 'refs/tags/nightly'
     with:
+      os_image:     ${{ matrix.image }}
+      os_name:      ${{ matrix.name }}
+      runtime:      ${{ matrix.runtime }}
       ghdl_version: ${{ needs.Params.outputs.ghdl_version }}
+      ghdl_backend: ${{ matrix.backend }}
