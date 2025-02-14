@@ -44,6 +44,8 @@ package body Vhdl.Ieee.Math_Real is
                      Def := Iir_Predefined_Ieee_Math_Real_Sign;
                   when Name_Realmax =>
                      Def := Iir_Predefined_Ieee_Math_Real_Realmax;
+                  when Name_Realmin =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Realmin;
                   when Name_Sqrt =>
                      Def := Iir_Predefined_Ieee_Math_Real_Sqrt;
                   when Name_Mod =>

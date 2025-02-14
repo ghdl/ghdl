@@ -3083,6 +3083,10 @@ package body Synth.Vhdl_Eval is
             return Create_Memory_Fp64
               (Fp64'Max (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
 
+         when Iir_Predefined_Ieee_Math_Real_Realmin =>
+            return Create_Memory_Fp64
+              (Fp64'Min (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
+
          when Iir_Predefined_Ieee_Math_Real_Mod =>
             declare
                function Fmod (L, R : Fp64) return Fp64;

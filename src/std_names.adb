@@ -700,6 +700,7 @@ package body Std_Names is
       Def ("round",              Name_Round);
       Def ("trunc",              Name_Trunc);
       Def ("realmax",            Name_Realmax);
+      Def ("realmin",            Name_Realmin);
       Def ("exp",                Name_Exp);
       Def ("log",                Name_Log);
       Def ("log2",               Name_Log2);
