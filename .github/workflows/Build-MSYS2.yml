@@ -292,7 +292,7 @@ jobs:
           retention-days: 7
 
       - name: ✂ Remove binaries, libraries and other files for libghdl
-        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
+        if: (inputs.runtime == 'mingw64' || inputs.runtime == 'ucrt64') && inputs.backend == 'mcode'
         run: |
           rm -Rf ./install/bin
           rm -Rf ./install/include
@@ -304,13 +304,13 @@ jobs:
           rm -Rf ./install/*.requirements
 
       - name: List './install' directory as tree
-        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
+        if: (inputs.runtime == 'mingw64' || inputs.runtime == 'ucrt64') && inputs.backend == 'mcode'
         run: |
           tree ./install
           ldd ./install/lib/*.dll
 
       - name: Copy and check dependency (MSYS2)
-        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
+        if: (inputs.runtime == 'mingw64' || inputs.runtime == 'ucrt64') && inputs.backend == 'mcode'
         run: |
           GetMinGWLibraries() {
             ldd "$1" | while IFS="" read -r dependency; do
@@ -334,7 +334,7 @@ jobs:
 
       - name: 📤 Upload '${{ steps.artifact_name.outputs.libghdl_artifact }}' artifact
         uses: pyTooling/upload-artifact@v4
-        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
+        if: (inputs.runtime == 'mingw64' || inputs.runtime == 'ucrt64') && inputs.backend == 'mcode'
         with:
           name: ${{ steps.artifact_name.outputs.libghdl_artifact }}
           working-directory: install

@@ -74,12 +74,12 @@ jobs:
 
       - name: '🔧 Install dependencies (MSYS2)'
         if: inputs.runtime != ''
+        shell: "msys2 {0}"
         run: |
           python -m pip install --disable-pip-version-check "pyTooling[packaging]"
 
       - name: '🔧 Install dependencies (Linux, Windows)'
         if: inputs.runtime == ''
-        shell: "msys2 {0}"
         run: |
           python -m pip install --disable-pip-version-check "pyTooling[packaging]" wheel
 
@@ -101,11 +101,11 @@ jobs:
 
       - name: 📦 Build Python package (binary distribution - wheel) (MSYS2)
         if: inputs.runtime != ''
+        shell: "msys2 {0}"
         run: python setup.py bdist_wheel
 
       - name: 📦 Build Python package (binary distribution - wheel) (Linux, Windows)
         if: inputs.runtime == ''
-        shell: "msys2 {0}"
         run: python setup.py bdist_wheel
 
       - name: '📤 Upload artifact: ${{ inputs.pyghdl_artifact }}'
