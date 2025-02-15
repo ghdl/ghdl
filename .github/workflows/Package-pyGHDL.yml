@@ -11,6 +11,10 @@ on:
         description: 'Name of the OS image.'
         required: true
         type: string
+      runtime:
+        description: 'MSYS2 runtime if MSYS2 is used.'
+        required: true
+        type: string
       python_icon:
         description: 'Name of the OS image.'
         required: true
@@ -54,12 +58,28 @@ jobs:
       - name: '⏬ Checkout'
         uses: actions/checkout@v4
 
+      - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
+        uses: msys2/setup-msys2@v2
+        if: inputs.runtime != ''
+        with:
+          msystem: ${{ inputs.runtime }}
+          update: true
+          pacboy: 'python:p python-pip:p python-wheel:p'
+
       - name: '🐍 Setup Python'
         uses: actions/setup-python@v5
+        if: inputs.runtime == ''
         with:
           python-version: ${{ inputs.python_version }}
 
-      - name: '🔧 Install dependencies'
+      - name: '🔧 Install dependencies (MSYS2)'
+        if: inputs.runtime != ''
+        run: |
+          python -m pip install --disable-pip-version-check "pyTooling[packaging]"
+
+      - name: '🔧 Install dependencies (Linux, Windows)'
+        if: inputs.runtime == ''
+        shell: "msys2 {0}"
         run: |
           python -m pip install --disable-pip-version-check "pyTooling[packaging]" wheel
 
@@ -69,17 +89,23 @@ jobs:
           name: ${{ inputs.libghdl_artifact }}-${{ inputs.backend }}
           path: install
 
-      - name: Copy libghdl files (Ubuntu)
-        if: startsWith(inputs.os_image, 'ubuntu')
+      - name: Copy libghdl files (Ubuntu, MSYS2)
+        if: startsWith(inputs.os_image, 'ubuntu') || (startsWith(inputs.os_image, 'windows') && inputs.runtime != '')
         run: |
           cp -r -v install/lib/* pyGHDL/lib
 
       - name: Copy libghdl files (Windows)
-        if: startsWith(inputs.os_image, 'windows')
+        if: startsWith(inputs.os_image, 'windows') && inputs.runtime == ''
         run: |
           cp -Recurse install/lib/* pyGHDL/lib
 
-      - name: 📦 Build Python package (binary distribution - wheel)
+      - name: 📦 Build Python package (binary distribution - wheel) (MSYS2)
+        if: inputs.runtime != ''
+        run: python setup.py bdist_wheel
+
+      - name: 📦 Build Python package (binary distribution - wheel) (Linux, Windows)
+        if: inputs.runtime == ''
+        shell: "msys2 {0}"
         run: python setup.py bdist_wheel
 
       - name: '📤 Upload artifact: ${{ inputs.pyghdl_artifact }}'

@@ -209,9 +209,15 @@ jobs:
 #          - {icon: '🟡', version: "3.11"}
 #          - {icon: '🟢', version: "3.12"}
           - {icon: '🟢', version: "3.13"}
+        other:
+          - {runtime: ''}
+        include:
+          - {os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', libghdl_artifact: 'MSYS2-mingw64', pyghdl_artifact: 'Windows-mingw64'}, py: {icon: '🟢', version: "3.12"}, other: {runtime: 'mingw64'}}
+          - {os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', libghdl_artifact: 'MSYS2-ucrt64',  pyghdl_artifact: 'Windows-ucrt64' }, py: {icon: '🟢', version: "3.12"}, other: {runtime: 'ucrt64' }}
     with:
       os_name:               ${{ matrix.os.name }}
       os_image:              ${{ matrix.os.image }}
+      runtime:               ${{ matrix.other.runtime }}
       python_icon:           ${{ matrix.py.icon }}
       python_version:        ${{ matrix.py.version }}
       libghdl_artifact:      ${{ needs.Params.outputs.libghdl_basename }}-${{ matrix.os.libghdl_artifact }}
