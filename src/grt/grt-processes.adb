@@ -1176,6 +1176,11 @@ package body Grt.Processes is
 
       Grt.Hooks.Call_Start_Hooks;
 
+      if Options.Break_Simulation then
+         --  If vpi_control is called in the StartOfSimulation hook.
+         return 1;
+      end if;
+
       Grt.Signals.Order_All_Signals;
 
       if Grt.Options.Disp_Signals_Map then
@@ -1325,7 +1330,10 @@ package body Grt.Processes is
       Status : Integer;
    begin
       Status := Simulation_Init;
-      pragma Assert (Status = 0);
+      if Status /= 0 then
+         --  In case of early stop...
+         return Status;
+      end if;
 
       Status := Simulation_Main_Loop;
 
