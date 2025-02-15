@@ -108,7 +108,7 @@ jobs:
         shell: bash
         run: |
           # Generic packages installed in MSYS2
-          echo "msys2_packages=make tree" >> $GITHUB_OUTPUT
+          echo "msys2_packages=make tree git" >> $GITHUB_OUTPUT
 
           # Runtime (and backend) specific packages
           common_packages="python:p python-pip:p gcc:p gcc-ada:p binutils:p diffutils:p zlib:p"
