@@ -70,24 +70,34 @@ jobs:
         id: params
         run: |
           if [ '${{ inputs.testsuites }}' == 'all' ]; then
-            echo "testsuites=sanity gna vests synth vpi vhpi" >> $GITHUB_OUTPUT
+            tee "${GITHUB_OUTPUT}" <<EOF
+          testsuites=sanity gna vests synth vpi vhpi
+          EOF
           else
-            echo "testsuites=${{ inputs.testsuites }}" >> $GITHUB_OUTPUT
+            tee "${GITHUB_OUTPUT}" <<EOF
+          testsuites=${{ inputs.testsuites }}
+          EOF
           fi
 
           ghdl_version=$(grep "^ghdl_version=\".*\"$" ./configure)
           ghdl_version=${ghdl_version/ghdl_version=/}
           ghdl_version=${ghdl_version//\"/}
           echo "GHDL version: $ghdl_version"
-          echo "ghdl_version=$ghdl_version" >> $GITHUB_OUTPUT
+          tee -a "${GITHUB_OUTPUT}" <<EOF
+          ghdl_version=${ghdl_version}
+          EOF
 
           pyghdl_version=${ghdl_version/-dev/.dev0}
-          echo "pyghdl_version=$pyghdl_version" >> $GITHUB_OUTPUT
+          tee -a "${GITHUB_OUTPUT}" <<EOF
+          pyghdl_version=${pyghdl_version}
+          EOF
 
           pacghdl_version=${ghdl_version/-dev/.dev-1}
-          echo "pacghdl_version=$pacghdl_version" >> $GITHUB_OUTPUT
+          tee -a "${GITHUB_OUTPUT}" <<EOF
+          pacghdl_version=${pacghdl_version}
+          EOF
 
-          cat $GITHUB_OUTPUT
+          cat "${GITHUB_OUTPUT}"
 
       - name: Check variables
         run: |

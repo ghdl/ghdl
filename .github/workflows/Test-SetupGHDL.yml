@@ -10,6 +10,7 @@ on:
         required: true
         type: string
       runtime:
+        description: 'MSYS2 runtime if MSYS2 is used.'
         required: true
         type: string
       ghdl_version:

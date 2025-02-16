@@ -209,9 +209,15 @@ jobs:
           - {icon: '🟡', version: "3.11"}
           - {icon: '🟢', version: "3.12"}
           - {icon: '🟢', version: "3.13"}
+        other:
+          - {runtime: ''}
+        include:
+          - {os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2022', libghdl_artifact: 'MSYS2-mingw64', pyghdl_artifact: 'Windows-mingw64'}, py: {icon: '🟢', version: "3.12"}, other: {runtime: 'mingw64'}}
+          - {os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', libghdl_artifact: 'MSYS2-ucrt64',  pyghdl_artifact: 'Windows-ucrt64' }, py: {icon: '🟢', version: "3.12"}, other: {runtime: 'ucrt64' }}
     with:
       os_name:               ${{ matrix.os.name }}
       os_image:              ${{ matrix.os.image }}
+      runtime:               ${{ matrix.other.runtime }}
       python_icon:           ${{ matrix.py.icon }}
       python_version:        ${{ matrix.py.version }}
       libghdl_artifact:      ${{ needs.Params.outputs.libghdl_basename }}-${{ matrix.os.libghdl_artifact }}
@@ -343,37 +349,40 @@ jobs:
         The following asset categories are provided for pyGHDL:
         * Platform specific Python wheel package for Ubuntu incl. `pyGHDL...so`
         * Platform specific Python wheel package for Windows incl. `pyGHDL...dll`
+        * Platform specific Python wheel package for Windows + MSYS2 (MinGW64, UCRT64) incl. `pyGHDL...dll`
       inventory-json: "inventory.json"
       inventory-version: ${{ needs.Params.outputs.ghdl_version }}
       inventory-categories: "application,os-name,os-version,os-arch,runtime,ghdl-backend"
       assets: |
-        ghdl-macos-13-x86_64-llvm:             $ghdl-llvm-%ghdl%-macos13-x86_64.tar.gz:                       ghdl,macos,13,x86-64,native,llvm:         GHDL - v%ghdl% - macOS 13 (x86-64) - llvm backend
-        ghdl-macos-13-x86_64-mcode:            $ghdl-mcode-%ghdl%-macos13-x86_64.tar.gz:                      ghdl,macos,13,x86-64,native,mcode:        GHDL - v%ghdl% - macOS 13 (x86-64) - mcode backend
-        ghdl-macos-14-aarch64-llvm:            $ghdl-llvm-%ghdl%-macos14-aarch64.tar.gz:                      ghdl,macos,14,aarch64,native,llvm:        GHDL - v%ghdl% - macOS 14 (aarch64) - llvm backend
-        ghdl-macos-14-aarch64-llvm-jit:        $ghdl-llvm-jit-%ghdl%-macos14-aarch64.tar.gz:                  ghdl,macos,14,aarch64,native,llvm-jit:    GHDL - v%ghdl% - macOS 14 (aarch64) - llvm-jit backend
-        ghdl-ubuntu-24.04-x86_64-gcc:          $ghdl-gcc-%ghdl%-ubuntu24.04-x86_64.tar.gz:                    ghdl,ubuntu,24.04,x86-64,native,gcc:      GHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - gcc backend
-        ghdl-ubuntu-24.04-x86_64-llvm:         $ghdl-llvm-%ghdl%-ubuntu24.04-x86_64.tar.gz:                   ghdl,ubuntu,24.04,x86-64,native,llvm:     GHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - llvm backend
-        ghdl-ubuntu-24.04-x86_64-llvm-jit:     $ghdl-llvm-jit-%ghdl%-ubuntu24.04-x86_64.tar.gz:               ghdl,ubuntu,24.04,x86-64,native,llvm-jit: GHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - llvm-jit backend
-        ghdl-ubuntu-24.04-x86_64-mcode:        $ghdl-mcode-%ghdl%-ubuntu24.04-x86_64.tar.gz:                  ghdl,ubuntu,24.04,x86-64,native,mcode:    GHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - mcode backend
-        ghdl-Pacman-mingw64-llvm:               mingw-w64-x86_64-ghdl-llvm-%pacghdl%-any.pkg.tar.zst:         ghdl,windows,2022,x86-64,mingw64,llvm:    GHDL - v%ghdl% - MSYS2/MinGW64 - LLVM backend
-        ghdl-Pacman-mingw64-llvm-jit:           mingw-w64-x86_64-ghdl-llvm-jit-%pacghdl%-any.pkg.tar.zst:     ghdl,windows,2022,x86-64,mingw64,llvm-jit:GHDL - v%ghdl% - MSYS2/MinGW64 - LLVM-JIT backend
-        ghdl-Pacman-mingw64-mcode:              mingw-w64-x86_64-ghdl-mcode-%pacghdl%-any.pkg.tar.zst:        ghdl,windows,2022,x86-64,mingw64,mcode:   GHDL - v%ghdl% - MSYS2/MinGW64 - mcode backend
-        ghdl-Pacman-ucrt64-llvm:                mingw-w64-ucrt-x86_64-ghdl-llvm-%pacghdl%-any.pkg.tar.zst:    ghdl,windows,2022,x86-64,ucrt64,llvm:     GHDL - v%ghdl% - MSYS2/UCRT64 - LLVM backend
-        ghdl-Pacman-ucrt64-llvm-jit:            mingw-w64-ucrt-x86_64-ghdl-llvm-jit-%pacghdl%-any.pkg.tar.zst:ghdl,windows,2022,x86-64,ucrt64,llvm-jit: GHDL - v%ghdl% - MSYS2/UCRT64 - LLVM-JIT backend
-        ghdl-Pacman-ucrt64-mcode:               mingw-w64-ucrt-x86_64-ghdl-mcode-%pacghdl%-any.pkg.tar.zst:   ghdl,windows,2022,x86-64,ucrt64,mcode:    GHDL - v%ghdl% - MSYS2/UCRT64 - mcode backend
-        ghdl-Windows-mingw64-mcode:            !ghdl-mcode-%ghdl%-mingw64.zip:                                ghdl,windows,2022,x86-64,native,mcode:    GHDL - v%ghdl% - Windows (x86-64, MinGW64, standalone) - mcode backend
-        ghdl-Windows-ucrt64-mcode:             !ghdl-mcode-%ghdl%-ucrt64.zip:                                 ghdl,windows,2022,x86-64,native,mcode:    GHDL - v%ghdl% - Windows (x86-64, UCRT64, standalone) - mcode backend
-        pyGHDL-Ubuntu-24.04-x86_64-Python-3.9:  pyGHDL-%pyghdl%-cp39-cp39-linux_x86_64.whl:                   pyGHDL,ubuntu,24.04,x86-64,py3.9,mcode:   pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.9
-        pyGHDL-Ubuntu-24.04-x86_64-Python-3.10: pyGHDL-%pyghdl%-cp310-cp310-linux_x86_64.whl:                 pyGHDL,ubuntu,24.04,x86-64,py3.10,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.10
-        pyGHDL-Ubuntu-24.04-x86_64-Python-3.11: pyGHDL-%pyghdl%-cp311-cp311-linux_x86_64.whl:                 pyGHDL,ubuntu,24.04,x86-64,py3.11,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.11
-        pyGHDL-Ubuntu-24.04-x86_64-Python-3.12: pyGHDL-%pyghdl%-cp312-cp312-linux_x86_64.whl:                 pyGHDL,ubuntu,24.04,x86-64,py3.12,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.12
-        pyGHDL-Ubuntu-24.04-x86_64-Python-3.13: pyGHDL-%pyghdl%-cp313-cp313-linux_x86_64.whl:                 pyGHDL,ubuntu,24.04,x86-64,py3.13,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.13
-        pyGHDL-Windows-x86_64-Python-3.9:       pyGHDL-%pyghdl%-cp39-cp39-win_amd64.whl:                      pyGHDL,windows,2022,x86-64,py3.9,mcode:   pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.9
-        pyGHDL-Windows-x86_64-Python-3.10:      pyGHDL-%pyghdl%-cp310-cp310-win_amd64.whl:                    pyGHDL,windows,2022,x86-64,py3.10,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.10
-        pyGHDL-Windows-x86_64-Python-3.11:      pyGHDL-%pyghdl%-cp311-cp311-win_amd64.whl:                    pyGHDL,windows,2022,x86-64,py3.11,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.11
-        pyGHDL-Windows-x86_64-Python-3.12:      pyGHDL-%pyghdl%-cp312-cp312-win_amd64.whl:                    pyGHDL,windows,2022,x86-64,py3.12,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.12
-        pyGHDL-Windows-x86_64-Python-3.13:      pyGHDL-%pyghdl%-cp313-cp313-win_amd64.whl:                    pyGHDL,windows,2022,x86-64,py3.13,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.13
-
+        # Artifact Name                        File Name ($/! -> archive with/without subdir)                 Labels                                           Title
+        ghdl-macos-13-x86_64-llvm:             $ghdl-llvm-%ghdl%-macos13-x86_64.tar.gz:                       ghdl,macos,13,x86-64,native,llvm:                GHDL - v%ghdl% - macOS 13 (x86-64) - llvm backend
+        ghdl-macos-13-x86_64-mcode:            $ghdl-mcode-%ghdl%-macos13-x86_64.tar.gz:                      ghdl,macos,13,x86-64,native,mcode:               GHDL - v%ghdl% - macOS 13 (x86-64) - mcode backend
+        ghdl-macos-14-aarch64-llvm:            $ghdl-llvm-%ghdl%-macos14-aarch64.tar.gz:                      ghdl,macos,14,aarch64,native,llvm:               GHDL - v%ghdl% - macOS 14 (aarch64) - llvm backend
+        ghdl-macos-14-aarch64-llvm-jit:        $ghdl-llvm-jit-%ghdl%-macos14-aarch64.tar.gz:                  ghdl,macos,14,aarch64,native,llvm-jit:           GHDL - v%ghdl% - macOS 14 (aarch64) - llvm-jit backend
+        ghdl-ubuntu-24.04-x86_64-gcc:          $ghdl-gcc-%ghdl%-ubuntu24.04-x86_64.tar.gz:                    ghdl,ubuntu,24.04,x86-64,native,gcc:             GHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - gcc backend
+        ghdl-ubuntu-24.04-x86_64-llvm:         $ghdl-llvm-%ghdl%-ubuntu24.04-x86_64.tar.gz:                   ghdl,ubuntu,24.04,x86-64,native,llvm:            GHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - llvm backend
+        ghdl-ubuntu-24.04-x86_64-llvm-jit:     $ghdl-llvm-jit-%ghdl%-ubuntu24.04-x86_64.tar.gz:               ghdl,ubuntu,24.04,x86-64,native,llvm-jit:        GHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - llvm-jit backend
+        ghdl-ubuntu-24.04-x86_64-mcode:        $ghdl-mcode-%ghdl%-ubuntu24.04-x86_64.tar.gz:                  ghdl,ubuntu,24.04,x86-64,native,mcode:           GHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - mcode backend
+        ghdl-Pacman-mingw64-llvm:               mingw-w64-x86_64-ghdl-llvm-%pacghdl%-any.pkg.tar.zst:         ghdl,windows,2022,x86-64,mingw64,llvm:           GHDL - v%ghdl% - MSYS2/MinGW64 - LLVM backend
+        ghdl-Pacman-mingw64-llvm-jit:           mingw-w64-x86_64-ghdl-llvm-jit-%pacghdl%-any.pkg.tar.zst:     ghdl,windows,2022,x86-64,mingw64,llvm-jit:       GHDL - v%ghdl% - MSYS2/MinGW64 - LLVM-JIT backend
+        ghdl-Pacman-mingw64-mcode:              mingw-w64-x86_64-ghdl-mcode-%pacghdl%-any.pkg.tar.zst:        ghdl,windows,2022,x86-64,mingw64,mcode:          GHDL - v%ghdl% - MSYS2/MinGW64 - mcode backend
+        ghdl-Pacman-ucrt64-llvm:                mingw-w64-ucrt-x86_64-ghdl-llvm-%pacghdl%-any.pkg.tar.zst:    ghdl,windows,2022,x86-64,ucrt64,llvm:            GHDL - v%ghdl% - MSYS2/UCRT64 - LLVM backend
+        ghdl-Pacman-ucrt64-llvm-jit:            mingw-w64-ucrt-x86_64-ghdl-llvm-jit-%pacghdl%-any.pkg.tar.zst:ghdl,windows,2022,x86-64,ucrt64,llvm-jit:        GHDL - v%ghdl% - MSYS2/UCRT64 - LLVM-JIT backend
+        ghdl-Pacman-ucrt64-mcode:               mingw-w64-ucrt-x86_64-ghdl-mcode-%pacghdl%-any.pkg.tar.zst:   ghdl,windows,2022,x86-64,ucrt64,mcode:           GHDL - v%ghdl% - MSYS2/UCRT64 - mcode backend
+        ghdl-Windows-mingw64-mcode:            !ghdl-mcode-%ghdl%-mingw64.zip:                                ghdl,windows,2022,x86-64,native,mcode:           GHDL - v%ghdl% - Windows (x86-64, MinGW64, standalone) - mcode backend
+        ghdl-Windows-ucrt64-mcode:             !ghdl-mcode-%ghdl%-ucrt64.zip:                                 ghdl,windows,2022,x86-64,native,mcode:           GHDL - v%ghdl% - Windows (x86-64, UCRT64, standalone) - mcode backend
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.9:  pyGHDL-%pyghdl%-cp39-cp39-linux_x86_64.whl:                   pyGHDL,ubuntu,24.04,x86-64,py3.9,native,mcode:   pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.9
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.10: pyGHDL-%pyghdl%-cp310-cp310-linux_x86_64.whl:                 pyGHDL,ubuntu,24.04,x86-64,py3.10,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.10
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.11: pyGHDL-%pyghdl%-cp311-cp311-linux_x86_64.whl:                 pyGHDL,ubuntu,24.04,x86-64,py3.11,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.11
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.12: pyGHDL-%pyghdl%-cp312-cp312-linux_x86_64.whl:                 pyGHDL,ubuntu,24.04,x86-64,py3.12,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.12
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.13: pyGHDL-%pyghdl%-cp313-cp313-linux_x86_64.whl:                 pyGHDL,ubuntu,24.04,x86-64,py3.13,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.13
+        pyGHDL-Windows-x86_64-Python-3.9:       pyGHDL-%pyghdl%-cp39-cp39-win_amd64.whl:                      pyGHDL,windows,2022,x86-64,py3.9,native,mcode:   pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.9
+        pyGHDL-Windows-x86_64-Python-3.10:      pyGHDL-%pyghdl%-cp310-cp310-win_amd64.whl:                    pyGHDL,windows,2022,x86-64,py3.10,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.10
+        pyGHDL-Windows-x86_64-Python-3.11:      pyGHDL-%pyghdl%-cp311-cp311-win_amd64.whl:                    pyGHDL,windows,2022,x86-64,py3.11,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.11
+        pyGHDL-Windows-x86_64-Python-3.12:      pyGHDL-%pyghdl%-cp312-cp312-win_amd64.whl:                    pyGHDL,windows,2022,x86-64,py3.12,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.12
+        pyGHDL-Windows-x86_64-Python-3.13:      pyGHDL-%pyghdl%-cp313-cp313-win_amd64.whl:                    pyGHDL,windows,2022,x86-64,py3.13,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.13
+        pyGHDL-Windows-mingw64-Python-3.12:     pyGHDL-%pyghdl%-cp312-cp312-mingw_x86_64_msvcrt_gnu.whl:      pyGHDL,windows,2022,x86-64,py3.12,mingw64,mcode: pyGHDL - v%ghdl% - Windows (x86-64) + MSYS2/MinGW64 - Wheel for Python 3.12
+        pyGHDL-Windows-ucrt64-Python-3.12:      pyGHDL-%pyghdl%-cp312-cp312-mingw_x86_64_ucrt_gnu.whl:        pyGHDL,windows,2022,x86-64,py3.12,ucrt64,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) + MSYS2/UCRT64 - Wheel for Python 3.12
 
   Release:
     uses: pyTooling/Actions/.github/workflows/NightlyRelease.yml@r4

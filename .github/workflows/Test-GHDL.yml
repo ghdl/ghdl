@@ -9,7 +9,7 @@ on:
         default: 'ubuntu-24.04'
         type: string
       runtime:
-        description: 'Used runtime if MSYS2.'
+        description: 'MSYS2 runtime if MSYS2 is used.'
         required: false
         default: ''
         type: string
