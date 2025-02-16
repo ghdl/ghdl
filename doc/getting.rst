@@ -156,7 +156,6 @@ Follow these steps:
     $ /usr/local/lib/ghdl/vendors/compile-lattice.sh --all
     $ /usr/local/lib/ghdl/vendors/compile-osvvm.sh --all
     $ /usr/local/lib/ghdl/vendors/compile-uvvm.sh --all
-    $ /usr/local/lib/ghdl/vendors/compile-xilinx-ise.sh --all
     $ /usr/local/lib/ghdl/vendors/compile-xilinx-vivado.sh --all
 
 
@@ -178,7 +177,6 @@ Follow these steps:
     drwxr-xr-x  2 <user> <group>  56K Mar 09 17:42 lattice
     drwxr-xr-x  2 <user> <group>  56K Mar 09 17:48 osvvm
     drwxr-xr-x  2 <user> <group>  56K Mar 09 17:58 uvvm
-    drwxr-xr-x  2 <user> <group>  56K Mar 09 17:58 xilinx-ise
     drwxr-xr-x  2 <user> <group>  56K Mar 09 17:48 xilinx-vivado
 
 
@@ -217,7 +215,6 @@ Follow these steps:
      PS> <GHDL>\lib\ghdl\vendors\compile-lattice.ps1 -All
      PS> <GHDL>\lib\ghdl\vendors\compile-osvvm.ps1 -All
      PS> <GHDL>\lib\ghdl\vendors\compile-uvvm.ps1 -All
-     PS> <GHDL>\lib\ghdl\vendors\compile-xilinx-ise.ps1 -All
      PS> <GHDL>\lib\ghdl\vendors\compile-xilinx-vivado.ps1 -All
 
   .. # In most cases GHDL is installed into ``/usr/local/``.
@@ -241,7 +238,6 @@ Follow these steps:
      d----    09.03.2018    19:38        <DIR> lattice
      d----    09.03.2018    19:38        <DIR> osvvm
      d----    09.03.2018    19:45        <DIR> uvvm
-     d----    09.03.2018    19:06        <DIR> xilinx-ise
      d----    09.03.2018    19:40        <DIR> xilinx-vivado
 
 
@@ -335,26 +331,6 @@ For Bash Scripts:
      --vhdl93              Compile selected libraries with VHDL-93 (default).
      --vhdl2008            Compile selected libraries with VHDL-2008.
 
-* ``compile-xilinx-ise.sh``
-
-  Selectable libraries:
-
-  .. code-block:: none
-
-     --all, -a             Compile all libraries, including common libraries, packages and device libraries.
-     --unisim              Compile the unisim primitives
-     --unimacro            Compile the unimacro macros
-     --simprim             Compile the simprim primitives
-     --corelib             Compile the xilinxcorelib macros
-     --secureip            Compile the secureip primitives
-
-  Compile options:
-
-  .. code-block:: none
-
-     --vhdl93              Compile selected libraries with VHDL-93 (default).
-     --vhdl2008            Compile selected libraries with VHDL-2008.
-
 * ``compile-xilinx-vivado.sh``
 
   Selectable libraries:
@@ -415,26 +391,6 @@ For PowerShell Scripts:
      -Arria                Compile device libraries for Arria FPGAs
      -Cyclone              Compile device libraries for Cyclone FPGAs
      -Stratix              Compile device libraries for Stratix FPGAs
-
-  Compile options:
-
-  .. code-block:: none
-
-     -VHDL93               Compile selected libraries with VHDL-93 (default).
-     -VHDL2008             Compile selected libraries with VHDL-2008.
-
-* ``compile-xilinx-ise.ps1``
-
-  Selectable libraries:
-
-  .. code-block:: none
-
-     -All                  Compile all libraries, including common libraries, packages and device libraries.
-     -Unisim               Compile the unisim primitives
-     -Unimacro             Compile the unimacro macros
-     -Simprim              Compile the simprim primitives
-     -CoreLib              Compile the xilinxcorelib macros
-     -Secureip             Compile the secureip primitives
 
   Compile options:
 

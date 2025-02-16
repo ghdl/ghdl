@@ -3,7 +3,7 @@
 #    Patrick Lehmann
 #
 # ==============================================================================
-#  Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
+#  Copyright (C) 2017-2025 Patrick Lehmann - Boetzingen, Germany
 #  Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -61,11 +61,6 @@ $Settings = @{
 		"InstallationDirectory" = "";								# "C:\git\GitHub\UVVM";
 		"SourceDirectory" =       ".";
 		"DestinationDirectory" =  "."
-	};
-	"XilinxISE" =				@{
-		"InstallationDirectory" = "";								# "C:\Xilinx\14.7\ISE_DS";
-		"SourceDirectory" =       "ISE\vhdl\src";
-		"DestinationDirectory" =  "xilinx-ise"
 	};
 	"XilinxVivado" =		@{
 		"InstallationDirectory" = "";								# "C:\Xilinx\Vivado\2020.2";
