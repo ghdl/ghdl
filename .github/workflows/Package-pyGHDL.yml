@@ -127,7 +127,15 @@ jobs:
         with:
           path: ghdl
 
-      - name: Prepare testsuite (Ubuntu)
+      - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
+        uses: msys2/setup-msys2@v2
+        if: inputs.runtime != ''
+        with:
+          msystem: ${{ inputs.runtime }}
+          update: true
+          pacboy: 'python:p python-pip:p python-wheel:p'
+
+      - name: Prepare testsuite (Ubuntu, MSYS2)
         if: startsWith(inputs.os_image, 'ubuntu')
         run: |
           mkdir pyGHDL
@@ -146,7 +154,7 @@ jobs:
           rm -Rf ghdl
 
       - name: Prepare testsuite (Windows)
-        if: startsWith(inputs.os_image, 'windows')
+        if: startsWith(inputs.os_image, 'windows') && inputs.runtime == ''
         run: |
           mkdir pyGHDL
           cp ghdl\pyGHDL\requirements.txt pyGHDL
@@ -163,8 +171,28 @@ jobs:
 
           Remove-Item -Force -Recurse ghdl
 
-      - name: '🐍 Setup Python'
+      - name: Prepare testsuite (Ubuntu, MSYS2)
+        if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
+        shell: "msys2 {0}"
+        run: |
+          mkdir pyGHDL
+          cp -v ghdl/pyGHDL/requirements.txt pyGHDL
+          mkdir pyGHDL/cli
+          cp -v ghdl/pyGHDL/cli/requirements.txt pyGHDL/cli
+          mkdir pyGHDL/dom
+          cp -v ghdl/pyGHDL/dom/requirements.txt pyGHDL/dom
+          mkdir pyGHDL/libghdl
+          cp -v ghdl/pyGHDL/libghdl/requirements.txt pyGHDL/libghdl
+          mkdir pyGHDL/lsp
+          cp -v ghdl/pyGHDL/lsp/requirements.txt pyGHDL/lsp
+          cp -r ghdl/testsuite .
+          cp -v ghdl/pyproject.toml .
+
+          rm -Rf ghdl
+
+      - name: 🐍 Setup Python (Ubuntu, Windows)
         uses: actions/setup-python@v5
+        if: inputs.runtime == ''
         with:
           python-version: ${{ inputs.python_version }}
 
@@ -182,10 +210,17 @@ jobs:
           python -m pip install --disable-pip-version-check -r testsuite/requirements.txt
 
       - name: 🔧 Install dependencies (Windows)
-        if: startsWith(inputs.os_image, 'windows')
+        if: startsWith(inputs.os_image, 'windows') && inputs.runtime == ''
         run: |
           python -m pip install -v --disable-pip-version-check (Get-Item .\wheels\pyGHDL-*.whl).FullName
           python -m pip install --disable-pip-version-check -r testsuite\requirements.txt
+
+      - name: 🔧 Install dependencies (MSYS2)
+        if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
+        shell: "msys2 {0}"
+        run: |
+          python -m pip install -v --disable-pip-version-check ./wheels/pyGHDL-*.whl
+          python -m pip install --disable-pip-version-check -r testsuite/requirements.txt
 
       - name: List pyGHDL installation directory (Ubuntu)
         if: startsWith(inputs.os_image, 'ubuntu')
@@ -198,7 +233,15 @@ jobs:
 #        run: |
 #          tree /F /A ${env:Python3_ROOT_DIR}\Lib\site-packages\pyGHDL
 
-      - name: Sanity check ghdl-lsp
+      - name: List pyGHDL installation directory (MSYS2)
+        if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
+        shell: "msys2 {0}"
+        run: |
+          ls -lAh ${MSYSTEM_PREFIX}/lib/python3.*/site-packages/pyGHDL/lib
+          tree ${MSYSTEM_PREFIX}/lib/python3.*/site-packages/pyGHDL
+
+      - name: Sanity check ghdl-lsp (Ubuntu, Windows)
+        if: startsWith(inputs.os_image, 'ubuntu') || (startsWith(inputs.os_image, 'windows') && inputs.runtime == '')
         run: |
           echo "Testing Python module:"
           python -m pyGHDL.cli.lsp --version
@@ -207,7 +250,19 @@ jobs:
           echo "Testing entrypoint (executable):"
           ghdl-ls --version
 
-      - name: Sanity check ghdl-dom
+      - name: Sanity check ghdl-lsp (MSYS2)
+        if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
+        shell: "msys2 {0}"
+        run: |
+          echo "Testing Python module:"
+          python -m pyGHDL.cli.lsp --version
+
+          echo ""
+          echo "Testing entrypoint (executable):"
+          ghdl-ls --version
+
+      - name: Sanity check ghdl-dom (Ubuntu, Windows)
+        if: startsWith(inputs.os_image, 'ubuntu') || (startsWith(inputs.os_image, 'windows') && inputs.runtime == '')
         run: |
           echo "Testing Python module:"
           python -m pyGHDL.cli.dom version
@@ -216,8 +271,25 @@ jobs:
           echo "Testing entrypoint (executable):"
           ghdl-dom version
 
-      - name: 🧰 Install dependencies (Ubuntu)
-        if: inputs.coverage
+      - name: Sanity check ghdl-dom (MSYS2)
+        if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
+        shell: "msys2 {0}"
+        run: |
+          echo "Testing Python module:"
+          python -m pyGHDL.cli.dom version
+
+          echo ""
+          echo "Testing entrypoint (executable):"
+          ghdl-dom version
+
+      - name: 🧰 Install dependencies (Ubuntu, Windows)
+        if: inputs.coverage && (startsWith(inputs.os_image, 'ubuntu') || (startsWith(inputs.os_image, 'windows') && inputs.runtime == ''))
+        run: |
+          python -m pip install --disable-pip-version-check tomli
+
+      - name: 🧰 Install dependencies (MSYS2)
+        if: inputs.coverage && (startsWith(inputs.os_image, 'windows') && inputs.runtime != '')
+        shell: "msys2 {0}"
         run: |
           python -m pip install --disable-pip-version-check tomli
 
@@ -277,12 +349,22 @@ jobs:
           python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
 
       - name: '🚦 Testsuite: pyunit (Windows)'
-        if: startsWith(inputs.os_image, 'windows')
+        if: startsWith(inputs.os_image, 'windows') && inputs.runtime == ''
         run: |
           $env:PYTHONPATH = (Get-Location).ToString()
 
           $PYTEST_ARGS = if ("${{ inputs.unittest_xml_artifact }}") { "--junitxml=report/unit/TestReportSummary.xml" } else { "" }
           Write-Host "python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+          python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
+
+      - name: '🚦 Testsuite: pyunit (MSYS2)'
+        if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
+        shell: "msys2 {0}"
+        run: |
+          export PYTHONPATH=$(pwd)
+
+          [ -n '${{ inputs.unittest_xml_artifact }}' ] && PYTEST_ARGS='--junitxml=report/unit/TestReportSummary.xml' || unset PYTEST_ARGS
+          echo "python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
           python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
 
 # Upload test result artifacts
