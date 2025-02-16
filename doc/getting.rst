@@ -154,7 +154,6 @@ Follow these steps:
     $ /usr/local/lib/ghdl/vendors/compile-altera.sh --all
     $ /usr/local/lib/ghdl/vendors/compile-intel.sh --all
     $ /usr/local/lib/ghdl/vendors/compile-lattice.sh --all
-    $ /usr/local/lib/ghdl/vendors/compile-osvvm.sh --all
     $ /usr/local/lib/ghdl/vendors/compile-uvvm.sh --all
     $ /usr/local/lib/ghdl/vendors/compile-xilinx-vivado.sh --all
 
@@ -213,7 +212,6 @@ Follow these steps:
      PS> <GHDL>\lib\ghdl\vendors\compile-altera.ps1 -All
      PS> <GHDL>\lib\ghdl\vendors\compile-intel.ps1 -All
      PS> <GHDL>\lib\ghdl\vendors\compile-lattice.ps1 -All
-     PS> <GHDL>\lib\ghdl\vendors\compile-osvvm.ps1 -All
      PS> <GHDL>\lib\ghdl\vendors\compile-uvvm.ps1 -All
      PS> <GHDL>\lib\ghdl\vendors\compile-xilinx-vivado.ps1 -All
 
@@ -349,15 +347,6 @@ For Bash Scripts:
      --vhdl93              Compile selected libraries with VHDL-93 (default).
      --vhdl2008            Compile selected libraries with VHDL-2008.
 
-* ``compile-osvvm.sh``
-
-  Selectable libraries:
-
-  .. code-block:: none
-
-     --all, -a             Compile all.
-     --osvvm               Compile the OSVVM library.
-
 * ``compile-uvvm.sh``
 
   Selectable libraries:
@@ -416,15 +405,6 @@ For PowerShell Scripts:
 
      -VHDL93               Compile selected libraries with VHDL-93 (default).
      -VHDL2008             Compile selected libraries with VHDL-2008.
-
-* ``compile-osvvm.ps1``
-
-  Selectable libraries:
-
-  .. code-block:: none
-
-     -All                  Compile all.
-     -OSVVM                Compile the OSVVM library.
 
 * ``compile-uvvm.ps1``
 
