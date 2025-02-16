@@ -40,15 +40,15 @@ import time
 from pathlib import Path
 from typing import Any, Optional as Nullable
 
-from pyGHDL.dom.Name import SimpleName
 from pyTooling.Decorators import export, InheritDocString
 
-from pyVHDLModel import VHDLVersion
+from pyVHDLModel import VHDLVersion, IEEEFlavor
 from pyVHDLModel import Design as VHDLModel_Design
 from pyVHDLModel import Library as VHDLModel_Library
 from pyVHDLModel import Document as VHDLModel_Document
 
 from pyGHDL.libghdl import (
+    ENCODING,
     initialize as libghdl_initialize,
     finalize as libghdl_finalize,
     set_option as libghdl_set_option,
@@ -60,13 +60,13 @@ from pyGHDL.libghdl import (
     flags,
     utils,
     files_map_editor,
-    ENCODING,
 )
 from pyGHDL.libghdl.flags import Flag_Gather_Comments
 from pyGHDL.libghdl.vhdl import nodes, sem_lib
 from pyGHDL.libghdl.vhdl.parse import Flag_Parse_Parenthesis
 from pyGHDL.dom import DOMException, Position
 from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors, GetNameOfNode, GetDocumentationOfNode
+from pyGHDL.dom.Name import SimpleName
 from pyGHDL.dom.Symbol import LibraryReferenceSymbol
 from pyGHDL.dom.DesignUnit import (
     Entity,
@@ -117,11 +117,11 @@ class Design(VHDLModel_Design):
                 "Error initializing 'libghdl'."
             )
 
-    def LoadDefaultLibraries(self):
+    def LoadDefaultLibraries(self, flavor: Nullable[IEEEFlavor] = None):
         t1 = time.perf_counter()
 
         super().LoadStdLibrary()
-        super().LoadIEEELibrary()
+        super().LoadIEEELibrary(flavor)
 
         self._loadDefaultLibraryTime = time.perf_counter() - t1
 

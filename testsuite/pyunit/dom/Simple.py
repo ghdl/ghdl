@@ -34,6 +34,8 @@ from pathlib import Path
 from typing import TypeVar, Dict
 from unittest import TestCase
 
+from pyTooling.Common import firstValue
+
 from pyGHDL.dom.NonStandard import Design, Document
 
 
@@ -41,13 +43,6 @@ if __name__ == "__main__":
     print("ERROR: you called a testcase declaration file as an executable module.")
     print("Use: 'python -m unitest <testcase module>'")
     exit(1)
-
-
-_DictKey = TypeVar("_DictKey")
-_DictValue = TypeVar("_DictValue")
-
-def firstValue(d: Dict[_DictKey, _DictValue]) -> _DictValue:
-    return next(iter(d.values()))
 
 
 class SimpleEntity(TestCase):
