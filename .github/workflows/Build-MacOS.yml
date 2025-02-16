@@ -85,13 +85,17 @@ jobs:
       - name: 🖉 Assemble artifact name
         id: artifact_name
         run: |
-          echo "ghdl_artifact=${{ inputs.macos_artifact }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
+          tee "${GITHUB_OUTPUT}" <<EOF
+          ghdl_artifact=${{ inputs.macos_artifact }}-${{ inputs.backend }}
+          EOF
 
       - name: 🔧 Install dependencies
         run: |
           brew install llvm
 
-          echo "LLVM_BINARY_PATH=$(brew --prefix llvm)/bin" >> $GITHUB_ENV
+          tee "${GITHUB_ENV}" <<EOF
+          LLVM_BINARY_PATH=$(brew --prefix llvm)/bin
+          EOF
 
       - name: 🔧 Install GNAT
         id: gnat
@@ -132,7 +136,9 @@ jobs:
             exit 1
           fi
 
-          echo "GNAT_MAJOR_VERSION=${GNAT_MAJOR_VERSION}" >> $GITHUB_OUTPUT
+          tee "${GITHUB_OUTPUT}" <<EOF
+          GNAT_MAJOR_VERSION=${GNAT_MAJOR_VERSION}
+          EOF
 
       - name: Prepare build environment
         run: |
