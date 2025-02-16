@@ -271,11 +271,28 @@ Analyze_Parameters+=(
 # Cleanup directory
 # ==============================================================================
 if [[ $CLEAN -eq 1 ]]; then
-	PrintErrorAndExit "'--clean' is not implemented!"
+	Chapter "Cleaning up vendor directory ..."
 
-	printf "${ANSI_YELLOW}%s${ANSI_NOCOLOR}\n" "Cleaning up vendor directory ..."
-	rm *.o 2> /dev/null
-	rm *.cf 2> /dev/null
+	if [[ $COMPILE_UNISIM -eq 1 && -d "unisim" ]]; then
+		PrintVerbose "Deleting 'unisims'"
+		PrintDebug "rm -rf "unisim" 2> /dev/null"
+		rm -rf "unisim" 2> /dev/null
+	fi
+	if [[ $COMPILE_UNIMACRO -eq 1 && -d "unimacro" ]]; then
+		PrintVerbose "Deleting 'unimacro'"
+		PrintDebug "rm -rf "unimacro" 2> /dev/null"
+		rm -rf "unimacro" 2> /dev/null
+	fi
+	if [[ $COMPILE_UNIFAST -eq 1 && -d "unifast" ]]; then
+		PrintVerbose "Deleting 'unifast'"
+		PrintDebug "rm -rf "unifast" 2> /dev/null"
+		rm -rf "unifast" 2> /dev/null
+	fi
+	if [[ $COMPILE_SECUREIP -eq 1 && -d "secureip" ]]; then
+		PrintVerbose "Deleting 'secureip'"
+		PrintDebug "rm -rf "secureip" 2> /dev/null"
+		rm -rf "secureip" 2> /dev/null
+	fi
 fi
 
 # Library unisim
@@ -363,5 +380,5 @@ if [[ ${#Libraries[@]} -ne 0 ]]; then
 	printf "%s\n" "--------------------------------------------------------------------------------"
 	printf "Compiling Xilinx Vivado libraries %s\n" "$(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
 else
-	printf "${ANSI_RED}%s${ANSI_NOCOLOR}\n" "No Xilinx Vivado libraries selected."
+	PrintErrorAndExit "No Xilinx Vivado libraries selected." 2
 fi

@@ -192,8 +192,8 @@ CreateVHDLLibrary() {
 	local DirectoryName=$2
 	local VHDLVersion=${3:-"v08"}
 
-	printf "${ANSI_YELLOW}Creating VHDL Library '%s'...${ANSI_NOCOLOR}\n" "${LibraryName}"
-
+	SubSection "Creating VHDL Library '${LibraryName}'..."
+	PrintVerbose "Creating library directory '$DirectoryName/$VHDLVersion'"
 	PrintDebug "mkdir -p \"$DirectoryName/$VHDLVersion\""
 	mkdir -p "$DirectoryName/$VHDLVersion"
 
