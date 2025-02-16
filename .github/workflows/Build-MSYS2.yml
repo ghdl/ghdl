@@ -108,7 +108,9 @@ jobs:
         shell: bash
         run: |
           # Generic packages installed in MSYS2
-          echo "msys2_packages=make tree git" >> $GITHUB_OUTPUT
+          tee "${GITHUB_OUTPUT}" <<EOF
+          msys2_packages=make tree git
+          EOF
 
           # Runtime (and backend) specific packages
           common_packages="python:p python-pip:p gcc:p gcc-ada:p binutils:p diffutils:p zlib:p"
@@ -116,11 +118,17 @@ jobs:
           llvm_packages="llvm:p clang:p"
 
           if ${{ startsWith(inputs.backend, 'mcode') }}; then
-            echo "pacboy_packages=${common_packages} ${mcode_packages}" >> $GITHUB_OUTPUT
+            tee -a "${GITHUB_OUTPUT}" <<EOF
+          pacboy_packages=${common_packages} ${mcode_packages}
+          EOF
           elif ${{ startsWith(inputs.backend, 'llvm') }}; then
-            echo "pacboy_packages=${common_packages} ${llvm_packages}" >> $GITHUB_OUTPUT
+            tee -a "${GITHUB_OUTPUT}" <<EOF
+          pacboy_packages=${common_packages} ${llvm_packages}
+          EOF
           else
-            echo "pacboy_packages=${common_packages}" >> $GITHUB_OUTPUT
+            tee -a "${GITHUB_OUTPUT}" <<EOF
+          pacboy_packages=${common_packages}
+          EOF
           fi
 
       - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
@@ -134,11 +142,12 @@ jobs:
       - name: 🖉 Assemble artifact name
         id: artifact_name
         run: |
-          echo "ghdl_artifact=${{ inputs.msys2_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
-          echo "pacman_artifact=${{ inputs.pacman_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
-          echo "windows_artifact=${{ inputs.windows_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
-          echo "libghdl_artifact=${{ inputs.libghdl_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}" >> $GITHUB_OUTPUT
-
+          tee "${GITHUB_OUTPUT}" <<EOF
+          ghdl_artifact=${{ inputs.msys2_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}
+          pacman_artifact=${{ inputs.pacman_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}
+          windows_artifact=${{ inputs.windows_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}
+          libghdl_artifact=${{ inputs.libghdl_artifact }}-${{ inputs.runtime }}-${{ inputs.backend }}
+          EOF
       - name: ☑ Check build environemnt
         run: |
           echo "which gnat:        $(which gnat) ($($(which gnat) --version))"
