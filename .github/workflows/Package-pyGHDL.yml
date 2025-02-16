@@ -128,11 +128,13 @@ jobs:
           path: ghdl
 
       - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
+        id: msys2
         uses: msys2/setup-msys2@v2
         if: inputs.runtime != ''
         with:
           msystem: ${{ inputs.runtime }}
           update: true
+          install: 'tree'
           pacboy: 'python:p python-pip:p python-wheel:p'
 
       - name: Prepare testsuite (Ubuntu, MSYS2)
@@ -237,8 +239,8 @@ jobs:
         if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
         shell: "msys2 {0}"
         run: |
-          ls -lAh ${MSYSTEM_PREFIX}/lib/python3.*/site-packages/pyGHDL/lib
-          tree ${MSYSTEM_PREFIX}/lib/python3.*/site-packages/pyGHDL
+          ls -lAh "${{ steps.msys2.outputs.msys2-location }}${MSYSTEM_PREFIX}/lib/python$(python --version | sed -E 's/Python ([0-9]+\.[0-9]+)\.[0-9]+/\1/')/site-packages/pyGHDL/lib"
+          tree    "${{ steps.msys2.outputs.msys2-location }}${MSYSTEM_PREFIX}/lib/python$(python --version | sed -E 's/Python ([0-9]+\.[0-9]+)\.[0-9]+/\1/')/site-packages/pyGHDL"
 
       - name: Sanity check ghdl-lsp (Ubuntu, Windows)
         if: startsWith(inputs.os_image, 'ubuntu') || (startsWith(inputs.os_image, 'windows') && inputs.runtime == '')
