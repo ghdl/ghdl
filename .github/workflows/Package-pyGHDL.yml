@@ -228,7 +228,7 @@ jobs:
         if: startsWith(inputs.os_image, 'ubuntu')
         run: |
           ls -lAh ${Python3_ROOT_DIR}/lib/python3.*/site-packages/pyGHDL/lib
-          tree ${Python3_ROOT_DIR}/lib/python3.*/site-packages/pyGHDL
+          tree ${Python3_ROOT_DIR}/lib/python3.*/site-packages/pyGHDL -I __pycache__
 
 #      - name: List pyGHDL installation directory (Windows)
 #        if: startsWith(inputs.os_image, 'windows')
@@ -240,7 +240,7 @@ jobs:
         shell: "msys2 {0}"
         run: |
           ls -lAh "${{ steps.msys2.outputs.msys2-location }}${MSYSTEM_PREFIX}/lib/python$(python --version | sed -E 's/Python ([0-9]+\.[0-9]+)\.[0-9]+/\1/')/site-packages/pyGHDL/lib"
-          tree    "${{ steps.msys2.outputs.msys2-location }}${MSYSTEM_PREFIX}/lib/python$(python --version | sed -E 's/Python ([0-9]+\.[0-9]+)\.[0-9]+/\1/')/site-packages/pyGHDL"
+          tree    "${{ steps.msys2.outputs.msys2-location }}${MSYSTEM_PREFIX}/lib/python$(python --version | sed -E 's/Python ([0-9]+\.[0-9]+)\.[0-9]+/\1/')/site-packages/pyGHDL" -I __pycache__
 
       - name: Sanity check ghdl-lsp (Ubuntu, Windows)
         if: startsWith(inputs.os_image, 'ubuntu') || (startsWith(inputs.os_image, 'windows') && inputs.runtime == '')
