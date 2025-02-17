@@ -65,7 +65,7 @@ from pyGHDL.dom.DesignUnit import (
     UseClause,
     PackageInstantiation,
 )
-from pyGHDL.dom.Symbol import SimpleSubtypeSymbol, ConstrainedCompositeSubtypeSymbol
+from pyGHDL.dom.Symbol import SimpleSubtypeSymbol, ConstrainedArraySubtypeSymbol
 from pyGHDL.dom.Type import (
     IntegerType,
     Subtype,
@@ -447,7 +447,7 @@ class PrettyPrint:
     def formatSubtypeIndication(self, subtypeIndication, entity: str, name: str) -> str:
         if isinstance(subtypeIndication, SimpleSubtypeSymbol):
             return f"{subtypeIndication.Name.Identifier}"
-        elif isinstance(subtypeIndication, ConstrainedCompositeSubtypeSymbol):
+        elif isinstance(subtypeIndication, ConstrainedArraySubtypeSymbol):
             constraints = []
             # FIXME: disabled due to problems with symbols
             # for constraint in subtypeIndication.Constraints:
