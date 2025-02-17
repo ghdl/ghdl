@@ -12,7 +12,7 @@
 #    - Compiles all Altera Quartus-II simulation libraries and packages
 #
 # ==============================================================================
-#  Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
+#  Copyright (C) 2017-2025 Patrick Lehmann - Boetzingen, Germany
 #  Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -39,7 +39,10 @@ ScriptDir="$($READLINK -f $ScriptDir)"
 
 # Source Bash utilities
 source $ScriptDir/../ansi_color.sh
-if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading Bash utilities.${ANSI_NOCOLOR}"    ; exit 1; fi
+if [[ $? -ne 0 ]]; then
+	printf "\x1b[31m[ERROR] %s\x1b[0m\n" "While loading Bash utilities." 1>&2
+	exit 1
+fi
 
 
 # Command line argument processing
@@ -135,7 +138,7 @@ while [[ $# -gt 0 ]]; do
 			shift						# skip argument
 			;;
 		*)		# unknown option
-			echo 1>&2 -e "\n${COLORED_ERROR} Unknown command line option '$1'.${ANSI_NOCOLOR}"
+			PrintError "Unknown command line option '$1'."
 			COMMAND=0
 			break
 			;;
@@ -147,48 +150,48 @@ ERRORCOUNT=0
 Libraries=()
 
 if [[ $COMMAND -le 1 ]]; then
-	test $COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected.${ANSI_NOCOLOR}"
-	echo ""
-	echo "Synopsis:"
-	echo "  A script to compile the Altera Quartus simulation libraries for GHDL on Linux."
-	echo "  One library folder 'lib/v??' per VHDL library will be created relative to the current"
-	echo "  working directory."
-	echo ""
-	echo "  Use the adv. options or edit 'config.sh' to supply paths and default params."
-	echo ""
-	echo "Usage:"
-	echo "  compile-altera.sh [<verbosity>] <common command>|<library> [<options>] [<adv. options>]"
-	echo ""
-	echo "Common commands:"
-	echo "  -h --help                    Print this help page"
-	echo "  -c --clean                   Remove all generated files"
-	echo ""
-	echo "Libraries:"
-	echo "  -a --all                     Compile all Altera simulation libraries."
-	echo "     --altera                  Compile the Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim."
-	echo "     --max                     Compile the Altera Max device libraries."
-	echo "     --cyclone                 Compile the Altera Cyclone device libraries."
-	echo "     --arria                   Compile the Altera Arria device libraries."
-	echo "     --stratix                 Compile the Altera Stratix device libraries."
-	echo "     --nanometer               Unknown device library."
-	echo ""
-	echo "Library compile options:"
-	echo "     --vhdl93                  Compile the libraries with VHDL-93."
-	echo "     --vhdl2008                Compile the libraries with VHDL-2008."
-	echo "  -S --skip-largefiles         Don't compile large files. Exclude *HSSI* and *HIP* files."
-	echo "  -H --halt-on-error           Halt on error(s)."
-	echo ""
-	echo "Advanced options:"
-	echo "  --ghdl <GHDL binary>         Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
-	echo "  --output <dir name>          Name of the output directory, e.g. altera"
-	echo "  --source <Path to Quartus>   Path to the sources."
-	echo ""
-	echo "Verbosity:"
-	echo "  -v --verbose                 Print verbose messages."
-	echo "  -d --debug                   Print debug messages."
-	echo "  -n --no-filter               Disable output filtering scripts."
-	echo "  -N --no-warnings             Suppress all warnings. Show only error messages."
-	echo ""
+	test $COMMAND -eq 1 && PrintError "No command selected."
+	printf "\n"
+	printf "%s\n" "Synopsis:"
+	printf "%s\n" "  A script to compile the Altera Quartus simulation libraries for GHDL on Linux."
+	printf "%s\n" "  One library folder 'lib/v??' per VHDL library will be created relative to the current"
+	printf "%s\n" "  working directory."
+	printf "\n"
+	printf "%s\n" "  Use the adv. options or edit 'config.sh' to supply paths and default params."
+	printf "\n"
+	printf "%s\n" "Usage:"
+	printf "%s\n" "  $(basename "$0") [<verbosity>] <common command>|<library> [<options>] [<adv. options>]"
+	printf "\n"
+	printf "%s\n" "Common commands:"
+	printf "%s\n" "  -h --help                    Print this help page"
+	printf "%s\n" "  -c --clean                   Remove all generated files"
+	printf "\n"
+	printf "%s\n" "Libraries:"
+	printf "%s\n" "  -a --all                     Compile all Altera simulation libraries."
+	printf "%s\n" "     --altera                  Compile the Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim."
+	printf "%s\n" "     --max                     Compile the Altera Max device libraries."
+	printf "%s\n" "     --cyclone                 Compile the Altera Cyclone device libraries."
+	printf "%s\n" "     --arria                   Compile the Altera Arria device libraries."
+	printf "%s\n" "     --stratix                 Compile the Altera Stratix device libraries."
+	printf "%s\n" "     --nanometer               Unknown device library."
+	printf "\n"
+	printf "%s\n" "Library compile options:"
+	printf "%s\n" "     --vhdl93                  Compile the libraries with VHDL-93."
+	printf "%s\n" "     --vhdl2008                Compile the libraries with VHDL-2008."
+	printf "%s\n" "  -S --skip-largefiles         Don't compile large files. Exclude *HSSI* and *HIP* files."
+	printf "%s\n" "  -H --halt-on-error           Halt on error(s)."
+	printf "\n"
+	printf "%s\n" "Advanced options:"
+	printf "%s\n" "  --ghdl <GHDL binary>         Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
+	printf "%s\n" "  --output <dir name>          Name of the output directory, e.g. altera"
+	printf "%s\n" "  --source <Path to Quartus>   Path to the sources."
+	printf "\n"
+	printf "%s\n" "Verbosity:"
+	printf "%s\n" "  -v --verbose                 Print verbose messages."
+	printf "%s\n" "  -d --debug                   Print debug messages."
+	printf "%s\n" "  -n --no-filter               Disable output filtering scripts."
+	printf "%s\n" "  -N --no-warnings             Suppress all warnings. Show only error messages."
+	printf "\n"
 	exit $COMMAND
 fi
 
@@ -203,15 +206,17 @@ fi
 
 
 # Source configuration file from GHDL's 'vendors' library directory
-echo -e "${ANSI_MAGENTA}Loading environment...${ANSI_NOCOLOR}"
+Chapter "Loading environment..."
 source $ScriptDir/config.sh
-if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading configuration.${ANSI_NOCOLOR}"     ; exit 1; fi
+CheckError $? "While loading configuration."
+
 source $ScriptDir/shared.sh
-if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading further procedures.${ANSI_NOCOLOR}"; exit 1; fi
+CheckError $? "While loading further procedures."
+
 
 # Warn that some files might not be VHDL-2008 ready. Thus enabled continue on error.
 if [[ $VHDLStandard -eq 2008 ]]; then
-	echo -e "${ANSI_RED}Not all Altera packages are VHDL-2008 compatible! Setting CONTINUE_ON_ERROR to TRUE.${ANSI_NOCOLOR}"
+	PrintWarning "${ANSI_RED}Not all Altera packages are VHDL-2008 compatible! Setting ${ANSI_LIGHT_RED}CONTINUE_ON_ERROR${ANSI_RED} to ${ANSI_LIGHT_RED}TRUE${ANSI_RED}."
 	CONTINUE_ON_ERROR=1
 fi
 
@@ -281,11 +286,49 @@ Analyze_Parameters+=(
 # Cleanup directories
 # ==============================================================================
 if [[ $CLEAN -eq 1 ]]; then
-	echo 1>&2 -e "${COLORED_ERROR} '--clean' is not implemented!"
-	exit 1
-	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ...${ANSI_NOCOLOR}"
-	rm *.o 2> /dev/null
-	rm *.cf 2> /dev/null
+	Chapter "Cleaning up vendor directory ..."
+	if [[ $COMPILE_ALTERA -eq 1 && -d "altera" ]]; then
+		PrintVerbose "Deleting 'altera'"
+		for Device in altera altera_mf altera_lnsim sgate lpm; do
+			PrintDebug "rm -rf "${Device}" 2> /dev/null"
+			rm -rf "${Device}" 2> /dev/null
+		done
+	fi
+	if [[ $COMPILE_MAX -eq 1 && -d "max" ]]; then
+		PrintVerbose "Deleting 'max'"
+		for Device in max maxii maxv; do
+			PrintDebug "rm -rf "${Device}" 2> /dev/null"
+			rm -rf "${Device}" 2> /dev/null
+		done
+	fi
+	if [[ $COMPILE_CYCLONE -eq 1 && -d "cyclone" ]]; then
+		PrintVerbose "Deleting 'cyclone'"
+		for Device in cycloneiv cycloneiv_pcie_hip cyclonev cycloneive cycloneiv; do
+			PrintDebug "rm -rf "${Device}" 2> /dev/null"
+			rm -rf "${Device}" 2> /dev/null
+		done
+	fi
+	if [[ $COMPILE_ARRIA -eq 1 && -d "arria" ]]; then
+		PrintVerbose "Deleting 'arria'"
+		for Device in arriaii arriaii_pcie_hip; do
+			PrintDebug "rm -rf "${Device}" 2> /dev/null"
+			rm -rf "${Device}" 2> /dev/null
+		done
+	fi
+#	if [[ $COMPILE_STRATIX -eq 1 && -d "stratix" ]]; then
+#		PrintVerbose "Deleting 'stratix'"
+#		for Device in altera altera_mf altera_lnsim; do
+#			PrintDebug "rm -rf "${Device}" 2> /dev/null"
+#			rm -rf "${Device}" 2> /dev/null
+#		done
+#	fi
+	if [[ $COMPILE_NM -eq 1 && -d "nm" ]]; then
+		PrintVerbose "Deleting 'nm'"
+		for Device in fiftyfivenm; do
+			PrintDebug "rm -rf "${Device}" 2> /dev/null"
+			rm -rf "${Device}" 2> /dev/null
+		done
+	fi
 fi
 
 
@@ -338,7 +381,7 @@ test $COMPILE_ALTERA -eq 1 && Libraries+=("$StructName")
 
 # Altera device libraries
 # ==============================================================================
-test $VERBOSE -eq 1 && echo -e "  Searching available devices ..."
+Chapter "Searching available devices ..."
 
 # Max library
 StructName="MAX"
@@ -347,7 +390,7 @@ Files=(
 	max_components.vhd
 )
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Max'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Max'."
 	CreateLibraryStruct $StructName "max" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_MAX -eq 1 && Libraries+=("$StructName")
@@ -360,7 +403,7 @@ Files=(
 	maxii_components.vhd
 )
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Max II'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Max II'."
 	CreateLibraryStruct $StructName "maxii" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_MAX -eq 1 && Libraries+=("$StructName")
@@ -373,7 +416,7 @@ Files=(
 	maxv_components.vhd
 )
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Max V'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Max V'."
 	CreateLibraryStruct $StructName "maxv" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_MAX -eq 1 && Libraries+=("$StructName")
@@ -392,7 +435,7 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 	)
 fi
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria II'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Arria II'."
 	CreateLibraryStruct $StructName "arriaii" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_ARRIA -eq 1 && Libraries+=("$StructName")
@@ -406,7 +449,7 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		arriaii_pcie_hip_atoms.vhd
 	)
 	if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria II (PCIe)'.${ANSI_NOCOLOR}"
+		PrintDebug "Found device 'Arria II (PCIe)'."
 		CreateLibraryStruct $StructName "arriaii_pcie_hip" "." $VHDLVersion "${Files[@]}"
 
 		test $COMPILE_ARRIA -eq 1 && Libraries+=("$StructName")
@@ -425,7 +468,7 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 	)
 fi
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria II GZ'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Arria II GZ'."
 	CreateLibraryStruct $StructName "arriaiigz" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_ARRIA -eq 1 && Libraries+=("$StructName")
@@ -444,7 +487,7 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 	)
 fi
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria V'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Arria V'."
 	CreateLibraryStruct $StructName "arriav" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_ARRIA -eq 1 && Libraries+=("$StructName")
@@ -463,7 +506,7 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 	)
 fi
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria V GZ'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Arria V GZ'."
 	CreateLibraryStruct $StructName "arriavgz" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_ARRIA -eq 1 && Libraries+=("$StructName")
@@ -477,7 +520,7 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		arriavgz_pcie_hip_atoms.vhd
 	)
 	if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria V GZ (PCIe)'.${ANSI_NOCOLOR}"
+		PrintDebug "Found device 'Arria V GZ (PCIe)'."
 		CreateLibraryStruct $StructName "arriavgz_pcie_hip" "." $VHDLVersion "${Files[@]}"
 
 		test $COMPILE_ARRIA -eq 1 && Libraries+=("$StructName")
@@ -491,7 +534,7 @@ Files=(
 	cyclone_components.vhd
 )
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Cyclone'."
 	CreateLibraryStruct $StructName "cyclone" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_CYCLONE -eq 1 && Libraries+=("$StructName")
@@ -504,7 +547,7 @@ Files=(
 	cycloneii_components.vhd
 )
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone II'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Cyclone II'."
 	CreateLibraryStruct $StructName "cycloneii" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_CYCLONE -eq 1 && Libraries+=("$StructName")
@@ -517,7 +560,7 @@ Files=(
 	cycloneiii_components.vhd
 )
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone III'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Cyclone III'."
 	CreateLibraryStruct $StructName "cycloneiii" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_CYCLONE -eq 1 && Libraries+=("$StructName")
@@ -536,7 +579,7 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 	)
 fi
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone IV'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Cyclone IV'."
 	CreateLibraryStruct $StructName "cycloneiv" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_CYCLONE -eq 1 && Libraries+=("$StructName")
@@ -550,7 +593,7 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		cycloneiv_pcie_hip_atoms.vhd
 	)
 	if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone IV (PCIe)'.${ANSI_NOCOLOR}"
+		PrintDebug "Found device 'Cyclone IV (PCIe)'."
 		CreateLibraryStruct $StructName "cycloneiv_pcie_hip" "." $VHDLVersion "${Files[@]}"
 
 		test $COMPILE_CYCLONE -eq 1 && Libraries+=("$StructName")
@@ -564,7 +607,7 @@ Files=(
 	cycloneive_components.vhd
 )
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone IV E'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Cyclone IV E'."
 	CreateLibraryStruct $StructName "cycloneive" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_CYCLONE -eq 1 && Libraries+=("$StructName")
@@ -583,7 +626,7 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 	)
 fi
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone V'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Cyclone V'."
 	CreateLibraryStruct $StructName "cyclonev" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_CYCLONE -eq 1 && Libraries+=("$StructName")
@@ -602,7 +645,7 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 	)
 fi
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Stratix IV'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Stratix IV'."
 	CreateLibraryStruct $StructName "stratixiv" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_STRATIX -eq 1 && Libraries+=("$StructName")
@@ -616,7 +659,7 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		stratixiv_pcie_hip_atoms.vhd
 	)
 	if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Stratix IV (PCIe)'.${ANSI_NOCOLOR}"
+		PrintDebug "Found device 'Stratix IV (PCIe)'."
 		CreateLibraryStruct $StructName "stratixiv_pcie_hip" "." $VHDLVersion "${Files[@]}"
 
 		test $COMPILE_STRATIX -eq 1 && Libraries+=("$StructName")
@@ -636,7 +679,7 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 	)
 fi
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Stratix V'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'Stratix V'."
 	CreateLibraryStruct $StructName "stratixv" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_STRATIX -eq 1 && Libraries+=("$StructName")
@@ -650,7 +693,7 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 		stratixv_pcie_hip_atoms.vhd
 	)
 	if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Stratix V (PCIe)'.${ANSI_NOCOLOR}"
+		PrintDebug "Found device 'Stratix V (PCIe)'."
 		CreateLibraryStruct $StructName "stratixv_pcie_hip" "." $VHDLVersion "${Files[@]}"
 
 		test $COMPILE_STRATIX -eq 1 && Libraries+=("$StructName")
@@ -664,7 +707,7 @@ Files=(
 	fiftyfivenm_components.vhd
 )
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device '55 nm'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device '55 nm'."
 	CreateLibraryStruct $StructName "fiftyfivenm" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_NM -eq 1 && Libraries+=("$StructName")
@@ -685,7 +728,7 @@ if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
 	)
 fi
 if [[ -f "$SourceDirectory/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device '20 nm'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device '20 nm'."
 	CreateLibraryStruct $StructName "twentynm" "." $VHDLVersion "${Files[@]}"
 
 	test $COMPILE_NM -eq 1 && Libraries+=("$StructName")
@@ -701,8 +744,8 @@ fi
 if [[ ${#Libraries[@]} -ne 0 ]]; then
 	Compile "$SourceDirectory" "${Libraries[*]}"
 
-	echo "--------------------------------------------------------------------------------"
-	echo -e "Compiling Altera Quartus packages and device libraries $(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
+	printf "%s\n" "--------------------------------------------------------------------------------"
+	printf "Compiling Altera Quartus packages and device libraries %s\n" "$(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
 else
-	echo -e "${ANSI_RED}Neither Altera Quartus packages nor device libraries selected.${ANSI_NOCOLOR}"
+	PrintErrorAndExit "Neither Altera Quartus packages nor device libraries selected." 2
 fi
