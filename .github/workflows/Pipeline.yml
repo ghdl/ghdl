@@ -49,8 +49,8 @@ jobs:
           - {icon: '🍏🟩', backend: 'llvm-jit', macos_image: 'macos-14', gnat_arch: 'aarch64', gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
 # macOS-15 is beta (broken/missing types in C)
 ###       - {icon: '🍏🟩', backend: 'mcode',    macos_image: 'macos-15', gnat_arch: 'aarch64', gnat_version: '14.2.0-1', testsuites: 'none'}                                    # mcode not yet supported for aarch64
-          - {icon: '🍏🟩', backend: 'llvm',     macos_image: 'macos-15', gnat_arch: 'aarch64', gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-          - {icon: '🍏🟩', backend: 'llvm-jit', macos_image: 'macos-15', gnat_arch: 'aarch64', gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+##        - {icon: '🍏🟩', backend: 'llvm',     macos_image: 'macos-15', gnat_arch: 'aarch64', gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+##        - {icon: '🍏🟩', backend: 'llvm-jit', macos_image: 'macos-15', gnat_arch: 'aarch64', gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
     with:
       macos_image:              ${{ matrix.macos_image }}
       gnat_arch:                ${{ matrix.gnat_arch }}
