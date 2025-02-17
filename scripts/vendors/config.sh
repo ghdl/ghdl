@@ -9,7 +9,7 @@
 #  This Bash file exports variables containing the users local tool environment.
 #
 # ==============================================================================
-#  Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
+#  Copyright (C) 2017-2025 Patrick Lehmann - Boetzingen, Germany
 #  Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -65,12 +65,6 @@ declare -A UVVM_Settings=(
 	["InstallationDirectory"]=""              # "~/git/github/UVVM"
 	["SourceDirectory"]="."
 	["DestinationDirectory"]="."
-)
-
-declare -A Xilinx_ISE_Settings=(
-	["InstallationDirectory"]=""              # "/opt/Xilinx/14.7/ISE_DS"
-	["SourceDirectory"]="ISE/vhdl/src"
-	["DestinationDirectory"]="xilinx-ise"
 )
 
 declare -A Xilinx_Vivado_Settings=(

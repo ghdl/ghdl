@@ -12,7 +12,7 @@
 #    - Compiles all Xilinx Vivado simulation libraries and packages
 #
 # ==============================================================================
-#  Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
+#  Copyright (C) 2017-2025 Patrick Lehmann - Boetzingen, Germany
 #  Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -39,7 +39,10 @@ ScriptDir="$($READLINK -f $ScriptDir)"
 
 # Source Bash utilities
 source "$ScriptDir"/../ansi_color.sh
-if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading Bash utilities.${ANSI_NOCOLOR}"    ; exit 1; fi
+if [[ $? -ne 0 ]]; then
+	printf "\x1b[31m[ERROR] %s\x1b[0m\n" "While loading Bash utilities." 1>&2
+	exit 1
+fi
 
 
 # Command line argument processing
@@ -125,7 +128,7 @@ while [[ $# -gt 0 ]]; do
 			shift						# skip argument
 			;;
 		*)		# unknown option
-			echo 1>&2 -e "\n${COLORED_ERROR} Unknown command line option '$1'.${ANSI_NOCOLOR}"
+			PrintError "Unknown command line option '$1'."
 			COMMAND=0
 			break
 			;;
@@ -137,46 +140,46 @@ ERRORCOUNT=0
 Libraries=()
 
 if [[ $COMMAND -le 1 ]]; then
-	test $COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected.${ANSI_NOCOLOR}"
-	echo ""
-	echo "Synopsis:"
-	echo "  A script to compile the Xilinx Vivado simulation libraries for GHDL on Linux."
-	echo "  One library folder 'lib/v??' per VHDL library will be created relative to the current"
-	echo "  working directory."
-	echo ""
-	echo "  Use the adv. options or edit 'config.sh' to supply paths and default params."
-	echo ""
-	echo "Usage:"
-	echo "  compile-xilinx-vivado.sh <common command>|<library> [<options>] [<adv. options>]"
-	echo ""
-	echo "Common commands:"
-	echo "  -h --help                    Print this help page"
-	echo "  -c --clean                   Remove all generated files"
-	echo ""
-	echo "Libraries:"
-	echo "  -a --all                     Compile all Xilinx simulation libraries."
-	echo "     --unisim                  Compile the unisim library."
-	echo "     --unimacro                Compile the unimacro library."
-	echo "     --unifast                 Compile the unifast library."
-	echo "     --with-secureip           Compile the secureip library."
-	echo ""
-	echo "Library compile options:"
-	echo "     --vhdl93                  Compile the libraries with VHDL-93."
-	echo "     --vhdl2008                Compile the libraries with VHDL-2008."
-	echo "  -S --skip-largefiles         Don't compile large files."
-	echo "  -H --halt-on-error           Halt on error(s)."
-	echo ""
-	echo "Advanced options:"
-	echo "  --ghdl <GHDL binary>         Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
-	echo "  --output <dir name>          Name of the output directory, e.g. vivado"
-	echo "  --source <Path to Vivado>    Path to the sources."
-	echo ""
-	echo "Verbosity:"
-	echo "  -v --verbose                 Print verbose messages."
-	echo "  -d --debug                   Print debug messages."
-	echo "  -n --no-filter               Disable output filtering scripts."
-	echo "  -N --no-warnings             Suppress all warnings. Show only error messages."
-	echo ""
+	test $COMMAND -eq 1 && PrintError "No command selected."
+	printf "\n"
+	printf "%s\n" "Synopsis:"
+	printf "%s\n" "  A script to compile the Xilinx Vivado simulation libraries for GHDL on Linux."
+	printf "%s\n" "  One library folder 'lib/v??' per VHDL library will be created relative to the current"
+	printf "%s\n" "  working directory."
+	printf "\n"
+	printf "%s\n" "  Use the adv. options or edit 'config.sh' to supply paths and default params."
+	printf "\n"
+	printf "%s\n" "Usage:"
+	printf "%s\n" "  $(basename "$0") <common command>|<library> [<options>] [<adv. options>]"
+	printf "\n"
+	printf "%s\n" "Common commands:"
+	printf "%s\n" "  -h --help                    Print this help page"
+	printf "%s\n" "  -c --clean                   Remove all generated files"
+	printf "\n"
+	printf "%s\n" "Libraries:"
+	printf "%s\n" "  -a --all                     Compile all Xilinx simulation libraries."
+	printf "%s\n" "     --unisim                  Compile the unisim library."
+	printf "%s\n" "     --unimacro                Compile the unimacro library."
+	printf "%s\n" "     --unifast                 Compile the unifast library."
+	printf "%s\n" "     --with-secureip           Compile the secureip library."
+	printf "\n"
+	printf "%s\n" "Library compile options:"
+	printf "%s\n" "     --vhdl93                  Compile the libraries with VHDL-93."
+	printf "%s\n" "     --vhdl2008                Compile the libraries with VHDL-2008."
+	printf "%s\n" "  -S --skip-largefiles         Don't compile large files."
+	printf "%s\n" "  -H --halt-on-error           Halt on error(s)."
+	printf "\n"
+	printf "%s\n" "Advanced options:"
+	printf "%s\n" "  --ghdl <GHDL binary>         Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
+	printf "%s\n" "  --output <dir name>          Name of the output directory, e.g. vivado"
+	printf "%s\n" "  --source <Path to Vivado>    Path to the sources."
+	printf "\n"
+	printf "%s\n" "Verbosity:"
+	printf "%s\n" "  -v --verbose                 Print verbose messages."
+	printf "%s\n" "  -d --debug                   Print debug messages."
+	printf "%s\n" "  -n --no-filter               Disable output filtering scripts."
+	printf "%s\n" "  -N --no-warnings             Suppress all warnings. Show only error messages."
+	printf "\n"
 	exit $COMMAND
 fi
 
@@ -189,15 +192,16 @@ fi
 
 
 # Source configuration file from GHDL's 'vendors' library directory
-echo -e "${ANSI_MAGENTA}Loading environment...${ANSI_NOCOLOR}"
+Chapter "Loading environment..."
 source $ScriptDir/config.sh
-if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading configuration.${ANSI_NOCOLOR}"     ; exit 1; fi
+CheckError $? "While loading configuration."
+
 source $ScriptDir/shared.sh
-if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading further procedures.${ANSI_NOCOLOR}"; exit 1; fi
+CheckError $? "While loading further procedures."
 
 # Warn that some files might not be VHDL-2008 ready. Thus enabled continue on error.
 if [[ $VHDLStandard -eq 2008 ]]; then
-	echo -e "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting CONTINUE_ON_ERROR to TRUE.${ANSI_NOCOLOR}"
+	PrintWarning "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting ${ANSI_LIGHT_RED}CONTINUE_ON_ERROR${ANSI_RED} to ${ANSI_LIGHT_RED}TRUE${ANSI_RED}."
 	CONTINUE_ON_ERROR=1
 fi
 
@@ -267,21 +271,40 @@ Analyze_Parameters+=(
 # Cleanup directory
 # ==============================================================================
 if [[ $CLEAN -eq 1 ]]; then
-	echo 1>&2 -e "${COLORED_ERROR} '--clean' is not implemented!"
-	exit 1
-	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ...${ANSI_NOCOLOR}"
-	rm *.o 2> /dev/null
-	rm *.cf 2> /dev/null
+	Chapter "Cleaning up vendor directory ..."
+
+	if [[ $COMPILE_UNISIM -eq 1 && -d "unisim" ]]; then
+		PrintVerbose "Deleting 'unisims'"
+		PrintDebug "rm -rf "unisim" 2> /dev/null"
+		rm -rf "unisim" 2> /dev/null
+	fi
+	if [[ $COMPILE_UNIMACRO -eq 1 && -d "unimacro" ]]; then
+		PrintVerbose "Deleting 'unimacro'"
+		PrintDebug "rm -rf "unimacro" 2> /dev/null"
+		rm -rf "unimacro" 2> /dev/null
+	fi
+	if [[ $COMPILE_UNIFAST -eq 1 && -d "unifast" ]]; then
+		PrintVerbose "Deleting 'unifast'"
+		PrintDebug "rm -rf "unifast" 2> /dev/null"
+		rm -rf "unifast" 2> /dev/null
+	fi
+	if [[ $COMPILE_SECUREIP -eq 1 && -d "secureip" ]]; then
+		PrintVerbose "Deleting 'secureip'"
+		PrintDebug "rm -rf "secureip" 2> /dev/null"
+		rm -rf "secureip" 2> /dev/null
+	fi
 fi
 
 # Library unisim
 # ==============================================================================
-test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Reading compile order files...${ANSI_NOCOLOR}"
+Chapter "Reading compile order files..."
 
 # Reading unisim files
 StructName="UNISIM"
 Library="unisim"
-test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/${Library}s/primitive/vhdl_analyze_order'${ANSI_NOCOLOR}"
+PrintVerbose "Reading compile order of '${Library}'"
+PrintDebug "Reading compile order from '$SourceDirectory/${Library}s/primitive/vhdl_analyze_order'"
+
 Files=(
 	unisim_VPKG.vhd
 	unisim_retarget_VCOMP.vhd
@@ -291,7 +314,7 @@ while IFS= read -r File; do
 done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/primitive/vhdl_analyze_order")
 
 # Reading unisim retarget files
-test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/${Library}s/retarget/vhdl_analyze_order'${ANSI_NOCOLOR}"
+PrintDebug "Reading compile order from '$SourceDirectory/${Library}s/retarget/vhdl_analyze_order'"
 while IFS= read -r File; do
 	Files+=("retarget/$File")
 done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/retarget/vhdl_analyze_order")
@@ -302,7 +325,7 @@ test $COMPILE_UNISIM -eq 1 && Libraries+=("$StructName")
 # Reading unisim secureip files
 StructName="UNISIM_SECUREIP"
 Library="unisim"
-test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Scanning directory '$SourceDirectory/${Library}s/secureip' for '*.vhd'${ANSI_NOCOLOR}"
+PrintDebug "Scanning directory '$SourceDirectory/${Library}s/secureip' for '*.vhd'"
 Files=( $(cd $SourceDirectory/${Library}s/secureip; LC_COLLATE=C ls *.vhd) )
 
 CreateLibraryStruct $StructName "secureip" "${Library}s/secureip" $VHDLVersion "${Files[@]}"
@@ -314,7 +337,8 @@ test $COMPILE_UNISIM -eq 1 && test $COMPILE_SECUREIP -eq 1 && Libraries+=("$Stru
 # Reading unimacro files
 StructName="UNIMACRO"
 Library="unimacro"
-test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Scanning directory '$SourceDirectory/$Library/' for '*_MACRO.vhd'${ANSI_NOCOLOR}"
+PrintVerbose "Reading compile order of '${Library}'"
+PrintDebug "Scanning directory '$SourceDirectory/$Library/' for '*_MACRO.vhd'"
 Files=(
 	unimacro_VCOMP.vhd
 )
@@ -329,7 +353,8 @@ test $COMPILE_UNIMACRO -eq 1 && Libraries+=("$StructName")
 # ==============================================================================
 StructName="UNIFAST"
 Library="unifast"
-test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/$Library/primitive/vhdl_analyze_order'${ANSI_NOCOLOR}"
+PrintVerbose "Reading compile order of '${Library}'"
+PrintDebug "Reading compile order from '$SourceDirectory/$Library/primitive/vhdl_analyze_order'"
 Files=()
 while IFS= read -r File; do
 	Files+=("$File")
@@ -341,7 +366,7 @@ test $COMPILE_UNIFAST -eq 1 && Libraries+=("$StructName")
 # Reading unifast secureip files
 StructName="UNIFAST_SECUREIP"
 Library="unifast"
-test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Scanning directory '$SourceDirectory/$Library/secureip' for '*.vhd'${ANSI_NOCOLOR}"
+PrintDebug "Scanning directory '$SourceDirectory/$Library/secureip' for '*.vhd'"
 Files=( $(cd $SourceDirectory/$Library/secureip; LC_COLLATE=C ls *.vhd) )
 
 CreateLibraryStruct $StructName "secureip" "$Library/secureip" $VHDLVersion "${Files[@]}"
@@ -352,8 +377,8 @@ test $COMPILE_UNIFAST -eq 1 && test $COMPILE_SECUREIP -eq 1 && Libraries+=("$Str
 if [[ ${#Libraries[@]} -ne 0 ]]; then
 	Compile "$SourceDirectory" "${Libraries[*]}"
 
-	echo "--------------------------------------------------------------------------------"
-	echo -e "Compiling Xilinx Vivado libraries $(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
+	printf "%s\n" "--------------------------------------------------------------------------------"
+	printf "Compiling Xilinx Vivado libraries %s\n" "$(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
 else
-	echo -e "${ANSI_RED}No Xilinx Vivado libraries selected.${ANSI_NOCOLOR}"
+	PrintErrorAndExit "No Xilinx Vivado libraries selected." 2
 fi

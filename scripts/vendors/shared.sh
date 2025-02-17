@@ -9,7 +9,7 @@
 #	   Provide Bash procedures to easily use GHDL in Bash scripts.
 #
 # ==============================================================================
-#  Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
+#  Copyright (C) 2017-2025 Patrick Lehmann - Boetzingen, Germany
 #  Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -25,25 +25,25 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <gnu.org/licenses>.
 # ==============================================================================
-
-
 # set bash options
 set -o pipefail
 
+VERBOSE=${VERBOSE:-0}
+DEBUG=${DEBUG:-0}
+CONTINUE_ON_ERROR=${CONTINUE_ON_ERROR:-0}
+
+
 if [[ -n "$GHDL" ]]; then
 	if [[ ! -f "$GHDL" ]]; then
-		echo 1>&2 -e "${COLORED_ERROR} Found GHDL environment variable, but '$GHDL' is not a file.${ANSI_NOCOLOR}"
-		exit 1
+		PrintErrorAndExit "Found GHDL environment variable, but '$GHDL' is not a file."
 	elif [[ ! -x "$GHDL" ]]; then
-		echo 1>&2 -e "${COLORED_ERROR} Found GHDL environment variable, but '$GHDL' is not executable.${ANSI_NOCOLOR}"
-		exit 1
+		PrintErrorAndExit "Found GHDL environment variable, but '$GHDL' is not executable."
 	fi
 else	# fall back to GHDL found via PATH
 	GHDL=$(which ghdl 2>/dev/null)
 	if [[ $? -ne 0 ]]; then
-		echo 1>&2 -e "${COLORED_ERROR} GHDL not found in PATH.${ANSI_NOCOLOR}"
-		echo 1>&2 -e "  Use adv. options '--ghdl' to set the GHDL binary directory."
-		exit 1
+		PrintError           "GHDL not found in PATH."
+		ContinueErrorAndExit   "Use adv. options '--ghdl' to set the GHDL binary directory."
 	fi
 fi
 
@@ -52,13 +52,8 @@ Analyze_Parameters=(
 	--mb-comments
 )
 
-VERBOSE=${VERBOSE:-0}
-DEBUG=${DEBUG:-0}
-CONTINUE_ON_ERROR=${CONTINUE_ON_ERROR:-0}
-
-test "$VERBOSE" -eq 1 && echo -e "  Declaring Bash procedures for GHDL..."
-
-test "$DEBUG" -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure SetupDirectories( <Index> <Name> )${ANSI_NOCOLOR}"
+PrintDebug "  " "Declaring Bash procedures for GHDL..."
+DeclareProcedure "SetupDirectories" "<Index> <Name>"
 # SetupDirectories
 # -> $Index
 # -> $Name
@@ -92,12 +87,10 @@ SetupDirectories() {
 	fi
 
 	if [[ -z $SourceDirectory || -z $DestinationDirectory ]]; then
-		echo 1>&2 -e "${COLORED_ERROR} $Name is not configured in '$ScriptDir/config.sh'.${ANSI_NOCOLOR}"
-		echo 1>&2 -e "  Use adv. options '--source' and '--output' or configure 'config.sh'."
-		exit 1
+		PrintError           "$Name is not configured in '$ScriptDir/config.sh'."
+		ContinueErrorAndExit   "Use adv. options '--source' and '--output' or configure 'config.sh'."
 	elif [[ ! -d $SourceDirectory ]]; then
-		echo 1>&2 -e "${COLORED_ERROR} Path '$SourceDirectory' does not exist.${ANSI_NOCOLOR}"
-		exit 1
+		PrintErrorAndExit "Path '$SourceDirectory' does not exist."
 	fi
 
 	# Resolve paths to an absolute paths
@@ -108,22 +101,21 @@ SetupDirectories() {
 	fi
 }
 
-test "$DEBUG" -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure CreateDestinationDirectory( undocumented )${ANSI_NOCOLOR}"
+DeclareProcedure "CreateDestinationDirectory" "undocumented"
 # CreateDestinationDirectory
 # -> undocumented
 CreateDestinationDirectory() {
 	if [ -d "$DestinationDirectory" ]; then
-		echo -e "${COLORED_WARNING} Vendor directory '$DestinationDirectory' already exists.${ANSI_NOCOLOR}"
+		PrintWarning "Vendor directory '$DestinationDirectory' already exists."
 	elif [ -f "$DestinationDirectory" ]; then
-		echo 1>&2 -e "${COLORED_ERROR} Vendor directory '$DestinationDirectory' already exists as a file.${ANSI_NOCOLOR}"
-		exit 1
+		PrintErrorAndExit "Vendor directory '$DestinationDirectory' already exists as a file."
 	else
-		echo -e "Creating vendor directory: '$DestinationDirectory'.${ANSI_NOCOLOR}"
+		printf "%s\n" "Creating vendor directory: '$DestinationDirectory'.${ANSI_NOCOLOR}"
 		mkdir -p "$DestinationDirectory"
 	fi
 }
 
-test "$DEBUG" -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure GHDLSetup( <VHDLStandard> )${ANSI_NOCOLOR}"
+DeclareProcedure "GHDLSetup" "<VHDLStandard>"
 # GHDLSetup
 # -> $VHDLStandard
 # <= $VHDLVersion
@@ -141,7 +133,7 @@ GHDLSetup() {
 	fi
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure CreateVHDLLibrary( <StructName> <LibraryName> <LibraryPath> <VHDLVersion> <Files[*]> )${ANSI_NOCOLOR}"
+DeclareProcedure "CreateVHDLLibrary" "<StructName> <LibraryName> <LibraryPath> <VHDLVersion> <Files[*]>"
 # CreateLibraryStruct
 # -> $StructName
 # -> $LibraryName
@@ -159,7 +151,7 @@ CreateLibraryStruct() {
 	FilesRef=( "$*" )
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure DeleteLibraryStruct( <StructName> )${ANSI_NOCOLOR}"
+DeclareProcedure "DeleteLibraryStruct" "<StructName>"
 # DeleteLibraryStruct
 # -> $StructName
 DeleteLibraryStruct() {
@@ -171,7 +163,7 @@ DeleteLibraryStruct() {
 	unset "${StructName}_Files"
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure PrintLibraryStruct( <StructName> )${ANSI_NOCOLOR}"
+DeclareProcedure "PrintLibraryStruct" "<StructName>"
 # PrintLibraryStruct
 # -> $StructName
 PrintLibraryStruct() {
@@ -181,16 +173,16 @@ PrintLibraryStruct() {
 	local LibraryName="${StructName}_LibraryName"; local LibraryName=${!LibraryName}
 	local Files="${StructName}_Files[*]";          local Files=${!Files}
 
-	echo -e "$Indentation${ANSI_DARK_GRAY}VHDL Library name: $LibraryName${ANSI_NOCOLOR}"
+	PrintDebug "$Indentation" "VHDL Library name: ${LibraryName}"
 	for File in ${Files[*]}; do
-		echo -e "$Indentation  ${ANSI_DARK_GRAY}$File${ANSI_NOCOLOR}"
+		PrintDebug "$Indentation  " "${File}"
 	done
 }
 
 
 declare -A GHDLLibraryMapping
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure CreateVHDLLibrary( <LibraryName> <DirectoryName> <VHDLVersion> )${ANSI_NOCOLOR}"
+DeclareProcedure "CreateVHDLLibrary" "<LibraryName> <DirectoryName> <VHDLVersion>"
 # CreateVHDLLibrary
 # -> $LibraryName
 # -> $DirectoryName
@@ -200,17 +192,17 @@ CreateVHDLLibrary() {
 	local DirectoryName=$2
 	local VHDLVersion=${3:-"v08"}
 
-	echo -e "${ANSI_YELLOW}Creating VHDL Library '$LibraryName'...${ANSI_NOCOLOR}"
-
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}mkdir -p \"$DirectoryName/$VHDLVersion\"${ANSI_NOCOLOR}"
+	SubSection "Creating VHDL Library '${LibraryName}'..."
+	PrintVerbose "Creating library directory '$DirectoryName/$VHDLVersion'"
+	PrintDebug "mkdir -p \"$DirectoryName/$VHDLVersion\""
 	mkdir -p "$DirectoryName/$VHDLVersion"
 
 	LibraryDir="$(pwd)/$DirectoryName/$VHDLVersion"
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Mapping library $LibraryName to '$LibraryDir'.${ANSI_NOCOLOR}"
+	PrintDebug "Mapping library $LibraryName to '$LibraryDir'."
 	GHDLLibraryMapping[$LibraryName]=$LibraryDir
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure AnalyzeVHDL( <LibraryName> <SourceDirectory> <LibraryPath> <File> )${ANSI_NOCOLOR}"
+DeclareProcedure "AnalyzeVHDL" "<LibraryName> <SourceDirectory> <LibraryPath> <File>"
 # AnalyzeVHDL
 # -> $LibraryName
 # -> $SourceDirectory
@@ -246,41 +238,35 @@ AnalyzeVHDL() {
 
 	local SourceFile="$SourceDirectory/$LibraryPath/$File"
 
-	if [[ ! -f "$SourceFile" ]]; then
-		echo 1>&2 -e "${COLORED_ERROR} Source file '$SourceFile' not found.${ANSI_NOCOLOR}"
-		test $CONTINUE_ON_ERROR -eq 0 && exit 1
+	if [[ ! -f "${SourceFile}" ]]; then
+		CheckErrorOrContinue 0 $CONTINUE_ON_ERROR "Source file '${SourceFile}' not found."
 	fi
 
 	if [[ $FILTERING -eq 0 ]]; then
-		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName --workdir=$DestinationDirectory \"$SourceFile\"${ANSI_NOCOLOR}"
+		PrintDebug "$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName --workdir=$DestinationDirectory \"$SourceFile\""
 		$GHDL -a "${Analyze_Parameters[@]}" "${Parameters[@]}" --work=$LibraryName --workdir=$DestinationDirectory "$SourceFile"
-		ExitCode=$?
-		if [[ $ExitCode -ne 0 ]]; then
-			echo 1>&2 -e "$Filter_Indent${COLORED_ERROR} While analyzing '$File'. ExitCode: $ExitCode${ANSI_NOCOLOR}"
-			test $CONTINUE_ON_ERROR -eq 0 && exit 1
-		fi
+		CheckErrorOrContinue $? $CONTINUE_ON_ERROR "${Filter_Indent}" "While analyzing '$File'."
 	 else
-		 test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName --workdir=$DestinationDirectory \"$SourceFile\" 2>&1 | \\\\${ANSI_NOCOLOR}"
-		 test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$ScriptDir/$Analyze_Filter ${Filter_Parameters[*]} -i \"$Filter_Indent\"${ANSI_NOCOLOR}"
+		 PrintDebug "$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName --workdir=$DestinationDirectory \"$SourceFile\" 2>&1 | \\\\"
+		 PrintDebug "$ScriptDir/$Analyze_Filter ${Filter_Parameters[*]} -i \"$Filter_Indent\""
 		 $GHDL -a "${Analyze_Parameters[@]}" "${Parameters[@]}" --work=$LibraryName --workdir=$DestinationDirectory "$SourceFile" 2>&1 | $ScriptDir/$Analyze_Filter "${Filter_Parameters[@]}" -i "$Filter_Indent"
 		 local PiplineStatus=("${PIPESTATUS[@]}")
 		 if [[ ${PiplineStatus[0]}  -ne 0 ]]; then
-			 echo 1>&2 -e "$Filter_Indent${COLORED_ERROR} While analyzing '$File'. ExitCode: ${PiplineStatus[0]}${ANSI_NOCOLOR}"
-			 test $CONTINUE_ON_ERROR -eq 0 && exit 1
+		 	 CheckErrorOrContinue ${PiplineStatus[0]} $CONTINUE_ON_ERROR "${Filter_Indent}" "While analyzing '$File'."
 		 elif [[ ${PiplineStatus[1]}  -ne 0 ]]; then
 			 case $(( ${PiplineStatus[1]} % 4 )) in
 				 # TODO: implement CONTINUE_ON_ERROR in cases ...
-				 3) echo 1>&2 -e "$Filter_Indent${ANSI_RED}Fatal errors detected by filtering script. ExitCode: ${PiplineStatus[1]}${ANSI_NOCOLOR}"; exit 1 ;;
-				 2) echo 1>&2 -e "$Filter_Indent${ANSI_RED}Errors detected by filtering script. ExitCode: ${PiplineStatus[1]}${ANSI_NOCOLOR}"; exit 1 ;;
-				 1) echo 1>&2 -e "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}" ;;
-				 0) test $DEBUG -eq 1 && echo 1>&2 -e "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}" ;;
+				 3) printf "$Filter_Indent${ANSI_RED}Fatal errors detected by filtering script. ExitCode: %s${ANSI_NOCOLOR}\n" "${PiplineStatus[1]}"; exit 1 ;;
+				 2) printf "$Filter_Indent${ANSI_RED}Errors detected by filtering script. ExitCode: %s${ANSI_NOCOLOR}\n"       "${PiplineStatus[1]}"; exit 1 ;;
+				 1) printf "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}\n"                                             ;;
+				 0) test $DEBUG -eq 1 && printf "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}" 1>&2                     ;;
 			 esac
 		 fi
 	fi
 }
 
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure AnalyzeLibrary( <LibraryName> <SourceDirectory> <LibraryPath> <Files[*]> )${ANSI_NOCOLOR}"
+DeclareProcedure "AnalyzeLibrary" "<LibraryName> <SourceDirectory> <LibraryPath> <Files[*]>"
 # AnalyzeLibrary
 # -> LibraryName
 # -> SourceDirectory
@@ -290,18 +276,16 @@ AnalyzeLibrary() {
 	local LibraryName=$1;     shift
 	local SourceDirectory=$1; shift
 	local LibraryPath=$1;     shift
-	local Files=$@
+	local Files="$@"
 
-	echo -e "${ANSI_YELLOW}Analyzing files into library '$LibraryName'...${ANSI_NOCOLOR}"
-
+	SubSection "Analyzing files into library '${LibraryName}'..."
 	for File in $Files; do
-		test "$VERBOSE" -eq 1 && echo -e "${ANSI_CYAN}  Analyzing '$File'${ANSI_NOCOLOR}"
-
+		PrintVerbose "Analyzing '$File'"
 		AnalyzeVHDL "$LibraryName" "$SourceDirectory" "$LibraryPath" "$File"
 	done
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}procedure Compile( <SourceDirectory> <Libraries> )${ANSI_NOCOLOR}"
+DeclareProcedure "Compile" "<SourceDirectory> <Libraries>"
 # Compile
 # -> SourceDirectory
 # -> VHDLLibraries
@@ -315,7 +299,7 @@ Compile() {
 		local VHDLVersion="${VHDLLibrary}_VHDLVersion"; local VHDLVersion=${!VHDLVersion}
 		local Files="${VHDLLibrary}_Files[*]";          local Files=${!Files}
 
-		echo -e "${ANSI_LIGHT_CYAN}Analyzing library '$LibraryName'...${ANSI_NOCOLOR}"
+		Section "Analyzing library '$LibraryName'..."
 
 		CreateVHDLLibrary $LibraryName $LibraryName $VHDLVersion
 		AnalyzeLibrary $LibraryName "$SourceDirectory" "$LibraryPath" "$Files"

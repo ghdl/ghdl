@@ -13,7 +13,7 @@
 #    - Compiles all Lattice Diamond simulation libraries and packages
 #
 # ==============================================================================
-#  Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
+#  Copyright (C) 2017-2025 Patrick Lehmann - Boetzingen, Germany
 #  Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #  Copyright (C) 2015-2016 Markus Koch
 #
@@ -41,7 +41,10 @@ ScriptDir="$($READLINK -f $ScriptDir)"
 
 # Source Bash utilities
 source $ScriptDir/../ansi_color.sh
-if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading Bash utilities.${ANSI_NOCOLOR}"    ; exit 1; fi
+if [[ $? -ne 0 ]]; then
+	printf "\x1b[31m[ERROR] %s\x1b[0m\n" "While loading Bash utilities." 1>&2
+	exit 1
+fi
 
 
 DeviceList="EC ECP ECP2 ECP3 ECP5U LPTM LPTM2 MACHXO MACHXO2 MACHXO3L SC SCM XP XP2"
@@ -122,7 +125,7 @@ while [[ $# -gt 0 ]]; do
 				done
 			fi
 			if [[ $FOUND -eq 0 ]]; then
-				echo 1>&2 -e "\n${COLORED_ERROR} Unknown command line option '$1'.${ANSI_NOCOLOR}"
+				PrintError "Unknown command line option '$1'."
 				COMMAND=0
 				break
 			fi
@@ -135,44 +138,44 @@ ERRORCOUNT=0
 Libraries=()
 
 if [[ $COMMAND -le 1 ]]; then
-	test $COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected.${ANSI_NOCOLOR}"
-	echo ""
-	echo "Synopsis:"
-	echo "  A script to compile the Lattice Diamond simulation libraries for GHDL on Linux."
-	echo "  One library folder 'lib/v??' per VHDL library will be created relative to the current"
-	echo "  working directory."
-	echo ""
-	echo "  Use the adv. options or edit 'config.sh' to supply paths and default params."
-	echo ""
-	echo "Usage:"
-	echo "  compile-lattice.sh <common command>|<library> [<options>] [<adv. options>]"
-	echo ""
-	echo "Common commands:"
-	echo "  -h --help                    Print this help page"
-	echo "  -c --clean                   Remove all generated files"
-	echo ""
-	echo "Libraries:"
-	echo "  -a --all                     Compile all Lattice simulation libraries."
+	test $COMMAND -eq 1 && PrintError "No command selected."
+	printf "\n"
+	printf "%s\n" "Synopsis:"
+	printf "%s\n" "  A script to compile the Lattice Diamond simulation libraries for GHDL on Linux."
+	printf "%s\n" "  One library folder 'lib/v??' per VHDL library will be created relative to the current"
+	printf "%s\n" "  working directory."
+	printf "\n"
+	printf "%s\n" "  Use the adv. options or edit 'config.sh' to supply paths and default params."
+	printf "\n"
+	printf "%s\n" "Usage:"
+	printf "%s\n" "  $(basename "$0") <common command>|<library> [<options>] [<adv. options>]"
+	printf "\n"
+	printf "%s\n" "Common commands:"
+	printf "%s\n" "  -h --help                    Print this help page"
+	printf "%s\n" "  -c --clean                   Remove all generated files"
+	printf "\n"
+	printf "%s\n" "Libraries:"
+	printf "%s\n" "  -a --all                     Compile all Lattice simulation libraries."
 	for Device in $DeviceList; do
 	  printf "     --%-23s Device primitives for '%s'.\n" "${Device,,}" "$Device"
 	done
-	echo ""
-	echo "Library compile options:"
-	echo "     --vhdl93                  Compile the libraries with VHDL-93."
-	echo "     --vhdl2008                Compile the libraries with VHDL-2008."
-	echo "  -H --halt-on-error           Halt on error(s)."
-	echo ""
-	echo "Advanced options:"
-	echo "  --ghdl <GHDL binary>         Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
-	echo "  --output <dir name>          Name of the output directory, e.g. lattice"
-	echo "  --source <Path to Diamond>   Path to the sources."
-	echo ""
-	echo "Verbosity:"
-	echo "  -v --verbose                 Print verbose messages."
-	echo "  -d --debug                   Print debug messages."
-	echo "  -n --no-filter               Disable output filtering scripts."
-	echo "  -N --no-warnings             Suppress all warnings. Show only error messages."
-	echo ""
+	printf "\n"
+	printf "%s\n" "Library compile options:"
+	printf "%s\n" "     --vhdl93                  Compile the libraries with VHDL-93."
+	printf "%s\n" "     --vhdl2008                Compile the libraries with VHDL-2008."
+	printf "%s\n" "  -H --halt-on-error           Halt on error(s)."
+	printf "\n"
+	printf "%s\n" "Advanced options:"
+	printf "%s\n" "  --ghdl <GHDL binary>         Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
+	printf "%s\n" "  --output <dir name>          Name of the output directory, e.g. lattice"
+	printf "%s\n" "  --source <Path to Diamond>   Path to the sources."
+	printf "\n"
+	printf "%s\n" "Verbosity:"
+	printf "%s\n" "  -v --verbose                 Print verbose messages."
+	printf "%s\n" "  -d --debug                   Print debug messages."
+	printf "%s\n" "  -n --no-filter               Disable output filtering scripts."
+	printf "%s\n" "  -N --no-warnings             Suppress all warnings. Show only error messages."
+	printf "\n"
 	exit $COMMAND
 fi
 
@@ -184,15 +187,16 @@ fi
 
 
 # Source configuration file from GHDL's 'vendors' library directory
-echo -e "${ANSI_MAGENTA}Loading environment...${ANSI_NOCOLOR}"
+Chapter "Loading environment..."
 source $ScriptDir/config.sh
-if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading configuration.${ANSI_NOCOLOR}"     ; exit 1; fi
+CheckError $? "While loading configuration."
+
 source $ScriptDir/shared.sh
-if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading further procedures.${ANSI_NOCOLOR}"; exit 1; fi
+CheckError $? "While loading further procedures."
 
 # Warn that some files might not be VHDL-2008 ready. Thus enabled continue on error.
 if [[ $VHDLStandard -eq 2008 ]]; then
-	echo -e "${ANSI_RED}Not all Lattice packages are VHDL-2008 compatible! Setting CONTINUE_ON_ERROR to TRUE.${ANSI_NOCOLOR}"
+	PrintWarning "${ANSI_RED}Not all Lattice packages are VHDL-2008 compatible! Setting ${ANSI_LIGHT_RED}CONTINUE_ON_ERROR${ANSI_RED} to ${ANSI_LIGHT_RED}TRUE${ANSI_RED}."
 	CONTINUE_ON_ERROR=1
 fi
 
@@ -263,15 +267,20 @@ Analyze_Parameters+=(
 # Cleanup directory
 # ==============================================================================
 if [[ $CLEAN -eq 1 ]]; then
-	echo 1>&2 -e "${COLORED_ERROR} '--clean' is not implemented!"
-	exit 1
-	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ...${ANSI_NOCOLOR}"
-	rm *.o 2> /dev/null
-	rm *.cf 2> /dev/null
+	Chapter "Cleaning up vendor directory ..."
+	for Device in *; do
+		VarName="DEV_${Device^^}_Enable"
+		if [[ ${!VarName} -eq 1 && -d "$Device" ]]; then
+			PrintVerbose "Deleting '$Device'"
+			PrintDebug "rm -rf "$Device" 2> /dev/null"
+			rm -rf "$Device" 2> /dev/null
+		fi
+	done
 fi
 
 # Excluded: pmi
 #
+Chapter "Searching devices ..."
 # Lattice device libraries
 # ==============================================================================
 # EC devices
@@ -288,13 +297,13 @@ Files=(
 	ORCA_MEM.vhd
 )
 if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'EC'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'EC'."
 	CreateLibraryStruct $StructName "ec" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
 	test ${!VarName} -eq 1 && Libraries+=("$StructName")
 #else
-#	echo "not found: $SourceDirectory/${Files[0]}"
+#	printf "%s\n" "not found: $SourceDirectory/${Files[0]}"
 fi
 
 # ECP devices
@@ -311,7 +320,7 @@ Files=(
 	ORCA_MEM.vhd
 )
 if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'ECP'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'ECP'."
 	CreateLibraryStruct $StructName "ecp" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
@@ -335,7 +344,7 @@ Files=(
 	ECP2_SL.vhd
 )
 if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'ECP2'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'ECP2'."
 	CreateLibraryStruct $StructName "ecp2" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
@@ -358,7 +367,7 @@ Files=(
 	ECP3_SL.vhd
 )
 if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'ECP3'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'ECP3'."
 	CreateLibraryStruct $StructName "ecp3" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
@@ -380,7 +389,7 @@ Files=(
 	gsr_pur_assign.vhd
 )
 if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'ECP5U'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'ECP5U'."
 	CreateLibraryStruct $StructName "ecp5u" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
@@ -401,7 +410,7 @@ Files=(
 	MACHXO_MISC.vhd
 )
 if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'LPTM'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'LPTM'."
 	CreateLibraryStruct $StructName "lptm" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
@@ -423,7 +432,7 @@ Files=(
 	MACHXO2_MISC.vhd
 )
 if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'LPTM2'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'LPTM2'."
 	CreateLibraryStruct $StructName "lptm2" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
@@ -444,7 +453,7 @@ Files=(
 	MACHXO_MISC.vhd
 )
 if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'MachXO'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'MachXO'."
 	CreateLibraryStruct $StructName "machxo" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
@@ -466,7 +475,7 @@ Files=(
 	MACHXO2_MISC.vhd
 )
 if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'MachXO2'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'MachXO2'."
 	CreateLibraryStruct $StructName "machxo2" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
@@ -488,7 +497,7 @@ Files=(
 	MACHXO3L_MISC.vhd
 )
 if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'MachXO3L'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'MachXO3L'."
 	CreateLibraryStruct $StructName "machxo3l" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
@@ -509,7 +518,7 @@ Files=(
 	ORCA_SL.vhd
 )
 if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'SC'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'SC'."
 	CreateLibraryStruct $StructName "sc" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
@@ -530,7 +539,7 @@ Files=(
 	ORCA_SL.vhd
 )
 if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'SCM'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'SCM'."
 	CreateLibraryStruct $StructName "scm" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
@@ -551,7 +560,7 @@ Files=(
 	ORCA_MEM.vhd
 )
 if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'XP'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'XP'."
 	CreateLibraryStruct $StructName "xp" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
@@ -574,7 +583,7 @@ Files=(
 	XP2_SL.vhd
 )
 if [[ -f "$SourceDirectory/$SourceDir/${Files[0]}" ]]; then
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'XP2'.${ANSI_NOCOLOR}"
+	PrintDebug "Found device 'XP2'."
 	CreateLibraryStruct $StructName "xp2" $SourceDir $VHDLVersion "${Files[@]}"
 
 	VarName="DEV_${StructName}_Enable"
@@ -591,8 +600,8 @@ fi
 if [[ ${#Libraries[@]} -ne 0 ]]; then
 	Compile "$SourceDirectory" "${Libraries[*]}"
 
-	echo "--------------------------------------------------------------------------------"
-	echo -e "Compiling Lattice device libraries $(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
+	printf "%s\n" "--------------------------------------------------------------------------------"
+	printf "Compiling Lattice device libraries %s\n" "$(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
 else
-	echo -e "${ANSI_RED}No Lattice device library selected.${ANSI_NOCOLOR}"
+	PrintErrorAndExit "No Lattice device library selected." 2
 fi

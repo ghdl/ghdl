@@ -11,7 +11,7 @@
 #    - Compiles all UVVM packages and verification IPs
 #
 # ==============================================================================
-#  Copyright (C) 2017-2021 Patrick Lehmann - Boetzingen, Germany
+#  Copyright (C) 2017-2025 Patrick Lehmann - Boetzingen, Germany
 #  Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -38,7 +38,10 @@ ScriptDir="$($READLINK -f $ScriptDir)"
 
 # Source Bash utilities
 source $ScriptDir/../ansi_color.sh
-if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading Bash utilities.${ANSI_NOCOLOR}"    ; exit 1; fi
+if [[ $? -ne 0 ]]; then
+	printf "\x1b[31m[ERROR] %s\x1b[0m\n" "While loading Bash utilities." 1>&2
+	exit 1
+fi
 
 
 # Command line argument processing
@@ -67,6 +70,8 @@ COMPILE_UVVM_VIP_SPEC_COV=0
 COMPILE_UVVM_VIP_SPI=0
 COMPILE_UVVM_VIP_UART=0
 COMPILE_UVVM_VIP_WISHBONE=0
+COMPILE_UVVM_IRQC=0
+COMPILE_UVVM_UART=0
 VERBOSE=0
 DEBUG=0
 FILTERING=1
@@ -208,7 +213,7 @@ while [[ $# -gt 0 ]]; do
 			shift						# skip argument
 			;;
 		*)		# unknown option
-			echo 1>&2 -e "\n${COLORED_ERROR} Unknown command line option '$1'.${ANSI_NOCOLOR}"
+			PrintError "Unknown command line option '$1'."
 			COMMAND=0
 			break
 			;;
@@ -219,66 +224,66 @@ done
 ERRORCOUNT=0
 
 if [[ $COMMAND -le 1 ]]; then
-	test $COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected.${ANSI_NOCOLOR}"
-	echo ""
-	echo "Synopsis:"
-	echo "  A script to compile the simulation library 'uvvm' for GHDL on Linux."
-	echo "  A library folder 'uvvm/v08' will be created relative to the current"
-	echo "  working directory."
-	echo ""
-	echo "  Use the adv. options or edit 'config.sh' to supply paths and default parameters."
-	echo ""
-	echo "Usage:"
-	echo "  compile-uvvm.sh [<verbosity>] <common command>|<library> [<options>] [<adv. options>]"
-	echo ""
-	echo "Common commands:"
-	echo "  -h --help                    Print this help page"
-	echo "  -c --clean                   Remove all generated files"
-	echo ""
-	echo "Libraries:"
-	echo "  -a --all                     Compile all libraries."
-	echo "     --uvvm                    Compile UVVM library packages."
-	echo "     --uvvm-vip                Compile UVVM Verification IPs (VIPs)."
-	echo ""
-	echo "Common Packages:"
-	echo "     --uvvm-utilities          UVVM utilities."
-	echo "     --uvvm-vvc-framework      VHDL Verification Component (VVC) framework."
-	echo ""
-	echo "Verification IPs:"
-	echo "     --uvvm-vip-avalon_mm      Altera/Intel Avalon Memory Mapped"
-	echo "     --uvvm-vip-avalon_st      Altera/Intel Avalon Stream"
-	echo "     --uvvm-vip-axi            ARM AMBA AXI4"
-	echo "     --uvvm-vip-axi_lite       ARM AMBA AXI4-Lite"
-	echo "     --uvvm-vip-axi_stream     ARM AMBA AXI4-Stream"
-	echo "     --uvvm-vip-clock          Clock generator"
-	echo "     --uvvm-vip-error          Error injection"
-	echo "     --uvvm-vip-ethernet       Ethernet"
-	echo "     --uvvm-vip-gmii           GMII"
-	echo "     --uvvm-vip-gpio           General Purpose Input/Output (GPIO)"
-	echo "     --uvvm-vip-hvvc2vvc       HVVC to VVC bridge"
-	echo "     --uvvm-vip-i2c            Inter-Integrated Circuit (I²C)"
-	echo "     --uvvm-vip-rgmii          RGMII"
-	echo "     --uvvm-vip-sbi            Simple Bus Interface"
-	echo "     --uvvm-vip-scoreboard     Scoreboard"
-	echo "     --uvvm-vip-spec           Specification Coverage"
-	echo "     --uvvm-vip-spi            Serial Peripheral Interface"
-	echo "     --uvvm-vip-uart           Universal Asynchronous Receiver Transmitter (UART)"
-	echo "     --uvvm-vip-wishbone       Wishbone"
-	echo ""
-	echo "Library compile options:"
-	echo "  -H --halt-on-error           Halt on error(s)."
-	echo ""
-	echo "Advanced options:"
-	echo "  --ghdl <GHDL binary>         Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
-	echo "  --output <dir name>          Name of the output directory, e.g. uvvm_util"
-	echo "  --source <Path to UVVM>      Path to the sources."
-	echo ""
-	echo "Verbosity:"
-	echo "  -v --verbose                  Print verbose messages."
-	echo "  -d --debug                    Print debug messages."
-	echo "  -n --no-filter                Disable output filtering scripts."
-	echo "  -N --no-warnings              Suppress all warnings. Show only error messages."
-	echo ""
+	test $COMMAND -eq 1 && PrintError "No command selected."
+	printf "\n"
+	printf "%s\n" "Synopsis:"
+	printf "%s\n" "  A script to compile the simulation library 'uvvm' for GHDL on Linux."
+	printf "%s\n" "  A library folder 'uvvm/v08' will be created relative to the current"
+	printf "%s\n" "  working directory."
+	printf "\n"
+	printf "%s\n" "  Use the adv. options or edit 'config.sh' to supply paths and default parameters."
+	printf "\n"
+	printf "%s\n" "Usage:"
+	printf "%s\n" "  $(basename "$0") [<verbosity>] <common command>|<library> [<options>] [<adv. options>]"
+	printf "\n"
+	printf "%s\n" "Common commands:"
+	printf "%s\n" "  -h --help                    Print this help page"
+	printf "%s\n" "  -c --clean                   Remove all generated files"
+	printf "\n"
+	printf "%s\n" "Libraries:"
+	printf "%s\n" "  -a --all                     Compile all libraries."
+	printf "%s\n" "     --uvvm                    Compile UVVM library packages."
+	printf "%s\n" "     --uvvm-vip                Compile UVVM Verification IPs (VIPs)."
+	printf "\n"
+	printf "%s\n" "Common Packages:"
+	printf "%s\n" "     --uvvm-utilities          UVVM utilities."
+	printf "%s\n" "     --uvvm-vvc-framework      VHDL Verification Component (VVC) framework."
+	printf "\n"
+	printf "%s\n" "Verification IPs:"
+	printf "%s\n" "     --uvvm-vip-avalon_mm      Altera/Intel Avalon Memory Mapped"
+	printf "%s\n" "     --uvvm-vip-avalon_st      Altera/Intel Avalon Stream"
+	printf "%s\n" "     --uvvm-vip-axi            ARM AMBA AXI4"
+	printf "%s\n" "     --uvvm-vip-axi_lite       ARM AMBA AXI4-Lite"
+	printf "%s\n" "     --uvvm-vip-axi_stream     ARM AMBA AXI4-Stream"
+	printf "%s\n" "     --uvvm-vip-clock          Clock generator"
+	printf "%s\n" "     --uvvm-vip-error          Error injection"
+	printf "%s\n" "     --uvvm-vip-ethernet       Ethernet"
+	printf "%s\n" "     --uvvm-vip-gmii           GMII"
+	printf "%s\n" "     --uvvm-vip-gpio           General Purpose Input/Output (GPIO)"
+	printf "%s\n" "     --uvvm-vip-hvvc2vvc       HVVC to VVC bridge"
+	printf "%s\n" "     --uvvm-vip-i2c            Inter-Integrated Circuit (I²C)"
+	printf "%s\n" "     --uvvm-vip-rgmii          RGMII"
+	printf "%s\n" "     --uvvm-vip-sbi            Simple Bus Interface"
+	printf "%s\n" "     --uvvm-vip-scoreboard     Scoreboard"
+	printf "%s\n" "     --uvvm-vip-spec           Specification Coverage"
+	printf "%s\n" "     --uvvm-vip-spi            Serial Peripheral Interface"
+	printf "%s\n" "     --uvvm-vip-uart           Universal Asynchronous Receiver Transmitter (UART)"
+	printf "%s\n" "     --uvvm-vip-wishbone       Wishbone"
+	printf "\n"
+	printf "%s\n" "Library compile options:"
+	printf "%s\n" "  -H --halt-on-error           Halt on error(s)."
+	printf "\n"
+	printf "%s\n" "Advanced options:"
+	printf "%s\n" "  --ghdl <GHDL binary>         Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
+	printf "%s\n" "  --output <dir name>          Name of the output directory, e.g. uvvm_util"
+	printf "%s\n" "  --source <Path to UVVM>      Path to the sources."
+	printf "\n"
+	printf "%s\n" "Verbosity:"
+	printf "%s\n" "  -v --verbose                  Print verbose messages."
+	printf "%s\n" "  -d --debug                    Print debug messages."
+	printf "%s\n" "  -n --no-filter                Disable output filtering scripts."
+	printf "%s\n" "  -N --no-warnings              Suppress all warnings. Show only error messages."
+	printf "\n"
 	exit $COMMAND
 fi
 
@@ -310,15 +315,17 @@ if [[ $COMPILE_UVVM_VIP -eq 1 ]]; then
 	COMPILE_UVVM_VIP_SPI=1
 	COMPILE_UVVM_VIP_UART=1
 	COMPILE_UVVM_VIP_WISHBONE=1
+	COMPILE_UVVM_IRQC=1
+	COMPILE_UVVM_UART=1
 fi
 
-
 # Source configuration file from GHDL's 'vendors' library directory
-echo -e "${ANSI_MAGENTA}Loading environment...${ANSI_NOCOLOR}"
+Chapter "Loading environment..."
 source $ScriptDir/config.sh
-if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading configuration.${ANSI_NOCOLOR}"     ; exit 1; fi
+CheckError $? "While loading configuration."
+
 source $ScriptDir/shared.sh
-if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading further procedures.${ANSI_NOCOLOR}"; exit 1; fi
+CheckError $? "While loading further procedures."
 
 # <= $VHDLVersion
 # <= $VHDLStandard
@@ -368,15 +375,32 @@ Analyze_Parameters+=(
 # Cleanup directory
 # ==============================================================================
 if [[ $CLEAN -eq 1 ]]; then
-	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ...${ANSI_NOCOLOR}"
-	rm *.o 2> /dev/null
-	rm *.cf 2> /dev/null
+	Chapter "Cleaning up vendor directory ..."
+	if [[ $COMPILE_UVVM_UTILITIES -eq 1 && -d "uvvm_util" ]]; then
+		PrintVerbose "Deleting 'uvvm_util'"
+		PrintDebug "rm -rf "uvvm_util" 2> /dev/null"
+		rm -rf "uvvm_util" 2> /dev/null
+	fi
+
+	while IFS=$'\r\n' read -r Component; do
+		if [[ ${Component:0:2} != "# " ]]; then
+			x="${Component%%_*}"
+			pos=${#x}+1
+			VIPName=${Component:$pos}
+			VarName="COMPILE_UVVM_${VIPName^^}"
+			if [[ ${!VarName} -eq 1 && -d "$Component" ]]; then
+				PrintVerbose "Deleting '$Component'"
+				PrintDebug "rm -rf "$Component" 2> /dev/null"
+				rm -rf "$Component" 2> /dev/null
+			fi
+		fi
+	done < <(cat "$SourceDirectory/script/component_list.txt")
 fi
 
 
 # Read order of components
 # ==============================================================================
-test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Reading compile order files...${ANSI_NOCOLOR}"
+Chapter "Reading compile order files..."
 
 Components=()
 while IFS=$'\r\n' read -r Component; do
@@ -401,8 +425,8 @@ for ComponentName in "${Components[@]}"; do
 	VIPName=${VIPName//AXILITE/AXI_LITE}
 	VIPName=${VIPName//AXISTREAM/AXI_STREAM}
 
-	test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Found VIP '$VIPName' in '$LibraryPath'.${ANSI_NOCOLOR}"
-	test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/$LibraryPath/script/compile_order.txt'${ANSI_NOCOLOR}"
+	PrintVerbose "Found VIP '$VIPName' in '$LibraryPath'."
+	PrintDebug   "Reading compile order from '$SourceDirectory/$LibraryPath/script/compile_order.txt'"
 
 	# Reading component's files
 	StructName=$VIPName
@@ -410,7 +434,7 @@ for ComponentName in "${Components[@]}"; do
 
 	CompileOrderFile="$SourceDirectory/$LibraryPath/script/compile_order.txt"
 	if [ ! -f "$CompileOrderFile" ]; then
-	  echo -e "${COLORED_ERROR} Compile order file '$CompileOrderFile' does not exist..${ANSI_NOCOLOR}"
+		PrintError "Compile order file '$CompileOrderFile' does not exist."
 	  continue
 	fi
 
@@ -434,9 +458,8 @@ done
 if [[ ${#Libraries[@]} -ne 0 ]]; then
 	Compile "$SourceDirectory" "${Libraries[*]}"
 
-	echo "--------------------------------------------------------------------------------"
-	echo -e "Compiling UVVM packages and VIPs $(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
+	printf "%s\n" "--------------------------------------------------------------------------------"
+	printf "Compiling UVVM packages and VIPs %s\n" "$(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
 else
-	echo -e "${COLORED_ERROR} Neither UVVM packages nor VIPs selected.${ANSI_NOCOLOR}"
-	exit 2
+	PrintErrorAndExit "Neither UVVM packages nor VIPs selected." 2
 fi
