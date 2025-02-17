@@ -181,6 +181,7 @@ jobs:
           GNATMAKE="gnatmake -j$NPROC" \
           MAKE="make -j$NPROC" \
           LDFLAGS=$CONFIG_LDFLAGS \
+          CC=clang \
           ../../configure --prefix=../../install $CONFIG_ARGS
 
       - name: 🔨 Make
