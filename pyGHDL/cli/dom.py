@@ -165,7 +165,7 @@ class Application(TerminalApplication, ArgParseHelperMixin):
 
     # class properties
     # ============================================================================
-    @property
+    @readonly
     def Platform(self):
         return self.__PLATFORM
 

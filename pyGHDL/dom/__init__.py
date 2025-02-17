@@ -33,7 +33,7 @@ Document object model (DOM) for :mod:`pyGHDL.libghdl` based on :doc:`pyVHDLModel
 """
 from pathlib import Path
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, readonly
 from pyTooling.MetaClasses import ExtendedType
 
 from pyGHDL import GHDLBaseException
@@ -70,7 +70,7 @@ class Position:
 
         return cls(Path(fileName), line, column)
 
-    @property
+    @readonly
     def Filename(self) -> Path:
         """
         Read-only property to access the filename this source code position referres to (:attr:`_filename`).
@@ -79,7 +79,7 @@ class Position:
         """
         return self._filename
 
-    @property
+    @readonly
     def Line(self) -> int:
         """
         Read-only property to access the line number this source code position referres to (:attr:`_line`).
@@ -88,7 +88,7 @@ class Position:
         """
         return self._line
 
-    @property
+    @readonly
     def Column(self) -> int:
         """
         Read-only property to access the column this source code position referres to (:attr:`_column`).
@@ -110,7 +110,9 @@ class DOMMixin(metaclass=ExtendedType, mixin=True):
         self._iirNode = node
         self._position = None
 
-    @property
+    # TODO: add Iir and Iir kind properties
+
+    @readonly
     def Position(self) -> Position:
         """
         Cached read-only property to access an IIR's position in source code (:attr:`_position`).

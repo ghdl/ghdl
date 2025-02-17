@@ -1,5 +1,6 @@
 -r ../pyGHDL/requirements.txt
 
+# Test Runner
 pytest ~= 8.3
 pytest-cov ~= 6.0
 

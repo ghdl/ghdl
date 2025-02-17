@@ -56,10 +56,11 @@ __copyright__ = "2002-2024, Tristan Gingold and contributors"
 __license__ = "GNU General Public License v2"
 __keywords__ = ["vhdl", "parser", "compiler", "simulator", "ghdl"]
 
+
 from sys import version_info
 from typing import List
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, readonly
 
 
 @export

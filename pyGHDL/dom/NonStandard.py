@@ -40,7 +40,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional as Nullable
 
-from pyTooling.Decorators import export, InheritDocString
+from pyTooling.Decorators import export, InheritDocString, readonly
 
 from pyVHDLModel import VHDLVersion, IEEEFlavor
 from pyVHDLModel import Design as VHDLModel_Design
@@ -156,7 +156,7 @@ class Document(VHDLModel_Document):
         dontParse: bool = False,
         dontTranslate: bool = False,
     ) -> None:
-        super().__init__(path)
+        super().__init__(path, parent=None)
 
         self._filename = path
 
@@ -281,10 +281,10 @@ class Document(VHDLModel_Document):
             else:
                 raise DOMException(f"Unknown design unit kind '{nodeKind.name}'.")
 
-    @property
+    @readonly
     def LibGHDLProcessingTime(self) -> float:
         return self.__ghdlProcessingTime
 
-    @property
+    @readonly
     def DOMTranslationTime(self) -> float:
         return self.__domTranslateTime
