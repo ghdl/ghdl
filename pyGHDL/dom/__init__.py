@@ -43,7 +43,7 @@ from pyGHDL.libghdl.vhdl import nodes
 
 
 @export
-class Position:
+class Position(metaclass=ExtendedType):
     """Represents the source code position of a IIR node in a source file."""
 
     _filename: Path
