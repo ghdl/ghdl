@@ -925,7 +925,8 @@ def GetConcurrentStatementsFromChainedNodes(
                 yield EntityInstantiation.parse(statement, instantiatedUnit, label)
             elif instantiatedUnitKind == nodes.Iir_Kind.Entity_Aspect_Configuration:
                 yield ConfigurationInstantiation.parse(statement, instantiatedUnit, label)
-            elif instantiatedUnitKind == nodes.Iir_Kind.Simple_Name:
+            elif (instantiatedUnitKind == nodes.Iir_Kind.Simple_Name or
+                  instantiatedUnitKind == nodes.Iir_Kind.Selected_Name):
                 yield ComponentInstantiation.parse(statement, instantiatedUnit, label)
             else:
                 raise DOMException(
