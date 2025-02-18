@@ -33,7 +33,7 @@
 """
 This module implements derived symbol classes from :mod:`pyVHDLModel.Symbol`.
 """
-from typing import List
+from typing import List, Mapping
 
 from pyTooling.Decorators import export, InheritDocString
 
@@ -54,6 +54,7 @@ from pyVHDLModel.Symbol import RecordElementSymbol as VHDLModel_RecordElementSym
 from pyVHDLModel.Symbol import ConstrainedScalarSubtypeSymbol as VHDLModel_ConstrainedScalarSubtypeSymbol
 from pyVHDLModel.Symbol import ConstrainedCompositeSubtypeSymbol as VHDLModel_ConstrainedCompositeSubtypeSymbol
 from pyVHDLModel.Symbol import ConstrainedRecordSubtypeSymbol as VHDLModel_ConstrainedRecordSubtypeSymbol
+from pyVHDLModel.Symbol import ConstrainedArraySubtypeSymbol as VHDLModel_ConstrainedArraySubtypeSymbol
 from pyVHDLModel.Symbol import SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol
 from pyVHDLModel.Symbol import IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol
 
@@ -318,10 +319,21 @@ class ConstrainedCompositeSubtypeSymbol(VHDLModel_ConstrainedCompositeSubtypeSym
         pass
 
 @export
+class ConstrainedArraySubtypeSymbol(VHDLModel_ConstrainedArraySubtypeSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_ConstrainedArraySubtypeSymbol)
+    def __init__(self, node: Iir, subtypeName: Name, constraints: List):
+        super().__init__(subtypeName, constraints)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse():
+        pass
+
+@export
 class ConstrainedRecordSubtypeSymbol(VHDLModel_ConstrainedRecordSubtypeSymbol, DOMMixin):
     @InheritDocString(VHDLModel_ConstrainedRecordSubtypeSymbol)
-    def __init__(self, node: Iir, subtypeName: Name, constraints: List):
-        super().__init__(self, constraints)
+    def __init__(self, node: Iir, subtypeName: Name, constraints: Mapping):
+        super().__init__(subtypeName, constraints)
         DOMMixin.__init__(self, node)
 
 @export
