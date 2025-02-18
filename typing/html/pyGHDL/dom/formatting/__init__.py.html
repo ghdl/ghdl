@@ -1,0 +1,80 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../../../../mypy-html.css">
+</head>
+<body>
+<h2>pyGHDL.dom.formatting</h2>
+<table>
+<caption>pyGHDL/dom/formatting/__init__.py</caption>
+<tbody><tr>
+<td class="table-lines"><pre><span id="L1" class="lineno"><a class="lineno" href="#L1">1</a></span>
+<span id="L2" class="lineno"><a class="lineno" href="#L2">2</a></span>
+<span id="L3" class="lineno"><a class="lineno" href="#L3">3</a></span>
+<span id="L4" class="lineno"><a class="lineno" href="#L4">4</a></span>
+<span id="L5" class="lineno"><a class="lineno" href="#L5">5</a></span>
+<span id="L6" class="lineno"><a class="lineno" href="#L6">6</a></span>
+<span id="L7" class="lineno"><a class="lineno" href="#L7">7</a></span>
+<span id="L8" class="lineno"><a class="lineno" href="#L8">8</a></span>
+<span id="L9" class="lineno"><a class="lineno" href="#L9">9</a></span>
+<span id="L10" class="lineno"><a class="lineno" href="#L10">10</a></span>
+<span id="L11" class="lineno"><a class="lineno" href="#L11">11</a></span>
+<span id="L12" class="lineno"><a class="lineno" href="#L12">12</a></span>
+<span id="L13" class="lineno"><a class="lineno" href="#L13">13</a></span>
+<span id="L14" class="lineno"><a class="lineno" href="#L14">14</a></span>
+<span id="L15" class="lineno"><a class="lineno" href="#L15">15</a></span>
+<span id="L16" class="lineno"><a class="lineno" href="#L16">16</a></span>
+<span id="L17" class="lineno"><a class="lineno" href="#L17">17</a></span>
+<span id="L18" class="lineno"><a class="lineno" href="#L18">18</a></span>
+<span id="L19" class="lineno"><a class="lineno" href="#L19">19</a></span>
+<span id="L20" class="lineno"><a class="lineno" href="#L20">20</a></span>
+<span id="L21" class="lineno"><a class="lineno" href="#L21">21</a></span>
+<span id="L22" class="lineno"><a class="lineno" href="#L22">22</a></span>
+<span id="L23" class="lineno"><a class="lineno" href="#L23">23</a></span>
+<span id="L24" class="lineno"><a class="lineno" href="#L24">24</a></span>
+<span id="L25" class="lineno"><a class="lineno" href="#L25">25</a></span>
+<span id="L26" class="lineno"><a class="lineno" href="#L26">26</a></span>
+<span id="L27" class="lineno"><a class="lineno" href="#L27">27</a></span>
+<span id="L28" class="lineno"><a class="lineno" href="#L28">28</a></span>
+<span id="L29" class="lineno"><a class="lineno" href="#L29">29</a></span>
+<span id="L30" class="lineno"><a class="lineno" href="#L30">30</a></span>
+<span id="L31" class="lineno"><a class="lineno" href="#L31">31</a></span>
+<span id="L32" class="lineno"><a class="lineno" href="#L32">32</a></span>
+</pre></td>
+<td class="table-code"><pre><span class="line-empty" title="No Anys on this line!"># =============================================================================</span>
+<span class="line-empty" title="No Anys on this line!">#               ____ _   _ ____  _          _</span>
+<span class="line-empty" title="No Anys on this line!">#  _ __  _   _ / ___| | | |  _ \| |      __| | ___  _ __ ___</span>
+<span class="line-empty" title="No Anys on this line!"># | '_ \| | | | |  _| |_| | | | | |     / _` |/ _ \| '_ ` _ \</span>
+<span class="line-empty" title="No Anys on this line!"># | |_) | |_| | |_| |  _  | |_| | |___ | (_| | (_) | | | | | |</span>
+<span class="line-empty" title="No Anys on this line!"># | .__/ \__, |\____|_| |_|____/|_____(_)__,_|\___/|_| |_| |_|</span>
+<span class="line-empty" title="No Anys on this line!"># |_|    |___/</span>
+<span class="line-empty" title="No Anys on this line!"># =============================================================================</span>
+<span class="line-empty" title="No Anys on this line!"># Authors:</span>
+<span class="line-empty" title="No Anys on this line!">#   Patrick Lehmann</span>
+<span class="line-empty" title="No Anys on this line!">#</span>
+<span class="line-empty" title="No Anys on this line!"># Package package:  A package for formatters.</span>
+<span class="line-empty" title="No Anys on this line!">#</span>
+<span class="line-empty" title="No Anys on this line!"># License:</span>
+<span class="line-empty" title="No Anys on this line!"># ============================================================================</span>
+<span class="line-empty" title="No Anys on this line!">#  Copyright (C) 2019-2021 Tristan Gingold</span>
+<span class="line-empty" title="No Anys on this line!">#</span>
+<span class="line-empty" title="No Anys on this line!">#  This program is free software: you can redistribute it and/or modify</span>
+<span class="line-empty" title="No Anys on this line!">#  it under the terms of the GNU General Public License as published by</span>
+<span class="line-empty" title="No Anys on this line!">#  the Free Software Foundation, either version 2 of the License, or</span>
+<span class="line-empty" title="No Anys on this line!">#  (at your option) any later version.</span>
+<span class="line-empty" title="No Anys on this line!">#</span>
+<span class="line-empty" title="No Anys on this line!">#  This program is distributed in the hope that it will be useful,</span>
+<span class="line-empty" title="No Anys on this line!">#  but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="line-empty" title="No Anys on this line!">#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="line-empty" title="No Anys on this line!">#  GNU General Public License for more details.</span>
+<span class="line-empty" title="No Anys on this line!">#</span>
+<span class="line-empty" title="No Anys on this line!">#  You should have received a copy of the GNU General Public License</span>
+<span class="line-empty" title="No Anys on this line!">#  along with this program.  If not, see &lt;gnu.org/licenses&gt;.</span>
+<span class="line-empty" title="No Anys on this line!">#</span>
+<span class="line-empty" title="No Anys on this line!"># SPDX-License-Identifier: GPL-2.0-or-later</span>
+<span class="line-empty" title="No Anys on this line!"># ============================================================================</span>
+</pre></td>
+</tr></tbody>
+</table>
+</body>
+</html>
