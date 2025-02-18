@@ -35,6 +35,9 @@
 This module offers helper functions to translate often used IIR substructures to pyGHDL.dom (pyVHDLModel) constructs.
 """
 
+# Remove:
+import code
+
 from typing import List, Generator, Type
 
 from pyTooling.Decorators import export
@@ -78,8 +81,10 @@ from pyGHDL.dom.Symbol import (
     SimpleObjectOrFunctionCallSymbol,
     SimpleSubtypeSymbol,
     ConstrainedCompositeSubtypeSymbol,
+    ConstrainedRecordSubtypeSymbol,
     IndexedObjectOrFunctionCallSymbol,
     ConstrainedScalarSubtypeSymbol,
+    RecordElementSymbol,
 )
 from pyGHDL.dom.Type import (
     IntegerType,
@@ -229,29 +234,22 @@ def GetArrayConstraintsFromSubtypeIndication(
 ) -> List:
     constraints = []
 
-    subtypeKind = GetIirKindOfNode(subtypeIndication)
-
-    if subtypeKind == nodes.Iir_Kind.Record_Subtype_Definition:
-        # Constraints get thrown away anyway?
-        # code.interact(local=dict(globals(), **locals()))
-        return constraints
-    else:
-        for constraint in utils.flist_iter(nodes.Get_Index_Constraint_List(subtypeIndication)):
-            constraintKind = GetIirKindOfNode(constraint)
-            if constraintKind == nodes.Iir_Kind.Range_Expression:
-                constraints.append(RangeExpression.parse(constraint))
-            elif constraintKind in (
-                nodes.Iir_Kind.Simple_Name,
-                nodes.Iir_Kind.Parenthesis_Name,
-                nodes.Iir_Kind.Selected_Name,
-                nodes.Iir_Kind.Attribute_Name,
-            ):
-                constraints.append(GetName(constraint))
-            else:
-                position = Position.parse(constraint)
-                raise DOMException(
-                    f"Unknown constraint kind '{constraintKind.name}' for constraint '{constraint}' in subtype indication '{subtypeIndication}' at {position}."
-                )
+    for constraint in utils.flist_iter(nodes.Get_Index_Constraint_List(subtypeIndication)):
+        constraintKind = GetIirKindOfNode(constraint)
+        if constraintKind == nodes.Iir_Kind.Range_Expression:
+            constraints.append(RangeExpression.parse(constraint))
+        elif constraintKind in (
+            nodes.Iir_Kind.Simple_Name,
+            nodes.Iir_Kind.Parenthesis_Name,
+            nodes.Iir_Kind.Selected_Name,
+            nodes.Iir_Kind.Attribute_Name,
+        ):
+            constraints.append(GetName(constraint))
+        else:
+            position = Position.parse(constraint)
+            raise DOMException(
+                f"Unknown constraint kind '{constraintKind.name}' for constraint '{constraint}' in subtype indication '{subtypeIndication}' at {position}."
+            )
 
     return constraints
 
@@ -389,6 +387,33 @@ def GetScalarConstrainedSubtypeFromNode(
 
 
 @export
+def GetRecordConstraintsFromSubtypeIndication(
+    subtypeIndicationNode: Iir
+) -> List:
+    chain = nodes.Get_Owned_Elements_Chain(subtypeIndicationNode)
+    constraints = dict()
+
+    for constraint in utils.chain_iter(chain):
+        # element: Record_Element_Constraint
+        symbol = RecordElementSymbol(constraint, GetNameOfNode(constraint))
+
+        # I think this is always the case?
+        constraintKind = GetIirKindOfNode(constraint)
+        
+        if constraintKind == nodes.Iir_Kind.Record_Element_Constraint:
+            # arraysubtype = nodes.Get_Subtype_Indication(constraint)
+            # indexconstraints = GetArrayConstraintsFromSubtypeIndication(arraysubtype)
+
+            constraints[symbol] = None # Needs to be a range...
+        else:
+            position = Position.parse(constraint)
+            raise DOMException(
+                f"Unknown record constraint kind '{constraintKind.name}': in expression '{subtypeIndicationNode}' at {position}"
+            )
+
+    return constraints
+
+@export
 def GetCompositeConstrainedSubtypeFromNode(
     subtypeIndicationNode: Iir,
 ) -> ConstrainedCompositeSubtypeSymbol:
@@ -396,9 +421,18 @@ def GetCompositeConstrainedSubtypeFromNode(
     typeMarkName = GetNameOfNode(typeMark)
     simpleTypeMark = SimpleName(typeMark, typeMarkName)
 
-    constraints = GetArrayConstraintsFromSubtypeIndication(subtypeIndicationNode)
-    return ConstrainedCompositeSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraints)
+    subtypeKind = GetIirKindOfNode(subtypeIndicationNode)
 
+    if subtypeKind == nodes.Iir_Kind.Record_Subtype_Definition:
+        constraints = GetRecordConstraintsFromSubtypeIndication(subtypeIndicationNode)
+
+        # Use those to create constrained subtype?
+        # return ConstrainedRecordSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, dict())
+
+    elif subtypeKind == nodes.Iir_Kind.Array_Subtype_Definition:
+        constraints = GetArrayConstraintsFromSubtypeIndication(subtypeIndicationNode)
+
+    return ConstrainedCompositeSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraints)
 
 @export
 def GetSubtypeFromNode(subtypeNode: Iir) -> Symbol:
