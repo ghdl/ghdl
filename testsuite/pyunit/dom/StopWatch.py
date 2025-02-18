@@ -80,6 +80,8 @@ class Designs(TestCase):
 
 class Display(Designs):
     def test_Encoder(self):
+        print()
+
         design = Design()
         for lib, file in self._encoderFiles:
             library = design.GetLibrary(lib)
@@ -89,6 +91,8 @@ class Display(Designs):
         self.assertEqual(len(self._encoderFiles), len(design.Documents))
 
     def test_Display(self):
+        print()
+
         design = Design()
         for lib, file in self._displayFiles:
             library = design.GetLibrary(lib)
@@ -98,6 +102,8 @@ class Display(Designs):
         self.assertEqual(len(self._displayFiles), len(design.Documents))
 
     def test_StopWatch(self):
+        print()
+
         design = Design()
         for lib, file in self._stopwatchFiles:
             library = design.GetLibrary(lib)
@@ -110,6 +116,7 @@ class Display(Designs):
 class CompileOrder(Designs):
     def test_Encoder(self):
         print()
+
         design = Design()
         design.LoadDefaultLibraries()
         t1 = time_perf_counter()
