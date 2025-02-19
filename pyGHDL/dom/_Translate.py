@@ -30,10 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+
 """
 This module offers helper functions to translate often used IIR substructures to pyGHDL.dom (pyVHDLModel) constructs.
 """
-
 from typing import List, Generator, Type
 
 from pyTooling.Decorators import export
@@ -77,8 +77,11 @@ from pyGHDL.dom.Symbol import (
     SimpleObjectOrFunctionCallSymbol,
     SimpleSubtypeSymbol,
     ConstrainedCompositeSubtypeSymbol,
+    ConstrainedArraySubtypeSymbol,
+    ConstrainedRecordSubtypeSymbol,
     IndexedObjectOrFunctionCallSymbol,
     ConstrainedScalarSubtypeSymbol,
+    RecordElementSymbol,
 )
 from pyGHDL.dom.Type import (
     IntegerType,
@@ -227,6 +230,7 @@ def GetArrayConstraintsFromSubtypeIndication(
     subtypeIndication: Iir,
 ) -> List:
     constraints = []
+
     for constraint in utils.flist_iter(nodes.Get_Index_Constraint_List(subtypeIndication)):
         constraintKind = GetIirKindOfNode(constraint)
         if constraintKind == nodes.Iir_Kind.Range_Expression:
@@ -349,6 +353,8 @@ def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: s
         return GetScalarConstrainedSubtypeFromNode(subtypeIndicationNode)
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
         return GetCompositeConstrainedSubtypeFromNode(subtypeIndicationNode)
+    elif kind == nodes.Iir_Kind.Record_Subtype_Definition:
+        return GetCompositeConstrainedSubtypeFromNode(subtypeIndicationNode)
     else:
         raise DOMException(f"Unknown kind '{kind.name}' for an subtype indication in a {entity} of `{name}`.")
 
@@ -378,6 +384,23 @@ def GetScalarConstrainedSubtypeFromNode(
 
 
 @export
+def GetRecordConstraintsFromSubtypeIndication(
+    subtypeIndicationNode: Iir
+) -> List:
+    chain = nodes.Get_Owned_Elements_Chain(subtypeIndicationNode)
+    constraints = dict()
+
+    for constraint in utils.chain_iter(chain):
+        symbol = RecordElementSymbol(constraint, GetNameOfNode(constraint))
+
+        subtypeIndication = nodes.Get_Subtype_Indication(constraint)
+
+        for indexConstraint in utils.flist_iter(nodes.Get_Index_Constraint_List(subtypeIndication)):
+            constraints[symbol] = GetExpressionFromNode(indexConstraint)
+
+    return constraints
+
+@export
 def GetCompositeConstrainedSubtypeFromNode(
     subtypeIndicationNode: Iir,
 ) -> ConstrainedCompositeSubtypeSymbol:
@@ -385,9 +408,15 @@ def GetCompositeConstrainedSubtypeFromNode(
     typeMarkName = GetNameOfNode(typeMark)
     simpleTypeMark = SimpleName(typeMark, typeMarkName)
 
-    constraints = GetArrayConstraintsFromSubtypeIndication(subtypeIndicationNode)
-    return ConstrainedCompositeSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraints)
+    subtypeKind = GetIirKindOfNode(subtypeIndicationNode)
 
+    if subtypeKind == nodes.Iir_Kind.Record_Subtype_Definition:
+        constraints = GetRecordConstraintsFromSubtypeIndication(subtypeIndicationNode)
+        return ConstrainedRecordSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraints)
+
+    elif subtypeKind == nodes.Iir_Kind.Array_Subtype_Definition:
+        constraints = GetArrayConstraintsFromSubtypeIndication(subtypeIndicationNode)
+        return ConstrainedArraySubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraints)
 
 @export
 def GetSubtypeFromNode(subtypeNode: Iir) -> Symbol:

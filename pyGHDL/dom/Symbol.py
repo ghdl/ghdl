@@ -33,7 +33,7 @@
 """
 This module implements derived symbol classes from :mod:`pyVHDLModel.Symbol`.
 """
-from typing import List
+from typing import List, Mapping
 
 from pyTooling.Decorators import export, InheritDocString
 
@@ -50,15 +50,17 @@ from pyVHDLModel.Symbol import EntityInstantiationSymbol as VHDLModel_EntityInst
 from pyVHDLModel.Symbol import ComponentInstantiationSymbol as VHDLModel_ComponentInstantiationSymbol
 from pyVHDLModel.Symbol import ConfigurationInstantiationSymbol as VHDLModel_ConfigurationInstantiationSymbol
 from pyVHDLModel.Symbol import SimpleSubtypeSymbol as VHDLModel_SimpleSubtypeSymbol
+from pyVHDLModel.Symbol import RecordElementSymbol as VHDLModel_RecordElementSymbol
 from pyVHDLModel.Symbol import ConstrainedScalarSubtypeSymbol as VHDLModel_ConstrainedScalarSubtypeSymbol
 from pyVHDLModel.Symbol import ConstrainedCompositeSubtypeSymbol as VHDLModel_ConstrainedCompositeSubtypeSymbol
+from pyVHDLModel.Symbol import ConstrainedRecordSubtypeSymbol as VHDLModel_ConstrainedRecordSubtypeSymbol
+from pyVHDLModel.Symbol import ConstrainedArraySubtypeSymbol as VHDLModel_ConstrainedArraySubtypeSymbol
 from pyVHDLModel.Symbol import SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol
 from pyVHDLModel.Symbol import IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol
 
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom.Range import Range
-
 
 @export
 class LibraryReferenceSymbol(VHDLModel_LibraryReferenceSymbol, DOMMixin):
@@ -316,6 +318,23 @@ class ConstrainedCompositeSubtypeSymbol(VHDLModel_ConstrainedCompositeSubtypeSym
     def parse(cls, node: Iir):
         pass
 
+@export
+class ConstrainedArraySubtypeSymbol(VHDLModel_ConstrainedArraySubtypeSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_ConstrainedArraySubtypeSymbol)
+    def __init__(self, node: Iir, subtypeName: Name, constraints: List):
+        super().__init__(subtypeName, constraints)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(self):
+        pass
+
+@export
+class ConstrainedRecordSubtypeSymbol(VHDLModel_ConstrainedRecordSubtypeSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_ConstrainedRecordSubtypeSymbol)
+    def __init__(self, node: Iir, subtypeName: Name, constraints: Mapping):
+        super().__init__(subtypeName, constraints)
+        DOMMixin.__init__(self, node)
 
 @export
 class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbol, DOMMixin):
@@ -332,6 +351,12 @@ class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbo
 
         return cls(node, name)
 
+@export
+class RecordElementSymbol(VHDLModel_RecordElementSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_RecordElementSymbol)
+    def __init__(self, node: Iir, name: Name) -> None:
+        super().__init__(name)
+        DOMMixin.__init__(self, node)
 
 @export
 class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSymbol, DOMMixin):
