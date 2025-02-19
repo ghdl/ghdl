@@ -395,30 +395,12 @@ def GetRecordConstraintsFromSubtypeIndication(
     constraints = dict()
 
     for constraint in utils.chain_iter(chain):
-        # element: Record_Element_Constraint
         symbol = RecordElementSymbol(constraint, GetNameOfNode(constraint))
 
-        # I think this is always the case?
-        constraintKind = GetIirKindOfNode(constraint)
+        subtypeIndication = nodes.Get_Subtype_Indication(constraint)
 
-        if constraintKind == nodes.Iir_Kind.Record_Element_Constraint:
-            arraySubtype = nodes.Get_Subtype_Indication(constraint)
-
-            for indexConstraint in utils.flist_iter(nodes.Get_Index_Constraint_List(arraySubtype)):
-                # Could be range exp. attribute name, maybe others?
-                indexKind = GetIirKindOfNode(indexConstraint)
-
-                if indexKind == nodes.Iir_Kind.Range_Expression:
-                    constraints[symbol] = RangeExpression.parse(indexConstraint)
-                else:
-                    prefixName = GetName(nodes.Get_Prefix(indexConstraint))
-
-                    # constraints[symbol] = ? # Needs to be a range...
-        else:
-            position = Position.parse(constraint)
-            raise DOMException(
-                f"Unknown record constraint kind '{constraintKind.name}': in expression '{subtypeIndicationNode}' at {position}"
-            )
+        for indexConstraint in utils.flist_iter(nodes.Get_Index_Constraint_List(subtypeIndication)):
+            constraints[symbol] = GetExpressionFromNode(indexConstraint)
 
     return constraints
 
