@@ -30,9 +30,6 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-# Remove
-import code
-
 from typing import List, Union
 
 from pyTooling.Decorators import export

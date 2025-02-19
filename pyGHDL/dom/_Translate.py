@@ -34,10 +34,6 @@
 """
 This module offers helper functions to translate often used IIR substructures to pyGHDL.dom (pyVHDLModel) constructs.
 """
-
-# Remove:
-import code
-
 from typing import List, Generator, Type
 
 from pyTooling.Decorators import export
