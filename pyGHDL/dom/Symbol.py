@@ -326,7 +326,7 @@ class ConstrainedArraySubtypeSymbol(VHDLModel_ConstrainedArraySubtypeSymbol, DOM
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse():
+    def parse(self):
         pass
 
 @export

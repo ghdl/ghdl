@@ -458,12 +458,11 @@ class PrettyPrint:
             constraints = []
             # Constraints: Dict[RecordElementSymbol, Any]
 
-            for element, constraint  in subtypeIndication.Constraints.items():
+            for constraint  in subtypeIndication.Constraints.values():
                 constraints.append(str(constraint))
 
             return f"{subtypeIndication.Name.Identifier}({', '.join(constraints)})"
         else:
-            
             raise PrettyPrintException(
                 f"Unhandled subtype kind '{subtypeIndication.__class__.__name__}' for {entity} '{name}'."
             )
