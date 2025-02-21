@@ -25,7 +25,7 @@ This directory contains the sources of GHDL, the open-source analyzer, compiler,
 
 # Table of Contents
 
-- [Main Features](#main-features) 
+- [Main Features](#main-features)
 - [Third-Party Integrations](#third-party-integrations)
 - [Getting GHDL](#getting-ghdl)
 - [Benefits of Using GHDL](#benefits-of-using-ghdl)
@@ -76,10 +76,10 @@ Together, these third-party integrations make GHDL a comprehensive tool for digi
   - After each successful CI run, [nightly](https://github.com/ghdl/ghdl/releases/tag/nightly) tarballs/zipfiles for Ubuntu and Windows (MSYS2) are updated. These nightly builds provide access to the latest features and updates, which may not yet be available in the package manager repositories.
   - If you need to set up GHDL in a Continuous Integration (CI) pipeline, the [setup-ghdl-ci](https://github.com/ghdl/setup-ghdl-ci) GitHub Action allows you to configure GHDL with minimal effort. It provides a simple and efficient way to integrate GHDL into your CI workflows with just a few lines of configuration.
 
-- **Using Docker**:  
+- **Using Docker**:
   For those who prefer containerization, GHDL is also available as Docker images. This is especially useful if you want to avoid managing dependencies manually or need a consistent environment across different machines. You can use containers from either [ghdl/docker](https://github.com/ghdl/docker) or [hdl/containers](https://github.com/hdl/containers), both of which offer pre-configured environments with GHDL installed. Running GHDL inside a Docker container ensures that your setup remains isolated from your host system, making it easier to maintain and replicate across different platforms. This option is ideal for users looking for a streamlined, hassle-free installation.
 
-- **Building GHDL from Source**:  
+- **Building GHDL from Source**:
   Advanced users can opt to build GHDL from source, allowing for customization and access to experimental features. Building from source can also be useful for platforms or configurations not covered by pre-built packages. The [Building GHDL guide](https://ghdl.github.io/ghdl/development/building/index.html) provides detailed instructions on how to compile GHDL, including selecting your preferred backend (LLVM, GCC, or mcode). This process gives users full control over their setup and allows them to tailor GHDL to their specific needs.
 
 - **Platform-Specific Notes**:
@@ -104,7 +104,7 @@ GHDL welcomes contributions from the community. Whether you're interested in imp
 Here’s how you can start contributing:
 
 1. **Find an issue to work on**: Check out the [open issues](https://github.com/ghdl/ghdl/issues) on the GitHub repository. Issues are often labeled by difficulty or type (e.g., "good first issue" for beginners). You can also propose your own ideas or enhancements.
-   
+
 2. **Fork and clone the repository**: Once you’ve chosen an issue to work on, fork the GHDL repository to your own GitHub account. Clone the forked repository to your local machine to make changes.
 
 3. **Create a new branch**: It’s good practice to create a new branch for each issue or feature you’re working on. This helps keep your changes isolated and makes it easier for the maintainers to review your work.
