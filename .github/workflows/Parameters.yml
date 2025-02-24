@@ -40,6 +40,9 @@ on:
       pacghdl_version:
         description: "GHDL's version for MSYS2."
         value: ${{ jobs.Parameters.outputs.pacghdl_version }}
+      setup_version:
+        description: "GHDL's version for setup-ghdl."
+        value: ${{ jobs.Parameters.outputs.setup_version }}
       ghdl_basename:
         description: "Artifact basename for GHDL."
         value: ${{ inputs.package_name }}
@@ -61,6 +64,7 @@ jobs:
       ghdl_version:    ${{ steps.params.outputs.ghdl_version }}
       pyghdl_version:  ${{ steps.params.outputs.pyghdl_version }}
       pacghdl_version: ${{ steps.params.outputs.pacghdl_version }}
+      setup_version:   ${{ steps.params.outputs.setup_version }}
 
     steps:
       - name: '⏬ Checkout'
@@ -87,14 +91,33 @@ jobs:
           ghdl_version=${ghdl_version}
           EOF
 
-          pyghdl_version=${ghdl_version/-dev/.dev0}
+          if [[ "${ghdl_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            pyghdl_version="${ghdl_version}"
+            pacghdl_version="${ghdl_version}"
+            setup_version="${ghdl_version}"
+          elif [[ "${ghdl_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-dev$ ]]; then
+            pyghdl_version="${ghdl_version/-dev/.dev0}"
+            pacghdl_version="${ghdl_version/-dev/.dev}-1"
+            setup_version="nightly"
+          elif [[ "${ghdl_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+$ ]]; then
+            pyghdl_version="${ghdl_version/-rc/rc}"
+            pacghdl_version="${ghdl_version/-rc/.rc}-1"
+            setup_version="${ghdl_version}"
+          else
+            echo "::error title=Parameters::Unsupported GHDL version pattern '${ghdl_version}'."
+            exit 1
+          fi
+
           tee -a "${GITHUB_OUTPUT}" <<EOF
           pyghdl_version=${pyghdl_version}
           EOF
 
-          pacghdl_version=${ghdl_version/-dev/.dev-1}
           tee -a "${GITHUB_OUTPUT}" <<EOF
           pacghdl_version=${pacghdl_version}
+          EOF
+
+          tee -a "${GITHUB_OUTPUT}" <<EOF
+          setup_version=${setup_version}
           EOF
 
           cat "${GITHUB_OUTPUT}"
