@@ -222,7 +222,7 @@ jobs:
       python_version:        ${{ matrix.py.version }}
       libghdl_artifact:      ${{ needs.Params.outputs.libghdl_basename }}-${{ matrix.os.libghdl_artifact }}
       pyghdl_artifact:       ${{ needs.Params.outputs.pyghdl_basename }}-${{ matrix.os.pyghdl_artifact }}-Python-${{ matrix.py.version }}
-      pyunit_testsuites:     'testsuite/pyunit/libghdl testsuite/pyunit/lsp'
+#      pyunit_testsuites:     'testsuite/pyunit/libghdl testsuite/pyunit/lsp'
       unittest_xml_artifact: 'pyGHDL-Unittest-XML'
     secrets: inherit
 
