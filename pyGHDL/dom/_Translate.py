@@ -79,7 +79,9 @@ from pyGHDL.dom.Symbol import (
     SimpleSubtypeSymbol,
     ConstrainedArraySubtypeSymbol,
     IndexedObjectOrFunctionCallSymbol,
-    ConstrainedScalarSubtypeSymbol, ConstrainedRecordSubtypeSymbol, RecordElementSymbol,
+    ConstrainedScalarSubtypeSymbol,
+    ConstrainedRecordSubtypeSymbol,
+    RecordElementSymbol,
 )
 from pyGHDL.dom.Type import (
     IntegerType,
@@ -927,8 +929,10 @@ def GetConcurrentStatementsFromChainedNodes(
                 yield EntityInstantiation.parse(statement, instantiatedUnit, label)
             elif instantiatedUnitKind == nodes.Iir_Kind.Entity_Aspect_Configuration:
                 yield ConfigurationInstantiation.parse(statement, instantiatedUnit, label)
-            elif (instantiatedUnitKind == nodes.Iir_Kind.Simple_Name or
-                  instantiatedUnitKind == nodes.Iir_Kind.Selected_Name):
+            elif (
+                instantiatedUnitKind == nodes.Iir_Kind.Simple_Name
+                or instantiatedUnitKind == nodes.Iir_Kind.Selected_Name
+            ):
                 yield ComponentInstantiation.parse(statement, instantiatedUnit, label)
             else:
                 raise DOMException(
@@ -945,7 +949,9 @@ def GetConcurrentStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Psl_Assert_Directive:
             yield ConcurrentAssertStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Simple_Simultaneous_Statement:
-            WarningCollector.Raise(f"[NOT IMPLEMENTED] Simple simultaneous statement (label: '{label}') at line {position.Line}")
+            WarningCollector.Raise(
+                f"[NOT IMPLEMENTED] Simple simultaneous statement (label: '{label}') at line {position.Line}"
+            )
         else:
             raise DOMException(f"Unknown statement of kind '{kind.name}' in {entity} '{name}' at {position}.")
 

@@ -135,7 +135,9 @@ class Entity(VHDLModel_Entity, DOMMixin):
         statements: Iterable["ConcurrentStatement"] = None,
         documentation: str = None,
     ) -> None:
-        super().__init__(identifier, contextItems, genericItems, portItems, declaredItems, statements, documentation, None)
+        super().__init__(
+            identifier, contextItems, genericItems, portItems, declaredItems, statements, documentation, None
+        )
         DOMMixin.__init__(self, node)
 
     @classmethod
