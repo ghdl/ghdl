@@ -20,7 +20,7 @@ on:
         required: true
         type: string
       python_version:
-        description: 'Python version to use for püackaging.'
+        description: 'Python version to use for packaging.'
         required: true
         type: string
       backend:
