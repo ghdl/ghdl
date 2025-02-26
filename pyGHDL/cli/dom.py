@@ -37,7 +37,7 @@ from pathlib import Path
 from platform import system as platform_system
 from textwrap import wrap, dedent
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, readonly
 from pyTooling.Attributes import Attribute
 from pyTooling.Attributes.ArgParse import ArgParseHelperMixin, DefaultHandler, CommandHandler, CommandLineArgument
 from pyTooling.Attributes.ArgParse.Argument import StringArgument

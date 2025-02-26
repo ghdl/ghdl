@@ -112,7 +112,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.pyghdl_artifact }}
-          path: dist/pyGHDL*.whl
+          path: dist/pyghdl*.whl
           if-no-files-found: error
 
   Test:
