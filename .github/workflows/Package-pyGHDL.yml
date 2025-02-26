@@ -203,26 +203,27 @@ jobs:
         with:
           name: ${{ inputs.pyghdl_artifact }}
           path: wheels
+          investigate: true
 
       - name: 🔧 Install dependencies (Ubuntu)
         if: startsWith(inputs.os_image, 'ubuntu')
         run: |
           sudo apt-get install -y --no-install-recommends libgnat-13
-          python -m pip install -v --disable-pip-version-check ./wheels/pyGHDL-*.whl
+          python -m pip install -v --disable-pip-version-check ./wheels/pyghdl-*.whl
           python -m pip install --disable-pip-version-check -r testsuite/requirements.txt
 
       - name: 🔧 Install dependencies (Windows)
         if: startsWith(inputs.os_image, 'windows') && inputs.runtime == ''
         run: |
-          python -m pip install -v --disable-pip-version-check (Get-Item .\wheels\pyGHDL-*.whl).FullName
+          python -m pip install -v --disable-pip-version-check (Get-Item .\wheels\pyghdl-*.whl).FullName
           python -m pip install --disable-pip-version-check -r testsuite\requirements.txt
 
       - name: 🔧 Install dependencies (MSYS2)
         if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
         shell: "msys2 {0}"
         run: |
-          python -m pip install -v --disable-pip-version-check ./wheels/pyGHDL-*.whl
-          python -m pip install --disable-pip-version-check -r testsuite/requirements.txt
+          python -m pip install -v --disable-pip-version-check --break-system-packages ./wheels/pyGHDL-*.whl
+          python -m pip install --disable-pip-version-check --break-system-packages -r testsuite/requirements.txt
 
       - name: List pyGHDL installation directory (Ubuntu)
         if: startsWith(inputs.os_image, 'ubuntu')
