@@ -9,16 +9,20 @@ on:
       os_name:
         required: true
         type: string
-      runtime:
-        description: 'MSYS2 runtime if MSYS2 is used.'
-        required: true
-        type: string
       ghdl_version:
         description: 'Version of the GHDL.'
         required: true
         type: string
+      runtime:
+        description: 'MSYS2 runtime if MSYS2 is used.'
+        required: true
+        type: string
       ghdl_backend:
         description: 'GHDL''s backend.'
+        required: true
+        type: string
+      expected_ghdl_version:
+        description: 'Expected version of the GHDL.'
         required: true
         type: string
 
@@ -49,7 +53,7 @@ jobs:
       - name: Setup GHDL ${{ inputs.ghdl_backend }}
         uses: ghdl/setup-ghdl@v1
         with:
-          version: nightly
+          version: ${{ inputs.ghdl_version }}
           backend: ${{ inputs.ghdl_backend }}
           runtime: ${{ inputs.runtime }}
           investigate: true
@@ -64,7 +68,7 @@ jobs:
 
           printf "which ghdl: %s\n" "$(which ghdl)"
 
-          expected="${{ inputs.ghdl_version }}"
+          expected="${{ inputs.expected_ghdl_version }}"
           printf "%s" "Verify GHDL version '${expected}' ... "
           if [[ "$(ghdl --version | head -n 1)" =~ ${expected//./\\.} ]]; then
             printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
@@ -86,7 +90,7 @@ jobs:
 
           printf "which ghdl: %s\n" "$(which ghdl)"
 
-          expected="${{ inputs.ghdl_version }}"
+          expected="${{ inputs.expected_ghdl_version }}"
           printf "%s" "Verify GHDL version '${expected}' ... "
           if [[ "$(ghdl --version | head -n 1)" =~ ${expected//./\\.} ]]; then
             printf "${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "[OK]"
