@@ -37,7 +37,8 @@ architecture rtl of sync_Bits is
 begin
 	gen : for i in Input'range generate
 	begin
-		bit: component work.sync_Bit
+--		bit: component work.sync_Bit
+		bit: entity work.sync_Bit
 			generic map (
 				STAGES => STAGES
 			)
