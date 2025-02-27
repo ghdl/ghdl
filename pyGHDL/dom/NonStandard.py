@@ -38,9 +38,10 @@
 import ctypes
 import time
 from pathlib import Path
-from typing import Any, Optional as Nullable
+from typing import Any, Optional as Nullable, List
 
-from pyTooling.Decorators import export, InheritDocString
+from pyTooling.Decorators import export, InheritDocString, readonly
+from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel import VHDLVersion, IEEEFlavor
 from pyVHDLModel import Design as VHDLModel_Design
@@ -88,12 +89,16 @@ class Design(VHDLModel_Design):
     _loadDefaultLibraryTime: Nullable[float]
     _analyzeTime: Nullable[float]
 
+    _warnings: List
+
     @InheritDocString(VHDLModel_Design)
     def __init__(self, name: str = None) -> None:
         super().__init__(name)
 
         self._loadDefaultLibraryTime = None
         self._analyzeTime = None
+
+        self._warnings = []
 
         self.__ghdl_init()
 
@@ -128,7 +133,8 @@ class Design(VHDLModel_Design):
     def Analyze(self):
         t1 = time.perf_counter()
 
-        super().Analyze()
+        with WarningCollector(self._warnings) as warnings:
+            super().Analyze()
 
         self._analyzeTime = time.perf_counter() - t1
 
@@ -141,6 +147,8 @@ class Library(VHDLModel_Library):
 @export
 class Document(VHDLModel_Document):
     _filename: Path
+    _warnings: List
+
     __ghdlFileID: Any
     __ghdlSourceFileEntry: Any
     __ghdlFile: Any
@@ -156,9 +164,10 @@ class Document(VHDLModel_Document):
         dontParse: bool = False,
         dontTranslate: bool = False,
     ) -> None:
-        super().__init__(path)
+        super().__init__(path, parent=None)
 
         self._filename = path
+        self._warnings = []
 
         if sourceCode is None:
             self.__loadFromPath()
@@ -182,7 +191,8 @@ class Document(VHDLModel_Document):
 
             if not dontTranslate:
                 t1 = time.perf_counter()
-                self.translate()
+                with WarningCollector(self._warnings) as warnings:
+                    self.translate()
                 self.__domTranslateTime = time.perf_counter() - t1
 
     def __loadFromPath(self):
@@ -281,10 +291,10 @@ class Document(VHDLModel_Document):
             else:
                 raise DOMException(f"Unknown design unit kind '{nodeKind.name}'.")
 
-    @property
+    @readonly
     def LibGHDLProcessingTime(self) -> float:
         return self.__ghdlProcessingTime
 
-    @property
+    @readonly
     def DOMTranslationTime(self) -> float:
         return self.__domTranslateTime

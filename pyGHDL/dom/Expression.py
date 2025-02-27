@@ -509,10 +509,7 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
                 rangeKind = GetIirKindOfNode(choiceRange)
                 if rangeKind == nodes.Iir_Kind.Range_Expression:
                     rng = GetRangeFromNode(choiceRange)
-                elif rangeKind in (
-                    nodes.Iir_Kind.Attribute_Name,
-                    nodes.Iir_Kind.Parenthesis_Name,
-                ):
+                elif rangeKind in (nodes.Iir_Kind.Attribute_Name, nodes.Iir_Kind.Parenthesis_Name):
                     rng = GetName(choiceRange)
                 else:
                     pos = Position.parse(item)

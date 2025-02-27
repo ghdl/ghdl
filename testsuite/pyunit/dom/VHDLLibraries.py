@@ -58,36 +58,56 @@ design = Design()
 
 @mark.parametrize("file", [str(f.relative_to(_IEEE2008_ROOT)) for f in _IEEE2008_ROOT.glob("*.vhdl")])
 def test_IEEE2008(file):
+    print()
+
     filePath = _IEEE2008_ROOT / file
 
     lib = design.GetLibrary("ieee2008")
     document = Document(filePath)
     design.AddDocument(document, lib)
+    print(f"{document.Path}:")
+    for warning in document._warnings:
+        print(f"  {warning}")
 
 
 @mark.parametrize("file", [str(f.relative_to(_MENTOR_ROOT)) for f in _MENTOR_ROOT.glob("*.vhdl")])
 def test_Mentor(file):
+    print()
+
     filePath = _MENTOR_ROOT / file
 
     lib = design.GetLibrary("mentor")
     document = Document(filePath)
     design.AddDocument(document, lib)
+    print(f"{document.Path}:")
+    for warning in document._warnings:
+        print(f"  {warning}")
 
 
 @mark.parametrize("file", [str(f.relative_to(_SYNOPSYS_ROOT)) for f in _SYNOPSYS_ROOT.glob("*.vhdl")])
 def test_Synopsys(file):
+    print()
+
     filePath = _SYNOPSYS_ROOT / file
 
     lib = design.GetLibrary("synopsys")
     document = Document(filePath)
     design.AddDocument(document, lib)
+    print(f"{document.Path}:")
+    for warning in document._warnings:
+        print(f"  {warning}")
 
 
 @mark.xfail(reason="Needs further investigations.")
 @mark.parametrize("file", [str(f.relative_to(_VITAL_ROOT)) for f in _VITAL_ROOT.glob("*.vhdl")])
 def test_Vital(file):
+    print()
+
     filePath = _VITAL_ROOT / file
 
     lib = design.GetLibrary("vital")
     document = Document(filePath)
     design.AddDocument(document, lib)
+    print(f"{document.Path}:")
+    for warning in document._warnings:
+        print(f"  {warning}")

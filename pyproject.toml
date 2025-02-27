@@ -2,7 +2,7 @@
 requires = [
   "setuptools ~= 75.5",
   "wheel ~= 0.45",
-  "pyTooling ~= 8.1"
+  "pyTooling ~= 8.2"
 ]
 build-backend = "setuptools.build_meta"
 

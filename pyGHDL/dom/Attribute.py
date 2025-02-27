@@ -33,6 +33,7 @@
 from typing import List
 
 from pyTooling.Decorators import export
+from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel.Name import Name
 from pyVHDLModel.Symbol import Symbol
@@ -119,7 +120,7 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
             if nameKind == nodes.Iir_Kind.Simple_Name:
                 names.append(SimpleName(name, GetNameOfNode(name)))
             elif nameKind == nodes.Iir_Kind.Signature:
-                print("[NOT IMPLEMENTED] Signature name in attribute specifications.")
+                WarningCollector.Raise("[NOT IMPLEMENTED] Signature name in attribute specifications.")
             else:
                 position = Position.parse(name)
                 raise DOMException(

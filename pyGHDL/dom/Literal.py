@@ -31,6 +31,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 from pyTooling.Decorators import export
+from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel.Expression import NullLiteral as VHDLModel_NullLiteral
 from pyVHDLModel.Expression import EnumerationLiteral as VHDLModel_EnumerationLiteral
@@ -150,4 +151,4 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return cls(literalNode, value)
         else:
-            print("[NOT IMPLEMENTED] Bit String Literal not supported yet")
+            WarningCollector.Raise("[NOT IMPLEMENTED] Bit String Literal not supported yet")

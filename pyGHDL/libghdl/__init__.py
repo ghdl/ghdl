@@ -41,7 +41,7 @@ from pathlib import Path
 from shutil import which
 from typing import List, Optional
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, readonly
 from pyTooling.Common import getResourceFile
 from pyTooling.Platform import CurrentPlatform
 from pyTooling.Exceptions import ToolingException
@@ -68,7 +68,7 @@ class LibGHDLException(GHDLBaseException):
         super().__init__(message)
         self._internalErrors = errors
 
-    @property
+    @readonly
     def InternalErrors(self) -> Nullable[List[str]]:
         return self._internalErrors
 

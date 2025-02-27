@@ -66,7 +66,7 @@ from pyGHDL.dom.Subprogram import Function, Procedure
 @export
 class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
     def __init__(self, node: Iir, identifier: str) -> None:
-        super().__init__(identifier)
+        super().__init__(identifier, parent=None)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -93,7 +93,7 @@ class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, literals: List[EnumerationLiteral]) -> None:
-        super().__init__(identifier, literals)
+        super().__init__(identifier, literals, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -129,7 +129,7 @@ class IntegerType(VHDLModel_IntegerType, DOMMixin):
     """
 
     def __init__(self, node: Iir, typeName: str, rng: Union[Range, "Name"]) -> None:
-        super().__init__(typeName, rng)
+        super().__init__(typeName, rng, None)
         DOMMixin.__init__(self, node)
 
 
@@ -159,7 +159,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
         primaryUnit: str,
         units: List[Tuple[str, PhysicalIntegerLiteral]],
     ) -> None:
-        super().__init__(typeName, rng, primaryUnit, units)
+        super().__init__(typeName, rng, primaryUnit, units, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -218,7 +218,7 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, indices: List, elementSubtype: Symbol) -> None:
-        super().__init__(identifier, indices, elementSubtype)
+        super().__init__(identifier, indices, elementSubtype, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -272,7 +272,7 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol) -> None:
-        super().__init__(identifiers, subtype)
+        super().__init__(identifiers, subtype, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -314,7 +314,7 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, elements: List[RecordTypeElement] = None) -> None:
-        super().__init__(identifier, elements)
+        super().__init__(identifier, elements, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -379,7 +379,7 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, methods: Union[List, Iterator] = None) -> None:
-        super().__init__(identifier, methods)
+        super().__init__(identifier, methods, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -422,7 +422,7 @@ class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, declaredItems: Union[List, Iterator] = None) -> None:
-        super().__init__(identifier, declaredItems)
+        super().__init__(identifier, declaredItems, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -461,7 +461,7 @@ class AccessType(VHDLModel_AccessType, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, designatedSubtype: Symbol) -> None:
-        super().__init__(identifier, designatedSubtype)
+        super().__init__(identifier, designatedSubtype, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -496,7 +496,7 @@ class FileType(VHDLModel_FileType, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, designatedSubtype: Symbol) -> None:
-        super().__init__(identifier, designatedSubtype)
+        super().__init__(identifier, designatedSubtype, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -528,5 +528,5 @@ class Subtype(VHDLModel_Subtype, DOMMixin):
     """
 
     def __init__(self, node: Iir, subtypeName: str, symbol: Symbol) -> None:
-        super().__init__(subtypeName, symbol)
+        super().__init__(subtypeName, symbol, None)
         DOMMixin.__init__(self, node)

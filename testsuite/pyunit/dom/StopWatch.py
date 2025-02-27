@@ -80,29 +80,44 @@ class Designs(TestCase):
 
 class Display(Designs):
     def test_Encoder(self):
+        print()
+
         design = Design()
         for lib, file in self._encoderFiles:
             library = design.GetLibrary(lib)
             document = Document(self._sourceDirectory / file)
             design.AddDocument(document, library)
+            print(f"{document.Path}:")
+            for warning in document._warnings:
+                print(f"  {warning}")
 
         self.assertEqual(len(self._encoderFiles), len(design.Documents))
 
     def test_Display(self):
+        print()
+
         design = Design()
         for lib, file in self._displayFiles:
             library = design.GetLibrary(lib)
             document = Document(self._sourceDirectory / file)
             design.AddDocument(document, library)
+            print(f"{document.Path}:")
+            for warning in document._warnings:
+                print(f"  {warning}")
 
         self.assertEqual(len(self._displayFiles), len(design.Documents))
 
     def test_StopWatch(self):
+        print()
+
         design = Design()
         for lib, file in self._stopwatchFiles:
             library = design.GetLibrary(lib)
             document = Document(self._sourceDirectory / file)
             design.AddDocument(document, library)
+            print(f"{document.Path}:")
+            for warning in document._warnings:
+                print(f"  {warning}")
 
         self.assertEqual(len(self._stopwatchFiles), len(design.Documents))
 
@@ -110,6 +125,7 @@ class Display(Designs):
 class CompileOrder(Designs):
     def test_Encoder(self):
         print()
+
         design = Design()
         design.LoadDefaultLibraries()
         t1 = time_perf_counter()
@@ -117,39 +133,30 @@ class CompileOrder(Designs):
             library = design.GetLibrary(lib)
             document = Document(self._sourceDirectory / file)
             design.AddDocument(document, library)
-            print(dedent("""\
-                file: {}
-                  libghdl processing time: {:5.3f} us
-                  DOM translation time:    {:5.3f} us
+            print(dedent(f"""\
+                file: {document.Path}
+                  libghdl processing time: {document.LibGHDLProcessingTime * 10**6:5.3f} us
+                  DOM translation time:    {document.DOMTranslationTime * 10**6:5.3f} us
                 """
-                ).format(
-                    document.Path,
-                    document.LibGHDLProcessingTime * 10**6,
-                    document.DOMTranslationTime * 10**6,
-                )
-            )
+            ))
+            for warning in document._warnings:
+                print(f"  {warning}")
         pyGHDLTime = time_perf_counter() - t1
 
         design.Analyze()
 
         toplevel = [root.Value.Identifier for root in design.HierarchyGraph.IterateRoots()]
 
-        print(dedent("""
+        print(dedent(f"""
             pyGHDL:
-              sum:                       {:5.3f} us
+              sum:                       {pyGHDLTime * 10**6:5.3f} us
             Analysis:
-              default library load time: {:5.3f} us
-              dependency analysis time:  {:5.3f} us
-            Toplevel:                    {toplevel}
+              default library load time: {design._loadDefaultLibraryTime * 10**6:5.3f} us
+              dependency analysis time:  {design._analyzeTime * 10**6:5.3f} us
+            Toplevel:                    {", ".join(toplevel)}
             Compile order:\
             """
-            ).format(
-                pyGHDLTime * 10**6,
-                design._loadDefaultLibraryTime * 10**6,
-                design._analyzeTime * 10**6,
-                toplevel=", ".join(toplevel)
-            )
-        )
+        ))
         for i, document in enumerate(design.IterateDocumentsInCompileOrder()):
             print(f"  {i:<2}: {document.Path.relative_to(Path.cwd())}")
 

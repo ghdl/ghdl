@@ -53,6 +53,8 @@ design = Design()
 
 @mark.parametrize("parameters", [f"{i}:{f.relative_to(_TESTSUITE_ROOT)}" for i, f in enumerate(_SANITY_TESTS_ROOT.glob("**/*.vhdl"))])
 def test_AllVHDLSources(parameters):
+    print()
+
     id, file = parameters.split(":")
     filePath = _TESTSUITE_ROOT / file
 
@@ -61,3 +63,6 @@ def test_AllVHDLSources(parameters):
     lib = design.GetLibrary(f"sanity_{id}")
     document = Document(filePath, vhdlVersion=vhdlVersion)
     design.AddDocument(document, lib)
+    print(f"{document.Path}:")
+    for warning in document._warnings:
+        print(f"  {warning}")

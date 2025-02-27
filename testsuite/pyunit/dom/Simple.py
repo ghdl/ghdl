@@ -31,7 +31,6 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 from pathlib import Path
-from typing import TypeVar, Dict
 from unittest import TestCase
 
 from pyTooling.Common import firstValue
@@ -58,39 +57,59 @@ class SimpleEntity(TestCase):
     # 	library = Library()
 
     def test_Document(self):
+        print()
+
         design = Design()
         document = Document(self._filename)
         design.Documents.append(document)
+        print(f"{document.Path}:")
+        for warning in document._warnings:
+            print(f"  {warning}")
+        print("  Document documentation:")
+        for line in document.Documentation.splitlines():
+            print(f"    {line}")
 
         self.assertEqual(1, len(design.Documents))
-        print()
-        print(document.Documentation)
         self.assertEqual(4, len(document.Documentation.splitlines()))
 
     def test_Entity(self):
+        print()
+
         design = Design()
         document = Document(self._filename)
         design.Documents.append(document)
+        print(f"{document.Path}:")
+        for warning in document._warnings:
+            print(f"  {warning}")
 
         self.assertEqual(1, len(design.Documents[0].Entities))
 
         entity = firstValue(design.Documents[0].Entities)
+        print("  Entity documentation:")
+        for line in entity.Documentation.splitlines():
+            print(f"    {line}")
+
         self.assertEqual("Counter", entity.Identifier)
-        print()
-        print(entity.Documentation)
         self.assertEqual(11, len(entity.Documentation.splitlines()))
 
     def test_Architecture(self):
+        print()
+
         design = Design()
         document = Document(self._filename)
         design.Documents.append(document)
+        print(f"{document.Path}:")
+        for warning in document._warnings:
+            print(f"  {warning}")
 
         self.assertEqual(1, len(design.Documents[0].Architectures))
 
         architecture = firstValue(firstValue(design.Documents[0].Architectures))
+        print("  Architecture documentation:")
+        for line in architecture.Documentation.splitlines():
+            print(f"    {line}")
+
         self.assertEqual("rtl", architecture.Identifier)
-        print()
-        print(architecture.Documentation)
         self.assertEqual(1, len(architecture.Documentation.splitlines()))
 
 
@@ -107,37 +126,55 @@ class SimplePackage(TestCase):
     # 	library = Library()
 
     def test_Document(self):
+        print()
+
         design = Design()
         document = Document(self._filename)
         design.Documents.append(document)
+        print(f"{document.Path}:")
+        for warning in document._warnings:
+            print(f"  {warning}")
+        print("  Document documentation:")
+        for line in document.Documentation.splitlines():
+            print(f"    {line}")
 
         self.assertEqual(1, len(design.Documents))
-        print()
-        print(document.Documentation)
         self.assertEqual(4, len(document.Documentation.splitlines()))
 
     def test_Package(self):
+        print()
+
         design = Design()
         document = Document(self._filename)
         design.Documents.append(document)
+        print(f"{document.Path}:")
+        for warning in document._warnings:
+            print(f"  {warning}")
 
         self.assertEqual(1, len(design.Documents[0].Packages))
 
         package = firstValue(design.Documents[0].Packages)
+        print("  Package documentation:")
+        for line in package.Documentation.splitlines():
+            print(f"    {line}")
         self.assertEqual("utilities", package.Identifier)
-        print()
-        print(package.Documentation)
         self.assertEqual(1, len(package.Documentation.splitlines()))
 
     def test_PackageBody(self):
+        print()
+
         design = Design()
         document = Document(self._filename)
         design.Documents.append(document)
+        print(f"{document.Path}:")
+        for warning in document._warnings:
+            print(f"  {warning}")
 
         self.assertEqual(1, len(design.Documents[0].PackageBodies))
 
         packageBodies = firstValue(design.Documents[0].PackageBodies)
+        print("  Package Body documentation:")
+        for line in packageBodies.Documentation.splitlines():
+            print(f"    {line}")
         self.assertEqual("utilities", packageBodies.Identifier)
-        print()
-        print(packageBodies.Documentation)
         self.assertEqual(0, len(packageBodies.Documentation.splitlines()))
