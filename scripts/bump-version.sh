@@ -12,13 +12,24 @@ fi
 
 ver=$1
 
+# Version should be:
+case "$ver"@ in
+    [0-9].[0-9].[0-9]@) echo "Release version $ver";;
+    [0-9].[0-9].[0-9]-dev@) echo "Development branch $ver";;
+    [0-9].[0-9].[0-9]-rc[0-9]@) echo "Release candidate $ver";;
+    *) echo "Incorrect version name ($ver)"; exit 3;;
+esac
+
 set -e
 
 sed -i "s/^ghdl_version=.*/ghdl_version=\"$ver\"/" configure
 sed -i "s/^__version__ =.*/__version__ = \"$ver\"/" pyGHDL/__init__.py
 
+# Hyphen are not allowed in pkgver
+pkgver=$(echo $ver | sed 's/-/_/')
+
 for f in dist/msys2/*/PKGBUILD; do
-    sed -i "s/^pkgver=.*/pkgver=$ver/" $f
+    sed -i "s/^pkgver=.*/pkgver=$pkgver/" $f
 done
 
 echo "Done"
