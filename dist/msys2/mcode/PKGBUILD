@@ -2,7 +2,7 @@ _realname=ghdl
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}-mcode")
 provides=("${MINGW_PACKAGE_PREFIX}-${_realname}")
-pkgver=5.0.0.dev
+pkgver=$(sed -n -e '/^ghdl_version/s/ghdl_version="\(.*\)"/\1/p' ../../../configure | sed 's/-/./g')
 pkgrel=1
 pkgdesc="GHDL: the open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL (mcode backend) (mingw-w64)"
 arch=('any')
