@@ -25,12 +25,5 @@ set -e
 sed -i "s/^ghdl_version=.*/ghdl_version=\"$ver\"/" configure
 sed -i "s/^__version__ =.*/__version__ = \"$ver\"/" pyGHDL/__init__.py
 
-# Hyphen are not allowed in pkgver
-pkgver=$(echo $ver | sed 's/-/_/')
-
-for f in dist/msys2/*/PKGBUILD; do
-    sed -i "s/^pkgver=.*/pkgver=$pkgver/" $f
-done
-
 echo "Done"
 exit 0
