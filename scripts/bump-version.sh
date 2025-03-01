@@ -25,5 +25,11 @@ set -e
 sed -i "s/^ghdl_version=.*/ghdl_version=\"$ver\"/" configure
 sed -i "s/^__version__ =.*/__version__ = \"$ver\"/" pyGHDL/__init__.py
 
-echo "Done"
+echo "Next steps:"
+echo "git add -p"
+echo "git commit -m \"Bump version to $ver\""
+echo "git tag v$ver"
+echo "git push github release-vX"
+echo "git push github v$ver"
+
 exit 0
