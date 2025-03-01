@@ -1,4 +1,7 @@
-## [Next] 5.0
+## [2025-03-01] 5.0
+
+- Fix some crashes on errors on Windows x64 with mcode backend
+- Multiple minor fixes and improvements
 
 ## [2024-04-14] 4.1
 
