@@ -1222,9 +1222,9 @@ package body Netlists.Disp_Verilog is
                Inst);
          when Id_Resolver =>
             Disp_Template
-              ("  assign \o0 = \i0; \\(resolver)" & NL, Inst);
+              ("  assign \o0 = \i0; // resolver" & NL, Inst);
             Disp_Template
-              ("  assign \o0 = \i1; \\(resolver)" & NL, Inst);
+              ("  assign \o0 = \i1; // resolver" & NL, Inst);
          when others =>
             Disp_Instance_Gate (Inst);
       end case;
