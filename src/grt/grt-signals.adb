@@ -834,7 +834,7 @@ package body Grt.Signals is
                --  Set the last transaction of the driver.
                Driver.Last_Trans := Last;
                --  Cut the chain.  This is not strickly necessary, since
-               --  it will be overriden below, by appending TRANS to the
+               --  it will be overridden below, by appending TRANS to the
                --  driver.
                Last.Next := null;
                --  Free removed transactions.

@@ -1535,7 +1535,7 @@ package body Vhdl.Sem_Scopes is
               and then Is_Operation_For_Type (El, Base_Type)
             then
                if Get_Visible_Flag (El) then
-                  --  Implicit declaration EL was overriden by a user
+                  --  Implicit declaration EL was overridden by a user
                   --  declaration.  Don't make it visible.
                   Potentially_Add_Name (El);
                else

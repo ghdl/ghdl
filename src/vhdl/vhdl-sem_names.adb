@@ -386,7 +386,7 @@ package body Vhdl.Sem_Names is
                end if;
             when others =>
                --  Consider only visible declarations (case of an implicit
-               --  declaration that is overriden by explicit one).
+               --  declaration that is overridden by explicit one).
                if Get_Identifier (Decl) = Id and Get_Visible_Flag (Decl) then
                   Add_Result (Res, Decl);
                end if;

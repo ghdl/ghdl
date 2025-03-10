@@ -1347,7 +1347,7 @@ package body Vhdl.Configuration is
                      then
                         --  Could be a generic package, a generic type...
                         Error_Msg_Elab
-                          ("generic %n cannot be overriden (not a constant)",
+                          ("generic %n cannot be overridden (not a constant)",
                            +Gen_Id);
                      else
                         Override_Generic (Inter, Over.Value);
