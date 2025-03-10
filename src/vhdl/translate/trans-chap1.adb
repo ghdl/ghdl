@@ -58,7 +58,7 @@ package body Trans.Chap1 is
               and then Get_Constraint_State (El_Type) /= Fully_Constrained
             then
                --  Do not initialize unconstrained array.  They will have
-               --  to be overriden by user.
+               --  to be overridden by user.
                null;
             else
                Chap4.Elab_Object_Value (El, Val);

@@ -437,7 +437,7 @@ package body Grt.Change_Generics is
                   if Uc_Array.Base = Null_Address then
                      Error_S ("top-level generic '");
                      Diag_C (Obj_Rti.Name);
-                     Error_E ("' must be overriden (use -gGEN=VAL)");
+                     Error_E ("' must be overridden (use -gGEN=VAL)");
                   end if;
                end;
             end if;

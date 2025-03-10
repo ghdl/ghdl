@@ -26,6 +26,6 @@ package Grt.Change_Generics is
    procedure Change_All_Generics;
 
    --  Emit an error if a generic that required override (unconstrained array)
-   --  wasn't overriden.
+   --  wasn't overridden.
    procedure Check_Required_Generic_Override;
 end Grt.Change_Generics;

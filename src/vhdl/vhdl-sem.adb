@@ -3671,7 +3671,7 @@ package body Vhdl.Sem is
       Sem_Scopes.Use_All_Names (Standard_Package);
 
       --  Use pre-defined locations for STD and WORK library (as they may
-      --  be later overriden).
+      --  be later overridden).
       Set_Location (Libraries.Std_Library, Libraries.Library_Location);
       Set_Location (Library, Libraries.Library_Location);
 

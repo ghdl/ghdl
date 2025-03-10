@@ -30,7 +30,7 @@ package Verilog.Elaborate is
    --
    --  The design hierarchy is instantiated (until the generate blocks).
    --
-   --  Parameters are overriden.
+   --  Parameters are overridden.
    --
    --  Design hierarchy is analyzed.
    --   Declarations

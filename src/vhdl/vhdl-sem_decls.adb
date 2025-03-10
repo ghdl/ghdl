@@ -1635,7 +1635,7 @@ package body Vhdl.Sem_Decls is
         or else (Flags.Vhdl_Std > Vhdl_87
                  and then Ident in Std_Names.Name_Id_Vhdl93_Attributes)
       then
-         Error_Msg_Sem (+Decl, "predefined attribute %i overriden", +Decl);
+         Error_Msg_Sem (+Decl, "predefined attribute %i overridden", +Decl);
       end if;
       Sem_Scopes.Add_Name (Decl);
       Xref_Decl (Decl);
