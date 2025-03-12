@@ -1,0 +1,10 @@
+vunit formal_module (module(rtl)) {
+    default clock is rising_edge(clk_i);
+
+    alias a_my_signal is << signal b_block.my_signal : std_logic >>;
+    assert always a_my_signal = '0';
+
+    assert always << signal b_block.my_signal : std_logic >> = '0';
+
+--    assert always b_block.my_signal = '0';
+}
