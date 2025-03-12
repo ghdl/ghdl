@@ -27,8 +27,6 @@ with PSL.Nodes;
 with PSL.Subsets;
 with PSL.Types;
 
-with Elab.Vhdl_Expr;
-
 with Synth.Vhdl_Stmts;
 with Synth.Vhdl_Decls;
 with Synth.Vhdl_Expr;
@@ -349,53 +347,6 @@ package body Simul.Vhdl_Elab is
       end if;
    end Elab2_Object_Alias;
 
-   procedure Elab_External_Name (Inst : Synth_Instance_Acc; Name : Node)
-   is
-      Prev_Instance_Pool : constant Areapools.Areapool_Acc := Instance_Pool;
-      Marker : Mark_Type;
-
-      Prev : Valtyp;
-      Res : Valtyp;
-      Name_Typ : Type_Acc;
-   begin
-      Mark_Expr_Pool (Marker);
-      Instance_Pool := Global_Pool'Access;
-
-      Prev := Get_Value (Inst, Name);
-
-      --  Resolve the external name.
-      Res := Elab.Vhdl_Expr.Exec_External_Name (Inst, Name);
-
-      if Res /= No_Valtyp then
-         --  Rewrite the external name as an alias.
-         Name_Typ := Prev.Typ;
-         case Res.Val.Kind is
-            when Value_Signal
-              | Value_Memory =>
-               Prev.Val.all := (Kind => Value_Alias,
-                                A_Obj => Res.Val,
-                                A_Typ => Res.Typ,
-                                A_Off => No_Value_Offsets);
-            when others =>
-               raise Internal_Error;
-         end case;
-
-         --  Subtype conversion.
-         --  The type of the external name is Res.Typ, and the target type is
-         --  in Prev.Typ.  Need to do some gymnastic.
-         Prev.Typ := Res.Typ;
-         Prev := Elab.Vhdl_Expr.Exec_Subtype_Conversion
-           (Prev, Name_Typ, True, Name);
-         Convert_Type_Width (Prev.Typ);
-         Prev.Typ := Unshare (Prev.Typ, Instance_Pool);
-
-         Mutate_Object (Inst, Name, Prev);
-      end if;
-
-      Instance_Pool := Prev_Instance_Pool;
-      Release_Expr_Pool (Marker);
-   end Elab_External_Name;
-
    procedure Gather_Processes_Decl (Inst : Synth_Instance_Acc; Decl : Node) is
    begin
       case Get_Kind (Decl) is
@@ -537,7 +488,7 @@ package body Simul.Vhdl_Elab is
             null;
 
          when Iir_Kinds_External_Name =>
-            Elab_External_Name (Inst, Decl);
+            Synth.Vhdl_Decls.Synth_Concurrent_External_Name (Inst, Decl, Decl);
 
          when others =>
             Error_Kind ("gather_processes_decl", Decl);

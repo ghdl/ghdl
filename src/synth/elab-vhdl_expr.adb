@@ -519,6 +519,8 @@ package body Elab.Vhdl_Expr is
                      return null;
                   end if;
                end;
+            when Iir_Kind_Vunit_Declaration =>
+               return Get_Instance_Parent (Cur_Inst);
             when others =>
                Error_Kind ("exec_pathname_concurrent_region", Cur_Src);
          end case;

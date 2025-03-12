@@ -77,4 +77,9 @@ package Synth.Vhdl_Decls is
                                             Top_Level : Boolean);
    procedure Synth_Concurrent_Package_Instantiation
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Top_Level : Boolean);
+
+   --  Re-compute external name NAME and update DECL.
+   procedure Synth_Concurrent_External_Name
+     (Inst : Synth_Instance_Acc; Decl : Node; Name : Node);
+
 end Synth.Vhdl_Decls;

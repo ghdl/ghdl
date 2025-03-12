@@ -668,6 +668,55 @@ package body Synth.Vhdl_Decls is
       Create_Object (Syn_Inst, Decl, Res);
    end Synth_Object_Alias_Declaration;
 
+   procedure Synth_Concurrent_External_Name
+     (Inst : Synth_Instance_Acc; Decl : Node; Name : Node)
+   is
+      Prev_Instance_Pool : constant Areapools.Areapool_Acc := Instance_Pool;
+      Marker : Mark_Type;
+
+      Prev : Valtyp;
+      Res : Valtyp;
+      Name_Typ : Type_Acc;
+   begin
+      Mark_Expr_Pool (Marker);
+      Instance_Pool := Global_Pool'Access;
+
+      Prev := Get_Value (Inst, Decl);
+
+      --  Resolve the external name.
+      Res := Elab.Vhdl_Expr.Exec_External_Name (Inst, Name);
+
+      if Res /= No_Valtyp then
+         --  Rewrite the external name as an alias.
+         Name_Typ := Prev.Typ;
+         case Res.Val.Kind is
+            when Value_Signal
+              | Value_Memory
+              | Value_Net =>
+               Prev.Val.all := (Kind => Value_Alias,
+                                A_Obj => Res.Val,
+                                A_Typ => Res.Typ,
+                                A_Off => No_Value_Offsets);
+            when others =>
+               raise Internal_Error;
+         end case;
+
+         --  Subtype conversion.
+         --  The type of the external name is Res.Typ, and the target type is
+         --  in Prev.Typ.  Need to do some gymnastic.
+         Prev.Typ := Res.Typ;
+         Prev := Elab.Vhdl_Expr.Exec_Subtype_Conversion
+           (Prev, Name_Typ, True, Name);
+--         Convert_Type_Width (Prev.Typ);
+         Prev.Typ := Unshare (Prev.Typ, Instance_Pool);
+
+         Mutate_Object (Inst, Decl, Prev);
+      end if;
+
+      Instance_Pool := Prev_Instance_Pool;
+      Release_Expr_Pool (Marker);
+   end Synth_Concurrent_External_Name;
+
    procedure Synth_Concurrent_Object_Alias_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
@@ -675,48 +724,59 @@ package body Synth.Vhdl_Decls is
       Val : Valtyp;
       Aval : Valtyp;
       Obj : Value_Acc;
+      Name : Node;
       Base : Node;
       Off : Uns32;
    begin
       Val := Get_Value (Syn_Inst, Decl);
       pragma Assert (Val.Val.Kind = Value_Alias);
       Obj := Val.Val.A_Obj;
-      if Obj.Kind = Value_Signal then
-         Mark_Expr_Pool (Marker);
-
-         --  A signal must have been changed to a wire or a net, but the
-         --  aliases have not been updated.  Update here.
-         Base := Decl;
-         loop
-            Base := Get_Base_Name (Get_Name (Base));
-            exit when Get_Kind (Base) /= Iir_Kind_Object_Alias_Declaration;
-         end loop;
-
-         Aval := Synth_Expression (Syn_Inst, Base);
-
-         Off := Val.Val.A_Off.Net_Off;
-
-         --  Handle alias of alias here.
-         if Aval.Val.Kind = Value_Alias then
-            Aval := (Aval.Val.A_Typ, Aval.Val.A_Obj);
-         end if;
-
-         if Aval.Val.Kind = Value_Net then
-            --  Object is a net if it is not writable.  Extract the
-            --  bits for the alias.
-            Aval := (Val.Typ,
-                     Create_Value_Net (Build2_Extract
-                                         (Get_Build (Syn_Inst),
-                                          Get_Value_Net (Aval.Val),
-                                          Off, Val.Typ.W),
-                                       Instance_Pool));
-            Val.Val.A_Off := (0, 0);
-         else
-            Aval := Unshare (Aval, Instance_Pool);
-         end if;
-         Val.Val.A_Obj := Aval.Val;
-         Release_Expr_Pool (Marker);
+      if Obj.Kind /= Value_Signal then
+         return;
       end if;
+
+      --  A signal must have been changed to a wire or a net, but the
+      --  aliases have not been updated.  Update here.
+      Name := Get_Name (Decl);
+      if Get_Kind (Name) in Iir_Kinds_External_Name then
+         Synth_Concurrent_External_Name (Syn_Inst, Decl, Name);
+         return;
+      end if;
+
+      --  Root of the alias (handle alias of alias).
+      loop
+         Base := Get_Base_Name (Name);
+         exit when Get_Kind (Base) /= Iir_Kind_Object_Alias_Declaration;
+         Name := Get_Name (Base);
+      end loop;
+
+      Mark_Expr_Pool (Marker);
+
+      Aval := Synth_Expression (Syn_Inst, Base);
+
+      Off := Val.Val.A_Off.Net_Off;
+
+      --  Handle alias of alias here.
+      if Aval.Val.Kind = Value_Alias then
+         Aval := (Aval.Val.A_Typ, Aval.Val.A_Obj);
+      end if;
+
+      if Aval.Val.Kind = Value_Net then
+         --  Object is a net if it is not writable.  Extract the
+         --  bits for the alias.
+         Aval := (Val.Typ,
+                  Create_Value_Net (Build2_Extract
+                                      (Get_Build (Syn_Inst),
+                                       Get_Value_Net (Aval.Val),
+                                       Off, Val.Typ.W),
+                                      Instance_Pool));
+         Val.Val.A_Off := (0, 0);
+      else
+         Aval := Unshare (Aval, Instance_Pool);
+      end if;
+      Val.Val.A_Obj := Aval.Val;
+
+      Release_Expr_Pool (Marker);
    end Synth_Concurrent_Object_Alias_Declaration;
 
    procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc;

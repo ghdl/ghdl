@@ -1300,7 +1300,10 @@ package body Vhdl.Sem_Psl is
 
    procedure Sem_Psl_Verification_Unit (Unit : Iir)
    is
+      use Vhdl.Sem_Decls;
+
       Hier_Name : constant Iir := Get_Hierarchical_Name (Unit);
+      Implicit : Implicit_Declaration_Type;
       Entity : Iir;
       Arch : Iir;
       Item : Iir;
@@ -1347,6 +1350,8 @@ package body Vhdl.Sem_Psl is
             Sem_Scopes.Extend_Scope_Of_Block_Declarations (Arch);
          end if;
       end if;
+
+      Push_Signals_Declarative_Part (Implicit, Unit);
 
       Item := Get_Vunit_Item_Chain (Unit);
       while Item /= Null_Iir loop
@@ -1450,6 +1455,8 @@ package body Vhdl.Sem_Psl is
          Prev_Item := Item;
          Item := Get_Chain (Item);
       end loop;
+
+      Pop_Signals_Declarative_Part (Implicit);
 
       if Arch /= Null_Iir then
          Sem_Scopes.Close_Scope_Extension;
