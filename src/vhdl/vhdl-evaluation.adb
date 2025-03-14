@@ -3181,16 +3181,32 @@ package body Vhdl.Evaluation is
       Expr : constant Iir := Get_Expression (Conv);
       Val : Iir;
       Val_Type : Iir;
-      Conv_Type : Iir;
+      Conv_Type, Conv_Btype : Iir;
       Res : Iir;
    begin
       Val := Eval_Static_Expr (Expr);
       Val_Type := Get_Base_Type (Get_Type (Val));
-      Conv_Type := Get_Base_Type (Get_Type (Conv));
-      if Conv_Type = Val_Type then
+      Conv_Type := Get_Type (Conv);
+      Conv_Btype := Get_Base_Type (Conv_Type);
+      if Conv_Btype = Val_Type then
+         --  Same type, nothing to convert.
          Res := Build_Constant (Val, Orig);
+
+         if Get_Kind (Conv_Btype) = Iir_Kind_Array_Type_Definition then
+            case Get_Constraint_State (Conv_Type) is
+               when Unconstrained =>
+                  --  This is a no-op.  Reuse the subtype of the expression.
+                  Set_Type (Res, Get_Type (Val));
+               when Fully_Constrained =>
+                  --  Constraints are set by the type mark.
+                  null;
+               when Partially_Constrained =>
+                  --  TODO
+                  null;
+            end case;
+         end if;
       else
-         case Get_Kind (Conv_Type) is
+         case Get_Kind (Conv_Btype) is
             when Iir_Kind_Integer_Type_Definition =>
                case Get_Kind (Val_Type) is
                   when Iir_Kind_Integer_Type_Definition =>
