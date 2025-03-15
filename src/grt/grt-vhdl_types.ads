@@ -35,6 +35,12 @@ package Grt.Vhdl_Types is
    subtype Std_Integer_32 is Ghdl_I32;
    subtype Std_Integer_64 is Ghdl_I64;
 
+   type Std_Integer_32_Acc is access Std_Integer_32;
+   pragma Convention (C, Std_Integer_32_Acc);
+
+   type Std_Integer_64_Acc is access Std_Integer_64;
+   pragma Convention (C, Std_Integer_64_Acc);
+
    subtype Std_Integer is Ghdl_I32;
 
    type Std_Integer_Acc is access Std_Integer;

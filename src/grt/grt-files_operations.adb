@@ -482,11 +482,11 @@ package body Grt.Files_Operations is
 
    procedure Ghdl_Untruncated_Text_Read (File : Ghdl_File_Index;
                                          Buf : Ghdl_C_String;
-                                         Len : in out Std_Integer;
+                                         Len : in out Ghdl_Index_Type;
                                          Status : out Op_Status)
    is
       Stream : C_Files;
-      L : Natural;
+      L : Ghdl_Index_Type;
       C : int;
    begin
       Get_File (File, Stream, Status);
@@ -525,11 +525,11 @@ package body Grt.Files_Operations is
             C := C_LF;
          end if;
          L := L + 1;
-         Buf (L) := Character'Val (C);
+         Buf (Natural (L)) := Character'Val (C);
          exit when C = C_LF;
       end loop;
 
-      Len := Std_Integer (L);
+      Len := L;
    end Ghdl_Untruncated_Text_Read;
 
    procedure File_Close

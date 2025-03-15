@@ -412,22 +412,21 @@ package body Grt.Files_Lib is
       return 0;
    end Ghdl_Text_Read_Length;
 
-   procedure Ghdl_Untruncated_Text_Read
-     (File : Ghdl_File_Index; Str : Std_String_Ptr; Len : Std_Integer_Acc)
+   function Untruncated_Text_Read (File : Ghdl_File_Index;
+                                   Base : Std_String_Basep;
+                                   Maxlen : Ghdl_Index_Type)
+                                  return Ghdl_Index_Type
    is
       Stream : C_Files;
-      Max_Len : int;
       C : int;
       L : Ghdl_Index_Type;
    begin
       Stream := Get_File (File);
       Check_Read (File, True);
 
-      Max_Len := int (Str.Bounds.Dim_1.Length);
-
       --  Read at most LEN characters, stop at EOL.
       L := 0;
-      for I in 1 .. Max_Len loop
+      for I in 1 .. int (Maxlen) loop
          C := fgetc (Stream);
          exit when C < 0;
          --  Be nice with DOS files: handle CR/CR+LF/LF.
@@ -442,12 +441,35 @@ package body Grt.Files_Lib is
             end if;
             C := C_LF;
          end if;
-         Str.Base (L) := Character'Val (C);
+         Base (L) := Character'Val (C);
          L := L + 1;
          exit when C = C_LF;
       end loop;
 
-      Len.all := Std_Integer (L);
+      return L;
+   end Untruncated_Text_Read;
+
+   procedure Ghdl_Untruncated_Text_Read_32 (File : Ghdl_File_Index;
+                                            Str : Std_String_Ptr;
+                                            Len : Std_Integer_32_Acc) is
+   begin
+      Len.all := Std_Integer_32
+        (Untruncated_Text_Read (File, Str.Base, Str.Bounds.Dim_1.Length));
+   end Ghdl_Untruncated_Text_Read_32;
+
+   procedure Ghdl_Untruncated_Text_Read_64 (File : Ghdl_File_Index;
+                                            Str : Std_String_Ptr;
+                                            Len : Std_Integer_64_Acc) is
+   begin
+      Len.all := Std_Integer_64
+        (Untruncated_Text_Read (File, Str.Base, Str.Bounds.Dim_1.Length));
+   end Ghdl_Untruncated_Text_Read_64;
+
+   procedure Ghdl_Untruncated_Text_Read
+     (File : Ghdl_File_Index; Str : Std_String_Ptr; Len : Std_Integer_Acc) is
+   begin
+      Len.all := Std_Integer
+        (Untruncated_Text_Read (File, Str.Base, Str.Bounds.Dim_1.Length));
    end Ghdl_Untruncated_Text_Read;
 
    procedure File_Close (File : Ghdl_File_Index; Is_Text : Boolean)

@@ -432,10 +432,10 @@ package body Elab.Vhdl_Files is
       Param3 : constant Node := Get_Chain (Param2);
       Param_Len : constant Valtyp := Get_Value (Syn_Inst, Param3);
       Buf : String (1 .. Natural (Str.Typ.Abound.Len));
-      Len : Std_Integer;
+      Len : Ghdl_Index_Type;
       Status : Op_Status;
    begin
-      Len := Std_Integer (Buf'Last);
+      Len := Ghdl_Index_Type (Buf'Last);
       Ghdl_Untruncated_Text_Read
         (File, To_Ghdl_C_String (Buf'Address), Len, Status);
       if Status /= Op_Ok then
