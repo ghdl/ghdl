@@ -98,11 +98,11 @@ package body Grt.Arith is
    end Mul_U64_Ovf;
 
    procedure Exp_I64 (V : Ghdl_I64;
-                      E : Std_Integer;
+                      E : Ghdl_I64;
                       Res : out Ghdl_I64;
                       Ovf : out Boolean)
    is
-      R : Std_Integer;
+      R : Ghdl_I64;
       P : Ghdl_U64;
       Ures : Ghdl_U64;
    begin
@@ -162,11 +162,11 @@ package body Grt.Arith is
    end Exp_I64;
 
    procedure Exp_I32 (V : Ghdl_I32;
-                      E : Std_Integer;
+                      E : Ghdl_I64;
                       Res : out Ghdl_I32;
                       Ovf : out Boolean)
    is
-      R : Std_Integer;
+      R : Ghdl_I64;
       P : Ghdl_I32;
    begin
       if E < 0 then

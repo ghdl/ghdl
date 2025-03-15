@@ -1242,13 +1242,13 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Integer_Exp =>
             declare
                Lv : Ghdl_I64;
-               Rv : Std_Integer;
+               Rv : Ghdl_I64;
                Res : Ghdl_I64;
                R : Int64;
                Ovf : Boolean;
             begin
                Lv := Ghdl_I64 (Read_Discrete (Param1));
-               Rv := Std_Integer (Read_Discrete (Param2));
+               Rv := Ghdl_I64 (Read_Discrete (Param2));
                Grt.Arith.Exp_I64 (Lv, Rv, Res, Ovf);
                if Ovf then
                   Error_Msg_Synth (Inst, Expr, "exponentiation overflow");

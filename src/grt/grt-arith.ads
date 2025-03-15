@@ -21,18 +21,17 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 with Grt.Types; use Grt.Types;
-with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 
 package Grt.Arith is
    --  Compute V**E.
    --  Set OVF to true in case of overflow, or E < 0.
    procedure Exp_I32 (V : Ghdl_I32;
-                      E : Std_Integer;
+                      E : Ghdl_I64;
                       Res : out Ghdl_I32;
                       Ovf : out Boolean);
 
    procedure Exp_I64 (V : Ghdl_I64;
-                      E : Std_Integer;
+                      E : Ghdl_I64;
                       Res : out Ghdl_I64;
                       Ovf : out Boolean);
 end Grt.Arith;

@@ -66,8 +66,15 @@ package Grt.Lib is
                                  Line : Ghdl_I32;
                                  Code : Ghdl_Index_Type);
 
-   function Ghdl_I32_Exp (V : Ghdl_I32; E : Std_Integer) return Ghdl_I32;
-   function Ghdl_I64_Exp (V : Ghdl_I64; E : Std_Integer) return Ghdl_I64;
+   function Ghdl_Real_Exp_32 (X : Ghdl_Real; Exp : Std_Integer_32)
+     return Ghdl_Real;
+   function Ghdl_Real_Exp_64 (X : Ghdl_Real; Exp : Std_Integer_64)
+     return Ghdl_Real;
+
+   function Ghdl_I32_Exp_32 (V : Ghdl_I32; E : Std_Integer_32) return Ghdl_I32;
+   function Ghdl_I64_Exp_32 (V : Ghdl_I64; E : Std_Integer_32) return Ghdl_I64;
+   function Ghdl_I32_Exp_64 (V : Ghdl_I32; E : Std_Integer_64) return Ghdl_I32;
+   function Ghdl_I64_Exp_64 (V : Ghdl_I64; E : Std_Integer_64) return Ghdl_I64;
 
    function Ghdl_I32_Div (L, R : Ghdl_I32) return Ghdl_I32;
    function Ghdl_I64_Div (L, R : Ghdl_I64) return Ghdl_I64;
@@ -84,9 +91,6 @@ package Grt.Lib is
    function Ghdl_Malloc0 (Size : Ghdl_Index_Type) return Ghdl_Ptr;
 
    procedure Ghdl_Free_Mem (Ptr : Ghdl_Ptr);
-
-   function Ghdl_Real_Exp (X : Ghdl_Real; Exp : Ghdl_I32)
-     return Ghdl_Real;
 
    type Ghdl_Std_Ulogic_Boolean_Array_Type is array (Ghdl_E8 range 0 .. 8)
      of Ghdl_B1;
@@ -143,9 +147,12 @@ private
    pragma Export (C, Ghdl_Malloc0, "__ghdl_malloc0");
    pragma Export (C, Ghdl_Free_Mem, "__ghdl_free_mem");
 
-   pragma Export (C, Ghdl_I32_Exp, "__ghdl_i32_exp");
-   pragma Export (C, Ghdl_I64_Exp, "__ghdl_i64_exp");
-   pragma Export (C, Ghdl_Real_Exp, "__ghdl_real_exp");
+   pragma Export (C, Ghdl_I32_Exp_32, "__ghdl_i32_exp_32");
+   pragma Export (C, Ghdl_I32_Exp_64, "__ghdl_i32_exp_64");
+   pragma Export (C, Ghdl_I64_Exp_32, "__ghdl_i64_exp_32");
+   pragma Export (C, Ghdl_I64_Exp_64, "__ghdl_i64_exp_64");
+   pragma Export (C, Ghdl_Real_Exp_32, "__ghdl_real_exp_32");
+   pragma Export (C, Ghdl_Real_Exp_64, "__ghdl_real_exp_64");
 
    pragma Export (C, Ghdl_I32_Div, "__ghdl_i32_div");
    pragma Export (C, Ghdl_I64_Div, "__ghdl_i64_div");

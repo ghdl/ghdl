@@ -17,6 +17,7 @@ with System; use System;
 
 with Ghdllocal; use Ghdllocal;
 with Simple_IO; use Simple_IO;
+with Flags;
 
 with Ortho_Jit;
 with Ortho_Nodes; use Ortho_Nodes;
@@ -82,12 +83,21 @@ package body Trans_Link is
       Def (Trans_Decls.Ghdl_Program_Error,
            Grt.Lib.Ghdl_Program_Error'Address);
 
-      Def (Trans_Decls.Ghdl_Real_Exp,
-           Grt.Lib.Ghdl_Real_Exp'Address);
-      Def (Trans_Decls.Ghdl_I32_Exp,
-           Grt.Lib.Ghdl_I32_Exp'Address);
-      Def (Trans_Decls.Ghdl_I64_Exp,
-           Grt.Lib.Ghdl_I64_Exp'Address);
+      if Flags.Flag_Integer_64 then
+         Def (Trans_Decls.Ghdl_Real_Exp,
+             Grt.Lib.Ghdl_Real_Exp_64'Address);
+         Def (Trans_Decls.Ghdl_I32_Exp,
+             Grt.Lib.Ghdl_I32_Exp_64'Address);
+         Def (Trans_Decls.Ghdl_I64_Exp,
+           Grt.Lib.Ghdl_I64_Exp_64'Address);
+      else
+         Def (Trans_Decls.Ghdl_Real_Exp,
+             Grt.Lib.Ghdl_Real_Exp_32'Address);
+         Def (Trans_Decls.Ghdl_I32_Exp,
+             Grt.Lib.Ghdl_I32_Exp_32'Address);
+         Def (Trans_Decls.Ghdl_I64_Exp,
+           Grt.Lib.Ghdl_I64_Exp_32'Address);
+      end if;
       Def (Trans_Decls.Ghdl_I32_Div,
            Grt.Lib.Ghdl_I32_Div'Address);
       Def (Trans_Decls.Ghdl_I64_Div,

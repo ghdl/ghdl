@@ -246,29 +246,53 @@ package body Grt.Lib is
       Error_E_Call_Stack (Bt);
    end Ghdl_Integer_Index_Check_Failed;
 
-   function Ghdl_I32_Exp (V : Ghdl_I32; E : Std_Integer) return Ghdl_I32
+   function Ghdl_I32_Exp_32 (V : Ghdl_I32; E : Std_Integer_32) return Ghdl_I32
    is
       Res : Ghdl_I32;
       Ovf : Boolean;
    begin
-      Grt.Arith.Exp_I32 (V, E, Res, Ovf);
+      Grt.Arith.Exp_I32 (V, Ghdl_I64 (E), Res, Ovf);
       if Ovf then
          Error ("overflow in exponentiation");
       end if;
       return Res;
-   end Ghdl_I32_Exp;
+   end Ghdl_I32_Exp_32;
 
-   function Ghdl_I64_Exp (V : Ghdl_I64; E : Std_Integer) return Ghdl_I64
+   function Ghdl_I32_Exp_64 (V : Ghdl_I32; E : Std_Integer_64) return Ghdl_I32
+   is
+      Res : Ghdl_I32;
+      Ovf : Boolean;
+   begin
+      Grt.Arith.Exp_I32 (V, Ghdl_I64 (E), Res, Ovf);
+      if Ovf then
+         Error ("overflow in exponentiation");
+      end if;
+      return Res;
+   end Ghdl_I32_Exp_64;
+
+   function Ghdl_I64_Exp_32 (V : Ghdl_I64; E : Std_Integer_32) return Ghdl_I64
    is
       Res : Ghdl_I64;
       Ovf : Boolean;
    begin
-      Grt.Arith.Exp_I64 (V, E, Res, Ovf);
+      Grt.Arith.Exp_I64 (V, Ghdl_I64 (E), Res, Ovf);
       if Ovf then
          Error ("overflow in exponentiation");
       end if;
       return Res;
-   end Ghdl_I64_Exp;
+   end Ghdl_I64_Exp_32;
+
+   function Ghdl_I64_Exp_64 (V : Ghdl_I64; E : Std_Integer_64) return Ghdl_I64
+   is
+      Res : Ghdl_I64;
+      Ovf : Boolean;
+   begin
+      Grt.Arith.Exp_I64 (V, Ghdl_I64 (E), Res, Ovf);
+      if Ovf then
+         Error ("overflow in exponentiation");
+      end if;
+      return Res;
+   end Ghdl_I64_Exp_64;
 
    function Ghdl_I32_Div (L, R : Ghdl_I32) return Ghdl_I32
    is
@@ -360,10 +384,10 @@ package body Grt.Lib is
       C_Free (Ptr);
    end Ghdl_Free_Mem;
 
-   function Ghdl_Real_Exp (X : Ghdl_Real; Exp : Ghdl_I32)
+   function Ghdl_Real_Exp_64 (X : Ghdl_Real; Exp : Ghdl_I64)
      return Ghdl_Real
    is
-      R : Ghdl_I32;
+      R : Ghdl_I64;
       Res : Ghdl_Real;
       P : Ghdl_Real;
    begin
@@ -396,7 +420,13 @@ package body Grt.Lib is
          end if;
          return 1.0 / Res;
       end if;
-   end Ghdl_Real_Exp;
+   end Ghdl_Real_Exp_64;
+
+   function Ghdl_Real_Exp_32 (X : Ghdl_Real; Exp : Ghdl_I32)
+                             return Ghdl_Real is
+   begin
+      return Ghdl_Real_Exp_64 (X, Ghdl_I64 (Exp));
+   end Ghdl_Real_Exp_32;
 
    function Textio_Read_Real (Str : Std_String_Ptr) return Ghdl_F64
    is
