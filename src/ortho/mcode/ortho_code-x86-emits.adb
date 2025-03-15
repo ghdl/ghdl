@@ -1904,6 +1904,46 @@ package body Ortho_Code.X86.Emits is
       end case;
    end Gen_Conv_B2;
 
+   procedure Gen_Conv_I64_To_Uxx
+     (Stmt : O_Enode; Ov : Boolean; Ubound : Int32)
+   is
+      Op : constant O_Enode := Get_Expr_Operand (Stmt);
+      Reg_Op : constant O_Reg := Get_Expr_Reg (Op);
+      Reg_Res : constant O_Reg := Get_Expr_Reg (Stmt);
+   begin
+      if Flags.M64 then
+         Emit_Load (Reg_Res, Op, Sz_64);
+         if Ov then
+            Start_Insn;
+            Init_Modrm_Reg (Reg_Res, Sz_64);
+            Gen_Insn_Grp1 (Opc2_Grp1_Cmp, Ubound);
+            End_Insn;
+            Gen_Ov_Check (R_Ule);
+         end if;
+      else
+         pragma Assert (Reg_Op in Regs_Pair);
+         if Ov then
+            --  Check MSB = 0
+            Emit_Tst (Reg_Op, Sz_32h);
+            Gen_Ov_Check (R_Eq);
+         end if;
+         if Reg_Op /= Reg_Res then
+            --  Move reg_op -> reg_res
+            --  FIXME: factorize with OE_Mov.
+            Start_Insn;
+            Init_Modrm_Reg (Reg_Op, Sz_32l, Reg_Res);
+            Gen_Insn_Sz (Opc_Mov_Reg_Rm, Sz_32);
+            Gen_Mod_Rm_Reg;
+            End_Insn;
+         end if;
+         --  Check LSB <= 255 (U8) or LSB <= 1 (B2)
+         if Ov then
+            Gen_Cmp_Imm (Reg_Res, Ubound, Sz_32);
+            Gen_Ov_Check (R_Ule);
+         end if;
+      end if;
+   end Gen_Conv_I64_To_Uxx;
+
    --  Convert I64 to xxx
    procedure Gen_Conv_I64 (Stmt : O_Enode; Ov : Boolean)
    is
@@ -1947,49 +1987,12 @@ package body Ortho_Code.X86.Emits is
                   Gen_Ov_Check (R_Eq);
                end if;
             end if;
-         when Mode_U8
-           | Mode_B2 =>
-            declare
-               Ubound : Int32;
-            begin
-               if Mode = Mode_B2 then
-                  Ubound := 1;
-               else
-                  Ubound := 16#ff#;
-               end if;
-
-               if Flags.M64 then
-                  Emit_Load (Reg_Res, Op, Sz_64);
-                  if Ov then
-                     Start_Insn;
-                     Init_Modrm_Reg (Reg_Res, Sz_64);
-                     Gen_Insn_Grp1 (Opc2_Grp1_Cmp, Ubound);
-                     End_Insn;
-                     Gen_Ov_Check (R_Ule);
-                  end if;
-               else
-                  pragma Assert (Reg_Op in Regs_Pair);
-                  if Ov then
-                     --  Check MSB = 0
-                     Emit_Tst (Reg_Op, Sz_32h);
-                     Gen_Ov_Check (R_Eq);
-                  end if;
-                  --  Check LSB <= 255 (U8) or LSB <= 1 (B2)
-                  if Reg_Op /= Reg_Res then
-                     --  Move reg_op -> reg_res
-                     --  FIXME: factorize with OE_Mov.
-                     Start_Insn;
-                     Init_Modrm_Reg (Reg_Op, Sz_32l, Reg_Res);
-                     Gen_Insn_Sz (Opc_Mov_Reg_Rm, Sz_32);
-                     Gen_Mod_Rm_Reg;
-                     End_Insn;
-                  end if;
-                  if Ov then
-                     Gen_Cmp_Imm (Reg_Res, Ubound, Sz_32);
-                     Gen_Ov_Check (R_Ule);
-                  end if;
-               end if;
-            end;
+         when Mode_B2 =>
+            Gen_Conv_I64_To_Uxx (Stmt, Ov, 1);
+         when Mode_U8 =>
+            Gen_Conv_I64_To_Uxx (Stmt, Ov, 16#ff#);
+         when Mode_U32 =>
+            Gen_Conv_I64_To_Uxx (Stmt, Ov, -1);
          when Mode_F64 =>
             if Flags.M64 then
                --  cvtsi2sd

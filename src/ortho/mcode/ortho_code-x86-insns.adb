@@ -2129,7 +2129,8 @@ package body Ortho_Code.X86.Insns is
                   when Mode_U32 =>
                      --  To U32
                      case O_Mode is
-                        when Mode_I32 =>
+                        when Mode_I32
+                          | Mode_I64 =>
                            --  Detect for bound.
                            null;
                         when Mode_B2
