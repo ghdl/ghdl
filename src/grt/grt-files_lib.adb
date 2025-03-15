@@ -382,9 +382,8 @@ package body Grt.Files_Lib is
       end if;
    end Ghdl_Read_Scalar;
 
-   function Ghdl_Text_Read_Length (File : Ghdl_File_Index;
-                                   Str : Std_String_Ptr)
-     return Std_Integer
+   function Ghdl_Text_Read_Length
+     (File : Ghdl_File_Index; Str : Std_String_Ptr) return Ghdl_Index_Type
    is
       Stream : C_Files;
       C : int;
@@ -400,14 +399,14 @@ package body Grt.Files_Lib is
          C := fgetc (Stream);
          if C < 0 then
             Error_Call_Stack ("read: end of file reached", 1);
-            return Std_Integer (I);
+            return I;
          end if;
          if I < Len then
             Str.Base (I) := Character'Val (C);
          end if;
          --  End of line is '\n' or LF or character # 10.
          if C = 10 then
-            return Std_Integer (I + 1);
+            return I + 1;
          end if;
       end loop;
       return 0;

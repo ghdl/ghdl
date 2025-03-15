@@ -566,7 +566,7 @@ package body Elab.Vhdl_Files is
       Bnd : aliased Std_String_Bound;
       Str : aliased Std_String;
       Status : Op_Status;
-      Len : Std_Integer;
+      Len : Ghdl_Index_Type;
    begin
       Str := (Base => To_Std_String_Basep (Value.Val.Mem.all'Address),
               Bounds => Bnd'Unrestricted_Access);

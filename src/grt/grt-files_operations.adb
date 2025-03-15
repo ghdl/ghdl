@@ -440,7 +440,7 @@ package body Grt.Files_Operations is
    procedure Ghdl_Text_Read_Length (File : Ghdl_File_Index;
                                     Str : Std_String_Ptr;
                                     Status : out Op_Status;
-                                    Length : out Std_Integer)
+                                    Length : out Ghdl_Index_Type)
    is
       Stream : C_Files;
       C : int;
@@ -462,7 +462,7 @@ package body Grt.Files_Operations is
       for I in Ghdl_Index_Type loop
          C := fgetc (Stream);
          if C < 0 then
-            Length := Std_Integer (I);
+            Length := I;
             Status := Op_End_Of_File;
             return;
          end if;
@@ -471,7 +471,7 @@ package body Grt.Files_Operations is
          end if;
          --  End of line is '\n' or LF or character # 10.
          if C = C_LF then
-            Length := Std_Integer (I + 1);
+            Length := I + 1;
             Status := Op_Ok;
             return;
          end if;

@@ -2335,6 +2335,7 @@ package body Trans.Chap8 is
                Assocs     : O_Assoc_List;
                Str        : O_Enode;
                Res        : Mnode;
+               Val        : O_Enode;
             begin
                if Get_Text_File_Flag (Get_Type (File_Param)) then
                   N_Assoc := Get_Chain (File_Assoc);
@@ -2350,7 +2351,9 @@ package body Trans.Chap8 is
                   --    compute string parameter (get a fat array pointer)
                   New_Association (Assocs, Str);
                   --    call a predefined procedure
-                  New_Assign_Stmt (M2Lv (Res), New_Function_Call (Assocs));
+                  Val := New_Function_Call (Assocs);
+                  Val := New_Convert_Ov (Val, Std_Integer_Otype);
+                  New_Assign_Stmt (M2Lv (Res), Val);
                else
                   Translate_Read_Procedure_Call (Imp, Assoc_Chain);
                end if;

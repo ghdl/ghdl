@@ -124,7 +124,7 @@ package Grt.Files_Operations is
    procedure Ghdl_Text_Read_Length (File : Ghdl_File_Index;
                                     Str : Std_String_Ptr;
                                     Status : out Op_Status;
-                                    Length : out Std_Integer);
+                                    Length : out Ghdl_Index_Type);
 
    procedure Ghdl_Untruncated_Text_Read (File : Ghdl_File_Index;
                                          Buf : Ghdl_C_String;

@@ -1091,10 +1091,10 @@ package body Translation is
 
       --  function __ghdl_text_read_length (file : __ghdl_file_index;
       --                                    str : std_string_ptr)
-      --     return std__standard_integer;
+      --     return __ghdl_index_type;
       Start_Function_Decl
         (Interfaces, Get_Identifier ("__ghdl_text_read_length"),
-         O_Storage_External, Std_Integer_Otype);
+         O_Storage_External, Ghdl_Index_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("file"),
                           Ghdl_File_Index_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("str"),

@@ -60,7 +60,7 @@ package Grt.Files_Lib is
                                Length : Ghdl_Index_Type);
 
    function Ghdl_Text_Read_Length
-     (File : Ghdl_File_Index; Str : Std_String_Ptr) return Std_Integer;
+     (File : Ghdl_File_Index; Str : Std_String_Ptr) return Ghdl_Index_Type;
 
    procedure Ghdl_Untruncated_Text_Read
      (File : Ghdl_File_Index; Str : Std_String_Ptr; Len : Std_Integer_Acc);
