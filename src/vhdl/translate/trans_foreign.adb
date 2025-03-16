@@ -15,7 +15,8 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 with Hash;
 with Interning;
-with Name_Table;
+with Types;
+with Std_Names;
 with Flags;
 
 with Foreigns;
@@ -61,26 +62,29 @@ package body Trans_Foreign is
 
    function Get_Intrinsic_Address (Decl : Iir) return Address
    is
-      Name : constant String := Name_Table.Image (Get_Identifier (Decl));
+      use Types;
+      use Std_Names;
+      Id : constant Name_Id := Get_Identifier (Decl);
    begin
-      if Name = "untruncated_text_read" then
-         if Flags.Flag_Integer_64 then
-            return Grt.Files_Lib.Ghdl_Untruncated_Text_Read_64'Address;
-         else
-            return Grt.Files_Lib.Ghdl_Untruncated_Text_Read_32'Address;
-         end if;
-      elsif Name = "textio_read_real" then
-         return Grt.Lib.Textio_Read_Real'Address;
-      elsif Name = "textio_write_real" then
-         return Grt.Lib.Textio_Write_Real'Address;
-      elsif Name = "control_simulation" then
-         return Grt.Lib.Ghdl_Control_Simulation'Address;
-      elsif Name = "get_resolution_limit" then
-         return Grt.Lib.Ghdl_Get_Resolution_Limit'Address;
-      else
-         Error_Msg_Sem (+Decl, "unknown foreign intrinsic %i", +Decl);
-         return Null_Address;
-      end if;
+      case Id is
+         when Name_Untruncated_Text_Read =>
+            if Flags.Flag_Integer_64 then
+               return Grt.Files_Lib.Ghdl_Untruncated_Text_Read_64'Address;
+            else
+               return Grt.Files_Lib.Ghdl_Untruncated_Text_Read_32'Address;
+            end if;
+         when Name_Textio_Read_Real =>
+            return Grt.Lib.Textio_Read_Real'Address;
+         when Name_Textio_Write_Real =>
+            return Grt.Lib.Textio_Write_Real'Address;
+         when Name_Control_Simulation =>
+            return Grt.Lib.Ghdl_Control_Simulation'Address;
+         when Name_Get_Resolution_Limit =>
+            return Grt.Lib.Ghdl_Get_Resolution_Limit'Address;
+         when others =>
+            Error_Msg_Sem (+Decl, "unknown foreign intrinsic %i", +Decl);
+            return Null_Address;
+      end case;
    end Get_Intrinsic_Address;
 
    function Get_Foreign_Address
