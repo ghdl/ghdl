@@ -901,7 +901,9 @@ package body Translation is
         (Interfaces, Get_Identifier ("__ghdl_value_" & Name),
          O_Storage_External, Val_Type);
       New_Interface_Decl
-        (Interfaces, Param, Wki_Val, Std_String_Ptr_Node);
+        (Interfaces, Param, Wki_Base, Std_String_Basep_Node);
+      New_Interface_Decl
+        (Interfaces, Param, Wki_Length, Ghdl_Index_Type);
       if Has_Td then
          New_Interface_Decl
            (Interfaces, Param, Get_Identifier ("rti"), Rtis.Ghdl_Rti_Access);
@@ -991,6 +993,7 @@ package body Translation is
       Info := Get_Info (String_Type_Definition);
       Std_String_Node := Info.Ortho_Type (Mode_Value);
       Std_String_Ptr_Node := Info.Ortho_Ptr_Type (Mode_Value);
+      Std_String_Basep_Node := Info.B.Base_Ptr_Type (Mode_Value);
 
       Std_Integer_Otype :=
         Get_Ortho_Type (Integer_Type_Definition, Mode_Value);

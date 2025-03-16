@@ -92,31 +92,25 @@ package body Grt.Values is
       Error_E ("'");
    end Value_Enum;
 
-   function Ghdl_Value_Enum (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_Index_Type is
+   function Ghdl_Value_B1 (Base : Std_String_Basep;
+                           Len : Ghdl_Index_Type;
+                           Rti : Ghdl_Rti_Access) return Ghdl_B1 is
    begin
-      return Value_Enum (Str.Base, Str.Bounds.Dim_1.Length, Rti);
-   end Ghdl_Value_Enum;
-
-   function Ghdl_Value_B1 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_B1
-   is
-   begin
-      return Ghdl_B1'Val (Ghdl_Value_Enum (Str, Rti));
+      return Ghdl_B1'Val (Value_Enum (Base, Len, Rti));
    end Ghdl_Value_B1;
 
-   function Ghdl_Value_E8 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_E8
-   is
+   function Ghdl_Value_E8 (Base : Std_String_Basep;
+                           Len : Ghdl_Index_Type;
+                           Rti : Ghdl_Rti_Access) return Ghdl_E8 is
    begin
-      return Ghdl_E8'Val (Ghdl_Value_Enum (Str, Rti));
+      return Ghdl_E8'Val (Value_Enum (Base, Len, Rti));
    end Ghdl_Value_E8;
 
-   function Ghdl_Value_E32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_E32
-   is
+   function Ghdl_Value_E32 (Base : Std_String_Basep;
+                            Len : Ghdl_Index_Type;
+                            Rti : Ghdl_Rti_Access) return Ghdl_E32 is
    begin
-      return Ghdl_E32'Val (Ghdl_Value_Enum (Str, Rti));
+      return Ghdl_E32'Val (Value_Enum (Base, Len, Rti));
    end Ghdl_Value_E32;
 
    procedure Value_Error (Status : Value_Status_Error);
@@ -169,25 +163,25 @@ package body Grt.Values is
       end case;
    end Value_I64;
 
-   function Ghdl_Value_I64 (Str : Std_String_Ptr) return Ghdl_I64
+   function Ghdl_Value_I64 (Base : Std_String_Basep;
+                            Len : Ghdl_Index_Type) return Ghdl_I64
    is
-      S : constant Std_String_Basep := Str.Base;
-      Len : Ghdl_Index_Type := Str.Bounds.Dim_1.Length;
+      L : Ghdl_Index_Type := Len;
       Pos : Ghdl_Index_Type := 0;
    begin
       --  LRM 14.1
       --  Leading [and trailing] whitespace is allowed and ignored.
       --
       --  GHDL: allow several leading whitespace.
-      Remove_Whitespaces (S, Len, Pos);
+      Remove_Whitespaces (Base, L, Pos);
 
-      return Value_I64 (S, Len, Pos);
+      return Value_I64 (Base, L, Pos);
    end Ghdl_Value_I64;
 
-   function Ghdl_Value_I32 (Str : Std_String_Ptr) return Ghdl_I32
-   is
+   function Ghdl_Value_I32 (Base : Std_String_Basep;
+                            Len : Ghdl_Index_Type) return Ghdl_I32 is
    begin
-      return Ghdl_I32 (Ghdl_Value_I64 (Str));
+      return Ghdl_I32 (Ghdl_Value_I64 (Base, Len));
    end Ghdl_Value_I32;
 
    function Value_F64 (S : Std_String_Basep;
@@ -207,27 +201,27 @@ package body Grt.Values is
 
    -- From patch attached to https://gna.org/bugs/index.php?18352
    -- thanks to Christophe Curis https://gna.org/users/lobotomy
-   function Ghdl_Value_F64 (Str : Std_String_Ptr) return Ghdl_F64
+   function Ghdl_Value_F64 (Base : Std_String_Basep;
+                            Len : Ghdl_Index_Type) return Ghdl_F64
    is
-      S   : constant Std_String_Basep := Str.Base;
-      Len : Ghdl_Index_Type  := Str.Bounds.Dim_1.Length;
+      L : Ghdl_Index_Type := Len;
       Pos : Ghdl_Index_Type := 0;
    begin
       --  LRM 14.1
       --  Leading and trailing whitespace is allowed and ignored.
       --
       --  GHDL: allow several leading whitespace.
-      Remove_Whitespaces (S, Len, Pos);
+      Remove_Whitespaces (Base, L, Pos);
 
-      return Value_F64 (S, Len, Pos);
+      return Value_F64 (Base, L, Pos);
    end Ghdl_Value_F64;
 
-   function Ghdl_Value_Physical_Type (Str : Std_String_Ptr;
+   function Ghdl_Value_Physical_Type (Base : Std_String_Basep;
+                                      L : Ghdl_Index_Type;
                                       Rti : Ghdl_Rti_Access)
                                      return Ghdl_I64
    is
-      S        : constant Std_String_Basep := Str.Base;
-      Len      : Ghdl_Index_Type := Str.Bounds.Dim_1.Length;
+      Len      : Ghdl_Index_Type := L;
       Unit_Pos : Ghdl_Index_Type;
       Lit_Pos  : Ghdl_Index_Type;
       Lit_End  : Ghdl_Index_Type;
@@ -242,25 +236,25 @@ package body Grt.Values is
    begin
       --  Remove trailing whitespaces.  FIXME: also called in physical_split.
       Lit_Pos := 0;
-      Remove_Whitespaces (S, Len, Lit_Pos);
+      Remove_Whitespaces (Base, Len, Lit_Pos);
 
       --  Extract literal and unit
       Ghdl_Value_Physical_Split
-        (S, Len, Found_Real, Lit_Pos, Lit_End, Unit_Pos);
+        (Base, Len, Found_Real, Lit_Pos, Lit_End, Unit_Pos);
 
       --  Find unit value
       Multiple := null;
       for i in 0 .. Phys_Rti.Nbr - 1 loop
          Unit_Name :=
            Rtis_Utils.Get_Physical_Unit_Name (Phys_Rti.Units (i));
-         if String_Match (S, Unit_Pos, Len, Unit_Name) then
+         if String_Match (Base, Unit_Pos, Len, Unit_Name) then
             Multiple := Phys_Rti.Units (i);
             exit;
          end if;
       end loop;
       if Multiple = null then
          Error_S ("'value: unit '");
-         Diag_C_Std (S (Unit_Pos .. Len - 1));
+         Diag_C_Std (Base (Unit_Pos .. Len - 1));
          Diag_C ("' not in physical type '");
          Diag_C (Phys_Rti.Name);
          Error_E ("'");
@@ -273,31 +267,31 @@ package body Grt.Values is
       else
          if Found_Real then
             return Ghdl_I64
-              (Value_F64 (S, Lit_End, Lit_Pos) * Ghdl_F64 (Mult));
+              (Value_F64 (Base, Lit_End, Lit_Pos) * Ghdl_F64 (Mult));
          else
-            return Value_I64 (S, Lit_End, Lit_Pos) * Mult;
+            return Value_I64 (Base, Lit_End, Lit_Pos) * Mult;
          end if;
       end if;
    end Ghdl_Value_Physical_Type;
 
-   function Ghdl_Value_P64 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_I64
-   is
+   function Ghdl_Value_P64 (Base : Std_String_Basep;
+                            Len : Ghdl_Index_Type;
+                            Rti : Ghdl_Rti_Access) return Ghdl_I64 is
    begin
       if Rti.Kind /= Ghdl_Rtik_Type_P64 then
          Error_E ("Physical_Type_64'value: incorrect RTI");
       end if;
-      return Ghdl_Value_Physical_Type (Str, Rti);
+      return Ghdl_Value_Physical_Type (Base, Len, Rti);
    end Ghdl_Value_P64;
 
-   function Ghdl_Value_P32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_I32
-   is
+   function Ghdl_Value_P32 (Base : Std_String_Basep;
+                            Len : Ghdl_Index_Type;
+                            Rti : Ghdl_Rti_Access) return Ghdl_I32 is
    begin
       if Rti.Kind /= Ghdl_Rtik_Type_P32 then
          Error_E ("Physical_Type_32'value: incorrect RTI");
       end if;
-      return Ghdl_I32 (Ghdl_Value_Physical_Type (Str, Rti));
+      return Ghdl_I32 (Ghdl_Value_Physical_Type (Base, Len, Rti));
    end Ghdl_Value_P32;
 
 end Grt.Values;

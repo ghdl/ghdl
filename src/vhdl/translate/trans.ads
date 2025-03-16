@@ -33,6 +33,7 @@ package Trans is
    --  Ortho type node for string template pointer.
    Std_String_Ptr_Node           : O_Tnode;
    Std_String_Node               : O_Tnode;
+   Std_String_Basep_Node               : O_Tnode;
 
    --  Ortho type for std.standard.integer.
    Std_Integer_Otype : O_Tnode;

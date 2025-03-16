@@ -25,19 +25,28 @@ with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Rtis; use Grt.Rtis;
 
 package Grt.Values is
-   function Ghdl_Value_B1 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_B1;
-   function Ghdl_Value_E8 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_E8;
-   function Ghdl_Value_E32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_E32;
-   function Ghdl_Value_I32 (Str : Std_String_Ptr) return Ghdl_I32;
-   function Ghdl_Value_I64 (Str : Std_String_Ptr) return Ghdl_I64;
-   function Ghdl_Value_F64 (Str : Std_String_Ptr) return Ghdl_F64;
-   function Ghdl_Value_P64 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_I64;
-   function Ghdl_Value_P32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-                           return Ghdl_I32;
+   function Ghdl_Value_B1 (Base : Std_String_Basep;
+                           Len : Ghdl_Index_Type;
+                           Rti : Ghdl_Rti_Access) return Ghdl_B1;
+   function Ghdl_Value_E8 (Base : Std_String_Basep;
+                           Len : Ghdl_Index_Type;
+                           Rti : Ghdl_Rti_Access) return Ghdl_E8;
+   function Ghdl_Value_E32 (Base : Std_String_Basep;
+                            Len : Ghdl_Index_Type;
+                            Rti : Ghdl_Rti_Access) return Ghdl_E32;
+
+   function Ghdl_Value_I32 (Base : Std_String_Basep;
+                            Len : Ghdl_Index_Type) return Ghdl_I32;
+   function Ghdl_Value_I64 (Base : Std_String_Basep;
+                            Len : Ghdl_Index_Type) return Ghdl_I64;
+   function Ghdl_Value_F64 (Base : Std_String_Basep;
+                            Len : Ghdl_Index_Type) return Ghdl_F64;
+   function Ghdl_Value_P32 (Base : Std_String_Basep;
+                            Len : Ghdl_Index_Type;
+                            Rti : Ghdl_Rti_Access) return Ghdl_I32;
+   function Ghdl_Value_P64 (Base : Std_String_Basep;
+                            Len : Ghdl_Index_Type;
+                            Rti : Ghdl_Rti_Access) return Ghdl_I64;
 
    --  Return the value of STR for enumerated type RTI.
    function Value_Enum
