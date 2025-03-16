@@ -250,7 +250,7 @@ package body Ghdlcovout is
             end loop;
             Put_Line (F, "   }");
             Put (F, "  }");
-            if Idx < Cov_Tables.Last then
+            if Idx <= Cov_Tables.Last then
                Put (F, ",");
             end if;
             New_Line (F);
