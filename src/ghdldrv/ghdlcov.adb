@@ -335,7 +335,8 @@ package body Ghdlcov is
       Scan_Expect (Tok_Rcurl);
    end Parse_File_Entry;
 
-   procedure Parse_File
+   --  Return True on success
+   function Parse_File return Boolean
    is
       use Mini_Json;
       use Errorout;
@@ -365,13 +366,16 @@ package body Ghdlcov is
       Scan_Expect (Tok_Rcurl);
       Scan_Expect (Tok_Eof);
 
+      return True;
+
    exception
       when Parse_Error =>
          Error_Msg_Option ("parse error at line %v",
                            (1 => +Int32 (Get_Line)));
+         return False;
    end Parse_File;
 
-   procedure Read_Coverage_File (Filename : String)
+   function Read_Coverage_File (Filename : String) return Boolean
    is
       use Errorout;
       File_Id : Name_Id;
@@ -381,12 +385,15 @@ package body Ghdlcov is
       File := Files_Map.Read_Source_File (Null_Identifier, File_Id);
       if File = No_Source_File_Entry then
          Error_Msg_Option ("cannot open file %i", (1 => +File_Id));
-         return;
+         return False;
       end if;
 
       Mini_Json.Init (File);
-      Parse_File;
+      if not Parse_File then
+         return False;
+      end if;
       Files_Map.Unload_Last_Source_File (File);
+      return True;
    end Read_Coverage_File;
 
    function Get_EOL_Pos (Buf : File_Buffer_Acc; Pos : Source_Ptr)
@@ -738,8 +745,12 @@ package body Ghdlcov is
                              Args : String_Acc_Array;
                              Success : out Boolean) is
    begin
+      Success := False;
+
       for I in Args'Range loop
-         Read_Coverage_File (Args (I).all);
+         if not Read_Coverage_File (Args (I).all) then
+            return;
+         end if;
       end loop;
       case Cmd.Format is
          when Format_Gcov =>
