@@ -30,14 +30,6 @@ package body Grt.Std_Logic_1164 is
    Assert_DC_Msg : constant String :=
      "STD_LOGIC_1164: '-' operand for matching ordering operator";
 
-   Assert_DC_Msg_Bound : constant Std_String_Bound :=
-     (Dim_1 => (Left => 1, Right => Assert_DC_Msg'Length, Dir => Dir_To,
-                Length => Assert_DC_Msg'Length));
-
-   Assert_DC_Msg_Str : aliased constant Std_String :=
-     (Base => To_Std_String_Basep (Assert_DC_Msg'Address),
-      Bounds => To_Std_String_Boundp (Assert_DC_Msg_Bound'Address));
-
    Filename : constant String := "std_logic_1164.vhdl" & NUL;
    Loc : aliased constant Ghdl_Location :=
      (Filename => To_Ghdl_C_String (Filename'Address),
@@ -49,7 +41,9 @@ package body Grt.Std_Logic_1164 is
       use Grt.Lib;
    begin
       Ghdl_Ieee_Assert_Failed
-        (To_Std_String_Ptr (Assert_DC_Msg_Str'Address), Error_Severity,
+        (To_Std_String_Basep (Assert_DC_Msg'Address),
+         Assert_DC_Msg'Length,
+         Error_Severity,
          To_Ghdl_Location_Ptr (Loc'Address));
    end Assert_Not_Match;
 
@@ -109,14 +103,6 @@ package body Grt.Std_Logic_1164 is
    Assert_Arr_Msg : constant String :=
      "parameters of '?=' array operator are not of the same length";
 
-   Assert_Arr_Msg_Bound : constant Std_String_Bound :=
-     (Dim_1 => (Left => 1, Right => Assert_Arr_Msg'Length, Dir => Dir_To,
-                Length => Assert_Arr_Msg'Length));
-
-   Assert_Arr_Msg_Str : aliased constant Std_String :=
-     (Base => To_Std_String_Basep (Assert_Arr_Msg'Address),
-      Bounds => To_Std_String_Boundp (Assert_Arr_Msg_Bound'Address));
-
    function Ghdl_Std_Ulogic_Array_Match_Eq (L : Ghdl_Ptr;
                                             L_Len : Ghdl_Index_Type;
                                             R : Ghdl_Ptr;
@@ -132,7 +118,9 @@ package body Grt.Std_Logic_1164 is
    begin
       if L_Len /= R_Len then
          Ghdl_Ieee_Assert_Failed
-           (To_Std_String_Ptr (Assert_Arr_Msg_Str'Address), Error_Severity,
+           (To_Std_String_Basep (Assert_Arr_Msg'Address),
+            Assert_Arr_Msg'Length,
+            Error_Severity,
             To_Ghdl_Location_Ptr (Loc'Address));
          return Std_Ulogic'Pos ('0');
       end if;

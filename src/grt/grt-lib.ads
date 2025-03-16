@@ -27,25 +27,37 @@ package Grt.Lib is
    procedure Ghdl_Memcpy
      (Dest : Ghdl_Ptr; Src : Ghdl_Ptr; Size : Ghdl_Index_Type);
 
-   procedure Ghdl_Assert_Failed
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
-   procedure Ghdl_Ieee_Assert_Failed
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
+   procedure Ghdl_Assert_Failed (Base : Std_String_Basep;
+                                 Len : Ghdl_Index_Type;
+                                 Severity : Integer;
+                                 Loc : Ghdl_Location_Ptr);
+   procedure Ghdl_Ieee_Assert_Failed (Base : Std_String_Basep;
+                                      Len : Ghdl_Index_Type;
+                                      Severity : Integer;
+                                      Loc : Ghdl_Location_Ptr);
 
-   procedure Ghdl_Psl_Assert_Failed
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
+   procedure Ghdl_Psl_Assert_Failed (Base : Std_String_Basep;
+                                     Len : Ghdl_Index_Type;
+                                     Severity : Integer;
+                                     Loc : Ghdl_Location_Ptr);
 
    procedure Ghdl_Psl_Assume_Failed (Loc : Ghdl_Location_Ptr);
 
    --  Called when a sequence is covered (in a cover directive)
-   procedure Ghdl_Psl_Cover
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
+   procedure Ghdl_Psl_Cover (Base : Std_String_Basep;
+                             Len : Ghdl_Index_Type;
+                             Severity : Integer;
+                             Loc : Ghdl_Location_Ptr);
 
-   procedure Ghdl_Psl_Cover_Failed
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
+   procedure Ghdl_Psl_Cover_Failed (Base : Std_String_Basep;
+                                    Len : Ghdl_Index_Type;
+                                    Severity : Integer;
+                                    Loc : Ghdl_Location_Ptr);
 
-   procedure Ghdl_Report
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
+   procedure Ghdl_Report (Base : Std_String_Basep;
+                          Len : Ghdl_Index_Type;
+                          Severity : Integer;
+                          Loc : Ghdl_Location_Ptr);
 
    --  Bound / Direction error.
    procedure Ghdl_Bound_Check_Failed (Filename : Ghdl_C_String;

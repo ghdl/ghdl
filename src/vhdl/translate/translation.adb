@@ -868,6 +868,16 @@ package body Translation is
       Finish_Subprogram_Decl (Interfaces, Force_Eff);
    end Create_Signal_Subprograms;
 
+   procedure Create_String_Base_Len_Params (Interfaces : in out O_Inter_List)
+   is
+      Param : O_Dnode;
+   begin
+      New_Interface_Decl
+        (Interfaces, Param, Wki_Base, Std_String_Basep_Node);
+      New_Interface_Decl
+        (Interfaces, Param, Wki_Length, Ghdl_Index_Type);
+   end Create_String_Base_Len_Params;
+
    --  procedure __ghdl_image_NAME (res : std_string_ptr_node;
    --                               val : VAL_TYPE;
    --                               rti : ghdl_rti_access);
@@ -900,10 +910,7 @@ package body Translation is
       Start_Function_Decl
         (Interfaces, Get_Identifier ("__ghdl_value_" & Name),
          O_Storage_External, Val_Type);
-      New_Interface_Decl
-        (Interfaces, Param, Wki_Base, Std_String_Basep_Node);
-      New_Interface_Decl
-        (Interfaces, Param, Wki_Length, Ghdl_Index_Type);
+      Create_String_Base_Len_Params (Interfaces);
       if Has_Td then
          New_Interface_Decl
            (Interfaces, Param, Get_Identifier ("rti"), Rtis.Ghdl_Rti_Access);
@@ -1019,8 +1026,7 @@ package body Translation is
          begin
             Start_Procedure_Decl
               (Interfaces, Get_Identifier (Name), O_Storage_External);
-            New_Interface_Decl
-              (Interfaces, Param, Get_Identifier ("msg"), Std_String_Ptr_Node);
+            Create_String_Base_Len_Params (Interfaces);
             New_Interface_Decl
               (Interfaces, Param, Get_Identifier ("severity"),
                Get_Ortho_Type (Severity_Level_Type_Definition, Mode_Value));

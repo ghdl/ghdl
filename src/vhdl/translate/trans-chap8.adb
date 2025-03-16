@@ -1264,10 +1264,32 @@ package body Trans.Chap8 is
       end if;
    end Translate_Variable_Assignment_Statement;
 
+   procedure New_Association_String_Base_Len (Assoc : in out O_Assoc_List;
+                                              Str : Mnode)
+   is
+      Val : O_Enode;
+   begin
+      if Str = Mnode_Null then
+         Val := New_Lit (New_Null_Access (Std_String_Basep_Node));
+      else
+         Val := M2E (Chap3.Get_Composite_Unbounded_Base (Str));
+      end if;
+      New_Association (Assoc, Val);
+
+      if Str = Mnode_Null then
+         Val := New_Lit (New_Index_Lit (0));
+      else
+         Val := M2E (Chap3.Range_To_Length
+                     (Chap3.Get_Array_Range
+                      (Str, String_Type_Definition, 1)));
+      end if;
+      New_Association (Assoc, Val);
+   end New_Association_String_Base_Len;
+
    procedure Translate_Report (Stmt : Iir; Subprg : O_Dnode; Level : Iir)
    is
       Expr     : Iir;
-      Msg      : O_Enode;
+      Msg      : Mnode;
       Severity : O_Enode;
       Assocs   : O_Assoc_List;
       Loc      : O_Dnode;
@@ -1275,9 +1297,10 @@ package body Trans.Chap8 is
       Loc := Chap4.Get_Location (Stmt);
       Expr := Get_Report_Expression (Stmt);
       if Expr = Null_Iir then
-         Msg := New_Lit (New_Null_Access (Std_String_Ptr_Node));
+         Msg := Mnode_Null;
       else
          Msg := Chap7.Translate_Expression (Expr, String_Type_Definition);
+         Stabilize (Msg);
       end if;
       Expr := Get_Severity_Expression (Stmt);
       if Expr = Null_Iir then
@@ -1287,7 +1310,7 @@ package body Trans.Chap8 is
       end if;
       --  Do call.
       Start_Association (Assocs, Subprg);
-      New_Association (Assocs, Msg);
+      New_Association_String_Base_Len (Assocs, Msg);
       New_Association (Assocs, Severity);
       New_Association (Assocs, New_Address (New_Obj (Loc),
                        Ghdl_Location_Ptr_Node));

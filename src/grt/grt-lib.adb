@@ -44,7 +44,8 @@ package body Grt.Lib is
    end Ghdl_Memcpy;
 
    procedure Do_Report (Msg : String;
-                        Str : Std_String_Ptr;
+                        Base : Std_String_Basep;
+                        Len : Ghdl_Index_Type;
                         Default_Str : String;
                         Severity : Integer;
                         Loc : Ghdl_Location_Ptr)
@@ -77,8 +78,8 @@ package body Grt.Lib is
             Diag_C ("???");
       end case;
       Diag_C ("): ");
-      if Str /= null then
-         Diag_C (Str);
+      if Base /= null then
+         Diag_C (Base, Len);
       else
          Diag_C (Default_Str);
       end if;
@@ -100,56 +101,68 @@ package body Grt.Lib is
         or else (Policy = Disable_Asserts_At_Time_0 and Current_Time = 0);
    end Is_Assert_Disabled;
 
-   procedure Ghdl_Assert_Failed
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr) is
+   procedure Ghdl_Assert_Failed (Base : Std_String_Basep;
+                                 Len : Ghdl_Index_Type;
+                                 Severity : Integer;
+                                 Loc : Ghdl_Location_Ptr) is
    begin
       if Is_Assert_Disabled (Asserts_Policy) then
          return;
       end if;
-      Do_Report ("assertion", Str, "Assertion violation", Severity, Loc);
+      Do_Report ("assertion", Base, Len, "Assertion violation", Severity, Loc);
    end Ghdl_Assert_Failed;
 
-   procedure Ghdl_Ieee_Assert_Failed
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr) is
+   procedure Ghdl_Ieee_Assert_Failed (Base : Std_String_Basep;
+                                      Len : Ghdl_Index_Type;
+                                      Severity : Integer;
+                                      Loc : Ghdl_Location_Ptr) is
    begin
       if Is_Assert_Disabled (Ieee_Asserts) then
          return;
       end if;
-      Do_Report ("assertion", Str, "Assertion violation", Severity, Loc);
+      Do_Report ("assertion", Base, Len, "Assertion violation", Severity, Loc);
    end Ghdl_Ieee_Assert_Failed;
 
-   procedure Ghdl_Psl_Assert_Failed
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr) is
+   procedure Ghdl_Psl_Assert_Failed (Base : Std_String_Basep;
+                                     Len : Ghdl_Index_Type;
+                                     Severity : Integer;
+                                     Loc : Ghdl_Location_Ptr) is
    begin
-      Do_Report ("psl assertion", Str, "Assertion violation", Severity, Loc);
+      Do_Report
+        ("psl assertion", Base, Len, "Assertion violation", Severity, Loc);
    end Ghdl_Psl_Assert_Failed;
 
    procedure Ghdl_Psl_Assume_Failed (Loc : Ghdl_Location_Ptr) is
    begin
-      Do_Report ("psl assumption", null, "Assumption violation",
+      Do_Report ("psl assumption", null, 0, "Assumption violation",
                  Grt.Severity.Error_Severity, Loc);
    end Ghdl_Psl_Assume_Failed;
 
-   procedure Ghdl_Psl_Cover
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr) is
+   procedure Ghdl_Psl_Cover (Base : Std_String_Basep;
+                             Len : Ghdl_Index_Type;
+                             Severity : Integer;
+                             Loc : Ghdl_Location_Ptr) is
    begin
-      Do_Report ("psl cover", Str, "sequence covered", Severity, Loc);
+      Do_Report ("psl cover", Base, Len, "sequence covered", Severity, Loc);
    end Ghdl_Psl_Cover;
 
-   procedure Ghdl_Psl_Cover_Failed
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr) is
+   procedure Ghdl_Psl_Cover_Failed (Base : Std_String_Basep;
+                                    Len : Ghdl_Index_Type;
+                                    Severity : Integer;
+                                    Loc : Ghdl_Location_Ptr) is
    begin
       if Flag_Psl_Report_Uncovered then
          Do_Report ("psl cover failure",
-                    Str, "sequence not covered", Severity, Loc);
+                    Base, Len, "sequence not covered", Severity, Loc);
       end if;
    end Ghdl_Psl_Cover_Failed;
 
-   procedure Ghdl_Report (Str : Std_String_Ptr;
+   procedure Ghdl_Report (Base : Std_String_Basep;
+                          Len : Ghdl_Index_Type;
                           Severity : Integer;
-                          Loc      : Ghdl_Location_Ptr) is
+                          Loc : Ghdl_Location_Ptr) is
    begin
-      Do_Report ("report", Str, "Assertion violation", Severity, Loc);
+      Do_Report ("report", Base, Len, "Assertion violation", Severity, Loc);
    end Ghdl_Report;
 
    procedure Ghdl_Program_Error (Filename : Ghdl_C_String;

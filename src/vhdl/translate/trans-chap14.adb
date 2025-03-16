@@ -24,6 +24,7 @@ with Trans_Decls; use Trans_Decls;
 with Trans.Chap3;
 with Trans.Chap6;
 with Trans.Chap7;
+with Trans.Chap8;
 with Trans.Rtis;
 with Trans.Helpers2; use Trans.Helpers2;
 with Trans.Foreach_Non_Composite;
@@ -1011,12 +1012,7 @@ package body Trans.Chap14 is
         (Get_Parameter (Attr), String_Type_Definition);
       Stabilize (Param);
       Start_Association (Assoc, Subprg);
-      New_Association
-        (Assoc, M2E (Chap3.Get_Composite_Unbounded_Base (Param)));
-      New_Association
-        (Assoc, M2E (Chap3.Range_To_Length
-                     (Chap3.Get_Array_Range
-                      (Param, String_Type_Definition, 1))));
+      Chap8.New_Association_String_Base_Len (Assoc, Param);
       case Type_Mode_Scalar (Pinfo.Type_Mode) is
          when Type_Mode_B1
             | Type_Mode_E8

@@ -54,7 +54,8 @@ package Grt.Errors is
    procedure Diag_C (N : Integer);
    procedure Diag_C (N : Ghdl_I32);
    procedure Diag_C (Str : Ghdl_C_String);
-   procedure Diag_C (Str : Std_String_Ptr);
+   procedure Diag_C (Base : Std_String_Basep;
+                     Len : Ghdl_Index_Type);
    procedure Diag_C_Std (Str : Std_String_Uncons);
    procedure Diag_C_Now;
 

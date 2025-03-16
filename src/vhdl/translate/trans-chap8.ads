@@ -82,6 +82,11 @@ package Trans.Chap8 is
    --  Create declarations for a for-loop statement.
    procedure Translate_For_Loop_Statement_Declaration (Stmt : Iir);
 
+   --  Add two associations (base and length) in ASSOC for STR.
+   --  STR can be Mnode_Null or it must have been stabilized.
+   procedure New_Association_String_Base_Len (Assoc : in out O_Assoc_List;
+                                              Str : Mnode);
+
    procedure Translate_Report (Stmt : Iir; Subprg : O_Dnode; Level : Iir);
 
    --  Create the state record for the CALL procedure call.

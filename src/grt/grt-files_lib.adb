@@ -272,7 +272,7 @@ package body Grt.Files_Lib is
    begin
       Save_Backtrace (Bt, 2);
       Error_S ("cannot open file """);
-      Diag_C_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
+      Diag_C (Str.Base, Str.Bounds.Dim_1.Length);
       Diag_C ('"');
       Error_E_Call_Stack (Bt);
    end Error_Open;

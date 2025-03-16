@@ -551,7 +551,7 @@ package body Trans.Chap9 is
       Instance   : O_Dnode;
       Pass       : O_Dnode;
       Loc        : O_Dnode;
-      Msg_Var    : O_Dnode;
+      Msg_Var    : Mnode;
       Blk        : O_If_Block;
       Expr       : Iir;
       Assocs     : O_Assoc_List;
@@ -566,26 +566,23 @@ package body Trans.Chap9 is
 
       Start_Subprogram_Body (Proc);
       Push_Local_Factory;
+      Open_Temp;
       --  Push scope for architecture declarations.
       Set_Scope_Via_Param_Ptr (Base.Block_Scope, Instance);
 
       Loc := Chap4.Get_Location (Stmt);
-      New_Var_Decl (Msg_Var, Get_Identifier ("msg"), O_Storage_Local,
-                    Std_String_Ptr_Node);
       Expr := Get_Report_Expression (Stmt);
       if Expr = Null_Iir then
-         New_Assign_Stmt (New_Obj (Msg_Var),
-                          New_Lit (New_Null_Access (Std_String_Ptr_Node)));
+         Msg_Var := Mnode_Null;
       else
-         New_Assign_Stmt
-           (New_Obj (Msg_Var),
-            Chap7.Translate_Expression (Expr, String_Type_Definition));
+         Msg_Var := Chap7.Translate_Expression (Expr, String_Type_Definition);
+         Stabilize (Msg_Var);
       end if;
 
       Start_If_Stmt (Blk, New_Obj_Value (Pass));
 
       Start_Association (Assocs, Ghdl_Psl_Cover);
-      New_Association (Assocs, New_Obj_Value (Msg_Var));
+      Chap8.New_Association_String_Base_Len (Assocs, Msg_Var);
       New_Association (Assocs, New_Lit (Get_Ortho_Literal
                                           (Severity_Level_Note)));
       New_Association (Assocs, New_Address (New_Obj (Loc),
@@ -595,7 +592,7 @@ package body Trans.Chap9 is
       New_Else_Stmt (Blk);
 
       Start_Association (Assocs, Ghdl_Psl_Cover_Failed);
-      New_Association (Assocs, New_Obj_Value (Msg_Var));
+      Chap8.New_Association_String_Base_Len (Assocs, Msg_Var);
       New_Association (Assocs, New_Lit (Get_Ortho_Literal
                                           (Severity_Level_Warning)));
       New_Association (Assocs, New_Address (New_Obj (Loc),
@@ -605,6 +602,7 @@ package body Trans.Chap9 is
       Finish_If_Stmt (Blk);
 
       Clear_Scope (Base.Block_Scope);
+      Close_Temp;
       Pop_Local_Factory;
       Finish_Subprogram_Body;
    end Translate_Psl_Report;

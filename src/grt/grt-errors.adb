@@ -100,12 +100,13 @@ package body Grt.Errors is
       Put (Error_Stream, Str_Subtype (Str));
    end Diag_C_Std;
 
-   procedure Diag_C (Str : Std_String_Ptr)
+   procedure Diag_C (Base : Std_String_Basep;
+                     Len : Ghdl_Index_Type)
    is
-      subtype Ada_Str is String (1 .. Natural (Str.Bounds.Dim_1.Length));
+      subtype Ada_Str is String (1 .. Natural (Len));
    begin
-      if Ada_Str'Length > 0 then
-         Diag_C (Ada_Str (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1)));
+      if Len > 0 then
+         Diag_C (Ada_Str (Base (0 .. Len - 1)));
       end if;
    end Diag_C;
 
