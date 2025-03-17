@@ -68,6 +68,14 @@ package body Vhdl.Disp_Tree is
       Disp_Int32 (Int32 (Node));
    end Disp_Iir_Number;
 
+   procedure Disp_String8 (Id : String8_Id; Len : Nat32) is
+   begin
+      for I in 1 .. Len loop
+         Disp_Int32 (Str_Table.Element_String8 (Id, I));
+      end loop;
+      Log_Line;
+   end Disp_String8;
+
    -- For iir.
 
    procedure Disp_Iir_List
@@ -545,7 +553,7 @@ package body Vhdl.Disp_Tree is
                when Type_PSL_NFA =>
                   Disp_PSL_NFA (Get_PSL_NFA (N, F), Sub_Indent);
                when Type_String8_Id =>
-                  Log_Line ("<string8>");
+                  Disp_String8 (Get_String8_Id (N, F), Get_String_Length (N));
                when Type_PSL_Node =>
                   PSL.Dump_Tree.Disp_Tree
                     (Get_PSL_Node (N, F), Sub_Indent, Depth - 1);
