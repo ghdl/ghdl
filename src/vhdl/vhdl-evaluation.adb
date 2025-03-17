@@ -3554,7 +3554,7 @@ package body Vhdl.Evaluation is
    is
       Suffix : constant Iir := Get_Suffix (Expr);
       Len : constant Int64 := Eval_Discrete_Range_Length (Suffix);
-      Rng : constant Iir := Eval_Static_Range (Suffix);
+      Idx_Type, Idx_Rng : Iir;
       Prefix : Iir;
       Dir : Direction_Type;
       Left, Right : Iir;
@@ -3564,12 +3564,15 @@ package body Vhdl.Evaluation is
          return Build_String (Null_String8, 0, Expr);
       end if;
 
+      Eval_Range_Bounds (Suffix, Dir, Left, Right);
+
       Prefix := Get_Prefix (Expr);
       Prefix := Eval_Static_Expr (Prefix);
 
-      Eval_Range_Bounds (Suffix, Dir, Left, Right);
+      Idx_Type := Get_Index_Type (Get_Type (Prefix), 0);
+      Idx_Rng := Get_Range_Constraint (Idx_Type);
 
-      Pos := Eval_Pos_In_Range (Rng, Left);
+      Pos := Eval_Pos_In_Range (Idx_Rng, Left);
 
       case Get_Kind (Prefix) is
          when Iir_Kind_String_Literal8 =>
