@@ -413,7 +413,7 @@ jobs:
       actions: write
       attestations: write
     with:
-      prerelease: true
+      draft: true
       replacements: |
         ghdl=${{ needs.Params.outputs.ghdl_version }}
         pyghdl=${{ needs.Params.outputs.pyghdl_version }}
