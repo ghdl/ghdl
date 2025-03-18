@@ -90,17 +90,16 @@ package Grt.Types is
      (Source => Ghdl_C_String, Target => Address);
 
    --  Str_len.
-   type String_Ptr is access String (1 .. Natural'Last);
    type Ghdl_Str_Len_Type is record
-      Len : Natural;
-      Str : String_Ptr;
+      Len : Ghdl_Index_Type;
+      Str : Ghdl_C_String;
    end record;
    --  Same as previous one, but using 'address.
    type Ghdl_Str_Len_Address_Type is record
-      Len : Natural;
+      Len : Ghdl_Index_Type;
       Str : Address;
    end record;
-   type Ghdl_Str_Len_Ptr is access constant Ghdl_Str_Len_Type;
+   type Ghdl_Str_Len_Ptr is access Ghdl_Str_Len_Type;
    type Ghdl_Str_Len_Array is array (Natural) of Ghdl_Str_Len_Type;
    type Ghdl_Str_Len_Array_Ptr is access all Ghdl_Str_Len_Array;
 

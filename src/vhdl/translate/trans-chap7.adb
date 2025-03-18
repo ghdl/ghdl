@@ -2312,14 +2312,17 @@ package body Trans.Chap7 is
                                 return O_Enode
    is
       Val_Type : constant Iir := Get_Base_Type (Res_Type);
-      Res      : O_Dnode;
+      Res      : Mnode;
+      Str_Len  : Mnode;
       Assoc    : O_Assoc_List;
    begin
-      Res := Create_Temp (Std_String_Node);
+      Str_Len := Dv2M (Create_Temp (Ghdl_Str_Len_Type_Node),
+        null, Mode_Value,
+        Ghdl_Str_Len_Type_Node,
+        Ghdl_Str_Len_Ptr_Node);
       Create_Temp_Stack2_Mark;
       Start_Association (Assoc, Subprg);
-      New_Association (Assoc,
-                       New_Address (New_Obj (Res), Std_String_Ptr_Node));
+      New_Association (Assoc, M2Addr (Str_Len));
       New_Association (Assoc, Val);
       if Arg2 /= O_Enode_Null then
          New_Association (Assoc, Arg2);
@@ -2328,9 +2331,9 @@ package body Trans.Chap7 is
          end if;
       end if;
       New_Procedure_Call (Assoc);
+      Res := Chap14.Create_String_From_Str_Len (Str_Len);
       return M2E (Translate_Implicit_Array_Conversion
-                  (Dv2M (Res, Get_Info (Val_Type), Mode_Value),
-                   Val_Type, Res_Type, Loc));
+                  (Res, Val_Type, Res_Type, Loc));
    end Translate_To_String;
 
    function Translate_Bv_To_String (Subprg   : O_Dnode;
@@ -3197,10 +3200,36 @@ package body Trans.Chap7 is
                New_Convert_Ov (Left_Tree, Ghdl_Real_Type),
                New_Convert_Ov (Right_Tree, Ghdl_I32_Type));
          when Iir_Predefined_Real_To_String_Format =>
-            return Translate_To_String
-              (Ghdl_To_String_F64_Format, Res_Type, Expr,
-               New_Convert_Ov (Left_Tree, Ghdl_Real_Type),
-               Right_Tree);
+            declare
+               Str_Tinfo : constant Type_Info_Acc :=
+                 Get_Info (String_Type_Definition);
+               Str_Len : Mnode;
+               Strp : Mnode;
+            begin
+               Str_Len := Dv2M (Create_Temp (Ghdl_Str_Len_Type_Node),
+                 null, Mode_Value,
+                 Ghdl_Str_Len_Type_Node,
+                 Ghdl_Str_Len_Ptr_Node);
+               Strp := Dp2M
+                 (Create_Temp_Init (Std_String_Ptr_Node, Right_Tree),
+                  Str_Tinfo, Mode_Value);
+               New_Assign_Stmt
+                 (New_Selected_Element (M2Lv (Str_Len),
+                                        Ghdl_Str_Len_Type_Str_Field),
+                  New_Convert_Ov (M2Addr (Chap3.Get_Composite_Base (Strp)),
+                                  Char_Ptr_Type));
+               New_Assign_Stmt
+                 (New_Selected_Element (M2Lv (Str_Len),
+                                        Ghdl_Str_Len_Type_Len_Field),
+                  M2E (Chap3.Range_To_Length
+                       (Chap3.Bounds_To_Range
+                        (Chap3.Get_Composite_Bounds (Strp),
+                         String_Type_Definition, 1))));
+               return Translate_To_String
+                 (Ghdl_To_String_F64_Format, Res_Type, Expr,
+                  New_Convert_Ov (Left_Tree, Ghdl_Real_Type),
+                  M2Addr (Str_Len));
+            end;
          when Iir_Predefined_Physical_To_String =>
             declare
                Conv   : O_Tnode;

@@ -388,8 +388,9 @@ package body Translation is
          Constr : O_Element_List;
       begin
          Start_Record_Type (Constr);
-         New_Record_Field (Constr, Ghdl_Str_Len_Type_Len_Field,
-                           Get_Identifier ("len"), Ghdl_Index_Type);
+         New_Record_Field
+           (Constr, Ghdl_Str_Len_Type_Len_Field,
+            Wki_Length, Ghdl_Index_Type);
          New_Record_Field
            (Constr, Ghdl_Str_Len_Type_Str_Field,
             Get_Identifier ("str"), Char_Ptr_Type);
@@ -878,11 +879,12 @@ package body Translation is
         (Interfaces, Param, Wki_Length, Ghdl_Index_Type);
    end Create_String_Base_Len_Params;
 
-   --  procedure __ghdl_image_NAME (res : std_string_ptr_node;
+   --  procedure __ghdl_image_NAME (res : ghdl_str_len_ptr;
    --                               val : VAL_TYPE;
    --                               rti : ghdl_rti_access);
    --
-   --  function __ghdl_value_NAME (val : std_string_ptr_node;
+   --  function __ghdl_value_NAME (base : std_string_basep;
+   --                              len : ghdl_index_type;
    --                              rti : ghdl_rti_access);
    --      return VAL_TYPE;
    procedure Create_Image_Value_Subprograms (Name : String;
@@ -898,7 +900,7 @@ package body Translation is
         (Interfaces, Get_Identifier ("__ghdl_image_" & Name),
          O_Storage_External);
       New_Interface_Decl
-        (Interfaces, Param, Get_Identifier ("res"), Std_String_Ptr_Node);
+        (Interfaces, Param, Wki_Res, Ghdl_Str_Len_Ptr_Node);
       New_Interface_Decl
         (Interfaces, Param, Wki_Val, Val_Type);
       if Has_Td then
@@ -954,7 +956,7 @@ package body Translation is
       Finish_Subprogram_Decl (Interfaces, Subprg);
    end Create_Std_Ulogic_Array_Match_Subprogram;
 
-   --  procedure NAME (res : std_string_ptr_node;
+   --  procedure NAME (res : ghdl_str_len_ptr_node;
    --                  val : VAL_TYPE;
    --                  ARG2_NAME : ARG2_TYPE);
    procedure Create_To_String_Subprogram (Name : String;
@@ -971,7 +973,7 @@ package body Translation is
       Start_Procedure_Decl
         (Interfaces, Get_Identifier (Name), O_Storage_External);
       New_Interface_Decl
-        (Interfaces, Param, Wki_Res, Std_String_Ptr_Node);
+        (Interfaces, Param, Wki_Res, Ghdl_Str_Len_Ptr_Node);
       New_Interface_Decl
         (Interfaces, Param, Wki_Val, Val_Type);
       if Arg2_Type /= O_Tnode_Null then
@@ -1945,7 +1947,7 @@ package body Translation is
          Ghdl_Real_Type, Ghdl_I32_Type, Get_Identifier ("nbr_digits"));
       Create_To_String_Subprogram
         ("__ghdl_to_string_f64_format", Ghdl_To_String_F64_Format,
-         Ghdl_Real_Type, Std_String_Ptr_Node, Get_Identifier ("format"));
+         Ghdl_Real_Type, Ghdl_Str_Len_Ptr_Node, Get_Identifier ("format"));
       declare
          Bv_Base_Ptr : constant O_Tnode :=
            Get_Info (Bit_Vector_Type_Definition).B.Base_Ptr_Type (Mode_Value);

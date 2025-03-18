@@ -20,7 +20,7 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
-with System; use System;
+
 with Ada.Unchecked_Conversion;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
 with Grt.Processes; use Grt.Processes;
@@ -29,35 +29,18 @@ with Grt.Errors_Exec; use Grt.Errors_Exec;
 with Grt.To_Strings; use Grt.To_Strings;
 
 package body Grt.Images is
-   function To_Std_String_Basep is new Ada.Unchecked_Conversion
-     (Source => System.Address, Target => Std_String_Basep);
-
-   function To_Std_String_Boundp is new Ada.Unchecked_Conversion
-     (Source => System.Address, Target => Std_String_Boundp);
-
-   procedure Set_String_Bounds (Res : Std_String_Ptr; Len : Ghdl_Index_Type)
+   procedure Return_String (Res : Ghdl_Str_Len_Ptr; Str : String)
    is
    begin
-      Res.Bounds := To_Std_String_Boundp
-        (Ghdl_Stack2_Allocate (Std_String_Bound'Size / System.Storage_Unit));
-      Res.Bounds.Dim_1 := (Left => 1,
-                           Right => Std_Integer (Len),
-                           Dir => Dir_To,
-                           Length => Len);
-   end Set_String_Bounds;
-
-   procedure Return_String (Res : Std_String_Ptr; Str : String)
-   is
-   begin
-      Res.Base := To_Std_String_Basep (Ghdl_Stack2_Allocate (Str'Length));
+      Res.Str := To_Ghdl_C_String (Ghdl_Stack2_Allocate (Str'Length));
       for I in 0 .. Str'Length - 1 loop
-         Res.Base (Ghdl_Index_Type (I)) := Str (Str'First + I);
+         Res.Str (I + 1) := Str (Str'First + I);
       end loop;
-      Set_String_Bounds (Res, Str'Length);
+      Res.Len := Str'Length;
    end Return_String;
 
    procedure Return_Enum
-     (Res : Std_String_Ptr; Rti : Ghdl_Rti_Access; Index : Ghdl_Index_Type)
+     (Res : Ghdl_Str_Len_Ptr; Rti : Ghdl_Rti_Access; Index : Ghdl_Index_Type)
    is
       Enum_Rti : constant Ghdl_Rtin_Type_Enum_Acc :=
         To_Ghdl_Rtin_Type_Enum_Acc (Rti);
@@ -67,27 +50,27 @@ package body Grt.Images is
    end Return_Enum;
 
    procedure Ghdl_Image_B1
-     (Res : Std_String_Ptr; Val : Ghdl_B1; Rti : Ghdl_Rti_Access)
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_B1; Rti : Ghdl_Rti_Access)
    is
    begin
       Return_Enum (Res, Rti, Ghdl_B1'Pos (Val));
    end Ghdl_Image_B1;
 
    procedure Ghdl_Image_E8
-     (Res : Std_String_Ptr; Val : Ghdl_E8; Rti : Ghdl_Rti_Access)
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_E8; Rti : Ghdl_Rti_Access)
    is
    begin
       Return_Enum (Res, Rti, Ghdl_E8'Pos (Val));
    end Ghdl_Image_E8;
 
    procedure Ghdl_Image_E32
-     (Res : Std_String_Ptr; Val : Ghdl_E32; Rti : Ghdl_Rti_Access)
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_E32; Rti : Ghdl_Rti_Access)
    is
    begin
       Return_Enum (Res, Rti, Ghdl_E32'Pos (Val));
    end Ghdl_Image_E32;
 
-   procedure Ghdl_Image_I32 (Res : Std_String_Ptr; Val : Ghdl_I32)
+   procedure Ghdl_Image_I32 (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I32)
    is
       Str : String (1 .. 11);
       First : Natural;
@@ -96,7 +79,7 @@ package body Grt.Images is
       Return_String (Res, Str (First .. Str'Last));
    end Ghdl_Image_I32;
 
-   procedure Ghdl_Image_I64 (Res : Std_String_Ptr; Val : Ghdl_I64)
+   procedure Ghdl_Image_I64 (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I64)
    is
       --  biggest number is: 18446744073709551615 (20 digits)
       Str : String (1 .. 21);
@@ -107,7 +90,7 @@ package body Grt.Images is
    end Ghdl_Image_I64;
 
    procedure Ghdl_Image_P64
-     (Res : Std_String_Ptr; Val : Ghdl_I64; Rti : Ghdl_Rti_Access)
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I64; Rti : Ghdl_Rti_Access)
    is
       Str : String (1 .. 21);
       First : Natural;
@@ -131,7 +114,7 @@ package body Grt.Images is
    end Ghdl_Image_P64;
 
    procedure Ghdl_Image_P32
-     (Res : Std_String_Ptr; Val : Ghdl_I32; Rti : Ghdl_Rti_Access)
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I32; Rti : Ghdl_Rti_Access)
    is
       Str : String (1 .. 11);
       First : Natural;
@@ -154,7 +137,7 @@ package body Grt.Images is
       end;
    end Ghdl_Image_P32;
 
-   procedure Ghdl_Image_F64 (Res : Std_String_Ptr; Val : Ghdl_F64)
+   procedure Ghdl_Image_F64 (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_F64)
    is
       Str : String (1 .. 24);
       P : Natural;
@@ -163,15 +146,15 @@ package body Grt.Images is
       Return_String (Res, Str (1 .. P));
    end Ghdl_Image_F64;
 
-   procedure Ghdl_To_String_I32 (Res : Std_String_Ptr; Val : Ghdl_I32)
+   procedure Ghdl_To_String_I32 (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I32)
      renames Ghdl_Image_I32;
-   procedure Ghdl_To_String_I64 (Res : Std_String_Ptr; Val : Ghdl_I64)
+   procedure Ghdl_To_String_I64 (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I64)
      renames Ghdl_Image_I64;
-   procedure Ghdl_To_String_F64 (Res : Std_String_Ptr; Val : Ghdl_F64)
+   procedure Ghdl_To_String_F64 (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_F64)
      renames Ghdl_Image_F64;
 
    procedure Ghdl_To_String_F64_Digits
-     (Res : Std_String_Ptr; Val : Ghdl_F64; Nbr_Digits : Ghdl_I32)
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_F64; Nbr_Digits : Ghdl_I32)
    is
       Str : String (1 .. 320 + Natural (Nbr_Digits));
       P : Natural;
@@ -181,14 +164,14 @@ package body Grt.Images is
    end Ghdl_To_String_F64_Digits;
 
    procedure Ghdl_To_String_F64_Format
-     (Res : Std_String_Ptr; Val : Ghdl_F64; Format : Std_String_Ptr)
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_F64; Format : Ghdl_Str_Len_Ptr)
    is
-      C_Format : String (1 .. Positive (Format.Bounds.Dim_1.Length + 1));
+      C_Format : String (1 .. Positive (Format.Len + 1));
       Str : String_Real_Format;
       P : Natural;
    begin
       for I in 1 .. C_Format'Last - 1 loop
-         C_Format (I) := Format.Base (Ghdl_Index_Type (I - 1));
+         C_Format (I) := Format.Str (I);
       end loop;
       C_Format (C_Format'Last) := NUL;
 
@@ -200,45 +183,45 @@ package body Grt.Images is
    Hex_Chars : constant array (Natural range 0 .. 15) of Character :=
      "0123456789ABCDEF";
 
-   procedure Ghdl_BV_To_String (Res : Std_String_Ptr;
+   procedure Ghdl_BV_To_String (Res : Ghdl_Str_Len_Ptr;
                                 Val : Std_Bit_Vector_Basep;
                                 Len : Ghdl_Index_Type;
                                 Log_Base : Log_Base_Type)
    is
       Res_Len : constant Ghdl_Index_Type := (Len + Log_Base - 1) / Log_Base;
-      Pos : Ghdl_Index_Type;
+      Pos : Natural;
       V : Natural;
       Sh_Count : Natural range 0 .. 4;
       Sh : Natural range 1 .. 16;
    begin
-      Res.Base := To_Std_String_Basep (Ghdl_Stack2_Allocate (Res_Len));
+      Res.Str := To_Ghdl_C_String (Ghdl_Stack2_Allocate (Res_Len));
+      Res.Len := Res_Len;
       V := 0;
       Sh_Count := 0;
       Sh := 1;
-      Pos := Res_Len - 1;
+      Pos := Natural (Res_Len);
       for I in reverse 1 .. Len loop
          V := V + Std_Bit'Pos (Val (I - 1)) * Sh;
          Sh_Count := Sh_Count + 1;
          Sh := Sh * 2;
          if Sh_Count = Natural (Log_Base) or else I = 1 then
-            Res.Base (Pos) := Hex_Chars (V);
+            Res.Str (Pos) := Hex_Chars (V);
             Pos := Pos - 1;
             Sh_Count := 0;
             Sh := 1;
             V := 0;
          end if;
       end loop;
-      Set_String_Bounds (Res, Res_Len);
    end Ghdl_BV_To_String;
 
-   procedure Ghdl_BV_To_Ostring (Res : Std_String_Ptr;
+   procedure Ghdl_BV_To_Ostring (Res : Ghdl_Str_Len_Ptr;
                                  Base : Std_Bit_Vector_Basep;
                                  Len : Ghdl_Index_Type) is
    begin
       Ghdl_BV_To_String (Res, Base, Len, 3);
    end Ghdl_BV_To_Ostring;
 
-   procedure Ghdl_BV_To_Hstring (Res : Std_String_Ptr;
+   procedure Ghdl_BV_To_Hstring (Res : Ghdl_Str_Len_Ptr;
                                  Base : Std_Bit_Vector_Basep;
                                  Len : Ghdl_Index_Type) is
    begin
@@ -246,7 +229,7 @@ package body Grt.Images is
    end Ghdl_BV_To_Hstring;
 
    procedure To_String_Enum
-     (Res : Std_String_Ptr; Rti : Ghdl_Rti_Access; Index : Ghdl_Index_Type)
+     (Res : Ghdl_Str_Len_Ptr; Rti : Ghdl_Rti_Access; Index : Ghdl_Index_Type)
    is
       Enum_Rti : Ghdl_Rtin_Type_Enum_Acc;
       Str : Ghdl_C_String;
@@ -265,7 +248,7 @@ package body Grt.Images is
             declare
                Skip : Boolean;
                Elen : Ghdl_Index_Type;
-               Epos : Ghdl_Index_Type;
+               Epos : Positive;
             begin
                Skip := False;
                Elen := 0;
@@ -277,56 +260,57 @@ package body Grt.Images is
                      Skip := Str (I) = '\';
                   end if;
                end loop;
-               Res.Base := To_Std_String_Basep (Ghdl_Stack2_Allocate (Elen));
-               Epos := 0;
+               Res.Str := To_Ghdl_C_String (Ghdl_Stack2_Allocate (Elen));
+               Res.Len := Elen;
+               Epos := 1;
                for I in 2 .. Len - 1 loop
                   if Skip then
                      Skip := False;
                   else
-                     Res.Base (Epos) := Str (I);
+                     Res.Str (Epos) := Str (I);
                      Epos := Epos + 1;
                      Skip := Str (I) = '\';
                   end if;
                end loop;
-               Set_String_Bounds (Res, Elen);
             end;
          end if;
       end if;
    end To_String_Enum;
 
    procedure Ghdl_To_String_B1
-     (Res : Std_String_Ptr; Val : Ghdl_B1; Rti : Ghdl_Rti_Access) is
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_B1; Rti : Ghdl_Rti_Access) is
    begin
       To_String_Enum (Res, Rti, Ghdl_B1'Pos (Val));
    end Ghdl_To_String_B1;
 
    procedure Ghdl_To_String_E8
-     (Res : Std_String_Ptr; Val : Ghdl_E8; Rti : Ghdl_Rti_Access) is
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_E8; Rti : Ghdl_Rti_Access) is
    begin
       To_String_Enum (Res, Rti, Ghdl_E8'Pos (Val));
    end Ghdl_To_String_E8;
 
    procedure Ghdl_To_String_E32
-     (Res : Std_String_Ptr; Val : Ghdl_E32; Rti : Ghdl_Rti_Access) is
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_E32; Rti : Ghdl_Rti_Access) is
    begin
       To_String_Enum (Res, Rti, Ghdl_E32'Pos (Val));
    end Ghdl_To_String_E32;
 
-   procedure Ghdl_To_String_Char (Res : Std_String_Ptr; Val : Std_Character) is
+   procedure Ghdl_To_String_Char (Res : Ghdl_Str_Len_Ptr;
+                                  Val : Std_Character) is
    begin
       Return_String (Res, (1 => Val));
    end Ghdl_To_String_Char;
 
    procedure Ghdl_To_String_P32
-     (Res : Std_String_Ptr; Val : Ghdl_I32; Rti : Ghdl_Rti_Access)
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I32; Rti : Ghdl_Rti_Access)
      renames Ghdl_Image_P32;
 
    procedure Ghdl_To_String_P64
-     (Res : Std_String_Ptr; Val : Ghdl_I64; Rti : Ghdl_Rti_Access)
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I64; Rti : Ghdl_Rti_Access)
      renames Ghdl_Image_P64;
 
    procedure Ghdl_Time_To_String_Unit
-     (Res : Std_String_Ptr;
+     (Res : Ghdl_Str_Len_Ptr;
       Val : Std_Time; Unit : Std_Time; Rti : Ghdl_Rti_Access)
    is
       Str : String_Time_Unit;
@@ -361,7 +345,7 @@ package body Grt.Images is
    end Ghdl_Time_To_String_Unit;
 
    procedure Ghdl_Array_Char_To_String_B1
-     (Res : Std_String_Ptr;
+     (Res : Ghdl_Str_Len_Ptr;
       Val : Ghdl_Ptr; Len : Ghdl_Index_Type; Rti : Ghdl_Rti_Access)
    is
       Enum_Rti : constant Ghdl_Rtin_Type_Enum_Acc :=
@@ -369,16 +353,16 @@ package body Grt.Images is
       Str : Ghdl_C_String;
       Arr : constant Ghdl_B1_Array_Base_Ptr := To_Ghdl_B1_Array_Base_Ptr (Val);
    begin
-      Res.Base := To_Std_String_Basep (Ghdl_Stack2_Allocate (Len));
+      Res.Str := To_Ghdl_C_String (Ghdl_Stack2_Allocate (Len));
+      Res.Len := Len;
       for I in 1 .. Len loop
          Str := Enum_Rti.Names (Ghdl_B1'Pos (Arr (I - 1)));
-         Res.Base (I - 1) := Str (2);
+         Res.Str (Positive (I)) := Str (2);
       end loop;
-      Set_String_Bounds (Res, Len);
    end Ghdl_Array_Char_To_String_B1;
 
    procedure Ghdl_Array_Char_To_String_E8
-     (Res : Std_String_Ptr;
+     (Res : Ghdl_Str_Len_Ptr;
       Val : Ghdl_Ptr; Len : Ghdl_Index_Type; Rti : Ghdl_Rti_Access)
    is
       Enum_Rti : constant Ghdl_Rtin_Type_Enum_Acc :=
@@ -386,16 +370,16 @@ package body Grt.Images is
       Str : Ghdl_C_String;
       Arr : constant Ghdl_E8_Array_Base_Ptr := To_Ghdl_E8_Array_Base_Ptr (Val);
    begin
-      Res.Base := To_Std_String_Basep (Ghdl_Stack2_Allocate (Len));
+      Res.Str := To_Ghdl_C_String (Ghdl_Stack2_Allocate (Len));
+      Res.Len := Len;
       for I in 1 .. Len loop
          Str := Enum_Rti.Names (Ghdl_E8'Pos (Arr (I - 1)));
-         Res.Base (I - 1) := Str (2);
+         Res.Str (Positive (I)) := Str (2);
       end loop;
-      Set_String_Bounds (Res, Len);
    end Ghdl_Array_Char_To_String_E8;
 
    procedure Ghdl_Array_Char_To_String_E32
-     (Res : Std_String_Ptr;
+     (Res : Ghdl_Str_Len_Ptr;
       Val : Ghdl_Ptr; Len : Ghdl_Index_Type; Rti : Ghdl_Rti_Access)
    is
       Enum_Rti : constant Ghdl_Rtin_Type_Enum_Acc :=
@@ -404,15 +388,15 @@ package body Grt.Images is
       Arr : constant Ghdl_E32_Array_Base_Ptr :=
         To_Ghdl_E32_Array_Base_Ptr (Val);
    begin
-      Res.Base := To_Std_String_Basep (Ghdl_Stack2_Allocate (Len));
+      Res.Str := To_Ghdl_C_String (Ghdl_Stack2_Allocate (Len));
+      Res.Len := Len;
       for I in 1 .. Len loop
          Str := Enum_Rti.Names (Ghdl_E32'Pos (Arr (I - 1)));
-         Res.Base (I - 1) := Str (2);
+         Res.Str (Positive (I)) := Str (2);
       end loop;
-      Set_String_Bounds (Res, Len);
    end Ghdl_Array_Char_To_String_E32;
 
---     procedure Ghdl_Image_F64 (Res : Std_String_Ptr; Val : Ghdl_F64)
+--     procedure Ghdl_Image_F64 (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_F64)
 --     is
 --        --  Sign (1) + digit (1) + dot (1) + digits (15) + exp (1) + sign (1)
 --        --  + exp_digits (4) -> 24.

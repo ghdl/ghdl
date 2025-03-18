@@ -29,55 +29,55 @@ package Grt.Images is
    --  stack.
 
    procedure Ghdl_Image_B1
-     (Res : Std_String_Ptr; Val : Ghdl_B1; Rti : Ghdl_Rti_Access);
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_B1; Rti : Ghdl_Rti_Access);
    procedure Ghdl_Image_E8
-     (Res : Std_String_Ptr; Val : Ghdl_E8; Rti : Ghdl_Rti_Access);
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_E8; Rti : Ghdl_Rti_Access);
    procedure Ghdl_Image_E32
-     (Res : Std_String_Ptr; Val : Ghdl_E32; Rti : Ghdl_Rti_Access);
-   procedure Ghdl_Image_I32 (Res : Std_String_Ptr; Val : Ghdl_I32);
-   procedure Ghdl_Image_I64 (Res : Std_String_Ptr; Val : Ghdl_I64);
-   procedure Ghdl_Image_F64 (Res : Std_String_Ptr; Val : Ghdl_F64);
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_E32; Rti : Ghdl_Rti_Access);
+   procedure Ghdl_Image_I32 (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I32);
+   procedure Ghdl_Image_I64 (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I64);
+   procedure Ghdl_Image_F64 (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_F64);
    procedure Ghdl_Image_P64
-     (Res : Std_String_Ptr; Val : Ghdl_I64; Rti : Ghdl_Rti_Access);
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I64; Rti : Ghdl_Rti_Access);
    procedure Ghdl_Image_P32
-     (Res : Std_String_Ptr; Val : Ghdl_I32; Rti : Ghdl_Rti_Access);
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I32; Rti : Ghdl_Rti_Access);
 
-   procedure Ghdl_To_String_I32 (Res : Std_String_Ptr; Val : Ghdl_I32);
-   procedure Ghdl_To_String_I64 (Res : Std_String_Ptr; Val : Ghdl_I64);
-   procedure Ghdl_To_String_F64 (Res : Std_String_Ptr; Val : Ghdl_F64);
+   procedure Ghdl_To_String_I32 (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I32);
+   procedure Ghdl_To_String_I64 (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I64);
+   procedure Ghdl_To_String_F64 (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_F64);
    procedure Ghdl_To_String_F64_Digits
-     (Res : Std_String_Ptr; Val : Ghdl_F64; Nbr_Digits : Ghdl_I32);
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_F64; Nbr_Digits : Ghdl_I32);
    procedure Ghdl_To_String_F64_Format
-     (Res : Std_String_Ptr; Val : Ghdl_F64; Format : Std_String_Ptr);
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_F64; Format : Ghdl_Str_Len_Ptr);
    procedure Ghdl_To_String_B1
-     (Res : Std_String_Ptr; Val : Ghdl_B1; Rti : Ghdl_Rti_Access);
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_B1; Rti : Ghdl_Rti_Access);
    procedure Ghdl_To_String_E8
-     (Res : Std_String_Ptr; Val : Ghdl_E8; Rti : Ghdl_Rti_Access);
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_E8; Rti : Ghdl_Rti_Access);
    procedure Ghdl_To_String_E32
-     (Res : Std_String_Ptr; Val : Ghdl_E32; Rti : Ghdl_Rti_Access);
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_E32; Rti : Ghdl_Rti_Access);
    procedure Ghdl_To_String_Char
-     (Res : Std_String_Ptr; Val : Std_Character);
+     (Res : Ghdl_Str_Len_Ptr; Val : Std_Character);
    procedure Ghdl_To_String_P32
-     (Res : Std_String_Ptr; Val : Ghdl_I32; Rti : Ghdl_Rti_Access);
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I32; Rti : Ghdl_Rti_Access);
    procedure Ghdl_To_String_P64
-     (Res : Std_String_Ptr; Val : Ghdl_I64; Rti : Ghdl_Rti_Access);
+     (Res : Ghdl_Str_Len_Ptr; Val : Ghdl_I64; Rti : Ghdl_Rti_Access);
    procedure Ghdl_Time_To_String_Unit
-     (Res : Std_String_Ptr;
+     (Res : Ghdl_Str_Len_Ptr;
       Val : Std_Time; Unit : Std_Time; Rti : Ghdl_Rti_Access);
    procedure Ghdl_Array_Char_To_String_B1
-     (Res : Std_String_Ptr;
+     (Res : Ghdl_Str_Len_Ptr;
       Val : Ghdl_Ptr; Len : Ghdl_Index_Type; Rti : Ghdl_Rti_Access);
    procedure Ghdl_Array_Char_To_String_E8
-     (Res : Std_String_Ptr;
+     (Res : Ghdl_Str_Len_Ptr;
       Val : Ghdl_Ptr; Len : Ghdl_Index_Type; Rti : Ghdl_Rti_Access);
    procedure Ghdl_Array_Char_To_String_E32
-     (Res : Std_String_Ptr;
+     (Res : Ghdl_Str_Len_Ptr;
       Val : Ghdl_Ptr; Len : Ghdl_Index_Type; Rti : Ghdl_Rti_Access);
 
-   procedure Ghdl_BV_To_Ostring (Res : Std_String_Ptr;
+   procedure Ghdl_BV_To_Ostring (Res : Ghdl_Str_Len_Ptr;
                                  Base : Std_Bit_Vector_Basep;
                                  Len : Ghdl_Index_Type);
-   procedure Ghdl_BV_To_Hstring (Res : Std_String_Ptr;
+   procedure Ghdl_BV_To_Hstring (Res : Ghdl_Str_Len_Ptr;
                                  Base : Std_Bit_Vector_Basep;
                                  Len : Ghdl_Index_Type);
 

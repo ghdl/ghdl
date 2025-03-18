@@ -34,7 +34,7 @@ package body Grt.Names is
      (Source => System.Address, Target => Std_String_Boundp);
 
    function To_Std_String_Basep is new Ada.Unchecked_Conversion
-     (Source => String_Ptr, Target => Std_String_Basep);
+     (Source => Ghdl_C_String, Target => Std_String_Basep);
 
    function To_Std_String_Basep is new Ada.Unchecked_Conversion
      (Source => System.Address, Target => Std_String_Basep);
@@ -48,15 +48,15 @@ package body Grt.Names is
       pragma Import (C, Memcpy);
 
       Bounds : Std_String_Boundp;
-      Len : Natural;
+      Len : Ghdl_Index_Type;
 
       Rstr : Rstring;
-      R_Len : Natural;
+      R_Len : Ghdl_Index_Type;
    begin
       if Ctxt.Block /= null then
          Prepend (Rstr, ':');
          Get_Path_Name (Rstr, Ctxt, ':', not Is_Path);
-         R_Len := Length (Rstr);
+         R_Len := Ghdl_Index_Type (Length (Rstr));
          Len := R_Len + Name.Len;
       else
          Len := Name.Len;
@@ -67,15 +67,14 @@ package body Grt.Names is
       Bounds.Dim_1.Left := 1;
       Bounds.Dim_1.Right := Ghdl_I32 (Len);
       Bounds.Dim_1.Dir := Dir_To;
-      Bounds.Dim_1.Length := Ghdl_Index_Type (Len);
+      Bounds.Dim_1.Length := Len;
       Res.Bounds := Bounds;
       if Ctxt.Block /= null then
-         Res.Base := To_Std_String_Basep
-           (Ghdl_Stack2_Allocate (Ghdl_Index_Type (Len)));
-         Memcpy (Res.Base (0)'Address, Get_Address (Rstr), R_Len);
-         Memcpy (Res.Base (Ghdl_Index_Type (R_Len))'Address,
+         Res.Base := To_Std_String_Basep (Ghdl_Stack2_Allocate (Len));
+         Memcpy (Res.Base (0)'Address, Get_Address (Rstr), Natural (R_Len));
+         Memcpy (Res.Base (R_Len)'Address,
                  Name.Str (1)'Address,
-                 Name.Len);
+                 Natural (Name.Len));
          Free (Rstr);
       else
          Res.Base := To_Std_String_Basep (Name.Str);

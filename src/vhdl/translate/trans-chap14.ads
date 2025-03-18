@@ -63,5 +63,7 @@ package Trans.Chap14 is
    function Translate_Driving_Attribute (Attr : Iir) return O_Enode;
 
    function Translate_Path_Instance_Name_Attribute (Attr : Iir)
-                                                       return O_Enode;
+                                                   return O_Enode;
+
+   function Create_String_From_Str_Len (Str_Len : Mnode) return Mnode;
 end Trans.Chap14;

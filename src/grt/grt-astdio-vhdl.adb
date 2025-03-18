@@ -33,7 +33,7 @@ package body Grt.Astdio.Vhdl is
          S (3) := ''';
          Put (Stream, S);
       else
-         Put (Stream, Str.Str (1 .. Str.Len));
+         Put (Stream, Str.Str (1 .. Natural (Str.Len)));
       end if;
    end Put_Str_Len;
 
