@@ -42,7 +42,10 @@ class Base(TestCase):
             commentText = file_comments.Get_Comment(f, idx)
             commentStart = file_comments.Get_Comment_Start(f, idx)
             commentEnd = file_comments.Get_Comment_Last(f, idx)
-            self.assertTrue(commentText.find(':'+name+':') >= 0, f"no :{name}: in [{commentStart}..{commentEnd}] '{commentText}'({len(commentText)})")
+            self.assertTrue(
+                commentText.find(f":{name}:") >= 0,
+                f"no :{name}: in [{commentStart}..{commentEnd}] '{commentText}'({len(commentText)})",
+            )
             idx = file_comments.Get_Next_Comment(f, idx)
 
     def checkFlist(self, flist) -> None:
@@ -54,8 +57,7 @@ class Base(TestCase):
         decl = first
         while decl != nodes.Null_Iir:
             k = nodes.Get_Kind(decl)
-            if (k not in nodes.Iir_Kinds.Specification
-                and k not in nodes.Iir_Kinds.Clause):
+            if k not in nodes.Iir_Kinds.Specification and k not in nodes.Iir_Kinds.Clause:
                 self.checkComments(decl, self.getIdentifier(decl))
             if k == nodes.Iir_Kind.Type_Declaration:
                 tdef = nodes.Get_Type_Definition(decl)
