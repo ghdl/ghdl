@@ -320,6 +320,8 @@ package body Ghdlcov is
       Scan_Expect (Tok_Colon);
       Scan_Expect (Tok_Lcurl);
 
+      L := F.Lines;
+
       loop
          Scan_Expect (Tok_String);
          Lineno := Natural'Value (Get_String);
@@ -576,7 +578,7 @@ package body Ghdlcov is
          begin
             Put_Line ("SF:" & Image (Rec.Dir) & Image (Rec.Name));
             --  No functions...
-            Put_Line ("FN:1:file");
+            Put_Line ("FN:1,file");
             Fn_Cov := False;
             for I in Lines'Range loop
                if Lines (I).Coverage and Lines (I).Covered then
