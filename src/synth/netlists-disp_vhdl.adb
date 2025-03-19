@@ -252,18 +252,19 @@ package body Netlists.Disp_Vhdl is
       Wr_Line (");");
    end Disp_Instance_Gate;
 
-   function Get_Lit_Quote (Wd : Width) return Character is
+   function Get_Lit_Quote (Wd : Width; Force_Arr : Boolean) return Character is
    begin
-      if Wd = 1 then
-         return ''';
-      else
+      if Force_Arr or else Wd /= 1 then
          return '"';
+      else
+         return ''';
       end if;
    end Get_Lit_Quote;
 
-   procedure Disp_Binary_Lit (Va : Uns32; Zx : Uns32; Wd : Width)
+   procedure Disp_Binary_Lit
+     (Va : Uns32; Zx : Uns32; Wd : Width; Force_Arr : Boolean)
    is
-      Q : constant Character := Get_Lit_Quote (Wd);
+      Q : constant Character := Get_Lit_Quote (Wd, Force_Arr);
    begin
       Wr (Q);
       Disp_Binary_Digits (Va, Zx, Natural (Wd));
@@ -308,9 +309,9 @@ package body Netlists.Disp_Vhdl is
       Wr ('"');
    end Disp_Const_Log;
 
-   procedure Disp_X_Lit (W : Width; C : Character)
+   procedure Disp_X_Lit (W : Width; C : Character; Force_Arr : Boolean)
    is
-      Q : constant Character := Get_Lit_Quote (W);
+      Q : constant Character := Get_Lit_Quote (W, Force_Arr);
    begin
       if W <= 8 then
          Wr (Q);
@@ -327,7 +328,10 @@ package body Netlists.Disp_Vhdl is
 
    procedure Disp_Extract (Inst : Instance);
 
-   procedure Disp_Constant_Inline (Inst : Instance)
+   --  If FORCE_ARR is set, use double quotes instead of quotes with width is
+   --  1.  This is used for signed/unsigned type qualification.
+   procedure Disp_Constant_Inline
+     (Inst : Instance; Force_Arr : Boolean := False)
    is
       Imod : constant Module := Get_Module (Inst);
       O : constant Net := Get_Output (Inst, 0);
@@ -335,15 +339,16 @@ package body Netlists.Disp_Vhdl is
       case Get_Id (Imod) is
          when Id_Const_UB32
            | Id_Const_SB32 =>
-            Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0), 0,  Get_Width (O));
+            Disp_Binary_Lit
+              (Get_Param_Uns32 (Inst, 0), 0,  Get_Width (O), Force_Arr);
          when Id_Const_UL32 =>
             Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0),
                              Get_Param_Uns32 (Inst, 1),
-                             Get_Width (O));
+                             Get_Width (O), Force_Arr);
          when Id_Const_Z =>
-            Disp_X_Lit (Get_Width (O), 'Z');
+            Disp_X_Lit (Get_Width (O), 'Z', Force_Arr);
          when Id_Const_X =>
-            Disp_X_Lit (Get_Width (O), 'X');
+            Disp_X_Lit (Get_Width (O), 'X', Force_Arr);
          when Id_Const_Bit =>
             Disp_Const_Bit (Inst);
          when Id_Const_Log =>
@@ -415,7 +420,7 @@ package body Netlists.Disp_Vhdl is
    procedure Disp_Memory_Init (Val : Net; W : Width; Depth : Width)
    is
       Inst : constant Instance := Get_Net_Parent (Val);
-      Q : constant Character := Get_Lit_Quote (W);
+      Q : constant Character := Get_Lit_Quote (W, False);
    begin
       case Get_Id (Inst) is
          when Id_Const_X =>
@@ -554,11 +559,11 @@ package body Netlists.Disp_Vhdl is
                Wr (")");
             when Conv_Unsigned =>
                Wr ("unsigned'(");
-               Disp_Constant_Inline (Net_Inst);
+               Disp_Constant_Inline (Net_Inst, True);
                Wr (")");
             when Conv_Signed =>
                Wr ("signed'(");
-               Disp_Constant_Inline (Net_Inst);
+               Disp_Constant_Inline (Net_Inst, True);
                Wr (")");
             when Conv_Edge
               | Conv_Clock =>
@@ -918,7 +923,7 @@ package body Netlists.Disp_Vhdl is
    is
       Def : constant Net := Get_Input_Net (Inst, 0);
       W : constant Width := Get_Width (Def);
-      Q : constant Character := Get_Lit_Quote (W);
+      Q : constant Character := Get_Lit_Quote (W, False);
    begin
       Disp_Template ("  with \i0 select \o0 <=" & NL, Inst);
       for I in 1 .. W loop
@@ -1168,7 +1173,7 @@ package body Netlists.Disp_Vhdl is
                            "    \i3 when ""10""," & NL &
                            "    \i4 when ""11""," & NL, Inst);
             Wr ("    ");
-            Disp_X_Lit (Get_Width (Get_Output (Inst, 0)), 'X');
+            Disp_X_Lit (Get_Width (Get_Output (Inst, 0)), 'X', False);
             Wr_Line (" when others;");
          when Id_Pmux =>
             Disp_Pmux (Inst);
@@ -1410,7 +1415,7 @@ package body Netlists.Disp_Vhdl is
               ("  \o0 <= '1' when falling_edge (\i0) else '0';" & NL, Inst);
          when Id_Tri =>
             Disp_Template ("  \o0 <= \i1 when (\i0 = '1') else ", Inst);
-            Disp_X_Lit (Get_Width (Get_Output (Inst, 0)), 'Z');
+            Disp_X_Lit (Get_Width (Get_Output (Inst, 0)), 'Z', False);
             Wr_Line (";");
          when Id_Assert =>
             Disp_Template
