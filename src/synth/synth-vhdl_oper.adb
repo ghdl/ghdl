@@ -20,6 +20,8 @@ with Types; use Types;
 with Types_Utils; use Types_Utils;
 with Mutils;
 
+with Grt.Types; use Grt.Types;
+
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -112,7 +114,7 @@ package body Synth.Vhdl_Oper is
             Boolean_Type);
       end if;
 
-      To_Logic (Read_Discrete (Cst), Cst.Typ, Val, Zx);
+      To_Logic (Ghdl_U8 (Read_Discrete (Cst)), Cst.Typ, Val, Zx);
       if Zx /= 0 then
          --  Equal unknown -> return X
          N := Build_Const_UL32 (Ctxt, 0, 1, 1);

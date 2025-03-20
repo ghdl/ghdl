@@ -19,6 +19,7 @@
 with Ada.Unchecked_Deallocation;
 
 with Types; use Types;
+with Grt.Types; use Grt.Types;
 
 with PSL.Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
@@ -58,10 +59,9 @@ package Synth.Vhdl_Expr is
    --  False means either not positive or unknown.
    function Is_Positive (V : Valtyp) return Boolean;
 
-   procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx : out Uns32);
-   procedure From_Bit (Enum : Int64; Val : out Uns32);
+   procedure From_Std_Logic (Enum : Ghdl_U8; Val : out Uns32; Zx : out Uns32);
    procedure To_Logic
-     (Enum : Int64; Etype : Type_Acc; Val : out Uns32; Zx : out Uns32);
+     (Enum : Ghdl_U8; Etype : Type_Acc; Val : out Uns32; Zx : out Uns32);
 
    --  Try to match: clk'event and clk = X
    --            or: clk = X and clk'event

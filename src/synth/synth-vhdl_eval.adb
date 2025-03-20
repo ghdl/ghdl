@@ -1093,7 +1093,7 @@ package body Synth.Vhdl_Eval is
                Val : Uns32;
                Zx : Uns32;
             begin
-               From_Std_Logic (Int64 (Read_U8 (Param1)), Val, Zx);
+               From_Std_Logic (Read_U8 (Param1), Val, Zx);
                return Create_Memory_U8
                  (Boolean'Pos (Val = 1 and Zx = 0), Boolean_Type);
             end;

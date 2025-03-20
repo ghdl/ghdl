@@ -133,7 +133,8 @@ package body Synth.Vhdl_Expr is
       end case;
    end Is_Positive;
 
-   procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx : out Uns32) is
+   procedure From_Std_Logic
+     (Enum : Ghdl_U8; Val : out Uns32; Zx : out Uns32) is
    begin
       case Enum is
          when Vhdl.Ieee.Std_Logic_1164.Std_Logic_0_Pos
@@ -159,7 +160,7 @@ package body Synth.Vhdl_Expr is
       end case;
    end From_Std_Logic;
 
-   procedure From_Bit (Enum : Int64; Val : out Uns32) is
+   procedure From_Bit (Enum : Ghdl_U8; Val : out Uns32) is
    begin
       if Enum = 0 then
          Val := 0;
@@ -171,7 +172,7 @@ package body Synth.Vhdl_Expr is
    end From_Bit;
 
    procedure To_Logic
-     (Enum : Int64; Etype : Type_Acc; Val : out Uns32; Zx : out Uns32) is
+     (Enum : Ghdl_U8; Etype : Type_Acc; Val : out Uns32; Zx : out Uns32) is
    begin
       if Etype = Logic_Type then
          pragma Assert (Etype.Kind = Type_Logic);
@@ -222,7 +223,7 @@ package body Synth.Vhdl_Expr is
    end Bit2logvec;
 
    --  Likewise for std_logic
-   procedure Logic2logvec (Val : Int64;
+   procedure Logic2logvec (Val : Ghdl_U8;
                            Off : Uns32;
                            Vec : in out Logvec_Array;
                            Has_Zx : in out Boolean)
@@ -277,7 +278,7 @@ package body Synth.Vhdl_Expr is
             --  Scalar bits cannot be cut.
             pragma Assert (Typ.W = 1);
             pragma Assert (Off = 0 and W >= 1);
-            Logic2logvec (Int64 (Read_U8 (Mem)), Vec_Off, Vec, Has_Zx);
+            Logic2logvec (Read_U8 (Mem), Vec_Off, Vec, Has_Zx);
             --  One bit read and written.
             Vec_Off := Vec_Off + 1;
             W := W - 1;
@@ -326,7 +327,7 @@ package body Synth.Vhdl_Expr is
                   when Type_Logic =>
                      for I in Off .. Len - 1 loop
                         Logic2logvec
-                          (Int64 (Read_U8 (Mem + Size_Type (Vlen - 1 - I))),
+                          (Read_U8 (Mem + Size_Type (Vlen - 1 - I)),
                            Vec_Off, Vec, Has_Zx);
                         Vec_Off := Vec_Off + 1;
                      end loop;
@@ -403,7 +404,7 @@ package body Synth.Vhdl_Expr is
                V := (0, 0);
                for J in Uns32 range 0 .. 31 loop
                   From_Std_Logic
-                    (Int64 (Val.Mem (Size_Type (I * 32 + J))), Va, Zx);
+                    (Ghdl_U8 (Val.Mem (Size_Type (I * 32 + J))), Va, Zx);
                   V.Val := Shift_Left (V.Val, 1) or Va;
                   V.Zx := Shift_Left (V.Zx, 1) or Zx;
                end loop;
