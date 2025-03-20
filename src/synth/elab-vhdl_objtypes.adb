@@ -1090,6 +1090,17 @@ package body Elab.Vhdl_Objtypes is
       end case;
    end Get_Array_Flat_Length;
 
+   function Is_Linear_Type (Typ : Type_Acc) return Boolean is
+   begin
+      if Typ.Kind = Type_Vector then
+         return Typ.Arr_El.Kind = Type_Logic;
+      elsif Typ.Kind = Type_Array then
+         return Is_Linear_Type (Typ.Arr_El);
+      else
+         return False;
+      end if;
+   end Is_Linear_Type;
+
    function Get_Type_Width (Atype : Type_Acc) return Uns32 is
    begin
       pragma Assert (Atype.Kind /= Type_Unbounded_Array);

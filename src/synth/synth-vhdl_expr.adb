@@ -383,6 +383,40 @@ package body Synth.Vhdl_Expr is
       Off1 : Uns32;
       W1 : Width;
    begin
+      --  Optimize (for large memories)
+      --  Conditions:
+      --   * no offsets
+      --   * multiple of logic_32
+      --   * array/vector without holes in representation
+      if Off = 0
+        and then Vec_Off = 0
+        and then (W mod 32) = 0
+        and then W > 128
+        and then Is_Linear_Type (Val.Typ)
+      then
+         declare
+            Lenw : constant Uns32 := W / 32;
+            Va, Zx : Uns32;
+            V : Logic_32;
+         begin
+            for I in 0 .. Lenw - 1 loop
+               V := (0, 0);
+               for J in Uns32 range 0 .. 31 loop
+                  From_Std_Logic
+                    (Int64 (Val.Mem (Size_Type (I * 32 + J))), Va, Zx);
+                  V.Val := Shift_Left (V.Val, 1) or Va;
+                  V.Zx := Shift_Left (V.Zx, 1) or Zx;
+               end loop;
+               Vec (Digit_Index (Lenw - 1 - I)) := V;
+               if V.Zx /= 0 then
+                  Has_Zx := True;
+               end if;
+            end loop;
+            Vec_Off := W;
+            return;
+         end;
+      end if;
+
       Off1 := Off;
       W1 := W;
       Value2logvec (Val.Mem, Val.Typ, Off1, W1, Vec, Vec_Off, Has_Zx);

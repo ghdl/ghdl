@@ -367,6 +367,9 @@ package Elab.Vhdl_Objtypes is
    --  sub-elements.
    function Get_Array_Flat_Length (Typ : Type_Acc) return Iir_Index32;
 
+   --  Return True iff TYP is linear: array or vectors composed of logic type.
+   function Is_Linear_Type (Typ : Type_Acc) return Boolean;
+
    --  Return length of dimension DIM of type T.
 --   function Get_Bound_Length (T : Type_Acc; Dim : Dim_Type) return Uns32;
    function Get_Bound_Length (T : Type_Acc) return Uns32;
