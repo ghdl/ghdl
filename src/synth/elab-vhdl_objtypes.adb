@@ -1373,9 +1373,9 @@ package body Elab.Vhdl_Objtypes is
    procedure Copy_Memory (Dest : Memory_Ptr; Src : Memory_Ptr; Sz : Size_Type)
    is
    begin
-      for I in 1 .. Sz loop
-         Dest (I - 1) := Src (I - 1);
-      end loop;
+      if Sz /= 0 then
+         Dest (0 .. Sz - 1) := Src (0 .. Sz - 1);
+      end if;
    end Copy_Memory;
 
    function Unshare (Src : Memtyp; Pool : Areapool_Acc) return Memtyp

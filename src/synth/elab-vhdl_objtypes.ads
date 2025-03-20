@@ -409,6 +409,8 @@ package Elab.Vhdl_Objtypes is
    function Is_Equal (L, R : Memtyp) return Boolean;
 
    procedure Copy_Memory (Dest : Memory_Ptr; Src : Memory_Ptr; Sz : Size_Type);
+   --  Further optimization: could directly use memcpy
+   --   pragma Import (C, Copy_Memory, "memcpy");
 
    function Unshare (Src : Memtyp) return Memtyp;
    function Unshare (Src : Memtyp; Pool : Areapool_Acc) return Memtyp;
