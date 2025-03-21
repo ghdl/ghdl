@@ -133,6 +133,20 @@ package body Synth.Vhdl_Expr is
       end case;
    end Is_Positive;
 
+   Vec_Std_Logic_Val : constant Uns32 := 0
+     + 2**Vhdl.Ieee.Std_Logic_1164.Std_Logic_1_Pos
+     + 2**Vhdl.Ieee.Std_Logic_1164.Std_Logic_H_Pos
+     + 2**Vhdl.Ieee.Std_Logic_1164.Std_Logic_U_Pos
+     + 2**Vhdl.Ieee.Std_Logic_1164.Std_Logic_X_Pos
+     + 2**Vhdl.Ieee.Std_Logic_1164.Std_Logic_D_Pos;
+
+   Vec_Std_Logic_Zx : constant Uns32 := 0
+     + 2**Vhdl.Ieee.Std_Logic_1164.Std_Logic_U_Pos
+     + 2**Vhdl.Ieee.Std_Logic_1164.Std_Logic_X_Pos
+     + 2**Vhdl.Ieee.Std_Logic_1164.Std_Logic_D_Pos
+     + 2**Vhdl.Ieee.Std_Logic_1164.Std_Logic_Z_Pos
+     + 2**Vhdl.Ieee.Std_Logic_1164.Std_Logic_W_Pos;
+
    procedure From_Std_Logic
      (Enum : Ghdl_U8; Val : out Uns32; Zx : out Uns32) is
    begin
@@ -396,16 +410,20 @@ package body Synth.Vhdl_Expr is
         and then Is_Linear_Type (Val.Typ)
       then
          declare
+            pragma Suppress (Index_Check);
+            pragma Suppress (Access_Check);
             Lenw : constant Uns32 := W / 32;
+            El : Natural;
             Va, Zx : Uns32;
             V : Logic_32;
          begin
             for I in 0 .. Lenw - 1 loop
                V := (0, 0);
                for J in Uns32 range 0 .. 31 loop
-                  From_Std_Logic
-                    (Ghdl_U8 (Val.Mem (Size_Type (I * 32 + J))), Va, Zx);
+                  El := Natural (Val.Mem (Size_Type (I * 32 + J)) and 16#f#);
+                  Va := Shift_Right (Vec_Std_Logic_Val, El) and 1;
                   V.Val := Shift_Left (V.Val, 1) or Va;
+                  Zx := Shift_Right (Vec_Std_Logic_Zx, El) and 1;
                   V.Zx := Shift_Left (V.Zx, 1) or Zx;
                end loop;
                Vec (Digit_Index (Lenw - 1 - I)) := V;
