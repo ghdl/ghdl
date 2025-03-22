@@ -3829,17 +3829,17 @@ package body Vhdl.Sem_Expr is
    end Sem_Array_Aggregate_Extract_Element_Subtype;
 
    --  Return FALSE in case of known mismatch.
-   function Check_Matching_Subtype (Expr : Iir; St : Iir) return Boolean
-   is
-      Et : constant Iir := Get_Type (Expr);
+   function Check_Matching_Subtype
+     (Et : Iir; St : Iir; Expr : Iir) return Boolean is
    begin
+      --  Fast check.
+      if Et = St then
+         return True;
+      end if;
+
       case Get_Kind (St) is
          when Iir_Kind_Array_Subtype_Definition =>
             if Get_Kind (Et) /= Iir_Kind_Array_Subtype_Definition then
-               return True;
-            end if;
-            --  Fast check.
-            if Et = St then
                return True;
             end if;
 
@@ -3870,7 +3870,8 @@ package body Vhdl.Sem_Expr is
                end;
             end if;
 
-            --  TODO: element array element ?
+            return Check_Matching_Subtype (Get_Element_Subtype (Et), St, Expr);
+
          when Iir_Kind_Record_Subtype_Definition =>
             --  TODO
             null;
@@ -3908,7 +3909,9 @@ package body Vhdl.Sem_Expr is
             else
                if Get_Element_Type_Flag (Assoc) then
                   --  TODO: only report the first error ?
-                  if not Check_Matching_Subtype (Sub_Aggr, El_Subtype) then
+                  if not Check_Matching_Subtype
+                    (Get_Type (Sub_Aggr), El_Subtype, Sub_Aggr)
+                  then
                      Ok := False;
                   end if;
                end if;
@@ -4381,9 +4384,6 @@ package body Vhdl.Sem_Expr is
            (Aggr, 1, Nbr_Dim, El_Subtype);
          if El_Subtype = Null_Iir then
             El_Subtype := El_Type;
-         else
-            --  TODO: check constraints of elements (if El_Subtype is static)
-            null;
          end if;
       else
          El_Subtype := El_Type;
