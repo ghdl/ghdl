@@ -150,10 +150,10 @@ jobs:
           EOF
       - name: ☑ Check build environemnt
         run: |
-          echo "which gnat:        $(which gnat) ($($(which gnat) --version))"
-          echo "which gnatmake:    $(which gnatmake) ($($(which gnatmake) --version))"
+          echo "which gnat:        $(which gnat) ($(gnat --version))"
+          echo "which gnatmake:    $(which gnatmake) ($(gnatmake --version))"
           if ${{ startsWith(inputs.runtime, 'llvm') }}; then
-            echo "which llvm-config: $(which llvm-config) ($($(which llvm-config) --version))"
+            echo "which llvm-config: $(which llvm-config) ($(llvm-config --version))"
           fi
 
       - name: Prepare build environemnt
@@ -166,7 +166,8 @@ jobs:
           cd build/${{ inputs.backend }}
 
           if ${{ startsWith(inputs.backend, 'llvm') }}; then
-            CONFIG_ARGS="--with-llvm-config"
+            # Force static link with llvm so that ghdl is immune to llvm update
+            CONFIG_ARGS="--with-llvm-config LLVM_LDFLAGS='`$(LLVM_CONFIG) --link-static --ldflags --libs --system-libs`'"
             if ${{ endsWith(inputs.backend, 'jit') }}; then
               CONFIG_ARGS="$CONFIG_ARGS --with-llvm-jit"
             fi
