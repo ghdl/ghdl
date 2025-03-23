@@ -165,9 +165,11 @@ jobs:
         run: |
           cd build/${{ inputs.backend }}
 
+          # Force static link with llvm so that ghdl is immune to llvm update
+          LLVM_LDFLAGS='\`\$(LLVM_CONFIG) --link-static --ldflags --libs --system-libs\`'
+
           if ${{ startsWith(inputs.backend, 'llvm') }}; then
-            # Force static link with llvm so that ghdl is immune to llvm update
-            CONFIG_ARGS="--with-llvm-config LLVM_LDFLAGS='`$(LLVM_CONFIG) --link-static --ldflags --libs --system-libs`'"
+            CONFIG_ARGS="--with-llvm-config"
             if ${{ endsWith(inputs.backend, 'jit') }}; then
               CONFIG_ARGS="$CONFIG_ARGS --with-llvm-jit"
             fi
@@ -178,7 +180,7 @@ jobs:
           NPROC=$(nproc)
           GNATMAKE="gnatmake -j$NPROC" \
           MAKE="make -j$NPROC" \
-          ../../configure --prefix=../../install $CONFIG_ARGS
+          ../../configure --prefix=../../install $CONFIG_ARGS "LLVM_LDFLAGS=$LLVM_LDFLAGS"
 
       - name: 🔨 Make
         run: |
