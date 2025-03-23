@@ -2895,6 +2895,91 @@ package body Ortho_Code.X86.Emits is
       Gen_Push_Pop_Reg (Opc_Pop_Reg, Reg, Sz_Ptr);
    end Pop_Reg;
 
+   procedure Emit_Win64_Xdata (Frame_Size : Unsigned_32;
+                               Set_Frame_Pc : Pc_Type;
+                               Alloc_Pc : Pc_Type)
+   is
+      use Ortho_Code.X86.Insns;
+      End_Pc : constant Pc_Type := Get_Current_Pc;
+      Off : Byte;
+      Nbr_Unw_Code : Unsigned_8;
+   begin
+      Set_Current_Section (Sect_Xdata);
+      Last_Unwind_Off := Get_Current_Pc;
+      Prealloc (9);
+      --  UNWIND_INFO
+      Gen_8 (16#01#);            --  Version(3)=1, Flags(5)=0
+      pragma Assert (End_Pc - Subprg_Pc < 256);
+      Gen_8 (Byte (End_Pc - Subprg_Pc));  --  Size of prolog
+      Gen_8 (2);                 --  Nbr unwind opcodes (will be patched)
+      Gen_8 (16#05#);            --  FrameReg(4)=ebp, FrameRegOff(4)=0*16
+
+      --  y: save preserved
+      --  TODO
+
+      --  x: alloc frame
+      Nbr_Unw_Code := 0;
+      if Frame_Size > 0 then
+         Gen_8 (Byte (Alloc_Pc - Subprg_Pc));    --  Offset
+         if Frame_Size <= 128 then
+            --  Alloc small
+            Gen_8 (16#02# + Byte (Frame_Size - 8) / 8 * 16);
+            Nbr_Unw_Code := Nbr_Unw_Code + 1;
+         elsif Frame_Size < 512 * 1024 - 8 then
+            --  Alloc large, operation info = 0
+            Gen_8 (16#01#);
+            Gen_16 (Frame_Size / 8);
+            Nbr_Unw_Code := Nbr_Unw_Code + 2;
+         else
+            --  Alloc large, operation info = 1
+            Gen_8 (16#11#);
+            Gen_16 ((Frame_Size / 8) mod 16#1_0000#);
+            Gen_16 ((Frame_Size / 8) / 16#1_0000#);
+            Nbr_Unw_Code := Nbr_Unw_Code + 3;
+         end if;
+      end if;
+
+
+      Off := Byte (Set_Frame_Pc - Subprg_Pc);
+      --  set fp
+      Prealloc (4);
+      Gen_8 (Off);       --  Offset
+      Gen_8 (16#03#);    --  Op: SET_FP_REG
+      Nbr_Unw_Code := Nbr_Unw_Code + 1;
+
+      --  push non vol
+      Off := Off - 3;
+      for R in reverse Preserved_Regs'Range loop
+         if Preserved_Regs (R) and Reg_Used (R) then
+            Prealloc (2);
+            Gen_8 (Off);
+            Gen_8 (16#00# + Byte (R - R_Ax) * 16);
+            Nbr_Unw_Code := Nbr_Unw_Code + 1;
+            if R in Regs_R8_R15 then
+               Off := Off - 2;
+            else
+               Off := Off - 1;
+            end if;
+         end if;
+      end loop;
+
+      --  0: push ebp
+      Gen_8 (1);       --  Offset: +1
+      Gen_8 (16#50#);  --  Op: SAVE_NONVOL, Reg: 5 (ebp)
+      Nbr_Unw_Code := Nbr_Unw_Code + 1;
+
+      Patch_8 (Last_Unwind_Off + 2, Nbr_Unw_Code);
+
+      if Nbr_Unw_Code mod 2 = 1 then
+         --  Pad for alignment
+         Prealloc (2);
+         Gen_8 (0);
+         Gen_8 (0);
+      end if;
+
+      Set_Current_Section (Sect_Text);
+   end Emit_Win64_Xdata;
+
    procedure Emit_Prologue (Subprg : Subprogram_Data_Acc)
    is
       use Ortho_Code.Decls;
@@ -3047,86 +3132,7 @@ package body Ortho_Code.X86.Emits is
       end if;
 
       if Flags.Win64 then
-         declare
-            End_Pc : constant Pc_Type := Get_Current_Pc;
-            Off : Byte;
-            Nbr_Unw_Code : Unsigned_8;
-         begin
-            Set_Current_Section (Sect_Xdata);
-            Last_Unwind_Off := Get_Current_Pc;
-            Prealloc (9);
-            --  UNWIND_INFO
-            Gen_8 (16#01#);            --  Version(3)=1, Flags(5)=0
-            pragma Assert (End_Pc - Subprg_Pc < 256);
-            Gen_8 (Byte (End_Pc - Subprg_Pc));  --  Size of prolog
-            Gen_8 (2);                 --  Nbr unwind opcodes (will be patched)
-            Gen_8 (16#05#);            --  FrameReg(4)=ebp, FrameRegOff(4)=0*16
-
-            --  y: save preserved
-            --  TODO
-
-            --  x: alloc frame
-            Nbr_Unw_Code := 0;
-            if Frame_Size > 0 then
-               Gen_8 (Byte (Alloc_Pc - Subprg_Pc));    --  Offset
-               if Frame_Size <= 128 then
-                  --  Alloc small
-                  Gen_8 (16#02# + Byte (Frame_Size - 8) / 8 * 16);
-                  Nbr_Unw_Code := Nbr_Unw_Code + 1;
-               elsif Frame_Size < 512 * 1024 - 8 then
-                  --  Alloc large, operation info = 0
-                  Gen_8 (16#01#);
-                  Gen_16 (Frame_Size / 8);
-                  Nbr_Unw_Code := Nbr_Unw_Code + 2;
-               else
-                  --  Alloc large, operation info = 1
-                  Gen_8 (16#11#);
-                  Gen_16 ((Frame_Size / 8) mod 16#1_0000#);
-                  Gen_16 ((Frame_Size / 8) / 16#1_0000#);
-                  Nbr_Unw_Code := Nbr_Unw_Code + 3;
-               end if;
-            end if;
-
-
-            Off := Byte (Set_Frame_Pc - Subprg_Pc);
-            --  set fp
-            Prealloc (4);
-            Gen_8 (Off);       --  Offset
-            Gen_8 (16#03#);    --  Op: SET_FP_REG
-            Nbr_Unw_Code := Nbr_Unw_Code + 1;
-
-            --  push non vol
-            Off := Off - 3;
-            for R in reverse Preserved_Regs'Range loop
-               if Preserved_Regs (R) and Reg_Used (R) then
-                  Prealloc (2);
-                  Gen_8 (Off);
-                  Gen_8 (16#00# + Byte (R - R_Ax) * 16);
-                  Nbr_Unw_Code := Nbr_Unw_Code + 1;
-                  if R in Regs_R8_R15 then
-                     Off := Off - 2;
-                  else
-                     Off := Off - 1;
-                  end if;
-               end if;
-            end loop;
-
-            --  0: push ebp
-            Gen_8 (1);       --  Offset: +1
-            Gen_8 (16#50#);  --  Op: SAVE_NONVOL, Reg: 5 (ebp)
-            Nbr_Unw_Code := Nbr_Unw_Code + 1;
-
-            Patch_8 (Last_Unwind_Off + 2, Nbr_Unw_Code);
-
-            if Nbr_Unw_Code mod 2 = 1 then
-               --  Pad for alignment
-               Prealloc (2);
-               Gen_8 (0);
-               Gen_8 (0);
-            end if;
-
-            Set_Current_Section (Sect_Text);
-         end;
+         Emit_Win64_Xdata (Frame_Size, Set_Frame_Pc, Alloc_Pc);
       end if;
    end Emit_Prologue;
 
@@ -3204,22 +3210,134 @@ package body Ortho_Code.X86.Emits is
       end if;
    end Emit_Epilogue;
 
+   procedure Gen_CIE
+   is
+      Len : Unsigned_32;
+   begin
+      Create_Section (Sect_Eh_Frame, ".eh_frame", 0);
+      Set_Current_Section (Sect_Eh_Frame);
+      Prealloc (32);
+
+      --  Generate CIE
+      if Flags.M64 then
+         Len := 20;
+      else
+         Len := 28;
+      end if;
+      Gen_32 (Len);  --  Length
+      Gen_32 (0);   --  CIE id = 0
+      Gen_8 (1);    --  Version = 1
+      Gen_8 (Character'Pos ('z'));  --  Augmentation
+      Gen_8 (Character'Pos ('R'));  --  Augmentation
+      Gen_8 (0);                    --  End of Augmentation
+      Gen_8 (1);   --  Code align factor
+      if Flags.M64 then
+         Dwarf.Gen_Sleb128 (-8); --  Data align factor
+         Dwarf.Gen_Uleb128 (16); --  Return address (16 = rip)
+      else
+         Dwarf.Gen_Sleb128 (-4);
+         Dwarf.Gen_Uleb128 (0);  --  TODO
+      end if;
+      Dwarf.Gen_Uleb128 (1); --  z: length of the remainder of augmentation
+      Gen_8 (16#23#);        --  R: pointer encoding: .text relative, udata4
+
+      --  CFIs (call frame instructions)
+      --  CFA is the last address of the previous frame,
+      --   ie: just above the return address stored by the call to this func
+      --   ie: the stack address before the call to this function
+      --  Initial state: cfa = rsp + 8, rip = -8@cfa
+      Gen_8 (16#0c#);  --  DW_CFA_def_cfa
+      Gen_8 (16#07#);  --    reg 7 (rsp)
+      Gen_8 (16#08#);  --    offset 8
+      Gen_8 (16#80# or 16#10#); --  DW_CFA_def_offset reg 16 (rip)
+      Gen_8 (16#01#);           --   offset 1 * (-8) = -8
+
+      if not Flags.M64 then
+         --  push %rbp, cfa = rsp + 16
+         --  (Note: push decrease rsp, then store)
+         Gen_8 (16#40# or 16#01#); --  DW_CFA_advance_loc +1
+         Gen_8 (16#0e#);           --  DW_CFA_def_cfa_offset
+         Gen_8 (16#10#);           --   offset 16
+         Gen_8 (16#80# or 16#06#); --  DW_CFA_def_offset reg 6 (rbp)
+         Gen_8 (16#02#);           --   offset 2 * (-8) = -16
+
+         --  movq %rsp, %rbp, cfa = rbp + 16
+         Gen_8 (16#40# or 16#03#); --  DW_CFA_advance_loc +3
+         Gen_8 (16#0d#);           --  DW_CFA_def_cfa_register
+         Gen_8 (16#06#);           --   reg 6 (rbp)
+      end if;
+      --  Common padding
+      Gen_8 (0);                --  nop
+      Gen_8 (0);                --  nop
+   end Gen_CIE;
+
    procedure Gen_FDE
    is
+      use Ortho_Code.X86.Insns;
+      Eh_Pc : Pc_Type;
       Subprg_Size : Unsigned_32;
+      Dw_Reg : Byte;
+      Fr_Off : Byte;
+      Len : Byte;
    begin
       Subprg_Size := Unsigned_32 (Get_Current_Pc - Subprg_Pc);
 
       Set_Current_Section (Sect_Eh_Frame);
+      Eh_Pc := Get_Current_Pc;
       Prealloc (20);
-      Gen_32 (16);            --  Length
-      Gen_32 (Unsigned_32 (Get_Current_Pc));  --  CIE pointer
-      Gen_32 (Unsigned_32 (Subprg_Pc));       --  Initial location (.text rel)
-      Gen_32 (Subprg_Size);                   --  Function size
-      Gen_8 (0);                              --  Length
-      Gen_8 (0);
-      Gen_8 (0);
-      Gen_8 (0);
+      Gen_32 (16);                            --  Length
+      Gen_32 (Unsigned_32 (Eh_Pc + 4));       --  CIE pointer (backward offset)
+      Gen_32 (Unsigned_32 (Subprg_Pc));       --  PC begin (.text rel)
+      Gen_32 (Subprg_Size);                   --  PC range
+
+      --  Len
+      Gen_8 (0);  --  At Eh_Pc + 16
+
+      if Flags.M64 then
+         --  push %rbp, cfa = rsp + 16
+         --  (Note: push decrease rsp, then store)
+         Prealloc (3);
+         Gen_8 (16#40# or 16#01#); --  DW_CFA_advance_loc +1
+         Gen_8 (16#80# or 16#06#); --  DW_CFA_def_offset reg 6 (rbp)
+         Gen_8 (16#02#);           --   offset 2 * (-8) = -16
+
+         --  TODO: at this point, CFA is still %rsp, so that's not correct.
+         --  Hopefully, we don't expect exception in the prologue...
+
+         --  Already 2 registers in the frame (rip and rbp)
+         Fr_Off := 2;
+         for R in reverse Preserved_Regs'Range loop
+            if Preserved_Regs (R) and Reg_Used (R) then
+               if R in Regs_R8_R15 then
+                  Len := 2;
+               else
+                  Len := 1;
+               end if;
+
+               Prealloc (1 + 2);
+               --  So after this push
+               Gen_8 (16#40# or Len); --  DW_CFA_advance_loc +1/+2
+
+               --  The register R is stored at CFA - X
+               Fr_Off := Fr_Off + 1;
+               Dw_Reg := Byte (R - R_Ax);
+               Gen_8 (16#80# or Dw_Reg);  --  DW_CFA_def_offset reg DW_REG
+               Gen_8 (Fr_Off);            --   offset Fr_Off * (-8)
+            end if;
+         end loop;
+
+         --  movq %rsp, %rbp, cfa = rbp + 16
+         Prealloc (3);
+         Gen_8 (16#40# or 16#03#); --  DW_CFA_advance_loc +3
+         Gen_8 (16#0e#);           --  DW_CFA_def_cfa_offset
+         Gen_8 (Fr_Off * 8);       --   offset
+         Gen_8 (16#0d#);           --  DW_CFA_def_cfa_register
+         Gen_8 (16#06#);           --   reg 6 (rbp)
+      end if;
+
+      Gen_Pow_Align (2);
+
+      Patch_32 (Eh_Pc, Unsigned_32 (Get_Current_Pc - Eh_Pc) - 4);
    end Gen_FDE;
 
    procedure Gen_Win64_Unwind (Subprg : Subprogram_Data_Acc)
@@ -3450,47 +3568,7 @@ package body Ortho_Code.X86.Emits is
       end if;
 
       if Flags.Eh_Frame then
-         Create_Section (Sect_Eh_Frame, ".eh_frame", 0);
-         Set_Current_Section (Sect_Eh_Frame);
-         Prealloc (32);
-
-         --  Generate CIE
-         Gen_32 (28);  --  Length
-         Gen_32 (0);  --  CIE id = 0
-         Gen_8 (1);   --  Version = 1
-         Gen_8 (Character'Pos ('z'));  --  Augmentation
-         Gen_8 (Character'Pos ('R'));  --  Augmentation
-         Gen_8 (0);                    --  End of Augmentation
-         Gen_8 (1);   --  Code align factor
-         if Flags.M64 then
-            Dwarf.Gen_Sleb128 (-8); --  Data align factor
-            Dwarf.Gen_Uleb128 (16); --  Return address (16 = rip)
-         else
-            Dwarf.Gen_Sleb128 (-4);
-            Dwarf.Gen_Uleb128 (0);  --  TODO
-         end if;
-         Dwarf.Gen_Uleb128 (1); --  z: length of the remainder of augmentation
-         Gen_8 (16#23#);        --  R: pointer encoding: .text relative, udata4
-
-         --  CFIs (call frame instructions)
-         --  Initial state: cfa = rsp + 8, rip = -8@cfa
-         Gen_8 (16#0c#);  --  DW_CFA_def_cfa
-         Gen_8 (16#07#);  --    reg 7 (rsp)
-         Gen_8 (16#08#);  --    offset 8
-         Gen_8 (16#80# or 16#10#); --  DW_CFA_def_offset reg 16 (rip)
-         Gen_8 (16#01#);           --   offset 1 * (-8) = -8
-         --  push %rbp, cfa = rsp + 16
-         Gen_8 (16#40# or 16#01#); --  DW_CFA_advance_loc +1
-         Gen_8 (16#0e#);           --  DW_CFA_def_cfa_offset
-         Gen_8 (16#10#);           --   offset 16
-         Gen_8 (16#80# or 16#06#); --  DW_CFA_def_offset reg 6 (rbp)
-         Gen_8 (16#02#);           --   offset 2 * (-8) = -16
-         --  movq %rsp, %rbp, cfa = rbp + 16
-         Gen_8 (16#40# or 16#03#); --  DW_CFA_advance_loc +3
-         Gen_8 (16#0d#);           --  DW_CFA_def_cfa_register
-         Gen_8 (16#06#);           --   reg 6 (rbp)
-         Gen_8 (0);                --  nop
-         Gen_8 (0);                --  nop
+         Gen_CIE;
       end if;
 
       if Flags.Win64 then
