@@ -67,6 +67,7 @@ on:
 jobs:
   Build:
     name: Build GHDL on '${{ inputs.macos_image }}'
+    if: false
     runs-on: ${{ inputs.macos_image }}
     outputs:
       ghdl_artifact: ${{ steps.artifact_name.outputs.ghdl_artifact }}

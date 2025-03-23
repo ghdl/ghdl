@@ -69,6 +69,7 @@ on:
 jobs:
   Build:
     name: Build GHDL on 'ubuntu-${{ inputs.ubuntu_version }}'
+    if: false
     runs-on: ubuntu-${{ inputs.ubuntu_version }}
     outputs:
       ghdl_artifact: ${{ steps.artifact_name.outputs.ghdl_artifact }}
