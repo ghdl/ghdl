@@ -310,6 +310,7 @@ package body Trans.Chap2 is
             Param_Info := Add_Info (Inter, Kind_Interface);
             Translate_Interface_Mechanism (Inter);
 
+            --  TODO: for intrinsic, pass strings as base + len.
             Arg_Type := Translate_Interface_Type (Inter, Mode_Value);
             New_Interface_Decl
               (Interface_List, Param_Info.Interface_Decl (Mode_Value),

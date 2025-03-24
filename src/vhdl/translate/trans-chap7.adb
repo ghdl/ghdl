@@ -4328,10 +4328,12 @@ package body Trans.Chap7 is
    procedure Translate_Record_Aggregate_Bounds
      (Bounds : Mnode; Aggr : Iir; Mode : Object_Kind_Type)
    is
-      Stable_Bounds : Mnode;
       Aggr_Type : constant Iir := Get_Type (Aggr);
       Base_El_List : constant Iir_Flist :=
         Get_Elements_Declaration_List (Get_Base_Type (Aggr_Type));
+
+      Stable_Bounds : Mnode;
+      Sub_Bounds : Mnode;
 
       Pos : Natural;
       Base_El : Iir;
@@ -4379,10 +4381,10 @@ package body Trans.Chap7 is
             else
                if Get_Kind (Expr) = Iir_Kind_Aggregate then
                   --  Just translate bounds.
-                  Translate_Aggregate_Sub_Bounds
-                    (Chap3.Record_Bounds_To_Element_Bounds (Stable_Bounds,
-                                                            Base_El),
-                     Expr, Mode);
+                  Sub_Bounds := Chap3.Record_Bounds_To_Element_Bounds
+                    (Stable_Bounds, Base_El);
+                  Stabilize (Sub_Bounds);
+                  Translate_Aggregate_Sub_Bounds (Sub_Bounds, Expr, Mode);
                else
                   --  Eval expr
                   Val := Translate_Expression (Expr);
