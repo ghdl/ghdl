@@ -71,6 +71,11 @@ package Elab.Debugger is
    --  Prepare resume execution.
    procedure Prepare_Continue;
 
+   --  Disp location of INST, for backtraces
+   generic
+      with procedure Put (S : String);
+   procedure Gen_Disp_A_Frame (Inst: Synth_Instance_Acc);
+
    --  Utilities for menu commands.
 
    --  Return the position of the first non-blank character.

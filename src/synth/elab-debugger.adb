@@ -466,13 +466,13 @@ package body Elab.Debugger is
       Prepare_Continue;
    end Cont_Proc;
 
-   procedure Disp_A_Frame (Inst: Synth_Instance_Acc)
+   procedure Gen_Disp_A_Frame (Inst: Synth_Instance_Acc)
    is
       use Vhdl.Utils;
       Src : Node;
    begin
       if Inst = Root_Instance then
-         Put_Line ("root instance");
+         Put ("root instance");
          return;
       end if;
 
@@ -489,8 +489,9 @@ package body Elab.Debugger is
       end case;
       Put (" at ");
       Put (Files_Map.Image (Get_Location (Src)));
-      New_Line;
-   end Disp_A_Frame;
+   end Gen_Disp_A_Frame;
+
+   procedure Disp_A_Frame is new Gen_Disp_A_Frame (Simple_IO.Put);
 
    procedure Debug_Bt (Instance : Synth_Instance_Acc)
    is
@@ -499,6 +500,7 @@ package body Elab.Debugger is
       Inst := Instance;
       while Inst /= null loop
          Disp_A_Frame (Inst);
+         New_Line;
          Inst := Get_Caller_Instance (Inst);
       end loop;
    end Debug_Bt;
