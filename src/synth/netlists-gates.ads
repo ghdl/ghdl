@@ -364,27 +364,25 @@ package Netlists.Gates is
    --  Constants are gates with only one constant output.  There are multiple
    --  kind of constant gates: for small width, the value is stored as a
    --  parameter, possibly signed or unsigned extended.
-   Id_Const_UB32 : constant Module_Id := 112;
-   Id_Const_SB32 : constant Module_Id := 113;
-   Id_Const_UL32 : constant Module_Id := 114;
-   Id_Const_UB64 : constant Module_Id := 115;
-   Id_Const_UL64 : constant Module_Id := 116;
-   Id_Const_X : constant Module_Id := 117;
-   Id_Const_Z : constant Module_Id := 118;
-   Id_Const_0 : constant Module_Id := 119;
-   Id_Const_1 : constant Module_Id := 120;
-
-   --  Should we keep them ?
-   pragma Unreferenced (Id_Const_UB64, Id_Const_UL64);
+   Id_Const_X : constant Module_Id := 112;
+   Id_Const_Z : constant Module_Id := 113;
+   Id_Const_0 : constant Module_Id := 114;
+   Id_Const_1 : constant Module_Id := 115;
+   Id_Const_UB32 : constant Module_Id := 116;
+   Id_Const_SB32 : constant Module_Id := 117;
+   Id_Const_UL32 : constant Module_Id := 118;
 
    --  Large width.
    --  For Const_Bit: param N is for bits 32*N .. 32*N+31
    --  For Const_Log: param 2*N   is for 0/1 of bits 32*N .. 32*N+31
    --                 param 2*N+1 is for Z/X of bits 32*N .. 32*N+31
-   Id_Const_Bit : constant Module_Id := 121;
-   Id_Const_Log : constant Module_Id := 122;
+   Id_Const_Bit : constant Module_Id := 119;
+   Id_Const_Log : constant Module_Id := 120;
 
-   subtype Constant_Module_Id is Module_Id range Id_Const_UB32 .. Id_Const_Log;
+   subtype Constant_Module_Id is Module_Id range Id_Const_X .. Id_Const_Log;
+
+   subtype Constant_Defined_Module_Id is
+     Module_Id range Id_Const_0 .. Id_Const_Log;
 
    --  Id 128 is the first user id.
 end Netlists.Gates;

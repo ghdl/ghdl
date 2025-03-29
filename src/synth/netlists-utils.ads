@@ -58,7 +58,7 @@ package Netlists.Utils is
    function Get_Input_Instance (Inst : Instance; Idx : Port_Idx)
                                return Instance;
 
-   --  Return True iff ID describe a constant.
+   --  Return True iff ID describe a constant value (without X/Z).
    function Is_Const_Net (N : Net) return Boolean;
 
    --  Assuming that N is a const net, return the value (for small values).
