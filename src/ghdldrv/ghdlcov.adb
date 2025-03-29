@@ -209,9 +209,49 @@ package body Ghdlcov is
          Expect (Scan, Ref);
       end Scan_Expect;
 
-      function Get_String return String is
+      function Get_String return String
+      is
+         First : constant Source_Ptr := Tok_Pos + 1;
+         Last : constant Source_Ptr := Pos - 2;
+         P : Source_Ptr;
+         Nquote : Natural;
       begin
-         return String (Buf (Tok_Pos + 1 .. Pos - 2));
+         Nquote := 0;
+         P := First;
+         while P <= Last loop
+            if Buf (P) = '\' and then P < Last and then Buf (P + 1) = '\' then
+               Nquote := Nquote + 1;
+               P := P + 2;
+            else
+               P := P + 1;
+            end if;
+         end loop;
+         if Nquote = 0 then
+            return String (Buf (First .. Last));
+         else
+            declare
+               Ns : String (1 .. Natural (Last - First + 1) - Nquote);
+               R : Positive;
+            begin
+               R := Ns'First;
+               P := First;
+               while P <= Last loop
+                  if Buf (P) = '\'
+                    and then P < Last
+                    and then Buf (P + 1) = '\'
+                  then
+                     Ns (R) := '\';
+                     P := P + 2;
+                  else
+                     Ns (R) := Buf (P);
+                     P := P + 1;
+                  end if;
+                  R := R + 1;
+               end loop;
+               pragma Assert (R = Ns'Last + 1);
+               return Ns;
+            end;
+         end if;
       end Get_String;
 
       function Get_Number return Natural is

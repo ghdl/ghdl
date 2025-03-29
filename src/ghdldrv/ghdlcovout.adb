@@ -130,6 +130,43 @@ package body Ghdlcovout is
       Fill_Entries;
    end Collect;
 
+   procedure Put_Quote (F : Grt.Stdio.FILEs; S : String)
+   is
+      use Grt.Astdio;
+      Nquote : Natural;
+   begin
+      Nquote := 0;
+      for I in S'Range loop
+         if S (I) = '\' then
+            Nquote := Nquote + 1;
+         end if;
+      end loop;
+
+      if Nquote = 0 then
+         Put (F, S);
+      else
+         declare
+            Ns : String (1 .. S'Length + Nquote);
+            P : Positive;
+            C : Character;
+         begin
+            P := Ns'First;
+            for I in S'Range loop
+               C := S (I);
+               if C = '\' then
+                  Ns (P) := '\';
+                  Ns (P + 1) := C;
+                  P := P + 2;
+               else
+                  Ns (P) := C;
+                  P := P + 1;
+               end if;
+            end loop;
+            Put (F, Ns);
+         end;
+      end if;
+   end Put_Quote;
+
    function Open_Coverage_File (C_Filename : String) return Grt.Stdio.FILEs
    is
       use Grt.Stdio;
@@ -190,13 +227,13 @@ package body Ghdlcovout is
          begin
             Put_Line (F, "  {");
             Put (F, "   ""file"": """);
-            Put (F, Name_Table.Image (Get_File_Name (Sfe)));
+            Put_Quote (F, Name_Table.Image (Get_File_Name (Sfe)));
             Put_Line (F, """,");
             Put (F, "   ""dir"": """);
             if Dir = Files_Map.Get_Home_Directory then
                Put (F, ".");
             else
-               Put (F, Name_Table.Image (Get_Directory_Name (Sfe)));
+               Put_Quote (F, Name_Table.Image (Get_Directory_Name (Sfe)));
             end if;
             Put_Line (F, """,");
             Put (F, "   ""sha1"": """);
