@@ -1018,6 +1018,8 @@ package body std_logic_1164 is
   -- string conversion and write operations
   -------------------------------------------------------------------
 
+  constant NUS  : STRING(2 to 1) := (others => ' ');
+
   function TO_OSTRING (value : STD_ULOGIC_VECTOR) return STRING is
     constant result_length : NATURAL := (value'length+2)/3;
     variable pad           : STD_ULOGIC_VECTOR(1 to result_length*3 - value'length);
@@ -1025,6 +1027,9 @@ package body std_logic_1164 is
     variable result        : STRING(1 to result_length);
     variable tri           : STD_ULOGIC_VECTOR(1 to 3);
   begin
+    if value'length < 1 then
+      return NUS;
+    end if;
     if value (value'left) = 'Z' then
       pad := (others => 'Z');
     else
@@ -1056,6 +1061,9 @@ package body std_logic_1164 is
     variable result        : STRING(1 to result_length);
     variable quad          : STD_ULOGIC_VECTOR(1 to 4);
   begin
+    if value'length < 1 then
+      return NUS;
+    end if;
     if value (value'left) = 'Z' then
       pad := (others => 'Z');
     else
