@@ -602,19 +602,23 @@ package body Elab.Vhdl_Insts is
       pragma Assert (Get_Kind (Res) = Iir_Kind_Component_Configuration);
    end Get_Next_Component_Configuration;
 
-   function Elab_Port_Association_Type (Sub_Inst : Synth_Instance_Acc;
-                                        Syn_Inst : Synth_Instance_Acc;
-                                        Inter : Node;
-                                        Assoc : Node) return Type_Acc
+   procedure Elab_Port_Association_Type (Sub_Inst : Synth_Instance_Acc;
+                                         Syn_Inst : Synth_Instance_Acc;
+                                         Inter : Node;
+                                         Assoc : Node)
    is
       Marker : Mark_Type;
       Inter_Typ : Type_Acc;
       Val : Valtyp;
       Res : Type_Acc;
    begin
+      --  Elaborate subtype of the port.
       Inter_Typ := Elab_Declaration_Type (Sub_Inst, Inter);
 
       if not Is_Bounded_Type (Inter_Typ) then
+         --  The subtype is not bounded, so the bounds are (partially) set
+         --  by the actual(s).
+
          --  TODO
          --  Find the association for this interface
          --  * if individual assoc: get type
@@ -625,38 +629,100 @@ package body Elab.Vhdl_Insts is
 
          Mark_Expr_Pool (Marker);
 
-         if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
-           and then not Get_Inertial_Flag (Assoc)
-         then
-            --  For expression: just compute the expression and associate.
-            Val := Synth_Expression_With_Type
-              (Syn_Inst, Get_Actual (Assoc), Inter_Typ);
-            Res := Val.Typ;
-            if Res /= null then
-               Res := Unshare (Res, Global_Pool'Access);
-            end if;
-         else
-            case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
-               when Iir_Kinds_Association_Element_By_Actual =>
+         case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
+            when Iir_Kind_Association_Element_By_Expression =>
+               if Get_Inertial_Flag (Assoc) then
                   Res := Exec_Name_Subtype (Syn_Inst, Get_Actual (Assoc));
-               when Iir_Kind_Association_Element_By_Individual =>
-                  Res := Synth_Subtype_Indication
-                    (Syn_Inst, Get_Actual_Type (Assoc));
-               when Iir_Kind_Association_Element_Open =>
-                  Res := Exec_Name_Subtype
-                    (Syn_Inst, Get_Default_Value (Inter));
-            end case;
+               else
+                  --  For expression: just compute the actual
+                  Val := Synth_Expression_With_Type
+                    (Syn_Inst, Get_Actual (Assoc), Inter_Typ);
+                  Res := Val.Typ;
+               end if;
+            when Iir_Kind_Association_Element_By_Name =>
+               Res := Exec_Name_Subtype (Syn_Inst, Get_Actual (Assoc));
+            when Iir_Kind_Association_Element_By_Individual =>
+               Res := Synth_Subtype_Indication
+                 (Syn_Inst, Get_Actual_Type (Assoc));
+            when Iir_Kind_Association_Element_Open =>
+               Res := Exec_Name_Subtype (Syn_Inst, Get_Default_Value (Inter));
+         end case;
 
-            if Res /= null then
-               Res := Unshare (Res, Global_Pool'Access);
-            end if;
+         if Res = null then
+            return;
          end if;
 
+         Inter_Typ := Unshare (Res, Global_Pool'Access);
+
          Release_Expr_Pool (Marker);
-         return Res;
-      else
-         return Inter_Typ;
       end if;
+
+      --  Check matching bounds.
+      if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Name
+        and then Get_Formal_Conversion (Assoc) = Null_Node
+        and then Get_Actual_Conversion (Assoc) = Null_Node
+      then
+         declare
+            use Synth.Vhdl_Stmts;
+            Marker : Mark_Type;
+            Actual : constant Node := Get_Actual (Assoc);
+            Actual_Base : Valtyp;
+            Actual_Typ : Type_Acc;
+            Actual_Offs : Value_Offsets;
+            Same : Boolean;
+         begin
+            Mark_Expr_Pool (Marker);
+
+            Synth_Assignment_Prefix
+              (Syn_Inst, Actual, Actual_Base, Actual_Typ, Actual_Offs);
+            case Inter_Typ.Kind is
+               when Type_All_Discrete =>
+                  Same := Inter_Typ.Drange = Actual_Typ.Drange;
+               when Type_Float =>
+                  Same := Inter_Typ.Frange = Actual_Typ.Frange;
+               when Type_Composite =>
+                  if not Check_Matching_Bounds (Syn_Inst, Inter_Typ,
+                    Actual_Typ, Assoc)
+                  then
+                     null;
+                  end if;
+                  Same := True;
+               when Type_Slice
+                 | Type_Protected
+                 | Type_Access
+                 | Type_File =>
+                  raise Internal_Error;
+            end case;
+            if not Same then
+               Error_Msg_Elab
+                 (Syn_Inst, Assoc,
+                  "range of formal %i is different from formal range", +Inter);
+            end if;
+               Release_Expr_Pool (Marker);
+            end;
+      elsif Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Individual then
+         --  Check matching bounds.
+         declare
+            Marker : Mark_Type;
+            Actual_Typ : Type_Acc;
+         begin
+            Mark_Expr_Pool (Marker);
+
+            --  Although actual type is defined in Syn_Inst, its
+            --  parent is defined in Sub_Inst.
+            Actual_Typ := Synth_Subtype_Indication
+              (Sub_Inst, Get_Actual_Type (Assoc));
+
+            if not Check_Matching_Bounds (Syn_Inst, Actual_Typ,
+              Inter_Typ, Assoc)
+            then
+               --  Error message already emitted.
+               null;
+            end if;
+            Release_Expr_Pool (Marker);
+         end;
+      end if;
+      Create_Signal (Sub_Inst, Inter, Inter_Typ);
    end Elab_Port_Association_Type;
 
    procedure Elab_Ports_Association_Type (Sub_Inst : Synth_Instance_Acc;
@@ -667,87 +733,13 @@ package body Elab.Vhdl_Insts is
       Inter : Node;
       Assoc : Node;
       Assoc_Inter : Node;
-      Inter_Typ : Type_Acc;
    begin
       Assoc := Assoc_Chain;
       Assoc_Inter := Inter_Chain;
       while Is_Valid (Assoc) loop
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
          if Get_Whole_Association_Flag (Assoc) then
-            Inter_Typ := Elab_Port_Association_Type
-              (Sub_Inst, Syn_Inst, Inter, Assoc);
-            if Inter_Typ /= null then
-               --  Check matching bounds.
-               if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Name
-                 and then Get_Formal_Conversion (Assoc) = Null_Node
-                 and then Get_Actual_Conversion (Assoc) = Null_Node
-               then
-                  declare
-                     use Synth.Vhdl_Stmts;
-                     Marker : Mark_Type;
-                     Actual : constant Node := Get_Actual (Assoc);
-                     Actual_Base : Valtyp;
-                     Actual_Typ : Type_Acc;
-                     Actual_Offs : Value_Offsets;
-                     Same : Boolean;
-                  begin
-                     Mark_Expr_Pool (Marker);
-
-                     Synth_Assignment_Prefix
-                       (Syn_Inst, Actual,
-                        Actual_Base, Actual_Typ, Actual_Offs);
-                     case Inter_Typ.Kind is
-                        when Type_All_Discrete =>
-                           Same := Inter_Typ.Drange = Actual_Typ.Drange;
-                        when Type_Float =>
-                           Same := Inter_Typ.Frange = Actual_Typ.Frange;
-                        when Type_Composite =>
-                           if not Check_Matching_Bounds (Syn_Inst, Inter_Typ,
-                                                         Actual_Typ, Assoc)
-                           then
-                              null;
-                           end if;
-                           Same := True;
-                        when Type_Slice
-                          | Type_Protected
-                          | Type_Access
-                          | Type_File =>
-                           raise Internal_Error;
-                     end case;
-                     if not Same then
-                        Error_Msg_Elab
-                          (Syn_Inst, Assoc,
-                           "range of formal %i is different from formal range",
-                           +Inter);
-                     end if;
-                     Release_Expr_Pool (Marker);
-                  end;
-               elsif (Get_Kind (Assoc)
-                        = Iir_Kind_Association_Element_By_Individual)
-               then
-                  --  Check matching bounds.
-                  declare
-                     Marker : Mark_Type;
-                     Actual_Typ : Type_Acc;
-                  begin
-                     Mark_Expr_Pool (Marker);
-
-                     --  Although actual type is defined in Syn_Inst, its
-                     --  parent is defined in Sub_Inst.
-                     Actual_Typ := Synth_Subtype_Indication
-                       (Sub_Inst, Get_Actual_Type (Assoc));
-
-                     if not Check_Matching_Bounds (Syn_Inst, Actual_Typ,
-                                                   Inter_Typ, Assoc)
-                     then
-                        --  Error message already emitted.
-                        null;
-                     end if;
-                     Release_Expr_Pool (Marker);
-                  end;
-               end if;
-               Create_Signal (Sub_Inst, Inter, Inter_Typ);
-            end if;
+            Elab_Port_Association_Type (Sub_Inst, Syn_Inst, Inter, Assoc);
          end if;
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
