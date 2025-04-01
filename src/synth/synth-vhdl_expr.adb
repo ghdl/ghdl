@@ -1536,6 +1536,11 @@ package body Synth.Vhdl_Expr is
          end;
       end if;
 
+      if Left = No_Valtyp or else Right = No_Valtyp then
+         Error := True;
+         return;
+      end if;
+
       if Is_Static_Val (Left.Val) and then Is_Static_Val (Right.Val) then
          Synth_Slice_Const_Suffix (Syn_Inst, Expr,
                                    Name, Pfx_Bnd, Order,

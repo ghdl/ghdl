@@ -983,14 +983,19 @@ package body Synth.Vhdl_Stmts is
    begin
       Mark_Expr_Pool (Marker);
       Targ := Synth_Target (Inst, Get_Target (Stmt));
-      Val := Synth_Expression_With_Type
-        (Inst, Get_Expression (Stmt), Targ.Targ_Type);
-      if Val = No_Valtyp then
+      if Targ.Targ_Type /= null then
+         Val := Synth_Expression_With_Type
+           (Inst, Get_Expression (Stmt), Targ.Targ_Type);
+         if Val = No_Valtyp then
+            Set_Error (Inst);
+            --  Avoid warnings about non-assigned variable.
+            Val := Create_Value_Default (Targ.Targ_Type);
+         end if;
+         Synth_Assignment (Inst, Targ, Val, Stmt);
+      else
          Set_Error (Inst);
-         --  Avoid warnings about non-assigned variable.
-         Val := Create_Value_Default (Targ.Targ_Type);
       end if;
-      Synth_Assignment (Inst, Targ, Val, Stmt);
+
       Release_Expr_Pool (Marker);
    end Synth_Variable_Assignment;
 
