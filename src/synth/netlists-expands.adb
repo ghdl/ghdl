@@ -58,12 +58,11 @@ package body Netlists.Expands is
                Memidx := Ninst;
             when Id_Addidx =>
                --  Extract memidx.
-               Inp_Net := Disconnect_And_Get (Ninst, 1);
+               Inp_Net := Get_Input_Net (Ninst, 1);
                Memidx := Get_Net_Parent (Inp_Net);
                pragma Assert (Get_Id (Memidx) = Id_Memidx);
                --  Extract next element in the chain
-               N := Disconnect_And_Get (Ninst, 0);
-               Remove_Instance (Ninst);
+               N := Get_Input_Net (Ninst, 0);
             when others =>
                raise Internal_Error;
          end case;
@@ -85,18 +84,45 @@ package body Netlists.Expands is
       end loop;
    end Gather_Memidx;
 
-   procedure Remove_Memidx (Memidx_Arr : Memidx_Array_Type)
+   procedure Remove_Memidx (Addr_Net : Net)
    is
       Inst : Instance;
    begin
-      for I in Memidx_Arr'Range loop
-         Inst := Memidx_Arr (I);
-         if not Is_Connected (Get_Output (Inst, 0)) then
-            --  A memidx can be shared between several insert/extract.
-            --  FIXME: what about memidx ?
-            Disconnect (Get_Input (Inst, 0));
-            Remove_Instance (Inst);
-         end if;
+      Inst := Get_Net_Parent (Addr_Net);
+
+      --  Still used by another dyn_insert/dyn_extract (subprogram interface)
+      if Is_Connected (Addr_Net) then
+         return;
+      end if;
+
+      loop
+         case Get_Id (Inst) is
+            when Id_Memidx =>
+               Disconnect (Get_Input (Inst, 0));
+               Remove_Instance (Inst);
+               exit;
+            when Id_Addidx =>
+               declare
+                  Inp_Net : Net;
+                  Memidx : Instance;
+               begin
+                  --  Extract memidx.
+                  Inp_Net := Disconnect_And_Get (Inst, 1);
+                  Memidx := Get_Net_Parent (Inp_Net);
+                  pragma Assert (Get_Id (Memidx) = Id_Memidx);
+
+                  Disconnect (Get_Input (Memidx, 0));
+                  Remove_Instance (Memidx);
+
+                  --  Extract next element in the chain
+                  Inp_Net := Disconnect_And_Get (Inst, 0);
+                  Remove_Instance (Inst);
+
+                  Inst := Get_Net_Parent (Inp_Net);
+               end;
+            when others =>
+               raise Internal_Error;
+         end case;
       end loop;
    end Remove_Memidx;
 
@@ -140,7 +166,6 @@ package body Netlists.Expands is
      (Ctxt : Context_Acc; Memidx_Arr : Memidx_Array_Type; Addr : out Net)
    is
       Inst : Instance;
-      Inp : Input;
       Max : Uns32;
       Max_Width : Width;
       Part_Addr : Net;
@@ -154,8 +179,7 @@ package body Netlists.Expands is
          Inst := Memidx_Arr (I);
 
          --  INST1 is a memidx.
-         Inp := Get_Input (Inst, 0);
-         Part_Addr := Get_Driver (Inp);
+         Part_Addr := Get_Input_Net (Inst, 0);
          if I = Memidx_Arr'Last then
             --  First memidx, which is the LSB.  Nothing to do.
             Addr := Part_Addr;
@@ -249,7 +273,7 @@ package body Netlists.Expands is
          Def := No_Net;
          Synth_Case (Ctxt, Addr, Els.all, Def, Res, Loc);
 
-         Remove_Memidx (Memidx_Arr);
+         Remove_Memidx (Addr_Net);
 
          Free_Case_Element_Array (Els);
       end if;
@@ -478,7 +502,7 @@ package body Netlists.Expands is
       end if;
       Remove_Instance (Inst);
 
-      Remove_Memidx (Memidx_Arr);
+      Remove_Memidx (Addr_Net);
    end Expand_Dyn_Insert;
 
    --  Replace instance INST a ROT b by: S (a, b) | C (a, l - b)
