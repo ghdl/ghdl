@@ -310,4 +310,9 @@ package body Netlists.Utils is
    begin
       return Uns32 (Mutils.Clog2 (Uns64 (W)));
    end Clog2;
+
+   function Is_Pow2 (W : Width) return Boolean is
+   begin
+      return (W and (W - 1)) = 0;
+   end Is_Pow2;
 end Netlists.Utils;

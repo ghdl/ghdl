@@ -100,6 +100,7 @@ package Netlists.Utils is
    function Skip_Signal (N : Net) return Net;
 
    function Clog2 (W : Width) return Width;
+   function Is_Pow2 (W : Width) return Boolean;
 
    --  Copy attribtues of SRC to DEST.
    procedure Copy_Instance_Attributes (Dest : Instance; Src : Instance);

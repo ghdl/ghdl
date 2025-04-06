@@ -227,6 +227,74 @@ package body Netlists.Expands is
       end if;
    end Truncate_Address;
 
+      --  Extract address from memidx/addidx and disconnect those gates.
+   function Extract_Flat_Address
+     (Ctxt : Context_Acc; Idx_Arr : Memidx_Array_Type) return Net
+   is
+      Inst : Instance;
+      Res : Net;
+      Res_W : Width;
+      Inp_Net : Net;
+      Out_W : Width;
+      Loc : Location_Type;
+      Step : Uns32;
+      Cst : Net;
+      Log2_Step : Width;
+   begin
+      Res := No_Net;
+      Res_W := 0;
+
+      for I in reverse Idx_Arr'Range loop
+         --  Extract parameters from memidx.
+         Inst := Idx_Arr (I);
+         Step := Get_Param_Uns32 (Inst, 0);
+         Loc := Get_Location (Inst);
+
+         --  Extract and disconnect input of memidx.
+         Inp_Net := Get_Input_Net (Inst, 0);
+
+         Out_W := Get_Width (Get_Output (Inst, 0));
+
+         if Step = 1 then
+            Res := Inp_Net;
+            Res_W := Out_W;
+         elsif Is_Pow2 (Step) then
+            --  Step is a power of 2, simply concatenate
+            Log2_Step := Clog2 (Step);
+            if Log2_Step = Res_W then
+               Res := Build_Concat2 (Ctxt, Inp_Net, Res);
+               Set_Location (Res, Loc);
+            else
+               Cst := Build2_Const_Uns (Ctxt, 0, Log2_Step - Res_W);
+               if Res = No_Net then
+                  Res := Build_Concat2 (Ctxt, Inp_Net, Cst);
+               else
+                  Res := Build_Concat3 (Ctxt, Inp_Net, Cst, Res);
+               end if;
+            end if;
+            Res_W := Out_W;
+         else
+            --  RES := RES + INP*STEP
+            Res_W := Out_W;
+            Cst := Build2_Const_Uns (Ctxt, Uns64 (Step), Res_W);
+            Inp_Net := Build2_Uresize (Ctxt, Inp_Net, Res_W, Loc);
+
+            Inp_Net := Build_Dyadic (Ctxt, Id_Umul, Inp_Net, Cst);
+            Set_Location (Inp_Net, Loc);
+
+            if Res = No_Net then
+               Res := Inp_Net;
+            else
+               Res := Build2_Uresize (Ctxt, Res, Res_W, Loc);
+               Res := Build_Dyadic (Ctxt, Id_Add, Res, Inp_Net);
+               Set_Location (Res, Loc);
+            end if;
+         end if;
+      end loop;
+
+      return Res;
+   end Extract_Flat_Address;
+
    procedure Expand_Dyn_Extract (Ctxt : Context_Acc; Inst : Instance)
    is
       Val : constant Net := Get_Input_Net (Inst, 0);
@@ -252,6 +320,14 @@ package body Netlists.Expands is
          --  There is only one element, so it's not really dynamic.
          --  Just return the value.
          Res := Get_Input_Net (Inst, 0);
+      elsif True then
+         --  2. Compute index
+         Addr := Extract_Flat_Address (Ctxt, Memidx_Arr);
+
+         Remove_Memidx (Addr_Net);
+         --  Keep Dyn_Extract, but the index is a single value
+         Connect (Get_Input (Inst, 1), Addr);
+         return;
       else
          --  2. build extract gates
          Els := new Case_Element_Array (1 .. Nbr_Els);
