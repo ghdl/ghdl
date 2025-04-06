@@ -1025,13 +1025,8 @@ package body Netlists.Disp_Vhdl is
                if Step /= 1 then
                   Disp_Template
                     ("  \o0 <= std_logic_vector (resize (resize (", Inst);
-                  if Get_Width (Get_Input_Net (Inst, 0)) = 1 then
-                     Disp_Template ("unsigned'(0 => \i0)", Inst);
-                  else
-                     Disp_Template ("\ui0", Inst);
-                  end if;
                   Disp_Template
-                    (", \n0) * \up0, \n0));" & NL, Inst, (0 => Wd));
+                    ("\ui0, \n0) * \up0, \n0));" & NL, Inst, (0 => Wd));
                else
                   Disp_Template ("  \o0 <= \i0;" & NL, Inst);
                end if;
