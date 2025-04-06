@@ -30,9 +30,10 @@ package body Netlists.Expands is
    type Memidx_Array_Type is array (Natural range <>) of Instance;
 
    --  Extract Memidx from ADDR_NET and return the number of
-   --  elements NBR_ELS (which is usually 2**width(ADDR_NET)).
+   --   elements NBR_ELS (which is usually 2**width(ADDR_NET)).
    --  Memidx are ordered from the one with the largest step to the one
    --   with the smallest step.
+   --  Addridx are removed.
    procedure Gather_Memidx (Addr_Net : Net;
                             Memidx_Arr : out Memidx_Array_Type;
                             Nbr_Els : out Natural)
@@ -42,6 +43,7 @@ package body Netlists.Expands is
       Ninst : Instance;
       Memidx : Instance;
       Max : Uns32;
+      Inp_Net : Net;
    begin
       N := Addr_Net;
       Nbr_Els := 1;
@@ -56,9 +58,12 @@ package body Netlists.Expands is
                Memidx := Ninst;
             when Id_Addidx =>
                --  Extract memidx.
-               Memidx := Get_Net_Parent (Get_Input_Net (Ninst, 1));
+               Inp_Net := Disconnect_And_Get (Ninst, 1);
+               Memidx := Get_Net_Parent (Inp_Net);
                pragma Assert (Get_Id (Memidx) = Id_Memidx);
-               N := Get_Input_Net (Ninst, 0);
+               --  Extract next element in the chain
+               N := Disconnect_And_Get (Ninst, 0);
+               Remove_Instance (Ninst);
             when others =>
                raise Internal_Error;
          end case;
@@ -132,11 +137,10 @@ package body Netlists.Expands is
 
    --  Extract address from memidx/addidx and disconnect those gates.
    procedure Extract_Address
-     (Ctxt : Context_Acc; Addr_Net : Net; Ndims : Int32; Addr : out Net)
+     (Ctxt : Context_Acc; Memidx_Arr : Memidx_Array_Type; Addr : out Net)
    is
-      Inst, Inst1 : Instance;
+      Inst : Instance;
       Inp : Input;
-      N : Net;
       Max : Uns32;
       Max_Width : Width;
       Part_Addr : Net;
@@ -145,44 +149,25 @@ package body Netlists.Expands is
       Max := 0;
       Max_Width := 0;
 
-      N := Addr_Net;
       --  Dimension 1 is the least significant part of the address
-      for I in 1 .. Ndims loop
-         Inst := Get_Net_Parent (N);
-         case Get_Id (Inst) is
-            when Id_Memidx =>
-               --  Must be the last one!
-               Inst1 := Inst;
-            when Id_Addidx =>
-               --  Extract memidx (LSB)
-               Inp := Get_Input (Inst, 1);
-               Inst1 := Get_Net_Parent (Get_Driver (Inp));
-               pragma Assert (Get_Id (Inst1) = Id_Memidx);
-               Disconnect (Inp);
-
-               --  Extract next (MSB)
-               Inp := Get_Input (Inst, 0);
-               N := Get_Driver (Inp);
-               Disconnect (Inp);
-
-               --  Remove the Addidx.
-               Remove_Instance (Inst);
-
-            when others =>
-               raise Internal_Error;
-         end case;
+      for I in reverse Memidx_Arr'Range loop
+         Inst := Memidx_Arr (I);
 
          --  INST1 is a memidx.
-         Inp := Get_Input (Inst1, 0);
+         Inp := Get_Input (Inst, 0);
          Part_Addr := Get_Driver (Inp);
-         if I = 1 then
+         if I = Memidx_Arr'Last then
+            --  First memidx, which is the LSB.  Nothing to do.
             Addr := Part_Addr;
          else
+            --  Following memidx, need to be multiplied by (max+1) of the
+            --  previous memidx.
             if 2**Natural (Max_Width) /= Max + 1 then
                --  Not a power of 2!
+               --  ADDR := ADDR + PART_ADDR * (MAX + 1)
                declare
                   W : constant Width := Get_Width (Addr) + Max_Width;
-                  Loc : constant Location_Type := Get_Location (Inst1);
+                  Loc : constant Location_Type := Get_Location (Inst);
                   Mul : Net;
                begin
                   Mul := Build2_Const_Uns (Ctxt, Uns64 (Max + 1), W);
@@ -197,10 +182,9 @@ package body Netlists.Expands is
                Addr := Build_Concat2 (Ctxt, Part_Addr, Addr);
             end if;
          end if;
-         Max := Get_Param_Uns32 (Inst1, 1);
+         Max := Get_Param_Uns32 (Inst, 1);
          Max_Width := Clog2 (Max + 1);
       end loop;
-      pragma Assert (Inst = Inst1);
    end Extract_Address;
 
    procedure Truncate_Address
@@ -222,9 +206,9 @@ package body Netlists.Expands is
    procedure Expand_Dyn_Extract (Ctxt : Context_Acc; Inst : Instance)
    is
       Val : constant Net := Get_Input_Net (Inst, 0);
-      Addr_Net : constant Net := Get_Input_Net (Inst, 1);
       Loc : constant Location_Type := Get_Location (Inst);
       W : constant Width := Get_Width (Get_Output (Inst, 0));
+      Addr_Net : constant Net := Disconnect_And_Get (Inst, 1);
       --  1. compute number of dims, check order.
       Ndims : constant Natural := Count_Memidx (Addr_Net);
       Nbr_Els : Natural;
@@ -244,8 +228,6 @@ package body Netlists.Expands is
          --  There is only one element, so it's not really dynamic.
          --  Just return the value.
          Res := Get_Input_Net (Inst, 0);
-         --  Disconnect the address
-         Disconnect (Get_Input (Inst, 1));
       else
          --  2. build extract gates
          Els := new Case_Element_Array (1 .. Nbr_Els);
@@ -262,18 +244,17 @@ package body Netlists.Expands is
          end;
 
          --  3. build mux tree
-         Disconnect (Get_Input (Inst, 1));
-         Extract_Address (Ctxt, Addr_Net, Int32 (Ndims), Addr);
+         Extract_Address (Ctxt, Memidx_Arr, Addr);
          Truncate_Address (Ctxt, Addr, Nbr_Els);
          Def := No_Net;
          Synth_Case (Ctxt, Addr, Els.all, Def, Res, Loc);
 
-         --  4. remove old dyn_extract.
          Remove_Memidx (Memidx_Arr);
 
          Free_Case_Element_Array (Els);
       end if;
 
+      --  Remove old dyn_extract.
       Disconnect (Get_Input (Inst, 0));
       Redirect_Inputs (Get_Output (Inst, 0), Res);
       Remove_Instance (Inst);
@@ -448,7 +429,7 @@ package body Netlists.Expands is
       Loc : constant Location_Type := Get_Location (Inst);
       Mem : constant Net := Get_Input_Net (Inst, 0);
       Dat : constant Net := Get_Input_Net (Inst, 1);
-      Addr_Net : constant Net := Get_Input_Net (Inst, 2);
+      Addr_Net : constant Net := Disconnect_And_Get (Inst, 2);
       O : constant Net := Get_Output (Inst, 0);
       O_W : constant Width := Get_Width (O);
       --  1. compute number of dims, check order.
@@ -468,8 +449,7 @@ package body Netlists.Expands is
 
       --  Generate decoder.
       Net_Arr := new Net_Array(0 .. Int32 (Nbr_Els - 1));
-      Disconnect (Get_Input (Inst, 2));  --  Disconnect address
-      Extract_Address (Ctxt, Addr_Net, Int32 (Ndims), Addr);
+      Extract_Address (Ctxt, Memidx_Arr, Addr);
       Truncate_Address (Ctxt, Addr, Nbr_Els);
       Generate_Decoder (Ctxt, Addr, Net_Arr.all, Loc);
 
