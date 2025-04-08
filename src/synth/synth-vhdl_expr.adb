@@ -1079,6 +1079,7 @@ package body Synth.Vhdl_Expr is
       Idx_Off : Value_Offsets;
    begin
       if Dim > Flist_Last (Indexes) then
+         --  Initialize values
          Voff := No_Net;
          Off := (0, 0);
          Error := False;
@@ -1086,6 +1087,7 @@ package body Synth.Vhdl_Expr is
          El_Typ := Arr_Typ;
          return;
       else
+         --  First recurse to start with least significant indexes.
          Synth_Indexes
            (Syn_Inst, Indexes, Dim + 1, Get_Array_Element (Arr_Typ),
             El_Typ, Voff, Off, Stride, Error);
@@ -1106,6 +1108,7 @@ package body Synth.Vhdl_Expr is
       Bnd := Get_Array_Bound (Arr_Typ);
 
       if Is_Static_Val (Idx_Val.Val) then
+         --  For a static index, compute offset.
          Idx := Get_Static_Discrete (Idx_Val);
          if not In_Bounds (Bnd, Int32 (Idx)) then
             Bound_Error (Syn_Inst, Idx_Expr, Bnd, Int32 (Idx));
@@ -1122,6 +1125,7 @@ package body Synth.Vhdl_Expr is
          --  Nothing to select.
          null;
       else
+         --  Dynamic index.
          Ivoff := Dyn_Index_To_Offset (Ctxt, Bnd, Idx_Val, Idx_Expr);
          Ivoff := Build_Memidx
            (Get_Build (Syn_Inst), Ivoff, El_Typ.W * Stride,
