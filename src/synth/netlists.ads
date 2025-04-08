@@ -44,6 +44,9 @@ package Netlists is
 
       --  Create a new version of an existing prefix.
       Sname_Version
+
+      --  A subelement of a record, or a field of a struct.
+      --  Sname_Field
      );
    pragma Convention (C, Sname_Kind);
 
@@ -65,6 +68,7 @@ package Netlists is
    function Get_Sname_Version (Name : Sname) return Uns32;
 
    --  Modifies an Sname.
+   --  Used only for display.
    procedure Set_Sname_Prefix (Name : Sname; Prefix : Sname);
 
    --  TODO: procedure to free an Sname.

@@ -384,5 +384,10 @@ package Netlists.Gates is
    subtype Constant_Defined_Module_Id is
      Module_Id range Id_Const_0 .. Id_Const_Log;
 
+   --  OUT := IN0[IN1*WD+WD-1:IN1*WD]
+   --  Inputs:  0: MEM (the memory)
+   --           1: IDX (then index)
+   Id_Bmux : constant Module_Id := 121;
+
    --  Id 128 is the first user id.
 end Netlists.Gates;
