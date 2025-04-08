@@ -206,12 +206,37 @@ package body Netlists.Disp_Verilog is
       end if;
 
       Parent := Get_Input_Parent (Inp);
-      if Get_Id (Parent) = Id_Nop then
-         return Get_Output (Parent, 0);
-      else
-         return No_Net;
-      end if;
+      case Get_Id (Parent) is
+         when Id_Nop
+           | Id_Signal =>
+            return Get_Output (Parent, 0);
+         when others =>
+            return No_Net;
+      end case;
    end Is_Nop_Drv;
+
+   --  Return True iff the driver for INP is the output of a user defined
+   --  module which only drives INP
+   function Has_Single_User_Driver (Inp : Input) return Boolean
+   is
+      O : constant Net := Get_Driver (Inp);
+      Inst : Instance;
+   begin
+      if O = No_Net then
+         return False;
+      end if;
+      if Get_First_Sink (O) /= Inp
+        or else Get_Next_Sink (Inp) /= No_Input
+      then
+         --  Not a single driver.
+         return False;
+      end if;
+      Inst := Get_Net_Parent (O);
+      if Get_Id (Inst) < Id_User_None then
+         return False;
+      end if;
+      return True;
+   end Has_Single_User_Driver;
 
    procedure Disp_Instance_Gate (Inst : Instance)
    is
@@ -1384,6 +1409,10 @@ package body Netlists.Disp_Verilog is
             when Id_Nop =>
                --  Inserted by netlists.rename to avoid escaping.
                null;
+            when Id_Signal =>
+               if not Has_Single_User_Driver (Get_Input (Inst, 0)) then
+                  Disp_Instance_Inline (Inst);
+               end if;
             when others =>
                Disp_Instance_Inline (Inst);
          end case;
