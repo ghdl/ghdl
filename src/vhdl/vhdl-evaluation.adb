@@ -3583,6 +3583,21 @@ package body Vhdl.Evaluation is
                return Build_String (String8_Substring (Str_Id, Int32 (Pos)),
                  Nat32 (Len), Expr);
             end;
+         when Iir_Kind_Simple_Aggregate =>
+            declare
+               Plist : constant Iir_Flist :=
+                 Get_Simple_Aggregate_List (Prefix);
+               Rlist : Iir_Flist;
+               El : Iir;
+            begin
+               Rlist := Create_Iir_Flist (Natural (Len));
+
+               for I in 0 .. Natural (Len - 1) loop
+                  El := Get_Nth_Element (Plist, Natural (Pos) + I);
+                  Set_Nth_Element (Rlist, Natural (I), El);
+               end loop;
+               return Build_Simple_Aggregate (Rlist, Expr, Get_Type (Expr));
+            end;
          when Iir_Kind_Overflow_Literal =>
             return Build_Overflow (Expr, Get_Type (Expr));
          when others =>
