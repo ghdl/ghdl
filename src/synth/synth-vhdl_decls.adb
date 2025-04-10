@@ -610,7 +610,7 @@ package body Synth.Vhdl_Decls is
      (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-      Atype : constant Node := Get_Declaration_Type (Decl);
+      Atype : Node;
       Name : constant Node := Get_Name (Decl);
       Marker : Mark_Type;
       Off : Value_Offsets;
@@ -619,21 +619,15 @@ package body Synth.Vhdl_Decls is
       Base : Valtyp;
       Typ : Type_Acc;
    begin
-      --  Subtype indication may not be present.
-      if Atype /= Null_Node then
-         Synth_Subtype_Indication (Syn_Inst, Atype);
-         Obj_Typ := Get_Subtype_Object (Syn_Inst, Atype);
-      else
-         Obj_Typ := null;
-      end if;
-
       Mark_Expr_Pool (Marker);
 
       if Get_Kind (Name) in Iir_Kinds_External_Name then
+         Atype := Get_Declaration_Type (Name);
          Base := Elab.Vhdl_Expr.Exec_External_Name (Syn_Inst, Name);
          Off := No_Value_Offsets;
          Typ := Base.Typ;
       else
+         Atype := Get_Declaration_Type (Decl);
          Vhdl_Stmts.Synth_Assignment_Prefix (Syn_Inst, Name, Base, Typ, Off);
       end if;
 
@@ -654,6 +648,15 @@ package body Synth.Vhdl_Decls is
       else
          Res := Create_Value_Alias (Base, Off, Typ, Expr_Pool'Access);
       end if;
+
+      --  Subtype indication may not be present.
+      if Atype /= Null_Node then
+         Synth_Subtype_Indication (Syn_Inst, Atype);
+         Obj_Typ := Get_Subtype_Object (Syn_Inst, Atype);
+      else
+         Obj_Typ := null;
+      end if;
+
       if Obj_Typ /= null
         and then Obj_Typ.Kind not in Type_Scalars
       then

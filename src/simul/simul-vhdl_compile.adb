@@ -1128,6 +1128,8 @@ package body Simul.Vhdl_Compile is
                case Get_Kind (Name) is
                   when Iir_Kind_External_Signal_Name
                     | Iir_Kind_External_Variable_Name =>
+                     Build_Subtype_Indication
+                       (Mem, Inst, Get_Subtype_Indication (Name));
                      External_Names_Table.Append ((Mem, Inst, Decl));
                   when others =>
                      Build_Object_Alias (Mem, Inst, Decl);
@@ -1145,6 +1147,8 @@ package body Simul.Vhdl_Compile is
             end;
 
          when Iir_Kinds_External_Name =>
+            Build_Subtype_Indication
+              (Mem, Inst, Get_Subtype_Indication (Decl));
             External_Names_Table.Append ((Mem, Inst, Decl));
 
          when Iir_Kind_File_Declaration =>

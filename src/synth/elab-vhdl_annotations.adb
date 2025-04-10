@@ -694,10 +694,16 @@ package body Elab.Vhdl_Annotations is
             Annotate_Subprogram_Body (Block_Info, Decl);
 
          when Iir_Kind_Object_Alias_Declaration =>
-            if Has_Owned_Subtype_Indication (Decl) then
-               Annotate_Type_Definition (Block_Info, Get_Type (Decl));
-            end if;
-            Create_Object_Info (Block_Info, Decl);
+            declare
+               Name : constant Iir := Get_Name (Decl);
+            begin
+               if Get_Kind (Name) in Iir_Kinds_External_Name then
+                  Annotate_External_Name_Type (Block_Info, Name);
+               elsif Has_Owned_Subtype_Indication (Decl) then
+                  Annotate_Type_Definition (Block_Info, Get_Type (Decl));
+               end if;
+               Create_Object_Info (Block_Info, Decl);
+            end;
 
          when Iir_Kind_Non_Object_Alias_Declaration =>
             null;
