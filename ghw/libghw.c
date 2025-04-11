@@ -1154,6 +1154,7 @@ ghw_read_value (struct ghw_handler *h,
 	val->f64 = v;
       }
       break;
+    case ghdl_rtik_type_i64:
     case ghdl_rtik_type_p64:
       {
 	int64_t v;
