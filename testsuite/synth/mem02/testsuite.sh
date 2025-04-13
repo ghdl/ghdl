@@ -9,7 +9,7 @@ done
 
 # Designs that doesn't create a RAM/ROM
 for t in ram3 ram4 ram6; do
-    synth_tb $t 2> $t.log
+    synth_tb $t
 done
 
 synth ram8.vhdl -e > syn_ram8.vhdl
