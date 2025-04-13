@@ -222,7 +222,7 @@ jobs:
         if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
         shell: "msys2 {0}"
         run: |
-          python -m pip install -v --disable-pip-version-check --break-system-packages ./wheels/pyGHDL-*.whl
+          python -m pip install -v --disable-pip-version-check --break-system-packages ./wheels/pyghdl-*.whl
           python -m pip install --disable-pip-version-check --break-system-packages -r testsuite/requirements.txt
 
       - name: List pyGHDL installation directory (Ubuntu)
