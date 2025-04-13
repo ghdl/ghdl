@@ -72,6 +72,13 @@ package Netlists.Folds is
                            Loc : Location_Type)
                           return Net;
 
+   --  X extend, noop or truncate I so that its width is W.
+   function Build2_Xresize (Ctxt : Context_Acc;
+                            I : Net;
+                            W : Width;
+                            Loc : Location_Type)
+                           return Net;
+
    --  Same as Build_Extract, but return I iff extract all the bits.
    function Build2_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
@@ -103,4 +110,13 @@ package Netlists.Folds is
    function Build2_Canon_And (Ctxt : Context_Acc;
                               R, L : Net;
                               Keep : Boolean) return Net;
+
+   --  Build IDX*MUL+ADD
+   --  If ADD is No_Net, simply compute IDX*MUL
+   --  Optimize if MUL is a power of 2.
+   function Build2_Addmul (Ctxt : Context_Acc;
+                           Idx : Net;
+                           Mul : Uns32;
+                           Add : Net;
+                           Loc : Location_Type) return Net;
 end Netlists.Folds;

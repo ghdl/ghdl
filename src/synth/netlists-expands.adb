@@ -227,7 +227,7 @@ package body Netlists.Expands is
       end if;
    end Truncate_Address;
 
-      --  Extract address from memidx/addidx and disconnect those gates.
+   --  Extract address from memidx/addidx and disconnect those gates.
    function Extract_Flat_Address
      (Ctxt : Context_Acc; Idx_Arr : Memidx_Array_Type) return Net
    is
@@ -250,7 +250,7 @@ package body Netlists.Expands is
          Step := Get_Param_Uns32 (Inst, 0);
          Loc := Get_Location (Inst);
 
-         --  Extract and disconnect input of memidx.
+         --  Extract input of memidx.
          Inp_Net := Get_Input_Net (Inst, 0);
 
          Out_W := Get_Width (Get_Output (Inst, 0));
@@ -295,10 +295,104 @@ package body Netlists.Expands is
       return Res;
    end Extract_Flat_Address;
 
+   function Memidx_No_Overlap (Idx_Arr : Memidx_Array_Type; Wd : Width)
+                              return Boolean is
+   begin
+      for I in Idx_Arr'Range loop
+         declare
+            Inst : constant Instance := Idx_Arr (I);
+            Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+         begin
+            if Step mod Wd /= 0 then
+               return False;
+            end if;
+         end;
+      end loop;
+      return True;
+   end Memidx_No_Overlap;
+
+   --  Extract bmux from memidx/addidx.
+   function Extract_Bmux
+     (Ctxt : Context_Acc; Idx_Arr : Memidx_Array_Type; Inp : Net) return Net
+   is
+      Inst : Instance;
+      I, Il : Natural;
+      Res : Net;
+      Res_Wd : Width;
+      N_Wd : Width;
+      Step : Uns32;
+      Stepl : Uns32;
+      Addr : Net;
+   begin
+      Res := Inp;
+      Res_Wd := Get_Width (Res);
+
+      I := Idx_Arr'First;
+      loop
+         --  Extract parameters from memidx.
+         Inst := Idx_Arr (I);
+         Step := Get_Param_Uns32 (Inst, 0);
+
+         --  Gather memidx whose step is a multiple of the smallest one.
+         --  Scan from larger steps to smaller one.
+         Il := I;
+         Stepl := Step;
+         while Il < Idx_Arr'Last loop
+            declare
+               Inst1 : constant Instance := Idx_Arr (Il + 1);
+               Step1 : constant Uns32 := Get_Param_Uns32 (Inst1, 0);
+            begin
+               exit when Step mod Step1 /= 0;
+               Stepl := Step1;
+               Il := Il + 1;
+            end;
+         end loop;
+
+         --  Combine index.
+         Addr := No_Net;
+         for J in reverse I .. Il loop
+            declare
+               Inst1 : constant Instance := Idx_Arr (J);
+               Step1 : constant Uns32 := Get_Param_Uns32 (Inst1, 0);
+               Len : constant Uns32 := Get_Param_Uns32 (Inst1, 1) + 1;
+               Log2_Len : constant Uns32 := Clog2 (Len);
+               Idx : Net;
+            begin
+               Idx := Get_Input_Net (Inst1, 0);
+
+               if Get_Width (Idx) > Log2_Len then
+                  Idx := Build2_Trunc
+                    (Ctxt, Id_Utrunc, Idx, Log2_Len, Get_Location (Inst1));
+               end if;
+
+               Addr := Build2_Addmul
+                 (Ctxt, Idx, Step1 / Stepl, Addr, Get_Location (Inst1));
+            end;
+         end loop;
+
+         --  Resize the input.
+         N_Wd := Stepl * 2**Natural(Get_Width (Addr));
+         if Res_Wd /= N_Wd then
+            Res := Build2_Xresize (Ctxt, Res, N_Wd, Get_Location (Inst));
+         end if;
+
+         Res := Build_Bmux (Ctxt, Stepl, Res, Addr);
+         Set_Location (Res, Get_Location (Inst));
+
+         Res_Wd := Stepl;
+
+         exit when Il = Idx_Arr'Last;
+         I := Il + 1;
+      end loop;
+
+      return Res;
+   end Extract_Bmux;
+
    procedure Expand_Dyn_Extract (Ctxt : Context_Acc; Inst : Instance)
    is
       Val : constant Net := Get_Input_Net (Inst, 0);
       Loc : constant Location_Type := Get_Location (Inst);
+      Mem : constant Net := Get_Input_Net (Inst, 0);
       W : constant Width := Get_Width (Get_Output (Inst, 0));
       Addr_Net : constant Net := Disconnect_And_Get (Inst, 1);
       --  1. compute number of dims, check order.
@@ -319,7 +413,24 @@ package body Netlists.Expands is
       if Nbr_Els = 1 then
          --  There is only one element, so it's not really dynamic.
          --  Just return the value.
-         Res := Get_Input_Net (Inst, 0);
+         Res := Mem;
+      elsif Memidx_No_Overlap (Memidx_Arr, W) then
+         --  Use Bmux if no overlap: every mem element can be selected by
+         --   only one index.
+         --  This is not the case for slices like:
+         --   mem(idx + 1 donwto idx)
+         declare
+            Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+         begin
+            Res := Mem;
+            if Off /= 0 then
+               Res := Build2_Extract (Ctxt, Res, Off, Get_Width (Mem) - Off);
+            end if;
+            Res := Extract_Bmux (Ctxt, Memidx_Arr, Res);
+            if Get_Width (Res) /= W then
+               Res := Build2_Extract (Ctxt, Res, 0, W);
+            end if;
+         end;
       elsif True then
          --  2. Compute index
          Addr := Extract_Flat_Address (Ctxt, Memidx_Arr);
@@ -349,10 +460,10 @@ package body Netlists.Expands is
          Def := No_Net;
          Synth_Case (Ctxt, Addr, Els.all, Def, Res, Loc);
 
-         Remove_Memidx (Addr_Net);
-
          Free_Case_Element_Array (Els);
       end if;
+
+      Remove_Memidx (Addr_Net);
 
       --  Remove old dyn_extract.
       Disconnect (Get_Input (Inst, 0));
