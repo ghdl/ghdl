@@ -526,6 +526,7 @@ package body Netlists.Disp_Verilog is
          when Id_Extract
            | Id_Dyn_Extract
            | Id_Dyn_Insert
+           | Id_Bmux
            | Id_Utrunc
            | Id_Strunc =>
             return True;
@@ -1083,6 +1084,15 @@ package body Netlists.Disp_Verilog is
                            "    endcase" & NL, Inst);
          when Id_Pmux =>
             Disp_Pmux (Inst);
+         when Id_Bmux =>
+            declare
+               O : constant Net := Get_Output (Inst, 0);
+               Wd : constant Width := Get_Width (O);
+            begin
+               Disp_Template
+                 ("  assign \o0 = \i0[\i1 * \n0 -: \n0]; //(Bmux)" & NL,
+                  Inst, (0 => Wd));
+            end;
          when Id_Add =>
             Disp_Template ("  assign \o0 = \i0 + \i1;" & NL, Inst);
          when Id_Sub =>

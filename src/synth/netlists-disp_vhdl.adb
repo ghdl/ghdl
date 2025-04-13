@@ -458,6 +458,8 @@ package body Netlists.Disp_Vhdl is
       end loop;
    end Disp_Memory_Init;
 
+   --  Some gates require a name as an input (and not a bit-string) as they
+   --  use indexed names or slice names.
    function Need_Name (Inst : Instance) return Boolean
    is
       Id : constant Module_Id := Get_Id (Inst);
@@ -467,7 +469,8 @@ package body Netlists.Disp_Vhdl is
            | Id_Dyn_Extract
            | Id_Dyn_Insert
            | Id_Utrunc
-           | Id_Strunc =>
+           | Id_Strunc
+           | Id_Bmux =>
             return True;
          when Id_User_None .. Module_Id'Last =>
             return True;
@@ -1172,6 +1175,21 @@ package body Netlists.Disp_Vhdl is
             Wr_Line (" when others;");
          when Id_Pmux =>
             Disp_Pmux (Inst);
+         when Id_Bmux =>
+            declare
+               O : constant Net := Get_Output (Inst, 0);
+               Wd : constant Width := Get_Width (O);
+            begin
+               Disp_Template ("  \o0 <= \i0", Inst);
+               if Wd = 1 then
+                  Disp_Template (" (to_integer (\ui1));" & NL, Inst);
+               else
+                  Disp_Template
+                    (" (to_integer (\ui1) * \n0 + \n1 "
+                     & "downto to_integer (\ui1) * \n0);" & NL,
+                     Inst, (0 => Wd, 1 => Wd - 1));
+               end if;
+            end;
          when Id_Add =>
             if Get_Width (Get_Output (Inst, 0)) = 1 then
                Disp_Template ("  \o0 <= \i0 xor \i1;  --  add" & NL, Inst);
