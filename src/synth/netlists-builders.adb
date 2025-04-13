@@ -435,6 +435,13 @@ package body Netlists.Builders is
         (Ctxt.M_Pmux,
          (0 => (New_Sname_Artificial (Get_Identifier ("n")),
                 Typ => Param_Uns32)));
+
+      Inputs (0) := Create_Input ("mem");
+      Inputs (1) := Create_Input ("idx");
+      Ctxt.M_Bmux := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("bmux")),
+         Id_Bmux, 2, 1, 0);
+      Set_Ports_Desc (Ctxt.M_Bmux, Inputs (0 .. 1), Outputs);
    end Create_Mux_Modules;
 
    procedure Create_Objects_Module (Ctxt : Context_Acc)
@@ -1078,6 +1085,23 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 1), Def);
       return O;
    end Build_Pmux;
+
+   function Build_Bmux (Ctxt : Context_Acc;
+                        Wd : Width;
+                        Inp : Net;
+                        Idx : Net) return Net
+   is
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Var_Instance (Ctxt.Parent, Ctxt.M_Bmux,
+                                New_Internal_Name (Ctxt), 2, 1, 0);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Wd);
+      Connect (Get_Input (Inst, 0), Inp);
+      Connect (Get_Input (Inst, 1), Idx);
+      return O;
+   end Build_Bmux;
 
    function Build_Concat2 (Ctxt : Context_Acc; I0, I1 : Net) return Net
    is

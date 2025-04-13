@@ -54,6 +54,7 @@ enum Module_Id {
    Id_Mux2 = 47,
    Id_Mux4 = 48,
    Id_Pmux = 49,
+   Id_Bmux = 50,
    Id_Signal  = 52,
    Id_Isignal = 53,
    Id_Output  = 54,

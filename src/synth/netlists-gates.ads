@@ -106,13 +106,20 @@ package Netlists.Gates is
    --  Output: o
    Id_Mux4 : constant Module_Id := 48;
 
+   subtype Mux_Module_Id is Module_Id range Id_Mux2 .. Id_Mux4;
+
    --  Inputs: 0: Selector as one-hot encoding
    --          1: Default value (when the selector is 0)
    --          2..1+W: values (2: MSB of sel, 1+W: LSB of sel)
    --  Output: 0: selected value
    Id_Pmux : constant Module_Id := 49;
 
-   subtype Mux_Module_Id is Module_Id range Id_Mux2 .. Id_Mux4;
+   --  The width of the index gives the maximum index value.
+   --  The WD = width(IN0) / 2**width(IN1), and the division must be exact.
+   --  OUT := IN0[IN1*WD+WD-1:IN1*WD]
+   --  Inputs:  0: the memory to be indexed
+   --           1: the index
+   Id_Bmux : constant Module_Id := 50;
 
    --  Like a wire: the output is equal to the input, but could be elimited
    --  at any time.  Isignal has an initial value.
@@ -271,6 +278,8 @@ package Netlists.Gates is
    --  Gate to compute dynamic insert or extract offsets.
    --  Provides the scale (step) factor (needed for insert/extract wider than
    --   1 bit), also provides the maximum index value.
+   --  The width of the output must be clog2(STEP*(MAX+1)).
+   --  The width of the index (IN0) must be minimum (= clog2(MAX + 1)).
    --  For multi-dimensional insert/extract, memidx needs to be combined with
    --   addidx.
    --  Inputs:  0: index
@@ -383,11 +392,6 @@ package Netlists.Gates is
 
    subtype Constant_Defined_Module_Id is
      Module_Id range Id_Const_0 .. Id_Const_Log;
-
-   --  OUT := IN0[IN1*WD+WD-1:IN1*WD]
-   --  Inputs:  0: MEM (the memory)
-   --           1: IDX (then index)
-   Id_Bmux : constant Module_Id := 121;
 
    --  Id 128 is the first user id.
 end Netlists.Gates;
