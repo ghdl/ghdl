@@ -1090,7 +1090,7 @@ package body Netlists.Disp_Verilog is
                Wd : constant Width := Get_Width (O);
             begin
                Disp_Template
-                 ("  assign \o0 = \i0[\i1 * \n0 -: \n0]; //(Bmux)" & NL,
+                 ("  assign \o0 = \i0[\i1 * \n0 +: \n0]; //(Bmux)" & NL,
                   Inst, (0 => Wd));
             end;
          when Id_Add =>
