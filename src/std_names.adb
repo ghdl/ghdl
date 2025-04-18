@@ -727,6 +727,7 @@ package body Std_Names is
       Def ("loc",                Name_Loc);
       Def ("keep",               Name_Keep);
       Def ("syn_black_box",      Name_Syn_Black_Box);
+      Def ("wrap",               Name_Wrap);
 
       --  Verilog directives
       Def ("define",          Name_Define);

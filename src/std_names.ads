@@ -823,7 +823,8 @@ package Std_Names is
    Name_Loc                : constant Name_Id := Name_First_Synthesis + 005;
    Name_Keep               : constant Name_Id := Name_First_Synthesis + 006;
    Name_Syn_Black_Box      : constant Name_Id := Name_First_Synthesis + 007;
-   Name_Last_Synthesis     : constant Name_Id := Name_Syn_Black_Box;
+   Name_Wrap               : constant Name_Id := Name_First_Synthesis + 008;
+   Name_Last_Synthesis     : constant Name_Id := Name_Wrap;
 
    --  Verilog Directives.
    Name_First_Directive : constant Name_Id := Name_Last_Synthesis + 1;
