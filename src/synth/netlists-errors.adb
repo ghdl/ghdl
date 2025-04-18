@@ -34,6 +34,7 @@ package body Netlists.Errors is
 
    procedure Output_Name_1 (N : Sname)
    is
+      Kind : constant Sname_Kind := Get_Sname_Kind (N);
       Prefix : Sname;
    begin
       --  Do not crash on No_Name.
@@ -42,18 +43,22 @@ package body Netlists.Errors is
          return;
       end if;
 
-      Prefix := Get_Sname_Prefix (N);
-      if Prefix /= No_Sname then
-         Output_Name_1 (Prefix);
-         Output_Message (".");
+      if Kind in Sname_Kind_Prefix then
+         Prefix := Get_Sname_Prefix (N);
+         if Prefix /= No_Sname then
+            Output_Name_1 (Prefix);
+            Output_Message (".");
+         end if;
       end if;
 
       case Get_Sname_Kind (N) is
-         when Sname_User =>
+         when Sname_User
+           | Sname_Field =>
             Output_Identifier (Get_Sname_Suffix (N));
          when Sname_Artificial =>
             Output_Identifier (Get_Sname_Suffix (N));
-         when Sname_Version =>
+         when Sname_Version
+           | Sname_Unique =>
             Output_Message ("n");
             Output_Uns32 (Get_Sname_Version (N));
       end case;

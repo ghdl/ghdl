@@ -37,18 +37,30 @@ package Netlists is
    --  without copying the whole prefix.
    type Sname_Kind is
      (
+      --  A unique name (use a number)
+      Sname_Unique,
+
+      Sname_Artificial,
+
       --  The name adds a suffix to an existing name.  Simple names (without
       --  prefix) are in this kind, with a null prefix.
       Sname_User,
-      Sname_Artificial,
+
+      --  A subelement of a record, or a field of a struct.
+      Sname_Field,
 
       --  Create a new version of an existing prefix.
       Sname_Version
-
-      --  A subelement of a record, or a field of a struct.
-      --  Sname_Field
      );
    pragma Convention (C, Sname_Kind);
+
+   --  Sname with a prefix
+   subtype Sname_Kind_Prefix is
+     Sname_Kind range Sname_User .. Sname_Field;
+
+   --  Sname with a Name_Id suffix
+   subtype Sname_Kind_Suffix is
+     Sname_Kind range Sname_Artificial .. Sname_Field;
 
    type Sname is private;
    No_Sname : constant Sname;
@@ -60,6 +72,8 @@ package Netlists is
    function New_Sname_User (Id : Name_Id; Prefix : Sname) return Sname;
    function New_Sname_Artificial (Id : Name_Id) return Sname;
    function New_Sname_Version (Ver : Uns32; Prefix : Sname) return Sname;
+   function New_Sname_Field (Id : Name_Id; Prefix : Sname) return Sname;
+   function New_Sname_Unique (Num : Uns32) return Sname;
 
    --  Read the content of an Sname.
    function Get_Sname_Kind (Name : Sname) return Sname_Kind;
@@ -373,11 +387,29 @@ private
    --  Just to confirm.
    for Port_Desc'Size use 64;
 
+   type Sname_Encoding is
+     (
+      --  Suffix is an Id, and encode an sub-element of the record.
+      Sn_Record,
+
+      --  Suffix is an Int32 and encode an index of an array.
+      Sn_Array,
+
+      --  Suffix is an Id or an Int32 (depending on bit 0), and encode a
+      --  hierachical name (block, generate, instance).
+      Sn_Hierarchy,
+
+      --  If prefix is No_Sname, the suffix is an Id to encode an artificial
+      --  name. Else, suffix is a version.
+      Sn_Number
+     );
+
    --  We don't care about C compatible representation of Sname_Record.
    pragma Warnings (Off, "*convention*");
    type Sname_Record is record
-      Kind : Sname_Kind;
+      Kind : Sname_Encoding;
       Prefix : Sname;
+
       Suffix : Uns32;
    end record;
    pragma Pack (Sname_Record);

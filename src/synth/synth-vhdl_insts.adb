@@ -453,7 +453,7 @@ package body Synth.Vhdl_Insts is
                   El := Get_Nth_Element (Els, Natural (I - 1));
                   Idx := Idx + 1;
                   Descs (Idx) :=
-                    (Name => New_Sname_User
+                    (Name => New_Sname_Field
                        (Get_Encoded_Name_Id (El, Encoding), Port_Sname),
                      Dir => Pkind,
                      W => Get_Type_Width (Typ.Rec.E (I).Typ));

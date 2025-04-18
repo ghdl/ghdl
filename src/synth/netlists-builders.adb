@@ -805,7 +805,11 @@ package body Netlists.Builders is
    is
       Name : Sname;
    begin
-      Name := New_Sname_Version (Ctxt.Num, Prefix);
+      if Prefix = No_Sname then
+         Name := New_Sname_Unique (Ctxt.Num);
+      else
+         Name := New_Sname_Version (Ctxt.Num, Prefix);
+      end if;
       Ctxt.Num := Ctxt.Num + 1;
       return Name;
    end New_Internal_Name;

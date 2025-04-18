@@ -48,8 +48,9 @@ package body Netlists.Disp_Verilog is
       Wr_Uns32 (Get_Sname_Version (N));
    end Put_Name_Version;
 
-   procedure Put_Name_1 (N : Sname)
+   procedure Put_Name_1 (N : Sname; Is_Escaped : in out Boolean)
    is
+      Kind : constant Sname_Kind := Get_Sname_Kind (N);
       Prefix : Sname;
    begin
       --  Do not crash on No_Name.
@@ -58,37 +59,42 @@ package body Netlists.Disp_Verilog is
          return;
       end if;
 
-      Prefix := Get_Sname_Prefix (N);
-      if Prefix /= No_Sname then
-         Put_Name_1 (Prefix);
-         Wr ("_");
+      if Kind = Sname_User then
+         Prefix := Get_Sname_Prefix (N);
+         if Prefix /= No_Sname then
+            Put_Name_1 (Prefix, Is_Escaped);
+            Wr ("_");
+         elsif Is_Escaped then
+            Wr ("\");
+         end if;
       end if;
 
-      case Get_Sname_Kind (N) is
+      case Kind is
          when Sname_User =>
             Put_Id (Get_Sname_Suffix (N));
          when Sname_Artificial =>
             Put_Id (Get_Sname_Suffix (N));
-         when Sname_Version =>
+         when Sname_Field =>
+            Is_Escaped := True;
+            Put_Name_1 (Get_Sname_Prefix (N), Is_Escaped);
+            Wr ("[");
+            Put_Id (Get_Sname_Suffix (N));
+            Wr ("]");
+         when Sname_Version
+           | Sname_Unique =>
             Wr ("n");
             Put_Name_Version (N);
       end case;
    end Put_Name_1;
 
-   procedure Put_Name (N : Sname) is
+   procedure Put_Name (N : Sname)
+   is
+      Is_Escaped : Boolean;
    begin
-      --  Do not crash on No_Name.
-      if N = No_Sname then
-         Wr ("*nil*");
-         return;
-      end if;
-
-      if Get_Sname_Kind (N) = Sname_User
-        and then Get_Sname_Prefix (N) = No_Sname
-      then
-         Put_Id (Get_Sname_Suffix (N));
-      else
-         Put_Name_1 (N);
+      Is_Escaped := False;
+      Put_Name_1 (N, Is_Escaped);
+      if Is_Escaped then
+         Wr (" ");
       end if;
    end Put_Name;
 
@@ -101,7 +107,7 @@ package body Netlists.Disp_Verilog is
       end if;
 
       --  Interface names are not versionned.
-      if Get_Sname_Kind (N) in Sname_User .. Sname_Artificial  then
+      if Get_Sname_Kind (N) in Sname_Artificial .. Sname_Field  then
          Put_Name (N);
       else
          Wr ("*err*");

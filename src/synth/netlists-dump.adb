@@ -111,6 +111,7 @@ package body Netlists.Dump is
    procedure Dump_Name (N : Sname)
    is
       use Name_Table;
+      Kind : constant Sname_Kind := Get_Sname_Kind (N);
       Prefix : Sname;
    begin
       --  Do not crash on No_Name.
@@ -119,20 +120,25 @@ package body Netlists.Dump is
          return;
       end if;
 
-      Prefix := Get_Sname_Prefix (N);
-      if Prefix /= No_Sname then
-         Dump_Name (Prefix);
-         Wr (".");
+      if Kind in Sname_Kind_Prefix then
+         Prefix := Get_Sname_Prefix (N);
+         if Prefix /= No_Sname then
+            Dump_Name (Prefix);
+            Wr (".");
+         end if;
       end if;
 
-      case Get_Sname_Kind (N) is
+      case Kind is
          when Sname_User =>
             Wr ("\");
+            Wr (Image (Get_Sname_Suffix (N)));
+         when Sname_Field =>
             Wr (Image (Get_Sname_Suffix (N)));
          when Sname_Artificial =>
             Wr ("$");
             Put_Id (Get_Sname_Suffix (N));
-         when Sname_Version =>
+         when Sname_Version
+           | Sname_Unique =>
             Wr ("%");
             Wr_Uns32 (Get_Sname_Version (N));
       end case;
