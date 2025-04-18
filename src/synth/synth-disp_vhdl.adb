@@ -256,46 +256,6 @@ package body Synth.Disp_Vhdl is
       end case;
    end Disp_In_Converter;
 
-   --  Disp conversion for output port (so in the form wrap_i <= i).
-   procedure Disp_Input_Port_Converter (Inst : Synth_Instance_Acc;
-                                        Port : Node)
-   is
-      Port_Id : constant Name_Id := Get_Identifier (Port);
-      Port_Name : constant String := Name_Table.Image (Port_Id);
-
-      Port_Type : constant Node := Get_Type (Port);
-      Typ : constant Type_Acc := Get_Subtype_Object (Inst, Port_Type);
-      Wname : Sname;
-   begin
-      Wname := New_Sname_User (Std_Names.Name_Wrap, No_Sname);
-      Wname := New_Sname_User (Port_Id, Wname);
-
-      if Get_Kind (Get_Base_Type (Port_Type)) = Iir_Kind_Record_Type_Definition
-      then
-         --  Expand
-         declare
-            Els : constant Node_Flist :=
-              Get_Elements_Declaration_List (Port_Type);
-         begin
-            for I in Flist_First .. Flist_Last (Els) loop
-               declare
-                  El : constant Node := Get_Nth_Element (Els, I);
-                  El_Id : constant Name_Id := Get_Identifier (El);
-                  Et : Rec_El_Type renames
-                    Typ.Rec.E (Iir_Index32 (I + 1));
-               begin
-                  Disp_In_Converter
-                    (New_Sname_Field (El_Id, Wname),
-                     Port_Name & '.' & Name_Table.Image (El_Id),
-                     0, Get_Type (El), Et.Typ, True);
-               end;
-            end loop;
-         end;
-      else
-         Disp_In_Converter (Wname, Port_Name, 0, Port_Type, Typ, True);
-      end if;
-   end Disp_Input_Port_Converter;
-
    procedure Disp_Out_Rhs
      (Wname : Sname; Off : Uns32; W : Width; Full : Boolean) is
    begin
@@ -465,8 +425,10 @@ package body Synth.Disp_Vhdl is
    end Disp_Out_Converter;
 
    --  Disp conversion for output port (so in the form o <= wrap_o).
-   procedure Disp_Output_Port_Converter (Inst : Synth_Instance_Acc;
-                                         Port : Node)
+   --  Disp conversion for output port (so in the form wrap_i <= i).
+   procedure Disp_Port_Converter (Inst : Synth_Instance_Acc;
+                                  Port : Node;
+                                  Is_Out : Boolean)
    is
       Port_Id : constant Name_Id := Get_Identifier (Port);
       Port_Name : constant String := Name_Table.Image (Port_Id);
@@ -491,17 +453,28 @@ package body Synth.Disp_Vhdl is
                   Et : Rec_El_Type renames
                     Typ.Rec.E (Iir_Index32 (I + 1));
                begin
-                  Disp_Out_Converter
-                    (New_Sname_Field (El_Id, Wname),
-                     Port_Name & '.' & Name_Table.Image (El_Id),
-                     0, Get_Type (El), Et.Typ, True);
+                  if Is_Out then
+                     Disp_Out_Converter
+                       (New_Sname_Field (El_Id, Wname),
+                        Port_Name & '.' & Name_Table.Image (El_Id),
+                        0, Get_Type (El), Et.Typ, True);
+                  else
+                     Disp_In_Converter
+                       (New_Sname_Field (El_Id, Wname),
+                        Port_Name & '.' & Name_Table.Image (El_Id),
+                        0, Get_Type (El), Et.Typ, True);
+                  end if;
                end;
             end loop;
          end;
       else
-         Disp_Out_Converter (Wname, Port_Name, 0, Port_Type, Typ, True);
+         if Is_Out then
+            Disp_Out_Converter (Wname, Port_Name, 0, Port_Type, Typ, True);
+         else
+            Disp_In_Converter (Wname, Port_Name, 0, Port_Type, Typ, True);
+         end if;
       end if;
-   end Disp_Output_Port_Converter;
+   end Disp_Port_Converter;
 
    function Has_Floating_Type (Atype : Node) return Boolean is
    begin
@@ -631,17 +604,15 @@ package body Synth.Disp_Vhdl is
       begin
          Port := Get_Port_Chain (Ent);
          while Port /= Null_Node loop
-            if Get_Mode (Port) = Iir_In_Mode then
-               Disp_Input_Port_Converter (Inst, Port);
-            end if;
-            Port := Get_Chain (Port);
-         end loop;
-
-         Port := Get_Port_Chain (Ent);
-         while Port /= Null_Node loop
-            if Get_Mode (Port) = Iir_Out_Mode then
-               Disp_Output_Port_Converter (Inst, Port);
-            end if;
+            case Get_Mode (Port) is
+               when Iir_In_Mode =>
+                  Disp_Port_Converter (Inst, Port, False);
+               when Iir_Out_Mode =>
+                  Disp_Port_Converter (Inst, Port, True);
+               when others =>
+                  --  TODO ?
+                  null;
+            end case;
             Port := Get_Chain (Port);
          end loop;
       end;
