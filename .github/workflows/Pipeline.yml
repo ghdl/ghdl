@@ -238,8 +238,8 @@ jobs:
       coverage_artifacts_pattern: '*-Coverage-SQLite-*'
       coverage_json_artifact: 'pyGHDL-Coverage-JSON'
       coverage_html_artifact: 'pyGHDL-Coverage-HTML'
-    secrets:
-      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+#    secrets:
+#      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
   PublishTestResults:
     uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r4
