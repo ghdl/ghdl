@@ -226,18 +226,17 @@ jobs:
       unittest_xml_artifact: 'pyGHDL-Unittest-XML'
     secrets: inherit
 
-  PublishCoverageResults:
+#  PublishCoverageResults:
 #    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r4
-    if: false
-    needs:
-      - macOS
-      - Ubuntu-fast
-      - Windows-fast
+#    needs:
+#      - macOS
+#      - Ubuntu-fast
+#      - Windows-fast
 ###   - pyGHDL         # pyGHDL is installed into site-packages, where no coverage is collected -> empty coverage report
-    with:
-      coverage_artifacts_pattern: '*-Coverage-SQLite-*'
-      coverage_json_artifact: 'pyGHDL-Coverage-JSON'
-      coverage_html_artifact: 'pyGHDL-Coverage-HTML'
+#    with:
+#      coverage_artifacts_pattern: '*-Coverage-SQLite-*'
+#      coverage_json_artifact: 'pyGHDL-Coverage-JSON'
+#      coverage_html_artifact: 'pyGHDL-Coverage-HTML'
 #    secrets:
 #      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
@@ -256,8 +255,9 @@ jobs:
 
   IntermediateCleanUp:
     uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r4
+    if: false
     needs:
-      - PublishCoverageResults
+#      - PublishCoverageResults
       - PublishTestResults
     with:
       sqlite_coverage_artifacts_prefix: 'pyGHDL-Coverage-SQLite-'
