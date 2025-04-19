@@ -268,18 +268,18 @@ jobs:
 #      ubuntu_image:  "ubuntu-20.04"            # gnat-gps (incl. GNATdoc) is limited to Ubuntu 20.04
 #      html_artifact: "documentation-gnatdoc"
 
-  Sphinx:
-    uses: ./.github/workflows/Documentation-Sphinx.yml
-    needs:
-      - Params
-      - Ubuntu-fast
+#  Sphinx:
+#    uses: ./.github/workflows/Documentation-Sphinx.yml
+#    needs:
+#      - Params
+#      - Ubuntu-fast
 #      - PublishCoverageResults
-      - PublishTestResults
-    with:
-      ghdl_artifact:  ${{ needs.Params.outputs.ghdl_basename }}-ubuntu-24.04-x86_64-mcode
-      html_artifact:  'documentation-HTML'
-      latex_document: 'ghdl'
-      latex_artifact: 'documentation-LaTeX'
+#      - PublishTestResults
+#    with:
+#      ghdl_artifact:  ${{ needs.Params.outputs.ghdl_basename }}-ubuntu-24.04-x86_64-mcode
+#      html_artifact:  'documentation-HTML'
+#      latex_document: 'ghdl'
+#      latex_artifact: 'documentation-LaTeX'
 ##      pdf_artifact:    'documentation-PDF'
 
 #  PublishToGitHubPages:
