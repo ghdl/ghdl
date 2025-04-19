@@ -61,7 +61,7 @@ package body Netlists.Disp_Vhdl is
       case Get_Sname_Kind (N) is
          when Sname_User =>
             return Is_Extended_Sname (Get_Sname_Prefix (N));
-         when Sname_Artificial =>
+         when Sname_System =>
             return False;
          when Sname_Field =>
             return True;
@@ -95,7 +95,7 @@ package body Netlists.Disp_Vhdl is
       case Get_Sname_Kind (N) is
          when Sname_User =>
             Put_Id (Get_Sname_Suffix (N));
-         when Sname_Artificial =>
+         when Sname_System =>
             Put_Id (Get_Sname_Suffix (N));
          when Sname_Field =>
             Put_Name_Inner (Get_Sname_Prefix (N));
@@ -133,7 +133,7 @@ package body Netlists.Disp_Vhdl is
       end if;
 
       --  Interface names are not versionned.
-      if Get_Sname_Kind (N) in Sname_Artificial .. Sname_Field then
+      if Get_Sname_Kind (N) in Sname_System .. Sname_Field then
          Put_Name (N);
       else
          Wr ("*err*");
@@ -200,7 +200,7 @@ package body Netlists.Disp_Vhdl is
       Name := Get_Module_Name (Imod);
       if Get_Id (Imod) < Id_User_None then
          Wr ("gsynth.gate_");
-         pragma Assert (Get_Sname_Kind (Name) = Sname_Artificial);
+         pragma Assert (Get_Sname_Kind (Name) = Sname_System);
          Put_Id (Get_Sname_Suffix (Name));
       else
          --  Even for blackbox, we assume the definition is in the work

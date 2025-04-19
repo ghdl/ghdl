@@ -488,7 +488,7 @@ package body Synth.Verilog_Insts is
                begin
                   if Label = Null_Identifier then
                      --  TODO: uniq name.
-                     Name := New_Sname_Artificial (Std_Names.Name_Generate);
+                     Name := New_Sname_System (Std_Names.Name_Generate);
                   else
                      Name := New_Sname_User (Label, Get_Sname (Inst));
                   end if;

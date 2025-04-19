@@ -72,7 +72,7 @@ package body Netlists.Disp_Verilog is
       case Kind is
          when Sname_User =>
             Put_Id (Get_Sname_Suffix (N));
-         when Sname_Artificial =>
+         when Sname_System =>
             Put_Id (Get_Sname_Suffix (N));
          when Sname_Field =>
             Is_Escaped := True;
@@ -107,7 +107,7 @@ package body Netlists.Disp_Verilog is
       end if;
 
       --  Interface names are not versionned.
-      if Get_Sname_Kind (N) in Sname_Artificial .. Sname_Field  then
+      if Get_Sname_Kind (N) in Sname_System .. Sname_Field  then
          Put_Name (N);
       else
          Wr ("*err*");
@@ -261,8 +261,7 @@ package body Netlists.Disp_Verilog is
       Name := Get_Module_Name (Imod);
       if Get_Id (Imod) < Id_User_None then
          Wr (" gate_");
-         pragma Assert (Get_Sname_Kind (Name) = Sname_Artificial
-                          and then Get_Sname_Prefix (Name) = No_Sname);
+         pragma Assert (Get_Sname_Kind (Name) = Sname_System);
          Put_Id (Get_Sname_Suffix (Name));
       else
          Put_Name (Name);

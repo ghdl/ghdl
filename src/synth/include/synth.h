@@ -81,7 +81,13 @@ namespace GhdlSynth {
   struct Sname { unsigned int id; };
   const Sname No_Sname = {0 };
 
-  enum Sname_Kind { Sname_User, Sname_Artificial, Sname_Version };
+  enum Sname_Kind {
+    Sname_Unique,
+    Sname_System,
+    Sname_User,
+    Sname_Field,
+    Sname_Version
+  };
   GHDLSYNTH_ADA_WRAPPER_DW(get_sname_kind, Sname_Kind, Sname);
   inline bool is_valid(Sname l) { return l.id != 0; }
 

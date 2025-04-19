@@ -55,7 +55,7 @@ package body Netlists.Errors is
          when Sname_User
            | Sname_Field =>
             Output_Identifier (Get_Sname_Suffix (N));
-         when Sname_Artificial =>
+         when Sname_System =>
             Output_Identifier (Get_Sname_Suffix (N));
          when Sname_Version
            | Sname_Unique =>
