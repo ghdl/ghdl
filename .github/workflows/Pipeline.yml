@@ -240,28 +240,27 @@ jobs:
 #    secrets:
 #      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
-  PublishTestResults:
-    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r4
-    needs:
-      - macOS
-      - Ubuntu-fast
-      - Windows-fast
-      - pyGHDL
-    with:
-      unittest_artifacts_pattern: '*-Unittest-XML-*'
-      merged_junit_artifact: 'pyGHDL-Unittest-XML'
-      additional_merge_args: '-d "--render=tree" "--name=pyGHDL" "--pytest=rewrite-dunder-init;reduce-depth:pytest.testsuite.pyunit;split:pytest"'
-      publish: ${{ github.event_name != 'pull_request' }}
+#  PublishTestResults:
+#    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r4
+#    needs:
+#      - macOS
+#      - Ubuntu-fast
+#      - Windows-fast
+#      - pyGHDL
+#    with:
+#      unittest_artifacts_pattern: '*-Unittest-XML-*'
+#      merged_junit_artifact: 'pyGHDL-Unittest-XML'
+#      additional_merge_args: '-d "--render=tree" "--name=pyGHDL" "--pytest=rewrite-dunder-init;reduce-depth:pytest.testsuite.pyunit;split:pytest"'
+#      publish: ${{ github.event_name != 'pull_request' }}
 
-  IntermediateCleanUp:
-    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r4
-    if: false
-    needs:
+#  IntermediateCleanUp:
+#    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r4
+#    needs:
 #      - PublishCoverageResults
-      - PublishTestResults
-    with:
-      sqlite_coverage_artifacts_prefix: 'pyGHDL-Coverage-SQLite-'
-      xml_unittest_artifacts_prefix: 'pyGHDL-Unittest-XML-'
+#      - PublishTestResults
+#    with:
+#      sqlite_coverage_artifacts_prefix: 'pyGHDL-Coverage-SQLite-'
+#      xml_unittest_artifacts_prefix: 'pyGHDL-Unittest-XML-'
 
 #  GNATdoc:
 #    uses: ./.github/workflows/Documentation-GNAT.yml
@@ -283,15 +282,15 @@ jobs:
       latex_artifact: 'documentation-LaTeX'
 ##      pdf_artifact:    'documentation-PDF'
 
-  PublishToGitHubPages:
-    uses: ./.github/workflows/Publish-GitHubPages.yml
-    needs:
-      - Sphinx
+#  PublishToGitHubPages:
+#    uses: ./.github/workflows/Publish-GitHubPages.yml
+#    needs:
+#      - Sphinx
 #      - PublishCoverageResults
-    with:
-      documentation: 'documentation-HTML'
-      coverage:      'pyGHDL-Coverage-HTML'
-      typing:        'pyGHDL-typing-HTML'
+#    with:
+#      documentation: 'documentation-HTML'
+#      coverage:      'pyGHDL-Coverage-HTML'
+#      typing:        'pyGHDL-typing-HTML'
 
   Nightly:
     uses: pyTooling/Actions/.github/workflows/NightlyRelease.yml@r4
