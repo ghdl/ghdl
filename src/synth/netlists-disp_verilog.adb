@@ -48,7 +48,27 @@ package body Netlists.Disp_Verilog is
       Wr_Uns32 (Get_Sname_Version (N));
    end Put_Name_Version;
 
-   procedure Put_Name_1 (N : Sname; Is_Escaped : in out Boolean)
+   --  Return True IFF N is an escaped identifier.
+   function Is_Escaped_Sname (N : Sname) return Boolean is
+   begin
+      if N = No_Sname then
+         return False;
+      end if;
+
+      case Get_Sname_Kind (N) is
+         when Sname_User =>
+            return Is_Escaped_Sname (Get_Sname_Prefix (N));
+         when Sname_System =>
+            return False;
+         when Sname_Field =>
+            return True;
+         when Sname_Version
+           | Sname_Unique =>
+            return False;
+      end case;
+   end Is_Escaped_Sname;
+
+   procedure Put_Name_1 (N : Sname)
    is
       Kind : constant Sname_Kind := Get_Sname_Kind (N);
       Prefix : Sname;
@@ -60,12 +80,12 @@ package body Netlists.Disp_Verilog is
       end if;
 
       if Kind = Sname_User then
-         Prefix := Get_Sname_Prefix (N);
-         if Prefix /= No_Sname then
-            Put_Name_1 (Prefix, Is_Escaped);
-            Wr ("_");
-         elsif Is_Escaped then
-            Wr ("\");
+         if Kind in Sname_Kind_Prefix then
+            Prefix := Get_Sname_Prefix (N);
+            if Prefix /= No_Sname then
+               Put_Name_1 (Prefix);
+               Wr ("_");
+            end if;
          end if;
       end if;
 
@@ -75,8 +95,7 @@ package body Netlists.Disp_Verilog is
          when Sname_System =>
             Put_Id (Get_Sname_Suffix (N));
          when Sname_Field =>
-            Is_Escaped := True;
-            Put_Name_1 (Get_Sname_Prefix (N), Is_Escaped);
+            Put_Name_1 (Get_Sname_Prefix (N));
             Wr ("[");
             Put_Id (Get_Sname_Suffix (N));
             Wr ("]");
@@ -89,10 +108,12 @@ package body Netlists.Disp_Verilog is
 
    procedure Put_Name (N : Sname)
    is
-      Is_Escaped : Boolean;
+      Is_Escaped : constant Boolean := Is_Escaped_Sname (N);
    begin
-      Is_Escaped := False;
-      Put_Name_1 (N, Is_Escaped);
+      if Is_Escaped then
+         Wr ("\");
+      end if;
+      Put_Name_1 (N);
       if Is_Escaped then
          Wr (" ");
       end if;
@@ -126,24 +147,24 @@ package body Netlists.Disp_Verilog is
          Idx : constant Port_Idx := Get_Port_Idx (N);
          M : Module;
          Inst_Name : Sname;
-         Port_Name : Sname;
       begin
          if Is_Self_Instance (Inst) then
             --  For ports of the current module, simply use the port name.
             Put_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
          else
             Inst_Name := Get_Instance_Name (Inst);
-            Put_Name (Inst_Name);
             M := Get_Module (Inst);
             case Get_Id (M) is
                when Id_Signal
                  | Id_Isignal =>
                   --  No suffix for signals (it's 'o').
-                  null;
+                  Put_Name (Inst_Name);
                when others =>
-                  Port_Name := Get_Output_Desc (M, Idx).Name;
-                  Wr ("_");
-                  Put_Interface_Name (Port_Name);
+                  Wr ("\");
+                  Put_Name_1 (Inst_Name);
+                  Wr (".");
+                  Put_Name_1 (Get_Output_Desc (M, Idx).Name);
+                  Wr (" ");
             end case;
          end if;
       end;
