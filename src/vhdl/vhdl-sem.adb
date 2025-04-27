@@ -1514,7 +1514,12 @@ package body Vhdl.Sem is
               and then
               Are_Trees_List_Equal (Get_Elements_Declaration_List (Left),
                                     Get_Elements_Declaration_List (Right));
-
+         when Iir_Kind_Record_Element_Constraint =>
+            if Get_Identifier (Left) /= Get_Identifier (Right) then
+               return False;
+            end if;
+            return Are_Trees_Equal (Get_Subtype_Indication (Left),
+                                    Get_Subtype_Indication (Right));
          when Iir_Kind_Integer_Literal =>
             if Get_Value (Left) /= Get_Value (Right) then
                return False;
