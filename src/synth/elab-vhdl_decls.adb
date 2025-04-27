@@ -37,8 +37,17 @@ package body Elab.Vhdl_Decls is
       Inter : Node;
       Typ : Type_Acc;
    begin
+      if Get_Implicit_Definition (Subprg) < Iir_Predefined_None then
+         --  Implicit operators directly use the type, not a subtype.
+         --  So there is no need to iterate over interfaces.
+         return;
+      end if;
       if Is_Second_Subprogram_Specification (Subprg) then
-         --  Already handled.
+         --  Already handled (by the primary specification).
+         return;
+      end if;
+      if not Get_Use_Flag (Subprg) then
+         --  Not used.
          return;
       end if;
 

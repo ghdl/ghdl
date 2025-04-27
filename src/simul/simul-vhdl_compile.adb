@@ -1213,7 +1213,13 @@ package body Simul.Vhdl_Compile is
 
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
-            if Is_Second_Subprogram_Specification (Decl) then
+            if Get_Implicit_Definition (Decl) < Iir_Predefined_None
+              or else Is_Second_Subprogram_Specification (Decl)
+            then
+               --  No subtype indication to elaborate.
+               return;
+            end if;
+            if not Get_Use_Flag (Decl) then
                return;
             end if;
             declare

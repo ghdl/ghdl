@@ -1082,6 +1082,36 @@ package body Vhdl.Canon is
       end loop;
    end Canon_Waveform_Expression;
 
+   --  Back propagate use_flag from the uninstantiated package specification
+   --  to the instantiated one.
+   --  When the body is analyzed, the use flag is set only on the
+   --  uninstantiated specification (for non-macro expanded generic package).
+   --  The use flag needs to be propagated to the instantiated specifications,
+   --  as this is the one which is elaborated.
+   procedure Package_Copy_Use_Flag (Uninst : Iir; Inst : Iir)
+   is
+      U_Chain : constant Iir := Get_Declaration_Chain (Uninst);
+      I_Chain : constant Iir := Get_Declaration_Chain (Inst);
+      U_El, I_El : Iir;
+   begin
+      U_El := U_Chain;
+      I_El := I_Chain;
+      if I_El = Null_Iir then
+         return;
+      end if;
+      while U_El /= Null_Iir loop
+         case Get_Kind (U_El) is
+            when Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration =>
+               Set_Use_Flag (I_El, Get_Use_Flag (U_El));
+            when others =>
+               null;
+         end case;
+         U_El := Get_Chain (U_El);
+         I_El := Get_Chain (I_El);
+      end loop;
+   end Package_Copy_Use_Flag;
+
    -- Names associations by position,
    -- reorder associations by name,
    -- create omitted association,
@@ -1156,8 +1186,9 @@ package body Vhdl.Canon is
                      end if;
                   when Iir_Kind_Association_Element_By_Individual =>
                      Found := True;
-                  when Iir_Kind_Association_Element_Package
-                    | Iir_Kind_Association_Element_Type
+                  when Iir_Kind_Association_Element_Package =>
+                     goto Done;
+                  when Iir_Kind_Association_Element_Type
                     | Iir_Kind_Association_Element_Subprogram
                     | Iir_Kind_Association_Element_Terminal =>
                      goto Done;
@@ -1186,6 +1217,7 @@ package body Vhdl.Canon is
                if Get_Kind (Default) /= Iir_Kind_Box_Name then
                   Default := Get_Named_Entity (Default);
                   if not Is_Error (Default) then
+                     --  Mark the associated subprogram as used.
                      Set_Use_Flag (Default, True);
                   end if;
                end if;
@@ -3427,6 +3459,8 @@ package body Vhdl.Canon is
       Pkg : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
       Bod : Iir;
    begin
+      Package_Copy_Use_Flag (Pkg, Decl);
+
       --  Canon map aspect.
       Set_Generic_Map_Aspect_Chain
         (Decl,
