@@ -29,4 +29,7 @@ if grep 'input  b_rst' syn_repro2.v && grep 'output b_rst' syn_repro2.v; then
   exit 1
 fi
 
+synth repro3.vhdl -e > syn_repro3.vhdl
+analyze syn_repro3.vhdl
+
 echo "Test successful"
