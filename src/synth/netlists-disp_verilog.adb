@@ -56,14 +56,14 @@ package body Netlists.Disp_Verilog is
       end if;
 
       case Get_Sname_Kind (N) is
-         when Sname_User =>
+         when Sname_User
+           | Sname_Version =>
             return Is_Escaped_Sname (Get_Sname_Prefix (N));
          when Sname_System =>
             return False;
          when Sname_Field =>
             return True;
-         when Sname_Version
-           | Sname_Unique =>
+         when Sname_Unique =>
             return False;
       end case;
    end Is_Escaped_Sname;
@@ -79,13 +79,11 @@ package body Netlists.Disp_Verilog is
          return;
       end if;
 
-      if Kind = Sname_User then
-         if Kind in Sname_Kind_Prefix then
-            Prefix := Get_Sname_Prefix (N);
-            if Prefix /= No_Sname then
-               Put_Name_1 (Prefix);
-               Wr ("_");
-            end if;
+      if Kind in Sname_Kind_Prefix then
+         Prefix := Get_Sname_Prefix (N);
+         if Prefix /= No_Sname then
+            Put_Name_1 (Prefix);
+            Wr ("_");
          end if;
       end if;
 
