@@ -153,16 +153,18 @@ package body Netlists.Disp_Verilog is
             Inst_Name := Get_Instance_Name (Inst);
             M := Get_Module (Inst);
             case Get_Id (M) is
-               when Id_Signal
-                 | Id_Isignal =>
-                  --  No suffix for signals (it's 'o').
-                  Put_Name (Inst_Name);
-               when others =>
+               when Id_Inout
+                 | Id_Iinout
+                 | Id_User_None .. Module_Id'Last =>
+                  --  Gates with multiple outputs.
                   Wr ("\");
                   Put_Name_1 (Inst_Name);
                   Wr (".");
                   Put_Name_1 (Get_Output_Desc (M, Idx).Name);
                   Wr (" ");
+               when others =>
+                  --  No suffix for signals (it's 'o').
+                  Put_Name (Inst_Name);
             end case;
          end if;
       end;
