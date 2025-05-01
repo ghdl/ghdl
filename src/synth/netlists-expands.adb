@@ -190,7 +190,7 @@ package body Netlists.Expands is
                --  Not a power of 2!
                --  ADDR := ADDR + PART_ADDR * (MAX + 1)
                declare
-                  W : constant Width := Get_Width (Addr) + Max_Width;
+                  W : constant Width := Get_Width (Part_Addr) + Max_Width;
                   Loc : constant Location_Type := Get_Location (Inst);
                   Mul : Net;
                begin
@@ -658,9 +658,10 @@ package body Netlists.Expands is
    begin
       Gather_Memidx (Addr_Net, Memidx_Arr, Nbr_Els);
 
+      Extract_Address (Ctxt, Memidx_Arr, Addr);
+
       --  Generate decoder.
       Net_Arr := new Net_Array(0 .. Int32 (Nbr_Els - 1));
-      Extract_Address (Ctxt, Memidx_Arr, Addr);
       Truncate_Address (Ctxt, Addr, Nbr_Els);
       Generate_Decoder (Ctxt, Addr, Net_Arr.all, Loc);
 
