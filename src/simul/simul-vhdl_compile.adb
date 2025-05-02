@@ -1515,10 +1515,13 @@ package body Simul.Vhdl_Compile is
             N := Get_Case_Statement_Alternative_Chain (Stmt);
             while N /= Null_Node loop
                if not Get_Same_Alternative_Flag (N) then
-                  if Get_Associated_Block (N) = Bod then
+                  B := Get_Associated_Block (N);
+                  if B = Bod then
                      return Res;
                   end if;
-                  Res := Res + 1;
+                  if Get_Use_Flag (B) then
+                     Res := Res + 1;
+                  end if;
                end if;
                N := Get_Chain (N);
             end loop;
