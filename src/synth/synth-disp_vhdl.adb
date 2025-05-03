@@ -31,6 +31,7 @@ with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 
 with Netlists.Iterators; use Netlists.Iterators;
 with Netlists.Disp_Vhdl; use Netlists.Disp_Vhdl;
+with Netlists.Disp_Common; use Netlists.Disp_Common;
 
 package body Synth.Disp_Vhdl is
    --  Display the name of a subtype created for NAME: "typ_NAME", but
@@ -60,7 +61,7 @@ package body Synth.Disp_Vhdl is
          Wr_Line (";");
       end if;
       Wr ("  signal ");
-      Put_Name (Desc.Name);
+      Put_Name (Desc.Name, Language_Vhdl);
       Wr (": ");
       if Desc.W > 1 then
          Disp_Signal_Subtype (Desc.Name);
@@ -105,7 +106,7 @@ package body Synth.Disp_Vhdl is
      (Wname : Sname; Off : Uns32; W : Width; Full : Boolean) is
    begin
       Wr ("  ");
-      Put_Name (Wname);
+      Put_Name (Wname, Language_Vhdl);
       Disp_Suffix (Off, W, Full);
       Wr (" <= ");
    end Disp_In_Lhs;
@@ -113,7 +114,7 @@ package body Synth.Disp_Vhdl is
    procedure Disp_Out_Rhs
      (Wname : Sname; Off : Uns32; W : Width; Full : Boolean) is
    begin
-      Put_Name (Wname);
+      Put_Name (Wname, Language_Vhdl);
       Disp_Suffix (Off, W, Full);
    end Disp_Out_Rhs;
 

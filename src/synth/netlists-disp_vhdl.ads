@@ -24,16 +24,5 @@ package Netlists.Disp_Vhdl is
 
    procedure Put_Type (W : Width);
 
-   --  Disp name N (as a normal identifier or as an extended identifier).
-   procedure Put_Name (N : Sname);
-
-   --  Return True IFF N requires an extended identifier for vhdl.
-   function Is_Extended_Sname (N : Sname) return Boolean;
-
-   --  Disp name N without extended character.
-   --  Useful when a suffix or a prefix is needed.
-   --  Use Is_Extended_Sname if N must be displayed as an extended identifier.
-   procedure Put_Name_Inner (N : Sname);
-
    procedure Disp_Vhdl (M : Module; Is_Top : Boolean);
 end Netlists.Disp_Vhdl;

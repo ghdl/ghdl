@@ -26,6 +26,7 @@ with Netlists.Iterators; use Netlists.Iterators;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Locations;
 with Netlists.Dump; use Netlists.Dump;
+with Netlists.Disp_Common; use Netlists.Disp_Common;
 
 package body Netlists.Disp_Vhdl is
    Flag_Merge_Lit : constant Boolean := True;
@@ -46,134 +47,14 @@ package body Netlists.Disp_Vhdl is
       end if;
    end Put_Type;
 
-   procedure Put_Name_Version (N : Sname) is
+   procedure Put_Name (N : Sname) is
    begin
-      Wr_Uns32 (Get_Sname_Version (N));
-   end Put_Name_Version;
-
-   --  Return True IFF N is an extended identifier.
-   function Is_Extended_Sname (N : Sname) return Boolean is
-   begin
-      if N = No_Sname then
-         return False;
-      end if;
-
-      case Get_Sname_Kind (N) is
-         when Sname_User
-           | Sname_Version =>
-            return Is_Extended_Sname (Get_Sname_Prefix (N));
-         when Sname_System =>
-            return False;
-         when Sname_Field =>
-            return True;
-         when Sname_Unique =>
-            return False;
-      end case;
-   end Is_Extended_Sname;
-
-   procedure Put_Name_Inner (N : Sname)
-   is
-      Kind : constant Sname_Kind := Get_Sname_Kind (N);
-      Prefix : Sname;
-   begin
-      --  Do not crash on No_Name.
-      if N = No_Sname then
-         Wr ("*nil*");
-         return;
-      end if;
-
-      if Kind in Sname_Kind_Prefix then
-         Prefix := Get_Sname_Prefix (N);
-         if Prefix /= No_Sname then
-            Put_Name_Inner (Prefix);
-            Wr ("_");
-         end if;
-      end if;
-
-      case Get_Sname_Kind (N) is
-         when Sname_User =>
-            Put_Id (Get_Sname_Suffix (N));
-         when Sname_System =>
-            Put_Id (Get_Sname_Suffix (N));
-         when Sname_Field =>
-            Put_Name_Inner (Get_Sname_Prefix (N));
-            Wr ("[");
-            Put_Id (Get_Sname_Suffix (N));
-            Wr ("]");
-         when Sname_Version
-           | Sname_Unique =>
-            Wr ("n");
-            Put_Name_Version (N);
-      end case;
-   end Put_Name_Inner;
-
-   procedure Put_Name (N : Sname)
-   is
-      Is_Extended : constant Boolean := Is_Extended_Sname (N);
-   begin
-      if Is_Extended then
-         Wr ("\");
-      end if;
-
-      Put_Name_Inner (N);
-
-      if Is_Extended then
-         Wr ("\");
-      end if;
+      Disp_Common.Put_Name (N, Language_Vhdl);
    end Put_Name;
-
-   procedure Put_Interface_Name (N : Sname) is
-   begin
-      --  Do not crash on No_Name.
-      if N = No_Sname then
-         Wr ("*nil*");
-         return;
-      end if;
-
-      --  Interface names are not versionned.
-      if Get_Sname_Kind (N) in Sname_System .. Sname_Field then
-         Put_Name (N);
-      else
-         Wr ("*err*");
-      end if;
-   end Put_Interface_Name;
 
    procedure Disp_Net_Name (N : Net) is
    begin
-      if N = No_Net then
-         Wr ("<unassigned>");
-         return;
-      end if;
-
-      declare
-         Inst : constant Instance := Get_Net_Parent (N);
-         Idx : constant Port_Idx := Get_Port_Idx (N);
-         M : Module;
-         Id : Module_Id;
-         Inst_Name : Sname;
-      begin
-         if Is_Self_Instance (Inst) then
-            --  For ports of the current module, simply use the port name.
-            Put_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
-         else
-            Inst_Name := Get_Instance_Name (Inst);
-            M := Get_Module (Inst);
-            Id := Get_Id (M);
-            case Id is
-               when Id_Inout
-                 | Id_Iinout
-                 | Id_User_None .. Module_Id'Last =>
-                  --  Gates with multiple outputs.
-                  Wr ("\");
-                  Put_Name_Inner (Inst_Name);
-                  Wr (".");
-                  Put_Name_Inner (Get_Output_Desc (M, Idx).Name);
-                  Wr ("\");
-               when others =>
-                  Put_Name (Inst_Name);
-            end case;
-         end if;
-      end;
+      Disp_Common.Disp_Net_Name (N, Language_Vhdl);
    end Disp_Net_Name;
 
    procedure Disp_Instance_Gate (Inst : Instance)
@@ -186,14 +67,9 @@ package body Netlists.Disp_Vhdl is
       Param : Param_Desc;
    begin
       Wr ("  ");
-      Name := Get_Instance_Name (Inst);
-      if Get_Sname_Kind (Name) = Sname_Version then
-         Wr ("inst_");
-         Put_Name_Version (Name);
-      else
-         Put_Name (Name);
-      end if;
+      Put_Instance_Name (Get_Instance_Name (Inst), Language_Vhdl);
       Wr (" : ");
+
       --  Gate name
       Name := Get_Module_Name (Imod);
       if Get_Id (Imod) < Id_User_None then
@@ -217,7 +93,7 @@ package body Netlists.Disp_Vhdl is
                Wr_Line (",");
             end if;
             Wr ("    ");
-            Put_Interface_Name (Param.Name);
+            Put_Interface_Name (Param.Name, Language_Vhdl);
             Wr (" => ");
             case Param.Typ is
                when Param_Uns32 =>
@@ -246,7 +122,8 @@ package body Netlists.Disp_Vhdl is
          end if;
          Wr ("    ");
          if Idx < Max_Idx then
-            Put_Interface_Name (Get_Input_Desc (Imod, Idx).Name);
+            Put_Interface_Name
+              (Get_Input_Desc (Imod, Idx).Name, Language_Vhdl);
             Idx := Idx + 1;
             Wr (" => ");
          end if;
@@ -261,7 +138,7 @@ package body Netlists.Disp_Vhdl is
             Wr_Line (",");
          end if;
          Wr ("    ");
-         Put_Interface_Name (Get_Output_Desc (Imod, Idx).Name);
+         Put_Interface_Name (Get_Output_Desc (Imod, Idx).Name, Language_Vhdl);
          Idx := Idx + 1;
          Wr (" => ");
          declare
@@ -484,27 +361,6 @@ package body Netlists.Disp_Vhdl is
       end loop;
    end Disp_Memory_Init;
 
-   --  Some gates require a name as an input (and not a bit-string) as they
-   --  use indexed names or slice names.
-   function Need_Name (Inst : Instance) return Boolean
-   is
-      Id : constant Module_Id := Get_Id (Inst);
-   begin
-      case Id is
-         when Id_Extract
-           | Id_Dyn_Extract
-           | Id_Dyn_Insert
-           | Id_Utrunc
-           | Id_Strunc
-           | Id_Bmux =>
-            return True;
-         when Id_User_None .. Module_Id'Last =>
-            return True;
-         when others =>
-            return False;
-      end case;
-   end Need_Name;
-
    --  Return True if constant INST is connected to an instance that needs
    --  a name.  In that case, a signal will be created and driven.
    function Need_Signal (Inst : Instance) return Boolean
@@ -520,37 +376,6 @@ package body Netlists.Disp_Vhdl is
       end loop;
       return False;
    end Need_Signal;
-
-   --  Return TRUE if edge INST (posedge or negedge) is used outside clock
-   --  inputs.
-   function Need_Edge (Inst : Instance) return Boolean
-   is
-      I : Input;
-      Parent : Instance;
-   begin
-      I := Get_First_Sink (Get_Output (Inst, 0));
-      while I /= No_Input loop
-         Parent := Get_Input_Parent (I);
-         case Get_Id (Parent) is
-            when Id_Dff
-              | Id_Adff
-              | Id_Idff
-              | Id_Iadff =>
-               if I /= Get_Input (Parent, 0) then
-                  return True;
-               end if;
-            when Id_Mem_Rd_Sync
-              | Id_Mem_Wr_Sync =>
-               if I /= Get_Input (Parent, 2) then
-                  return True;
-               end if;
-            when others =>
-               return True;
-         end case;
-         I := Get_Next_Sink (I);
-      end loop;
-      return False;
-   end Need_Edge;
 
    type Conv_Type is
      (Conv_None,
