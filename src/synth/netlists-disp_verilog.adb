@@ -246,7 +246,7 @@ package body Netlists.Disp_Verilog is
                Wr_Line (",");
             end if;
             Wr ("    .");
-            Put_Interface_Name (Desc.Name, Language_Vhdl);
+            Put_Interface_Name (Desc.Name, Language_Verilog);
             Wr ("(");
             declare
                I : Input;
