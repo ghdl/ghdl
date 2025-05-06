@@ -3060,6 +3060,10 @@ package body Synth.Vhdl_Stmts is
                   Copy_Memory (Res.Val.Mem, Mt.Mem + Expr.Val.A_Off.Mem_Off,
                                Expr.Typ.Sz);
                   return Res;
+               when Value_Wire =>
+                  --  No need to unshare it: the value is assigned to the
+                  --  result (as a net), so it is not kept.
+                  return Expr;
                when others =>
                   --  Is it possible ?
                   raise Internal_Error;
