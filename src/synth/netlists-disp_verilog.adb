@@ -879,7 +879,7 @@ package body Netlists.Disp_Verilog is
                Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
             begin
                Disp_Template
-                 ("  assign \o0 = \i0[\i1 + \n0 -: \n1]; //(dyn_extract)" & NL,
+                 ("  assign \o0 = \i0[\i1 + \n0 +: \n1]; //(dyn_extract)" & NL,
                   Inst, (0 => Off, 1 => Wd));
             end;
          when Id_Dyn_Insert
@@ -896,7 +896,7 @@ package body Netlists.Disp_Verilog is
                   Disp_Template ("    if (\i3)" & NL, Inst);
                end if;
                Disp_Template
-                 ("    \o0 [\i2 + \p0 -: \n0] = \i1;" & NL,
+                 ("    \o0 [\i2 + \p0 +: \n0] = \i1;" & NL,
                   Inst, (0 => Iw - 1));
                Disp_Template ("  end" & NL, Inst);
             end;
