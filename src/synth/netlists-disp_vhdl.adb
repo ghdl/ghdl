@@ -516,41 +516,46 @@ package body Netlists.Disp_Vhdl is
                when others =>
                   Conv := Conv_None;
             end case;
-            Idx := Character'Pos (S (I + 1)) - Character'Pos ('0');
-            case S (I) is
-               when 'o' =>
-                  pragma Assert (Conv = Conv_None);
-                  N := Get_Output (Inst, Port_Idx (Idx));
-                  Disp_Net_Name (N);
-               when 'i' =>
-                  N := Get_Input_Net (Inst, Port_Idx (Idx));
-                  Disp_Net_Expr (N, Inst, Conv);
-               when 'n' =>
-                  V := Val (Idx);
-                  Wr_Uns32 (V);
-               when 'p' =>
-                  V := Get_Param_Uns32 (Inst, Param_Idx (Idx));
-                  case Conv is
-                     when Conv_None
-                       | Conv_Unsigned
-                       | Conv_Slv =>
-                        Wr_Uns32 (V);
-                     when Conv_Signed =>
-                        Wr_Int32 (To_Int32 (V));
-                     when Conv_Edge
-                       | Conv_Clock
-                       | Conv_Sensitivity =>
-                        raise Internal_Error;
-                  end case;
-               when 'l' =>
-                  pragma Assert (Idx = 0);
-                  pragma Assert (Conv = Conv_None);
-                  Put_Name (Get_Instance_Name (Inst));
-               when others =>
-                  raise Internal_Error;
-            end case;
+            if S (I) = '\' then
+               Wr ('\');
+               I := I + 1;
+            else
+               Idx := Character'Pos (S (I + 1)) - Character'Pos ('0');
+               case S (I) is
+                  when 'o' =>
+                     pragma Assert (Conv = Conv_None);
+                     N := Get_Output (Inst, Port_Idx (Idx));
+                     Disp_Net_Name (N);
+                  when 'i' =>
+                     N := Get_Input_Net (Inst, Port_Idx (Idx));
+                     Disp_Net_Expr (N, Inst, Conv);
+                  when 'n' =>
+                     V := Val (Idx);
+                     Wr_Uns32 (V);
+                  when 'p' =>
+                     V := Get_Param_Uns32 (Inst, Param_Idx (Idx));
+                     case Conv is
+                        when Conv_None
+                          | Conv_Unsigned
+                          | Conv_Slv =>
+                           Wr_Uns32 (V);
+                        when Conv_Signed =>
+                           Wr_Int32 (To_Int32 (V));
+                        when Conv_Edge
+                          | Conv_Clock
+                          | Conv_Sensitivity =>
+                           raise Internal_Error;
+                     end case;
+                  when 'l' =>
+                     pragma Assert (Idx = 0);
+                     pragma Assert (Conv = Conv_None);
+                     Put_Name (Get_Instance_Name (Inst));
+                  when others =>
+                     raise Internal_Error;
+               end case;
 
-            I := I + 2;
+               I := I + 2;
+            end if;
          else
             Wr (C);
             I := I + 1;
