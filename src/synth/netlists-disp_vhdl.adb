@@ -379,12 +379,12 @@ package body Netlists.Disp_Vhdl is
 
    type Conv_Type is
      (Conv_None,
-     Conv_Slv, Conv_Unsigned, Conv_Signed,
-     Conv_Edge, Conv_Clock,
+      Conv_Slv, Conv_Unsigned, Conv_Signed,
+      Conv_Edge, Conv_Clock,
 
-     --  Only for input: disp the net (prepended by ", ") if it's a real net;
-     --  do not display constant expressions.
-     Conv_Sensitivity);
+      --  Only for input: disp the net (prepended by ", ") if it's a real net;
+      --  do not display constant expressions.
+      Conv_Sensitivity);
 
    procedure Disp_Net_Expr (N : Net; Inst : Instance; Conv : Conv_Type)
    is
@@ -432,8 +432,10 @@ package body Netlists.Disp_Vhdl is
               | Conv_Slv =>
                Disp_Net_Name (N);
             when Conv_Sensitivity =>
-               Wr (", ");
-               Disp_Net_Name (N);
+               if Need_Name (Net_Inst) then
+                  Wr (", ");
+                  Disp_Net_Name (N);
+               end if;
             when Conv_Edge =>
                case Edge_Module_Id (Get_Id (Net_Inst)) is
                   when Id_Posedge =>
@@ -474,8 +476,17 @@ package body Netlists.Disp_Vhdl is
 
    --  Template:
    --  \[C]AN
-   --   C: conversion  u: unsigned, s: signed, f: force logic
-   --   A: argument    o: output, i: input, n: value, p: parameter, l: label
+   --   C: conversion
+   --      u: unsigned
+   --      s: signed
+   --      f: force logic (use a type qualifier to avoid ambiguity in compare)
+   --      S: sensitivity (prepend with ',' but do not display if constant)
+   --   A: argument
+   --      o: output
+   --      i: input
+   --      n: value
+   --      p: parameter
+   --      l: label
    --   N: argument number (0-9)
    procedure Disp_Template
      (S : String; Inst : Instance; Val : Uns32_Array := No_Uns32_Arr)
@@ -915,23 +926,65 @@ package body Netlists.Disp_Vhdl is
                O : constant Net := Get_Output (Inst, 0);
                Wd : constant Width := Get_Width (O);
                Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+               Iwd : constant Width := Get_Width (Get_Input_Net (Inst, 0));
             begin
-               Disp_Template ("  \o0 <= \i0", Inst);
-               if Wd /= 0 then
-                  Disp_Template (" (to_integer (\ui1)", Inst);
+               if True then
+                  Disp_Template
+                    ("  process(\i1\Si0)", Inst);
+                  Wr_Line;
+                  Wr_Line
+                    ("    variable \idx\ : integer;");
+                  Wr_Line
+                    ("  begin");
+                  Disp_Template
+                    ("    \\idx\\ := to_integer(\ui1);",
+                    Inst);
+                  Wr_Line;
+                  Disp_Template
+                    ("    if \\idx\\ <= \n0 then",
+                     Inst, (0 => Iwd - Wd - Off));
+                  Wr_Line ("");
+                  Disp_Template ("      \o0 <= \i0(\\idx\\", Inst);
                   if Off /= 0 then
                      Disp_Template (" + \n0", Inst, (0 => Off));
                   end if;
                   if Wd > 1 then
-                     Disp_Template (" + \n0 - 1 downto to_integer (\ui1)",
+                     Disp_Template (" + \n0 - 1 downto \\idx\\",
                                     Inst, (0 => Wd));
                      if Off /= 0 then
                         Disp_Template (" + \n0", Inst, (0 => Off));
                      end if;
                   end if;
-                  Wr (")");
+                  Wr (");");
+                  Wr_Line;
+                  Wr_Line ("    else");
+                  Disp_Template ("      \o0 <= ", Inst);
+                  if Wd = 1 then
+                     Wr ("'X'");
+                  else
+                     Wr ("(others => 'X')");
+                  end if;
+                  Wr_Line (";");
+                  Wr_Line ("    end if;");
+                  Wr_Line ("  end process;");
+               else
+                  Disp_Template ("  \o0 <= \i0", Inst);
+                  if Wd /= 0 then
+                     Disp_Template (" (to_integer (\ui1)", Inst);
+                     if Off /= 0 then
+                        Disp_Template (" + \n0", Inst, (0 => Off));
+                     end if;
+                     if Wd > 1 then
+                        Disp_Template (" + \n0 - 1 downto to_integer (\ui1)",
+                          Inst, (0 => Wd));
+                        if Off /= 0 then
+                           Disp_Template (" + \n0", Inst, (0 => Off));
+                        end if;
+                     end if;
+                     Wr (")");
+                  end if;
+                  Wr_Line (";");
                end if;
-               Wr_Line (";");
             end;
          when Id_Dyn_Insert
            | Id_Dyn_Insert_En =>
