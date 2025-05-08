@@ -74,7 +74,7 @@ class GHDLBaseException(Exception):
         :param message:   The exception message.
         """
         super().__init__()
-        self.message = message
+        self.msg = message
 
     # WORKAROUND: for Python <3.11
     # Implementing a dummy method for Python versions before
