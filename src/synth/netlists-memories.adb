@@ -977,7 +977,7 @@ package body Netlists.Memories is
       --  1. Gather all ports.
       Gather_Ports (Sig, Ports);
 
-      --  2. From ports, get the index.
+      --  2. From ports, get the memidx instance.
       for I in Ports'Range loop
          declare
             P   : constant Instance := Ports (I);
