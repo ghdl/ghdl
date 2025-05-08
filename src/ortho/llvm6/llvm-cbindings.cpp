@@ -99,10 +99,12 @@ static LLVMBuilderRef Builder;
 static LLVMBuilderRef DeclBuilder;
 static LLVMBuilderRef ExtraBuilder;
 
+static LLVMTypeRef StackSaveFunType;
 static LLVMValueRef StackSaveFun;
+static LLVMTypeRef StackRestoreFunType;
 static LLVMValueRef StackRestoreFun;
-static LLVMValueRef CopySignFun;
 static LLVMTypeRef CopySignFunType;
+static LLVMValueRef CopySignFun;
 
 static LLVMValueRef Fp0_5;
 
@@ -366,15 +368,16 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
 
   LLVMTypeRef I8Ptr = LLVMPointerType(LLVMInt8Type(), 0);
 
+  StackSaveFunType = LLVMFunctionType (I8Ptr, NULL, 0, false);
   StackSaveFun = LLVMAddFunction
-    (TheModule, "llvm.stacksave", LLVMFunctionType (I8Ptr, NULL, 0, false));
+    (TheModule, "llvm.stacksave", StackSaveFunType);
 
   LLVMTypeRef ParamTypes[2];
 
   ParamTypes[0] = I8Ptr;
+  StackRestoreFunType = LLVMFunctionType(LLVMVoidType(), ParamTypes, 1, false);
   StackRestoreFun = LLVMAddFunction
-    (TheModule, "llvm.stackrestore",
-     LLVMFunctionType(LLVMVoidType(), ParamTypes, 1, false));
+    (TheModule, "llvm.stackrestore", StackRestoreFunType);
 
   ParamTypes[0] = LLVMDoubleType();
   ParamTypes[1] = LLVMDoubleType();
@@ -1799,7 +1802,7 @@ finish_declare_stmt ()
 
     if (CurrentDeclareBlock->StackValue != nullptr) {
       //  Restore stack pointer
-      LLVMBuildCall2(Builder, LLVMVoidType(), StackRestoreFun,
+      LLVMBuildCall2(Builder, StackRestoreFunType, StackRestoreFun,
                      &CurrentDeclareBlock->StackValue, 1, "");
     }
     //  Execution will continue on the next statement
@@ -2621,9 +2624,11 @@ new_alloca (OTnode Rtype, OEnode Size)
   if (Unreach)
     Res = nullptr;
   else {
-    if (CurrentDeclareBlock->StackValue != nullptr
+    if (CurrentDeclareBlock->StackValue == nullptr
 	&& CurrentDeclareBlock->Prev != nullptr) {
       // Save the stack pointer at the entry of the block.
+      // No need to save for the first block (stack will be cleaned at the
+      // exit of the function).
       LLVMValueRef FirstInsn =
 	LLVMGetFirstInstruction(CurrentDeclareBlock->StmtBB);
       LLVMBuilderRef Bld;
@@ -2634,12 +2639,8 @@ new_alloca (OTnode Rtype, OEnode Size)
 	LLVMPositionBuilderBefore(ExtraBuilder, FirstInsn);
 	Bld = ExtraBuilder;
       }
-#ifdef USE_OPAQUE_POINTERS
-      LLVMTypeRef Ptr = LLVMPointerTypeInContext(LLVMGetGlobalContext(), 0);
-#endif
-
       CurrentDeclareBlock->StackValue =
-	LLVMBuildCall2(Bld, Ptr, StackSaveFun, nullptr, 0, "");
+	LLVMBuildCall2(Bld, StackSaveFunType, StackSaveFun, nullptr, 0, "");
     }
     Res = LLVMBuildArrayAlloca(Builder, LLVMInt8Type(), Size.Ref, "");
     //  Convert
