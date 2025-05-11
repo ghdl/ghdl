@@ -87,16 +87,17 @@ def _get_libghdl_name() -> Path:
 
 @export
 def _get_libghdl_path() -> Path:
-    """\
+    """
     Locate the directory where the shared library is installed.
 
     **Search order:**
 
-    1. `GHDL_PREFIX` - directory (prefix) of the vhdl libraries.
-    2. `VUNIT_GHDL_PATH` - path of the `ghdl` binary when using VUnit.
-    3. `GHDL` - name of, or path to the `ghdl` binary.
-    4. Try within `pyGHDL/lib` Python installation.
-    5. Try when running from the build directory.
+    1. Check environment variable ``GHDL_PREFIX`` - directory (prefix) of the vhdl libraries.
+    2. Check environment variable ``VUNIT_GHDL_PATH`` - path of the ``ghdl`` binary when using VUnit.
+    3. Check environment variable ``GHDL`` - name of, or path to the ``ghdl`` binary.
+    4. Try within ``pyGHDL/lib`` Python package installation path.
+    5. Try searching the ``ghdl`` binary via ``which``.
+    6. Try ``../../lib`` when running from the build directory.
     """
 
     def _check_libghdl_libdir(libDirectory: Path, libraryFilename: Path) -> Path:
@@ -158,7 +159,7 @@ def _get_libghdl_path() -> Path:
 
     # Try GHDL (name/path of the ghdl binary)
     try:
-        whichGHDL = which(varGHDL)
+        whichGHDL = which("ghdl")
         searchedAt.append(f"  Tried 'which ghdl':                  {whichGHDL}")
         ghdl = Path(whichGHDL)
         return _check_libghdl_bindir(ghdl.parent, libGHDLSharedLibraryFile)
