@@ -1021,6 +1021,7 @@ package body Netlists.Memories is
                      raise Internal_Error;
                end case;
 
+               --  Check the steps, max and directions match.
                Idx := Get_Input_Net (M, 0);
                if I = 1 then
                   W := Get_Width (Idx);
@@ -1044,10 +1045,12 @@ package body Netlists.Memories is
 
             --  Update ports.
             for I in Ports'Range loop
+               --  Get the Memidx gate
                M := Ports (I);
                case Get_Id (M) is
                   when Id_Memidx =>
                      Ports (I) := No_Instance;
+                     --  No more dimensions.
                      Done := True;
                   when Id_Addidx =>
                      Ports (I) := Get_Input_Instance (M, 1);
