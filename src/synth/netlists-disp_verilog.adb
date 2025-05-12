@@ -445,7 +445,7 @@ package body Netlists.Disp_Verilog is
    end Need_Signal;
 
    type Conv_Type is
-     (Conv_None, Conv_Unsigned, Conv_Signed, Conv_Edge, Conv_Clock);
+     (Conv_None, Conv_Unsigned, Conv_Signed, Conv_Edge, Conv_Const);
 
    procedure Disp_Net_Expr (N : Net; Inst : Instance; Conv : Conv_Type)
    is
@@ -462,7 +462,8 @@ package body Netlists.Disp_Verilog is
         and then not Need_Name (Inst)
       then
          case Conv is
-            when Conv_None =>
+            when Conv_None
+              | Conv_Const =>
                Disp_Constant_Inline (Net_Inst);
             when Conv_Unsigned =>
                Wr ("$unsigned(");
@@ -472,8 +473,7 @@ package body Netlists.Disp_Verilog is
                Wr ("$signed(");
                Disp_Constant_Inline (Net_Inst);
                Wr (")");
-            when Conv_Edge
-              | Conv_Clock =>
+            when Conv_Edge =>
                --  Not expected: a constant is not an edge.
                raise Internal_Error;
          end case;
@@ -489,8 +489,8 @@ package body Netlists.Disp_Verilog is
                      Wr ("negedge ");
                end case;
                Disp_Net_Name (Get_Input_Net (Net_Inst, 0));
-            when Conv_Clock =>
-               Disp_Net_Name (Get_Input_Net (Net_Inst, 0));
+            when Conv_Const =>
+               Disp_Constant_Inline (Net_Inst);
             when Conv_Unsigned =>
                Wr ("$unsigned(");
                Disp_Net_Name (N);
@@ -510,7 +510,7 @@ package body Netlists.Disp_Verilog is
 
    --  Template:
    --  \[C]AN
-   --   C: conversion  u: unsigned, s: signed, f: force logic
+   --   C: conversion  u: unsigned, s: signed, f: force logic, C: const
    --   A: argument    o: output, i: input, n: value, p: parameter, l: label
    --   N: argument number (0-9)
    procedure Disp_Template
@@ -540,8 +540,8 @@ package body Netlists.Disp_Verilog is
                when 'e' =>
                   Conv := Conv_Edge;
                   I := I + 1;
-               when 'c' =>
-                  Conv := Conv_Clock;
+               when 'C' =>
+                  Conv := Conv_Const;
                   I := I + 1;
                when others =>
                   Conv := Conv_None;
@@ -567,7 +567,7 @@ package body Netlists.Disp_Verilog is
                      when Conv_Signed =>
                         Wr_Int32 (To_Int32 (V));
                      when Conv_Edge
-                       | Conv_Clock =>
+                       | Conv_Const =>
                         raise Internal_Error;
                   end case;
                when 'l' =>
@@ -826,7 +826,7 @@ package body Netlists.Disp_Verilog is
                                  "    \o0 = \i0; // (isignal)" & NL, Inst);
                end if;
                Disp_Template ("  initial" & NL &
-                              "    \o0 = \i1;" & NL, Inst);
+                              "    \o0 = \Ci1;" & NL, Inst);
             end;
          when Id_Port =>
             Disp_Template ("  \o0 <= \i0; -- (port)" & NL, Inst);
@@ -922,7 +922,7 @@ package body Netlists.Disp_Verilog is
                              "    \o0 <= \i1;" & NL, Inst);
             if Id = Id_Idff then
                Disp_Template ("  initial" & NL &
-                              "    \o0 = \i2;" & NL, Inst);
+                              "    \o0 = \Ci2;" & NL, Inst);
             end if;
          when Id_Dlatch =>
             Disp_Template ("  always @(\i1)" & NL &
