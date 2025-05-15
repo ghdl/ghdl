@@ -409,6 +409,9 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                      Predefined := Iir_Predefined_Ieee_1164_To_X01_Log;
                   elsif Is_Bit_Function (Decl) then
                      Predefined := Iir_Predefined_Ieee_1164_To_X01_Bit_Log;
+                  elsif Is_Bitvec_Function (Decl) then
+                     --  TODO: distinguish slv/suv
+                     Predefined := Iir_Predefined_Ieee_1164_To_X01_Bv_Slv;
                   end if;
                when Name_To_UX01 =>
                   if Is_Vector_Function (Decl) then

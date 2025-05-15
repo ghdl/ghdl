@@ -2832,6 +2832,22 @@ package body Synth.Vhdl_Eval is
                S := Bit2log_Table (B);
                return Create_Memory_U8 (Std_Ulogic'Pos (S), Res_Typ);
             end;
+         when Iir_Predefined_Ieee_1164_To_X01_Bv_Slv =>
+            declare
+               Len : constant Uns32 := Param1.Typ.Abound.Len;
+               El_Type : constant Type_Acc := Get_Array_Element (Res_Typ);
+               Res : Memtyp;
+               Bnd : Type_Acc;
+               B : Bit;
+            begin
+               Bnd := Create_Vec_Type_By_Length (Width (Len), El_Type);
+               Res := Create_Memory (Bnd);
+               for I in 1 .. Len loop
+                  B := Read_Bit (Param1.Mem, I - 1);
+                  Write_Std_Logic (Res.Mem, Len - I, Bit2log_Table (B));
+               end loop;
+               return Res;
+            end;
          when Iir_Predefined_Ieee_1164_To_X01_Slv
             | Iir_Predefined_Ieee_Numeric_Std_To_X01_Uns
             | Iir_Predefined_Ieee_Numeric_Std_To_X01_Sgn =>
