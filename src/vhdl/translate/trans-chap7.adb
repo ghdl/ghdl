@@ -654,6 +654,9 @@ package body Trans.Chap7 is
          when Iir_Kinds_Denoting_Name =>
             return Translate_Static_Expression
               (Get_Named_Entity (Expr), Res_Type);
+         when Iir_Kind_Constant_Declaration =>
+            return Translate_Static_Expression
+              (Get_Default_Value (Expr), Res_Type);
          when others =>
             Error_Kind ("translate_static_expression", Expr);
       end case;

@@ -5205,6 +5205,20 @@ package body Vhdl.Evaluation is
                return Str_Info'(Is_String => True,
                                 Len => Get_String_Length (Expr),
                                 Id => Get_String8_Id (Expr));
+
+            when Iir_Kinds_Denoting_Name =>
+               return Get_Str_Info (Get_Named_Entity (Expr));
+            when Iir_Kind_Constant_Declaration =>
+               declare
+                  Val : Iir;
+               begin
+                  --  Evaluate the expression as it may not have been.
+                  Val := Get_Default_Value (Expr);
+                  Val := Eval_Expr_Keep_Orig (Val, False);
+                  Set_Default_Value (Expr, Val);
+                  return Get_Str_Info (Val);
+               end;
+
             when others =>
                Error_Kind ("string_utils.get_info", Expr);
          end case;
