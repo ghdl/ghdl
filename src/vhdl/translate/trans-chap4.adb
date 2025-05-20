@@ -157,7 +157,9 @@ package body Trans.Chap4 is
                --  Not a full constant declaration (ie a value for an
                --   already declared constant).
                --  Must create the declaration.
-               if Chap7.Is_Static_Constant (El) then
+               if Get_Type_Staticness (Def) = Locally
+                 and then Chap7.Is_Static_Constant (El)
+               then
                   Info.Object_Static := True;
                   Info.Object_Var := Create_Global_Const
                     (Create_Identifier (El), Obj_Type, Global_Storage,

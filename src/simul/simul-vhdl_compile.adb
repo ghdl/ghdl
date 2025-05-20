@@ -52,7 +52,6 @@ with Simul.Main;
 with Translation;
 with Trans; use Trans; use Trans.Chap10;
 with Trans.Chap4;
-with Trans.Chap7;
 with Trans.Chap9;
 with Trans.Rtis;
 with Trans_Link;
@@ -1117,7 +1116,7 @@ package body Simul.Vhdl_Compile is
                      Build_Subtype_Definition (Mem, Def, Val.Typ);
                   end if;
                end;
-               if not Trans.Chap7.Is_Static_Constant (Decl) then
+               if not Get_Info (Decl).Object_Static then
                   Build_Object_Value (Mem, Inst, Decl);
                end if;
             end if;

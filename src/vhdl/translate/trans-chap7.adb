@@ -128,9 +128,14 @@ package body Trans.Chap7 is
       end if;
 
       --  Only aggregates are specially handled.
-      if not Is_Static_Construct (Expr)
-        or else Get_Kind (Expr) /= Iir_Kind_Aggregate
-      then
+      if Get_Kind (Expr) /= Iir_Kind_Aggregate then
+         if Get_Type_Staticness (Get_Type (Expr)) /= Locally then
+            --  Unbounded locally static expressions are not yet handled.
+            --  This concerns at least 'image.
+            return False;
+         end if;
+         return Is_Static_Construct (Expr);
+      elsif not Get_Aggregate_Expand_Flag (Expr) then
          return False;
       end if;
 
@@ -336,9 +341,7 @@ package body Trans.Chap7 is
       Chap3.Translate_Anonymous_Subtype_Definition (Lit_Type, False);
       Arr_Type := Get_Ortho_Type (Lit_Type, Mode_Value);
 
-      Start_Array_Aggr
-        (List, Arr_Type,
-         Unsigned_32 (Chap3.Get_Static_Array_Length (Lit_Type)));
+      Start_Array_Aggr (List, Arr_Type, Unsigned_32 (Get_String_Length (Str)));
 
       Translate_Static_String_Literal8_Inner (List, Str, Element_Type);
 
