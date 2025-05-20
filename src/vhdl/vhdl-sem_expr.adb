@@ -5261,49 +5261,31 @@ package body Vhdl.Sem_Expr is
       end if;
    end Check_Constant_Restriction;
 
-   function Sem_Dyadic_Operator (Expr : Iir; Atype : Iir) return Iir
+   procedure Sem_Dyadic_Operator_Array
+     (Arr : in out Iir_Array; Atype : Iir; Res : out Iir)
    is
-      Arr : Iir_Array (1 .. 128);
-      Len : Natural;
+      pragma Assert (Arr'First = 1);
+      Expr : constant Iir := Arr (1);
+      Len : constant Positive := Arr'Last;
    begin
-      --  Try to linearize the tree in order to reduce recursion depth
-      --  and also improve speed of evaluation.
-      --  This is particularly useful for repeated concatenations.
-      declare
-         Left : Iir;
-      begin
-         Len := 0;
-         Left := Expr;
-         while Len < Arr'Last
-           and then Get_Kind (Left) in Iir_Kinds_Dyadic_Operator
-         loop
-            Len := Len + 1;
-            Arr (Len) := Left;
-            Left := Get_Left (Left);
-         end loop;
-      end;
-
-      --  No possibility to linearize...
-      if Len = 1 then
-         return Sem_Operator (Expr, Atype);
-      end if;
+      Res := Null_Iir;
 
       if Get_Type (Expr) = Null_Iir then
          --  First pass.
          Arr (Len) := Sem_Operator_Pass1 (Arr (Len), Null_Iir);
          if Arr (Len) = Null_Iir then
-            return Null_Iir;
+            return;
          end if;
          for I in reverse 2 .. Len - 1 loop
             Set_Left (Arr (I), Arr (I + 1));
             Arr (I) := Sem_Operator_Pass1 (Arr (I), Null_Iir);
             if Arr (I) = Null_Iir then
-               return Null_Iir;
+               return;
             end if;
          end loop;
+         --  Use Atype for the last operator.
          Set_Left (Arr (1), Arr (2));
-         Arr (1) := Sem_Operator_Pass1 (Arr (1), Atype);
-         return Arr (1);
+         Res := Sem_Operator_Pass1 (Arr (1), Atype);
       else
          --  Second pass.
          declare
@@ -5322,11 +5304,10 @@ package body Vhdl.Sem_Expr is
                   pragma Assert (I > 1);
                   exit;
                end if;
-               Decl := Sem_Operator_Pass2_Interpretation
-                 (Arr (I), Op_Type);
+               Decl := Sem_Operator_Pass2_Interpretation (Arr (I), Op_Type);
                if Decl = Null_Iir then
                   --  Stop in case of error.
-                  return Null_Iir;
+                  return;
                end if;
                Set_Type (Arr (I), Get_Return_Type (Decl));
                Set_Implementation (Arr (I), Decl);
@@ -5388,8 +5369,51 @@ package body Vhdl.Sem_Expr is
                   end loop;
                end if;
             end if;
-            return Arr (1);
+            Res := Arr (1);
          end;
+      end if;
+   end Sem_Dyadic_Operator_Array;
+
+   function Sem_Dyadic_Operator (Expr : Iir; Atype : Iir) return Iir
+   is
+      Arr : aliased Iir_Array (1 .. 128);
+      Arr_P, N_Arr_P : Iir_Array_Acc;
+      Len : Natural;
+      Res : Iir;
+   begin
+      --  Try to linearize the tree in order to reduce recursion depth
+      --  and also improve speed of evaluation.
+      --  This is particularly useful for repeated concatenations.
+      declare
+         Left : Iir;
+      begin
+         Len := 0;
+         Left := Expr;
+         Arr_P := Arr'Unrestricted_Access;
+         while Get_Kind (Left) in Iir_Kinds_Dyadic_Operator loop
+            Len := Len + 1;
+            if Len > Arr_P'Last then
+               N_Arr_P := new Iir_Array (1 .. Arr_P'Last * 2);
+               N_Arr_P (Arr_P'Range) := Arr_P.all;
+               if Arr_P'Length /= Arr'Length then
+                  Free (Arr_P);
+               end if;
+               Arr_P := N_Arr_P;
+            end if;
+            Arr_P (Len) := Left;
+            Left := Get_Left (Left);
+         end loop;
+      end;
+
+      --  No possibility to linearize...
+      if Len = 1 then
+         return Sem_Operator (Expr, Atype);
+      else
+         Sem_Dyadic_Operator_Array (Arr_P (1 .. Len), Atype, Res);
+         if Arr_P'Length /= Arr'Length then
+            Free (Arr_P);
+         end if;
+         return Res;
       end if;
    end Sem_Dyadic_Operator;
 
