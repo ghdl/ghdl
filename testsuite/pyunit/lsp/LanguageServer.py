@@ -162,19 +162,21 @@ class JSONTest(TestCase):
             self.fail()
 
 
-class Test001_Simple(JSONTest):
+class JSONTest_Single(JSONTest):
+    def test_Request_Response(self):
+        # Do not run this test, run only within inherited class
+        # FIXME: there should be a better way to do this ?
+        if self.__class__.__name__ == "JSONTest_Single":
+            return
+        self._RequestResponse("cmds.json", "replies.json")
+
+
+class Test001_Simple(JSONTest_Single):
     subdir = Path("001simple")
 
-    def test_Request_Response(self):
-        self._RequestResponse("cmds.json", "replies.json")
 
-
-class Test002_Coverage(JSONTest):
+class Test002_Coverage(JSONTest_Single):
     subdir = Path("002coverage")
-
-    def test_Request_Response(self):
-        self._RequestResponse("cmds.json", "replies.json")
-
 
 class Test003_Errors(JSONTest):
     subdir = Path("003errors")
@@ -190,66 +192,41 @@ class Test003_Errors(JSONTest):
 
 
 @mark.xfail(platform == "win32" and ("MINGW_PREFIX" not in environ), reason="FIXME")
-class Test004_Error_Project(JSONTest):
+class Test004_Error_Project(JSONTest_Single):
     subdir = Path("004errprj")
 
-    def test_Request_Response(self):
-        self._RequestResponse("cmds.json", "replies.json")
 
-
-class Test005_Create(JSONTest):
+class Test005_Create(JSONTest_Single):
     subdir = Path("005create")
 
-    def test_Request_Response(self):
-        self._RequestResponse("cmds.json", "replies.json")
 
-
-class Test006_Option_Error(JSONTest):
+class Test006_Option_Error(JSONTest_Single):
     subdir = Path("006opterr")
 
-    def test_Request_Response(self):
-        self._RequestResponse("cmds.json", "replies.json")
 
-
-class Test007_Error_Project(JSONTest):
+class Test007_Error_Project(JSONTest_Single):
     subdir = Path("007errprj")
 
-    def test_Request_Response(self):
-        self._RequestResponse("cmds.json", "replies.json")
 
-
-class Test008_Error_NoFile(JSONTest):
+class Test008_Error_NoFile(JSONTest_Single):
     subdir = Path("008errnofile")
 
-    def test_Request_Response(self):
-        self._RequestResponse("cmds.json", "replies.json")
 
-class Test009_ls_122(JSONTest):
+class Test009_ls_122(JSONTest_Single):
     subdir = Path("009ls122")
 
-    def test_Request_Response(self):
-        self._RequestResponse("cmds.json", "replies.json")
 
-class Test010_ls_28(JSONTest):
+class Test010_ls_28(JSONTest_Single):
     subdir = Path("010ls28")
 
-    def test_Request_Response(self):
-        self._RequestResponse("cmds.json", "replies.json")
 
-class Test011_closediag(JSONTest):
+class Test011_closediag(JSONTest_Single):
     subdir = Path("011closediag")
 
-    def test_Request_Response(self):
-        self._RequestResponse("cmds.json", "replies.json")
 
-class Test012_library(JSONTest):
+class Test012_library(JSONTest_Single):
     subdir = Path("012library")
 
-    def test_Request_Response(self):
-        self._RequestResponse("cmds.json", "replies.json")
 
-class Test013_library(JSONTest):
+class Test013_library(JSONTest_Single):
     subdir = Path("013record")
-
-    def test_Request_Response(self):
-        self._RequestResponse("cmds.json", "replies.json")
