@@ -1222,6 +1222,9 @@ package body Netlists.Disp_Verilog is
                            | Id_Concatn
                            | Id_Extract =>
                            null;
+                        when Id_Nop =>
+                           --  Used for renaming
+                           null;
                         when others =>
                            raise Internal_Error;
                      end case;

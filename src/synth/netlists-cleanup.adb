@@ -146,6 +146,7 @@ package body Netlists.Cleanup is
          Disconnect (Get_Input (Inst, 1));
       end if;
 
+      Set_Location (Inst, No_Location);
       Remove_Instance (Inst);
    end Remove_Output_Gate;
 
@@ -418,6 +419,7 @@ package body Netlists.Cleanup is
 
       Build (Ctxt, Conc, Res);
       Redirect_Inputs (Get_Output (Inst, 0), Res);
+      Set_Location (Inst, No_Location);
       Remove_Instance (Inst);
    end Replace_Concat_Null_Inputs;
 
