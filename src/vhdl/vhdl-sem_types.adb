@@ -115,10 +115,12 @@ package body Vhdl.Sem_Types is
                  Get_Elements_Declaration_List (Atype);
                El : Iir;
             begin
-               for I in Flist_First .. Flist_Last (El_List) loop
-                  El := Get_Nth_Element (El_List, I);
-                  Set_Type_Has_Signal (Get_Type (El));
-               end loop;
+               if El_List /= Null_Iir_Flist then
+                  for I in Flist_First .. Flist_Last (El_List) loop
+                     El := Get_Nth_Element (El_List, I);
+                     Set_Type_Has_Signal (Get_Type (El));
+                  end loop;
+               end if;
             end;
          when Iir_Kind_Error =>
             null;
