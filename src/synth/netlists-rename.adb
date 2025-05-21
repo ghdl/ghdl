@@ -149,7 +149,7 @@ package body Netlists.Rename is
    begin
       Id := Get_Sname_Suffix (Name);
 
-      if Id in Std_Names.Name_Id_Vhdl19_Reserved_Words then
+      if Id in Std_Names.Name_First_Keyword .. Std_Names.Name_Last_Vhdl19 then
          return Escape_Vhdl (Id);
       end if;
 
