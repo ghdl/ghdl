@@ -567,8 +567,6 @@ package body Netlists.Dump is
       Wr_Line;
    end Debug_Net;
 
-   pragma Unreferenced (Debug_Net);
-
    Xdigits : constant array (Uns32 range 0 ..15) of Character :=
      "0123456789abcdef";
 

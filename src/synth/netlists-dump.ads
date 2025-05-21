@@ -48,4 +48,7 @@ package Netlists.Dump is
 
    --  More humain readable output.
    procedure Disp_Module (M : Module; Indent : Natural := 0);
+
+private
+   procedure Debug_Net (N : Net);
 end Netlists.Dump;
