@@ -20,4 +20,9 @@ package Ortho_Code.Disps is
    procedure Disp_Type (Atype : O_Tnode; Force : Boolean := False);
    procedure Init;
    procedure Finish;
+
+private
+   procedure Debug_Tnode (Atype : O_Tnode);
+   procedure Debug_Enode (Expr : O_Enode);
+   procedure Debug_Lnode (Expr : O_Lnode);
 end Ortho_Code.Disps;
