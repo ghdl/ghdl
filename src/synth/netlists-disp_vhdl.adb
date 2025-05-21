@@ -1451,6 +1451,9 @@ package body Netlists.Disp_Vhdl is
                            | Id_Concatn
                            | Id_Extract =>
                            null;
+                        when Id_Nop =>
+                           --  Used in renaming
+                           null;
                         when others =>
                            raise Internal_Error;
                      end case;
