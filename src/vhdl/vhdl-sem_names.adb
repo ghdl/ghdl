@@ -426,10 +426,9 @@ package body Vhdl.Sem_Names is
             end;
          when Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Interface_Package_Declaration =>
-            --  Generics are not visible in selected name.
-            --  They are indeed not included in LRM08 12.3 f)
-            null;
-            --  Iterator_Decl_Chain (Get_Generic_Chain (Decl), Id);
+            --  A generic is a declaration, and according to LRM08 12.3 f), any
+            --  declaration is visible by selection.
+            Iterator_Decl_Chain (Get_Generic_Chain (Decl), Id);
          when Iir_Kind_Block_Statement =>
             declare
                Header : constant Iir := Get_Block_Header (Decl);
