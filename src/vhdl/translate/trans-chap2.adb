@@ -1898,9 +1898,36 @@ package body Trans.Chap2 is
    end Translate_Package_Instantiation_Declaration;
 
    procedure Translate_Package_Instantiation_Declaration_Subprograms
-     (Inst : Iir; What : Subprg_Translate_Kind) is
+     (Inst : Iir; What : Subprg_Translate_Kind)
+   is
+      Inter : Iir;
    begin
       if Get_Macro_Expand_Flag (Get_Uninstantiated_Package_Decl (Inst)) then
+         if What in Subprg_Translate_Spec then
+            --  Copy info to the interface subprogram so that the interface
+            --  subprogram can be called directly.
+            Inter := Get_Generic_Chain (Inst);
+            while Inter /= Null_Iir loop
+               if Get_Kind (Inter)
+                 in Iir_Kinds_Interface_Subprogram_Declaration
+               then
+                  declare
+                     Orig : constant Iir := Get_Associated_Subprogram (Inter);
+                     Orig_Inter, Inst_Inter : Iir;
+                  begin
+                     Inst_Inter := Get_Interface_Declaration_Chain (Inter);
+                     Orig_Inter := Get_Interface_Declaration_Chain (Orig);
+                     while Inst_Inter /= Null_Iir loop
+                        Set_Info (Inst_Inter, Get_Info (Orig_Inter));
+                        Inst_Inter := Get_Chain (Inst_Inter);
+                        Orig_Inter := Get_Chain (Orig_Inter);
+                     end loop;
+                  end;
+               end if;
+               Inter := Get_Chain (Inter);
+            end loop;
+         end if;
+
          declare
             Bod : constant Iir := Get_Instance_Package_Body (Inst);
             Mark  : Id_Mark_Type;

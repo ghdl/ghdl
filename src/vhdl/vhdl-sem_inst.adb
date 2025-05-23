@@ -816,6 +816,13 @@ package body Vhdl.Sem_Inst is
                        (Get_Interface_Type_Subprograms (Inter)));
                end;
             when Iir_Kinds_Interface_Subprogram_Declaration =>
+               Set_Interface_Declaration_Chain
+                 (Res,
+                  Instantiate_Iir_Chain
+                    (Get_Interface_Declaration_Chain (Inter)));
+               if Get_Kind (Res) = Iir_Kind_Interface_Function_Declaration then
+                  Set_Return_Type (Res, Get_Return_Type (Inter));
+               end if;
                Sem_Utils.Compute_Subprogram_Hash (Res);
             when others =>
                Error_Kind ("instantiate_generic_chain", Res);

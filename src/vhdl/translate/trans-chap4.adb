@@ -2048,7 +2048,13 @@ package body Trans.Chap4 is
             when Iir_Kind_Interface_Type_Declaration =>
                Translate_Interface_Type_Association (Inter, Assoc);
             when Iir_Kinds_Interface_Subprogram_Declaration =>
-               null;
+               --  Copy info so that the subprogram interface can be called
+               --  from outside.
+               declare
+                  Orig : constant Iir := Get_Associated_Subprogram (Inter);
+               begin
+                  Set_Info (Inter, Get_Info (Orig));
+               end;
             when others =>
                Error_Kind ("translate_generic_association_chain", Inter);
          end case;
