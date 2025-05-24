@@ -3429,6 +3429,10 @@ impl Node {
         unsafe { get_kind(self) }
     }
 
+    pub fn raw_id(self: Self) -> u32 {
+        self.0
+    }
+
     pub fn location(self: Self) -> Location {
         unsafe { get_location(self) }
     }

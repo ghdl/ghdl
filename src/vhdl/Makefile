@@ -93,41 +93,41 @@ vhdl-elocations_meta.adb: vhdl-elocations_meta.adb.in vhdl-elocations.ads $(DEPS
 	$(PYTHON) -m black $@
 	chmod -w $@
 
-../../pyGHDL/libghdl/std_names.py: $(PNODESPY) ../std_names.ads
+../../pyGHDL/libghdl/std_names.py: $(PNODESPY) $(PNODES) ../std_names.ads
 	$(RM) $@
 	$(PNODESPY) $(NODES_FLAGS) libghdl-names > $@
 	$(PYTHON) -m black $@
 	chmod -w $@
 
-../../pyGHDL/libghdl/vhdl/tokens.py: $(PNODESPY) vhdl-tokens.ads
+../../pyGHDL/libghdl/vhdl/tokens.py: $(PNODESPY) $(PNODES) vhdl-tokens.ads
 	$(RM) $@
 	$(PNODESPY) $(NODES_FLAGS) libghdl-tokens > $@
 	$(PYTHON) -m black $@
 	chmod -w $@
 
-../../pyGHDL/libghdl/vhdl/elocations.py: $(PNODESPY) vhdl-elocations.ads
+../../pyGHDL/libghdl/vhdl/elocations.py: $(PNODESPY) $(PNODES) vhdl-elocations.ads
 	$(RM) $@
 	$(PNODESPY) $(ELOCATIONS_FLAGS) libghdl-elocs > $@
 	$(PYTHON) -m black $@
 	chmod -w $@
 
-../../pyGHDL/libghdl/errorout.py: $(PNODESPY) ../errorout.ads
+../../pyGHDL/libghdl/errorout.py: $(PNODESPY) $(PNODES) ../errorout.ads
 	$(RM) $@
 	$(PNODESPY) $(NODES_FLAGS) libghdl-errorout > $@
 	$(PYTHON) -m black $@
 	chmod -w $@
 
-../errorout_def.rs: $(PNODESRS) ../errorout.ads
+../errorout_def.rs: $(PNODESRS) $(PNODES) ../errorout.ads
 	$(RM) $@
 	$(PNODESRS) $(NODES_FLAGS) errorout > $@
 	chmod -w $@
 
-../std_names.rs: $(PNODESRS) ../std_names.ads
+../std_names.rs: $(PNODESRS) $(PNODES) ../std_names.ads
 	$(RM) $@
 	$(PNODESRS) $(NODES_FLAGS) std_names > $@
 	chmod -w $@
 
-nodes_def.rs: $(PNODESRS) vhdl-nodes.ads vhdl-nodes.adb.in
+nodes_def.rs: $(PNODESRS) $(DEPS)
 	$(RM) $@
 	$(PNODESRS) $(NODES_FLAGS) vhdl-nodes > $@
 	chmod -w $@

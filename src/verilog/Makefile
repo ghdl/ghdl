@@ -24,3 +24,8 @@ nodes_def.rs: $(PNODESRS) verilog-nodes.ads
 	$(RM) $@
 	$(PNODESRS) $(PNODES_ARGS) verilog-nodes > $@
 	chmod -w $@
+
+standard_def.rs: $(PNODESRS) verilog-standard.ads
+	$(RM) $@
+	$(PNODESRS) $(PNODES_ARGS) verilog-standard > $@
+	chmod -w $@
