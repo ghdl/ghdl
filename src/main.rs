@@ -1,14 +1,15 @@
 use std::{env, ffi, fs, io, iter, os};
-mod types;
-mod errorout_def;
 mod errorout;
-mod vhdl;
-mod verilog;
+mod errorout_def;
 mod files_map;
 mod std_names;
+mod str_table;
+mod types;
+mod verilog;
+mod vhdl;
 
-use vhdl::nodes_def::Node as VhdlNode;
 use files_map::SourceFileEntry;
+use vhdl::nodes_def::{Node as VhdlNode, Kind as VhdKind};
 
 #[derive(Clone, Copy)]
 #[repr(u8)]
@@ -201,16 +202,19 @@ struct VhdlAnalyzeFlags {
 impl Default for VhdlAnalyzeFlags {
     fn default() -> Self {
         Self {
-         std: VhdlStd::Vhdl93,
-         relaxed: true,
-        bootstrap: false,
-        synopsys_pkgs: false,
-        synth_binding: false,
-        work_name: NameId::NULL,
-        work_dir: NameId::NULL,
-        psl_comment: false,
-        comment_keyword: false,
-        warnings: [WarnState {enable: WarnValue::Default, error: WarnValue::Default}; crate::errorout::WARNID_USIZE],
+            std: VhdlStd::Vhdl93,
+            relaxed: true,
+            bootstrap: false,
+            synopsys_pkgs: false,
+            synth_binding: false,
+            work_name: NameId::NULL,
+            work_dir: NameId::NULL,
+            psl_comment: false,
+            comment_keyword: false,
+            warnings: [WarnState {
+                enable: WarnValue::Default,
+                error: WarnValue::Default,
+            }; crate::errorout::WARNID_USIZE],
         }
     }
 }
@@ -232,14 +236,22 @@ fn apply_analyze_flags(flags: &VhdlAnalyzeFlags) {
         for (i, w) in flags.warnings.iter().enumerate() {
             let id = crate::errorout::MSGID_FIRST_WARNID + (i as u8);
             match w.error {
-                WarnValue::Default => {},
-                WarnValue::Enable => { warning_error(id, true); },
-                WarnValue::Disable => { warning_error(id, false); },
+                WarnValue::Default => {}
+                WarnValue::Enable => {
+                    warning_error(id, true);
+                }
+                WarnValue::Disable => {
+                    warning_error(id, false);
+                }
             }
             match w.enable {
-                WarnValue::Default => {},
-                WarnValue::Enable => { enable_warning(id, true); },
-                WarnValue::Disable => {enable_warning(id, false); },
+                WarnValue::Default => {}
+                WarnValue::Enable => {
+                    enable_warning(id, true);
+                }
+                WarnValue::Disable => {
+                    enable_warning(id, false);
+                }
             }
         }
     }
@@ -442,13 +454,15 @@ impl Command for CommandImport {
         for arg in &args[1..] {
             if got_file {
                 files.push(arg.clone());
-            }
-            else if arg == "--expect-failure" {
+            } else if arg == "--expect-failure" {
                 expect_failure = true;
             } else {
                 match parse_analyze_flags(&mut flags, &arg) {
                     None => {}
-                    Some(ParseStatus::NotOption) => {got_file = true; files.push(arg.clone()); },
+                    Some(ParseStatus::NotOption) => {
+                        got_file = true;
+                        files.push(arg.clone());
+                    }
                     Some(err) => return Err(err),
                 }
             }
@@ -462,9 +476,7 @@ impl Command for CommandImport {
 
         // And analyze every file
         for file in &files {
-            if file.starts_with("--work=") {
-
-            }
+            if file.starts_with("--work=") {}
             let id = unsafe { get_identifier_with_len(file.as_ptr(), file.len() as u32) };
             status = unsafe { analyze_file(id) };
             if !status {
@@ -640,6 +652,8 @@ impl Command for CommandVerilog2Comp {
     }
 
     fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
+        let mut package_name = String::new();
+
         unsafe {
             verilog::errors_initialize();
             verilog::scans_init_paths();
@@ -649,7 +663,14 @@ impl Command for CommandVerilog2Comp {
             verilog::flag_keep_parentheses = true;
         }
 
+        let mut res = vhdl::nodes_utils::Chain::new();
+
         for arg in &args[1..] {
+            if arg.starts_with("--package=") {
+                package_name = arg[10..].to_string();
+                continue;
+            }
+
             //  Parse verilog file
             let id = NameId::from_string(arg);
             unsafe {
@@ -665,13 +686,50 @@ impl Command for CommandVerilog2Comp {
                 verilog::sem_compilation_unit(vlg_top);
 
                 //  convert to vhdl
-                let chain = verilog::export_file(vlg_top);
-
-                //  print (the first one)
-                vhdl::disp_vhdl(chain);
+                res.append_chain(verilog::exporters::export_file(vlg_top));
             }
         }
-        return Err(ParseStatus::CommandError)
+
+        if package_name.is_empty() {
+            //  print (the first one)
+            let mut el: VhdlNode = res.head();
+            loop {
+                unsafe { vhdl::disp_vhdl(el) };
+                el = el.chain();
+                if el == VhdlNode::NULL {
+                    break;
+                }
+                println!();
+            }
+        }
+        else {
+            let unit = VhdlNode::new(VhdKind::Design_Unit);
+            //  Add 'package PACKAGE_NAME'
+            let pkg = VhdlNode::new(VhdKind::Package_Declaration);
+            pkg.set_identifier(NameId::from_string(&package_name));
+            pkg.set_declaration_chain(res.head());
+            pkg.set_has_end(true);
+            unit.set_library_unit(pkg);
+
+            //  Add 'library ieee;'
+            let lib = VhdlNode::new(VhdKind::Library_Clause);
+            lib.set_identifier(std_names::IEEE);
+            unit.set_context_items(lib);
+            //  Add 'use ieee.std_logic_1164.all;'
+            let usec = VhdlNode::new(VhdKind::Use_Clause);
+            let selname = VhdlNode::new(VhdKind::Selected_Name);
+            selname.set_identifier(std_names::STD_LOGIC_1164);
+            let name = VhdlNode::new(VhdKind::Simple_Name);
+            name.set_identifier(std_names::IEEE);
+            selname.set_prefix(name);
+            let allname = VhdlNode::new(VhdKind::Selected_By_All_Name);
+            allname.set_prefix(selname);
+            usec.set_selected_name(allname);
+            lib.set_chain(usec);
+
+            unsafe { vhdl::disp_vhdl(unit); }
+        }
+        return Ok(());
     }
 }
 
@@ -693,8 +751,7 @@ fn execute_command(args: &[String]) -> Result<(), ParseStatus> {
     return Err(ParseStatus::UnknownCommand);
 }
 
-fn expand_args(args : Vec<String>) -> io::Result<Vec<String>>
-{
+fn expand_args(args: Vec<String>) -> io::Result<Vec<String>> {
     //  Check if there is one arg to expand
     let mut need_expand = false;
     for arg in &args {
@@ -713,15 +770,19 @@ fn expand_args(args : Vec<String>) -> io::Result<Vec<String>>
             let filename = &arg[1..];
             let file;
             match std::fs::File::open(filename) {
-                Ok(f) => { file = f; }
-                Err(e) => { eprintln!("cannot open {filename}: {e}"); return Err(e); }
+                Ok(f) => {
+                    file = f;
+                }
+                Err(e) => {
+                    eprintln!("cannot open {filename}: {e}");
+                    return Err(e);
+                }
             }
             let reader = std::io::BufReader::new(file);
             for line in reader.lines() {
                 res.push(line?);
             }
-        }
-        else {
+        } else {
             res.push(arg);
         }
     }
@@ -734,10 +795,12 @@ fn main() {
     }
 
     //  Collect and expand options, read response files
-    let init_args : Vec<String> = env::args().collect();
-    let args : Vec<String>;
+    let init_args: Vec<String> = env::args().collect();
+    let args: Vec<String>;
     match expand_args(init_args) {
-        Ok(eargs) => { args = eargs; }
+        Ok(eargs) => {
+            args = eargs;
+        }
         Err(_) => {
             std::process::exit(1);
         }
@@ -777,7 +840,7 @@ fn main() {
             eprintln!("unexpected non-option in command\n");
             std::process::exit(1);
         }
-        Err(ParseStatus::CommandExpectedError) => {},
-        Err(ParseStatus::CommandError) => { std::process::exit(1)},
+        Err(ParseStatus::CommandExpectedError) => {}
+        Err(ParseStatus::CommandError) => std::process::exit(1),
     }
 }

@@ -1,9 +1,9 @@
 #![allow(non_camel_case_types, dead_code)]
 
-use crate::types::*;
 use crate::verilog::types::*;
 use crate::files_map::Location;
 use crate::NameId;
+use crate::str_table::String8Id;
 
 #[repr(transparent)]
 #[derive(Copy, Clone, PartialEq)]

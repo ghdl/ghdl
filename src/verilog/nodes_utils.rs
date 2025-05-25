@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use crate::vhdl::nodes_def::Node;
 
 pub struct Chain {

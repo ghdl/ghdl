@@ -197,6 +197,10 @@ def do_vhdl_subprg():
     print('    pub fn set(self: Self, idx: u32, el: Node) {')
     print('        unsafe { set_nth_element(self, idx, el); }')
     print('    }')
+    print()
+    print('    pub fn get(self: Self, idx: u32) -> Node {')
+    print('        unsafe { get_nth_element(self, idx) }')
+    print('    }')
     print('}')
 
 
@@ -236,6 +240,7 @@ def do_vhdl_nodes():
     print("use crate::types::*;")
     print("use crate::files_map::{Location, SourceFileEntry};")
     print("use crate::NameId;")
+    print("use crate::str_table::String8Id;")
     print()
     do_class_kinds()
     read_spec_enum("Iir_Mode", "Iir_", "Mode")
@@ -281,10 +286,10 @@ def do_verilog_nodes():
     """Convert verilog-nodes.ads"""
     print("#![allow(non_camel_case_types, dead_code)]")
     print()
-    print("use crate::types::*;")
     print("use crate::verilog::types::*;")
     print("use crate::files_map::Location;")
     print("use crate::NameId;")
+    print("use crate::str_table::String8Id;")
     print()
     print("#[repr(transparent)]")
     print("#[derive(Copy, Clone, PartialEq)]")

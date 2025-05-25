@@ -2,6 +2,7 @@
 use crate::types::*;
 use crate::files_map::{Location, SourceFileEntry};
 use crate::NameId;
+use crate::str_table::String8Id;
 
 #[derive(Copy, Clone, PartialEq, PartialOrd)]
 #[repr(u16)]
@@ -9478,5 +9479,9 @@ impl Flist {
 
     pub fn set(self: Self, idx: u32, el: Node) {
         unsafe { set_nth_element(self, idx, el); }
+    }
+
+    pub fn get(self: Self, idx: u32) -> Node {
+        unsafe { get_nth_element(self, idx) }
     }
 }

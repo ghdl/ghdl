@@ -14,18 +14,9 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Dyn_Tables;
-with Types; use Types;
-with Verilog.Types; use Verilog.Types;
-
-package Verilog.Bn_Tables is
-   package Bignum_Table is new Dyn_Tables
-     (Table_Component_Type => Logic_32,
-      Table_Index_Type => Bn_Index,
-      Table_Low_Bound => No_Bn_Index + 1);
-
-   Bn_Table : Bignum_Table.Instance;
-
-   --  For foreign languages
-   function Get_Logic_32 (Bn : Bn_Index) return Logic_32;
+package body Verilog.Bn_Tables is
+   function Get_Logic_32 (Bn : Bn_Index) return Logic_32 is
+   begin
+      return Bn_Table.Table (Bn);
+   end Get_Logic_32;
 end Verilog.Bn_Tables;

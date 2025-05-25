@@ -19,6 +19,21 @@ impl Chain {
         }
         self.tail = n;
     }
+
+    pub fn append_chain(self: &mut Self, c : Self) {
+        //  Nothing to append if c is empty.
+        if c.head == Node::NULL {
+            return
+        }
+
+        if self.tail == Node::NULL {
+            *self = c;
+        }
+        else {
+            self.tail.set_chain(c.head);
+            self.tail = c.tail;
+        }
+    }
     pub fn head(self: Self) -> Node {
         self.head
     }
