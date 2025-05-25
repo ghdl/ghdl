@@ -222,45 +222,50 @@ jobs:
       python_version:        ${{ matrix.py.version }}
       libghdl_artifact:      ${{ needs.Params.outputs.libghdl_basename }}-${{ matrix.os.libghdl_artifact }}
       pyghdl_artifact:       ${{ needs.Params.outputs.pyghdl_basename }}-${{ matrix.os.pyghdl_artifact }}-Python-${{ matrix.py.version }}
-#      pyunit_testsuites:     'testsuite/pyunit/libghdl testsuite/pyunit/lsp'
       unittest_xml_artifact: 'pyGHDL-Unittest-XML'
     secrets: inherit
 
-#  PublishCoverageResults:
-#    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r4
-#    needs:
-#      - macOS
-#      - Ubuntu-fast
-#      - Windows-fast
-###   - pyGHDL         # pyGHDL is installed into site-packages, where no coverage is collected -> empty coverage report
-#    with:
-#      coverage_artifacts_pattern: '*-Coverage-SQLite-*'
-#      coverage_json_artifact: 'pyGHDL-Coverage-JSON'
-#      coverage_html_artifact: 'pyGHDL-Coverage-HTML'
+  PublishCoverageResults:
+    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@dev
+    needs:
+      - macOS
+      - Ubuntu-fast
+      - Windows-fast
+##   - pyGHDL         # pyGHDL is installed into site-packages, where no coverage is collected -> empty coverage report
+    with:
+      coverage_artifacts_pattern: '*-Coverage-SQLite-*'
+      coverage_json_artifact: 'pyGHDL-Coverage-JSON'
+      coverage_html_artifact: 'pyGHDL-Coverage-HTML'
+#      codecov: true
+#      codacy:  true
 #    secrets:
-#      codacy_token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+#      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+#      CODACY_TOKEN:  ${{ secrets.CODACY_TOKEN }}
 
-#  PublishTestResults:
-#    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r4
-#    needs:
-#      - macOS
-#      - Ubuntu-fast
-#      - Windows-fast
-#      - pyGHDL
-#    with:
-#      unittest_artifacts_pattern: '*-Unittest-XML-*'
-#      merged_junit_artifact: 'pyGHDL-Unittest-XML'
-#      additional_merge_args: '-d "--render=tree" "--name=pyGHDL" "--pytest=rewrite-dunder-init;reduce-depth:pytest.testsuite.pyunit;split:pytest"'
-#      publish: ${{ github.event_name != 'pull_request' }}
+  PublishTestResults:
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@dev
+    needs:
+      - macOS
+      - Ubuntu-fast
+      - Windows-fast
+      - pyGHDL
+    with:
+      unittest_artifacts_pattern: '*-Unittest-XML-*'
+      merged_junit_artifact: 'pyGHDL-Unittest-XML'
+      additional_merge_args: '-d "--render=tree" "--name=pyGHDL" "--pytest=rewrite-dunder-init;reduce-depth:pytest.testsuite.pyunit;split:pytest"'
+      dorny:   true
+#      codecov: true
+#    secrets:
+#      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-#  IntermediateCleanUp:
-#    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r4
-#    needs:
-#      - PublishCoverageResults
-#      - PublishTestResults
-#    with:
-#      sqlite_coverage_artifacts_prefix: 'pyGHDL-Coverage-SQLite-'
-#      xml_unittest_artifacts_prefix: 'pyGHDL-Unittest-XML-'
+  IntermediateCleanUp:
+    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r4
+    needs:
+      - PublishCoverageResults
+      - PublishTestResults
+    with:
+      sqlite_coverage_artifacts_prefix: 'pyGHDL-Coverage-SQLite-'
+      xml_unittest_artifacts_prefix:    'pyGHDL-Unittest-XML-'
 
 #  GNATdoc:
 #    uses: ./.github/workflows/Documentation-GNAT.yml
@@ -268,29 +273,29 @@ jobs:
 #      ubuntu_image:  "ubuntu-20.04"            # gnat-gps (incl. GNATdoc) is limited to Ubuntu 20.04
 #      html_artifact: "documentation-gnatdoc"
 
-#  Sphinx:
-#    uses: ./.github/workflows/Documentation-Sphinx.yml
-#    needs:
-#      - Params
-#      - Ubuntu-fast
-#      - PublishCoverageResults
-#      - PublishTestResults
-#    with:
-#      ghdl_artifact:  ${{ needs.Params.outputs.ghdl_basename }}-ubuntu-24.04-x86_64-mcode
-#      html_artifact:  'documentation-HTML'
-#      latex_document: 'ghdl'
-#      latex_artifact: 'documentation-LaTeX'
-##      pdf_artifact:    'documentation-PDF'
+  Sphinx:
+    uses: ./.github/workflows/Documentation-Sphinx.yml
+    needs:
+      - Params
+      - Ubuntu-fast
+      - PublishCoverageResults
+      - PublishTestResults
+    with:
+      ghdl_artifact:  ${{ needs.Params.outputs.ghdl_basename }}-ubuntu-24.04-x86_64-mcode
+      html_artifact:  'documentation-HTML'
+      latex_document: 'ghdl'
+      latex_artifact: 'documentation-LaTeX'
+#      pdf_artifact:    'documentation-PDF'
 
-#  PublishToGitHubPages:
-#    uses: ./.github/workflows/Publish-GitHubPages.yml
-#    needs:
-#      - Sphinx
-#      - PublishCoverageResults
-#    with:
-#      documentation: 'documentation-HTML'
-#      coverage:      'pyGHDL-Coverage-HTML'
-#      typing:        'pyGHDL-typing-HTML'
+  PublishToGitHubPages:
+    uses: ./.github/workflows/Publish-GitHubPages.yml
+    needs:
+      - Sphinx
+      - PublishCoverageResults
+    with:
+      documentation: 'documentation-HTML'
+      coverage:      'pyGHDL-Coverage-HTML'
+      typing:        'pyGHDL-typing-HTML'
 
   Nightly:
     uses: pyTooling/Actions/.github/workflows/NightlyRelease.yml@r4
@@ -302,7 +307,7 @@ jobs:
       - Windows-fast
       - Windows
       - Python
-#      - Sphinx
+      - Sphinx
     if: github.ref == 'refs/tags/nightly'
     secrets: inherit
     permissions:
@@ -397,11 +402,11 @@ jobs:
       - Windows-fast
       - Windows
       - Python
-#      - PublishToGitHubPages
-#      - StaticTypeCheck
-#      - DocCoverage
-#      - PublishCoverageResults
-#      - PublishTestResults
+      - PublishToGitHubPages
+      - StaticTypeCheck
+      - DocCoverage
+      - PublishCoverageResults
+      - PublishTestResults
     secrets: inherit
     permissions:
       contents: write
