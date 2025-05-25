@@ -198,7 +198,8 @@ fn convert_expr(expr: Node, tkind: TypeKind) -> VhdNode {
 
 fn convert_predefined_typedef(dtype: Node) -> VhdNode {
     match dtype.raw_id() {
-        standard_def::IMPLICIT_TYPEDEF => build_vhdl_name(std_names::STD_LOGIC),
+        standard_def::IMPLICIT_TYPEDEF | standard_def::REG_TYPEDEF =>
+            build_vhdl_name(std_names::STD_LOGIC),
         _ => {
             eprint!(
                 "convert_predefined_typedef: cannot handle {}\n",
