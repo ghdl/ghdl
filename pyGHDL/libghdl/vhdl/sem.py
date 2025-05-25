@@ -44,7 +44,7 @@ def Semantic(DesignUnit: Iir_Design_Unit) -> None:
     """
     Do the semantic analysis of design unit :obj:`DesignUnit`.
 
-    Also add a few node or change some nodes, when for example an identifier is
+    Also add a few nodes or change some nodes, when for example an identifier is
     changed into an access to the type.
 
     :param DesignUnit: Design unit to semantically analyze. Type: ``Iir_Design_Unit``
