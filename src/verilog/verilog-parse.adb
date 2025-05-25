@@ -8446,7 +8446,7 @@ package body Verilog.Parse is
             Set_Type_Node (El, Last_Type);
             if Last_Direction = N_Input then
                Set_Default_Value (El, Expr);
-            elsif Expr /= Null_Node then
+            elsif Expr /= Null_Node and then Last_Kind /= N_Var then
                --  1800-2017 23.2.2.4 Default port values
                --  A module declaration may specify a default value for each
                --  singular input port.
@@ -8463,6 +8463,10 @@ package body Verilog.Parse is
             if Port_Kind = N_Var then
                pragma Assert (Last_Kind = N_Var);
                Set_Has_Var (Decl, True);
+
+               if Expr /= Null_Node and then Last_Direction /= N_Input then
+                  Set_Default_Value (Decl, Expr);
+               end if;
             end if;
 
             Set_Redeclaration (El, Decl);
