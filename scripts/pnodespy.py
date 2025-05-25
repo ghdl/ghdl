@@ -2,15 +2,11 @@
 
 """Like pnodes but output for Python."""
 
-from __future__ import print_function
-
-import re
-import sys
 from textwrap import dedent
 
 try:
     import scripts.pnodes as pnodes
-except:
+except ImportError:
     import pnodes
 
 libname = "libghdl"
@@ -30,15 +26,15 @@ def print_enum(name, vals):
         print(f"    {k} = {n}")
 
 
-def print_file_header(includeIntEnumUnique=True, includeBindToLibGHDL=True):
-    print(dedent("""\
-            # Auto generated Python source file from Ada sources
-            # Call 'make' in 'src/vhdl' to regenerate:
-            #
-        """) + "{sysImports}from pyTooling.Decorators import export\n{moduleImports}".format(
-            sysImports="from enum import IntEnum, unique\n" if includeIntEnumUnique else "",
-            moduleImports="\nfrom pyGHDL.libghdl._decorator import BindToLibGHDL\n" if includeBindToLibGHDL else "",
-        )
+def print_file_header(includeIntEnumUnique: bool = True, includeBindToLibGHDL: bool = True):
+    print(dedent(f"""\
+# Auto generated Python source file from Ada sources
+# Call 'make' in 'src/vhdl' to regenerate:
+#
+{'from enum import IntEnum, unique\n\n' if includeIntEnumUnique else ''}\
+from pyTooling.Decorators import export
+{'\nfrom pyGHDL.libghdl._decorator import BindToLibGHDL\n' if includeBindToLibGHDL else ''}\
+    """)
     )
 
 

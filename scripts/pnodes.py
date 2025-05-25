@@ -1048,12 +1048,12 @@ def main():
 
     except ParseError as e:
         print(e, file=sys.stderr)
-        print("in {0}:{1}:{2}".format(e.lr.filename, e.lr.lineno, e.lr.l), file=sys.stderr)
+        print(f"in {e.lr.filename}:{e.lr.lineno}:{e.lr.l}", file=sys.stderr)
         sys.exit(1)
 
     f = actions.get(args.action, None)
     if not f:
-        print("Action {0} is unknown".format(args.action), file=sys.stderr)
+        print(f"Action {args.action} is unknown", file=sys.stderr)
         sys.exit(1)
     f()
 
