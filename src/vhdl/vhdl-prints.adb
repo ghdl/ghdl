@@ -3921,46 +3921,79 @@ package body Vhdl.Prints is
    is
       Str_Id : constant String8_Id := Get_String8_Id (Str);
       Len : constant Nat32 := Get_String_Length (Str);
+      Base : constant Number_Base_Type := Get_Bit_String_Base (Str);
       Literal_List : Iir_Flist;
       Pos : Nat8;
       Lit : Iir;
       Id : Name_Id;
       C : Character;
    begin
-      if Get_Bit_String_Base (Str) /= Base_None then
+      if Base /= Base_None then
          Start_Lit (Ctxt, Tok_Bit_String);
          if Get_Has_Length (Str) then
             Disp_Int32 (Ctxt, Iir_Int32 (Get_String_Length (Str)));
          end if;
-         Disp_Char (Ctxt, 'b');
       else
          Start_Lit (Ctxt, Tok_String);
       end if;
 
-      Disp_Char (Ctxt, '"');
+      if Base = Base_16 and then El_Type = Null_Iir and then Len mod 4 = 0 then
+         Disp_Char (Ctxt, 'x');
 
-      if El_Type /= Null_Iir then
-         Literal_List :=
-           Get_Enumeration_Literal_List (Get_Base_Type (El_Type));
+         Disp_Char (Ctxt, '"');
+
+         declare
+            P : Nat32;
+            V : Natural;
+         begin
+            P := 1;
+            while P <= Len loop
+               V := 0;
+               for I in 1 .. 4 loop
+                  Pos := Str_Table.Element_String8 (Str_Id, P);
+                  V := V * 2 + Natural (Pos - Character'Pos ('0'));
+                  P := P + 1;
+               end loop;
+               if V <= 9 then
+                  C := Character'Val (Character'Pos ('0') + V);
+               else
+                  C := Character'Val (Character'Pos ('a') + V - 10);
+               end if;
+
+               Disp_Char (Ctxt, C);
+            end loop;
+         end;
       else
-         Literal_List := Null_Iir_Flist;
-      end if;
+         if Base /= Base_None then
+            --  Other bases are not handled, use 'b' for a bit string.
+            Disp_Char (Ctxt, 'b');
+         end if;
 
-      for I in 1 .. Len loop
-         Pos := Str_Table.Element_String8 (Str_Id, I);
-         if Literal_List /= Null_Iir_Flist then
-            Lit := Get_Nth_Element (Literal_List, Natural (Pos));
-            Id := Get_Identifier (Lit);
+         Disp_Char (Ctxt, '"');
+
+         if El_Type /= Null_Iir then
+            Literal_List :=
+              Get_Enumeration_Literal_List (Get_Base_Type (El_Type));
          else
-            Id := Name_Table.Get_Identifier (Character'Val (Pos));
+            Literal_List := Null_Iir_Flist;
          end if;
-         pragma Assert (Name_Table.Is_Character (Id));
-         C := Name_Table.Get_Character (Id);
-         if C = '"' then
+
+         for I in 1 .. Len loop
+            Pos := Str_Table.Element_String8 (Str_Id, I);
+            if Literal_List /= Null_Iir_Flist then
+               Lit := Get_Nth_Element (Literal_List, Natural (Pos));
+               Id := Get_Identifier (Lit);
+            else
+               Id := Name_Table.Get_Identifier (Character'Val (Pos));
+            end if;
+            pragma Assert (Name_Table.Is_Character (Id));
+            C := Name_Table.Get_Character (Id);
+            if C = '"' then
+               Disp_Char (Ctxt, C);
+            end if;
             Disp_Char (Ctxt, C);
-         end if;
-         Disp_Char (Ctxt, C);
-      end loop;
+         end loop;
+      end if;
 
       Disp_Char (Ctxt, '"');
       Close_Lit (Ctxt);
