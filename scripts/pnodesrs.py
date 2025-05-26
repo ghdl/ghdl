@@ -12,7 +12,7 @@ except:
     import pnodes
 
 
-def print_enum(name, vals):
+def print_enum(name, vals, extra_derives=[]):
     if len(vals) < 256:
         repr = 8
     elif len(vals) < 65536:
@@ -20,6 +20,10 @@ def print_enum(name, vals):
     else:
         repr = 32
     print(f"#[repr(u{repr})]")
+    derives = ["Copy", "Clone", "PartialEq"]
+    derives.extend(extra_derives)
+    derives_str = ", ".join(derives)
+    print(f"#[derive({derives_str})]")
     print(f"pub enum {name} {{")
     for k in vals:
         print(f"    {k},")
@@ -40,8 +44,8 @@ def print_enum(name, vals):
 
 def do_class_kinds():
     typ = "Kind"
-    print(f"#[derive(Copy, Clone, PartialEq, PartialOrd)]")
-    print_enum(typ, pnodes.kinds)
+    # print(f"#[derive(Copy, Clone, PartialEq, PartialOrd)]")
+    print_enum(typ, pnodes.kinds, ["PartialOrd"])
     print(f"impl {typ} {{")
     for k, v in pnodes.kinds_ranges.items():
         print(f"    fn is_{k.lower()}(self: Self) -> bool {{")

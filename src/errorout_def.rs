@@ -6,6 +6,7 @@ pub const MSGID_ERROR: u8 = 40;
 pub const MSGID_FATAL: u8 = 41;
 
 #[repr(u8)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum Warnid {
     Library,
     DeprecatedOption,
