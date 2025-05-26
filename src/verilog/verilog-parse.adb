@@ -682,12 +682,8 @@ package body Verilog.Parse is
       Scan;
 
       case Current_Token is
-         when Tok_Number_32 =>
-            Res := Create_Node (N_Number);
-            Reformat_Based_Number (Natural (Width));
-            Set_Number_Lo_Val (Res, Current_Number_Lo.Val);
-            Set_Number_Lo_Zx (Res, Current_Number_Lo.Zx);
-         when Tok_Number_64 =>
+         when Tok_Number_32
+           | Tok_Number_64 =>
             Res := Create_Node (N_Number);
             Reformat_Based_Number (Natural (Width));
             Set_Number_Lo_Val (Res, Current_Number_Lo.Val);
