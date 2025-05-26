@@ -1,15 +1,16 @@
 use crate::std_names;
+use crate::str_table;
 use crate::types::Logic32;
 use crate::vhdl::nodes_def::{
     DirectionType, Flist as VhdFlist, Kind as VhdKind, Mode as VhdMode, Node as VhdNode,
+    NumberBaseType,
 };
 use crate::vhdl::nodes_utils::Chain as VhdChain;
-use crate::str_table;
 
 use crate::verilog::nodes_def;
 use crate::verilog::standard_def;
 
-use nodes_def::{BinaryOps, Kind, Node};
+use nodes_def::{Base, BinaryOps, Kind, Node};
 
 //  The universal representation of a type (common in verilog and vhdl)
 #[derive(Copy, Clone)]
@@ -19,7 +20,6 @@ enum TypeKind {
 
     //  An integer
     Int,
-
     //  Also possible (but not used):
     //  A string
     //  A real
@@ -38,10 +38,14 @@ impl TypeKind {
                     let rv = r.value();
                     match rng.direction() {
                         DirectionType::To => {
-                            if rv >= lv { return TypeKind::Vec((rv - lv + 1) as u32)}
+                            if rv >= lv {
+                                return TypeKind::Vec((rv - lv + 1) as u32);
+                            }
                         }
                         DirectionType::Downto => {
-                            if rv <= lv { return TypeKind::Vec((lv - rv + 1) as u32)}
+                            if rv <= lv {
+                                return TypeKind::Vec((lv - rv + 1) as u32);
+                            }
                         }
                     }
                 }
@@ -95,10 +99,50 @@ fn convert_binary_op(expr: Node, op_kind: VhdKind, tkind: TypeKind) -> VhdNode {
     return res;
 }
 
+fn get_number_word(num: Node, idx: u32) -> Logic32 {
+    if num.kind() == Kind::Number {
+        assert!(idx < 2);
+        if idx == 0 {
+            Logic32 {
+                zx: num.number_lo_zx(),
+                val: num.number_lo_val(),
+            }
+        } else {
+            Logic32 {
+                zx: num.number_hi_zx(),
+                val: num.number_hi_val(),
+            }
+        }
+    } else {
+        let bn = num.bignum_index();
+        bn.logic32(idx)
+    }
+}
+
+fn logic32_extract_bit(w: Logic32, idx: u32) -> Logic32 {
+    let b = idx & 0x1f;
+    Logic32 {
+    zx: (w.zx >> b) & 1,
+    val: (w.val >> b) & 1
+    }
+}
+
+fn logic32_to_logic(w: Logic32) -> u32 {
+    (w.zx << 1) | w.val
+}
+
 //  Convert a verilog Number (or Big_Number) to a string literal
-fn number_to_vec(expr : Node, tlen: u32) -> VhdNode {
-    let elen = expr.number_size();
+fn number_to_vec(expr: Node, tlen: u32) -> VhdNode {
+    const MAP : [u8;4] = ['0' as u8, '1' as u8, 'Z' as u8, 'X' as u8];
+    let sz = expr.number_size();
+    //  Number of bits
+    //  For Number, the value is always extended by the parser
+    //  For Bignum, the number of bits is as it appears in the source file
+    let nbits = if expr.kind() == Kind::Number { 64 } else {expr.bignum_len() };
+    let elen = if sz == 0 { nbits } else { std::cmp::min(nbits, sz) };
     let len = if tlen != 0 { tlen } else { elen };
+
+    // println!("nbits:{nbits}, elen:{elen}, len:{len}");
 
     let res = VhdNode::new(VhdKind::String_Literal8);
     res.set_string_length(len as i32);
@@ -106,28 +150,30 @@ fn number_to_vec(expr : Node, tlen: u32) -> VhdNode {
     let str = str_table::String8Id::new();
     res.set_string8_id(str);
 
-    let mut w : Logic32 = Logic32{val: 0, zx: 0};
+    if expr.number_base() == Base::Hexa && len % 4 == 0 {
+        res.set_bit_string_base(NumberBaseType::Base_16);
+    }
 
-    for i in 0..len {
-        let idx = if i >= elen && elen != 0 { elen - 1 } else { i };
-        if idx % 32 == 0 && i == idx {
-            if expr.kind() == Kind::Number {
-                w = if i == 0 {
-                    Logic32{zx: expr.number_lo_zx(), val: expr.number_lo_val()}
-                }
-                else {
-                    Logic32{zx: expr.number_hi_zx(), val: expr.number_hi_val()}
-                }
-            }
-            else {
-                let bn = expr.bignum_index();
-                w = bn.logic32(i / 32);
+    //  Extend
+    if len > elen {
+        let w = get_number_word(expr, (elen - 1) / 32);
+        let msb = logic32_extract_bit(w, elen - 1);
+        let c = if msb.zx != 0 { MAP[logic32_to_logic(msb) as usize] } else {MAP[0]};
+            for _ in elen..len {
+                str.append(c);
             }
         }
-        let b_zx = (w.zx >> (idx % 32)) & 1;
-        let b_va = (w.val >> (idx % 32)) & 1;
-        let map = [ '0' as u8, '1' as u8, 'Z' as u8, 'X' as u8];
-        str.append(map[((b_zx << 1) + b_va) as usize]);
+
+    let mut w: Logic32 = Logic32 { val: 0, zx: 0 };
+    let nlen = std::cmp::min(len, elen);
+    for i in (0..nlen).rev() {
+        if i % 32 == 31 || i == nlen - 1 {
+            w = get_number_word(expr, i / 32);
+        }
+        let b = logic32_extract_bit(w, i & 0x1f);
+        let l = logic32_to_logic(b);
+        // println!("w:{0:x}/{1:x}, i:{i}, l:{l}", w.zx, w.val);
+        str.append(MAP[l as usize]);
     }
     res
 }
@@ -143,18 +189,14 @@ fn convert_expr(expr: Node, tkind: TypeKind) -> VhdNode {
                 }
                 build_vhdl_int(expr.number_lo_val() as i64)
             }
-            TypeKind::Vec(tlen) => {
-                number_to_vec(expr, tlen)
-            }
+            TypeKind::Vec(tlen) => number_to_vec(expr, tlen),
         },
         Kind::Bignum => match tkind {
             TypeKind::Int => {
                 eprint!("convert_expr: unhandled big_number as int\n");
                 build_vhdl_int(0)
             }
-            TypeKind::Vec(tlen) => {
-                number_to_vec(expr, tlen)
-            }
+            TypeKind::Vec(tlen) => number_to_vec(expr, tlen),
         },
         Kind::Binary_Op => match expr.binary_op() {
             BinaryOps::Sub => convert_binary_op(expr, VhdKind::Substraction_Operator, tkind),
@@ -198,8 +240,9 @@ fn convert_expr(expr: Node, tkind: TypeKind) -> VhdNode {
 
 fn convert_predefined_typedef(dtype: Node) -> VhdNode {
     match dtype.raw_id() {
-        standard_def::IMPLICIT_TYPEDEF | standard_def::REG_TYPEDEF =>
-            build_vhdl_name(std_names::STD_LOGIC),
+        standard_def::IMPLICIT_TYPEDEF | standard_def::REG_TYPEDEF => {
+            build_vhdl_name(std_names::STD_LOGIC)
+        }
         _ => {
             eprint!(
                 "convert_predefined_typedef: cannot handle {}\n",
