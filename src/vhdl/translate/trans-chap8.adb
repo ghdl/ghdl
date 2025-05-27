@@ -1170,6 +1170,46 @@ package body Trans.Chap8 is
       return Get_Expr_Staticness (Assoc) >= Globally;
    end Is_Aggregate_Loop;
 
+   --  Translate the expression of a variable or signal assignment when it is
+   --  an aggregate.
+   procedure Translate_Assignment_Aggregate
+     (Res : out Mnode; Expr : Iir; Targ : in out Mnode; Targ_Type : Iir) is
+   begin
+      pragma Assert (Get_Kind (Expr) = Iir_Kind_Aggregate);
+      if Get_Determined_Aggregate_Flag (Expr) then
+         declare
+            Targ_Tinfo : constant Type_Info_Acc := Get_Info (Targ_Type);
+         begin
+            --  Create a temp.
+            Res := Create_Temp (Targ_Tinfo);
+            case Type_Mode_Aggregate (Targ_Tinfo.Type_Mode) is
+               when Type_Mode_Unbounded_Record
+                 | Type_Mode_Unbounded_Array =>
+                  --  Set bounds from target
+                  Stabilize (Targ);
+                  New_Assign_Stmt
+                    (M2Lp (Chap3.Get_Composite_Bounds (Res)),
+                     M2Addr (Chap3.Get_Composite_Bounds (Targ)));
+                  --  Allocate target
+                  Chap3.Allocate_Unbounded_Composite_Base
+                    (Alloc_Stack, Res, Targ_Type);
+               when Type_Mode_Static_Record
+                 | Type_Mode_Static_Array =>
+                  null;
+               when Type_Mode_Complex_Record
+                 | Type_Mode_Complex_Array =>
+                  Chap4.Allocate_Complex_Object (Targ_Type, Alloc_Stack, Res);
+               when Type_Mode_Protected =>
+                  raise Internal_Error;
+            end case;
+            --  Translate aggregate
+            Chap7.Translate_Aggregate (Res, Targ_Type, Expr);
+         end;
+      else
+         Res := Chap7.Translate_Expression (Expr, Targ_Type);
+      end if;
+   end Translate_Assignment_Aggregate;
+
    procedure Translate_Variable_Assignment_Statement
      (Stmt : Iir_Variable_Assignment_Statement)
    is
@@ -1214,48 +1254,16 @@ package body Trans.Chap8 is
          if Get_Kind (Expr) = Iir_Kind_Aggregate then
             if Is_Aggregate_Loop (Expr) then
                Chap7.Translate_Aggregate (Targ_Node, Targ_Type, Expr);
-            elsif Get_Determined_Aggregate_Flag (Expr) then
+            else
                declare
---                  Expr_Type : constant Iir := Get_Type (Expr);
---                  Expr_Btype : constant Iir := Get_Base_Type (Expr_Type);
-                  Expr_Tinfo : constant Type_Info_Acc := Get_Info (Targ_Type);
                   Val : Mnode;
                begin
-                  --  Create a temp.
-                  Val := Create_Temp (Expr_Tinfo);
-                  case Type_Mode_Aggregate (Expr_Tinfo.Type_Mode) is
-                     when Type_Mode_Unbounded_Record
-                       | Type_Mode_Unbounded_Array =>
-                        --  Set bounds from target
-                        Stabilize (Targ_Node);
-                        New_Assign_Stmt
-                          (M2Lp (Chap3.Get_Composite_Bounds (Val)),
-                           M2Addr (Chap3.Get_Composite_Bounds (Targ_Node)));
-                        --  Allocate target
-                        Chap3.Allocate_Unbounded_Composite_Base
-                          (Alloc_Stack, Val, Targ_Type);
-                     when Type_Mode_Static_Record
-                       | Type_Mode_Static_Array =>
-                        null;
-                     when Type_Mode_Complex_Record
-                       | Type_Mode_Complex_Array =>
-                        Chap4.Allocate_Complex_Object
-                          (Targ_Type, Alloc_Stack, Val);
-                     when Type_Mode_Protected =>
-                        raise Internal_Error;
-                  end case;
-                  --  Translate aggregate
-                  Chap7.Translate_Aggregate (Val, Targ_Type, Expr);
+                  Translate_Assignment_Aggregate
+                    (Val, Expr, Targ_Node, Targ_Type);
+                  --  In case of overlap: be sure to use an intermediate
+                  --  variable.
                   --  Assign
                   Chap3.Translate_Object_Copy (Targ_Node, Val, Targ_Type);
-               end;
-            else
-               --  In case of overlap: be sure to use an intermediate variable.
-               declare
-                  E : Mnode;
-               begin
-                  E := Chap7.Translate_Expression (Expr, Targ_Type);
-                  Chap3.Translate_Object_Copy (Targ_Node, E, Targ_Type);
                end;
             end if;
          else
@@ -4604,29 +4612,10 @@ package body Trans.Chap8 is
       Update_Data_Record => Gen_Signal_Direct_Update_Data_Record);
 
    procedure Translate_Waveform_Expression
-     (Expr : Iir; Target_Type : Iir; Targ : in out Mnode; Res : out Mnode)
-   is
-      Expr_Type : constant Iir := Get_Type (Expr);
+     (Expr : Iir; Target_Type : Iir; Targ : in out Mnode; Res : out Mnode) is
    begin
-      if Get_Kind (Expr) = Iir_Kind_Aggregate
-        and then Get_Constraint_State (Expr_Type) /= Fully_Constrained
-      then
-         declare
-            Expr_Tinfo : constant Type_Info_Acc := Get_Info (Expr_Type);
-         begin
-            --  Create a temp.
-            Res := Create_Temp (Expr_Tinfo);
-            --  Set bounds from target
-            Stabilize (Targ);
-            New_Assign_Stmt
-              (M2Lp (Chap3.Get_Composite_Bounds (Res)),
-               M2Addr (Chap3.Get_Composite_Bounds (Targ)));
-            --  Allocate target
-            Chap3.Allocate_Unbounded_Composite_Base
-              (Alloc_Stack, Res, Get_Base_Type (Expr_Type));
-            --  Translate aggregate
-            Chap7.Translate_Aggregate (Res, Target_Type, Expr);
-         end;
+      if Get_Kind (Expr) = Iir_Kind_Aggregate then
+         Translate_Assignment_Aggregate (Res, Expr, Targ, Target_Type);
       else
          Res := Chap7.Translate_Expression (Expr, Target_Type);
       end if;

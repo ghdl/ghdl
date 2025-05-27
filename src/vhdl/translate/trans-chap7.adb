@@ -3827,8 +3827,9 @@ package body Trans.Chap7 is
    is
       El_List  : constant Iir_Flist :=
         Get_Elements_Declaration_List (Target_Type);
-      El_Index : Natural;
       Nbr_El   : constant Natural := Get_Nbr_Elements (El_List);
+      Aggr_El_List : constant Iir_Flist :=
+        Get_Elements_Declaration_List (Get_Type (Aggr));
 
       --  Record which elements of the record have been set.  The 'others'
       --  clause applies to all elements not already set.
@@ -3842,12 +3843,18 @@ package body Trans.Chap7 is
       Targ    : Mnode;
 
       --  Set an elements.
-      procedure Set_El (El : Iir_Element_Declaration)
+      procedure Set_El (El_Index : Natural)
       is
+         El : constant Iir := Get_Nth_Element (El_List, El_Index);
+         Aggr_El : constant Iir := Get_Nth_Element (Aggr_El_List, El_Index);
          Info : constant Ortho_Info_Acc := Get_Info (Assoc);
          El_Type : constant Iir := Get_Type (El);
          Dest : Mnode;
       begin
+         if Get_Info (Aggr_El) = null then
+            Set_Info (Aggr_El, Get_Info (El));
+         end if;
+
          Dest := Chap6.Translate_Selected_Element (Targ, El);
          if Info /= null then
             --  The expression was already evaluated to compute the bounds.
@@ -3861,6 +3868,7 @@ package body Trans.Chap7 is
       end Set_El;
 
       N_El_Expr : Iir;
+      El_Index : Natural;
    begin
       Open_Temp;
       Targ := Stabilize (Target);
@@ -3877,18 +3885,18 @@ package body Trans.Chap7 is
 
          case Get_Kind (Assoc) is
             when Iir_Kind_Choice_By_None =>
-               Set_El (Get_Nth_Element (El_List, El_Index));
+               Set_El (El_Index);
                El_Index := El_Index + 1;
             when Iir_Kind_Choice_By_Name =>
                El_Index := Natural
                  (Get_Element_Position
                     (Get_Named_Entity (Get_Choice_Name (Assoc))));
-               Set_El (Get_Nth_Element (El_List, El_Index));
+               Set_El (El_Index);
                El_Index := Natural'Last;
             when Iir_Kind_Choice_By_Others =>
                for J in Set_Array'Range loop
                   if not Set_Array (J) then
-                     Set_El (Get_Nth_Element (El_List, J));
+                     Set_El (J);
                   end if;
                end loop;
             when others =>
