@@ -32,27 +32,24 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 
-from __future__ import absolute_import
-
 from argparse import ArgumentParser
 from logging import getLogger, DEBUG, INFO, ERROR, basicConfig
+from os import environ as os_environ, getcwd as os_getcwd, name as os_name
+from pathlib import Path
 from sys import (
     argv as sys_argv,
+    exit as sys_exit,
+    platform as sys_platform,
     stdin as sys_stdin,
     stdout as sys_stdout,
     stderr as sys_stderr,
-    exit as sys_exit,
+    version as sys_version,
 )
-import sys
-from os import environ as os_environ, getcwd as os_getcwd
-import os
-from pathlib import Path
 
 from pyTooling.Decorators import export
 
 from pyGHDL import __version__ as ghdlVersion
-import pyGHDL.libghdl as libghdl
-from pyGHDL.libghdl import errorout_console
+from pyGHDL.libghdl import errorout_console, disp_config
 from pyGHDL.lsp import LSPConnTrace
 from pyGHDL.lsp.lsp import LSPConn, LanguageProtocolServer
 from pyGHDL.lsp.vhdl_ls import VhdlLanguageServer
@@ -113,10 +110,10 @@ def main():
 
     if args.disp_config:
         errorout_console.Install_Handler()
-        libghdl.disp_config()
+        disp_config()
         print("python:")
-        print(f"sys.platform: {sys.platform}, os.name: {os.name}")
-        print(sys.version)
+        print(f"sys.platform: {sys_platform}, os.name: {os_name}")
+        print(sys_version)
         return
 
     # Setup logging
