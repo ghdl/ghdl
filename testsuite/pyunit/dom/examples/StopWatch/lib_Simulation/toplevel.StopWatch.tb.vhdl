@@ -10,7 +10,10 @@ use     IEEE.numeric_std.all;
 library lib_Utilities;
 use     lib_Utilities.Utilities_pkg.all;
 
-use     work.StopWatch_pkg.all;
+library lib_StopWatch;
+use     lib_StopWatch.StopWatch_pkg.all;
+
+library lib_Pretty;
 
 
 entity toplevel_tb is
@@ -43,7 +46,7 @@ begin
 	               '1' after 22 ms,
 	               '0' after 22 ms + 2 us;
 
-	DUT: entity lib_StopWatch.toplevel
+	DUT: entity lib_Pretty.toplevel
 		generic map (
 			CLOCK_PERIOD_NS => CLOCK_PERIOD / 1 ns
 		)
