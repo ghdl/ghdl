@@ -264,9 +264,9 @@ package body Ortho_Debug is
       --  Is it needed ?
       if T1.Kind = ON_Array_Subtype and then T2.Kind = ON_Array_Subtype
         and then T1.Arr_Base = T2.Arr_Base
-        and then T1.Arr_El_Type = T2.Arr_El_Type
         and then T1.Length.all = T2.Length.all
       then
+         Check_Type (T1.Arr_El_Type, T2.Arr_El_Type);
          return;
       end if;
       if T1.Kind = ON_Record_Subtype and then T2.Kind = ON_Record_Subtype
