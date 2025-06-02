@@ -3870,7 +3870,8 @@ package body Vhdl.Sem_Expr is
                end;
             end if;
 
-            return Check_Matching_Subtype (Get_Element_Subtype (Et), St, Expr);
+            return Check_Matching_Subtype
+              (Get_Element_Subtype (Et), Get_Element_Subtype (St), Expr);
 
          when Iir_Kind_Record_Subtype_Definition =>
             --  TODO
