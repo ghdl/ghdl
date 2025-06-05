@@ -4961,9 +4961,9 @@ package body Trans.Chap7 is
      (Sig : Mnode; Sig_Type : Iir; Val : Mnode)
          renames Translate_Signal_Assign_Driving;
 
-   function Translate_Overflow_Literal (Expr : Iir) return O_Enode
+   function Translate_Overflow_Literal (Expr : Iir; Expr_Type : Iir)
+                                       return O_Enode
    is
-      Expr_Type : constant Iir := Get_Type (Expr);
       Tinfo : Type_Info_Acc;
       Otype : O_Tnode;
       L     : O_Dnode;
@@ -5102,7 +5102,7 @@ package body Trans.Chap7 is
                when Constraint_Error =>
                   Warning_Msg_Elab (Warnid_Runtime_Error, Expr,
                                     "physical literal out of range");
-                  return Translate_Overflow_Literal (Expr);
+                  return Translate_Overflow_Literal (Expr, Expr_Type);
             end;
 
          when Iir_Kind_String_Literal8
@@ -5121,7 +5121,7 @@ package body Trans.Chap7 is
             return New_Lit (Translate_Null_Literal (Expr, Res_Type));
 
          when Iir_Kind_Overflow_Literal =>
-            return Translate_Overflow_Literal (Expr);
+            return Translate_Overflow_Literal (Expr, Res_Type);
 
          when Iir_Kind_Parenthesis_Expression =>
             return Translate_Expression (Get_Expression (Expr), Rtype);
