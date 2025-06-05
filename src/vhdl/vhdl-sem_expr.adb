@@ -3663,8 +3663,10 @@ package body Vhdl.Sem_Expr is
                  and then not Eval_Is_In_Bound (Expr, Element_Type)
                then
                   Info.Has_Bound_Error := True;
-                  Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
-                                   "element is out of the bounds");
+                  if Get_Kind (Expr) /= Iir_Kind_Overflow_Literal then
+                     Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
+                                      "element is out of the bounds");
+                  end if;
                end if;
 
                if Is_Array
