@@ -2,7 +2,7 @@
 
 # Test Runner
 pytest ~= 8.3
-pytest-cov ~= 6.1
+pytest-cov ~= 6.2
 
 # Coverage collection
 Coverage ~= 7.8
