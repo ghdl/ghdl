@@ -914,6 +914,10 @@ package body Simul.Vhdl_Compile is
          end;
       end if;
 
+      if Info.Alias_Direct then
+         return;
+      end if;
+
       for Mode in Mode_Value .. Info.Alias_Kind loop
          Var_Mem := Get_Var_Mem (Mem, Info.Alias_Var (Mode));
          case Obj.Kind is

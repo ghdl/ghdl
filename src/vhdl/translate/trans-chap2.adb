@@ -1419,6 +1419,7 @@ package body Trans.Chap2 is
             Dest.all :=
               (Kind => Kind_Alias,
                Mark => False,
+               Alias_Direct => Src.Alias_Direct,
                Alias_Var => (Mode_Value =>
                                Instantiate_Var (Src.Alias_Var (Mode_Value)),
                              Mode_Signal =>

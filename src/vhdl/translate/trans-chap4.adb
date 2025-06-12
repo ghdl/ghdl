@@ -313,6 +313,10 @@ package body Trans.Chap4 is
 
                Info := Add_Info (Decl, Kind_Alias);
 
+               --  Always use pointers to access to the object, as it is not
+               --  known.
+               Info.Alias_Direct := False;
+
                if Kind = Iir_Kind_External_Signal_Name then
                   Info.Alias_Kind := Mode_Signal;
 
@@ -1883,15 +1887,25 @@ package body Trans.Chap4 is
       end if;
 
       Tinfo := Get_Info (Decl_Type);
-      for Mode in Mode_Value .. Info.Alias_Kind loop
-         Atype := Get_Alias_Ortho_Type (Tinfo, Mode);
-         if Mode = Mode_Signal then
-            Id := Create_Var_Identifier (Decl, "_SIG", 0);
-         else
-            Id := Create_Var_Identifier (Decl);
-         end if;
-         Info.Alias_Var (Mode) := Create_Var (Id, Atype);
-      end loop;
+
+      if Get_Kind (Name) in Iir_Kinds_Denoting_Name
+        and then Tinfo.Type_Mode in Type_Mode_Non_Composite
+      then
+         --  Do not use an alias, directly substitute the name.
+         --  This is in particular required for alias of subprogram interfaces
+         --  (as the address of an interface cannot be taken).
+         Info.Alias_Direct := True;
+      else
+         for Mode in Mode_Value .. Info.Alias_Kind loop
+            Atype := Get_Alias_Ortho_Type (Tinfo, Mode);
+            if Mode = Mode_Signal then
+               Id := Create_Var_Identifier (Decl, "_SIG", 0);
+            else
+               Id := Create_Var_Identifier (Decl);
+            end if;
+            Info.Alias_Var (Mode) := Create_Var (Id, Atype);
+         end loop;
+      end if;
    end Translate_Object_Alias_Declaration;
 
    procedure Elab_Object_Alias_Declaration
@@ -1912,6 +1926,11 @@ package body Trans.Chap4 is
         and then Get_Kind (Get_Parent (Decl)) not in Iir_Kinds_Subprogram_Body
       then
          --  Not supported or set by pre-elaboration.
+         return;
+      end if;
+
+      if Alias_Info.Alias_Direct then
+         --  Nothing to do.
          return;
       end if;
 

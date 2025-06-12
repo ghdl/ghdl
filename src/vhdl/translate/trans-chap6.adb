@@ -1095,17 +1095,23 @@ package body Trans.Chap6 is
       R : O_Lnode;
       pragma Assert (Mode <= Name_Info.Alias_Kind);
    begin
+      if Name_Info.Alias_Direct then
+         return Translate_Name (Get_Name (Name), Mode);
+      end if;
+
       --  Alias_Var is not like an object variable, since it is
       --  always a pointer to the aliased object.
       case Type_Info.Type_Mode is
-         when Type_Mode_Unbounded_Array =>
+         when Type_Mode_Unbounded_Array
+            | Type_Mode_Unbounded_Record
+            | Type_Mode_Protected =>
             --  Get_Var for Mnode is ok here as an unbounded object is always
             --  a pointer (and so is an alias).
             return Get_Var (Name_Info.Alias_Var (Mode), Type_Info, Mode);
          when Type_Mode_Bounded_Arrays
-           | Type_Mode_Bounded_Records
-           | Type_Mode_Acc
-           | Type_Mode_Bounds_Acc =>
+            | Type_Mode_Bounded_Records
+            | Type_Mode_Acc
+            | Type_Mode_Bounds_Acc =>
             R := Get_Var (Name_Info.Alias_Var (Mode));
             return Lp2M (R, Type_Info, Mode);
          when Type_Mode_Scalar =>
@@ -1198,35 +1204,7 @@ package body Trans.Chap6 is
 
          when Iir_Kind_Object_Alias_Declaration
            | Iir_Kinds_External_Name =>
-            --  Alias_Var is not like an object variable, since it is
-            --  always a pointer to the aliased object.
-            declare
-               R : O_Lnode;
-            begin
-               pragma Assert (Mode <= Name_Info.Alias_Kind);
-               case Type_Info.Type_Mode is
-                  when Type_Mode_Unbounded_Array
-                    | Type_Mode_Unbounded_Record
-                    | Type_Mode_Protected =>
-                     return Get_Var (Name_Info.Alias_Var (Mode), Type_Info,
-                                     Mode);
-                  when Type_Mode_Bounded_Arrays
-                     | Type_Mode_Bounded_Records
-                     | Type_Mode_Acc
-                     | Type_Mode_Bounds_Acc =>
-                     R := Get_Var (Name_Info.Alias_Var (Mode));
-                     return Lp2M (R, Type_Info, Mode);
-                  when Type_Mode_Scalar =>
-                     R := Get_Var (Name_Info.Alias_Var (Mode));
-                     if Mode = Mode_Signal then
-                        return Lv2M (R, Type_Info, Mode_Signal);
-                     else
-                        return Lp2M (R, Type_Info, Mode_Value);
-                     end if;
-                  when others =>
-                     raise Internal_Error;
-               end case;
-            end;
+            return Translate_Object_Alias_Name (Name, Mode);
 
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Stable_Attribute

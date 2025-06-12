@@ -1878,6 +1878,8 @@ package Trans is
             Signal_Function : O_Dnode := O_Dnode_Null;
 
          when Kind_Alias =>
+            --  If set, simply use the name instead of the alias.
+            Alias_Direct : Boolean := False;
             Alias_Var  : Var_Type_Array;
             Alias_Kind : Object_Kind_Type;
 
