@@ -16,7 +16,7 @@ on:
       main_branch:
         description: 'Name of the branch containing releases.'
         required: false
-        default: 'main'
+        default: 'master'
         type: string
       development_branch:
         description: 'Name of the development branch containing features.'
