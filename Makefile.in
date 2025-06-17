@@ -385,8 +385,8 @@ ghdl_llvm_jit$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
                llvm-cbindings.o version.ads force
 	$(GNATMAKE) -o $@ $(GHDL_LLVM_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb \
 	 $(GNAT_BARGS) -largs llvm-cbindings.o $(GRT_ADD_OBJS) \
-	 $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) --LINK=$(CXX) \
-	 $(LLVM_LDFLAGS) $(LDFLAGS)
+	 $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB) $(GRT_EXEC_OPTS)) \
+	 --LINK=$(CXX) $(LLVM_LDFLAGS) $(LDFLAGS)
 
 llvm-cbindings.o: $(srcdir)/src/ortho/$(llvm_be)/llvm-cbindings.cpp
 	$(CXX) -c `$(LLVM_CONFIG) --includedir --cxxflags` \
