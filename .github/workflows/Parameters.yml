@@ -26,7 +26,7 @@ on:
       release_branch:
         description: 'Name of the branch containing releases and nightly builds.'
         required: false
-        default: 'main'
+        default: 'master'
         type: string
       test_tag:
         description: 'Name of the tag used for testing nightly builds.'
