@@ -1,8 +1,8 @@
 -r ../pyGHDL/requirements.txt
 
 # Test Runner
-pytest ~= 8.3
-pytest-cov ~= 6.1
+pytest ~= 8.4
+pytest-cov ~= 6.2
 
 # Coverage collection
-Coverage ~= 7.8
+Coverage ~= 7.9

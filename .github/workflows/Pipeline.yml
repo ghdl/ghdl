@@ -173,7 +173,7 @@ jobs:
       - Params
 
   StaticTypeCheck:
-    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r4
+    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r5
     needs:
       - Params
     with:
@@ -184,7 +184,7 @@ jobs:
       html_artifact: 'pyGHDL-typing-HTML'
 
   DocCoverage:
-    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@r4
+    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@r5
     needs:
       - Params
     with:
@@ -226,7 +226,7 @@ jobs:
     secrets: inherit
 
   PublishCoverageResults:
-    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@dev
+    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r5
     needs:
       - macOS
       - Ubuntu-fast
@@ -243,7 +243,7 @@ jobs:
 #      CODACY_TOKEN:  ${{ secrets.CODACY_TOKEN }}
 
   PublishTestResults:
-    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@dev
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r5
     needs:
       - macOS
       - Ubuntu-fast
@@ -259,7 +259,7 @@ jobs:
 #      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   IntermediateCleanUp:
-    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r4
+    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r5
     needs:
       - PublishCoverageResults
       - PublishTestResults
@@ -298,7 +298,8 @@ jobs:
       typing:        'pyGHDL-typing-HTML'
 
   Nightly:
-    uses: pyTooling/Actions/.github/workflows/NightlyRelease.yml@r4
+    uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r5
+    if: needs.Params.outputs.is_nightly_tag == 'true' || needs.Params.outputs.is_tagged_test == 'true'
     needs:
       - Params
       - macOS
@@ -308,55 +309,23 @@ jobs:
       - Windows
       - Python
       - Sphinx
-    if: github.ref == 'refs/tags/nightly'
-    secrets: inherit
     permissions:
       contents: write
-      actions: write
-      attestations: write
+      actions:  write
     with:
+      tag:   ${{ needs.Params.outputs.tag }}
+      title: "Nightly Release (test)"
+      mode:  "nightly"
+      description: |
+        This *nightly* release contains all latest and important artifacts created by GHDL's CI pipeline.
+      description_file: .github/ReleaseDescription.md
       prerelease: true
       replacements: |
         ghdl=${{ needs.Params.outputs.ghdl_version }}
         pyghdl=${{ needs.Params.outputs.pyghdl_version }}
         pacghdl=${{ needs.Params.outputs.pacghdl_version }}
-      nightly_name: nightly
-      nightly_title: "Nightly Release"
-      nightly_description: |
-        This *nightly* release contains all latest and important artifacts created by GHDL's CI pipeline.
-
-        # GHDL %ghdl%
-
-        GHDL offers the simulator and synthesis tool for VHDL. GHDL can be build for various backends:
-        * `gcc` - using the GCC compiler framework
-        * `mcode` - in memory code generation
-        * `llvm` - using the LLVM compiler framework
-        * `llvm-jit` - using the LLVM compiler framework, but in memory
-
-        The following asset categories are provided for GHDL:
-        * macOS x64-64 builds as TAR/GZ file
-        * macOS aarch64 builds as TAR/GZ file
-        * Ubuntu 24.04 LTS builds as TAR/GZ file
-        * Windows builds for standalone usage (without MSYS2) as ZIP file
-        * MSYS2 packages as TAR/ZST file
-
-        ## Docker Images
-
-        Latest docker images at pushed to [Docker Hub - ghdl/ghdl:latest](https://hub.docker.com/r/ghdl/ghdl/tags).
-
-        # pyGHDL %ghdl%
-
-        The Python package `pyGHDL` offers Python binding (`pyGHDL.libghdl`) to a `libghdl` shared library (`*.so`/`*.dll`).
-        In addition to the low-level binding layer, pyGHDL offers:
-        * a Language Server Protocol (LSP) instance for e.g. live code checking by editors
-        * a Code Document Object Model (CodeDOM) based on [pyVHDLModel](https://github.com/VHDL/pyVHDLModel)
-
-        The following asset categories are provided for pyGHDL:
-        * Platform specific Python wheel package for Ubuntu incl. `pyGHDL...so`
-        * Platform specific Python wheel package for Windows incl. `pyGHDL...dll`
-        * Platform specific Python wheel package for Windows + MSYS2 (MinGW64, UCRT64) incl. `pyGHDL...dll`
-      inventory-json: "inventory.json"
-      inventory-version: ${{ needs.Params.outputs.ghdl_version }}
+      inventory-json:       "inventory.json"
+      inventory-version:    ${{ needs.Params.outputs.ghdl_version }}
       inventory-categories: "application,os-name,os-version,os-arch,runtime,ghdl-backend"
       assets: |
         # Artifact Name                        File Name ($/! -> archive with/without subdir)                 Labels                                           Title
@@ -392,8 +361,8 @@ jobs:
         pyGHDL-Windows-ucrt64-Python-3.12:      pyghdl-%pyghdl%-cp312-cp312-mingw_x86_64_ucrt_gnu.whl:        pyGHDL,windows,2022,x86-64,py3.12,ucrt64,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) + MSYS2/UCRT64 - Wheel for Python 3.12
 
   Release:
-    uses: pyTooling/Actions/.github/workflows/NightlyRelease.yml@r4
-    if: startsWith(github.ref, 'refs/tags/v')
+    uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r5
+    if: needs.Params.outputs.is_release_tag == 'true'
     needs:
       - Params
       - macOS
@@ -407,50 +376,19 @@ jobs:
       - DocCoverage
       - PublishCoverageResults
       - PublishTestResults
-    secrets: inherit
     permissions:
       contents: write
       actions: write
-      attestations: write
     with:
+      tag:                  ${{ needs.Params.outputs.version }}
+      description_file:     ".github/ReleaseDescription.md"
       prerelease: true
       replacements: |
         ghdl=${{ needs.Params.outputs.ghdl_version }}
         pyghdl=${{ needs.Params.outputs.pyghdl_version }}
         pacghdl=${{ needs.Params.outputs.pacghdl_version }}
-      nightly_name: "v${{ needs.Params.outputs.ghdl_version }}"
-      nightly_description: |
-        # GHDL %ghdl%
-
-        GHDL offers the simulator and synthesis tool for VHDL. GHDL can be build for various backends:
-        * `gcc` - using the GCC compiler framework
-        * `mcode` - in memory code generation
-        * `llvm` - using the LLVM compiler framework
-        * `llvm-jit` - using the LLVM compiler framework, but in memory
-
-        The following asset categories are provided for GHDL:
-        * macOS x64-64 builds as TAR/GZ file
-        * macOS aarch64 builds as TAR/GZ file
-        * Ubuntu 24.04 LTS builds as TAR/GZ file
-        * Windows builds for standalone usage (without MSYS2) as ZIP file
-        * MSYS2 packages as TAR/ZST file
-
-        ## Docker Images
-
-        Latest docker images at pushed to [Docker Hub - ghdl/ghdl:latest](https://hub.docker.com/r/ghdl/ghdl/tags).
-
-        # pyGHDL %ghdl%
-
-        The Python package `pyGHDL` offers Python binding (`pyGHDL.libghdl`) to a `libghdl` shared library (`*.so`/`*.dll`).
-        In addition to the low-level binding layer, pyGHDL offers:
-        * a Language Server Protocol (LSP) instance for e.g. live code checking by editors
-        * a Code Document Object Model (CodeDOM) based on [pyVHDLModel](https://github.com/VHDL/pyVHDLModel)
-
-        The following asset categories are provided for pyGHDL:
-        * Platform specific Python wheel package for Ubuntu incl. `pyGHDL...so`
-        * Platform specific Python wheel package for Windows incl. `pyGHDL...dll`
-      inventory-json: "inventory.json"
-      inventory-version: ${{ needs.Params.outputs.ghdl_version }}
+      inventory-json:       "inventory.json"
+      inventory-version:    ${{ needs.Params.outputs.ghdl_version }}
       inventory-categories: "application,os-name,os-version,os-arch,runtime,ghdl-backend"
       assets: |
         ghdl-macos-13-x86_64-llvm:             $ghdl-llvm-%ghdl%-macos13-x86_64.tar.gz:                       ghdl,macos,13,x86-64,native,llvm:         GHDL - v%ghdl% - macOS 13 (x86-64) - llvm backend
@@ -516,7 +454,7 @@ jobs:
           - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'mcode'}
           - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm'}
           - {icon: '🪟🟨', name: 'Windows', image: 'windows-2022', runtime: 'ucrt64',  backend: 'llvm-jit'}
-    if: (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/tags/nightly') && !failure() && !cancelled()
+    if: (needs.Params.outputs.is_release_tag == 'true' || needs.Params.outputs.is_nightly_tag == 'true' || needs.Params.outputs.is_tagged_test == 'true') && !failure() && !cancelled()
     with:
       os_image:              ${{ matrix.image }}
       os_name:               ${{ matrix.name }}
