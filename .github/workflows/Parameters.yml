@@ -28,6 +28,11 @@ on:
         required: false
         default: 'main'
         type: string
+      test_tag:
+        description: 'Name of the tag used for testing nightly builds.'
+        required: false
+        default: 'testing'
+        type: string
       nightly_tag_pattern:
         description: 'Pattern for nightly tags on the release branch.'
         required: false
@@ -84,6 +89,9 @@ on:
       is_release_tag:
         description: ""
         value: ${{ jobs.Prepare.outputs.is_release_tag }}
+      is_tagged_test:
+        description: ""
+        value: ${{ jobs.Prepare.outputs.is_tagged_test }}
       ref_kind:
         description: ""
         value: ${{ jobs.Prepare.outputs.ref_kind }}
@@ -93,6 +101,9 @@ on:
       tag:
         description: ""
         value: ${{ jobs.Prepare.outputs.tag }}
+      pull:
+        description: ""
+        value: ${{ jobs.Prepare.outputs.pull }}
       version:
         description: ""
         value: ${{ jobs.Prepare.outputs.version }}
@@ -143,9 +154,11 @@ jobs:
       is_release_commit: ${{ steps.Classify.outputs.is_release_commit }}
       is_nightly_tag:    ${{ steps.Classify.outputs.is_nightly_tag }}
       is_release_tag:    ${{ steps.Classify.outputs.is_release_tag }}
+      is_tagged_test:    ${{ steps.Classify.outputs.is_tagged_test }}
       ref_kind:          ${{ steps.Classify.outputs.ref_kind }}
       branch:            ${{ steps.Classify.outputs.branch }}
       tag:               ${{ steps.Classify.outputs.tag }}
+      pull:              ${{ steps.Classify.outputs.pull }}
       version:           ${{ steps.Classify.outputs.version || steps.FindPullRequest.outputs.pr_version }}
 #      release_version:   ${{ steps.FindPullRequest.outputs.release_version }}
       pr_title:          ${{ steps.FindPullRequest.outputs.pr_title }}
@@ -187,9 +200,11 @@ jobs:
           is_release_commit="false"
           is_nightly_tag="false"
           is_release_tag="false"
+          is_tagged_test="false"
           ref_kind="unknown"
           branch=""
           tag=""
+          pull=""
           version=""
 
           if [[ "${ref:0:11}" == "refs/heads/" ]]; then
@@ -271,10 +286,18 @@ jobs:
               printf "::error title=RexExpCheck::Tag name '%s' doesn't conform to regexp '%s' nor '%s'.\n" "${tag}" "${NIGHTLY_TAG_PATTERN}" "${RELEASE_TAG_PATTERN}"
               exit 1
             fi
+          elif [[ "${ref:0:10}" == "refs/pull/" ]]; then
+            ref_kind="pullrequest"
+
+            printf "Rull Request check:\n"
           else
             printf "${ANSI_LIGHT_RED}Unknown Git reference '%s'.${ANSI_NOCOLOR}\n" "${{ github.ref }}"
             printf "::error title=Classify Commit::Unknown Git reference '%s'.\n" "${{ github.ref }}"
             exit 1
+          fi
+
+          if [[ "${ref_kind}" == "tag" && "${tag}" == "${{ inputs.test_tag }}" ]]; then
+            is_tagged_test="true"
           fi
 
           tee --append "${GITHUB_OUTPUT}" <<EOF
@@ -286,9 +309,11 @@ jobs:
           is_release_commit=${is_release_commit}
           is_nightly_tag=${is_nightly_tag}
           is_release_tag=${is_release_tag}
+          is_tagged_test=${is_tagged_test}
           ref_kind=${ref_kind}
           branch=${branch}
           tag=${tag}
+          pull=${pull}
           version=${version}
           EOF
 
@@ -370,9 +395,11 @@ jobs:
           printf "is_release_commit: %s\n" "${{ steps.Classify.outputs.is_release_commit }}"
           printf "is_nightly_tag:    %s\n" "${{ steps.Classify.outputs.is_nightly_tag }}"
           printf "is_release_tag:    %s\n" "${{ steps.Classify.outputs.is_release_tag }}"
+          printf "is_tagged_test:    %s\n" "${{ steps.Classify.outputs.is_tagged_test }}"
           printf "ref_kind:          %s\n" "${{ steps.Classify.outputs.ref_kind }}"
           printf "branch:            %s\n" "${{ steps.Classify.outputs.branch }}"
           printf "tag:               %s\n" "${{ steps.Classify.outputs.tag }}"
+          printf "pull:              %s\n" "${{ steps.Classify.outputs.pull }}"
           printf "version from tag:  %s\n" "${{ steps.Classify.outputs.version }}"
           printf "version from pr:   %s\n" "${{ steps.FindPullRequest.outputs.pr_version }}"
           printf "version:           %s\n" "${{ steps.Classify.outputs.version || steps.FindPullRequest.outputs.pr_version }}"
