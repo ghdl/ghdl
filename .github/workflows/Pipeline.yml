@@ -173,7 +173,7 @@ jobs:
       - Params
 
   StaticTypeCheck:
-    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r4
+    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r5
     needs:
       - Params
     with:
@@ -184,7 +184,7 @@ jobs:
       html_artifact: 'pyGHDL-typing-HTML'
 
   DocCoverage:
-    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@r4
+    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@r5
     needs:
       - Params
     with:
@@ -226,7 +226,7 @@ jobs:
     secrets: inherit
 
   PublishCoverageResults:
-    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@dev
+    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r5
     needs:
       - macOS
       - Ubuntu-fast
@@ -243,7 +243,7 @@ jobs:
 #      CODACY_TOKEN:  ${{ secrets.CODACY_TOKEN }}
 
   PublishTestResults:
-    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@dev
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r5
     needs:
       - macOS
       - Ubuntu-fast
@@ -259,7 +259,7 @@ jobs:
 #      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   IntermediateCleanUp:
-    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r4
+    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r5
     needs:
       - PublishCoverageResults
       - PublishTestResults
@@ -298,7 +298,7 @@ jobs:
       typing:        'pyGHDL-typing-HTML'
 
   Nightly:
-    uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@dev
+    uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r5
     if: github.ref == 'refs/tags/nightly'
     needs:
       - Params
@@ -361,7 +361,7 @@ jobs:
         pyGHDL-Windows-ucrt64-Python-3.12:      pyghdl-%pyghdl%-cp312-cp312-mingw_x86_64_ucrt_gnu.whl:        pyGHDL,windows,2022,x86-64,py3.12,ucrt64,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) + MSYS2/UCRT64 - Wheel for Python 3.12
 
   Release:
-    uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@dev
+    uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r5
     if: needs.Params.outputs.is_release_tag == 'true'
     needs:
       - Params
