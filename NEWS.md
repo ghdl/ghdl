@@ -1,3 +1,7 @@
+## [2025-06-17] 5.1
+
+- Improve release management
+
 ## [2025-03-01] 5.0
 
 - Fix some crashes on errors on Windows x64 with mcode backend
