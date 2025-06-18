@@ -1,6 +1,7 @@
 ## [2025-06-17] 5.1
 
 - Improve release management
+- Add llvm-jit build
 
 ## [2025-03-01] 5.0
 
