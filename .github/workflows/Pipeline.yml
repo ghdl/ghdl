@@ -382,7 +382,6 @@ jobs:
     with:
       tag:                  ${{ needs.Params.outputs.version }}
       description_file:     ".github/ReleaseDescription.md"
-      prerelease: true
       replacements: |
         ghdl=${{ needs.Params.outputs.ghdl_version }}
         pyghdl=${{ needs.Params.outputs.pyghdl_version }}
