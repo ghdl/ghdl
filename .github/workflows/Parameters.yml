@@ -275,7 +275,7 @@ jobs:
               NIGHTLY_TAG_PATTERN='^${{ inputs.nightly_tag_pattern }}$'
               RELEASE_TAG_PATTERN='^${{ inputs.release_tag_pattern }}$'
               printf "  Check tag name against regexp '%s' ... " "${RELEASE_TAG_PATTERN}"
-              if [[ "${tag}" =~ NIGHTLY_TAG_PATTERN ]]; then
+              if [[ "${tag}" =~ $NIGHTLY_TAG_PATTERN ]]; then
                 printf "${ANSI_LIGHT_GREEN}[NIGHTLY]${ANSI_NOCOLOR}\n"
                 is_nightly_tag="true"
               elif [[ "${tag}" =~ $RELEASE_TAG_PATTERN ]]; then
