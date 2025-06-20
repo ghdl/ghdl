@@ -430,13 +430,14 @@ jobs:
           ghdl_version=$(grep "^ghdl_version=\".*\"$" ./configure)
           ghdl_version=${ghdl_version/ghdl_version=/}
           ghdl_version=${ghdl_version//\"/}
-          echo "GHDL version: $ghdl_version"
+          printf "GHDL version: %s\n" "${ghdl_version}"
 
           pacmanPackageRelease=$(grep "^pkgrel=[1-9][0-9]*$" ./dist/msys2/llvm/PKGBUILD)
           pacmanPackageRelease=${pacmanPackageRelease/pkgrel=/}
-          echo "Pacman package release: ${pacmanPackageRelease}"
+          printf "Pacman package release: %s\n" "${pacmanPackageRelease}"
 
-          tee -a "${GITHUB_OUTPUT}" <<EOF
+          printf "\n"
+          tee "${GITHUB_OUTPUT}" <<EOF
           ghdl_version=${ghdl_version}
           EOF
 
@@ -453,7 +454,7 @@ jobs:
             pacghdl_version="${ghdl_version/-rc/.rc}-${pacmanPackageRelease}"
             setup_version="${ghdl_version}"
           else
-            echo "::error title=Parameters::Unsupported GHDL version pattern '${ghdl_version}'."
+            echo "::error title=%s::%s\n" "Parameters" "Unsupported GHDL version pattern '${ghdl_version}'."
             exit 1
           fi
 
@@ -474,20 +475,19 @@ jobs:
           EOF
 
           if [ '${{ inputs.testsuites }}' == 'all' ]; then
-            tee "${GITHUB_OUTPUT}" <<EOF
+            tee -a "${GITHUB_OUTPUT}" <<EOF
           testsuites=sanity gna vests synth vpi vhpi
           EOF
           else
-            tee "${GITHUB_OUTPUT}" <<EOF
+            tee -a "${GITHUB_OUTPUT}" <<EOF
           testsuites=${{ inputs.testsuites }}
           EOF
           fi
 
-          # cat "${GITHUB_OUTPUT}"
-
       - name: Check variables
         run: |
-          echo "ghdl_version:    ${{ steps.params.outputs.ghdl_version }}"
-          echo "pyghdl_version:  ${{ steps.params.outputs.pyghdl_version }}"
-          echo "pacghdl_version: ${{ steps.params.outputs.pacghdl_version }}"
-          echo "pacghdl_release: ${{ steps.params.outputs.pacghdl_release }}"
+          printf "ghdl_version:    %s\n" "${{ steps.params.outputs.ghdl_version }}"
+          printf "pyghdl_version:  %s\n" "${{ steps.params.outputs.pyghdl_version }}"
+          printf "pacghdl_version: %s\n" "${{ steps.params.outputs.pacghdl_version }}"
+          printf "pacghdl_release: %s\n" "${{ steps.params.outputs.pacghdl_release }}"
+          printf "testsuites:      %s\n" "${{ steps.params.outputs.testsuites }}"
