@@ -314,7 +314,7 @@ jobs:
       actions:  write
     with:
       tag:   ${{ needs.Params.outputs.tag }}
-      title: "Nightly Release (test)"
+      title: "Nightly Release"
       mode:  "nightly"
       description: |
         This *nightly* release contains all latest and important artifacts created by GHDL's CI pipeline.
