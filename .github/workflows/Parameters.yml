@@ -124,6 +124,9 @@ on:
       pacghdl_version:
         description: "GHDL's version for MSYS2."
         value: ${{ jobs.Parameters.outputs.pacghdl_version }}
+      pacghdl_release:
+        description: "GHDL's MSYS2 package release."
+        value: ${{ jobs.Parameters.outputs.pacghdl_release }}
       setup_version:
         description: "GHDL's version for setup-ghdl."
         value: ${{ jobs.Parameters.outputs.setup_version }}
@@ -414,6 +417,7 @@ jobs:
       ghdl_version:    ${{ steps.params.outputs.ghdl_version }}
       pyghdl_version:  ${{ steps.params.outputs.pyghdl_version }}
       pacghdl_version: ${{ steps.params.outputs.pacghdl_version }}
+      pacghdl_release: ${{ steps.params.outputs.pacghdl_release }}
       setup_version:   ${{ steps.params.outputs.setup_version }}
 
     steps:
@@ -423,29 +427,17 @@ jobs:
       - name: Generate 'params' and 'python_jobs'
         id: params
         run: |
-          if [ '${{ inputs.testsuites }}' == 'all' ]; then
-            tee "${GITHUB_OUTPUT}" <<EOF
-          testsuites=sanity gna vests synth vpi vhpi
-          EOF
-          else
-            tee "${GITHUB_OUTPUT}" <<EOF
-          testsuites=${{ inputs.testsuites }}
-          EOF
-          fi
-
           ghdl_version=$(grep "^ghdl_version=\".*\"$" ./configure)
           ghdl_version=${ghdl_version/ghdl_version=/}
           ghdl_version=${ghdl_version//\"/}
           echo "GHDL version: $ghdl_version"
-          tee -a "${GITHUB_OUTPUT}" <<EOF
-          ghdl_version=${ghdl_version}
-          EOF
 
           pacmanPackageRelease=$(grep "^pkgrel=[1-9][0-9]*$" ./dist/msys2/llvm/PKGBUILD)
           pacmanPackageRelease=${pacmanPackageRelease/pkgrel=/}
-          echo "Pacman package release: pacmanPackageRelease"
+          echo "Pacman package release: ${pacmanPackageRelease}"
+
           tee -a "${GITHUB_OUTPUT}" <<EOF
-          pacghdl_release=${pacmanPackageRelease}
+          ghdl_version=${ghdl_version}
           EOF
 
           if [[ "${ghdl_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -474,13 +466,28 @@ jobs:
           EOF
 
           tee -a "${GITHUB_OUTPUT}" <<EOF
+          pacghdl_release=${pacmanPackageRelease}
+          EOF
+
+          tee -a "${GITHUB_OUTPUT}" <<EOF
           setup_version=${setup_version}
           EOF
 
-          cat "${GITHUB_OUTPUT}"
+          if [ '${{ inputs.testsuites }}' == 'all' ]; then
+            tee "${GITHUB_OUTPUT}" <<EOF
+          testsuites=sanity gna vests synth vpi vhpi
+          EOF
+          else
+            tee "${GITHUB_OUTPUT}" <<EOF
+          testsuites=${{ inputs.testsuites }}
+          EOF
+          fi
+
+          # cat "${GITHUB_OUTPUT}"
 
       - name: Check variables
         run: |
           echo "ghdl_version:    ${{ steps.params.outputs.ghdl_version }}"
           echo "pyghdl_version:  ${{ steps.params.outputs.pyghdl_version }}"
           echo "pacghdl_version: ${{ steps.params.outputs.pacghdl_version }}"
+          echo "pacghdl_release: ${{ steps.params.outputs.pacghdl_release }}"
