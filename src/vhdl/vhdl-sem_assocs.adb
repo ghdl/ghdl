@@ -2969,6 +2969,9 @@ package body Vhdl.Sem_Assocs is
                Error_Msg_Sem (+Loc, "%n must be associated", +Inter);
                Err := True;
             end if;
+         when Iir_Kind_Interface_Type_Declaration =>
+            Error_Msg_Sem (+Loc, "%n must be associated", +Inter);
+            Err := True;
          when others =>
             Error_Kind ("sem_association_chain", Inter);
       end case;
