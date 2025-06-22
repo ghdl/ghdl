@@ -84,7 +84,9 @@ package body Trans.Chap2 is
    procedure Translate_Interface_Mechanism (Inter : Iir)
    is
       Spec : constant Iir := Get_Parent (Inter);
-      pragma Assert (Get_Kind (Spec) in Iir_Kinds_Subprogram_Declaration);
+      pragma Assert (Get_Kind (Spec) in Iir_Kinds_Subprogram_Declaration
+        or else
+        Get_Kind (Spec) in Iir_Kinds_Subprogram_Instantiation_Declaration);
       Info : constant Interface_Info_Acc := Get_Info (Inter);
       Tinfo : constant Type_Info_Acc := Get_Info (Get_Type (Inter));
       Mech : Call_Mechanism;
@@ -154,7 +156,7 @@ package body Trans.Chap2 is
          Inter := Get_Chain (Inter);
       end loop;
 
-      if Get_Kind (Spec) = Iir_Kind_Procedure_Declaration then
+      if Is_Procedure_Declaration (Spec) then
          --  Create the param record (except for foreign subprogram).
          Info := Get_Info (Spec);
          Inter := Get_Interface_Declaration_Chain (Spec);
@@ -222,8 +224,7 @@ package body Trans.Chap2 is
    is
       use Vhdl.Back_End;
       Info : constant Subprg_Info_Acc := Get_Info (Spec);
-      Is_Func : constant Boolean :=
-        Get_Kind (Spec) = Iir_Kind_Function_Declaration;
+      Is_Func : constant Boolean := Is_Function_Declaration (Spec);
       Is_Foreign : constant Boolean := Get_Foreign_Flag (Spec);
       Inter : Iir;
       Param_Info : Ortho_Info_Acc;
@@ -412,7 +413,8 @@ package body Trans.Chap2 is
       --  True if the subprogram is suspendable (can be true only for
       --  procedures).
       Has_Suspend : constant Boolean :=
-        Get_Kind (Spec) = Iir_Kind_Procedure_Declaration
+        Kind_In (Spec, Iir_Kind_Procedure_Declaration,
+                       Iir_Kind_Procedure_Instantiation_Declaration)
         and then Get_Suspend_Flag (Spec);
 
       --  True if the subprogram is translated to a function in ortho.
@@ -442,6 +444,14 @@ package body Trans.Chap2 is
    begin
       --  Do not translate body for foreign subprograms.
       if Get_Foreign_Flag (Spec) then
+         return;
+      end if;
+
+      --  A macro-expanded generic subprogram.
+      --  Only the expanded subprograms will be translated.
+      if Get_Kind (Spec) in Iir_Kinds_Subprogram_Declaration
+        and then Get_Macro_Expand_Flag (Spec)
+      then
          return;
       end if;
 

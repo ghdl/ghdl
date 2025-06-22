@@ -3485,6 +3485,95 @@ package body Vhdl.Canon is
       end if;
    end Canon_Package_Instantiation_Declaration;
 
+   procedure Canon_Subprogram_Instantiation_Declaration (Decl : Iir)
+   is
+      Spec : constant Iir :=
+        Get_Named_Entity (Get_Uninstantiated_Subprogram_Name (Decl));
+      Bod : Iir;
+   begin
+      --  Canon map aspect.
+      Set_Generic_Map_Aspect_Chain
+        (Decl,
+         Canon_Association_Chain_And_Actuals
+           (Get_Generic_Chain (Decl),
+            Get_Generic_Map_Aspect_Chain (Decl), Decl));
+
+      --  Generate the body now.
+      --  Note: according to the LRM, if the instantiation occurs within a
+      --  package, the body of the instance should be appended to the package
+      --  body.
+      --  FIXME: generate only if generating code for this unit.
+      if Get_Macro_Expand_Flag (Spec)
+        and then Instantiation_Needs_Immediate_Body_P (Decl)
+      then
+         Set_Immediate_Body_Flag (Decl, True);
+         Bod := Sem_Inst.Instantiate_Subprogram_Body (Decl);
+         Set_Parent (Bod, Get_Parent (Decl));
+         Set_Instance_Subprogram_Body (Decl, Bod);
+--         Set_Owned_Instance_Subprogram_Body (Decl, Bod);
+      end if;
+   end Canon_Subprogram_Instantiation_Declaration;
+
+   --  Add bodies or package or subprograms instantiation in package body BOD.
+   procedure Canon_Instantiation_Package_Body (Bod : Iir; Last_Decl : Iir)
+   is
+      Pkg : constant Iir := Get_Package (Bod);
+      Pkg_Decl : Iir;
+      Prev_Decl : Iir;
+      Spec : Iir;
+      Inst_Bod : Iir;
+   begin
+      Prev_Decl := Last_Decl;
+
+      --  For each declaration of the package
+      Pkg_Decl := Get_Declaration_Chain (Pkg);
+      while Pkg_Decl /= Null_Iir loop
+         Inst_Bod := Null_Iir;
+         case Get_Kind (Pkg_Decl) is
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               --  This is a package instantiation...
+               Spec := Get_Uninstantiated_Package_Decl (Pkg_Decl);
+               if Get_Need_Body (Spec)
+                 and then Get_Macro_Expand_Flag (Spec)
+                 and then not Get_Immediate_Body_Flag (Pkg_Decl)
+               then
+                  --  ... that needs a body.  Create the body.
+                  Inst_Bod := Sem_Inst.Instantiate_Package_Body (Pkg_Decl);
+                  Set_Parent (Inst_Bod, Bod);
+                  pragma Assert
+                    (Get_Instance_Package_Body (Pkg_Decl) = Null_Iir);
+                  Set_Instance_Package_Body (Pkg_Decl, Inst_Bod);
+               end if;
+
+            when Iir_Kinds_Subprogram_Instantiation_Declaration =>
+               Spec := Get_Named_Entity
+                 (Get_Uninstantiated_Subprogram_Name (Pkg_Decl));
+               pragma Assert (Get_Macro_Expand_Flag (Spec));
+
+               Inst_Bod := Sem_Inst.Instantiate_Subprogram_Body (Pkg_Decl);
+               Set_Parent (Inst_Bod, Bod);
+               pragma Assert
+                 (Get_Instance_Subprogram_Body (Pkg_Decl) = Null_Iir);
+               Set_Instance_Subprogram_Body (Pkg_Decl, Inst_Bod);
+
+            when others =>
+               null;
+         end case;
+
+         if Inst_Bod /= Null_Iir then
+            --  Append.
+            if Prev_Decl = Null_Iir then
+               Set_Declaration_Chain (Bod, Inst_Bod);
+            else
+               Set_Chain (Prev_Decl, Inst_Bod);
+            end if;
+            Prev_Decl := Inst_Bod;
+         end if;
+
+         Pkg_Decl := Get_Chain (Pkg_Decl);
+      end loop;
+   end Canon_Instantiation_Package_Body;
+
    procedure Canon_Package_Body (Bod : Iir)
    is
       Decl : Iir;
@@ -3498,46 +3587,9 @@ package body Vhdl.Canon is
          Decl := Get_Chain (Prev_Decl);
       end loop;
 
-      --  Add bodies of package instantiations.
+      --  Add bodies of package and subprogram instantiations.
       if Vhdl_Std >= Vhdl_08 then
-         declare
-            Pkg : constant Iir := Get_Package (Bod);
-            Pkg_Decl : Iir;
-            Pkg_Spec : Iir;
-            Inst_Bod : Iir;
-         begin
-            --  For each declaration of the package
-            Pkg_Decl := Get_Declaration_Chain (Pkg);
-            while Pkg_Decl /= Null_Iir loop
-               if (Get_Kind (Pkg_Decl)
-                     = Iir_Kind_Package_Instantiation_Declaration)
-               then
-                  --  This is a package instantiation...
-                  Pkg_Spec := Get_Uninstantiated_Package_Decl (Pkg_Decl);
-                  if Get_Need_Body (Pkg_Spec)
-                    and then Get_Macro_Expand_Flag (Pkg_Spec)
-                    and then not Get_Immediate_Body_Flag (Pkg_Decl)
-                  then
-                     --  ... that needs a body.  Create the body.
-                     Inst_Bod := Sem_Inst.Instantiate_Package_Body (Pkg_Decl);
-                     Set_Parent (Inst_Bod, Bod);
-                     pragma Assert
-                       (Get_Instance_Package_Body (Pkg_Decl) = Null_Iir);
-                     Set_Instance_Package_Body (Pkg_Decl, Inst_Bod);
-
-                     --  Append.
-                     if Prev_Decl = Null_Iir then
-                        Set_Declaration_Chain (Bod, Inst_Bod);
-                     else
-                        Set_Chain (Prev_Decl, Inst_Bod);
-                     end if;
-                     Prev_Decl := Inst_Bod;
-                  end if;
-               end if;
-
-               Pkg_Decl := Get_Chain (Pkg_Decl);
-            end loop;
-         end;
+         Canon_Instantiation_Package_Body (Bod, Prev_Decl);
       end if;
    end Canon_Package_Body;
 
@@ -3566,13 +3618,8 @@ package body Vhdl.Canon is
             | Iir_Kind_Function_Declaration =>
             null;
          when Iir_Kind_Function_Instantiation_Declaration
-            | Iir_Kind_Procedure_Instantiation_Declaration =>
-            --  Canon map aspect.
-            Set_Generic_Map_Aspect_Chain
-              (Decl,
-               Canon_Association_Chain_And_Actuals
-                 (Get_Generic_Chain (Decl),
-                  Get_Generic_Map_Aspect_Chain (Decl), Decl));
+           | Iir_Kind_Procedure_Instantiation_Declaration =>
+            Canon_Subprogram_Instantiation_Declaration (Decl);
 
          when Iir_Kind_Type_Declaration =>
             declare

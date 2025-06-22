@@ -978,6 +978,20 @@ package body Simul.Vhdl_Compile is
       end loop;
    end Build_Object_Alias;
 
+   procedure Build_Interfaces_Instance (Mem : Memory_Ptr;
+                                        Inst : Synth_Instance_Acc;
+                                        Decl : Node)
+   is
+      Inter : Node;
+   begin
+      Inter := Get_Interface_Declaration_Chain (Decl);
+      while Inter /= Null_Node loop
+         Build_Subtype_Indication
+           (Mem, Inst, Get_Subtype_Indication (Inter));
+         Inter := Get_Chain (Inter);
+      end loop;
+   end Build_Interfaces_Instance;
+
    procedure Build_Decl_Instance (Mem : Memory_Ptr;
                                   Inst : Synth_Instance_Acc;
                                   Decl : Node) is
@@ -1225,16 +1239,11 @@ package body Simul.Vhdl_Compile is
             if not Get_Use_Flag (Decl) then
                return;
             end if;
-            declare
-               Inter : Node;
-            begin
-               Inter := Get_Interface_Declaration_Chain (Decl);
-               while Inter /= Null_Node loop
-                  Build_Subtype_Indication
-                    (Mem, Inst, Get_Subtype_Indication (Inter));
-                  Inter := Get_Chain (Inter);
-               end loop;
-            end;
+            Build_Interfaces_Instance (Mem, Inst, Decl);
+         when Iir_Kinds_Subprogram_Instantiation_Declaration =>
+            if Get_Use_Flag (Decl) then
+               Build_Interfaces_Instance (Mem, Inst, Decl);
+            end if;
          when Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body =>
             null;

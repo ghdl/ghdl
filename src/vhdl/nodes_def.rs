@@ -4434,6 +4434,12 @@ extern "C" {
     #[link_name = "vhdl__nodes__set_owned_instance_package_body"]
     fn set_owned_instance_package_body(n: Node, v: Node);
 
+    #[link_name = "vhdl__nodes__get_instance_subprogram_body"]
+    fn get_instance_subprogram_body(n: Node) -> Node;
+
+    #[link_name = "vhdl__nodes__set_instance_subprogram_body"]
+    fn set_instance_subprogram_body(n: Node, v: Node);
+
     #[link_name = "vhdl__nodes__get_need_body"]
     fn get_need_body(n: Node) -> bool;
 
@@ -6986,6 +6992,14 @@ impl Node {
 
     pub fn set_owned_instance_package_body(self: Self, v : Node) {
         unsafe { set_owned_instance_package_body(self, v); }
+    }
+
+    pub fn instance_subprogram_body(self: Self) -> Node {
+        unsafe { get_instance_subprogram_body(self) }
+    }
+
+    pub fn set_instance_subprogram_body(self: Self, v : Node) {
+        unsafe { set_instance_subprogram_body(self, v); }
     }
 
     pub fn need_body(self: Self) -> bool {

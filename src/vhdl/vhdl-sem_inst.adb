@@ -1434,6 +1434,26 @@ package body Vhdl.Sem_Inst is
       end loop;
    end Instantiate_Interface_References;
 
+   --  In the body of INST_PARENT, use parameters of the instance instead of
+   --  parameters of the generic subprogram ORIG_PARENT.
+   procedure Instantiate_Parameter_References (Orig_Parent : Iir;
+                                               Inst_Parent : Iir)
+   is
+      Orig_El : Iir;
+      Inst_El : Iir;
+   begin
+      --  In the arch/body, references to parameter object are redirected to
+      --  the instantiated parameter objects (of the subprogram)
+      Orig_El := Get_Interface_Declaration_Chain (Orig_Parent);
+      Inst_El := Get_Interface_Declaration_Chain (Inst_Parent);
+      while Is_Valid (Orig_El) loop
+         Set_Instance (Orig_El, Inst_El);
+
+         Orig_El := Get_Chain (Orig_El);
+         Inst_El := Get_Chain (Inst_El);
+      end loop;
+   end Instantiate_Parameter_References;
+
    function Instantiate_Package_Body (Inst : Iir) return Iir
    is
       Pkg : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
@@ -1482,6 +1502,60 @@ package body Vhdl.Sem_Inst is
 
       return Res;
    end Instantiate_Package_Body;
+
+   function Instantiate_Subprogram_Body (Inst : Iir) return Iir
+   is
+      Spec : constant Iir :=
+        Get_Named_Entity (Get_Uninstantiated_Subprogram_Name (Inst));
+      Prev_Instance_File : constant Source_File_Entry := Instance_File;
+      Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
+      Bod : constant Iir := Get_Subprogram_Body (Spec);
+      Res : Iir;
+   begin
+      Create_Relocation (Inst, Spec);
+
+      --  Be sure Get_Origin_Priv can be called on existing nodes.
+      Expand_Origin_Table;
+
+      --  References to subprogram specification (and its declarations) will
+      --  be redirected to the subprogram instantiation.
+      Set_Instance (Spec, Inst);
+
+      --  Redirect references of generics.
+      Instantiate_Interface_References (Spec, Inst, Inst);
+      --  Redirect references of parameters.
+      Instantiate_Parameter_References (Spec, Inst);
+
+      --  Instantiate the body.
+
+      if Get_Kind (Spec) = Iir_Kind_Function_Declaration then
+         Res := Create_Iir (Iir_Kind_Function_Body);
+      else
+         Res := Create_Iir (Iir_Kind_Procedure_Body);
+         Set_Suspend_Flag (Res, Get_Suspend_Flag (Bod));
+      end if;
+      Location_Copy (Res, Inst);
+
+      Set_Instance (Bod, Res);
+
+      Set_Declaration_Chain
+        (Res, Instantiate_Iir_Chain (Get_Declaration_Chain (Bod)));
+      Set_Sequential_Statement_Chain
+        (Res, Instantiate_Iir_Chain (Get_Sequential_Statement_Chain (Bod)));
+      Set_Attribute_Value_Chain
+        (Res, Instantiate_Iir_Chain (Get_Attribute_Value_Chain (Bod)));
+      Set_Subprogram_Specification (Res, Inst);
+
+      --  Restore.
+      Instance_File := Prev_Instance_File;
+      Restore_Origin (Mark);
+
+      if Has_Unbounded_Type_Interface (Inst) then
+         Reanalyze_Instantiated_Declarations (Get_Declaration_Chain (Res));
+      end if;
+
+      return Res;
+   end Instantiate_Subprogram_Body;
 
    function Instantiate_Component_Entity_Common (Comp : Iir; Map_Parent : Iir)
                                                 return Iir
@@ -1702,9 +1776,15 @@ package body Vhdl.Sem_Inst is
 
    function Get_Subprogram_Body_Origin (Spec : Iir) return Iir
    is
-      Res : constant Iir := Get_Subprogram_Body (Spec);
+      Res : Iir;
       Orig : Iir;
    begin
+      if Get_Kind (Spec) in Iir_Kinds_Subprogram_Instantiation_Declaration then
+         return Get_Instance_Subprogram_Body (Spec);
+      else
+         Res := Get_Subprogram_Body (Spec);
+      end if;
+
       if Res /= Null_Iir then
          return Res;
       else

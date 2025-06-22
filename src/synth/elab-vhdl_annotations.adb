@@ -690,6 +690,7 @@ package body Elab.Vhdl_Annotations is
                   not in Iir_Predefined_Operators)
               and then not Is_Second_Subprogram_Specification (Decl)
               and then Get_Use_Flag (Decl)
+              and then Get_Generic_Chain (Decl) = Null_Iir
             then
                Annotate_Subprogram_Interfaces_Type (Block_Info, Decl);
                Annotate_Subprogram_Specification (Block_Info, Decl);
@@ -697,6 +698,13 @@ package body Elab.Vhdl_Annotations is
          when Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body =>
             Annotate_Subprogram_Body (Block_Info, Decl);
+         when Iir_Kinds_Subprogram_Instantiation_Declaration =>
+            if Get_Use_Flag (Decl) then
+               Annotate_Interface_List
+                 (Block_Info, Get_Generic_Chain (Decl), True);
+               Annotate_Subprogram_Interfaces_Type (Block_Info, Decl);
+               Annotate_Subprogram_Specification (Block_Info, Decl);
+            end if;
 
          when Iir_Kind_Object_Alias_Declaration =>
             declare

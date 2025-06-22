@@ -3094,6 +3094,19 @@ def Set_Owned_Instance_Package_Body(obj: Iir, value: Iir) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_instance_subprogram_body")
+def Get_Instance_Subprogram_Body(obj: Iir) -> Iir:
+    """"""
+    return 0  # pragma: no cover
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_instance_subprogram_body")
+def Set_Instance_Subprogram_Body(obj: Iir, value: Iir) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_need_body")
 def Get_Need_Body(obj: Iir) -> Boolean:
     """"""

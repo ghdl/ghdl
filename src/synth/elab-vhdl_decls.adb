@@ -31,11 +31,23 @@ with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
 with Synth.Vhdl_Decls;
 
 package body Elab.Vhdl_Decls is
-   procedure Elab_Subprogram_Declaration
+
+   procedure Elab_Interface_Declaration
      (Syn_Inst : Synth_Instance_Acc; Subprg : Node)
    is
       Inter : Node;
-      Typ : Type_Acc;
+   begin
+      Inter := Get_Interface_Declaration_Chain (Subprg);
+      while Inter /= Null_Node loop
+         if not Get_Is_Ref (Inter) then
+            Elab_Declaration_Type (Syn_Inst, Inter);
+         end if;
+         Inter := Get_Chain (Inter);
+      end loop;
+   end Elab_Interface_Declaration;
+
+   procedure Elab_Subprogram_Declaration
+     (Syn_Inst : Synth_Instance_Acc; Subprg : Node) is
    begin
       if Get_Implicit_Definition (Subprg) < Iir_Predefined_None then
          --  Implicit operators directly use the type, not a subtype.
@@ -51,14 +63,7 @@ package body Elab.Vhdl_Decls is
          return;
       end if;
 
-      Inter := Get_Interface_Declaration_Chain (Subprg);
-      while Inter /= Null_Node loop
-         if not Get_Is_Ref (Inter) then
-            Elab_Declaration_Type (Syn_Inst, Inter);
-         end if;
-         Inter := Get_Chain (Inter);
-      end loop;
-      pragma Unreferenced (Typ);
+      Elab_Interface_Declaration (Syn_Inst, Subprg);
    end Elab_Subprogram_Declaration;
 
    procedure Create_Signal (Syn_Inst : Synth_Instance_Acc;
@@ -375,6 +380,14 @@ package body Elab.Vhdl_Decls is
          when Iir_Kind_Procedure_Declaration
             | Iir_Kind_Function_Declaration =>
             Elab_Subprogram_Declaration (Syn_Inst, Decl);
+         when Iir_Kinds_Subprogram_Instantiation_Declaration =>
+            if Get_Use_Flag (Decl) then
+               Vhdl_Insts.Elab_Generics_Association
+                 (Syn_Inst, Syn_Inst,
+                  Get_Generic_Chain (Decl),
+                  Get_Generic_Map_Aspect_Chain (Decl));
+               Elab_Interface_Declaration (Syn_Inst, Decl);
+            end if;
          when Iir_Kind_Procedure_Body
             | Iir_Kind_Function_Body =>
             null;

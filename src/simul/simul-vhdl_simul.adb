@@ -906,7 +906,10 @@ package body Simul.Vhdl_Simul is
    begin
       Areapools.Mark (Area_Mark, Instance_Pool.all);
 
-      if Get_Implicit_Definition (Imp) /= Iir_Predefined_None then
+      if Get_Kind (Imp) in Iir_Kinds_Subprogram_Declaration
+        and then Get_Implicit_Definition (Imp) /= Iir_Predefined_None
+      then
+         --  Call to a predefined subprogram.
          declare
             Inter_Chain : constant Node :=
               Get_Interface_Declaration_Chain (Imp);

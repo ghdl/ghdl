@@ -2940,8 +2940,7 @@ package body Trans.Chap8 is
       Imp : constant Iir := Get_Implementation (Call);
       Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
 
-      Is_Procedure : constant Boolean :=
-        Get_Kind (Imp) = Iir_Kind_Procedure_Declaration;
+      Is_Procedure : constant Boolean := Is_Procedure_Declaration (Imp);
       Is_Function : constant Boolean := not Is_Procedure;
       Is_Foreign : constant Boolean := Get_Foreign_Flag (Imp);
       Info : constant Subprg_Info_Acc := Get_Info (Imp);

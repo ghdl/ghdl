@@ -1093,6 +1093,8 @@ package body Vhdl.Sem_Scopes is
             if not Is_Second_Subprogram_Specification (Decl) then
                Handle_Decl (Decl, Arg);
             end if;
+         when Iir_Kinds_Subprogram_Instantiation_Declaration =>
+            Handle_Decl (Decl, Arg);
          when Iir_Kind_Type_Declaration =>
             declare
                Def : constant Iir := Get_Type_Definition (Decl);

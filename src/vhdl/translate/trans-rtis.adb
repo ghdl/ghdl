@@ -2222,6 +2222,8 @@ package body Trans.Rtis is
             when Iir_Kind_Function_Body
                | Iir_Kind_Procedure_Body =>
                null;
+            when Iir_Kinds_Subprogram_Instantiation_Declaration =>
+               null;
             when Iir_Kind_Anonymous_Type_Declaration =>
                --  Handled in subtype declaration.
                null;
@@ -2406,6 +2408,8 @@ package body Trans.Rtis is
             when Iir_Kind_Function_Body
                | Iir_Kind_Procedure_Body =>
                --  Already handled by Translate_Subprogram_Body.
+               null;
+            when Iir_Kinds_Subprogram_Instantiation_Declaration =>
                null;
             when Iir_Kind_Configuration_Specification
                | Iir_Kind_Attribute_Specification

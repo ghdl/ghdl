@@ -2608,6 +2608,7 @@ package body Trans.Chap4 is
                if not Is_Implicit_Subprogram (El)
                  and then (not Flag_Discard_Unused or else Get_Use_Flag (El))
                  and then not Is_Second_Subprogram_Specification (El)
+                 and then Get_Generic_Chain (El) = Null_Iir
                then
                   Info := Add_Info (El, Kind_Subprg);
                   Chap2.Translate_Subprogram_Interfaces (El);
@@ -2616,6 +2617,11 @@ package body Trans.Chap4 is
                         Info.Subprg_Resolv := new Subprg_Resolv_Info;
                      end if;
                   end if;
+               end if;
+            when Iir_Kinds_Subprogram_Instantiation_Declaration =>
+               if not Flag_Discard_Unused or else Get_Use_Flag (El) then
+                  Info := Add_Info (El, Kind_Subprg);
+                  Chap2.Translate_Subprogram_Interfaces (El);
                end if;
             when Iir_Kind_Function_Body
                | Iir_Kind_Procedure_Body =>
@@ -2851,14 +2857,25 @@ package body Trans.Chap4 is
                if Do_Bodies then
                   --  Do not translate body if generating only specs (for
                   --  subprograms in an entity).
-                  if not Flag_Discard_Unused
-                    or else
-                    Get_Use_Flag (Get_Subprogram_Specification (El))
-                  then
-                     Chap2.Translate_Subprogram_Body (El);
-                     Translate_Resolution_Function_Body
-                       (Get_Subprogram_Specification (El));
-                  end if;
+                  declare
+                     Spec : constant Iir := Get_Subprogram_Specification (El);
+                  begin
+                     if (not Flag_Discard_Unused or else Get_Use_Flag (Spec))
+                       and then
+                       (Get_Kind (Spec)
+                         in Iir_Kinds_Subprogram_Instantiation_Declaration
+                        or else Get_Generic_Chain (Spec) = Null_Iir)
+                     then
+                        Chap2.Translate_Subprogram_Body (El);
+                        Translate_Resolution_Function_Body (Spec);
+                     end if;
+                  end;
+               end if;
+            when Iir_Kinds_Subprogram_Instantiation_Declaration =>
+               --  Translate only if used.
+               if Do_Specs and then Get_Info (El) /= null then
+                  Chap2.Translate_Subprogram_Declaration (El);
+                  --  Translate_Resolution_Function (El);
                end if;
             when Iir_Kind_Type_Declaration
                | Iir_Kind_Anonymous_Type_Declaration =>
@@ -2967,6 +2984,10 @@ package body Trans.Chap4 is
             when Iir_Kind_Function_Body
                | Iir_Kind_Procedure_Body =>
                null;
+            when Iir_Kinds_Subprogram_Instantiation_Declaration =>
+               if not Flag_Discard_Unused or else Get_Use_Flag (Decl) then
+                  Chap2.Elab_Subprogram_Interfaces (Decl);
+               end if;
 
             when Iir_Kind_Attribute_Implicit_Declaration =>
                declare

@@ -2689,6 +2689,22 @@ package body Vhdl.Nodes is
       Set_Field11 (Pkg, Decl);
    end Set_Owned_Instance_Package_Body;
 
+   function Get_Instance_Subprogram_Body (Pkg : Iir) return Iir is
+   begin
+      pragma Assert (Pkg /= Null_Iir);
+      pragma Assert (Has_Instance_Subprogram_Body (Get_Kind (Pkg)),
+                     "no field Instance_Subprogram_Body");
+      return Get_Field11 (Pkg);
+   end Get_Instance_Subprogram_Body;
+
+   procedure Set_Instance_Subprogram_Body (Pkg : Iir; Decl : Iir) is
+   begin
+      pragma Assert (Pkg /= Null_Iir);
+      pragma Assert (Has_Instance_Subprogram_Body (Get_Kind (Pkg)),
+                     "no field Instance_Subprogram_Body");
+      Set_Field11 (Pkg, Decl);
+   end Set_Instance_Subprogram_Body;
+
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);
@@ -4995,7 +5011,7 @@ package body Vhdl.Nodes is
       pragma Assert (Proc /= Null_Iir);
       pragma Assert (Has_Passive_Flag (Get_Kind (Proc)),
                      "no field Passive_Flag");
-      return Get_Flag2 (Proc);
+      return Get_Flag14 (Proc);
    end Get_Passive_Flag;
 
    procedure Set_Passive_Flag (Proc : Iir; Flag : Boolean) is
@@ -5003,7 +5019,7 @@ package body Vhdl.Nodes is
       pragma Assert (Proc /= Null_Iir);
       pragma Assert (Has_Passive_Flag (Get_Kind (Proc)),
                      "no field Passive_Flag");
-      Set_Flag2 (Proc, Flag);
+      Set_Flag14 (Proc, Flag);
    end Set_Passive_Flag;
 
    function Get_Resolution_Function_Flag (Func : Iir) return Boolean is
@@ -5076,7 +5092,7 @@ package body Vhdl.Nodes is
       pragma Assert (Func /= Null_Iir);
       pragma Assert (Has_Pure_Flag (Get_Kind (Func)),
                      "no field Pure_Flag");
-      return Get_Flag2 (Func);
+      return Get_Flag14 (Func);
    end Get_Pure_Flag;
 
    procedure Set_Pure_Flag (Func : Iir; Flag : Boolean) is
@@ -5084,7 +5100,7 @@ package body Vhdl.Nodes is
       pragma Assert (Func /= Null_Iir);
       pragma Assert (Has_Pure_Flag (Get_Kind (Func)),
                      "no field Pure_Flag");
-      Set_Flag2 (Func, Flag);
+      Set_Flag14 (Func, Flag);
    end Set_Pure_Flag;
 
    function Get_Foreign_Flag (Decl : Iir) return Boolean is
@@ -7394,7 +7410,7 @@ package body Vhdl.Nodes is
       pragma Assert (Stmt /= Null_Iir);
       pragma Assert (Has_Stop_Flag (Get_Kind (Stmt)),
                      "no field Stop_Flag");
-      return Get_Flag13 (Stmt);
+      return Get_Flag2 (Stmt);
    end Get_Stop_Flag;
 
    procedure Set_Stop_Flag (Stmt : Iir; Flag : Boolean) is
@@ -7402,7 +7418,7 @@ package body Vhdl.Nodes is
       pragma Assert (Stmt /= Null_Iir);
       pragma Assert (Has_Stop_Flag (Get_Kind (Stmt)),
                      "no field Stop_Flag");
-      Set_Flag13 (Stmt, Flag);
+      Set_Flag2 (Stmt, Flag);
    end Set_Stop_Flag;
 
    function Get_Is_Ref (N : Iir) return Boolean is

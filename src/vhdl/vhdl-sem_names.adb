@@ -1840,12 +1840,14 @@ package body Vhdl.Sem_Names is
             Set_Base_Name (Name_Res, Res);
             return Name_Res;
          when Iir_Kind_Function_Declaration
-           | Iir_Kind_Interface_Function_Declaration =>
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Function_Instantiation_Declaration =>
             Name_Res := Finish_Sem_Denoting_Name (Name, Res);
             Set_Type (Name_Res, Get_Return_Type (Res));
             return Name_Res;
          when Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Interface_Procedure_Declaration =>
+           | Iir_Kind_Interface_Procedure_Declaration
+           | Iir_Kind_Procedure_Instantiation_Declaration =>
             return Finish_Sem_Denoting_Name (Name, Res);
          when Iir_Kind_Type_Conversion =>
             pragma Assert (Get_Kind (Name) = Iir_Kind_Parenthesis_Name);
