@@ -1645,11 +1645,11 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Subprogram_Hash (Field4)
    --
-   --   Get/Set_Interface_Declaration_Chain (Field5)
-   --
    --   Get/Set_Generic_Chain (Field6)
    --
    --  --Get/Set_Generic_Map_Aspect_Chain (Field8)
+   --
+   --   Get/Set_Interface_Declaration_Chain (Field5)
    --
    --   Get/Set_Implicit_Definition (Field7)
    --
@@ -1714,6 +1714,7 @@ package Vhdl.Nodes is
 
    -- Iir_Kind_Function_Body (Medium)
    -- Iir_Kind_Procedure_Body (Medium)
+   -- Iir_Kind_Subprogram_Instantiation_Body (Medium)
    --
    --  LRM08 4.3 Subprogram bodies
    --
@@ -1750,6 +1751,7 @@ package Vhdl.Nodes is
    --   Get/Set_End_Has_Identifier (Flag9)
    --
    -- Only for Iir_Kind_Procedure_Body:
+   -- Only for Iir_Kind_Subprogram_Instantiation_Body:
    --   Get/Set_Suspend_Flag (Flag11)
 
    -- Iir_Kind_Function_Instantiation_Declaration (Medium)
@@ -1757,21 +1759,21 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Parent (Field0)
    --
-   -- Only for Iir_Kind_Function_Instantiation_Declaration:
-   --   Get/Set_Return_Type (Field1)
-   --
-   -- Only for Iir_Kind_Function_Instantiation_Declaration:
-   --   Get/Set_Type (Alias Field1)
-   --
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Subprogram_Hash (Field4)
    --
+   --   Get/Set_Generic_Chain (Field6)
+   --
    --   Get/Set_Interface_Declaration_Chain (Field5)
    --
-   --   Get/Set_Generic_Chain (Field6)
+   -- Only for Iir_Kind_Function_Instantiation_Declaration:
+   --   Get/Set_Return_Type (Field1)
+   --
+   -- Only for Iir_Kind_Function_Instantiation_Declaration:
+   --   Get/Set_Type (Alias Field1)
    --
    --  A signature or a simple name.
    --   Get/Set_Uninstantiated_Subprogram_Name (Field7)
@@ -5288,6 +5290,7 @@ package Vhdl.Nodes is
       Iir_Kind_Procedure_Declaration,           --  Subprg, Proc
       Iir_Kind_Function_Body,
       Iir_Kind_Procedure_Body,
+      Iir_Kind_Subprogram_Instantiation_Body,
       Iir_Kind_Function_Instantiation_Declaration,
       Iir_Kind_Procedure_Instantiation_Declaration,
 

@@ -389,7 +389,8 @@ package body Elab.Vhdl_Decls is
                Elab_Interface_Declaration (Syn_Inst, Decl);
             end if;
          when Iir_Kind_Procedure_Body
-            | Iir_Kind_Function_Body =>
+            | Iir_Kind_Function_Body
+            | Iir_Kind_Subprogram_Instantiation_Body =>
             null;
          when Iir_Kind_Non_Object_Alias_Declaration =>
             null;

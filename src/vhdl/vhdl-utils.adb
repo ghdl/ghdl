@@ -353,6 +353,7 @@ package body Vhdl.Utils is
                | Iir_Kinds_Specification
                | Iir_Kind_Non_Object_Alias_Declaration
                | Iir_Kinds_Subprogram_Body
+               | Iir_Kind_Subprogram_Instantiation_Body
                | Iir_Kind_Protected_Type_Body
                | Iir_Kind_Generate_Statement_Body
                | Iir_Kind_Package_Instantiation_Body

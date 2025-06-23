@@ -700,7 +700,7 @@ package body Trans.Chap2 is
 
       if Has_Suspend or Final or Is_Prot then
          --  Create a barrier to catch missing return statement.
-         if Get_Kind (Spec) = Iir_Kind_Procedure_Declaration then
+         if Is_Procedure_Declaration (Spec) then
             if Has_Suspend then
                Chap8.State_Jump (Chap8.State_Return);
             else

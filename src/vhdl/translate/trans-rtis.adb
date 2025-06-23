@@ -2406,7 +2406,8 @@ package body Trans.Rtis is
                --  FIXME: to be added (for foreign).
                null;
             when Iir_Kind_Function_Body
-               | Iir_Kind_Procedure_Body =>
+               | Iir_Kind_Procedure_Body
+               | Iir_Kind_Subprogram_Instantiation_Body =>
                --  Already handled by Translate_Subprogram_Body.
                null;
             when Iir_Kinds_Subprogram_Instantiation_Declaration =>

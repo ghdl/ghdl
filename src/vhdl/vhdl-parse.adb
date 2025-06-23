@@ -9082,6 +9082,8 @@ package body Vhdl.Parse is
       --  Skip ';'.
       Expect_Scan (Tok_Semi_Colon);
 
+      Free_Iir (Subprg);
+
       return Res;
    end Parse_Subprogram_Instantiation;
 

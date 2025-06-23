@@ -1528,10 +1528,8 @@ package body Vhdl.Sem_Inst is
 
       --  Instantiate the body.
 
-      if Get_Kind (Spec) = Iir_Kind_Function_Declaration then
-         Res := Create_Iir (Iir_Kind_Function_Body);
-      else
-         Res := Create_Iir (Iir_Kind_Procedure_Body);
+      Res := Create_Iir (Iir_Kind_Subprogram_Instantiation_Body);
+      if Get_Kind (Spec) = Iir_Kind_Procedure_Declaration then
          Set_Suspend_Flag (Res, Get_Suspend_Flag (Bod));
       end if;
       Location_Copy (Res, Inst);

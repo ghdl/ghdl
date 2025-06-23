@@ -132,6 +132,7 @@ pub enum Kind {
     Procedure_Declaration,
     Function_Body,
     Procedure_Body,
+    Subprogram_Instantiation_Body,
     Function_Instantiation_Declaration,
     Procedure_Instantiation_Declaration,
     Terminal_Declaration,
@@ -345,7 +346,7 @@ pub enum Kind {
 }
 
 impl Kind {
-    pub const VALUES: [Self; 335] = [
+    pub const VALUES: [Self; 336] = [
         Self::Unused,
         Self::Error,
         Self::Design_File,
@@ -471,6 +472,7 @@ impl Kind {
         Self::Procedure_Declaration,
         Self::Function_Body,
         Self::Procedure_Body,
+        Self::Subprogram_Instantiation_Body,
         Self::Function_Instantiation_Declaration,
         Self::Procedure_Instantiation_Declaration,
         Self::Terminal_Declaration,
@@ -683,7 +685,7 @@ impl Kind {
         Self::Attribute_Name,
     ];
 
-    pub const IMAGES: [&'static str; 335] = [
+    pub const IMAGES: [&'static str; 336] = [
         "unused",
         "error",
         "design_file",
@@ -809,6 +811,7 @@ impl Kind {
         "procedure_declaration",
         "function_body",
         "procedure_body",
+        "subprogram_instantiation_body",
         "function_instantiation_declaration",
         "procedure_instantiation_declaration",
         "terminal_declaration",

@@ -2146,7 +2146,8 @@ package body Trans.Chap4 is
             | Iir_Kind_Procedure_Declaration =>
             raise Internal_Error;
          when Iir_Kind_Function_Body
-            | Iir_Kind_Procedure_Body =>
+            | Iir_Kind_Procedure_Body
+            | Iir_Kind_Subprogram_Instantiation_Body =>
             null;
 
          when Iir_Kind_Protected_Type_Body =>
@@ -2624,7 +2625,8 @@ package body Trans.Chap4 is
                   Chap2.Translate_Subprogram_Interfaces (El);
                end if;
             when Iir_Kind_Function_Body
-               | Iir_Kind_Procedure_Body =>
+               | Iir_Kind_Procedure_Body
+               | Iir_Kind_Subprogram_Instantiation_Body =>
                null;
             when others =>
                Translate_Declaration (El);
@@ -2853,7 +2855,8 @@ package body Trans.Chap4 is
                   end if;
                end if;
             when Iir_Kind_Function_Body
-              | Iir_Kind_Procedure_Body =>
+               | Iir_Kind_Procedure_Body
+               | Iir_Kind_Subprogram_Instantiation_Body =>
                if Do_Bodies then
                   --  Do not translate body if generating only specs (for
                   --  subprograms in an entity).
@@ -2982,7 +2985,8 @@ package body Trans.Chap4 is
                   Chap2.Elab_Subprogram_Interfaces (Decl);
                end if;
             when Iir_Kind_Function_Body
-               | Iir_Kind_Procedure_Body =>
+               | Iir_Kind_Procedure_Body
+               | Iir_Kind_Subprogram_Instantiation_Body =>
                null;
             when Iir_Kinds_Subprogram_Instantiation_Declaration =>
                if not Flag_Discard_Unused or else Get_Use_Flag (Decl) then

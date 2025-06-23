@@ -696,7 +696,8 @@ package body Elab.Vhdl_Annotations is
                Annotate_Subprogram_Specification (Block_Info, Decl);
             end if;
          when Iir_Kind_Function_Body
-           | Iir_Kind_Procedure_Body =>
+            | Iir_Kind_Procedure_Body
+            | Iir_Kind_Subprogram_Instantiation_Body =>
             Annotate_Subprogram_Body (Block_Info, Decl);
          when Iir_Kinds_Subprogram_Instantiation_Declaration =>
             if Get_Use_Flag (Decl) then

@@ -1245,7 +1245,8 @@ package body Simul.Vhdl_Compile is
                Build_Interfaces_Instance (Mem, Inst, Decl);
             end if;
          when Iir_Kind_Function_Body
-           | Iir_Kind_Procedure_Body =>
+            | Iir_Kind_Procedure_Body
+            | Iir_Kind_Subprogram_Instantiation_Body =>
             null;
          when Iir_Kind_Protected_Type_Body =>
             null;

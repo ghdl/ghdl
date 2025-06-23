@@ -3506,11 +3506,13 @@ package body Vhdl.Canon is
       if Get_Macro_Expand_Flag (Spec)
         and then Instantiation_Needs_Immediate_Body_P (Decl)
       then
-         Set_Immediate_Body_Flag (Decl, True);
          Bod := Sem_Inst.Instantiate_Subprogram_Body (Decl);
          Set_Parent (Bod, Get_Parent (Decl));
          Set_Instance_Subprogram_Body (Decl, Bod);
---         Set_Owned_Instance_Subprogram_Body (Decl, Bod);
+
+         --  Insert body after DECL.
+         Set_Chain (Bod, Get_Chain (Decl));
+         Set_Chain (Decl, Bod);
       end if;
    end Canon_Subprogram_Instantiation_Declaration;
 
@@ -3601,18 +3603,26 @@ package body Vhdl.Canon is
       case Get_Kind (Decl) is
          when Iir_Kind_Procedure_Body
             | Iir_Kind_Function_Body =>
-            Canon_Declarations (Top, Decl, Null_Iir);
-            if Canon_Flag_Add_Suspend_State
-              and then Get_Kind (Decl) = Iir_Kind_Procedure_Body
-              and then Get_Suspend_Flag (Decl)
+            if Get_Kind (Get_Subprogram_Specification (Decl))
+              not in Iir_Kinds_Subprogram_Instantiation_Declaration
             then
-               Canon_Add_Suspend_State (Decl);
+               -- Do not re-canon subprogram instantiations.
+               Canon_Declarations (Top, Decl, Null_Iir);
+               if Canon_Flag_Add_Suspend_State
+                 and then Get_Kind (Decl) = Iir_Kind_Procedure_Body
+                 and then Get_Suspend_Flag (Decl)
+               then
+                  Canon_Add_Suspend_State (Decl);
+               end if;
+               if Canon_Flag_Sequentials_Stmts then
+                  Stmts := Get_Sequential_Statement_Chain (Decl);
+                  Stmts := Canon_Sequential_Stmts (Stmts);
+                  Set_Sequential_Statement_Chain (Decl, Stmts);
+               end if;
             end if;
-            if Canon_Flag_Sequentials_Stmts then
-               Stmts := Get_Sequential_Statement_Chain (Decl);
-               Stmts := Canon_Sequential_Stmts (Stmts);
-               Set_Sequential_Statement_Chain (Decl, Stmts);
-            end if;
+
+         when Iir_Kind_Subprogram_Instantiation_Body =>
+            null;
 
          when Iir_Kind_Procedure_Declaration
             | Iir_Kind_Function_Declaration =>

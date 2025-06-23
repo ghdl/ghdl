@@ -538,7 +538,8 @@ package body Vhdl.Errors is
          when Iir_Kind_Interface_Function_Declaration =>
             return Disp_Identifier (Node, "interface function");
          when Iir_Kind_Procedure_Body
-           | Iir_Kind_Function_Body =>
+            | Iir_Kind_Function_Body
+            | Iir_Kind_Subprogram_Instantiation_Body =>
             return "subprogram body";
 
          when Iir_Kind_Foreign_Module =>

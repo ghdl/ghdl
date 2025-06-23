@@ -1287,6 +1287,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
+           | Iir_Kind_Subprogram_Instantiation_Body
            | Iir_Kind_Function_Instantiation_Declaration
            | Iir_Kind_Procedure_Instantiation_Declaration
            | Iir_Kind_Spectrum_Quantity_Declaration

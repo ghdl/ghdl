@@ -2685,6 +2685,8 @@ package body Vhdl.Prints is
                Disp_Token (Ctxt, Tok_Is);
                Close_Hbox (Ctxt);
                Disp_Subprogram_Body (Ctxt, Decl);
+            when Iir_Kind_Subprogram_Instantiation_Body =>
+               null;
             when Iir_Kinds_Subprogram_Instantiation_Declaration =>
                Disp_Subprogram_Instantiation_Declaration (Ctxt, Decl);
             when Iir_Kind_Protected_Type_Body =>
