@@ -8,15 +8,21 @@ if grep 'inst_b = inst_b' syn_repro1.v; then
   exit 1
 fi
 
+# Check valid verilog
+synth syn_repro1.v -e > /dev/null
+
 # Synthesize repro2
 analyze repro2_pkg.vhdl
 analyze repro2.vhdl
 synth repro2 > syn_repro2.vhdl
 synth --out=verilog repro2 > syn_repro2.v
+synth syn_repro2.v -e > /dev/null
 
 analyze repro2b.vhdl
 synth repro2b > syn_repro2b.vhdl
 synth --out=verilog repro2b > syn_repro2b.v
+synth syn_repro2b.v -e > /dev/null
+
 clean
 
 # Test vhdl output
