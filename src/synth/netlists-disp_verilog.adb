@@ -143,6 +143,9 @@ package body Netlists.Disp_Verilog is
          return False;
       end if;
       Inst := Get_Net_Parent (O);
+      if Is_Self_Instance (Inst) then
+         return False;
+      end if;
       if Get_Id (Inst) < Id_User_None then
          return False;
       end if;
