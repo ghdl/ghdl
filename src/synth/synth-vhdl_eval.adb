@@ -3095,6 +3095,16 @@ package body Synth.Vhdl_Eval is
                  (Pow (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
             end;
 
+         when Iir_Predefined_Ieee_Math_Real_Pow_Int_Real =>
+            declare
+               function Pow (L, R : Fp64) return Fp64;
+               pragma Import (C, Pow);
+            begin
+               return Create_Memory_Fp64
+                 (Pow (Fp64 (Read_Discrete (Param1)),
+                             Read_Fp64 (Param2)), Res_Typ);
+            end;
+
          when Iir_Predefined_Ieee_Math_Real_Realmax =>
             return Create_Memory_Fp64
               (Fp64'Max (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
