@@ -78,11 +78,11 @@ document ploc
 Print the location for iir $.
 end
 
-define ppsltf
+define psl_ptf
   call psl.dump_tree.disp_tree($arg0, 0, 2)
 end
 
-document ppsltf
+document psl_ptf
 Print the PSL node that is $arg0
 end
 
