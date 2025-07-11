@@ -379,11 +379,24 @@ package body Vhdl.Sem_Psl is
    end Sem_Hdl_Expr;
 
    --  Sem a boolean node.
-   function Sem_Boolean (Bool : PSL_Node) return PSL_Node is
+   function Sem_Boolean (Bool : PSL_Node) return PSL_Node
+   is
+      Res : PSL_Node;
    begin
       case Get_Kind (Bool) is
          when N_HDL_Expr =>
-            return Sem_Hdl_Expr (Bool);
+            Res := Sem_Hdl_Expr (Bool);
+            case Get_Kind (Res) is
+               when N_Sequence_Instance
+                 | N_Property_Instance
+                 | N_Sequence_Parameter
+                 | N_Property_Parameter
+                 | N_Endpoint_Instance =>
+                  Error_Msg_Sem (+Res, "boolean expression expected");
+               when others =>
+                  null;
+            end case;
+            return Res;
          when N_And_Bool
            | N_Or_Bool =>
             Set_Left (Bool, Sem_Boolean (Get_Left (Bool)));
