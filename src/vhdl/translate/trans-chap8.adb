@@ -4357,8 +4357,8 @@ package body Trans.Chap8 is
       Prepare_Data_Record => Gen_Signal_Prepare_Data_Record,
       Update_Data_Record => Gen_Signal_Update_Data_Record);
 
-   procedure Translate_Signal_Target_Aggr
-     (Aggr : Mnode; Target : Iir; Target_Type : Iir);
+   function Translate_Signal_Target_Aggr
+     (Aggr : Mnode; Target : Iir; Target_Type : Iir) return Mnode;
 
    procedure Translate_Signal_Target_Array_Aggr
      (Aggr        : Mnode;
@@ -4371,6 +4371,7 @@ package body Trans.Chap8 is
         Get_Index_Subtype_List (Target_Type);
       Nbr_Dim    : constant Natural := Get_Nbr_Elements (Index_List);
       Sub_Aggr   : Mnode;
+      E : Mnode;
       Sub_Type   : Iir;
       El         : Iir;
       Expr       : Iir;
@@ -4396,7 +4397,7 @@ package body Trans.Chap8 is
                Error_Kind ("translate_signal_target_array_aggr", El);
          end case;
          if Dim = Nbr_Dim then
-            Translate_Signal_Target_Aggr (Sub_Aggr, Expr, Sub_Type);
+            E := Translate_Signal_Target_Aggr (Sub_Aggr, Expr, Sub_Type);
             if Get_Kind (El) = Iir_Kind_Choice_By_None then
                if Get_Element_Type_Flag (El) then
                   Inc_Var (Idx);
@@ -4406,7 +4407,7 @@ package body Trans.Chap8 is
                      New_Dyadic_Op
                        (ON_Add_Ov,
                         New_Obj_Value (Idx),
-                        Chap3.Get_Array_Length (Sub_Aggr, Sub_Type)));
+                        Chap3.Get_Array_Length (E, Sub_Type)));
                end if;
             else
                --  TODO
@@ -4428,6 +4429,8 @@ package body Trans.Chap8 is
       Aggr_El  : Iir;
       El_Index : Natural;
       Element  : Iir_Element_Declaration;
+      E : Mnode;
+      pragma Unreferenced (E);
    begin
       El_Index := 0;
       Aggr_El := Get_Association_Choices_Chain (Target);
@@ -4442,15 +4445,17 @@ package body Trans.Chap8 is
             when others =>
                Error_Kind ("translate_signal_target_record_aggr", Aggr_El);
          end case;
-         Translate_Signal_Target_Aggr
+         E := Translate_Signal_Target_Aggr
            (Chap6.Translate_Selected_Element (Aggr, Element),
             Get_Associated_Expr (Aggr_El), Get_Type (Element));
          Aggr_El := Get_Chain (Aggr_El);
       end loop;
    end Translate_Signal_Target_Record_Aggr;
 
-   procedure Translate_Signal_Target_Aggr
-     (Aggr : Mnode; Target : Iir; Target_Type : Iir)
+   --  Copy TARGET to AGGR.
+   --  Return the translation of TARGET when it is a composite object.
+   function Translate_Signal_Target_Aggr
+     (Aggr : Mnode; Target : Iir; Target_Type : Iir) return Mnode
    is
       Src : Mnode;
    begin
@@ -4475,13 +4480,37 @@ package body Trans.Chap8 is
                   Error_Kind ("translate_signal_target_aggr", Target_Type);
             end case;
             Close_Temp;
+            return Mnode_Null;
          end;
       else
          Src := Chap6.Translate_Name (Target, Mode_Signal);
-         if Get_Type_Info (Src).Type_Mode in Type_Mode_Unbounded then
-            Src := Chap3.Get_Composite_Base (Src);
-         end if;
-         Chap3.Translate_Object_Copy (Aggr, Src, Target_Type);
+         declare
+            Tinfo : constant Type_Info_Acc := Get_Info (Target_Type);
+            S : Mnode;
+         begin
+            case Tinfo.Type_Mode is
+               when Type_Mode_Scalar
+                 | Type_Mode_Acc
+                 | Type_Mode_Bounds_Acc
+                 | Type_Mode_File =>
+                  --  Scalar or thin pointer.
+                  New_Assign_Stmt (M2Lv (Aggr), M2E (Src));
+                  return Mnode_Null;
+               when Type_Mode_Unbounded_Array
+                 | Type_Mode_Unbounded_Record
+                 | Type_Mode_Bounded_Arrays
+                 | Type_Mode_Bounded_Records =>
+                  --  Composite objects.
+                  S := Stabilize (Src);
+                  Gen_Memcpy (M2Addr (Aggr),
+                              M2Addr (Chap3.Get_Composite_Base (S)),
+                              Chap3.Get_Object_Size (S, Target_Type));
+                  return S;
+               when Type_Mode_Unknown
+                 | Type_Mode_Protected =>
+                  raise Internal_Error;
+            end case;
+         end;
       end if;
    end Translate_Signal_Target_Aggr;
 
@@ -4696,6 +4725,8 @@ package body Trans.Chap8 is
       Bounds : Mnode;
       Layout : Mnode;
       Constrained : Boolean;
+      E : Mnode;
+      pragma Unreferenced (E);
    begin
       if Get_Kind (Target) = Iir_Kind_Aggregate then
          --  The target is an aggregate.
@@ -4728,12 +4759,12 @@ package body Trans.Chap8 is
             Chap7.Translate_Aggregate_Bounds (Bounds, Target, Mode_Signal);
             Chap3.Allocate_Unbounded_Composite_Base
               (Alloc_Stack, Targ, Target_Type);
-            Translate_Signal_Target_Aggr
+            E := Translate_Signal_Target_Aggr
               (Chap3.Get_Composite_Base (Targ), Target, Target_Type);
          else
             pragma Assert (Constrained);
             Chap4.Allocate_Complex_Object (Target_Type, Alloc_Stack, Targ);
-            Translate_Signal_Target_Aggr (Targ, Target, Target_Type);
+            E := Translate_Signal_Target_Aggr (Targ, Target, Target_Type);
          end if;
       else
          if Mechanism = Signal_Assignment_Direct then
