@@ -45,6 +45,11 @@ package Vhdl.Sem_Names is
 
    --  Analyze NAME: perform the first pass only.  In case of error, a message
    --  is displayed and the named entity is error_mark.
+   --
+   --  If the result is an overload list, it must be resolved and then
+   --  Finish_Sem_Name must be called.
+   --  If the result is a name (not an error or not a overload list),
+   --  Finish_Sem_Name must be called.
    procedure Sem_Name (Name : Iir; Keep_Alias : Boolean := False);
 
    --  Finish analysis of NAME, if necessary.  The named entity must not

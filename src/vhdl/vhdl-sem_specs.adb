@@ -269,6 +269,24 @@ package body Vhdl.Sem_Specs is
       Is_Anon_Type : Boolean;
    begin
       --  LRM93 5.1
+      --  An entity designator that denotes an alias of an object is
+      --  required to denote the entire object, and not a subelement
+      --  or slice thereof.
+      if Get_Kind (Decl) = Iir_Kind_Object_Alias_Declaration then
+         declare
+            Attr_Name : constant Iir := Get_Name (Decl);
+            Base : constant Iir := Get_Object_Prefix (Attr_Name, False);
+         begin
+            if Get_Kind (Attr_Name) not in Iir_Kinds_Denoting_Name then
+               Error_Msg_Sem
+                 (+Attr, "%n does not denote the entire object", +Decl);
+            end if;
+            Attribute_A_Decl (Base, Attr, Check_Class, Check_Defined);
+         end;
+         return;
+      end if;
+
+      --  LRM93 5.1
       --  It is an error if the class of those names is not the same as that
       --  denoted by the entity class.
       if Attr_Class /= Tok_Invalid
@@ -467,55 +485,30 @@ package body Vhdl.Sem_Specs is
 
    --  Return TRUE if a named entity was attributed.
    function Sem_Named_Entities (Scope : Iir;
-                                Name : Iir;
                                 Attr : Iir_Attribute_Specification;
                                 Check_Defined : Boolean)
                                return Boolean
    is
-      --  Name is set (ie neither ALL nor OTHERS).
-      Is_Designator : constant Boolean := Name /= Null_Iir;
-
       Res : Boolean;
 
       --  If declaration DECL matches then named entity ENT, apply attribute
       --  specification and returns TRUE. Otherwise, return FALSE.
       --  Note: ENT and DECL are different for aliases.
-      function Sem_Named_Entity1 (Ent : Iir; Decl : Iir) return Boolean
-      is
-         use Vhdl.Tokens;
-         Ent_Id : constant Name_Id := Get_Identifier (Ent);
+      function Sem_Named_Entity1 (Ent : Iir; Decl : Iir) return Boolean is
       begin
-         if (not Is_Designator or else Ent_Id = Get_Identifier (Name))
-           and then Ent_Id /= Null_Identifier
-         then
-            if Is_Designator then
-               --  The designator is neither ALL nor OTHERS.
-               Set_Named_Entity (Name, Ent);
-               Xref_Ref (Name, Ent);
-
-               if Get_Entity_Class (Attr) = Tok_Label then
-                  --  Concurrent or sequential statements appear later in the
-                  --  AST, but their label are considered to appear before
-                  --  other items in the declarative part.
-                  Set_Is_Forward_Ref (Name, True);
-               end if;
-            end if;
-            if Get_Visible_Flag (Ent) = False then
-               Error_Msg_Sem (+Attr, "%n is not yet visible", +Ent);
-            else
-               Attribute_A_Decl (Decl, Attr, Is_Designator, Check_Defined);
-               return True;
-            end if;
+         if Get_Visible_Flag (Ent) = False then
+            Error_Msg_Sem (+Attr, "%n is not yet visible", +Ent);
+            return False;
+         else
+            Attribute_A_Decl (Decl, Attr, False, Check_Defined);
+            return True;
          end if;
-         return False;
       end Sem_Named_Entity1;
 
       procedure Sem_Named_Entity (Ent : Iir) is
       begin
          case Get_Kind (Ent) is
             when Iir_Kinds_Library_Unit
-              | Iir_Kinds_Concurrent_Statement
-              | Iir_Kinds_Sequential_Statement
               | Iir_Kinds_Non_Alias_Object_Declaration
               | Iir_Kind_Type_Declaration
               | Iir_Kind_Subtype_Declaration
@@ -528,6 +521,12 @@ package body Vhdl.Sem_Specs is
               | Iir_Kind_Group_Declaration
               | Iir_Kind_Mode_View_Declaration =>
                Res := Res or Sem_Named_Entity1 (Ent, Ent);
+            when Iir_Kinds_Concurrent_Statement
+              | Iir_Kinds_Sequential_Statement =>
+               --  Labels are optionnal
+               if Get_Identifier (Ent) /= Null_Identifier then
+                  Res := Res or Sem_Named_Entity1 (Ent, Ent);
+               end if;
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
                if not Is_Second_Subprogram_Specification (Ent) then
@@ -678,12 +677,7 @@ package body Vhdl.Sem_Specs is
       --  NOTE: therefore, ALL/OTHERS do not apply to named entities declared
       --  beyond the immediate declarative part, such as design unit or
       --  interfaces.
-      if Is_Designator then
-         if Is_Error (Name) then
-            pragma Assert (Flags.Flag_Force_Analysis);
-            return True;
-         end if;
-
+      if False then
          --  LRM 5.1  Attribute specification
          --  An attribute specification for an attribute of a design unit
          --  (i.e. an entity declaration, an architecture, a configuration
@@ -779,6 +773,153 @@ package body Vhdl.Sem_Specs is
       return Res;
    end Sem_Named_Entities;
 
+   procedure Sem_Simple_Name_Entity_Designator
+     (Scope : Iir; Name : Iir; Spec : Iir_Attribute_Specification)
+   is
+      Scope_Id : Iir;
+      Scope1 : Iir;
+      Decl : Iir;
+      Name1 : Iir;
+      Parent : Iir;
+   begin
+      Scope1 := Null_Iir;
+
+      --  Get the name of the scope (if appliable).
+      --  Also, get alternative scope (for subprogram interfaces).
+      case Get_Kind (Scope) is
+         when Iir_Kind_Protected_Type_Declaration =>
+            Scope_Id := Get_Type_Declarator (Scope);
+         when Iir_Kind_Procedure_Body
+           | Iir_Kind_Function_Body =>
+            Scope1 := Get_Subprogram_Specification (Scope);
+            Scope_Id := Null_Iir;
+         when others =>
+            Scope_Id := Scope;
+      end case;
+
+      --  Handle simple case when the attribute is applied to the scope.
+      if Scope_Id /= Null_Iir
+        and then Get_Identifier (Scope_Id) = Get_Identifier (Name)
+      then
+         Decl := Scope;
+         Set_Named_Entity (Name, Decl);
+         Xref_Ref (Name, Decl);
+         Attribute_A_Decl (Decl, Spec, True, True);
+         return;
+      end if;
+
+      Sem_Name (Name, False);
+      Decl := Get_Named_Entity (Name);
+      case Get_Kind (Decl) is
+         when Iir_Kind_Error =>
+            --  Give up now.
+            return;
+         when Iir_Kind_Overload_List =>
+            declare
+               List, Nlist : Iir_List;
+               It : List_Iterator;
+               El : Iir;
+            begin
+               --  LRM08 7.2 Attribute specification
+               --  The the entity tag is overloaded and the entity designator
+               --  does not contain a signature, all named entites already
+               --  declared in the current declarative part and matching the
+               --  specification are decorated.
+               List := Get_Overload_List (Decl);
+               Nlist := Create_Iir_List;
+               It := List_Iterate (List);
+               while Is_Valid (It) loop
+                  El := Get_Element (It);
+                  if Get_Parent (El) = Scope then
+                     Append_Element (Nlist, El);
+                  end if;
+                  Next (It);
+               end loop;
+
+               case Get_Nbr_Elements (Nlist) is
+                  when 0 =>
+                     Error_Msg_Sem (+Name, "no %i for attribute specification",
+                                    (1 => +Name));
+                     Free_Overload_List (Decl);
+                     Destroy_Iir_List (Nlist);
+                     Set_Named_Entity (Name, Null_Iir);
+                  when 1 =>
+                     El := Get_First_Element (Nlist);
+                     Destroy_Iir_List (Nlist);
+                     Free_Overload_List (Decl);
+                     Set_Named_Entity (Name, El);
+                     Decl := El;
+                     Name1 := Finish_Sem_Name (Name);
+                     Attribute_A_Decl (Decl, Spec, True, True);
+                  when others =>
+                     Destroy_Iir_List (List);
+                     Set_Overload_List (Decl, Nlist);
+                     It := List_Iterate (Nlist);
+                     while Is_Valid (It) loop
+                        El := Get_Element (It);
+                        Xref_Ref (Name, El);
+                        Attribute_A_Decl (El, Spec, True, True);
+                        Next (It);
+                     end loop;
+               end case;
+               return;
+            end;
+         when others =>
+            Name1 := Finish_Sem_Name (Name);
+            --  As NAME is a simple_name (and not a parenthesis name), the
+            --  result should be a simple name too.
+            pragma Assert (Name1 = Name);
+
+            case Get_Kind (Decl) is
+               when Iir_Kinds_Sequential_Statement
+                 | Iir_Kinds_Concurrent_Statement =>
+                  --  Concurrent or sequential statements appear later in the
+                  --  AST, but their label are considered to appear before
+                  --  other items in the declarative part.
+                  Set_Is_Forward_Ref (Name, True);
+                  Set_Base_Name (Name, Null_Iir);
+               when others =>
+                  null;
+            end case;
+      end case;
+
+      Parent := Get_Parent (Decl);
+
+      --  The immediate scope of a sequential statement is the process or
+      --  the subprogram.
+      while Get_Kind (Parent) in Iir_Kinds_Sequential_Statement loop
+         Parent := Get_Parent (Parent);
+      end loop;
+
+      --  Check DECL is in the immediate scope of SCOPE.
+      if Parent /= Scope and then Parent /= Scope1 then
+         if Flag_Relaxed_Rules
+           and then Get_Kind (Decl) = Iir_Kind_Interface_Signal_Declaration
+           and then (Get_Kind (Get_Parent (Spec))
+                       = Iir_Kind_Architecture_Body)
+           and then (Get_Kind (Get_Parent (Decl))
+                       = Iir_Kind_Entity_Declaration)
+         then
+            --  Some (clueless ?) vendors put attribute specifications in
+            --  architectures for ports (declared in entities).  This is not
+            --  valid according to the LRM (eg: LRM02 5.1 Attribute
+            --  specification).  Be tolerant.
+            Warning_Msg_Sem
+              (Warnid_Specs, +Name,
+               "attribute for port %i must be specified in the entity",
+               (1 => +Name));
+         else
+            Error_Msg_Sem
+              (+Spec,
+               "attribute spec not in the same immediate scope as %n",
+               +Decl);
+            return;
+         end if;
+      end if;
+
+      Attribute_A_Decl (Decl, Spec, True, True);
+   end Sem_Simple_Name_Entity_Designator;
+
    procedure Sem_Signature_Entity_Designator
      (Sig : Iir_Signature; Attr : Iir_Attribute_Specification)
    is
@@ -829,38 +970,6 @@ package body Vhdl.Sem_Specs is
    procedure Sem_Attribute_Specification (Spec : Iir_Attribute_Specification)
    is
       Scope : constant Iir := Get_Parent (Spec);
-
-      --  Emit an error message when NAME is not found.
-      procedure Error_Attribute_Specification (Name : Iir)
-      is
-         Inter : Name_Interpretation_Type;
-         Decl : Iir;
-      begin
-         if Flag_Relaxed_Rules then
-            --  Some (clueless ?) vendors put attribute specifications in
-            --  architectures for ports (declared in entities).  This is not
-            --  valid according to the LRM (eg: LRM02 5.1 Attribute
-            --  specification).  Be tolerant.
-            Inter := Get_Interpretation (Get_Identifier (Name));
-            if Valid_Interpretation (Inter) then
-               Decl := Get_Declaration (Inter);
-               if Get_Kind (Decl) = Iir_Kind_Interface_Signal_Declaration
-                 and then (Get_Kind (Get_Parent (Decl))
-                             = Iir_Kind_Entity_Declaration)
-                 and then Get_Kind (Scope) = Iir_Kind_Architecture_Body
-               then
-                  Warning_Msg_Sem
-                    (Warnid_Specs, +Name,
-                     "attribute for port %i must be specified in the entity",
-                     (1 => +Name));
-                  return;
-               end if;
-            end if;
-         end if;
-
-         Error_Msg_Sem
-           (+Name, "no %i for attribute specification", (1 => +Name));
-      end Error_Attribute_Specification;
 
       use Vhdl.Tokens;
 
@@ -934,7 +1043,7 @@ package body Vhdl.Sem_Specs is
          --  specification applies to all named entities of the specified
          --  class that are declared in the immediatly enclosing
          --  declarative part.
-         Res := Sem_Named_Entities (Scope, Null_Iir, Spec, True);
+         Res := Sem_Named_Entities (Scope, Spec, True);
          if Res = False and then Is_Warning_Enabled (Warnid_Specs) then
             Warning_Msg_Sem
               (Warnid_Specs, +Spec,
@@ -947,7 +1056,7 @@ package body Vhdl.Sem_Specs is
          --  part, provided that each such entity is not explicitly named
          --  in the entity name list of a previous attribute specification
          --  for the given attribute.
-         Res := Sem_Named_Entities (Scope, Null_Iir, Spec, False);
+         Res := Sem_Named_Entities (Scope, Spec, False);
          if Res = False and then Is_Warning_Enabled (Warnid_Specs) then
             Warning_Msg_Sem
               (Warnid_Specs, +Spec,
@@ -965,16 +1074,17 @@ package body Vhdl.Sem_Specs is
          begin
             for I in Flist_First .. Flist_Last (List) loop
                El := Get_Nth_Element (List, I);
-               if Get_Kind (El) = Iir_Kind_Signature then
-                  Sem_Signature_Entity_Designator (El, Spec);
-               else
-                  --  LRM 5.1
-                  --  It is an error if the class of those names is not the
-                  --  same as that denoted by entity class.
-                  if not Sem_Named_Entities (Scope, El, Spec, True) then
-                     Error_Attribute_Specification (El);
-                  end if;
-               end if;
+               case Get_Kind (El) is
+                  when Iir_Kind_Signature =>
+                     Sem_Signature_Entity_Designator (El, Spec);
+                  when Iir_Kind_Simple_Name
+                    | Iir_Kind_Operator_Symbol
+                    | Iir_Kind_Character_Literal =>
+                     Sem_Simple_Name_Entity_Designator (Scope, El, Spec);
+                  when others =>
+                     pragma Assert (Flags.Flag_Force_Analysis);
+                     null;
+               end case;
             end loop;
          end;
       end if;
