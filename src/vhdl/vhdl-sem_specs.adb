@@ -363,7 +363,7 @@ package body Vhdl.Sem_Specs is
       --  Similarly, it is an error if two different attributes with the
       --  same simple name (whether predefined or user-defined) are both
       --  associated with a given named entity.
-      Attr_Chain_Parent := Get_Attribute_Value_Chain_Parent (Decl);
+      Attr_Chain_Parent := Get_Attribute_Value_Chain_Parent (Attr);
       El := Get_Attribute_Value_Chain (Attr_Chain_Parent);
       while El /= Null_Iir loop
          if Get_Designated_Entity (El) = Decl then
