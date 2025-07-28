@@ -681,6 +681,10 @@ package body Netlists.Dump is
          Dump_Name (Get_Instance_Name (Inst));
       end if;
 
+      if Is_Self_Instance (Inst) then
+         Wr (" {self}");
+      end if;
+
       declare
          Nbr_Inputs : constant Port_Nbr := Get_Nbr_Inputs (Inst);
          M : constant Module := Get_Module (Inst);
