@@ -4375,11 +4375,8 @@ package body Trans.Chap7 is
             when Iir_Kind_Choice_By_None =>
                null;
             when Iir_Kind_Choice_By_Name =>
-               pragma Assert
-                 (Get_Element_Position
-                    (Get_Named_Entity
-                       (Get_Choice_Name (Assoc))) = Iir_Index32 (Pos));
-               null;
+               Pos := Natural (Get_Element_Position
+                               (Get_Named_Entity (Get_Choice_Name (Assoc))));
          end case;
          Base_El := Get_Nth_Element (Base_El_List, Pos);
          Base_El_Type := Get_Type (Base_El);
