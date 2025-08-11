@@ -302,8 +302,9 @@ copy-sources.gcc: version.ads scripts/gcc/Make-lang.in
 	 7.*)      	    gcc_ortho_lang=ortho-lang-7.c ;; \
 	 8.*)      	    gcc_ortho_lang=ortho-lang-8.c ;; \
 	 9.* | 10.* | 11.* | 12.* | 13.* | 14.*) gcc_ortho_lang=ortho-lang-9.c ;; \
+	 15.*)     	    gcc_ortho_lang=ortho-lang-15.c ;; \
 	 *) echo "Mismatch gcc version from $(gcc_src_dir)"; \
-	    echo "Need gcc version 4.9.x, 5.x to 14.x"; \
+	    echo "Need gcc version 4.9.x, 5.x to 15.x"; \
 	    exit 1 ;; \
 	esac; \
 	$(CP) -p $(srcdir)/src/ortho/gcc/$$gcc_ortho_lang \
@@ -315,10 +316,10 @@ copy-sources.gcc: version.ads scripts/gcc/Make-lang.in
 	$(CP) -p $(srcdir)/scripts/gcc/config-lang.in $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/scripts/gcc/lang-options.h $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/scripts/gcc/lang-specs.h $(gcc_vhdl_dir)
-#	For gcc 12.x, use .cc extension
+#	For gcc >= 12.x, use .cc extension
 	base_ver=`cat $(gcc_src_dir)/gcc/BASE-VER`; \
 	case $$base_ver in \
-	12.* | 13.* | 14.*) for f in $(gcc_vhdl_dir)/*.c; do mv $$f $${f}c; done; \
+	12.* | 13.* | 14.* | 15.*) for f in $(gcc_vhdl_dir)/*.c; do mv $$f $${f}c; done; \
 	  sed -e 's/ortho-lang.c/ortho-lang.cc/' \
 	    < $(srcdir)/scripts/gcc/config-lang.in \
 	    > $(gcc_vhdl_dir)/config-lang.in ;; \
