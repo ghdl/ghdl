@@ -80,7 +80,7 @@ jobs:
 
     steps:
       - name: ⏬ Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0

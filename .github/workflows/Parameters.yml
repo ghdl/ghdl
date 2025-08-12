@@ -169,7 +169,7 @@ jobs:
 
     steps:
       - name: ⏬ Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
@@ -422,7 +422,7 @@ jobs:
 
     steps:
       - name: '⏬ Checkout'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Generate 'params' and 'python_jobs'
         id: params

@@ -98,7 +98,7 @@ jobs:
 
     steps:
       - name: ⏬ Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
@@ -491,7 +491,7 @@ jobs:
 
     steps:
       - name: ⏬ Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
         uses: msys2/setup-msys2@v2
@@ -536,7 +536,7 @@ jobs:
 
     steps:
       - name: ⏬ Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 📥 Download artifacts '${{ needs.Build.outputs.windows_artifact }}' from 'Package' job
         uses: pyTooling/download-artifact@v4
