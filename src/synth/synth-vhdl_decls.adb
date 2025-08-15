@@ -273,6 +273,18 @@ package body Synth.Vhdl_Decls is
       end case;
    end Synth_Attribute_Port;
 
+   procedure Synth_Attribute_Inst
+     (Inst : Instance; Attr_Decl : Node; Val : Valtyp)
+   is
+      Ptype : Param_Type;
+      Pv    : Pval;
+   begin
+      Ptype := Type_To_Param_Type (Get_Type (Attr_Decl));
+      Pv := Memtyp_To_Pval (Get_Memtyp (Val));
+
+      Set_Instance_Attribute (Inst, Get_Identifier (Attr_Decl), Ptype, Pv);
+   end Synth_Attribute_Inst;
+
    procedure Synth_Attribute_Net (Syn_Inst : Synth_Instance_Acc;
                                   Obj : Node;
                                   Attr_Decl  : Node;
@@ -281,8 +293,6 @@ package body Synth.Vhdl_Decls is
       N     : Net;
       Inst  : Instance;
       V     : Valtyp;
-      Ptype : Param_Type;
-      Pv    : Pval;
    begin
       V := Get_Value (Syn_Inst, Obj);
       case V.Val.Kind is
@@ -295,10 +305,7 @@ package body Synth.Vhdl_Decls is
       end case;
       Inst := Get_Net_Parent (N);
 
-      Ptype := Type_To_Param_Type (Get_Type (Attr_Decl));
-      Pv := Memtyp_To_Pval (Get_Memtyp (Val));
-
-      Set_Instance_Attribute (Inst, Get_Identifier (Attr_Decl), Ptype, Pv);
+      Synth_Attribute_Inst (Inst, Attr_Decl, Val);
    end Synth_Attribute_Net;
 
    procedure Synth_Attribute_Object (Syn_Inst : Synth_Instance_Acc;
@@ -324,6 +331,13 @@ package body Synth.Vhdl_Decls is
             else
                Synth_Attribute_Net (Syn_Inst, Obj, Attr_Decl, Val);
             end if;
+         when Iir_Kind_Entity_Declaration =>
+            declare
+               Top : constant Module := Get_Instance_Module (Syn_Inst);
+               Inst : constant Instance := Get_Self_Instance (Top);
+            begin
+               Synth_Attribute_Inst (Inst, Attr_Decl, Val);
+            end;
          when Iir_Kind_Component_Instantiation_Statement =>
             --  TODO
             null;

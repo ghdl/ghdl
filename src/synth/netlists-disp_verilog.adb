@@ -1375,6 +1375,10 @@ package body Netlists.Disp_Verilog is
          return;
       end if;
 
+      if Has_Instance_Attribute (Self_Inst) then
+         Disp_Attributes (Get_Instance_First_Attribute (Self_Inst));
+      end if;
+
       --  Module id and name.
       Wr ("module ");
       Put_Name (Get_Module_Name (M));
