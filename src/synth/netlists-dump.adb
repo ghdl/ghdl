@@ -214,12 +214,34 @@ package body Netlists.Dump is
       end case;
    end Dump_Parameter;
 
+   procedure Dump_Attribute_Value (Attr : Attribute)
+   is
+      Kind  : Param_Type;
+      Val   : Pval;
+   begin
+      Wr (" := ");
+      Kind := Get_Attribute_Type (Attr);
+      Val := Get_Attribute_Pval (Attr);
+      case Kind is
+         when Param_Invalid
+            | Param_Uns32 =>
+            Wr ("??");
+         when Param_Pval_String =>
+            Disp_Pval_String (Val);
+         when Param_Pval_Vector
+            | Param_Pval_Integer
+            | Param_Pval_Boolean
+            | Param_Pval_Real
+            | Param_Pval_Time_Ps =>
+            Disp_Pval_Binary (Val);
+      end case;
+      Wr_Line (";");
+   end Dump_Attribute_Value;
+
    procedure Dump_Attributes (Inst : Instance; Indent : Natural := 0)
    is
       Attrs : constant Attribute := Get_Instance_First_Attribute (Inst);
       Attr  : Attribute;
-      Kind  : Param_Type;
-      Val   : Pval;
    begin
       Attr := Attrs;
       while Attr /= No_Attribute loop
@@ -231,26 +253,27 @@ package body Netlists.Dump is
          Wr (" of ");
          Dump_Name (Get_Instance_Name (Inst));
          Disp_Instance_Id (Inst);
-         Wr (" := ");
-         Kind := Get_Attribute_Type (Attr);
-         Val := Get_Attribute_Pval (Attr);
-         case Kind is
-            when Param_Invalid
-              | Param_Uns32 =>
-               Wr ("??");
-            when Param_Pval_String =>
-               Disp_Pval_String (Val);
-            when Param_Pval_Vector
-              | Param_Pval_Integer
-              | Param_Pval_Boolean
-              | Param_Pval_Real
-              | Param_Pval_Time_Ps =>
-               Disp_Pval_Binary (Val);
-         end case;
-         Wr_Line (";");
+         Dump_Attribute_Value (Attr);
          Attr := Get_Attribute_Next (Attr);
       end loop;
    end Dump_Attributes;
+
+   procedure Dump_Port_Attributes
+     (Desc : Port_Desc; Attrs : Attribute; Indent : Natural := 0)
+   is
+      Attr  : Attribute;
+   begin
+      Attr := Attrs;
+      while Attr /= No_Attribute loop
+         Wr_Indent (Indent);
+         Wr ("attribute ");
+         Put_Id (Get_Attribute_Name (Attr));
+         Wr (" of ");
+         Dump_Name (Desc.Name);
+         Dump_Attribute_Value (Attr);
+         Attr := Get_Attribute_Next (Attr);
+      end loop;
+   end Dump_Port_Attributes;
 
    procedure Dump_Instance (Inst : Instance; Indent : Natural := 0)
    is
@@ -397,12 +420,24 @@ package body Netlists.Dump is
 
       --  Ports.
       for I in 1 .. Get_Nbr_Inputs (M) loop
-         Wr_Indent (Indent + 1);
-         Dump_Module_Port (Get_Input_Desc (M, I - 1), Port_In);
+         declare
+            Desc : constant Port_Desc := Get_Input_Desc (M, I - 1);
+         begin
+            Wr_Indent (Indent + 1);
+            Dump_Module_Port (Desc, Port_In);
+            Dump_Port_Attributes
+              (Desc, Get_Input_Port_First_Attribute (M, I - 1), Indent + 1);
+         end;
       end loop;
       for I in 1 .. Get_Nbr_Outputs (M) loop
-         Wr_Indent (Indent + 1);
-         Dump_Module_Port (Get_Output_Desc (M, I - 1), Port_Out);
+         declare
+            Desc : constant Port_Desc := Get_Output_Desc (M, I - 1);
+         begin
+            Wr_Indent (Indent + 1);
+            Dump_Module_Port (Desc, Port_Out);
+            Dump_Port_Attributes
+              (Desc, Get_Output_Port_First_Attribute (M, I - 1), Indent + 1);
+         end;
       end loop;
    end Dump_Module_Header;
 
