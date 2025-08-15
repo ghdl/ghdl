@@ -621,7 +621,7 @@ package body Netlists.Disp_Vhdl is
       Wr_Line (";");
    end Disp_Attribute_Decl;
 
-   procedure Disp_Attribute (Attr : Attribute; Inst : Instance; Akind : String)
+   procedure Disp_Attribute (Attr : Attribute; Name : Sname; Akind : String)
    is
       Kind  : Param_Type;
       Val   : Pval;
@@ -629,7 +629,7 @@ package body Netlists.Disp_Vhdl is
       Wr ("  attribute ");
       Put_Id (Get_Attribute_Name (Attr));
       Wr (" of ");
-      Put_Name (Get_Instance_Name (Inst));
+      Put_Name (Name);
       Wr (" : ");
       Wr (Akind);
       Wr (" is ");
@@ -741,6 +741,7 @@ package body Netlists.Disp_Vhdl is
 
       if Has_Instance_Attribute (Mem) then
          declare
+            Name : constant Sname := Get_Instance_Name (Mem);
             Attr  : Attribute;
          begin
             Attr := Get_Instance_First_Attribute (Mem);
@@ -748,7 +749,7 @@ package body Netlists.Disp_Vhdl is
                Wr ("  ");
                Disp_Attribute_Decl (Attr);
                Wr ("  ");
-               Disp_Attribute (Attr, Mem, "variable");
+               Disp_Attribute (Attr, Name, "variable");
                Attr := Get_Attribute_Next (Attr);
             end loop;
          end;
@@ -1391,6 +1392,22 @@ package body Netlists.Disp_Vhdl is
       Build_Value => Build_Value,
       Equal => "=");
 
+   --  Call Disp_Attribute_Decl only if the name of ATTR is not in MAP.
+   --  So that the attribute is declared only once.
+   procedure Disp_Attribute_Decl_Maybe
+     (Attr : Attribute; Map : in out Attr_Maps.Instance)
+   is
+      Attr_Name : constant Name_Id := Get_Attribute_Name (Attr);
+      Name_Idx : Attr_Maps.Index_Type;
+   begin
+      --  Maybe declare the attribute.
+      Attr_Maps.Get_Index (Map, Attr_Name, Name_Idx);
+      if not Attr_Maps.Get_Value (Map, Name_Idx) then
+         Disp_Attribute_Decl (Attr);
+         Attr_Maps.Set_Value (Map, Name_Idx, True);
+      end if;
+   end Disp_Attribute_Decl_Maybe;
+
    procedure Disp_Architecture_Declarations (M : Module)
    is
       Map : Attr_Maps.Instance;
@@ -1491,21 +1508,13 @@ package body Netlists.Disp_Vhdl is
             declare
                Attrs : constant Attribute :=
                  Get_Instance_First_Attribute (Inst);
-               Name_Idx : Attr_Maps.Index_Type;
+               Sig_Name : constant Sname := Get_Instance_Name (Inst);
                Attr  : Attribute;
-               Name  : Name_Id;
             begin
                Attr := Attrs;
                while Attr /= No_Attribute loop
-                  Name := Get_Attribute_Name (Attr);
-                  --  Maybe declare the attribute.
-                  Attr_Maps.Get_Index (Map, Name, Name_Idx);
-                  if not Attr_Maps.Get_Value (Map, Name_Idx) then
-                     Disp_Attribute_Decl (Attr);
-                     Attr_Maps.Set_Value (Map, Name_Idx, True);
-                  end if;
-
-                  Disp_Attribute (Attr, Inst, "signal");
+                  Disp_Attribute_Decl_Maybe (Attr, Map);
+                  Disp_Attribute (Attr, Sig_Name, "signal");
                   Attr := Get_Attribute_Next (Attr);
                end loop;
             end;
@@ -1600,10 +1609,24 @@ package body Netlists.Disp_Vhdl is
       Put_Type (Desc.W);
    end Disp_Entity_Port;
 
-   procedure Disp_Entity_Ports (M : Module)
+   procedure Disp_Port_Attributes
+     (Attrs : Attribute; Name : Sname; Map : in out Attr_Maps.Instance)
+   is
+      Attr  : Attribute;
+   begin
+      Attr := Attrs;
+      while Attr /= No_Attribute loop
+         Disp_Attribute_Decl_Maybe (Attr, Map);
+         Disp_Attribute (Attr, Name, "signal");
+         Attr := Get_Attribute_Next (Attr);
+      end loop;
+   end Disp_Port_Attributes;
+
+   procedure Disp_Entity_Ports (M : Module; Map : in out Attr_Maps.Instance)
    is
       First : Boolean;
       Desc : Port_Desc;
+      Attrs : Attribute;
    begin
       First := True;
       for I in 1 .. Get_Nbr_Inputs (M) loop
@@ -1617,6 +1640,19 @@ package body Netlists.Disp_Vhdl is
       if not First then
          Wr_Line (");");
       end if;
+
+      for I in 1 .. Get_Nbr_Inputs (M) loop
+         Attrs := Get_Input_Port_First_Attribute (M, I - 1);
+         if Attrs /= No_Attribute then
+            Disp_Port_Attributes (Attrs, Get_Input_Desc (M, I - 1).Name, Map);
+         end if;
+      end loop;
+      for I in 1 .. Get_Nbr_Outputs (M) loop
+         Attrs := Get_Output_Port_First_Attribute (M, I - 1);
+         if Attrs /= No_Attribute then
+            Disp_Port_Attributes (Attrs, Get_Output_Desc (M, I - 1).Name, Map);
+         end if;
+      end loop;
    end Disp_Entity_Ports;
 
    procedure Disp_Entity_Generics (M : Module)
@@ -1642,25 +1678,46 @@ package body Netlists.Disp_Vhdl is
       Wr_Line (");");
    end Disp_Entity_Generics;
 
-   procedure Disp_Entity (M : Module) is
+   procedure Disp_Entity (M : Module)
+   is
+      Self : constant Instance := Get_Self_Instance (M);
+      Name : constant Sname := Get_Module_Name (M);
+      Map : Attr_Maps.Instance;
    begin
+      Attr_Maps.Init (Map);
+
       --  Module id and name.
       Wr_Line ("library ieee;");
       Wr_Line ("use ieee.std_logic_1164.all;");
       Wr_Line ("use ieee.numeric_std.all;");
       Wr_Line;
       Wr ("entity ");
-      Put_Name (Get_Module_Name (M));
+      Put_Name (Name);
       Wr_Line (" is");
 
       Disp_Entity_Generics (M);
 
-      Disp_Entity_Ports (M);
+      Disp_Entity_Ports (M, Map);
+
+      if Has_Instance_Attribute (Self) then
+         declare
+            Attr  : Attribute;
+         begin
+            Attr := Get_Instance_First_Attribute (Self);
+            while Attr /= No_Attribute loop
+               Disp_Attribute_Decl_Maybe (Attr, Map);
+               Disp_Attribute (Attr, Name, "entity");
+               Attr := Get_Attribute_Next (Attr);
+            end loop;
+         end;
+      end if;
 
       Wr ("end entity ");
       Put_Name (Get_Module_Name (M));
       Wr_Line (";");
       Wr_Line;
+
+      Attr_Maps.Free (Map);
    end Disp_Entity;
 
    procedure Disp_Vhdl (M : Module; Is_Top : Boolean) is
