@@ -5,4 +5,4 @@ pytest ~= 8.4
 pytest-cov ~= 6.2
 
 # Coverage collection
-Coverage ~= 7.9
+Coverage ~= 7.10
