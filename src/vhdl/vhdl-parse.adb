@@ -2463,7 +2463,7 @@ package body Vhdl.Parse is
          --  A function designator is either an identifier or an operator
          --  symbol.
          Set_Identifier (Subprg, Scan_To_Operator_Name (Get_Token_Location));
-         Set_Location (Subprg);
+         Set_Location (Subprg, Get_Token_Location + 1);
 
          --  Skip string.
          Scan;
