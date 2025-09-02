@@ -6304,6 +6304,56 @@ package Vhdl.Nodes is
 
       --  numeric_bit
 
+      Iir_Predefined_Ieee_Numeric_Bit_Add_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Add_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Bit_Add_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Add_Uns_Bit,
+      Iir_Predefined_Ieee_Numeric_Bit_Add_Bit_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Add_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Add_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Bit_Add_Int_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Add_Sgn_Bit,
+      Iir_Predefined_Ieee_Numeric_Bit_Add_Bit_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Bit_Sub_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Sub_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Bit_Sub_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Sub_Uns_Bit,
+      Iir_Predefined_Ieee_Numeric_Bit_Sub_Bit_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Sub_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Sub_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Bit_Sub_Int_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Sub_Sgn_Bit,
+      Iir_Predefined_Ieee_Numeric_Bit_Sub_Bit_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Bit_Mul_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Mul_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Bit_Mul_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Mul_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Mul_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Bit_Mul_Int_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Bit_Div_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Div_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Bit_Div_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Div_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Div_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Bit_Div_Int_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Bit_Rem_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Rem_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Bit_Rem_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Rem_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Rem_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Bit_Rem_Int_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Bit_Mod_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Mod_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Bit_Mod_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Mod_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Mod_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Bit_Mod_Int_Sgn,
+
       --  To_Integer, To_Unsigned, to_Signed
       Iir_Predefined_Ieee_Numeric_Bit_Toint_Uns_Nat,
       Iir_Predefined_Ieee_Numeric_Bit_Toint_Sgn_Int,

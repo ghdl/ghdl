@@ -54,8 +54,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Log,
             Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Add_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Add_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Add_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Add_Uns_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Add_Bit_Uns),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Add_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Add_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Add_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Add_Sgn_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Add_Bit_Sgn)));
 
    Sub_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -72,8 +82,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Log,
             Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Sgn)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Sub_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Sub_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Sub_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Sub_Uns_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Sub_Bit_Uns),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Sub_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Sub_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Sub_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Sub_Sgn_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Sub_Bit_Sgn)));
 
    Mul_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -90,8 +110,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Mul_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Mul_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Mul_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Mul_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Mul_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Mul_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Div_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -108,8 +138,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Div_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Div_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Div_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Div_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Div_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Div_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Rem_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -126,8 +166,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Rem_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Rem_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Rem_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Rem_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Rem_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Rem_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Mod_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -144,8 +194,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Mod_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Mod_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Mod_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Mod_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Mod_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Mod_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Eq_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
