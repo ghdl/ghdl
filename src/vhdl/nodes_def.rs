@@ -2114,6 +2114,10 @@ pub enum PredefinedFunctions {
     Ieee_Numeric_Std_To_Ostring_Uns,
     Ieee_Numeric_Std_To_Hstring_Sgn,
     Ieee_Numeric_Std_To_Ostring_Sgn,
+    Ieee_Numeric_Bit_Not_Uns,
+    Ieee_Numeric_Bit_Not_Sgn,
+    Ieee_Numeric_Bit_Abs_Sgn,
+    Ieee_Numeric_Bit_Neg_Sgn,
     Ieee_Numeric_Bit_Add_Uns_Uns,
     Ieee_Numeric_Bit_Add_Uns_Nat,
     Ieee_Numeric_Bit_Add_Nat_Uns,
@@ -2432,7 +2436,7 @@ pub enum PredefinedFunctions {
 }
 
 impl PredefinedFunctions {
-    pub const VALUES: [Self; 803] = [
+    pub const VALUES: [Self; 807] = [
         Self::Error,
         Self::Boolean_And,
         Self::Boolean_Or,
@@ -2921,6 +2925,10 @@ impl PredefinedFunctions {
         Self::Ieee_Numeric_Std_To_Ostring_Uns,
         Self::Ieee_Numeric_Std_To_Hstring_Sgn,
         Self::Ieee_Numeric_Std_To_Ostring_Sgn,
+        Self::Ieee_Numeric_Bit_Not_Uns,
+        Self::Ieee_Numeric_Bit_Not_Sgn,
+        Self::Ieee_Numeric_Bit_Abs_Sgn,
+        Self::Ieee_Numeric_Bit_Neg_Sgn,
         Self::Ieee_Numeric_Bit_Add_Uns_Uns,
         Self::Ieee_Numeric_Bit_Add_Uns_Nat,
         Self::Ieee_Numeric_Bit_Add_Nat_Uns,
@@ -3238,7 +3246,7 @@ impl PredefinedFunctions {
         Self::Ieee_Std_Logic_Misc_Xnor_Reduce_Suv,
     ];
 
-    pub const IMAGES: [&'static str; 803] = [
+    pub const IMAGES: [&'static str; 807] = [
         "error",
         "boolean_and",
         "boolean_or",
@@ -3727,6 +3735,10 @@ impl PredefinedFunctions {
         "ieee_numeric_std_to_ostring_uns",
         "ieee_numeric_std_to_hstring_sgn",
         "ieee_numeric_std_to_ostring_sgn",
+        "ieee_numeric_bit_not_uns",
+        "ieee_numeric_bit_not_sgn",
+        "ieee_numeric_bit_abs_sgn",
+        "ieee_numeric_bit_neg_sgn",
         "ieee_numeric_bit_add_uns_uns",
         "ieee_numeric_bit_add_uns_nat",
         "ieee_numeric_bit_add_nat_uns",

@@ -1491,6 +1491,10 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
             | Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Log
             | Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn
+            | Iir_Predefined_Ieee_Numeric_Bit_Add_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Bit_Add_Uns_Bit
+            | Iir_Predefined_Ieee_Numeric_Bit_Add_Sgn_Bit
+            | Iir_Predefined_Ieee_Numeric_Bit_Add_Bit_Sgn
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Slv
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Log_Slv
@@ -1510,6 +1514,7 @@ package body Synth.Vhdl_Oper is
             --  "+" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns_Uns (Ctxt, Id_Add, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Bit_Add_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Nat =>
             --  "+" (Unsigned, Natural)
             return Synth_Dyadic_Uns_Nat (Ctxt, Id_Add, L, R, Expr);
@@ -1519,6 +1524,7 @@ package body Synth.Vhdl_Oper is
             --  "+" (Unsigned, Integer)
             return Synth_Dyadic_Sgn_Int (Ctxt, Id_Add, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns
+            | Iir_Predefined_Ieee_Numeric_Bit_Add_Nat_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Nat_Slv
             | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Uns_Uns
             | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Uns_Slv
@@ -1526,18 +1532,21 @@ package body Synth.Vhdl_Oper is
             --  "+" (Natural, Unsigned)
             return Synth_Dyadic_Nat_Uns (Ctxt, Id_Add, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int
+            | Iir_Predefined_Ieee_Numeric_Bit_Add_Sgn_Int
             | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Int
             | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Int_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Int_Slv =>
             --  "+" (Signed, Integer)
             return Synth_Dyadic_Sgn_Int (Ctxt, Id_Add, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn
+            | Iir_Predefined_Ieee_Numeric_Bit_Add_Int_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Slv
             | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Int_Slv =>
             --  "+" (Integer, Signed)
             return Synth_Dyadic_Int_Sgn (Ctxt, Id_Add, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn
+            | Iir_Predefined_Ieee_Numeric_Bit_Add_Sgn_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv
             | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Slv =>
@@ -2366,6 +2375,7 @@ package body Synth.Vhdl_Oper is
       Oper_Type : constant Node := Get_Type (Inter_Chain);
       Oper_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Oper_Type);
       Operand : Valtyp;
+      Res : Memtyp;
    begin
       Operand := Synth_Expression_With_Type (Syn_Inst, Operand_Expr, Oper_Typ);
       if Operand = No_Valtyp then
@@ -2376,10 +2386,13 @@ package body Synth.Vhdl_Oper is
       Strip_Const (Operand);
 
       if Is_Static_Val (Operand.Val) then
-         return Create_Value_Memtyp
-           (Eval_Static_Predefined_Function_Call
-              (Syn_Inst, Get_Value_Memtyp (Operand), Null_Memtyp,
-               null, Expr));
+         Res := Eval_Static_Predefined_Function_Call
+           (Syn_Inst, Get_Value_Memtyp (Operand), Null_Memtyp, null, Expr);
+         if Res = Null_Memtyp then
+            --  In case of serious error (function not handled)
+            return No_Valtyp;
+         end if;
+         return Create_Value_Memtyp (Res);
       else
          return Synth_Dynamic_Predefined_Call
            (Syn_Inst, Imp, Operand, No_Valtyp, Expr);

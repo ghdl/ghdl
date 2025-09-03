@@ -39,6 +39,16 @@ package body Vhdl.Ieee.Numeric is
    type Shift_Pattern_Type is array (Type_Signed .. Type_Unsigned)
      of Iir_Predefined_Functions;
 
+   type Conv_Pattern_Type is array (Pkg_Kind) of Iir_Predefined_Functions;
+
+   To_Signed_Nat_Pattern : constant Conv_Pattern_Type :=
+     (Pkg_Std => Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn,
+      Pkg_Bit => Iir_Predefined_Ieee_Numeric_Bit_Tosgn_Int_Nat_Sgn);
+
+   To_Signed_Sgn_Pattern : constant Conv_Pattern_Type :=
+     (Pkg_Std => Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Sgn_Sgn,
+      Pkg_Bit => Iir_Predefined_Ieee_Numeric_Bit_Tosgn_Int_Sgn_Sgn);
+
    Add_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
         (Type_Unsigned =>
@@ -464,21 +474,24 @@ package body Vhdl.Ieee.Numeric is
         (Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Neg_Uns,
          Type_Signed => Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn),
       Pkg_Bit =>
-        (others => Iir_Predefined_None));
+        (Type_Unsigned => Iir_Predefined_None,
+         Type_Signed => Iir_Predefined_Ieee_Numeric_Bit_Neg_Sgn));
 
    Abs_Patterns : constant Unary_Pattern_Type :=
      (Pkg_Std =>
         (Type_Unsigned => Iir_Predefined_None,
          Type_Signed => Iir_Predefined_Ieee_Numeric_Std_Abs_Sgn),
       Pkg_Bit =>
-        (others => Iir_Predefined_None));
+        (Type_Unsigned => Iir_Predefined_None,
+         Type_Signed => Iir_Predefined_Ieee_Numeric_Bit_Abs_Sgn));
 
    Not_Patterns : constant Unary_Pattern_Type :=
      (Pkg_Std =>
         (Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Not_Uns,
          Type_Signed => Iir_Predefined_Ieee_Numeric_Std_Not_Sgn),
       Pkg_Bit =>
-        (others => Iir_Predefined_None));
+        (Type_Unsigned => Iir_Predefined_Ieee_Numeric_Bit_Not_Uns,
+         Type_Signed => Iir_Predefined_Ieee_Numeric_Bit_Not_Sgn));
 
    Red_And_Patterns : constant Unary_Pattern_Type :=
      (Pkg_Std =>
@@ -814,21 +827,22 @@ package body Vhdl.Ieee.Numeric is
          Set_Implicit_Definition (Decl, Predefined);
       end Handle_To_Unsigned;
 
-      procedure Handle_To_Signed is
+      procedure Handle_To_Signed
+      is
+         Def : Iir_Predefined_Functions;
       begin
          if Arg1_Kind = Arg_Scal and Arg1_Sign = Type_Signed then
             if Arg2_Kind = Arg_Scal and Arg2_Sign = Type_Unsigned then
-               Set_Implicit_Definition
-                 (Decl, Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn);
+               Def := To_Signed_Nat_Pattern (Pkg);
             elsif Arg2_Kind = Arg_Vect and Arg2_Sign = Type_Signed then
-               Set_Implicit_Definition
-                 (Decl, Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Sgn_Sgn);
+               Def := To_Signed_Sgn_Pattern (Pkg);
             else
                raise Error;
             end if;
          else
             raise Error;
          end if;
+         Set_Implicit_Definition (Decl, Def);
       end Handle_To_Signed;
 
       procedure Handle_To_Integer is

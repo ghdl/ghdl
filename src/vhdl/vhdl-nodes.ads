@@ -6304,6 +6304,11 @@ package Vhdl.Nodes is
 
       --  numeric_bit
 
+      Iir_Predefined_Ieee_Numeric_Bit_Not_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Not_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Abs_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Neg_Sgn,
+
       Iir_Predefined_Ieee_Numeric_Bit_Add_Uns_Uns,
       Iir_Predefined_Ieee_Numeric_Bit_Add_Uns_Nat,
       Iir_Predefined_Ieee_Numeric_Bit_Add_Nat_Uns,

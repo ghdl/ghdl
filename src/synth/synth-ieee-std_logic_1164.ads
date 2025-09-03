@@ -44,7 +44,7 @@ package Synth.Ieee.Std_Logic_1164 is
       '-'   --  Don't care.
      );
 
-   subtype X01  is Std_Ulogic range 'X' .. '1';
+   subtype X01 is Std_Ulogic range 'X' .. '1';
 
    function Read_Std_Logic (M : Memory_Ptr; Off : Uns32) return Std_Ulogic;
    procedure Write_Std_Logic (M : Memory_Ptr; Off : Uns32; Val : Std_Ulogic);
