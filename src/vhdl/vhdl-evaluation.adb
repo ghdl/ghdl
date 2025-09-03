@@ -814,7 +814,8 @@ package body Vhdl.Evaluation is
                   W := Discrete_Range_Width (Res_Rng);
                   return Create_Discrete_Type (Res_Rng, Base_Typ.Sz, W);
                end;
-            when Iir_Kind_Floating_Type_Definition =>
+            when Iir_Kind_Floating_Type_Definition
+               | Iir_Kind_Floating_Subtype_Definition =>
                return Create_Float_Type ((Dir_To, Fp64'First, Fp64'Last));
             when Iir_Kind_Array_Type_Definition =>
                declare
