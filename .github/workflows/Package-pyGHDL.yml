@@ -116,7 +116,6 @@ jobs:
           if-no-files-found: error
 
   Test:
-    if: false
     name: '🐍${{ inputs.python_icon }} Test pyGHDL on ${{ inputs.os_name }} and Python ${{ inputs.python_version }}'
     runs-on: ${{ inputs.os_image }}
     needs:

@@ -120,7 +120,7 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
             if nameKind == nodes.Iir_Kind.Simple_Name:
                 names.append(SimpleName(name, GetNameOfNode(name)))
             elif nameKind == nodes.Iir_Kind.Signature:
-                WarningCollector.Raise("[NOT IMPLEMENTED] Signature name in attribute specifications.")
+                WarningCollector.Raise(NotImplementedError("Signature name in attribute specifications."))
             else:
                 position = Position.parse(name)
                 raise DOMException(

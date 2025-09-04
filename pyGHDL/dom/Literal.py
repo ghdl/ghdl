@@ -151,4 +151,4 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return cls(literalNode, value)
         else:
-            WarningCollector.Raise("[NOT IMPLEMENTED] Bit String Literal not supported yet")
+            WarningCollector.Raise(NotImplementedError("Bit String Literal not supported yet"))
