@@ -49,6 +49,22 @@ package body Vhdl.Ieee.Numeric is
      (Pkg_Std => Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Sgn_Sgn,
       Pkg_Bit => Iir_Predefined_Ieee_Numeric_Bit_Tosgn_Int_Sgn_Sgn);
 
+   To_Integer_Uns_Pattern : constant Conv_Pattern_Type :=
+     (Pkg_Std => Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat,
+      Pkg_Bit => Iir_Predefined_Ieee_Numeric_Bit_Toint_Uns_Nat);
+
+   To_Integer_Sgn_Pattern : constant Conv_Pattern_Type :=
+     (Pkg_Std => Iir_Predefined_Ieee_Numeric_Std_Toint_Sgn_Int,
+      Pkg_Bit => Iir_Predefined_Ieee_Numeric_Bit_Toint_Sgn_Int);
+
+   Resize_Uns_Nat_Pattern : constant Conv_Pattern_Type :=
+     (Pkg_Std => Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat,
+      Pkg_Bit => Iir_Predefined_Ieee_Numeric_Bit_Resize_Uns_Nat);
+
+   Resize_Sgn_Nat_Pattern : constant Conv_Pattern_Type :=
+     (Pkg_Std => Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat,
+      Pkg_Bit => Iir_Predefined_Ieee_Numeric_Bit_Resize_Sgn_Nat);
+
    Add_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
         (Type_Unsigned =>
@@ -232,8 +248,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Eq_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Eq_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Eq_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Eq_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Eq_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Eq_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Ne_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -268,8 +294,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Lt_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Lt_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Lt_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Lt_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Lt_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Lt_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Le_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -286,8 +322,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Le_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Le_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Le_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Le_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Le_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Le_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Gt_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -322,8 +368,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Ge_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Ge_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Ge_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Ge_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Ge_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Ge_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Min_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -845,28 +901,29 @@ package body Vhdl.Ieee.Numeric is
          Set_Implicit_Definition (Decl, Def);
       end Handle_To_Signed;
 
-      procedure Handle_To_Integer is
+      procedure Handle_To_Integer
+      is
+         Def : Iir_Predefined_Functions;
       begin
          if Arg1_Kind = Arg_Vect and Arg1_Sign = Type_Unsigned then
-            Set_Implicit_Definition
-              (Decl, Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat);
+            Def := To_Integer_Uns_Pattern (Pkg);
          elsif Arg1_Kind = Arg_Vect and Arg1_Sign = Type_Signed then
-            Set_Implicit_Definition
-              (Decl, Iir_Predefined_Ieee_Numeric_Std_Toint_Sgn_Int);
+            Def := To_Integer_Sgn_Pattern (Pkg);
          else
             raise Error;
          end if;
+         Set_Implicit_Definition (Decl, Def);
       end Handle_To_Integer;
 
-      procedure Handle_Resize is
+      procedure Handle_Resize
+      is
+         Def : Iir_Predefined_Functions;
       begin
          if Arg2_Kind = Arg_Scal and Arg2_Sign = Type_Unsigned then
             if Arg1_Kind = Arg_Vect and Arg1_Sign = Type_Unsigned then
-               Set_Implicit_Definition
-                 (Decl, Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat);
+               Def := Resize_Uns_Nat_Pattern (Pkg);
             elsif Arg1_Kind = Arg_Vect and Arg1_Sign = Type_Signed then
-               Set_Implicit_Definition
-                 (Decl, Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat);
+               Def := Resize_Sgn_Nat_Pattern (Pkg);
             else
                raise Error;
             end if;
@@ -874,19 +931,18 @@ package body Vhdl.Ieee.Numeric is
             if Arg1_Kind = Arg_Vect and Arg1_Sign = Type_Unsigned
               and Arg2_Sign = Type_Unsigned
             then
-               Set_Implicit_Definition
-                 (Decl, Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Uns);
+               Def := Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Uns;
             elsif Arg1_Kind = Arg_Vect and Arg1_Sign = Type_Signed
               and Arg2_Sign = Type_Signed
             then
-               Set_Implicit_Definition
-                 (Decl, Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn);
+               Def := Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn;
             else
                raise Error;
             end if;
          else
             raise Error;
          end if;
+         Set_Implicit_Definition (Decl, Def);
       end Handle_Resize;
 
       procedure Handle_Std_Match
