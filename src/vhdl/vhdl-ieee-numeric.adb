@@ -350,8 +350,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Gt_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Gt_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Gt_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Gt_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Gt_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Gt_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Ge_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -604,8 +614,16 @@ package body Vhdl.Ieee.Numeric is
             Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Std_And_Log_Sgn,
             others        => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_And_Uns_Uns,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_And_Uns_Log,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_And_Log_Uns,
+            others        => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_And_Sgn_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_And_Sgn_Log,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_And_Log_Sgn,
+            others        => Iir_Predefined_None)));
 
    Or_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>

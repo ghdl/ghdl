@@ -6425,6 +6425,48 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Bit_Tosgn_Int_Nat_Sgn,
       Iir_Predefined_Ieee_Numeric_Bit_Tosgn_Int_Sgn_Sgn,
 
+      Iir_Predefined_Ieee_Numeric_Bit_And_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_And_Uns_Log,
+      Iir_Predefined_Ieee_Numeric_Bit_And_Log_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_And_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_And_Sgn_Log,
+      Iir_Predefined_Ieee_Numeric_Bit_And_Log_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Bit_Nand_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Nand_Uns_Log,
+      Iir_Predefined_Ieee_Numeric_Bit_Nand_Log_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Nand_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Nand_Sgn_Log,
+      Iir_Predefined_Ieee_Numeric_Bit_Nand_Log_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Bit_Or_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Or_Uns_Log,
+      Iir_Predefined_Ieee_Numeric_Bit_Or_Log_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Or_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Or_Sgn_Log,
+      Iir_Predefined_Ieee_Numeric_Bit_Or_Log_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Bit_Nor_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Nor_Uns_Log,
+      Iir_Predefined_Ieee_Numeric_Bit_Nor_Log_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Nor_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Nor_Sgn_Log,
+      Iir_Predefined_Ieee_Numeric_Bit_Nor_Log_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Bit_Xor_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Xor_Uns_Log,
+      Iir_Predefined_Ieee_Numeric_Bit_Xor_Log_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Xor_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Xor_Sgn_Log,
+      Iir_Predefined_Ieee_Numeric_Bit_Xor_Log_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Bit_Xnor_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Xnor_Uns_Log,
+      Iir_Predefined_Ieee_Numeric_Bit_Xnor_Log_Uns,
+      Iir_Predefined_Ieee_Numeric_Bit_Xnor_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Bit_Xnor_Sgn_Log,
+      Iir_Predefined_Ieee_Numeric_Bit_Xnor_Log_Sgn,
+
       --  Numeric_Std_Unsigned (ieee2008)
       Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Slv,
       Iir_Predefined_Ieee_Numeric_Std_Unsigned_Add_Slv_Nat,

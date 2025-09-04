@@ -832,6 +832,23 @@ package body Synth.Ieee.Numeric_Bit is
       return Res;
    end Abs_Vec;
 
+   function Not_Vec (V : Memtyp) return Memtyp
+   is
+      Len : constant Uns32 := V.Typ.Abound.Len;
+      Res : Memtyp;
+   begin
+      Res.Typ := Create_Res_Type (V.Typ, Len);
+      Res := Create_Memory (Res.Typ);
+      for I in 1 .. Len loop
+         declare
+            B : constant Bit := Read_Bit (V.Mem, I - 1);
+         begin
+            Write_Bit (Res.Mem, I - 1, Not_Table (B));
+         end;
+      end loop;
+      return Res;
+   end Not_Vec;
+
    function Shift_Vec (Val : Memtyp;
                        Amt : Uns32;
                        Right : Boolean;

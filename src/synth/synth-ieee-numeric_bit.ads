@@ -45,6 +45,9 @@ package Synth.Ieee.Numeric_Bit is
    --  Unary "-"
    function Neg_Vec (V : Memtyp) return Memtyp;
 
+   --  "not"
+   function Not_Vec (V : Memtyp) return Memtyp;
+
    --  "abs"
    function Abs_Vec (V : Memtyp) return Memtyp;
 
