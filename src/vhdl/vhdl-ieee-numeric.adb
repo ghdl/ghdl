@@ -36,7 +36,7 @@ package body Vhdl.Ieee.Numeric is
    type Unary_Pattern_Type is array (Pkg_Kind, Sign_Num_Kind)
      of Iir_Predefined_Functions;
 
-   type Shift_Pattern_Type is array (Type_Signed .. Type_Unsigned)
+   type Shift_Pattern_Type is array (Pkg_Kind, Type_Signed .. Type_Unsigned)
      of Iir_Predefined_Functions;
 
    type Conv_Pattern_Type is array (Pkg_Kind) of Iir_Predefined_Functions;
@@ -688,80 +688,141 @@ package body Vhdl.Ieee.Numeric is
            (others => Iir_Predefined_None)));
 
    Shl_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat),
+      Pkg_Bit =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Bit_Shf_Left_Sgn_Nat,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Bit_Shf_Left_Uns_Nat));
 
    Shr_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat),
+      Pkg_Bit =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Bit_Shf_Right_Sgn_Nat,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Bit_Shf_Right_Uns_Nat));
 
    Rotate_Left_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Sgn_Nat,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Sgn_Nat,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat),
+      Pkg_Bit =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Bit_Rot_Left_Sgn_Nat,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Bit_Rot_Left_Uns_Nat));
 
    Rotate_Right_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Sgn_Nat,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Uns_Nat);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Sgn_Nat,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Uns_Nat),
+      Pkg_Bit =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Bit_Rot_Right_Sgn_Nat,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Bit_Rot_Right_Uns_Nat));
 
    Sll_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sll_Sgn_Int,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sll_Sgn_Int,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    Srl_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Srl_Sgn_Int,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Srl_Sgn_Int,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    Sla_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sla_Sgn_Int,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Sla_Uns_Int);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sla_Sgn_Int,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Sla_Uns_Int),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    Sra_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Sra_Uns_Int);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Sra_Uns_Int),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    Rol_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Rol_Sgn_Int,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Int);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Rol_Sgn_Int,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Int),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    Ror_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Int,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Int);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Int,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Int),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    Leftmost_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Sgn,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Uns);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Sgn,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Uns),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    Rightmost_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Sgn,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Uns);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Sgn,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Uns),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    To_01_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_01_Sgn,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_01_Uns);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_01_Sgn,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_01_Uns),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    To_X01_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_X01_Sgn,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_X01_Uns);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_X01_Sgn,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_X01_Uns),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    To_X01z_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_X01Z_Sgn,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_X01Z_Uns);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_X01Z_Sgn,
+          Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_X01Z_Uns),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    To_Ux01_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_UX01_Sgn,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_UX01_Uns);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_UX01_Sgn,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_UX01_Uns),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    Is_X_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Is_X_Sgn,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Is_X_Uns);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Is_X_Sgn,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Is_X_Uns),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    To_Hstring_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Sgn,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Uns);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Sgn,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Uns),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    To_Ostring_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_Ostring_Sgn,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_Ostring_Uns);
+     (Pkg_Std =>
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_To_Ostring_Sgn,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_To_Ostring_Uns),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    Error : exception;
 
@@ -986,7 +1047,7 @@ package body Vhdl.Ieee.Numeric is
             raise Error;
          end if;
 
-         Predefined := To_01_Patterns (Arg1_Sign);
+         Predefined := To_01_Patterns (Pkg, Arg1_Sign);
 
          Set_Implicit_Definition (Decl, Predefined);
       end Handle_To_01;
@@ -997,7 +1058,7 @@ package body Vhdl.Ieee.Numeric is
             raise Error;
          end if;
 
-         Set_Implicit_Definition (Decl, Pats (Arg1_Sign));
+         Set_Implicit_Definition (Decl, Pats (Pkg, Arg1_Sign));
       end Handle_To_X01;
 
       procedure Handle_Shift (Pats : Shift_Pattern_Type; Sh_Sign : Sign_Kind)
@@ -1010,7 +1071,7 @@ package body Vhdl.Ieee.Numeric is
          then
             case Arg1_Sign is
                when Type_Signed | Type_Unsigned =>
-                  Res := Pats (Arg1_Sign);
+                  Res := Pats (Pkg, Arg1_Sign);
                when others =>
                   Res := Iir_Predefined_None;
             end case;
@@ -1028,7 +1089,7 @@ package body Vhdl.Ieee.Numeric is
          then
             case Arg1_Sign is
                when Type_Signed | Type_Unsigned =>
-                  Res := Pats (Arg1_Sign);
+                  Res := Pats (Pkg, Arg1_Sign);
                when others =>
                   Res := Iir_Predefined_None;
             end case;

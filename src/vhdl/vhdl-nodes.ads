@@ -6401,6 +6401,17 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Bit_Ne_Sgn_Int,
       Iir_Predefined_Ieee_Numeric_Bit_Ne_Int_Sgn,
 
+      --  Shift and rotate functions.
+      Iir_Predefined_Ieee_Numeric_Bit_Shf_Left_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Bit_Shf_Right_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Bit_Shf_Left_Sgn_Nat,
+      Iir_Predefined_Ieee_Numeric_Bit_Shf_Right_Sgn_Nat,
+
+      Iir_Predefined_Ieee_Numeric_Bit_Rot_Left_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Bit_Rot_Right_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Bit_Rot_Left_Sgn_Nat,
+      Iir_Predefined_Ieee_Numeric_Bit_Rot_Right_Sgn_Nat,
+
       Iir_Predefined_Ieee_Numeric_Bit_Resize_Uns_Nat,
       Iir_Predefined_Ieee_Numeric_Bit_Resize_Sgn_Nat,
       Iir_Predefined_Ieee_Numeric_Bit_Resize_Uns_Uns,

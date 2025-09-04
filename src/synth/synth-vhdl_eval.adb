@@ -2461,6 +2461,8 @@ package body Synth.Vhdl_Eval is
             | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv
             | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Slv =>
             return Num_Std.Add_Sgn_Sgn (Param1, Param2, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Bit_Add_Sgn_Sgn =>
+            return Num_Bit.Add_Sgn_Sgn (Param1, Param2);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int
             | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Int =>
             return Num_Std.Add_Sgn_Int (Param1, Read_Discrete (Param2), +Expr);
@@ -3031,20 +3033,35 @@ package body Synth.Vhdl_Eval is
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Shift_Left =>
             return Num_Std.Shift_Vec
               (Param1, Read_Uns32 (Param2), False, False);
+         when Iir_Predefined_Ieee_Numeric_Bit_Shf_Left_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Bit_Shf_Left_Sgn_Nat =>
+            return Num_Bit.Shift_Vec
+              (Param1, Read_Uns32 (Param2), False, False);
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Shift_Right =>
             return Num_Std.Shift_Vec
               (Param1, Read_Uns32 (Param2), True, False);
+         when Iir_Predefined_Ieee_Numeric_Bit_Shf_Right_Uns_Nat =>
+            return Num_Bit.Shift_Vec
+              (Param1, Read_Uns32 (Param2), True, False);
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat =>
             return Num_Std.Shift_Vec (Param1, Read_Uns32 (Param2), True, True);
+         when Iir_Predefined_Ieee_Numeric_Bit_Shf_Right_Sgn_Nat =>
+            return Num_Bit.Shift_Vec (Param1, Read_Uns32 (Param2), True, True);
          when Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Sgn_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Rotate_Left =>
             return Num_Std.Rotate_Vec (Param1, Read_Uns32 (Param2), False);
+         when Iir_Predefined_Ieee_Numeric_Bit_Rot_Left_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Bit_Rot_Left_Sgn_Nat =>
+            return Num_Bit.Rotate_Vec (Param1, Read_Uns32 (Param2), False);
          when Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Sgn_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Rotate_Right =>
             return Num_Std.Rotate_Vec (Param1, Read_Uns32 (Param2), True);
+         when Iir_Predefined_Ieee_Numeric_Bit_Rot_Right_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Bit_Rot_Right_Sgn_Nat =>
+            return Num_Bit.Rotate_Vec (Param1, Read_Uns32 (Param2), True);
 
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Resize_Slv_Nat =>

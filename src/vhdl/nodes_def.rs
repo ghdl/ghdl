@@ -2198,6 +2198,14 @@ pub enum PredefinedFunctions {
     Ieee_Numeric_Bit_Ne_Sgn_Sgn,
     Ieee_Numeric_Bit_Ne_Sgn_Int,
     Ieee_Numeric_Bit_Ne_Int_Sgn,
+    Ieee_Numeric_Bit_Shf_Left_Uns_Nat,
+    Ieee_Numeric_Bit_Shf_Right_Uns_Nat,
+    Ieee_Numeric_Bit_Shf_Left_Sgn_Nat,
+    Ieee_Numeric_Bit_Shf_Right_Sgn_Nat,
+    Ieee_Numeric_Bit_Rot_Left_Uns_Nat,
+    Ieee_Numeric_Bit_Rot_Right_Uns_Nat,
+    Ieee_Numeric_Bit_Rot_Left_Sgn_Nat,
+    Ieee_Numeric_Bit_Rot_Right_Sgn_Nat,
     Ieee_Numeric_Bit_Resize_Uns_Nat,
     Ieee_Numeric_Bit_Resize_Sgn_Nat,
     Ieee_Numeric_Bit_Resize_Uns_Uns,
@@ -2476,7 +2484,7 @@ pub enum PredefinedFunctions {
 }
 
 impl PredefinedFunctions {
-    pub const VALUES: [Self; 847] = [
+    pub const VALUES: [Self; 855] = [
         Self::Error,
         Self::Boolean_And,
         Self::Boolean_Or,
@@ -3049,6 +3057,14 @@ impl PredefinedFunctions {
         Self::Ieee_Numeric_Bit_Ne_Sgn_Sgn,
         Self::Ieee_Numeric_Bit_Ne_Sgn_Int,
         Self::Ieee_Numeric_Bit_Ne_Int_Sgn,
+        Self::Ieee_Numeric_Bit_Shf_Left_Uns_Nat,
+        Self::Ieee_Numeric_Bit_Shf_Right_Uns_Nat,
+        Self::Ieee_Numeric_Bit_Shf_Left_Sgn_Nat,
+        Self::Ieee_Numeric_Bit_Shf_Right_Sgn_Nat,
+        Self::Ieee_Numeric_Bit_Rot_Left_Uns_Nat,
+        Self::Ieee_Numeric_Bit_Rot_Right_Uns_Nat,
+        Self::Ieee_Numeric_Bit_Rot_Left_Sgn_Nat,
+        Self::Ieee_Numeric_Bit_Rot_Right_Sgn_Nat,
         Self::Ieee_Numeric_Bit_Resize_Uns_Nat,
         Self::Ieee_Numeric_Bit_Resize_Sgn_Nat,
         Self::Ieee_Numeric_Bit_Resize_Uns_Uns,
@@ -3326,7 +3342,7 @@ impl PredefinedFunctions {
         Self::Ieee_Std_Logic_Misc_Xnor_Reduce_Suv,
     ];
 
-    pub const IMAGES: [&'static str; 847] = [
+    pub const IMAGES: [&'static str; 855] = [
         "error",
         "boolean_and",
         "boolean_or",
@@ -3899,6 +3915,14 @@ impl PredefinedFunctions {
         "ieee_numeric_bit_ne_sgn_sgn",
         "ieee_numeric_bit_ne_sgn_int",
         "ieee_numeric_bit_ne_int_sgn",
+        "ieee_numeric_bit_shf_left_uns_nat",
+        "ieee_numeric_bit_shf_right_uns_nat",
+        "ieee_numeric_bit_shf_left_sgn_nat",
+        "ieee_numeric_bit_shf_right_sgn_nat",
+        "ieee_numeric_bit_rot_left_uns_nat",
+        "ieee_numeric_bit_rot_right_uns_nat",
+        "ieee_numeric_bit_rot_left_sgn_nat",
+        "ieee_numeric_bit_rot_right_sgn_nat",
         "ieee_numeric_bit_resize_uns_nat",
         "ieee_numeric_bit_resize_sgn_nat",
         "ieee_numeric_bit_resize_uns_uns",
