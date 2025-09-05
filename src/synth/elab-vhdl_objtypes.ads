@@ -333,6 +333,7 @@ package Elab.Vhdl_Objtypes is
 
    --  Create an Type_Array from an Type_Array_Unbounded by replacing the
    --  element type.
+   --  Handle multiple dimensions.
    function Create_Array_From_Array_Unbounded
      (Parent : Type_Acc; El : Type_Acc) return Type_Acc;
 
@@ -349,6 +350,7 @@ package Elab.Vhdl_Objtypes is
    function Get_Range_Length (Rng : Discrete_Range_Type) return Uns32;
 
    --  Return the element of a vector/array/unbounded_array.
+   --  Note: doesn't handle multiple dimensions.
    function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc;
 
    --  Return True if TYP is fully bounded.
