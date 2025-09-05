@@ -353,6 +353,9 @@ package Elab.Vhdl_Objtypes is
    --  Note: doesn't handle multiple dimensions.
    function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc;
 
+   --  Same but handle multiple dimensions.
+   function Get_Array_Element_Multidim (Typ : Type_Acc) return Type_Acc;
+
    --  Return True if TYP is fully bounded.
    function Is_Bounded_Type (Typ : Type_Acc) return Boolean;
 

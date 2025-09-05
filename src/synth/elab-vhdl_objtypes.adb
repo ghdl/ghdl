@@ -591,6 +591,21 @@ package body Elab.Vhdl_Objtypes is
       end case;
    end Get_Array_Bound;
 
+   function Get_Array_Element_Multidim (Typ : Type_Acc) return Type_Acc
+   is
+      Res : Type_Acc;
+      Prev : Type_Acc;
+   begin
+      Prev := Typ;
+      loop
+         Res := Get_Array_Element (Prev);
+         if Is_Last_Dimension (Prev) then
+            return Res;
+         end if;
+         Prev := Res;
+      end loop;
+   end Get_Array_Element_Multidim;
+
    function Get_Uarray_Index (Typ : Type_Acc) return Type_Acc is
    begin
       case Typ.Kind is
