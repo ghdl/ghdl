@@ -16,6 +16,8 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Ada.Unchecked_Deallocation;
+
 with Types; use Types;
 with Libraries;
 with Areapools;
@@ -602,6 +604,124 @@ package body Elab.Vhdl_Insts is
       pragma Assert (Get_Kind (Res) = Iir_Kind_Component_Configuration);
    end Get_Next_Component_Configuration;
 
+   type Node_Couple_Type is record
+      Assoc : Node;
+      Formal : Node;
+   end record;
+
+   type Node_Couple_Array is array (Natural range <>) of Node_Couple_Type;
+   type Node_Couple_Arr_Acc is access Node_Couple_Array;
+
+   procedure Free_Node_Couple_Array is new Ada.Unchecked_Deallocation
+     (Node_Couple_Array, Node_Couple_Arr_Acc);
+
+   function Elab_Individual_Typ (Syn_Inst : Synth_Instance_Acc;
+                                 Assocs : Node_Couple_Array;
+                                 Typ : Type_Acc;
+                                 Depth : Natural) return Type_Acc
+   is
+      function Get_Name_Suffix_1 (Name : Node;
+                                  Pos : Positive;
+                                  Res : Node;
+                                  Res_Pos : Natural) return Node
+      is
+         Prev : Node;
+      begin
+         case Get_Kind (Name) is
+            when Iir_Kind_Selected_Element
+               | Iir_Kind_Indexed_Name =>
+               Prev := Get_Prefix (Name);
+               if Res_Pos = Pos then
+                  return Get_Name_Suffix_1
+                    (Prev, Pos, Get_Prefix (Res), Res_Pos);
+               else
+                  return Get_Name_Suffix_1 (Prev, Pos, Res, Res_Pos + 1);
+               end if;
+            when Iir_Kinds_Denoting_Name =>
+               if Res_Pos = Pos then
+                  return Res;
+               end if;
+               raise Internal_Error;
+            when others =>
+               raise Internal_Error;
+         end case;
+      end Get_Name_Suffix_1;
+
+      --  Get the POS-th suffix of NAME.
+      --  A suffix is a selected name, or an indexed name.
+      function Get_Name_Suffix (Name : Node; Pos : Positive) return Node is
+      begin
+         return Get_Name_Suffix_1 (Name, Pos, Name, 0);
+      end Get_Name_Suffix;
+
+   begin
+      case Typ.Kind is
+         when Type_Array_Unbounded =>
+            --  If one of the suffix denotes a whole object, get the type from
+            --  it.  Otherwise, recurse.
+            declare
+               Suff : Node;
+               Formal : Node;
+               El_Typ : Type_Acc;
+            begin
+               for I in Assocs'Range loop
+                  Formal := Assocs (I).Formal;
+                  Suff := Get_Name_Suffix (Formal, Depth + 1);
+                  if Suff = Formal then
+                     El_Typ := Exec_Name_Subtype
+                       (Syn_Inst, Get_Actual (Assocs (I).Assoc));
+                     return Create_Array_From_Array_Unbounded (Typ, El_Typ);
+                  end if;
+               end loop;
+               El_Typ := Elab_Individual_Typ
+                 (Syn_Inst, Assocs,
+                  Get_Array_Element_Multidim (Typ), Depth + 1);
+               return Create_Array_From_Array_Unbounded (Typ, El_Typ);
+            end;
+         when others =>
+            --  TODO for records
+            raise Internal_Error;
+      end case;
+   end Elab_Individual_Typ;
+
+   function Elab_Individual_Subtype (Syn_Inst : Synth_Instance_Acc;
+                                     Assoc : Node) return Type_Acc
+   is
+      Res : Type_Acc;
+      Arr : Node_Couple_Arr_Acc;
+      Cnt : Natural;
+      El : Node;
+   begin
+      Res := Synth_Subtype_Indication (Syn_Inst, Get_Actual_Type (Assoc));
+      if Is_Bounded_Type (Res) then
+         return Res;
+      end if;
+
+      --  Count number of associations in the chain
+      El := Get_Chain (Assoc);
+      Cnt := 0;
+      loop
+         Cnt := Cnt + 1;
+         El := Get_Chain (El);
+         exit when El = Null_Node;
+         exit when not Get_Whole_Association_Flag (El);
+      end loop;
+
+      --  Allocate and fill
+      Arr := new Node_Couple_Array(1 .. Cnt);
+      El := Get_Chain (Assoc);
+      for I in Arr'Range loop
+         Arr (I) := (El, Get_Formal (El));
+         El := Get_Chain (El);
+      end loop;
+
+      --  Complete the type.
+      Res := Elab_Individual_Typ (Syn_Inst, Arr.all, Res, 0);
+
+      Free_Node_Couple_Array (Arr);
+      return Res;
+   end Elab_Individual_Subtype;
+
    procedure Elab_Port_Association_Type (Sub_Inst : Synth_Instance_Acc;
                                          Syn_Inst : Synth_Instance_Acc;
                                          Inter : Node;
@@ -642,8 +762,7 @@ package body Elab.Vhdl_Insts is
             when Iir_Kind_Association_Element_By_Name =>
                Res := Exec_Name_Subtype (Syn_Inst, Get_Actual (Assoc));
             when Iir_Kind_Association_Element_By_Individual =>
-               Res := Synth_Subtype_Indication
-                 (Syn_Inst, Get_Actual_Type (Assoc));
+               Res := Elab_Individual_Subtype (Syn_Inst, Assoc);
             when Iir_Kind_Association_Element_Open =>
                Res := Exec_Name_Subtype (Syn_Inst, Get_Default_Value (Inter));
          end case;
