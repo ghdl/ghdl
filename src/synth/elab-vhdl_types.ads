@@ -26,9 +26,6 @@ package Elab.Vhdl_Types is
    --  subtype).
    function Get_Declaration_Type (Decl : Node) return Node;
 
-   --  True if the element subtype indication of ATYPE needs to be created.
-   function Has_Element_Subtype_Indication (Atype : Node) return Boolean;
-
    function Synth_Discrete_Range_Expression
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type;
    function Synth_Float_Range_Expression

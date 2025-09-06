@@ -596,16 +596,6 @@ package body Elab.Vhdl_Types is
       end case;
    end Synth_Float_Range_Constraint;
 
-   function Has_Element_Subtype_Indication (Atype : Node) return Boolean is
-   begin
-      return Get_Array_Element_Constraint (Atype) /= Null_Node
-        or else
-        (Get_Resolution_Indication (Atype) /= Null_Node
-           and then
-           (Get_Kind (Get_Resolution_Indication (Atype))
-              = Iir_Kind_Array_Element_Resolution));
-   end Has_Element_Subtype_Indication;
-
    procedure Check_Bound_Compatibility (Syn_Inst : Synth_Instance_Acc;
                                         Loc : Node;
                                         Bnd : Bound_Type;
@@ -640,14 +630,10 @@ package body Elab.Vhdl_Types is
       El_Typ : Type_Acc;
    begin
       --  Get parent real array element.
-      El_Typ := Parent_Typ;
-      while not Is_Last_Dimension (El_Typ) loop
-         El_Typ := Get_Array_Element (El_Typ);
-      end loop;
-      El_Typ := Get_Array_Element (El_Typ);
+      El_Typ := Get_Array_Element_Multidim (Parent_Typ);
 
       --  VHDL08
-      if Has_Element_Subtype_Indication (Atype) then
+      if El_Type /= Get_Element_Subtype (Parent_Type) then
          --  This subtype has created a new anonymous subtype for the
          --  element.
          El_Typ := Synth_Subtype_Indication_With_Parent

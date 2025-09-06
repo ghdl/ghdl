@@ -961,48 +961,6 @@ package body Elab.Vhdl_Expr is
       return Res;
    end Create_Onedimensional_Array_Subtype;
 
-   function Exec_Aggregate_Subtype (Syn_Inst : Synth_Instance_Acc;
-                                    Aggr : Node;
-                                    Aggr_Typ : Type_Acc) return Type_Acc is
-   begin
-      case Aggr_Typ.Kind is
-         when Type_Array_Unbounded =>
-            --  Get the element type from any aggregate subelement.
-            declare
-               Choice : Node;
-               Sub_Aggr : Node;
-               El_Typ : Type_Acc;
-               Last : Boolean;
-            begin
-               Sub_Aggr := Aggr;
-               El_Typ := Aggr_Typ;
-               loop
-                  Last := Is_Last_Dimension (El_Typ);
-                  El_Typ := Get_Array_Element (El_Typ);
-                  Choice := Get_Association_Choices_Chain (Sub_Aggr);
-                  Sub_Aggr := Get_Associated_Expr (Choice);
-                  exit when Last;
-               end loop;
-               El_Typ := Exec_Name_Subtype (Syn_Inst, Sub_Aggr);
-               return Create_Array_From_Array_Unbounded (Aggr_Typ, El_Typ);
-            end;
-         when Type_Unbounded_Array
-            | Type_Unbounded_Vector =>
-            --  Shouldn't happen
-            raise Internal_Error;
-         when  Type_Unbounded_Record =>
-            --  TODO
-            raise Internal_Error;
-         when Type_Vector
-           | Type_Array
-           | Type_Record
-           | Type_Slice =>
-            return Aggr_Typ;
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Exec_Aggregate_Subtype;
-
    function Exec_Name_Subtype (Syn_Inst : Synth_Instance_Acc; Name : Node)
                               return Type_Acc is
    begin
@@ -1088,13 +1046,7 @@ package body Elab.Vhdl_Expr is
          when Iir_Kind_String_Literal8 =>
             return Synth_Subtype_Indication (Syn_Inst, Get_Type (Name));
          when Iir_Kind_Aggregate =>
-            declare
-               Aggr_Typ : Type_Acc;
-            begin
-               Aggr_Typ := Synth_Subtype_Indication
-                 (Syn_Inst, Get_Type (Name));
-               return Exec_Aggregate_Subtype (Syn_Inst, Name, Aggr_Typ);
-            end;
+            return Synth_Subtype_Indication (Syn_Inst, Get_Type (Name));
 
          when Iir_Kind_Image_Attribute =>
             declare
