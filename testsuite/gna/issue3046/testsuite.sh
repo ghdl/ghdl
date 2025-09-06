@@ -10,6 +10,12 @@ if ghdl_is_preelaboration; then
     elab_simulate ent
     clean
   done
+
+  analyze rec_aggr.vhdl
+  elab_simulate rec_aggr
+
+  analyze recmat_aggr.vhdl
+  elab_simulate recmat_aggr
 fi
 
 echo "Test successful"
