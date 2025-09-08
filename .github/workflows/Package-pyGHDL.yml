@@ -67,7 +67,7 @@ jobs:
           pacboy: 'python:p python-pip:p python-wheel:p'
 
       - name: '🐍 Setup Python'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         if: inputs.runtime == ''
         with:
           python-version: ${{ inputs.python_version }}
@@ -194,7 +194,7 @@ jobs:
           rm -Rf ghdl
 
       - name: 🐍 Setup Python (Ubuntu, Windows)
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         if: inputs.runtime == ''
         with:
           python-version: ${{ inputs.python_version }}

@@ -241,7 +241,7 @@ jobs:
           cp -r -v ./install/lib/* ./pyGHDL/lib
 
       - name: 🐍 Setup Python (only mcode backend)
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         if: (inputs.unittesting || inputs.coverage) && inputs.backend == 'mcode'
         with:
           python-version: ${{ inputs.python_version }}
