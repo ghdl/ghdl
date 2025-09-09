@@ -678,8 +678,56 @@ package body Elab.Vhdl_Insts is
                   Get_Array_Element_Multidim (Typ), Depth + 1);
                return Create_Array_From_Array_Unbounded (Typ, El_Typ);
             end;
+         when Type_Unbounded_Record =>
+            declare
+               Parent_Rec : constant Rec_El_Array_Acc := Typ.Rec;
+               Els : Rec_El_Array_Acc;
+               Formal : Node;
+               Suff : Node;
+               El : Node;
+               Sub_Assocs : Node_Couple_Arr_Acc;
+               Sub_Cnt : Natural;
+            begin
+               --  Create array of elements
+               Els := Create_Rec_El_Array (Parent_Rec.Len);
+               --  For each element:
+               for I in 1 .. Parent_Rec.Len loop
+                  Sub_Cnt := 0;
+                  for J in Assocs'Range loop
+                     Formal := Assocs (J).Formal;
+                     Suff := Get_Name_Suffix (Formal, Depth + 1);
+                     pragma Assert
+                       (Get_Kind (Suff) = Iir_Kind_Selected_Element);
+                     El := Get_Named_Entity (Suff);
+                     if Get_Element_Position (El) = Iir_Index32 (I - 1) then
+                        if Suff = Formal then
+                           Els.E (I).Typ := Exec_Name_Subtype
+                             (Syn_Inst,
+                              Get_Actual (Assocs (Natural (I)).Assoc));
+                           Sub_Cnt := 0;
+                           exit;
+                        else
+                           if Sub_Assocs = null then
+                              Sub_Assocs :=
+                                new Node_Couple_Array(1 .. Assocs'Length);
+                           end if;
+                           Sub_Cnt := Sub_Cnt + 1;
+                           Sub_Assocs (Sub_Cnt) := Assocs (J);
+                        end if;
+                     end if;
+                  end loop;
+                  if Sub_Cnt /= 0 then
+                     Els.E (I).Typ := Elab_Individual_Typ
+                       (Syn_Inst, Sub_Assocs (1 .. Sub_Cnt),
+                        Parent_Rec.E (I).Typ, Depth + 1);
+                  end if;
+               end loop;
+               if Sub_Assocs /= null then
+                  Free_Node_Couple_Array (Sub_Assocs);
+               end if;
+               return Create_Record_Type (Typ, Els);
+            end;
          when others =>
-            --  TODO for records
             raise Internal_Error;
       end case;
    end Elab_Individual_Typ;
@@ -700,11 +748,10 @@ package body Elab.Vhdl_Insts is
       --  Count number of associations in the chain
       El := Get_Chain (Assoc);
       Cnt := 0;
-      loop
+      while not Get_Whole_Association_Flag (El) loop
          Cnt := Cnt + 1;
          El := Get_Chain (El);
          exit when El = Null_Node;
-         exit when not Get_Whole_Association_Flag (El);
       end loop;
 
       --  Allocate and fill
