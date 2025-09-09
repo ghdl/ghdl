@@ -321,7 +321,7 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
         return PhysicalType.parse(typeName, typeDefinition)
 
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
-        WarningCollector.Raise("[NOT IMPLEMENTED] Array_Subtype_Definition")
+        WarningCollector.Raise(NotImplementedError("Array_Subtype_Definition"))
 
         return ArrayType(typeDefinition, "????", [], None)
     else:
@@ -783,7 +783,7 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                 if nodes.Get_Has_Body(item):
                     yield Function.parse(item)
                 else:
-                    WarningCollector.Raise("[NOT IMPLEMENTED] function declaration without body")
+                    WarningCollector.Raise(NotImplementedError("function declaration without body"))
 
                 lastKind = kind
                 item = nodes.Get_Chain(item)
@@ -800,7 +800,7 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                 if nodes.Get_Has_Body(item):
                     yield Procedure.parse(item)
                 else:
-                    WarningCollector.Raise("[NOT IMPLEMENTED] procedure declaration without body")
+                    WarningCollector.Raise(NotImplementedError("procedure declaration without body"))
 
                 lastKind = kind
                 item = nodes.Get_Chain(item)
@@ -842,25 +842,25 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
 
                 yield PackageInstantiation.parse(item)
             elif kind == nodes.Iir_Kind.Configuration_Specification:
-                WarningCollector.Raise(f"[NOT IMPLEMENTED] Configuration specification in {name}")
+                WarningCollector.Raise(NotImplementedError(f"Configuration specification in {name}"))
             elif kind == nodes.Iir_Kind.Psl_Default_Clock:
                 yield DefaultClock.parse(item)
             elif kind == nodes.Iir_Kind.Group_Declaration:
-                WarningCollector.Raise(f"[NOT IMPLEMENTED] Group declaration in {name}")
+                WarningCollector.Raise(NotImplementedError(f"Group declaration in {name}"))
             elif kind == nodes.Iir_Kind.Group_Template_Declaration:
-                WarningCollector.Raise(f"[NOT IMPLEMENTED] Group template declaration in {name}")
+                WarningCollector.Raise(NotImplementedError(f"Group template declaration in {name}"))
             elif kind == nodes.Iir_Kind.Disconnection_Specification:
-                WarningCollector.Raise(f"[NOT IMPLEMENTED] Disconnect specification in {name}")
+                WarningCollector.Raise(NotImplementedError(f"Disconnect specification in {name}"))
             elif kind == nodes.Iir_Kind.Nature_Declaration:
-                WarningCollector.Raise(f"[NOT IMPLEMENTED] Nature declaration in {name}")
+                WarningCollector.Raise(NotImplementedError(f"Nature declaration in {name}"))
             elif kind == nodes.Iir_Kind.Free_Quantity_Declaration:
-                WarningCollector.Raise(f"[NOT IMPLEMENTED] Free quantity declaration in {name}")
+                WarningCollector.Raise(NotImplementedError(f"Free quantity declaration in {name}"))
             elif kind == nodes.Iir_Kind.Across_Quantity_Declaration:
-                WarningCollector.Raise(f"[NOT IMPLEMENTED] Across quantity declaration in {name}")
+                WarningCollector.Raise(NotImplementedError(f"Across quantity declaration in {name}"))
             elif kind == nodes.Iir_Kind.Through_Quantity_Declaration:
-                WarningCollector.Raise(f"[NOT IMPLEMENTED] Through quantity declaration in {name}")
+                WarningCollector.Raise(NotImplementedError(f"Through quantity declaration in {name}"))
             elif kind == nodes.Iir_Kind.Terminal_Declaration:
-                WarningCollector.Raise(f"[NOT IMPLEMENTED] Terminal declaration in {name}")
+                WarningCollector.Raise(NotImplementedError(f"Terminal declaration in {name}"))
             else:
                 position = Position.parse(item)
                 raise DOMException(f"Unknown declared item kind '{kind.name}' in {entity} '{name}' at {position}.")
@@ -913,11 +913,15 @@ def GetConcurrentStatementsFromChainedNodes(
             yield ConcurrentSimpleSignalAssignment.parse(statement, label)
         elif kind == nodes.Iir_Kind.Concurrent_Conditional_Signal_Assignment:
             WarningCollector.Raise(
-                f"[NOT IMPLEMENTED] Concurrent (conditional) signal assignment (label: '{label}') at line {position.Line}"
+                NotImplementedError(
+                    f"Concurrent (conditional) signal assignment (label: '{label}') at line {position.Line}"
+                )
             )
         elif kind == nodes.Iir_Kind.Concurrent_Selected_Signal_Assignment:
             WarningCollector.Raise(
-                f"[NOT IMPLEMENTED] Concurrent (selected) signal assignment (label: '{label}') at line {position.Line}"
+                NotImplementedError(
+                    f"Concurrent (selected) signal assignment (label: '{label}') at line {position.Line}"
+                )
             )
         elif kind == nodes.Iir_Kind.Concurrent_Procedure_Call_Statement:
             yield ConcurrentProcedureCall.parse(statement, label)
@@ -950,7 +954,7 @@ def GetConcurrentStatementsFromChainedNodes(
             yield ConcurrentAssertStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Simple_Simultaneous_Statement:
             WarningCollector.Raise(
-                f"[NOT IMPLEMENTED] Simple simultaneous statement (label: '{label}') at line {position.Line}"
+                NotImplementedError(f"Simple simultaneous statement (label: '{label}') at line {position.Line}")
             )
         else:
             raise DOMException(f"Unknown statement of kind '{kind.name}' in {entity} '{name}' at {position}.")
@@ -977,7 +981,9 @@ def GetSequentialStatementsFromChainedNodes(
             nodes.Iir_Kind.Variable_Assignment_Statement,
             nodes.Iir_Kind.Conditional_Variable_Assignment_Statement,
         ):
-            WarningCollector.Raise(f"[NOT IMPLEMENTED] Variable assignment (label: '{label}') at line {position.Line}")
+            WarningCollector.Raise(
+                NotImplementedError(f"Variable assignment (label: '{label}') at line {position.Line}")
+            )
         elif kind == nodes.Iir_Kind.Wait_Statement:
             yield WaitStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Procedure_Call_Statement:
