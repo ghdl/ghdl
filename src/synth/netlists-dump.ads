@@ -34,6 +34,7 @@ package Netlists.Dump is
    --  Display PV within double quotes.
    procedure Disp_Pval_Binary (Pv : Pval);
 
+   --  Display parameter value PV as a string.
    procedure Disp_Pval_String (Pv : Pval);
 
    procedure Dump_Name (N : Sname);

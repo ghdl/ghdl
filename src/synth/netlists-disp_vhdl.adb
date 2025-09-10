@@ -98,7 +98,13 @@ package body Netlists.Disp_Vhdl is
             case Param.Typ is
                when Param_Uns32 =>
                   Wr_Uns32 (Get_Param_Uns32 (Inst, P - 1));
-               when Param_Types_Pval =>
+               when Param_Pval_String =>
+                  Disp_Pval_String (Get_Param_Pval (Inst, P - 1));
+               when Param_Pval_Vector
+                 | Param_Pval_Integer
+                 | Param_Pval_Real
+                 | Param_Pval_Time_Ps
+                 | Param_Pval_Boolean =>
                   Disp_Pval_Binary (Get_Param_Pval (Inst, P - 1));
                when Param_Invalid =>
                   Wr ("*invalid*");
