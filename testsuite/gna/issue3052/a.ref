@@ -1,0 +1,4 @@
+elaborate and simulate --time-resolution=ns a
+0 ns
+10 ns
+simulation finished @10ns
