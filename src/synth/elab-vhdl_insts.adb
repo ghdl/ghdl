@@ -130,7 +130,10 @@ package body Elab.Vhdl_Insts is
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
          case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
             when Iir_Kind_Interface_Constant_Declaration =>
-               Inter_Type := Elab_Declaration_Type (Sub_Inst, Inter);
+               if Get_Whole_Association_Flag (Assoc) then
+                  --  Elab only once (for the first association).
+                  Inter_Type := Elab_Declaration_Type (Sub_Inst, Inter);
+               end if;
                Formal_Base := No_Valtyp;
 
                case Get_Kind (Assoc) is
