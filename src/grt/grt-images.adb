@@ -98,9 +98,15 @@ package body Grt.Images is
         := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
       Unit_Name : Ghdl_C_String;
       Unit_Len : Natural;
+      Unit : Ghdl_Rti_Access;
    begin
       To_String (Str, First, Val);
-      Unit_Name := Get_Physical_Unit_Name (Phys.Units (0));
+      for I in Ghdl_Index_Type loop
+         Unit := Phys.Units (I);
+         exit when Unit.Kind /= Ghdl_Rtik_Unit64
+           or else To_Ghdl_Rtin_Unit64_Acc (Unit).Value = 1;
+      end loop;
+      Unit_Name := Get_Physical_Unit_Name (Unit);
       Unit_Len := strlen (Unit_Name);
       declare
          L : constant Natural := Str'Last + 1 - First;
