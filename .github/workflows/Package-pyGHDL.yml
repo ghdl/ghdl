@@ -84,7 +84,7 @@ jobs:
           python -m pip install --disable-pip-version-check "pyTooling[packaging]" wheel
 
       - name: 📥 Download artifacts '${{ inputs.libghdl_artifact }}-${{ inputs.backend }}' from 'Build' job
-        uses: pyTooling/download-artifact@v4
+        uses: pyTooling/download-artifact@v5
         with:
           name: ${{ inputs.libghdl_artifact }}-${{ inputs.backend }}
           path: install
@@ -199,7 +199,7 @@ jobs:
           python-version: ${{ inputs.python_version }}
 
       - name: 📥 Download artifacts '${{ inputs.pyghdl_artifact }}' from 'Package' job
-        uses: pyTooling/download-artifact@v4
+        uses: pyTooling/download-artifact@v5
         with:
           name: ${{ inputs.pyghdl_artifact }}
           path: wheels
