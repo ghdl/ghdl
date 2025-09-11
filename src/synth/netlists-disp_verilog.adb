@@ -928,13 +928,13 @@ package body Netlists.Disp_Verilog is
             Disp_Template ("  assign \o0 = (\i0 < \i1) ? \i0 : \i1;" & NL,
                            Inst);
          when Id_Smin =>
-            Disp_Template ("  \o0 <= \i0 when \si0 < \si1 else \i1;" & NL,
+            Disp_Template ("  assign \o0 = (\si0 < \si1) ? \i0 : \i1;" & NL,
                            Inst);
          when Id_Umax =>
             Disp_Template ("  assign \o0 = (\i0 > \i1) ? \i0 : \i1;" & NL,
                            Inst);
          when Id_Smax =>
-            Disp_Template ("  \o0 <= \i0 when \si0 > \si1 else \i1;" & NL,
+            Disp_Template ("  assign \o0 = (\si0 > \si1) ? \i0 : \i1;" & NL,
                            Inst);
          when Id_Umul =>
             Disp_Template ("  assign \o0 = \i0 * \i1; // umul" & NL, Inst);
