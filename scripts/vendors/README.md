@@ -32,7 +32,7 @@ documentation on how to use [Precompile Scripts](https://ghdl.github.io/ghdl/get
  - **Step 2 - Start the compilation script(s)**
 	 Choose one of the provided pre-compilation scripts and run:
     ```Bash
-    $ /usr/local/lib/ghdl/vendors/compile-osvvm.sh --all --source ../path/to/osvvm
+    $ /usr/local/lib/ghdl/vendors/compile-VENDOR.sh --all --source ../path/to/VENDOR
     ```
 
     In most cases GHDL is installed into `/usr/local/`. The scripts are
@@ -45,10 +45,7 @@ documentation on how to use [Precompile Scripts](https://ghdl.github.io/ghdl/get
     ```Bash
     $ ls -ahl
     ...
-    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:48 osvvm
-    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:58 osvvm_common
-    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:58 osvvm_axi4
-    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:48 osvvm_uart
+    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:48 VENDOR
     ```
 
 
@@ -63,7 +60,7 @@ documentation on how to use [Precompile Scripts](https://ghdl.github.io/ghdl/get
  - **Step 2 - Start the compilation script(s)**
 	 Choose one of the provided pre-compilation scripts and run:
     ```PowerShell
-    PS> <GHDL>\lib\ghdl\vendors\compile-osvvm.ps1 -All -Source ..\path\to\osvvm
+    PS> <GHDL>\lib\ghdl\vendors\compile-VENDOR.ps1 -All -Source ..\path\to\VENDOR
     ```
 
  - **Step 3 - Viewing the result**
@@ -76,10 +73,7 @@ documentation on how to use [Precompile Scripts](https://ghdl.github.io/ghdl/get
 
     Mode           LastWriteTime       Length Name
     ----           -------------       ------ ----
-    d----    20.11.2019    19:38        <DIR> osvvm
-    d----    20.11.2019    19:45        <DIR> osvvm_common
-    d----    20.11.2019    19:06        <DIR> osvvm_axi4
-    d----    20.11.2019    19:40        <DIR> osvvm_uart
+    d----    20.11.2019    19:38        <DIR> VENDOR
     ```
 
 ---------------------------------------------------------------------
@@ -113,14 +107,12 @@ For a detailed documentation and all command line options see
 
 ## TODOs
 
-- OSVVM
-  - switch / search directories if normal OSVVM or OsvvmLibraries is specified as source
 - Missing features
   - Implement `-Clean` ```--clean` commands
 - describe usage with -P
 - document offered procedures and functions
 - don't enforce `--output` if `--source` is used.
-- UVVM (OSVVM)
+- UVVM
   - create a list of components as array and generate from that:
 	  - variables
 	  - cli options
