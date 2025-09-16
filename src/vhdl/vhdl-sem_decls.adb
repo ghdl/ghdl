@@ -1249,9 +1249,12 @@ package body Vhdl.Sem_Decls is
             if Default_Value = Null_Iir then
                Default_Value :=
                  Create_Error_Expr (Get_Default_Value (Decl), Atype);
+            else
+               Check_Read (Default_Value);
+               Default_Value :=
+                 Eval_Expr_Check_If_Static (Default_Value, Atype);
             end if;
-            Check_Read (Default_Value);
-            Default_Value := Eval_Expr_Check_If_Static (Default_Value, Atype);
+
          end if;
       else
          pragma Assert (Get_Kind (Last_Decl) = Get_Kind (Decl));

@@ -3511,7 +3511,6 @@ package body Vhdl.Evaluation is
       Prefix : Iir;
    begin
       Prefix := Get_Prefix (Expr);
-      Prefix := Eval_Static_Expr (Prefix);
 
       --  Eval indexes
       declare
@@ -3536,6 +3535,11 @@ package body Vhdl.Evaluation is
             end if;
          end loop;
       end;
+
+      --  Then evaluate prefix.
+      --  (See comment for slice: the type of the evaluated expression may be
+      --   different from the type of the prefix).
+      Prefix := Eval_Static_Expr (Prefix);
 
       case Get_Kind (Prefix) is
          when Iir_Kind_Aggregate =>
@@ -3568,12 +3572,15 @@ package body Vhdl.Evaluation is
       Eval_Range_Bounds (Suffix, Dir, Left, Right);
 
       Prefix := Get_Prefix (Expr);
-      Prefix := Eval_Static_Expr (Prefix);
 
+      --  Immediately extract type from the prefix
+      --  (the type of the evaluated expression might not be correct).
       Idx_Type := Get_Index_Type (Get_Type (Prefix), 0);
       Idx_Rng := Get_Range_Constraint (Idx_Type);
 
       Pos := Eval_Pos_In_Range (Idx_Rng, Left);
+
+      Prefix := Eval_Static_Expr (Prefix);
 
       case Get_Kind (Prefix) is
          when Iir_Kind_String_Literal8 =>
