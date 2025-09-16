@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use std::process::Command;
 // use std::path::Path;
 
+//  How to compile a C file to an object file and pass it to the Rust linker
 fn c_compile(out_dir: &str, optflags: &[&str], src: &str, cflags: &[&str]) -> Result<(), ()> {
     let file = Path::new(src);
     let basename = file.file_stem().unwrap();
@@ -32,6 +33,7 @@ fn c_compile(out_dir: &str, optflags: &[&str], src: &str, cflags: &[&str]) -> Re
     return Ok(());
 }
 
+//  How to compile an Ada file (or a set of Ada files) to an object file
 fn ada_compile(
     top: &str,
     mode: &str,
@@ -75,6 +77,25 @@ fn ada_compile(
     Ok(())
 }
 
+fn add_ada_dependencies(src_dirs: &[&str]) {
+    for &dir in src_dirs {
+        if let Ok(entries) = std::fs::read_dir(dir) {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    let path = entry.path();
+                    if let Some(ext) = path.extension() {
+                        if ext == "ads" || ext == "adb" {
+                            if let Some(p) = path.to_str() {
+                                println!("cargo:rerun-if-changed={}", p);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 fn run() -> Result<(), ()> {
     let out_dir = env::var("OUT_DIR").unwrap();
     let bind_file = format!("{}/bind_rust.adb", out_dir);
@@ -97,6 +118,8 @@ fn run() -> Result<(), ()> {
     ];
     let ada_top = "ghdl_rust";
     let bargs = ["-bargs", "-n", "-o", &bind_file, "-Lghdl_rust_"];
+
+    add_ada_dependencies(&ada_src_dirs);
 
     //  Call gnatmake to compile
     ada_compile(&ada_top, "-c", &out_dir, &optflags, &ada_src_dirs, &[])?;
