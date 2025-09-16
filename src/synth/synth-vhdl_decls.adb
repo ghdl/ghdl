@@ -384,6 +384,7 @@ package body Synth.Vhdl_Decls is
          --  4. Each new attribute instance is assigned the value of
          --     the expression.
          Val := Unshare (Val, Instance_Pool);
+         Val.Typ := Unshare (Val.Typ, Instance_Pool);
          Create_Object (Syn_Inst, Value, Val);
 
          Release_Expr_Pool (Marker);
