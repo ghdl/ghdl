@@ -6,7 +6,7 @@ on:
       windows_version:
         description: 'Version of the Windows image.'
         required: false
-        default: '2022'
+        default: '2025'
         type: string
       runtime:
         description: 'MSYS2 runtime'
@@ -45,7 +45,7 @@ on:
       python_version:
         description: 'Python version for pyGHDL testing.'
         required: false
-        default: '3.11'
+        default: '3.12'
         type: string
       pyunit_testsuites:
         description: 'Name of the pyunit testsuites.'
