@@ -80,7 +80,7 @@ jobs:
 
     steps:
       - name: ⏬ Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
@@ -337,7 +337,7 @@ jobs:
           cp -r -v ./install/lib/* ./pyGHDL/lib
 
       - name: 🐍 Setup Python (only mcode backend)
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         if: (inputs.unittesting || inputs.coverage) && inputs.ghdl_backend == 'mcode'
         with:
           python-version: ${{ inputs.python_version }}

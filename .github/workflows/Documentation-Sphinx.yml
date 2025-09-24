@@ -56,10 +56,10 @@ jobs:
 
     steps:
       - name: '⏬ Checkout'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
-        uses: pyTooling/download-artifact@v4
+        uses: pyTooling/download-artifact@v5
         with:
           name: ${{ inputs.ghdl_artifact }}
           path: install
@@ -76,7 +76,7 @@ jobs:
           ghdl version
 
       - name: '🐍 Setup Python'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python_version }}
 
@@ -107,10 +107,10 @@ jobs:
 
     steps:
       - name: '⏬ Checkout'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
-        uses: pyTooling/download-artifact@v4
+        uses: pyTooling/download-artifact@v5
         with:
           name: ${{ inputs.ghdl_artifact }}
           path: install
@@ -127,7 +127,7 @@ jobs:
           ghdl version
 
       - name: '🐍 Setup Python'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python_version }}
 
@@ -160,7 +160,7 @@ jobs:
 
     steps:
       - name: 📥 Download artifacts '${{ inputs.latex_artifact }}' from 'Sphinx' job
-        uses: pyTooling/download-artifact@v4
+        uses: pyTooling/download-artifact@v5
         with:
           name: ${{ inputs.latex_artifact }}
           path: latex

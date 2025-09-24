@@ -30,7 +30,7 @@ jobs:
       package_name: "ghdl"
       library_name: "libghdl"
       pyghdl_name:  "pyGHDL"
-#      testsuites:   "sanity"         # disable parameter to fall back to 'all'
+      testsuites:   "sanity"         # disable parameter to fall back to 'all'
 
   macOS:
     uses: ./.github/workflows/Build-MacOS.yml
@@ -173,18 +173,17 @@ jobs:
       - Params
 
   StaticTypeCheck:
-    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r5
+    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r6
     needs:
       - Params
     with:
-      requirements: mypy lxml
-      commands: |
-        mypy --html-report htmlmypy -p pyGHDL
-      html_report: 'htmlmypy'
+      requirements:   mypy lxml
+      html_report: >-
+        { "directory": "htmlmypy" }
       html_artifact: 'pyGHDL-typing-HTML'
 
   DocCoverage:
-    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@r5
+    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@r6
     needs:
       - Params
     with:
@@ -226,7 +225,7 @@ jobs:
     secrets: inherit
 
   PublishCoverageResults:
-    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r5
+    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r6
     needs:
       - macOS
       - Ubuntu-fast
@@ -243,7 +242,7 @@ jobs:
 #      CODACY_TOKEN:  ${{ secrets.CODACY_TOKEN }}
 
   PublishTestResults:
-    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r5
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r6
     needs:
       - macOS
       - Ubuntu-fast
@@ -259,7 +258,7 @@ jobs:
 #      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   IntermediateCleanUp:
-    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r5
+    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r6
     needs:
       - PublishCoverageResults
       - PublishTestResults
@@ -298,7 +297,7 @@ jobs:
       typing:        'pyGHDL-typing-HTML'
 
   Nightly:
-    uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r5
+    uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r6
     if: needs.Params.outputs.is_nightly_tag == 'true' || needs.Params.outputs.is_tagged_test == 'true'
     needs:
       - Params
@@ -361,7 +360,7 @@ jobs:
         pyGHDL-Windows-ucrt64-Python-3.12:      pyghdl-%pyghdl%-cp312-cp312-mingw_x86_64_ucrt_gnu.whl:        pyGHDL,windows,2022,x86-64,py3.12,ucrt64,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) + MSYS2/UCRT64 - Wheel for Python 3.12
 
   Release:
-    uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r5
+    uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r6
     if: needs.Params.outputs.is_release_tag == 'true'
     needs:
       - Params
@@ -378,7 +377,7 @@ jobs:
       - PublishTestResults
     permissions:
       contents: write
-      actions: write
+      actions:  write
     with:
       tag:                  ${{ needs.Params.outputs.version }}
       description_file:     ".github/ReleaseDescription.md"
