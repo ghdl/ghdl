@@ -2,7 +2,7 @@
 
 # GHDL %ghdl%
 
-GHDL offers the simulator and synthesis tool for VHDL. GHDL can be build for various backends:
+GHDL offers the simulator and synthesis tool for VHDL. GHDL can be built for various backends:
 * `gcc` - using the GCC compiler framework
 * `mcode` - in memory code generation
 * `llvm` - using the LLVM compiler framework
