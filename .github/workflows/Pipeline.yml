@@ -30,7 +30,7 @@ jobs:
       package_name: "ghdl"
       library_name: "libghdl"
       pyghdl_name:  "pyGHDL"
-      testsuites:   "sanity"         # disable parameter to fall back to 'all'
+#      testsuites:   "sanity"         # disable parameter to fall back to 'all'
 
   macOS:
     uses: ./.github/workflows/Build-MacOS.yml
