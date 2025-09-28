@@ -46,4 +46,10 @@ package Netlists.Inference is
                            Val : Net;
                            En_Gate : Net;
                            Loc : Location_Type) return Net;
+
+   --  Infere a tri-state buffer.
+   --  Replace VAL <= sel ? inp : 'Z'  with VAL <= tri(sel, inp)
+   function Infere_Tri (Ctxt : Context_Acc; Val : Net) return Net;
+
+   procedure Infere_Pass (Ctxt : Context_Acc; M : Module);
 end Netlists.Inference;

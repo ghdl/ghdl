@@ -20,6 +20,7 @@ with Errorout; use Errorout;
 with Name_Table; use Name_Table;
 
 with Netlists.Cleanup;
+with Netlists.Inference;
 with Netlists.Memories;
 with Netlists.Expands;
 
@@ -98,6 +99,13 @@ package body Synthesis is
       if not Synth.Flags.Flag_Debug_Nocleanup then
          --  Netlists.Cleanup.Remove_Unconnected_Instances (Inst.M);
          Netlists.Cleanup.Mark_And_Sweep (M);
+      end if;
+
+      if not Synth.Flags.Flag_Debug_Noinference then
+         Netlists.Inference.Infere_Pass (Ctxt, M);
+      end if;
+
+      if not Synth.Flags.Flag_Debug_Nocleanup then
          Netlists.Cleanup.Remove_Output_Gates (M);
       end if;
 

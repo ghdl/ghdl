@@ -440,12 +440,8 @@ package body Synth.Environment is
                      --  Possibly infere a idff/iadff.
                      pragma Assert (Pa.Offset = 0);
                      pragma Assert (Pa.Next = No_Partial_Assign);
-                     if Synth.Flags.Flag_Debug_Noinference then
-                        Res := Pa.Value;
-                     else
-                        Res := Inference.Infere_Assert
-                          (Ctxt, Pa.Value, Outport, Loc);
-                     end if;
+                     Res := Inference.Infere_Assert
+                       (Ctxt, Pa.Value, Outport, Loc);
                      Connect (Get_Input (Get_Net_Parent (Outport), 0), Res);
                   else
                      Add_Conc_Assign (Wid, Pa.Value, Pa.Offset, Loc);
@@ -733,23 +729,38 @@ package body Synth.Environment is
       end if;
    end Sort_Conc_Assign;
 
-   function Is_Proto_Memory (N : Net) return Boolean
+   function Is_Proto_Memory (N : Net; Prev : Net) return Boolean
    is
       use Netlists.Gates;
-      Inst, Inst1 : Instance;
-      Inp : Input;
+      Inst : Instance;
+      Src, Src1, Src2 : Net;
    begin
       Inst := Get_Net_Parent (N);
       case Get_Id (Inst) is
          when Id_Dff
            | Id_Idff =>
-            Inp := Get_Input (Inst, 1);
+            Src := Get_Input_Net (Inst, 1);
+            Inst := Get_Net_Parent (Src);
+         when Id_Mux2 =>
+            Src := Get_Input_Net (Inst, 2);
+            loop
+               Inst := Get_Net_Parent (Src);
+               exit when Get_Id (Inst) /= Id_Mux2;
+               Src1 := Get_Input_Net (Inst, 1);
+               Src2 := Get_Input_Net (Inst, 2);
+               if Src1 = Prev then
+                  Src := Src2;
+               elsif Src2 = Prev then
+                  Src := Src1;
+               else
+                  return False;
+               end if;
+            end loop;
          when others =>
             return False;
       end case;
 
-      Inst1 := Get_Net_Parent (Get_Driver (Inp));
-      case Get_Id (Inst1) is
+      case Get_Id (Inst) is
          when Id_Dyn_Insert
            | Id_Dyn_Insert_En =>
             null;
@@ -795,6 +806,9 @@ package body Synth.Environment is
       --  They will be sorted by offset and width.
       Asgn : Conc_Assign;
 
+      --  Target
+      Targ : Net;
+
       --  Width of the target.
       Wire_Width : Width;
 
@@ -827,7 +841,7 @@ package body Synth.Environment is
          N := Get_Conc_Value (Conc);
          if Is_Tribuf_Net (N) then
             Last := Tristate;
-         elsif Is_Proto_Memory (N) then
+         elsif Is_Proto_Memory (N, Data.Targ) then
             Last := Multiport;
          else
             return Unknown;
@@ -925,28 +939,25 @@ package body Synth.Environment is
       Data : Finalize_Assignment_Data;
       Cls : Finalize_Assignment_Kind;
    begin
-      --  Do inferences.
-      if not Synth.Flags.Flag_Debug_Noinference then
-         declare
-            Asgn : Conc_Assign;
-         begin
-            Asgn := Wire_Rec.Final_Assign;
-            while Asgn /= No_Conc_Assign loop
-               declare
-                  Ca : Conc_Assign_Record renames
-                    Conc_Assign_Table.Table (Asgn);
-               begin
-                  Ca.Value := Inference.Infere
-                    (Ctxt, Ca.Value, Ca.Offset, Wire_Rec.Gate, Ca.Loc,
-                     Wire_Rec.Kind = Wire_Variable);
-                  Asgn := Ca.Next;
-               end;
-            end loop;
-         end;
-      end if;
+      --  Do Tri-state inferences.
+      declare
+         Asgn : Conc_Assign;
+      begin
+         Asgn := Wire_Rec.Final_Assign;
+         while Asgn /= No_Conc_Assign loop
+            declare
+               Ca : Conc_Assign_Record renames
+                 Conc_Assign_Table.Table (Asgn);
+            begin
+               Ca.Value := Inference.Infere_Tri (Ctxt, Ca.Value);
+               Asgn := Ca.Next;
+            end;
+         end loop;
+      end;
 
       --  Sort assignments by offset.
       Data := (Asgn => Wire_Rec.Final_Assign,
+               Targ => Wire_Rec.Gate,
                Wire_Width => Get_Width (Wire_Rec.Gate),
                First_Assign => No_Conc_Assign,
                Last_Assign => No_Conc_Assign,
@@ -1158,13 +1169,9 @@ package body Synth.Environment is
                then
                   --  Single and full assignment.
                   Value := Conc_Asgn.Value;
-                  if not Synth.Flags.Flag_Debug_Noinference then
-                     pragma Assert (Wire_Rec.Kind /= Wire_Enable);
-                     pragma Assert (Conc_Asgn.Offset = 0);
-                     Value := Inference.Infere
-                       (Ctxt, Value, 0, Wire_Rec.Gate, Conc_Asgn.Loc,
-                        Wire_Rec.Kind = Wire_Variable);
-                  end if;
+                  pragma Assert (Wire_Rec.Kind /= Wire_Enable);
+                  pragma Assert (Conc_Asgn.Offset = 0);
+                  Value := Inference.Infere_Tri (Ctxt, Value);
                else
                   --  Partial assignment.
                   Finalize_Complex_Assignment (Ctxt, Wire_Rec, Value);

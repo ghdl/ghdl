@@ -549,12 +549,19 @@ package body Netlists.Inference is
    --  Determine the kind of FF and extract the asynchronous reset.
    --  Build the FF (or the RAM).
    --
-   --  CLOCK_MUX is the mux whose input 0 is the loop and clock for selector.
-   --  It is the last mux of the chain.
+   --  CLOCK_MUX is the mux2 whose input 0 is the loop (so PREV_VAL)
+   --  and clock for selector.  It is the last mux of the chain.
+   --  There can be previous mux2 for asynchronous set/reset.
+   --
+   --  The selector of CLOCK_MUX is divided into CLK and CLK_ENABLE.
+   --  CLK is a posedge or a negedge, while CLK_ENABLE, if set, is a
+   --  synchronous enable.
    --
    --  VAL is the value to be assigned.
-   --  PREV_VAL is the output of the signal which is assigned but also the
-   --   value of the loop.  OFF is the offset in the signal.
+   --  PREV_VAL is the output of the gate (signal or output) whose input
+   --  should have been VAL (before the DFF is created).  It is also the loop
+   --  signal of VAL.
+   --  OFF is the offset in PREV_VAL (for partial assignments).
    function Infere_FF (Ctxt : Context_Acc;
                        Val : Net;
                        Prev_Val : Net;
@@ -581,26 +588,31 @@ package body Netlists.Inference is
    begin
       --  Create and return the DFF.
 
-      --  1. Remove the mux CLOCK_MUX that creates the loop (will be
-      --     replaced by the dff).
+      --  1. Remove the mux CLOCK_MUX that creates the loop, and create
+      --     the DFF.
       Infere_FF_Mux (Ctxt, Prev_Val, Off, W, Clock_Mux, Els, Data);
 
       --  If the signal declaration has an initial value, get it.
       Sig := Get_Net_Parent (Prev_Val);
       case Get_Id (Get_Module (Sig)) is
          when Id_Isignal
-           | Id_Ioutput =>
+           | Id_Ioutput
+           | Id_Iinout =>
             Init := Get_Input_Net (Sig, 1);
             Init := Build2_Extract (Ctxt, Init, Off, Get_Width (O));
-         when others =>
+         when Id_Signal
+           | Id_Output
+           | Id_Inout =>
             Init := No_Net;
+         when others =>
+            raise Internal_Error;
       end case;
 
       --  As an enable signal, start with the enable extracted from the clock
       --  to handle conditions like: `rising_edge(clk) and en`
       Enable := Clk_Enable;
 
-      --  Look for asynchronous set/reset.  They are muxes after the loop
+      --  Look for asynchronous set/reset.  They are muxes before the clock
       --  mux.  In theory, there can be many set/reset with a defined order.
       Rst_Val := No_Net;
       Rst := No_Net;
@@ -668,6 +680,9 @@ package body Netlists.Inference is
                      else
                         exit;
                      end if;
+                     --  So an output of a mux2 between the clock_mux and
+                     --  the final value is used somewhere else.
+                     --  We cannot collapse the asynchronous set/reset.
                      Error_Msg_Netlist
                        (Eloc, "intermediate value of the FF is read");
                      exit;
@@ -1060,6 +1075,39 @@ package body Netlists.Inference is
       return Infere_Latch_Create (Ctxt, Val, Prev_Val, Last_Mux, Loc);
    end Infere_Latch;
 
+   function Infere_Tri (Ctxt : Context_Acc;
+                        Val : Net) return Net
+   is
+      First_Mux : constant Instance := Get_Net_Parent (Val);
+      Nsel, N0, N1 : Net;
+      Res : Net;
+   begin
+      --  Infere tri-buf.
+      if Get_Id (First_Mux) /= Id_Mux2 then
+         return Val;
+      end if;
+
+      --  Check for VAL <= SEL ? N1 : 'Z'
+      if Get_Id (Get_Input_Instance (First_Mux, 1)) = Id_Const_Z then
+         --  Disconnect the mux.
+         Nsel := Disconnect_And_Get (First_Mux, 0);
+         N0 := Disconnect_And_Get (First_Mux, 1);
+         N1 := Disconnect_And_Get (First_Mux, 2);
+         --  Build the tri buf.
+         Res := Build_Tri (Ctxt, Nsel, N1);
+         --  Remove the 'Z' (shouldn't be connected).
+         Remove_Instance (Get_Net_Parent (N0));
+         --  Copy location.
+         Copy_Location (Res, First_Mux);
+         --  Redirect tri output.
+         Redirect_Inputs (Get_Output (First_Mux, 0), Res);
+         Remove_Instance (First_Mux);
+         return Res;
+      else
+         return Val;
+      end if;
+   end Infere_Tri;
+
    --  VAL is the value to be assigned to a wire at offset OFF.
    --  Note: PREV_VAL is the wire gate, so with full width and no offset.
    function Infere (Ctxt : Context_Acc;
@@ -1086,30 +1134,12 @@ package body Netlists.Inference is
       end if;
 
       --  Infere tri-buf.
-      First_Mux := Get_Net_Parent (Val);
-      if Get_Id (First_Mux) = Id_Mux2 then
-         declare
-            Nsel, N0, N1 : Net;
-         begin
-            --  Check for VAL <= SEL ? N1 : 'Z'
-            if Get_Id (Get_Input_Instance (First_Mux, 1)) = Id_Const_Z then
-               --  Disconnect the mux.
-               Nsel := Disconnect_And_Get (First_Mux, 0);
-               N0 := Disconnect_And_Get (First_Mux, 1);
-               N1 := Disconnect_And_Get (First_Mux, 2);
-               --  Build the tri buf.
-               Res := Build_Tri (Ctxt, Nsel, N1);
-               --  Remove the 'Z' (shouldn't be connected).
-               Remove_Instance (Get_Net_Parent (N0));
-               --  Copy location.
-               Copy_Location (Res, First_Mux);
-               --  Redirect tri output.
-               Redirect_Inputs (Get_Output (First_Mux, 0), Res);
-               Remove_Instance (First_Mux);
-               return Res;
-            end if;
-         end;
+      Res := Infere_Tri (Ctxt, Val);
+      if Res /= Val then
+         return Res;
       end if;
+
+      First_Mux := Get_Net_Parent (Val);
 
       if Last_Use
         and then Has_One_Connection (Prev_Val)
@@ -1330,5 +1360,70 @@ package body Netlists.Inference is
 
       return En;
    end Infere_Assert;
+
+   procedure Infere_On_Port (Ctxt : Context_Acc;
+                             Port : Input;
+                             Off : Uns32;
+                             Outp : Net;
+                             Inst : Instance)
+   is
+      Drv : constant Net := Get_Driver (Port);
+      Res : Net;
+   begin
+      Disconnect (Port);
+      Res := Infere (Ctxt, Drv, Off, Outp, Get_Location (Inst), True);
+      Connect (Port, Res);
+   end Infere_On_Port;
+
+   procedure Infere_On_Signal (Ctxt : Context_Acc; Inst : Instance)
+   is
+      Outp : constant Net := Get_Output (Inst, 0);
+      Inpp : constant Input := Get_Input (Inst, 0);
+      Inpd : constant Net := Get_Driver (Inpp);
+      Drv : constant Instance := Get_Net_Parent (Inpd);
+   begin
+      case Get_Id (Drv) is
+         when Id_Mem_Multiport =>
+            Infere_On_Port (Ctxt, Get_Input (Drv, 0), 0, Outp, Inst);
+            Infere_On_Port (Ctxt, Get_Input (Drv, 1), 0, Outp, Inst);
+         when Concat_Module_Id =>
+            declare
+               Off : Uns32;
+               Concp : Input;
+            begin
+               Off := Get_Width (Outp);
+               for I in 1 .. Get_Nbr_Inputs (Drv) loop
+                  Concp := Get_Input (Drv, I - 1);
+                  Off := Off - Get_Width (Get_Driver (Concp));
+                  Infere_On_Port (Ctxt, Concp, Off, Outp, Inst);
+               end loop;
+               pragma Assert (Off = 0);
+            end;
+         when others =>
+            Infere_On_Port (Ctxt, Get_Input (Inst, 0), 0, Outp, Inst);
+      end case;
+   end Infere_On_Signal;
+
+   procedure Infere_Pass (Ctxt : Context_Acc; M : Module)
+   is
+      Inst, Next_Inst : Instance;
+   begin
+      Inst := Get_First_Instance (M);
+      while Inst /= No_Instance loop
+         Next_Inst := Get_Next_Instance (Inst);
+         case Get_Id (Inst) is
+            when Id_Output
+              | Id_Ioutput
+              | Id_Inout
+              | Id_Iinout
+              | Id_Signal
+              | Id_Isignal =>
+               Infere_On_Signal (Ctxt, Inst);
+            when others =>
+               null;
+         end case;
+         Inst := Next_Inst;
+      end loop;
+   end Infere_Pass;
 
 end Netlists.Inference;
