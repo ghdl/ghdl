@@ -56,7 +56,7 @@ jobs:
 
     steps:
       - name: '⏬ Checkout'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
         uses: msys2/setup-msys2@v2
@@ -67,7 +67,7 @@ jobs:
           pacboy: 'python:p python-pip:p python-wheel:p'
 
       - name: '🐍 Setup Python'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         if: inputs.runtime == ''
         with:
           python-version: ${{ inputs.python_version }}
@@ -84,7 +84,7 @@ jobs:
           python -m pip install --disable-pip-version-check "pyTooling[packaging]" wheel
 
       - name: 📥 Download artifacts '${{ inputs.libghdl_artifact }}-${{ inputs.backend }}' from 'Build' job
-        uses: pyTooling/download-artifact@v4
+        uses: pyTooling/download-artifact@v5
         with:
           name: ${{ inputs.libghdl_artifact }}-${{ inputs.backend }}
           path: install
@@ -123,7 +123,7 @@ jobs:
 
     steps:
       - name: '⏬ Checkout'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: ghdl
 
@@ -193,13 +193,13 @@ jobs:
           rm -Rf ghdl
 
       - name: 🐍 Setup Python (Ubuntu, Windows)
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         if: inputs.runtime == ''
         with:
           python-version: ${{ inputs.python_version }}
 
       - name: 📥 Download artifacts '${{ inputs.pyghdl_artifact }}' from 'Package' job
-        uses: pyTooling/download-artifact@v4
+        uses: pyTooling/download-artifact@v5
         with:
           name: ${{ inputs.pyghdl_artifact }}
           path: wheels

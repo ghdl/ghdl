@@ -30,23 +30,23 @@ jobs:
 
     steps:
       - name: ⏬ Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 📥 Download artifacts '${{ inputs.documentation }}' from 'Sphinx' job
-        uses: pyTooling/download-artifact@v4
+        uses: pyTooling/download-artifact@v5
         with:
           name: ${{ inputs.documentation }}
           path: public
 
       - name: 📥 Download artifacts '${{ inputs.coverage }}' from 'PublishCoverageResults' job
-        uses: pyTooling/download-artifact@v4
+        uses: pyTooling/download-artifact@v5
         if: ${{ inputs.coverage != '' }}
         with:
           name: ${{ inputs.coverage }}
           path: public/coverage
 
       - name: 📥 Download artifacts '${{ inputs.typing }}' from 'StaticTypeCheck' job
-        uses: pyTooling/download-artifact@v4
+        uses: pyTooling/download-artifact@v5
         if: ${{ inputs.typing != '' }}
         with:
           name: ${{ inputs.typing }}

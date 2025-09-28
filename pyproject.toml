@@ -2,13 +2,13 @@
 requires = [
   "setuptools >= 80.0",
   "wheel ~= 0.45",
-  "pyTooling ~= 8.5"
+  "pyTooling ~= 8.7"
 ]
 build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 120
-target-version = ['py39', 'py310', 'py311', 'py312', 'py313']
+target-version = ['py39', 'py310', 'py311', 'py312', 'py313', 'py314']
 
 [tool.mypy]
 files = ["pyGHDL"]
@@ -19,7 +19,7 @@ pretty = true
 show_error_context = true
 show_error_codes = true
 namespace_packages = true
-html_report = "report/typing"
+html_report = "report/typing/html"
 
 [tool.pytest]
 junit_xml = "report/unit/TestReportSummary.xml"

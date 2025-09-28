@@ -6,7 +6,7 @@ on:
       windows_version:
         description: 'Version of the Windows image.'
         required: false
-        default: '2022'
+        default: '2025'
         type: string
       runtime:
         description: 'MSYS2 runtime'
@@ -45,7 +45,7 @@ on:
       python_version:
         description: 'Python version for pyGHDL testing.'
         required: false
-        default: '3.11'
+        default: '3.12'
         type: string
       pyunit_testsuites:
         description: 'Name of the pyunit testsuites.'
@@ -98,7 +98,7 @@ jobs:
 
     steps:
       - name: ⏬ Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # The command 'git describe' (used for version) needs the history.
           fetch-depth: 0
@@ -360,7 +360,7 @@ jobs:
           cp -r -v ./install/lib/* ./pyGHDL/lib
 
 #      - name: 🐍 Setup Python (only mcode backend)
-#        uses: actions/setup-python@v5
+#        uses: actions/setup-python@v6
 #        if: (inputs.unittesting || inputs.coverage) && inputs.backend == 'mcode'
 #        with:
 #          python-version: ${{ inputs.python_version }}
@@ -491,7 +491,7 @@ jobs:
 
     steps:
       - name: ⏬ Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: '🟦 Setup MSYS2 for ${{ inputs.runtime }}'
         uses: msys2/setup-msys2@v2
@@ -501,7 +501,7 @@ jobs:
           pacboy: "diffutils:p"
 
       - name: 📥 Download artifacts '${{ needs.Build.outputs.pacman_artifact }}' from 'Package' job
-        uses: pyTooling/download-artifact@v4
+        uses: pyTooling/download-artifact@v5
         with:
           name: ${{ needs.Build.outputs.pacman_artifact }}
           path: pacman
@@ -536,10 +536,10 @@ jobs:
 
     steps:
       - name: ⏬ Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 📥 Download artifacts '${{ needs.Build.outputs.windows_artifact }}' from 'Package' job
-        uses: pyTooling/download-artifact@v4
+        uses: pyTooling/download-artifact@v5
         with:
           name: ${{ needs.Build.outputs.windows_artifact }}
           path: install
