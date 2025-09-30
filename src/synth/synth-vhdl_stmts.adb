@@ -116,10 +116,6 @@ package body Synth.Vhdl_Stmts is
       Off : Value_Offsets;
       Err : Boolean;
    begin
-      if Dest_Base.Val /= null then
-         --  For individual associations, only the typ can be set.
-         Strip_Const (Dest_Base);
-      end if;
       Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Typ, El_Typ, Voff, Off, Err);
 
       if Err then
@@ -180,10 +176,6 @@ package body Synth.Vhdl_Stmts is
       Err : Boolean;
       Arr_Typ : Type_Acc;
    begin
-      if Dest_Base.Val /= null then
-         Strip_Const (Dest_Base);
-      end if;
-
       Get_Onedimensional_Array_Bounds (Dest_Typ, Pfx_Bnd, El_Typ);
       Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, Dest_Typ.Wkind, El_Typ,
                           Res_Bnd, Sl_Voff, Sl_Off, Err);

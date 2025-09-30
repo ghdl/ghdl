@@ -2633,6 +2633,7 @@ package body Synth.Vhdl_Expr is
                   end if;
                end if;
                if Dyn.Voff = No_Net and then Is_Static (Base.Val) then
+                  Strip_Const (Base);
                   Res := Create_Value_Memtyp
                     ((Typ, Base.Val.Mem + Off.Mem_Off));
                   return Res;
@@ -2652,7 +2653,6 @@ package body Synth.Vhdl_Expr is
                Res : Valtyp;
             begin
                Val := Synth_Expression (Syn_Inst, Pfx);
-               Strip_Const (Val);
                Res_Typ := Val.Typ.Rec.E (Idx + 1).Typ;
                if Res_Typ.W = 0 and then Val.Val.Kind /= Value_Memory then
                   --  This is a null object.  As nothing can be done about it,
@@ -2661,6 +2661,7 @@ package body Synth.Vhdl_Expr is
                elsif Is_Static (Val.Val) then
                   --  TODO: why a copy ?
                   Res := Create_Value_Memory (Res_Typ, Current_Pool);
+                  Strip_Const (Val);
                   Copy_Memory
                     (Res.Val.Mem,
                      Get_Memory (Val)
