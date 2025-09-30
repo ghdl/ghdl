@@ -1629,10 +1629,11 @@ ghw_read_cycle_start (struct ghw_handler *h)
 int
 ghw_read_cycle_cont (struct ghw_handler *h, int *list)
 {
-  uint32_t i;
+  uint32_t i,j,k,p;
   int *list_p;
 
   i = 0;
+  p = 0;
   list_p = list;
   while (1)
     {
@@ -1653,33 +1654,48 @@ ghw_read_cycle_cont (struct ghw_handler *h, int *list)
 	  /* Fast version. */
 	  i = i + d;
 	  if (i >= h->nbr_sigs)
-	    goto err;
+	    goto err; 
 	}
       else
 	{
-	  /* Slow version: Linear search through all signals. Find d-th
-	     element with non-NULL type. Note: Type of sigs[0] is ignored. */
-	  while (d > 0)
-	    {
-	      i++;
-	      if (i >= h->nbr_sigs)
-		goto err;
-	      if (h->sigs[i].type != NULL)
-		d--;
+	  /* build the cache if not existing yet */
+	  if(h->no_null_sig_cache == NULL){
+	    fprintf (stderr, "[libghw] Building non null signal cache for %d signals...\n", h->nbr_sigs);
+	    h->no_null_sig_cache = malloc_unwrap(sizeof(uint32_t)*h->nbr_sigs);
+	    memset(h->no_null_sig_cache,0xFF,sizeof(uint32_t)*h->nbr_sigs);
+
+	    k = 0;
+	    for(j = 1; j < h->nbr_sigs; j++) {
+	      if(h->sigs[j].type != NULL) {
+		/* mark into cache */
+		h->no_null_sig_cache[k] = j; 
+		/*
+		if(k < 10) {
+		  fprintf (stderr, "[libghw]    k=%d, j=%d\n",k,j);
+		  }*/
+		k++;
+	      }
 	    }
+	  }
+	  
+	  /* take the value from the cache */
+	  p += d;
+	  i = h->no_null_sig_cache[p] - 1; /* Note: Type of sigs[0] is ignored, thus -1 */
 	}
 
       // i=0 is not a valid signal
       if (i == 0) goto err;
 
-      if (ghw_read_signal_value (h, &h->sigs[i]) < 0)
+      if (ghw_read_signal_value (h, &h->sigs[i]) < 0) {
 	return -1;
+      }
       if (list_p)
 	*list_p++ = i;
     }
 
   if (list_p)
     *list_p = 0;
+
   return 0;
 
 err:
@@ -2132,6 +2148,12 @@ ghw_close (struct ghw_handler *h)
 
       h->stream = NULL;
     }
+
+  /* Free up the non null signal cache if still in memory */
+  if(h->no_null_sig_cache != NULL) {
+    free(h->no_null_sig_cache);
+    h->no_null_sig_cache = NULL;
+  }
 }
 
 const char *

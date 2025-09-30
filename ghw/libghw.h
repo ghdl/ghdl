@@ -387,6 +387,12 @@ struct ghw_handler
   /* 1: sigs does not contain any signals with type = NULL and index > 0 */
   int sigs_no_null;
 
+  /*
+    A cached array of uint32_t containing all non null signals indices. Length is equal to nbr_sigs. Empty array cells have values 0xFFFFFFFF
+    It is used in ghw_read_cycle_cont to speed up loading for large files
+   */
+  uint32_t* no_null_sig_cache;
+  
   /* Hierarchy.  */
   struct ghw_hie *hie;
 
