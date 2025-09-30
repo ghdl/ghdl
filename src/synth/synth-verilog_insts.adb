@@ -384,11 +384,13 @@ package body Synth.Verilog_Insts is
       declare
          Inports : Port_Desc_Array (1 .. Nbr_Inputs);
          Outports : Port_Desc_Array (1 .. Nbr_Outputs);
+         Order : Uns32;
          Port : Node;
          Decl : Node;
       begin
          Nbr_Inputs := 0;
          Nbr_Outputs := 0;
+         Order := 0;
 
          Port := Ports;
          while Port /= Null_Node loop
@@ -400,13 +402,15 @@ package body Synth.Verilog_Insts is
                   Inports (Nbr_Inputs) :=
                     (Name => New_Sname_User (Get_Identifier (Decl), No_Sname),
                      Dir => Port_In,
+                     Order => Order,
                      W => Get_Type_Bitwidth (Get_Type_Data_Type (Decl)));
                when N_Output =>
                   Set_Obj_Port (Scope, Decl, Nbr_Outputs);
                   Nbr_Outputs := Nbr_Outputs + 1;
                   Outports (Nbr_Outputs) :=
                     (Name => New_Sname_User (Get_Identifier (Decl), No_Sname),
-                    Dir => Port_Out,
+                     Dir => Port_Out,
+                     Order => Order,
                      W => Get_Type_Bitwidth (Get_Type_Data_Type (Decl)));
                when N_Wire
                   | N_Wire_Direct
@@ -422,6 +426,7 @@ package body Synth.Verilog_Insts is
                   Error_Kind ("build_module", Port);
             end case;
             Port := Get_Chain (Port);
+            Order := Order + 1;
          end loop;
 
          pragma Assert (Nbr_Inputs = Inports'Last);

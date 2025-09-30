@@ -26,6 +26,7 @@ package body Netlists.Builders is
    begin
       return (Name => New_Sname_System (Get_Identifier (Id)),
               Dir => Dir,
+              Order => 0,
               W => W);
    end Create_Port;
 

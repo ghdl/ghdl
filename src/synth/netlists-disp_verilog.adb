@@ -1293,20 +1293,43 @@ package body Netlists.Disp_Verilog is
 
    procedure Disp_Module_Ports (M : Module)
    is
+      Nbr_Inputs : constant Port_Nbr := Get_Nbr_Inputs (M);
+      Nbr_Outputs : constant Port_Nbr := Get_Nbr_Outputs (M);
+      Inp_Idx, Out_Idx : Port_Idx;
       First : Boolean;
-      Desc : Port_Desc;
+      Desc_In, Desc_Out : Port_Desc;
       Attr : Attribute;
+      Is_Out : Boolean;
    begin
       First := True;
-      for I in 1 .. Get_Nbr_Inputs (M) loop
-         Desc := Get_Input_Desc (M, I - 1);
-         Attr := Get_Input_Port_First_Attribute (M, I - 1);
-         Disp_Module_Port (Desc, Attr, First);
-      end loop;
-      for I in 1 .. Get_Nbr_Outputs (M) loop
-         Desc := Get_Output_Desc (M, I - 1);
-         Attr := Get_Output_Port_First_Attribute (M, I - 1);
-         Disp_Module_Port (Desc, Attr, First);
+      Inp_Idx := 0;
+      Out_Idx := 0;
+      loop
+         exit when Inp_Idx = Nbr_Inputs and Out_Idx = Nbr_Outputs;
+         if Inp_Idx = Nbr_Inputs then
+            --  No more inputs
+            Is_Out := True;
+         elsif Out_Idx = Nbr_Outputs then
+            --  No more outputs
+            Is_Out := False;
+         else
+            --  Both inputs and outputs.
+            Desc_In := Get_Input_Desc (M, Inp_Idx);
+            Desc_Out := Get_Output_Desc (M, Out_Idx);
+            Is_Out := Desc_Out.Order < Desc_In.Order;
+         end if;
+
+         if Is_Out then
+            Desc_Out := Get_Output_Desc (M, Out_Idx);
+            Attr := Get_Output_Port_First_Attribute (M, Out_Idx);
+            Disp_Module_Port (Desc_Out, Attr, First);
+            Out_Idx := Out_Idx + 1;
+         else
+            Desc_In := Get_Input_Desc (M, Inp_Idx);
+            Attr := Get_Input_Port_First_Attribute (M, Inp_Idx);
+            Disp_Module_Port (Desc_In, Attr, First);
+            Inp_Idx := Inp_Idx + 1;
+         end if;
       end loop;
       if not First then
          Wr (")");

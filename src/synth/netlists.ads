@@ -183,11 +183,13 @@ package Netlists is
 
       Dir : Port_Kind;
 
+      --  Ports order for printers.
+      Order : Uns32;
+
       --  Port width (number of bits).
       W : Width;
    end record;
    pragma Pack (Port_Desc);
-   pragma Convention (C, Port_Desc);
 
    type Port_Desc_Array is array (Port_Idx range <>) of Port_Desc;
 
@@ -396,7 +398,7 @@ private
    No_Sname : constant Sname := 0;
 
    --  Just to confirm.
-   for Port_Desc'Size use 64;
+   for Port_Desc'Size use 3*32;
 
    type Module is mod 2**30;
    No_Module : constant Module := 0;

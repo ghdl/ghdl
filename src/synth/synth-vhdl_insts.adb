@@ -420,6 +420,7 @@ package body Synth.Vhdl_Insts is
    procedure Build_Ports_Desc (Descs : in out Port_Desc_Array;
                                Idx : in out Port_Nbr;
                                Pkind : Port_Kind;
+                               Order : Uns32;
                                Encoding : Name_Encoding;
                                Typ : Type_Acc;
                                Inter : Node)
@@ -441,6 +442,7 @@ package body Synth.Vhdl_Insts is
             Idx := Idx + 1;
             Descs (Idx) := (Name => Port_Sname,
                             Dir => Pkind,
+                            Order => Order,
                             W => Get_Type_Width (Typ));
          when Type_Record
            | Type_Unbounded_Record =>
@@ -456,6 +458,7 @@ package body Synth.Vhdl_Insts is
                     (Name => New_Sname_Field
                        (Get_Encoded_Name_Id (El, Encoding), Port_Sname),
                      Dir => Pkind,
+                     Order => Order,
                      W => Get_Type_Width (Typ.Rec.E (I).Typ));
                end loop;
             end;
@@ -554,10 +557,12 @@ package body Synth.Vhdl_Insts is
          Outports : Port_Desc_Array (1 .. Nbr_Outputs);
          Pkind : Port_Kind;
          Vt : Valtyp;
+         Order : Uns32;
       begin
          Inter := Get_Port_Chain (Decl);
          Nbr_Inputs := 0;
          Nbr_Outputs := 0;
+         Order := 0;
          while Is_Valid (Inter) loop
             Pkind := Mode_To_Port_Kind (Get_Mode (Inter));
             Vt := Get_Value (Params.Syn_Inst, Inter);
@@ -565,15 +570,16 @@ package body Synth.Vhdl_Insts is
             case Pkind is
                when Port_In =>
                   Build_Ports_Desc (Inports, Nbr_Inputs,
-                                    Pkind, Params.Encoding,
+                                    Pkind, Order, Params.Encoding,
                                     Vt.Typ, Inter);
                when Port_Out
                  | Port_Inout =>
                   Build_Ports_Desc (Outports, Nbr_Outputs,
-                                    Pkind, Params.Encoding,
+                                    Pkind, Order, Params.Encoding,
                                     Vt.Typ, Inter);
             end case;
             Inter := Get_Chain (Inter);
+            Order := Order + 1;
          end loop;
          pragma Assert (Nbr_Inputs = Inports'Last);
          pragma Assert (Nbr_Outputs = Outports'Last);

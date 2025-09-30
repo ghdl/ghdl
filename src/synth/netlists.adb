@@ -229,7 +229,7 @@ package body Netlists is
       Ports_Desc := Port_Desc_Table.Last + 1;
       for I in 1 .. Nbr_Inputs + Nbr_Outputs loop
          Port_Desc_Table.Append
-           ((Name => No_Sname, Dir => Port_In, W => 0));
+           ((Name => No_Sname, Dir => Port_In, Order => 0, W => 0));
       end loop;
 
       Modules_Table.Append
@@ -1658,6 +1658,7 @@ begin
 
    Port_Desc_Table.Append ((Name => No_Sname,
                             Dir => Port_In,
+                            Order => 0,
                             W => 0));
    pragma Assert (Port_Desc_Table.Last = No_Port_Desc_Idx);
 
