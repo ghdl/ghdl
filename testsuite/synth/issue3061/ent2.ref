@@ -1,8 +1,3 @@
-module ent
   (output sig1,
    output sig2,
    input  sig3);
-  assign sig1 = sig3; //(module output)
-  assign sig2 = sig3; //(module output)
-endmodule
-

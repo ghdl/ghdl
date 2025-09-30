@@ -1,28 +1,5 @@
-module ent
-  (output \sig1_sig1[a1] ,
-   output [3:0] \sig1_sig1[b1] ,
-   input  [1:0] \sig2_sig2[a2] ,
-   input  [3:0] \sig2_sig2[b2] ,
+  (output \sig1[a1] ,
+   output [3:0] \sig1[b1] ,
+   input  [1:0] \sig2[a2] ,
+   input  [3:0] \sig2[b2] ,
    output sig3);
-  wire n1;
-  wire [3:0] n2;
-  wire [5:0] n3;
-  wire n5;
-  wire [3:0] n6;
-  wire n7;
-  wire [4:0] n8;
-  assign \sig1_sig1[a1]  = n1; //(module output)
-  assign \sig1_sig1[b1]  = n2; //(module output)
-  assign sig3 = n5; //(module output)
-  assign n1 = n8[0]; // extract
-  assign n2 = n8[4:1]; // extract
-  assign n3 = {\sig2_sig2[b2] , \sig2_sig2[a2] };
-  /* ent4.vhdl:29:24  */
-  assign n5 = n3[0]; // extract
-  /* ent4.vhdl:30:25  */
-  assign n6 = n3[5:2]; // extract
-  /* ent4.vhdl:31:27  */
-  assign n7 = n3[1]; // extract
-  assign n8 = {n6, n7};
-endmodule
-
