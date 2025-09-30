@@ -1412,10 +1412,16 @@ package body Netlists.Memories is
       if Cell.Reversed then
          case Get_Id (Sig) is
             when Constant_Module_Id =>
-               --  For pure ROM
-               pragma Assert (Dim = 1);
-               Sig := Reverse_Mem_Constant
-                 (Ctxt, Sig, Cell.Step, Cell.Max + 1);
+               declare
+                  Nsig : Instance;
+               begin
+                  --  For pure ROM
+                  pragma Assert (Dim = 1);
+                  Nsig := Reverse_Mem_Constant
+                    (Ctxt, Sig, Cell.Step, Cell.Max + 1);
+                  Copy_Instance_Attributes (Nsig, Sig);
+                  Sig := Nsig;
+               end;
             when Id_Isignal =>
                --  For RAM
                pragma Assert (Dim = 1);
@@ -1569,6 +1575,7 @@ package body Netlists.Memories is
       Sig_Net := Get_Output (Nsig, 0);
 
       Inst := Build_Memory_Init (Ctxt, Name, Get_Width (Sig_Net), Sig_Net);
+      Copy_Instance_Attributes (Inst, Sig);
 
       Replace_ROM_Read_Ports (Ctxt, Sig, Inst, Step);
    end Replace_ROM_Memory;

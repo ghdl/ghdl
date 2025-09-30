@@ -298,8 +298,9 @@ package body Synth.Vhdl_Decls is
       case V.Val.Kind is
          when Value_Wire =>
             N := Get_Wire_Gate (Get_Value_Wire (V.Val));
-         when Value_Net =>
-            N := Get_Value_Net (V.Val);
+         when Value_Net
+            | Value_Const =>
+            N := Get_Net (Get_Build (Syn_Inst), V);
          when others =>
             raise Internal_Error;
       end case;
@@ -323,7 +324,8 @@ package body Synth.Vhdl_Decls is
 
       case Get_Kind (Obj) is
          when Iir_Kind_Signal_Declaration
-            | Iir_Kind_Variable_Declaration =>
+            | Iir_Kind_Variable_Declaration
+            | Iir_Kind_Constant_Declaration =>
             Synth_Attribute_Net (Syn_Inst, Obj, Attr_Decl, Val);
          when Iir_Kind_Interface_Signal_Declaration =>
             if Get_Kind (Get_Parent (Obj)) = Iir_Kind_Entity_Declaration then

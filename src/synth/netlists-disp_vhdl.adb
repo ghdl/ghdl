@@ -1452,7 +1452,6 @@ package body Netlists.Disp_Vhdl is
                if not Is_Self_Instance (Inst)
                  and then not (Flag_Merge_Lit
                                  and then Id in Constant_Module_Id
-                                 and then Id < Id_User_None
                                  and then not Need_Signal (Inst))
                  and then not (Flag_Merge_Edge
                                  and then Id in Edge_Module_Id
@@ -1510,7 +1509,11 @@ package body Netlists.Disp_Vhdl is
                end if;
          end case;
 
-         if With_Attr and then Has_Instance_Attribute (Inst) then
+         if With_Attr and then Has_Instance_Attribute (Inst)
+           and then not (Flag_Merge_Lit
+                         and then Id in Constant_Module_Id
+                         and then not Need_Signal (Inst))
+         then
             declare
                Attrs : constant Attribute :=
                  Get_Instance_First_Attribute (Inst);
