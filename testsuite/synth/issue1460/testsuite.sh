@@ -11,4 +11,6 @@ done
 synth_analyze to01_float
 synth_analyze division_float
 
+clean
+
 echo "Test successful"
