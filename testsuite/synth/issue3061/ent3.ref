@@ -1,0 +1,10 @@
+module ent
+  (input  sig1,
+   input  sig2,
+   output sig3);
+  wire n1;
+  assign sig3 = n1; //(module output)
+  /* ent3.vhdl:13:22  */
+  assign n1 = sig2 ^ sig1;
+endmodule
+
