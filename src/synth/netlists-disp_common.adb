@@ -68,17 +68,18 @@ package body Netlists.Disp_Common is
          Prefix := Get_Sname_Prefix (N);
          if Prefix /= No_Sname then
             Put_Name_Inner (Prefix);
-            Wr ("_");
+            if Kind /= Sname_Field then
+               Wr ("_");
+            end if;
          end if;
       end if;
 
-      case Get_Sname_Kind (N) is
+      case Kind is
          when Sname_User =>
             Put_Id (Get_Sname_Suffix (N));
          when Sname_System =>
             Put_Id (Get_Sname_Suffix (N));
          when Sname_Field =>
-            Put_Name_Inner (Get_Sname_Prefix (N));
             Wr ("[");
             Put_Id (Get_Sname_Suffix (N));
             Wr ("]");
