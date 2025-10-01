@@ -1672,23 +1672,19 @@ ghw_read_cycle_cont (struct ghw_handler *h, int *list)
 	    h->no_null_sig_cache = malloc_unwrap(sizeof(uint32_t)*h->nbr_sigs);
 	    memset(h->no_null_sig_cache,0xFF,sizeof(uint32_t)*h->nbr_sigs);
 
-	    k = 0;
+	    k = 1; /* Note: Type of sigs[0] is ignored, thus we start from first index */
 	    for(j = 1; j < h->nbr_sigs; j++) {
 	      if(h->sigs[j].type != NULL) {
 		/* mark into cache */
 		h->no_null_sig_cache[k] = j; 
-		/*
-		if(k < 10) {
-		  fprintf (stderr, "[libghw]    k=%d, j=%d\n",k,j);
-		  }*/
 		k++;
 	      }
 	    }
 	  }
 	  
-	  /* take the value from the cache */
+	  /* takes the value from the cache */
 	  p += d;
-	  i = h->no_null_sig_cache[p] - 1; /* Note: Type of sigs[0] is ignored, thus -1 */
+	  i = h->no_null_sig_cache[p]; 
 	}
 
       // i=0 is not a valid signal
@@ -2159,6 +2155,7 @@ ghw_close (struct ghw_handler *h)
 
   /* Free up the non null signal cache if still in memory */
   if(h->no_null_sig_cache != NULL) {
+    printf("[libghw] Clearing non null signal cache\n");
     free(h->no_null_sig_cache);
     h->no_null_sig_cache = NULL;
   }
