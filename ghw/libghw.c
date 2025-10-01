@@ -87,6 +87,14 @@ ghw_open (struct ghw_handler *h, const char *filename)
 {
   char hdr[16];
 
+  /*
+    resets cache for non null signals.
+    NOTE: this is freed on close, so we should have
+    no memory leaks, but if the user passes a non-initialized
+    handler then this avoids segfault later on
+   */
+  h->no_null_sig_cache = NULL; 
+
   h->stream = fopen (filename, "rb");
   if (h->stream == NULL)
     return -1;
