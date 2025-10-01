@@ -1668,7 +1668,7 @@ ghw_read_cycle_cont (struct ghw_handler *h, int *list)
 	{
 	  /* build the cache if not existing yet */
 	  if(h->no_null_sig_cache == NULL){
-	    fprintf (stderr, "[libghw] Building non null signal cache for %d signals...\n", h->nbr_sigs);
+	    printf("[libghw] Building non null signal cache for %u signals...\n", h->nbr_sigs);
 	    h->no_null_sig_cache = malloc_unwrap(sizeof(uint32_t)*h->nbr_sigs);
 	    memset(h->no_null_sig_cache,0xFF,sizeof(uint32_t)*h->nbr_sigs);
 
