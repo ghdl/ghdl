@@ -1667,8 +1667,7 @@ ghw_read_cycle_cont (struct ghw_handler *h, int *list)
       else
 	{
 	  /* build the cache if not existing yet */
-	  if(h->no_null_sig_cache == NULL){
-	    printf("[libghw] Building non null signal cache for %u signals...\n", h->nbr_sigs);
+	  if(h->no_null_sig_cache == NULL) {
 	    h->no_null_sig_cache = malloc_unwrap(sizeof(uint32_t)*h->nbr_sigs);
 	    memset(h->no_null_sig_cache,0xFF,sizeof(uint32_t)*h->nbr_sigs);
 
@@ -1687,7 +1686,7 @@ ghw_read_cycle_cont (struct ghw_handler *h, int *list)
 	  i = h->no_null_sig_cache[p]; 
 	}
 
-      // i=0 is not a valid signal
+      /* i=0 is not a valid signal */
       if (i == 0) goto err;
 
       if (ghw_read_signal_value (h, &h->sigs[i]) < 0) {
@@ -2155,7 +2154,6 @@ ghw_close (struct ghw_handler *h)
 
   /* Free up the non null signal cache if still in memory */
   if(h->no_null_sig_cache != NULL) {
-    printf("[libghw] Clearing non null signal cache\n");
     free(h->no_null_sig_cache);
     h->no_null_sig_cache = NULL;
   }
