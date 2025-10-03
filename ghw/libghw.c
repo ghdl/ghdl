@@ -1668,9 +1668,8 @@ ghw_read_cycle_cont (struct ghw_handler *h, int *list)
 	{
 	  /* build the cache if not existing yet */
 	  if(h->no_null_sig_cache == NULL) {
-	    h->no_null_sig_cache = malloc_unwrap(sizeof(uint32_t)*h->nbr_sigs);
-	    memset(h->no_null_sig_cache,0xFF,sizeof(uint32_t)*h->nbr_sigs);
-
+	    h->no_null_sig_cache = calloc_unwrap(h->nbr_sigs, sizeof(uint32_t));
+	    
 	    k = 1; /* Note: Type of sigs[0] is ignored, thus we start from first index */
 	    for(j = 1; j < h->nbr_sigs; j++) {
 	      if(h->sigs[j].type != NULL) {
