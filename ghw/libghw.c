@@ -87,6 +87,14 @@ ghw_open (struct ghw_handler *h, const char *filename)
 {
   char hdr[16];
 
+  /*
+    resets cache for non null signals.
+    NOTE: this is freed on close, so we should have
+    no memory leaks, but if the user passes a non-initialized
+    handler then this avoids segfault later on
+   */
+  h->no_null_sig_cache = NULL; 
+
   h->stream = fopen (filename, "rb");
   if (h->stream == NULL)
     return -1;
@@ -1629,10 +1637,11 @@ ghw_read_cycle_start (struct ghw_handler *h)
 int
 ghw_read_cycle_cont (struct ghw_handler *h, int *list)
 {
-  uint32_t i;
+  uint32_t i,j,k,p;
   int *list_p;
 
   i = 0;
+  p = 0;
   list_p = list;
   while (1)
     {
@@ -1653,33 +1662,42 @@ ghw_read_cycle_cont (struct ghw_handler *h, int *list)
 	  /* Fast version. */
 	  i = i + d;
 	  if (i >= h->nbr_sigs)
-	    goto err;
+	    goto err; 
 	}
       else
 	{
-	  /* Slow version: Linear search through all signals. Find d-th
-	     element with non-NULL type. Note: Type of sigs[0] is ignored. */
-	  while (d > 0)
-	    {
-	      i++;
-	      if (i >= h->nbr_sigs)
-		goto err;
-	      if (h->sigs[i].type != NULL)
-		d--;
+	  /* build the cache if not existing yet */
+	  if(h->no_null_sig_cache == NULL) {
+	    h->no_null_sig_cache = calloc_unwrap(h->nbr_sigs, sizeof(uint32_t));
+	    
+	    k = 1; /* Note: Type of sigs[0] is ignored, thus we start from first index */
+	    for(j = 1; j < h->nbr_sigs; j++) {
+	      if(h->sigs[j].type != NULL) {
+		/* mark into cache */
+		h->no_null_sig_cache[k] = j; 
+		k++;
+	      }
 	    }
+	  }
+	  
+	  /* takes the value from the cache */
+	  p += d;
+	  i = h->no_null_sig_cache[p]; 
 	}
 
-      // i=0 is not a valid signal
+      /* i=0 is not a valid signal */
       if (i == 0) goto err;
 
-      if (ghw_read_signal_value (h, &h->sigs[i]) < 0)
+      if (ghw_read_signal_value (h, &h->sigs[i]) < 0) {
 	return -1;
+      }
       if (list_p)
 	*list_p++ = i;
     }
 
   if (list_p)
     *list_p = 0;
+
   return 0;
 
 err:
@@ -2132,6 +2150,12 @@ ghw_close (struct ghw_handler *h)
 
       h->stream = NULL;
     }
+
+  /* Free up the non null signal cache if still in memory */
+  if(h->no_null_sig_cache != NULL) {
+    free(h->no_null_sig_cache);
+    h->no_null_sig_cache = NULL;
+  }
 }
 
 const char *
