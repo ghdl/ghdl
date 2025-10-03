@@ -223,12 +223,26 @@ package body Synth.Vhdl_Decls is
       Release_Expr_Pool (Marker);
    end Synth_Constant_Declaration;
 
+   --  Convert attribute declaration ATTR_DECL and value VAL from the
+   --  specification to netlist attribute ID, PTYPE, PV.
+   procedure Synth_Attribute_Value (Attr_Decl : Node;
+                                    Val : Valtyp;
+                                    Id : out Name_Id;
+                                    Ptype : out Param_Type;
+                                    Pv : out Pval) is
+   begin
+      --  Keep original case.
+      Id := Get_Source_Identifier (Attr_Decl);
+      Ptype := Type_To_Param_Type (Get_Type (Attr_Decl));
+      Pv := Memtyp_To_Pval (Get_Memtyp (Val));
+   end Synth_Attribute_Value;
+
    procedure Synth_Attribute_Port (Syn_Inst : Synth_Instance_Acc;
                                    Obj : Node;
                                    Attr_Decl : Node;
                                    Val : Valtyp)
    is
-      Id    : constant Name_Id := Get_Identifier (Attr_Decl);
+      Id : Name_Id;
       V : Valtyp;
       N : Net;
       Ptype : Param_Type;
@@ -238,8 +252,7 @@ package body Synth.Vhdl_Decls is
       Port : Port_Idx;
       Inp, N_Inp : Input;
    begin
-      Ptype := Type_To_Param_Type (Get_Type (Attr_Decl));
-      Pv := Memtyp_To_Pval (Get_Memtyp (Val));
+      Synth_Attribute_Value (Attr_Decl, Val, Id, Ptype, Pv);
 
       V := Get_Value (Syn_Inst, Obj);
       case V.Val.Kind is
@@ -276,13 +289,13 @@ package body Synth.Vhdl_Decls is
    procedure Synth_Attribute_Inst
      (Inst : Instance; Attr_Decl : Node; Val : Valtyp)
    is
+      Id : Name_Id;
       Ptype : Param_Type;
       Pv    : Pval;
    begin
-      Ptype := Type_To_Param_Type (Get_Type (Attr_Decl));
-      Pv := Memtyp_To_Pval (Get_Memtyp (Val));
+      Synth_Attribute_Value (Attr_Decl, Val, Id, Ptype, Pv);
 
-      Set_Instance_Attribute (Inst, Get_Identifier (Attr_Decl), Ptype, Pv);
+      Set_Instance_Attribute (Inst, Id, Ptype, Pv);
    end Synth_Attribute_Inst;
 
    procedure Synth_Attribute_Net (Syn_Inst : Synth_Instance_Acc;
