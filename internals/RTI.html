@@ -1,0 +1,845 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="author" title="About these documents" href="../about.html"><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="GNATdoc" href="../gnatdoc/index.html"><link rel="prev" title="AST" href="AST.html">
+        <link rel="prefetch" href="../_static/logo.png" as="image">
+
+    <link rel="shortcut icon" href="../_static/icon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.09.25 -->
+        <title>Run Time Information (RTI) - 6.0.0-dev</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=580074bf" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f3f3;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">6.0.0-dev</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">6.0.0-dev</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a><input aria-label="Toggle navigation of Quick Start Guide" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../quick_start/simulation/index.html">Simulation</a><input aria-label="Toggle navigation of Simulation" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/hello/index.html"><cite>Hello world</cite> program</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/heartbeat/index.html"><cite>Heartbeat</cite> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/adder/index.html"><cite>Full adder</cite> module and testbench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/DLXModelSuite.html">Working with non-trivial designs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference external" href="https://ghdl.github.io/ghdl-cosim">Co-Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quick_start/python/index.html">Python Interfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../development/building/index.html">Building GHDL</a><input aria-label="Toggle navigation of Building GHDL" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/Sources.html">Sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/mcode.html">mcode backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/LLVM.html">LLVM backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/GCC.html">GCC backend</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ghw/index.html">GHDL Waveform (GHW)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="AST.html">AST</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/ghdl/ghdl/blob/master/doc/internals/RTI.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/ghdl/ghdl/edit/master/doc/internals/RTI.rst" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="run-time-information-rti">
+<h1>Run Time Information (RTI)<a class="headerlink" href="#run-time-information-rti" title="Link to this heading">¶</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This section was written while trying to understand how the RTI is
+organized. It almost certainly contains errors, and it likely
+won’t be updated with the codebase, so don’t believe any of the
+information here. Nevertheless, it may be helpful for a developer new
+to GHDL trying to understand the organization of the RTI.</p>
+</div>
+<section id="useful-definitions">
+<h2>Useful Definitions<a class="headerlink" href="#useful-definitions" title="Link to this heading">¶</a></h2>
+<p>RTI</p>
+<blockquote>
+<div><p>Run Time Information. The information that is used when simulating the design.</p>
+</div></blockquote>
+<p>RTIN</p>
+<blockquote>
+<div><p>Run Time Information Node. The design is organized into a directed
+graph where the architectures, signals and statements are represented
+as nodes on the graph. This graph can be cyclic since an architecture
+may be instantiated many times, and could be recursively
+instantiated.</p>
+</div></blockquote>
+<p>Context</p>
+<blockquote>
+<div><p>The context of a node is the position in the elaborated design. For
+example a architecture might be instantiated 4 times in a design, but
+will have a single RTI node. The data related to that node but
+specific to particular instantiation has an address in memory. A
+context object (<cite>Rti_Context</cite>) bundles an RTI node with an address for
+it’s instantiation data.  If this RTI node references another RTI node we
+can find the relevant instantiation data for that node by considering the
+context.</p>
+</div></blockquote>
+<p>RTII</p>
+<blockquote>
+<div><p>Run Time Instance Information. This is a record that groups an RTI
+node with any other data necessary to specify a particular
+instantiation. The RTII objects create a tree that represents the
+elaborated design. Currently they are only implemented for RTIN nodes
+of signals, ports, generics, constants and their subcomponents.</p>
+</div></blockquote>
+</section>
+<section id="rti-nodes-rtii-nodes">
+<h2>RTI Nodes / RTII Nodes<a class="headerlink" href="#rti-nodes-rtii-nodes" title="Link to this heading">¶</a></h2>
+<p>All RTI node records have a <cite>Ghdl_Rtin_Common</cite> record as their first
+element. This record contains the following elements:</p>
+<p>Kind : Ghdl_Rtik</p>
+<blockquote>
+<div><p>This specified what kind of node it is. For example a <cite>process</cite> and
+an <cite>entity</cite> node are both represented by <cite>Ghdl_Rtin_Block</cite> records
+but they are distinguished by having a different Kind.</p>
+</div></blockquote>
+<p>Depth : Ghdl_Rti_Depth</p>
+<blockquote>
+<div><p>The depth indicates the relationship between the RTI Node and the RTI
+Context. Child nodes often just use the same Context as their parent,
+and the depth indicates how far up in the hierarchy you go to find
+where the Context is based.</p>
+</div></blockquote>
+<p>Mode : Ghdl_Rti_U8</p>
+<blockquote>
+<div><p>??</p>
+</div></blockquote>
+<p>Max_Depth : Ghdl_Rti_Depth</p>
+<blockquote>
+<div><p>??</p>
+</div></blockquote>
+<p>It’s also useful to look at some of the other elements that commonly
+appear in the different RTI Node records.</p>
+<p>Loc : Ghdl_Rti_Loc</p>
+<blockquote>
+<div><p>This is an address offset. It tells us where the instantiation data
+for this node is located relative to the data of it’s parent.</p>
+</div></blockquote>
+<p>Linecol : Ghdl_Index_Type</p>
+<blockquote>
+<div><p>Refers back to a location in the source code.</p>
+</div></blockquote>
+<p>Parent : Ghdl_Rti_Access</p>
+<blockquote>
+<div><p>Points to the parent. This isn’t necessarily the parent in the RTI
+tree though. For example the <cite>Parent</cite> of an architecture RTI node
+points at the entity node, however the parent in the tree is the
+instance RTI.</p>
+</div></blockquote>
+<p>This document will now review that main classes of RTI Nodes.</p>
+<section id="architecture-rti-ghdl-rtin-block">
+<h3>Architecture RTI (Ghdl_Rtin_Block)<a class="headerlink" href="#architecture-rti-ghdl-rtin-block" title="Link to this heading">¶</a></h3>
+<p>The architecture acts as a simple container for it’s children. Create
+the child tree nodes by looping through <cite>Ghdl_Rti_Block.Children</cite> and
+keeping the context unchanged.</p>
+<p>The information about the generics and ports access the entity RTI
+nodes through <cite>Ghdl_Rti_Block.Parent</cite> using the same context.</p>
+<p>The instantiation data of an architecture contains a single item, a
+pointer to the RTI node. This is necessary because it is necessary to
+store which of the possible architectures of this entity was
+instantiated.</p>
+</section>
+<section id="entity-rti-ghdl-rtin-block">
+<h3>Entity RTI (Ghdl_Rtin_Block)<a class="headerlink" href="#entity-rti-ghdl-rtin-block" title="Link to this heading">¶</a></h3>
+<p>The RTI of an entity is a <cite>Ghdl_Rti_Block</cite> record (the same as the
+architecture) and uses the same context as the architecture. It is
+accessed via the architecture’s <cite>Parent</cite> element. The generics and
+ports can be accessed as the children of the entity.</p>
+</section>
+<section id="other-blocks-package-process-ghdl-rtin-block">
+<h3>Other Blocks (Package/Process) (Ghdl_Rtin_Block)<a class="headerlink" href="#other-blocks-package-process-ghdl-rtin-block" title="Link to this heading">¶</a></h3>
+<p>The block just loops over it’s children.</p>
+</section>
+<section id="if-generate-case-generate-ghdl-rtin-block">
+<h3>if_generate / case_generate (Ghdl_Rtin_Block)<a class="headerlink" href="#if-generate-case-generate-ghdl-rtin-block" title="Link to this heading">¶</a></h3>
+<p>If-Generate and Case-Generate statements are represented with
+<cite>Ghdl_Rtin_Block</cite> records with Kind <cite>Ghdl_Rtik_If_Generate</cite> and
+<cite>Ghdl_Rtik_Case_Generate</cite>.</p>
+<p>Their children are all of Kind <cite>Ghdl_Rtik_Body</cite>, and represent the
+different possible blocks that could be selected.</p>
+<p>The instantiation data of a if_generate or case_generate RTI contains two items:
+1) A pointer to the context of the selected generate body (instance_pointer).
+2) The index of the selected child (block_id)</p>
+<p>The child node is then created from the RTI node
+<cite>Ghdl_Rtik_Body.Children(block_id)</cite> combined with the instantiation data given by
+<cite>instance_pointer</cite>.</p>
+</section>
+<section id="for-generate-ghdl-rtin-generate">
+<h3>for_generate (Ghdl_Rtin_Generate)<a class="headerlink" href="#for-generate-ghdl-rtin-generate" title="Link to this heading">¶</a></h3>
+<p>For-Generate statements are represented with <cite>Ghdl_Rtin_Generate</cite>
+records with Kind <cite>Ghdl_Rtik_For_Generate</cite>.</p>
+<p>Their RTI-node structure is different from the <cite>Ghdl_Rtin_Block</cite>
+record in that rather than having <cite>Nbr_Child</cite> and <cite>Children</cite> elements,
+it has:</p>
+<p>Child : Ghdl_Rti_Access</p>
+<blockquote>
+<div><p>A pointer to the generate body node that is their only child.</p>
+</div></blockquote>
+<p>Size : Ghdl_Index_Type</p>
+<blockquote>
+<div><p>The amount of memory required for the context of their child.</p>
+</div></blockquote>
+<p>The Child element is a generate body. There is only a single RTI-node
+structure which Child points to, however a different context is used
+each time we go around the for-generate loop.</p>
+<p>The context of a for_generate RTI contains a single item: An address
+which points at the contexts for it’s children.</p>
+<p>Each time we go around the for generate loop we increment the address
+of the context by <cite>Size</cite> so we looking at the correct context for that
+instantiation of the contexts of the loop.</p>
+<p>One complexity of the for-generate is finding the number of times that
+we go around the loop. The first element in the child generate body is
+an iterator. That iterator has a type and we can get the bounds of
+that type by passing it the local context. The type of the iterator
+for the for-generate loop is implicitly created and placed directly
+before the for_generate block, so using the local context will work.
+There might be a bug if the for-generate loop uses a type that wasn’t
+defined implicitly.</p>
+</section>
+<section id="instance-ghdl-rtin-instance">
+<h3>instance (Ghdl_Rtin_Instance)<a class="headerlink" href="#instance-ghdl-rtin-instance" title="Link to this heading">¶</a></h3>
+<p>An instantiation of an entity is represented by a <cite>Ghdl_Rtin_Instance</cite>
+node with Kind <cite>Ghdl_Rtik_Instance</cite>.</p>
+<p>The context contains a single item, which is a pointer to the context
+of the architecture. The architecture context also contains a single
+item, which is a pointer to the architecture RTI Node.</p>
+</section>
+<section id="port-ghdl-rtin-object">
+<h3>Port (Ghdl_Rtin_Object)<a class="headerlink" href="#port-ghdl-rtin-object" title="Link to this heading">¶</a></h3>
+</section>
+<section id="array-kinds">
+<h3>Array Kinds<a class="headerlink" href="#array-kinds" title="Link to this heading">¶</a></h3>
+<dl class="simple">
+<dt>Ghdl_Rtik_Type_Array</dt><dd><p>A VHDL array where the range is not specified.</p>
+</dd>
+<dt>Ghdl_Rtik_Subtype_Array</dt><dd><p>A VHDL array where the range is specified.
+A Type_Array together with the bounds.</p>
+</dd>
+</dl>
+</section>
+<section id="object-to-base-bound">
+<h3>Object_To_Base_Bound<a class="headerlink" href="#object-to-base-bound" title="Link to this heading">¶</a></h3>
+<p>This function takes an object type and an object’s static context
+location and returns the complex context location and the bounds.</p>
+<p>When the object is static the bounds is null (because the bounds
+are held in the type definition) and the complex context is the
+same as the static context.</p>
+<p>When the object is complex the bounds is null, and the static
+context location contains a pointer to the complex context
+location.</p>
+<p>When the object is unbound the static context contains a <cite>Ghdl_Uc_Array</cite>
+record. The contains <cite>Bounds</cite> which points to the bounds, and <cite>Base</cite>
+which points to the complex context location.</p>
+</section>
+<section id="array-type-ghdl-rtin-type-array">
+<h3>Array_Type (Ghdl_Rtin_Type_Array)<a class="headerlink" href="#array-type-ghdl-rtin-type-array" title="Link to this heading">¶</a></h3>
+<p>Contains Common and Name fields followed by:</p>
+<dl class="simple">
+<dt>Element : Ghdl_Rti_Access</dt><dd><p>The type of the elements in the array.</p>
+</dd>
+<dt>Nbr_Dim : Ghdl_Index_Type</dt><dd><p>The number of dimensions in the array.
+Multidimensional arrays are not stored as arrays of arrays,
+but rather directly as multidimensional arrays.</p>
+</dd>
+<dt>Indexes : Ghdl_Rti_Arr_Acc</dt><dd><p>??? This is an array of the indices for each dimension, but I don’t
+know what kind of object they are represented by yet.</p>
+</dd>
+</dl>
+<p>Functions acting on types don’t seem to use context in the same way.
+The functions are often pass the RTI object, a context (of a object
+higher in the hierarchy, and a pointer to a local context (often called
+layout)).</p>
+<p>The context of an Array Type has a defined structure which is <cite>Ghdl_Uc_Array</cite>.
+This contains a <cite>Base</cite> and a <cite>Bounds</cite> field.</p>
+<dl class="simple">
+<dt>Base : Address</dt><dd><p>Points to the complex context of the object.</p>
+</dd>
+<dt>Bounds : Address</dt><dd><p>Points to the bounds of the array.</p>
+</dd>
+</dl>
+</section>
+<section id="array-subtype-ghdl-rtin-subtype-array">
+<h3>Array Subtype (Ghdl_Rtin_Subtype_Array)<a class="headerlink" href="#array-subtype-ghdl-rtin-subtype-array" title="Link to this heading">¶</a></h3>
+<p>Array subtypes are represented by the <cite>Ghdl_Rtin_Subtype_Composite</cite>
+RTI node.
+The node contains the <cite>Common</cite> and <cite>Name</cite> fields, followed by</p>
+<dl class="simple">
+<dt>Basetype : Ghdl_Rti_Access</dt><dd><p>A pointer to the RTI array type which it is a subtype of.</p>
+</dd>
+<dt>Layout : Ghdl_Rti_Loc</dt><dd><p>A pointer to the context of the subtype relative to the parent context.
+The layout contains:
+a value size, a signal sizes, and the bounds.</p>
+</dd>
+</dl>
+</section>
+<section id="port-signal-generic-constant-variable-ghdl-rtin-object">
+<h3>Port / Signal / Generic / Constant / Variable (Ghdl_Rtin_Object)<a class="headerlink" href="#port-signal-generic-constant-variable-ghdl-rtin-object" title="Link to this heading">¶</a></h3>
+<p>The context of an object is found by taking offsetting the Context by
+the <cite>Loc</cite> field on the object. The implementation often uses the same
+Context for a group of hierarhical signals, so that the determination
+of the location of the context of objects in the hierarchy must be
+found using a function such as <cite>Loc_To_Addr</cite>.</p>
+<p>The <cite>Obj_Type</cite> field of an object points at the type of the object.</p>
+<p>A signal definition can also include placing bounds on a unbounded
+type.</p>
+<p>The tree of an object can be created by pairing the hierarchy of types
+with the hierarchy of contexts.</p>
+<dl class="simple">
+<dt>If the type is a scalar type then the value of the object is found at:</dt><dd><dl class="simple">
+<dt>If the object is a port or signal then the only item in the context</dt><dd><p>is a pointer to the signal object.  The first item in the signal object
+is a pointer to the value.</p>
+</dd>
+<dt>If the object is a constant, generic or variable then the context</dt><dd><p>contains a pointer to the value itself.</p>
+</dd>
+</dl>
+</dd>
+<dt>If the type is an unbound array:</dt><dd><p>We must be at the top level of a hierarchical object.
+The context contains a pointer to the first element context,
+and a pointer to the bounds.</p>
+</dd>
+<dt>If the type is a static array:</dt><dd><p>The context is the same as the context of the first element.
+The bounds are given in the layout of the type (composite).</p>
+</dd>
+<dt>If the type is a complex array:</dt><dd><p>The context contains a pointer to the context of the first element.
+Because the size of the context cannot be determined at compile time
+this layer of indirection is necessary.</p>
+</dd>
+</dl>
+</section>
+<section id="record-kinds">
+<h3>Record Kinds<a class="headerlink" href="#record-kinds" title="Link to this heading">¶</a></h3>
+<p>Ghdl_Rtik_Type_Record</p>
+<blockquote>
+<div><p>A standard VHDL record.</p>
+</div></blockquote>
+<p>Ghdl_Rtik_Type_Unbounded_Record</p>
+<blockquote>
+<div><p>A vhdl record containing an unbounded array (directory or indirectly).</p>
+</div></blockquote>
+<p>Ghdl_Rtik_Subtype_Record</p>
+<blockquote>
+<div><p>A subtype of an unbounded record where all arrays are not bounded.</p>
+</div></blockquote>
+<p>Ghdl_Rtik_Subtype_Unbounded_Record</p>
+<blockquote>
+<div><p>A subtype of an unbounded record where some but not all of the previously
+unbound arrays have been bound.</p>
+</div></blockquote>
+</section>
+<section id="record-type-ghdl-rtin-type-record">
+<h3>Record Type (Ghdl_Rtin_Type_Record)<a class="headerlink" href="#record-type-ghdl-rtin-type-record" title="Link to this heading">¶</a></h3>
+<p>Can have Kind of <cite>Ghdl_Rtik_Type_Record</cite> or <cite>Ghdl_Rtik_Type_Unbounded_Record</cite>.
+The record elements after <cite>Common</cite> and <cite>Name</cite> are:</p>
+<p>Nbrel : Ghdl_Index_Type</p>
+<blockquote>
+<div><p>Number elements in the record.</p>
+</div></blockquote>
+<p>Elements : Ghdl_Rti_Arr_Acc;</p>
+<blockquote>
+<div><p>The RTI nodes of the element definitions.</p>
+</div></blockquote>
+<p>Layout : Ghdl_Rti_Loc</p>
+<blockquote>
+<div><p>The layout is the relative address that the layout/bounds information
+of the elements will be relative to.</p>
+</div></blockquote>
+</section>
+<section id="id1">
+<h3>Record Type (Ghdl_Rtin_Type_Record)<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<p>For an unbounded record the Layout is not used, but rather a <cite>Bounds</cite> must be
+given.</p>
+</section>
+<section id="element-type-ghdl-rtin-element">
+<h3>Element Type (Ghdl_Rtin_Element)<a class="headerlink" href="#element-type-ghdl-rtin-element" title="Link to this heading">¶</a></h3>
+<p>The record elements after <cite>Common</cite> and <cite>Name</cite> are:</p>
+<dl class="simple">
+<dt>Eltype : Ghdl_Rti_Access</dt><dd><p>The RTI node representing the type of the element.</p>
+</dd>
+<dt>Val_Off : Ghdl_Index_Type</dt><dd><p>For static element the offset is in the record.
+For complex element the offset is in the type layout or object layout.
+This is the offset for the value for generics or constants.</p>
+</dd>
+<dt>Sig_Off : Ghdl_Index_Type</dt><dd><p>This is the offset for the value wrapper in signals or ports.</p>
+</dd>
+<dt>Layout_Off : Ghdl_Index_Type;</dt><dd><p>For unbounded records: element layout offset in the layout.
+The layout is stores all the bounds for the various elements
+when the unbounded record is given bounds.</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h3>
+<div class="highlight-vhdl notranslate"><div class="highlight"><pre><span></span><span class="k">library</span><span class="w"> </span><span class="nn">ieee</span><span class="w"> </span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="nn">ieee.std_logic_1164.</span><span class="k">all</span><span class="p">;</span>
+
+<span class="k">package</span><span class="w"> </span><span class="n">mypkg</span><span class="w"> </span><span class="k">is</span>
+
+<span class="w">  </span><span class="k">type</span><span class="w"> </span><span class="n">mytype</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">record</span>
+<span class="w">    </span><span class="n">a</span><span class="o">:</span><span class="w"> </span><span class="kt">std_logic</span><span class="p">;</span>
+<span class="w">    </span><span class="n">b</span><span class="o">:</span><span class="w"> </span><span class="kt">std_logic</span><span class="p">;</span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">record</span><span class="p">;</span>
+
+<span class="k">end</span><span class="w"> </span><span class="k">package</span><span class="p">;</span>
+
+<span class="k">library</span><span class="w"> </span><span class="nn">ieee</span><span class="w"> </span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="nn">ieee.std_logic_1164.</span><span class="k">all</span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="nn">work.mypkg.</span><span class="k">all</span><span class="p">;</span>
+
+<span class="k">entity</span><span class="w"> </span><span class="nc">myentity</span><span class="w"> </span><span class="k">is</span>
+<span class="w">  </span><span class="k">port</span><span class="p">(</span>
+<span class="w">    </span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">mytype</span>
+<span class="w">    </span><span class="p">);</span>
+<span class="k">end</span><span class="w"> </span><span class="nc">myentity</span><span class="p">;</span>
+
+<span class="k">architecture</span><span class="w"> </span><span class="nc">arch</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nc">myentity</span><span class="w"> </span><span class="k">is</span>
+<span class="k">begin</span>
+<span class="k">end</span><span class="w"> </span><span class="nc">arch</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>What will be the structure of the RTI for the port <cite>myentity.x</cite>?</p>
+<p>The architecture has a context.
+Address of the architecture is A</p>
+<p>The entity has the same context.
+Address of the entity is A.</p>
+<p>The child on the entity is the port.
+Address of the port is A + 16.</p>
+<p>A port is a record ‘x’
+Address of the record value is A + 16.</p>
+<p>The record contains ‘a’ a std_logic vector.
+Address is A + 16.</p>
+<p>The record contains ‘b’ a std_logic_vector.
+Address is A + 24</p>
+<div class="highlight-vhdl notranslate"><div class="highlight"><pre><span></span><span class="k">library</span><span class="w"> </span><span class="nn">ieee</span><span class="w"> </span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="nn">ieee.std_logic_1164.</span><span class="k">all</span><span class="p">;</span>
+
+<span class="k">package</span><span class="w"> </span><span class="n">mypkg</span><span class="w"> </span><span class="k">is</span>
+
+<span class="w">  </span><span class="k">type</span><span class="w"> </span><span class="n">mytype</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">record</span>
+<span class="w">    </span><span class="n">a</span><span class="o">:</span><span class="w"> </span><span class="kt">std_logic_vector</span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="k">downto</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">    </span><span class="n">b</span><span class="o">:</span><span class="w"> </span><span class="kt">std_logic_vector</span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="k">downto</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">record</span><span class="p">;</span>
+
+<span class="k">end</span><span class="w"> </span><span class="k">package</span><span class="p">;</span>
+
+<span class="k">library</span><span class="w"> </span><span class="nn">ieee</span><span class="w"> </span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="nn">ieee.std_logic_1164.</span><span class="k">all</span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="nn">work.mypkg.</span><span class="k">all</span><span class="p">;</span>
+
+<span class="k">entity</span><span class="w"> </span><span class="nc">myentity</span><span class="w"> </span><span class="k">is</span>
+<span class="w">  </span><span class="k">port</span><span class="p">(</span>
+<span class="w">    </span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="n">mytype</span>
+<span class="w">    </span><span class="p">);</span>
+<span class="k">end</span><span class="w"> </span><span class="nc">myentity</span><span class="p">;</span>
+
+<span class="k">architecture</span><span class="w"> </span><span class="nc">arch</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nc">myentity</span><span class="w"> </span><span class="k">is</span>
+<span class="k">begin</span>
+<span class="k">end</span><span class="w"> </span><span class="nc">arch</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>- Architecture (A)
+  - Entity (A)
+    - port x (A+16)
+      - x.a (A+16)
+      - x.a(?) (A+16)
+      - x.a(?) (A+24)
+      - x.b (A+32)
+      - x.b(?) (A+40)
+      - x.b(?) (A+48)
+</pre></div>
+</div>
+<div class="highlight-vhdl notranslate"><div class="highlight"><pre><span></span><span class="k">library</span><span class="w"> </span><span class="nn">ieee</span><span class="w"> </span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="nn">ieee.std_logic_1164.</span><span class="k">all</span><span class="p">;</span>
+
+<span class="k">entity</span><span class="w"> </span><span class="nc">myentity</span><span class="w"> </span><span class="k">is</span>
+<span class="w">  </span><span class="k">generic</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">WIDTH</span><span class="o">:</span><span class="w"> </span><span class="kt">natural</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">    </span><span class="p">);</span>
+<span class="w">  </span><span class="k">port</span><span class="p">(</span>
+<span class="w">    </span><span class="n">x</span><span class="o">:</span><span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="kt">std_logic_vector</span><span class="p">(</span><span class="n">WIDTH</span><span class="o">-</span><span class="mi">1</span><span class="w"> </span><span class="k">downto</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">);</span>
+<span class="k">end</span><span class="w"> </span><span class="nc">myentity</span><span class="p">;</span>
+
+<span class="k">architecture</span><span class="w"> </span><span class="nc">arch</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nc">myentity</span><span class="w"> </span><span class="k">is</span>
+<span class="k">begin</span>
+<span class="k">end</span><span class="w"> </span><span class="nc">arch</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>- Architecture (A)
+  - Entity (A)
+    - generic WIDTH (A+16)
+    - port x (A+48) content of address (A+48) is B
+      - type information
+        analyze a type with context (address=A, rti=entity)
+        layout is located at A+20
+        so bounds is located at A+28
+      - x subtype array (B)
+        - x(?) (B)
+        - x(?) (B+8)
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../gnatdoc/index.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">GNATdoc</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="AST.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">AST</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2002-2024, Tristan Gingold and contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link fa-solid fa-brands fa-github" href="https://github.com/ghdl/ghdl" aria-label="GitHub ghdl/ghdl"></a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Run Time Information (RTI)</a><ul>
+<li><a class="reference internal" href="#useful-definitions">Useful Definitions</a></li>
+<li><a class="reference internal" href="#rti-nodes-rtii-nodes">RTI Nodes / RTII Nodes</a><ul>
+<li><a class="reference internal" href="#architecture-rti-ghdl-rtin-block">Architecture RTI (Ghdl_Rtin_Block)</a></li>
+<li><a class="reference internal" href="#entity-rti-ghdl-rtin-block">Entity RTI (Ghdl_Rtin_Block)</a></li>
+<li><a class="reference internal" href="#other-blocks-package-process-ghdl-rtin-block">Other Blocks (Package/Process) (Ghdl_Rtin_Block)</a></li>
+<li><a class="reference internal" href="#if-generate-case-generate-ghdl-rtin-block">if_generate / case_generate (Ghdl_Rtin_Block)</a></li>
+<li><a class="reference internal" href="#for-generate-ghdl-rtin-generate">for_generate (Ghdl_Rtin_Generate)</a></li>
+<li><a class="reference internal" href="#instance-ghdl-rtin-instance">instance (Ghdl_Rtin_Instance)</a></li>
+<li><a class="reference internal" href="#port-ghdl-rtin-object">Port (Ghdl_Rtin_Object)</a></li>
+<li><a class="reference internal" href="#array-kinds">Array Kinds</a></li>
+<li><a class="reference internal" href="#object-to-base-bound">Object_To_Base_Bound</a></li>
+<li><a class="reference internal" href="#array-type-ghdl-rtin-type-array">Array_Type (Ghdl_Rtin_Type_Array)</a></li>
+<li><a class="reference internal" href="#array-subtype-ghdl-rtin-subtype-array">Array Subtype (Ghdl_Rtin_Subtype_Array)</a></li>
+<li><a class="reference internal" href="#port-signal-generic-constant-variable-ghdl-rtin-object">Port / Signal / Generic / Constant / Variable (Ghdl_Rtin_Object)</a></li>
+<li><a class="reference internal" href="#record-kinds">Record Kinds</a></li>
+<li><a class="reference internal" href="#record-type-ghdl-rtin-type-record">Record Type (Ghdl_Rtin_Type_Record)</a></li>
+<li><a class="reference internal" href="#id1">Record Type (Ghdl_Rtin_Type_Record)</a></li>
+<li><a class="reference internal" href="#element-type-ghdl-rtin-element">Element Type (Ghdl_Rtin_Element)</a></li>
+<li><a class="reference internal" href="#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=2a02db7b"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
