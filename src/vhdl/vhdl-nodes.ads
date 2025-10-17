@@ -304,6 +304,7 @@ package Vhdl.Nodes is
    --  After analysis, this is the position of each literal.
    --   Get/Set_String8_Id (Field5)
    --
+   --  Number of characters in the string literal (given by the scanner).
    --   Get/Set_Literal_Length (Field0)
    --
    --  Used for computed literals.  Literal_Origin contains the expression
