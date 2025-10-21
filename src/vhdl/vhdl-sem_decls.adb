@@ -1044,24 +1044,7 @@ package body Vhdl.Sem_Decls is
          return;
       end if;
 
-      if not Is_Proper_Subtype_Indication (Ind) then
-         if Get_Kind (Def) /= Iir_Kind_Protected_Type_Declaration
-           and then Get_Kind (Def) /= Iir_Kind_Interface_Type_Definition
-         then
-            --  There is no added constraints and therefore the subtype
-            --  declaration is in fact an alias of the type.  Create a copy so
-            --  that it has its own type declarator.
-            --  (Except for protected types).
-            Def := Copy_Subtype_Indication (Def);
-            Location_Copy (Def, Decl);
-            Set_Subtype_Type_Mark (Def, Ind);
-            Set_Subtype_Indication (Decl, Def);
-            Set_Type_Declarator (Def, Decl);
-         else
-            --  Do not set type_declarator, as there is no copy.
-            null;
-         end if;
-      else
+      if Is_Proper_Subtype_Indication (Ind) then
          Set_Type_Declarator (Def, Decl);
       end if;
 
@@ -1277,8 +1260,8 @@ package body Vhdl.Sem_Decls is
       --  constant must conform to that given in the deferred constant
       --  declaration.
       if Deferred_Const /= Null_Iir
-        and then not Are_Trees_Equal (Get_Type (Decl),
-                                      Get_Type (Deferred_Const))
+        and then not Are_Trees_Equal (Get_Subtype_Indication (Decl),
+                                      Get_Subtype_Indication (Deferred_Const))
       then
          Error_Msg_Sem
            (+Decl,

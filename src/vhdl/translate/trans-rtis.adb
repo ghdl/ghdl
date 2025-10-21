@@ -308,6 +308,9 @@ package body Trans.Rtis is
            (Constr, Get_Identifier ("__ghdl_rtik_subtype_access"),
             Ghdl_Rtik_Subtype_Access);
          New_Enum_Literal
+           (Constr, Get_Identifier ("__ghdl_rtik_subtype_alias"),
+            Ghdl_Rtik_Subtype_Alias);
+         New_Enum_Literal
            (Constr, Get_Identifier ("__ghdl_rtik_type_protected"),
             Ghdl_Rtik_Type_Protected);
 
@@ -1813,6 +1816,34 @@ package body Trans.Rtis is
       Finish_Init_Value (Info.Type_Rti, Val);
    end Generate_Protected_Type_Declaration;
 
+   function Generate_Type_Alias (Decl : Iir; Def : Iir) return O_Dnode
+   is
+      Info : constant Object_Info_Acc := Get_Info (Decl);
+      Name : O_Dnode;
+      Base : O_Dnode;
+      Val  : O_Cnode;
+      List : O_Record_Aggr_List;
+   begin
+      New_Const_Decl (Info.Object_Rti, Create_Identifier ("RTI"),
+                         Global_Storage, Ghdl_Rtin_Type_Fileacc);
+      if Global_Storage = O_Storage_External then
+         return Info.Object_Rti;
+      end if;
+
+      Base := Generate_Type_Definition (Get_Type (Get_Named_Entity (Def)));
+      Name := Generate_Name (Decl);
+
+      Start_Init_Value (Info.Object_Rti);
+      Start_Record_Aggr (List, Ghdl_Rtin_Type_Fileacc);
+      New_Record_Aggr_El
+        (List, Generate_Common_Type (Ghdl_Rtik_Subtype_Alias, 0, 0));
+      New_Record_Aggr_El (List, New_Name_Address (Name));
+      New_Record_Aggr_El (List, New_Rti_Address (Base));
+      Finish_Record_Aggr (List, Val);
+      Finish_Init_Value (Info.Object_Rti, Val);
+      return Info.Object_Rti;
+   end Generate_Type_Alias;
+
    --  If FORCE is true, force the creation of the type RTI.
    --  Otherwise, only the declaration (and not the definition) may have
    --  been created.
@@ -1896,19 +1927,25 @@ package body Trans.Rtis is
       return Info.Type_Rti;
    end Generate_Incomplete_Type_Definition;
 
-   function Generate_Type_Decl (Decl : Iir) return O_Dnode
+   function Generate_Type_Decl (Decl : Iir; Def : Iir) return O_Dnode
    is
       Id   : constant Name_Id := Get_Identifier (Decl);
-      Def  : constant Iir := Get_Type (Decl);
       Rti  : O_Dnode;
       Mark : Id_Mark_Type;
    begin
       Push_Identifier_Prefix (Mark, Id);
-      if Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition then
-         Rti := Generate_Incomplete_Type_Definition (Def);
-      else
-         Rti := Generate_Type_Definition (Def, True);
-      end if;
+      case Get_Kind (Def) is
+         when Iir_Kind_Incomplete_Type_Definition =>
+            Rti := Generate_Incomplete_Type_Definition (Def);
+         when Iir_Kinds_Denoting_Name =>
+            Rti := Generate_Type_Alias (Decl, Def);
+         when Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Element_Attribute =>
+            --  Not handled.
+            return O_Dnode_Null;
+         when others =>
+            Rti := Generate_Type_Definition (Def, True);
+      end case;
       Pop_Identifier_Prefix (Mark);
       return Rti;
    end Generate_Type_Decl;
@@ -2193,11 +2230,13 @@ package body Trans.Rtis is
                null;
             when Iir_Kind_Type_Declaration =>
                --  FIXME: physicals ?
-               if Get_Kind (Get_Type_Definition (Decl))
-                 = Iir_Kind_Enumeration_Type_Definition
-               then
-                  Add_Rti_Node (Generate_Type_Decl (Decl));
-               end if;
+               declare
+                  Def : constant Iir := Get_Type_Definition (Decl);
+               begin
+                  if Get_Kind (Def) = Iir_Kind_Enumeration_Type_Definition then
+                     Add_Rti_Node (Generate_Type_Decl (Decl, Def));
+                  end if;
+               end;
             when Iir_Kind_Subtype_Declaration =>
                --  In a subprogram, a subtype may depends on parameters.
                --  Eg: array subtypes.
@@ -2330,9 +2369,12 @@ package body Trans.Rtis is
             when Iir_Kind_Anonymous_Type_Declaration =>
                --  Handled in subtype declaration.
                null;
-            when Iir_Kind_Type_Declaration
-               | Iir_Kind_Subtype_Declaration =>
-               Add_Rti_Node (Generate_Type_Decl (Decl));
+            when Iir_Kind_Type_Declaration =>
+               Add_Rti_Node
+                 (Generate_Type_Decl (Decl, Get_Type_Definition (Decl)));
+            when Iir_Kind_Subtype_Declaration =>
+               Add_Rti_Node
+                 (Generate_Type_Decl (Decl, Get_Subtype_Indication (Decl)));
             when Iir_Kind_Suspend_State_Declaration =>
                null;
             when Iir_Kind_Constant_Declaration =>

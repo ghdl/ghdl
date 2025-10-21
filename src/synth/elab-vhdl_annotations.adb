@@ -664,7 +664,7 @@ package body Elab.Vhdl_Annotations is
                Ind : constant Iir := Get_Subtype_Indication (Decl);
             begin
                --  No annotation for aliases.
-               if Get_Kind (Ind) not in Iir_Kinds_Denoting_Name then
+               if Is_Proper_Subtype_Indication (Ind) then
                   Annotate_Type_Definition (Block_Info, Get_Type (Decl));
                end if;
             end;

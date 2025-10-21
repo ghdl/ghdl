@@ -469,6 +469,8 @@ package body Grt.Disp_Rti is
 
          when Ghdl_Rtik_Subtype_Scalar =>
             Put ("ghdl_rtik_subtype_scalar");
+         when Ghdl_Rtik_Subtype_Alias =>
+            Put ("ghdl_rtik_subtype_alias");
 
          when Ghdl_Rtik_Element =>
             Put ("ghdl_rtik_element");
@@ -566,6 +568,8 @@ package body Grt.Disp_Rti is
                   Disp_Scalar_Type_Name (Rti.Basetype);
                end if;
             end;
+         when Ghdl_Rtik_Subtype_Alias =>
+            Disp_Name (To_Ghdl_Rtin_Type_Fileacc_Acc (Def).Name);
          when Ghdl_Rtik_Type_B1
            | Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Type_E32 =>
@@ -715,6 +719,8 @@ package body Grt.Disp_Rti is
             end;
             --Disp_Scalar_Subtype_Name (To_Ghdl_Rtin_Scalsubtype_Acc (Def),
             --                          Base);
+         when Ghdl_Rtik_Subtype_Alias =>
+            Disp_Name (To_Ghdl_Rtin_Type_Fileacc_Acc (Def).Name);
          when Ghdl_Rtik_Type_B1
            | Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Type_E32 =>
@@ -1295,6 +1301,19 @@ package body Grt.Disp_Rti is
       New_Line;
    end Disp_Subtype_Record_Decl;
 
+   procedure Disp_Subtype_Alias (Def : Ghdl_Rtin_Type_Fileacc_Acc;
+                                 Ctxt : Rti_Context;
+                                 Indent : Natural) is
+   begin
+      Disp_Indent (Indent);
+      Disp_Kind (Def.Common.Kind);
+      Put (": ");
+      Disp_Name (Def.Name);
+      Put (" is ");
+      Disp_Subtype_Indication (Def.Base, Ctxt, Null_Address);
+      New_Line;
+   end Disp_Subtype_Alias;
+
    procedure Disp_Type_Protected (Def : Ghdl_Rtin_Type_Scalar_Acc;
                                   Ctxt : Rti_Context;
                                   Indent : Natural)
@@ -1383,6 +1402,9 @@ package body Grt.Disp_Rti is
          when Ghdl_Rtik_Type_Protected =>
             Disp_Type_Protected
               (To_Ghdl_Rtin_Type_Scalar_Acc (Rti), Ctxt, Indent);
+         when Ghdl_Rtik_Subtype_Alias =>
+            Disp_Subtype_Alias
+              (To_Ghdl_Rtin_Type_Fileacc_Acc (Rti), Ctxt, Indent);
          when Ghdl_Rtik_Psl_Cover
            | Ghdl_Rtik_Psl_Assume
            | Ghdl_Rtik_Psl_Assert =>

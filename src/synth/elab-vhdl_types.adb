@@ -896,7 +896,24 @@ package body Elab.Vhdl_Types is
             --  Already elaborated.
             --  We cannot use the object type as it can be a subtype
             --  deduced from the default value (for constants).
-            Res_Type := Get_Type (Get_Named_Entity (Atype));
+            declare
+               Decl : constant Node := Get_Named_Entity (Atype);
+               Atype2 : Node;
+            begin
+               case Get_Kind (Decl) is
+                  when Iir_Kind_Type_Declaration =>
+                     Atype2 := Get_Type_Definition (Decl);
+                  when Iir_Kind_Subtype_Declaration =>
+                     Atype2 := Get_Subtype_Indication (Decl);
+                  when Iir_Kind_Interface_Type_Declaration =>
+                     Atype2 := Get_Interface_Type_Definition (Decl);
+                  when Iir_Kind_Anonymous_Type_Declaration =>
+                     raise Internal_Error;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+               return Get_Elaborated_Subtype_Indication (Syn_Inst, Atype2);
+            end;
          when Iir_Kind_Subtype_Attribute =>
             declare
                Pfx : constant Node := Get_Prefix (Atype);
@@ -928,6 +945,8 @@ package body Elab.Vhdl_Types is
             --  For interface types of implicit operators.
             Res_Type := Atype;
          when Iir_Kind_Interface_Type_Definition =>
+            Res_Type := Atype;
+         when Iir_Kind_Protected_Type_Declaration =>
             Res_Type := Atype;
          when others =>
             Error_Kind ("elab_subtype_indication", Atype);

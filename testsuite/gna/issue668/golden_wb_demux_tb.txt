@@ -6,7 +6,6 @@ subtype std_logic_vector is std_ulogic_vector;
 type t_wishbone_master_out is record
   dat: std_logic_vector;
 end record;
-subtype t_wishbone_slave_in is t_wishbone_master_out;
 design
  package standard: 
  package textio: 

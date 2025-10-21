@@ -82,15 +82,16 @@ package Grt.Rtis is
       Ghdl_Rtik_Subtype_Record, -- 40         --  Rtin_Subtype_Composite
       Ghdl_Rtik_Subtype_Unbounded_Record,
       Ghdl_Rtik_Subtype_Access,               --  Rtin_Type_Fileacc
+      Ghdl_Rtik_Subtype_Alias,                --  Rtin_Type_Fileacc
       Ghdl_Rtik_Type_Protected,
-      Ghdl_Rtik_Element,
 
+      Ghdl_Rtik_Element,
       Ghdl_Rtik_Unit64,
       Ghdl_Rtik_Unitptr,
       Ghdl_Rtik_Attribute_Transaction,
       Ghdl_Rtik_Attribute_Quiet,
-      Ghdl_Rtik_Attribute_Stable,
 
+      Ghdl_Rtik_Attribute_Stable,
       Ghdl_Rtik_Psl_Assert,
       Ghdl_Rtik_Psl_Assume,
       Ghdl_Rtik_Psl_Cover,

@@ -438,6 +438,10 @@ package body Grt.Avhpi is
             Res := (Kind => VhpiSubtypeDeclK,
                     Ctxt => Ctxt,
                     Atype => Rti);
+         when Ghdl_Rtik_Subtype_Alias =>
+            Res := (Kind => VhpiSubtypeDeclK,
+                    Ctxt => Ctxt,
+                    Atype => Rti);
          when others =>
             Res := (Kind => VhpiUndefined,
                     Ctxt => Ctxt);
@@ -493,7 +497,8 @@ package body Grt.Avhpi is
                  | Ghdl_Rtik_Type_E8
                  | Ghdl_Rtik_Type_E32
                  | Ghdl_Rtik_Type_B1
-                 | Ghdl_Rtik_Subtype_Scalar =>
+                 | Ghdl_Rtik_Subtype_Scalar
+                 | Ghdl_Rtik_Subtype_Alias =>
                   Rti_To_Handle (Ch, Iterator.Ctxt, Res);
                   if Res.Kind /= VhpiUndefined then
                      Error := AvhpiErrorOk;
@@ -954,9 +959,13 @@ package body Grt.Avhpi is
             begin
                case Ref.Kind is
                   when VhpiSubtypeIndicK
-                     | VhpiSubtypeDeclK
                      | VhpiArrayTypeDeclK =>
                      Atype := Ref.Atype;
+                  when VhpiSubtypeDeclK =>
+                     Atype := Ref.Atype;
+                     if Atype.Kind = Ghdl_Rtik_Subtype_Alias then
+                        Atype := To_Ghdl_Rtin_Type_Fileacc_Acc (Atype).Base;
+                     end if;
                   when VhpiGenericDeclK
                      | VhpiConstDeclK
                      | VhpiSigDeclK =>

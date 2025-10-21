@@ -2858,9 +2858,11 @@ package body Trans.Chap3 is
 
    procedure Elab_Subtype_Declaration (Decl : Iir_Subtype_Declaration)
    is
-      Def : constant Iir := Get_Type (Decl);
+      Def : constant Iir := Get_Subtype_Indication (Decl);
    begin
-      Elab_Subtype_Definition (Def);
+      if Is_Proper_Subtype_Indication (Def) then
+         Elab_Subtype_Definition (Def);
+      end if;
    end Elab_Subtype_Declaration;
 
    function Get_Static_Array_Length (Atype : Iir) return Int64

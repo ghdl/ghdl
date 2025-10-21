@@ -2,11 +2,10 @@ type std_ulogic is ('U', 'X', '0', '1', 'Z', 'W', 'L', 'H', '-');  -- WKT:3
 type integer is range <>;
 subtype natural is integer range 0 to 2147483647;
 type std_ulogic_vector is array (natural range <>) of std_ulogic;
-subtype my_vector is std_ulogic_vector;
+subtype std_logic_vector is std_ulogic_vector;
 type t_wishbone_master_out is record
-  dat: my_vector;
+  dat: std_logic_vector;
 end record;
-subtype t_wishbone_slave_in is t_wishbone_master_out;
 design
  package standard: 
  package textio: 

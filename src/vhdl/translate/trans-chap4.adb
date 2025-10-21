@@ -1818,12 +1818,18 @@ package body Trans.Chap4 is
 
    procedure Translate_Subtype_Declaration (Decl : Iir_Subtype_Declaration)
    is
-      Def : constant Iir := Get_Type (Decl);
+      Def : constant Iir := Get_Subtype_Indication (Decl);
       Mark  : Id_Mark_Type;
+      Info  : Ortho_Info_Acc;
    begin
-      Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
-      Chap3.Translate_Subtype_Definition (Def, True);
-      Pop_Identifier_Prefix (Mark);
+      if Get_Kind (Def) in Iir_Kinds_Denoting_Name then
+         Info := Add_Info (Decl, Kind_Object);
+         Info.Object_Var := Null_Var;
+      else
+         Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+         Chap3.Translate_Subtype_Definition (Get_Type (Decl), True);
+         Pop_Identifier_Prefix (Mark);
+      end if;
    end Translate_Subtype_Declaration;
 
    procedure Translate_Bool_Type_Declaration (Decl : Iir_Type_Declaration)
