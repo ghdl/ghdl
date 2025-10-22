@@ -1612,18 +1612,18 @@ package body Vhdl.Evaluation is
       return Build_Simple_Aggregate (Res_List, Origin, Get_Type (Left));
    end Eval_Shift_Operator;
 
-   --  Concatenate all the elements of OPERANDS.
-   --  The first element of OPERANDS is the rightest one, the last the
+   --  Concatenate all the elements of OPERATORS.
+   --  The first element of OPERATORS is the rightest one, the last the
    --  leftest one.  All the elements are concatenation operators.
    --  All the elements are static.
-   function Eval_Concatenation (Operands : Iir_Array) return Iir
+   function Eval_Concatenation (Operators : Iir_Array) return Iir
    is
-      pragma Assert (Operands'First = 1);
-      Orig : constant Iir := Operands (1);
+      pragma Assert (Operators'First = 1);
+      Orig : constant Iir := Operators (1);
       Origin_Type : constant Iir := Get_Type (Orig);
 
-      Ops_Val : Iir_Array (Operands'Range);
-      Str_Lits : Iir_Array (Operands'Range);
+      Ops_Val : Iir_Array (Operators'Range);
+      Str_Lits : Iir_Array (Operators'Range);
       Left_Op : Iir;
       Left_Val : Iir;
       Left_Lit : Iir;
@@ -1635,17 +1635,21 @@ package body Vhdl.Evaluation is
       El : Iir;
       El_List : Iir_Flist;
       El_Len : Natural;
+      El_Subtype : Iir;
       Err_Orig : Iir;
 
       --  To compute the index range of the result for vhdl87.
       Leftest_Non_Null : Iir;
       Bounds_From_Subtype : Boolean;
    begin
+      Op := Operators (Operators'First);
+      El_Subtype := Get_Element_Subtype (Get_Type (Op));
+
       --  Eval operands, compute length of the result.
       Err_Orig := Null_Iir;
       Res_Len := 0;
-      for I in Operands'Range loop
-         Op := Operands (I);
+      for I in Operators'Range loop
+         Op := Operators (I);
          Def := Get_Implicit_Definition (Get_Implementation (Op));
          if Get_Kind (Op) = Iir_Kind_Function_Call then
             El := Get_Actual
@@ -1661,6 +1665,11 @@ package body Vhdl.Evaluation is
                when Iir_Predefined_Array_Element_Concat
                  | Iir_Predefined_Element_Element_Concat =>
                   Res_Len := Res_Len + 1;
+                  --  For an operand of the type of the element, check
+                  --  the bounds.
+                  if not Eval_Check_Bound (Ops_Val (I), El_Subtype) then
+                     Err_Orig := El;
+                  end if;
                when Iir_Predefined_Element_Array_Concat
                  | Iir_Predefined_Array_Array_Concat =>
                   Str_Lits (I) := Eval_String_Literal (Ops_Val (I));
@@ -1670,7 +1679,8 @@ package body Vhdl.Evaluation is
          end if;
       end loop;
 
-      Op := Operands (Operands'Last);
+      --  Don't forget the leftest one.
+      Op := Operators (Operators'Last);
       if Get_Kind (Op) = Iir_Kind_Function_Call then
          Left_Op := Get_Actual (Get_Parameter_Association_Chain (Op));
       else
@@ -1685,6 +1695,11 @@ package body Vhdl.Evaluation is
             when Iir_Predefined_Element_Array_Concat
               | Iir_Predefined_Element_Element_Concat =>
                Res_Len := Res_Len + 1;
+               --  For an operand of the type of the element, check
+               --  the bounds.
+               if not Eval_Check_Bound (Left_Val, El_Subtype) then
+                  Err_Orig := Left_Op;
+               end if;
             when Iir_Predefined_Array_Element_Concat
               | Iir_Predefined_Array_Array_Concat =>
                Left_Lit := Eval_String_Literal (Left_Val);
@@ -1697,7 +1712,7 @@ package body Vhdl.Evaluation is
       if Err_Orig /= Null_Iir then
          --  Free all.
          for I in Ops_Val'Range loop
-            Free_Eval_Static_Expr (Ops_Val (I), Operands (I));
+            Free_Eval_Static_Expr (Ops_Val (I), Operators (I));
          end loop;
          Free_Eval_Static_Expr (Left_Val, Left_Op);
 
@@ -1730,8 +1745,8 @@ package body Vhdl.Evaluation is
       end case;
 
       --  Right:
-      for I in reverse Operands'Range loop
-         Def := Get_Implicit_Definition (Get_Implementation (Operands (I)));
+      for I in reverse Operators'Range loop
+         Def := Get_Implicit_Definition (Get_Implementation (Operators (I)));
          case Iir_Predefined_Concat_Functions (Def) is
             when Iir_Predefined_Array_Element_Concat
               | Iir_Predefined_Element_Element_Concat =>
@@ -1762,7 +1777,7 @@ package body Vhdl.Evaluation is
          --  If both operands are null arrays, then the result of the
          --  concatenation is the right operand.
          if Res_Len = 0 then
-            Res_Type := Get_Type (Get_Right (Operands (1)));
+            Res_Type := Get_Type (Get_Right (Operators (1)));
          else
             --  LRM93 7.2.4
             --  Otherwise, the direction and bounds of the result are
@@ -1796,7 +1811,7 @@ package body Vhdl.Evaluation is
               (Origin_Type, Int64 (Res_Len), Orig);
          else
             if Res_Len = 0 then
-               Res_Type := Get_Type (Get_Right (Operands (1)));
+               Res_Type := Get_Type (Get_Right (Operators (1)));
             else
                declare
                   Left_Index : constant Iir :=
@@ -1828,7 +1843,7 @@ package body Vhdl.Evaluation is
       end if;
 
       for I in Ops_Val'Range loop
-         Free_Eval_Static_Expr (Ops_Val (I), Operands (I));
+         Free_Eval_Static_Expr (Ops_Val (I), Operators (I));
       end loop;
       Free_Eval_Static_Expr (Left_Val, Left_Op);
 

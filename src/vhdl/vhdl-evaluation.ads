@@ -50,12 +50,13 @@ package Vhdl.Evaluation is
    --  is locally static).  Return a literal or an aggregate, without setting
    --  the origin, and do not modify EXPR.  This can be used only to get the
    --  value of an expression, without replacing it.
+   --  The result is either a new literal, or EXPR, or a sub-node of EXPR.
    function Eval_Static_Expr (Expr: Iir) return Iir;
 
    --  Evaluate (ie compute) expression EXPR.
    --  EXPR is required to be a locally static expression, otherwise an error
    --  message is generated.
-   --  The result is a literal with the origin set.
+   --  The result is a literal with the origin set or EXPR.
    function Eval_Expr (Expr: Iir) return Iir;
 
    --  Same as Eval_Expr, but if EXPR is not locally static, the result is
@@ -64,11 +65,11 @@ package Vhdl.Evaluation is
    --  is locally static.
    function Eval_Expr_If_Static (Expr : Iir) return Iir;
 
-   --  Concatenate all the elements of OPERANDS.
-   --  The first element of OPERANDS is the rightest one, the last the
+   --  Concatenate all the elements of OPERATORS.
+   --  The first element of OPERATORS is the rightest one, the last the
    --  leftest one.  All the elements are concatenation operators.
    --  All the elements are static.
-   function Eval_Concatenation (Operands : Iir_Array) return Iir;
+   function Eval_Concatenation (Operators : Iir_Array) return Iir;
 
    --  Evaluate a physical literal and return a normalized literal (using
    --  the primary unit as unit).
