@@ -1,0 +1,1608 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="author" title="About these documents" href="../about.html"><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Simulation (runtime)" href="Simulation.html"><link rel="prev" title="Python Interfaces" href="../quick_start/python/index.html">
+        <link rel="prefetch" href="../_static/logo.png" as="image">
+
+    <link rel="shortcut icon" href="../_static/icon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.09.25 -->
+        <title>Invoking GHDL - 6.0.0-dev</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=580074bf" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f3f3;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">6.0.0-dev</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">6.0.0-dev</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">GHDL usage</span></p>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a><input aria-label="Toggle navigation of Quick Start Guide" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../quick_start/simulation/index.html">Simulation</a><input aria-label="Toggle navigation of Simulation" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/hello/index.html"><cite>Hello world</cite> program</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/heartbeat/index.html"><cite>Heartbeat</cite> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/adder/index.html"><cite>Full adder</cite> module and testbench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/DLXModelSuite.html">Working with non-trivial designs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference external" href="https://ghdl.github.io/ghdl-cosim">Co-Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quick_start/python/index.html">Python Interfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../development/building/index.html">Building GHDL</a><input aria-label="Toggle navigation of Building GHDL" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/Sources.html">Sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/mcode.html">mcode backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/LLVM.html">LLVM backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/GCC.html">GCC backend</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ghw/index.html">GHDL Waveform (GHW)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../internals/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/ghdl/ghdl/blob/master/doc/using/InvokingGHDL.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/ghdl/ghdl/edit/master/doc/using/InvokingGHDL.rst" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="invoking-ghdl">
+<span id="using-invoking"></span><h1>Invoking GHDL<a class="headerlink" href="#invoking-ghdl" title="Link to this heading">¶</a></h1>
+<p>The form of the <strong class="program">ghdl</strong> command is <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">command</span> <span class="pre">[options...]</span></code>.
+There are multiple available commands, but these general rules apply:</p>
+<ul class="simple">
+<li><p>The first argument selects the command.
+The options are used to slightly modify the action.</p></li>
+<li><p>No option is allowed before the command.
+Except for the run command, no option is allowed after a filename or a unit name.</p></li>
+</ul>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>If the number of options is large and the command line length is beyond the system limit, you can use a response file.
+An argument that starts with a <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> is considered as a response file; it is replaced by arguments read from the file
+(separated by blanks and end of line).</p>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Only the most common commands and options are shown here. For the most advanced and experimental features see section
+<a class="reference internal" href="CommandReference.html#ref-command"><span class="std std-ref">Additional Command Reference</span></a>.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>During analysis and elaboration GHDL may read the <code class="docutils literal notranslate"><span class="pre">std</span></code> and <code class="docutils literal notranslate"><span class="pre">ieee</span></code> files.
+The location of these files is based on the prefix, which is (in order of priority):</p>
+<ul class="simple">
+<li><p>the <a class="reference internal" href="#cmdoption-ghdl-PREFIX"><code class="xref std std-option docutils literal notranslate"><span class="pre">--PREFIX</span></code></a> command line option</p></li>
+<li><p>the <span class="target" id="index-0"></span><a class="reference internal" href="CommandReference.html#envvar-GHDL_PREFIX"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">GHDL_PREFIX</span></code></a> environment variable</p></li>
+<li><p>a built-in default path. It is a hard-coded path on GNU/Linux, and it corresponds to the value of the
+<code class="docutils literal notranslate"><span class="pre">HKLM\Software\Ghdl\Install_Dir</span></code> registry entry on Windows.</p></li>
+</ul>
+<p>You should use the <a class="reference internal" href="CommandReference.html#cmdoption-ghdl-disp-config"><code class="xref std std-option docutils literal notranslate"><span class="pre">--disp-config</span></code></a> command to display and debug installation problems.</p>
+</div>
+<section id="design-building-commands">
+<h2>Design building commands<a class="headerlink" href="#design-building-commands" title="Link to this heading">¶</a></h2>
+<p>The most commonly used commands of GHDL are those to analyze and elaborate a design.</p>
+<section id="analysis-a">
+<span id="analysis-command"></span><span id="index-1"></span><h3>Analysis [<code class="docutils literal notranslate"><span class="pre">-a</span></code>]<a class="headerlink" href="#analysis-a" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-a">
+<span class="sig-name descname"><span class="pre">-a</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]</span> <span class="pre">file...&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-a" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Analyzes/compiles one or more files, and creates an object file for each source file.
+Any argument starting with a dash is an option, the others are filenames.
+No options are allowed after a filename argument.
+GHDL analyzes each filename in the given order, and stops the analysis in case of error (remaining files are not
+analyzed).</p>
+<p>See <a class="reference internal" href="#ghdl-options"><span class="std std-ref">Options</span></a>, for details on the GHDL options.
+For example, to produce debugging information such as line numbers, use: <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">-a</span> <span class="pre">-g</span> <span class="pre">my_design.vhdl</span></code>.</p>
+</section>
+<section id="elaboration-e">
+<span id="elaboration-command"></span><span id="index-2"></span><h3>Elaboration [<code class="docutils literal notranslate"><span class="pre">-e</span></code>]<a class="headerlink" href="#elaboration-e" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-e">
+<span class="sig-name descname"><span class="pre">-e</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]</span> <span class="pre">[library.]top_unit</span> <span class="pre">[arch]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-e" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Re-analyzes all the configurations, entities, architectures and package declarations, and creates the default
+configurations and the default binding indications according to the LRM rules.
+It also generates the list of object files required for the executable.
+Then, it links all these files with the runtime library (GRT).</p>
+<p>The elaboration command, <a class="reference internal" href="#cmdoption-ghdl-e"><code class="xref std std-option docutils literal notranslate"><span class="pre">-e</span></code></a>, must be followed by a <code class="docutils literal notranslate"><span class="pre">top_unit</span></code> name denoting either of:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>a configuration unit</p></li>
+<li><p>an entity unit</p></li>
+<li><p>an entity unit followed by a secondary unit (the name of an architecture unit)</p></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><p>Name of the top units can be either a simple name (without dots), or the name of a logical library followed by a dot
+and a simple name.
+The latter is equivalent to using <a class="reference internal" href="#cmdoption-ghdl-work"><code class="xref std std-option docutils literal notranslate"><span class="pre">--work=NAME</span></code></a> described in <a class="reference internal" href="#ghdl-options"><span class="std std-ref">Options</span></a>:
+<code class="docutils literal notranslate"><span class="pre">-e</span> <span class="pre">&lt;[options...]</span> <span class="pre">--work=library</span> <span class="pre">top_unit</span> <span class="pre">[arch]&gt;</span></code>.
+It selects the name of the library to be used as <code class="docutils literal notranslate"><span class="pre">WORK</span></code>.
+See section <a class="reference internal" href="ImplementationOfVHDL.html#top-entity"><span class="std std-ref">Top entity</span></a>, for the restrictions on the root/top unit of a hierarchy.</p></li>
+<li><p>Name of the secondary units must be a simple name; they cannot contain any dot.</p></li>
+</ul>
+<p>With regard to the artifacts:</p>
+<ul class="simple">
+<li><p>If the GCC/LLVM backend was enabled during the compilation of GHDL, the elaboration command creates an executable
+containing the code of the VHDL sources, the elaboration code and simulation code for executing a design hierarchy.
+The executable is created in the current directory and the the filename is the name of the primary unit, or for the
+latter case, the concatenation of the name of the primary unit, a dash, and the name of the secondary unit.
+Option <code class="docutils literal notranslate"><span class="pre">-o</span></code> followed by a filename can override the default executable filename.</p></li>
+<li><p>If mcode is used, this command elaborates the design but does not generate anything.
+Since the run command also elaborates the design, this can be skipped.</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This elaboration command is not a complete elaboration in terms of the VHDL standard.
+The actual elaboration is performed at runtime.
+Therefore, in order to get a complete VHDL elaboration without running the simulation, <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">--elab-run</span> <span class="pre">--no-run</span></code>
+is required.
+See <a class="reference internal" href="Simulation.html#cmdoption-ghdl-no-run"><code class="xref std std-option docutils literal notranslate"><span class="pre">--no-run</span></code></a>.</p>
+</div>
+</section>
+<section id="run-r">
+<span id="run-command"></span><span id="index-3"></span><h3>Run [<code class="docutils literal notranslate"><span class="pre">-r</span></code>]<a class="headerlink" href="#run-r" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-r">
+<span class="sig-name descname"><span class="pre">-r</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]</span> <span class="pre">[library.]top_unit</span> <span class="pre">[arch]</span> <span class="pre">[simulation_options...]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-r" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Runs/simulates a design.
+Two sets of options are accepted, both of them being separated by <code class="docutils literal notranslate"><span class="pre">[library.]top_unit</span> <span class="pre">[arch]</span></code>.
+For the first set, <code class="docutils literal notranslate"><span class="pre">options...</span></code>, arguments are the same as for the <a class="reference internal" href="#elaboration-command"><span class="std std-ref">elaboration command</span></a>.
+For the second set, <code class="docutils literal notranslate"><span class="pre">simulation_options...</span></code>, arguments are defined in <a class="reference internal" href="Simulation.html#using-simulation"><span class="std std-ref">Simulation (runtime)</span></a>.</p>
+<ul class="simple">
+<li><p>GGC/LLVM: the filename of the executable is determined and it is executed.
+Elaboration options are ignored.
+You may also directly execute the program.
+The executable must be in the current directory.</p></li>
+<li><p>mcode: the design is elaborated and the simulation is launched.
+As a consequence, you must use the same options used during analysis.</p></li>
+</ul>
+<p>This command exists for three reasons:</p>
+<ul class="simple">
+<li><p>It works with mcode implementation, where the executable code is generated in memory.</p></li>
+<li><p>You are using GCC/LLVM, but you don’t need to create the executable program name.</p></li>
+<li><p>It is coherent with the <a class="reference internal" href="#cmdoption-ghdl-a"><code class="xref std std-option docutils literal notranslate"><span class="pre">-a</span></code></a> and <a class="reference internal" href="#cmdoption-ghdl-e"><code class="xref std std-option docutils literal notranslate"><span class="pre">-e</span></code></a> commands.</p></li>
+</ul>
+</section>
+<section id="elaborate-and-run-elab-run">
+<span id="elab-and-run-command"></span><span id="index-4"></span><h3>Elaborate and run [<code class="docutils literal notranslate"><span class="pre">--elab-run</span></code>]<a class="headerlink" href="#elaborate-and-run-elab-run" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-elab-run">
+<span class="sig-name descname"><span class="pre">--elab-run</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]</span> <span class="pre">[library.]top_unit</span> <span class="pre">[arch]</span> <span class="pre">[simulation_options...]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-elab-run" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Acts like the elaboration command followed by the run command.
+Note that this command accepts two sets of options.
+See <a class="reference internal" href="#cmdoption-ghdl-e"><code class="xref std std-option docutils literal notranslate"><span class="pre">-e</span></code></a>, <a class="reference internal" href="#cmdoption-ghdl-r"><code class="xref std std-option docutils literal notranslate"><span class="pre">-r</span></code></a> and <a class="reference internal" href="Simulation.html#using-simulation"><span class="std std-ref">Simulation (runtime)</span></a>.</p>
+</section>
+<section id="check-syntax-s">
+<span id="index-5"></span><h3>Check syntax [<code class="docutils literal notranslate"><span class="pre">-s</span></code>]<a class="headerlink" href="#check-syntax-s" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-s">
+<span class="sig-name descname"><span class="pre">-s</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]</span> <span class="pre">file...&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-s" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Analyze files but do not generate code.
+This command may be used to check the syntax of files.
+It does not update the library.</p>
+</section>
+<section id="analyze-and-elaborate-c">
+<span id="index-6"></span><h3>Analyze and elaborate [<code class="docutils literal notranslate"><span class="pre">-c</span></code>]<a class="headerlink" href="#analyze-and-elaborate-c" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-c">
+<span class="sig-name descname"><span class="pre">-c</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]</span> <span class="pre">file...</span> <span class="pre">-&lt;e|r&gt;</span> <span class="pre">top_unit</span> <span class="pre">[arch]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-c" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>With GCC/LLVM, <a class="reference internal" href="#cmdoption-ghdl-e"><code class="xref std std-option docutils literal notranslate"><span class="pre">-e</span></code></a> should be used, and <a class="reference internal" href="#cmdoption-ghdl-r"><code class="xref std std-option docutils literal notranslate"><span class="pre">-r</span></code></a> with mcode.</p>
+</div>
+<p>The files are first parsed, and then a elaboration is performed, which drives an analysis.
+Effectively, analysis and elaboration are combined, but there is no explicit call to <a class="reference internal" href="#cmdoption-ghdl-a"><code class="xref std std-option docutils literal notranslate"><span class="pre">-a</span></code></a>.
+With GCC/LLVM, code is generated during the elaboration.
+With mcode, the simulation is launched after the elaboration.</p>
+<p>All the units of the files are put into the <cite>work</cite> library.
+But, the work library is neither read from disk nor saved.
+Therefore, you must give all the files of the <cite>work</cite> library your design needs.</p>
+<p>The advantages over the traditional approach (analyze and then elaborate) are:</p>
+<ul class="simple">
+<li><p>The compilation cycle is achieved in one command.</p></li>
+<li><p>Since the files are only parsed once, the compilation cycle may be faster.</p></li>
+<li><p>You don’t need to know an analysis order.</p></li>
+<li><p>This command produces a smaller executable, since unused units and subprograms do not generate code.</p></li>
+</ul>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>However, you should know that most of the time is spent in code generation and the analyze and elaborate command
+generates code for all units needed, even units of <code class="docutils literal notranslate"><span class="pre">std</span></code> and <code class="docutils literal notranslate"><span class="pre">ieee</span></code> libraries.
+Therefore, according to the design, the time for this command may be higher than the time for the analyze command
+followed by the elaborate command.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This command is still under development. In case of problems, you should go back to the traditional way.</p>
+</div>
+</section>
+</section>
+<section id="design-rebuilding-commands">
+<h2>Design rebuilding commands<a class="headerlink" href="#design-rebuilding-commands" title="Link to this heading">¶</a></h2>
+<p>Analyzing and elaborating a design consisting of several files can be tricky, due to dependencies.
+GHDL has a few commands for rebuilding a design.</p>
+<section id="import-i">
+<span id="import-command"></span><span id="index-7"></span><h3>Import [<code class="docutils literal notranslate"><span class="pre">-i</span></code>]<a class="headerlink" href="#import-i" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-i">
+<span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]</span> <span class="pre">file...&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-i" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>All the files specified in the command line are scanned, parsed and added into the libraries but as not yet analyzed.
+No object files are created.
+Its purpose is to localize design units in the design files.
+The make command will then be able to recursively build a hierarchy from an entity name or a configuration name.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<ul class="simple">
+<li><p>Note that all the files are added to the work library.
+If you have many libraries, you must use the command for each library.</p></li>
+<li><p>Since the files are parsed, there must be correct files.
+However, since they are not analyzed, many errors are tolerated by this command.</p></li>
+</ul>
+</div>
+<p>See <a class="reference internal" href="#cmdoption-ghdl-m"><code class="xref std std-option docutils literal notranslate"><span class="pre">-m</span></code></a>, to actually build the design.
+See also <a class="reference internal" href="#cmdoption-ghdl-elab-order"><code class="xref std std-option docutils literal notranslate"><span class="pre">--elab-order</span></code></a>, for retrieving the compilation order guessed recursively.</p>
+</section>
+<section id="elab-order-elab-order">
+<span id="index-8"></span><h3>Elab-order [<code class="docutils literal notranslate"><span class="pre">--elab-order</span></code>]<a class="headerlink" href="#elab-order-elab-order" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-elab-order">
+<span class="sig-name descname"><span class="pre">--elab-order</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]</span> <span class="pre">[library.]top_unit</span> <span class="pre">[arch]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-elab-order" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Print the list of sources required for elaborating a unit, in order
+for them to be analyzed without dependency issues.  This is expected
+to be used after <a class="reference internal" href="#cmdoption-ghdl-i"><code class="xref std std-option docutils literal notranslate"><span class="pre">-i</span></code></a>, or for retrieving the order for some
+unit analyzed through third-party scripts.</p>
+<p>With the <code class="xref std std-option docutils literal notranslate"><span class="pre">--libraries</span></code> option, each line contains first the
+library name followed by the file name.</p>
+<p>Without the <code class="xref std std-option docutils literal notranslate"><span class="pre">--libraries</span></code> option, the list does not include
+information about the logical library names where each source needs
+to be analyzed.  Hence, it is useful when all sources belong
+to the same <code class="docutils literal notranslate"><span class="pre">WORK</span></code> library.</p>
+</section>
+<section id="make-m">
+<span id="make-command"></span><span id="index-9"></span><h3>Make [<code class="docutils literal notranslate"><span class="pre">-m</span></code>]<a class="headerlink" href="#make-m" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-m">
+<span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]</span> <span class="pre">[library.]top_unit</span> <span class="pre">[arch]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-m" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Analyze automatically outdated files and elaborate a design.
+The primary unit denoted by the <code class="docutils literal notranslate"><span class="pre">[library.]top_unit</span></code> argument must already be known by the system, either because you
+have already analyzed it (even if you have modified it) or because you have imported it.
+A file may be outdated because it has been modified (e.g. you have just edited it), or because a design unit contained
+in the file depends on a unit which is outdated.
+This rule is recursive.</p>
+<ul class="simple">
+<li><p>With option <code class="docutils literal notranslate"><span class="pre">--bind</span></code>, GHDL will stop before the final linking step.
+This is useful when the main entry point is not GHDL and you’re linking GHDL object files into a foreign program.</p></li>
+<li><p>With option <code class="docutils literal notranslate"><span class="pre">-f</span></code> (force), GHDL analyzes all the units of the work library needed to create the design hierarchy.
+Outdated units are recompiled.
+This is useful if you want to compile a design hierarchy with new compilation flags (for example, to add the <code class="docutils literal notranslate"><span class="pre">-g</span></code>
+debugging option).</p></li>
+</ul>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The make command will only re-analyze design units in the work library.
+GHDL fails if it has to analyze an outdated unit from another library.</p>
+</div>
+<p>The purpose of this command is to be able to compile a design without prior knowledge of file order.
+In the VHDL model, some units must be analyzed before others (e.g. an entity before its architecture).
+It might be a nightmare to analyze a full design of several files if you don’t have the ordered list of files.
+This command computes an analysis order.</p>
+<p>The make command fails when a unit was not previously parsed.
+For example, if you split a file containing several design units into several files, you must either import these new
+files or analyze them so that GHDL knows in which file these units are.</p>
+<p>The make command imports files which have been modified.
+Then, a design hierarchy is internally built as if no units are outdated.
+Then, all outdated design units, using the dependencies of the design hierarchy, are analyzed.
+If necessary, the design hierarchy is elaborated.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>This is not perfect, since the default architecture (the most recently analyzed one) may change while outdated design
+files are analyzed.
+In such a case, re-run the make command of GHDL.</p>
+</div>
+</section>
+<section id="generate-makefile-gen-makefile">
+<span id="index-10"></span><h3>Generate Makefile [<code class="docutils literal notranslate"><span class="pre">--gen-makefile</span></code>]<a class="headerlink" href="#generate-makefile-gen-makefile" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-gen-makefile">
+<span class="sig-name descname"><span class="pre">--gen-makefile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]</span> <span class="pre">[library.]top_unit</span> <span class="pre">[arch]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-gen-makefile" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>This command works like the make command (see <a class="reference internal" href="#cmdoption-ghdl-m"><code class="xref std std-option docutils literal notranslate"><span class="pre">-m</span></code></a>), but only a makefile is generated on the standard output.</p>
+</section>
+<section id="generate-dependency-file-command-gen-depends">
+<span id="index-11"></span><h3>Generate dependency file command [<code class="docutils literal notranslate"><span class="pre">--gen-depends</span></code>]<a class="headerlink" href="#generate-dependency-file-command-gen-depends" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-gen-depends">
+<span class="sig-name descname"><span class="pre">--gen-depends</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]</span> <span class="pre">[library.]top_unit</span> <span class="pre">[arch]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-gen-depends" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Generate a Makefile containing only dependencies to build a design unit.</p>
+<p>This command works like the make and gen-makefile commands (see
+<a class="reference internal" href="#cmdoption-ghdl-m"><code class="xref std std-option docutils literal notranslate"><span class="pre">-m</span></code></a>), but instead of a full makefile only dependencies
+without rules are generated on the standard output.  These rules can
+then be integrated in another Makefile.</p>
+<p>This command is not available with the mcode backend.</p>
+</section>
+</section>
+<section id="options">
+<span id="ghdl-options"></span><h2>Options<a class="headerlink" href="#options" title="Link to this heading">¶</a></h2>
+<dl class="std option" id="index-16">
+<span id="index-15"></span><span id="index-14"></span><span id="index-13"></span><span id="index-12"></span><dt class="sig sig-object std" id="cmdoption-ghdl-work">
+<span class="sig-name descname"><span class="pre">--work</span></span><span class="sig-prename descclassname"><span class="pre">=&lt;LIB_NAME&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-work" title="Link to this definition">¶</a></dt>
+<dd><p>Specify the name of the <code class="docutils literal notranslate"><span class="pre">WORK</span></code> library. Analyzed units are always placed in the library logically named <code class="docutils literal notranslate"><span class="pre">WORK</span></code>.
+With this option, you can set its name.
+By default, the name is <code class="docutils literal notranslate"><span class="pre">work</span></code>.</p>
+<p><cite>GHDL</cite> checks whether <code class="docutils literal notranslate"><span class="pre">WORK</span></code> is a valid identifier.
+Although being more or less supported, the <code class="docutils literal notranslate"><span class="pre">WORK</span></code> identifier should not be an extended identifier, since the
+filesystem may prevent it from working correctly (due to case sensitivity or forbidden characters in filenames).</p>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p><cite>VHDL</cite> rules forbid you from adding units to the <code class="docutils literal notranslate"><span class="pre">std</span></code> library.
+Furthermore, you should not put units in the <code class="docutils literal notranslate"><span class="pre">ieee</span></code> library.</p>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Since <a class="reference external" href="https://github.com/ghdl/ghdl/commit/849a25e02cfb359e3d9313060156b0643495548b">849a25e0</a>, this option can
+be alternatively provided to several commands by prepending the library name to the top unit name.
+See, for instance, <a class="reference internal" href="#cmdoption-ghdl-e"><code class="xref std std-option docutils literal notranslate"><span class="pre">-e</span></code></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-workdir">
+<span class="sig-name descname"><span class="pre">--workdir</span></span><span class="sig-prename descclassname"><span class="pre">=&lt;DIR&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-workdir" title="Link to this definition">¶</a></dt>
+<dd><p>Specify the directory where the <code class="docutils literal notranslate"><span class="pre">WORK</span></code> library is located.
+When this option is not present, the <code class="docutils literal notranslate"><span class="pre">WORK</span></code> library is in the current directory.
+The object files created by the compiler are always placed in the same directory as the <code class="docutils literal notranslate"><span class="pre">WORK</span></code> library.</p>
+<p>Use option <a class="reference external" href="https://docs.python.org/3/using/cmdline.html#cmdoption-P" title="(in Python v3.14)"><code class="xref std std-option docutils literal notranslate"><span class="pre">-P</span></code></a> to specify where libraries other than <code class="docutils literal notranslate"><span class="pre">WORK</span></code> are placed.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-std">
+<span class="sig-name descname"><span class="pre">--std</span></span><span class="sig-prename descclassname"><span class="pre">=&lt;STANDARD&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-std" title="Link to this definition">¶</a></dt>
+<dd><p>Specify the standard to use. By default, the standard is <code class="docutils literal notranslate"><span class="pre">93c</span></code>, which means VHDL-93 with relaxed rules.
+For details on <code class="docutils literal notranslate"><span class="pre">STANDARD</span></code> values see section <a class="reference internal" href="ImplementationOfVHDL.html#vhdl-standards"><span class="std std-ref">VHDL standards</span></a>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>This option resets the effect of <a class="reference internal" href="#cmdoption-ghdl-frelaxed"><code class="xref std std-option docutils literal notranslate"><span class="pre">-frelaxed</span></code></a>, so it should be the first option.</p>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-fsynopsys">
+<span class="sig-name descname"><span class="pre">-fsynopsys</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-fsynopsys" title="Link to this definition">¶</a></dt>
+<dd><p>Allow the use of synopsys non-standard packages (<code class="docutils literal notranslate"><span class="pre">std_logic_arith</span></code>, <code class="docutils literal notranslate"><span class="pre">std_logic_signed</span></code>, <code class="docutils literal notranslate"><span class="pre">std_logic_unsigned</span></code>,
+<code class="docutils literal notranslate"><span class="pre">std_logic_textio</span></code>).
+These packages are present in the ieee library but without this option it’s an error to use them.</p>
+<p>The synopsys packages were created by some companies, and are popular.
+However they are not standard packages, and have been placed in the <cite>IEEE</cite> library without the permission from the
+<code class="docutils literal notranslate"><span class="pre">ieee</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-ieee">
+<span class="sig-name descname"><span class="pre">--ieee</span></span><span class="sig-prename descclassname"><span class="pre">=&lt;IEEE_VAR&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-ieee" title="Link to this definition">¶</a></dt>
+<dd><p id="index-18"><span id="index-17"></span>Select the <code class="docutils literal notranslate"><span class="pre">IEEE</span></code> library to use. <code class="docutils literal notranslate"><span class="pre">IEEE_VAR</span></code> must be one of:</p>
+<dl class="simple">
+<dt>none</dt><dd><p>Do not supply an <cite>IEEE</cite> library. Any library clause with the <code class="docutils literal notranslate"><span class="pre">IEEE</span></code> identifier will fail, unless you have created
+your own library with the <cite>IEEE</cite> name.</p>
+</dd>
+<dt>standard</dt><dd><p>Supply an <cite>IEEE</cite> library containing only packages defined by <code class="docutils literal notranslate"><span class="pre">ieee</span></code> standards.
+Currently, there are the multivalue logic system package <code class="docutils literal notranslate"><span class="pre">std_logic_1164</span></code> defined by IEEE 1164, the synthesis
+packages <code class="docutils literal notranslate"><span class="pre">numeric_bit</span></code> and <code class="docutils literal notranslate"><span class="pre">numeric_std</span></code> defined by IEEE 1076.3, and the <code class="docutils literal notranslate"><span class="pre">vital</span></code> packages <code class="docutils literal notranslate"><span class="pre">vital_timing</span></code> and
+<code class="docutils literal notranslate"><span class="pre">vital_primitives</span></code>, defined by IEEE 1076.4.
+The version of these packages is defined by the VHDL standard used.
+See section <a class="reference internal" href="ImplementationOfVITAL.html#vital-packages"><span class="std std-ref">VITAL packages</span></a>, for more details.</p>
+</dd>
+<dt>synopsys</dt><dd><p>This option is now deprecated.
+It is equivalent to <code class="docutils literal notranslate"><span class="pre">--ieee=standard</span></code> and <code class="docutils literal notranslate"><span class="pre">-fsynopsys</span></code>.</p>
+</dd>
+</dl>
+<p>To avoid errors, you must use the same <cite>IEEE</cite> library for all units of your design, and during elaboration.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-P-DIRECTORY">
+<span class="sig-name descname"><span class="pre">-P&lt;DIRECTORY&gt;</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-P-DIRECTORY" title="Link to this definition">¶</a></dt>
+<dd><p>Add <cite>DIRECTORY</cite> to the end of the list of directories to be searched for library files.
+A library is searched in <cite>DIRECTORY</cite> and also in <cite>DIRECTORY/LIB/vVV</cite> (where <cite>LIB</cite> is the name of the library and <cite>VV</cite>
+the vhdl standard).</p>
+<p>The <cite>WORK</cite> library is always searched in the path specified by the <a class="reference internal" href="#cmdoption-ghdl-workdir"><code class="xref std std-option docutils literal notranslate"><span class="pre">--workdir</span></code></a> option, or in the current
+directory if the latter option is not specified.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-fexplicit">
+<span class="sig-name descname"><span class="pre">-fexplicit</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-fexplicit" title="Link to this definition">¶</a></dt>
+<dd><p>When two operators are overloaded, give preference to the explicit declaration.
+This may be used to avoid the most common pitfall of the <code class="docutils literal notranslate"><span class="pre">std_logic_arith</span></code> package.
+See section <a class="reference internal" href="#ieee-library-pitfalls"><span class="std std-ref">IEEE library pitfalls</span></a>, for an example.</p>
+</dd></dl>
+
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This option is not set by default.
+We don’t think this option is a good feature, because it breaks the encapsulation rule.
+When set, an operator can be silently overridden in another package.
+You’d do better to fix your design and use the <code class="docutils literal notranslate"><span class="pre">numeric_std</span></code> package.</p>
+</div>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-frelaxed">
+<span class="sig-name descname"><span class="pre">-frelaxed</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-frelaxed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-frelaxed-rules">
+<span class="sig-name descname"><span class="pre">-frelaxed-rules</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-frelaxed-rules" title="Link to this definition">¶</a></dt>
+<dd><div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The effects of this option are reset by <a class="reference internal" href="#cmdoption-ghdl-std"><code class="xref std std-option docutils literal notranslate"><span class="pre">--std</span></code></a>, so it should be placed <em>after</em> that option.</p>
+</div>
+<p>Slightly relax some rules to be compatible with various other simulators or synthesizers:</p>
+<ul>
+<li><p>VHDL-87 file declarations are accepted;</p></li>
+<li><p>Default binding indication rules of VHDL-02 are used. Default binding rules are often used, but they are
+particularly obscure before VHDL-02.</p></li>
+<li><p>Allow a subprogram body to match its declaration when the argument lists are semantically identical but
+do not satisfy formal rules (e.g when a function declaration uses the keyword <code class="docutils literal notranslate"><span class="pre">in</span></code> for an
+argument but its body does not).</p></li>
+<li><p>Within an object declaration, allow references to the name (which references the hidden declaration).
+This ignores the error in the following code:</p>
+<div class="highlight-VHDL notranslate"><div class="highlight"><pre><span></span><span class="k">package</span><span class="w"> </span><span class="n">pkg1</span><span class="w"> </span><span class="k">is</span>
+<span class="w">  </span><span class="k">type</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="p">(</span><span class="n">state1</span><span class="p">,</span><span class="w"> </span><span class="n">state2</span><span class="p">,</span><span class="w"> </span><span class="n">state3</span><span class="p">);</span>
+<span class="k">end</span><span class="w"> </span><span class="nc">pkg1</span><span class="p">;</span>
+
+<span class="k">use</span><span class="w"> </span><span class="nn">work.pkg1.</span><span class="k">all</span><span class="p">;</span>
+<span class="k">package</span><span class="w"> </span><span class="n">pkg2</span><span class="w"> </span><span class="k">is</span>
+<span class="w">  </span><span class="k">constant</span><span class="w"> </span><span class="n">state1</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">state1</span><span class="p">;</span>
+<span class="k">end</span><span class="w"> </span><span class="nc">pkg2</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Some code (such as Xilinx packages) have such constructs, which are invalid.</p>
+<p>(The scope of the <code class="docutils literal notranslate"><span class="pre">state1</span></code> constant starts at the <cite>constant</cite> keyword.
+Because the constant <code class="docutils literal notranslate"><span class="pre">state1</span></code> and the enumeration literal <code class="docutils literal notranslate"><span class="pre">state1</span></code> are homographs, the enumeration literal is
+hidden in the immediate scope of the constant).</p>
+</li>
+</ul>
+<p>This option also relaxes the rules about pure functions.
+Violations result in warnings instead of errors.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-fpsl">
+<span class="sig-name descname"><span class="pre">-fpsl</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-fpsl" title="Link to this definition">¶</a></dt>
+<dd><p>Enable parsing of PSL assertions within comments.
+See section <a class="reference internal" href="ImplementationOfVHDL.html#psl-implementation"><span class="std std-ref">PSL support</span></a> for more details.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-mb-comments">
+<span id="cmdoption-ghdl-C"></span><span class="sig-name descname"><span class="pre">--mb-comments</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">-C</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-mb-comments" title="Link to this definition">¶</a></dt>
+<dd><p>Allow UTF8 or multi-bytes chars in a comment.</p>
+<p>According to the VHDL standards before 2002, the only characters allowed in a source file (and that includes the
+comments) are the graphical characters of the ISO 8859-1 character set.
+This is incompatible with comments using UTF-8 or some other encoding.
+This option lift this restriction.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-syn-binding">
+<span class="sig-name descname"><span class="pre">--syn-binding</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-syn-binding" title="Link to this definition">¶</a></dt>
+<dd><p>Use synthesizer rules for component binding.
+During elaboration, if a component is not bound to an entity using VHDL LRM rules, try to find in any known library an
+entity whose name is the same as the component name.</p>
+<p>This rule is known as the synthesizer rule.</p>
+<p>There are two key points: normal VHDL LRM rules are tried first and entities are searched only in known libraries.
+A known library is a library which has been named in your design.</p>
+<p>This option is only useful during elaboration.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-format">
+<span class="sig-name descname"><span class="pre">--format</span></span><span class="sig-prename descclassname"><span class="pre">=&lt;FORMAT&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-format" title="Link to this definition">¶</a></dt>
+<dd><p>Define the output format of some options, such as <a class="reference internal" href="CommandReference.html#cmdoption-ghdl-pp-html"><code class="xref std std-option docutils literal notranslate"><span class="pre">--pp-html</span></code></a> or <a class="reference internal" href="Simulation.html#cmdoption-ghdl-xref-html"><code class="xref std std-option docutils literal notranslate"><span class="pre">--xref-html</span></code></a>.</p>
+<ul class="simple">
+<li><p>By default or when <a class="reference internal" href="#cmdoption-ghdl-format"><code class="xref std std-option docutils literal notranslate"><span class="pre">--format=html2</span></code></a> is specified, generated files follow the HTML 2.0 standard,
+and colours are specified with <cite>&lt;FONT&gt;</cite> tags.
+However, colours are hard-coded.</p></li>
+<li><p>If <a class="reference internal" href="#cmdoption-ghdl-format"><code class="xref std std-option docutils literal notranslate"><span class="pre">--format=css</span></code></a> is specified, generated files follow the HTML 4.0 standard, and use the CSS-1
+file <code class="file docutils literal notranslate"><span class="pre">ghdl.css</span></code> to specify colours.
+This file is generated only if it does not already exist (it is never overwritten) and can be customized by the user
+to change colours or appearance.
+Refer to a generated file and its comments for more information.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-no-vital-checks">
+<span class="sig-name descname"><span class="pre">--no-vital-checks</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-no-vital-checks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-vital-checks">
+<span class="sig-name descname"><span class="pre">--vital-checks</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-vital-checks" title="Link to this definition">¶</a></dt>
+<dd><p>Disable or enable checks of restriction on VITAL units. Checks are enabled by default.</p>
+<p>Checks are performed only when a design unit is decorated by a VITAL attribute.
+The VITAL attributes are <code class="docutils literal notranslate"><span class="pre">VITAL_Level0</span></code> and <code class="docutils literal notranslate"><span class="pre">VITAL_Level1</span></code>, both declared in the <code class="docutils literal notranslate"><span class="pre">ieee.VITAL_Timing</span></code> package.</p>
+<p>Currently, VITAL checks are only partially implemented.
+See section <a class="reference internal" href="ImplementationOfVITAL.html#vhdl-restrictions-for-vital"><span class="std std-ref">VHDL restrictions for VITAL</span></a> for more details.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-PREFIX">
+<span class="sig-name descname"><span class="pre">--PREFIX</span></span><span class="sig-prename descclassname"><span class="pre">=&lt;PATH&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-PREFIX" title="Link to this definition">¶</a></dt>
+<dd><p>Use <code class="file docutils literal notranslate"><span class="pre">PATH</span></code> as the prefix path to find commands and pre-installed (<code class="docutils literal notranslate"><span class="pre">std</span></code> and <code class="docutils literal notranslate"><span class="pre">ieee</span></code>) libraries.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-v">
+<span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-v" title="Link to this definition">¶</a></dt>
+<dd><p>Be verbose. For example, for analysis, elaboration and make commands, GHDL displays the commands executed.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-o">
+<span class="sig-name descname"><span class="pre">-o</span></span><span class="sig-prename descclassname"><span class="pre">=&lt;FNAME&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-o" title="Link to this definition">¶</a></dt>
+<dd><p>All the commands that perform a link (<a class="reference internal" href="#cmdoption-ghdl-e"><code class="xref std std-option docutils literal notranslate"><span class="pre">-e</span></code></a>, <a class="reference internal" href="#cmdoption-ghdl-elab-run"><code class="xref std std-option docutils literal notranslate"><span class="pre">--elab-run</span></code></a>, <a class="reference internal" href="CommandReference.html#cmdoption-ghdl-link"><code class="xref std std-option docutils literal notranslate"><span class="pre">--link</span></code></a>, <a class="reference internal" href="#cmdoption-ghdl-c"><code class="xref std std-option docutils literal notranslate"><span class="pre">-c</span></code></a>,
+<a class="reference internal" href="#cmdoption-ghdl-m"><code class="xref std std-option docutils literal notranslate"><span class="pre">-m</span></code></a>, etc.) support overriding the location and name of the generated artifact.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-time-resolution">
+<span class="sig-name descname"><span class="pre">--time-resolution</span></span><span class="sig-prename descclassname"><span class="pre">=&lt;UNIT&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-time-resolution" title="Link to this definition">¶</a></dt>
+<dd><div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>This feature is supported with <em>mcode</em> backend only.
+It is not possible to support it with either LLVM or GCC backends, because it needs to apply globally.</p>
+</div>
+<p>Set the base time resolution of the simulation.
+This option is supported in commands <a class="reference internal" href="#cmdoption-ghdl-a"><code class="xref std std-option docutils literal notranslate"><span class="pre">-a</span></code></a> and <a class="reference internal" href="#cmdoption-ghdl-r"><code class="xref std std-option docutils literal notranslate"><span class="pre">-r</span></code></a> only.
+Allowed values are <code class="docutils literal notranslate"><span class="pre">auto</span></code> (default), <code class="docutils literal notranslate"><span class="pre">fs</span></code>, <code class="docutils literal notranslate"><span class="pre">ps</span></code>, <code class="docutils literal notranslate"><span class="pre">ns</span></code>, <code class="docutils literal notranslate"><span class="pre">us</span></code>, <code class="docutils literal notranslate"><span class="pre">ms</span></code> or <code class="docutils literal notranslate"><span class="pre">sec</span></code>.
+With LLVM/GCC, the value is fixed to <code class="docutils literal notranslate"><span class="pre">fs</span></code>.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>When overriding the time resolution, all the time units that are used in the design must be larger.
+Using units below the resolution will produce a failure.</p>
+</div>
+</dd></dl>
+
+</section>
+<section id="warnings">
+<h2>Warnings<a class="headerlink" href="#warnings" title="Link to this heading">¶</a></h2>
+<p>Some constructions are not erroneous but dubious.
+Warnings are diagnostic messages that report such constructions.
+Some warnings are reported only during analysis, others during elaboration.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>You could disable a warning by using the <code class="docutils literal notranslate"><span class="pre">--warn-no-XXX</span></code> or <code class="docutils literal notranslate"><span class="pre">-Wno-XXX</span></code> instead of <code class="docutils literal notranslate"><span class="pre">--warn-XXX</span></code> or <code class="docutils literal notranslate"><span class="pre">-WXXX</span></code>.</p>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Some warnings are enabled by default, you can see the list by using
+<code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">--help-warnings</span></code>.</p>
+</div>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-library">
+<span class="sig-name descname"><span class="pre">--warn-library</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-library" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wlibrary">
+<span class="sig-name descname"><span class="pre">-Wlibrary</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wlibrary" title="Link to this definition">¶</a></dt>
+<dd><p>Warns if a design unit replaces another design unit with the same name.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-default-binding">
+<span class="sig-name descname"><span class="pre">--warn-default-binding</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-default-binding" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wdefault-binding">
+<span class="sig-name descname"><span class="pre">-Wdefault-binding</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wdefault-binding" title="Link to this definition">¶</a></dt>
+<dd><p>During analyze, warns if a component instantiation has neither
+configuration specification nor default binding.  This may be useful
+if you want to detect during analyze possibly unbound components if
+you don’t use configuration.  See section <a class="reference internal" href="ImplementationOfVHDL.html#vhdl-standards"><span class="std std-ref">VHDL standards</span></a> for
+more details about default binding rules.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-binding">
+<span class="sig-name descname"><span class="pre">--warn-binding</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-binding" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wbinding">
+<span class="sig-name descname"><span class="pre">-Wbinding</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wbinding" title="Link to this definition">¶</a></dt>
+<dd><p>During elaboration, warns if a component instantiation is not bound
+(and not explicitly left unbound).  Also warns if a port of an
+entity is not bound in a configuration specification or in a
+component configuration.  This warning is enabled by default, since
+default binding rules are somewhat complex and an unbound component
+is most often unexpected.</p>
+<p>However, warnings are still emitted if a component instantiation is
+inside a generate statement.  As a consequence, if you use the
+conditional generate statement to select a component according to
+the implementation, you will certainly get warnings.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-port">
+<span class="sig-name descname"><span class="pre">--warn-port</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-port" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wport">
+<span class="sig-name descname"><span class="pre">-Wport</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wport" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning on unconnected input port without defaults (in
+relaxed mode).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-reserved">
+<span class="sig-name descname"><span class="pre">--warn-reserved</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-reserved" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wreserved">
+<span class="sig-name descname"><span class="pre">-Wreserved</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wreserved" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning if an identifier is a reserved word in a later VHDL standard.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-pragma">
+<span class="sig-name descname"><span class="pre">--warn-pragma</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-pragma" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wpragma">
+<span class="sig-name descname"><span class="pre">-Wpragma</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wpragma" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning for unknown pragma</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-nested-comment">
+<span class="sig-name descname"><span class="pre">--warn-nested-comment</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-nested-comment" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wnested-comment">
+<span class="sig-name descname"><span class="pre">-Wnested-comment</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wnested-comment" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning if a <code class="docutils literal notranslate"><span class="pre">/*</span></code> appears within a block comment (vhdl 2008).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-parenthesis">
+<span class="sig-name descname"><span class="pre">--warn-parenthesis</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-parenthesis" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wparenthesis">
+<span class="sig-name descname"><span class="pre">-Wparenthesis</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wparenthesis" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning in case of weird use of parentheses.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-vital-generic">
+<span class="sig-name descname"><span class="pre">--warn-vital-generic</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-vital-generic" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wvital-generic">
+<span class="sig-name descname"><span class="pre">-Wvital-generic</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wvital-generic" title="Link to this definition">¶</a></dt>
+<dd><p>Warns if a generic name of a vital entity is not a vital generic name. This
+is set by default.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-delayed-checks">
+<span class="sig-name descname"><span class="pre">--warn-delayed-checks</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-delayed-checks" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wdelayed-checks">
+<span class="sig-name descname"><span class="pre">-Wdelayed-checks</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wdelayed-checks" title="Link to this definition">¶</a></dt>
+<dd><p>Warns for checks that cannot be done during analysis time and are
+postponed to elaboration time.  This is because not all procedure
+bodies are available during analysis (either because a package body
+has not yet been analysed or because <cite>GHDL</cite> doesn’t read not
+required package bodies).</p>
+<p>These are checks for no wait statements in a procedure called in a
+sensitized process and checks for pure rules of a function.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-sensitivity">
+<span class="sig-name descname"><span class="pre">--warn-sensitivity</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-sensitivity" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wsensitivity">
+<span class="sig-name descname"><span class="pre">-Wsensitivity</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wsensitivity" title="Link to this definition">¶</a></dt>
+<dd><p>Check analyzed unit for good synthesizable code practices and emit warnings if bad practices are detected</p>
+<dl class="simple">
+<dt>Currently, the following checks are executed:</dt><dd><ul class="simple">
+<li><p>Incomplete sensitivity lists (Missing signals)</p></li>
+<li><p>Over-specified sensitivity lists (Redundant signals)</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>Sensitity lists with indexed, selected or sliced names might generate
+incorrect warnings.</p>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-body">
+<span class="sig-name descname"><span class="pre">--warn-body</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-body" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wbody">
+<span class="sig-name descname"><span class="pre">-Wbody</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wbody" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning if a package body which is not required is
+analyzed. If a package does not declare a subprogram or a deferred
+constant, the package does not require a body.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-specs">
+<span class="sig-name descname"><span class="pre">--warn-specs</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-specs" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wspecs">
+<span class="sig-name descname"><span class="pre">-Wspecs</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wspecs" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning if an all or others specification does not apply.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-universal">
+<span class="sig-name descname"><span class="pre">--warn-universal</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-universal" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wuniversal">
+<span class="sig-name descname"><span class="pre">-Wuniversal</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wuniversal" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning on incorrect use of universal values.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-port-bounds">
+<span class="sig-name descname"><span class="pre">--warn-port-bounds</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-port-bounds" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wport-bounds">
+<span class="sig-name descname"><span class="pre">-Wport-bounds</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wport-bounds" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning on bounds mismatch between the actual and formal in a
+scalar port association</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-runtime-error">
+<span class="sig-name descname"><span class="pre">--warn-runtime-error</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-runtime-error" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wruntime-error">
+<span class="sig-name descname"><span class="pre">-Wruntime-error</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wruntime-error" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning in case of runtime error that is detected during analysis.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-delta-cycle">
+<span class="sig-name descname"><span class="pre">--warn-delta-cycle</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-delta-cycle" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wdelta-cycle">
+<span class="sig-name descname"><span class="pre">-Wdelta-cycle</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wdelta-cycle" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning if a signal assignemnt creates a delta cycle in a
+postponed process.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-missing-wait">
+<span class="sig-name descname"><span class="pre">--warn-missing-wait</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-missing-wait" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wmissing-wait">
+<span class="sig-name descname"><span class="pre">-Wmissing-wait</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wmissing-wait" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning if there is no wait statement in a non-sensitized
+process</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-shared">
+<span class="sig-name descname"><span class="pre">--warn-shared</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-shared" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wshared">
+<span class="sig-name descname"><span class="pre">-Wshared</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wshared" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning when a shared variable is declared and its type it
+not a protected type.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-hide">
+<span class="sig-name descname"><span class="pre">--warn-hide</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-hide" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Whide">
+<span class="sig-name descname"><span class="pre">-Whide</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Whide" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning when a declaration hides a previous hide.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-unused">
+<span class="sig-name descname"><span class="pre">--warn-unused</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-unused" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wunused">
+<span class="sig-name descname"><span class="pre">-Wunused</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wunused" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning when a subprogram is never used.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-nowrite">
+<span class="sig-name descname"><span class="pre">--warn-nowrite</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-nowrite" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wnowrite">
+<span class="sig-name descname"><span class="pre">-Wnowrite</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wnowrite" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning if a variable or a signal is never assigned (only for synthesis).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-others">
+<span class="sig-name descname"><span class="pre">--warn-others</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-others" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wothers">
+<span class="sig-name descname"><span class="pre">-Wothers</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wothers" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning is an <cite>others</cite> choice is not required because all the choices have been explicitly covered.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-pure">
+<span class="sig-name descname"><span class="pre">--warn-pure</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-pure" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wpure">
+<span class="sig-name descname"><span class="pre">-Wpure</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wpure" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning when a pure rules is violated (like declaring a pure function with access parameters).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-analyze-assert">
+<span class="sig-name descname"><span class="pre">--warn-analyze-assert</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-analyze-assert" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wanalyze-assert">
+<span class="sig-name descname"><span class="pre">-Wanalyze-assert</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wanalyze-assert" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning for assertions that are statically evaluated during
+analysis.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-attribute">
+<span class="sig-name descname"><span class="pre">--warn-attribute</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-attribute" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wattribute">
+<span class="sig-name descname"><span class="pre">-Wattribute</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wattribute" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning on incorrect use of attributes.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-useless">
+<span class="sig-name descname"><span class="pre">--warn-useless</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-useless" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wuseless">
+<span class="sig-name descname"><span class="pre">-Wuseless</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wuseless" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning on useless code (like conditions that are always
+false or true, assertions that cannot be triggered).</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-missing-assoc">
+<span class="sig-name descname"><span class="pre">--warn-missing-assoc</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-missing-assoc" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wmissing-assoc">
+<span class="sig-name descname"><span class="pre">-Wmissing-assoc</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wmissing-assoc" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning on missing association for a port association.  Open
+associations are required.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-static">
+<span class="sig-name descname"><span class="pre">--warn-static</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-static" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wstatic">
+<span class="sig-name descname"><span class="pre">-Wstatic</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wstatic" title="Link to this definition">¶</a></dt>
+<dd><p>Emit a warning when a non-static expression is used at a place where the standard requires a static expression.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-warn-error">
+<span class="sig-name descname"><span class="pre">--warn-error</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-warn-error" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-0">
+<span class="sig-name descname"><span class="pre">--warn-error</span></span><span class="sig-prename descclassname"><span class="pre">=&lt;warning&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Werror">
+<span class="sig-name descname"><span class="pre">-Werror</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Werror" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-1">
+<span class="sig-name descname"><span class="pre">-Werror</span></span><span class="sig-prename descclassname"><span class="pre">=&lt;warning&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wno-error">
+<span class="sig-name descname"><span class="pre">-Wno-error</span></span><span class="sig-prename descclassname"><span class="pre">=&lt;warning&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-Wno-error" title="Link to this definition">¶</a></dt>
+<dd><p>When this option is set, warnings are considered as errors.  With
+the parameter, only the specific warning is turned into an error.</p>
+</dd></dl>
+
+</section>
+<section id="diagnostics-control">
+<h2>Diagnostics Control<a class="headerlink" href="#diagnostics-control" title="Link to this heading">¶</a></h2>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-fcolor-diagnostics">
+<span class="sig-name descname"><span class="pre">-fcolor-diagnostics</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-fcolor-diagnostics" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-fno-color-diagnostics">
+<span class="sig-name descname"><span class="pre">-fno-color-diagnostics</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-fno-color-diagnostics" title="Link to this definition">¶</a></dt>
+<dd><p>Control whether diagnostic messages are displayed in color. The
+default is on when the standard output is a terminal.  For
+compatibility with other tools, when colors are enabled the
+diagnostic level is always displayed.  When colors are not enabled,
+level <code class="docutils literal notranslate"><span class="pre">error</span></code> is not displayed.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-fdiagnostics-show-option">
+<span class="sig-name descname"><span class="pre">-fdiagnostics-show-option</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-fdiagnostics-show-option" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-fno-diagnostics-show-option">
+<span class="sig-name descname"><span class="pre">-fno-diagnostics-show-option</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-fno-diagnostics-show-option" title="Link to this definition">¶</a></dt>
+<dd><p>Control whether the warning option is displayed at the end of warning messages, so that the user can easily know how
+to disable it.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-fcaret-diagnostics">
+<span class="sig-name descname"><span class="pre">-fcaret-diagnostics</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-fcaret-diagnostics" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-fno-caret-diagnostics">
+<span class="sig-name descname"><span class="pre">-fno-caret-diagnostics</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-fno-caret-diagnostics" title="Link to this definition">¶</a></dt>
+<dd><p>Control whether the source line of the error is displayed with a caret indicating the column of the error.</p>
+</dd></dl>
+
+</section>
+<section id="library-commands">
+<h2>Library commands<a class="headerlink" href="#library-commands" title="Link to this heading">¶</a></h2>
+<p id="index-19"><span id="create-a-library"></span>A new library is created implicitly, by compiling entities (packages etc.) into it:
+<code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">-a</span> <span class="pre">--work=my_custom_lib</span> <span class="pre">my_file.vhdl</span></code>.</p>
+<p>A library’s source code is usually stored and compiled into its own
+directory, that you specify with the <a class="reference internal" href="#cmdoption-ghdl-workdir"><code class="xref std std-option docutils literal notranslate"><span class="pre">--workdir</span></code></a> option:
+<code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">-a</span> <span class="pre">--work=my_custom_lib</span> <span class="pre">--workdir=my_custom_libdir</span>
+<span class="pre">my_custom_lib_srcdir/my_file.vhdl</span></code>.  See also the <a class="reference external" href="https://docs.python.org/3/using/cmdline.html#cmdoption-P" title="(in Python v3.14)"><code class="xref std std-option docutils literal notranslate"><span class="pre">-P</span></code></a>
+command line option.</p>
+<p>Furthermore, GHDL provides a few commands which act on a library:</p>
+<dl class="std option" id="index-20">
+<dt class="sig sig-object std" id="cmdoption-ghdl-dir">
+<span class="sig-name descname"><span class="pre">--dir</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]</span> <span class="pre">[libs]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-dir" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Displays the content of the design libraries (by default the <code class="docutils literal notranslate"><span class="pre">work</span></code> library).
+All options are allowed, but only a few are meaningful: <a class="reference internal" href="#cmdoption-ghdl-work"><code class="xref std std-option docutils literal notranslate"><span class="pre">--work</span></code></a>, <a class="reference internal" href="#cmdoption-ghdl-workdir"><code class="xref std std-option docutils literal notranslate"><span class="pre">--workdir</span></code></a> and <a class="reference internal" href="#cmdoption-ghdl-std"><code class="xref std std-option docutils literal notranslate"><span class="pre">--std</span></code></a>.</p>
+<dl class="std option" id="clean-command">
+<span id="index-21"></span><dt class="sig sig-object std" id="cmdoption-ghdl-clean">
+<span class="sig-name descname"><span class="pre">--clean</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-clean" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Try to remove any object, executable or temporary file it could have created.
+Source files are not removed.
+The library is kept.</p>
+<dl class="std option" id="remove-command">
+<span id="index-22"></span><dt class="sig sig-object std" id="cmdoption-ghdl-remove">
+<span class="sig-name descname"><span class="pre">--remove</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-remove" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Acts like the clean command but removes the library too.
+Note that after removing a design library, the files are not known anymore by GHDL.</p>
+</section>
+<section id="vpi-vhpi-build-commands">
+<span id="vpi-build-commands"></span><h2>VPI/VHPI build commands<a class="headerlink" href="#vpi-vhpi-build-commands" title="Link to this heading">¶</a></h2>
+<p>These commands simplify the compile and the link of a user VPI or VHPI module.
+They are all wrappers: the arguments are in fact a whole command line that is executed with additional switches.
+Currently a unix-like compiler (like <cite>cc</cite>, <cite>gcc</cite> or <cite>clang</cite>) is expected: the additional switches use their syntax.
+The only option is <cite>-v</cite> which displays the command before its execution.</p>
+<dl class="std option" id="index-23">
+<dt class="sig sig-object std" id="cmdoption-ghdl-vpi-compile">
+<span class="sig-name descname"><span class="pre">--vpi-compile</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;command&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-vpi-compile" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Add an include path to the command and execute it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ghdl</span> <span class="o">--</span><span class="n">vpi</span><span class="o">-</span><span class="nb">compile</span> <span class="n">command</span>
+</pre></div>
+</div>
+<p>This will execute:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">command</span> <span class="o">-</span><span class="n">Ixxx</span><span class="o">/</span><span class="n">include</span>
+</pre></div>
+</div>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">--vpi-compile</span> <span class="pre">gcc</span> <span class="pre">-c</span> <span class="pre">vpi1.c</span></code> executes <code class="docutils literal notranslate"><span class="pre">gcc</span> <span class="pre">-c</span> <span class="pre">vpi1.c</span> <span class="pre">-fPIC</span> <span class="pre">-Ixxx/include</span></code>.</p>
+<dl class="std option" id="index-24">
+<span id="vpi-link-command"></span><dt class="sig sig-object std" id="cmdoption-ghdl-vpi-link">
+<span class="sig-name descname"><span class="pre">--vpi-link</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;command&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-vpi-link" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Add a library path and name to the command and execute it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ghdl</span> <span class="o">--</span><span class="n">vpi</span><span class="o">-</span><span class="n">link</span> <span class="n">command</span>
+</pre></div>
+</div>
+<p>This will execute:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">command</span> <span class="o">-</span><span class="n">Lxxx</span><span class="o">/</span><span class="n">lib</span> <span class="o">-</span><span class="n">lghdlvpi</span>
+</pre></div>
+</div>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">--vpi-link</span> <span class="pre">gcc</span> <span class="pre">-o</span> <span class="pre">vpi1.vpi</span> <span class="pre">vpi1.o</span></code> executes <code class="docutils literal notranslate"><span class="pre">gcc</span> <span class="pre">-o</span> <span class="pre">vpi1.vpi</span> <span class="pre">vpi1.o</span> <span class="pre">--shared</span> <span class="pre">-Lxxx/lib</span> <span class="pre">-lghdlvpi</span></code>.</p>
+<dl class="std option" id="index-25">
+<span id="vpi-cflags-command"></span><dt class="sig sig-object std" id="cmdoption-ghdl-vpi-cflags">
+<span class="sig-name descname"><span class="pre">--vpi-cflags</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-vpi-cflags" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display flags added by <a class="reference internal" href="#cmdoption-ghdl-vpi-compile"><code class="xref std std-option docutils literal notranslate"><span class="pre">--vpi-compile</span></code></a>.</p>
+<dl class="std option" id="index-26">
+<dt class="sig sig-object std" id="cmdoption-ghdl-vpi-ldflags">
+<span class="sig-name descname"><span class="pre">--vpi-ldflags</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-vpi-ldflags" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display flags added by <a class="reference internal" href="#cmdoption-ghdl-vpi-link"><code class="xref std std-option docutils literal notranslate"><span class="pre">--vpi-link</span></code></a>.</p>
+<dl class="std option" id="index-27">
+<dt class="sig sig-object std" id="cmdoption-ghdl-vpi-include-dir">
+<span class="sig-name descname"><span class="pre">--vpi-include-dir</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-vpi-include-dir" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display the include directory added by the compile flags.</p>
+<dl class="std option" id="index-28">
+<dt class="sig sig-object std" id="cmdoption-ghdl-vpi-library-dir">
+<span class="sig-name descname"><span class="pre">--vpi-library-dir</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-vpi-library-dir" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display the library directory added by the link flags.</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-vpi-library-dir-unix">
+<span class="sig-name descname"><span class="pre">--vpi-library-dir-unix</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-vpi-library-dir-unix" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display the library directory added by the link flags, forcing UNIX syntax.</p>
+</section>
+<section id="ieee-library-pitfalls">
+<span id="id1"></span><h2>IEEE library pitfalls<a class="headerlink" href="#ieee-library-pitfalls" title="Link to this heading">¶</a></h2>
+<p>When you use options <a class="reference internal" href="#cmdoption-ghdl-ieee"><code class="xref std std-option docutils literal notranslate"><span class="pre">--ieee=synopsys</span></code></a>, the <code class="docutils literal notranslate"><span class="pre">ieee</span></code> library contains non standard packages such as
+<code class="docutils literal notranslate"><span class="pre">std_logic_arith</span></code>.
+These packages are not standard because there are not described by an IEEE standard, even if they have been put in the
+<cite>IEEE</cite> library.
+Furthermore, they are not really de-facto standard, because there are slight differences between the packages of Mentor
+and those of Synopsys.
+Furthermore, since they are not well thought out, their use has pitfalls.
+For example, this description has an error during compilation:</p>
+<div class="highlight-VHDL notranslate"><div class="highlight"><pre><span></span><span class="k">library</span><span class="w"> </span><span class="nn">ieee</span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="nn">ieee.std_logic_1164.</span><span class="k">all</span><span class="p">;</span>
+
+<span class="c1">--  A counter from 0 to 10.</span>
+<span class="k">entity</span><span class="w"> </span><span class="nc">counter</span><span class="w"> </span><span class="k">is</span>
+<span class="w">  </span><span class="k">port</span><span class="w"> </span><span class="p">(</span><span class="n">val</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">out</span><span class="w"> </span><span class="kt">std_logic_vector</span><span class="w"> </span><span class="p">(</span><span class="mi">3</span><span class="w"> </span><span class="k">downto</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">        </span><span class="n">ck</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">std_logic</span><span class="p">;</span>
+<span class="w">        </span><span class="n">rst</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">std_logic</span><span class="p">);</span>
+<span class="k">end</span><span class="w"> </span><span class="nc">counter</span><span class="p">;</span>
+
+<span class="k">library</span><span class="w"> </span><span class="nn">ieee</span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="nn">ieee.std_logic_unsigned.</span><span class="k">all</span><span class="p">;</span>
+
+<span class="k">architecture</span><span class="w"> </span><span class="nc">bad</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nc">counter</span>
+<span class="k">is</span>
+<span class="w">  </span><span class="k">signal</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">std_logic_vector</span><span class="w"> </span><span class="p">(</span><span class="mi">3</span><span class="w"> </span><span class="k">downto</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="k">begin</span>
+<span class="w">  </span><span class="k">process</span><span class="w"> </span><span class="p">(</span><span class="n">ck</span><span class="p">,</span><span class="w"> </span><span class="n">rst</span><span class="p">)</span>
+<span class="w">  </span><span class="k">begin</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">rst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39;1&#39;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">      </span><span class="n">v</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mh">x&quot;0&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="k">elsif</span><span class="w"> </span><span class="n">rising_edge</span><span class="w"> </span><span class="p">(</span><span class="n">ck</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1010&quot;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="c1">-- Error</span>
+<span class="w">        </span><span class="n">v</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mh">x&quot;0&quot;</span><span class="p">;</span>
+<span class="w">      </span><span class="k">else</span>
+<span class="w">        </span><span class="n">v</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">      </span><span class="k">end</span><span class="w"> </span><span class="k">if</span><span class="p">;</span>
+<span class="w">    </span><span class="k">end</span><span class="w"> </span><span class="k">if</span><span class="p">;</span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">process</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">val</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">v</span><span class="p">;</span>
+<span class="k">end</span><span class="w"> </span><span class="nc">bad</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>When you analyze this design, GHDL does not accept it (two long lines have been split for readability):</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>ghdl<span class="w"> </span>-a<span class="w"> </span>--ieee<span class="o">=</span>synopsys<span class="w"> </span>bad_counter.vhdl
+bad_counter.vhdl:13:14:<span class="w"> </span>operator<span class="w"> </span><span class="s2">&quot;=&quot;</span><span class="w"> </span>is<span class="w"> </span>overloaded
+bad_counter.vhdl:13:14:<span class="w"> </span>possible<span class="w"> </span>interpretations<span class="w"> </span>are:
+../../libraries/ieee/std_logic_1164.v93:69:5:<span class="w"> </span>implicit<span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="s2">&quot;=&quot;</span>
+<span class="w">    </span><span class="o">[</span>std_logic_vector,<span class="w"> </span>std_logic_vector<span class="w"> </span><span class="k">return</span><span class="w"> </span>boolean<span class="o">]</span>
+../../libraries/synopsys/std_logic_unsigned.vhdl:64:5:<span class="w"> </span><span class="k">function</span><span class="w"> </span><span class="s2">&quot;=&quot;</span>
+<span class="w">    </span><span class="o">[</span>std_logic_vector,<span class="w"> </span>std_logic_vector<span class="w"> </span><span class="k">return</span><span class="w"> </span>boolean<span class="o">]</span>
+../translate/ghdldrv/ghdl:<span class="w"> </span>compilation<span class="w"> </span>error
+</pre></div>
+</div>
+<p>Indeed, the <cite>“=”</cite> operator is defined in both packages, and both are visible at the place it is used.
+The first declaration is an implicit one, which occurs when the <cite>std_logic_vector</cite> type is declared and is an element to
+element comparison.
+The second one is an explicit declared function, with the semantics of an unsigned comparison.</p>
+<p>With some analysers, the explicit declaration has priority over the implicit declaration, and this design can be
+analyzed without error.
+However, this is not the rule given by the VHDL LRM, and since GHDL follows these rules, it emits an error.</p>
+<p>You can force GHDL to use this rule with the <em>-fexplicit</em> option (see <a class="reference internal" href="#ghdl-options"><span class="std std-ref">Options</span></a> for further details).
+However it is easy to fix this error, by using a selected name:</p>
+<div class="highlight-VHDL notranslate"><div class="highlight"><pre><span></span><span class="k">library</span><span class="w"> </span><span class="nn">ieee</span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="nn">ieee.std_logic_unsigned.</span><span class="k">all</span><span class="p">;</span>
+
+<span class="k">architecture</span><span class="w"> </span><span class="nc">fixed_bad</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nc">counter</span>
+<span class="k">is</span>
+<span class="w">  </span><span class="k">signal</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">std_logic_vector</span><span class="w"> </span><span class="p">(</span><span class="mi">3</span><span class="w"> </span><span class="k">downto</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="k">begin</span>
+<span class="w">  </span><span class="k">process</span><span class="w"> </span><span class="p">(</span><span class="n">ck</span><span class="p">,</span><span class="w"> </span><span class="n">rst</span><span class="p">)</span>
+<span class="w">  </span><span class="k">begin</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">rst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39;1&#39;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">      </span><span class="n">v</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mh">x&quot;0&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="k">elsif</span><span class="w"> </span><span class="n">rising_edge</span><span class="w"> </span><span class="p">(</span><span class="n">ck</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="nn">ieee.std_logic_unsigned</span><span class="p">.</span><span class="s">&quot;=&quot;</span><span class="w"> </span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;1010&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="n">v</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mh">x&quot;0&quot;</span><span class="p">;</span>
+<span class="w">      </span><span class="k">else</span>
+<span class="w">        </span><span class="n">v</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">      </span><span class="k">end</span><span class="w"> </span><span class="k">if</span><span class="p">;</span>
+<span class="w">    </span><span class="k">end</span><span class="w"> </span><span class="k">if</span><span class="p">;</span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">process</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">val</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">v</span><span class="p">;</span>
+<span class="k">end</span><span class="w"> </span><span class="nc">fixed_bad</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>It is better to only use the standard packages defined by IEEE, which provide the same functionalities:</p>
+<div class="highlight-VHDL notranslate"><div class="highlight"><pre><span></span><span class="k">library</span><span class="w"> </span><span class="nn">ieee</span><span class="p">;</span>
+<span class="k">use</span><span class="w"> </span><span class="nn">ieee.numeric_std.</span><span class="k">all</span><span class="p">;</span>
+
+<span class="k">architecture</span><span class="w"> </span><span class="nc">good</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nc">counter</span>
+<span class="k">is</span>
+<span class="w">  </span><span class="k">signal</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="p">(</span><span class="mi">3</span><span class="w"> </span><span class="k">downto</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="k">begin</span>
+<span class="w">  </span><span class="k">process</span><span class="w"> </span><span class="p">(</span><span class="n">ck</span><span class="p">,</span><span class="w"> </span><span class="n">rst</span><span class="p">)</span>
+<span class="w">  </span><span class="k">begin</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">rst</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39;1&#39;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">      </span><span class="n">v</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mh">x&quot;0&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="k">elsif</span><span class="w"> </span><span class="n">rising_edge</span><span class="w"> </span><span class="p">(</span><span class="n">ck</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;1010&quot;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">        </span><span class="n">v</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mh">x&quot;0&quot;</span><span class="p">;</span>
+<span class="w">      </span><span class="k">else</span>
+<span class="w">        </span><span class="n">v</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">      </span><span class="k">end</span><span class="w"> </span><span class="k">if</span><span class="p">;</span>
+<span class="w">    </span><span class="k">end</span><span class="w"> </span><span class="k">if</span><span class="p">;</span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">process</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">val</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="kt">std_logic_vector</span><span class="w"> </span><span class="p">(</span><span class="n">v</span><span class="p">);</span>
+<span class="k">end</span><span class="w"> </span><span class="nc">good</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="admonition hint" id="index-30">
+<span id="index-29"></span><p class="admonition-title">Hint</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">ieee</span></code> math packages (<code class="docutils literal notranslate"><span class="pre">math_real</span></code> and <code class="docutils literal notranslate"><span class="pre">math_complex</span></code>) provided with <cite>GHDL</cite> are fully compliant with the
+<cite>IEEE</cite> standard.</p>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="Simulation.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Simulation (runtime)</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="../quick_start/python/index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Python Interfaces</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2002-2024, Tristan Gingold and contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link fa-solid fa-brands fa-github" href="https://github.com/ghdl/ghdl" aria-label="GitHub ghdl/ghdl"></a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Invoking GHDL</a><ul>
+<li><a class="reference internal" href="#design-building-commands">Design building commands</a><ul>
+<li><a class="reference internal" href="#analysis-a">Analysis [<code class="docutils literal notranslate"><span class="pre">-a</span></code>]</a></li>
+<li><a class="reference internal" href="#elaboration-e">Elaboration [<code class="docutils literal notranslate"><span class="pre">-e</span></code>]</a></li>
+<li><a class="reference internal" href="#run-r">Run [<code class="docutils literal notranslate"><span class="pre">-r</span></code>]</a></li>
+<li><a class="reference internal" href="#elaborate-and-run-elab-run">Elaborate and run [<code class="docutils literal notranslate"><span class="pre">--elab-run</span></code>]</a></li>
+<li><a class="reference internal" href="#check-syntax-s">Check syntax [<code class="docutils literal notranslate"><span class="pre">-s</span></code>]</a></li>
+<li><a class="reference internal" href="#analyze-and-elaborate-c">Analyze and elaborate [<code class="docutils literal notranslate"><span class="pre">-c</span></code>]</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#design-rebuilding-commands">Design rebuilding commands</a><ul>
+<li><a class="reference internal" href="#import-i">Import [<code class="docutils literal notranslate"><span class="pre">-i</span></code>]</a></li>
+<li><a class="reference internal" href="#elab-order-elab-order">Elab-order [<code class="docutils literal notranslate"><span class="pre">--elab-order</span></code>]</a></li>
+<li><a class="reference internal" href="#make-m">Make [<code class="docutils literal notranslate"><span class="pre">-m</span></code>]</a></li>
+<li><a class="reference internal" href="#generate-makefile-gen-makefile">Generate Makefile [<code class="docutils literal notranslate"><span class="pre">--gen-makefile</span></code>]</a></li>
+<li><a class="reference internal" href="#generate-dependency-file-command-gen-depends">Generate dependency file command [<code class="docutils literal notranslate"><span class="pre">--gen-depends</span></code>]</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#options">Options</a></li>
+<li><a class="reference internal" href="#warnings">Warnings</a></li>
+<li><a class="reference internal" href="#diagnostics-control">Diagnostics Control</a></li>
+<li><a class="reference internal" href="#library-commands">Library commands</a></li>
+<li><a class="reference internal" href="#vpi-vhpi-build-commands">VPI/VHPI build commands</a></li>
+<li><a class="reference internal" href="#ieee-library-pitfalls">IEEE library pitfalls</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=2a02db7b"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
