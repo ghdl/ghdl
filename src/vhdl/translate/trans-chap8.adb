@@ -2586,6 +2586,7 @@ package body Trans.Chap8 is
                end if;
 
                if Get_Expr_Staticness (Actual) = Locally
+                 and then Get_Type_Staticness (Act_Type) = Locally
                  and then Kind_In (Actual,
                                    Iir_Kind_Simple_Aggregate,
                                    Iir_Kind_Aggregate)
