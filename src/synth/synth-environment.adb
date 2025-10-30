@@ -1081,7 +1081,7 @@ package body Synth.Environment is
             if Cls = Unknown then
                Error_Multiple_Assignments
                  (Wire_Rec.Decl, Data.Res_Off, Data.Res_Off + Inp_Wd - 1);
-               Finalize_Assignment_Skip (Data, Inp_Wd);
+               Finalize_Assignment_Append (Data, Build_Const_X (Ctxt, Inp_Wd));
             else
                declare
                   Res, Vc, V : Net;
