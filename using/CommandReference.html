@@ -1,0 +1,720 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="author" title="About these documents" href="../about.html"><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Implementation of VHDL" href="ImplementationOfVHDL.html"><link rel="prev" title="Synthesis" href="Synthesis.html">
+        <link rel="prefetch" href="../_static/logo.png" as="image">
+
+    <link rel="shortcut icon" href="../_static/icon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.09.25 -->
+        <title>Additional Command Reference - 6.0.0-dev</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=580074bf" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f3f3;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">6.0.0-dev</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">6.0.0-dev</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">GHDL usage</span></p>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a><input aria-label="Toggle navigation of Quick Start Guide" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../quick_start/simulation/index.html">Simulation</a><input aria-label="Toggle navigation of Simulation" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/hello/index.html"><cite>Hello world</cite> program</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/heartbeat/index.html"><cite>Heartbeat</cite> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/adder/index.html"><cite>Full adder</cite> module and testbench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/DLXModelSuite.html">Working with non-trivial designs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference external" href="https://ghdl.github.io/ghdl-cosim">Co-Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quick_start/python/index.html">Python Interfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../development/building/index.html">Building GHDL</a><input aria-label="Toggle navigation of Building GHDL" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/Sources.html">Sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/mcode.html">mcode backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/LLVM.html">LLVM backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/GCC.html">GCC backend</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ghw/index.html">GHDL Waveform (GHW)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../internals/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/ghdl/ghdl/blob/master/doc/using/CommandReference.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/ghdl/ghdl/edit/master/doc/using/CommandReference.rst" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="additional-command-reference">
+<span id="ref-command"></span><h1>Additional Command Reference<a class="headerlink" href="#additional-command-reference" title="Link to this heading">¶</a></h1>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>The most common commands and options are shown in section <a class="reference internal" href="InvokingGHDL.html#using-invoking"><span class="std std-ref">Invoking GHDL</span></a>.
+Here the advanced and experimental features are described.</p>
+</div>
+<section id="environment-variables">
+<h2>Environment variables<a class="headerlink" href="#environment-variables" title="Link to this heading">¶</a></h2>
+<dl class="std envvar">
+<dt class="sig sig-object std" id="envvar-GHDL_PREFIX">
+<span class="sig-name descname"><span class="pre">GHDL_PREFIX</span></span><a class="headerlink" href="#envvar-GHDL_PREFIX" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="misc-commands">
+<h2>Misc commands<a class="headerlink" href="#misc-commands" title="Link to this heading">¶</a></h2>
+<p>There are a few GHDL commands which are seldom useful.</p>
+<section id="help-h">
+<span id="index-0"></span><h3>Help [<code class="docutils literal notranslate"><span class="pre">-h</span></code>]<a class="headerlink" href="#help-h" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-help">
+<span id="cmdoption-ghdl-h"></span><span class="sig-name descname"><span class="pre">--help</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">-h</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-help" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display (on the standard output) a short description of the all the
+commands available.  If the help switch is followed by a command
+switch, then options for that second command are displayed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ghdl</span> <span class="o">--</span><span class="n">help</span>
+<span class="n">ghdl</span> <span class="o">-</span><span class="n">h</span>
+<span class="n">ghdl</span> <span class="o">-</span><span class="n">h</span> <span class="n">command</span>
+</pre></div>
+</div>
+</section>
+<section id="help-help-options">
+<span id="index-1"></span><h3>Help [<code class="docutils literal notranslate"><span class="pre">--help-options</span></code>]<a class="headerlink" href="#help-help-options" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-help-options">
+<span class="sig-name descname"><span class="pre">--help-options,</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-help-options" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display (on the standard output) a short description of the all the
+analysis options.</p>
+<blockquote>
+<div><p>ghdl –help-options</p>
+</div></blockquote>
+</section>
+<section id="help-help-warnings">
+<span id="index-2"></span><h3>Help [<code class="docutils literal notranslate"><span class="pre">--help-warnings</span></code>]<a class="headerlink" href="#help-help-warnings" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-help-warnings">
+<span class="sig-name descname"><span class="pre">--help-warnings,</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-help-warnings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display (on the standard output) a short description of the all the warnings,
+and those which are enabled by default.</p>
+<blockquote>
+<div><p>ghdl –help-warnings</p>
+</div></blockquote>
+</section>
+<section id="display-config-disp-config">
+<span id="index-3"></span><h3>Display config [<code class="docutils literal notranslate"><span class="pre">--disp-config</span></code>]<a class="headerlink" href="#display-config-disp-config" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-disp-config">
+<span class="sig-name descname"><span class="pre">--disp-config</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-disp-config" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display the program paths and options used by GHDL. This may be useful to track installation errors.</p>
+</section>
+<section id="display-standard-disp-standard">
+<span id="index-5"></span><span id="index-4"></span><h3>Display standard [<code class="docutils literal notranslate"><span class="pre">--disp-standard</span></code>]<a class="headerlink" href="#display-standard-disp-standard" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-disp-standard">
+<span class="sig-name descname"><span class="pre">--disp-standard</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-disp-standard" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display the <code class="docutils literal notranslate"><span class="pre">std.standard</span></code> package.</p>
+</section>
+<section id="version-version">
+<span id="index-6"></span><h3>Version [<code class="docutils literal notranslate"><span class="pre">--version</span></code>]<a class="headerlink" href="#version-version" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-version">
+<span id="cmdoption-ghdl-v"></span><span class="sig-name descname"><span class="pre">--version</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-version" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display the GHDL version.</p>
+</section>
+</section>
+<section id="file-commands">
+<h2>File commands<a class="headerlink" href="#file-commands" title="Link to this heading">¶</a></h2>
+<p>The following commands act on one or several files.
+These are not analyzed, therefore, they work even if a file has semantic errors.</p>
+<section id="format-fmt">
+<span id="index-7"></span><h3>Format [<code class="docutils literal notranslate"><span class="pre">fmt</span></code>]<a class="headerlink" href="#format-fmt" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-arg-fmt">
+<span class="sig-name descname"><span class="pre">fmt</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;file&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-arg-fmt" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Format on the standard output the input file.</p>
+</section>
+<section id="pretty-print-pp-html">
+<span id="index-8"></span><h3>Pretty print [<code class="docutils literal notranslate"><span class="pre">--pp-html</span></code>]<a class="headerlink" href="#pretty-print-pp-html" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-pp-html">
+<span class="sig-name descname"><span class="pre">--pp-html</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options]</span> <span class="pre">file...&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-pp-html" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>The files are just scanned and an html file with syntax highlighting is generated on standard output.
+Since the files are not even parsed, erroneous files or incomplete designs can be pretty printed.
+The style of the html file can be modified with the <a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-format"><code class="xref std std-option docutils literal notranslate"><span class="pre">--format</span></code></a> option.</p>
+</section>
+<section id="find-f">
+<span id="index-9"></span><h3>Find [<code class="docutils literal notranslate"><span class="pre">-f</span></code>]<a class="headerlink" href="#find-f" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-f">
+<span class="sig-name descname"><span class="pre">-f</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;file...&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-f" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>The files are scanned, parsed and the names of design units are displayed.
+Design units marked with two stars are candidates to be at the apex of a design hierarchy.</p>
+</section>
+<section id="chop-chop">
+<span id="index-10"></span><h3>Chop [<code class="docutils literal notranslate"><span class="pre">--chop</span></code>]<a class="headerlink" href="#chop-chop" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-chop">
+<span class="sig-name descname"><span class="pre">--chop</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;files...&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-chop" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>The provided files are read, and a file is written in the current directory for every design unit.
+Each filename is built according to the type:</p>
+<ul class="simple">
+<li><p>For an entity declaration, a package declaration, or a configuration the file name is <code class="file docutils literal notranslate"><span class="pre">NAME.vhdl</span></code>, where <cite>NAME</cite>
+is the name of the design unit.</p></li>
+<li><p>For a package body, the filename is <code class="file docutils literal notranslate"><span class="pre">NAME-body.vhdl</span></code>.</p></li>
+<li><p>Finally, for an architecture <cite>ARCH</cite> of an entity <cite>ENTITY</cite>, the filename is <code class="file docutils literal notranslate"><span class="pre">ENTITY-ARCH.vhdl</span></code>.</p></li>
+</ul>
+<p>Since the input files are parsed, this command aborts in case of syntax error.
+The command aborts too if a file to be written already exists.</p>
+<p>Comments between design units are stored into the most adequate files.</p>
+<p>This command may be useful to split big files, if your computer doesn’t have enough memory to compile such files.
+The size of the executable is reduced too.</p>
+</section>
+<section id="lines-lines">
+<span id="index-11"></span><h3>Lines [<code class="docutils literal notranslate"><span class="pre">--lines</span></code>]<a class="headerlink" href="#lines-lines" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-lines">
+<span class="sig-name descname"><span class="pre">--lines</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;files...&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-lines" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Display on the standard output lines of files preceded by line number.</p>
+</section>
+<section id="xml-tree-generation-file-to-xml">
+<span id="index-12"></span><h3>XML tree generation [<code class="docutils literal notranslate"><span class="pre">--file-to-xml</span></code>]<a class="headerlink" href="#xml-tree-generation-file-to-xml" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-file-to-xml">
+<span class="sig-name descname"><span class="pre">--file-to-xml</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-file-to-xml" title="Link to this definition">¶</a></dt>
+<dd><p>Outputs an XML representation of the decorated syntax tree for the input file and its dependencies.
+It can be used for VHDL tooling using semantic information, like style checkers, documentation extraction, complexity
+estimation, etc.</p>
+</dd></dl>
+
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<ul class="simple">
+<li><p>The AST slightly changes from time to time (particularly when new nodes are added for new language features), so be
+liberal in what is allowed by your tool.
+Also, the XML can be quite large so consider it only during prototyping.</p></li>
+<li><p>Note that at this time there is no XML dump of the elaborated design.</p></li>
+</ul>
+</div>
+</section>
+</section>
+<section id="mcode-only-commands">
+<h2>MCODE only commands<a class="headerlink" href="#mcode-only-commands" title="Link to this heading">¶</a></h2>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-arg-coverage">
+<span class="sig-name descname"><span class="pre">coverage</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[format]</span> <span class="pre">files&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-arg-coverage" title="Link to this definition">¶</a></dt>
+<dd><p>Merge and output results of coverage generated by simulations run with
+the <code class="docutils literal notranslate"><span class="pre">--coverage</span></code> option.  There are different output formats.</p>
+<p>The default format, also selected with <code class="docutils literal notranslate"><span class="pre">--format=summary</span></code> displays on
+the standard output a line for each file, containing the file name and the
+coverage ratio (with numbers and also with a percentage).  The last line
+displays the total ratio.</p>
+<p>The option <code class="docutils literal notranslate"><span class="pre">--format=lcov</span></code> displays on the standard output a tracefile
+of the <code class="docutils literal notranslate"><span class="pre">lcov</span></code> format.  You can directly use <code class="docutils literal notranslate"><span class="pre">genhtml</span></code> tool (from <code class="docutils literal notranslate"><span class="pre">lcov</span></code>)
+and generates HTML files from the results.</p>
+<p>Finally, the option <code class="docutils literal notranslate"><span class="pre">--format=gcov</span></code> generates <code class="docutils literal notranslate"><span class="pre">.gcov</span></code> files in the current
+directory, which are compatible with the <code class="docutils literal notranslate"><span class="pre">gcov</span></code> output. A <code class="docutils literal notranslate"><span class="pre">.gcov</span></code> file
+is generated for each source file, which contains the text source prefixed
+with coverage informations.</p>
+</dd></dl>
+
+</section>
+<section id="gcc-llvm-only-commands">
+<span id="gccllvm-only-programs"></span><h2>GCC/LLVM only commands<a class="headerlink" href="#gcc-llvm-only-commands" title="Link to this heading">¶</a></h2>
+<section id="bind-bind">
+<span id="index-13"></span><h3>Bind [<code class="docutils literal notranslate"><span class="pre">--bind</span></code>]<a class="headerlink" href="#bind-bind" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-bind">
+<span class="sig-name descname"><span class="pre">--bind</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options]</span> <span class="pre">[library.]top_unit</span> <span class="pre">[arch]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-bind" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Performs only the first stage of the elaboration command; the list of object files is created but the executable is not
+built.
+This command should be used only when the main entry point is not GHDL.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Currently, the objects generated by <a class="reference internal" href="#cmdoption-ghdl-bind"><code class="xref std std-option docutils literal notranslate"><span class="pre">--bind</span></code></a> are created in the working directory.
+This behaviour is different from other object files generated with <a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-a"><code class="xref std std-option docutils literal notranslate"><span class="pre">-a</span></code></a>, which are always placed in the same
+directory as the <cite>WORK</cite> library.
+It is possible to provide an output path with <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">--bind</span> <span class="pre">-o</span> <span class="pre">path/top_unit</span> <span class="pre">[library.]top_unit</span> <span class="pre">[arch]</span></code>.
+However, <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">--list-link</span></code> will only search in the current path.</p>
+</div>
+</section>
+<section id="link-link">
+<span id="index-14"></span><h3>Link [<code class="docutils literal notranslate"><span class="pre">--link</span></code>]<a class="headerlink" href="#link-link" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-link">
+<span class="sig-name descname"><span class="pre">--link</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options]</span> <span class="pre">[library.]top_unit</span> <span class="pre">[arch]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-link" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Performs only the second stage of the elaboration command: the executable is created by linking the files of the object
+files list.
+This command is available only for completeness.
+The elaboration command is equivalent to the bind command followed by the link command.</p>
+</section>
+<section id="list-link-list-link">
+<span id="index-15"></span><h3>List link [<code class="docutils literal notranslate"><span class="pre">--list-link</span></code>]<a class="headerlink" href="#list-link-list-link" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-list-link">
+<span class="sig-name descname"><span class="pre">--list-link</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[library.]top_unit</span> <span class="pre">[arch]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-list-link" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>This command may be used only after a bind command.
+GHDL displays all the files which will be linked to create an executable and additional arguments for the linker.
+This command is intended to add object files in a link of a foreign program.
+This command should be used only after <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">--bind</span></code>, as some files generated by it are looked for in the current path.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>One of the arguments returned by <code class="docutils literal notranslate"><span class="pre">--list-link</span></code> is <code class="docutils literal notranslate"><span class="pre">-Wl,--version-script=PREFIX/lib/ghdl/grt.ver</span></code>, where <cite>PREFIX</cite>
+is the installation path of GHDL.
+This will hide most of the symbols when the target executable binary is built.
+In some contexts, where the binary is to be loaded dynamically, the user might want additional symbols to be
+accessible.
+There are two possible approaches to have it done:</p>
+<ul class="simple">
+<li><p>Filter the output of <code class="docutils literal notranslate"><span class="pre">--list-link</span></code> with e.g. <code class="docutils literal notranslate"><span class="pre">sed</span></code>.</p></li>
+<li><p>Provide an additional non-anonymous version script: <code class="docutils literal notranslate"><span class="pre">-Wl,-Wl,--version-script=file.ver</span></code>.</p></li>
+</ul>
+</div>
+</section>
+</section>
+<section id="options">
+<h2>Options<a class="headerlink" href="#options" title="Link to this heading">¶</a></h2>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-GHDL1">
+<span class="sig-name descname"><span class="pre">--GHDL1&lt;</span></span><span class="sig-prename descclassname"><span class="pre">=COMMAND&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-GHDL1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Use <code class="docutils literal notranslate"><span class="pre">COMMAND</span></code> as the command name for the compiler.
+If <code class="docutils literal notranslate"><span class="pre">COMMAND</span></code> is not a path, then it is searched in the path.</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-AS">
+<span class="sig-name descname"><span class="pre">--AS&lt;</span></span><span class="sig-prename descclassname"><span class="pre">=COMMAND&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-AS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Use <code class="docutils literal notranslate"><span class="pre">COMMAND</span></code> as the command name for the assembler.
+If <code class="docutils literal notranslate"><span class="pre">COMMAND</span></code> is not a path, then it is searched in the path.
+The default is <code class="docutils literal notranslate"><span class="pre">as</span></code>.</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-LINK">
+<span class="sig-name descname"><span class="pre">--LINK&lt;</span></span><span class="sig-prename descclassname"><span class="pre">=COMMAND&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-LINK" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Use <code class="docutils literal notranslate"><span class="pre">COMMAND</span></code> as the linker driver.
+If <code class="docutils literal notranslate"><span class="pre">COMMAND</span></code> is not a path, then it is searched in the path.
+The default is <code class="docutils literal notranslate"><span class="pre">gcc</span></code>.</p>
+</section>
+<section id="passing-options-to-other-programs">
+<span id="id1"></span><h2>Passing options to other programs<a class="headerlink" href="#passing-options-to-other-programs" title="Link to this heading">¶</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>These options are only available with GCC/LLVM.</p>
+</div>
+<p>For many commands, GHDL acts as a driver: it invokes programs to perform the command.
+You can pass arbitrary options to these programs.</p>
+<p>Both the compiler and the linker are in fact GCC programs.
+See the GCC manual for details on GCC options.</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wc-OPTION">
+<span class="sig-name descname"><span class="pre">-Wc,&lt;OPTION&gt;</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wc-OPTION" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Pass <cite>OPTION</cite> as an option to the compiler.</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wa-OPTION">
+<span class="sig-name descname"><span class="pre">-Wa,&lt;OPTION&gt;</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wa-OPTION" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Pass <cite>OPTION</cite> as an option to the assembler.</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-Wl-OPTION">
+<span class="sig-name descname"><span class="pre">-Wl,&lt;OPTION&gt;</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-Wl-OPTION" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Pass <cite>OPTION</cite> as an option to the linker.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="ImplementationOfVHDL.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Implementation of VHDL</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="Synthesis.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Synthesis</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2002-2024, Tristan Gingold and contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link fa-solid fa-brands fa-github" href="https://github.com/ghdl/ghdl" aria-label="GitHub ghdl/ghdl"></a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Additional Command Reference</a><ul>
+<li><a class="reference internal" href="#environment-variables">Environment variables</a></li>
+<li><a class="reference internal" href="#misc-commands">Misc commands</a><ul>
+<li><a class="reference internal" href="#help-h">Help [<code class="docutils literal notranslate"><span class="pre">-h</span></code>]</a></li>
+<li><a class="reference internal" href="#help-help-options">Help [<code class="docutils literal notranslate"><span class="pre">--help-options</span></code>]</a></li>
+<li><a class="reference internal" href="#help-help-warnings">Help [<code class="docutils literal notranslate"><span class="pre">--help-warnings</span></code>]</a></li>
+<li><a class="reference internal" href="#display-config-disp-config">Display config [<code class="docutils literal notranslate"><span class="pre">--disp-config</span></code>]</a></li>
+<li><a class="reference internal" href="#display-standard-disp-standard">Display standard [<code class="docutils literal notranslate"><span class="pre">--disp-standard</span></code>]</a></li>
+<li><a class="reference internal" href="#version-version">Version [<code class="docutils literal notranslate"><span class="pre">--version</span></code>]</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#file-commands">File commands</a><ul>
+<li><a class="reference internal" href="#format-fmt">Format [<code class="docutils literal notranslate"><span class="pre">fmt</span></code>]</a></li>
+<li><a class="reference internal" href="#pretty-print-pp-html">Pretty print [<code class="docutils literal notranslate"><span class="pre">--pp-html</span></code>]</a></li>
+<li><a class="reference internal" href="#find-f">Find [<code class="docutils literal notranslate"><span class="pre">-f</span></code>]</a></li>
+<li><a class="reference internal" href="#chop-chop">Chop [<code class="docutils literal notranslate"><span class="pre">--chop</span></code>]</a></li>
+<li><a class="reference internal" href="#lines-lines">Lines [<code class="docutils literal notranslate"><span class="pre">--lines</span></code>]</a></li>
+<li><a class="reference internal" href="#xml-tree-generation-file-to-xml">XML tree generation [<code class="docutils literal notranslate"><span class="pre">--file-to-xml</span></code>]</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#mcode-only-commands">MCODE only commands</a></li>
+<li><a class="reference internal" href="#gcc-llvm-only-commands">GCC/LLVM only commands</a><ul>
+<li><a class="reference internal" href="#bind-bind">Bind [<code class="docutils literal notranslate"><span class="pre">--bind</span></code>]</a></li>
+<li><a class="reference internal" href="#link-link">Link [<code class="docutils literal notranslate"><span class="pre">--link</span></code>]</a></li>
+<li><a class="reference internal" href="#list-link-list-link">List link [<code class="docutils literal notranslate"><span class="pre">--list-link</span></code>]</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#options">Options</a></li>
+<li><a class="reference internal" href="#passing-options-to-other-programs">Passing options to other programs</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=2a02db7b"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
