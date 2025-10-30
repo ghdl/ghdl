@@ -1097,6 +1097,8 @@ package body Netlists.Disp_Verilog is
    procedure Disp_Module_Output (Inst : Instance; Id : Module_Id; O : Net)
    is
       W : constant Width := Get_Width (O);
+      type Output_Kind is (K_Reg, K_Wire, K_Localparam);
+      K : Output_Kind;
    begin
       if W = 0 and not Flag_Null_Wires then
          return;
@@ -1109,22 +1111,34 @@ package body Netlists.Disp_Verilog is
            | Id_Dlatch
            | Id_Isignal =>
             --  As expected
-            Wr ("  reg ");
+            K := K_Reg;
          when Id_Mux4
            | Id_Pmux
            | Id_Dyn_Insert
            | Id_Dyn_Insert_En =>
             --  Implemented by a process
-            Wr ("  reg ");
+            K := K_Reg;
          when Constant_Module_Id =>
-            Wr ("  localparam ");
+            K := K_Localparam;
          when Id_User_None .. Module_Id'Last =>
             if Is_Nop_Drv (O) /= No_Net then
                return;
             end if;
-            Wr ("  wire ");
+            K := K_Wire;
          when others =>
-            Wr ("  wire ");
+            K := K_Wire;
+      end case;
+      Wr ("  ");
+      if Has_Instance_Attribute (Inst) then
+         Disp_Attributes (Get_Instance_First_Attribute (Inst));
+      end if;
+      case K is
+         when K_Reg =>
+            Wr ("reg ");
+         when K_Wire =>
+            Wr ("wire ");
+         when K_Localparam =>
+            Wr ("localparam ");
       end case;
       Put_Type (W);
       Disp_Net_Name (O);
