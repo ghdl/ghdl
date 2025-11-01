@@ -1006,6 +1006,12 @@ package body Vhdl.Sem_Scopes is
         Get_Interpretation_Raw (Ident);
       Prev_Hidden : Boolean;
    begin
+      if Ident = Null_Identifier then
+         --  Missing identifier can happen only in case of parse error.
+         pragma Assert (Flags.Flag_Force_Analysis);
+         return;
+      end if;
+
       --  Compute wether the current interpretation should be hidden or not.
       if Valid_Interpretation (Raw_Inter)
         and then not Is_Conflict_Declaration (Raw_Inter)
