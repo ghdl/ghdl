@@ -1191,7 +1191,7 @@ package body Vhdl.Sem_Decls is
             end;
 
          when others =>
-            Error_Kind ("sem_object_declaration(2)", Decl);
+            Error_Kind ("check_object_declaration", Decl);
       end case;
    end Check_Object_Declaration;
 
