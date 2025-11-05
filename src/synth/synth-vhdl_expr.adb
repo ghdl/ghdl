@@ -2363,6 +2363,9 @@ package body Synth.Vhdl_Expr is
       --  Note: we know the value of left if it is not constant.
       if Is_Static_Val (Left.Val) and then Is_Static_Val (Right.Val) then
          Val := Get_Static_Discrete (Right);
+         if Neg then
+            Val := 1 - Val;
+         end if;
          return Create_Value_Discrete (Val, Typ);
       end if;
 
