@@ -246,7 +246,8 @@ package body Synth.Vhdl_Insts is
       end case;
    end Hash_Const;
 
-   function Create_Module_Name (Params : Inst_Params) return Sname
+   function Create_Module_Name_Hash (Params : Inst_Params;
+                                     Arch_Id : Name_Id) return Sname
    is
       use GNAT.SHA1;
       Decl : constant Node := Params.Decl;
@@ -265,7 +266,8 @@ package body Synth.Vhdl_Insts is
       --  Append the hash if any.
       use Name_Table;
       Id_Len : constant Natural := Get_Name_Length (Id);
-      Str_Len : constant Natural := Id_Len + 512;
+      Arch_Id_Len : constant Natural := Get_Name_Length (Arch_Id);
+      Str_Len : constant Natural := Id_Len + 2 + Arch_Id_Len + 512;
 
       --  True in practice (and used to set the length of STR, but doesn't work
       --  anymore with gcc/gnat 11.
@@ -276,88 +278,99 @@ package body Synth.Vhdl_Insts is
       Gen_Decl : Node;
       Gen : Valtyp;
    begin
+      --  Put entity name.
       Len := Id_Len;
       Str (1 .. Len) := Get_Name_Ptr (Id) (1 .. Len);
 
+      --  Append architecture name.
+      Str (Len + 1 .. Len + 2) := "_B";
+      Len := Len + 2;
+      Str (Len + 1 .. Len + Arch_Id_Len) :=
+        Get_Name_Ptr (Arch_Id)(1 .. Arch_Id_Len);
+      Len := Len + Arch_Id_Len;
+
       Has_Hash := False;
 
-      case Params.Encoding is
-         when Name_Hash =>
-            Ctxt := GNAT.SHA1.Initial_Context;
+      Ctxt := GNAT.SHA1.Initial_Context;
 
-            Gen_Decl := Generics;
-            while Gen_Decl /= Null_Node loop
-               if Get_Kind (Gen_Decl) = Iir_Kind_Interface_Constant_Declaration
-               then
-                  Gen := Get_Value (Params.Syn_Inst, Gen_Decl);
-                  Strip_Const (Gen);
-                  case Gen.Typ.Kind is
-                     when Type_Discrete =>
-                        declare
-                           S : constant String :=
-                             Uns64'Image (To_Uns64 (Read_Discrete (Gen)));
-                        begin
-                           if Len + S'Length > Str_Len then
-                              Has_Hash := True;
-                              Hash_Const (Ctxt, Gen.Val, Gen.Typ);
-                           else
-                              Str (Len + 1 .. Len + S'Length) := S;
-                              pragma Assert (Str (Len + 1) = ' ');
-                              Str (Len + 1) := '_';  --  Overwrite the space.
-                              Len := Len + S'Length;
-                           end if;
-                        end;
-                     when others =>
+      Gen_Decl := Generics;
+      while Gen_Decl /= Null_Node loop
+         if Get_Kind (Gen_Decl) = Iir_Kind_Interface_Constant_Declaration then
+            Gen := Get_Value (Params.Syn_Inst, Gen_Decl);
+            Strip_Const (Gen);
+            case Gen.Typ.Kind is
+               when Type_Discrete =>
+                  declare
+                     S : constant String :=
+                       Uns64'Image (To_Uns64 (Read_Discrete (Gen)));
+                  begin
+                     if Len + S'Length > Str_Len then
                         Has_Hash := True;
                         Hash_Const (Ctxt, Gen.Val, Gen.Typ);
-                  end case;
-               else
-                  --  TODO: add a unique number (index)
-                  null;
-               end if;
-               Gen_Decl := Get_Chain (Gen_Decl);
-            end loop;
+                     else
+                        Str (Len + 1 .. Len + S'Length) := S;
+                        pragma Assert (Str (Len + 1) = ' ');
+                        Str (Len + 1) := '_';  --  Overwrite the space.
+                        Len := Len + S'Length;
+                     end if;
+                  end;
+               when others =>
+                  Has_Hash := True;
+                  Hash_Const (Ctxt, Gen.Val, Gen.Typ);
+            end case;
+         else
+            --  TODO: add a unique number (index)
+            null;
+         end if;
+         Gen_Decl := Get_Chain (Gen_Decl);
+      end loop;
 
-            declare
-               Port_Decl : Node;
-               Port_Typ : Type_Acc;
-            begin
-               Port_Decl := Ports;
-               while Port_Decl /= Null_Node loop
-                  if not Is_Fully_Constrained_Type (Get_Type (Port_Decl)) then
-                     Port_Typ := Get_Value (Params.Syn_Inst, Port_Decl).Typ;
-                     Has_Hash := True;
-                     Hash_Bounds (Ctxt, Port_Typ);
-                  end if;
-                  Port_Decl := Get_Chain (Port_Decl);
-               end loop;
-            end;
-            if not Has_Hash and then Generics = Null_Node then
-               --  Simple case: same name.
-               --  TODO: what about two entities with the same identifier but
-               --   declared in two different libraries ?
-               --  TODO: what about extended identifiers ?
-               return New_Sname_User (Id, No_Sname);
+      declare
+         Port_Decl : Node;
+         Port_Typ : Type_Acc;
+      begin
+         Port_Decl := Ports;
+         while Port_Decl /= Null_Node loop
+            if not Is_Fully_Constrained_Type (Get_Type (Port_Decl)) then
+               Port_Typ := Get_Value (Params.Syn_Inst, Port_Decl).Typ;
+               Has_Hash := True;
+               Hash_Bounds (Ctxt, Port_Typ);
             end if;
+            Port_Decl := Get_Chain (Port_Decl);
+         end loop;
+      end;
+      if Has_Hash then
+         Str (Len + 1) := '_';
+         Len := Len + 1;
+         Str (Len + 1 .. Len + 40) := GNAT.SHA1.Digest (Ctxt);
+         Len := Len + 40;
+      end if;
 
-            if Has_Hash then
-               Str (Len + 1) := '_';
-               Len := Len + 1;
-               Str (Len + 1 .. Len + 40) := GNAT.SHA1.Digest (Ctxt);
-               Len := Len + 40;
+      return New_Sname_User (Get_Identifier (Str (1 .. Len)), No_Sname);
+   end Create_Module_Name_Hash;
+
+   function Create_Module_Name (Params : Inst_Params) return Sname
+   is
+      Arch_Id : Name_Id;
+   begin
+      case Params.Encoding is
+         when Name_Hash =>
+            if Params.Arch = Null_Node then
+               Arch_Id := Null_Identifier;
+            else
+               Arch_Id := Get_Identifier (Params.Arch);
             end if;
+            return Create_Module_Name_Hash (Params, Arch_Id);
 
          when Name_Asis
            | Name_Parameters =>
-            return New_Sname_User (Get_Source_Identifier (Decl), No_Sname);
+            return New_Sname_User
+              (Get_Source_Identifier (Params.Decl), No_Sname);
 
          when Name_Index =>
             --  TODO.
             raise Internal_Error;
       end case;
-
-
-      return New_Sname_User (Get_Identifier (Str (1 .. Len)), No_Sname);
    end Create_Module_Name;
 
    --  Create the name of an interface.
