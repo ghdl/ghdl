@@ -1,0 +1,23 @@
+vunit i_example_entity(example(wrong_rtl)) {
+	--
+	-- SEQUENCES
+	--
+	sequence seq_fifo_to_full is {not rsi_rst and axs_i_valid and not axs_o_ready[*3]};
+	sequence seq_fifo_full_to_empty is {
+		not rsi_rst and axs_i_valid and not axs_o_ready[*3];
+		not rsi_rst and not axs_i_valid and axs_o_ready[*3]
+	};
+
+	--
+	-- DEFAULTS
+	--
+	default clock is rising_edge(csi_clk);
+
+	
+	-- --
+	-- -- INPUT CONSTRAINTS
+	-- --
+	formal_reset : assume {rsi_rst};
+
+}
+
