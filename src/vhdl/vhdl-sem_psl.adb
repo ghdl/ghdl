@@ -1305,9 +1305,15 @@ package body Vhdl.Sem_Psl is
       if Arch_Name /= Null_Iir then
          Arch := Sem_Lib.Load_Secondary_Unit
            (Design_Entity, Get_Identifier (Arch_Name), Arch_Name);
-         if Arch /= Null_Iir then
-            Set_Named_Entity (Arch_Name, Get_Library_Unit (Arch));
+         if Arch = Null_Iir then
+            --  It will probably be difficult to analyze the unit, as
+            --  the names from the architecture couldn't be visible.
+            Error_Msg_Sem (+Arch_Name,
+              "cannot find architecture %i of entity %i",
+              (+Arch_Name, + Entity_Name));
+            return;
          end if;
+         Set_Named_Entity (Arch_Name, Get_Library_Unit (Arch));
       end if;
    end Sem_Hierarchical_Name;
 
