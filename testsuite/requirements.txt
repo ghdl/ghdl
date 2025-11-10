@@ -1,7 +1,7 @@
 -r ../pyGHDL/requirements.txt
 
 # Test Runner
-pytest ~= 8.4
+pytest ~= 9.0
 pytest-cov ~= 7.0
 
 # Coverage collection
