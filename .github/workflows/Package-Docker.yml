@@ -35,7 +35,7 @@ on:
         default: 'ghdl'
         type: string
       testsuites:
-        description: 'GHDL testsuites'
+        description: "List of GHDL testsuites to execute while testing (space separated). Alternatively: 'all' or 'none'"
         required: true
         type: string
 
@@ -133,8 +133,8 @@ jobs:
       - Ubuntu
     if: inputs.publish
     with:
-      os_image:     ${{ inputs.ubuntu_image }}
-      ghdl_image:   ${{ needs.Ubuntu.outputs.ghdl_image }}
-      ghdl_backend: ${{ inputs.ghdl_backend }}
-      ghdl_version: ${{ inputs.ghdl_version }}
-      testsuites:   ${{ inputs.testsuites }}
+      os_image:          ${{ inputs.ubuntu_image }}
+      ghdl_image:        ${{ needs.Ubuntu.outputs.ghdl_image }}
+      ghdl_backend:      ${{ inputs.ghdl_backend }}
+      ghdl_version:      ${{ inputs.ghdl_version }}
+      testsuites:        ${{ inputs.testsuites }}

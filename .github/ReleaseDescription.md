@@ -13,11 +13,20 @@ The following asset categories are provided for GHDL:
 * macOS aarch64 builds as TAR/GZ file
 * Ubuntu 24.04 LTS builds as TAR/GZ file
 * Windows builds for standalone usage (without MSYS2) as ZIP file
-* MSYS2 packages as TAR/ZST file
+* MSYS2/MinGW64 packages as TAR/ZST file
+* MSYS2/UCRT64 packages as TAR/ZST file
 
 ## Docker Images
 
 Latest docker images at pushed to [Docker Hub - ghdl/ghdl:latest](https://hub.docker.com/r/ghdl/ghdl/tags).
+
+| Backend  | Ubuntu 22.04                        | Ubuntu 24.04                        |
+|----------|-------------------------------------|-------------------------------------|
+| mcode    | `ghdl:%ghdl%-mcode-ubuntu-22.04`    | `ghdl:%ghdl%-mcode-ubuntu-24.04`    |
+| llvm     | `ghdl:%ghdl%-llvm-ubuntu-22.04`     | `ghdl:%ghdl%-llvm-ubuntu-24.04`     |
+| llvm-jit | `ghdl:%ghdl%-llvm-jit-ubuntu-22.04` | `ghdl:%ghdl%-llvm-jit-ubuntu-24.04` |
+| gcc      | `ghdl:%ghdl%-gcc-ubuntu-22.04`      | `ghdl:%ghdl%-gcc-ubuntu-24.04`      |
+
 
 # pyGHDL %ghdl%
 

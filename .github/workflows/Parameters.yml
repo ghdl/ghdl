@@ -14,32 +14,32 @@ on:
         type: string
       # Integrated from pyTooling/Actions::PrepareJob.yml, because GitHub is limited to 20 reusable workflows.
       main_branch:
-        description: 'Name of the branch containing releases.'
+        description: 'Name of the branch containing releases and nightly builds.'
         required: false
-        default: 'master'
+        default: 'main'
+        type: string
+      release_branch:
+        description: 'Name of the branch containing pre-releases and nightly builds.'
+        required: false
+        default: 'release'
         type: string
       development_branch:
         description: 'Name of the development branch containing features.'
         required: false
         default: 'dev'
         type: string
-      release_branch:
-        description: 'Name of the branch containing releases and nightly builds.'
-        required: false
-        default: 'master'
-        type: string
-      test_tag:
-        description: 'Name of the tag used for testing nightly builds.'
-        required: false
-        default: 'testing'
-        type: string
       nightly_tag_pattern:
-        description: 'Pattern for nightly tags on the release branch.'
+        description: 'Pattern for nightly tags on the main or release branch.'
         required: false
         default: 'nightly'
         type: string
+      test_tag_pattern:
+        description: 'Pattern for test tags on the main or release branch.'
+        required: false
+        default: 'testing'
+        type: string
       release_tag_pattern:
-        description: 'Pattern for release tags on the release branch. Usually: vXX.YY.ZZ'
+        description: 'Pattern for release tags on the main branch. Usually: vXX.YY.ZZ'
         required: false
         default: '(v|r)?[0-9]+(\.[0-9]+){0,2}(-(dev|alpha|beta|rc)([0-9]*))?'
         type: string
@@ -65,15 +65,18 @@ on:
 
     outputs:
       # Integrated from pyTooling/Actions::PrepareJob.yml, because GitHub is limited to 20 reusable workflows.
+      on_default_branch:
+        description: ""
+        value: ${{ jobs.Prepare.outputs.on_default_branch }}
       on_main_branch:
         description: ""
         value: ${{ jobs.Prepare.outputs.on_main_branch }}
-      on_dev_branch:
-        description: ""
-        value: ${{ jobs.Prepare.outputs.on_dev_branch }}
       on_release_branch:
         description: ""
         value: ${{ jobs.Prepare.outputs.on_release_branch }}
+      on_dev_branch:
+        description: ""
+        value: ${{ jobs.Prepare.outputs.on_dev_branch }}
       is_regular_commit:
         description: ""
         value: ${{ jobs.Prepare.outputs.is_regular_commit }}
@@ -86,24 +89,27 @@ on:
       is_nightly_tag:
         description: ""
         value: ${{ jobs.Prepare.outputs.is_nightly_tag }}
+      is_test_tag:
+        description: ""
+        value: ${{ jobs.Prepare.outputs.is_test_tag }}
       is_release_tag:
         description: ""
         value: ${{ jobs.Prepare.outputs.is_release_tag }}
-      is_tagged_test:
+      has_submodules:
         description: ""
-        value: ${{ jobs.Prepare.outputs.is_tagged_test }}
+        value: ${{ jobs.Prepare.outputs.has_submodules }}
       ref_kind:
         description: ""
         value: ${{ jobs.Prepare.outputs.ref_kind }}
+      default_branch:
+        description: ""
+        value: ${{ jobs.Prepare.outputs.default_branch }}
       branch:
         description: ""
         value: ${{ jobs.Prepare.outputs.branch }}
       tag:
         description: ""
         value: ${{ jobs.Prepare.outputs.tag }}
-      pull:
-        description: ""
-        value: ${{ jobs.Prepare.outputs.pull }}
       version:
         description: ""
         value: ${{ jobs.Prepare.outputs.version }}
@@ -113,6 +119,15 @@ on:
       pr_number:
         description: ""
         value: ${{ jobs.Prepare.outputs.pr_number }}
+      git_submodule_count:
+        description: ""
+        value: ${{ jobs.Prepare.outputs.git_submodule_count }}
+      git_submodule_names:
+        description: ""
+        value: ${{ jobs.Prepare.outputs.git_submodule_names }}
+      git_submodule_paths:
+        description: ""
+        value: ${{ jobs.Prepare.outputs.git_submodule_paths }}
       # End of integration
 
       ghdl_version:
@@ -149,23 +164,28 @@ jobs:
     name: Extract Information
     runs-on: ubuntu-24.04
     outputs:
-      on_main_branch:    ${{ steps.Classify.outputs.on_main_branch }}
-      on_dev_branch:     ${{ steps.Classify.outputs.on_dev_branch }}
-      on_release_branch: ${{ steps.Classify.outputs.on_release_branch }}
-      is_regular_commit: ${{ steps.Classify.outputs.is_regular_commit }}
-      is_merge_commit:   ${{ steps.Classify.outputs.is_merge_commit }}
-      is_release_commit: ${{ steps.Classify.outputs.is_release_commit }}
-      is_nightly_tag:    ${{ steps.Classify.outputs.is_nightly_tag }}
-      is_release_tag:    ${{ steps.Classify.outputs.is_release_tag }}
-      is_tagged_test:    ${{ steps.Classify.outputs.is_tagged_test }}
-      ref_kind:          ${{ steps.Classify.outputs.ref_kind }}
-      branch:            ${{ steps.Classify.outputs.branch }}
-      tag:               ${{ steps.Classify.outputs.tag }}
-      pull:              ${{ steps.Classify.outputs.pull }}
-      version:           ${{ steps.Classify.outputs.version || steps.FindPullRequest.outputs.pr_version }}
-#      release_version:   ${{ steps.FindPullRequest.outputs.release_version }}
-      pr_title:          ${{ steps.FindPullRequest.outputs.pr_title }}
-      pr_number:         ${{ steps.FindPullRequest.outputs.pr_number }}
+      on_default_branch:   ${{ steps.Classify.outputs.on_default_branch }}
+      on_main_branch:      ${{ steps.Classify.outputs.on_main_branch }}
+      on_release_branch:   ${{ steps.Classify.outputs.on_release_branch }}
+      on_dev_branch:       ${{ steps.Classify.outputs.on_dev_branch }}
+      is_regular_commit:   ${{ steps.Classify.outputs.is_regular_commit }}
+      is_merge_commit:     ${{ steps.Classify.outputs.is_merge_commit }}
+      is_release_commit:   ${{ steps.Classify.outputs.is_release_commit }}
+      is_nightly_tag:      ${{ steps.Classify.outputs.is_nightly_tag }}
+      is_test_tag:         ${{ steps.Classify.outputs.is_test_tag }}
+      is_release_tag:      ${{ steps.Classify.outputs.is_release_tag }}
+      has_submodules:      ${{ steps.Classify.outputs.has_submodules }}
+      ref_kind:            ${{ steps.Classify.outputs.ref_kind }}
+      default_branch:      ${{ steps.Classify.outputs.default_branch }}
+      branch:              ${{ steps.Classify.outputs.branch }}
+      tag:                 ${{ steps.Classify.outputs.tag }}
+      version:             ${{ steps.Classify.outputs.version || steps.FindPullRequest.outputs.pr_version }}
+#      release_version:     ${{ steps.FindPullRequest.outputs.release_version }}
+      pr_title:            ${{ steps.FindPullRequest.outputs.pr_title }}
+      pr_number:           ${{ steps.Classify.outputs.pr_number || steps.FindPullRequest.outputs.pr_number }}
+      git_submodule_count: ${{ steps.Classify.outputs.git_submodule_count }}
+      git_submodule_names: ${{ steps.Classify.outputs.git_submodule_names }}
+      git_submodule_paths: ${{ steps.Classify.outputs.git_submodule_paths }}
 
     steps:
       - name: ⏬ Checkout repository
@@ -194,131 +214,210 @@ jobs:
           ANSI_LIGHT_BLUE=$'\x1b[94m'
           ANSI_NOCOLOR=$'\x1b[0m'
 
+          export GH_TOKEN=${{ github.token }}
+
           ref="${{ github.ref }}"
+          on_default_branch="false"
           on_main_branch="false"
-          on_dev_branch="false"
           on_release_branch="false"
+          on_dev_branch="false"
           is_regular_commit="false"
           is_merge_commit="false"
           is_release_commit="false"
           is_nightly_tag="false"
+          is_test_tag="false"
           is_release_tag="false"
-          is_tagged_test="false"
+          has_submodules="false"
           ref_kind="unknown"
+          default_branch=""
           branch=""
           tag=""
-          pull=""
+          pr_number=""
           version=""
+          git_submodule_count="0"
+          git_submodule_names=""
+          git_submodule_paths=""
 
+          printf "Classify Git reference '%s' " "${ref}"
           if [[ "${ref:0:11}" == "refs/heads/" ]]; then
+            printf "${ANSI_LIGHT_GREEN}[BRANCH]\n"
             ref_kind="branch"
             branch="${ref:11}"
 
-            printf "Commit check:\n"
+            printf "Get default branch name ... "
+            defaultBranch=$(gh repo view "${{ github.repository }}" --json defaultBranchRef --jq '.defaultBranchRef.name' 2>&1)
+            if [[ $? -eq 0 ]]; then
+              printf "${ANSI_LIGHT_GREEN} [OK]\n"
 
+              default_branch="${defaultBranch}"
+              printf "  Default branch ${ANSI_LIGHT_BLUE}'%s'${ANSI_NOCOLOR}\n" "${default_branch}"
+            else
+              printf "${ANSI_LIGHT_RED} [FAILED]\n"
+              printf "  ${ANSI_LIGHT_RED}%s${ANSI_NOCOLOR}\n" "${default_branch}"
+            fi
+
+            printf "Commit checks:\n"
+            printf "  Commit: %s\n" "${{ github.sha }}"
+            printf "  Commit kind "
+            if [[ -z "$(git rev-list -1 --merges ${{ github.sha }}~1..${{ github.sha }})" ]]; then
+              is_regular_commit="true"
+              printf "${ANSI_LIGHT_YELLOW}[REGULAR]${ANSI_NOCOLOR}\n"
+            else
+              is_merge_commit="true"
+              printf "${ANSI_LIGHT_GREEN}[MERGE]${ANSI_NOCOLOR}\n"
+            fi
+
+            printf "Branch checks:\n"
+            printf "  Branch: %s\n" "${branch}"
+            printf "  Commit on default branch ${ANSI_LIGHT_BLUE}'%s'${ANSI_NOCOLOR} " "${defaultBranch}"
+            if [[ "${branch}" == "${defaultBranch}" ]]; then
+              on_default_branch="true"
+              printf "${ANSI_LIGHT_GREEN}[YES]${ANSI_NOCOLOR}\n"
+            else
+              printf "${ANSI_LIGHT_RED}[NO]${ANSI_NOCOLOR}\n"
+            fi
+
+            printf "  Commit on main branch ${ANSI_LIGHT_BLUE}'%s'${ANSI_NOCOLOR} " "${{ inputs.main_branch }}"
             if [[ "${branch}" == "${{ inputs.main_branch }}" ]]; then
               on_main_branch="true"
-
-              if [[ -z "$(git rev-list -1 --merges ${{ github.sha }}~1..${{ github.sha }})" ]]; then
-                is_regular_commit="true"
-                printf "  ${ANSI_LIGHT_YELLOW}regular "
-              else
-                is_merge_commit="true"
-                printf "  ${ANSI_LIGHT_GREEN}merge "
-              fi
-              printf "commit${ANSI_NOCOLOR} on main branch ${ANSI_LIGHT_BLUE}'%s'${ANSI_NOCOLOR}\n" "${{ inputs.main_branch }}"
+              printf "${ANSI_LIGHT_GREEN}[YES]${ANSI_NOCOLOR}\n"
+            else
+              printf "${ANSI_LIGHT_RED}[NO]${ANSI_NOCOLOR}\n"
             fi
 
-            if [[ "${branch}" == "${{ inputs.development_branch }}" ]]; then
-              on_dev_branch="true"
-
-              if [[ -z "$(git rev-list -1 --merges ${{ github.sha }}~1..${{ github.sha }})" ]]; then
-                is_regular_commit="true"
-                printf "  ${ANSI_LIGHT_YELLOW}regular "
-              else
-                is_merge_commit="true"
-                printf "  ${ANSI_LIGHT_GREEN}merge "
-              fi
-              printf "commit${ANSI_NOCOLOR} on development branch ${ANSI_LIGHT_BLUE}'%s'${ANSI_NOCOLOR}\n" "${{ inputs.development_branch }}"
-            fi
-
+            printf "  Commit on release branch ${ANSI_LIGHT_BLUE}'%s'${ANSI_NOCOLOR} " "${{ inputs.release_branch }}"
             if [[ "${branch}" == "${{ inputs.release_branch }}" ]]; then
               on_release_branch="true"
+              printf "${ANSI_LIGHT_GREEN}[YES]${ANSI_NOCOLOR}\n"
+            else
+              printf "${ANSI_LIGHT_RED}[NO]${ANSI_NOCOLOR}\n"
+            fi
 
-              if [[ -z "$(git rev-list -1 --merges ${{ github.sha }}~1..${{ github.sha }})" ]]; then
-                is_regular_commit="true"
-                printf "  ${ANSI_LIGHT_YELLOW}regular "
-              else
+            printf "  Commit on development branch ${ANSI_LIGHT_BLUE}'%s'${ANSI_NOCOLOR} " "${{ inputs.development_branch }}"
+            if [[ "${branch}" == "${{ inputs.development_branch }}" ]]; then
+              on_dev_branch="true"
+              printf "${ANSI_LIGHT_GREEN}[YES]${ANSI_NOCOLOR}\n"
+            else
+              printf "${ANSI_LIGHT_RED}[NO]${ANSI_NOCOLOR}\n"
+            fi
+
+            if [[ "${is_merge_commit}" == "true" ]]; then
+              printf "Release checks:\n"
+              printf "  Release kind "
+              if [[ "${on_main_branch}" == "true" ]]; then
                 is_release_commit="true"
-                printf "  ${ANSI_LIGHT_GREEN}release "
+                printf "${ANSI_LIGHT_GREEN}[RELEASE]${ANSI_NOCOLOR}\n"
+              elif [[ "${on_version_branch}" == "true" ]]; then
+                is_release_commit="true"
+                printf "${ANSI_LIGHT_GREEN}[RELEASE]${ANSI_NOCOLOR}\n"
+              elif [[ "${on_release_branch}" == "true" ]]; then
+                is_prerelease_commit="true"
+                printf "${ANSI_LIGHT_YELLOW}[PRERELEASE]${ANSI_NOCOLOR}\n"
               fi
-              printf "commit${ANSI_NOCOLOR} on release branch ${ANSI_LIGHT_BLUE}'%s'${ANSI_NOCOLOR}\n" "${{ inputs.release_branch }}"
             fi
           elif [[ "${ref:0:10}" == "refs/tags/" ]]; then
+            printf "${ANSI_LIGHT_GREEN}[TAG]\n"
             ref_kind="tag"
             tag="${ref:10}"
 
-            printf "Tag check:\n"
-            if [[ "${tag}" == "${{ inputs.test_tag }}" ]]; then
-              is_tagged_test="true"
+            NIGHTLY_TAG_PATTERN='^${{ inputs.nightly_tag_pattern }}$'
+            TEST_TAG_PATTERN='^${{ inputs.test_tag_pattern }}$'
+            RELEASE_TAG_PATTERN='^${{ inputs.release_tag_pattern }}$'
 
-              printf "  Check if tag is on release branch '%s' ... [skipped]" "${{ inputs.release_branch }}"
+            printf "Tag checks:\n"
+            printf "  Tag: %s\n" "${tag}"
+            printf "  Check tag '%s' against regexp ... " "${tag}"
+            if [[ "${tag}" =~ ${NIGHTLY_TAG_PATTERN} ]]; then
+              printf "${ANSI_LIGHT_GREEN}[NIGHTLY]${ANSI_NOCOLOR}\n"
+              is_nightly_tag="true"
+            elif [[ "${tag}" =~ ${TEST_TAG_PATTERN} ]]; then
+              printf "${ANSI_LIGHT_GREEN}[TEST]${ANSI_NOCOLOR}\n"
+              is_test_tag="true"
+            elif [[ "${tag}" =~ ${RELEASE_TAG_PATTERN} ]]; then
+              printf "${ANSI_LIGHT_GREEN}[RELEASE]${ANSI_NOCOLOR}\n"
+              version="${tag}"
+              is_release_tag="true"
             else
-              printf "  Check if tag is on release branch '%s' ... " "${{ inputs.release_branch }}"
-              git branch --remotes --contains $(git rev-parse --verify "tags/${tag}~0") | grep "origin/${{ inputs.release_branch }}" > /dev/null
+              printf "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}\n"
+              printf "${ANSI_LIGHT_RED}Tag name '%s' doesn't conform to regexp${ANSI_NOCOLOR}\n" "${tag}"
+              printf "  ${ANSI_LIGHT_RED}nightly tag: %s${ANSI_NOCOLOR}\n" "${NIGHTLY_TAG_PATTERN}"
+              printf "  ${ANSI_LIGHT_RED}test tag:    %s${ANSI_NOCOLOR}\n" "${TEST_TAG_PATTERN}"
+              printf "  ${ANSI_LIGHT_RED}release tag: %s${ANSI_NOCOLOR}\n" "${RELEASE_TAG_PATTERN}"
+              printf "::error title=RexExpCheck::Tag name '%s' doesn't conform to regexp '%s', '%s' nor '%s'.\n" "${tag}" "${NIGHTLY_TAG_PATTERN}" "${TEST_TAG_PATTERN}" "${RELEASE_TAG_PATTERN}"
+              exit 1
+            fi
+
+            if [[ "${is_nightly_tag}" == "true" ]]; then
+              printf "  Check if nightly tag is on main branch '%s' ... " "${{ inputs.main_branch }}"
+              git branch --remotes --contains $(git rev-parse --verify "tags/${tag}~0") | grep "origin/${{ inputs.main_branch }}" > /dev/null
               if [[ $? -eq 0 ]]; then
                 printf "${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}\n"
               else
                 printf "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}\n"
-                printf "${ANSI_LIGHT_RED}Tag '%s' isn't on branch '%s'.${ANSI_NOCOLOR}\n" "${tag}" "${{ inputs.release_branch }}"
-                printf "::error title=TagCheck::Tag '%s' isn't on branch '%s'.\n" "${tag}" "${{ inputs.release_branch }}"
+                printf "    ${ANSI_LIGHT_RED}Tag '%s' isn't on branch '%s'.${ANSI_NOCOLOR}\n" "${tag}" "${{ inputs.main_branch }}"
+                printf "::error title=TagCheck::Tag '%s' isn't on branch '%s'.\n" "${tag}" "${{ inputs.main_branch }}"
                 exit 1
               fi
-
-              NIGHTLY_TAG_PATTERN='^${{ inputs.nightly_tag_pattern }}$'
-              RELEASE_TAG_PATTERN='^${{ inputs.release_tag_pattern }}$'
-              printf "  Check tag name against regexp '%s' ... " "${RELEASE_TAG_PATTERN}"
-              if [[ "${tag}" =~ $NIGHTLY_TAG_PATTERN ]]; then
-                printf "${ANSI_LIGHT_GREEN}[NIGHTLY]${ANSI_NOCOLOR}\n"
-                is_nightly_tag="true"
-              elif [[ "${tag}" =~ $RELEASE_TAG_PATTERN ]]; then
-                printf "${ANSI_LIGHT_GREEN}[RELEASE]${ANSI_NOCOLOR}\n"
-                version="${tag}"
-                is_release_tag="true"
+            elif [[ "${is_test_tag}" == "true" ]]; then
+              printf "  Check if test tag is on any branch ... ${ANSI_LIGHT_YELLOW}[SKIPPED]${ANSI_NOCOLOR}\n"
+            elif [[ "${is_release_tag}" == "true" ]]; then
+              printf "  Check if release tag is on main branch '%s' ... " "${{ inputs.main_branch }}"
+              git branch --remotes --contains $(git rev-parse --verify "tags/${tag}~0") | grep "origin/${{ inputs.main_branch }}" > /dev/null
+              if [[ $? -eq 0 ]]; then
+                printf "${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}\n"
               else
                 printf "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}\n"
-                printf "${ANSI_LIGHT_RED}Tag name '%s' doesn't conform to regexp${ANSI_NOCOLOR}\n" "${tag}"
-                printf "  ${ANSI_LIGHT_RED}nightly tag: %s${ANSI_NOCOLOR}\n" "${NIGHTLY_TAG_PATTERN}"
-                printf "  ${ANSI_LIGHT_RED}release tag: %s${ANSI_NOCOLOR}\n" "${RELEASE_TAG_PATTERN}"
-                printf "::error title=RexExpCheck::Tag name '%s' doesn't conform to regexp '%s' nor '%s'.\n" "${tag}" "${NIGHTLY_TAG_PATTERN}" "${RELEASE_TAG_PATTERN}"
+                printf "    ${ANSI_LIGHT_RED}Tag '%s' isn't on branch '%s'.${ANSI_NOCOLOR}\n" "${tag}" "${{ inputs.main_branch }}"
+                printf "::error title=TagCheck::Tag '%s' isn't on branch '%s'.\n" "${tag}" "${{ inputs.main_branch }}"
                 exit 1
               fi
             fi
           elif [[ "${ref:0:10}" == "refs/pull/" ]]; then
+            printf "${ANSI_LIGHT_YELLOW}[PULL REQUEST]\n"
             ref_kind="pullrequest"
+            pr_number=${ref:11}
+            pr_number=${pr_number%%/*}
 
-            printf "Rull Request check:\n"
+            printf "Pull Request checks:\n"
+            printf "  Number: %s\n" "${pr_number}"
           else
+            printf "${ANSI_LIGHT_RED}[UNKNOWN]\n"
             printf "${ANSI_LIGHT_RED}Unknown Git reference '%s'.${ANSI_NOCOLOR}\n" "${{ github.ref }}"
             printf "::error title=Classify Commit::Unknown Git reference '%s'.\n" "${{ github.ref }}"
             exit 1
           fi
 
+          # Submodules
+          if [[ -f .gitsubmodules ]]; then
+            has_submodules="true"
+            git_modules_file=.gitmodules   # $(git rev-parse --show-toplevel)/.gitmodules
+            git_submodule_count="$(grep -Po '(?<=\[submodule \")(.*)(?=\"\])' "${git_modules_file}" | wc -l)"
+            git_submodule_names="$(grep -Po '(?<=\[submodule \")(.*)(?=\"\])' "${git_modules_file}" | paste -sd ':' -)"
+            git_submodule_paths="$(git config --file "${git_modules_file}" --null --name-only --get-regexp '\.path$' | xargs -0 -n1 git config --file "${git_modules_file}" --get | paste -sd ':' -)"
+          fi
+
+          printf "\nWriting output variables ...\n"
           tee --append "${GITHUB_OUTPUT}" <<EOF
+          on_default_branch=${on_default_branch}
           on_main_branch=${on_main_branch}
-          on_dev_branch=${on_dev_branch}
           on_release_branch=${on_release_branch}
+          on_dev_branch=${on_dev_branch}
           is_regular_commit=${is_regular_commit}
           is_merge_commit=${is_merge_commit}
           is_release_commit=${is_release_commit}
           is_nightly_tag=${is_nightly_tag}
+          is_test_tag=${is_test_tag}
           is_release_tag=${is_release_tag}
-          is_tagged_test=${is_tagged_test}
+          has_submodules=${has_submodules}
           ref_kind=${ref_kind}
+          default_branch=${default_branch}
           branch=${branch}
           tag=${tag}
-          pull=${pull}
+          pr_number=${pr_number}
           version=${version}
+          git_submodule_count=${git_submodule_count}
+          git_submodule_names=${git_submodule_names}
+          git_submodule_paths=${git_submodule_paths}
           EOF
 
       - name: 🔁 Find merged PullRequest from second parent of current SHA (${{ github.sha }})
@@ -391,24 +490,33 @@ jobs:
 
       - name: Debug
         run: |
-          printf "on_main_branch:    %s\n" "${{ steps.Classify.outputs.on_main_branch }}"
-          printf "on_dev_branch:     %s\n" "${{ steps.Classify.outputs.on_dev_branch }}"
-          printf "on_release_branch: %s\n" "${{ steps.Classify.outputs.on_release_branch }}"
-          printf "is_regular_commit: %s\n" "${{ steps.Classify.outputs.is_regular_commit }}"
-          printf "is_merge_commit:   %s\n" "${{ steps.Classify.outputs.is_merge_commit }}"
-          printf "is_release_commit: %s\n" "${{ steps.Classify.outputs.is_release_commit }}"
-          printf "is_nightly_tag:    %s\n" "${{ steps.Classify.outputs.is_nightly_tag }}"
-          printf "is_release_tag:    %s\n" "${{ steps.Classify.outputs.is_release_tag }}"
-          printf "is_tagged_test:    %s\n" "${{ steps.Classify.outputs.is_tagged_test }}"
-          printf "ref_kind:          %s\n" "${{ steps.Classify.outputs.ref_kind }}"
-          printf "branch:            %s\n" "${{ steps.Classify.outputs.branch }}"
-          printf "tag:               %s\n" "${{ steps.Classify.outputs.tag }}"
-          printf "pull:              %s\n" "${{ steps.Classify.outputs.pull }}"
-          printf "version from tag:  %s\n" "${{ steps.Classify.outputs.version }}"
-          printf "version from pr:   %s\n" "${{ steps.FindPullRequest.outputs.pr_version }}"
-          printf "version:           %s\n" "${{ steps.Classify.outputs.version || steps.FindPullRequest.outputs.pr_version }}"
-          printf "pr title:          %s\n" "${{ steps.FindPullRequest.outputs.pr_title }}"
-          printf "pr number:         %s\n" "${{ steps.FindPullRequest.outputs.pr_number }}"
+          printf "on_default_branch:    %s\n" "${{ steps.Classify.outputs.on_default_branch }}"
+          printf "on_main_branch:       %s\n" "${{ steps.Classify.outputs.on_main_branch }}"
+          printf "on_release_branch:    %s\n" "${{ steps.Classify.outputs.on_release_branch }}"
+          printf "on_dev_branch:        %s\n" "${{ steps.Classify.outputs.on_dev_branch }}"
+          printf "is_regular_commit:    %s\n" "${{ steps.Classify.outputs.is_regular_commit }}"
+          printf "is_merge_commit:      %s\n" "${{ steps.Classify.outputs.is_merge_commit }}"
+          printf "is_release_commit:    %s\n" "${{ steps.Classify.outputs.is_release_commit }}"
+          printf "is_nightly_tag:       %s\n" "${{ steps.Classify.outputs.is_nightly_tag }}"
+          printf "is_test_tag:          %s\n" "${{ steps.Classify.outputs.is_test_tag }}"
+          printf "is_release_tag:       %s\n" "${{ steps.Classify.outputs.is_release_tag }}"
+          printf "has_submodules:       %s\n" "${{ steps.Classify.outputs.has_submodules }}"
+          printf "ref_kind:             %s\n" "${{ steps.Classify.outputs.ref_kind }}"
+          printf "default_branch:       %s\n" "${{ steps.Classify.outputs.default_branch }}"
+          printf "branch:               %s\n" "${{ steps.Classify.outputs.branch }}"
+          printf "tag:                  %s\n" "${{ steps.Classify.outputs.tag }}"
+          printf "version:              %s\n" "${{ steps.Classify.outputs.version || steps.FindPullRequest.outputs.pr_version }}"
+          printf "  from tag:           %s\n" "${{ steps.Classify.outputs.version }}"
+          printf "  from pr:            %s\n" "${{ steps.FindPullRequest.outputs.pr_version }}"
+          printf "pr title:             %s\n" "${{ steps.FindPullRequest.outputs.pr_title }}"
+          printf "pr number:            %s\n" "${{ steps.Classify.outputs.pr_number || steps.FindPullRequest.outputs.pr_number }}"
+          printf "  from merge:         %s\n" "${{ steps.Classify.outputs.pr_number }}"
+          printf "  from pr:            %s\n" "${{ steps.FindPullRequest.outputs.pr_number }}"
+          printf "git_submodule_*:\n"
+          printf "  *_count_:           %s\n" "${{ steps.FindPullRequest.outputs.git_submodule_count }}"
+          printf "  *_names:            %s\n" "${{ steps.FindPullRequest.outputs.git_submodule_names }}"
+          printf "  *_paths:            %s\n" "${{ steps.FindPullRequest.outputs.git_submodule_paths }}"
+
 
   Parameters:
     runs-on: ${{ inputs.ubuntu_image }}

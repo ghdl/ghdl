@@ -16,7 +16,7 @@ on:
         required: true
         type: string
       testsuites:
-        description: 'GHDL testsuites to run'
+        description: "List of GHDL testsuites to execute while testing (space separated). Alternatively: 'all' or 'none'"
         required: true
         type: string
     # Parameters created build artifacts

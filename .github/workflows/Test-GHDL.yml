@@ -23,7 +23,7 @@ on:
         required: true
         type: string
       testsuites:
-        description: 'GHDL testsuites'
+        description: "List of GHDL testsuites to execute while testing (space separated). Alternatively: 'all' or 'none'"
         required: true
         type: string
 
@@ -66,6 +66,7 @@ jobs:
       - name: Prepare test environment (macOS)
         if: startsWith(inputs.os_image, 'macos')
         run: |
+          brew install coreutils
           echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
           cat $GITHUB_ENV
 
@@ -102,6 +103,7 @@ jobs:
       - name: Run tests in testsuite
         run: |
           [ '${{ inputs.runtime }}' != '' ] && export PATH=$(pwd)/install/bin:$PATH
+          [ ${{ startsWith(inputs.os_image, 'macos') }} ] && export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
           cd testsuite
 
           # no pyunit
