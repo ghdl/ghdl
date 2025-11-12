@@ -959,7 +959,9 @@ def GetConcurrentStatementsFromChainedNodes(
                 NotImplementedError(f"Simple simultaneous statement (label: '{label}') at line {position.Line}")
             )
         else:
-            raise DOMException(f"Unknown concurrent statement of kind '{kind.name}' in {entity} '{name}' at {position}.")
+            raise DOMException(
+                f"Unknown concurrent statement of kind '{kind.name}' in {entity} '{name}' at {position}."
+            )
 
 
 def GetSequentialStatementsFromChainedNodes(
@@ -984,7 +986,7 @@ def GetSequentialStatementsFromChainedNodes(
         elif kind in (
             nodes.Iir_Kind.Variable_Assignment_Statement,
             nodes.Iir_Kind.Conditional_Variable_Assignment_Statement,
-            nodes.Iir_Kind.Conditional_Signal_Assignment_Statement
+            nodes.Iir_Kind.Conditional_Signal_Assignment_Statement,
         ):
             WarningCollector.Raise(
                 NotImplementedError(f"Variable assignment (label: '{label}') at line {position.Line}")
@@ -1004,7 +1006,9 @@ def GetSequentialStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Exit_Statement:
             yield ExitStatement(statement, label)
         else:
-            raise DOMException(f"Unknown sequential statement of kind '{kind.name}' in {entity} '{name}' at {position}.")
+            raise DOMException(
+                f"Unknown sequential statement of kind '{kind.name}' in {entity} '{name}' at {position}."
+            )
 
 
 def GetAliasFromNode(aliasNode: Iir):

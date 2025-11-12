@@ -180,7 +180,13 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, literalNode: Iir) -> Union["StringLiteral", BinaryBitStringLiteral, OctalBitStringLiteral, DecimalBitStringLiteral, HexadecimalBitStringLiteral]:
+    def parse(cls, literalNode: Iir) -> Union[
+        "StringLiteral",
+        BinaryBitStringLiteral,
+        OctalBitStringLiteral,
+        DecimalBitStringLiteral,
+        HexadecimalBitStringLiteral,
+    ]:
         base = nodes.Get_Bit_String_Base(literalNode)
         signed = nodes.Get_Has_Signed(literalNode) if nodes.Get_Has_Sign(literalNode) else None
         length = nodes.Get_String_Length(literalNode) if nodes.Get_Has_Length(literalNode) else None
