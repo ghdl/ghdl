@@ -213,7 +213,7 @@ jobs:
           ./testsuite.sh sanity
 
       - name: 📤 Upload '${{ inputs.macos_artifact }}-${{ inputs.backend }}' artifact
-        uses: pyTooling/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v5
         with:
           name: ${{ inputs.macos_artifact }}-${{ inputs.backend }}
           working-directory: install
@@ -318,7 +318,7 @@ jobs:
 # Upload test result artifacts
 
       - name: 📤 Upload 'TestReportSummary.xml' artifact (only mcode backend)
-        uses: pyTooling/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v5
         if: inputs.unittesting && inputs.backend == 'mcode' && inputs.unittest_xml_artifact != ''
         continue-on-error: true
         with:
@@ -337,7 +337,7 @@ jobs:
       - name: 📤 Upload 'Coverage SQLite Database' artifact (only mcode backend)
         if: inputs.coverage && inputs.backend == 'mcode' && inputs.coverage_sqlite_artifact != ''
         continue-on-error: true
-        uses: pyTooling/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v5
         with:
           name: ${{ inputs.coverage_sqlite_artifact }}-${{ inputs.macos_image }}-${{ inputs.python_version }}
           path: .coverage
