@@ -653,6 +653,10 @@ package body Elab.Vhdl_Expr is
       First, Last : Size_Type;
       Val : Int64;
    begin
+      if L = 0 then
+         return No_Valtyp;
+      end if;
+
       --  LRM93 14.1 Predefined attributes.
       --  Leading and trailing whitespace are ignored.
       First := 0;
