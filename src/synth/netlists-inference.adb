@@ -984,6 +984,7 @@ package body Netlists.Inference is
    end Infere_Latch_Create;
 
    --  Return a name for PREV_VAL (the target).
+   --  Used in error messages for latches.
    function Get_Prev_Val_Name (Prev_Val : Net) return Sname
    is
       Name : Sname;
@@ -1000,6 +1001,23 @@ package body Netlists.Inference is
             loop
                pragma Assert (Inp /= No_Input);
                Inst := Get_Input_Parent (Inp);
+
+               --  Handle partial assignment (records).
+               while Get_Id (Inst) = Id_Extract loop
+                  declare
+                     Eout : constant Net := Get_Output (Inst, 0);
+                     Einp : constant Input := Get_First_Sink (Eout);
+                  begin
+                     if Einp /= No_Input
+                       and then Get_Next_Sink (Einp) = No_Input
+                     then
+                        Inst := Get_Input_Parent (Einp);
+                     else
+                        exit;
+                     end if;
+                  end;
+               end loop;
+
                if Get_Id (Inst) >= Id_User_None then
                   Name := Get_Output_Desc (Get_Module (Inst),
                                            Get_Port_Idx (Inp)).Name;
