@@ -20,7 +20,7 @@ on:
         required: true
         type: string
       testsuites:
-        description: 'GHDL testsuites to run'
+        description: "List of GHDL testsuites to execute while testing (space separated). Alternatively: 'all' or 'none'"
         required: true
         type: string
     # Parameters created build artifacts
@@ -92,7 +92,7 @@ jobs:
 
       - name: 🔧 Install dependencies
         run: |
-          brew install llvm
+          brew install llvm coreutils
 
           tee "${GITHUB_ENV}" <<EOF
           LLVM_BINARY_PATH=$(brew --prefix llvm)/bin
@@ -205,6 +205,7 @@ jobs:
 
       - name: "🚦 Run testsuite: 'sanity'"
         run: |
+          export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
           export GHDL=$(pwd)/install/bin/ghdl
           cd testsuite
 
@@ -212,8 +213,7 @@ jobs:
           ./testsuite.sh sanity
 
       - name: 📤 Upload '${{ inputs.macos_artifact }}-${{ inputs.backend }}' artifact
-#        uses: actions/upload-artifact@v4
-        uses: pyTooling/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v5
         with:
           name: ${{ inputs.macos_artifact }}-${{ inputs.backend }}
           working-directory: install
@@ -318,15 +318,13 @@ jobs:
 # Upload test result artifacts
 
       - name: 📤 Upload 'TestReportSummary.xml' artifact (only mcode backend)
-        uses: pyTooling/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v5
         if: inputs.unittesting && inputs.backend == 'mcode' && inputs.unittest_xml_artifact != ''
         continue-on-error: true
-#        uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.unittest_xml_artifact }}-${{ inputs.macos_image }}-${{ inputs.python_version }}
           working-directory: report/unit
           path: TestReportSummary.xml
-#          path: report/unit/TestReportSummary.xml
           if-no-files-found: error
           retention-days: 1
 
@@ -339,8 +337,7 @@ jobs:
       - name: 📤 Upload 'Coverage SQLite Database' artifact (only mcode backend)
         if: inputs.coverage && inputs.backend == 'mcode' && inputs.coverage_sqlite_artifact != ''
         continue-on-error: true
-#        uses: actions/upload-artifact@v4
-        uses: pyTooling/upload-artifact@v4
+        uses: pyTooling/upload-artifact@v5
         with:
           name: ${{ inputs.coverage_sqlite_artifact }}-${{ inputs.macos_image }}-${{ inputs.python_version }}
           path: .coverage
