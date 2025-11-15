@@ -267,7 +267,11 @@ package body Synth.Vhdl_Insts is
       use Name_Table;
       Id_Len : constant Natural := Get_Name_Length (Id);
       Arch_Id_Len : constant Natural := Get_Name_Length (Arch_Id);
-      Str_Len : constant Natural := Id_Len + 2 + Arch_Id_Len + 512;
+      Lib_Id : constant Name_Id := Get_Identifier
+        (Get_Library (Get_Design_File (Get_Design_Unit (Decl))));
+      Lib_Id_Len : constant Natural := Get_Name_Length (Lib_Id);
+      Str_Len : constant Natural :=
+        Id_Len + 2 + Arch_Id_Len + 2 + Lib_Id_Len + 512;
 
       --  True in practice (and used to set the length of STR, but doesn't work
       --  anymore with gcc/gnat 11.
@@ -288,6 +292,15 @@ package body Synth.Vhdl_Insts is
       Str (Len + 1 .. Len + Arch_Id_Len) :=
         Get_Name_Ptr (Arch_Id)(1 .. Arch_Id_Len);
       Len := Len + Arch_Id_Len;
+
+      --  Append library name.
+      if Lib_Id /= Std_Names.Name_Work then
+         Str (Len + 1 .. Len + 2) := "_L";
+         Len := Len + 2;
+         Str (Len + 1 .. Len + Lib_Id_Len) :=
+           Get_Name_Ptr (Lib_Id)(1 .. Lib_Id_Len);
+         Len := Len + Lib_Id_Len;
+      end if;
 
       Has_Hash := False;
 
