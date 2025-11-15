@@ -68,6 +68,9 @@ package body Netlists.Rename is
            | Name_While
            | Name_Wait =>
             return True;
+         when Name_Do =>
+            --  SystemVerilog
+            return True;
          when others =>
             --  Not a keyword
             return False;
