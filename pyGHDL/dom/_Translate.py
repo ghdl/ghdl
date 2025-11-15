@@ -54,12 +54,14 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom.Sequential import (
     IfStatement,
     ForLoopStatement,
+    WhileLoopStatement,
     CaseStatement,
     SequentialReportStatement,
     SequentialAssertStatement,
     WaitStatement,
     SequentialSimpleSignalAssignment,
     NullStatement,
+    NextStatement,
     ExitStatement,
     SequentialProcedureCall,
 )
@@ -957,7 +959,9 @@ def GetConcurrentStatementsFromChainedNodes(
                 NotImplementedError(f"Simple simultaneous statement (label: '{label}') at line {position.Line}")
             )
         else:
-            raise DOMException(f"Unknown statement of kind '{kind.name}' in {entity} '{name}' at {position}.")
+            raise DOMException(
+                f"Unknown concurrent statement of kind '{kind.name}' in {entity} '{name}' at {position}."
+            )
 
 
 def GetSequentialStatementsFromChainedNodes(
@@ -971,15 +975,18 @@ def GetSequentialStatementsFromChainedNodes(
         kind = GetIirKindOfNode(statement)
         if kind == nodes.Iir_Kind.If_Statement:
             yield IfStatement.parse(statement, label)
-        elif kind == nodes.Iir_Kind.For_Loop_Statement:
-            yield ForLoopStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Case_Statement:
             yield CaseStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.For_Loop_Statement:
+            yield ForLoopStatement.parse(statement, label)
+        elif kind == nodes.Iir_Kind.While_Loop_Statement:
+            yield WhileLoopStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Simple_Signal_Assignment_Statement:
             yield SequentialSimpleSignalAssignment.parse(statement, label)
         elif kind in (
             nodes.Iir_Kind.Variable_Assignment_Statement,
             nodes.Iir_Kind.Conditional_Variable_Assignment_Statement,
+            nodes.Iir_Kind.Conditional_Signal_Assignment_Statement,
         ):
             WarningCollector.Raise(
                 NotImplementedError(f"Variable assignment (label: '{label}') at line {position.Line}")
@@ -994,10 +1001,14 @@ def GetSequentialStatementsFromChainedNodes(
             yield SequentialAssertStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Null_Statement:
             yield NullStatement(statement, label)
+        elif kind == nodes.Iir_Kind.Next_Statement:
+            yield NextStatement(statement, label)
         elif kind == nodes.Iir_Kind.Exit_Statement:
             yield ExitStatement(statement, label)
         else:
-            raise DOMException(f"Unknown statement of kind '{kind.name}' in {entity} '{name}' at {position}.")
+            raise DOMException(
+                f"Unknown sequential statement of kind '{kind.name}' in {entity} '{name}' at {position}."
+            )
 
 
 def GetAliasFromNode(aliasNode: Iir):
