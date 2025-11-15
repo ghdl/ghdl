@@ -435,19 +435,19 @@ jobs:
           export GH_TOKEN=${{ github.token }}
 
           printf "Read second parent of current SHA (%s) ... " "${{ github.ref }}"
-          FATHER_SHA=$(git rev-parse ${{ github.ref }}^2)
-          if [[ $? -ne 0 || "{FATHER_SHA}" == "" ]]; then
+          SECOND_PARENT_SHA=$(git rev-parse ${{ github.ref }}^2)
+          if [[ $? -ne 0 || "{SECOND_PARENT_SHA}" == "" ]]; then
             printf "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}\n"
             printf "${ANSI_LIGHT_RED}Couldn't read second parent (father) of '%s'.${ANSI_NOCOLOR}\n" "${{ github.ref }}^2"
-            printf "::error title=GitCommitHistoryError::Couldn't read second parent (father) of '%s'. -> %s\n" "${{ github.ref }}^2" "${FATHER_SHA}"
+            printf "::error title=GitCommitHistoryError::Couldn't read second parent (father) of '%s'. -> %s\n" "${{ github.ref }}^2" "${SECOND_PARENT_SHA}"
             exit 1
           else
             printf "${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}\n"
           fi
 
-          printf "Search Pull Request to '%s' and branch containing SHA %s ... " "${{ inputs.release_branch }}" "${FATHER_SHA}"
-          PULL_REQUESTS=$(gh pr list --base "${{ inputs.release_branch }}" --search "${FATHER_SHA}" --state "merged" --json "title,number,mergedBy,mergedAt")
-          if [[ $? -ne 0 || "${PULL_REQUESTS}" == "" ]]; then
+          printf "Search Pull Request to '%s' and branch containing SHA %s ... " "${{ inputs.release_branch }}" "${SECOND_PARENT_SHA}"
+          PULL_REQUESTS=$(gh pr list --base "${{ inputs.release_branch }}" --search "${SECOND_PARENT_SHA}" --state "merged" --json "title,number,mergedBy,mergedAt")
+          if [[ $? -ne 0 || "${PULL_REQUESTS}" == "[]" ]]; then
             printf "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}\n"
             printf "${ANSI_LIGHT_RED}Couldn't find a merged Pull Request to '%s'. -> %s${ANSI_NOCOLOR}\n" "${{ inputs.release_branch }}" "${PULL_REQUESTS}"
             printf "::error title=PullRequest::Couldn't find a merged Pull Request to '%s'. -> %s\n" "${{ inputs.release_branch }}" "${PULL_REQUESTS}"
