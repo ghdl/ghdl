@@ -2012,9 +2012,13 @@ package body Synth.Vhdl_Stmts is
                else
                   Obj := Unshare (Info.Obj, Instance_Pool);
                end if;
-               if Info.Off = No_Value_Offsets then
+               if Info.Targ_Type = Info.Obj.Typ then
+                  --  The type is the whole object, so there should be no
+                  --  offsets.
+                  pragma Assert (Info.Off = No_Value_Offsets);
                   return Obj;
                else
+                  --  A subpart of the object is taken, create an alias.
                   return Create_Value_Alias
                     (Obj, Info.Off, Info.Targ_Type, Instance_Pool);
                end if;
@@ -2111,7 +2115,8 @@ package body Synth.Vhdl_Stmts is
             --  Always pass by value.
             if Is_Copyback_Parameter (Inter) then
                --  For the copy back: keep info of formal.
-               Create_Object (Caller_Inst, Assoc, Info_To_Valtyp (Info));
+               Val := Info_To_Valtyp (Info);
+               Create_Object (Caller_Inst, Assoc, Val);
             end if;
             if Get_Mode (Inter) /= Iir_Out_Mode
               or else Inter_Typ.Kind = Type_File
