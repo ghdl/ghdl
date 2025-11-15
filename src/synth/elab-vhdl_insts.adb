@@ -225,7 +225,8 @@ package body Elab.Vhdl_Insts is
                      Act_Typ := Synth_Subtype_Indication (Syn_Inst, Act);
                   else
                      --  An existing type.
-                     Act_Typ := Get_Subtype_Object (Syn_Inst, Act);
+                     Act_Typ := Get_Elaborated_Subtype_Indication
+                       (Syn_Inst, Act);
                   end if;
                   Act_Typ := Unshare (Act_Typ, Instance_Pool);
                   Create_Interface_Type
