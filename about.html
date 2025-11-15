@@ -1,0 +1,512 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="author" title="About these documents" href="#"><link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Getting | Installing" href="getting.html"><link rel="prev" title="GHDL" href="index.html">
+        <link rel="prefetch" href="_static/logo.png" as="image">
+
+    <link rel="shortcut icon" href="_static/icon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.09.25 -->
+        <title>About - 6.0.0-dev</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=55b73dce" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=580074bf" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f3f3;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">6.0.0-dev</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">6.0.0-dev</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="quick_start/index.html">Quick Start Guide</a><input aria-label="Toggle navigation of Quick Start Guide" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="quick_start/simulation/index.html">Simulation</a><input aria-label="Toggle navigation of Simulation" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="quick_start/simulation/hello/index.html"><cite>Hello world</cite> program</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quick_start/simulation/heartbeat/index.html"><cite>Heartbeat</cite> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quick_start/simulation/adder/index.html"><cite>Full adder</cite> module and testbench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quick_start/simulation/DLXModelSuite.html">Working with non-trivial designs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference external" href="https://ghdl.github.io/ghdl-cosim">Co-Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start/python/index.html">Python Interfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="development/building/index.html">Building GHDL</a><input aria-label="Toggle navigation of Building GHDL" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="development/building/Sources.html">Sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/building/mcode.html">mcode backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/building/LLVM.html">LLVM backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/building/GCC.html">GCC backend</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ghw/index.html">GHDL Waveform (GHW)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="internals/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Python Module Index</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/ghdl/ghdl/blob/master/doc/about.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/ghdl/ghdl/edit/master/doc/about.rst" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="about">
+<h1>About<a class="headerlink" href="#about" title="Link to this heading">¶</a></h1>
+<section id="what-is-vhdl">
+<span id="intro-vhdl"></span><h2>What is <cite>VHDL</cite>?<a class="headerlink" href="#what-is-vhdl" title="Link to this heading">¶</a></h2>
+<p><a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/VHDL">VHDL</a> is an acronym for <em>Verification and Hardware Description Language</em> (<a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/HDL">HDL</a>),
+which is a computer language used to describe a logic circuit by function, data flow behavior, or structure.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Historically the ‘V’ in the language’s acronym came from the Very High Speed Integrated Circuit (<a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/VHSIC">VHSIC</a>),
+which was the U.S. government program that funded the early work on the standard.
+Changing the ‘V’ to mean <em>verification</em> reflects the language’s increasing usage for verification as well as design.
+See <a class="reference external" href="http://www.eda-twiki.org/twiki/pub/P1076/PrivateDocuments/Par1076_202X.pdf">VHDL 202X PAR</a> via <a class="reference external" href="https://ieee-p1076.gitlab.io/VHDL-202X/index.html#vhdl202x" title="(in VHDL Analysis and Standardization Group (VASG))"><span>VHDL-202X</span></a>.</p>
+</div>
+<p>Although VHDL was not designed for writing general purpose programs, VHDL <em>is</em> a programming language: any algorithm can
+be written with it, it can interact with files, the environment, stdin and stdout, etc.
+VHDL has features similar to those found in procedural languages such as
+<a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/C_(programming_language)">C</a>,
+<a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/Python_(programming_language)">Python</a>,
+or <a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/Ada_(programming_language)">Ada</a>.
+Indeed, VHDL derives most of its syntax and semantics from Ada. Knowing <cite>Ada</cite> is an advantage for learning VHDL (it is
+an advantage in general as well).</p>
+<p>However, VHDL was not designed as a general purpose language but as an <cite>HDL</cite>.
+As the name implies, VHDL aims at modeling or documenting electronics systems.
+Due to the nature of hardware components –which are always running–, VHDL is a highly concurrent language, built upon
+an event-driven execution model.</p>
+<p>Like a program written in any other language, a VHDL program can be executed.
+Since VHDL is used to model designs, the term <em class="dfn">simulation</em> is often used instead of <cite>execution</cite>, with the same
+meaning.
+At the same time, like a design written in another <cite>HDL</cite>, a set of VHDL sources can be transformed with a
+<em class="dfn">synthesis tool</em> into a netlist, that is, a detailed gate-level implementation.</p>
+<p>The development of VHDL started in 1983 and the standard is named <a class="reference external" href="https://www.ieee.org/">IEEE</a> <cite>1076</cite>.
+Five revisions exist:
+<a class="reference external" href="http://ieeexplore.ieee.org/document/26487/">1987</a>,
+<a class="reference external" href="http://ieeexplore.ieee.org/document/392561/">1993</a>,
+<a class="reference external" href="http://ieeexplore.ieee.org/document/1003477/">2002</a>,
+<a class="reference external" href="http://ieeexplore.ieee.org/document/4772740/">2008</a> and
+<a class="reference external" href="https://ieeexplore.ieee.org/document/8938196">2019</a>.
+The standardization is handled by the <a class="reference external" href="https://ieee-p1076.gitlab.io/index.html" title="(in VHDL Analysis and Standardization Group (VASG))"><span>IEEE P1076 Working Group: VHDL Analysis and Standardization Group (VASG)</span></a>.
+Find on-going work towards <em>VHDL 202X</em> in <a class="reference external" href="https://gitlab.com/IEEE-P1076/VHDL-Issues/-/issues">gitlab.com/IEEE-P1076/VHDL-Issues</a>.</p>
+</section>
+<section id="what-is-ghdl">
+<span id="intro-ghdl"></span><h2>What is GHDL?<a class="headerlink" href="#what-is-ghdl" title="Link to this heading">¶</a></h2>
+<figure class="align-center" id="id1">
+<a class="reference external image-reference" href="internals/index.html"><img alt="_images/internals.png" src="_images/internals.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">Architecture overview of the GHDL toolkit (CLI, libghdl, pyGHDL and ghdl-yosys-plugin).</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
+</figcaption>
+</figure>
+<p><cite>GHDL</cite> is a shorthand for <cite>G Hardware Design Language</cite> (currently, <cite>G</cite> has no meaning).
+It is a VHDL analyzer, compiler, simulator and (experimental) synthesizer that can process (nearly) any VHDL design.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For almost 20 years, GHDL was <em>not</em> a synthesis tool: a netlist could not be created.
+Hence, most of the content in this documentation corresponds to the usage of GHDL as a compiler/simulator.
+See <a class="reference internal" href="using/Synthesis.html#using-synthesis"><span class="std std-ref">Synthesis</span></a> for further details regarding synthesis.</p>
+</div>
+<p>Unlike some other simulators, GHDL is a compiler: it directly translates a VHDL file to machine code, without using an
+intermediary language such as <cite>C</cite> or <cite>C++</cite>.
+Therefore, the compiled code should be faster and the analysis time should be shorter than with a compiler using an
+intermediary language.</p>
+<p>GHDL can use multiple back-ends, i.e. code generators, (<a class="reference external" href="http://gcc.gnu.org/">GCC</a>, <a class="reference external" href="http://llvm.org/">LLVM</a> or
+<a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/X86-64">x86</a>/<a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/Intel_80386">i386</a> only, a built-in one named <em>mcode</em>) and runs on
+<a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/Linux_distribution">GNU/Linux</a>, <a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/Microsoft_Windows">Windows</a> ™ and
+<a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/MacOS">macOS</a> ™; on x86, x86_64, armv6/armv7/aarch32/aarch64, ppc64, etc.</p>
+<p>The current version of GHDL does not contain any built-in graphical viewer: signal waves cannot be seen through GHDL.
+However, the behavior of the designs can still be checked through test benches and verification frameworks.
+Moreover, <a class="reference internal" href="ghw/index.html#ghw"><span class="std std-ref">GHDL Waveform (GHW)</span></a>, <a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/Value_change_dump">VCD</a> or <cite>FST</cite> files can be produced, which can be viewed with an
+external <a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/Waveform_viewer">waveform viewer</a>, such as <a class="reference external" href="http://gtkwave.sourceforge.net/">GtkWave</a>.</p>
+<p>GHDL aims at implementing VHDL as defined by <a class="reference external" href="http://ieeexplore.ieee.org/document/4772740/">IEEE 1076</a>.
+It supports the
+<a class="reference external" href="http://ieeexplore.ieee.org/document/26487/">1987</a>,
+<a class="reference external" href="http://ieeexplore.ieee.org/document/392561/">1993</a> and
+<a class="reference external" href="http://ieeexplore.ieee.org/document/1003477/">2002</a> revisions and, partially,
+<a class="reference external" href="http://ieeexplore.ieee.org/document/4772740/">2008</a> and
+<a class="reference external" href="https://ieeexplore.ieee.org/document/8938196/">2019</a>.
+<a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/Property_Specification_Language">Property Specification Language (PSL)</a> is also partially supported.</p>
+<p>Several third party projects are supported:
+<a class="reference external" href="https://github.com/YosysHQ/yosys">Yosys</a>
+(through the <a class="reference external" href="https://github.com/ghdl/ghdl-yosys-plugin">ghdl-yosys-plugin</a>)
+<a class="reference external" href="https://github.com/potentialventures/cocotb">cocotb</a>,
+(through the <a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/Verilog_Procedural_Interface">VPI interface</a>),
+<a class="reference external" href="https://vunit.github.io/">VUnit</a>,
+<a class="reference external" href="http://osvvm.org/">OSVVM</a>,
+<a class="reference external" href="https://vhdl.github.io/pyVHDLModel/index.html" title="(in pyVHDLModel v0.33)"><span>The pyVHDLModel Documentation</span></a>,
+…</p>
+</section>
+<section id="who-uses-ghdl">
+<span id="intro-who"></span><h2>Who uses GHDL?<a class="headerlink" href="#who-uses-ghdl" title="Link to this heading">¶</a></h2>
+<div class="whouses docutils container">
+<div class="table-wrapper docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Project hub</p></th>
+<th class="head"><p>Documentation</p></th>
+<th class="head"><p>Name</p></th>
+<th class="head"><p>Brief description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="https://github.com/VLSI-EDA/PoC"><img alt="Source Code on GitHub" class="shield" src="https://img.shields.io/badge/-VLSI--EDA/PoC-323131.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="http://poc-library.readthedocs.io/en/latest/?badge=latest"><img alt="Documentation on ReadTheDocs" class="shield" src="https://img.shields.io/badge/-poc--library-2980b9.svg?logo=read-the-docs&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="https://github.com/VLSI-EDA/PoC">PoC-Library</a></p></td>
+<td><p>A Vendor-Independent, Open-Source IP Core and Utility Library.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://github.com/VUnit/vunit"><img alt="Source Code on GitHub" class="shield" src="https://img.shields.io/badge/-VUnit/vunit-323131.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="https://vunit.github.io/documentation"><img alt="Documentation on vunit.github.io" class="shield" src="https://img.shields.io/badge/doc-vunit.github.io-blue.svg?&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="https://vunit.github.io/">VUnit</a></p></td>
+<td><p>A unit testing framework for VHDL/SystemVerilog</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://gitlab.com/IEEE-P1076"><img alt="Source Code on GitLab" class="shield" src="https://img.shields.io/badge/-IEEE--P1076-323131.svg?logo=gitlab&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="http://www.eda-twiki.org/cgi-bin/view.cgi/P1076/WebHome"><img alt="Documentation on eda-twiki.org" class="shield" src="https://img.shields.io/badge/-eda--twiki.org-critical.svg?logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA%2FwD%2FAP%2BgvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4QIWAhImtwMY5AAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAACwUlEQVRYw%2B1XTWgTQRT%2BZpOokURDg6GiaAwoCEX8QQpevFTQHgTBY8FrERSstKLePVSleLSH3qUFRSx48CR4CIJU8BC0WKqVULQiJsZmZ94%2BD83GJPOTDR68dGHZXYb3vu99882bWWDz%2Bs%2BXCF%2F408Au%2BD9GoaqXoIICFAQUAAWAGk%2FXTQCkAFSwhiAxD94%2BJS6vLEQiwOULp1B5Og9JGS2xbCEgDcDheOcYxQhb%2BibF2NdbTgL8%2BWQOv98sQlJaSyQ7qpeW6k0kQkWyR86Jq2%2Bf2wh4qK%2BMdgWXBnBpeaoWMpKB1dIztwKl9BL8Sl4DF6lXkMGyltT%2BruCrs%2FD9nJYre%2FCMuP3hhYlAHH5tvz5%2FAJL5B%2BL0u9leHM13My8h%2FZyWq1ot2KdAsdACFAAVxHpeUzZ%2F1Nc9BwHD3IXf%2F0og9A4Ja0jcCC4B8PfjPJuqNsfFtkUx8q3UlJvZw730eRBUI2YdvuzTTBrmdRIggwfqq%2BNQGG%2BuBtAkgBstsTHUfz1ur5j1FSEBJBBBAW2Nc8d0cKBFh4BdO6SLADk6XOs392A61YsCUcBVD6YzKeAwtOfs%2FW1O7kJAWjYtW6zmAVcFBCBwEJBdPKCimpAcVQkLARlxu3YSkBZg6pLAthWbVHWakAwHj04fmJopORSI2FXNCpBBjaBHBWQEBTf6gAdQ4PaATQFlUa6TmE9sJ4DkEmTlgBOcABD385XUMZAQUGBcP5To2v3CnIE3DOAhXxwUYq7I7QeS6d038bN8xwm%2B0QsYBO4Y89o2Hd%2BigAQwMDgl5opjeiOKZ6fBW9esFfxtRAISXgPUawO3kW7N97p4jQ%2FvfMQjw%2Fv0U%2FHM0X6U339BreZZk5gAQol9B7huygB7CvfFwseJ9v%2BCmaEMlosTUBhCfMcJqJY2TQ7DKccyNHVUBcAPgESSsDf%2FZPPXbPP6A13nhms8bYukAAAAAElFTkSuQmCC&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="https://www.eda-twiki.org/vasg/">IEEE P1076 WG</a></p></td>
+<td><p>IEEE P1076 Working Group [VASG]</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://github.com/cpc/tce"><img alt="Source Code on GitHub" class="shield" src="https://img.shields.io/badge/-TCE-323131.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="http://openasip.org/documentation.html"><img alt="Documentation on openasip.org" class="shield" src="https://img.shields.io/badge/doc-openasip.org-blue.svg?&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p></td>
+<td><p><a class="reference external" href="http://openasip.org/">TCE</a></p></td>
+<td><p>TTA-Based Co-Design Environment - an open-source ASIP toolset.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="getting.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Getting | Installing</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Home</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2002-2024, Tristan Gingold and contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link fa-solid fa-brands fa-github" href="https://github.com/ghdl/ghdl" aria-label="GitHub ghdl/ghdl"></a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">About</a><ul>
+<li><a class="reference internal" href="#what-is-vhdl">What is <cite>VHDL</cite>?</a></li>
+<li><a class="reference internal" href="#what-is-ghdl">What is GHDL?</a></li>
+<li><a class="reference internal" href="#who-uses-ghdl">Who uses GHDL?</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=2a02db7b"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

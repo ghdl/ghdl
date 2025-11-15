@@ -1,0 +1,636 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="author" title="About these documents" href="../about.html"><link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Additional Command Reference" href="CommandReference.html"><link rel="prev" title="Simulation (runtime)" href="Simulation.html">
+        <link rel="prefetch" href="../_static/logo.png" as="image">
+
+    <link rel="shortcut icon" href="../_static/icon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.09.25 -->
+        <title>Synthesis - 6.0.0-dev</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=55b73dce" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=580074bf" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f3f3;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">6.0.0-dev</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">6.0.0-dev</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">GHDL usage</span></p>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../quick_start/index.html">Quick Start Guide</a><input aria-label="Toggle navigation of Quick Start Guide" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../quick_start/simulation/index.html">Simulation</a><input aria-label="Toggle navigation of Simulation" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/hello/index.html"><cite>Hello world</cite> program</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/heartbeat/index.html"><cite>Heartbeat</cite> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/adder/index.html"><cite>Full adder</cite> module and testbench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../quick_start/simulation/DLXModelSuite.html">Working with non-trivial designs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference external" href="https://ghdl.github.io/ghdl-cosim">Co-Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../quick_start/python/index.html">Python Interfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../development/building/index.html">Building GHDL</a><input aria-label="Toggle navigation of Building GHDL" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/Sources.html">Sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/mcode.html">mcode backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/LLVM.html">LLVM backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../development/building/GCC.html">GCC backend</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ghw/index.html">GHDL Waveform (GHW)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../internals/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../py-modindex.html">Python Module Index</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/ghdl/ghdl/blob/master/doc/using/Synthesis.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/ghdl/ghdl/edit/master/doc/using/Synthesis.rst" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="synthesis">
+<span id="using-synthesis"></span><h1>Synthesis<a class="headerlink" href="#synthesis" title="Link to this heading">¶</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This is experimental and work in progress! If you find crashes or unsupported features, please
+<a class="reference internal" href="../contribute.html#reporting-bugs"><span class="std std-ref">report them</span></a>!</p>
+</div>
+<p>Since <code class="docutils literal notranslate"><span class="pre">v0.37</span></code>, GHDL features a built-in (experimental) synthesis kernel with two backends: <code class="docutils literal notranslate"><span class="pre">synth</span></code> and
+<code class="docutils literal notranslate"><span class="pre">yosys-plugin</span></code>.
+Currently, synthesis is supported as a front-end of other synthesis and technology mapping tools.
+Hence, the netlists generated by GHDL are not optimised.</p>
+<section id="synthesis-synth">
+<span id="synth-command"></span><span id="index-0"></span><h2>Synthesis [<code class="docutils literal notranslate"><span class="pre">--synth</span></code>]<a class="headerlink" href="#synthesis-synth" title="Link to this heading">¶</a></h2>
+<p>This command is useful for checking that a design can be synthesized, before actually running a complete synthesis
+tool. In fact, because this is expected to be much faster, it can be used as a frequent check.</p>
+<p>Moreover, since GHDL’s front-end supports multiple versions of the standard, but the synthesised netlists are generated
+using a subset of VHDL 1993, GHDL’s synthesis features can be used as a preprocessor with tools that do support older
+versions of the standard, but which don’t provide the most recent features.</p>
+<p>Currently, the default output is a generic netlist using a (very simple) subset of VHDL 1993.
+See <a class="reference internal" href="#cmdoption-ghdl-out"><code class="xref std std-option docutils literal notranslate"><span class="pre">--out</span></code></a> and <a class="extlink-ghdlsharp reference external" href="https://github.com/ghdl/ghdl/issues/1174">#1174</a> for on-going discussion about other output formats.</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-synth">
+<span class="sig-name descname"><span class="pre">--synth</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]</span> <span class="pre">[library.]top_unit</span> <span class="pre">[arch]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-synth" title="Link to this definition">¶</a></dt>
+<dd><p>Elaborates for synthesis the design whose top unit is indicated by <code class="docutils literal notranslate"><span class="pre">[library.]top_unit</span> <span class="pre">[arch]</span></code>.</p>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>All the units must have been analyzed; that is, the artifacts of previously executed <a class="reference internal" href="InvokingGHDL.html#cmdoption-ghdl-a"><code class="xref std std-option docutils literal notranslate"><span class="pre">-a</span></code></a> calls must exist.</p>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-0">
+<span class="sig-name descname"><span class="pre">--synth</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;[options...]</span> <span class="pre">file...</span> <span class="pre">-e</span> <span class="pre">[top_unit</span> <span class="pre">[arch]]&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-0" title="Link to this definition">¶</a></dt>
+<dd><p>Analyses and elaborates for synthesis the files present on the command line only.
+Elaboration starts from the top unit indicated by <code class="docutils literal notranslate"><span class="pre">[top_unit</span> <span class="pre">[arch]]</span></code>.
+If no top unit is specified, GHDL will try guessing it and a note will be printed.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Files can be provided in any order, but <code class="docutils literal notranslate"><span class="pre">-e</span></code> must be provided after them.
+That is, <code class="docutils literal notranslate"><span class="pre">--synth</span> <span class="pre">&lt;[options...]</span> <span class="pre">files...&gt;</span></code> is NOT supported.
+This is because we want to unambiguously tell files and the unit specification apart.
+We don’t want to rely on parsing the items and guessing whether we are dealing with files or a top unit name.
+In corner cases, a filename might exist which matches the name of a primary unit: <code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">synth</span> <span class="pre">name</span></code>.</p>
+</div>
+</dd></dl>
+
+</section>
+<section id="synthesis-options">
+<span id="id1"></span><h2>Synthesis options<a class="headerlink" href="#synthesis-options" title="Link to this heading">¶</a></h2>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Multiple pragmas are supported for preventing blocks of code from being synthesized:</p>
+<p><code class="docutils literal notranslate"><span class="pre">--</span> <span class="pre">pragma|synopsys|synthesis</span> <span class="pre">(synthesis|translate)(</span> <span class="pre">|_)(on|off)</span></code></p>
+<p>For example:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--</span> <span class="pre">pragma</span> <span class="pre">translate</span> <span class="pre">off</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--</span> <span class="pre">synthesis</span> <span class="pre">translate_on</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--</span> <span class="pre">synopsys</span> <span class="pre">synthesis_off</span></code></p></li>
+</ul>
+</div>
+<p>Due to GHDL’s modular architecture (see <a class="reference internal" href="../internals/index.html#int-overview"><span class="std std-ref">Overview</span></a>), the synthesis kernel shares the VHDL parsing front-end
+with the simulation back-ends.
+Hence, available options for synthesis are the same as for analysis and/or simulation elaboration
+(see <a class="reference internal" href="InvokingGHDL.html#ghdl-options"><span class="std std-ref">Options</span></a>).
+In addition to those options, there are some synthesis specific options.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Furthermore there are lot of debug options available.
+Beware: these debug options should only used for debugging purposes as they aren’t guaranteed to be stable during
+development of GHDL’s synthesis feature.
+You can find them in the file <a class="extlink-ghdlsrc reference external" href="https://github.com/ghdl/ghdl/blob/master/src/ghdldrv/ghdlsynth.adb">ghdlsynth.adb</a> in the procedure <code class="docutils literal notranslate"><span class="pre">Decode_Option()</span></code>.</p>
+</div>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-gNAME">
+<span class="sig-name descname"><span class="pre">-gNAME</span></span><span class="sig-prename descclassname"><span class="pre">=VALUE</span></span><a class="headerlink" href="#cmdoption-ghdl-gNAME" title="Link to this definition">¶</a></dt>
+<dd><p>Override top unit generic <cite>NAME</cite> with value <cite>VALUE</cite>.
+Similar to the run-time option <a class="reference internal" href="Simulation.html#cmdoption-ghdl-gGENERIC"><code class="xref std std-option docutils literal notranslate"><span class="pre">-gGENERIC</span></code></a>.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ghdl --synth --std=08 -gDEPTH=12 [library.]top_unit [arch]
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-out">
+<span class="sig-name descname"><span class="pre">--out</span></span><span class="sig-prename descclassname"><span class="pre">=&lt;vhdl|raw-vhdl|verilog|dot|none|raw|dump&gt;</span></span><a class="headerlink" href="#cmdoption-ghdl-out" title="Link to this definition">¶</a></dt>
+<dd><ul class="simple">
+<li><p><strong>vhdl</strong> <em>(default)</em>: equivalent to <code class="docutils literal notranslate"><span class="pre">raw-vhdl</span></code>, but the original top-level unit is preserved unmodified, so the
+synthesized design can be simulated with the same testbench.</p></li>
+<li><p><strong>raw-vhdl</strong>: all statements are converted to a simple VHDL 1993
+netlist, for allowing instantiation in other synthesis tools
+without modern VHDL support.</p></li>
+<li><p><strong>verilog</strong>: generate a verilog netlist.</p></li>
+<li><p><strong>dot</strong>: generate a graphviz dot diagram of the netlist AST.</p></li>
+<li><p><strong>none</strong>: perform the synthesis, but do not generate any output; useful for frequent checks.</p></li>
+<li><p><strong>raw</strong>: print the internal representation of the design, for debugging purposes.</p></li>
+<li><p><strong>dump</strong>: similar to <code class="docutils literal notranslate"><span class="pre">raw</span></code>, with even more internal details for debugging.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-o">
+<span class="sig-name descname"><span class="pre">-o</span></span><span class="sig-prename descclassname"><span class="pre">=FILENAME</span></span><a class="headerlink" href="#cmdoption-ghdl-o" title="Link to this definition">¶</a></dt>
+<dd><p>Write the netlist to <cite>FILENAME</cite> instead of the standard output.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-vendor-library">
+<span class="sig-name descname"><span class="pre">--vendor-library</span></span><span class="sig-prename descclassname"><span class="pre">=NAME</span></span><a class="headerlink" href="#cmdoption-ghdl-vendor-library" title="Link to this definition">¶</a></dt>
+<dd><p>Any entity from library NAME is a black box.  No warning is emitted for
+an instantiation of an unbounded component if the component is declared in
+library NAME.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ghdl --synth --std=08 --vendor-library=vendorlib [library.]top_unit [arch]
+</pre></div>
+</div>
+</dd></dl>
+
+<section id="assertions-psl-and-formal-verification">
+<h3>Assertions, PSL and formal verification<a class="headerlink" href="#assertions-psl-and-formal-verification" title="Link to this heading">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-no-formal">
+<span class="sig-name descname"><span class="pre">--no-formal</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-no-formal" title="Link to this definition">¶</a></dt>
+<dd><p>Neither synthesize assert nor PSL.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ghdl --synth --std=08 --no-formal [library.]top_unit [arch]
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-no-assert-cover">
+<span class="sig-name descname"><span class="pre">--no-assert-cover</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-no-assert-cover" title="Link to this definition">¶</a></dt>
+<dd><p>Disable automatic cover PSL assertion activation. If this option isn’t used, GHDL generates
+<cite>cover</cite> directives for each <cite>assert</cite> directive (with an implication operator) automatically during synthesis.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ghdl --synth --std=08 --no-assert-cover [library.]top_unit [arch]
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-assert-assumes">
+<span class="sig-name descname"><span class="pre">--assert-assumes</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-assert-assumes" title="Link to this definition">¶</a></dt>
+<dd><p>Treat all PSL asserts like PSL assumes. If this option is used, GHDL generates an <cite>assume</cite> directive
+for each <cite>assert</cite> directive during synthesis. This is similar to the <cite>-assert-assumes</cite>
+option of Yosys’ <a class="reference external" href="https://yosyshq.net/yosys/cmd_read_verilog.html">read_verilog</a> command.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ghdl --synth --std=08 --assert-assumes [library.]top_unit [arch]
+</pre></div>
+</div>
+<p>As all PSL asserts are treated like PSL assumes, no <cite>cover</cite> directives are automatically generated for them,
+regardless of using the <a class="reference internal" href="#cmdoption-ghdl-no-assert-cover"><code class="xref std std-option docutils literal notranslate"><span class="pre">--no-assert-cover</span></code></a> or not.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-ghdl-assume-asserts">
+<span class="sig-name descname"><span class="pre">--assume-asserts</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-ghdl-assume-asserts" title="Link to this definition">¶</a></dt>
+<dd><p>Treat all PSL assumes like PSL asserts. If this option is used, GHDL generates an <cite>assert</cite> directive
+for each <cite>assume</cite> directive during synthesis. This is similar to the <cite>-assume-asserts</cite>
+option of Yosys’ <a class="reference external" href="https://yosyshq.net/yosys/cmd_read_verilog.html">read_verilog</a> command.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ ghdl --synth --std=08 --assume-asserts [library.]top_unit [arch]
+</pre></div>
+</div>
+<p><cite>cover</cite> directives are automatically generated for the resulting asserts (with an implication operator)
+if <a class="reference internal" href="#cmdoption-ghdl-no-assert-cover"><code class="xref std std-option docutils literal notranslate"><span class="pre">--no-assert-cover</span></code></a> isn’t used.</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="yosys-plugin">
+<span id="synth-plugin"></span><h2>Yosys plugin<a class="headerlink" href="#yosys-plugin" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="https://github.com/ghdl/ghdl-yosys-plugin">ghdl-yosys-plugin</a> is a module to use GHDL as a VHDL front-end for <a class="reference external" href="https://yosyshq.net/yosys/">Yosys
+Open Synthesis Suite</a>, a framework for optimised synthesis and technology mapping.
+Artifacts generated by Yosys can be used in multiple open source and vendor tools to achieve P&amp;R, formal verification,
+etc. A relevant feature of combining GHDL and Yosys is that mixed-language (VHDL-Verilog) synthesis with open source
+tools is possible.</p>
+<p>The command line syntax for this plugin is the same as for <a class="reference internal" href="#cmdoption-ghdl-synth"><code class="xref std std-option docutils literal notranslate"><span class="pre">--synth</span></code></a>, except that the command name (<code class="docutils literal notranslate"><span class="pre">--synth</span></code>)
+is neither required nor supported.
+Instead, <code class="docutils literal notranslate"><span class="pre">yosys</span></code>, <code class="docutils literal notranslate"><span class="pre">yosys</span> <span class="pre">-m</span> <span class="pre">ghdl</span></code> or <code class="docutils literal notranslate"><span class="pre">yosys</span> <span class="pre">-m</span> <span class="pre">path/to/ghdl.so</span></code> need to be used, depending of how is the plugin
+built.
+See <a class="reference external" href="https://github.com/ghdl/ghdl-yosys-plugin">ghdl/ghdl-yosys-plugin: README</a> for building and installation
+guidelines.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>ghdl-yosys-plugin is a thin layer that converts the internal representation of <a class="reference internal" href="#cmdoption-ghdl-synth"><code class="xref std std-option docutils literal notranslate"><span class="pre">--synth</span></code></a> to Yosys’ C API.
+Hence, it is suggested to check the designs with <a class="reference internal" href="#cmdoption-ghdl-synth"><code class="xref std std-option docutils literal notranslate"><span class="pre">--synth</span></code></a> before running synthesis with Yosys.</p>
+</div>
+<section id="convert-v-hdl-to-other-formats">
+<h3>Convert (V)HDL to other formats<a class="headerlink" href="#convert-v-hdl-to-other-formats" title="Link to this heading">¶</a></h3>
+<p>Yosys provides <code class="docutils literal notranslate"><span class="pre">write_*</span></code> commands for generating output netlists in different formats. Therefore, VHDL and/or Verilog
+sources can be converted to EDIF, SMT, BTOR2, etc.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>For a comprehensive list of supported output formats (AIGER, BLIF, ILANG, JSON…), check out the
+<a class="reference external" href="https://yosyshq.net/yosys/documentation.html">Yosys documentation</a>.</p>
+</div>
+<section id="to-verilog">
+<h4>To Verilog<a class="headerlink" href="#to-verilog" title="Link to this heading">¶</a></h4>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>yosys<span class="w"> </span>-m<span class="w"> </span>ghdl<span class="w"> </span>-p<span class="w"> </span><span class="s1">&#39;ghdl filename.vhdl -e top_unit [arch]; write_verilog filename.v&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="to-edif">
+<h4>To EDIF<a class="headerlink" href="#to-edif" title="Link to this heading">¶</a></h4>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>yosys<span class="w"> </span>-m<span class="w"> </span>ghdl<span class="w"> </span>-p<span class="w"> </span><span class="s1">&#39;ghdl filename.vhdl -e top_unit [arch]; write_edif filename.edif&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="to-smt">
+<h4>To SMT<a class="headerlink" href="#to-smt" title="Link to this heading">¶</a></h4>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>yosys<span class="w"> </span>-m<span class="w"> </span>ghdl<span class="w"> </span>-p<span class="w"> </span><span class="s1">&#39;ghdl filename.vhdl -e top_unit [arch]; write_smt2 filename.smt2&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="to-btor2">
+<h4>To BTOR2<a class="headerlink" href="#to-btor2" title="Link to this heading">¶</a></h4>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>yosys<span class="w"> </span>-m<span class="w"> </span>ghdl<span class="w"> </span>-p<span class="w"> </span><span class="s1">&#39;ghdl filename.vhdl -e top_unit [arch]; write_btor filename.btor&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="to-firrtl">
+<h4>To FIRRTL<a class="headerlink" href="#to-firrtl" title="Link to this heading">¶</a></h4>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>yosys<span class="w"> </span>-m<span class="w"> </span>ghdl<span class="w"> </span>-p<span class="w"> </span><span class="s1">&#39;ghdl filename.vhdl -e top_unit [arch]; write_firrtl filename.firrtl&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="to-vhdl">
+<h4>To VHDL<a class="headerlink" href="#to-vhdl" title="Link to this heading">¶</a></h4>
+<p>There is work in progress in <a class="reference external" href="https://github.com/ghdl/ghdl-yosys-plugin/pull/122">ghdl/ghdl-yosys-plugin#122</a> for adding
+a <code class="docutils literal notranslate"><span class="pre">write_vhdl</span></code> command to Yosys. That is the complement of what ghdl-yosys-plugin provides.</p>
+</section>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="CommandReference.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Additional Command Reference</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="Simulation.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Simulation (runtime)</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2002-2024, Tristan Gingold and contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link fa-solid fa-brands fa-github" href="https://github.com/ghdl/ghdl" aria-label="GitHub ghdl/ghdl"></a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Synthesis</a><ul>
+<li><a class="reference internal" href="#synthesis-synth">Synthesis [<code class="docutils literal notranslate"><span class="pre">--synth</span></code>]</a></li>
+<li><a class="reference internal" href="#synthesis-options">Synthesis options</a><ul>
+<li><a class="reference internal" href="#assertions-psl-and-formal-verification">Assertions, PSL and formal verification</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#yosys-plugin">Yosys plugin</a><ul>
+<li><a class="reference internal" href="#convert-v-hdl-to-other-formats">Convert (V)HDL to other formats</a><ul>
+<li><a class="reference internal" href="#to-verilog">To Verilog</a></li>
+<li><a class="reference internal" href="#to-edif">To EDIF</a></li>
+<li><a class="reference internal" href="#to-smt">To SMT</a></li>
+<li><a class="reference internal" href="#to-btor2">To BTOR2</a></li>
+<li><a class="reference internal" href="#to-firrtl">To FIRRTL</a></li>
+<li><a class="reference internal" href="#to-vhdl">To VHDL</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=2a02db7b"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
