@@ -1787,6 +1787,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Overload_Number (Field12)
    --
+   --   Get/Set_Seen_Flag (Flag1)
+   --
    --   Get/Set_Foreign_Flag (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -1797,6 +1799,9 @@ package Vhdl.Nodes is
    --
    -- Only for Iir_Kind_Procedure_Instantiation_Declaration:
    --   Get/Set_Suspend_Flag (Flag11)
+   --
+   -- Only for Iir_Kind_Function_Instantiation_Declaration:
+   --   Get/Set_Pure_Flag (Flag14)
 
    -- Iir_Kind_Interface_Function_Declaration (Medium)
    -- Iir_Kind_Interface_Procedure_Declaration (Medium)

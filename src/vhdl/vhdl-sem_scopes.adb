@@ -373,6 +373,8 @@ package body Vhdl.Sem_Scopes is
          when Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Function_Instantiation_Declaration
+           | Iir_Kind_Procedure_Instantiation_Declaration
            | Iir_Kind_Interface_Function_Declaration
            | Iir_Kind_Interface_Procedure_Declaration =>
             return True;

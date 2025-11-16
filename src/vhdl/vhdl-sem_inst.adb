@@ -1239,8 +1239,10 @@ package body Vhdl.Sem_Inst is
         (Inst,
          Instantiate_Generic_Chain (Inst, Get_Generic_Chain (Subprg), True));
       Instantiate_Generic_Map_Chain (Inst, Inst, Subprg);
-      if Get_Kind (Subprg) = Iir_Kind_Function_Instantiation_Declaration then
-         Set_Return_Type (Inst, Instantiate_Iir (Subprg, True));
+      if Get_Kind (Inst) = Iir_Kind_Function_Instantiation_Declaration then
+         Set_Return_Type (Inst,
+                          Instantiate_Iir (Get_Return_Type (Subprg), True));
+         Set_Pure_Flag (Inst, Get_Pure_Flag (Subprg));
       end if;
       Set_Interface_Declaration_Chain
         (Inst,

@@ -311,7 +311,9 @@ package body Vhdl.Sem_Names is
               | Iir_Kind_Enumeration_Literal =>
                null;
             when Iir_Kind_Interface_Function_Declaration
-              | Iir_Kind_Interface_Procedure_Declaration =>
+              | Iir_Kind_Interface_Procedure_Declaration
+              | Iir_Kind_Function_Instantiation_Declaration
+              | Iir_Kind_Procedure_Instantiation_Declaration =>
                null;
             when Iir_Kinds_Denoting_Name =>
                null;

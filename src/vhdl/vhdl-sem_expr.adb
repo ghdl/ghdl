@@ -986,7 +986,8 @@ package body Vhdl.Sem_Expr is
                      Staticness := None;
                   end if;
             end case;
-         when Iir_Kind_Interface_Function_Declaration =>
+         when Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Function_Instantiation_Declaration =>
             Staticness := None;
          when others =>
             Error_Kind ("set_function_call_staticness", Imp);
@@ -1172,7 +1173,8 @@ package body Vhdl.Sem_Expr is
 
       --  If subprogram called is pure, then there is no signals reference.
       case Get_Kind (Callee) is
-         when Iir_Kind_Function_Declaration =>
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Function_Instantiation_Declaration =>
             if Get_Pure_Flag (Callee) then
                return;
             end if;
@@ -1181,7 +1183,8 @@ package body Vhdl.Sem_Expr is
                return;
             end if;
          when Iir_Kind_Interface_Function_Declaration
-           | Iir_Kind_Interface_Procedure_Declaration =>
+           | Iir_Kind_Interface_Procedure_Declaration
+           | Iir_Kind_Procedure_Instantiation_Declaration =>
             --  FIXME: how to compute sensitivity ?  Recurse ?
             return;
          when others =>
@@ -1218,10 +1221,12 @@ package body Vhdl.Sem_Expr is
                when Iir_Kind_Process_Statement =>
                   return;
                when Iir_Kind_Function_Declaration
-                 | Iir_Kind_Procedure_Declaration =>
+                 | Iir_Kind_Procedure_Declaration
+                 | Iir_Kind_Procedure_Instantiation_Declaration
+                 | Iir_Kind_Function_Instantiation_Declaration =>
                   Set_All_Sensitized_State (Subprg, Invalid_Signal);
                when others =>
-                  Error_Kind ("sem_call_all_sensitized_check", Subprg);
+                  Error_Kind ("sem_call_all_sensitized_check2", Subprg);
             end case;
          when Read_Signal =>
             --  Put this subprogram in callees list as it may read a signal.
@@ -1327,14 +1332,16 @@ package body Vhdl.Sem_Expr is
 
          case Get_Kind (A_Func) is
             when Iir_Kinds_Functions_And_Literals
-              | Iir_Kind_Interface_Function_Declaration =>
+              | Iir_Kind_Interface_Function_Declaration
+              | Iir_Kind_Function_Instantiation_Declaration =>
                if not Is_Func_Call then
                   --  The identifier of a function call must be a function or
                   --  an enumeration literal.
                   goto Continue;
                end if;
             when Iir_Kind_Procedure_Declaration
-              | Iir_Kind_Interface_Procedure_Declaration =>
+              | Iir_Kind_Interface_Procedure_Declaration
+              | Iir_Kind_Procedure_Instantiation_Declaration =>
                if Is_Func_Call then
                   --  The identifier of a procedure call must be a procedure.
                   goto Continue;

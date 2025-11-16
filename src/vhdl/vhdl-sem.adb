@@ -1506,6 +1506,9 @@ package body Vhdl.Sem is
             return True;
          when Iir_Kind_Interface_Type_Declaration =>
             return Get_Identifier (Left) = Get_Identifier (Right);
+         when Iir_Kind_Interface_Type_Definition =>
+            return Are_Trees_Equal (Get_Type_Declarator (Left),
+                                    Get_Type_Declarator (Right));
          when Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Floating_Subtype_Definition
@@ -1828,7 +1831,9 @@ package body Vhdl.Sem is
          Prev := Get_Declaration (Inter);
          case Get_Kind (Prev) is
             when Iir_Kind_Function_Declaration
-              | Iir_Kind_Procedure_Declaration =>
+              | Iir_Kind_Procedure_Declaration
+              | Iir_Kind_Function_Instantiation_Declaration
+              | Iir_Kind_Procedure_Instantiation_Declaration =>
                if Is_Implicit_Subprogram (Prev) then
                   --  Implicit declarations aren't taken into account (as they
                   --  are mangled differently).
@@ -2489,8 +2494,12 @@ package body Vhdl.Sem is
 
       --  Create the interface parameters.
       Sem_Inst.Instantiate_Subprogram_Declaration (Decl, Subprg);
+      Sem_Utils.Compute_Subprogram_Hash (Decl);
+      Set_Subprogram_Overload_Number (Decl);
 
-      Set_Suspend_Flag (Decl, True);
+      if Get_Kind (Decl) = Iir_Kind_Procedure_Instantiation_Declaration then
+         Set_Suspend_Flag (Decl, True);
+      end if;
 
       --  Add DECL.  Must be done after parameters creation to handle
       --  homographs.
