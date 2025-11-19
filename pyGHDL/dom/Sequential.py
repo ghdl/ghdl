@@ -47,8 +47,10 @@ from pyVHDLModel.Sequential import OthersCase as VHDLModel_OthersCase
 from pyVHDLModel.Sequential import IfStatement as VHDLModel_IfStatement
 from pyVHDLModel.Sequential import CaseStatement as VHDLModel_CaseStatement
 from pyVHDLModel.Sequential import ForLoopStatement as VHDLModel_ForLoopStatement
+from pyVHDLModel.Sequential import WhileLoopStatement as VHDLModel_WhileLoopStatement
 from pyVHDLModel.Sequential import NullStatement as VHDLModel_NullStatement
 from pyVHDLModel.Sequential import WaitStatement as VHDLModel_WaitStatement
+from pyVHDLModel.Sequential import NextStatement as VHDLModel_NextStatement
 from pyVHDLModel.Sequential import ExitStatement as VHDLModel_ExitStatement
 from pyVHDLModel.Sequential import SequentialProcedureCall as VHDLModel_SequentialProcedureCall
 from pyVHDLModel.Sequential import SequentialSimpleSignalAssignment as VHDLModel_SequentialSimpleSignalAssignment
@@ -367,6 +369,53 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
 
 
 @export
+class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
+    def __init__(
+        self,
+        loopNode: Iir,
+        condition: ExpressionUnion,
+        statements: Iterable[SequentialStatement] = None,
+        label: str = None,
+    ) -> None:
+        super().__init__(condition, statements, label)
+        DOMMixin.__init__(self, loopNode)
+
+    @classmethod
+    def parse(cls, loopNode: Iir, label: str) -> "WhileLoopStatement":
+        from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
+        from pyGHDL.dom._Translate import (
+            GetSequentialStatementsFromChainedNodes,
+            GetRangeFromNode,
+            GetName,
+        )
+
+        # spec = nodes.Get_Parameter_Specification(loopNode)
+        # loopIndex = GetNameOfNode(spec)
+        #
+        # discreteRange = nodes.Get_Discrete_Range(spec)
+        # rangeKind = GetIirKindOfNode(discreteRange)
+        # if rangeKind == nodes.Iir_Kind.Range_Expression:
+        #     rng = GetRangeFromNode(discreteRange)
+        # elif rangeKind in (
+        #     nodes.Iir_Kind.Attribute_Name,
+        #     nodes.Iir_Kind.Parenthesis_Name,
+        # ):
+        #     rng = GetName(discreteRange)
+        # else:
+        #     pos = Position.parse(loopNode)
+        #     raise DOMException(
+        #         f"Unknown discrete range kind '{rangeKind.name}' in for...loop statement at line {pos.Line}."
+        #     )
+
+        condition = None
+
+        statementChain = nodes.Get_Sequential_Statement_Chain(loopNode)
+        statements = GetSequentialStatementsFromChainedNodes(statementChain, "while", label)
+
+        return cls(loopNode, condition, statements, label)
+
+
+@export
 class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignment, DOMMixin):
     def __init__(
         self,
@@ -475,6 +524,18 @@ class NullStatement(VHDLModel_NullStatement, DOMMixin):
     ) -> None:
         super().__init__(label)
         DOMMixin.__init__(self, waitNode)
+
+
+@export
+class NextStatement(VHDLModel_NextStatement, DOMMixin):
+    def __init__(
+        self,
+        exitNode: Iir,
+        label: str = None,
+    ) -> None:
+        super().__init__(condition=None, loopLabel=label)
+        DOMMixin.__init__(self, exitNode)
+        # TODO: parse condition
 
 
 @export
