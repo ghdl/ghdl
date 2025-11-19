@@ -1528,6 +1528,7 @@ package body Trans.Chap2 is
                          Field_Node => Src.Field_Node,
                          Field_Bound => Src.Field_Bound);
          when Kind_Component =>
+            Dest.Comp_Scope := Instantiate_Var_Scope (Src.Comp_Scope);
             Dest.all :=
               (Kind => Kind_Component,
                Mark => False,
@@ -1535,6 +1536,8 @@ package body Trans.Chap2 is
                Comp_Ptr_Type => Src.Comp_Ptr_Type,
                Comp_Link => Src.Comp_Link,
                Comp_Rti_Const => Src.Comp_Rti_Const);
+            Push_Instantiate_Var_Scope
+              (Dest.Comp_Scope'Access, Src.Comp_Scope'Access);
          when Kind_Package =>
             Dest.all :=
               (Kind => Kind_Package,
@@ -1576,6 +1579,8 @@ package body Trans.Chap2 is
                when others =>
                   null;
             end case;
+         when Kind_Component =>
+            Pop_Instantiate_Var_Scope (Info.Comp_Scope'Access);
          when Kind_Package_Instance =>
             --  The order is important: it must be the reverse order of the
             --  push.
