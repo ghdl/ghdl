@@ -2219,19 +2219,30 @@ package body Vhdl.Sem_Stmts is
       while Assoc /= Null_Iir loop
          Formal := Get_Formal (Assoc);
          if Formal /= Null_Iir then
-            case Get_Kind (Formal) is
-               when Iir_Kind_Simple_Name
-                 | Iir_Kind_Reference_Name =>
-                  Ent := Get_Named_Entity (Formal);
-                  if Ent /= Null_Iir then
-                     --  Except in case of error!
-                     Ent := Sem_Inst.Get_Origin (Ent);
-                     Set_Named_Entity (Formal, Ent);
-                  end if;
-               when others =>
-                  --  TODO.
-                  raise Internal_Error;
-            end case;
+            --  We need the base name, but not the named entity.
+            --  So we cannot use Get_Base_Name.
+            loop
+               case Get_Kind (Formal) is
+                  when Iir_Kind_Simple_Name
+                    | Iir_Kind_Reference_Name =>
+                     Ent := Get_Named_Entity (Formal);
+                     if Ent /= Null_Iir then
+                        --  Except in case of error!
+                        Ent := Sem_Inst.Get_Origin (Ent);
+                        Set_Named_Entity (Formal, Ent);
+                     end if;
+
+                     exit;
+
+                  when Iir_Kind_Selected_Element
+                    | Iir_Kind_Indexed_Name
+                    | Iir_Kind_Slice_Name =>
+                     Formal := Get_Prefix (Formal);
+                  when others =>
+                     --  TODO.
+                     raise Internal_Error;
+               end case;
+            end loop;
          end if;
          Assoc := Get_Chain (Assoc);
       end loop;
