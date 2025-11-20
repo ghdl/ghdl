@@ -150,7 +150,7 @@ install: install.$(backend) install.vhdllib install.vpi install.libghdl install.
 	"$(DESTDIR)$(bindir)/ghdl$(EXEEXT)" --disp-standard --std=93 > "$(DESTDIR)$(VHDL_LIB_DIR)/src/std/v93/standard.vhdl"
 	"$(DESTDIR)$(bindir)/ghdl$(EXEEXT)" --disp-standard --std=08 > "$(DESTDIR)$(VHDL_LIB_DIR)/src/std/v08/standard.vhdl"
 
-uninstall: uninstall.$(backend) uninstall.vhdllib uninstall.vpi uninstall.libghdl uninstall.ghw
+uninstall: uninstall.$(backend) uninstall.vhdllib uninstall.vpi uninstall.libghdl uninstall.ghw uninstall.dirs
 
 test: test.$(backend)
 
@@ -555,8 +555,8 @@ uninstall.libghdl:
 	$(RM) $(DESTDIR)$(libdir)/libghdl$(SOEXT)
 	$(RM) $(DESTDIR)$(libdir)/libghw.dll
 	$(RM) $(DESTDIR)$(libdir)/libghw$(SOEXT)
-	$(RM) $(incdirsuffix)/ghdl/synth.h
-	$(RM) $(incdirsuffix)/ghdl/synth_gates.h
+	$(RM) $(DESTDIR)$(incdir)/synth.h
+	$(RM) $(DESTDIR)$(incdir)/synth_gates.h
 
 ################ ghwdump #################################################
 
@@ -585,6 +585,14 @@ uninstall.ghw:
 	$(RM) "$(DESTDIR)$(bindir)/ghwdump$(EXEEXT)"
 	$(RM) "$(DESTDIR)$(libdir)/libghw$(EXEEXT)"
 	$(RM) "$(DESTDIR)$(incdir)/libghw.h"
+
+uninstall.dirs:
+	$(RM) -d "$(DESTDIR)$(incdir)"
+	$(RM) -d "$(DESTDIR)$(prefix)/$(incdirsuffix)"
+	$(RM) -d "$(DESTDIR)$(libghdldir)"
+	$(RM) -d "$(DESTDIR)$(libdir)"
+	$(RM) -d "$(DESTDIR)$(bindir)"
+	$(RM) -d "$(DESTDIR)$(prefix)"
 
 ############### grt #####################################################
 
