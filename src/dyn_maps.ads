@@ -20,7 +20,7 @@ with Dyn_Tables;
 
 --  This generic package provides a factory to build unique objects.
 --  The container is iterable through the index.
---  PARAMS_TYPE is the type used to find the key, and if the key does not
+--  KEY_TYPE is the type used to find the key, and if the key does not
 --   exists, it is also used to build the new object.
 --  The key is of type OBJECT_TYPE.
 --  VALUE_TYPE is the value associated to the key.
@@ -45,11 +45,10 @@ generic
    --  The required property is: Hash(P1) /= Hash(P2) => P1 /= P2.
    with function Hash (Key : Key_Type) return Hash_Value_Type;
 
-   --  Create an object from KEY.
-   with function Build (Key : Key_Type) return Object_Type;
-
-   --  Initial value of the object.  Called when an object is created.
-   with function Build_Value (Obj : Object_Type) return Value_Type;
+   --  Create an object and value from KEY.
+   with procedure Build (Key : Key_Type;
+                         Obj : out Object_Type;
+                         Val : out Value_Type);
 
    --  Return True iff OBJ is the object corresponding to PARAMS.
    with function Equal (Obj : Object_Type; Key : Key_Type) return Boolean;

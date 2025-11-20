@@ -1377,17 +1377,12 @@ package body Netlists.Disp_Vhdl is
       return Hash_Value_Type (V);
    end Hash_Name_Id;
 
-   function Build_Name_Id (Key : Name_Id) return Name_Id is
+   procedure Build_Name_Id (Key : Name_Id;
+                            Obj : out Name_Id; Val : out Boolean) is
    begin
-      return Key;
+      Obj := Key;
+      Val := False;
    end Build_Name_Id;
-
-   function Build_Value (Key : Name_Id) return Boolean
-   is
-      pragma Unreferenced (Key);
-   begin
-      return False;
-   end Build_Value;
 
    package Attr_Maps is new Dyn_Maps
      (Key_Type => Name_Id,
@@ -1395,7 +1390,6 @@ package body Netlists.Disp_Vhdl is
       Value_Type => Boolean,
       Hash => Hash_Name_Id,
       Build => Build_Name_Id,
-      Build_Value => Build_Value,
       Equal => "=");
 
    --  Call Disp_Attribute_Decl only if the name of ATTR is not in MAP.

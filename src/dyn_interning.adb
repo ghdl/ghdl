@@ -16,11 +16,11 @@
 
 
 package body Dyn_Interning is
-   function Build_No_Value (Obj : Object_Type) return No_Value_Type
-   is
-      pragma Unreferenced (Obj);
+   procedure Build_No_Value (Key : Key_Type;
+                             Obj : out Object_Type; Val : out No_Value_Type) is
    begin
-      return (null record);
+      Obj := Build (Key);
+      Val := (null record);
    end Build_No_Value;
 
    procedure Get

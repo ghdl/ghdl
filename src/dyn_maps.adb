@@ -124,17 +124,16 @@ package body Dyn_Maps is
       Hash_Index := Hash_Value and (Inst.Size - 1);
 
       declare
-         Res : Object_Type;
+         Obj : Object_Type;
          Val : Value_Type;
       begin
-         Res := Build (Key);
-         Val := Build_Value (Res);
+         Build (Key, Obj, Val);
 
          --  Insert.
          Wrapper_Tables.Append (Inst.Els,
                                 (Hash => Hash_Value,
                                  Next => Inst.Hash_Table (Hash_Index),
-                                 Obj => Res,
+                                 Obj => Obj,
                                  Val => Val));
          Inst.Hash_Table (Hash_Index) := Wrapper_Tables.Last (Inst.Els);
       end;

@@ -49,17 +49,12 @@ package body Verilog.Sem_Upwards is
       return Hash_Value_Type (Param);
    end Map_Hash;
 
-   function Map_Build (Param : Name_Id) return Name_Id is
+   procedure Map_Build
+     (Key : Name_Id; Obj : out Name_Id; Val : out Cell_Index) is
    begin
-      return Param;
+      Obj := Key;
+      Val := Null_Index;
    end Map_Build;
-
-   function Map_Build_Value (Obj : Name_Id) return Cell_Index
-   is
-      pragma Unreferenced (Obj);
-   begin
-      return Null_Index;
-   end Map_Build_Value;
 
    package Name_Maps is new Dyn_Maps
      (Key_Type => Name_Id,
@@ -67,7 +62,6 @@ package body Verilog.Sem_Upwards is
       Value_Type  => Cell_Index,
       Hash => Map_Hash,
       Build => Map_Build,
-      Build_Value => Map_Build_Value,
       Equal => "=");
 
    Name_Map : Name_Maps.Instance;

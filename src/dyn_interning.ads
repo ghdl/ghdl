@@ -37,16 +37,16 @@ generic
    with function Equal (Obj : Object_Type; Key : Key_Type) return Boolean;
 package Dyn_Interning is
    type No_Value_Type is null record;
-   function Build_No_Value (Obj : Object_Type) return No_Value_Type;
+   procedure Build_No_Value (Key : Key_Type;
+                             Obj : out Object_Type; Val : out No_Value_Type);
 
    package Map is new Dyn_Maps
-     (Key_Type    => Key_Type,
-      Object_Type => Object_Type,
-      Value_Type  => No_Value_Type,
-      Hash        => Hash,
-      Build       => Build,
-      Build_Value => Build_No_Value,
-      Equal       => Equal);
+     (Key_Type     => Key_Type,
+      Object_Type  => Object_Type,
+      Value_Type   => No_Value_Type,
+      Hash         => Hash,
+      Build        => Build_No_Value,
+      Equal        => Equal);
 
    subtype Instance is Map.Instance;
 

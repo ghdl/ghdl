@@ -135,12 +135,7 @@ package body Simul.Fst is
       return Hash_Value_Type (V);
    end Hash_Node;
 
-   function Build (N : Node) return Node is
-   begin
-      return N;
-   end Build;
-
-   function Build_Value (N : Node) return fstEnumHandle
+   procedure Build (N : Node; Obj : out Node; Value : out fstEnumHandle)
    is
       type C_String_Array is array (Natural range <>) of Ghdl_C_String;
       type C_String_Array_Acc is access C_String_Array;
@@ -161,11 +156,13 @@ package body Simul.Fst is
       Vals : String_Acc_Array_Acc;
       Names : C_String_Array_Acc;
       Val_Addr : C_String_Array_Acc;
-      Res : fstEnumHandle;
    begin
+      Obj := N;
+
       --  If there is a character, forget.
       if Get_Is_Character_Type (N) then
-         return 0;
+         Value := 0;
+         return;
       end if;
 
       if Get_Scalar_Size (N) = Scalar_8 then
@@ -204,7 +201,7 @@ package body Simul.Fst is
          end;
       end loop;
 
-      Res := fstWriterCreateEnumTable
+      Value := fstWriterCreateEnumTable
         (Context,
          Get_C_String (Get_Identifier (Get_Type_Declarator (N))),
          unsigned (Last_Lit + 1),
@@ -219,9 +216,7 @@ package body Simul.Fst is
       Free (Vals);
       Free (Val_Addr);
       Free (Names);
-
-      return Res;
-   end Build_Value;
+   end Build;
 
    package Enum_Maps is new Dyn_Maps
      (Key_Type => Node,
@@ -229,7 +224,6 @@ package body Simul.Fst is
       Value_Type => fstEnumHandle,
       Hash => Hash_Node,
       Build => Build,
-      Build_Value => Build_Value,
       Equal => "=");
 
    Enums : Enum_Maps.Instance;

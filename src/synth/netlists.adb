@@ -1264,17 +1264,13 @@ package body Netlists is
       return Hash_Value_Type (Params);
    end Instance_Attribute_Hash;
 
-   function Instance_Attribute_Build (Params : Instance) return Instance is
+   procedure Instance_Attribute_Build (Key : Instance;
+                                       Obj : out Instance;
+                                       Val : out Attribute) is
    begin
-      return Params;
+      Obj := Key;
+      Val := No_Attribute;
    end Instance_Attribute_Build;
-
-   function Instance_Attribute_Build_Value (Obj : Instance) return Attribute
-   is
-      pragma Unreferenced (Obj);
-   begin
-      return No_Attribute;
-   end Instance_Attribute_Build_Value;
 
    package Instances_Attribute_Maps is new Dyn_Maps
      (Key_Type => Instance,
@@ -1282,7 +1278,6 @@ package body Netlists is
       Value_Type => Attribute,
       Hash => Instance_Attribute_Hash,
       Build => Instance_Attribute_Build,
-      Build_Value => Instance_Attribute_Build_Value,
       Equal => "=");
 
    Instances_Attribute_Map : Instances_Attribute_Maps.Instance;
@@ -1376,18 +1371,13 @@ package body Netlists is
       return Hash_Value_Type (Params);
    end Port_Attribute_Hash;
 
-   function Port_Attribute_Build (Params : Port_Desc_Idx)
-                                 return Port_Desc_Idx is
+   procedure Port_Attribute_Build (Key : Port_Desc_Idx;
+                                   Obj : out Port_Desc_Idx;
+                                   Value : out Attribute) is
    begin
-      return Params;
+      Obj := Key;
+      Value := No_Attribute;
    end Port_Attribute_Build;
-
-   function Port_Attribute_Build_Value (Obj : Port_Desc_Idx) return Attribute
-   is
-      pragma Unreferenced (Obj);
-   begin
-      return No_Attribute;
-   end Port_Attribute_Build_Value;
 
    package Ports_Attribute_Maps is new Dyn_Maps
      (Key_Type => Port_Desc_Idx,
@@ -1395,7 +1385,6 @@ package body Netlists is
       Value_Type => Attribute,
       Hash => Port_Attribute_Hash,
       Build => Port_Attribute_Build,
-      Build_Value => Port_Attribute_Build_Value,
       Equal => "=");
 
    Ports_Attribute_Map : Ports_Attribute_Maps.Instance;
