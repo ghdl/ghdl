@@ -13,6 +13,11 @@ if ghdl_is_preelaboration; then
   elab_simulate tb_ghdl
   
   clean
+
+  analyze b.vhdl
+  elab_simulate tb_ghdl
+ 
+  clean
 fi
 
 echo "Test successful"
