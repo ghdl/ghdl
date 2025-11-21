@@ -1214,6 +1214,11 @@ package body Elab.Vhdl_Insts is
 
             pragma Assert (Get_Parent (E_Ent) = Null_Iir);
             Set_Parent (E_Ent, Stmt);
+
+            --  Change the formals to those of E_ENT.
+            Vhdl.Sem_Inst.Reassoc_Association_Formals
+              (Get_Port_Map_Aspect_Chain (Stmt),
+               Get_Port_Chain (Entity), Get_Port_Chain (E_Ent));
          end if;
       else
          E_Ent := Entity;

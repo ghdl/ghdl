@@ -15,10 +15,13 @@
 --  the original declaration are also stored in that table.
 
 with Tables;
+with Types; use Types;
+with Hash; use Hash;
+with Dyn_Maps;
+with Files_Map;
+
 with Vhdl.Nodes_Priv;
 with Vhdl.Nodes_Meta;
-with Types; use Types;
-with Files_Map;
 with Vhdl.Sem_Types;
 with Vhdl.Sem_Decls;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -1807,4 +1810,92 @@ package body Vhdl.Sem_Inst is
          return Get_Protected_Type_Body_Origin (Orig);
       end if;
    end Get_Protected_Type_Body_Origin;
+
+   type Node_Tuple is record
+      Key : Node;
+      Val : Node;
+   end record;
+
+   function Hash_Node (V : Node_Tuple) return Hash_Value_Type is
+   begin
+      return Hash_Value_Type (V.Key);
+   end Hash_Node;
+
+   procedure Build (Key : Node_Tuple; Obj : out Node; Value : out Node) is
+   begin
+      Obj := Key.Key;
+      Value := Key.Val;
+   end Build;
+
+   function "=" (L : Node; R : Node_Tuple) return Boolean is
+   begin
+      return L = R.Key;
+   end "=";
+
+   package Node_Maps is new Dyn_Maps
+     (Key_Type => Node_Tuple,
+      Object_Type => Node,
+      Value_Type => Node,
+      Hash => Hash_Node,
+      Build => Build,
+      Equal => "=");
+
+   procedure Reassoc_Association_Formals
+     (Assocs : Iir; Formals : Iir; New_Formals : Iir)
+   is
+      use Node_Maps;
+      Map : Node_Maps.Instance;
+      Idx : Node_Maps.Index_Type;
+      Assoc : Iir;
+      Formal, New_Formal : Iir;
+      Ent : Iir;
+   begin
+      Init (Map);
+
+      --  Put formal into the map.
+      Formal := Formals;
+      New_Formal := New_Formals;
+      while Formal /= Null_Iir loop
+         Get_Index (Map, (Key => Formal, Val => New_Formal), Idx);
+         Formal := Get_Chain (Formal);
+         New_Formal := Get_Chain (New_Formal);
+      end loop;
+
+      Assoc := Assocs;
+      while Assoc /= Null_Iir loop
+         Formal := Get_Formal (Assoc);
+         if Formal /= Null_Iir then
+            --  We need the base name, but not the named entity.
+            --  So we cannot use Get_Base_Name.
+            loop
+               case Get_Kind (Formal) is
+                  when Iir_Kind_Simple_Name
+                    | Iir_Kind_Reference_Name =>
+                     Ent := Get_Named_Entity (Formal);
+                     if Ent /= Null_Iir then
+                        --  Except in case of error!
+                        Idx := Get_Index_Soft
+                          (Map, (Key => Ent, Val => Null_Iir));
+                        pragma Assert (Idx /= No_Index);
+                        Ent := Get_Value (Map, Idx);
+                        Set_Named_Entity (Formal, Ent);
+                     end if;
+
+                     exit;
+
+                  when Iir_Kind_Selected_Element
+                    | Iir_Kind_Indexed_Name
+                    | Iir_Kind_Slice_Name =>
+                     Formal := Get_Prefix (Formal);
+                  when others =>
+                     --  TODO.
+                     raise Internal_Error;
+               end case;
+            end loop;
+         end if;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+
+      Free (Map);
+   end Reassoc_Association_Formals;
 end Vhdl.Sem_Inst;

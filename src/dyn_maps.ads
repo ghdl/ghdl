@@ -64,7 +64,7 @@ package Dyn_Maps is
    No_Index : constant Index_Type := 0;
    First_Index : constant Index_Type := 1;
 
-   --  If there is already an existing object for PARAMS, return its index.
+   --  If there is already an existing object for KEY, return its index.
    --  Otherwise create it.
    --  The index is doesn't change over the lifetime of the map.
    procedure Get_Index

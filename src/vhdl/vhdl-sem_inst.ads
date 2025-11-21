@@ -67,4 +67,8 @@ package Vhdl.Sem_Inst is
    --  Likewise for protected type bodies.
    --  ATYPE is the protected type definition.
    function Get_Protected_Type_Body_Origin (Atype : Iir) return Iir;
+
+   --  Replace formals in ASSOCS by NEW_FORMALS.
+   procedure Reassoc_Association_Formals
+     (Assocs : Iir; Formals : Iir; New_Formals : Iir);
 end Vhdl.Sem_Inst;

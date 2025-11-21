@@ -2208,46 +2208,6 @@ package body Vhdl.Sem_Stmts is
       end if;
    end Sem_Instantiated_Unit;
 
-   --  Change the formal so that it refers to the original interface.
-   procedure Reassoc_Association_Chain (Chain : Iir)
-   is
-      Assoc : Iir;
-      Formal : Iir;
-      Ent : Iir;
-   begin
-      Assoc := Chain;
-      while Assoc /= Null_Iir loop
-         Formal := Get_Formal (Assoc);
-         if Formal /= Null_Iir then
-            --  We need the base name, but not the named entity.
-            --  So we cannot use Get_Base_Name.
-            loop
-               case Get_Kind (Formal) is
-                  when Iir_Kind_Simple_Name
-                    | Iir_Kind_Reference_Name =>
-                     Ent := Get_Named_Entity (Formal);
-                     if Ent /= Null_Iir then
-                        --  Except in case of error!
-                        Ent := Sem_Inst.Get_Origin (Ent);
-                        Set_Named_Entity (Formal, Ent);
-                     end if;
-
-                     exit;
-
-                  when Iir_Kind_Selected_Element
-                    | Iir_Kind_Indexed_Name
-                    | Iir_Kind_Slice_Name =>
-                     Formal := Get_Prefix (Formal);
-                  when others =>
-                     --  TODO.
-                     raise Internal_Error;
-               end case;
-            end loop;
-         end if;
-         Assoc := Get_Chain (Assoc);
-      end loop;
-   end Reassoc_Association_Chain;
-
    procedure Sem_Component_Instantiation_Statement
      (Stmt: Iir_Component_Instantiation_Statement; Is_Passive : Boolean)
    is
@@ -2275,16 +2235,23 @@ package body Vhdl.Sem_Stmts is
          return;
       end if;
 
-      --  The associations
+      --  The associations.
+      --  We first need to associate then generics.
       Sem_Generic_Association_Chain (Decl, Stmt);
       if Component_Need_Instance (Decl, True) then
          --  Can be an entity or a component.
+         --  The generics have been associated, can now instantiate the whole
+         --  component or entity, and replacing the types.
          Decl_Inst := Sem_Inst.Instantiate_Component_Declaration (Decl, Stmt);
          Set_Instantiated_Header (Stmt, Decl_Inst);
          Sem_Port_Association_Chain (Decl_Inst, Stmt);
          --  Re-associate formals with the non-instantiated interfaces.
-         Reassoc_Association_Chain (Get_Generic_Map_Aspect_Chain (Stmt));
-         Reassoc_Association_Chain (Get_Port_Map_Aspect_Chain (Stmt));
+         Sem_Inst.Reassoc_Association_Formals
+           (Get_Generic_Map_Aspect_Chain (Stmt),
+            Get_Generic_Chain (Decl_Inst), Get_Generic_Chain (Decl));
+         Sem_Inst.Reassoc_Association_Formals
+           (Get_Port_Map_Aspect_Chain (Stmt),
+            Get_Port_Chain (Decl_Inst), Get_Port_Chain (Decl));
       else
          Sem_Port_Association_Chain (Decl, Stmt);
       end if;

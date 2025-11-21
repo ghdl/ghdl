@@ -1357,24 +1357,27 @@ package body Trans.Chap9 is
             when Iir_Kind_Component_Instantiation_Statement =>
                declare
                   Hdr : constant Iir := Get_Instantiated_Header (Stmt);
+                  Ent : Iir;
                begin
                   if Hdr /= Null_Iir
                     and then Get_Kind (Hdr) = Iir_Kind_Entity_Declaration
                     and then Get_Macro_Expand_Flag (Hdr)
                     and then Get_Parent (Hdr) /= Null_Iir
                   then
+                     Ent := Hdr;
                      Chap1.Translate_Entity_Subprograms (Hdr);
+                  else
+                     Ent := Get_Entity_From_Entity_Aspect
+                       (Get_Instantiated_Unit (Stmt));
+                  end if;
+
+                  Chap4.Translate_Association_Subprograms
+                    (Stmt, Block, Base_Block, Ent);
+                  if Flag_Elaboration then
+                     Translate_Component_Instantiation_Subprogram
+                       (Stmt, Base_Info);
                   end if;
                end;
-
-               Chap4.Translate_Association_Subprograms
-                 (Stmt, Block, Base_Block,
-                  Get_Entity_From_Entity_Aspect
-                    (Get_Instantiated_Unit (Stmt)));
-               if Flag_Elaboration then
-                  Translate_Component_Instantiation_Subprogram
-                    (Stmt, Base_Info);
-               end if;
             when Iir_Kind_Block_Statement =>
                declare
                   Guard : constant Iir := Get_Guard_Decl (Stmt);
