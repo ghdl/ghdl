@@ -1417,12 +1417,10 @@ package body Vhdl.Sem is
                if Name_Left = Name_Right then
                   return True;
                end if;
-               if Get_Kind (Name_Left) = Iir_Kind_Interface_Type_Declaration
-                 and then
-                 Get_Kind (Name_Right) = Iir_Kind_Interface_Type_Declaration
-                 and then
-                 (Get_Identifier (Get_Parent (Name_Left))
-                  = Get_Identifier (Get_Parent (Name_Right)))
+               if Get_Kind (Name_Left) in Iir_Kinds_Interface_Declaration
+                 and then Get_Kind (Name_Left) = Get_Kind (Name_Right)
+                 and then (Get_Identifier (Get_Parent (Name_Left))
+                           = Get_Identifier (Get_Parent (Name_Right)))
                then
                   return True;
                end if;
