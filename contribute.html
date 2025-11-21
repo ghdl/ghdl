@@ -1,0 +1,517 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="author" title="About these documents" href="about.html"><link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Copyrights | Licenses" href="licenses.html"><link rel="prev" title="Getting | Installing" href="getting.html">
+        <link rel="prefetch" href="_static/logo.png" as="image">
+
+    <link rel="shortcut icon" href="_static/icon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.09.25 -->
+        <title>Contributing - 6.0.0-dev</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=55b73dce" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=580074bf" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f3f3;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">6.0.0-dev</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">6.0.0-dev</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting.html">Getting | Installing</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="quick_start/index.html">Quick Start Guide</a><input aria-label="Toggle navigation of Quick Start Guide" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="quick_start/simulation/index.html">Simulation</a><input aria-label="Toggle navigation of Simulation" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="quick_start/simulation/hello/index.html"><cite>Hello world</cite> program</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quick_start/simulation/heartbeat/index.html"><cite>Heartbeat</cite> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quick_start/simulation/adder/index.html"><cite>Full adder</cite> module and testbench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quick_start/simulation/DLXModelSuite.html">Working with non-trivial designs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference external" href="https://ghdl.github.io/ghdl-cosim">Co-Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start/python/index.html">Python Interfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="development/building/index.html">Building GHDL</a><input aria-label="Toggle navigation of Building GHDL" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="development/building/Sources.html">Sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/building/mcode.html">mcode backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/building/LLVM.html">LLVM backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/building/GCC.html">GCC backend</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ghw/index.html">GHDL Waveform (GHW)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="internals/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Python Module Index</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/ghdl/ghdl/blob/master/doc/contribute.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/ghdl/ghdl/edit/master/doc/contribute.rst" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="contributing">
+<span id="intro-contributing"></span><h1>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">¶</a></h1>
+<p>As in many other free and open source projects, there are many areas requiring different skills where contributions to GHDL
+are welcome. The first step might be to use GHDL and explore its possibilities in your own project. If you are new to VHDL,
+see the <a class="reference internal" href="quick_start/simulation/index.html#using-quickstart-simulation"><span class="std std-ref">Simulation</span></a> for an introduction. Furthermore, we encourage you to read <a class="reference internal" href="using/InvokingGHDL.html#using-invoking"><span class="std std-ref">Invoking GHDL</span></a>,
+where the most commonly used options are explained. You can also check the complete <a class="reference internal" href="using/CommandReference.html#ref-command"><span class="std std-ref">Additional Command Reference</span></a>.</p>
+<p>If you are more familiar with GHDL, you might start asking yourself how it works internally. If so, you might find
+<a class="reference internal" href="using/ImplementationOfVHDL.html#ref-implvhdl"><span class="std std-ref">Implementation of VHDL</span></a> and <a class="reference internal" href="using/ImplementationOfVITAL.html#ref-implvital"><span class="std std-ref">Implementation of VITAL</span></a> interesting.</p>
+<p>While using GHDL, you might find flaws, such as bugs, missing features, typos in the documentation, or topics which still are
+not covered. In order to improve GHDL, we welcome bug reports, suggestions, and contributions for any aspect of
+GHDL. Whether it’s a bug or an enhancement, have a look at the <a class="reference external" href="https://github.com/ghdl/ghdl/issues"><img alt="Open issues" class="shield" src="https://img.shields.io/github/issues/ghdl/ghdl.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a> and <a class="reference external" href="https://github.com/ghdl/ghdl/issues?q=is%3Aissue+is%3Aclosed"><img alt="Closed issues" class="shield" src="https://img.shields.io/github/issues-closed-raw/ghdl/ghdl.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a> to see
+if someone already told us about it. You might find a solution there.</p>
+<p>Ideas for future work, enhancements, documentation, and internship programs are shown in the <a class="reference external" href="https://github.com/ghdl/ghdl/wiki">GitHub wiki</a>.</p>
+<p>If you found no information on your topic, please, report so that we are aware! You can reach us through various ways:
+<a class="reference external" href="https://gitter.im/ghdl1/Lobby"><img alt="Talk to us on Gitter" class="shield" src="https://img.shields.io/badge/chat-on%20gitter-4db797.svg?logo=gitter&amp;logoColor=4db797&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a> or open a <a class="reference external" href="https://github.com/ghdl/ghdl/issues/new"><img alt="Open new issue at GitHub" class="shield" src="https://img.shields.io/badge/new-issue-yellowgreen.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a>.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<ul class="simple">
+<li><p>Since the development of GHDL started in 2002, multiple platforms have been used as a support for both distribution
+and getting feedback. However, the development is now centralized in <a class="reference external" href="https://github.com/ghdl">github.com/ghdl</a>.</p></li>
+<li><p><a class="reference external" href="www.catb.org/~esr/faqs/smart-questions.html">How To Ask Questions The Smart Way</a></p></li>
+</ul>
+</div>
+<section id="reporting-bugs">
+<span id="id1"></span><h2>Reporting bugs<a class="headerlink" href="#reporting-bugs" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>If the compiler crashes, this is a bug. Reliable tools never crash.</p></li>
+<li><p>If the compiler emits an error message for a perfectly valid input or does not emit an error message for an invalid
+input, this may be a bug.</p></li>
+<li><p>If the executable created from your VHDL sources crashes, this may be a bug at runtime or the code itself may be
+wrong. Since VHDL has a notion of pointers, an erroneous VHDL program (using invalid pointers for example) may crash.</p></li>
+<li><p>If a compiler message is not clear enough, please tell us. The error messages can be improved, but we do not have
+enough experience with them.</p></li>
+<li><p>It is suggested to test synthesis features with <a class="reference internal" href="using/Synthesis.html#cmdoption-ghdl-synth"><code class="xref std std-option docutils literal notranslate"><span class="pre">--synth</span></code></a>, before processing the design with <a class="reference internal" href="using/Synthesis.html#synth-plugin"><span class="std std-ref">Yosys plugin</span></a>.</p></li>
+</ul>
+<p>Please, report issues through <a class="reference external" href="https://github.com/ghdl/ghdl/issues/new?template=bug_report.md"><img alt="Open new bug report at GitHub" class="shield" src="https://img.shields.io/badge/new-bug--report-yellowgreen.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a>, as this allows us to categorize issues into groups and to assign developers
+to them. You can track the state and see how it’s getting solved.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>As suggested in the bug report template, please elaborate a <cite>Minimal (non) Working Example</cite> (<a class="extlink-wikipedia reference external" href="https://en.wikipedia.org/wiki/Minimal_Working_Example">MWE</a>)
+prior to sending the report, so that the possible bug source is isolated. Should it fulfill the format requirements of
+<a class="reference external" href="https://github.com/umarcor/issue-runner">issue-runner</a>, you would be able to test your bug with the latest GHDL version.
+Please do so in order to ensure that the bug is not solved already.</p>
+<p>Also, please include enough information in the bug report, for the maintainers to reproduce the problem. The template
+includes:</p>
+<ul class="simple">
+<li><p>Operating system and version of GHDL (you can get it with <code class="samp docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">version</span></code> and <code class="samp docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">hash</span></code>).</p></li>
+<li><p>Whether you have built GHDL from sources (provide short SHA of the used commit) or used the binary distribution
+(note which release/tag); if you cannot compile, please report which compiler you are using and the version.</p></li>
+<li><p>Content of the input files which comprise the MWE.</p></li>
+<li><p>Description of the problem:</p>
+<ul>
+<li><p>Comment explaining whether the MWE should compile or not; if yes, whether it should run until the assertion.</p></li>
+<li><p>What you expect to happen and what you actually get. If you know the LRM well enough, please specify which paragraph
+might not be implemented well.</p></li>
+<li><p>Samples of any log.</p></li>
+<li><p>Anything else that you think would be helpful.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you don’t know the LRM, be aware that an issue claimed as a bug report may be rejected because there is no bug
+according to it. GHDL aims at implementing VHDL as defined in <a class="reference external" href="http://ieeexplore.ieee.org/document/4772740/">IEEE 1076</a>.
+However, some other tools allow constructs which do not fully follow the standard revisions. Therefore, comparisons
+with other VHDL variants is not a solid argument. Some of them are supported by GHDL (see <a class="reference internal" href="using/InvokingGHDL.html#ieee-library-pitfalls"><span class="std std-ref">IEEE library pitfalls</span></a>),
+but any such enhancement will have very low priority.</p>
+</div>
+</section>
+<section id="requesting-enhancements">
+<span id="id2"></span><h2>Requesting enhancements<a class="headerlink" href="#requesting-enhancements" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="https://github.com/ghdl/ghdl/issues/new?template=feature_request.md"><img alt="Open new feature request at GitHub" class="shield" src="https://img.shields.io/badge/new-feature--request-yellowgreen.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a> <a class="reference external" href="https://gitter.im/ghdl1/Lobby"><img alt="Talk to us on Gitter" class="shield" src="https://img.shields.io/badge/chat-on%20gitter-4db797.svg?logo=gitter&amp;logoColor=4db797&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a></p>
+<p>All enhancements and feature requests are welcome. Please <a class="reference external" href="https://github.com/ghdl/ghdl/issues/new">open a new issue</a>
+to report any, so you can track the status and implementation. Depending on the complexity of the request,
+you may want to <a class="reference external" href="https://gitter.im/ghdl/ghdl1">chat on Gitter</a>, for polishing it before opening an issue.</p>
+</section>
+<section id="improving-the-documentation">
+<h2>Improving the documentation<a class="headerlink" href="#improving-the-documentation" title="Link to this heading">¶</a></h2>
+<p>If you found a mistake in the documentation, please send a comment. If you didn’t understand some parts of this manual,
+please tell us. English is not our mother tongue, so this documentation may not be well-written.</p>
+<p>Likewise, rewriting part of the documentation or missing content (such as examples) is a good way to improve it. Since
+it is built automatically from <cite>reStructuredText</cite>, you can fork, modify and push. The documentation will be shown
+in the GitHub Pages site of your fork: <code class="docutils literal notranslate"><span class="pre">https://USERNAME.github.io/ghdl</span></code>. When you are done, request the maintainers
+to pull your copy. See <a class="reference internal" href="#pull-request"><span class="std std-ref">Fork, modify and pull-request</span></a>.</p>
+</section>
+<section id="fork-modify-and-pull-request">
+<span id="pull-request"></span><h2>Fork, modify and pull-request<a class="headerlink" href="#fork-modify-and-pull-request" title="Link to this heading">¶</a></h2>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<ul class="simple">
+<li><p>Before starting any modification, you might want to have a look at <a class="reference external" href="https://github.com/ghdl/ghdl/pulls"><img alt="Open pull requests" class="shield" src="https://img.shields.io/github/issues-pr/ghdl/ghdl.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a> and <a class="reference external" href="https://github.com/ghdl/ghdl/pulls"><img alt="Closed pull requests" class="shield" src="https://img.shields.io/github/issues-pr-closed-raw/ghdl/ghdl.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a>,
+to check which other contributions are being made or have been made. If you observe that the modifications you are
+about to start might conflict with any other, please <a class="reference external" href="https://gitter.im/ghdl1/Lobby"><img alt="Talk to us on Gitter" class="shield" src="https://img.shields.io/badge/chat-on%20gitter-4db797.svg?logo=gitter&amp;logoColor=4db797&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a> or open a <a class="reference external" href="https://github.com/ghdl/ghdl/compare/"><img alt="Open new Pull Request (PR) at GitHub" class="shield" src="https://img.shields.io/badge/new-pull--request-yellowgreen.svg?logo=github&amp;style=flat-square&amp;longCache=true" style="height: 22px;" /></a> to coordinate.</p></li>
+<li><p>See section <a class="reference internal" href="development/Directories.html#build-dir-structure"><span class="std std-ref">Directory structure</span></a> to faster find the location of the sources you need to modify, and/or to know
+where to place new ones.</p></li>
+</ul>
+</div>
+<p>Contributing source code/documentation is done through <a class="reference external" href="https://git-scm.com/">git</a>. Although we don’t provide direct
+write access to our repositories, the project is hosted at GitHub, which follows a fork, edit and pull-request
+<a class="reference external" href="https://help.github.com/articles/github-flow/">flow</a> . That is:</p>
+<ol class="arabic simple">
+<li><p>Make a copy (<a class="reference external" href="https://help.github.com/articles/fork-a-repo/">fork</a>) of the project.</p></li>
+<li><p>Do the changes you wish (edit, add, rename, move and/or delete).</p></li>
+<li><p>When you think that the changes are ready to be merged, notify the maintainers by opening a <a class="reference external" href="https://help.github.com/articles/creating-a-pull-request/">Pull Request</a> (PR).</p></li>
+<li><p>The maintainers will review the proposed changes and will reply in the corresponding thread if any further modification
+is required. If so, you can keep adding commits to the same branch, and the PR will be automatically updated.</p></li>
+<li><p>Last, maintainers will merge your branch. You will be notified, the PR will be closed, and you’ll be allowed to
+delete the branch, if you want.</p></li>
+</ol>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<ul class="simple">
+<li><p>It is recommended to read <a class="reference external" href="http://nvie.com/posts/a-successful-git-branching-model/">A successful Git branching model</a>
+for a reference on how maintainers expect to handle multiple branches. However, our actual model is not as exhaustive
+as explained there.</p></li>
+<li><p>Some commit messages can <a class="reference external" href="https://help.github.com/articles/closing-issues-via-commit-messages/">automatically close</a>
+issues. This is a very useful feature, which you are not required to use. However beware that using <cite>fix</cite> anywhere
+in the commit message can have side effects. If you closed any issue unexpectedly, just reply to it (even if it’s
+closed) so that maintainers can check it.</p></li>
+<li><p>It is recommended to read <a class="reference internal" href="development/CodingStyle.html#dev-style"><span class="std std-ref">Coding Style</span></a> before contributing modifications to Ada sources.</p></li>
+</ul>
+</div>
+</section>
+<section id="related-interesting-projects">
+<h2>Related interesting projects<a class="headerlink" href="#related-interesting-projects" title="Link to this heading">¶</a></h2>
+<p>If you have an interesting project, please send us feedback or get listed on our <a class="reference internal" href="about.html#intro-who"><span class="std std-ref">Who uses GHDL?</span></a> page.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="licenses.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Copyrights | Licenses</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="getting.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Getting | Installing</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2002-2024, Tristan Gingold and contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link fa-solid fa-brands fa-github" href="https://github.com/ghdl/ghdl" aria-label="GitHub ghdl/ghdl"></a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Contributing</a><ul>
+<li><a class="reference internal" href="#reporting-bugs">Reporting bugs</a></li>
+<li><a class="reference internal" href="#requesting-enhancements">Requesting enhancements</a></li>
+<li><a class="reference internal" href="#improving-the-documentation">Improving the documentation</a></li>
+<li><a class="reference internal" href="#fork-modify-and-pull-request">Fork, modify and pull-request</a></li>
+<li><a class="reference internal" href="#related-interesting-projects">Related interesting projects</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=2a02db7b"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

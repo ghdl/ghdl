@@ -1,0 +1,1154 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="author" title="About these documents" href="about.html"><link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="About" href="about.html">
+        <link rel="prefetch" href="_static/logo.png" as="image">
+
+    <link rel="shortcut icon" href="_static/icon.png"><!-- Generated with Sphinx 8.2.3 and Furo 2025.09.25 -->
+        <title>6.0.0-dev</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=55b73dce" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=580074bf" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f0f3f3;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="#"><div class="brand">6.0.0-dev</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="#">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">6.0.0-dev</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Introduction</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting.html">Getting | Installing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contribute.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="licenses.html">Copyrights | Licenses</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">GHDL usage</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="quick_start/index.html">Quick Start Guide</a><input aria-label="Toggle navigation of Quick Start Guide" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="quick_start/simulation/index.html">Simulation</a><input aria-label="Toggle navigation of Simulation" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="quick_start/simulation/hello/index.html"><cite>Hello world</cite> program</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quick_start/simulation/heartbeat/index.html"><cite>Heartbeat</cite> module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quick_start/simulation/adder/index.html"><cite>Full adder</cite> module and testbench</a></li>
+<li class="toctree-l3"><a class="reference internal" href="quick_start/simulation/DLXModelSuite.html">Working with non-trivial designs</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference external" href="https://ghdl.github.io/ghdl-cosim">Co-Simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start/python/index.html">Python Interfaces</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="using/InvokingGHDL.html">Invoking GHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/Simulation.html">Simulation (runtime)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/Synthesis.html">Synthesis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/CommandReference.html">Additional Command Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/ImplementationOfVHDL.html">Implementation of VHDL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="using/ImplementationOfVITAL.html">Implementation of VITAL</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="development/Directories.html">Directory structure</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="development/building/index.html">Building GHDL</a><input aria-label="Toggle navigation of Building GHDL" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="development/building/Sources.html">Sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/building/mcode.html">mcode backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/building/LLVM.html">LLVM backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/building/GCC.html">GCC backend</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ghw/index.html">GHDL Waveform (GHW)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/CodingStyle.html">Coding Style</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/Scripts.html">Scripts</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Internals</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="internals/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/Frontend.html">Front-end</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/AST.html">AST</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internals/RTI.html">Run Time Information (RTI)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gnatdoc/index.html">GNATdoc</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Index</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+<li class="toctree-l1"><a class="reference internal" href="py-modindex.html">Python Module Index</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="https://github.com/ghdl/ghdl/blob/master/doc/index.rst?plain=true" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div><div class="edit-this-page">
+  <a class="muted-link" href="https://github.com/ghdl/ghdl/edit/master/doc/index.rst" rel="edit" title="Edit this page">
+    <svg><use href="#svg-pencil"></use></svg>
+    <span class="visually-hidden">Edit this page</span>
+  </a>
+</div><div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <style type="text/css">
+  span.bolditalic {font-weight: bold; font-style: italic; }
+  span.underline {text-decoration: underline; }
+  span.strike {text-decoration: line-through; }
+  span.xlarge {font-size: x-large; }
+  span.colorred {color: #CC0000; }
+  span.colorgreen {color: #009933; }
+  span.colorblue {color: #0066FF; }
+  span.colorpurple {color: #9900CC; }
+</style><section id="ghdl">
+<h1>GHDL<a class="headerlink" href="#ghdl" title="Link to this heading">¶</a></h1>
+<p style="text-align: center;">
+  <a title="GitHub Repository" href="https://github.com/ghdl/ghdl"><img src="https://img.shields.io/badge/-ghdl/ghdl-323131.svg?longCache=true&style=flat-square&logo=github"></a><!--
+  -->
+  <a title="Talk to us on Gitter" href="https://gitter.im/ghdl1/Lobby"><img src="https://img.shields.io/badge/chat-on%20gitter-4db797.svg?longCache=true&style=flat-square&logo=gitter&logoColor=fff"></a><!--
+  -->
+  <a title="GNU General Public License 2" href="Licenses.html"><img src="https://img.shields.io/badge/code%20license-GPLv2-bd0000.svg?longCache=true&style=flat-square&label=license&logo=gnu"></a><!--
+  -->
+  <a title="Creative Commons Attribution-ShareAlike 4.0" href="Licenses.html"><img src="https://img.shields.io/badge/doc%20license-CC--BY--SA--4.0-bf7600.svg?longCache=true&style=flat-square&logo=Creative%20Commons&logoColor=fff"></a><!--
+  -->
+  <a title="Latest release" href="http://ghdl.rtfd.io"><img src="https://img.shields.io/github/release/ghdl/ghdl.svg?longCache=true&style=flat-square&label=latest%20release"></a><!--
+  -->
+</p>
+
+<p style="text-align: center; font-weight: 700; font-size: 125%; margin: 24px 0;">
+free and open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL
+</p><div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<section id="id1">
+<h2>[2025-06-17] 5.1<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Improve release management</p></li>
+<li><p>Add llvm-jit build</p></li>
+</ul>
+</section>
+<section id="id2">
+<h2>[2025-03-01] 5.0<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Fix some crashes on errors on Windows x64 with mcode backend</p></li>
+<li><p>Multiple minor fixes and improvements</p></li>
+</ul>
+</section>
+<section id="id3">
+<h2>[2024-04-14] 4.1<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The mcode backend is now fully supported on Windows x64</p></li>
+<li><p>Coverage output has been improved for being supported by vunit.</p></li>
+</ul>
+</section>
+<section id="id4">
+<h2>[2024-03-06] 4.0<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>For the mcode backend, elaboration of the designs is now performed
+before code generation.  This allows some optimizations and the support
+of external names.</p></li>
+<li><p>There is a new signal dumper (using FST format) for the mcode backend.</p></li>
+<li><p>The GCC backend will be deprecated and the  LLVM backend will be used like
+the mcode backend (code generation in memory). As a consequence, no backend
+will generate object files anymore.</p></li>
+</ul>
+</section>
+<section id="id5">
+<h2>[2023-03-08] 3.0<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="https://github.com/ghdl/ghdl/milestone/11?closed=1"><img alt="GitHub v3.0 milestone" src="https://img.shields.io/github/milestones/progress/ghdl/ghdl/11?style=flat-square" /></a></p>
+<ul class="simple">
+<li><p>Handle IEEE operators for static expressions.</p></li>
+<li><p>Improved support of VHDL 2008 (still!).</p></li>
+<li><p>Start support of VHDL 2019 (<code class="docutils literal notranslate"><span class="pre">--std=19</span></code>).</p></li>
+<li><p>pyGHDL:</p>
+<ul>
+<li><p>Experimental support to preserve VHDL code comments for documentation
+extraction.</p></li>
+<li><p>Experimental packaging with a platform-specific shared library for
+standalone installation using PIP.</p></li>
+<li><p>DOM: dependency graphs, instantiation graphs (design hierarchy),
+file dependencies (compile order).</p></li>
+</ul>
+</li>
+<li><p>Pre-releases are published to GitHub Releases and assets are uploaded to
+pre-releases and releases.</p></li>
+</ul>
+</section>
+<section id="rc-4">
+<h2>[2023-03-06] 3.0.0-rc.4<a class="headerlink" href="#rc-4" title="Link to this heading">¶</a></h2>
+<p>See <code class="docutils literal notranslate"><span class="pre">3.0</span></code>.</p>
+</section>
+<section id="id6">
+<h2>[2022-02-28] 2.0<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="https://github.com/ghdl/ghdl/milestone/10?closed=1"><img alt="GitHub v2.0 milestone" src="https://img.shields.io/github/milestones/progress/ghdl/ghdl/10?style=flat-square" /></a></p>
+<ul class="simple">
+<li><p>Improvements to VHDL 2008 supports and synthesis.</p></li>
+</ul>
+</section>
+<section id="id7">
+<h2>[2021-02-02] 1.0<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="https://github.com/ghdl/ghdl/milestone/9?closed=1"><img alt="GitHub v1.0 milestone" src="https://img.shields.io/github/milestones/progress/ghdl/ghdl/9?style=flat-square" /></a></p>
+<ul class="simple">
+<li><p>Python bindings overhauled and renamed to <code class="docutils literal notranslate"><span class="pre">pyGHDL</span></code>. Three modules are included:
+<code class="docutils literal notranslate"><span class="pre">libghdl</span></code>, <code class="docutils literal notranslate"><span class="pre">lsp</span></code> and <code class="docutils literal notranslate"><span class="pre">dom</span></code>.</p></li>
+<li><p>Utility scripts in the codebase moved into subdir <code class="docutils literal notranslate"><span class="pre">scripts</span></code>: CI, binding
+generation, vendors, etc.</p></li>
+<li><p>Repository <a class="reference external" href="https://github.com/ghdl/ghdl-cosim">ghdl/ghdl-cosim</a> created.
+It contains documentation and code examples related to VHPIDIRECT, VPI and SystemC.</p></li>
+<li><p>GitHub Action <a class="reference external" href="https://github.com/ghdl/setup-ghdl-ci">ghdl/setup-ghdl-ci</a>
+created, to allow easy installation of nightly GHDL assets in GitHub Actions
+workflows.</p></li>
+<li><p>Main documentation site(s) moved to <a class="reference external" href="https://ghdl.github.io/ghdl/">ghdl.github.io/ghdl</a>
+and <a class="reference external" href="https://ghdl.github.io/ghdl-cosim/">ghdl.github.io/ghdl-cosim</a>.</p></li>
+<li><p>Repository <a class="reference external" href="https://github.com/ghdl/extended-tests">ghdl/extended-tests</a>
+created for testing <code class="docutils literal notranslate"><span class="pre">vendors</span></code> build scripts.</p></li>
+<li><p>Logo updated (org, ghdl/ghdl, ghdl/docker and ghdl/ghdl-cosim).</p></li>
+<li><p>Assets not added to releases or pre-releases anymore.
+Users should use package managers or nightly assets (updated after each
+successful CI run of branch <code class="docutils literal notranslate"><span class="pre">master</span></code>):
+<a class="reference external" href="https://github.com/ghdl/ghdl/releases/tag/nightly">nightly</a>.</p></li>
+</ul>
+</section>
+<section id="rc1">
+<h2>[2021-01-31] 1.0.0rc1<a class="headerlink" href="#rc1" title="Link to this heading">¶</a></h2>
+<p>See <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p>
+</section>
+<section id="nightly-build-assets">
+<h2>[2020-05-21] Nightly build assets<a class="headerlink" href="#nightly-build-assets" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>After each successful CI run of branch <code class="docutils literal notranslate"><span class="pre">master</span></code>, packages are published as assets of pre-release <a class="reference external" href="https://github.com/ghdl/ghdl/releases/tag/nightly">nightly</a>.</p></li>
+<li><p>GitHub Action <a class="reference external" href="https://github.com/ghdl/setup-ghdl-ci">ghdl/setup-ghdl-ci</a> was created, to allow easy installation of nightly GHDL assets in GitHub Actions workflows.</p></li>
+</ul>
+</section>
+<section id="new-repositories-and-a-wiki">
+<h2>[2020-05-09] New repositories and a wiki<a class="headerlink" href="#new-repositories-and-a-wiki" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The plugin for Yosys was moved from <a class="reference external" href="https://github.com/tgingold/ghdlsynth-beta">tgingold/ghdlsynth-beta</a>
+to <a class="reference external" href="https://github.com/ghdl/ghdl-yosys-plugin">ghdl/ghdl-yosys-plugin</a>.</p></li>
+<li><p>Repository <a class="reference external" href="https://github.com/ghdl/ghdl-cosim">ghdl/ghdl-cosim</a> was created.
+It contains documentation and code examples related to VHPIDIRECT, VPI and SystemC.
+See <a class="reference external" href="https://ghdl.github.io/ghdl-cosim/index.html#cosim" title="(in GHDL-cosim vlatest)"><span>Co-simulation with GHDL</span></a> and <a class="reference external" href="https://github.com/ghdl/ghdl-cosim/issues/1">Previous work and future ideas</a>.</p></li>
+<li><p>A <a class="reference external" href="https://github.com/ghdl/ghdl/wiki">Wiki</a> was created.
+The roadmap and ideas for documentation and internship programs were moved there.
+If you want to contribute anyhow, <a class="reference external" href="https://github.com/ghdl/ghdl/wiki">have a look</a>!</p></li>
+</ul>
+</section>
+<section id="id8">
+<h2>[2020-02-28] 0.37<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="https://github.com/ghdl/ghdl/milestone/8?closed=1"><img alt="GitHub v0.37 milestone" src="https://img.shields.io/github/milestones/progress/ghdl/ghdl/8?style=flat-square" /></a></p>
+<ul class="simple">
+<li><p>Python binding added</p></li>
+<li><p>Experimental support of synthesis (either with –synth or with the Yosys plugin)</p></li>
+<li><p>Fixes and improved support of VHDL 2008</p>
+<ul>
+<li><p>PSL keywords are directly handled in VHDL 2008</p></li>
+</ul>
+</li>
+<li><p>Add support for assume.</p></li>
+<li><p>Last version that supports the Mentor variation of <code class="docutils literal notranslate"><span class="pre">std_logic_arith</span></code>.
+The Synopsys one is still available.</p></li>
+</ul>
+</section>
+<section id="id9">
+<h2>[2019-03-03] 0.36<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="https://github.com/ghdl/ghdl/milestone/7?closed=1"><img alt="GitHub v0.36 milestone" src="https://img.shields.io/github/milestones/progress/ghdl/ghdl/7?style=flat-square" /></a></p>
+<ul class="simple">
+<li><p>More support of unbounded arrays and records.</p></li>
+<li><p>Support of UVVM and VUnit.</p></li>
+</ul>
+</section>
+<section id="id10">
+<h2>[2019-02-23] 0.36-rc1<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h2>
+<p>See <code class="docutils literal notranslate"><span class="pre">0.36</span></code>.</p>
+</section>
+<section id="id11">
+<h2>[2018-11-29] 20181129<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h2>
+</section>
+<section id="github-organization">
+<h2>[2017-12-20] GitHub organization<a class="headerlink" href="#github-organization" title="Link to this heading">¶</a></h2>
+<p>A new GitHub organization is created and the main repo is moved from
+<a class="reference external" href="https://github.com/tgingold/ghdl">github.com/tgingold/ghdl</a> to <a class="reference external" href="https://github.com/ghdl/ghdl">github.com/ghdl/ghdl</a>.
+Old refs will continue working, because permanent redirects are set up.
+However, we suggest every contributor to update the remote URLs in their local clones.</p>
+</section>
+<section id="id12">
+<h2>[2017-12-14] 0.35<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="https://github.com/ghdl/ghdl/milestone/3?closed=1"><img alt="GitHub v0.35 milestone" src="https://img.shields.io/github/milestones/progress/ghdl/ghdl/3?style=flat-square" /></a></p>
+<ul class="simple">
+<li><p>Assert and report messages are sent to stdout (#394)</p></li>
+<li><p>Improve support for unbounded records</p></li>
+<li><p>Bugs fixed</p></li>
+</ul>
+</section>
+<section id="id13">
+<h2>[2017-08-15] 0.34<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h2>
+<p><a class="reference external" href="https://github.com/ghdl/ghdl/milestone/1?closed=1"><img alt="GitHub v0.34 milestone" src="https://img.shields.io/github/milestones/progress/ghdl/ghdl/1?style=flat-square" /></a></p>
+<ul class="simple">
+<li><p>Display stack backtraces on errors or assert failures</p></li>
+<li><p>Compile scripts for vendor libraries (Xilinx, Altera, osvvm, vunit)</p></li>
+<li><p>Use SSE2 for mcode backend</p></li>
+<li><p>mcode backend ported to <code class="docutils literal notranslate"><span class="pre">x86_64</span></code></p></li>
+<li><p>Support cocotb <a class="reference external" href="https://github.com/potentialventures/cocotb">potentialventures/cocotb</a></p></li>
+<li><p>Main repository is now on github: <a class="reference external" href="https://github.com/tgingold/ghdl">github.com/tgingold/ghdl</a></p></li>
+<li><p>Docs available on rtd: <a class="reference external" href="https://ghdl.readthedocs.org/en/latest/">ghdl.readthedocks.org</a></p></li>
+<li><p>Speed improved.</p></li>
+<li><p>New option <code class="docutils literal notranslate"><span class="pre">--psl-report</span></code>, to report status of PSL assert and cover.</p></li>
+<li><p>VHDL2008: support nested package</p></li>
+</ul>
+</section>
+<section id="id14">
+<h2>[2015-10-23] 0.33<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Improve support of VHDL2008</p></li>
+<li><p>Support <a class="reference external" href="http://osvvm.org">OSVVM</a> 2015</p></li>
+<li><p>Support VUnit: <a class="reference external" href="https://github.com/LarsAsplund/vunit">LarsAsplund/vunit</a></p></li>
+<li><p>Many bugs fixed</p></li>
+</ul>
+</section>
+<section id="xx-0-32">
+<h2>[2014-11-XX] 0.32<a class="headerlink" href="#xx-0-32" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Updated to build with <code class="docutils literal notranslate"><span class="pre">gcc-4.9.2</span></code>.</p></li>
+<li><p>support:
+- partial of VHDL2008 (available with <code class="docutils literal notranslate"><span class="pre">--std=08</span></code>):
+- new <code class="docutils literal notranslate"><span class="pre">std.env</span></code> package.
+- added features in <code class="docutils literal notranslate"><span class="pre">std.textio</span></code> package
+- all standard IEEE packages.
+- new operations (relation operators, maximum and minimum, unary reduction operators)
+- <code class="docutils literal notranslate"><span class="pre">boolean_vector</span></code>, <code class="docutils literal notranslate"><span class="pre">integer_vector</span></code>, <code class="docutils literal notranslate"><span class="pre">real_vector</span></code>.
+- process(all).
+- generic packages and interface package declarations.
+- block comments (aka delimited comments)
+- implicitly defined to_string functions.
+- OSVVM 2014_01</p></li>
+<li><p>Bugs fixed</p></li>
+</ul>
+</section>
+<section id="xx-0-31">
+<h2>[2014-01-XX] 0.31<a class="headerlink" href="#xx-0-31" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Updated to build with <code class="docutils literal notranslate"><span class="pre">gcc-4.8.2</span></code>.</p></li>
+<li><p>Supports OSVVM (Open-Source VHDL Verification Methodology) (see <a class="reference external" href="http://osvvm.org">osvvm.org</a>) in its VHDL-2002 form.</p></li>
+<li><p>Adds <code class="docutils literal notranslate"><span class="pre">'image</span></code> and <code class="docutils literal notranslate"><span class="pre">'value</span></code> attributes for all required datatypes</p></li>
+<li><p>Many bugs and support issues fixed.</p></li>
+<li><p>New home on <code class="docutils literal notranslate"><span class="pre">https://sourceforge.net/projects/ghdl-updates/</span></code></p></li>
+</ul>
+</section>
+<section id="id15">
+<h2>0.30<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h2>
+<p>Never released, switch to Dunoon Edition.</p>
+</section>
+<section id="id16">
+<h2>[2010-01-09] 0.29<a class="headerlink" href="#id16" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Initial implementation of embedded PSL assertions.</p></li>
+<li><p>Improve:
+- speed of non-sensitized processes.
+- speed of string case statement (dichotomy instead of linear search).</p></li>
+<li><p>bug fix:
+- and improvements in SDF annotator.
+- when the bound of a string literal type is not locally static.
+- gcov crash</p></li>
+</ul>
+</section>
+<section id="id17">
+<h2>[2009-09-17] 0.28<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">--std=08</span></code> to enable VHDL2008 features.</p></li>
+<li><p>Support all-sensitized processes from VHDL2008.</p></li>
+<li><p>Documentation typos (thanks to Peter Huewe).</p></li>
+<li><p>bug fix:</p>
+<ul>
+<li><p>handle <code class="docutils literal notranslate"><span class="pre">'pos/'leftof/'rightof/'succ/'pred</span></code> in concurrent statements.</p></li>
+<li><p>overloaded resolution functions.</p></li>
+<li><p>direct drivers elaboration for unconstrained array signals.</p></li>
+<li><p>many minor bugs.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id18">
+<h2>[2008-07-01] 0.27<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Improve SDF annotation (handles much more annotations)</p></li>
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">--ieee-asserts=</span></code> option to control assert messages from ieee packages.</p></li>
+<li><p>bug fix:</p>
+<ul>
+<li><p>aliases in port map</p></li>
+<li><p>crash during elaboration for top entities with ports/generic</p></li>
+<li><p>crash when string literal in aggregate.</p></li>
+<li><p>concatenation with an array subtype element.</p></li>
+<li><p>non-static subtype used by type conversions in associations.</p></li>
+<li><p>clear timeout in wait for.</p></li>
+<li><p>minor bugs.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="id19">
+<h2>[2007-04-08] 0.26<a class="headerlink" href="#id19" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">GHDL_PREFIX</span></code> environment variable overrides default installation prefix.</p></li>
+<li><p>simulation speed improved with ‘direct drivers’.</p></li>
+<li><p>windows version:
+- exceptions are caught
+- use executable path instead of registry for prefix</p></li>
+<li><p>bug fix:
+- individual association by expression (was not working)
+- individual association of string
+- within windows code generator
+- [windows] large local variables crashed
+- crash when overloaded aggregate target.
+- forbid individual association with open
+- crash when bad array prefix
+- correctly extract sensitivity of record aggregate</p></li>
+</ul>
+</section>
+<section id="id20">
+<h2>[2006-08-11] 0.25<a class="headerlink" href="#id20" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>VPI functions to schedules values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">math_real</span></code> now works under windows.</p></li>
+<li><p>documentation updated for windows.</p></li>
+<li><p>filename/line number displayed for range error during signal update.</p></li>
+<li><p>bug fix:
+- ieee math libraries available when <code class="docutils literal notranslate"><span class="pre">--ieee=synopsys</span></code>.
+- <code class="docutils literal notranslate"><span class="pre">'image</span></code> in package bodies.
+- scan of fp literals.
+- interface identifier is checked for conformance rules.
+- avoid a crash in case of error in configuration specification.
+- non-static choice in unidim case are now correctly checked.
+- do not crash in case of bad use of incomplete type.
+- <code class="docutils literal notranslate"><span class="pre">'range</span></code> are not expressions.
+- handle file declaration in concurrent procedure calls.
+- correctly handle static <code class="docutils literal notranslate"><span class="pre">'image</span></code> attribute.
+- handle in-conversion for signal associated with an expression.
+- emit an error when a function tries to exit without a return.</p></li>
+</ul>
+</section>
+<section id="id21">
+<h2>[2006-06-25] 0.24<a class="headerlink" href="#id21" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Handle enums with more than 256 elements.</p></li>
+<li><p>Relax expr static rules in 93c to analyze Xilinx core lib from 8.1</p></li>
+<li><p>man page, <code class="docutils literal notranslate"><span class="pre">ghdl.1</span></code>, added.</p></li>
+<li><p>windows installer improved</p></li>
+<li><p>bug fix:
+- correctly handle empty file name.
+- correctly handle unused subprograms of protected types.
+- avoid a crash if unused library are used.
+- avoid crashes during error reports.
+- add a missing case array conversion.
+- build on <code class="docutils literal notranslate"><span class="pre">x86_64</span></code>.
+- code generated for conversion after mod/rem (windows version).
+- <code class="docutils literal notranslate"><span class="pre">-fexplicit</span></code> crashed with <code class="docutils literal notranslate"><span class="pre">std.standard</span></code> functions.
+- handle recursion of pure/wait checks.
+- correctly handle error cases of user attributes
+- time and character read procedure of std.textio.
+- initialize by value parameters (instead of copy-in).</p></li>
+</ul>
+</section>
+<section id="id22">
+<h2>[2006-05-16] 0.23<a class="headerlink" href="#id22" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>bug fix:
+- handle implicit conversion in resolution functions.
+- missing implicit conversion added.
+- avoid a crash in error.</p></li>
+</ul>
+</section>
+<section id="id23">
+<h2>[2006-03-28] 0.22<a class="headerlink" href="#id23" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>direntry added in <code class="docutils literal notranslate"><span class="pre">ghdl.texi</span></code></p></li>
+<li><p>updated:
+- Documentation (explain bug in Xilinx unisim library).
+- to <code class="docutils literal notranslate"><span class="pre">gcc</span> <span class="pre">4.1</span></code>
+- math_real</p></li>
+<li><p>bug fix:
+- avoid crash if type conversion is indexed/sliced
+- do not allow anymore uncomplete individual association
+- missing check on array association
+- check bounds for val attribute on enumerated type
+- array inequality of locally static expressions evaluated
+- configuration issue
+- <code class="docutils literal notranslate"><span class="pre">--warn-no-vital-generic</span></code> is now working</p></li>
+</ul>
+</section>
+<section id="id24">
+<h2>[2005-12-18] 0.21<a class="headerlink" href="#id24" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>local optimizations (loops, indexed name).</p></li>
+<li><p>simulation speed improved by 20% due to processes mngt optimizations.</p></li>
+<li><p>stack-switching code ported to <code class="docutils literal notranslate"><span class="pre">x86_64</span></code> (<code class="docutils literal notranslate"><span class="pre">amd64/em64t</span></code>).</p></li>
+<li><p>stack-switching code ported to <code class="docutils literal notranslate"><span class="pre">ia64</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--syn-binding</span></code> option extended (see documentation).</p></li>
+<li><p>bug fix:
+- line number for some bound violation messages.
+- improved message error for deferred constants.
+- file parameter for functions.
+- universal real divided by integer handled in locally static expr.
+- <code class="docutils literal notranslate"><span class="pre">std_ulogic</span></code> types and arrays are known by VPI.
+- missing space added in VCDs for integers.
+- <code class="docutils literal notranslate"><span class="pre">CR+LF</span></code> is also end of line for <code class="docutils literal notranslate"><span class="pre">std.textio.readline</span></code>.
+- avoid a crash if parse error on choice.
+- handle <code class="docutils literal notranslate"><span class="pre">'image</span></code> in nested subprograms.
+- handle <code class="docutils literal notranslate"><span class="pre">'image</span></code> for floating point types.
+- do not use varargs C calls.
+- handle missing <code class="docutils literal notranslate"><span class="pre">EOL</span></code> for <code class="docutils literal notranslate"><span class="pre">readline</span></code>.
+- for <code class="docutils literal notranslate"><span class="pre">x86_64</span></code></p></li>
+</ul>
+</section>
+<section id="id25">
+<h2>0.20 [2005-10-15]<a class="headerlink" href="#id25" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>stack memory usage improved for shortcut operations.</p></li>
+<li><p>gtkwave now displays nice waves for bit and std_ulogic signals.</p></li>
+<li><p>time unit is displayed in assert/report message.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-fexplicit</span></code> option added.</p></li>
+<li><p>integers are now written in VCD files.</p></li>
+<li><p>hash table added for design_units (speed optimization).</p></li>
+<li><p>range checks slightly optimized.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--vcdz</span></code> run time option added.</p></li>
+<li><p>improved error message for invalid expressions.</p></li>
+<li><p>grt now compiles with GNAT-GPL-2005 (use a GNAT bug work-around).</p></li>
+<li><p>bug fix:
+- handle more types for <code class="docutils literal notranslate"><span class="pre">--dump-rti</span></code> and <code class="docutils literal notranslate"><span class="pre">--wave</span></code>.
+- <code class="docutils literal notranslate"><span class="pre">'last_event</span></code> and <code class="docutils literal notranslate"><span class="pre">'last_active</span></code> (bad value returned when no previous event or activity).
+- <code class="docutils literal notranslate"><span class="pre">'image</span></code> attribute for physical types (was bad unit).
+- <code class="docutils literal notranslate"><span class="pre">'image</span></code> attribute for locally static integers.
+- for reading <code class="docutils literal notranslate"><span class="pre">.ghw</span></code> files.
+- in <code class="docutils literal notranslate"><span class="pre">--xref</span></code>.</p></li>
+</ul>
+</section>
+<section id="id26">
+<h2>[2005-08-17] 0.19<a class="headerlink" href="#id26" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ADAFLAGS</span></code> has been replaced by <code class="docutils literal notranslate"><span class="pre">GHDL_ADAFLAGS</span></code> to ease compilation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ieee.math_real</span></code> and <code class="docutils literal notranslate"><span class="pre">ieee.math_complex</span></code> added (only partially, based on a
+draft).</p></li>
+<li><p>current time is printed with assert/report messages.</p></li>
+<li><p>stack switch assembly code ported to powerpc-linux.</p></li>
+<li><p>documentation on how to use grt from Ada added.</p></li>
+<li><p>allow indexes of indexed names to be non-static in case statements (93c only)
+(this is not standard, but I can’t see why it should be required).</p></li>
+<li><p>unbound ports of entities are now reported with <code class="docutils literal notranslate"><span class="pre">--warn-binding</span></code>.</p></li>
+<li><p>some error or warning messages improved.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--wave</span></code> option added to dump waveforms (using ghw file format).</p></li>
+<li><p>bug fix:
+- internal error (missing close_temp for implicit read)
+- <code class="docutils literal notranslate"><span class="pre">--xref-html</span></code>: avoid to reanalyze unit.
+- handle implicit conversion for <code class="docutils literal notranslate"><span class="pre">'image</span></code>.
+- aggregate assigned to an aggregate: avoid crash.
+- array attributes on unconstrained array: avoid crash.
+- <code class="docutils literal notranslate"><span class="pre">'last_event</span></code> returns <code class="docutils literal notranslate"><span class="pre">time'high</span></code> if no event.
+- <code class="docutils literal notranslate"><span class="pre">'last_event</span></code> on array (uninitialized variable).
+- allow calling <code class="docutils literal notranslate"><span class="pre">rising_edge</span></code> with a port of mode buffer.
+- allow aliases of unconstrained arrays.
+- bound error on aggregate with an unused other association.
+- catch indexed/sliced component (was crashing).
+- catch index/slice of a type conversion (was crashing).
+- handle bad component specification in conf (was crashing).
+- missing ports in component (was crashing).
+- component configurations were dicarded by bug in some cases.
+- no more unused warnings for subprograms in architectures (they may be used in configuration).
+- allow conversion in component configuration.
+- conversion in associations with not statically defined array signals.</p></li>
+</ul>
+</section>
+<section id="id27">
+<h2>[2005-03-12] 0.18<a class="headerlink" href="#id27" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>Keep last line number to speed-up line number look-up (improvement).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--warn-default-binding</span></code> added, <code class="docutils literal notranslate"><span class="pre">--warn-binding</span></code> rewritten.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'value</span></code> implemented for integer numbers.</p></li>
+<li><p>bug fix:
+- in <code class="docutils literal notranslate"><span class="pre">textio.read</span></code> for time.
+- <code class="docutils literal notranslate"><span class="pre">file_close</span></code> does not crash if file was already closed.
+- spurious unused warnings for protected types.
+- allow subtype names in slice during sensitivity extraction.
+- correctly set the default value of collapsed ports.
+- handling of stack2 (aka large concatenation bug).</p></li>
+</ul>
+</section>
+<section id="id28">
+<h2>[2005-02-26] 0.17<a class="headerlink" href="#id28" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>command <code class="docutils literal notranslate"><span class="pre">--elab-run</span></code> added.</p></li>
+<li><p>Code generation for aggregate improved.</p></li>
+<li><p>Library name of option <code class="docutils literal notranslate"><span class="pre">--work=</span></code> is checked.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--no-run</span></code> option added to prevent simulation (may be used to disp tree only).</p></li>
+<li><p>disp signal name in error when multiple sources drive an unresolved signal.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-m</span></code>/<code class="docutils literal notranslate"><span class="pre">--gen-makefile</span></code> now handle several libraries.</p></li>
+<li><p>dependencies are not stored anymore in libraries (shorter/faster).</p></li>
+<li><p>mentor version of ieee library is now provided.</p></li>
+<li><p>handling of universal types is more consistent with LRM (almost corner cases).</p></li>
+<li><p>iterator and indexes whose bounds were universal expressions are now of type integer or erroneous, according to the weird LRM rules.</p></li>
+<li><p>handle selected name as entity name in architecture/configuration.</p></li>
+<li><p>bug fix:
+- port map with expression (corner case ?).
+- forbid empty extended identifiers.
+- enumeration literal xrefs.
+- non-object name in sensitivity list crashed.
+- correctly handle alias of signals in processes.</p></li>
+</ul>
+</section>
+<section id="id29">
+<h2>[2005-01-02] 0.16<a class="headerlink" href="#id29" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">std.textio</span></code>: readline has no limits on line length.</p></li>
+<li><p>command <code class="docutils literal notranslate"><span class="pre">-r</span></code> (run) added.</p></li>
+<li><p>bug fix:
+- better handling of errors in type conversion.
+- few uninitialized variables in ghdl itself caught.
+- parse error: <code class="docutils literal notranslate"><span class="pre">begin</span></code> in aggregates.
+- bad <code class="docutils literal notranslate"><span class="pre">unused</span> <span class="pre">subprogram</span></code> warnings.</p></li>
+</ul>
+</section>
+<section id="id30">
+<h2>[2004-10-13] 0.15<a class="headerlink" href="#id30" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>library file format modified to handle relative pathes.</p></li>
+<li><p>install fixed to use relative pathes.</p></li>
+<li><p>internal change: ortho API modified (constant are not anymore expressions).</p></li>
+</ul>
+</section>
+<section id="id31">
+<h2>[2004-08-29] 0.14<a class="headerlink" href="#id31" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>pretty printing in HTML command, <code class="docutils literal notranslate"><span class="pre">--pp-html</span></code>, added.</p></li>
+<li><p>xref generation in HTML command, <code class="docutils literal notranslate"><span class="pre">--xref-html</span></code>, added.</p></li>
+<li><p>syntax checking command, <code class="docutils literal notranslate"><span class="pre">-s</span></code>, added.</p></li>
+<li><p>Code generation in whole command, <code class="docutils literal notranslate"><span class="pre">-c</span> <span class="pre">files</span> <span class="pre">-e</span> <span class="pre">unit</span></code>, added.</p></li>
+<li><p>warns for unused subprograms.</p></li>
+<li><p>bug box added to help bug reports.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-s</span></code> (syntax check) command added.</p></li>
+<li><p>Missing grt subprogram to close non-text file added.</p></li>
+<li><p>maximum line length of <code class="docutils literal notranslate"><span class="pre">std.textio.readline</span></code> extended to 512 characters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std.textio.readline</span></code> assert error on truncated lines.</p></li>
+<li><p>Handle P32 and P64 in <code class="docutils literal notranslate"><span class="pre">--trace-signals</span></code></p></li>
+<li><p>sequentials statements are not canonicalized (should be faster).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DESTDIR</span></code> added in Makefile to ease packaging.</p></li>
+<li><p>for <code class="docutils literal notranslate"><span class="pre">-m</span></code> command, re-parse modified files of the work library.</p></li>
+<li><p>Many checks added on interfaces.</p></li>
+<li><p>Many checks added on associations, better handling of conversions.</p></li>
+<li><p>Checks for unassociated entity ports at elaboration.</p></li>
+<li><p>bug fix:
+- resolution function can be an expanded name.
+- missing type check in a corner case.
+- emit an error when <code class="docutils literal notranslate"><span class="pre">EOF</span></code> is reached while a text file is read.
+- <code class="docutils literal notranslate"><span class="pre">std.textio.read</span></code> for negative number.
+- <code class="docutils literal notranslate"><span class="pre">std.textio.read</span></code> [integer]: correctly handle end of line.
+- parameters of protected type: handled and checked.
+- <code class="docutils literal notranslate"><span class="pre">gen_tree.c</span></code> modified to work with sparc.</p></li>
+</ul>
+</section>
+<section id="id32">
+<h2>[2004-06-26] 0.13<a class="headerlink" href="#id32" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>support of 64bits integers and 32bits time (not yet user available)</p></li>
+<li><p>handle <code class="docutils literal notranslate"><span class="pre">'high</span></code> and <code class="docutils literal notranslate"><span class="pre">'low</span></code> attributes on non-locally static types and subtypes.</p></li>
+<li><p>Many warning switches added (to control output of warnings).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--gen-makefile</span></code> mode added to ghdl (to generate a Makefile)</p></li>
+<li><p>alias identifier restrictions of vhdl-02 implemented.</p></li>
+<li><p>declarative region for architecture from vhdl-02 implemented.</p></li>
+<li><p>buffer port association rules of vhdl-02 implemented.</p></li>
+<li><p>method operator restrictions of vhdl-02 implemented.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'driving</span></code> and <code class="docutils literal notranslate"><span class="pre">'driving_value</span></code> implemented.</p></li>
+<li><p>run-time bound check error message now contains file name and line number.</p></li>
+<li><p>strings are not stored anymore with the identifiers.</p></li>
+<li><p>parser does not back-track anymore.</p></li>
+<li><p>bug fix:
+- name clash in generated <code class="docutils literal notranslate"><span class="pre">.s</span></code> files (arch and port/generic names).
+- implicit conversion of signal parameters.
+- handle locally static type conversion of arrays.
+- stabilize during elaboration of an unconstrained signal.
+- revert previous <code class="docutils literal notranslate"><span class="pre">vhdl87</span></code> conf spec bug fix, according to INT-1991 issue 27.
+- multiple visibility of declarations (eg: direct and alias).
+- names attribute of non-object aliases.</p></li>
+</ul>
+</section>
+<section id="id33">
+<h2>[2004-05-30] 0.12<a class="headerlink" href="#id33" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>simulation speed improved (2 fold) due to reduced activity optimization.</p></li>
+<li><p>type conversion handled in associations</p></li>
+<li><p>make mode of ghdl improved.</p></li>
+<li><p>bug fix:
+- attribute specification
+- allow discrete type marks in choices
+- handling of generate statement for VCD
+- allow dereference in variable associations
+- allow function conversion in block port map
+- vhdl87: apply configuration specification inside generate stmts.
+- catch non-passive concurrent procedure calls in entity.
+- association of an unconstrained port with an expression.
+- declaring an uncons. array subtype of an uncons. array subtype.</p></li>
+</ul>
+</section>
+<section id="id34">
+<h2>[2004-04-24] 0.11.1<a class="headerlink" href="#id34" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>bug fix:
+- corner case of signal not updated
+- handle <code class="docutils literal notranslate"><span class="pre">'stable</span></code>, <code class="docutils literal notranslate"><span class="pre">'quiet</span></code> with a parameter &gt; 0
+- typos (missing <code class="docutils literal notranslate"><span class="pre">+</span> </code>) in sparc.S</p></li>
+</ul>
+</section>
+<section id="id35">
+<h2>[2004-04-17] 0.11<a class="headerlink" href="#id35" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>signal collapsing improved.</p></li>
+<li><p>simulation kernel speed improved (maybe 5x faster).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--lines</span></code> mode of ghdldrv added.</p></li>
+<li><p>boolean signals are now dumped in vcd files.</p></li>
+<li><p>bug fix:
+- in code generation for an aggregate.
+- run-time check of ascending order of projected transactions.
+- empty sequence of stmts in case alternatives (unidim array).
+- evaluation of locally static ‘range attribute.
+- implicit conversion in formal function convertor.
+- return type is a type mark.</p></li>
+</ul>
+</section>
+<section id="id36">
+<h2>[2004-02-28] 0.10<a class="headerlink" href="#id36" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>architecture with many instances can be compiled with less memory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--stats</span></code> option added to the simulator, to evaluate performance.</p></li>
+<li><p>signals are now collapsed between instances, if possible.</p></li>
+<li><p>simulation is about 3x faster.</p></li>
+<li><p>sparc port available (source only).</p></li>
+<li><p>more checks added for attribute specification.</p></li>
+<li><p>chop command added (split files by design unit).</p></li>
+<li><p>bug fix:
+- absolute source files.
+- empty sequence of statements in case alternatives.</p></li>
+</ul>
+</section>
+<section id="id37">
+<h2>[2004-02-01] 0.9<a class="headerlink" href="#id37" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>VITAL level 0 restrictions checks added.</p></li>
+<li><p>VITAL 2000 packages provided.</p></li>
+<li><p>run-time information (such as signal names) rewritten.</p></li>
+<li><p>SDF support added (partial and experimental).</p></li>
+<li><p>bug fix:
+- allow elaboration even if no package body if the package is present in a file but not used by the hierarchy.
+- <code class="docutils literal notranslate"><span class="pre">delay_length</span></code> range is pre-elaborated (was not in v93).
+- crashed when a design unit is not found at elaboration.
+- allow association of <code class="docutils literal notranslate"><span class="pre">'stable</span></code>, <code class="docutils literal notranslate"><span class="pre">'quiet</span></code>… with signal interfaces.
+- concurrent procedure call creates a non-sensitized process.
+- effective value of non-scalar resolved signal might not be set.</p></li>
+</ul>
+</section>
+<section id="id38">
+<h2>[2003-11-05] 0.8<a class="headerlink" href="#id38" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>protected types (from 1076a/1076-2000) implemented.</p></li>
+<li><p>file declarations are finalized in subprograms.</p></li>
+<li><p>an exit call-back has been added in the run-time library.</p></li>
+<li><p>internal modifications (nodes are stored in a table).</p></li>
+<li><p>name of generated executable can be set with <code class="docutils literal notranslate"><span class="pre">-o</span></code> option.</p></li>
+<li><p>IVI (ivi.sourceforge.org) support through a few VPI subprograms.</p></li>
+<li><p>pure and wait checks added.</p></li>
+<li><p>out ports are correctly dumped in VCD files.</p></li>
+<li><p>bug fix:
+- signal declaration not allowed in processes.
+- several bugs fixed.</p></li>
+</ul>
+</section>
+<section id="id39">
+<h2>[2003-08-02] 0.7<a class="headerlink" href="#id39" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>layout of internal nodes improved.</p></li>
+<li><p>incremental binding (vhdl93).</p></li>
+<li><p>association of in port with expressions (vhdl93).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--disp-time</span></code> option added.</p></li>
+<li><p>make mode (<code class="docutils literal notranslate"><span class="pre">ghdl</span> <span class="pre">-m</span></code>) rewritten.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'simple_name</span></code>, <code class="docutils literal notranslate"><span class="pre">'path_name</span></code> and <code class="docutils literal notranslate"><span class="pre">'instance_name</span></code> added (vhdl93).</p></li>
+<li><p>bug fix:
+- instantiation added in hierarchy.
+- individual association of subelements by expression.
+- <code class="docutils literal notranslate"><span class="pre">--stop-delta</span></code> option is working.
+- correctly handle operators names at function call.
+- several small bugs fixed.</p></li>
+</ul>
+</section>
+<section id="id40">
+<h2>[2003-06-09] 0.6<a class="headerlink" href="#id40" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>internal modifications (single linked list used instead of arrays).</p></li>
+<li><p>Mentor version of std_logic_arith is provided.</p></li>
+<li><p>postponed handled (vhdl 93).</p></li>
+<li><p>declarations allowed in a generate statement (vhdl 93).</p></li>
+<li><p>non object aliases handled (vhdl93).</p></li>
+<li><p>signatures handled (vhdl93).</p></li>
+<li><p>bug fix:
+- <code class="docutils literal notranslate"><span class="pre">xnor</span></code> on <code class="docutils literal notranslate"><span class="pre">bit</span></code> and <code class="docutils literal notranslate"><span class="pre">boolean</span></code> is working.
+- <code class="docutils literal notranslate"><span class="pre">selected_name</span></code> list in use clauses.
+- many other small bug fixes.</p></li>
+</ul>
+</section>
+<section id="id41">
+<h2>[2003-05-10] 0.5<a class="headerlink" href="#id41" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>foreign attribute handled.  You can now call subprograms defined in a foreign
+language (such as C or Ada).</p></li>
+<li><p>ghdl entry point added: you can start the VHDL simulation from your own
+program.</p></li>
+<li><p>bug fix:
+- triple use.
+- incomplete types</p></li>
+</ul>
+</section>
+<section id="id42">
+<h2>[2003-04-07] 0.4.1<a class="headerlink" href="#id42" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>bug fix: in the vcd output.</p></li>
+</ul>
+</section>
+<section id="id43">
+<h2>[2003-04-02] 0.4<a class="headerlink" href="#id43" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">libgrt</span></code> does not depend on GNAT library anymore.
+Installation requirements are reduced.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'delayed</span></code> attribute implemented.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'transaction</span></code> attribute implemented.</p></li>
+<li><p>unaffected (from vhdl-93) implemented.</p></li>
+<li><p>ghdl action <code class="docutils literal notranslate"><span class="pre">--disp-standard</span></code> prints the std.standard package.</p></li>
+<li><p>exponentiation operator, <code class="docutils literal notranslate"><span class="pre">**</span></code>, implemented for all integer and floating
+point types.</p></li>
+<li><p>many other small bug fixes.</p></li>
+<li><p>bug fix: subprogram interfaces are now elaborated.</p></li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="about.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">About</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2002-2024, Tristan Gingold and contributors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link fa-solid fa-brands fa-github" href="https://github.com/ghdl/ghdl" aria-label="GitHub ghdl/ghdl"></a>
+              
+            </div>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">GHDL</a><ul>
+<li><a class="reference internal" href="#id1">[2025-06-17] 5.1</a></li>
+<li><a class="reference internal" href="#id2">[2025-03-01] 5.0</a></li>
+<li><a class="reference internal" href="#id3">[2024-04-14] 4.1</a></li>
+<li><a class="reference internal" href="#id4">[2024-03-06] 4.0</a></li>
+<li><a class="reference internal" href="#id5">[2023-03-08] 3.0</a></li>
+<li><a class="reference internal" href="#rc-4">[2023-03-06] 3.0.0-rc.4</a></li>
+<li><a class="reference internal" href="#id6">[2022-02-28] 2.0</a></li>
+<li><a class="reference internal" href="#id7">[2021-02-02] 1.0</a></li>
+<li><a class="reference internal" href="#rc1">[2021-01-31] 1.0.0rc1</a></li>
+<li><a class="reference internal" href="#nightly-build-assets">[2020-05-21] Nightly build assets</a></li>
+<li><a class="reference internal" href="#new-repositories-and-a-wiki">[2020-05-09] New repositories and a wiki</a></li>
+<li><a class="reference internal" href="#id8">[2020-02-28] 0.37</a></li>
+<li><a class="reference internal" href="#id9">[2019-03-03] 0.36</a></li>
+<li><a class="reference internal" href="#id10">[2019-02-23] 0.36-rc1</a></li>
+<li><a class="reference internal" href="#id11">[2018-11-29] 20181129</a></li>
+<li><a class="reference internal" href="#github-organization">[2017-12-20] GitHub organization</a></li>
+<li><a class="reference internal" href="#id12">[2017-12-14] 0.35</a></li>
+<li><a class="reference internal" href="#id13">[2017-08-15] 0.34</a></li>
+<li><a class="reference internal" href="#id14">[2015-10-23] 0.33</a></li>
+<li><a class="reference internal" href="#xx-0-32">[2014-11-XX] 0.32</a></li>
+<li><a class="reference internal" href="#xx-0-31">[2014-01-XX] 0.31</a></li>
+<li><a class="reference internal" href="#id15">0.30</a></li>
+<li><a class="reference internal" href="#id16">[2010-01-09] 0.29</a></li>
+<li><a class="reference internal" href="#id17">[2009-09-17] 0.28</a></li>
+<li><a class="reference internal" href="#id18">[2008-07-01] 0.27</a></li>
+<li><a class="reference internal" href="#id19">[2007-04-08] 0.26</a></li>
+<li><a class="reference internal" href="#id20">[2006-08-11] 0.25</a></li>
+<li><a class="reference internal" href="#id21">[2006-06-25] 0.24</a></li>
+<li><a class="reference internal" href="#id22">[2006-05-16] 0.23</a></li>
+<li><a class="reference internal" href="#id23">[2006-03-28] 0.22</a></li>
+<li><a class="reference internal" href="#id24">[2005-12-18] 0.21</a></li>
+<li><a class="reference internal" href="#id25">0.20 [2005-10-15]</a></li>
+<li><a class="reference internal" href="#id26">[2005-08-17] 0.19</a></li>
+<li><a class="reference internal" href="#id27">[2005-03-12] 0.18</a></li>
+<li><a class="reference internal" href="#id28">[2005-02-26] 0.17</a></li>
+<li><a class="reference internal" href="#id29">[2005-01-02] 0.16</a></li>
+<li><a class="reference internal" href="#id30">[2004-10-13] 0.15</a></li>
+<li><a class="reference internal" href="#id31">[2004-08-29] 0.14</a></li>
+<li><a class="reference internal" href="#id32">[2004-06-26] 0.13</a></li>
+<li><a class="reference internal" href="#id33">[2004-05-30] 0.12</a></li>
+<li><a class="reference internal" href="#id34">[2004-04-24] 0.11.1</a></li>
+<li><a class="reference internal" href="#id35">[2004-04-17] 0.11</a></li>
+<li><a class="reference internal" href="#id36">[2004-02-28] 0.10</a></li>
+<li><a class="reference internal" href="#id37">[2004-02-01] 0.9</a></li>
+<li><a class="reference internal" href="#id38">[2003-11-05] 0.8</a></li>
+<li><a class="reference internal" href="#id39">[2003-08-02] 0.7</a></li>
+<li><a class="reference internal" href="#id40">[2003-06-09] 0.6</a></li>
+<li><a class="reference internal" href="#id41">[2003-05-10] 0.5</a></li>
+<li><a class="reference internal" href="#id42">[2003-04-07] 0.4.1</a></li>
+<li><a class="reference internal" href="#id43">[2003-04-02] 0.4</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=2a02db7b"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
