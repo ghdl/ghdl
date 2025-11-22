@@ -29,6 +29,7 @@ jobs:
     with:
       main_branch:    'master'
       release_branch: 'master'
+      release_tag_pattern: '.*'   # FIXME: Workaround: allow any PR title; Potential solution: distinguish tag pattern on tags from merge commits for releases implying a tag name.
       package_name:   'ghdl'
       library_name:   'libghdl'
       pyghdl_name:    'pyGHDL'
