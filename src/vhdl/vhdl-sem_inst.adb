@@ -1449,11 +1449,13 @@ package body Vhdl.Sem_Inst is
    begin
       --  In the arch/body, references to parameter object are redirected to
       --  the instantiated parameter objects (of the subprogram)
+      --  Also for the subtype indication.
       Orig_El := Get_Interface_Declaration_Chain (Orig_Parent);
       Inst_El := Get_Interface_Declaration_Chain (Inst_Parent);
       while Is_Valid (Orig_El) loop
          Set_Instance (Orig_El, Inst_El);
-
+         Set_Instance (Get_Subtype_Indication (Orig_El),
+                       Get_Subtype_Indication (Inst_El));
          Orig_El := Get_Chain (Orig_El);
          Inst_El := Get_Chain (Inst_El);
       end loop;

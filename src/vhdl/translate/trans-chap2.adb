@@ -149,6 +149,9 @@ package body Trans.Chap2 is
       --  overload number if any.
       Push_Subprg_Identifier (Spec, Mark);
 
+      --  Translate generic constants (for subprogram instantiations)
+      Chap4.Translate_Generic_Chain (Spec);
+
       --  Translate interface types.
       Inter := Get_Interface_Declaration_Chain (Spec);
       while Inter /= Null_Iir loop

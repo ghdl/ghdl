@@ -5122,8 +5122,8 @@ package body Vhdl.Nodes_Meta is
       Field_Is_Forward_Ref,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Type,
       Field_Named_Entity,
+      Field_Type,
       Field_Base_Name,
       --  Iir_Kind_Selected_Name
       Field_Identifier,

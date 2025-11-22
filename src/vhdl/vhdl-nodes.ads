@@ -4600,11 +4600,11 @@ package Vhdl.Nodes is
 
    -- Iir_Kind_Simple_Name (Short)
    --
-   --   Get/Set_Type (Field1)
-   --
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Named_Entity (Field4)
+   --
+   --   Get/Set_Type (Field1)
    --
    --   Get/Set_Base_Name (Field5)
    --
