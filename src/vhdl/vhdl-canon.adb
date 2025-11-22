@@ -1177,9 +1177,8 @@ package body Vhdl.Canon is
                Chain_Append (N_Chain, Last, Assoc_El);
 
                case Iir_Kinds_Association_Element (Get_Kind (Assoc_El)) is
-                  when Iir_Kind_Association_Element_Open =>
-                     goto Done;
-                  when Iir_Kind_Association_Element_By_Expression
+                  when Iir_Kind_Association_Element_Open
+                     | Iir_Kind_Association_Element_By_Expression
                      | Iir_Kind_Association_Element_By_Name =>
                      if Get_Whole_Association_Flag (Assoc_El) then
                         goto Done;
