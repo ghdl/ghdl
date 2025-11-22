@@ -7,6 +7,9 @@ if ghdl_is_preelaboration; then
   analyze issue2.vhdl
   elab_simulate issue2
 
+  analyze issue.vhdl
+  elab_simulate issue
+
   clean
 fi
 
