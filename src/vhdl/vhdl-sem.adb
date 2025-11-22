@@ -2468,9 +2468,47 @@ package body Vhdl.Sem is
       return Subprg;
    end Sem_Uninstantiated_Subprogram_Name;
 
+   procedure Load_Subprogram_Body (Decl : Iir; Loc : Iir)
+   is
+      Unit : Iir;
+      Lib_Unit : Iir;
+      Res : Iir;
+      Pkg_Bod : Iir;
+   begin
+      Res := Get_Subprogram_Body (Decl);
+      if Res /= Null_Iir then
+         --  Either not in a package or already loaded.
+         return;
+      end if;
+
+      Unit := Get_Parent (Decl);
+      while Get_Kind (Unit) /= Iir_Kind_Design_Unit loop
+         Unit := Get_Parent (Unit);
+      end loop;
+      Lib_Unit := Get_Library_Unit (Unit);
+      if Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration then
+         Pkg_Bod := Libraries.Find_Secondary_Unit (Unit, Null_Identifier);
+         if Pkg_Bod = Null_Iir then
+            Error_Msg_Sem
+              (+Loc, "cannot instantiate %n as package body of %n not found",
+               (+Decl, +Lib_Unit));
+            return;
+         end if;
+         Pkg_Bod := Load_Secondary_Unit (Unit, Null_Identifier, Loc);
+         if Pkg_Bod = Null_Iir then
+            return;
+         end if;
+         Add_Dependence (Pkg_Bod);
+      else
+         Error_Msg_Sem
+           (+Loc, "cannot instantiate %n (body not yet seen)", +Decl);
+      end if;
+   end Load_Subprogram_Body;
+
    procedure Sem_Subprogram_Instantiation_Declaration (Decl : Iir)
    is
       Subprg : Iir;
+      Parent : Iir;
    begin
       Xref_Decl (Decl);
 
@@ -2497,6 +2535,18 @@ package body Vhdl.Sem is
 
       if Get_Kind (Decl) = Iir_Kind_Procedure_Instantiation_Declaration then
          Set_Suspend_Flag (Decl, True);
+      end if;
+
+      --  LRM08 4.4 Subprogram instantiation declarations
+      --  If the subprogram insyantiation declaration occurs immediately within
+      --  an enclosing package declaration, then generic-mapped subprogram
+      --  body occurs at the end of the package body corresponding to the
+      --  enclosing pakage declaration.
+      Parent := Get_Parent (Decl);
+      if Get_Kind (Parent) = Iir_Kind_Package_Declaration then
+         null;
+      else
+         Load_Subprogram_Body (Subprg, Decl);
       end if;
 
       --  Add DECL.  Must be done after parameters creation to handle
