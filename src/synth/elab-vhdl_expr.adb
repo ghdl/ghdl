@@ -406,7 +406,7 @@ package body Elab.Vhdl_Expr is
                --  [...] and the value of the expression shall belong to the
                --  discrete range specified for the generate parameter.
                Param_Rng := Get_Subtype_Object (Cur_Inst, Get_Type (Param));
-               Idx := Synth_Expression_With_Type (Cur_Inst, Expr, Param_Rng);
+               Idx := Synth_Expression_With_Type (Loc_Inst, Expr, Param_Rng);
                if Idx = No_Valtyp then
                   return No_Valtyp;
                end if;
