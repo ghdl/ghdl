@@ -2521,6 +2521,7 @@ package body Synth.Vhdl_Expr is
                         or else (Res.Val.Kind = Value_Alias
                                    and then Res.Val.A_Obj.Kind = Value_Signal))
                   then
+                     --  It's a signal or an alias of a signal.
                      if Hook_Signal_Expr /= null then
                         return Hook_Signal_Expr (Res);
                      end if;

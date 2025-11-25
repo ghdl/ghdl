@@ -507,6 +507,8 @@ package body Elab.Vhdl_Expr is
               | Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body =>
                null;
+            when Iir_Kind_For_Generate_Statement =>
+               null;
             when Iir_Kind_Package_Declaration =>
                --  Check if it is within a concurrent region.
                declare
