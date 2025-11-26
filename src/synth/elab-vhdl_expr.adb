@@ -503,7 +503,7 @@ package body Elab.Vhdl_Expr is
             when Iir_Kind_Component_Declaration =>
                --  The implicit block for the component.
                null;
-            when Iir_Kind_Process_Statement
+            when Iir_Kinds_Process_Statement
               | Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body =>
                null;
