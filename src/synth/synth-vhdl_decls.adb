@@ -237,6 +237,18 @@ package body Synth.Vhdl_Decls is
       Pv := Memtyp_To_Pval (Get_Memtyp (Val));
    end Synth_Attribute_Value;
 
+   procedure Synth_Attribute_Inst
+     (Inst : Instance; Attr_Decl : Node; Val : Valtyp)
+   is
+      Id : Name_Id;
+      Ptype : Param_Type;
+      Pv    : Pval;
+   begin
+      Synth_Attribute_Value (Attr_Decl, Val, Id, Ptype, Pv);
+
+      Set_Instance_Attribute (Inst, Id, Ptype, Pv);
+   end Synth_Attribute_Inst;
+
    procedure Synth_Attribute_Port (Syn_Inst : Synth_Instance_Acc;
                                    Obj : Node;
                                    Attr_Decl : Node;
@@ -260,43 +272,41 @@ package body Synth.Vhdl_Decls is
             --  For an input
             N := Get_Value_Net (V.Val);
             Inst := Get_Net_Parent (N);
-            pragma Assert (Is_Self_Instance (Inst));
-            Port := Get_Port_Idx (N);
-            M := Get_Module (Inst);
-            Set_Input_Port_Attribute (M, Port, Id, Ptype, Pv);
+            if Is_Self_Instance (Inst) then
+               --  This is really a port
+               Port := Get_Port_Idx (N);
+               M := Get_Module (Inst);
+               Set_Input_Port_Attribute (M, Port, Id, Ptype, Pv);
+            else
+               --  A net (because of --keep-hierarchy=no).
+               Synth_Attribute_Inst (Inst, Attr_Decl, Val);
+            end if;
          when Value_Wire =>
             --  For an output
             N := Get_Wire_Gate (Get_Value_Wire (V.Val));
             Inst := Get_Net_Parent (N);
-            pragma Assert (Get_Id (Inst) = Netlists.Gates.Id_Output);
-            --  Get last sink.
-            Inp := Get_First_Sink (N);
-            loop
-               N_Inp := Get_Next_Sink (Inp);
-               exit when N_Inp = No_Input;
-               Inp := N_Inp;
-            end loop;
-            Inst := Get_Input_Parent (Inp);
-            pragma Assert (Is_Self_Instance (Inst));
-            Port := Get_Port_Idx (Inp);
-            M := Get_Module (Inst);
-            Set_Output_Port_Attribute (M, Port, Id, Ptype, Pv);
+            if Get_Id (Inst) = Netlists.Gates.Id_Output then
+               --  This is really a port
+               --  Get last sink.
+               Inp := Get_First_Sink (N);
+               loop
+                  N_Inp := Get_Next_Sink (Inp);
+                  exit when N_Inp = No_Input;
+                  Inp := N_Inp;
+               end loop;
+               Inst := Get_Input_Parent (Inp);
+               pragma Assert (Is_Self_Instance (Inst));
+               Port := Get_Port_Idx (Inp);
+               M := Get_Module (Inst);
+               Set_Output_Port_Attribute (M, Port, Id, Ptype, Pv);
+            else
+               --  A net (--keep-hierarchy=no)
+               Synth_Attribute_Inst (Inst, Attr_Decl, Val);
+            end if;
          when others =>
             raise Internal_Error;
       end case;
    end Synth_Attribute_Port;
-
-   procedure Synth_Attribute_Inst
-     (Inst : Instance; Attr_Decl : Node; Val : Valtyp)
-   is
-      Id : Name_Id;
-      Ptype : Param_Type;
-      Pv    : Pval;
-   begin
-      Synth_Attribute_Value (Attr_Decl, Val, Id, Ptype, Pv);
-
-      Set_Instance_Attribute (Inst, Id, Ptype, Pv);
-   end Synth_Attribute_Inst;
 
    procedure Synth_Attribute_Net (Syn_Inst : Synth_Instance_Acc;
                                   Obj : Node;
