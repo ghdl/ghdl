@@ -1120,9 +1120,11 @@ package body Synth.Environment is
          Value := Build_Concat2 (Ctxt,
                                  Get_Conc_Value (Data.Last_Assign),
                                  Get_Conc_Value (Data.First_Assign));
+         Set_Location (Value, Get_Location (Wire_Rec.Decl));
       else
          Value := Build_Concatn
            (Ctxt, Data.Wire_Width, Uns32 (Data.Nbr_Assign));
+         Set_Location (Value, Get_Location (Wire_Rec.Decl));
          declare
             Inst : constant Instance := Get_Net_Parent (Value);
             Asgn : Conc_Assign;
