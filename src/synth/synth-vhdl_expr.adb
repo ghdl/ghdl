@@ -36,6 +36,7 @@ with Netlists.Gates; use Netlists.Gates;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations;
+with Netlists.Builders; use Netlists.Builders;
 
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Errors;
@@ -481,48 +482,6 @@ package body Synth.Vhdl_Expr is
          return N;
       end if;
    end Synth_Resize;
-
-   procedure Concat_Array (Ctxt : Context_Acc; Arr : in out Net_Array)
-   is
-      Last : Int32;
-      Idx, New_Idx : Int32;
-   begin
-      Last := Arr'Last;
-      while Last > Arr'First loop
-         Idx := Arr'First;
-         New_Idx := Arr'First - 1;
-         while Idx <= Last loop
-            --  Gather at most 4 nets.
-            New_Idx := New_Idx + 1;
-
-            if Idx = Last then
-               Arr (New_Idx) := Arr (Idx);
-               Idx := Idx + 1;
-            elsif Idx + 1 = Last then
-               Arr (New_Idx) := Build_Concat2
-                 (Ctxt, Arr (Idx), Arr (Idx + 1));
-               Idx := Idx + 2;
-            elsif Idx + 2 = Last then
-               Arr (New_Idx) := Build_Concat3
-                 (Ctxt, Arr (Idx), Arr (Idx + 1), Arr (Idx + 2));
-               Idx := Idx + 3;
-            else
-               Arr (New_Idx) := Build_Concat4
-                 (Ctxt,
-                  Arr (Idx), Arr (Idx + 1), Arr (Idx + 2), Arr (Idx + 3));
-               Idx := Idx + 4;
-            end if;
-         end loop;
-         Last := New_Idx;
-      end loop;
-   end Concat_Array;
-
-   procedure Concat_Array
-     (Ctxt : Context_Acc; Arr : in out Net_Array; N : out Net) is
-   begin
-      Concat_Array (Ctxt, Arr);
-      N := Arr (Arr'First);
-   end Concat_Array;
 
    function Synth_Array_Bounds (Syn_Inst : Synth_Instance_Acc;
                                 Atype : Node;

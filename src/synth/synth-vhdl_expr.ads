@@ -29,7 +29,6 @@ with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
 with Netlists; use Netlists;
-with Netlists.Builders; use Netlists.Builders;
 
 with Synth.Source;
 
@@ -68,9 +67,6 @@ package Synth.Vhdl_Expr is
    --  where X is '0' or '1'.
    function Synth_Clock_Edge
      (Syn_Inst : Synth_Instance_Acc; Left, Right : Node) return Net;
-
-   procedure Concat_Array
-     (Ctxt : Context_Acc; Arr : in out Net_Array; N : out Net);
 
    --  Hook to convert a signal to a value.
    --  If not defined, the signal are not allowed (like in expressions during

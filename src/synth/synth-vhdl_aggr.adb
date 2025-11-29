@@ -22,6 +22,7 @@ with Str_Table;
 with Netlists; use Netlists;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Builders; use Netlists.Builders;
+with Netlists.Folds; use Netlists.Folds;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Nodes_Utils;
@@ -456,13 +457,14 @@ package body Synth.Vhdl_Aggr is
    begin
       Arr := new Net_Array (1 .. Tab'Length);
       Idx := 0;
-      for I in Arr'Range loop
+      --  Use reverse to handle build2_concat reverse.
+      for I in reverse Arr'Range loop
          if Tab (I).Val /= null then
             Idx := Idx + 1;
             Arr (Idx) := Get_Net (Ctxt, Tab (I));
          end if;
       end loop;
-      Concat_Array (Ctxt, Arr (1 .. Idx), Res);
+      Res := Build2_Concat (Ctxt, Arr (1 .. Idx));
       Free_Net_Array (Arr);
       return Res;
    end Valtyp_Array_To_Net;

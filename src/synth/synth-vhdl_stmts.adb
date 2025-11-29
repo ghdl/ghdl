@@ -4598,8 +4598,7 @@ package body Synth.Vhdl_Stmts is
 
             --  TODO: if EOS is present, then this is a live state.
 
-            --  Reverse order for final concatenation.
-            D_Num := Nbr_States - 1 - Get_State_Label (Get_Edge_Dest (E));
+            D_Num := Get_State_Label (Get_Edge_Dest (E));
             if D_Arr (D_Num) /= No_Net then
                Cond := Build_Dyadic (Ctxt, Id_Or, D_Arr (D_Num), Cond);
                Set_Location (Cond, Loc);
@@ -4613,16 +4612,16 @@ package body Synth.Vhdl_Stmts is
       end loop;
 
       --  Maybe there is no edge to the first state (common for restrict).
-      if D_Arr (Nbr_States - 1) = No_Net then
-         D_Arr (Nbr_States - 1) := Build_Const_UB32 (Ctxt, 0, 1);
-      end if;
-
-      --  Maybe there is no edge to the final state.
       if D_Arr (0) = No_Net then
          D_Arr (0) := Build_Const_UB32 (Ctxt, 0, 1);
       end if;
 
-      Concat_Array (Ctxt, D_Arr.all, Res);
+      --  Maybe there is no edge to the final state.
+      if D_Arr (Nbr_States - 1) = No_Net then
+         D_Arr (Nbr_States - 1) := Build_Const_UB32 (Ctxt, 0, 1);
+      end if;
+
+      Res := Build2_Concat (Ctxt, D_Arr.all);
       Free_Net_Array (D_Arr);
 
       return Res;
