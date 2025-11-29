@@ -58,7 +58,8 @@ package Synth.Verilog_Environment is
       Static_To_Net => Memtyp_To_Net,
       Partial_Static_To_Net => Partial_Memtyp_To_Net,
       Warning_No_Assignment => Warning_No_Assignment,
-      Error_Multiple_Assignments => Error_Multiple_Assignments);
+      Error_Multiple_Assignments => Error_Multiple_Assignments,
+      Get_Location => Get_Location);
 
    procedure Dump_Memtyp (Val : Memtyp) is null;
 

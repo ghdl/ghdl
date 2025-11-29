@@ -212,4 +212,8 @@ package body Synth.Vhdl_Environment is
       Info_Subnet (Decl.Obj, Decl.Typ, First_Off, Last_Off + 1 - First_Off);
    end Error_Multiple_Assignments;
 
+   function Get_Location (Decl : Decl_Type) return Location_Type is
+   begin
+      return Get_Location (Decl.Obj);
+   end Get_Location;
 end Synth.Vhdl_Environment;

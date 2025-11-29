@@ -41,6 +41,7 @@ generic
      (Decl : Decl_Type; First_Off : Uns32; Last_Off : Uns32);
    with procedure Error_Multiple_Assignments
      (Decl : Decl_Type; First_Off : Uns32; Last_Off : Uns32);
+   with function Get_Location (Decl : Decl_Type) return Location_Type;
 package Synth.Environment is
    --  This package declares the type Wire_Id and its methods.
    --

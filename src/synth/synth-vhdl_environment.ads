@@ -51,6 +51,8 @@ package Synth.Vhdl_Environment is
    procedure Error_Multiple_Assignments
      (Decl : Decl_Type; First_Off : Uns32; Last_Off : Uns32);
 
+   function Get_Location (Decl : Decl_Type) return Location_Type;
+
    package Env is new Synth.Environment
      (Decl_Type => Decl_Type,
       Static_Type => Elab.Vhdl_Objtypes.Memtyp,
@@ -59,8 +61,8 @@ package Synth.Vhdl_Environment is
       Static_To_Net => Memtyp_To_Net,
       Partial_Static_To_Net => Partial_Memtyp_To_Net,
       Warning_No_Assignment => Warning_No_Assignment,
-      Error_Multiple_Assignments => Error_Multiple_Assignments);
---      "+" => Vhdl.Nodes.Get_Location);
+      Error_Multiple_Assignments => Error_Multiple_Assignments,
+      Get_Location => Get_Location);
 
    package Debug is new Env.Debug
      (Dump_Static => Elab.Vhdl_Values.Debug.Debug_Memtyp);

@@ -33,6 +33,7 @@ with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Concats;
 with Netlists.Folds;
+with Netlists.Locations; use Netlists.Locations;
 
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
@@ -834,7 +835,7 @@ package body Synth.Vhdl_Insts is
       end loop;
 
       --   3. connect
-      Build (Ctxt, Concat, N);
+      Build (Ctxt, Concat, Get_Location (Assoc), N);
 
       Value_Offset_Tables.Free (Els);
       return N;
@@ -1027,7 +1028,8 @@ package body Synth.Vhdl_Insts is
                   Nets (Nat32 (I)) := Get_Output (Inst, Idx);
                   Idx := Idx + 1;
                end loop;
-               N := Folds.Build2_Concat (Get_Build (Syn_Inst), Nets);
+               N := Folds.Build2_Concat
+                 (Get_Build (Syn_Inst), Nets, Get_Location (Inst));
             end;
          when Type_Slice
            | Type_Access

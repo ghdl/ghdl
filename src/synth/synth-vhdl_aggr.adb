@@ -23,7 +23,6 @@ with Netlists; use Netlists;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
-with Netlists.Locations; use Netlists.Locations;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Nodes_Utils;
@@ -465,10 +464,7 @@ package body Synth.Vhdl_Aggr is
             Arr (Idx) := Get_Net (Ctxt, Tab (I));
          end if;
       end loop;
-      Res := Build2_Concat (Ctxt, Arr (1 .. Idx));
-      if Idx > 1 then
-         Set_Location (Res, Loc);
-      end if;
+      Res := Build2_Concat (Ctxt, Arr (1 .. Idx), Loc);
       Free_Net_Array (Arr);
       return Res;
    end Valtyp_Array_To_Net;

@@ -417,7 +417,7 @@ package body Netlists.Cleanup is
          end if;
       end loop;
 
-      Build (Ctxt, Conc, Res);
+      Build (Ctxt, Conc, Get_Location (Inst), Res);
       Redirect_Inputs (Get_Output (Inst, 0), Res);
       Set_Location (Inst, No_Location);
       Remove_Instance (Inst);

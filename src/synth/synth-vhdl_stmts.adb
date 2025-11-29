@@ -1570,7 +1570,7 @@ package body Synth.Vhdl_Stmts is
       if Nbr_Choices = 0 then
          Sel_Net := No_Net;
       else
-         Sel_Net := Build2_Concat (Ctxt, Nets (1 .. Nbr_Choices));
+         Sel_Net := Build2_Concat (Ctxt, Nets (1 .. Nbr_Choices), +Stmt);
       end if;
 
       --  Create list of wire_id, sort it.
@@ -1927,7 +1927,7 @@ package body Synth.Vhdl_Stmts is
          if Nbr_Choices = 0 then
             Sel_Net := No_Net;
          else
-            Sel_Net := Build2_Concat (Ctxt, Nets (1 .. Nbr_Choices));
+            Sel_Net := Build2_Concat (Ctxt, Nets (1 .. Nbr_Choices), +Stmt);
          end if;
 
          declare
@@ -4621,7 +4621,7 @@ package body Synth.Vhdl_Stmts is
          D_Arr (Nbr_States - 1) := Build_Const_UB32 (Ctxt, 0, 1);
       end if;
 
-      Res := Build2_Concat (Ctxt, D_Arr.all);
+      Res := Build2_Concat (Ctxt, D_Arr.all, +Loc);
       Free_Net_Array (D_Arr);
 
       return Res;

@@ -38,17 +38,22 @@ package body Netlists.Concats is
    end Append;
 
    --  Get the concatenation of all nets in C.  Reset C.
-   procedure Build (Ctxt : Context_Acc; C : in out Concat_Type; N : out Net) is
+   procedure Build (Ctxt : Context_Acc;
+                    C : in out Concat_Type;
+                    Loc : Location_Type;
+                    N : out Net) is
    begin
       case C.Len is
          when Int32'First .. 0 =>
             raise Internal_Error;
          when 1 .. Static_Last =>
-            N := Build2_Concat (Ctxt, Net_Array (C.Sarr (1 .. C.Len)));
+            N := Build2_Concat
+              (Ctxt, Net_Array (C.Sarr (1 .. C.Len)), Loc);
          when Static_Last + 1 .. Int32'Last =>
             --  Compute length.
             pragma Assert (C.Len = Net_Tables.Last (C.Darr));
-            N := Build2_Concat (Ctxt, Net_Array (C.Darr.Table (1 .. C.Len)));
+            N := Build2_Concat
+              (Ctxt, Net_Array (C.Darr.Table (1 .. C.Len)), Loc);
             --  Free the vector.
             Net_Tables.Free (C.Darr);
       end case;

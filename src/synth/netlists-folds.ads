@@ -37,7 +37,8 @@ package Netlists.Folds is
 
    --  Concatenate nets of ELS in reverse order.  So if ELS(L .. R), then
    --  ELS(L) will be at offset 0 (so the last input).
-   function Build2_Concat (Ctxt : Context_Acc; Els : Net_Array) return Net;
+   function Build2_Concat
+     (Ctxt : Context_Acc; Els : Net_Array; Loc : Location_Type) return Net;
 
    --  If L or R has a null width, return the other.
    function Build2_Concat2 (Ctxt : Context_Acc; L, R : Net) return Net;

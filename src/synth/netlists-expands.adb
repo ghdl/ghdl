@@ -676,7 +676,7 @@ package body Netlists.Expands is
             Append (Concat, Build_Extract (Ctxt, Mem, Off, O_W - Off));
          end if;
       end;
-      Build (Ctxt, Concat, Res);
+      Build (Ctxt, Concat, Loc, Res);
       pragma Assert (Get_Width (Res) = O_W);
 
       Free_Net_Array (Net_Arr);

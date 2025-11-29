@@ -642,7 +642,8 @@ package body Synth.Verilog_Exprs is
    end Synth_Static_Concatenation;
 
    function Synth_Dynamic_Concatenation (Inst : Synth_Instance_Acc;
-                                         Arr : Valtyp_Array_Acc) return Net
+                                         Arr : Valtyp_Array_Acc;
+                                         Loc : Location_Type) return Net
    is
       pragma Assert (Arr'First = 1);
       Ctxt : constant Context_Acc := Get_Build (Inst);
@@ -654,7 +655,7 @@ package body Synth.Verilog_Exprs is
          Net_Arr (Arr'Last - I + 1) := Get_Net (Ctxt, Arr (I));
       end loop;
 
-      Res_Net := Build2_Concat (Ctxt, Net_Arr.all);
+      Res_Net := Build2_Concat (Ctxt, Net_Arr.all, Loc);
 
       Free_Net_Array (Net_Arr);
 
@@ -724,7 +725,7 @@ package body Synth.Verilog_Exprs is
          declare
             Res_Net : Net;
          begin
-            Res_Net := Synth_Dynamic_Concatenation (Inst, Arr);
+            Res_Net := Synth_Dynamic_Concatenation (Inst, Arr, +N);
             Res := Create_Value_Net (Res_Net, Rtyp);
          end;
       end if;
@@ -779,20 +780,20 @@ package body Synth.Verilog_Exprs is
             Nt : Net;
             Res_Net : Net;
          begin
-            Nt := Synth_Dynamic_Concatenation (Inst, Arr);
+            Nt := Synth_Dynamic_Concatenation (Inst, Arr, +N);
 
             if Count < 8 then
                declare
                   Arr2 : constant Net_Array (1 .. 8) := (others => Nt);
                begin
-                  Res_Net := Build2_Concat (Ctxt, Arr2 (1 .. Count));
+                  Res_Net := Build2_Concat (Ctxt, Arr2 (1 .. Count), +N);
                end;
             else
                declare
                   Arr2 : Net_Array_Acc;
                begin
                   Arr2 := new Net_Array'(1 .. Count => Nt);
-                  Res_Net := Build2_Concat (Ctxt, Arr2.all);
+                  Res_Net := Build2_Concat (Ctxt, Arr2.all, +N);
                   Free_Net_Array (Arr2);
                end;
             end if;

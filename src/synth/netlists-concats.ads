@@ -27,7 +27,10 @@ package Netlists.Concats is
    procedure Append (C : in out Concat_Type; N : Net);
 
    --  Get the concatenation of all nets in C.  Reset C.
-   procedure Build (Ctxt : Context_Acc; C : in out Concat_Type; N : out Net);
+   procedure Build (Ctxt : Context_Acc;
+                    C : in out Concat_Type;
+                    Loc : Location_Type;
+                    N : out Net);
 private
    Static_Last : constant := 16;
 

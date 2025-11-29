@@ -252,7 +252,7 @@ package body Synth.Environment is
 
    --  Concatenate when possible partial assignments of HEAD.
    procedure Merge_Partial_Assignments
-     (Ctxt : Context_Acc; Head : Seq_Assign_Value)
+     (Ctxt : Context_Acc; Head : Seq_Assign_Value; Loc : Location_Type)
    is
       use Netlists.Concats;
       First : Partial_Assign;
@@ -298,7 +298,7 @@ package body Synth.Environment is
                First_Record : Partial_Assign_Record renames
                  Partial_Assign_Table.Table (First);
             begin
-               Build (Ctxt, Concat, First_Record.Value);
+               Build (Ctxt, Concat, Loc, First_Record.Value);
                First_Record.Next := Next;
 
             end;
@@ -1362,8 +1362,7 @@ package body Synth.Environment is
 
    --  Get the current value of W for WD bits at offset OFF.
    function Get_Current_Assign_Value
-     (Ctxt : Context_Acc; Wid : Wire_Id; Off : Uns32; Wd : Width)
-     return Net
+     (Ctxt : Context_Acc; Wid : Wire_Id; Off : Uns32; Wd : Width) return Net
    is
       Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
       pragma Assert (Wire_Rec.Kind /= Wire_None);
@@ -1483,7 +1482,7 @@ package body Synth.Environment is
          end loop;
 
          --  Concat
-         Build (Ctxt, Vec, Res);
+         Build (Ctxt, Vec, Get_Location (Wire_Rec.Decl), Res);
          return Res;
       end;
    end Get_Current_Assign_Value;
@@ -1866,8 +1865,8 @@ package body Synth.Environment is
          end if;
          --  Merge partial assigns as much as possible.  This reduce
          --  propagation of splits.
-         Merge_Partial_Assignments (Ctxt, Fv);
-         Merge_Partial_Assignments (Ctxt, Tv);
+         Merge_Partial_Assignments (Ctxt, Fv, Loc);
+         Merge_Partial_Assignments (Ctxt, Tv, Loc);
          if not Merge_Static_Assigns (W, Tv, Fv) then
             Merge_Assigns (Ctxt, W, Sel, Fv, Tv, Loc);
          end if;

@@ -97,7 +97,8 @@ package body Netlists.Folds is
       end if;
    end Build2_Concat2;
 
-   function Build2_Concat (Ctxt : Context_Acc; Els : Net_Array) return Net
+   function Build2_Concat
+     (Ctxt : Context_Acc; Els : Net_Array; Loc : Location_Type) return Net
    is
       F : constant Int32 := Els'First;
       Len : constant Natural := Els'Length;
@@ -109,7 +110,7 @@ package body Netlists.Folds is
          when 0 =>
             raise Internal_Error;
          when 1 =>
-            N := Els (F);
+            return Els (F);
          when 2 =>
             N := Build_Concat2 (Ctxt, Els (F + 1), Els (F));
          when 3 =>
@@ -130,6 +131,7 @@ package body Netlists.Folds is
                Connect (Get_Input (Inst, Port_Idx (Els'Last - I)), Els (I));
             end loop;
       end case;
+      Set_Location (N, Loc);
       return N;
    end Build2_Concat;
 
