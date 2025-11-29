@@ -226,19 +226,21 @@ package body Netlists.Folds is
    function Build2_Xresize (Ctxt : Context_Acc;
                             I : Net;
                             W : Width;
-                            Loc : Location_Type)
-                           return Net
+                            Loc : Location_Type) return Net
    is
       Wn : constant Width := Get_Width (I);
+      Res : Net;
    begin
       if Wn = W then
          return I;
       elsif Wn > W then
-         return Build2_Trunc (Ctxt, Id_Utrunc, I, W, Loc);
+         Res := Build2_Trunc (Ctxt, Id_Utrunc, I, W, Loc);
       else
          pragma Assert (Wn < W);
-         return Build_Concat2 (Ctxt, Build_Const_X (Ctxt, W - Wn), I);
+         Res := Build_Concat2 (Ctxt, Build_Const_X (Ctxt, W - Wn), I);
       end if;
+      Set_Location (Res, Loc);
+      return Res;
    end Build2_Xresize;
 
    function Build2_Sresize (Ctxt : Context_Acc;
@@ -450,25 +452,25 @@ package body Netlists.Folds is
                          Loc : Location_Type) return Net
    is
       Wmul : constant Uns32 := Clog2 (Mul);
+      Res : Net;
    begin
       if Mul = 2**Natural (Wmul) then
          if Mul = 1 then
             return Idx;
          else
-            return Build_Concat2 (Ctxt, Idx, Build_Const_UB32 (Ctxt, 0, Wmul));
+            Res := Build_Concat2 (Ctxt, Idx, Build_Const_UB32 (Ctxt, 0, Wmul));
          end if;
       else
          declare
             Widx : constant Width := Get_Width (Idx);
-            Res : Net;
          begin
             Res := Build_Dyadic (Ctxt, Id_Umul,
                                  Build2_Uresize (Ctxt, Idx, Widx + Wmul, Loc),
                                  Build_Const_UB32 (Ctxt, Mul, Widx + Wmul));
-            Set_Location (Res, Loc);
-            return Res;
          end;
       end if;
+      Set_Location (Res, Loc);
+      return Res;
    end Build2_Umul;
 
    function Build2_Addmul (Ctxt : Context_Acc;
@@ -483,14 +485,14 @@ package body Netlists.Folds is
          return Build2_Umul (Ctxt, Idx, Mul, Loc);
       else
          if Mul = 2**Natural(Get_Width (Add)) then
-            return Build_Concat2 (Ctxt, Idx, Add);
+            Res := Build_Concat2 (Ctxt, Idx, Add);
          else
             V1 := Build2_Umul (Ctxt, Idx, Mul, Loc);
             V2 := Build2_Uresize (Ctxt, Add, Get_Width (V1), Loc);
             Res := Build_Dyadic (Ctxt, Id_Add, V1, V2);
-            Set_Location (Res, Loc);
-            return Res;
          end if;
+         Set_Location (Res, Loc);
+         return Res;
       end if;
    end Build2_Addmul;
 

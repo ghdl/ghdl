@@ -204,6 +204,7 @@ package body Netlists.Expands is
                end;
             else
                Addr := Build_Concat2 (Ctxt, Part_Addr, Addr);
+               Copy_Location (Addr, Inst);
             end if;
          end if;
          Max := Get_Param_Uns32 (Inst, 1);
