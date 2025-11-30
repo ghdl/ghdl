@@ -563,7 +563,7 @@ uninstall.libghdl:
 GHWDUMP_OBJS=ghwdump.o libghw.o
 
 ghwdump$(EXEEXT): $(GHWDUMP_OBJS)
-	$(CC) $(LDFLAGS) -o $@ $(GHWDUMP_OBJS)
+	$(CC) $(LDFLAGS) -o $@ $(GHWDUMP_OBJS) $(COVERAGE_FLAGS)
 
 lib/libghw$(SOEXT): libghw.o
 	$(CC) $(PIC_FLAGS) $(LDFLAGS) -shared -o $@ $^
