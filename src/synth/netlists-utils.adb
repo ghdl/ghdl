@@ -17,7 +17,6 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Mutils;
-with Types_Utils; use Types_Utils;
 
 with Netlists.Gates; use Netlists.Gates;
 
@@ -163,11 +162,6 @@ package body Netlists.Utils is
             raise Internal_Error;
       end case;
    end Get_Net_Uns64;
-
-   function Get_Net_Int64 (N : Net) return Int64 is
-   begin
-      return To_Int64 (Get_Net_Uns64 (N));
-   end Get_Net_Int64;
 
    procedure Get_Net_Element
      (N : Net; Off : Uns32; Va : out Uns32; Zx : out Uns32)

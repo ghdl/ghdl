@@ -64,9 +64,6 @@ package Netlists.Utils is
    --  Assuming that N is a const net, return the value (for small values).
    function Get_Net_Uns64 (N : Net) return Uns64;
 
-   function Get_Net_Int64 (N : Net) return Int64;
-   pragma Inline (Get_Net_Int64);
-
    --  Assuming that N is a const net, return the value at offset OFF.
    procedure Get_Net_Element
      (N : Net; Off : Uns32; Va : out Uns32; Zx : out Uns32);
