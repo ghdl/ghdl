@@ -64,10 +64,6 @@ package Netlists.Utils is
    --  Assuming that N is a const net, return the value (for small values).
    function Get_Net_Uns64 (N : Net) return Uns64;
 
-   --  Assuming that N is a const net, return the value at offset OFF.
-   procedure Get_Net_Element
-     (N : Net; Off : Uns32; Va : out Uns32; Zx : out Uns32);
-
    --  Return True iff O has at least one sink (ie is connected to at least one
    --  input).
    function Is_Connected (O : Net) return Boolean;

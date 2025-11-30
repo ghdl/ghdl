@@ -163,26 +163,6 @@ package body Netlists.Utils is
       end case;
    end Get_Net_Uns64;
 
-   procedure Get_Net_Element
-     (N : Net; Off : Uns32; Va : out Uns32; Zx : out Uns32)
-   is
-      Inst : constant Instance := Get_Net_Parent (N);
-   begin
-      case Get_Id (Inst) is
-         when Id_Const_UB32 =>
-            declare
-               V : constant Uns32 := Get_Param_Uns32 (Inst, 0);
-               Wd : constant Width := Get_Width (N);
-            begin
-               pragma Assert (Off < 32);
-               Zx := 0;
-               Va := Shift_Right (V, Natural (Wd - Off)) and 1;
-            end;
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Get_Net_Element;
-
    function Skip_Signal (N : Net) return Net
    is
       Inst : constant Instance := Get_Net_Parent (N);
