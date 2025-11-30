@@ -495,8 +495,7 @@ package body Synth.Vhdl_Stmts is
                N : Net;
             begin
                N := Build2_Extract
-                 (Ctxt, Get_Net (Ctxt, Val), Off * El_Typ.W, Typ.W);
-               Set_Location (N, Loc);
+                 (Ctxt, Get_Net (Ctxt, Val), Off * El_Typ.W, Typ.W, +Loc);
                return Create_Value_Net (N, Typ);
             end;
          when Value_Memory =>
@@ -532,8 +531,7 @@ package body Synth.Vhdl_Stmts is
                N : Net;
             begin
                N := Build2_Extract (Ctxt, Get_Net (Ctxt, Val),
-                                    El_Typ.Offs.Net_Off, El_Typ.Typ.W);
-               Set_Location (N, Loc);
+                                    El_Typ.Offs.Net_Off, El_Typ.Typ.W, +Loc);
                return Create_Value_Net (N, Typ);
             end;
          when Value_Memory =>
@@ -783,11 +781,11 @@ package body Synth.Vhdl_Stmts is
             --  Do not try to extract if the net is null.
             N := Build_Dyn_Extract (Ctxt, N, Dyn.Voff,
                                     Off + Dyn.Pfx_Off.Net_Off, Res_Typ.W);
+            Set_Location (N, Loc);
          else
             pragma Assert (not Is_Static (Obj.Val));
-            N := Build2_Extract (Ctxt, N, Off, Res_Typ.W);
+            N := Build2_Extract (Ctxt, N, Off, Res_Typ.W, +Loc);
          end if;
-         Set_Location (N, Loc);
       end if;
       return Create_Value_Net (N, Res_Typ);
    end Synth_Read_Memory;
@@ -805,7 +803,8 @@ package body Synth.Vhdl_Stmts is
                when Value_Net
                  | Value_Wire =>
                   N := Build2_Extract (Ctxt, Get_Net (Ctxt, Targ.Obj),
-                                       Targ.Off.Net_Off, Targ.Targ_Type.W);
+                                       Targ.Off.Net_Off, Targ.Targ_Type.W,
+                                      +Loc);
                   return Create_Value_Net (N, Targ.Targ_Type);
                when Value_File =>
                   return Create_Value_File
@@ -4807,8 +4806,10 @@ package body Synth.Vhdl_Stmts is
       use PSL.NFAs;
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       NFA : constant PSL_NFA := Get_PSL_NFA (Stmt);
+      Loc : constant Location_Type := Get_Location (Stmt);
       Active : NFA_State;
       Next_States : Net;
+      Active_Bit : Net;
       Inst : Instance;
       Lab : Sname;
    begin
@@ -4827,7 +4828,7 @@ package body Synth.Vhdl_Stmts is
 
       Inst := Build_Assert
         (Ctxt, Lab, Synth_Psl_Not_Final (Syn_Inst, Stmt, Next_States));
-      Set_Location (Inst, Get_Location (Stmt));
+      Set_Location (Inst, Loc);
 
       --  Also add a cover gate to cover assertion activation.
       if Flags.Flag_Assert_Cover then
@@ -4836,11 +4837,11 @@ package body Synth.Vhdl_Stmts is
             if Lab /= No_Sname then
                Lab := New_Sname_User (Std_Names.Name_Cover, Lab);
             end if;
-            Inst := Build_Assert_Cover
-              (Get_Build (Syn_Inst), Lab,
-               Build_Extract_Bit (Get_Build (Syn_Inst), Next_States,
-                                  Uns32 (Get_State_Label (Active))));
-            Set_Location (Inst, Get_Location (Stmt));
+            Active_Bit := Build_Extract_Bit (Get_Build (Syn_Inst), Next_States,
+                                             Uns32 (Get_State_Label (Active)));
+            Set_Location (Active_Bit, Loc);
+            Inst := Build_Assert_Cover (Get_Build (Syn_Inst), Lab, Active_Bit);
+            Set_Location (Inst, Loc);
          end if;
       end if;
    end Synth_Psl_Assert_Directive;

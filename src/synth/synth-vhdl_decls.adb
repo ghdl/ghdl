@@ -745,8 +745,8 @@ package body Synth.Vhdl_Decls is
          --  Object is a net if it is not writable.  Extract the
          --  bits for the alias.
          Res := Create_Value_Net
-           (Build2_Extract (Ctxt,
-                            Get_Value_Net (Base.Val), Off.Net_Off, Typ.W),
+           (Build2_Extract
+              (Ctxt, Get_Value_Net (Base.Val), Off.Net_Off, Typ.W, +Decl),
             Typ);
       else
          Res := Create_Value_Alias (Base, Off, Typ, Expr_Pool'Access);
@@ -874,7 +874,7 @@ package body Synth.Vhdl_Decls is
                   Create_Value_Net (Build2_Extract
                                       (Get_Build (Syn_Inst),
                                        Get_Value_Net (Aval.Val),
-                                       Off, Val.Typ.W),
+                                       Off, Val.Typ.W, +Decl),
                                       Instance_Pool));
          Val.Val.A_Off := (0, 0);
       else

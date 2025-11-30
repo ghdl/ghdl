@@ -21,6 +21,7 @@ with Ada.Unchecked_Deallocation;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Folds; use Netlists.Folds;
+with Netlists.Locations; use Netlists.Locations;
 
 with Synth.Verilog_Sources; use Synth.Verilog_Sources;
 with Synth.Verilog_Environment; use Synth.Verilog_Environment.Env;
@@ -59,7 +60,8 @@ package body Synth.Verilog_Exprs is
             begin
                --  Extract sub-value from the expression.
                N := Get_Net (Ctxt, Val);
-               N := Build2_Extract (Ctxt, N, Off, Uns32 (Wd));
+               N := Build2_Extract (Ctxt, N, Off, Uns32 (Wd),
+                                    Get_Location (Get_Net_Parent (N)));
                return Create_Value_Net (N, Res_Typ);
             end;
          when Value_Memory =>
@@ -525,7 +527,7 @@ package body Synth.Verilog_Exprs is
             Res := Build2_Sresize
               (Ctxt, Nv, Get_Type_Bitwidth (Rtyp), Get_Location (N));
          when Convop_Lv_Log =>
-            Res := Build2_Extract (Ctxt, Nv, 0, 1);
+            Res := Build2_Extract (Ctxt, Nv, 0, 1, Get_Location (N));
          when Convop_Lv_Nop =>
             Res := Nv;
          when others =>
@@ -868,7 +870,7 @@ package body Synth.Verilog_Exprs is
             Nt := Build_Dyn_Extract (Ctxt, Nt, Doff, Off.Net_Off, W);
             Set_Location (Nt, N);
          else
-            Nt := Build2_Extract (Ctxt, Nt, Off.Net_Off, W);
+            Nt := Build2_Extract (Ctxt, Nt, Off.Net_Off, W, Get_Location (N));
          end if;
          Res := Create_Value_Net (Nt, Typ);
       end if;

@@ -32,7 +32,7 @@ with Grt.Algos;
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Concats;
-with Netlists.Folds;
+with Netlists.Folds; use Netlists.Folds;
 with Netlists.Locations; use Netlists.Locations;
 
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
@@ -912,6 +912,7 @@ package body Synth.Vhdl_Insts is
 
          --   2. Extract the value.
          O := Build_Extract (Get_Build (Syn_Inst), Port, Offs.Net_Off, Typ.W);
+         Set_Location (O, Get_Location (Iassoc));
          V := Create_Value_Net (O, Typ);
 
          --   3. Assign.
@@ -987,9 +988,10 @@ package body Synth.Vhdl_Insts is
             for I in Inter_Typ.Rec.E'Range loop
                if N /= No_Net then
                   Connect (Get_Input (Inst, Port),
-                           Build_Extract (Get_Build (Syn_Inst), N,
-                                          Inter_Typ.Rec.E (I).Offs.Net_Off,
-                                          Inter_Typ.Rec.E (I).Typ.W));
+                           Build2_Extract (Get_Build (Syn_Inst), N,
+                                           Inter_Typ.Rec.E (I).Offs.Net_Off,
+                                           Inter_Typ.Rec.E (I).Typ.W,
+                                           Get_Location (Inst)));
                end if;
                Port := Port + 1;
             end loop;
@@ -1028,7 +1030,7 @@ package body Synth.Vhdl_Insts is
                   Nets (Nat32 (I)) := Get_Output (Inst, Idx);
                   Idx := Idx + 1;
                end loop;
-               N := Folds.Build2_Concat
+               N := Build2_Concat
                  (Get_Build (Syn_Inst), Nets, Get_Location (Inst));
             end;
          when Type_Slice

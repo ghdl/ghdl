@@ -23,7 +23,7 @@ with Types_Utils; use Types_Utils;
 with Netlists.Folds; use Netlists.Folds;
 
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
-with Netlists.Locations;
+with Netlists.Locations; use Netlists.Locations;
 
 package body Synth.Vhdl_Context is
    package Extra_Tables is new Tables
@@ -439,8 +439,8 @@ package body Synth.Vhdl_Context is
                else
                   Res := Get_Net (Ctxt, (Val.Typ, Val.Val.A_Obj));
                end if;
-               return Build2_Extract
-                 (Ctxt, Res, Val.Val.A_Off.Net_Off, Val.Typ.W);
+               return Build2_Extract (Ctxt, Res, Val.Val.A_Off.Net_Off,
+                 Val.Typ.W, Get_Location (Get_Net_Parent (Res)));
             end;
          when Value_Const =>
             declare
@@ -450,8 +450,8 @@ package body Synth.Vhdl_Context is
                if N = No_Net then
                   N := Get_Net (Ctxt, (Val.Typ, Val.Val.C_Val));
                   Val.Val.C_Net := To_Uns32 (N);
-                  Locations.Set_Location (Get_Net_Parent (N),
-                                          Get_Location (Val.Val.C_Loc));
+                  Set_Location (Get_Net_Parent (N),
+                                Get_Location (Val.Val.C_Loc));
                end if;
                return N;
             end;

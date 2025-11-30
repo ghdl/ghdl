@@ -81,8 +81,10 @@ package Netlists.Folds is
                            return Net;
 
    --  Same as Build_Extract, but return I iff extract all the bits.
-   function Build2_Extract
-     (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
+   function Build2_Extract (Ctxt : Context_Acc;
+                            I : Net;
+                            Off, W : Width;
+                            Loc : Location_Type) return Net;
 
    --  Return A -> B  ==  !A || B
    function Build2_Imp (Ctxt : Context_Acc; A, B : Net; Loc : Location_Type)

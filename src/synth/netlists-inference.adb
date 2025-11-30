@@ -372,7 +372,8 @@ package body Netlists.Inference is
             declare
                Prev : Net;
             begin
-               Prev := Build2_Extract (Ctxt, Prev_Val, Off, Get_Width (Data));
+               Prev := Build2_Extract
+                 (Ctxt, Prev_Val, Off, Get_Width (Data), Loc);
 
                Ndata := Build_Mux2 (Ctxt, Clk_Enable, Prev, Data);
                Set_Location (Ndata, Loc);
@@ -445,6 +446,7 @@ package body Netlists.Inference is
                            W : Width)
    is
       Inst : constant Instance := Get_Net_Parent (Val);
+      Loc : constant Location_Type := Get_Location (Inst);
    begin
       case Get_Id (Inst) is
          when Id_Mux2 =>
@@ -459,14 +461,14 @@ package body Netlists.Inference is
                Push_Extract (Ctxt, I1, Off, Last_Mux, W);
                Res := Build_Mux2 (Ctxt, Get_Input_Net (Inst, 0), I0, I1);
                Mux := Get_Net_Parent (Res);
-               Set_Location (Mux, Get_Location (Inst));
+               Set_Location (Mux, Loc);
                if Inst = Last_Mux then
                   Last_Mux := Mux;
                end if;
                Val := Res;
             end;
          when others =>
-            Val := Build_Extract (Ctxt, Val, Off, W);
+            Val := Build2_Extract (Ctxt, Val, Off, W, Loc);
       end case;
    end Push_Extract;
 
@@ -533,7 +535,7 @@ package body Netlists.Inference is
 
       Data := Get_Driver (I1);
       if Get_Width (Data) > W then
-         Data := Build2_Extract (Ctxt, Data, Off, W);
+         Data := Build2_Extract (Ctxt, Data, Off, W, Mux_Loc);
          --  Do not disconnect as this mux is certainly used somewhere else.
       else
          Disconnect (Sel);
@@ -599,7 +601,7 @@ package body Netlists.Inference is
            | Id_Ioutput
            | Id_Iinout =>
             Init := Get_Input_Net (Sig, 1);
-            Init := Build2_Extract (Ctxt, Init, Off, Get_Width (O));
+            Init := Build2_Extract (Ctxt, Init, Off, Get_Width (O), Loc);
          when Id_Signal
            | Id_Output
            | Id_Inout =>

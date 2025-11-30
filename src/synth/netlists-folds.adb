@@ -291,10 +291,13 @@ package body Netlists.Folds is
       end if;
    end Build2_Resize;
 
-   function Build2_Extract
-     (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net
+   function Build2_Extract (Ctxt : Context_Acc;
+                            I : Net;
+                            Off, W : Width;
+                            Loc : Location_Type) return Net
    is
       Parent : Instance;
+      Res : Net;
    begin
       if Off = 0 and then W = Get_Width (I) then
          --  No extraction, full input.
@@ -304,13 +307,15 @@ package body Netlists.Folds is
       Parent := Get_Net_Parent (I);
       if Get_Id (Parent) = Id_Extract then
          --  Merge extract of extract.
-         return Build2_Extract
+         Res := Build2_Extract
            (Ctxt,
             Get_Input_Net (Parent, 0),
-            Off + Get_Param_Uns32 (Parent, 0), W);
+            Off + Get_Param_Uns32 (Parent, 0), W, Loc);
+      else
+         Res := Build_Extract (Ctxt, I, Off, W);
+         Set_Location (Res, Loc);
       end if;
-
-      return Build_Extract (Ctxt, I, Off, W);
+      return Res;
    end Build2_Extract;
 
    function Build2_Imp (Ctxt : Context_Acc; A, B : Net; Loc : Location_Type)

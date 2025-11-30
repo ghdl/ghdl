@@ -2634,8 +2634,7 @@ package body Synth.Vhdl_Expr is
                else
                   N := Build2_Extract (Ctxt, Get_Net (Ctxt, Val),
                                        Val.Typ.Rec.E (Idx + 1).Offs.Net_Off,
-                                       Get_Type_Width (Res_Typ));
-                  Set_Location (N, Expr);
+                                       Get_Type_Width (Res_Typ), +Expr);
                   return Create_Value_Net (N, Res_Typ);
                end if;
             end;

@@ -425,11 +425,12 @@ package body Netlists.Expands is
          begin
             Res := Mem;
             if Off /= 0 then
-               Res := Build2_Extract (Ctxt, Res, Off, Get_Width (Mem) - Off);
+               Res := Build2_Extract
+                 (Ctxt, Res, Off, Get_Width (Mem) - Off, Loc);
             end if;
             Res := Extract_Bmux (Ctxt, Memidx_Arr, Res);
             if Get_Width (Res) /= W then
-               Res := Build2_Extract (Ctxt, Res, 0, W);
+               Res := Build2_Extract (Ctxt, Res, 0, W, Loc);
             end if;
          end;
       elsif True then
@@ -559,7 +560,7 @@ package body Netlists.Expands is
       Next_Off := 0;
 
       if Off /= 0 then
-         Append (Concat, Build_Extract (Ctxt, Mem, 0, Off));
+         Append (Concat, Build2_Extract (Ctxt, Mem, 0, Off, Loc));
          Next_Off := Off;
       end if;
 
@@ -582,11 +583,12 @@ package body Netlists.Expands is
             --             | Dat                            |
             --             +----------+----------+----------+
             Step := Dat_W - (Next_Off - Off);
-            Append (Concat, Build_Extract (Ctxt, Prev_Net, 0, Step));
+            Append (Concat, Build2_Extract (Ctxt, Prev_Net, 0, Step, Loc));
             V := Build_Concat2
               (Ctxt,
-               Build_Extract (Ctxt, Mem, Next_Off, Step),
-               Build_Extract (Ctxt, Prev_Net, Step, Dat_W - Step));
+               Build2_Extract (Ctxt, Mem, Next_Off, Step, Loc),
+               Build2_Extract (Ctxt, Prev_Net, Step, Dat_W - Step, Loc));
+            Set_Location (V, Loc);
          else
             --  No overlap.
             if Prev_Net /= No_Net then
@@ -595,10 +597,10 @@ package body Netlists.Expands is
 
             if Next_Off < Off then
                --  But there is a gap.
-               Append (Concat, Build_Extract (Ctxt, Mem, Next_Off,
-                                              Off - Next_Off));
+               Append (Concat, Build2_Extract (Ctxt, Mem, Next_Off,
+                                               Off - Next_Off, Loc));
             end if;
-            V := Build_Extract (Ctxt, Mem, Off, Dat_W);
+            V := Build2_Extract (Ctxt, Mem, Off, Dat_W, Loc);
          end if;
 
          S := Net_Arr (Sel);
@@ -674,7 +676,7 @@ package body Netlists.Expands is
          Generate_Muxes
            (Ctxt, Concat, Mem, Off, Dat, Memidx_Arr, Net_Arr.all, Loc, En);
          if Off < O_W then
-            Append (Concat, Build_Extract (Ctxt, Mem, Off, O_W - Off));
+            Append (Concat, Build2_Extract (Ctxt, Mem, Off, O_W - Off, Loc));
          end if;
       end;
       Build (Ctxt, Concat, Loc, Res);

@@ -1452,7 +1452,7 @@ package body Netlists.Disp_Vhdl is
                                  and then not Need_Edge (Inst))
                then
                   if Locations.Get_Location (Inst) = No_Location then
-                     case Get_Id (Inst) is
+                     case Id is
                         when Id_Const_UB32
                            | Id_Const_SB32
                            | Id_Const_UL32
