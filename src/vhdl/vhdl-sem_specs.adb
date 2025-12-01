@@ -1555,7 +1555,9 @@ package body Vhdl.Sem_Specs is
          while Assoc /= Null_Iir loop
             if Get_Kind (Assoc) /= Iir_Kind_Association_Element_Open then
                Inter := Get_Association_Interface (Assoc, Inter_Iter);
-               Set_Open_Flag (Inter, False);
+               if not Is_Error (Inter) then
+                  Set_Open_Flag (Inter, False);
+               end if;
             end if;
             Next_Association_Interface (Assoc, Inter_Iter);
          end loop;
