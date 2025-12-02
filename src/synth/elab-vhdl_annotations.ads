@@ -92,10 +92,6 @@ package Elab.Vhdl_Annotations is
    --  For an instantiated node N, copy the annotation from its origin node.
    procedure Instantiate_Annotate (N : Iir);
 
-   --  Disp annotations for an iir node.
-   procedure Disp_Vhdl_Info (Node : Iir);
-   procedure Disp_Tree_Info (Node : Iir);
-
    --  Infos for top-level packages.
    Global_Info : Sim_Info_Acc;
 

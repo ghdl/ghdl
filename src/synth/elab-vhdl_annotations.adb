@@ -17,7 +17,6 @@
 with Ada.Unchecked_Deallocation;
 
 with Tables;
-with Simple_IO;
 
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
@@ -1549,69 +1548,6 @@ package body Elab.Vhdl_Annotations is
       end loop;
       Info_Node.Free;
    end Finalize_Annotate;
-
-   -- Disp annotations for an iir node.
-   procedure Disp_Vhdl_Info (Node: Iir)
-   is
-      use Simple_IO;
-      Info : constant Sim_Info_Acc := Get_Ann (Node);
-   begin
-      if Info = null then
-         return;
-      end if;
-
-      case Info.Kind is
-         when Kind_Block =>
-            Put_Line
-              ("-- nbr objects:" & Object_Slot_Type'Image (Info.Nbr_Objects));
-
-         when Kind_Frame
-           | Kind_Protected
-           | Kind_Process
-           | Kind_Package =>
-            Put_Line
-              ("-- nbr objects:" & Object_Slot_Type'Image (Info.Nbr_Objects));
-
-         when Kind_Type | Kind_Object | Kind_Signal | Kind_File
-           | Kind_Terminal
-           | Kind_Quantity
-           | Kind_PSL =>
-            Put_Line ("-- slot:" & Object_Slot_Type'Image (Info.Slot));
-         when Kind_Extra =>
-            null;
-      end case;
-   end Disp_Vhdl_Info;
-
-   procedure Disp_Info (Info : Sim_Info_Acc)
-   is
-      use Simple_IO;
-   begin
-      if Info = null then
-         Put_Line ("*null*");
-         return;
-      end if;
-      Put ("slot:" & Object_Slot_Type'Image (Info.Slot));
-      case Info.Kind is
-         when Kind_Block
-           | Kind_Frame
-           | Kind_Protected
-           | Kind_Process
-           | Kind_Package =>
-            Put (" nbr objects:"
-                   & Object_Slot_Type'Image (Info.Nbr_Objects));
-         when Kind_Type | Kind_Object | Kind_Signal | Kind_File
-           | Kind_Terminal | Kind_Quantity
-           | Kind_PSL
-           | Kind_Extra =>
-            null;
-      end case;
-      New_Line;
-   end Disp_Info;
-
-   procedure Disp_Tree_Info (Node: Iir) is
-   begin
-      Disp_Info (Get_Ann (Node));
-   end Disp_Tree_Info;
 
    procedure Set_Ann (Target: Iir; Info: Sim_Info_Acc) is
    begin
