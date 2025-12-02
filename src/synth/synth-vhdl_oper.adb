@@ -158,11 +158,9 @@ package body Synth.Vhdl_Oper is
          when Type_Slice =>
             return Create_Vec_Type_By_Length (Res.W, Res.Slice_El);
 
-         when Type_Unbounded_Vector =>
-            raise Internal_Error;
+         when Type_Unbounded_Vector => raise Internal_Error;
 
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Create_Res_Bound;
 
@@ -225,8 +223,7 @@ package body Synth.Vhdl_Oper is
             when Std_Logic_D_Pos =>
                B := 0;
                M := 0;
-            when others =>
-               raise Internal_Error;
+            when others => raise Internal_Error;
          end case;
          Mask (Woff) := Mask (Woff) or Shift_Left (M, Boff);
          Vals (Woff) := Vals (Woff) or Shift_Left (B, Boff);

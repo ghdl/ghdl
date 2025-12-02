@@ -828,8 +828,7 @@ package body Synth.Vhdl_Stmts is
                  | Value_Sig_Val =>
                   raise Internal_Error;
             end case;
-         when Target_Aggregate =>
-            raise Internal_Error;
+         when Target_Aggregate => raise Internal_Error;
          when Target_Memory =>
             return Synth_Read_Memory (Syn_Inst, Targ.Mem_Obj, Targ.Targ_Type,
                                       0, Targ.Mem_Dyn, Loc);
@@ -3924,8 +3923,7 @@ package body Synth.Vhdl_Stmts is
                  | Iir_Kind_Psl_Assert_Directive
                  | Iir_Kind_Psl_Assume_Directive =>
                   Sev_V := Error_Severity;
-               when others =>
-                  raise Internal_Error;
+               when others => raise Internal_Error;
             end case;
          else
             Sev_V := Natural (Read_Discrete (Sev));
@@ -3980,8 +3978,7 @@ package body Synth.Vhdl_Stmts is
                   Put_Line_Err ("Assumption violation.");
                when Iir_Kind_Psl_Cover_Directive =>
                   Put_Line_Err ("sequence covered.");
-               when others =>
-                  raise Internal_Error;
+               when others => raise Internal_Error;
             end case;
          else
             Put_Line_Err (Value_To_String (Rep));
@@ -4012,48 +4009,6 @@ package body Synth.Vhdl_Stmts is
    begin
       Exec_Failed_Assertion (Inst, Stmt);
    end Execute_Report_Statement;
-
-   --  Return True if EXPR can be evaluated with static values.
-   --  Does not need to be fully accurate, used for report/assert messages.
-   function Is_Static_Expr (Inst : Synth_Instance_Acc;
-                            Expr : Node) return Boolean is
-   begin
-      case Get_Kind (Expr) is
-         when Iir_Kinds_Dyadic_Operator =>
-            return Is_Static_Expr (Inst, Get_Left (Expr))
-              and then Is_Static_Expr (Inst, Get_Right (Expr));
-         when Iir_Kind_Image_Attribute =>
-            return Is_Static_Expr (Inst, Get_Parameter (Expr));
-         when Iir_Kind_Instance_Name_Attribute
-            | Iir_Kinds_Literal
-            | Iir_Kind_Enumeration_Literal =>
-            return True;
-         when Iir_Kind_Length_Array_Attribute =>
-            --  Attributes on types can be evaluated.
-            return True;
-         when Iir_Kind_Simple_Name =>
-            return Is_Static_Expr (Inst, Get_Named_Entity (Expr));
-         when others =>
-            Error_Kind ("is_static_expr", Expr);
-            return False;
-      end case;
-   end Is_Static_Expr;
-
-   procedure Synth_Dynamic_Report_Statement (Inst : Synth_Instance_Acc;
-                                             Stmt : Node;
-                                             Is_Cond : Boolean)
-   is
-      Rep_Expr : constant Node := Get_Report_Expression (Stmt);
-      Sev_Expr : constant Node := Get_Severity_Expression (Stmt);
-   begin
-      if not Is_Cond
-        and then Is_Static_Expr (Inst, Rep_Expr)
-        and then (Sev_Expr = Null_Node
-                    or else Is_Static_Expr (Inst, Sev_Expr))
-      then
-         Exec_Failed_Assertion (Inst, Stmt);
-      end if;
-   end Synth_Dynamic_Report_Statement;
 
    procedure Execute_Assertion_Statement (Inst : Synth_Instance_Acc;
                                           Stmt : Node)
@@ -4184,9 +4139,7 @@ package body Synth.Vhdl_Stmts is
                Execute_Report_Statement (C.Inst, Stmt);
             else
                --  Not executed.
-               --  Depends on the execution path: the report statement may
-               --  be conditionally executed.
-               Synth_Dynamic_Report_Statement (C.Inst, Stmt, True);
+               null;
             end if;
          when Iir_Kind_Assertion_Statement =>
             if not Is_Dyn then
