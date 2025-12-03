@@ -1951,8 +1951,7 @@ package body Vhdl.Sem_Specs is
       Entity_Unit : Iir_Design_Unit;
       Parent : Iir;
       Force : Boolean;
-      Create_Map_Aspect : Boolean)
-     return Iir_Binding_Indication
+      Create_Map_Aspect : Boolean) return Iir_Binding_Indication
    is
       Entity : Iir_Entity_Declaration;
       Entity_Name : Iir;

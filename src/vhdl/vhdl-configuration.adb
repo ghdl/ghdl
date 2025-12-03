@@ -454,6 +454,7 @@ package body Vhdl.Configuration is
       while Assoc /= Null_Iir loop
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
             Formal := Get_Association_Interface (Assoc, Inter);
+            --  So FORMAL is not associated.
             Err := Err or Check_Open_Port (Formal, Assoc);
             if Is_Warning_Enabled (Warnid_Binding)
               and then not Get_Artificial_Flag (Assoc)
@@ -489,6 +490,7 @@ package body Vhdl.Configuration is
          while Assoc /= Null_Iir loop
             if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
                Formal := Get_Association_Interface (Assoc, Inter);
+               --  FORMAL is not associated.
                Set_Open_Flag (Formal, True);
                Err := True;
             end if;
@@ -512,9 +514,12 @@ package body Vhdl.Configuration is
                   end if;
                end if;
                if Actual /= Null_Iir
+                 and then Get_Default_Value (Actual) = Null_Iir
                  and then Get_Open_Flag (Actual)
                  and then Check_Open_Port (Formal, Null_Iir)
                then
+                  --  So FORMAL is associated to ACTUAL, which is not
+                  --  associated (and has no default value).
                   --  For a better message, find the location.
                   Assoc_1 := Inst_Assoc_Chain;
                   Inter_1 := Inst_Inter_Chain;
