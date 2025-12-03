@@ -415,8 +415,7 @@ package body Synth.Vhdl_Eval is
             end if;
          when 8 =>
             null;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Check_Integer_Overflow;
 
@@ -552,8 +551,7 @@ package body Synth.Vhdl_Eval is
                end loop;
                return Create_Memory_Fp64 (Res, Etyp);
             end;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Eval_Vector_Maximum;
 
@@ -607,8 +605,7 @@ package body Synth.Vhdl_Eval is
                end loop;
                return Create_Memory_Fp64 (Res, Etyp);
             end;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Eval_Vector_Minimum;
 
