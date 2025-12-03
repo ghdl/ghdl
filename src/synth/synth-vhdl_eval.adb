@@ -1068,17 +1068,18 @@ package body Synth.Vhdl_Eval is
       Ord : Order_Type;
    begin
       case Def is
+         --  GCOV_EXCL_START (internal errors)
          when Iir_Predefined_Error =>
             return Null_Memtyp;
-
-         when Iir_Predefined_Boolean_Not
-           | Iir_Predefined_Bit_Not =>
-            return Create_Memory_U8 (1 - Read_U8 (Param1), Param1.Typ);
 
          when Iir_Predefined_Boolean_Or
             | Iir_Predefined_Bit_Or
             | Iir_Predefined_Boolean_And
-            | Iir_Predefined_Bit_And =>
+            | Iir_Predefined_Bit_And
+            | Iir_Predefined_Boolean_Nor
+            | Iir_Predefined_Bit_Nor
+            | Iir_Predefined_Boolean_Nand
+            | Iir_Predefined_Bit_Nand =>
             --  Short-circuit operators.
             raise Internal_Error;
 
@@ -1088,26 +1089,17 @@ package body Synth.Vhdl_Eval is
             | Iir_Predefined_Bit_Falling_Edge =>
             --  Cannot be static
             raise Internal_Error;
+         --  GCOV_EXCL_STOP
+
+         when Iir_Predefined_Boolean_Not
+           | Iir_Predefined_Bit_Not =>
+            return Create_Memory_U8 (1 - Read_U8 (Param1), Param1.Typ);
 
          when Iir_Predefined_Boolean_Xor
             | Iir_Predefined_Bit_Xor =>
             return Create_Memory_U8
               (Boolean'Pos (Boolean'Val (Read_Discrete (Param1))
                               xor Boolean'Val (Read_Discrete (Param2))),
-               Res_Typ);
-
-         when Iir_Predefined_Boolean_Nand
-            | Iir_Predefined_Bit_Nand =>
-            return Create_Memory_U8
-              (Boolean'Pos (not (Boolean'Val (Read_Discrete (Param1))
-                                   and Boolean'Val (Read_Discrete (Param2)))),
-               Res_Typ);
-
-         when Iir_Predefined_Boolean_Nor
-            | Iir_Predefined_Bit_Nor =>
-            return Create_Memory_U8
-              (Boolean'Pos (not (Boolean'Val (Read_Discrete (Param1))
-                                   or Boolean'Val (Read_Discrete (Param2)))),
                Res_Typ);
 
          when Iir_Predefined_Bit_Condition =>
