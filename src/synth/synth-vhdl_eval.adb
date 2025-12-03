@@ -2990,7 +2990,8 @@ package body Synth.Vhdl_Eval is
             end;
 
          when Iir_Predefined_Ieee_1164_To_01_Slv_Log
-            | Iir_Predefined_Ieee_Numeric_Std_To_01_Uns =>
+            | Iir_Predefined_Ieee_Numeric_Std_To_01_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_To_01_Sgn =>
             declare
                Len : constant Uns32 := Param1.Typ.Abound.Len;
                S : Std_Ulogic;
@@ -3055,7 +3056,7 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Suv
            | Iir_Predefined_Ieee_1164_To_Stdulogicvector_Slv =>
             --  TODO
-            return (Param1.Typ, Param1.Mem);
+            return Unshare (Param1);
 
          when Iir_Predefined_Ieee_1164_To_Hstring
             | Iir_Predefined_Ieee_Numeric_Std_To_Hstring_Uns =>
