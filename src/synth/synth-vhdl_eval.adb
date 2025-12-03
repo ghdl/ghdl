@@ -263,8 +263,7 @@ package body Synth.Vhdl_Eval is
             else
                raise Internal_Error;
             end if;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Compare;
 
@@ -1614,9 +1613,11 @@ package body Synth.Vhdl_Eval is
             end if;
 
          when Iir_Predefined_Array_Sll
-           | Iir_Predefined_Array_Srl
-           | Iir_Predefined_Array_Rol
-           | Iir_Predefined_Array_Ror =>
+            | Iir_Predefined_Array_Srl
+            | Iir_Predefined_Array_Sla
+            | Iir_Predefined_Array_Sra
+            | Iir_Predefined_Array_Rol
+            | Iir_Predefined_Array_Ror =>
             return Execute_Shift_Operator
               (Param1, Read_Discrete (Param2), 0, Def);
 
