@@ -48,6 +48,8 @@ package body Vhdl.Ieee.Math_Real is
                      Def := Iir_Predefined_Ieee_Math_Real_Realmin;
                   when Name_Sqrt =>
                      Def := Iir_Predefined_Ieee_Math_Real_Sqrt;
+                  when Name_Cbrt =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Cbrt;
                   when Name_Mod =>
                      Def := Iir_Predefined_Ieee_Math_Real_Mod;
                   when Name_Ceil =>
@@ -70,12 +72,26 @@ package body Vhdl.Ieee.Math_Real is
                      Def := Iir_Predefined_Ieee_Math_Real_Sin;
                   when Name_Cos =>
                      Def := Iir_Predefined_Ieee_Math_Real_Cos;
+                  when Name_Tan =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Tan;
+                  when Name_Arcsin =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Arcsin;
+                  when Name_Arccos =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Arccos;
                   when Name_Arctan =>
                      Def := Iir_Predefined_Ieee_Math_Real_Arctan;
                   when Name_Sinh =>
                      Def := Iir_Predefined_Ieee_Math_Real_Sinh;
                   when Name_Cosh =>
                      Def := Iir_Predefined_Ieee_Math_Real_Cosh;
+                  when Name_Tanh =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Tanh;
+                  when Name_Arcsinh =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Arcsinh;
+                  when Name_Arccosh =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Arccosh;
+                  when Name_Arctanh =>
+                     Def := Iir_Predefined_Ieee_Math_Real_Arctanh;
                   when Name_Op_Exp =>
                      declare
                         use Vhdl.Std_Package;
