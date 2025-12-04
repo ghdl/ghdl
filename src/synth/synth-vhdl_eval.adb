@@ -2777,7 +2777,7 @@ package body Synth.Vhdl_Eval is
             return Create_Memory_Discrete
               (Eval_Log_To_Integer (Param1, Expr), Res_Typ);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Int =>
-            return Param1;
+            return Unshare (Param1);
 
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat
