@@ -13,7 +13,9 @@ begin
     v0 := x"4";
     assert v0 /= 5 severity failure;
     v0 := x"d";
-    assert 13 /= v0 severity failure;
+--    assert not (13 /= v0) severity failure;
+--    assert 13 = v0 severity failure;
+    assert 12 /= v0 severity failure;
     wait;
   end process;
 end;
