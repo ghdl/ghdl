@@ -3102,28 +3102,36 @@ package body Synth.Vhdl_Eval is
             return Num_Std.Minmax (Param1, Param2, False, False);
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Uns
-            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Shl =>
-            return Execute_Shift_Operator
-              (Param1, Read_Discrete (Param2),
-               Std_Ulogic'Pos('0'), Iir_Predefined_Array_Sll);
-
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Shl
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Signed_Shl =>
-            return Execute_Shift_Operator
-              (Param1, Read_Discrete (Param2),
-               Std_Ulogic'Pos('0'), Iir_Predefined_Array_Sla);
+            declare
+               Cnt : Int64;
+            begin
+               Cnt := Eval_Std_Unsigned_To_Integer (Param2, Expr);
+               return Execute_Shift_Operator
+                 (Param1, Cnt, Std_Ulogic'Pos('0'), Iir_Predefined_Array_Sll);
+            end;
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Shr_Uns
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Shr =>
-            return Execute_Shift_Operator
-              (Param1, Read_Discrete (Param2),
-               Std_Ulogic'Pos('0'), Iir_Predefined_Array_Srl);
+            declare
+               Cnt : Int64;
+            begin
+               Cnt := Eval_Std_Unsigned_To_Integer (Param2, Expr);
+               return Execute_Shift_Operator
+                 (Param1, Cnt, Std_Ulogic'Pos('0'), Iir_Predefined_Array_Srl);
+            end;
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Shr_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Signed_Shr =>
-            return Execute_Shift_Operator
-              (Param1, Read_Discrete (Param2),
-               Std_Ulogic'Pos('0'), Iir_Predefined_Array_Sra);
+            declare
+               Cnt : Int64;
+            begin
+               Cnt := Eval_Std_Unsigned_To_Integer (Param2, Expr);
+               return Execute_Shift_Operator
+                 (Param1, Cnt, Std_Ulogic'Pos('0'), Iir_Predefined_Array_Sra);
+            end;
 
          when Iir_Predefined_Ieee_Std_Logic_Misc_And_Reduce_Slv
             | Iir_Predefined_Ieee_Std_Logic_Misc_And_Reduce_Suv =>
