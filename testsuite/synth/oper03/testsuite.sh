@@ -15,5 +15,6 @@ synth_failure --std=87 concat02.vhdl -e
 
 GHDL_STD_FLAGS=--std=08
 synth_only match01
+synth_only tox01
 
 echo "Test successful"
