@@ -2693,6 +2693,7 @@ package body Synth.Vhdl_Eval is
                if Unit = Null_Iir then
                   Error_Msg_Synth
                     (Inst, Expr, "to_string for time called with wrong unit");
+                  return Null_Memtyp;
                end if;
                Grt.To_Strings.To_String (Str, First,
                                          Ghdl_I64 (Read_Discrete (Param1)),
