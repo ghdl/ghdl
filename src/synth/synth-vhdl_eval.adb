@@ -3362,10 +3362,13 @@ package body Synth.Vhdl_Eval is
                pragma Assert (Valid);
                return Create_Memory_Fp64 (Fp64 (Res), Res_Typ);
             end;
+
+         --  GCOV_EXCL_START (never called)
          when others =>
             Error_Msg_Synth (Inst, Expr, "unhandled (static) function: "
                                & Iir_Predefined_Functions'Image (Def));
             return Null_Memtyp;
+         --  GCOV_EXCL_STOP
       end case;
    end Eval_Static_Predefined_Function_Call;
 end Synth.Vhdl_Eval;
