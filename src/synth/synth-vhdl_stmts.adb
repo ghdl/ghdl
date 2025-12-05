@@ -270,6 +270,9 @@ package body Synth.Vhdl_Stmts is
             Synth_Assignment_Prefix
               (Syn_Inst, Pfx_Inst, Get_Prefix (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
+            if Dest_Base = No_Valtyp then
+               return;
+            end if;
             Synth_Assignment_Prefix_Indexed_Name
               (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
 
@@ -277,6 +280,9 @@ package body Synth.Vhdl_Stmts is
             Synth_Assignment_Prefix
               (Syn_Inst, Pfx_Inst, Get_Prefix (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
+            if Dest_Base = No_Valtyp then
+               return;
+            end if;
             Synth_Assignment_Prefix_Selected_Name
               (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
 
@@ -284,6 +290,9 @@ package body Synth.Vhdl_Stmts is
             Synth_Assignment_Prefix
               (Syn_Inst, Pfx_Inst, Get_Prefix (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
+            if Dest_Base = No_Valtyp then
+               return;
+            end if;
             Synth_Assignment_Prefix_Slice_Name
               (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
 
