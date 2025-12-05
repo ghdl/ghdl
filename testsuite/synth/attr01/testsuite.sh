@@ -11,4 +11,7 @@ synth_analyze attr02
 grep -q "keep of rst" syn_attr02.vhdl
 clean
 
+GHDL_STD_FLAGS=-frelaxed
+synth_tb attr03
+
 echo "Test successful"
