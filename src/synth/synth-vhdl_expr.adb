@@ -366,6 +366,7 @@ package body Synth.Vhdl_Expr is
          when Type_Access =>
             --  Accesses cannot be indexed or sliced.
             --  Just fill with 'X'.
+            --  GCOV_EXCL_START (can this exist ?)
             pragma Assert (Off = 0 and W >= Typ.W);
             for I in 0 .. Typ.W - 1 loop
                declare
@@ -378,8 +379,8 @@ package body Synth.Vhdl_Expr is
                Vec_Off := Vec_Off + 1;
             end loop;
             W := W - Typ.W;
-         when others =>
-            raise Internal_Error;
+            --  GCOV_EXCL_STOP
+         when others => raise Internal_Error;
       end case;
    end Value2logvec;
 
@@ -438,28 +439,15 @@ package body Synth.Vhdl_Expr is
       pragma Assert (W1 = 0);
    end Value2logvec;
 
-   --  Resize for a discrete value.
-   function Synth_Resize
+   --  Resize for a dynamic index
+   function Synth_Resize_Index
      (Ctxt : Context_Acc; Val : Valtyp; W : Width; Loc : Node) return Net
    is
       Wn : constant Width := Val.Typ.W;
       N : Net;
       Res : Net;
-      V : Int64;
    begin
-      if Is_Static (Val.Val)
-        and then Wn /= W
-      then
-         --  Optimization: resize directly.
-         V := Read_Discrete (Val);
-         if Val.Typ.Drange.Is_Signed then
-            Res := Build2_Const_Int (Ctxt, V, W);
-         else
-            Res := Build2_Const_Uns (Ctxt, To_Uns64 (V), W);
-         end if;
-         Set_Location (Res, Loc);
-         return Res;
-      end if;
+      pragma Assert (not Is_Static (Val.Val));
 
       N := Get_Net (Ctxt, Val);
       if Wn > W then
@@ -475,7 +463,7 @@ package body Synth.Vhdl_Expr is
       else
          return N;
       end if;
-   end Synth_Resize;
+   end Synth_Resize_Index;
 
    function Synth_Array_Bounds (Syn_Inst : Synth_Instance_Acc;
                                 Atype : Node;
@@ -758,8 +746,7 @@ package body Synth.Vhdl_Expr is
                      end if;
                      return Create_Value_Discrete (Val, Dtype);
                   end;
-               when others =>
-                  raise Internal_Error;
+               when others => raise Internal_Error;
             end case;
          when Type_Float =>
             pragma Assert (Vtype.Kind = Type_Float);
@@ -989,7 +976,7 @@ package body Synth.Vhdl_Expr is
       Wbounds : Width;
    begin
       Wbounds := Clog2 (Bnd.Len);
-      Idx2 := Synth_Resize (Ctxt, Idx_Val, Wbounds, Loc);
+      Idx2 := Synth_Resize_Index (Ctxt, Idx_Val, Wbounds, Loc);
 
       if Bnd.Right = 0 and then Bnd.Dir = Dir_Downto then
          --  Simple case without adjustments.
