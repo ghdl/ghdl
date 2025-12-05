@@ -125,19 +125,10 @@ package body Elab.Vhdl_Expr is
       return Null_Node;
    end Find_Name_In_Declaration_Chain;
 
-   function Synth_Pathname_Object (Loc_Inst : Synth_Instance_Acc;
-                                   Name : Node;
-                                   Cur_Inst : Synth_Instance_Acc;
-                                   Path : Node) return Valtyp
+   function Find_Object_Name_In_Scope (Scope : Node; Id : Name_Id) return Node
    is
-      use Errorout;
-      Id : constant Name_Id := Get_Identifier (Path);
-      Scope : constant Node := Get_Source_Scope (Cur_Inst);
       Obj : Node;
-      Res : Valtyp;
-      Name_Typ : Type_Acc;
    begin
-      --  Object simple name.
       case Get_Kind (Scope) is
          when Iir_Kind_Generate_Statement_Body
            | Iir_Kind_Block_Statement
@@ -160,6 +151,41 @@ package body Elab.Vhdl_Expr is
          when others =>
             Error_Kind ("synth_pathname_object(1)", Scope);
       end case;
+      return Obj;
+   end Find_Object_Name_In_Scope;
+
+   function Find_Stmt_Name_In_Scope (Scope : Node; Id : Name_Id) return Node
+   is
+      Res : Node;
+   begin
+      case Get_Kind (Scope) is
+         when Iir_Kind_Architecture_Body
+           | Iir_Kind_Block_Statement
+           | Iir_Kind_Generate_Statement_Body =>
+            Res := Find_Name_In_Chain
+              (Get_Concurrent_Statement_Chain (Scope), Id);
+         when Iir_Kind_Package_Declaration =>
+            Res := Find_Name_In_Declaration_Chain (Scope, Id);
+         when others =>
+            Error_Kind ("synth_pathname(scope)", Scope);
+      end case;
+      return Res;
+   end Find_Stmt_Name_In_Scope;
+
+   function Synth_Pathname_Object (Loc_Inst : Synth_Instance_Acc;
+                                   Name : Node;
+                                   Cur_Inst : Synth_Instance_Acc;
+                                   Path : Node) return Valtyp
+   is
+      use Errorout;
+      Id : constant Name_Id := Get_Identifier (Path);
+      Scope : constant Node := Get_Source_Scope (Cur_Inst);
+      Obj : Node;
+      Res : Valtyp;
+      Name_Typ : Type_Acc;
+   begin
+      --  Object simple name.
+      Obj := Find_Object_Name_In_Scope (Scope, Id);
 
       --  LRM08 8.7 External names
       --  It is an error when evaluating an external name if the identified
@@ -167,8 +193,15 @@ package body Elab.Vhdl_Expr is
       --  whose simple name is the object simple name of the external
       --  pathname.
       if Obj = Null_Node then
-         Error_Msg_Synth
-           (Loc_Inst, Path, "cannot find object %i in %i", (+Id, +Scope));
+         Obj := Find_Stmt_Name_In_Scope (Scope, Id);
+         if Obj /= Null_Node then
+            Error_Msg_Synth
+              (Loc_Inst, Path,
+              "last path element %i is not an object in %i", (+Id, +Scope));
+         else
+            Error_Msg_Synth
+              (Loc_Inst, Path, "cannot find object %i in %i", (+Id, +Scope));
+         end if;
          return No_Valtyp;
       end if;
 
@@ -307,21 +340,18 @@ package body Elab.Vhdl_Expr is
       Scope := Get_Source_Scope (Cur_Inst);
 
       --  Find name in concurrent statements.
-      case Get_Kind (Scope) is
-         when Iir_Kind_Architecture_Body
-           | Iir_Kind_Block_Statement
-           | Iir_Kind_Generate_Statement_Body =>
-            Res := Find_Name_In_Chain
-              (Get_Concurrent_Statement_Chain (Scope), Id);
-         when Iir_Kind_Package_Declaration =>
-            Res := Find_Name_In_Declaration_Chain (Scope, Id);
-         when others =>
-            Error_Kind ("synth_pathname(scope)", Scope);
-      end case;
+      Res := Find_Stmt_Name_In_Scope (Scope, Id);
       if Res = Null_Node then
-         Error_Msg_Synth
-           (Loc_Inst, Path,
-            "cannot find path element %i in %i", (+Id, +Scope));
+         Res := Find_Object_Name_In_Scope (Scope, Id);
+         if Res /= Null_Node then
+            Error_Msg_Synth
+              (Loc_Inst, Suffix,
+              "cannot select a subelement of %i in an external name", +Res);
+         else
+            Error_Msg_Synth
+              (Loc_Inst, Path,
+              "cannot find path element %i in %i", (+Id, +Scope));
+         end if;
          return No_Valtyp;
       end if;
 
