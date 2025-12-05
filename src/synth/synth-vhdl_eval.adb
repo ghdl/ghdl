@@ -1848,6 +1848,7 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int
             | Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Int
             | Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Slv_Int =>
+            --  TODO: check the semantic of std_logic_arith operator
             Ord := Num_Std.Compare_Sgn_Int (Param1, Param2, Greater, +Expr);
             return Create_Memory_Boolean (Ord = Equal);
          when Iir_Predefined_Ieee_Numeric_Bit_Eq_Sgn_Int =>

@@ -73,8 +73,7 @@ package body Synth.Vhdl_Expr is
                Res := Get_Value_Memtyp ((V.Val.A_Typ, V.Val.A_Obj));
                return (V.Typ, Res.Mem + V.Val.A_Off.Mem_Off);
             end;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Get_Value_Memtyp;
 
@@ -90,8 +89,7 @@ package body Synth.Vhdl_Expr is
          when Value_Const
            | Value_Alias =>
             return Read_Discrete (Get_Memtyp (V));
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Get_Static_Discrete;
 
@@ -120,8 +118,7 @@ package body Synth.Vhdl_Expr is
                   return False;
                end if;
             end;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
       Inst := Get_Net_Parent (N);
       case Get_Id (Inst) is
@@ -169,9 +166,7 @@ package body Synth.Vhdl_Expr is
            |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_W_Pos =>
             Val := 0;
             Zx := 1;
-         when others =>
-            --  Only 9 values.
-            raise Internal_Error;
+         when others => raise Internal_Error; --  Only 9 values.
       end case;
    end From_Std_Logic;
 
@@ -346,8 +341,7 @@ package body Synth.Vhdl_Expr is
                            Vec_Off, Vec, Has_Zx);
                         Vec_Off := Vec_Off + 1;
                      end loop;
-                  when others =>
-                     raise Internal_Error;
+                  when others => raise Internal_Error;
                end case;
                W := W - (Len - Off);
                Off := 0;
@@ -691,8 +685,7 @@ package body Synth.Vhdl_Expr is
                   return False;
                end if;
             end loop;
-         when Type_Slice =>
-            raise Internal_Error;
+         when Type_Slice => raise Internal_Error;
       end case;
       return True;
    end Check_Matching_Bounds;
@@ -925,8 +918,7 @@ package body Synth.Vhdl_Expr is
             end;
          when Iir_Kind_Psl_Endpoint_Declaration =>
             return Synth_Expression (Syn_Inst, Name);
-         when others =>
-            Error_Kind ("synth_name", Name);
+         when others => Error_Kind ("synth_name", Name);
       end case;
    end Synth_Name;
 
@@ -1740,8 +1732,7 @@ package body Synth.Vhdl_Expr is
                         R := Fp64 (Read_Discrete (Val));
                      when Type_Float =>
                         R := Read_Fp64 (Val);
-                     when others =>
-                        raise Internal_Error;
+                     when others => raise Internal_Error;
                   end case;
                   Res := Create_Value_Float (R, Conv_Typ);
                   return Res;
