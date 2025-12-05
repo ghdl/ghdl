@@ -9,4 +9,7 @@ for t in rom1 srom01 sram01 sram02 sram03 sram05 dpram1 dpram2 dpram3; do
     grep 'found R' $t.log
 done
 
+synth_only rom2
+synth_only rom3
+
 echo "Test successful"
