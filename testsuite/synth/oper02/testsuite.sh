@@ -12,5 +12,6 @@ for t in min01 smin01 umin01 \
 done
 
 synth_only shift02
+synth_only ushift02
 
 echo "Test successful"
