@@ -65,13 +65,7 @@ package body Synth.Vhdl_Expr is
          when Value_Wire =>
             return Synth.Vhdl_Environment.Env.Get_Static_Wire
               (Get_Value_Wire (V.Val));
-         when Value_Alias =>
-            declare
-               Res : Memtyp;
-            begin
-               Res := Get_Value_Memtyp ((V.Val.A_Typ, V.Val.A_Obj));
-               return (V.Typ, Res.Mem + V.Val.A_Off.Mem_Off);
-            end;
+         when Value_Alias => raise Internal_Error;
          when others => raise Internal_Error;
       end case;
    end Get_Value_Memtyp;
@@ -362,23 +356,7 @@ package body Synth.Vhdl_Expr is
                              Typ.Rec.E (I).Typ, Off, W, Vec, Vec_Off, Has_Zx);
                exit when W = 0;
             end loop;
-         when Type_Access =>
-            --  Accesses cannot be indexed or sliced.
-            --  Just fill with 'X'.
-            --  GCOV_EXCL_START (can this exist ?)
-            pragma Assert (Off = 0 and W >= Typ.W);
-            for I in 0 .. Typ.W - 1 loop
-               declare
-                  Idx : constant Digit_Index := Digit_Index (Vec_Off / 32);
-                  Pos : constant Natural := Natural (Vec_Off mod 32);
-               begin
-                  Vec (Idx).Val := Vec (Idx).Val or Shift_Left (1, Pos);
-                  Vec (Idx).Zx := Vec (Idx).Zx or Shift_Left (1, Pos);
-               end;
-               Vec_Off := Vec_Off + 1;
-            end loop;
-            W := W - Typ.W;
-            --  GCOV_EXCL_STOP
+         when Type_Access => raise Internal_Error;
          when others => raise Internal_Error;
       end case;
    end Value2logvec;
@@ -827,19 +805,12 @@ package body Synth.Vhdl_Expr is
 
    --  Convert index IDX in PFX to an offset.
    --  SYN_INST and LOC are used in case of error.
-   function Index_To_Offset (Syn_Inst : Synth_Instance_Acc;
-                             Bnd : Bound_Type;
+   function Index_To_Offset (Bnd : Bound_Type;
                              Order : Wkind_Type;
-                             Idx : Int64;
-                             Loc : Node) return Value_Offsets
+                             Idx : Int64) return Value_Offsets
    is
       Res : Value_Offsets;
    begin
-      if not In_Bounds (Bnd, Int32 (Idx)) then
-         Bound_Error (Syn_Inst, Loc, Bnd, Int32 (Idx));
-         return (0, 0);
-      end if;
-
       --  The offset is from the LSB (bit 0).  Bit 0 is the rightmost one.
       case Bnd.Dir is
          when Dir_To =>
@@ -951,8 +922,7 @@ package body Synth.Vhdl_Expr is
             Bound_Error (Syn_Inst, Idx_Expr, Bnd, Int32 (Idx));
             Error := True;
          else
-            Idx_Off := Index_To_Offset (Syn_Inst, Bnd, Arr_Typ.Wkind,
-                                        Idx, Idx_Expr);
+            Idx_Off := Index_To_Offset (Bnd, Arr_Typ.Wkind, Idx);
             Off.Net_Off := Off.Net_Off
               + Idx_Off.Net_Off * Stride * El_Typ.W;
             Off.Mem_Off := Off.Mem_Off
