@@ -22,4 +22,8 @@ synth -frelaxed err_elab04.vhdl -e > syn_elab04.vhdl
 
 synth_only case01
 
+synth_failure err_idx01.vhdl -e
+synth_failure err_idx02.vhdl -e
+synth_failure err_idx03.vhdl -e
+
 echo "Test successful"
