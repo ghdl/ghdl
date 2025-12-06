@@ -254,6 +254,7 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Constant_Declaration
+           | Iir_Kind_Iterator_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Object_Alias_Declaration
