@@ -5,6 +5,9 @@
 GHDL_STD_FLAGS=--std=08
 synth_failure repro_alias2.vhdl -e
 synth_failure repro_alias3.vhdl -e
+synth_failure repro_alias4.vhdl -e
+
+synth -frelaxed repro_alias4.vhdl -e > syn_repro_alias4.vhdl
 
 #synth --keep-hierarchy=no repro_proc.vhdl -e > syn_repro_proc.vhdl
 
