@@ -14,5 +14,6 @@ synth_failure convflt01.vhdl -e
 
 GHDL_STD_FLAGS=--std=08
 synth_failure convrec01.vhdl -e
+synth_only convarr02
 
 echo "Test successful"
