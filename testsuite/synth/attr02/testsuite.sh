@@ -12,6 +12,11 @@ synth_failure err_last_event.vhdl -e
 synth_failure err_driving_value.vhdl -e
 synth_failure err_driving.vhdl -e
 
+synth_only leftof02
+analyze leftof02.vhdl
+elab_simulate leftof02
+clean
+
 GHDL_STD_FLAGS=--std=08
 synth_tb right01
 
