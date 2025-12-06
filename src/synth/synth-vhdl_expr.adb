@@ -2535,7 +2535,8 @@ package body Synth.Vhdl_Expr is
             return Synth_Expression_With_Type
               (Syn_Inst, Get_Named_Entity (Expr), Typ);
          when Iir_Kind_Indexed_Name
-           | Iir_Kind_Slice_Name =>
+           | Iir_Kind_Slice_Name
+           | Iir_Kind_Selected_Element =>
             declare
                Base : Valtyp;
                Typ : Type_Acc;
@@ -2586,43 +2587,6 @@ package body Synth.Vhdl_Expr is
                end if;
                return Synth_Read_Memory
                  (Syn_Inst, Base, Typ, Off.Net_Off, Dyn, Expr);
-            end;
-         when Iir_Kind_Selected_Element =>
-            declare
-               Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-               Idx : constant Iir_Index32 :=
-                 Get_Element_Position (Get_Named_Entity (Expr));
-               Pfx : constant Node := Get_Prefix (Expr);
-               Res_Typ : Type_Acc;
-               N : Net;
-               Val : Valtyp;
-               Res : Valtyp;
-            begin
-               Val := Synth_Expression (Syn_Inst, Pfx);
-               if Val = No_Valtyp then
-                  return No_Valtyp;
-               end if;
-               Res_Typ := Val.Typ.Rec.E (Idx + 1).Typ;
-               if Res_Typ.W = 0 and then Val.Val.Kind /= Value_Memory then
-                  --  This is a null object.  As nothing can be done about it,
-                  --  returns 0.
-                  return Create_Value_Memtyp (Create_Memory_Zero (Res_Typ));
-               elsif Is_Static (Val.Val) then
-                  --  TODO: why a copy ?
-                  Res := Create_Value_Memory (Res_Typ, Current_Pool);
-                  Strip_Const (Val);
-                  Copy_Memory
-                    (Res.Val.Mem,
-                     Get_Memory (Val)
-                       + Val.Typ.Rec.E (Idx + 1).Offs.Mem_Off,
-                     Res_Typ.Sz);
-                  return Res;
-               else
-                  N := Build2_Extract (Ctxt, Get_Net (Ctxt, Val),
-                                       Val.Typ.Rec.E (Idx + 1).Offs.Net_Off,
-                                       Get_Type_Width (Res_Typ), +Expr);
-                  return Create_Value_Net (N, Res_Typ);
-               end if;
             end;
          when Iir_Kind_Character_Literal =>
             return Synth_Expression_With_Type
