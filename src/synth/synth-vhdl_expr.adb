@@ -1107,7 +1107,6 @@ package body Synth.Vhdl_Expr is
             "cannot extract same variable part for dynamic slice");
          return;
       end if;
-      Inp := L_Inp;
 
       if L_Fac /= R_Fac then
          Error_Msg_Synth
@@ -1115,6 +1114,8 @@ package body Synth.Vhdl_Expr is
             "cannot extract same constant factor for dynamic slice");
          return;
       end if;
+
+      Inp := L_Inp;
 
       --  Compute step and width.
       Sstep := abs L_Fac;
