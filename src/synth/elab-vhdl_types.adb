@@ -713,7 +713,9 @@ package body Elab.Vhdl_Types is
                return Create_Array_From_Array_Unbounded
                  (Parent_Typ, El_Typ);
             else
-               raise Internal_Error;
+               return Create_Array_Unbounded_Type
+                 (Parent_Typ.Abound, Parent_Typ.Is_Bnd_Static,
+                  Parent_Typ.Alast, El_Typ);
             end if;
          when Type_Vector
            | Type_Array =>
