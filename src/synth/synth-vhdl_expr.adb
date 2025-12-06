@@ -2653,7 +2653,8 @@ package body Synth.Vhdl_Expr is
             declare
                Dtype : Type_Acc;
             begin
-               Dtype := Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
+               Dtype := Get_Subtype_Object
+                 (Syn_Inst, Get_Type (Get_Prefix (Expr)));
                return Synth_Inc_Dec_Attribute
                  (Syn_Inst, Expr, Dtype, Dtype.Drange.Dir = Dir_Downto);
             end;
@@ -2661,7 +2662,8 @@ package body Synth.Vhdl_Expr is
             declare
                Dtype : Type_Acc;
             begin
-               Dtype := Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
+               Dtype := Get_Subtype_Object
+                 (Syn_Inst, Get_Type (Get_Prefix (Expr)));
                return Synth_Inc_Dec_Attribute
                  (Syn_Inst, Expr, Dtype, Dtype.Drange.Dir = Dir_To);
             end;
