@@ -8,6 +8,15 @@ synth_failure err_slv1.vhdl -e
 synth_failure --std=08 err_slv2.vhdl -e
 synth_failure err_vect1.vhdl -e
 
+synth_failure --std=93 err_elab01.vhdl -e
+synth -frelaxed err_elab01.vhdl -e > syn_elab01.vhdl
+
+synth_failure --std=93 err_elab02.vhdl -e
+synth -frelaxed err_elab02.vhdl -e > syn_elab02.vhdl
+
+synth_failure --std=93 err_elab03.vhdl -e
+synth -frelaxed err_elab03.vhdl -e > syn_elab03.vhdl
+
 synth_only case01
 
 echo "Test successful"
