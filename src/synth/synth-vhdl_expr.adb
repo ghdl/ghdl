@@ -2571,6 +2571,11 @@ package body Synth.Vhdl_Expr is
                           ((Typ, Base.Val.Init.Mem + Off.Mem_Off));
                      end if;
                      return Res;
+                  else
+                     Error_Msg_Synth
+                       (Syn_Inst, Expr,
+                       "cannot use signal value during elaboration");
+                     return No_Valtyp;
                   end if;
                end if;
                if Dyn.Voff = No_Net and then Is_Static (Base.Val) then
