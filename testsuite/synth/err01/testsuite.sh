@@ -26,4 +26,6 @@ synth_failure err_idx01.vhdl -e
 synth_failure err_idx02.vhdl -e
 synth_failure err_idx03.vhdl -e
 
+synth_failure err_slice01.vhdl -e
+
 echo "Test successful"
