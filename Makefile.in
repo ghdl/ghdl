@@ -77,7 +77,10 @@ ifeq "$(enable_checks)" "true"
  LIB_CFLAGS+=
 else
  # Optimize + no checks
- ADA_FLAGS+=-gnatpn
+ ADA_FLAGS+=-gnatp
+ ifneq "$(build_mode)" "coverage"
+   ADA_FLAGS+=-gnatn
+ endif
  OPT_FLAGS+=-O
  LIB_CFLAGS=-O
 endif
