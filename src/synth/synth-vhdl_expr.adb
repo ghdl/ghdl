@@ -39,7 +39,6 @@ with Netlists.Locations;
 with Netlists.Builders; use Netlists.Builders;
 
 with Elab.Memtype; use Elab.Memtype;
-with Elab.Vhdl_Errors;
 with Elab.Vhdl_Annotations;
 with Elab.Vhdl_Heap; use Elab.Vhdl_Heap;
 with Elab.Vhdl_Types; use Elab.Vhdl_Types;
@@ -812,102 +811,6 @@ package body Synth.Vhdl_Expr is
             raise Internal_Error;
       end case;
    end Synth_Subtype_Conversion;
-
-   function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
-                       return Valtyp is
-   begin
-      case Get_Kind (Name) is
-         when Iir_Kind_Simple_Name
-            | Iir_Kind_Selected_Name
-            | Iir_Kind_Attribute_Name =>
-            declare
-               Res : Valtyp;
-            begin
-               Res := Synth_Name (Syn_Inst, Get_Named_Entity (Name));
-               if Res = No_Valtyp then
-                  Elab.Vhdl_Errors.Error_Msg_Elab
-                    (Syn_Inst, Name,
-                     "reference to a declaration before its elaboration");
-                  raise Elab.Vhdl_Errors.Elaboration_Error;
-               end if;
-               return Res;
-            end;
-         when Iir_Kind_Interface_Signal_Declaration
-            | Iir_Kind_Interface_View_Declaration
-            | Iir_Kind_Variable_Declaration
-            | Iir_Kind_Interface_Variable_Declaration
-            | Iir_Kind_Signal_Declaration
-            | Iir_Kinds_Signal_Attribute
-            | Iir_Kind_Guard_Signal_Declaration
-            | Iir_Kind_Interface_Constant_Declaration
-            | Iir_Kind_Constant_Declaration
-            | Iir_Kind_Iterator_Declaration
-            | Iir_Kind_Free_Quantity_Declaration
-            | Iir_Kinds_Branch_Quantity_Declaration
-            | Iir_Kind_Object_Alias_Declaration
-            | Iir_Kind_Non_Object_Alias_Declaration
-            | Iir_Kind_File_Declaration
-            | Iir_Kind_Interface_File_Declaration
-            | Iir_Kind_Above_Attribute =>
-            return Get_Value (Syn_Inst, Name);
-         when Iir_Kind_External_Signal_Name =>
-            return Elab.Vhdl_Expr.Exec_External_Name (Syn_Inst, Name);
-         when  Iir_Kind_Attribute_Value =>
-            --  It's a little bit complex for attribute of an entity or
-            --  of an architecture as there might be no instances for them.
-            --  Simply recompute it in that case; the expression is locally
-            --  static.
-            case Get_Kind (Get_Designated_Entity (Name)) is
-               when Iir_Kind_Entity_Declaration
-                 | Iir_Kind_Architecture_Body =>
-                  declare
-                     Spec : constant Node :=
-                       Get_Attribute_Specification (Name);
-                  begin
-                     return Synth_Expression (Syn_Inst, Get_Expression (Spec));
-                  end;
-               when others =>
-                  return Get_Value (Syn_Inst, Name);
-            end case;
-         when Iir_Kind_Enumeration_Literal =>
-            declare
-               Typ : constant Type_Acc :=
-                 Get_Subtype_Object (Syn_Inst, Get_Type (Name));
-               Res : Valtyp;
-            begin
-               Res := Create_Value_Memory (Typ, Current_Pool);
-               Write_Discrete (Res, Int64 (Get_Enum_Pos (Name)));
-               return Res;
-            end;
-         when Iir_Kind_Unit_Declaration =>
-            declare
-               Typ : constant Type_Acc :=
-                 Get_Subtype_Object (Syn_Inst, Get_Type (Name));
-            begin
-               return Create_Value_Discrete
-                 (Vhdl.Evaluation.Get_Physical_Value (Name), Typ);
-            end;
-         when Iir_Kind_Implicit_Dereference
-           | Iir_Kind_Dereference =>
-            declare
-               Val : Valtyp;
-               Acc : Heap_Ptr;
-               Obj : Memtyp;
-            begin
-               Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
-               Acc := Read_Access (Val);
-               if Acc = Null_Heap_Ptr then
-                  Error_Msg_Synth (Syn_Inst, Name, "NULL access dereferenced");
-                  return No_Valtyp;
-               end if;
-               Obj := Elab.Vhdl_Heap.Synth_Dereference (Acc);
-               return Create_Value_Memtyp (Obj);
-            end;
-         when Iir_Kind_Psl_Endpoint_Declaration =>
-            return Synth_Expression (Syn_Inst, Name);
-         when others => Error_Kind ("synth_name", Name);
-      end case;
-   end Synth_Name;
 
    procedure Bound_Error (Syn_Inst : Synth_Instance_Acc;
                           Loc : Node;
@@ -2435,113 +2338,31 @@ package body Synth.Vhdl_Expr is
                     (Syn_Inst, Imp, Get_Operand (Expr), Expr);
                end if;
             end;
-         when Iir_Kind_Simple_Name
-            | Iir_Kind_Selected_Name
-            | Iir_Kind_Attribute_Name
-            | Iir_Kind_Interface_Signal_Declaration --  For PSL.
-            | Iir_Kind_Signal_Declaration   -- For PSL.
-            | Iir_Kind_Guard_Signal_Declaration
-            | Iir_Kind_Object_Alias_Declaration   -- For PSL
+         when Iir_Kinds_Denoting_Name =>
+            return Synth_Expression_With_Type
+              (Syn_Inst, Get_Named_Entity (Expr), Typ);
+         when Iir_Kind_Unit_Declaration =>
+            declare
+               Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
+            begin
+               return Create_Value_Discrete
+                 (Vhdl.Evaluation.Get_Physical_Value (Expr), Typ);
+            end;
+         when Iir_Kind_Attribute_Name
+            | Iir_Kinds_Object_Declaration
             | Iir_Kind_Non_Object_Alias_Declaration   -- For PSL
             | Iir_Kind_External_Signal_Name
             | Iir_Kind_Implicit_Dereference
             | Iir_Kind_Dereference
-            | Iir_Kind_Above_Attribute =>
-            declare
-               Res : Valtyp;
-               Init : Valtyp;
-            begin
-               Res := Synth_Name (Syn_Inst, Expr);
-               if Res.Val /= null then
-                  if (Res.Val.Kind = Value_Signal
-                        or else Res.Val.Kind = Value_Sig_Val
-                        or else (Res.Val.Kind = Value_Alias
-                                   and then Res.Val.A_Obj.Kind = Value_Signal))
-                  then
-                     --  It's a signal or an alias of a signal.
-                     if Hook_Signal_Expr /= null then
-                        return Hook_Signal_Expr (Res);
-                     end if;
-                     if Flags.Flag_Relaxed_Rules then
-                        Warning_Msg_Synth
-                          (Warnid_Elaboration, +Expr,
-                           "cannot use signal value during elaboration");
-                        if Res.Val.Kind = Value_Signal then
-                           --  The signal may have no default value.
-                           if Res.Val.Init = null then
-                              Init := Create_Value_Memory
-                                (Res.Typ, Current_Pool);
-                              Write_Value_Default (Init.Val.Mem, Res.Typ);
-                              --  Do not write the default value, even if it
-                              --  were allocated on the instance_pool, it
-                              --  might be deallocated after a subprogram call.
-                              Res := (Res.Typ, Init.Val);
-                           else
-                              Res := (Res.Typ, Res.Val.Init);
-                           end if;
-                        elsif Res.Val.Kind = Value_Alias then
-                           Res := Create_Value_Memtyp
-                             ((Res.Val.A_Typ,
-                               Res.Val.A_Obj.Init.Mem
-                                 + Res.Val.A_Off.Mem_Off));
-                        else
-                           Res := No_Valtyp;
-                        end if;
-                        return Res;
-                     else
-                        Error_Msg_Synth
-                          (Syn_Inst, Expr,
-                           "cannot use signal value during elaboration");
-                        return No_Valtyp;
-                     end if;
-                  elsif (Res.Val.Kind = Value_Quantity
-                           or else
-                           (Res.Val.Kind = Value_Alias
-                              and then Res.Val.A_Obj.Kind = Value_Quantity))
-                  then
-                     if Hook_Quantity_Expr /= null then
-                        return Hook_Quantity_Expr (Res);
-                     end if;
-                     Error_Msg_Synth
-                       (Syn_Inst, Expr, "cannot use quantity value");
-                     return No_Valtyp;
-                  end if;
-               end if;
-               if Res.Typ /= null
-                 and then Res.Typ.W = 0 and then Res.Val.Kind /= Value_Memory
-               then
-                  --  This is a null object.  As nothing can be done about it,
-                  --  returns 0.
-                  return Create_Value_Memtyp (Create_Memory_Zero (Res.Typ));
-               end if;
-               return Res;
-            end;
-         when Iir_Kinds_Signal_Attribute =>
-            declare
-               Res : Valtyp;
-            begin
-               if Hook_Signal_Expr = null then
-                  Error_Msg_Synth (Syn_Inst, Expr,
-                                   "signal attribute not supported");
-                  Res := No_Valtyp;
-               else
-                  Res := Synth_Name (Syn_Inst, Expr);
-                  Res := Hook_Signal_Expr (Res);
-               end if;
-               return Res;
-            end;
-         when Iir_Kind_Reference_Name =>
-            --  Only used for anonymous signals in internal association.
-            return Synth_Expression_With_Type
-              (Syn_Inst, Get_Named_Entity (Expr), Typ);
-         when Iir_Kind_Indexed_Name
-           | Iir_Kind_Slice_Name
-           | Iir_Kind_Selected_Element =>
+            | Iir_Kind_Above_Attribute
+            | Iir_Kind_Indexed_Name
+            | Iir_Kind_Slice_Name
+            | Iir_Kind_Selected_Element =>
             declare
                Base : Valtyp;
                Typ : Type_Acc;
                Off : Value_Offsets;
-               Res : Valtyp;
 
                Dyn : Dyn_Name;
             begin
@@ -2555,42 +2376,86 @@ package body Synth.Vhdl_Expr is
                if Base.Val.Kind = Value_Signal
                  or else Base.Val.Kind = Value_Sig_Val
                then
+                  --  It's a signal or an alias of a signal.
                   if Hook_Signal_Expr /= null then
+                     --  Get the value of the signal.
                      Base := Hook_Signal_Expr (Base);
                   elsif Flags.Flag_Relaxed_Rules then
                      Warning_Msg_Synth
                        (Warnid_Elaboration, +Expr,
-                        "cannot use signal value during elaboration");
-                     pragma Assert (Dyn.Voff = No_Net);
+                       "cannot use signal value during elaboration");
+
                      if Base.Val.Init = null then
-                        --  No default value
-                        Res := Create_Value_Memory
-                          (Typ, Current_Pool);
-                        Write_Value_Default (Res.Val.Mem, Typ);
+                        --  The signal may have no default value.
+                        Base := Create_Value_Memory (Typ, Current_Pool);
+                        Write_Value_Default (Base.Val.Mem, Typ);
+                        --  Do not write the default value, even if it
+                        --  were allocated on the instance_pool, it
+                        --  might be deallocated after a subprogram call.
+                        return (Typ, Base.Val);
                      else
-                        Res := Create_Value_Memtyp
-                          ((Typ, Base.Val.Init.Mem + Off.Mem_Off));
+                        --  Use its default value.
+                        Base := (Base.Typ, Base.Val.Init);
                      end if;
-                     return Res;
                   else
                      Error_Msg_Synth
                        (Syn_Inst, Expr,
                        "cannot use signal value during elaboration");
                      return No_Valtyp;
                   end if;
+               elsif Base.Val.Kind = Value_Quantity then
+                  if Hook_Quantity_Expr /= null then
+                     Base := Hook_Quantity_Expr (Base);
+                  else
+                     Error_Msg_Synth
+                       (Syn_Inst, Expr, "cannot use quantity value");
+                     return No_Valtyp;
+                  end if;
                end if;
-               if Dyn.Voff = No_Net and then Is_Static (Base.Val) then
-                  Strip_Const (Base);
-                  Res := Create_Value_Memtyp
-                    ((Typ, Base.Val.Mem + Off.Mem_Off));
-                  return Res;
+               if Typ /= null
+                 and then Typ.W = 0 and then Base.Val.Kind /= Value_Memory
+               then
+                  --  This is a null object.  As nothing can be done about it,
+                  --  returns 0.
+                  return Create_Value_Memtyp (Create_Memory_Zero (Typ));
+               end if;
+
+               if Dyn.Voff = No_Net then
+                  if Typ.Sz = Base.Typ.Sz then
+                     --  Whole object (but maybe reshaped).
+                     return (Typ, Base.Val);
+                  elsif Is_Static (Base.Val) then
+                     Strip_Const (Base);
+                     return Create_Value_Memtyp
+                       ((Typ, Base.Val.Mem + Off.Mem_Off));
+                  end if;
                end if;
                return Synth_Read_Memory
                  (Syn_Inst, Base, Typ, Off.Net_Off, Dyn, Expr);
             end;
-         when Iir_Kind_Character_Literal =>
-            return Synth_Expression_With_Type
-              (Syn_Inst, Get_Named_Entity (Expr), Typ);
+         when Iir_Kinds_Signal_Attribute =>
+            declare
+               Base : Valtyp;
+               Typ : Type_Acc;
+               Off : Value_Offsets;
+
+               Dyn : Dyn_Name;
+            begin
+               if Hook_Signal_Expr = null then
+                  Error_Msg_Synth
+                    (Syn_Inst, Expr, "signal attribute not supported");
+                  return No_Valtyp;
+               end if;
+
+               Synth_Assignment_Prefix
+                 (Syn_Inst, Syn_Inst, Expr, Base, Typ, Off, Dyn);
+
+               --  Subelements are not handled.
+               pragma Assert (Dyn.Voff = No_Net);
+               pragma Assert (Typ.Sz = Base.Typ.Sz);
+
+               return Hook_Signal_Expr (Base);
+            end;
          when Iir_Kind_Integer_Literal =>
             declare
                Res : Valtyp;
@@ -2620,7 +2485,15 @@ package body Synth.Vhdl_Expr is
          when Iir_Kind_String_Literal8 =>
             return Elab.Vhdl_Expr.Exec_String_Literal (Syn_Inst, Expr, Typ);
          when Iir_Kind_Enumeration_Literal =>
-            return Synth_Name (Syn_Inst, Expr);
+            declare
+               Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
+               Res : Valtyp;
+            begin
+               Res := Create_Value_Memory (Typ, Current_Pool);
+               Write_Discrete (Res, Int64 (Get_Enum_Pos (Expr)));
+               return Res;
+            end;
          when Iir_Kind_Type_Conversion =>
             return Synth_Type_Conversion (Syn_Inst, Expr);
          when Iir_Kind_Qualified_Expression =>

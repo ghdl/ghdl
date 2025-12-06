@@ -46,6 +46,7 @@ with Elab.Vhdl_Types; use Elab.Vhdl_Types;
 with Elab.Vhdl_Expr; use Elab.Vhdl_Expr;
 with Elab.Vhdl_Utils; use Elab.Vhdl_Utils;
 with Elab.Vhdl_Debug;
+with Elab.Vhdl_Errors;
 with Elab.Debugger;
 
 with Synth.Errors; use Synth.Errors;
@@ -224,6 +225,13 @@ package body Synth.Vhdl_Stmts is
       is
          Targ : constant Valtyp := Get_Value (Inst, Pfx);
       begin
+         if Targ = No_Valtyp then
+            Elab.Vhdl_Errors.Error_Msg_Elab
+              (Syn_Inst, Pfx,
+              "reference to a declaration before its elaboration");
+            raise Elab.Vhdl_Errors.Elaboration_Error;
+         end if;
+
          Dest_Dyn := No_Dyn_Name;
          Dest_Typ := Targ.Typ;
 
@@ -258,7 +266,6 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_File_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Object_Alias_Declaration
-           | Iir_Kinds_External_Name
            | Iir_Kind_Attribute_Value
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kinds_Branch_Quantity_Declaration
@@ -266,6 +273,12 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Above_Attribute
            | Iir_Kinds_Signal_Attribute =>
             Assign_Base (Pfx_Inst);
+
+         when Iir_Kinds_External_Name =>
+            Dest_Dyn := No_Dyn_Name;
+            Dest_Base := Elab.Vhdl_Expr.Exec_External_Name (Syn_Inst, Pfx);
+            Dest_Typ := Dest_Base.Typ;
+            Dest_Off := No_Value_Offsets;
 
          when Iir_Kind_Indexed_Name =>
             Synth_Assignment_Prefix
