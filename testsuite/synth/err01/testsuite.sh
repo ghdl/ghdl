@@ -17,6 +17,9 @@ synth -frelaxed err_elab02.vhdl -e > syn_elab02.vhdl
 synth_failure --std=93 err_elab03.vhdl -e
 synth -frelaxed err_elab03.vhdl -e > syn_elab03.vhdl
 
+synth_failure --std=93 err_elab04.vhdl -e
+synth -frelaxed err_elab04.vhdl -e > syn_elab04.vhdl
+
 synth_only case01
 
 echo "Test successful"
