@@ -2594,6 +2594,9 @@ package body Synth.Vhdl_Expr is
                Res : Valtyp;
             begin
                Val := Synth_Expression (Syn_Inst, Pfx);
+               if Val = No_Valtyp then
+                  return No_Valtyp;
+               end if;
                Res_Typ := Val.Typ.Rec.E (Idx + 1).Typ;
                if Res_Typ.W = 0 and then Val.Val.Kind /= Value_Memory then
                   --  This is a null object.  As nothing can be done about it,
