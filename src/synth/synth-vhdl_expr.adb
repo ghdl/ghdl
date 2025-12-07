@@ -1546,36 +1546,35 @@ package body Synth.Vhdl_Expr is
    begin
       case Conv_Typ.Kind is
          when Type_Discrete =>
-            if Val.Typ.Kind = Type_Discrete then
-               --  Int to int.
-               Res := Synth_Subtype_Conversion
-                 (Syn_Inst, Val, Conv_Typ, False, Loc);
-               return Res;
-            elsif Val.Typ.Kind = Type_Float then
-               pragma Assert (Is_Static (Val.Val));
-               declare
-                  V : constant Fp64 := Read_Fp64 (Val);
-                  Err : Boolean;
-               begin
-                  case Conv_Typ.Drange.Dir is
-                     when Dir_To =>
-                        Err := V < Fp64 (Conv_Typ.Drange.Left)
-                          or V > Fp64 (Conv_Typ.Drange.Right);
-                     when Dir_Downto =>
-                        Err := V < Fp64 (Conv_Typ.Drange.Right)
-                          or V > Fp64 (Conv_Typ.Drange.Left);
-                  end case;
-                  if Err then
-                     Error_Msg_Synth (Syn_Inst, Loc, "value out of range");
-                     return No_Valtyp;
-                  end if;
-                  return Create_Value_Discrete (Int64 (V), Conv_Typ);
-               end;
-            else
-               Error_Msg_Synth (Syn_Inst, Loc,
-                                "unhandled type conversion (to int)");
-               return No_Valtyp;
-            end if;
+            case Val.Typ.Kind is
+               when Type_Discrete =>
+                  --  Int to int.
+                  Res := Synth_Subtype_Conversion
+                    (Syn_Inst, Val, Conv_Typ, False, Loc);
+                  return Res;
+               when Type_Float =>
+                  --  Float to int
+                  pragma Assert (Is_Static (Val.Val));
+                  declare
+                     V : constant Fp64 := Read_Fp64 (Val);
+                     Err : Boolean;
+                  begin
+                     case Conv_Typ.Drange.Dir is
+                        when Dir_To =>
+                           Err := V < Fp64 (Conv_Typ.Drange.Left)
+                             or V > Fp64 (Conv_Typ.Drange.Right);
+                        when Dir_Downto =>
+                           Err := V < Fp64 (Conv_Typ.Drange.Right)
+                             or V > Fp64 (Conv_Typ.Drange.Left);
+                     end case;
+                     if Err then
+                        Error_Msg_Synth (Syn_Inst, Loc, "value out of range");
+                        return No_Valtyp;
+                     end if;
+                     return Create_Value_Discrete (Int64 (V), Conv_Typ);
+                  end;
+               when others => raise Internal_Error;
+            end case;
          when Type_Float =>
             if Is_Static (Val.Val) then
                declare
@@ -1592,8 +1591,8 @@ package body Synth.Vhdl_Expr is
                   return Res;
                end;
             else
-               Error_Msg_Synth (Syn_Inst, Loc,
-                                "unhandled type conversion (to float)");
+               Error_Msg_Synth
+                 (Syn_Inst, Loc, "cannot synthesis conversion to float");
                return No_Valtyp;
             end if;
          when Type_Vector
@@ -1629,7 +1628,7 @@ package body Synth.Vhdl_Expr is
                     (Syn_Inst, Loc, Src_Typ.Abound, Dst_Typ.Uarr_Idx);
                   exit when Src_Typ.Alast;
                   Src_Typ := Src_Typ.Arr_El;
-                  Dst_Typ := Dst_Typ.Arr_El;
+                  Dst_Typ := Dst_Typ.Uarr_El;
                end loop;
 
                return Val;
@@ -1640,9 +1639,9 @@ package body Synth.Vhdl_Expr is
          when Type_Record
            | Type_Unbounded_Record =>
             return Val;
-         when others =>
-            Error_Msg_Synth (Syn_Inst, Loc, "unhandled type conversion");
-            return No_Valtyp;
+         when Type_Array_Unbounded => raise Internal_Error;
+         when Type_Slice => raise Internal_Error;
+         when Type_Access | Type_Protected | Type_File => raise Internal_Error;
       end case;
    end Synth_Type_Conversion;
 
