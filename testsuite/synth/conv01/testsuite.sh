@@ -7,6 +7,8 @@ for t in conv01 pos01; do
     clean
 done
 
+synth_failure pos02.vhdl -e
+
 synth_only convacc01
 
 synth_failure convarr01.vhdl -e
