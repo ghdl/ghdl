@@ -2422,7 +2422,9 @@ package body Synth.Vhdl_Expr is
                Res : Valtyp;
             begin
                Res := Create_Value_Memory (Typ, Current_Pool);
-               pragma Assert (In_Range (Typ.Drange, V));
+               if not In_Range (Typ.Drange, V) then
+                  Error_Msg_Synth (Syn_Inst, Expr, "literal out of range");
+               end if;
                Write_Discrete (Res, V);
                return Res;
             end;
