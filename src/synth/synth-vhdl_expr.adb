@@ -1467,10 +1467,8 @@ package body Synth.Vhdl_Expr is
       Imp := Get_Implementation (Expr);
       if Get_Implicit_Definition (Imp) /= Iir_Predefined_Enum_Equality then
          Error_Msg_Synth
-           (Syn_Inst, Expr, "ill-formed clock-level, '=' expected");
-         Res := Build_Posedge (Ctxt, Clk);
-         Set_Location (Res, Expr);
-         return Res;
+           (Syn_Inst, Expr, "ill-formed clock-level, logic '=' expected");
+         return No_Net;
       end if;
 
       Left := Get_Left (Expr);
@@ -1503,8 +1501,7 @@ package body Synth.Vhdl_Expr is
                   Posedge := False;
                when 1 =>
                   Posedge := True;
-               when others =>
-                  raise Internal_Error;
+               when others => raise Internal_Error;
             end case;
          end if;
       end if;
