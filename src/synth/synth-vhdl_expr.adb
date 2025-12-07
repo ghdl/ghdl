@@ -2272,7 +2272,9 @@ package body Synth.Vhdl_Expr is
                         Get_Left (Expr), Get_Right (Expr), Bit_Type, Expr);
                   when Iir_Predefined_None =>
                      if Error_Ieee_Operator (Syn_Inst, Imp, Expr) then
+                        --  GCOV_EXCL_START
                         return No_Valtyp;
+                        --  GCOV_EXCL_STOP
                      else
                         return Synth_User_Operator
                           (Syn_Inst, Get_Left (Expr), Get_Right (Expr), Expr);
@@ -2291,7 +2293,9 @@ package body Synth.Vhdl_Expr is
             begin
                if Def = Iir_Predefined_None then
                   if Error_Ieee_Operator (Syn_Inst, Imp, Expr) then
+                     --  GCOV_EXCL_START
                      return No_Valtyp;
+                     --  GCOV_EXCL_STOP
                   else
                      return Synth_User_Operator
                        (Syn_Inst, Get_Operand (Expr), Null_Node, Expr);
@@ -2367,6 +2371,7 @@ package body Synth.Vhdl_Expr is
                      return No_Valtyp;
                   end if;
                elsif Base.Val.Kind = Value_Quantity then
+                  --  GCOV_EXCL_START (AMS)
                   if Hook_Quantity_Expr /= null then
                      Base := Hook_Quantity_Expr (Base);
                   else
@@ -2374,6 +2379,7 @@ package body Synth.Vhdl_Expr is
                        (Syn_Inst, Expr, "cannot use quantity value");
                      return No_Valtyp;
                   end if;
+                  --  GCOV_EXCL_STOP
                end if;
                if Typ /= null
                  and then Typ.W = 0 and then Base.Val.Kind /= Value_Memory
@@ -2421,21 +2427,11 @@ package body Synth.Vhdl_Expr is
             end;
          when Iir_Kind_Integer_Literal =>
             declare
+               V : constant Int64 := Get_Value (Expr);
                Res : Valtyp;
-               V : Int64;
             begin
                Res := Create_Value_Memory (Typ, Current_Pool);
-               V := Get_Value (Expr);
-               if Typ.Sz = 4
-                 and then (V < Int64 (Int32'First) or V > Int64 (Int32'Last))
-               then
-                  --  TODO: should not exist, should be an overflow.
-                  Error_Msg_Synth (Syn_Inst, Expr, "value out of range");
-                  return No_Valtyp;
-               end if;
-               if not In_Range (Typ.Drange, V) then
-                  Error_Msg_Synth (Syn_Inst, Expr, "value out of range");
-               end if;
+               pragma Assert (In_Range (Typ.Drange, V));
                Write_Discrete (Res, V);
                return Res;
             end;
@@ -2465,15 +2461,8 @@ package body Synth.Vhdl_Expr is
                Get_Subtype_Object (Syn_Inst, Get_Type (Get_Type_Mark (Expr))));
          when Iir_Kind_Function_Call =>
             declare
-               Imp : Node;
+               Imp : constant Node := Get_Implementation (Expr);
             begin
-               Imp := Get_Implementation (Expr);
-               --  Handle interface function.
-               while Get_Kind (Imp) = Iir_Kind_Interface_Function_Declaration
-               loop
-                  Imp := Get_Interface_Subprogram (Syn_Inst, Imp);
-               end loop;
-
                case Get_Implicit_Definition (Imp) is
                   when Iir_Predefined_Operators
                      | Iir_Predefined_Ieee_Numeric_Std_Binary_Operators
@@ -2732,6 +2721,8 @@ package body Synth.Vhdl_Expr is
             Error_Msg_Synth (Syn_Inst, Expr,
                              "last_active attribute not allowed");
             return No_Valtyp;
+
+         --  GCOV_EXCL_START (not for synthesis)
          when Iir_Kind_Dot_Attribute =>
             if Hook_Dot_Attribute /= null then
                return Hook_Dot_Attribute (Syn_Inst, Expr);
@@ -2744,8 +2735,9 @@ package body Synth.Vhdl_Expr is
             end if;
             Error_Msg_Synth (Syn_Inst, Expr, "endpoint read not allowed");
             return No_Valtyp;
-         when others =>
-            Error_Kind ("synth_expression_with_type", Expr);
+         --  GCOV_EXCL_STOP
+
+         when others => Error_Kind ("synth_expression_with_type", Expr);
       end case;
    end Synth_Expression_With_Type;
 
