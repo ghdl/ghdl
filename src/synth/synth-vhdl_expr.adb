@@ -1829,17 +1829,12 @@ package body Synth.Vhdl_Expr is
                      return Edge;
                   end if;
                end if;
-               if Get_Kind (R) = N_EOS then
-                  --  It is never EOS!
-                  Res := Build_Const_UB32 (Ctxt, 0, 1);
-               else
-                  Lv := Synth_PSL_Expression (Syn_Inst, L);
-                  Rv := Synth_PSL_Expression (Syn_Inst, R);
-                  if Lv = No_Net or Rv = No_Net then
-                     return No_Net;
-                  end if;
-                  Res := Build_Dyadic (Ctxt, Id_And, Lv, Rv);
+               Lv := Synth_PSL_Expression (Syn_Inst, L);
+               Rv := Synth_PSL_Expression (Syn_Inst, R);
+               if Lv = No_Net or Rv = No_Net then
+                  return No_Net;
                end if;
+               Res := Build_Dyadic (Ctxt, Id_And, Lv, Rv);
             end;
          when N_Or_Bool =>
             declare
@@ -1873,9 +1868,11 @@ package body Synth.Vhdl_Expr is
          when N_False
            | N_EOS =>
             Res := Build_Const_UB32 (Ctxt, 0, 1);
+         --  GCOV_EXCL_START (all handled)
          when others =>
             PSL.Errors.Error_Kind ("synth_psl_expression", Expr);
             return No_Net;
+         --  GCOV_EXCL_STOP
       end case;
       Netlists.Locations.Set_Location (Get_Net_Parent (Res), Loc);
       return Res;
