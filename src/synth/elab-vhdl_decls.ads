@@ -39,13 +39,6 @@ package Elab.Vhdl_Decls is
                                 Decls : Iir;
                                 Force_Init : Boolean := False);
 
-   procedure Finalize_Declaration (Syn_Inst : Synth_Instance_Acc;
-                                   Decl : Iir;
-                                   Is_Subprg : Boolean);
-   procedure Finalize_Declarations (Syn_Inst : Synth_Instance_Acc;
-                                    Decls : Iir;
-                                    Is_Subprg : Boolean := False);
-
    --  Create a signal.
    --  It's a wrapper around elab.vhdl_context.create_signal but it computes
    --  the default value.
