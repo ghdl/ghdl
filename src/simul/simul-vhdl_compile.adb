@@ -1799,7 +1799,7 @@ package body Simul.Vhdl_Compile is
          begin
             Mark_Expr_Pool (Marker);
 
-            Synth.Vhdl_Stmts.Synth_Assignment_Prefix
+            Synth.Vhdl_Stmts.Synth_Object_Name
               (Proc.Inst, Ddrv.Sig, Sig, Typ, Off);
             pragma Assert (Sig /= No_Valtyp);
 

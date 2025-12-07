@@ -1868,7 +1868,7 @@ package body Simul.Vhdl_Simul is
          Quan := Get_Break_Quantity (El);
          Sel := Get_Selector_Quantity (El);
 
-         Synth_Assignment_Prefix (Inst, Quan, Quan_Base, Typ, Off);
+         Synth_Object_Name (Inst, Quan, Quan_Base, Typ, Off);
          --  Only full quantities are currently supported.
          pragma Assert (Off.Net_Off = 0);
          pragma Assert (Typ.W = Quan_Base.Typ.W);
@@ -1882,7 +1882,7 @@ package body Simul.Vhdl_Simul is
             Sel_Off := Off;
             Is_Integ := Get_Kind (Quan) = Iir_Kind_Integ_Attribute;
          else
-            Synth_Assignment_Prefix (Inst, Sel, Sel_Base, Sel_Typ, Sel_Off);
+            Synth_Object_Name (Inst, Sel, Sel_Base, Sel_Typ, Sel_Off);
             if Sel_Typ.W /= Typ.W then
                Error_Msg_Exec
                  (Stmt, "number of break and selected quantities mismatch");
@@ -4271,7 +4271,7 @@ package body Simul.Vhdl_Simul is
             begin
                Mark_Expr_Pool (Mark);
 
-               Synth_Assignment_Prefix
+               Synth_Object_Name
                  (Inst, Get_Prefix (Attr), Quan_Base, Typ, Off);
 
                Sq_Idx := Quantity_Table.Table (Quan_Base.Val.Q).Sq_Idx

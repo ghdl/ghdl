@@ -2324,7 +2324,7 @@ package body Synth.Vhdl_Expr is
 
                Dyn : Dyn_Name;
             begin
-               Synth_Assignment_Prefix
+               Synth_Object_Name
                  (Syn_Inst, Syn_Inst, Expr, Base, Typ, Off, Dyn);
                if Base = No_Valtyp then
                   --  Propagate error.
@@ -2407,7 +2407,7 @@ package body Synth.Vhdl_Expr is
                   return No_Valtyp;
                end if;
 
-               Synth_Assignment_Prefix
+               Synth_Object_Name
                  (Syn_Inst, Syn_Inst, Expr, Base, Typ, Off, Dyn);
 
                --  Subelements are not handled.

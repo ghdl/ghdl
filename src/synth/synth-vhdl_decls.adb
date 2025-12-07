@@ -731,7 +731,7 @@ package body Synth.Vhdl_Decls is
          Typ := Base.Typ;
       else
          Atype := Get_Declaration_Type (Decl);
-         Vhdl_Stmts.Synth_Assignment_Prefix (Syn_Inst, Name, Base, Typ, Off);
+         Vhdl_Stmts.Synth_Object_Name (Syn_Inst, Name, Base, Typ, Off);
       end if;
 
       --  In case of error (in particular invalid external names)

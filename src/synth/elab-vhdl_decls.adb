@@ -216,7 +216,7 @@ package body Elab.Vhdl_Decls is
                   Base := Exec_External_Name (Syn_Inst, Pfx);
                   Obj_Typ := Base.Typ;
                else
-                  Synth_Assignment_Prefix (Syn_Inst, Pfx, Base, Obj_Typ, Off);
+                  Synth_Object_Name (Syn_Inst, Pfx, Base, Obj_Typ, Off);
                end if;
                Obj_Typ := Unshare (Obj_Typ, Instance_Pool);
                Release_Expr_Pool (Marker);
@@ -329,7 +329,7 @@ package body Elab.Vhdl_Decls is
          else
             Obj_Typ := null;
          end if;
-         Synth_Assignment_Prefix (Syn_Inst, Name, Base, Typ, Off);
+         Synth_Object_Name (Syn_Inst, Name, Base, Typ, Off);
       end if;
       if Base /= No_Valtyp then
          --  In case of error (invalid name or invalid external name).

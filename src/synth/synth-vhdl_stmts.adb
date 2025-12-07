@@ -104,13 +104,12 @@ package body Synth.Vhdl_Stmts is
       end if;
    end Synth_Waveform;
 
-   procedure Synth_Assignment_Prefix_Indexed_Name
-     (Syn_Inst : Synth_Instance_Acc;
-      Pfx : Node;
-      Dest_Base : in out Valtyp;
-      Dest_Typ : in out Type_Acc;
-      Dest_Off : in out Value_Offsets;
-      Dest_Dyn : in out Dyn_Name)
+   procedure Synth_Object_Indexed_Name (Syn_Inst : Synth_Instance_Acc;
+                                        Pfx : Node;
+                                        Dest_Base : in out Valtyp;
+                                        Dest_Typ : in out Type_Acc;
+                                        Dest_Off : in out Value_Offsets;
+                                        Dest_Dyn : in out Dyn_Name)
    is
       El_Typ : Type_Acc;
       Voff : Net;
@@ -143,15 +142,14 @@ package body Synth.Vhdl_Stmts is
       end if;
 
       Dest_Typ := El_Typ;
-   end Synth_Assignment_Prefix_Indexed_Name;
+   end Synth_Object_Indexed_Name;
 
-   procedure Synth_Assignment_Prefix_Selected_Name
-     (Syn_Inst : Synth_Instance_Acc;
-      Pfx : Node;
-      Dest_Base : in out Valtyp;
-      Dest_Typ : in out Type_Acc;
-      Dest_Off : in out Value_Offsets;
-      Dest_Dyn : in out Dyn_Name)
+   procedure Synth_Object_Selected_Name (Syn_Inst : Synth_Instance_Acc;
+                                         Pfx : Node;
+                                         Dest_Base : in out Valtyp;
+                                         Dest_Typ : in out Type_Acc;
+                                         Dest_Off : in out Value_Offsets;
+                                         Dest_Dyn : in out Dyn_Name)
    is
       pragma Unreferenced (Syn_Inst, Dest_Base, Dest_Dyn);
       Idx : constant Iir_Index32 :=
@@ -159,15 +157,14 @@ package body Synth.Vhdl_Stmts is
    begin
       Dest_Off := Dest_Off + Dest_Typ.Rec.E (Idx + 1).Offs;
       Dest_Typ := Dest_Typ.Rec.E (Idx + 1).Typ;
-   end Synth_Assignment_Prefix_Selected_Name;
+   end Synth_Object_Selected_Name;
 
-   procedure Synth_Assignment_Prefix_Slice_Name
-     (Syn_Inst : Synth_Instance_Acc;
-      Pfx : Node;
-      Dest_Base : in out Valtyp;
-      Dest_Typ : in out Type_Acc;
-      Dest_Off : in out Value_Offsets;
-      Dest_Dyn : in out Dyn_Name)
+   procedure Synth_Object_Slice_Name (Syn_Inst : Synth_Instance_Acc;
+                                      Pfx : Node;
+                                      Dest_Base : in out Valtyp;
+                                      Dest_Typ : in out Type_Acc;
+                                      Dest_Off : in out Value_Offsets;
+                                      Dest_Dyn : in out Dyn_Name)
    is
       Pfx_Bnd : Bound_Type;
       El_Typ : Type_Acc;
@@ -211,15 +208,15 @@ package body Synth.Vhdl_Stmts is
          Arr_Typ := Create_Array_Type (Res_Bnd, False, True, El_Typ);
          Dest_Typ := Create_Slice_Type (Arr_Typ, Res_Bnd.Len, El_Typ);
       end if;
-   end Synth_Assignment_Prefix_Slice_Name;
+   end Synth_Object_Slice_Name;
 
-   procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
-                                      Pfx_Inst : Synth_Instance_Acc;
-                                      Pfx : Node;
-                                      Dest_Base : out Valtyp;
-                                      Dest_Typ : out Type_Acc;
-                                      Dest_Off : out Value_Offsets;
-                                      Dest_Dyn : out Dyn_Name)
+   procedure Synth_Object_Name (Syn_Inst : Synth_Instance_Acc;
+                                Pfx_Inst : Synth_Instance_Acc;
+                                Pfx : Node;
+                                Dest_Base : out Valtyp;
+                                Dest_Typ : out Type_Acc;
+                                Dest_Off : out Value_Offsets;
+                                Dest_Dyn : out Dyn_Name)
    is
       procedure Assign_Base (Inst : Synth_Instance_Acc)
       is
@@ -249,7 +246,7 @@ package body Synth.Vhdl_Stmts is
          when Iir_Kind_Simple_Name
             | Iir_Kind_Selected_Name
             | Iir_Kind_Attribute_Name =>
-            Synth_Assignment_Prefix
+            Synth_Object_Name
               (Syn_Inst, Pfx_Inst, Get_Named_Entity (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
          when Iir_Kind_Interface_Signal_Declaration
@@ -281,33 +278,33 @@ package body Synth.Vhdl_Stmts is
             Dest_Off := No_Value_Offsets;
 
          when Iir_Kind_Indexed_Name =>
-            Synth_Assignment_Prefix
+            Synth_Object_Name
               (Syn_Inst, Pfx_Inst, Get_Prefix (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
             if Dest_Base = No_Valtyp then
                return;
             end if;
-            Synth_Assignment_Prefix_Indexed_Name
+            Synth_Object_Indexed_Name
               (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
 
          when Iir_Kind_Selected_Element =>
-            Synth_Assignment_Prefix
+            Synth_Object_Name
               (Syn_Inst, Pfx_Inst, Get_Prefix (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
             if Dest_Base = No_Valtyp then
                return;
             end if;
-            Synth_Assignment_Prefix_Selected_Name
+            Synth_Object_Selected_Name
               (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
 
          when Iir_Kind_Slice_Name =>
-            Synth_Assignment_Prefix
+            Synth_Object_Name
               (Syn_Inst, Pfx_Inst, Get_Prefix (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
             if Dest_Base = No_Valtyp then
                return;
             end if;
-            Synth_Assignment_Prefix_Slice_Name
+            Synth_Object_Slice_Name
               (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
 
 
@@ -317,7 +314,7 @@ package body Synth.Vhdl_Stmts is
                Acc : Memtyp;
                Idx : Heap_Ptr;
             begin
-               Synth_Assignment_Prefix
+               Synth_Object_Name
                  (Syn_Inst, Get_Prefix (Pfx), Dest_Base, Dest_Typ, Dest_Off);
                Acc := (Dest_Typ, Dest_Base.Val.Mem + Dest_Off.Mem_Off);
                Idx := Read_Access (Acc);
@@ -341,12 +338,11 @@ package body Synth.Vhdl_Stmts is
             Dest_Off := (0, 0);
             Dest_Dyn := No_Dyn_Name;
 
-         when others =>
-            Error_Kind ("synth_assignment_prefix", Pfx);
+         when others => Error_Kind ("synth_object_name", Pfx);
       end case;
-   end Synth_Assignment_Prefix;
+   end Synth_Object_Name;
 
-   procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
+   procedure Synth_Object_Name (Syn_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
                                       Dest_Base : out Valtyp;
                                       Dest_Typ : out Type_Acc;
@@ -354,10 +350,10 @@ package body Synth.Vhdl_Stmts is
    is
       Dyn : Dyn_Name;
    begin
-      Synth_Assignment_Prefix
+      Synth_Object_Name
         (Syn_Inst, Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dyn);
       pragma Assert (Dyn = No_Dyn_Name);
-   end Synth_Assignment_Prefix;
+   end Synth_Object_Name;
 
    function Synth_Aggregate_Target_Type (Syn_Inst : Synth_Instance_Acc;
                                          Target : Node) return Type_Acc
@@ -486,7 +482,7 @@ package body Synth.Vhdl_Stmts is
 
                Dyn : Dyn_Name;
             begin
-               Synth_Assignment_Prefix
+               Synth_Object_Name
                  (Syn_Inst, Syn_Inst, Target, Base, Typ, Off, Dyn);
                return To_Target_Info (Base, Typ, Off, Dyn);
             end;
@@ -2299,7 +2295,7 @@ package body Synth.Vhdl_Stmts is
                Dest_Dyn : Dyn_Name;
             begin
                Dest_Dyn := No_Dyn_Name;
-               Synth_Assignment_Prefix_Indexed_Name
+               Synth_Object_Indexed_Name
                  (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
                pragma Assert (Dest_Dyn = No_Dyn_Name);
             end;
@@ -2312,7 +2308,7 @@ package body Synth.Vhdl_Stmts is
                Dest_Dyn : Dyn_Name;
             begin
                Dest_Dyn := No_Dyn_Name;
-               Synth_Assignment_Prefix_Selected_Name
+               Synth_Object_Selected_Name
                  (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
                pragma Assert (Dest_Dyn = No_Dyn_Name);
             end;
@@ -2325,7 +2321,7 @@ package body Synth.Vhdl_Stmts is
                Dest_Dyn : Dyn_Name;
             begin
                Dest_Dyn := No_Dyn_Name;
-               Synth_Assignment_Prefix_Slice_Name
+               Synth_Object_Slice_Name
                  (Syn_Inst, Pfx, Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
                pragma Assert (Dest_Dyn = No_Dyn_Name);
             end;
@@ -2481,8 +2477,8 @@ package body Synth.Vhdl_Stmts is
                Act_Off := No_Value_Offsets;
                Act_Dyn := No_Dyn_Name;
             else
-               Synth_Assignment_Prefix (Caller_Inst, Caller_Inst, Actual,
-                                        Act_Base, Act_Typ, Act_Off, Act_Dyn);
+               Synth_Object_Name (Caller_Inst, Caller_Inst, Actual,
+                                  Act_Base, Act_Typ, Act_Off, Act_Dyn);
             end if;
             if Get_Actual_Conversion (Assoc) /= Null_Node then
                --  TODO
@@ -5033,7 +5029,7 @@ package body Synth.Vhdl_Stmts is
          Base : Valtyp;
          Typ : Type_Acc;
       begin
-         Synth_Assignment_Prefix (Syn_Inst, Sig, Base, Typ, Off);
+         Synth_Object_Name (Syn_Inst, Sig, Base, Typ, Off);
          pragma Assert (Off = (0, 0));
          pragma Assert (Base.Val.Kind = Value_Wire);
          pragma Assert (Base.Typ = Typ);

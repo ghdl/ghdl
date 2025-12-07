@@ -233,7 +233,7 @@ package body Simul.Vhdl_Elab is
    begin
       Mark_Expr_Pool (Marker);
 
-      Synth.Vhdl_Stmts.Synth_Assignment_Prefix (Inst, Name, Base, Typ, Off);
+      Synth.Vhdl_Stmts.Synth_Object_Name (Inst, Name, Base, Typ, Off);
       if Base = No_Valtyp then
          Res := (Base => No_Signal_Index,
                  Typ => null,
@@ -338,7 +338,7 @@ package body Simul.Vhdl_Elab is
          Mark_Expr_Pool (Marker);
          Instance_Pool := Global_Pool'Access;
 
-         Synth.Vhdl_Stmts.Synth_Assignment_Prefix (Inst, Name, Base, Typ, Off);
+         Synth.Vhdl_Stmts.Synth_Object_Name (Inst, Name, Base, Typ, Off);
          V.Val.A_Off := Off;
          pragma Assert (Base.Val = V.Val.A_Obj);
          pragma Unreferenced (Typ);
@@ -772,12 +772,12 @@ package body Simul.Vhdl_Elab is
       if Formal = Null_Iir then
          Formal := Inter;
       end if;
-      Synth_Assignment_Prefix (Port_Inst, Formal, Formal_Base, Typ, Off);
+      Synth_Object_Name (Port_Inst, Formal, Formal_Base, Typ, Off);
       Typ := Unshare (Typ, Global_Pool'Access);
       Formal_Sig := Formal_Base.Val.S;
       Formal_Ep := (Formal_Sig, Off, Typ);
 
-      Synth_Assignment_Prefix
+      Synth_Object_Name
         (Assoc_Inst, Get_Actual (Assoc), Actual_Base, Typ, Off);
       Typ := Unshare (Typ, Global_Pool'Access);
       Actual_Sig := Actual_Base.Val.S;
