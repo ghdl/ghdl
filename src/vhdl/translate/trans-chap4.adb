@@ -2996,6 +2996,11 @@ package body Trans.Chap4 is
                null;
             when Iir_Kinds_Subprogram_Instantiation_Declaration =>
                if not Flag_Discard_Unused or else Get_Use_Flag (Decl) then
+                  --  Elaborate generics.
+                  --  There is no need to switch between formal and actual
+                  --  env (recursive instantiation would be infinite...)
+                  Chap5.Elab_Generic_Map_Aspect
+                    (Decl, Decl, (null, Null_Var_Scope));
                   Chap2.Elab_Subprogram_Interfaces (Decl);
                end if;
 
