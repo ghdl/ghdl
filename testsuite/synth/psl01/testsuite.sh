@@ -11,6 +11,8 @@ done
 
 synth_failure cover3.vhdl -e cover3
 
+synth_only eventually1
+
 clean
 
 echo "Test successful"
