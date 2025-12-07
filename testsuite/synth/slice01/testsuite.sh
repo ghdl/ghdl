@@ -14,5 +14,6 @@ synth_failure slice09.vhdl -e
 synth_failure slice10.vhdl -e
 synth_failure slice11.vhdl -e
 synth_failure slice12.vhdl -e
+synth_failure slice13.vhdl -e
 
 echo "Test successful"
