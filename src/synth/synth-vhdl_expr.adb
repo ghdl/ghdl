@@ -1879,25 +1879,16 @@ package body Synth.Vhdl_Expr is
    end Synth_PSL_Expression;
 
    function Synth_Psl_Function_Clock (Syn_Inst : Synth_Instance_Acc;
-                                      Call : Node;
-                                      Ctxt : Context_Acc) return Net
+                                      Call : Node) return Net
    is
       use PSL.Types;
-      Clock   : Node;
       Iclock  : PSL_Node;
-      Clk     : Valtyp;
-      Clk_Net : Net;
    begin
-      Clock := Get_Clock_Expression (Call);
-      if Clock /= Null_Node then
-         Clk := Synth_Expression (Syn_Inst, Clock);
-         Clk_Net := Get_Net (Ctxt, Clk);
-      else
-         Iclock := Get_Default_Clock (Call);
-         pragma Assert (Iclock /= Null_PSL_Node);
-         Clk_Net := Synth_PSL_Expression (Syn_Inst, Iclock);
-      end if;
-      return Clk_Net;
+      pragma Assert (Get_Clock_Expression (Call) = Null_Node);
+
+      Iclock := Get_Default_Clock (Call);
+      pragma Assert (Iclock /= Null_PSL_Node);
+      return Synth_PSL_Expression (Syn_Inst, Iclock);
    end Synth_Psl_Function_Clock;
 
    function Synth_Psl_Prev (Syn_Inst : Synth_Instance_Acc; Call : Node)
@@ -1913,7 +1904,7 @@ package body Synth.Vhdl_Expr is
    begin
       Expr := Synth_Expression_With_Basetype (Syn_Inst, Get_Expression (Call));
 
-      Clk_Net := Synth_Psl_Function_Clock (Syn_Inst, Call, Ctxt);
+      Clk_Net := Synth_Psl_Function_Clock (Syn_Inst, Call);
 
       if Count /= Null_Node then
          Count_Val := Synth_Expression (Syn_Inst, Count);
@@ -1944,7 +1935,7 @@ package body Synth.Vhdl_Expr is
    begin
       Expr := Synth_Expression_With_Basetype (Syn_Inst, Get_Expression (Call));
 
-      Clk_Net := Synth_Psl_Function_Clock (Syn_Inst, Call, Ctxt);
+      Clk_Net := Synth_Psl_Function_Clock (Syn_Inst, Call);
 
       DffCurr := Get_Net (Ctxt, Expr);
       Set_Location (DffCurr, Call);
@@ -1970,7 +1961,7 @@ package body Synth.Vhdl_Expr is
    begin
       Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
 
-      Clk_Net := Synth_Psl_Function_Clock (Syn_Inst, Call, Ctxt);
+      Clk_Net := Synth_Psl_Function_Clock (Syn_Inst, Call);
 
       DffCurr := Get_Net (Ctxt, Expr);
       Set_Location (DffCurr, Call);
@@ -2000,7 +1991,7 @@ package body Synth.Vhdl_Expr is
    begin
       Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
 
-      Clk_Net := Synth_Psl_Function_Clock(Syn_Inst, Call, Ctxt);
+      Clk_Net := Synth_Psl_Function_Clock(Syn_Inst, Call);
 
       DffCurr := Get_Net (Ctxt, Expr);
       Set_Location (DffCurr, Call);
