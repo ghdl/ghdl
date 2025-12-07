@@ -772,6 +772,33 @@ package body Simul.Vhdl_Compile is
       Build_Object_Value (Mem, Inst, Decl);
    end Build_Object_Decl;
 
+   procedure Build_Generic_Map (Mem : Memory_Ptr;
+                                Inst : Synth_Instance_Acc;
+                                Hdr : Node)
+   is
+      Assoc, Assoc_Inter, Inter : Node;
+   begin
+      Assoc := Get_Generic_Map_Aspect_Chain (Hdr);
+      Assoc_Inter := Get_Generic_Chain (Hdr);
+      while Assoc /= Null_Node loop
+         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+
+         if Get_Kind (Inter) = Iir_Kind_Interface_Type_Declaration then
+            declare
+               Def : constant Node := Get_Actual (Assoc);
+            begin
+               if Is_Proper_Subtype_Indication (Def) then
+                  Build_Subtype_Indication (Mem, Inst, Def);
+               end if;
+            end;
+         else
+            Build_Decl_Instance (Mem, Inst, Inter);
+         end if;
+
+         Next_Association_Interface (Assoc, Assoc_Inter);
+      end loop;
+   end Build_Generic_Map;
+
    procedure Build_Package_Instantiation (Mem : Memory_Ptr;
                                           Inst : Synth_Instance_Acc;
                                           Pkg : Node)
@@ -781,31 +808,9 @@ package body Simul.Vhdl_Compile is
    begin
       if Info.Kind = Kind_Package then
          --  Macro-expanded (either at top-level or within an block)
+         Build_Generic_Map (Mem, Inst, Pkg);
+
          Pkg_Mem := Mem;
-         declare
-            Assoc, Assoc_Inter, Inter : Node;
-         begin
-            Assoc := Get_Generic_Map_Aspect_Chain (Pkg);
-            Assoc_Inter := Get_Generic_Chain (Pkg);
-            while Assoc /= Null_Node loop
-               Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-
-               if Get_Kind (Inter) = Iir_Kind_Interface_Type_Declaration then
-                  declare
-                     Def : constant Node := Get_Actual (Assoc);
-                  begin
-                     if Is_Proper_Subtype_Indication (Def) then
-                        Build_Subtype_Indication (Mem, Inst, Def);
-                     end if;
-                  end;
-               else
-                  Build_Decl_Instance (Pkg_Mem, Inst, Inter);
-               end if;
-
-               Next_Association_Interface (Assoc, Assoc_Inter);
-            end loop;
-         end;
-
          Build_Decls_Instance (Pkg_Mem, Inst, Get_Declaration_Chain (Pkg));
 
          declare
@@ -1242,6 +1247,7 @@ package body Simul.Vhdl_Compile is
             Build_Interfaces_Instance (Mem, Inst, Decl);
          when Iir_Kinds_Subprogram_Instantiation_Declaration =>
             if Get_Use_Flag (Decl) then
+               Build_Generic_Map (Mem, Inst, Decl);
                Build_Interfaces_Instance (Mem, Inst, Decl);
             end if;
          when Iir_Kind_Function_Body
