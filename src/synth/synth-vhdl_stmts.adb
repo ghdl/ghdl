@@ -486,8 +486,7 @@ package body Synth.Vhdl_Stmts is
                  (Syn_Inst, Syn_Inst, Target, Base, Typ, Off, Dyn);
                return To_Target_Info (Base, Typ, Off, Dyn);
             end;
-         when others =>
-            Error_Kind ("synth_target", Target);
+         when others => Error_Kind ("synth_target", Target);
       end case;
    end Synth_Target;
 
@@ -687,13 +686,9 @@ package body Synth.Vhdl_Stmts is
             Phi_Assign_Net (Ctxt, W, Get_Net (Ctxt, V), Off.Net_Off);
          end if;
       else
-         if not Is_Static (V.Val) then
-            --  Maybe the error message is too cryptic ?
-            Error_Msg_Synth
-              (Syn_Inst, Loc, "cannot assign a net to a static value");
-         else
-            Copy_Memory (Targ.Val.Mem + Off.Mem_Off, Get_Memory (V), V.Typ.Sz);
-         end if;
+         pragma Assert (Is_Static (V.Val));
+         --  Maybe the error message is too cryptic ?
+         Copy_Memory (Targ.Val.Mem + Off.Mem_Off, Get_Memory (V), V.Typ.Sz);
       end if;
    end Synth_Assignment_Simple;
 
@@ -834,14 +829,7 @@ package body Synth.Vhdl_Stmts is
                                   Targ.Targ_Type.Sz);
                      return Res;
                   end;
-               when Value_Quantity
-                 | Value_Terminal
-                 | Value_Const
-                 | Value_Alias
-                 | Value_Dyn_Alias
-                 | Value_Signal
-                 | Value_Sig_Val =>
-                  raise Internal_Error;
+               when others => raise Internal_Error;
             end case;
          when Target_Aggregate => raise Internal_Error;
          when Target_Memory =>
