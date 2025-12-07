@@ -432,8 +432,7 @@ package body Synth.Vhdl_Stmts is
          when Type_Unbounded_Array =>
             pragma Assert (Base_Typ.Ulast);
             Res := Create_Array_Type (Bnd, False, True, Base_Typ.Uarr_El);
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
       return Res;
    end Synth_Aggregate_Target_Type;
@@ -534,8 +533,7 @@ package body Synth.Vhdl_Stmts is
                   Typ.Sz);
                return Res;
             end;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Aggregate_Array_Extract;
 
@@ -566,8 +564,7 @@ package body Synth.Vhdl_Stmts is
                             Val.Val.Mem + El_Typ.Offs.Mem_Off, El_Typ.Typ.Sz);
                return Res;
             end;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Aggregate_Record_Extract;
 
@@ -646,8 +643,7 @@ package body Synth.Vhdl_Stmts is
                   Choice := Get_Chain (Choice);
                end loop;
             end;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Assign_Aggregate;
 
@@ -1202,9 +1198,7 @@ package body Synth.Vhdl_Stmts is
             | Vhdl.Ieee.Std_Logic_1164.Std_Logic_W_Pos =>
             Warning_Msg_Synth (+Loc, "choice with meta-value is ignored");
             return True;
-         when others =>
-            --  Only 9 values.
-            raise Internal_Error;
+         when others => raise Internal_Error; --  Only 9 values.
       end case;
    end Ignore_Choice_Logic;
 
@@ -1235,8 +1229,7 @@ package body Synth.Vhdl_Stmts is
             end if;
          when Type_Array =>
             return False;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Ignore_Choice_Expression;
 
@@ -1734,8 +1727,7 @@ package body Synth.Vhdl_Stmts is
                end if;
             when Iir_Kind_Choice_By_Others =>
                return Res;
-            when others =>
-               raise Internal_Error;
+            when others => raise Internal_Error;
          end case;
          Choice := Get_Chain (Choice);
       end loop;
@@ -1774,8 +1766,7 @@ package body Synth.Vhdl_Stmts is
                      return Res;
                   end if;
                end;
-            when others =>
-               raise Internal_Error;
+            when others => raise Internal_Error;
          end case;
          Choice := Get_Chain (Choice);
       end loop;
@@ -1793,8 +1784,7 @@ package body Synth.Vhdl_Stmts is
          when Type_Vector
            | Type_Array =>
             return Execute_Static_Choices_Array (Inst, Choices, Sel);
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Execute_Static_Choices;
 
@@ -1846,8 +1836,7 @@ package body Synth.Vhdl_Stmts is
             Assoc := Get_Associated_Expr (Choice);
             Val := Synth_Expression_With_Type
               (Syn_Inst, Assoc, Targ_Type);
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
       return Val;
    end Synth_Selected_Assignment_Choice;
@@ -2044,8 +2033,7 @@ package body Synth.Vhdl_Stmts is
                     (Obj, Info.Off, Info.Targ_Type, Instance_Pool);
                end if;
             end;
-         when Target_Aggregate =>
-            raise Internal_Error;
+         when Target_Aggregate => raise Internal_Error;
          when Target_Memory =>
             return Create_Value_Dyn_Alias (Info.Mem_Obj.Val,
                                            Info.Mem_Dyn.Pfx_Off.Net_Off,
@@ -2130,8 +2118,7 @@ package body Synth.Vhdl_Stmts is
       end if;
 
       case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
-         when Iir_Kind_Interface_Constant_Declaration =>
-            raise Internal_Error;
+         when Iir_Kind_Interface_Constant_Declaration => raise Internal_Error;
          when Iir_Kind_Interface_Variable_Declaration =>
             --  Always pass by value.
             if Is_Copyback_Parameter (Inter) then
@@ -2219,10 +2206,8 @@ package body Synth.Vhdl_Stmts is
             return Val;
          when Iir_Kind_Interface_File_Declaration =>
             return Info.Obj;
-         when Iir_Kind_Interface_Quantity_Declaration =>
-            raise Internal_Error;
-         when Iir_Kind_Interface_View_Declaration =>
-            raise Internal_Error;
+         when Iir_Kind_Interface_Quantity_Declaration => raise Internal_Error;
+         when Iir_Kind_Interface_View_Declaration => raise Internal_Error;
       end case;
    end Synth_Subprogram_Association;
 
@@ -2284,8 +2269,7 @@ package body Synth.Vhdl_Stmts is
                Copy_Unbounded_Type (Typ.Uarr_El, Base.Uarr_El));
          when Type_Unbounded_Vector =>
             return Create_Unbounded_Vector (Typ.Uarr_Idx, Typ.Uarr_El);
-         when Type_Slice =>
-            raise Internal_Error;
+         when Type_Slice => raise Internal_Error;
       end case;
    end Copy_Unbounded_Type;
 
@@ -3116,8 +3100,7 @@ package body Synth.Vhdl_Stmts is
          when Iir_Kind_Function_Call
            | Iir_Kind_Procedure_Call =>
             Obj := Get_Method_Object (Call);
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
 
       if Obj /= Null_Node then
@@ -3972,8 +3955,7 @@ package body Synth.Vhdl_Stmts is
                Put_Err ("psl assumption");
             when Iir_Kind_Psl_Cover_Directive =>
                Put_Err ("psl cover");
-            when others =>
-               raise Internal_Error;
+            when others => raise Internal_Error;
          end case;
          Put_Err (' ');
          case Sev_V is
