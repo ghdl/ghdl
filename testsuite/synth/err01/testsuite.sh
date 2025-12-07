@@ -28,4 +28,6 @@ synth_failure err_idx03.vhdl -e
 
 synth_failure err_slice01.vhdl -e
 
+synth_failure err_acc01.vhdl -e
+
 echo "Test successful"
