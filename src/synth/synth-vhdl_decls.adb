@@ -1242,8 +1242,11 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Constant_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Function_Body
+           | Iir_Kind_Function_Instantiation_Declaration
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Procedure_Body
+           | Iir_Kind_Procedure_Instantiation_Declaration
+           | Iir_Kind_Subprogram_Instantiation_Body
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Protected_Type_Body
            | Iir_Kind_Anonymous_Type_Declaration

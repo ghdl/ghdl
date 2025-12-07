@@ -3039,7 +3039,8 @@ package body Vhdl.Sem_Names is
                   +Prefix_Name);
             end if;
          when Iir_Kind_Function_Declaration
-           | Iir_Kind_Interface_Function_Declaration =>
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Function_Instantiation_Declaration =>
             Sem_Parenthesis_Function (Prefix);
             Set_Named_Entity (Prefix_Name, Res_Prefix);
             if Res = Null_Iir then
@@ -3140,7 +3141,8 @@ package body Vhdl.Sem_Names is
             return;
 
          when Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Interface_Procedure_Declaration =>
+           | Iir_Kind_Interface_Procedure_Declaration
+           | Iir_Kind_Procedure_Instantiation_Declaration =>
             Error_Msg_Sem (+Name, "cannot call %n in an expression",
                            +Prefix);
 
