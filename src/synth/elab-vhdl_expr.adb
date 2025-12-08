@@ -940,14 +940,6 @@ package body Elab.Vhdl_Expr is
       return Create_Value_Memtyp (Res);
    end Exec_Instance_Name_Attribute;
 
-   procedure Check_Matching_Bounds (Syn_Inst : Synth_Instance_Acc;
-                                    L, R : Type_Acc; Loc : Node) is
-   begin
-      if not Are_Types_Equal (L, R) then
-         Error_Msg_Elab (Syn_Inst, Loc, "non matching bounds");
-      end if;
-   end Check_Matching_Bounds;
-
    --  Return the bounds of a one dimensional array/vector type and the
    --  width of the element.
    procedure Get_Onedimensional_Array_Bounds

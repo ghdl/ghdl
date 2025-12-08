@@ -1269,7 +1269,10 @@ package body Synth.Vhdl_Oper is
                Result_Typ : Type_Acc;
                N : Net;
             begin
-               Check_Matching_Bounds (Syn_Inst, Le_Typ, R.Typ, Expr);
+               if not Check_Matching_Bounds (Syn_Inst, Le_Typ, R.Typ, Expr)
+               then
+                  return No_Valtyp;
+               end if;
                N := Build2_Concat2 (Ctxt, Ln, Get_Net (Ctxt, R));
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
@@ -1292,7 +1295,10 @@ package body Synth.Vhdl_Oper is
                Result_Typ : Type_Acc;
                N : Net;
             begin
-               Check_Matching_Bounds (Syn_Inst, L.Typ, Re_Typ, Expr);
+               if not Check_Matching_Bounds (Syn_Inst, L.Typ, Re_Typ, Expr)
+               then
+                  return No_Valtyp;
+               end if;
                N := Build2_Concat2 (Ctxt, Get_Net (Ctxt, L), Rn);
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
@@ -1313,7 +1319,9 @@ package body Synth.Vhdl_Oper is
                Bnd : Bound_Type;
                Result_Typ : Type_Acc;
             begin
-               Check_Matching_Bounds (Syn_Inst, L.Typ, R.Typ, Expr);
+               if not Check_Matching_Bounds (Syn_Inst, L.Typ, R.Typ, Expr) then
+                  return No_Valtyp;
+               end if;
                N := Build2_Concat2
                  (Ctxt, Get_Net (Ctxt, L), Get_Net (Ctxt, R));
                Set_Location (N, Expr);
@@ -1336,7 +1344,10 @@ package body Synth.Vhdl_Oper is
                Result_Typ : Type_Acc;
                N : Net;
             begin
-               Check_Matching_Bounds (Syn_Inst, Le_Typ, Re_Typ, Expr);
+               if not Check_Matching_Bounds (Syn_Inst, Le_Typ, Re_Typ, Expr)
+               then
+                  return No_Valtyp;
+               end if;
                N := Build2_Concat2 (Ctxt, Ln, Rn);
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length

@@ -32,9 +32,6 @@ package Elab.Vhdl_Expr is
    function Create_Onedimensional_Array_Subtype
      (Btyp : Type_Acc; Bnd : Bound_Type; El_Typ : Type_Acc) return Type_Acc;
 
-   procedure Check_Matching_Bounds (Syn_Inst : Synth_Instance_Acc;
-                                    L, R : Type_Acc; Loc : Node);
-
    --  Get the type of NAME.  No expressions are expected to be evaluated.
    function Exec_Name_Subtype (Syn_Inst : Synth_Instance_Acc; Name : Node)
                               return Type_Acc;

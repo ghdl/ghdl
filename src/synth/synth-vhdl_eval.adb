@@ -1442,7 +1442,9 @@ package body Synth.Vhdl_Eval is
                Res_St : Type_Acc;
                Res : Memtyp;
             begin
-               Check_Matching_Bounds (Inst, Le_Typ, Re_Typ, Expr);
+               if not Check_Matching_Bounds (Inst, Le_Typ, Re_Typ, Expr) then
+                  return Null_Memtyp;
+               end if;
                if L_Len = 0 and R_Len = 0 then
                   --  LRM08 9.2.5 Adding operators
                   --  If both operands are null arrays, then the result of the
@@ -1505,7 +1507,10 @@ package body Synth.Vhdl_Eval is
                Res_St : Type_Acc;
                Res : Memtyp;
             begin
-               Check_Matching_Bounds (Inst, Param1.Typ, Re_Typ, Expr);
+               if not Check_Matching_Bounds (Inst, Param1.Typ, Re_Typ, Expr)
+               then
+                  return Null_Memtyp;
+               end if;
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
                  (Get_Uarray_Index (Res_Typ).Drange, 1 + Rlen);
                Res_St := Create_Onedimensional_Array_Subtype
@@ -1526,7 +1531,10 @@ package body Synth.Vhdl_Eval is
                Res_St : Type_Acc;
                Res : Memtyp;
             begin
-               Check_Matching_Bounds (Inst, Le_Typ, Param2.Typ, Expr);
+               if not Check_Matching_Bounds (Inst, Le_Typ, Param2.Typ, Expr)
+               then
+                  return Null_Memtyp;
+               end if;
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
                  (Get_Uarray_Index (Res_Typ).Drange, Llen + 1);
                Res_St := Create_Onedimensional_Array_Subtype
@@ -1545,7 +1553,11 @@ package body Synth.Vhdl_Eval is
                Res_St : Type_Acc;
                Res : Memtyp;
             begin
-               Check_Matching_Bounds (Inst, Param1.Typ, Param2.Typ, Expr);
+               if not Check_Matching_Bounds
+                 (Inst, Param1.Typ, Param2.Typ, Expr)
+               then
+                  return Null_Memtyp;
+               end if;
                Bnd := Elab.Vhdl_Types.Create_Bounds_From_Length
                  (Get_Uarray_Index (Res_Typ).Drange, 2);
                Res_St := Create_Onedimensional_Array_Subtype
