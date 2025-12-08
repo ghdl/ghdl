@@ -148,8 +148,7 @@ package body Elab.Vhdl_Expr is
                   end if;
                end;
             end if;
-         when others =>
-            Error_Kind ("synth_pathname_object(1)", Scope);
+         when others => Error_Kind ("synth_pathname_object(1)", Scope);
       end case;
       return Obj;
    end Find_Object_Name_In_Scope;
@@ -166,8 +165,7 @@ package body Elab.Vhdl_Expr is
               (Get_Concurrent_Statement_Chain (Scope), Id);
          when Iir_Kind_Package_Declaration =>
             Res := Find_Name_In_Declaration_Chain (Scope, Id);
-         when others =>
-            Error_Kind ("synth_pathname(scope)", Scope);
+         when others => Error_Kind ("synth_pathname(scope)", Scope);
       end case;
       return Res;
    end Find_Stmt_Name_In_Scope;
@@ -246,8 +244,7 @@ package body Elab.Vhdl_Expr is
                      "denoted object name %i is a not a constant", +Obj);
                   return No_Valtyp;
             end case;
-         when others =>
-            Error_Kind ("synth_pathname_object(2)", Obj);
+         when others => Error_Kind ("synth_pathname_object(2)", Obj);
       end case;
 
       --  LRM08 8.7 External names
@@ -382,8 +379,7 @@ package body Elab.Vhdl_Expr is
             --  And other concurrent statements...
             --  and other declarations
             null;
-         when others =>
-            Error_Kind ("synth_pathname(2a)", Res);
+         when others => Error_Kind ("synth_pathname(2a)", Res);
       end case;
 
       case Get_Kind (Res) is
@@ -475,8 +471,7 @@ package body Elab.Vhdl_Expr is
                "pathname element %i does not denote a concurrent region",
                +Id);
             return No_Valtyp;
-         when others =>
-            Error_Kind ("synth_pathname(2)", Res);
+         when others => Error_Kind ("synth_pathname(2)", Res);
       end case;
       return Synth_Pathname (Loc_Inst, Name, Sub_Inst, Suffix);
    end Synth_Pathname;
@@ -553,8 +548,7 @@ package body Elab.Vhdl_Expr is
                end;
             when Iir_Kind_Vunit_Declaration =>
                return Get_Instance_Parent (Cur_Inst);
-            when others =>
-               Error_Kind ("exec_pathname_concurrent_region", Cur_Src);
+            when others => Error_Kind ("exec_pathname_conc_region", Cur_Src);
          end case;
          Cur_Inst := Get_Instance_Parent (Cur_Inst);
          pragma Assert (Cur_Inst /= null);
@@ -902,8 +896,7 @@ package body Elab.Vhdl_Expr is
                  (Str, First, Ghdl_I64 (Read_Discrete (Val)));
                return Str (First .. Str'Last) & ' ' & Name_Table.Image (Id);
             end;
-         when others =>
-            Error_Kind ("synth_image_attribute_str", Expr_Type);
+         when others => Error_Kind ("synth_image_attribute_str", Expr_Type);
       end case;
    end Synth_Image_Attribute_Str;
 
@@ -1100,8 +1093,7 @@ package body Elab.Vhdl_Expr is
                return Pfx.Arr_El;
             end;
 
-         when others =>
-            Error_Kind ("exec_name_subtype", Name);
+         when others => Error_Kind ("exec_name_subtype", Name);
       end case;
    end Exec_Name_Subtype;
 
@@ -1250,9 +1242,8 @@ package body Elab.Vhdl_Expr is
                end if;
                Prepend (Rstr, Image (Get_Label (Stmt)));
                Prepend (Rstr, ':');
-            when others =>
-               Error_Kind ("Exec_Path_Instance_Name_Attribute",
-                           Label);
+            when others => Error_Kind ("Exec_Path_Instance_Name_Attribute",
+                                       Label);
          end case;
          Instance := Parent;
       end loop;

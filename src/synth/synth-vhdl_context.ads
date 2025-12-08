@@ -77,12 +77,6 @@ package Synth.Vhdl_Context is
    --  Start the definition of module M (using INST).
    procedure Set_Instance_Module (Inst : Synth_Instance_Acc; M : Module);
 
-   --  Build the value for object OBJ.
-   --  KIND must be Wire_Variable or Wire_Signal.
-   procedure Create_Wire_Object (Syn_Inst : Synth_Instance_Acc;
-                                 Kind : Wire_Kind;
-                                 Obj : Node);
-
    --  Get a net from a scalar/vector value.  This will automatically create
    --  a net for literals.
    function Get_Net (Ctxt : Context_Acc; Val : Valtyp) return Net;
