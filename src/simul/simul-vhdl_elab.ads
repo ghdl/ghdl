@@ -33,6 +33,11 @@ package Simul.Vhdl_Elab is
    procedure Compute_Sources;
    procedure Elab_Processes;
 
+   --  Convert interface_type to the associated type.
+   --  For other types, return it.
+   function Get_Concrete_Type (Inst : Synth_Instance_Acc;
+                               Atype : Node) return Node;
+
    --  For the debugger.
    Top_Instance : Synth_Instance_Acc;
 

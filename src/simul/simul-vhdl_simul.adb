@@ -3052,16 +3052,7 @@ package body Simul.Vhdl_Simul is
          Arr_Type : Node;
          Idx_Type : Node;
       begin
-         if Get_Kind (Sig_Type1) = Iir_Kind_Interface_Type_Definition then
-            declare
-               Ntyp : Type_Acc;
-            begin
-               Get_Interface_Type (E.Inst, Sig_Type1, Ntyp, Sig_Type);
-               pragma Unreferenced (Ntyp);
-            end;
-         else
-            Sig_Type := Sig_Type1;
-         end if;
+         Sig_Type := Get_Concrete_Type (E.Inst, Sig_Type1);
 
          if not Already_Resolved
            and then Get_Kind (Sig_Type) in Iir_Kinds_Subtype_Definition
