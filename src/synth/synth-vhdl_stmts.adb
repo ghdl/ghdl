@@ -474,7 +474,8 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Slice_Name
            | Iir_Kind_Dereference
            | Iir_Kind_Dot_Attribute
-           | Iir_Kinds_Signal_Attribute =>
+           | Iir_Kinds_Signal_Attribute
+           | Iir_Kind_External_Signal_Name =>
             declare
                Base : Valtyp;
                Typ : Type_Acc;
