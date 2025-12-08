@@ -420,6 +420,9 @@ package body Ghdlrun is
                Simul.Vhdl_Compile.Simulation;
             else
                Elaborate_Proc := Simul.Vhdl_Simul.Runtime_Elaborate'Access;
+
+               Simul.Fst.Register;
+
                Simul.Vhdl_Simul.Simulation;
             end if;
       end case;
