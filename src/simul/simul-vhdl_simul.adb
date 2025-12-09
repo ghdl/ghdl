@@ -1667,6 +1667,9 @@ package body Simul.Vhdl_Simul is
             when Iir_Kind_Conditional_Signal_Assignment_Statement =>
                Execute_Conditional_Signal_Assignment (Inst, Stmt, False);
                Next_Statement (Process, Stmt);
+            when Iir_Kind_Selected_Waveform_Assignment_Statement =>
+               Execute_Selected_Signal_Assignment (Inst, Stmt, False);
+               Next_Statement (Process, Stmt);
 
             when Iir_Kind_Signal_Force_Assignment_Statement =>
                Execute_Signal_Force_Assignment (Inst, Stmt);
