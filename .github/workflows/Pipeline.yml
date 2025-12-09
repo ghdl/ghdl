@@ -42,9 +42,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-# macOS-13 is the last Intel x86_64 release - discontinued 12.2025
-###       - {icon: '🍎🟨', backend: 'mcode',    macos_image: 'macos-13', gnat_arch: 'x86_64',  gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-###       - {icon: '🍎🟨', backend: 'llvm',     macos_image: 'macos-13', gnat_arch: 'x86_64',  gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
 # macOS-14 is the latest ARM v9 release
 ###       - {icon: '🍏🟩', backend: 'mcode',    macos_image: 'macos-14', gnat_arch: 'aarch64', gnat_version: '14.2.0-1', testsuites: 'none'}                                    # mcode not yet supported for aarch64
           - {icon: '🍏🟩', backend: 'llvm',     macos_image: 'macos-14', gnat_arch: 'aarch64', gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
@@ -325,8 +322,6 @@ jobs:
       inventory-categories: &categories 'application,os-name,os-version,os-arch,runtime,ghdl-backend'
       assets:               &assetList |
         # Artifact Name                        File Name ($/! -> archive with/without subdir)                 Labels                                           Title
-        ghdl-macos-13-x86_64-llvm:             $ghdl-llvm-%ghdl%-macos13-x86_64.tar.gz:                       ghdl,macos,13,x86-64,native,llvm:                GHDL - v%ghdl% - macOS 13 (x86-64) - llvm backend
-        ghdl-macos-13-x86_64-mcode:            $ghdl-mcode-%ghdl%-macos13-x86_64.tar.gz:                      ghdl,macos,13,x86-64,native,mcode:               GHDL - v%ghdl% - macOS 13 (x86-64) - mcode backend
         ghdl-macos-14-aarch64-llvm:            $ghdl-llvm-%ghdl%-macos14-aarch64.tar.gz:                      ghdl,macos,14,aarch64,native,llvm:               GHDL - v%ghdl% - macOS 14 (aarch64) - llvm backend
         ghdl-macos-14-aarch64-llvm-jit:        $ghdl-llvm-jit-%ghdl%-macos14-aarch64.tar.gz:                  ghdl,macos,14,aarch64,native,llvm-jit:           GHDL - v%ghdl% - macOS 14 (aarch64) - llvm-jit backend
         ghdl-macos-15-aarch64-llvm:            $ghdl-llvm-%ghdl%-macos15-aarch64.tar.gz:                      ghdl,macos,15,aarch64,native,llvm:               GHDL - v%ghdl% - macOS 15 (aarch64) - llvm backend
@@ -402,9 +397,6 @@ jobs:
           - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm'}
           - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'llvm-jit'}
           - {icon: '🐧',   name: 'Ubuntu',  image: 'ubuntu-24.04', runtime: '',        backend: 'gcc'}
-#         - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'gcc'}
-          - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'mcode'}
-          - {icon: '🍎',   name: 'macOS',   image: 'macos-13',     runtime: '',        backend: 'llvm'}
           - {icon: '🍏',   name: 'macOS',   image: 'macos-14',     runtime: '',        backend: 'llvm'}
           - {icon: '🍏',   name: 'macOS',   image: 'macos-14',     runtime: '',        backend: 'llvm-jit'}
           - {icon: '🍏',   name: 'macOS',   image: 'macos-15',     runtime: '',        backend: 'llvm'}
