@@ -42,9 +42,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-# macOS-13 is the last Intel x86_64 release
-          - {icon: '🍎🟨', backend: 'mcode',    macos_image: 'macos-13', gnat_arch: 'x86_64',  gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
-          - {icon: '🍎🟨', backend: 'llvm',     macos_image: 'macos-13', gnat_arch: 'x86_64',  gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+# macOS-13 is the last Intel x86_64 release - discontinued 12.2025
+###       - {icon: '🍎🟨', backend: 'mcode',    macos_image: 'macos-13', gnat_arch: 'x86_64',  gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
+###       - {icon: '🍎🟨', backend: 'llvm',     macos_image: 'macos-13', gnat_arch: 'x86_64',  gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
 # macOS-14 is the latest ARM v9 release
 ###       - {icon: '🍏🟩', backend: 'mcode',    macos_image: 'macos-14', gnat_arch: 'aarch64', gnat_version: '14.2.0-1', testsuites: 'none'}                                    # mcode not yet supported for aarch64
           - {icon: '🍏🟩', backend: 'llvm',     macos_image: 'macos-14', gnat_arch: 'aarch64', gnat_version: '14.2.0-1', testsuites: '${{ needs.Params.outputs.testsuites }}'}  # 'all', 'none' or list of testsuites
