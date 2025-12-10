@@ -20,6 +20,7 @@ with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
+with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 
 package Synth.Vhdl_Eval is
    --  Note: INST is only used to report errors.
@@ -32,4 +33,7 @@ package Synth.Vhdl_Eval is
 
    --  STYP is the string type.
    function String_To_Memtyp (Str : String; Styp : Type_Acc) return Memtyp;
+
+   --  Also used for matching cases.
+   function Eval_Vector_Match (Left, Right : Memtyp) return Std_Ulogic;
 end Synth.Vhdl_Eval;

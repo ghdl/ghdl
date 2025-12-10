@@ -1345,12 +1345,12 @@ package body Simul.Vhdl_Simul is
    is
       use Synth.Vhdl_Expr;
       Target : constant Node := Get_Target (Stmt);
+      Matching : constant Boolean := Get_Matching_Flag (Stmt);
+      Choices : constant Node := Get_Selected_Waveform_Chain (Stmt);
       Marker : Mark_Type;
-      Sel : Memtyp;
-      Sw : Node;
+      Sel : Valtyp;
       Wf : Node;
       Info : Target_Info;
-      Eq : Boolean;
    begin
       Mark_Expr_Pool (Marker);
       Info := Synth_Target (Inst, Target);
@@ -1362,43 +1362,13 @@ package body Simul.Vhdl_Simul is
          return;
       end if;
 
-      Sel := Get_Memtyp (Synth_Expression (Inst, Get_Expression (Stmt)));
+      Sel := Synth_Expression (Inst, Get_Expression (Stmt));
 
-      Sw := Get_Selected_Waveform_Chain (Stmt);
-      while Sw /= Null_Node loop
-         if not Get_Same_Alternative_Flag (Sw) then
-            Wf := Get_Associated_Chain (Sw);
-         else
-            pragma Assert (Get_Associated_Chain (Sw) = Null_Node);
-            null;
-         end if;
-         case Iir_Kinds_Choice (Get_Kind (Sw)) is
-            when Iir_Kind_Choice_By_Expression =>
-               declare
-                  Ch : Valtyp;
-               begin
-                  Ch := Synth_Expression (Inst, Get_Choice_Expression (Sw));
-                  Eq := Is_Equal (Sel, Get_Memtyp (Ch));
-               end;
-            when Iir_Kind_Choice_By_Range =>
-               declare
-                  Bnd : Discrete_Range_Type;
-               begin
-                  Elab.Vhdl_Types.Synth_Discrete_Range
-                    (Inst, Get_Choice_Range (Sw), Bnd);
-                  Eq := In_Range (Bnd, Read_Discrete (Sel));
-               end;
-            when Iir_Kind_Choice_By_Others =>
-               Eq := True;
-            when others =>
-               raise Internal_Error;
-         end case;
-         if Eq then
-            Execute_Waveform_Assignment (Inst, Info, Stmt, Wf);
-            exit;
-         end if;
-         Sw := Get_Chain (Sw);
-      end loop;
+      Wf := Execute_Static_Choices (Inst, Choices, Sel, Matching);
+      Wf := Get_Associated_Chain (Wf);
+
+      Execute_Waveform_Assignment (Inst, Info, Stmt, Wf);
+
       Release_Expr_Pool (Marker);
    end Execute_Selected_Signal_Assignment;
 

@@ -244,7 +244,8 @@ package body Elab.Vhdl_Stmts is
       Val := Synth_Expression (Syn_Inst, Expr);
       Strip_Const (Val);
 
-      Gen := Synth.Vhdl_Stmts.Execute_Static_Choices (Syn_Inst, Choices, Val);
+      Gen := Synth.Vhdl_Stmts.Execute_Static_Choices
+        (Syn_Inst, Choices, Val, False);
       Release_Expr_Pool (Marker);
 
       --  Get the corresponding block configuration.

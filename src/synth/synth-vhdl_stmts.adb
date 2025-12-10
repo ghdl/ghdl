@@ -59,6 +59,7 @@ with Synth.Source;
 with Synth.Vhdl_Static_Proc;
 with Synth.Flags;
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
+with Synth.Ieee.Std_Logic_1164;
 
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
@@ -1682,9 +1683,13 @@ package body Synth.Vhdl_Stmts is
       Free_Net_Array (Nets);
    end Synth_Case_Statement_Dynamic;
 
-   function Execute_Static_Choices_Array
-     (Inst : Synth_Instance_Acc; Choices : Node; Sel : Valtyp) return Node
+   function Execute_Static_Choices_Array (Inst : Synth_Instance_Acc;
+                                          Choices : Node;
+                                          Sel : Valtyp;
+                                          Matching : Boolean) return Node
    is
+      use Synth.Vhdl_Eval;
+      use Synth.Ieee.Std_Logic_1164;
       Choice : Node;
       Sel_Expr : Node;
       Sel_Val : Valtyp;
@@ -1703,8 +1708,16 @@ package body Synth.Vhdl_Stmts is
             when Iir_Kind_Choice_By_Expression =>
                Sel_Expr := Get_Choice_Expression (Choice);
                Sel_Val := Synth_Expression_With_Basetype (Inst, Sel_Expr);
-               if Is_Equal (Sel_Val, Sel) then
-                  return Res;
+               if Matching then
+                  if Eval_Vector_Match (Get_Memtyp (Sel_Val),
+                                        Get_Memtyp (Sel)) = '1'
+                  then
+                     return Res;
+                  end if;
+               else
+                  if Is_Equal (Sel_Val, Sel) then
+                     return Res;
+                  end if;
                end if;
                if Sel_Val.Typ.Abound.Len /= Sel.Typ.Abound.Len then
                   Error_Msg_Synth (Inst, Choice, "incorrect selector length");
@@ -1757,18 +1770,21 @@ package body Synth.Vhdl_Stmts is
       end loop;
    end Execute_Static_Choices_Scalar;
 
-   function Execute_Static_Choices
-     (Inst : Synth_Instance_Acc; Choices : Node; Sel : Valtyp) return Node is
+   function Execute_Static_Choices (Inst : Synth_Instance_Acc;
+                                    Choices : Node;
+                                    Sel : Valtyp;
+                                    Matching : Boolean) return Node is
    begin
       case Sel.Typ.Kind is
          when Type_Bit
            | Type_Logic
            | Type_Discrete =>
+            pragma Assert (not Matching);
             return Execute_Static_Choices_Scalar (Inst, Choices,
                                                   Read_Discrete (Sel));
          when Type_Vector
            | Type_Array =>
-            return Execute_Static_Choices_Array (Inst, Choices, Sel);
+            return Execute_Static_Choices_Array (Inst, Choices, Sel, Matching);
          when others => raise Internal_Error;
       end case;
    end Execute_Static_Choices;
@@ -1777,9 +1793,10 @@ package body Synth.Vhdl_Stmts is
      (Inst : Synth_Instance_Acc; Stmt : Node; Sel : Valtyp) return Node
    is
       Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
+      Matching : constant Boolean := Get_Matching_Flag (Stmt);
       Choice : Node;
    begin
-      Choice := Execute_Static_Choices (Inst, Choices, Sel);
+      Choice := Execute_Static_Choices (Inst, Choices, Sel, Matching);
       return Get_Associated_Chain (Choice);
    end Execute_Static_Case_Statement;
 
@@ -1866,7 +1883,8 @@ package body Synth.Vhdl_Stmts is
          declare
             Choice : Node;
          begin
-            Choice := Execute_Static_Choices (Syn_Inst, Choices, Sel);
+            Choice := Execute_Static_Choices
+              (Syn_Inst, Choices, Sel, Get_Matching_Flag (Stmt));
             Asgn := Synth_Selected_Assignment_Choice
               (Syn_Inst, Kind, Choice, Targ_Type);
          end;

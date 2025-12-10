@@ -171,8 +171,10 @@ package Synth.Vhdl_Stmts is
    --  Return the associated choice from CHOICES chain selected by SEL.
    --  It returns the choice (not the associated expression or chain) which
    --  carries the association.
-   function Execute_Static_Choices
-     (Inst : Synth_Instance_Acc; Choices : Node; Sel : Valtyp) return Node;
+   function Execute_Static_Choices (Inst : Synth_Instance_Acc;
+                                    Choices : Node;
+                                    Sel : Valtyp;
+                                    Matching : Boolean) return Node;
 
    function Execute_Static_Case_Statement
      (Inst : Synth_Instance_Acc; Stmt : Node; Sel : Valtyp) return Node;

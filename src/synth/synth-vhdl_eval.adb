@@ -42,7 +42,6 @@ with Netlists; use Netlists;
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
 with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
-with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 with Synth.Ieee.Numeric_Std;
 with Synth.Ieee.Numeric_Bit;
 with Synth.Ieee.Std_Logic_Arith; use Synth.Ieee.Std_Logic_Arith;
@@ -150,6 +149,23 @@ package body Synth.Vhdl_Eval is
       return Create_Memory_U8 (Std_Ulogic'Pos (Res), Left.Typ);
    end Eval_Logic_Scalar;
 
+   function Eval_Vector_Match (Left, Right : Memtyp) return Std_Ulogic
+   is
+      Res : Std_Ulogic;
+   begin
+      Res := '1';
+      for I in 1 .. Left.Typ.Abound.Len loop
+         declare
+            Ls : constant Std_Ulogic := Read_Std_Logic (Left.Mem, I - 1);
+            Rs : constant Std_Ulogic := Read_Std_Logic (Right.Mem, I - 1);
+         begin
+            Res := And_Table (Res, Match_Eq_Table (Ls, Rs));
+         end;
+      end loop;
+
+      return Res;
+   end Eval_Vector_Match;
+
    function Eval_Vector_Match (Inst : Synth_Instance_Acc;
                                Left, Right : Memtyp;
                                Neg : Boolean;
@@ -161,20 +177,11 @@ package body Synth.Vhdl_Eval is
          Error_Msg_Synth (Inst, Loc, "length of operands mismatch");
          return Null_Memtyp;
       end if;
-
-      Res := '1';
-      for I in 1 .. Left.Typ.Abound.Len loop
-         declare
-            Ls : constant Std_Ulogic := Read_Std_Logic (Left.Mem, I - 1);
-            Rs : constant Std_Ulogic := Read_Std_Logic (Right.Mem, I - 1);
-         begin
-            Res := And_Table (Res, Match_Eq_Table (Ls, Rs));
-         end;
-      end loop;
-
+      Res := Eval_Vector_Match (Left, Right);
       if Neg then
          Res := Not_Table (Res);
       end if;
+
       return Create_Memory_U8 (Std_Ulogic'Pos (Res), Left.Typ.Arr_El);
    end Eval_Vector_Match;
 
