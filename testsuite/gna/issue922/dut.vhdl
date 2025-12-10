@@ -16,7 +16,7 @@ architecture rtl of dut is
         return ab&ba;
     end function;
     signal s1 : bit_vector(adr_width*2-1 downto 0);
-    signal s2 : bit_vector(adr_width-1 downto 0);
+    signal s2 : bit_vector(adr_width*2-1 downto 0);
 begin
     s1 <= deser(s2);
 end architecture rtl;
