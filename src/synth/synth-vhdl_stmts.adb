@@ -2387,7 +2387,6 @@ package body Synth.Vhdl_Stmts is
                                            Pfx : Node;
                                            Pfx_Typ : Type_Acc)
    is
-      pragma Unreferenced (Syn_Inst);
       Parent_Typ : Type_Acc;
    begin
       Parent_Typ := Synth_Individual_Get_Formal_Type
@@ -2417,8 +2416,11 @@ package body Synth.Vhdl_Stmts is
                if not Is_Bounded_Type (Sub_Inter) then
                   Parent_Typ.Rec.E (Idx + 1).Typ := Pfx_Typ;
                else
-                  --  check shape ?
-                  null;
+                  if not Check_Matching_Bounds
+                    (Syn_Inst, Sub_Inter, Pfx_Typ, Pfx)
+                  then
+                     null;
+                  end if;
                end if;
             end;
 
