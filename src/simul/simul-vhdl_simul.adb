@@ -2403,6 +2403,7 @@ package body Simul.Vhdl_Simul is
                Create_Process_Drivers (I);
 
             when Iir_Kind_Psl_Assert_Directive
+               | Iir_Kind_Psl_Assume_Directive
                | Iir_Kind_Psl_Cover_Directive
                | Iir_Kind_Psl_Endpoint_Declaration =>
                Processes_State (I) := (Kind => Kind_PSL,
