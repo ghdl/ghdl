@@ -8,9 +8,12 @@ if ghdl_is_preelaboration; then
     elab_simulate b
 
     analyze repro1.vhdl
-    elab_simulate b1 --vcd-nodate --vcd=out.vcd
+    elab b1
+    if ghdl_has_feature b1 vcd; then
+	elab_simulate b1 --vcd-nodate --vcd=out.vcd
 
-    diff_nocr out.vcd ref.vcd
+	diff_nocr out.vcd ref.vcd
+    fi
 
     clean
 fi
