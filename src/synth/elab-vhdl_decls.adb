@@ -297,7 +297,14 @@ package body Elab.Vhdl_Decls is
          --     the expression.
          Val := Unshare (Val, Instance_Pool);
          Val.Typ := Unshare (Val.Typ, Instance_Pool);
-         Create_Object (Syn_Inst, Value, Val);
+         if Is_Entity_Attribute (Value) then
+            if Get_Value (Root_Instance, Value) = No_Valtyp then
+               --  Set once, it's global and not in a specific order...
+               Create_Object_Force (Root_Instance, Value, Val);
+            end if;
+         else
+            Create_Object (Syn_Inst, Value, Val);
+         end if;
          Release_Expr_Pool (Marker);
 
          Value := Get_Spec_Chain (Value);

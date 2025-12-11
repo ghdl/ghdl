@@ -729,7 +729,11 @@ package body Elab.Vhdl_Annotations is
             begin
                Value := Get_Attribute_Value_Spec_Chain (Decl);
                while Value /= Null_Iir loop
-                  Create_Object_Info (Block_Info, Value);
+                  if Is_Entity_Attribute (Value) then
+                     Create_Object_Info (Global_Info, Value);
+                  else
+                     Create_Object_Info (Block_Info, Value);
+                  end if;
                   Value := Get_Spec_Chain (Value);
                end loop;
             end;

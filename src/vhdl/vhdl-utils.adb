@@ -2123,6 +2123,13 @@ package body Vhdl.Utils is
       end case;
    end Get_Attribute_Parameter;
 
+   function Is_Entity_Attribute (Attr_Value : Iir) return Boolean
+   is
+      De : constant Node := Get_Designated_Entity (Attr_Value);
+   begin
+      return Get_Kind (De) = Iir_Kind_Entity_Declaration;
+   end Is_Entity_Attribute;
+
    function Get_File_Signature_Length (Def : Iir) return Natural is
    begin
       case Get_Kind (Def) is

@@ -455,6 +455,10 @@ package Vhdl.Utils is
    function Get_Attribute_Parameter
      (Attr : Iir; N : Parameter_Index) return Iir;
 
+   --  Attribute on entities are special: they must be locally static as
+   --  the entity may not even be instantiated.
+   function Is_Entity_Attribute (Attr_Value : Iir) return Boolean;
+
    --  Return the expected signature length that will be used by
    --  Get_File_Signature.
    function Get_File_Signature_Length (Def : Iir) return Natural;
