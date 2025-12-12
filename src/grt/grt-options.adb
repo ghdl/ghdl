@@ -167,11 +167,19 @@ package body Grt.Options is
 
    function Parse_Time (Str : String) return Std_Time
    is
+      procedure Error_Too_Large is
+      begin
+         Error_S ("time value '");
+         Diag_C (Str);
+         Error_E ("' is too large");
+      end Error_Too_Large;
+
       Ok : Boolean;
       Pos : Natural;
       Time : Integer_64;
       Unit : String (1 .. 3);
       Scale : Natural_Time_Scale;
+      Mul : Integer_64;
    begin
       Extract_Integer (Str, Ok, Time, Pos);
       if not Ok then
@@ -192,6 +200,8 @@ package body Grt.Options is
       Unit (1) := To_Lower (Str (Pos));
       Unit (2) := To_Lower (Str (Pos + 1));
 
+      Mul := 1;
+
       if Unit = "fs " then
          Scale := 5;
       elsif Unit = "ps " then
@@ -204,6 +214,12 @@ package body Grt.Options is
          Scale := 1;
       elsif Unit = "sec" then
          Scale := 0;
+      elsif Unit = "min" then
+         Scale := 0;
+         Mul := 60;
+      elsif Unit = "hr " then
+         Scale := 0;
+         Mul := 3600;
       else
          Error_S ("bad unit name for '");
          Diag_C (Str);
@@ -217,15 +233,18 @@ package body Grt.Options is
          return -1;
       end if;
       while Scale < Time_Resolution_Scale loop
-         if Time >= Integer_64'Last / 1000 then
-            Error_S ("time value '");
-            Diag_C (Str);
-            Error_E ("' is too large");
+         if Time >= Integer_64'Last / (Mul * 1000) then
+            Error_Too_Large;
             return -1;
          end if;
          Time := Time * 1000;
          Scale := Scale + 1;
       end loop;
+      if Time >= Integer_64'Last / Mul then
+         Error_Too_Large;
+         return -1;
+      end if;
+      Time := Time * Mul;
       return Std_Time (Time);
    end Parse_Time;
 
