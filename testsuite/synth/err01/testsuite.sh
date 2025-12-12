@@ -31,4 +31,9 @@ synth_failure err_slice01.vhdl -e
 synth_failure err_acc01.vhdl -e
 synth_failure err_lit01.vhdl -e
 
+synth_failure --std=08 err_concat01.vhdl -e
+synth_failure --std=08 err_concat02.vhdl -e
+synth_failure --std=08 err_concat03.vhdl -e
+synth_failure --std=08 err_concat04.vhdl -e
+
 echo "Test successful"
