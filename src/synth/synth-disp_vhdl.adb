@@ -53,7 +53,7 @@ package body Synth.Disp_Vhdl is
    procedure Disp_Signal (Desc : Port_Desc)
    is
    begin
-      if Desc.W > 1 then
+      if Desc.W /= 1 then
          Wr ("  subtype ");
          Disp_Signal_Subtype (Desc.Name);
          Wr (" is ");
@@ -63,7 +63,7 @@ package body Synth.Disp_Vhdl is
       Wr ("  signal ");
       Put_Name (Desc.Name, Language_Vhdl);
       Wr (": ");
-      if Desc.W > 1 then
+      if Desc.W /= 1 then
          Disp_Signal_Subtype (Desc.Name);
       else
          Put_Type (Desc.W);
@@ -328,7 +328,7 @@ package body Synth.Disp_Vhdl is
             end if;
          else
             Disp_In_Lhs (Wname, Off, W, Full);
-            if W > 1 then
+            if W /= 1 then
                if Full then
                   Disp_Signal_Subtype (Wname);
                else
@@ -342,7 +342,7 @@ package body Synth.Disp_Vhdl is
                --  netlist.
                Wr (" (" & Pfx & "'left)");
             end if;
-            if W > 1 then
+            if W /= 1 then
                Wr (')');
             end if;
             Wr_Line (";");
