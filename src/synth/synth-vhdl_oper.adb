@@ -443,9 +443,8 @@ package body Synth.Vhdl_Oper is
       L_Net : Net;
       Res : Net;
    begin
-      if Len = 0 then
-         return Create_Value_Int (-1, Res_Typ);
-      end if;
+      --  If len = 0, this is a static operation.
+      pragma Assert (Len > 0);
 
       --  The intermediate result is computed using the least number of bits,
       --  which must represent all positive values in the bounds using a
@@ -897,17 +896,9 @@ package body Synth.Vhdl_Oper is
          Set_Location (Edge, Expr);
          return Create_Value_Net (Edge, Res_Typ);
       end Synth_Negedge;
-
-      function Error_Unhandled return Valtyp is
-      begin
-         Error_Msg_Synth
-           (Get_Caller_Instance (Syn_Inst), Expr,
-            "unhandled dyn operation: "
-              & Iir_Predefined_Functions'Image (Def));
-         return No_Valtyp;
-      end Error_Unhandled;
    begin
       case Def is
+         --  GCOV_EXCL_START (not called)
          when Iir_Predefined_Error
             | Iir_Predefined_None =>
             --  Should not happen.
@@ -915,7 +906,9 @@ package body Synth.Vhdl_Oper is
 
          when Iir_Predefined_Boolean_Rising_Edge
            | Iir_Predefined_Boolean_Falling_Edge =>
-            return Error_Unhandled;
+            raise Internal_Error;
+         --  GCOV_EXCL_STOP
+
          when Iir_Predefined_Bit_Rising_Edge =>
             if Hook_Bit_Rising_Edge /= null then
                return Create_Value_Memtyp
@@ -2262,8 +2255,14 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Uns =>
             return Synth_Find_Bit (Syn_Inst, L, R, Res_Typ, False, Expr);
 
+         --  GCOV_EXCL_START (not called)
          when others =>
-            return Error_Unhandled;
+            Error_Msg_Synth
+              (Get_Caller_Instance (Syn_Inst), Expr,
+              "unhandled dyn operation: "
+              & Iir_Predefined_Functions'Image (Def));
+            return No_Valtyp;
+         --  GCOV_EXCL_STOP
       end case;
    end Synth_Dynamic_Predefined_Call;
 
