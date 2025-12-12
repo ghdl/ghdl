@@ -721,7 +721,8 @@ package body Simul.Vhdl_Simul is
                else
                   Stmt := Parent;
                end if;
-            when Iir_Kind_Procedure_Body =>
+            when Iir_Kind_Procedure_Body
+               | Iir_Kind_Subprogram_Instantiation_Body =>
                Finish_Procedure_Call (Process, Parent, Stmt);
                exit when Stmt = Null_Node;
             when others =>
@@ -1750,7 +1751,8 @@ package body Simul.Vhdl_Simul is
       Inst := Process.Instance;
       Src := Get_Source_Scope (Inst);
       if Get_Kind (Src) = Iir_Kind_Sensitized_Process_Statement
-        or else (Get_Kind (Src) = Iir_Kind_Procedure_Body
+        or else (Kind_In (Src, Iir_Kind_Procedure_Body,
+                               Iir_Kind_Subprogram_Instantiation_Body)
                    and then not Get_Suspend_Flag (Src))
       then
          --  No suspend, simply execute.
