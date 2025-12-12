@@ -108,11 +108,8 @@ package body Synth.Vhdl_Oper is
       Zx : Uns32;
       N : Net;
    begin
-      if Is_Static (Expr.Val) then
-         return Create_Value_Discrete
-           (Boolean'Pos (Read_Discrete (Cst) = Read_Discrete (Expr)),
-            Boolean_Type);
-      end if;
+      --  EXPR cannot be static, otherwise vhdl_eval would have been used.
+      pragma Assert (not Is_Static (Expr.Val));
 
       To_Logic (Ghdl_U8 (Read_Discrete (Cst)), Cst.Typ, Val, Zx);
       if Zx /= 0 then
