@@ -334,34 +334,35 @@ package body Simul.Vhdl_Simul is
             declare
                Len : constant Uns32 := Target.Typ.Abound.Len;
                El : constant Type_Acc := Target.Typ.Arr_El;
-               Smem : Memory_Ptr;
+               Smem : Memtyp;
             begin
-               pragma Assert (Val.Typ.Abound.Len = Len);
+               pragma Assert (Val.Typ = null or else Val.Typ.Abound.Len = Len);
                for I in 1 .. Len loop
                   if Val.Mem = null then
-                     Smem := null;
+                     Smem := Null_Memtyp;
                   else
-                     Smem := Val.Mem + Size_Type (I - 1) * El.Sz;
+                     Smem := (Val.Typ.Arr_El,
+                              Val.Mem + Size_Type (I - 1) * El.Sz);
                   end if;
                   Force_Signal_Value
                     ((El, Sig_Index (Target.Mem, (I - 1) * El.W)),
-                     Kind, Mode, (Val.Typ.Arr_El, Smem));
+                     Kind, Mode, Smem);
                end loop;
             end;
          when Type_Record =>
             for I in Target.Typ.Rec.E'Range loop
                declare
                   E : Rec_El_Type renames Target.Typ.Rec.E (I);
-                  Smem : Memory_Ptr;
+                  Smem : Memtyp;
                begin
                   if Val.Mem = null then
-                     Smem := null;
+                     Smem := Null_Memtyp;
                   else
-                     Smem := Val.Mem + E.Offs.Mem_Off;
+                     Smem := (E.Typ, Val.Mem + E.Offs.Mem_Off);
                   end if;
                   Force_Signal_Value
                     ((E.Typ, Sig_Index (Target.Mem, E.Offs.Net_Off)),
-                     Kind, Mode, (E.Typ, Smem));
+                     Kind, Mode, Smem);
                end;
             end loop;
          when others =>
