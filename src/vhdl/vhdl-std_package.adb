@@ -1418,6 +1418,8 @@ package body Vhdl.Std_Package is
       Unit : Iir;
       Prim : Iir;
       Rng : Iir;
+      Done : Boolean;
+      First, Last : Iir;
    begin
       case Resolution is
          when 'f' =>
@@ -1452,27 +1454,43 @@ package body Vhdl.Std_Package is
          Change_Unit (Get_Right_Limit (Rng), Prim);
       end if;
 
+      --  Adjust the value of each units and recreate the chain of units
+      --  without the primary one.
       Unit := Get_Unit_Chain (Time_Type_Definition);
+      First := Null_Iir;
+      Last := Null_Iir;
+      Done := False;
       while Unit /= Null_Iir loop
          declare
             Lit : constant Iir := Get_Physical_Literal (Unit);
             Orig : constant Iir := Get_Literal_Origin (Lit);
             Lit_Unit : Iir;
+            Next_Unit : Iir;
          begin
-            if Prim = Null_Iir then
+            if Done then
                --  Primary already set, just recompute values.
                Lit_Unit := Get_Physical_Literal
                  (Get_Named_Entity (Get_Unit_Name (Orig)));
                Set_Value (Lit, Get_Value (Orig) * Get_Value (Lit_Unit));
             elsif Unit = Prim then
                Set_Value (Lit, 1);
-               Prim := Null_Iir;
+               Done := True;
             else
                Set_Value (Lit, 0);
             end if;
+
+            --  Re-chain.
+            Next_Unit := Get_Chain (Unit);
+            if Unit /= Prim then
+               Chain_Append (First, Last, Unit);
+            end if;
+            Unit := Next_Unit;
          end;
-         Unit := Get_Chain (Unit);
       end loop;
+      --  The new primary unit is now the first unit.
+      Set_Chain (Last, Null_Iir);
+      Set_Chain (Prim, First);
+      Set_Unit_Chain (Time_Type_Definition, Prim);
    end Set_Time_Resolution;
 
    function Get_Minimal_Time_Resolution return Character is
