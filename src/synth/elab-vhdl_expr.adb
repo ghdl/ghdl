@@ -386,7 +386,7 @@ package body Elab.Vhdl_Expr is
             Sub_Inst := Get_Sub_Instance (Cur_Inst, Res);
             if not Is_Entity_Instantiation (Res) then
                Sub_Inst := Get_Component_Instance (Sub_Inst);
-               if Cur_Inst = null then
+               if Sub_Inst = null then
                   Error_Msg_Synth
                     (Loc_Inst, Path, "component for %i is not bound", +Res);
                   return No_Valtyp;
