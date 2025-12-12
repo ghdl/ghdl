@@ -207,8 +207,7 @@ package body Elab.Vhdl_Types is
             Synth_Discrete_Range
               (Syn_Inst, Get_Subtype_Indication (Get_Named_Entity (Bound)),
                Rng);
-         when others =>
-            Error_Kind ("synth_discrete_range", Bound);
+         when others => Error_Kind ("synth_discrete_range", Bound);
       end case;
    end Synth_Discrete_Range;
 
@@ -514,8 +513,7 @@ package body Elab.Vhdl_Types is
             Typ := null;
          when Iir_Kind_Incomplete_Type_Definition =>
             return;
-         when others =>
-            Vhdl.Errors.Error_Kind ("synth_type_definition", Def);
+         when others => Error_Kind ("synth_type_definition", Def);
       end case;
       if Typ /= null then
          Typ := Unshare (Typ, Instance_Pool);
@@ -567,8 +565,7 @@ package body Elab.Vhdl_Types is
             Typ := Elab_Floating_Type_Definition (Def, St);
          when Iir_Kind_Array_Type_Definition =>
             Typ := Synth_Array_Type_Definition (Syn_Inst, Def);
-         when others =>
-            Vhdl.Errors.Error_Kind ("synth_anonymous_type_definition", Def);
+         when others => Error_Kind ("synth_anonymous_type_definition", Def);
       end case;
       Typ := Unshare (Typ, Instance_Pool);
       Create_Subtype_Object (Syn_Inst, Def, Typ);
@@ -591,8 +588,7 @@ package body Elab.Vhdl_Types is
          when Iir_Kind_Range_Expression =>
             --  FIXME: check range.
             return Synth_Float_Range_Expression (Syn_Inst, Rng);
-         when others =>
-            Vhdl.Errors.Error_Kind ("synth_float_range_constraint", Rng);
+         when others => Error_Kind ("synth_float_range_constraint", Rng);
       end case;
    end Synth_Float_Range_Constraint;
 
@@ -721,8 +717,7 @@ package body Elab.Vhdl_Types is
            | Type_Array =>
             --  An alias with just a different resolver ?
             return Parent_Typ;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Synth_Array_Subtype_Indication;
 
@@ -835,8 +830,7 @@ package body Elab.Vhdl_Types is
            | Iir_Kind_Array_Type_Definition
            | Iir_Kind_Enumeration_Type_Definition =>
             return Get_Subtype_Object (Syn_Inst, Atype);
-         when others =>
-            Vhdl.Errors.Error_Kind ("synth_subtype_indication", Atype);
+         when others => Error_Kind ("synth_subtype_indication", Atype);
       end case;
    end Synth_Subtype_Indication;
 
@@ -879,8 +873,7 @@ package body Elab.Vhdl_Types is
               | Iir_Kind_Physical_Subtype_Definition
               | Iir_Kind_Enumeration_Subtype_Definition =>
                return Atype;
-            when others =>
-               Vhdl.Errors.Error_Kind ("get_declaration_type", Atype);
+            when others => Error_Kind ("get_declaration_type", Atype);
          end case;
       end loop;
    end Get_Declaration_Type;
@@ -911,8 +904,7 @@ package body Elab.Vhdl_Types is
                      Atype2 := Get_Interface_Type_Definition (Decl);
                   when Iir_Kind_Anonymous_Type_Declaration =>
                      raise Internal_Error;
-                  when others =>
-                     raise Internal_Error;
+                  when others => raise Internal_Error;
                end case;
                return Get_Elaborated_Subtype_Indication (Syn_Inst, Atype2);
             end;
@@ -950,8 +942,7 @@ package body Elab.Vhdl_Types is
             Res_Type := Atype;
          when Iir_Kind_Protected_Type_Declaration =>
             Res_Type := Atype;
-         when others =>
-            Error_Kind ("elab_subtype_indication", Atype);
+         when others => Error_Kind ("elab_subtype_indication", Atype);
       end case;
 
       return Get_Subtype_Object (Syn_Inst, Res_Type);

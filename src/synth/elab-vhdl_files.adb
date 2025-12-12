@@ -227,8 +227,7 @@ package body Elab.Vhdl_Files is
                File_Mode := Grt.Files.Read_Mode;
             when Iir_Out_Mode =>
                File_Mode := Grt.Files.Write_Mode;
-            when others =>
-               raise Internal_Error;
+            when others => raise Internal_Error;
          end case;
       end if;
 

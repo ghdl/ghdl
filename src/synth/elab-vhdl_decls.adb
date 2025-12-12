@@ -169,17 +169,6 @@ package body Elab.Vhdl_Decls is
       Create_Object (Syn_Inst, Decl, Res);
    end Elab_File_Declaration;
 
-   procedure Elab_Free_Quantity_Declaration (Syn_Inst : Synth_Instance_Acc;
-                                             Decl : Node)
-   is
-      Obj_Typ : Type_Acc;
-      Res : Valtyp;
-   begin
-      Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
-      Res := Create_Value_Quantity (Obj_Typ, No_Quantity_Index, Instance_Pool);
-      Create_Object (Syn_Inst, Decl, Res);
-   end Elab_Free_Quantity_Declaration;
-
    procedure Elab_External_Name (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
       Obj_Typ : Type_Acc;
@@ -230,6 +219,18 @@ package body Elab.Vhdl_Decls is
       Create_Signal (Syn_Inst, Decl, Obj_Typ, null);
    end Elab_Implicit_Signal_Declaration;
 
+   --  GCOV_EXCL_START (AMS)
+   procedure Elab_Free_Quantity_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                             Decl : Node)
+   is
+      Obj_Typ : Type_Acc;
+      Res : Valtyp;
+   begin
+      Obj_Typ := Elab_Declaration_Type (Syn_Inst, Decl);
+      Res := Create_Value_Quantity (Obj_Typ, No_Quantity_Index, Instance_Pool);
+      Create_Object (Syn_Inst, Decl, Res);
+   end Elab_Free_Quantity_Declaration;
+
    procedure Elab_Implicit_Quantity_Declaration (Syn_Inst : Synth_Instance_Acc;
                                                  Decl : Node)
    is
@@ -262,6 +263,7 @@ package body Elab.Vhdl_Decls is
             Error_Kind ("elab_nature_definition", Def);
       end case;
    end Elab_Nature_Definition;
+   --  GCOV_EXCL_STOP
 
    procedure Elab_Attribute_Specification
      (Syn_Inst : Synth_Instance_Acc; Spec : Node)
@@ -455,6 +457,8 @@ package body Elab.Vhdl_Decls is
             null;
          when Iir_Kind_Attribute_Implicit_Declaration =>
             Elab_Attribute_Implicit_Declaration (Syn_Inst, Decl);
+
+         --  GCOV_EXCL_START (AMS)
          when Iir_Kind_Nature_Declaration =>
             Elab_Nature_Definition (Syn_Inst, Get_Nature (Decl));
          when Iir_Kind_Free_Quantity_Declaration =>
@@ -467,6 +471,8 @@ package body Elab.Vhdl_Decls is
             Elab_Implicit_Quantity_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Terminal_Declaration =>
             Elab_Terminal_Declaration (Syn_Inst, Decl);
+         --  GCOV_EXCL_STOP
+
          when Iir_Kinds_Signal_Attribute =>
             --  Handled by Attribute_Implicit_Declaration
             raise Program_Error;

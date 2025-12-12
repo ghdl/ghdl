@@ -308,8 +308,7 @@ package body Elab.Vhdl_Expr is
            | Type_File
            | Type_Access =>
             null;
-         when Type_Slice =>
-            raise Internal_Error;
+         when Type_Slice => raise Internal_Error;
       end case;
 
       return Res;
@@ -814,8 +813,7 @@ package body Elab.Vhdl_Expr is
                end if;
             end;
 
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
       return Create_Value_Discrete (Val, Dtype);
    end Value_Attribute;
@@ -951,8 +949,7 @@ package body Elab.Vhdl_Expr is
             pragma Assert (Typ.Alast);
             El_Typ := Typ.Arr_El;
             Bnd := Typ.Abound;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Get_Onedimensional_Array_Bounds;
 
@@ -976,8 +973,7 @@ package body Elab.Vhdl_Expr is
             pragma Assert (Btyp.Ulast);
             pragma Assert (Is_Bounded_Type (El_Typ));
             Res := Create_Array_Type (Bnd, False, True, El_Typ);
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
       return Res;
    end Create_Onedimensional_Array_Subtype;
@@ -1120,8 +1116,7 @@ package body Elab.Vhdl_Expr is
             | Type_Unbounded_Array =>
             Bounds := Synth_Bounds_From_Length
               (Get_Index_Type (Str_Type, 0), Len);
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
 
       El_Type := Get_Array_Element (Str_Typ);
