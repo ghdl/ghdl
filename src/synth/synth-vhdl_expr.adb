@@ -2465,6 +2465,8 @@ package body Synth.Vhdl_Expr is
                         Imp := Get_Interface_Subprogram (Syn_Inst, Imp);
                      when Iir_Kind_Function_Declaration =>
                         exit;
+                     when Iir_Kind_Function_Instantiation_Declaration =>
+                        return Synth_User_Function_Call (Syn_Inst, Expr, Imp);
                      when others => Error_Kind ("function_call", Imp);
                   end case;
                end loop;
