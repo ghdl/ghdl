@@ -896,15 +896,29 @@ package body Simul.Vhdl_Simul is
       use Vhdl.Errors;
       Inst : constant Synth_Instance_Acc := Process.Instance;
       Call : constant Node := Get_Procedure_Call (Stmt);
-      Imp  : constant Node := Get_Implementation (Call);
       Obj  : constant Node := Get_Method_Object (Call);
 
       Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
 
       Area_Mark : Mark_Type;
       Sub_Inst : Synth_Instance_Acc;
+      Imp  : Node;
    begin
       Areapools.Mark (Area_Mark, Instance_Pool.all);
+
+      Imp := Get_Implementation (Call);
+      --  For instantiations.
+      loop
+         case Get_Kind (Imp) is
+            when Iir_Kind_Interface_Procedure_Declaration =>
+               Imp := Get_Interface_Subprogram (Inst, Imp);
+            when Iir_Kind_Procedure_Declaration =>
+               exit;
+            when Iir_Kind_Procedure_Instantiation_Declaration =>
+               exit;
+            when others => Error_Kind ("procedure_call_statement", Imp);
+         end case;
+      end loop;
 
       if Get_Kind (Imp) in Iir_Kinds_Subprogram_Declaration
         and then Get_Implicit_Definition (Imp) /= Iir_Predefined_None
