@@ -21,4 +21,6 @@ synth_failure nor05.vhdl -e
 synth_only nor06
 synth_only nor07
 
+synth_failure urot02.vhdl -e
+
 echo "Test successful"
