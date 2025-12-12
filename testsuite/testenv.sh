@@ -187,7 +187,7 @@ ghdl_has_feature ()
 
 ghdl_is_interpretation ()
 {
-  "$GHDL" --version | grep -q interpretation
+  echo "$GHDL_FLAGS" | fgrep -q interp
 }
 
 ghdl_is_preelaboration ()

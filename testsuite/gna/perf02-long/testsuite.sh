@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-if echo "$GHDL_FLAGS" | fgrep -q interp; then
+if ghdl_is_interpretation; then
   echo "Test skipped"
   exit 0
 fi

@@ -4,6 +4,10 @@
 
 GHDL_STD_FLAGS=--std=08
 
+if ghdl_is_interpretation; then
+    exit 0
+fi
+
 if $GHDL help coverage > /dev/null; then
     # Coverage is available
     analyze reproducer.vhdl tb_reproducer.vhdl tb_second.vhdl

@@ -2,6 +2,10 @@
 
 . ../../testenv.sh
 
+if ghdl_is_interpretation; then
+    exit 0
+fi
+
 GHDL_STD_FLAGS=--std=08
 
 analyze repro1.vhdl
