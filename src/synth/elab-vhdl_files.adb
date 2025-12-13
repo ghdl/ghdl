@@ -272,7 +272,7 @@ package body Elab.Vhdl_Files is
          return True;
       else
          File_Error (Syn_Inst, Loc, Status);
-         return False;
+         raise File_Execution_Error;
       end if;
    end Endfile;
 
