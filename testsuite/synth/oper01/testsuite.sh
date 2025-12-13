@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in snum01 snum02 snum03 snum04 snum05 cmp01 cmp02 \
+for t in snum01 snum02 snum03 snum04 snum05 cmp01 cmp02 cmp04 \
 	 match01 match02 match05 uns01 \
 	 nand01 nor01 xnor01; do
     synth_tb $t
