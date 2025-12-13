@@ -35,11 +35,20 @@ synth_failure --std=08 err_concat01.vhdl -e
 synth_failure --std=08 err_concat02.vhdl -e
 synth_failure --std=08 err_concat03.vhdl -e
 synth_failure --std=08 err_concat04.vhdl -e
+synth_failure --std=08 err_concat05.vhdl -e
+synth_failure --std=08 err_concat06.vhdl -e
+synth_failure --std=08 err_concat07.vhdl -e
+synth_failure --std=08 err_concat08.vhdl -e
 
 synth_failure err_conv01.vhdl -e
 synth_failure err_op02.vhdl -e
 
 synth_failure err_resize01.vhdl -e
 synth_failure err_resize02.vhdl -e
+
+synth_failure --std=08 err_tostr01.vhdl -e
+
+synth_failure err_flt01.vhdl -e
+synth_failure err_phy01.vhdl -e
 
 echo "Test successful"
