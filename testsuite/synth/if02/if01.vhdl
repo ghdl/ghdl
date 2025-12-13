@@ -11,5 +11,5 @@ end if01;
 architecture behav of if01 is
 begin
   s <= a when sel = '0'
-       else b when sel = '1';
+       else b when '1' = sel;
 end behav;
