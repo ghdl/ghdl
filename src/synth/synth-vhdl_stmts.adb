@@ -3464,6 +3464,11 @@ package body Synth.Vhdl_Stmts is
       Mark_Expr_Pool (Marker);
       if Cond /= Null_Node then
          Cond_Val := Synth_Expression (C.Inst, Cond);
+         if Cond_Val = No_Valtyp then
+            Release_Expr_Pool (Marker);
+            return;
+         end if;
+
          Static_Cond := Is_Static_Val (Cond_Val.Val);
          if Static_Cond then
             if Get_Static_Discrete (Cond_Val) = 0 then
@@ -3638,6 +3643,7 @@ package body Synth.Vhdl_Stmts is
       if In_Range (Val.Typ.Drange, Read_Discrete (Val)) then
          loop
             Synth_Sequential_Statements (C, Stmts);
+            exit when Is_Error (C.Inst);
 
             Loop_Control_Update (C);
 
