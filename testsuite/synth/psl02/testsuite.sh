@@ -32,4 +32,7 @@ analyze syn_assert25.vhdl
 
 clean
 
+synth_failure err_attr01.vhdl -e
+synth_failure err_attr02.vhdl -e
+
 echo "Test successful"

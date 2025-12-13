@@ -2,10 +2,14 @@
 
 . ../../testenv.sh
 
-synth --std=08 exp_psl.vhdl -e > syn_psl.vhdl
-grep -q "gate_anyconst" syn_psl.vhdl
+GHDL_STD_FLAGS=--std=08
+synth_only exp_psl
+grep -q "gate_anyconst" syn_exp_psl.vhdl
 
-synth --std=08 exp_vhd.vhdl -e > syn_vhd.vhdl
-grep -q "gate_anyconst" syn_vhd.vhdl
+synth_only exp_psl2
+grep -q "gate_allconst" syn_exp_psl2.vhdl
+
+synth_only exp_vhd
+grep -q "gate_anyconst" syn_exp_vhd.vhdl
 
 echo "Test successful"
