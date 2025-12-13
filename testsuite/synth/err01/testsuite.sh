@@ -51,4 +51,7 @@ synth_failure --std=08 err_tostr01.vhdl -e
 synth_failure err_flt01.vhdl -e
 synth_failure err_phy01.vhdl -e
 
+GHDL_STD_FLAGS=--std=08
+synth_tb eq01
+
 echo "Test successful"
