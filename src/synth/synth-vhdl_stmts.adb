@@ -3936,8 +3936,7 @@ package body Synth.Vhdl_Stmts is
                Put_Err ("error");
             when Failure_Severity =>
                Put_Err ("failure");
-            when others =>
-               Put_Err ("??");
+            when others => raise Internal_Error;
          end case;
          Put_Err ("): ");
 
@@ -4058,10 +4057,10 @@ package body Synth.Vhdl_Stmts is
       end if;
 
       if Flags.Flag_Trace_Statements then
-         Elab.Vhdl_Debug.Put_Stmt_Trace (Stmt);
+         Elab.Vhdl_Debug.Put_Stmt_Trace (Stmt); -- GCOV_EXCL_LINE
       end if;
       if Elab.Debugger.Flag_Need_Debug then
-         Elab.Debugger.Debug_Break (C.Inst, Stmt);
+         Elab.Debugger.Debug_Break (C.Inst, Stmt); -- GCOV_EXCL_LINE
       end if;
 
       Set_Covered_Flag (Stmt, True);
@@ -4379,6 +4378,7 @@ package body Synth.Vhdl_Stmts is
             Lib := Get_Library (Get_Design_File (Unit));
             if Get_Identifier (Lib) = Std_Names.Name_Ieee then
                case Get_Identifier (Pkg) is
+                  --  GCOV_EXCL_START (not called)
                   when Std_Names.Name_Std_Logic_1164
                     | Std_Names.Name_Numeric_Std
                     | Std_Names.Name_Numeric_Bit
@@ -4393,6 +4393,8 @@ package body Synth.Vhdl_Stmts is
                         "unhandled call to ieee function %i", +Imp);
                      Set_Error (Syn_Inst);
                      return No_Valtyp;
+                  --  GCOV_EXCL_STOP
+
                   when others =>
                      --  Other ieee packages are handled as normal packages.
                      null;
@@ -4772,21 +4774,6 @@ package body Synth.Vhdl_Stmts is
       end if;
    end Synth_Psl_Assert_Directive;
 
-   procedure Synth_Psl_Endpoint_Declaration
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
-   is
-      pragma Unreferenced (Syn_Inst, Stmt);
-   begin
-      if not Flags.Flag_Formal then
-         return;
-      end if;
-
-      --  TODO
-      --  Mutate object to a net
-      --  Assign the net.
-      raise Internal_Error;
-   end Synth_Psl_Endpoint_Declaration;
-
    procedure Synth_Generate_Statement_Body
      (Syn_Inst : Synth_Instance_Acc; Bod : Node)
    is
@@ -5082,8 +5069,6 @@ package body Synth.Vhdl_Stmts is
                Synth_Psl_Restrict_Directive (Syn_Inst, Item);
             when Iir_Kind_Psl_Cover_Directive =>
                Synth_Psl_Cover_Directive (Syn_Inst, Item);
-            when Iir_Kind_Psl_Endpoint_Declaration =>
-               Synth_Psl_Endpoint_Declaration (Syn_Inst, Item);
             when Iir_Kind_Signal_Declaration
                | Iir_Kind_Constant_Declaration
                | Iir_Kind_Function_Declaration
