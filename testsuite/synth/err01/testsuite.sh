@@ -59,6 +59,8 @@ synth_failure err_process03.vhdl -e
 synth_failure err_process04.vhdl -e
 synth_failure err_process05.vhdl -e
 
+synth_failure foreign01.vhdl -e
+
 GHDL_STD_FLAGS=--std=08
 synth_tb eq01
 
