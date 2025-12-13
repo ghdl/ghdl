@@ -604,8 +604,8 @@ package body Synth.Vhdl_Stmts is
                                                          Targ_Info.Targ_Type,
                                                          Assoc_Expr),
                                 Loc);
-                     when others =>
-                        Error_Kind ("assign_aggregate(arr)", Choice);
+                     when others => Error_Kind ("assign_aggregate(arr)",
+                                                Choice);
                   end case;
                   Choice := Get_Chain (Choice);
                end loop;
@@ -634,8 +634,8 @@ package body Synth.Vhdl_Stmts is
                                                           Targ_Info.Targ_Type,
                                                           Assoc_Expr),
                                 Loc);
-                     when others =>
-                        Error_Kind ("assign_aggregate(rec)", Choice);
+                     when others => Error_Kind ("assign_aggregate(rec)",
+                                                Choice);
                   end case;
                   Choice := Get_Chain (Choice);
                end loop;
@@ -2333,8 +2333,7 @@ package body Synth.Vhdl_Stmts is
                pragma Assert (Dest_Dyn = No_Dyn_Name);
             end;
 
-         when others =>
-            Error_Kind ("synth_individual_formal", Pfx);
+         when others => Error_Kind ("synth_individual_formal", Pfx);
       end case;
    end Synth_Individual_Formal;
 
@@ -2375,8 +2374,7 @@ package body Synth.Vhdl_Stmts is
               (Inter_Typ, Get_Prefix (Pfx));
             return Parent_Typ;
 
-         when others =>
-            Error_Kind ("synth_individual_get_formal_type", Pfx);
+         when others => Error_Kind ("synth_individual_get_formal_type", Pfx);
       end case;
    end Synth_Individual_Get_Formal_Type;
 
@@ -2424,8 +2422,7 @@ package body Synth.Vhdl_Stmts is
                end if;
             end;
 
-         when others =>
-            Error_Kind ("synth_individual_formal_type", Pfx);
+         when others => Error_Kind ("synth_individual_formal_type", Pfx);
       end case;
    end Synth_Individual_Formal_Type;
 
@@ -2701,8 +2698,7 @@ package body Synth.Vhdl_Stmts is
             begin
                Res := Synth_Type_Conversion (Inst, Val, Conv_Typ, Func);
             end;
-         when others =>
-            Vhdl.Errors.Error_Kind ("synth_association_conversion", Func);
+         when others => Error_Kind ("synth_association_conversion", Func);
       end case;
       Res := Synth.Vhdl_Expr.Synth_Subtype_Conversion
         (Inst, Res, Res_Typ, False, Func);
@@ -3047,39 +3043,6 @@ package body Synth.Vhdl_Stmts is
       Set_Caller_Instance (Res, Inst);
       return Res;
    end Synth_Protected_Call_Instance;
-
-   --  Copy the result of a function EXPR to the expr_pool, so that if a local
-   --  value is returned, it is saved before the local instance is destroyed.
-   function Unshare_Result (Expr : Valtyp) return Valtyp
-   is
-      Res : Valtyp;
-   begin
-      if Expr.Val.Kind = Value_Alias then
-         --  If the result is an alias, extract the value (on the right pool).
-         declare
-            Val : constant Value_Acc := Expr.Val.A_Obj;
-            Mt : Memtyp;
-         begin
-            case Val.Kind is
-               when Value_Memory =>
-                  Mt := Get_Value_Memtyp ((Expr.Val.A_Typ, Val));
-                  Res := Create_Value_Memory (Expr.Typ, Expr_Pool'Access);
-                  Copy_Memory (Res.Val.Mem, Mt.Mem + Expr.Val.A_Off.Mem_Off,
-                               Expr.Typ.Sz);
-                  return Res;
-               when Value_Wire =>
-                  --  No need to unshare it: the value is assigned to the
-                  --  result (as a net), so it is not kept.
-                  return Expr;
-               when others =>
-                  --  Is it possible ?
-                  raise Internal_Error;
-            end case;
-         end;
-      else
-         return Unshare (Expr, Expr_Pool'Access);
-      end if;
-   end Unshare_Result;
 
    function Synth_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
                                    Call : Node;
@@ -3848,7 +3811,8 @@ package body Synth.Vhdl_Stmts is
                --  Copy a result of the function call.
                --  The result can be a local variable which will be released.
                --  It can also be an alias of a local variable.
-               C.Ret_Value := Unshare_Result (Val);
+               pragma Assert (Val.Val.Kind /= Value_Alias);
+               C.Ret_Value := Unshare (Val, Expr_Pool'Access);
                if not Is_Bounded_Type (C.Ret_Typ) then
                   --  The function was declared with an unconstrained
                   --  return type.  Now that a value has been returned,
@@ -4172,8 +4136,7 @@ package body Synth.Vhdl_Stmts is
             --  is called from a sensitized process.
             --  But this could also be detected during elaboration.
             null;
-         when others =>
-            Error_Kind ("synth_sequential_statements", Stmt);
+         when others => Error_Kind ("synth_sequential_statements", Stmt);
       end case;
       if Is_Dyn then
          if Has_Phi then
@@ -4973,8 +4936,7 @@ package body Synth.Vhdl_Stmts is
          when Iir_Kind_Concurrent_Assertion_Statement =>
             --  Passive statement.
             Synth_Concurrent_Assertion_Statement (Syn_Inst, Stmt);
-         when others =>
-            Error_Kind ("synth_concurrent_statement", Stmt);
+         when others => Error_Kind ("synth_concurrent_statement", Stmt);
       end case;
 
       pragma Assert (Is_Expr_Pool_Empty);
@@ -5143,8 +5105,7 @@ package body Synth.Vhdl_Stmts is
                | Iir_Kind_Concurrent_Procedure_Call_Statement
                | Iir_Kind_Component_Instantiation_Statement =>
                Synth_Concurrent_Statement (Syn_Inst, Item);
-            when others =>
-               Error_Kind ("synth_verification_unit", Item);
+            when others => Error_Kind ("synth_verification_unit", Item);
          end case;
          Item := Get_Chain (Item);
       end loop;
@@ -5184,8 +5145,7 @@ package body Synth.Vhdl_Stmts is
                | Iir_Kind_Type_Declaration
                | Iir_Kind_Anonymous_Type_Declaration =>
                Finalize_Declaration (Syn_Inst, Item, False);
-            when others =>
-               Error_Kind ("synth_verification_unit(2)", Item);
+            when others => Error_Kind ("synth_verification_unit(2)", Item);
          end case;
          Item := Get_Chain (Item);
       end loop;
