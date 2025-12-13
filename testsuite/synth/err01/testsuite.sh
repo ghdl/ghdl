@@ -39,4 +39,7 @@ synth_failure --std=08 err_concat04.vhdl -e
 synth_failure err_conv01.vhdl -e
 synth_failure err_op02.vhdl -e
 
+synth_failure err_resize01.vhdl -e
+synth_failure err_resize02.vhdl -e
+
 echo "Test successful"
