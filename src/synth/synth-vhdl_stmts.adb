@@ -3927,6 +3927,8 @@ package body Synth.Vhdl_Stmts is
             when Iir_Kind_Assertion_Statement
               | Iir_Kind_Concurrent_Assertion_Statement =>
                Put_Err ("assert");
+
+            --  GCOV_EXCL_START (handler used instead)
             when Iir_Kind_Psl_Assert_Directive =>
                Put_Err ("psl assertion");
             when Iir_Kind_Psl_Assume_Directive =>
@@ -3934,6 +3936,7 @@ package body Synth.Vhdl_Stmts is
             when Iir_Kind_Psl_Cover_Directive =>
                Put_Err ("psl cover");
             when others => raise Internal_Error;
+            --  GCOV_EXCL_STOP
          end case;
          Put_Err (' ');
          case Sev_V is
@@ -3956,11 +3959,13 @@ package body Synth.Vhdl_Stmts is
                  | Iir_Kind_Concurrent_Assertion_Statement
                  | Iir_Kind_Psl_Assert_Directive =>
                   Put_Line_Err ("Assertion violation.");
+               --  GCOV_EXCL_START (handler used instead)
                when Iir_Kind_Psl_Assume_Directive =>
                   Put_Line_Err ("Assumption violation.");
                when Iir_Kind_Psl_Cover_Directive =>
                   Put_Line_Err ("sequence covered.");
                when others => raise Internal_Error;
+               --  GCOV_EXCL_STOP
             end case;
          else
             Put_Line_Err (Value_To_String (Rep));
@@ -5034,12 +5039,12 @@ package body Synth.Vhdl_Stmts is
                | Name_Gclk =>
                --  Applies to nets/ports.
                null;
+            when Name_Foreign =>
+               null;
             when others =>
                Warning_Msg_Synth
                  (Warnid_Unhandled_Attribute,
-                  +Spec,
-                  "unhandled attribute %i",
-                  (1 => +Id));
+                  +Spec, "unhandled attribute %i", (1 => +Id));
          end case;
          Val := Get_Value_Chain (Val);
       end loop;
