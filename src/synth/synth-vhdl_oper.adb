@@ -912,6 +912,34 @@ package body Synth.Vhdl_Oper is
            | Iir_Predefined_Boolean_And =>
             --  Short circuit.
             raise Internal_Error;
+
+         when Iir_Predefined_Now_Function
+            | Iir_Predefined_Real_Now_Function
+            | Iir_Predefined_Frequency_Function
+            | Iir_Predefined_Std_Env_Resolution_Limit
+            | Iir_Predefined_Std_Env_Stop
+            | Iir_Predefined_Std_Env_Stop_Status
+            | Iir_Predefined_Std_Env_Finish
+            | Iir_Predefined_Std_Env_Finish_Status
+            | Iir_Predefined_Read
+            | Iir_Predefined_Write
+            | Iir_Predefined_Read_Length
+            | Iir_Predefined_Flush
+            | Iir_Predefined_File_Open_Status
+            | Iir_Predefined_File_Open
+            | Iir_Predefined_File_Close
+            | Iir_Predefined_Foreign_Untruncated_Text_Read
+            | Iir_Predefined_Foreign_Textio_Read_Real
+            | Iir_Predefined_Foreign_Textio_Write_Real =>
+            --  Procedures or functions without arguments.
+            raise Internal_Error;
+
+         when Iir_Predefined_Access_Equality
+            | Iir_Predefined_Access_Inequality
+            | Iir_Predefined_Deallocate =>
+            Error_Msg_Synth
+              (Syn_Inst, Expr, "non-constant access operations not supported");
+            return No_Valtyp;
          --  GCOV_EXCL_STOP
 
          when Iir_Predefined_Bit_Rising_Edge =>
@@ -1447,13 +1475,6 @@ package body Synth.Vhdl_Oper is
                "non-constant floating point operation not supported");
             return No_Valtyp;
 
-         when Iir_Predefined_Access_Equality
-            | Iir_Predefined_Access_Inequality
-            | Iir_Predefined_Deallocate =>
-            Error_Msg_Synth
-              (Syn_Inst, Expr, "non-constant access operations not supported");
-            return No_Valtyp;
-
          when Iir_Predefined_Enum_To_String
             | Iir_Predefined_Integer_To_String
             | Iir_Predefined_Floating_To_String
@@ -1463,28 +1484,6 @@ package body Synth.Vhdl_Oper is
             | Iir_Predefined_Bit_Vector_To_Ostring =>
             Error_Msg_Synth
               (Syn_Inst, Expr, "to_string is not supported");
-            return No_Valtyp;
-
-         when Iir_Predefined_Now_Function
-            | Iir_Predefined_Real_Now_Function
-            | Iir_Predefined_Frequency_Function
-            | Iir_Predefined_Std_Env_Resolution_Limit
-            | Iir_Predefined_Std_Env_Stop
-            | Iir_Predefined_Std_Env_Stop_Status
-            | Iir_Predefined_Std_Env_Finish
-            | Iir_Predefined_Std_Env_Finish_Status
-            | Iir_Predefined_Read
-            | Iir_Predefined_Write
-            | Iir_Predefined_Read_Length
-            | Iir_Predefined_Flush
-            | Iir_Predefined_File_Open_Status
-            | Iir_Predefined_File_Open
-            | Iir_Predefined_File_Close
-            | Iir_Predefined_Foreign_Untruncated_Text_Read
-            | Iir_Predefined_Foreign_Textio_Read_Real
-            | Iir_Predefined_Foreign_Textio_Write_Real =>
-            Error_Msg_Synth
-              (Syn_Inst, Expr, "call to %i is not supported", (1 => +Imp));
             return No_Valtyp;
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
