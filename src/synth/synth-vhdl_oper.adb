@@ -907,6 +907,11 @@ package body Synth.Vhdl_Oper is
          when Iir_Predefined_Boolean_Rising_Edge
            | Iir_Predefined_Boolean_Falling_Edge =>
             raise Internal_Error;
+
+         when Iir_Predefined_Bit_And
+           | Iir_Predefined_Boolean_And =>
+            --  Short circuit.
+            raise Internal_Error;
          --  GCOV_EXCL_STOP
 
          when Iir_Predefined_Bit_Rising_Edge =>
@@ -1007,10 +1012,6 @@ package body Synth.Vhdl_Oper is
                return Create_Value_Net (N, L.Typ);
             end;
 
-         when Iir_Predefined_Bit_And
-           | Iir_Predefined_Boolean_And =>
-            --  Short circuit.
-            raise Internal_Error;
          when Iir_Predefined_Ieee_1164_Scalar_And =>
             return Synth_Bit_Dyadic (Id_And);
          when Iir_Predefined_Bit_Xor
@@ -2395,7 +2396,9 @@ package body Synth.Vhdl_Oper is
            (Syn_Inst, Get_Value_Memtyp (Operand), Null_Memtyp, null, Expr);
          if Res = Null_Memtyp then
             --  In case of serious error (function not handled)
+            --  GCOV_EXCL_START (never called)
             return No_Valtyp;
+            --  GCOV_EXCL_STOP
          end if;
          return Create_Value_Memtyp (Res);
       else
