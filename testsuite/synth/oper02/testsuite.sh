@@ -3,8 +3,8 @@
 . ../../testenv.sh
 
 GHDL_STD_FLAGS=--std=08
-for t in min01 smin01 umin01 \
-	 max01 smax01 umax01 \
+for t in min01 smin01 smin02 smin03 umin01 umin02 umin03 \
+	 max01 smax01 smax02 smax03 umax01 umax02 umax03 \
 	 uns02 \
 	 urot01 srot01 \
 	 sshift01 ushift01 nushift01 \
