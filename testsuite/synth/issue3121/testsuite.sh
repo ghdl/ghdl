@@ -11,4 +11,7 @@ synth -frelaxed repro_alias4.vhdl -e > syn_repro_alias4.vhdl
 
 #synth --keep-hierarchy=no repro_proc.vhdl -e > syn_repro_proc.vhdl
 
+# Reproducer
+#synth_failure top2.vhdl -e
+
 echo "Test successful"
