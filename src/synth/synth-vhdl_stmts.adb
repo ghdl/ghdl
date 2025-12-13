@@ -785,9 +785,8 @@ package body Synth.Vhdl_Stmts is
       if Res_Typ.W = Obj.Typ.W then
          --  The only possible offset is 0.
          null;
-      elsif Res_Typ.W = 0 then
-         N := Build_Const_X (Ctxt, 0);
       else
+         pragma Assert (Res_Typ.W > 0);
          if Dyn.Voff /= No_Net then
             Synth.Source.Set_Location_Maybe (N, Loc);
             --  Do not try to extract if the net is null.
@@ -877,6 +876,10 @@ package body Synth.Vhdl_Stmts is
    begin
       Mark_Expr_Pool (Marker);
       Targ := Synth_Target (Syn_Inst, Get_Target (Stmt));
+      if Targ.Targ_Type = null then
+         --  Return now in case of error.
+         return;
+      end if;
       Cwf := Get_Conditional_Waveform_Chain (Stmt);
       Cond := Get_Condition (Cwf);
       Next_Cwf := Get_Chain (Cwf);
