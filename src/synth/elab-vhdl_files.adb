@@ -49,6 +49,7 @@ package body Elab.Vhdl_Files is
      (Syn_Inst : Synth_Instance_Acc; Loc : Node; Status : Op_Status) is
    begin
       pragma Assert (Status /= Op_Ok);
+      Set_Error (Syn_Inst);
       Error_Msg_Synth (Syn_Inst, Loc, "file operation failed");
    end File_Error;
 
@@ -247,10 +248,10 @@ package body Elab.Vhdl_Files is
 
       if Status /= Op_Ok then
          if Status = Op_Name_Error then
+            Set_Error (Syn_Inst);
             Error_Msg_Elab
               (Syn_Inst, Decl,
                "cannot open file: " & C_Name (1 .. C_Name_Len));
-            Set_Error (Syn_Inst);
          else
             File_Error (Syn_Inst, Decl, Status);
          end if;
@@ -272,7 +273,7 @@ package body Elab.Vhdl_Files is
          return True;
       else
          File_Error (Syn_Inst, Loc, Status);
-         raise File_Execution_Error;
+         return True;
       end if;
    end Endfile;
 
@@ -308,10 +309,10 @@ package body Elab.Vhdl_Files is
 
       if Status /= Op_Ok then
          if Status = Op_Name_Error then
+            Set_Error (Syn_Inst);
             Error_Msg_Elab
               (Syn_Inst, Loc,
                "cannot open file: " & C_Name (1 .. C_Name_Len));
-            raise File_Execution_Error;
          else
             File_Error (Syn_Inst, Loc, Status);
          end if;
@@ -374,7 +375,7 @@ package body Elab.Vhdl_Files is
            | Op_Write_Error
            | Op_Bad_Index
            | Op_Bad_Mode =>
-            raise File_Execution_Error;
+            raise Internal_Error;
       end case;
 
       if Is_Static (Ostatus.Val) then

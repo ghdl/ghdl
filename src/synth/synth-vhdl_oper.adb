@@ -2024,9 +2024,6 @@ package body Synth.Vhdl_Oper is
                Res := Elab.Vhdl_Files.Endfile (Syn_Inst, L.Val.File, Expr);
                return Create_Value_Memtyp
                  (Create_Memory_U8 (Boolean'Pos (Res), Boolean_Type));
-            exception
-               when Elab.Vhdl_Files.File_Execution_Error =>
-                  return No_Valtyp;
             end;
 
          when Iir_Predefined_Integer_Minimum =>

@@ -3227,6 +3227,11 @@ package body Synth.Vhdl_Stmts is
       Synth_Subprogram_Back_Association
         (Sub_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
 
+      --  Propagate error.
+      if Is_Error (Sub_Inst) then
+         Set_Error (Syn_Inst);
+      end if;
+
       Free_Instance (Sub_Inst);
       Areapools.Release (Area_Mark, Instance_Pool.all);
    end Synth_Implicit_Procedure_Call;
@@ -3829,6 +3834,7 @@ package body Synth.Vhdl_Stmts is
 
          --  Exit from the loop if S_Exit/S_Quit
          exit when Lc.S_Exit or Lc.S_Quit or C.Nbr_Ret > 0;
+         exit when Is_Error (C.Inst);
       end loop;
 
       C.Cur_Loop := Lc.Prev_Loop;
@@ -4215,7 +4221,7 @@ package body Synth.Vhdl_Stmts is
       Stmt := Stmts;
       while Is_Valid (Stmt) loop
          Synth_Sequential_Statement (C, Stmt, Stop);
-         exit when Stop;
+         exit when Stop or else Is_Error (C.Inst);
          Stmt := Get_Chain (Stmt);
       end loop;
    end Synth_Sequential_Statements;

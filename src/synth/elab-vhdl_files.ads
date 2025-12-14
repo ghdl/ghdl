@@ -22,9 +22,6 @@ with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
 package Elab.Vhdl_Files is
-   --  Raised in case of un-recoverable error.
-   File_Execution_Error : exception;
-
    --  Set the current design unit, so that its path can be used to search
    --  files.
    procedure Set_Current_Design_Unit (Unit : Node);
