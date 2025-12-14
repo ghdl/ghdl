@@ -1,0 +1,6 @@
+rec4.vhdl:16:10:error: multiple assignments for "s" offsets 4:4
+rec4.vhdl:16:10:note:  this concerns these parts of the signal:
+rec4.vhdl:16:10:note:   s.b(3)
+rec4.vhdl:16:10:error: multiple assignments for "s" offsets 5:5
+rec4.vhdl:16:10:note:  this concerns these parts of the signal:
+rec4.vhdl:16:10:note:   s.c(0)
