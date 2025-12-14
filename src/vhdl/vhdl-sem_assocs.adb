@@ -1659,9 +1659,9 @@ package body Vhdl.Sem_Assocs is
    --  Create an implicit association_element_subprogram for the declaration
    --  of function ID for ACTUAL_Type (a type/subtype definition).
    function Sem_Implicit_Operator_Association
-     (Id : Name_Id; Actual_Type : Iir; Actual_Name : Iir) return Iir
+     (Actual_Type : Iir; Loc : Location_Type) return Iir
    is
-      use Sem_Scopes;
+      Base_Type : constant Iir := Get_Base_Type (Actual_Type);
 
       --  Return TRUE if DECL is a function declaration with a comparaison
       --  operator profile.
@@ -1698,26 +1698,53 @@ package body Vhdl.Sem_Assocs is
          return True;
       end Has_Comparaison_Profile;
 
-      Interp : Name_Interpretation_Type;
+      function Build_Implicit_Assoc (Decl : Iir) return Iir
+      is
+         Res : Iir;
+      begin
+         Res := Create_Iir (Iir_Kind_Association_Element_Subprogram);
+         Set_Location (Res, Loc);
+         Set_Actual (Res, Build_Simple_Name (Decl, Loc));
+         Set_Use_Flag (Decl, True);
+         return Res;
+      end Build_Implicit_Assoc;
+
       Decl : Iir;
-      Res : Iir;
+      Id : Name_Id;
+      Op_Eq : Iir;
+      Op_Neq : Iir;
    begin
-      Interp := Get_Interpretation (Id);
-      while Valid_Interpretation (Interp) loop
-         Decl := Get_Declaration (Interp);
+      if Get_Kind (Base_Type) = Iir_Kind_Interface_Type_Definition then
+         --  Interface types are different: the declarations of the implicit
+         --  operators are attached to the interface type declaration.
+         Decl := Get_Type_Declarator (Base_Type);
+         Decl := Get_Interface_Type_Subprograms (Decl);
+         Op_Eq := Build_Implicit_Assoc (Decl);
+         Op_Neq := Build_Implicit_Assoc (Get_Chain (Decl));
+         Set_Chain (Op_Eq, Op_Neq);
+         return Op_Eq;
+      end if;
+
+      --  Normal types (not interface): look for the implicit operators,
+      --  declared after the base type.
+      Decl := Get_Chain (Get_Type_Declarator (Base_Type));
+
+      while Is_Function_Declaration (Decl) loop
          if Has_Comparaison_Profile (Decl) then
-            Res := Create_Iir (Iir_Kind_Association_Element_Subprogram);
-            Location_Copy (Res, Actual_Name);
-            Set_Actual
-              (Res, Build_Simple_Name (Decl, Get_Location (Actual_Name)));
-            Set_Use_Flag (Decl, True);
-            return Res;
+            Id := Get_Identifier (Decl);
+            if Id = Std_Names.Name_Op_Equality then
+               Op_Eq := Build_Implicit_Assoc (Decl);
+            elsif Id = Std_Names.Name_Op_Inequality then
+               Op_Neq := Build_Implicit_Assoc (Decl);
+               pragma Assert (Op_Eq /= Null_Iir);
+               Set_Chain (Op_Eq, Op_Neq);
+               return Op_Eq;
+            end if;
          end if;
-         Interp := Get_Next_Interpretation (Interp);
+
+         Decl := Get_Chain (Decl);
       end loop;
 
-      Error_Msg_Sem (+Actual_Name, "cannot find a %i declaration for type %i",
-                     (+Id, +Actual_Name));
       return Null_Iir;
    end Sem_Implicit_Operator_Association;
 
@@ -1729,7 +1756,7 @@ package body Vhdl.Sem_Assocs is
       Inter_Def : constant Iir := Get_Type (Inter);
       Actual : Iir;
       Actual_Type : Iir;
-      Op_Eq, Op_Neq : Iir;
+      Impl_Assocs : Iir;
    begin
       if not Finish then
          Sem_Association_Package_Type_Not_Finish (Assoc, Inter, Match);
@@ -1757,6 +1784,10 @@ package body Vhdl.Sem_Assocs is
       Set_Actual_Type (Assoc, Actual_Type);
       Set_Associated_Type (Inter_Def, Actual_Type);
 
+      if Is_Error (Actual_Type) then
+         return;
+      end if;
+
       --  Previously, the test was: Get_Has_Signal_Flag (Inter_Def)
       --  But this flag might be set by an architecture which might not be
       --  known.
@@ -1764,15 +1795,24 @@ package body Vhdl.Sem_Assocs is
          Vhdl.Sem_Types.Set_Type_Has_Signal (Actual_Type);
       end if;
 
+      --  LRM08 14.3.3 Generic map aspect
+      --  The generic association list also contains implicit association
+      --  elements for the predefined equality (=) operator and inequality
+      --  (/=) operators of each generic type; the actual part of such an
+      --  implicit association element is the name of the predefined equality
+      --  operator or inequality operator for the base type of the subtype
+      --  indication in the actual part of the association element
+      --  corresponding to the generic type.
+      --
       --  FIXME: it is not clear at all from the LRM how the implicit
       --  associations are done...
-      Op_Eq := Sem_Implicit_Operator_Association
-        (Std_Names.Name_Op_Equality, Actual_Type, Actual);
-      if Op_Eq /= Null_Iir then
-         Op_Neq := Sem_Implicit_Operator_Association
-           (Std_Names.Name_Op_Inequality, Actual_Type, Actual);
-         Set_Chain (Op_Eq, Op_Neq);
-         Set_Subprogram_Association_Chain (Assoc, Op_Eq);
+      Impl_Assocs := Sem_Implicit_Operator_Association
+        (Actual_Type, Get_Location (Actual));
+      if Impl_Assocs = Null_Iir then
+         Error_Msg_Sem
+           (+Assoc, "cannot find '=' and '/=' for %n", +Actual_Type);
+      else
+         Set_Subprogram_Association_Chain (Assoc, Impl_Assocs);
       end if;
    end Sem_Association_Type;
 
