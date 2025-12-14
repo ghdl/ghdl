@@ -65,6 +65,7 @@ with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Utils; use Netlists.Utils;
+with Netlists.Concats;
 with Netlists.Locations; use Netlists.Locations;
 
 package body Synth.Vhdl_Stmts is
@@ -2272,7 +2273,7 @@ package body Synth.Vhdl_Stmts is
          when Type_Array_Unbounded =>
             return Create_Array_Unbounded_Type
               (Typ.Abound, Typ.Is_Bnd_Static, Typ.Alast,
-               Copy_Unbounded_Type (Typ.Uarr_El, Base.Uarr_El));
+               Copy_Unbounded_Type (Typ.Arr_El, Base.Arr_El));
          when Type_Unbounded_Vector =>
             return Create_Unbounded_Vector (Typ.Uarr_Idx, Typ.Uarr_El);
          when Type_Slice => raise Internal_Error;
@@ -2448,6 +2449,22 @@ package body Synth.Vhdl_Stmts is
       Inter_Typ : Type_Acc;
       Static : Boolean;
       Res : Valtyp;
+
+      function Form_Off_Lt (L, R : Positive) return Boolean is
+      begin
+         return Assocs (L).Form_Off.Net_Off < Assocs (R).Form_Off.Net_Off;
+      end Form_Off_Lt;
+
+      procedure Swap (L, R : Positive)
+      is
+         Tmp : constant Assoc_Record := Assocs (L);
+      begin
+         Assocs (L) := Assocs (R);
+         Assocs (R) := Tmp;
+      end Swap;
+
+      procedure Form_Off_Sort is
+         new Grt.Algos.Heap_Sort (Lt => Form_Off_Lt, Swap => Swap);
    begin
       --  2. Build array formal-value
       Assocs := new Assoc_Array (1 .. Count);
@@ -2567,8 +2584,32 @@ package body Synth.Vhdl_Stmts is
       elsif Flags.Flag_Simulation then
          Res := Hook_Create_Value_For_Signal_Individual_Assocs
            (Subprg_Inst, Assocs.all, Formal_Typ);
+      elsif Get_Mode (Inter) = Iir_In_Mode then
+         declare
+            use Netlists.Concats;
+            Ctxt : constant Context_Acc := Get_Build (Caller_Inst);
+            Concat : Concat_Type;
+            Res_N : Net;
+         begin
+            --  Not static.
+            Set_Instance_Const (Subprg_Inst, False);
+
+            Form_Off_Sort (Assocs'Length);
+            for I in Assocs'Range loop
+               declare
+                  A : Assoc_Record renames Assocs (I);
+                  El : Valtyp;
+               begin
+                  El := Synth_Read_Memory
+                    (Caller_Inst, A.Act_Base, A.Act_Typ,
+                     A.Act_Off.Net_Off, A.Act_Dyn, A.Formal);
+                  Append (Concat, Get_Net (Ctxt, El));
+               end;
+            end loop;
+            Build (Ctxt, Concat, +First_Assoc, Res_N);
+            Res := Create_Value_Net (Res_N, Formal_Typ, Instance_Pool);
+         end;
       else
-         Res := No_Valtyp;
          raise Internal_Error;
       end if;
 
@@ -3116,7 +3157,7 @@ package body Synth.Vhdl_Stmts is
       end if;
 
       if Elab.Debugger.Flag_Need_Debug then
-         Elab.Debugger.Debug_Leave (Sub_Inst);
+         Elab.Debugger.Debug_Leave (Sub_Inst);  -- GCOV_EXCL_LINE
       end if;
 
       Free_Instance (Sub_Inst);
