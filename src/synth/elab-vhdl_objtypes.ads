@@ -114,6 +114,7 @@ package Elab.Vhdl_Objtypes is
      Type_Vector .. Type_Unbounded_Vector;
    subtype Type_Composite is Type_Kind range
      Type_Vector .. Type_Record;
+   subtype Type_Non_Synth is Type_Kind range Type_Access .. Type_Protected;
 
    type Type_Type (Kind : Type_Kind);
    type Type_Acc is access Type_Type;

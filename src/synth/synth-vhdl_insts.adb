@@ -80,9 +80,7 @@ package body Synth.Vhdl_Insts is
             return Port_Out;
          when Iir_Inout_Mode =>
             return Port_Inout;
-         when Iir_Linkage_Mode
-           | Iir_Unknown_Mode =>
-            raise Synth_Error;
+         when Iir_Linkage_Mode | Iir_Unknown_Mode => raise Internal_Error;
       end case;
    end Mode_To_Port_Kind;
 
@@ -216,8 +214,7 @@ package body Synth.Vhdl_Insts is
          when Type_Bit
            | Type_Logic =>
             null;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Hash_Bounds;
 
@@ -225,26 +222,8 @@ package body Synth.Vhdl_Insts is
                          Val : Value_Acc;
                          Typ : Type_Acc) is
    begin
-      case Val.Kind is
-         when Value_Memory =>
-            Hash_Memory (C, Val.Mem, Typ);
-         when Value_Const =>
-            Hash_Const (C, Val.C_Val, Typ);
-         when Value_Alias =>
-            if Val.A_Off /= (0, 0) then
-               raise Internal_Error;
-            end if;
-            Hash_Const (C, Val.A_Obj, Typ);
-         when Value_Net
-           | Value_Wire
-           | Value_Signal
-           | Value_File
-           | Value_Quantity
-           | Value_Terminal
-           | Value_Dyn_Alias
-           | Value_Sig_Val =>
-            raise Internal_Error;
-      end case;
+      pragma Assert (Val.Kind = Value_Memory);
+      Hash_Memory (C, Val.Mem, Typ);
    end Hash_Const;
 
    function Create_Module_Name_Hash (Params : Inst_Params;
@@ -381,9 +360,7 @@ package body Synth.Vhdl_Insts is
             return New_Sname_User
               (Get_Source_Identifier (Params.Decl), No_Sname);
 
-         when Name_Index =>
-            --  TODO.
-            raise Internal_Error;
+         when Name_Index => raise Internal_Error; --  TODO.
       end case;
    end Create_Module_Name;
 
@@ -425,11 +402,7 @@ package body Synth.Vhdl_Insts is
          when Type_Record
            | Type_Unbounded_Record =>
             return Port_Nbr (Typ.Rec.Len);
-         when Type_Slice
-           | Type_Access
-           | Type_File
-           | Type_Protected =>
-            raise Internal_Error;
+         when Type_Slice | Type_Non_Synth => raise Internal_Error;
       end case;
    end Count_Nbr_Ports;
 
@@ -489,11 +462,7 @@ package body Synth.Vhdl_Insts is
                      W => Get_Type_Width (Typ.Rec.E (I).Typ));
                end loop;
             end;
-         when Type_Slice
-           | Type_Access
-           | Type_File
-           | Type_Protected =>
-            raise Internal_Error;
+         when Type_Slice | Type_Non_Synth => raise Internal_Error;
       end case;
    end Build_Ports_Desc;
 
@@ -737,8 +706,8 @@ package body Synth.Vhdl_Insts is
                Act := Synth_Function_Conversion (Syn_Inst, Actual, Conv);
             when Iir_Kind_Type_Conversion =>
                Act := Synth_Type_Conversion (Syn_Inst, Conv);
-            when others =>
-               Vhdl.Errors.Error_Kind ("synth_single_input_assoc", Conv);
+            when others => Vhdl.Errors.Error_Kind ("synth_single_input_assoc",
+                                                   Conv);
          end case;
       elsif Actual = Null_Node then
          --  No actual, no default value.
@@ -995,11 +964,7 @@ package body Synth.Vhdl_Insts is
                end if;
                Port := Port + 1;
             end loop;
-         when Type_Slice
-           | Type_Access
-           | Type_File
-           | Type_Protected =>
-            raise Internal_Error;
+         when Type_Slice | Type_Non_Synth => raise Internal_Error;
       end case;
    end Inst_Input_Connect;
 
@@ -1033,11 +998,7 @@ package body Synth.Vhdl_Insts is
                N := Build2_Concat
                  (Get_Build (Syn_Inst), Nets, Get_Location (Inst));
             end;
-         when Type_Slice
-           | Type_Access
-           | Type_File
-           | Type_Protected =>
-            raise Internal_Error;
+         when Type_Slice | Type_Non_Synth => raise Internal_Error;
       end case;
    end Inst_Output_Connect;
 
@@ -1345,8 +1306,7 @@ package body Synth.Vhdl_Insts is
               (Ctxt, New_Internal_Name (Ctxt, Pfx_Name), W);
             Set_Location (Value, Loc);
             Set_Wire_Gate (Get_Value_Wire (Val.Val), Value);
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Create_Component_Wire;
 
@@ -1604,8 +1564,7 @@ package body Synth.Vhdl_Insts is
             null;
          when Iir_Kinds_Verification_Unit =>
             null;
-         when Iir_Kind_Foreign_Module =>
-            raise Internal_Error;
+         when Iir_Kind_Foreign_Module => raise Internal_Error;
       end case;
    end Synth_Dependency;
 
@@ -1633,25 +1592,14 @@ package body Synth.Vhdl_Insts is
                                Encoding : Name_Encoding;
                                Syn_Inst : Synth_Instance_Acc)
    is
-      Lib_Unit : constant Node := Get_Library_Unit (Design_Unit);
+      Config : constant Node := Get_Library_Unit (Design_Unit);
       Arch : Node;
       Entity : Node;
-      Config : Node;
       Inst_Obj : Inst_Object;
    begin
       --  Extract architecture from design.
-      case Get_Kind (Lib_Unit) is
-         when Iir_Kind_Architecture_Body =>
-            Arch := Lib_Unit;
-            Config := Get_Library_Unit
-              (Get_Default_Configuration_Declaration (Arch));
-         when Iir_Kind_Configuration_Declaration =>
-            Config := Lib_Unit;
-            Arch := Get_Named_Entity
-              (Get_Block_Specification (Get_Block_Configuration (Lib_Unit)));
-         when others =>
-            raise Internal_Error;
-      end case;
+      Arch := Get_Named_Entity
+        (Get_Block_Specification (Get_Block_Configuration (Config)));
       Entity := Get_Entity (Arch);
 
       Make_Base_Instance (Base);
@@ -1661,7 +1609,7 @@ package body Synth.Vhdl_Insts is
       Insts_Interning.Init;
 
       if Flags.Flag_Debug_Init then
-         Elab.Debugger.Debug_Elab (Syn_Inst);
+         Elab.Debugger.Debug_Elab (Syn_Inst);  -- GCOV_EXCL_LINE
       end if;
 
       pragma Assert (Is_Expr_Pool_Empty);
@@ -1881,8 +1829,7 @@ package body Synth.Vhdl_Insts is
             --  TODO: generics ?
             Finalize_Package_Declarations
               (Inst, Get_Declaration_Chain (Pkg));
-         when others =>
-            Vhdl.Errors.Error_Kind ("finalize_package", Pkg);
+         when others => Vhdl.Errors.Error_Kind ("finalize_package", Pkg);
       end case;
    end Finalize_Package;
 
