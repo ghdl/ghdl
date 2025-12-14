@@ -352,7 +352,8 @@ package body Synth.Vhdl_Decls is
             if Get_Kind (Get_Parent (Obj)) = Iir_Kind_Entity_Declaration then
                Synth_Attribute_Port (Syn_Inst, Obj, Attr_Decl, Val);
             else
-               Synth_Attribute_Net (Syn_Inst, Obj, Attr_Decl, Val);
+               raise Internal_Error;  --  Is it possible ?
+               --  Synth_Attribute_Net (Syn_Inst, Obj, Attr_Decl, Val);
             end if;
          when Iir_Kind_Entity_Declaration =>
             declare
@@ -884,6 +885,7 @@ package body Synth.Vhdl_Decls is
       Release_Expr_Pool (Marker);
    end Synth_Concurrent_Object_Alias_Declaration;
 
+   --  For declarations of subprograms or processes.
    procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc;
                                 Decl : Node;
                                 Is_Subprg : Boolean;
@@ -896,22 +898,8 @@ package body Synth.Vhdl_Decls is
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration =>
             Synth_Variable_Declaration (Syn_Inst, Decl, Is_Subprg);
-         when Iir_Kind_Interface_Variable_Declaration =>
-            --  Ignore default value.
-            declare
-               Val : Valtyp;
-               Obj_Typ : Type_Acc;
-            begin
-               Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
-               Val := Create_Var_Wire
-                 (Syn_Inst, Decl, Wire_Variable, (Obj_Typ, null));
-               Create_Object (Syn_Inst, Decl, Val);
-            end;
          when Iir_Kind_Constant_Declaration =>
             Synth_Constant_Declaration (Syn_Inst, Decl, Is_Subprg, Last_Type);
-         when Iir_Kind_Signal_Declaration =>
-            pragma Assert (not Is_Subprg);
-            Synth_Signal_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Object_Alias_Declaration =>
             Synth_Object_Alias_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Procedure_Declaration
