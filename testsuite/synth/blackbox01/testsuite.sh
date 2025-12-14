@@ -19,5 +19,7 @@ analyze blackbox1_adder.vhdl syn_blackbox1.vhdl tb_blackbox1.vhdl
 elab_simulate tb_blackbox1
 clean
 
+synth_failure blackbox1_adder_err01.vhdl blackbox1.vhdl -e
+synth_failure blackbox1_adder_err02.vhdl blackbox1.vhdl -e
 
 echo "Test successful"
