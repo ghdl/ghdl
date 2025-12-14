@@ -303,8 +303,7 @@ package body Synth.Vhdl_Decls is
                --  A net (--keep-hierarchy=no)
                Synth_Attribute_Inst (Inst, Attr_Decl, Val);
             end if;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Synth_Attribute_Port;
 
@@ -324,8 +323,7 @@ package body Synth.Vhdl_Decls is
          when Value_Net
             | Value_Const =>
             N := Get_Net (Get_Build (Syn_Inst), V);
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
       Inst := Get_Net_Parent (N);
 
@@ -552,8 +550,8 @@ package body Synth.Vhdl_Decls is
             when Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body =>
                null;
-            when others =>
-               Vhdl.Errors.Error_Kind ("create_protected_object", Decl);
+            when others => Vhdl.Errors.Error_Kind ("create_protected_object",
+                                                   Decl);
          end case;
          if Is_Error (Obj_Inst) then
             Set_Error (Inst);
@@ -674,7 +672,9 @@ package body Synth.Vhdl_Decls is
          return;
       end if;
 
-      if Init.Val = null then
+      --  Variables are always initialized during elaboration.
+      pragma Assert (Init.Val /= null);
+      if False and then Init.Val = null then
          Mark_Expr_Pool (Marker);
          Init := Create_Value_Default (Init.Typ);
          Init := Unshare (Init, Instance_Pool);
@@ -803,8 +803,7 @@ package body Synth.Vhdl_Decls is
                                 A_Obj => Res.Val,
                                 A_Typ => Res.Typ,
                                 A_Off => No_Value_Offsets);
-            when others =>
-               raise Internal_Error;
+            when others => raise Internal_Error;
          end case;
 
          --  Subtype conversion.
@@ -1022,8 +1021,7 @@ package body Synth.Vhdl_Decls is
                Create_Object (Syn_Inst, Decl, Val);
             end;
 
-         when others =>
-            Vhdl.Errors.Error_Kind ("synth_declaration", Decl);
+         when others => Vhdl.Errors.Error_Kind ("synth_declaration", Decl);
       end case;
 
       pragma Assert (Areapools.Is_At_Mark (Expr_Pool, Marker));
@@ -1094,9 +1092,7 @@ package body Synth.Vhdl_Decls is
             | Id_Iinout =>
             Drv := Get_Input_Net (Gate, 0);
             Def_Val := Get_Input_Net (Gate, 1);
-         when others =>
-            --  Todo: output ?
-            raise Internal_Error;
+         when others => raise Internal_Error; --  Todo: output ?
       end case;
       if Drv = No_Net then
          --  Undriven signals.
@@ -1211,8 +1207,7 @@ package body Synth.Vhdl_Decls is
             null;
          when Iir_Kind_Suspend_State_Declaration =>
             null;
-         when others =>
-            Vhdl.Errors.Error_Kind ("finalize_declaration", Decl);
+         when others => Vhdl.Errors.Error_Kind ("finalize_declaration", Decl);
       end case;
    end Finalize_Declaration;
 
@@ -1269,8 +1264,8 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Attribute_Implicit_Declaration =>
             --  Error will be printed when the attribute is used.
             null;
-         when others =>
-            Vhdl.Errors.Error_Kind ("synth_concurrent_declaration", Decl);
+         when others => Vhdl.Errors.Error_Kind ("synth_concurrent_declaration",
+                                                Decl);
       end case;
       pragma Assert (Is_Expr_Pool_Empty);
    end Synth_Concurrent_Declaration;
