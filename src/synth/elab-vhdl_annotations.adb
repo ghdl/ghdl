@@ -613,7 +613,8 @@ package body Elab.Vhdl_Annotations is
                      when Iir_Kind_External_Signal_Name =>
                         Annotate_External_Name_Type (Block_Info, Attr);
                         Create_Signal_Info (Block_Info, Attr);
-                     when Iir_Kind_External_Constant_Name =>
+                     when Iir_Kind_External_Constant_Name
+                        | Iir_Kind_External_Variable_Name =>
                         Annotate_External_Name_Type (Block_Info, Attr);
                         Create_Object_Info (Block_Info, Attr);
                      when others => raise Internal_Error;

@@ -208,43 +208,39 @@ package body Elab.Vhdl_Expr is
       --  denoted by an external constant name is not a constant, or if the
       --  object denoted by an external signal name is not a signal, or if
       --  the object denoted by an external variable name is not a variable.
-      case Get_Kind (Obj) is
-         when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Interface_Signal_Declaration =>
-            case Iir_Kinds_External_Name (Get_Kind (Name)) is
-               when Iir_Kind_External_Signal_Name =>
+      case Iir_Kinds_External_Name (Get_Kind (Name)) is
+         when Iir_Kind_External_Signal_Name =>
+            case Get_Kind (Obj) is
+               when Iir_Kind_Signal_Declaration
+                 | Iir_Kind_Interface_Signal_Declaration =>
                   Res := Get_Value (Cur_Inst, Obj);
-               when Iir_Kind_External_Constant_Name
-                 | Iir_Kind_External_Variable_Name =>
+               when others =>
                   Error_Msg_Synth
                     (Loc_Inst, Path,
                      "denoted object name %i is a not a signal", +Obj);
                   return No_Valtyp;
             end case;
-         when Iir_Kind_Variable_Declaration =>
-            case Iir_Kinds_External_Name (Get_Kind (Name)) is
-               when Iir_Kind_External_Variable_Name =>
+         when Iir_Kind_External_Variable_Name =>
+            case Get_Kind (Obj) is
+               when Iir_Kind_Variable_Declaration =>
                   Res := Get_Value (Cur_Inst, Obj);
-               when Iir_Kind_External_Constant_Name
-                 | Iir_Kind_External_Signal_Name =>
+               when others =>
                   Error_Msg_Synth
                     (Loc_Inst, Path,
                      "denoted object name %i is a not a variable", +Obj);
                   return No_Valtyp;
             end case;
-         when Iir_Kind_Constant_Declaration
-           | Iir_Kind_Interface_Constant_Declaration =>
-            case Iir_Kinds_External_Name (Get_Kind (Name)) is
-               when Iir_Kind_External_Constant_Name =>
+         when Iir_Kind_External_Constant_Name =>
+            case Get_Kind (Obj) is
+               when Iir_Kind_Constant_Declaration
+                 | Iir_Kind_Interface_Constant_Declaration =>
                   Res := Get_Value (Cur_Inst, Obj);
-               when Iir_Kind_External_Variable_Name
-                 | Iir_Kind_External_Signal_Name =>
+               when others =>
                   Error_Msg_Synth
                     (Loc_Inst, Path,
                      "denoted object name %i is a not a constant", +Obj);
                   return No_Valtyp;
             end case;
-         when others => Error_Kind ("synth_pathname_object(2)", Obj);
       end case;
 
       --  LRM08 8.7 External names
