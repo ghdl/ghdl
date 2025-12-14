@@ -1213,7 +1213,7 @@ package body Synth.Vhdl_Oper is
                   Error_Msg_Synth
                     (Syn_Inst, Expr,
                      "operands of ?= don't have the same size");
-                  return Create_Value_Discrete (0, Bit_Type);
+                  return Create_Value_Discrete (0, Logic_Type);
                end if;
 
                if Is_Static (L.Val) then
@@ -1242,7 +1242,7 @@ package body Synth.Vhdl_Oper is
                if L.Typ.W /= R.Typ.W then
                   Error_Msg_Synth (Syn_Inst, Expr,
                                    "operands of ?/= don't have the same size");
-                  return Create_Value_Discrete (1, Bit_Type);
+                  return Create_Value_Discrete (1, Logic_Type);
                end if;
 
                if Is_Static (L.Val) then
