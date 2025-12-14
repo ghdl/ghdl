@@ -102,31 +102,13 @@ package body Synth.Vhdl_Environment is
                                Wd     : Width) is
    begin
       case Typ.Kind is
-         when Type_Bit
-            | Type_Logic
-            | Type_Discrete
-            | Type_Float =>
-            pragma Assert (Wd = Typ.W);
-            pragma Assert (Off = 0);
-            Info_Msg_Synth (+Loc, "  " & Prefix);
-         when Type_File
-            | Type_Protected
-            | Type_Access
-            | Type_Array_Unbounded
-            | Type_Unbounded_Array
-            | Type_Unbounded_Record
-            | Type_Unbounded_Vector =>
-            raise Internal_Error;
          when Type_Vector =>
             pragma Assert (Wd <= Typ.W);
-            if Off = 0 and Wd = Typ.W then
-               Info_Msg_Synth (+Loc, "  " & Prefix);
-            else
-               Info_Msg_Synth
-                 (+Loc,
-                  "  " & Prefix
-                    & "(" & Info_Subrange_Vhdl (Off, Wd, Typ.Abound) & ")");
-            end if;
+            pragma Assert (Off /= 0 or else Wd /= Typ.W);
+            Info_Msg_Synth
+              (+Loc,
+               "  " & Prefix
+                 & "(" & Info_Subrange_Vhdl (Off, Wd, Typ.Abound) & ")");
          when Type_Slice
             | Type_Array =>
             Info_Msg_Synth (+Loc, "  " & Prefix & "(??)");
@@ -176,6 +158,7 @@ package body Synth.Vhdl_Environment is
                   end;
                end loop;
             end;
+         when others => raise Internal_Error;
       end case;
    end Info_Subnet_Vhdl;
 
