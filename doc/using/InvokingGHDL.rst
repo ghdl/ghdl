@@ -415,7 +415,7 @@ Options
   See section :ref:`IEEE_library_pitfalls`, for an example.
 
 .. WARNING::
-  This option is not set by default.
+  This option is not set by default, except for vhdl 2008 and later.
   We don't think this option is a good feature, because it breaks the encapsulation rule.
   When set, an operator can be silently overridden in another package.
   You'd do better to fix your design and use the ``numeric_std`` package.
