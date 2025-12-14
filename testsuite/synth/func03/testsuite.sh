@@ -14,4 +14,7 @@ synth_tb func06
 #synth_tb func07
 synth_only func07
 
+#TODO
+#proc01
+
 echo "Test successful"
