@@ -66,7 +66,11 @@ synth_failure err_process05.vhdl -e
 synth_failure foreign01.vhdl -e
 synth_failure foreign02.vhdl -e
 
+synth_failure err_var01.vhdl -e
+
 GHDL_STD_FLAGS=--std=08
 synth_tb eq01
+
+synth_failure err_prot01.vhdl -e
 
 echo "Test successful"
