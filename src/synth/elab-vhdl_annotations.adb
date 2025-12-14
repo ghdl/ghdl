@@ -1536,6 +1536,7 @@ package body Elab.Vhdl_Annotations is
    is
       procedure Free is new Ada.Unchecked_Deallocation
         (Sim_Info_Type, Sim_Info_Acc);
+      Info : Sim_Info_Acc;
    begin
       Free (Global_Info);
       for I in Info_Node.First .. Info_Node.Last loop
@@ -1547,7 +1548,10 @@ package body Elab.Vhdl_Annotations is
                --  Info is shared with the spec.
                null;
             when others =>
-               Free (Info_Node.Table (I));
+               Info := Info_Node.Table (I);
+               if Info /= null and then Info.Ref = I then
+                  Free (Info);
+               end if;
          end case;
       end loop;
       Info_Node.Free;
