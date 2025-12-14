@@ -9,7 +9,14 @@ synth_only external01
 synth_only external02
 synth_only external03
 
+# Without --keep-hierarchy
+# TODO: improve error message
+synth_failure external02.vhdl -e
+
 synth_failure externalerr01.vhdl -e
-synth_failure externalerr02.vhdl -e
+synth_failure externalerr03.vhdl -e
+synth_failure externalerr04.vhdl -e
+synth_failure externalerr05.vhdl -e
+synth_failure externalerr06.vhdl -e
 
 echo "Test successful"
