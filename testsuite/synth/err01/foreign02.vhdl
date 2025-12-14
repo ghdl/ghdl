@@ -1,20 +1,20 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity foreign01 is
+entity foreign02 is
   port (rst : std_logic;
         clk : in std_logic;
         counter : out natural);
 end entity;
 
-architecture a of foreign01 is
-  procedure incr(signal i : inout natural);
-  attribute foreign of incr: procedure is "VHPIDIRECT incr";
+architecture a of foreign02 is
+  function incr(signal i :  natural) return natural;
+  attribute foreign of incr: function is "VHPIDIRECT incr";
 
-  procedure incr(signal i : inout natural) is
+  function incr(signal i :  natural) return natural is
   begin
-    i <= i + 1;
-  end procedure;
+    return i + 1;
+  end incr;
   signal c : natural;
 begin
   process(clk)
@@ -23,7 +23,7 @@ begin
       if rst = '1' then
         c <= 0;
       else
-        incr(c);
+        c <= incr(c);
       end if;
     end if;
   end process;
