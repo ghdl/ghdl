@@ -2537,18 +2537,12 @@ package body Synth.Vhdl_Stmts is
             when Type_Unbounded_Record =>
                --  TODO: unbounded record with unbounded elements.
                Formal_Typ := Create_Record_Type (Formal_Typ, Formal_Typ.Rec);
-            when Type_Unbounded_Array
-              | Type_Unbounded_Vector =>
-               raise Internal_Error;
             when Type_Array_Unbounded =>
                pragma Assert (Formal_Typ.Alast); --  TODO.
                Formal_Typ := Create_Array_Type
                  (Formal_Typ.Abound, False, Formal_Typ.Alast,
                   Formal_Typ.Arr_El);
-            when Type_Array
-              | Type_Vector
-              | Type_Record =>
-               raise Internal_Error;
+            when others => raise Internal_Error;
          end case;
 
          --  Re-evaluate the formals to re-compute the offset.
