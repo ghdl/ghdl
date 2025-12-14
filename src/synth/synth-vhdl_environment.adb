@@ -141,15 +141,12 @@ package body Synth.Vhdl_Environment is
                              & Vhdl.Utils.Image_Identifier (Field));
                      else
                         --  Partially covered.
-                        if Off < El.Offs.Net_Off then
-                           Sub_Off := 0;
-                           Sub_Wd := Wd - (El.Offs.Net_Off - Off);
-                           Sub_Wd := Width'Min (Sub_Wd, El.Typ.W);
-                        else
-                           Sub_Off := Off - El.Offs.Net_Off;
-                           Sub_Wd := El.Typ.W - (Off - El.Offs.Net_Off);
-                           Sub_Wd := Width'Min (Sub_Wd, Wd);
-                        end if;
+                        --  But shouldn't be part of a previous sub-element,
+                        --  as the assignments should be distincts.
+                        pragma Assert (Off >= El.Offs.Net_Off);
+                        Sub_Off := Off - El.Offs.Net_Off;
+                        Sub_Wd := El.Typ.W - (Off - El.Offs.Net_Off);
+                        Sub_Wd := Width'Min (Sub_Wd, Wd);
                         Info_Subnet_Vhdl
                           (+Loc,
                            Prefix & '.' & Vhdl.Utils.Image_Identifier (Field),
@@ -189,10 +186,12 @@ package body Synth.Vhdl_Environment is
    procedure Error_Multiple_Assignments
      (Decl : Decl_Type; First_Off : Uns32; Last_Off : Uns32) is
    begin
+      Report_Start_Group;
       Error_Msg_Netlist
         (+Decl.Obj, "multiple assignments for %i offsets %v:%v",
          (+Decl.Obj, +First_Off, +Last_Off));
       Info_Subnet (Decl.Obj, Decl.Typ, First_Off, Last_Off + 1 - First_Off);
+      Report_End_Group;
    end Error_Multiple_Assignments;
 
    function Get_Location (Decl : Decl_Type) return Location_Type is
