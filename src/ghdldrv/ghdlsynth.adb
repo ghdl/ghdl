@@ -635,6 +635,9 @@ package body Ghdlsynth is
          Netlists.Disp_Stats;
       end if;
 
+      Elab.Vhdl_Annotations.Finalize_Annotate;
+      Synth.Vhdl_Context.Free_Base_Instance;
+
       Success := True;
    end Perform_Action;
 
