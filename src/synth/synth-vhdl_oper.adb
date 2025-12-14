@@ -972,7 +972,8 @@ package body Synth.Vhdl_Oper is
          when Iir_Predefined_Boolean_Not
            | Iir_Predefined_Bit_Not =>
             return Synth_Bit_Monadic (Id_Not);
-         when Iir_Predefined_Ieee_1164_Vector_Not
+         when Iir_Predefined_TF_Array_Not
+            | Iir_Predefined_Ieee_1164_Vector_Not
             | Iir_Predefined_Ieee_Numeric_Std_Not_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Not_Sgn =>
             return Synth_Vec_Monadic (Id_Not);
