@@ -111,8 +111,7 @@ package body Synth.Vhdl_Aggr is
                Res (1) := Stride;
                return Res (1 .. Ndim);
             end;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Fill_Stride;
 
@@ -360,9 +359,7 @@ package body Synth.Vhdl_Aggr is
                           (First_Pos + Nat32 (Off), Nat32 (Rng_Len), Val);
                      end if;
                   end;
-               when others =>
-                  Error_Msg_Synth
-                    (Syn_Inst, Assoc, "unhandled association form");
+               when others => raise Internal_Error;
             end case;
             Assoc := Get_Chain (Assoc);
             exit when Is_Null (Assoc);
@@ -437,9 +434,7 @@ package body Synth.Vhdl_Aggr is
                                   (Get_Named_Entity
                                      (Get_Choice_Name (Assoc))));
                   Set_Elem (Pos);
-               when others =>
-                  Error_Msg_Synth
-                    (Syn_Inst, Assoc, "unhandled association form");
+               when others => raise Internal_Error;
             end case;
             Assoc := Get_Chain (Assoc);
             exit when Is_Null (Assoc);
@@ -541,9 +536,8 @@ package body Synth.Vhdl_Aggr is
                end if;
                Res_Typ := Create_Array_From_Array_Unbounded (Aggr_Typ, El_Typ);
             end if;
-         when Type_Unbounded_Vector
-           | Type_Unbounded_Array =>
-            raise Internal_Error;
+         when Type_Unbounded_Vector => raise Internal_Error;
+         when Type_Unbounded_Array => raise Internal_Error;
       end case;
 
       Res := Valtyp_Array_To_Valtyp
@@ -626,8 +620,7 @@ package body Synth.Vhdl_Aggr is
             Res_Typ := Create_Vector_Type (Bnd, False, El_Typ);
          when Type_Unbounded_Array =>
             Res_Typ := Create_Array_Type (Bnd, False, True, El_Typ);
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
 
       Res := Valtyp_Array_To_Valtyp
@@ -722,8 +715,7 @@ package body Synth.Vhdl_Aggr is
                      pragma Assert (Res_Type.Ulast);
                      return Synth_Aggregate_Array_Concat (Syn_Inst, Aggr,
                                                           Res_Type);
-                  when others =>
-                     raise Internal_Error;
+                  when others => raise Internal_Error;
                end case;
             end;
          when Type_Vector
@@ -735,8 +727,7 @@ package body Synth.Vhdl_Aggr is
          when Type_Record
            |  Type_Unbounded_Record =>
             return Synth_Aggregate_Record (Syn_Inst, Aggr, Aggr_Type);
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Synth_Aggregate;
 
