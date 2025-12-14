@@ -101,12 +101,6 @@ package body Synth.Vhdl_Context is
       Extra_Tables.Table (Get_Instance_Id (Inst)).Base := Base;
    end Set_Instance_Base;
 
-   procedure Set_Instance_Base (Inst : Synth_Instance_Acc;
-                                Base : Synth_Instance_Acc) is
-   begin
-      Set_Instance_Base (Inst, Get_Instance_Extra (Base).Base);
-   end Set_Instance_Base;
-
    procedure Free_Instance (Synth_Inst : in out Synth_Instance_Acc) is
    begin
       if Get_Instance_Id (Synth_Inst) = Extra_Tables.Last then

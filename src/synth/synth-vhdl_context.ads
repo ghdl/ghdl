@@ -57,12 +57,6 @@ package Synth.Vhdl_Context is
 
    procedure Free_Instance (Synth_Inst : in out Synth_Instance_Acc);
 
-   --  Only useful for subprograms: set the base (which can be different from
-   --  the parent).  Ideally it should be part of Make_Instance, but in most
-   --  cases they are the same (except sometimes for subprograms).
-   procedure Set_Instance_Base (Inst : Synth_Instance_Acc;
-                                Base : Synth_Instance_Acc);
-
    function Get_Sname (Inst : Synth_Instance_Acc) return Sname;
    pragma Inline (Get_Sname);
 
