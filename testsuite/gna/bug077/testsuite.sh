@@ -23,6 +23,10 @@ elab_simulate repro3
 analyze repro7.vhdl
 elab_simulate repro7
 
+# TODO: support
+#analyze proc01.vhdl
+#elab_simulate proc01
+
 clean
 
 echo "Test successful"
