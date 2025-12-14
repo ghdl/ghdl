@@ -1,0 +1,3 @@
+vec01.vhdl:11:10:error: multiple assignments for "s" offsets 7:7
+vec01.vhdl:11:10:note:  this concerns these parts of the signal:
+vec01.vhdl:11:10:note:   s(-1)

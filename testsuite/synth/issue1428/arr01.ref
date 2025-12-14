@@ -1,0 +1,3 @@
+arr01.vhdl:11:10:error: multiple assignments for "s" offsets 1:1
+arr01.vhdl:11:10:note:  this concerns these parts of the signal:
+arr01.vhdl:11:10:note:   s(??)
