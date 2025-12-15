@@ -130,8 +130,8 @@ package body Elab.Vhdl_Stmts is
                   when Iir_Kind_Slice_Name =>
                      Synth_Discrete_Range (Syn_Inst, Get_Suffix (Spec), Drng);
                      exit when In_Range (Drng, Dval);
-                  when others =>
-                     Error_Kind ("elab_for_generate_statement", Spec);
+                  when others => Error_Kind ("elab_for_generate_statement",
+                                             Spec);
                end case;
                Config := Get_Prev_Block_Configuration (Config);
             end loop;
@@ -362,8 +362,7 @@ package body Elab.Vhdl_Stmts is
          when Iir_Kind_Block_Statement =>
             Elab_Block_Statement (Syn_Inst, Stmt, Cfgs);
 
-         when others =>
-            Error_Kind ("elab_concurrent_statement", Stmt);
+         when others => Error_Kind ("elab_concurrent_statement", Stmt);
       end case;
       pragma Assert (Is_Expr_Pool_Empty);
    end Elab_Concurrent_Statement;
