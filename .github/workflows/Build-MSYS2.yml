@@ -245,7 +245,7 @@ jobs:
           cat ./install/*.requirements
 
       - name: 📤 Upload '${{ steps.artifact_name.outputs.ghdl_artifact }}' artifact
-        uses: pyTooling/upload-artifact@v5
+        uses: pyTooling/upload-artifact@v6
         if: inputs.msys2_artifact != ''
         with:
           name: ${{ steps.artifact_name.outputs.ghdl_artifact }}
@@ -294,7 +294,7 @@ jobs:
           tree ./standalone
 
       - name: 📤 Upload '${{ steps.artifact_name.outputs.windows_artifact }}' artifact
-        uses: pyTooling/upload-artifact@v5
+        uses: pyTooling/upload-artifact@v6
         if: inputs.backend == 'mcode' && inputs.windows_artifact != ''
         with:
           name: ${{ steps.artifact_name.outputs.windows_artifact }}
@@ -345,7 +345,7 @@ jobs:
           done
 
       - name: 📤 Upload '${{ steps.artifact_name.outputs.libghdl_artifact }}' artifact
-        uses: pyTooling/upload-artifact@v5
+        uses: pyTooling/upload-artifact@v6
         if: (inputs.runtime == 'mingw64' || inputs.runtime == 'ucrt64') && inputs.backend == 'mcode'
         with:
           name: ${{ steps.artifact_name.outputs.libghdl_artifact }}
@@ -437,7 +437,7 @@ jobs:
 # Upload test result artifacts
 
       - name: 📤 Upload 'TestReportSummary.xml' artifact (only mcode backend)
-        uses: pyTooling/upload-artifact@v5
+        uses: pyTooling/upload-artifact@v6
         if: inputs.unittesting && inputs.backend == 'mcode' && inputs.unittest_xml_artifact != ''
         continue-on-error: true
         with:
@@ -454,7 +454,7 @@ jobs:
         run: coverage report --rcfile=pyproject.toml --data-file=.coverage
 
       - name: 📤 Upload 'Coverage SQLite Database' artifact (only mcode backend)
-        uses: pyTooling/upload-artifact@v5
+        uses: pyTooling/upload-artifact@v6
         if: inputs.coverage && inputs.backend == 'mcode' && inputs.coverage_sqlite_artifact != ''
         continue-on-error: true
         with:
