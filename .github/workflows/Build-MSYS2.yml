@@ -208,7 +208,7 @@ jobs:
           echo "================================================================================"
 
       - name: 📤 Upload '${{ steps.artifact_name.outputs.pacman_artifact }}' artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: inputs.pacman_artifact != ''
         with:
           name: ${{ steps.artifact_name.outputs.pacman_artifact }}
