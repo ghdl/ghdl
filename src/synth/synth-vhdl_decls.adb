@@ -1115,6 +1115,9 @@ package body Synth.Vhdl_Decls is
            | Iir_Kind_Interface_Variable_Declaration =>
             if not Get_Instance_Const (Syn_Inst) then
                Finalize_Signal (Syn_Inst, Decl);
+            else
+               --  TODO: finalize protected object
+               null;
             end if;
          when Iir_Kind_Constant_Declaration =>
             null;

@@ -22,5 +22,7 @@ with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 package Elab.Vhdl_Prot is
    function Create (Inst : Synth_Instance_Acc) return Protected_Index;
    function Get (Idx : Protected_Index) return Synth_Instance_Acc;
-   procedure Destroy (Idx : Protected_Index);
+
+   --  TODO:
+   --  procedure Destroy (Idx : Protected_Index);
 end Elab.Vhdl_Prot;

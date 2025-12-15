@@ -43,14 +43,14 @@ package body Elab.Vhdl_Prot is
       return Res;
    end Get;
 
-   procedure Destroy (Idx : Protected_Index) is
-   begin
-      pragma Assert (Idx > No_Protected_Index);
-      pragma Assert (Idx <= Prot_Table.Last);
-      pragma Assert (Prot_Table.Table (Idx) /= null);
-      Prot_Table.Table (Idx) := null;
+   --  procedure Destroy (Idx : Protected_Index) is
+   --  begin
+   --     pragma Assert (Idx > No_Protected_Index);
+   --     pragma Assert (Idx <= Prot_Table.Last);
+   --     pragma Assert (Prot_Table.Table (Idx) /= null);
+   --     Prot_Table.Table (Idx) := null;
 
-      --  TODO: Decrease if last ?
-   end Destroy;
+   --     --  TODO: Decrease if last ?
+   --  end Destroy;
 
 end Elab.Vhdl_Prot;
