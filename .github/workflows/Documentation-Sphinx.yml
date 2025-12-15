@@ -59,7 +59,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
-        uses: pyTooling/download-artifact@v6
+        uses: pyTooling/download-artifact@v7
         with:
           name: ${{ inputs.ghdl_artifact }}
           path: install
@@ -110,7 +110,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
-        uses: pyTooling/download-artifact@v6
+        uses: pyTooling/download-artifact@v7
         with:
           name: ${{ inputs.ghdl_artifact }}
           path: install
@@ -160,7 +160,7 @@ jobs:
 
     steps:
       - name: 📥 Download artifacts '${{ inputs.latex_artifact }}' from 'Sphinx' job
-        uses: pyTooling/download-artifact@v6
+        uses: pyTooling/download-artifact@v7
         with:
           name: ${{ inputs.latex_artifact }}
           path: latex
