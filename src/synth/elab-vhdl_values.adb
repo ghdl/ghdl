@@ -174,6 +174,7 @@ package body Elab.Vhdl_Values is
       return (Vtype, Create_Value_File (File, Pool));
    end Create_Value_File;
 
+   --  GCOV_EXCL_START (AMS)
    function Create_Value_Quantity (Q : Quantity_Index_Type;
                                    Pool : Areapool_Acc) return Value_Acc
    is
@@ -207,6 +208,7 @@ package body Elab.Vhdl_Values is
    begin
       return (Vtype, Create_Value_Terminal (T, Pool));
    end Create_Value_Terminal;
+   --  GCOV_EXCL_STOP
 
    function Create_Value_Alias (Obj : Valtyp;
                                 Off : Value_Offsets;
@@ -314,11 +316,8 @@ package body Elab.Vhdl_Values is
             Res := (Src.Typ, Create_Value_Wire (Src.Val.N, Current_Pool));
          when Value_File =>
             Res := Create_Value_File (Src.Typ, Src.Val.File, Current_Pool);
-         when Value_Quantity
-           | Value_Terminal =>
-            raise Internal_Error;
-         when Value_Signal =>
-            raise Internal_Error;
+         when Value_Quantity | Value_Terminal => raise Internal_Error;
+         when Value_Signal => raise Internal_Error;
          when Value_Const =>
             declare
                Cst : Valtyp;
@@ -339,8 +338,7 @@ package body Elab.Vhdl_Values is
                                             Src.Val.D_Poff, Src.Val.D_Ptyp,
                                             Src.Val.D_Voff, Src.Val.D_Eoff,
                                             Current_Pool));
-         when Value_Sig_Val =>
-            raise Internal_Error;
+         when Value_Sig_Val => raise Internal_Error;
       end case;
       return Res;
    end Copy;
@@ -401,11 +399,6 @@ package body Elab.Vhdl_Values is
       return V;
    end Read_Protected;
 
-   function Read_Protected (Mt : Memtyp) return Protected_Index is
-   begin
-      return Read_Protected (Mt.Mem);
-   end Read_Protected;
-
    procedure Write_Discrete (Vt : Valtyp; Val : Int64) is
    begin
       Write_Discrete (Vt.Val.Mem, Vt.Typ, Val);
@@ -451,43 +444,10 @@ package body Elab.Vhdl_Values is
             Write_I32 (Res.Val.Mem, Ghdl_I32 (Val));
          when 8 =>
             Write_I64 (Res.Val.Mem, Ghdl_I64 (Val));
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
       return Res;
    end Create_Value_Discrete;
-
-   function Create_Value_Uns (Val : Uns64; Vtype : Type_Acc) return Valtyp
-   is
-      Res : Valtyp;
-   begin
-      Res := Create_Value_Memory (Vtype, Current_Pool);
-      case Vtype.Sz is
-         when 1 =>
-            Write_U8 (Res.Val.Mem, Ghdl_U8 (Val));
-         when 4 =>
-            Write_U32 (Res.Val.Mem, Ghdl_U32 (Val));
-         when others =>
-            raise Internal_Error;
-      end case;
-      return Res;
-   end Create_Value_Uns;
-
-   function Create_Value_Int (Val : Int64; Vtype : Type_Acc) return Valtyp
-   is
-      Res : Valtyp;
-   begin
-      Res := Create_Value_Memory (Vtype, Current_Pool);
-      case Vtype.Sz is
-         when 4 =>
-            Write_I32 (Res.Val.Mem, Ghdl_I32 (Val));
-         when 8 =>
-            Write_I64 (Res.Val.Mem, Ghdl_I64 (Val));
-         when others =>
-            raise Internal_Error;
-      end case;
-      return Res;
-   end Create_Value_Int;
 
    function Arr_Index (M : Memory_Ptr; Idx : Iir_Index32; El_Typ : Type_Acc)
                       return Memory_Ptr is
@@ -516,13 +476,6 @@ package body Elab.Vhdl_Values is
                   Write_Value_Default (Arr_Index (M, I - 1, El_Typ), El_Typ);
                end loop;
             end;
-         when Type_Unbounded_Vector
-           | Type_Array_Unbounded
-           | Type_Unbounded_Array
-           | Type_Unbounded_Record =>
-            raise Internal_Error;
-         when Type_Slice =>
-            raise Internal_Error;
          when Type_Record =>
             for I in Typ.Rec.E'Range loop
                Write_Value_Default (M + Typ.Rec.E (I).Offs.Mem_Off,
@@ -530,9 +483,7 @@ package body Elab.Vhdl_Values is
             end loop;
          when Type_Access =>
             Write_Access (M, Null_Heap_Ptr);
-         when Type_File
-           |  Type_Protected =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Write_Value_Default;
 

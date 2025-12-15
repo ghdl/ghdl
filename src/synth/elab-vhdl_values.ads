@@ -157,8 +157,6 @@ package Elab.Vhdl_Values is
                                 return Valtyp;
    function Create_Value_Memtyp (Mt : Memtyp) return Valtyp;
 
-   function Create_Value_Uns (Val : Uns64; Vtype : Type_Acc) return Valtyp;
-   function Create_Value_Int (Val : Int64; Vtype : Type_Acc) return Valtyp;
    function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc)
                                   return Valtyp;
 
@@ -234,7 +232,6 @@ package Elab.Vhdl_Values is
 
    procedure Write_Protected (Mem : Memory_Ptr; Idx : Protected_Index);
    function Read_Protected (Mem : Memory_Ptr) return Protected_Index;
-   function Read_Protected (Mt : Memtyp) return Protected_Index;
 
    function Read_Fp64 (Vt : Valtyp) return Fp64;
 
