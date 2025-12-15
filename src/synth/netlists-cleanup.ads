@@ -19,11 +19,6 @@
 with Netlists.Builders; use Netlists.Builders;
 
 package Netlists.Cleanup is
-   --  Remove instances of module M whose outputs are not connected.
-   --  Their inputs will be deconnected, which can result in new instances
-   --  that are also removed.
-   procedure Remove_Unconnected_Instances (M : Module);
-
    --  Stronger version of Remove_Unconnected_Instances: use a mark and
    --  sweep algorithm.
    procedure Mark_And_Sweep (M : Module);
