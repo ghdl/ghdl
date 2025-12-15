@@ -2731,20 +2731,22 @@ package body Synth.Vhdl_Expr is
                              "last_active attribute not allowed");
             return No_Valtyp;
 
-         --  GCOV_EXCL_START (not for synthesis)
+         --  GCOV_EXCL_START (AMS)
          when Iir_Kind_Dot_Attribute =>
             if Hook_Dot_Attribute /= null then
                return Hook_Dot_Attribute (Syn_Inst, Expr);
             end if;
             Error_Msg_Synth (Syn_Inst, Expr, "dot attribute not allowed");
             return No_Valtyp;
+         --  GCOV_EXCL_STOP
          when Iir_Kind_Psl_Endpoint_Declaration =>
             if Hook_Endpoint /= null then
                return Hook_Endpoint (Syn_Inst, Expr);
             end if;
+            --  GCOV_EXCL_START (not for synthesis)
             Error_Msg_Synth (Syn_Inst, Expr, "endpoint read not allowed");
             return No_Valtyp;
-         --  GCOV_EXCL_STOP
+            --  GCOV_EXCL_STOP
 
          when others => Error_Kind ("synth_expression_with_type", Expr);
       end case;
