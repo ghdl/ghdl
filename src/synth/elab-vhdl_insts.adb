@@ -163,8 +163,7 @@ package body Elab.Vhdl_Insts is
                      Val.Typ := Synth_Subtype_Indication
                        (Syn_Inst, Get_Actual_Type (Assoc));
                      Val := Create_Value_Memory (Val.Typ, Expr_Pool'Access);
-                  when others =>
-                     raise Internal_Error;
+                  when others => raise Internal_Error;
                end case;
 
                if Get_Whole_Association_Flag (Assoc) then
@@ -252,8 +251,7 @@ package body Elab.Vhdl_Insts is
                         Act := Get_Open_Actual (Assoc);
                      when Iir_Kind_Association_Element_Subprogram =>
                         Act := Get_Actual (Assoc);
-                     when others =>
-                        raise Internal_Error;
+                     when others => raise Internal_Error;
                   end case;
                   Act := Strip_Denoting_Name (Act);
                   Create_Interface_Subprg (Sub_Inst, Inter, Act);
@@ -441,8 +439,7 @@ package body Elab.Vhdl_Insts is
                   null;
                when Iir_Kinds_Verification_Unit =>
                   null;
-               when Iir_Kind_Foreign_Module =>
-                  raise Internal_Error;
+               when Iir_Kind_Foreign_Module => raise Internal_Error;
             end case;
          end if;
          Next (Dep_It);
@@ -503,13 +500,11 @@ package body Elab.Vhdl_Insts is
                      when Iir_Kind_Block_Statement =>
                         Set_Block_Block_Configuration (Sub_Blk, Item);
                         Count := Count + 1;
-                     when others =>
-                        Vhdl.Errors.Error_Kind
-                          ("apply_block_configuration(blk)", Sub_Blk);
+                     when others => Error_Kind ("apply_block_config(blk)",
+                                                Sub_Blk);
                   end case;
                end;
-            when others =>
-               Vhdl.Errors.Error_Kind ("apply_block_configuration", Item);
+            when others => Error_Kind ("apply_block_configuration", Item);
          end case;
          Item := Get_Chain (Item);
       end loop;
@@ -646,8 +641,7 @@ package body Elab.Vhdl_Insts is
                   return Res;
                end if;
                raise Internal_Error;
-            when others =>
-               raise Internal_Error;
+            when others => raise Internal_Error;
          end case;
       end Get_Name_Suffix_1;
 
@@ -731,8 +725,7 @@ package body Elab.Vhdl_Insts is
                end if;
                return Create_Record_Type (Typ, Els);
             end;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Elab_Individual_Typ;
 
@@ -967,8 +960,7 @@ package body Elab.Vhdl_Insts is
                | Iir_Kind_Concurrent_Procedure_Call_Statement
                | Iir_Kind_Component_Instantiation_Statement =>
                Elab_Concurrent_Statement (Unit_Inst, Item, Cfgs);
-            when others =>
-               Error_Kind ("elab_verification_unit", Item);
+            when others => Error_Kind ("elab_verification_unit", Item);
          end case;
          Item := Get_Chain (Item);
       end loop;
