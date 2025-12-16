@@ -54,13 +54,6 @@ package body Synth.Source is
       Set_Location2 (Inst, Src);
    end Set_Location_Maybe2;
 
-   procedure Set_Location_Maybe (Inst : Netlists.Instance; Src : Syn_Src) is
-   begin
-      if Flag_Locations then
-         Set_Location_Maybe2 (Inst, Src);
-      end if;
-   end Set_Location_Maybe;
-
    procedure Set_Location_Maybe2 (N : Netlists.Net; Src : Syn_Src) is
    begin
       Set_Location_Maybe2 (Get_Net_Parent (N), Src);
