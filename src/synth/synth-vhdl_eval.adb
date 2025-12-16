@@ -2190,13 +2190,21 @@ package body Synth.Vhdl_Eval is
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log =>
-            return Num_Std.Add_Uns_Uns
-              (Param1, Num_Std.Log_To_Vec (Param2, Param1), +Expr);
+            if Param1.Typ.Abound.Len = 0 then
+               return Num_Std.Log_To_Vec1 (Param2);
+            else
+               return Num_Std.Add_Uns_Uns
+                 (Param1, Num_Std.Log_To_Vec (Param2, Param1), +Expr);
+            end if;
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Log_Uns
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Log_Slv =>
-            return Num_Std.Add_Uns_Uns
-              (Num_Std.Log_To_Vec (Param1, Param2), Param2, +Expr);
+            if Param2.Typ.Abound.Len = 0 then
+               return Num_Std.Log_To_Vec1 (Param1);
+            else
+               return Num_Std.Add_Uns_Uns
+                 (Num_Std.Log_To_Vec (Param1, Param2), Param2, +Expr);
+            end if;
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int

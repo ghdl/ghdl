@@ -54,6 +54,9 @@ package Synth.Ieee.Numeric_Std is
    --  at the lsb and filled with 0.
    function Log_To_Vec (Val : Memtyp; Vec : Memtyp) return Memtyp;
 
+   --  Create a vector of length 1 containing element VAL.
+   function Log_To_Vec1 (Val : Memtyp) return Memtyp;
+
    --  "+"
    function Add_Uns_Uns (L, R : Memtyp; Loc : Location_Type) return Memtyp;
    function Add_Sgn_Sgn (L, R : Memtyp; Loc : Location_Type) return Memtyp;
