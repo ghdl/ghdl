@@ -168,8 +168,17 @@ package body NUMERIC_STD is
         exit;
       end if;
     end loop;
-    assert TOPBIT >= 0 report "NUMERIC_STD.DIVMOD: DIV, MOD, or REM by zero"
-      severity error;
+
+    --  Code added for GHDL to avoid an index error.
+    --  If DENOM is 0, TOPBIT is -1, the loop below iterates from NUM'length
+    --  to 0, and indexes incorrectly QUOT.
+    if TOPBIT < 0 then
+      assert TOPBIT >= 0 report "NUMERIC_STD.DIVMOD: DIV, MOD, or REM by zero"
+        severity error;
+      XQUOT := (XQUOT'range => 'X');
+      XREMAIN := (XREMAIN'range => 'X');
+      return;
+    end if;
 
     for J in NUM'length-(TOPBIT+1) downto 0 loop
       if TEMP(TOPBIT+J+1 downto J) >= "0"&DENOM(TOPBIT downto 0) then
@@ -389,6 +398,9 @@ package body NUMERIC_STD is
   is
     variable XR : UNRESOLVED_UNSIGNED(L'length-1 downto 0) := (others => '0');
   begin
+    --  GHDL: added to behave like mod (and avoid index error)
+    if (L'length < 1) then return (0 => R);
+    end if;
     XR(0) := R;
     return (L + XR);
   end function "+";
@@ -399,6 +411,8 @@ package body NUMERIC_STD is
   is
     variable XL : UNRESOLVED_UNSIGNED(R'length-1 downto 0) := (others => '0');
   begin
+    if (R'length < 1) then return (0 => L);
+    end if;
     XL(0) := L;
     return (XL + R);
   end function "+";
@@ -888,6 +902,9 @@ package body NUMERIC_STD is
     constant L_LENGTH : NATURAL := MAXIMUM(UNSIGNED_NUM_BITS(L), R'length);
     variable XL, XREM : UNRESOLVED_UNSIGNED(L_LENGTH-1 downto 0);
   begin
+    --  GHDL: added to behave like mod (and avoid index error)
+    if (R'length < 1) then return NAU;
+    end if;
     XL   := TO_UNSIGNED(L, L_LENGTH);
     XREM := XL rem R;
     if L_LENGTH > R'length and XREM(0) /= 'X'
