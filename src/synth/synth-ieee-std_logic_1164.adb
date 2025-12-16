@@ -54,8 +54,7 @@ package body Synth.Ieee.Std_Logic_1164 is
             return '0';
          when 1 =>
             return '1';
-         when others =>
-            raise Constraint_Error;
+         when others => raise Constraint_Error;
       end case;
    end Read_Bit_To_Std_Logic;
 end Synth.Ieee.Std_Logic_1164;
