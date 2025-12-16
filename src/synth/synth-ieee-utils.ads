@@ -56,16 +56,4 @@ package Synth.Ieee.Utils is
 
    --  Note: SRC = DST is allowed.
    procedure Abs_Vec (Src : Memory_Ptr; Dst : Memory_Ptr; Len : Uns32);
-
-   --  Multiplication.
-   --  Length of RES is LLEN + RLEN + 1 (if L_SIGN /= R_SIGN)
-   procedure Mul_Vec (L, R : Memory_Ptr;
-                      Llen, Rlen : Uns32;
-                      L_Sign, R_Sign : Boolean;
-                      Res : Memory_Ptr);
-
-   --  Assume no X (they are considered as '0').
-   function Compare_Vec (L, R : Memory_Ptr;
-                         Llen, Rlen : Uns32;
-                         L_Sign, R_Sign : Boolean) return Order_Type;
 end Synth.Ieee.Utils;
