@@ -1592,11 +1592,11 @@ package body Synth.Ieee.Numeric_Std is
    is
       Lw : constant Uns32 := Left.Typ.W;
       Rw : constant Uns32 := Right.Typ.W;
-      Len : constant Uns32 := Uns32'Max (Left.Typ.W, Right.Typ.W);
+      Len : constant Uns32 := Uns32'Max (Lw, Rw);
       L, R, T : Std_Ulogic;
       Res : Std_Ulogic;
    begin
-      if Len = 0 then
+      if Lw = 0 or Rw = 0 then
          Warn_Compare_Null (Loc);
          return 'X';
       end if;
