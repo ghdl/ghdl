@@ -2577,6 +2577,9 @@ package body Synth.Vhdl_Eval is
          when Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Uns_Nat =>
             return Num_Std.Match_Cmp_Vec_Int
               (Param1, Param2, Num_Std.Map_Ge, False, +Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Sgn_Int =>
+            return Num_Std.Match_Cmp_Vec_Int
+              (Param1, Param2, Num_Std.Map_Ge, True, +Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Sgn_Sgn =>
             declare
