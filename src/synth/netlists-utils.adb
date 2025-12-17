@@ -76,15 +76,17 @@ package body Netlists.Utils is
       return Get_Id (Get_Module (Inst));
    end Get_Id;
 
-   function Get_Input_Name (M : Module; I : Port_Idx) return Sname is
-   begin
-      return Get_Input_Desc (M, I).Name;
-   end Get_Input_Name;
-
    function Get_Output_Name (M : Module; I : Port_Idx) return Sname is
    begin
       return Get_Output_Desc (M, I).Name;
    end Get_Output_Name;
+
+   --  GCOV_EXCL_START (called by libghdl)
+
+   function Get_Input_Name (M : Module; I : Port_Idx) return Sname is
+   begin
+      return Get_Input_Desc (M, I).Name;
+   end Get_Input_Name;
 
    function Get_Input_Width (M : Module; I : Port_Idx) return Width is
    begin
@@ -101,6 +103,18 @@ package body Netlists.Utils is
       return Get_Output_Desc (M, I).Dir = Port_Inout;
    end Get_Inout_Flag;
 
+   function Get_Param_Name (M : Module; I : Param_Idx) return Sname is
+   begin
+      return Get_Param_Desc (M, I).Name;
+   end Get_Param_Name;
+
+   function Get_Param_Type (M : Module; I : Param_Idx) return Param_Type is
+   begin
+      return Get_Param_Desc (M, I).Typ;
+   end Get_Param_Type;
+
+   --  GCOV_EXCL_STOP
+
    function Get_Input_Net (Inst : Instance; Idx : Port_Idx) return Net is
    begin
       return Get_Driver (Get_Input (Inst, Idx));
@@ -111,16 +125,6 @@ package body Netlists.Utils is
    begin
       return Get_Net_Parent (Get_Input_Net (Inst, Idx));
    end Get_Input_Instance;
-
-   function Get_Param_Name (M : Module; I : Param_Idx) return Sname is
-   begin
-      return Get_Param_Desc (M, I).Name;
-   end Get_Param_Name;
-
-   function Get_Param_Type (M : Module; I : Param_Idx) return Param_Type is
-   begin
-      return Get_Param_Desc (M, I).Typ;
-   end Get_Param_Type;
 
    function Is_Const_Net (N : Net) return Boolean is
    begin
