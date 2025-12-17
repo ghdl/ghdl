@@ -93,18 +93,6 @@ package body Synth.Environment is
       Wire_Id_Table.Table (Wid).Gate := Gate;
    end Set_Wire_Gate;
 
-   procedure Replace_Wire_Gate (Wid : Wire_Id; Gate : Net)
-   is
-      Old : constant Net := Wire_Id_Table.Table (Wid).Gate;
-      Inst : constant Instance := Get_Net_Parent (Old);
-   begin
-      Redirect_Inputs (Old, Gate);
-      Remove_Instance (Inst);
-      Set_Location (Get_Net_Parent (Gate), Get_Location (Inst));
-      --  FIXME: attributes ?
-      Wire_Id_Table.Table (Wid).Gate := Gate;
-   end Replace_Wire_Gate;
-
    function Get_Wire_Gate (Wid : Wire_Id) return Net is
    begin
       return Wire_Id_Table.Table (Wid).Gate;
@@ -231,8 +219,7 @@ package body Synth.Environment is
                when Wire_Variable =>
                   --  In case of error.
                   null;
-               when others =>
-                  raise Internal_Error;
+               when others => raise Internal_Error;
             end case;
          end;
       end loop;
@@ -418,8 +405,7 @@ package body Synth.Environment is
       pragma Assert (Get_Input_Net (Get_Net_Parent (Outport), 0) = No_Net);
 
       case Asgn_Rec.Val.Is_Static is
-         when Unknown =>
-            raise Internal_Error;
+         when Unknown => raise Internal_Error;
          when True =>
             --  Create a net.  No inference to do.
             Res := Static_To_Net (Ctxt, Asgn_Rec.Val.Val);
@@ -570,8 +556,7 @@ package body Synth.Environment is
               or else Wire_Id_Table.Table (Wid).Kind = Wire_Enable
             then
                case Asgn_Rec.Val.Is_Static is
-                  when Unknown =>
-                     raise Internal_Error;
+                  when Unknown => raise Internal_Error;
                   when True =>
                      Phi_Assign_Static (Wid, Asgn_Rec.Val.Val);
                   when False =>
@@ -655,8 +640,7 @@ package body Synth.Environment is
                   --  Unset kind so that it can be set in normal processes.
                   Wire_Rec.Kind := Wire_Unset;
 
-               when others =>
-                  raise Internal_Error;
+               when others => raise Internal_Error;
             end case;
             Asgn := Asgn_Rec.Chain;
          end;
@@ -1102,8 +1086,7 @@ package body Synth.Environment is
                            Res := Build_Resolver (Ctxt, Res, V);
                         when Multiport =>
                            Res := Build_Mem_Multiport (Ctxt, Res, V);
-                        when Unknown =>
-                           raise Internal_Error;
+                        when Unknown => raise Internal_Error;
                      end case;
                      Set_Location (Res, Get_Conc_Location (Conc));
 
@@ -1289,8 +1272,7 @@ package body Synth.Environment is
          when Wire_Signal | Wire_Output | Wire_Inout
            | Wire_Variable | Wire_Unset =>
             null;
-         when Wire_Input | Wire_Enable | Wire_None =>
-            raise Internal_Error;
+         when Wire_Input | Wire_Enable | Wire_None => raise Internal_Error;
       end case;
 
       if Asgn_Rec.Val.Is_Static = True then
@@ -1360,8 +1342,7 @@ package body Synth.Environment is
          when Wire_Unset =>
             pragma Assert (Wire_Rec.Cur_Assign = No_Seq_Assign);
             return Wire_Rec.Gate;
-         when Wire_None =>
-            raise Internal_Error;
+         when Wire_None => raise Internal_Error;
       end case;
    end Get_Current_Value;
 
@@ -1914,10 +1895,8 @@ package body Synth.Environment is
       N : Net;
       Asgn : Seq_Assign;
    begin
-      if Last = No_Phi_Id then
-         --  Can be called only when a phi is created.
-         raise Internal_Error;
-      end if;
+      --  Can be called only when a phi is created.
+      pragma Assert (Last /= No_Phi_Id);
       if Last = No_Phi_Id + 1 then
          --  That's the first phi, which is always enabled.
          return No_Net;
@@ -1987,9 +1966,9 @@ package body Synth.Environment is
                  renames Partial_Assign_Table.Table (El);
             begin
                --  Check no overlap.
-               if Cur.Offset < Prev.Offset + Get_Width (Prev.Value) then
-                  raise Internal_Error;
-               end if;
+               pragma Assert
+                 (Cur.Offset >= Prev.Offset + Get_Width (Prev.Value));
+               null;
             end;
             Prev_El := El;
          end;
