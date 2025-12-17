@@ -29,6 +29,7 @@ package body Netlists.Folds is
       if Val < 2**32 then
          return Build_Const_UB32 (Ctxt, Uns32 (Val), W);
       else
+         --  GCOV_EXCL_START (not generated)
          pragma Assert (W > 32);
          declare
             Inst : Instance;
@@ -41,6 +42,7 @@ package body Netlists.Folds is
             end loop;
             return Get_Output (Inst, 0);
          end;
+         --  GCOV_EXCL_STOP
       end if;
    end Build2_Const_Uns;
 
@@ -68,6 +70,7 @@ package body Netlists.Folds is
       if Val in -2**31 .. 2**31 - 1 then
          return Build_Const_SB32 (Ctxt, Int32 (Val), W);
       else
+         --  GCOV_EXCL_START (not generated)
          pragma Assert (W > 32);
          declare
             V : constant Uns64 := To_Uns64 (Val);
@@ -83,6 +86,7 @@ package body Netlists.Folds is
             end loop;
             return Get_Output (Inst, 0);
          end;
+         --  GCOV_EXCL_STOP
       end if;
    end Build2_Const_Int;
 
@@ -107,8 +111,7 @@ package body Netlists.Folds is
       N : Net;
    begin
       case Len is
-         when 0 =>
-            raise Internal_Error;
+         when 0 => raise Internal_Error;
          when 1 =>
             return Els (F);
          when 2 =>
