@@ -1295,30 +1295,6 @@ package body Synth.Environment is
       return Get_Current_Assign_Value (Ctxt, Asgn_Rec.Id, 0, W);
    end Get_Assign_Value;
 
-   function Get_Gate_Value (Wid : Wire_Id) return Net
-   is
-      Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
-      pragma Assert (Wire_Rec.Kind /= Wire_None);
-   begin
-      return Wire_Rec.Gate;
-   end Get_Gate_Value;
-
-   function Get_Assigned_Value (Ctxt : Builders.Context_Acc; Wid : Wire_Id)
-                               return Net
-   is
-      Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
-      pragma Assert (Wire_Rec.Kind /= Wire_None);
-   begin
-      if Wire_Rec.Cur_Assign = No_Seq_Assign then
-         --  The variable was never assigned, so the variable value is
-         --  the initial value.
-         --  FIXME: use initial value directly ?
-         return Wire_Rec.Gate;
-      else
-         return Get_Assign_Value (Ctxt, Wire_Rec.Cur_Assign);
-      end if;
-   end Get_Assigned_Value;
-
    function Get_Current_Value (Ctxt : Builders.Context_Acc; Wid : Wire_Id)
                               return Net
    is

@@ -200,13 +200,6 @@ package Synth.Environment is
    function Get_Assign_Value (Ctxt : Builders.Context_Acc; Asgn : Seq_Assign)
                              return Net;
 
-   --  Return the value from the gate.
-   function Get_Gate_Value (Wid : Wire_Id) return Net;
-
-   --  Return the current assigned value.
-   function Get_Assigned_Value (Ctxt : Builders.Context_Acc; Wid : Wire_Id)
-                               return Net;
-
    --  For low-level phi merge.
    --  A sequential assignment is a linked list of partial assignment.
    type Partial_Assign is private;
