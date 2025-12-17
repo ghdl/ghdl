@@ -1629,22 +1629,34 @@ package body Synth.Vhdl_Eval is
             return Execute_Shift_Operator
               (Param1, Read_Discrete (Param2), 0, Def);
 
-         when Iir_Predefined_TF_Array_And =>
+         when Iir_Predefined_TF_Array_And
+            | Iir_Predefined_Ieee_Numeric_Bit_And_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Bit_And_Sgn_Sgn =>
             return Eval_TF_Vector_Dyadic
               (Inst, Param1, Param2, Tf_2d_And, Expr);
-         when Iir_Predefined_TF_Array_Or =>
+         when Iir_Predefined_TF_Array_Or
+            | Iir_Predefined_Ieee_Numeric_Bit_Or_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Bit_Or_Sgn_Sgn =>
             return Eval_TF_Vector_Dyadic
               (Inst, Param1, Param2, Tf_2d_Or, Expr);
-         when Iir_Predefined_TF_Array_Xor =>
+         when Iir_Predefined_TF_Array_Xor
+            | Iir_Predefined_Ieee_Numeric_Bit_Xor_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Bit_Xor_Sgn_Sgn =>
             return Eval_TF_Vector_Dyadic
               (Inst, Param1, Param2, Tf_2d_Xor, Expr);
-         when Iir_Predefined_TF_Array_Nand =>
+         when Iir_Predefined_TF_Array_Nand
+            | Iir_Predefined_Ieee_Numeric_Bit_Nand_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Bit_Nand_Sgn_Sgn =>
             return Eval_TF_Vector_Dyadic
               (Inst, Param1, Param2, Tf_2d_Nand, Expr);
-         when Iir_Predefined_TF_Array_Nor =>
+         when Iir_Predefined_TF_Array_Nor
+            | Iir_Predefined_Ieee_Numeric_Bit_Nor_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Bit_Nor_Sgn_Sgn =>
             return Eval_TF_Vector_Dyadic
               (Inst, Param1, Param2, Tf_2d_Nor, Expr);
-         when Iir_Predefined_TF_Array_Xnor =>
+         when Iir_Predefined_TF_Array_Xnor
+            | Iir_Predefined_Ieee_Numeric_Bit_Xnor_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Bit_Xnor_Sgn_Sgn =>
             return Eval_TF_Vector_Dyadic
               (Inst, Param1, Param2, Tf_2d_Xnor, Expr);
 
