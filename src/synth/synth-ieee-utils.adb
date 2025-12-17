@@ -40,12 +40,4 @@ package body Synth.Ieee.Utils is
          end loop;
       end if;
    end Abs_Vec;
-
-   procedure Fill (Res : Memory_Ptr; Len : Uns32; V : Std_Ulogic) is
-   begin
-      for I in 1 .. Len loop
-         Write_Std_Logic (Res, I - 1, V);
-      end loop;
-   end Fill;
-
 end Synth.Ieee.Utils;

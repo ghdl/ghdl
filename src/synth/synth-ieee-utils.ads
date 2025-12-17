@@ -49,8 +49,6 @@ package Synth.Ieee.Utils is
    type Uns_To_01_Array is array (Uns64 range 0 .. 1) of Sl_X01;
    Uns_To_01 : constant Uns_To_01_Array := (0 => '0', 1 => '1');
 
-   procedure Fill (Res : Memory_Ptr; Len : Uns32; V : Std_Ulogic);
-
    --  Note: SRC = DST is allowed.
    procedure Neg_Vec (Src : Memory_Ptr; Dst : Memory_Ptr; Len : Uns32);
 
