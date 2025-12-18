@@ -53,7 +53,9 @@ package Synth.Ieee.Numeric_Bit is
 
    --  Create a vector whose length is VEC'length, set to logic value VAL
    --  at the lsb and filled with 0.
-   function Log_To_Vec (Val : Memtyp; Vec : Memtyp) return Memtyp;
+   function Bit_To_Vec (Val : Memtyp; Vec : Memtyp) return Memtyp;
+
+   function Bit_To_Vec1 (Val : Memtyp) return Memtyp;
 
    --  "+"
    function Add_Uns_Uns (L, R : Memtyp) return Memtyp;

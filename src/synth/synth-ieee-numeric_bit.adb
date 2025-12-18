@@ -336,6 +336,28 @@ package body Synth.Ieee.Numeric_Bit is
       return Res;
    end Compare_Sgn_Int;
 
+   function Bit_To_Vec1 (Val : Memtyp) return Memtyp
+   is
+      Res : Memtyp;
+   begin
+      Res.Typ := Create_Vec_Type_By_Length (1, Val.Typ);
+      Res := Create_Memory (Res.Typ);
+      Write_U8 (Res.Mem, Read_U8 (Val.Mem));
+      return Res;
+   end Bit_To_Vec1;
+
+   function Bit_To_Vec (Val : Memtyp; Vec : Memtyp) return Memtyp
+   is
+      Len : constant Uns32 := Vec.Typ.Abound.Len;
+      Res : Memtyp;
+   begin
+      pragma Assert (Len > 0);
+      Res := Create_Memory (Vec.Typ);
+      Fill (Res, '0');
+      Write_U8 (Res.Mem + Size_Type (Len - 1), Read_U8 (Val.Mem));
+      return Res;
+   end Bit_To_Vec;
+
    function Add_Vec_Vec (L, R : Memtyp; Signed : Boolean) return Memtyp
    is
       Llen : constant Uns32 := L.Typ.Abound.Len;
@@ -386,21 +408,6 @@ package body Synth.Ieee.Numeric_Bit is
    begin
       return Add_Vec_Vec (L, R, False);
    end Add_Uns_Uns;
-
-   function Log_To_Vec (Val : Memtyp; Vec : Memtyp) return Memtyp
-   is
-      Len : constant Uns32 := Vec.Typ.Abound.Len;
-      Res : Memtyp;
-   begin
-      if Len = 0 then
-         --  FIXME: is it an error ?
-         return Vec;
-      end if;
-      Res := Create_Memory (Vec.Typ);
-      Fill (Res, '0');
-      Write_U8 (Res.Mem + Size_Type (Len - 1), Read_U8 (Val.Mem));
-      return Res;
-   end Log_To_Vec;
 
    function Add_Sgn_Sgn (L, R : Memtyp) return Memtyp is
    begin

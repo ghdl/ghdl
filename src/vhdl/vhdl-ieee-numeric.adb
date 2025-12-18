@@ -65,6 +65,14 @@ package body Vhdl.Ieee.Numeric is
      (Pkg_Std => Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat,
       Pkg_Bit => Iir_Predefined_Ieee_Numeric_Bit_Resize_Sgn_Nat);
 
+   Resize_Uns_Uns_Pattern : constant Conv_Pattern_Type :=
+     (Pkg_Std => Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Uns,
+      Pkg_Bit => Iir_Predefined_Ieee_Numeric_Bit_Resize_Uns_Uns);
+
+   Resize_Sgn_Sgn_Pattern : constant Conv_Pattern_Type :=
+     (Pkg_Std => Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn,
+      Pkg_Bit => Iir_Predefined_Ieee_Numeric_Bit_Resize_Sgn_Sgn);
+
    Add_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
         (Type_Unsigned =>
@@ -276,8 +284,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Ne_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Ne_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Ne_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Ne_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Ne_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Ne_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Lt_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -406,8 +424,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Min_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Min_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Min_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Min_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Min_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Min_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Max_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -424,8 +452,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Max_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Max_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Max_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Max_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Max_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Max_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Match_Eq_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -442,8 +480,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Eq_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Match_Eq_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Eq_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Eq_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Match_Eq_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Eq_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Match_Ne_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -460,8 +508,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Ne_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Match_Ne_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Ne_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Ne_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Match_Ne_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Ne_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Match_Lt_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -478,8 +536,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Lt_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Match_Lt_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Lt_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Lt_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Match_Lt_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Lt_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Match_Le_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -496,8 +564,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Le_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Match_Le_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Le_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Le_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Match_Le_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Le_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Match_Gt_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -514,8 +592,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Gt_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Match_Gt_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Gt_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Gt_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Match_Gt_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Gt_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Match_Ge_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
@@ -532,8 +620,18 @@ package body Vhdl.Ieee.Numeric is
             Arg_Vect_Log  => Iir_Predefined_None,
             Arg_Log_Vect  => Iir_Predefined_None)),
       Pkg_Bit =>
-        (others =>
-           (others => Iir_Predefined_None)));
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Ge_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Match_Ge_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Ge_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Ge_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Bit_Match_Ge_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Bit_Match_Ge_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)));
 
    Neg_Patterns : constant Unary_Pattern_Type :=
      (Pkg_Std =>
@@ -616,13 +714,13 @@ package body Vhdl.Ieee.Numeric is
       Pkg_Bit =>
         (Type_Unsigned =>
            (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_And_Uns_Uns,
-            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_And_Uns_Log,
-            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_And_Log_Uns,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_And_Uns_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_And_Bit_Uns,
             others        => Iir_Predefined_None),
          Type_Signed =>
            (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_And_Sgn_Sgn,
-            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_And_Sgn_Log,
-            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_And_Log_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_And_Sgn_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_And_Bit_Sgn,
             others        => Iir_Predefined_None)));
 
    Or_Patterns : constant Binary_Pattern_Type :=
@@ -640,13 +738,13 @@ package body Vhdl.Ieee.Numeric is
       Pkg_Bit =>
         (Type_Unsigned =>
            (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Or_Uns_Uns,
-            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Or_Uns_Log,
-            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Or_Log_Uns,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Or_Uns_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Or_Bit_Uns,
             others        => Iir_Predefined_None),
          Type_Signed =>
            (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Or_Sgn_Sgn,
-            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Or_Sgn_Log,
-            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Or_Log_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Or_Sgn_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Or_Bit_Sgn,
             others        => Iir_Predefined_None)));
 
    Nand_Patterns : constant Binary_Pattern_Type :=
@@ -664,13 +762,13 @@ package body Vhdl.Ieee.Numeric is
       Pkg_Bit =>
         (Type_Unsigned =>
            (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Nand_Uns_Uns,
-            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Nand_Uns_Log,
-            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Nand_Log_Uns,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Nand_Uns_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Nand_Bit_Uns,
             others        => Iir_Predefined_None),
          Type_Signed =>
            (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Nand_Sgn_Sgn,
-            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Nand_Sgn_Log,
-            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Nand_Log_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Nand_Sgn_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Nand_Bit_Sgn,
             others        => Iir_Predefined_None)));
 
    Nor_Patterns : constant Binary_Pattern_Type :=
@@ -688,13 +786,13 @@ package body Vhdl.Ieee.Numeric is
       Pkg_Bit =>
         (Type_Unsigned =>
            (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Nor_Uns_Uns,
-            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Nor_Uns_Log,
-            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Nor_Log_Uns,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Nor_Uns_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Nor_Bit_Uns,
             others        => Iir_Predefined_None),
          Type_Signed =>
            (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Nor_Sgn_Sgn,
-            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Nor_Sgn_Log,
-            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Nor_Log_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Nor_Sgn_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Nor_Bit_Sgn,
             others        => Iir_Predefined_None)));
 
    Xor_Patterns : constant Binary_Pattern_Type :=
@@ -712,13 +810,13 @@ package body Vhdl.Ieee.Numeric is
       Pkg_Bit =>
         (Type_Unsigned =>
            (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Xor_Uns_Uns,
-            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Xor_Uns_Log,
-            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Xor_Log_Uns,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Xor_Uns_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Xor_Bit_Uns,
             others        => Iir_Predefined_None),
          Type_Signed =>
            (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Xor_Sgn_Sgn,
-            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Xor_Sgn_Log,
-            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Xor_Log_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Xor_Sgn_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Xor_Bit_Sgn,
             others        => Iir_Predefined_None)));
 
    Xnor_Patterns : constant Binary_Pattern_Type :=
@@ -736,13 +834,13 @@ package body Vhdl.Ieee.Numeric is
       Pkg_Bit =>
         (Type_Unsigned =>
            (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Xnor_Uns_Uns,
-            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Xnor_Uns_Log,
-            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Xnor_Log_Uns,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Xnor_Uns_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Xnor_Bit_Uns,
             others        => Iir_Predefined_None),
          Type_Signed =>
            (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Bit_Xnor_Sgn_Sgn,
-            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Xnor_Sgn_Log,
-            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Xnor_Log_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Bit_Xnor_Sgn_Bit,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Bit_Xnor_Bit_Sgn,
             others        => Iir_Predefined_None)));
 
    Shl_Patterns : constant Shift_Pattern_Type :=
@@ -782,56 +880,64 @@ package body Vhdl.Ieee.Numeric is
         (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sll_Sgn_Int,
          Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int),
       Pkg_Bit =>
-        (others => Iir_Predefined_None));
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Bit_Sll_Sgn_Int,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Bit_Sll_Uns_Int));
 
    Srl_Patterns : constant Shift_Pattern_Type :=
      (Pkg_Std =>
         (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Srl_Sgn_Int,
          Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int),
       Pkg_Bit =>
-        (others => Iir_Predefined_None));
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Bit_Srl_Sgn_Int,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Bit_Srl_Uns_Int));
 
    Sla_Patterns : constant Shift_Pattern_Type :=
      (Pkg_Std =>
         (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sla_Sgn_Int,
          Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Sla_Uns_Int),
       Pkg_Bit =>
-        (others => Iir_Predefined_None));
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Bit_Sla_Sgn_Int,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Bit_Sla_Uns_Int));
 
    Sra_Patterns : constant Shift_Pattern_Type :=
      (Pkg_Std =>
         (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int,
          Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Sra_Uns_Int),
       Pkg_Bit =>
-        (others => Iir_Predefined_None));
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Bit_Sra_Sgn_Int,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Bit_Sra_Uns_Int));
 
    Rol_Patterns : constant Shift_Pattern_Type :=
      (Pkg_Std =>
         (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Rol_Sgn_Int,
          Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Int),
       Pkg_Bit =>
-        (others => Iir_Predefined_None));
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Bit_Rol_Sgn_Int,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Bit_Rol_Uns_Int));
 
    Ror_Patterns : constant Shift_Pattern_Type :=
      (Pkg_Std =>
         (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Int,
          Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Int),
       Pkg_Bit =>
-        (others => Iir_Predefined_None));
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Bit_Ror_Sgn_Int,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Bit_Ror_Uns_Int));
 
    Leftmost_Patterns : constant Shift_Pattern_Type :=
      (Pkg_Std =>
         (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Sgn,
          Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Uns),
       Pkg_Bit =>
-        (others => Iir_Predefined_None));
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Bit_Find_Leftmost_Sgn,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Bit_Find_Leftmost_Uns));
 
    Rightmost_Patterns : constant Shift_Pattern_Type :=
      (Pkg_Std =>
         (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Sgn,
          Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Uns),
       Pkg_Bit =>
-        (others => Iir_Predefined_None));
+        (Type_Signed   => Iir_Predefined_Ieee_Numeric_Bit_Find_Rightmost_Sgn,
+         Type_Unsigned => Iir_Predefined_Ieee_Numeric_Bit_Find_Rightmost_Uns));
 
    To_01_Patterns : constant Shift_Pattern_Type :=
      (Pkg_Std =>
@@ -1050,11 +1156,11 @@ package body Vhdl.Ieee.Numeric is
             if Arg1_Kind = Arg_Vect and Arg1_Sign = Type_Unsigned
               and Arg2_Sign = Type_Unsigned
             then
-               Def := Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Uns;
+               Def := Resize_Uns_Uns_Pattern (Pkg);
             elsif Arg1_Kind = Arg_Vect and Arg1_Sign = Type_Signed
               and Arg2_Sign = Type_Signed
             then
-               Def := Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn;
+               Def := Resize_Sgn_Sgn_Pattern (Pkg);
             else
                raise Error;
             end if;
