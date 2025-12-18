@@ -51,7 +51,7 @@ jobs:
           pacboy: "diffutils:p"
 
       - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
-        uses: pyTooling/download-artifact@v6
+        uses: pyTooling/download-artifact@v7
         with:
           name: ${{ inputs.ghdl_artifact }}
           path: install
