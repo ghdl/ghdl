@@ -97,6 +97,15 @@ package body Synth.Ieee.Numeric_Bit is
       Warning_Msg_Synth (Loc, "null argument detected, returning false");
    end Warn_Compare_Null;
 
+   function Null_Res (Arr_Typ : Type_Acc) return Memtyp
+   is
+      Res : Memtyp;
+   begin
+      Res.Typ := Create_Res_Type (Arr_Typ, 0);
+      Res := Create_Memory (Res.Typ);
+      return Res;
+   end Null_Res;
+
    function Compare_Uns_Uns (Left, Right : Memtyp;
                              Err : Order_Type;
                              Loc : Location_Type) return Order_Type
@@ -451,7 +460,7 @@ package body Synth.Ieee.Numeric_Bit is
 
    function Add_Uns_Nat (L : Memtyp; R : Uns64) return Memtyp is
    begin
-      return Add_Vec_Int (L, R, True);
+      return Add_Vec_Int (L, R, False);
    end Add_Uns_Nat;
 
    function Sub_Vec_Vec (L, R : Memtyp; Signed : Boolean) return Memtyp
@@ -549,7 +558,7 @@ package body Synth.Ieee.Numeric_Bit is
 
    function Sub_Uns_Nat (L : Memtyp; R : Uns64) return Memtyp is
    begin
-      return Sub_Vec_Int (L, R, True);
+      return Sub_Vec_Int (L, R, False);
    end Sub_Uns_Nat;
 
    function Sub_Int_Vec (L : Uns64;
@@ -601,12 +610,14 @@ package body Synth.Ieee.Numeric_Bit is
       Res           : Memtyp;
       Lb, Rb, Vb, Carry : Bit;
    begin
+      if Llen = 0 or Rlen = 0 then
+         return Null_Res (L.Typ);
+      end if;
+
       Res.Typ := Create_Res_Type (L.Typ, Len);
       Res := Create_Memory (Res.Typ);
-      if Llen = 0 or Rlen = 0 then
-         return Res;
-      end if;
       Fill (Res, '0');
+
       --  Shift and add L.
       for I in 1 .. Rlen loop
          Rb := Read_Bit (R.Mem, Rlen - I);
@@ -680,11 +691,12 @@ package body Synth.Ieee.Numeric_Bit is
       Res           : Memtyp;
       Lb, Rb, Vb, Carry : Bit;
    begin
+      if Llen = 0 or Rlen = 0 then
+         return Null_Res (L.Typ);
+      end if;
+
       Res.Typ := Create_Res_Type (L.Typ, Len);
       Res := Create_Memory (Res.Typ);
-      if Llen = 0 or Rlen = 0 then
-         return Res;
-      end if;
       Fill (Res, '0');
 
       --  Shift and add L, do not consider (yet) the sign bit of R.
@@ -1175,11 +1187,12 @@ package body Synth.Ieee.Numeric_Bit is
       Dlen  : constant Uns32 := R.Typ.Abound.Len;
       Rema  : Memtyp;
    begin
+      if Nlen = 0 or Dlen = 0 then
+         return Null_Res (L.Typ);
+      end if;
+
       Rema.Typ := Create_Res_Type (R.Typ, Dlen);
       Rema := Create_Memory (Rema.Typ);
-      if Nlen = 0 or Dlen = 0 then
-         return Rema;
-      end if;
 
       if Is_0 (R) then
          Error_Msg_Synth (Inst, Loc, "NUMERIC_BIT.""rem"": division by 0");
@@ -1229,11 +1242,12 @@ package body Synth.Ieee.Numeric_Bit is
       Ru    : Memtyp;
       Neg   : Boolean;
    begin
+      if Nlen = 0 or Dlen = 0 then
+         return Null_Res (L.Typ);
+      end if;
+
       Rema.Typ := Create_Res_Type (L.Typ, Dlen);
       Rema := Create_Memory (Rema.Typ);
-      if Nlen = 0 or Dlen = 0 then
-         return Rema;
-      end if;
 
       if Is_0 (R) then
          Error_Msg_Synth (Inst, Loc, "NUMERIC_BIT.""rem"": division by 0");
@@ -1305,14 +1319,15 @@ package body Synth.Ieee.Numeric_Bit is
       Ru    : Memtyp;
       L_Neg, R_Neg : Boolean;
    begin
-      Rema.Typ := Create_Res_Type (L.Typ, Dlen);
-      Rema := Create_Memory (Rema.Typ);
       if Nlen = 0 or Dlen = 0 then
-         return Rema;
+         return Null_Res (L.Typ);
       end if;
 
+      Rema.Typ := Create_Res_Type (L.Typ, Dlen);
+      Rema := Create_Memory (Rema.Typ);
+
       if Is_0 (R) then
-         Error_Msg_Synth (Inst, Loc, "NUMERIC_BIT.""rem"": division by 0");
+         Error_Msg_Synth (Inst, Loc, "NUMERIC_BIT.""mod"": division by 0");
          Fill (Rema, '0');
          return Rema;
       end if;
