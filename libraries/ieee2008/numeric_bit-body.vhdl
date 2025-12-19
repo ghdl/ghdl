@@ -153,8 +153,17 @@ package body NUMERIC_BIT is
         exit;
       end if;
     end loop;
-    assert TOPBIT >= 0 report "NUMERIC_BIT.DIVMOD: DIV, MOD, or REM by zero"
-      severity error;
+
+    --  Code added for GHDL to avoid an index error.
+    --  If DENOM is 0, TOPBIT is -1, the loop below iterates from NUM'length
+    --  to 0, and indexes incorrectly QUOT.
+    if TOPBIT < 0 then
+      assert TOPBIT >= 0 report "NUMERIC_BIT.DIVMOD: DIV, MOD, or REM by zero"
+        severity error;
+      XQUOT := (XQUOT'range => '0');
+      XREMAIN := (XREMAIN'range => '0');
+      return;
+    end if;
 
     for J in NUM'length-(TOPBIT+1) downto 0 loop
       if TEMP(TOPBIT+J+1 downto J) >= "0"&DENOM(TOPBIT downto 0) then
@@ -349,6 +358,10 @@ package body NUMERIC_BIT is
   function "+" (L : UNSIGNED; R : BIT) return UNSIGNED is
     variable XR : UNSIGNED(L'length-1 downto 0) := (others => '0');
   begin
+    --  Added for GHDL
+    if XR'left < 0 then
+      return (0 => R);
+    end if;
     XR(0) := R;
     return (L + XR);
   end function "+";
@@ -374,6 +387,10 @@ package body NUMERIC_BIT is
   function "+" (L : SIGNED; R : BIT) return SIGNED is
     variable XR : SIGNED(L'length-1 downto 0) := (others => '0');
   begin
+    --  Added for GHDL
+    if XR'left < 0 then
+      return (0 => R);
+    end if;
     XR(0) := R;
     return (L + XR);
   end function "+";
