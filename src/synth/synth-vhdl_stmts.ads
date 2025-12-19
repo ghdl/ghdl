@@ -138,6 +138,13 @@ package Synth.Vhdl_Stmts is
    procedure Execute_Failed_Assertion (Syn_Inst : Synth_Instance_Acc;
                                        Stmt : Node);
 
+   --  Do the final user report: print the full message and maybe stop.
+   --  Free MSG.
+   procedure Report_Assertion_Failure (Syn_Inst : Synth_Instance_Acc;
+                                       Stmt : Node;
+                                       Severity : Natural;
+                                       Msg : String_Acc);
+
    procedure Init_For_Loop_Statement (Inst : Synth_Instance_Acc;
                                       Stmt : Node;
                                       Val : out Valtyp);

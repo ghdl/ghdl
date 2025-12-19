@@ -3915,7 +3915,8 @@ package body Synth.Vhdl_Stmts is
          when Iir_Kind_Report_Statement =>
             Put_Err ("report");
          when Iir_Kind_Assertion_Statement
-           | Iir_Kind_Concurrent_Assertion_Statement =>
+           | Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kinds_Dyadic_Operator =>
             Put_Err ("assert");
 
          --  GCOV_EXCL_START (handler used instead)
@@ -3973,6 +3974,27 @@ package body Synth.Vhdl_Stmts is
          end loop;
       end;
    end Assertion_Report_Default;
+
+   procedure Report_Assertion_Failure (Syn_Inst : Synth_Instance_Acc;
+                                       Stmt : Node;
+                                       Severity : Natural;
+                                       Msg : String_Acc)
+   is
+      Tmp : String_Acc;
+   begin
+      if Assertion_Report_Handler /= null then
+         Assertion_Report_Handler (Syn_Inst, Stmt, Severity, Msg);
+      else
+         Assertion_Report_Default (Syn_Inst, Stmt, Severity, Msg);
+      end if;
+
+      Tmp := Msg;
+      Free (Tmp);
+
+      if Severity >= Flags.Severity_Level then
+         Error_Msg_Synth (Syn_Inst, Stmt, "error due to assertion failure");
+      end if;
+   end Report_Assertion_Failure;
 
    procedure Execute_Failed_Assertion (Syn_Inst : Synth_Instance_Acc;
                                        Stmt : Node)
@@ -4033,17 +4055,7 @@ package body Synth.Vhdl_Stmts is
 
       Release_Expr_Pool (Marker);
 
-      if Assertion_Report_Handler /= null then
-         Assertion_Report_Handler (Syn_Inst, Stmt, Sev_V, Rep_Str);
-      else
-         Assertion_Report_Default (Syn_Inst, Stmt, Sev_V, Rep_Str);
-      end if;
-
-      Free (Rep_Str);
-
-      if Sev_V >= Flags.Severity_Level then
-         Error_Msg_Synth (Syn_Inst, Stmt, "error due to assertion failure");
-      end if;
+      Report_Assertion_Failure (Syn_Inst, Stmt, Sev_V, Rep_Str);
    end Execute_Failed_Assertion;
 
    procedure Execute_Report_Statement (Inst : Synth_Instance_Acc;

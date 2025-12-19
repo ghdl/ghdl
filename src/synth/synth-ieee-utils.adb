@@ -16,6 +16,9 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Synth.Vhdl_Stmts;
+with Grt.Severity;
+
 package body Synth.Ieee.Utils is
    procedure Neg_Vec (Src : Memory_Ptr; Dst : Memory_Ptr; Len : Uns32)
    is
@@ -65,4 +68,16 @@ package body Synth.Ieee.Utils is
       Res := Create_Memory (Res.Typ);
       return Res;
    end Null_Res;
+
+   procedure Report_Division_By_Zero (Inst : Synth_Instance_Acc;
+                                      Loc : Node;
+                                      Msg : String)
+   is
+      use Synth.Vhdl_Stmts;
+      use Grt.Severity;
+      Str : String_Acc;
+   begin
+      Str := new String'(Msg & ": division by 0");
+      Report_Assertion_Failure (Inst, Loc, Error_Severity, Str);
+   end Report_Division_By_Zero;
 end Synth.Ieee.Utils;

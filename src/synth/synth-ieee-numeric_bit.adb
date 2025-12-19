@@ -1043,7 +1043,7 @@ package body Synth.Ieee.Numeric_Bit is
       end if;
 
       if Is_0 (R) then
-         Error_Msg_Synth (Inst, Loc, "NUMERIC_BIT.""/"": division by 0");
+         Report_Division_By_Zero (Inst, Loc, "NUMERIC_BIT.""/""");
          Fill (Quot, '0');
          return Quot;
       end if;
@@ -1097,7 +1097,7 @@ package body Synth.Ieee.Numeric_Bit is
       end if;
 
       if Is_0 (R) then
-         Error_Msg_Synth (Inst, Loc, "NUMERIC_BIT.""/"": division by 0");
+         Report_Division_By_Zero (Inst, Loc, "NUMERIC_BIT.""/""");
          Fill (Quot, '0');
          return Quot;
       end if;
@@ -1171,7 +1171,7 @@ package body Synth.Ieee.Numeric_Bit is
       Rema := Create_Memory (Rema.Typ);
 
       if Is_0 (R) then
-         Error_Msg_Synth (Inst, Loc, "NUMERIC_BIT.""rem"": division by 0");
+         Report_Division_By_Zero (Inst, Loc, "NUMERIC_BIT.""rem""");
          Fill (Rema, '0');
          return Rema;
       end if;
@@ -1226,7 +1226,7 @@ package body Synth.Ieee.Numeric_Bit is
       Rema := Create_Memory (Rema.Typ);
 
       if Is_0 (R) then
-         Error_Msg_Synth (Inst, Loc, "NUMERIC_BIT.""rem"": division by 0");
+         Report_Division_By_Zero (Inst, Loc, "NUMERIC_BIT.""rem""");
          Fill (Rema, '0');
          return Rema;
       end if;
@@ -1303,7 +1303,7 @@ package body Synth.Ieee.Numeric_Bit is
       Rema := Create_Memory (Rema.Typ);
 
       if Is_0 (R) then
-         Error_Msg_Synth (Inst, Loc, "NUMERIC_BIT.""mod"": division by 0");
+         Report_Division_By_Zero (Inst, Loc, "NUMERIC_BIT.""mod""");
          Fill (Rema, '0');
          return Rema;
       end if;

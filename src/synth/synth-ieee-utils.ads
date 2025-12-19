@@ -20,8 +20,11 @@ with Types; use Types;
 
 with Elab.Memtype; use Elab.Memtype;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
+
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Ieee.Utils is
    subtype Sl_01 is Std_Ulogic range '0' .. '1';
@@ -62,4 +65,8 @@ package Synth.Ieee.Utils is
 
    --  Function to create a null result.
    function Null_Res (Arr_Typ : Type_Acc) return Memtyp;
+
+   procedure Report_Division_By_Zero (Inst : Synth_Instance_Acc;
+                                      Loc : Node;
+                                      Msg : String);
 end Synth.Ieee.Utils;

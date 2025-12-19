@@ -1405,7 +1405,8 @@ package body Simul.Vhdl_Simul is
          when Iir_Kind_Report_Statement =>
             Diag_C ("report");
          when Iir_Kind_Assertion_Statement
-           | Iir_Kind_Concurrent_Assertion_Statement =>
+           | Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kinds_Dyadic_Operator =>
             Diag_C ("assertion");
          when Iir_Kind_Psl_Assert_Directive =>
             Diag_C ("psl assertion");

@@ -1097,7 +1097,7 @@ package body Synth.Ieee.Numeric_Std is
          return Quot;
       end if;
       if R0 = '0' then
-         Error_Msg_Synth (Inst, Loc, "NUMERIC_STD.""/"": division by 0");
+         Report_Division_By_Zero (Inst, Loc, "NUMERIC_STD.""/""");
          Fill (Quot, 'X');
          return Quot;
       end if;
@@ -1160,7 +1160,7 @@ package body Synth.Ieee.Numeric_Std is
          return Quot;
       end if;
       if R0 = '0' then
-         Error_Msg_Synth (Inst, Loc, "NUMERIC_STD.""/"": division by 0");
+         Report_Division_By_Zero (Inst, Loc, "NUMERIC_STD.""/""");
          Fill (Quot, 'X');
          return Quot;
       end if;
@@ -1242,7 +1242,7 @@ package body Synth.Ieee.Numeric_Std is
          return Rema;
       end if;
       if R0 = '0' then
-         Error_Msg_Synth (Inst, Loc, "NUMERIC_STD.""rem"": division by 0");
+         Report_Division_By_Zero (Inst, Loc, "NUMERIC_STD.""rem""");
          Fill (Rema, 'X');
          return Rema;
       end if;
@@ -1305,7 +1305,7 @@ package body Synth.Ieee.Numeric_Std is
          return Rema;
       end if;
       if R0 = '0' then
-         Error_Msg_Synth (Inst, Loc, "NUMERIC_STD.""rem"": division by 0");
+         Report_Division_By_Zero (Inst, Loc, "NUMERIC_STD.""rem""");
          Fill (Rema, 'X');
          return Rema;
       end if;
@@ -1390,7 +1390,7 @@ package body Synth.Ieee.Numeric_Std is
          return Rema;
       end if;
       if R0 = '0' then
-         Error_Msg_Synth (Inst, Loc, "NUMERIC_STD.""mod"": division by 0");
+         Report_Division_By_Zero (Inst, Loc, "NUMERIC_STD.""mod""");
          Fill (Rema, 'X');
          return Rema;
       end if;
