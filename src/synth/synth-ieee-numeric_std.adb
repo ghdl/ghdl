@@ -25,23 +25,6 @@ with Synth.Ieee.Utils; use Synth.Ieee.Utils;
 with Synth.Source; use Synth.Source;
 
 package body Synth.Ieee.Numeric_Std is
-
-   function Create_Res_Type (Otyp : Type_Acc; Len : Uns32) return Type_Acc is
-   begin
-      if Otyp.Abound.Len = Len
-        and then Otyp.Abound.Right = 0
-        and then Otyp.Abound.Dir = Dir_Downto
-        and then not Otyp.Is_Global
-      then
-         --  Try to reuse the same type as the parameter.
-         --  But the result type must be allocated on the expr_pool.
-         --  FIXME: is this code ever executed ?
-         pragma Assert (Otyp.Abound.Left = Int32 (Len) - 1);
-         return Otyp;
-      end if;
-      return Create_Vec_Type_By_Length (Len, Otyp.Arr_El);
-   end Create_Res_Type;
-
    procedure Fill (Res : Memtyp; V : Std_Ulogic) is
    begin
       for I in 1 .. Res.Typ.Abound.Len loop
@@ -77,15 +60,6 @@ package body Synth.Ieee.Numeric_Std is
    begin
       Warning_Msg_Synth (Loc, "metavalue detected, returning false");
    end Warn_Compare_Meta;
-
-   function Null_Res (Arr_Typ : Type_Acc) return Memtyp
-   is
-      Res : Memtyp;
-   begin
-      Res.Typ := Create_Res_Type (Arr_Typ, 0);
-      Res := Create_Memory (Res.Typ);
-      return Res;
-   end Null_Res;
 
    function Compare_Uns_Uns (Left, Right : Memtyp;
                              Err : Order_Type;

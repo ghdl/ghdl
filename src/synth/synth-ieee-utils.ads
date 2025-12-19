@@ -19,6 +19,7 @@
 with Types; use Types;
 
 with Elab.Memtype; use Elab.Memtype;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 
@@ -54,4 +55,11 @@ package Synth.Ieee.Utils is
 
    --  Note: SRC = DST is allowed.
    procedure Abs_Vec (Src : Memory_Ptr; Dst : Memory_Ptr; Len : Uns32);
+
+   --  Function to create the result vector type (from LEN) to most numerical
+   --  operations.
+   function Create_Res_Type (Otyp : Type_Acc; Len : Uns32) return Type_Acc;
+
+   --  Function to create a null result.
+   function Null_Res (Arr_Typ : Type_Acc) return Memtyp;
 end Synth.Ieee.Utils;
