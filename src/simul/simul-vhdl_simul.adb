@@ -1391,7 +1391,7 @@ package body Simul.Vhdl_Simul is
    procedure Assertion_Report_Msg (Inst : Synth_Instance_Acc;
                                    Stmt : Node;
                                    Severity : Natural;
-                                   Msg : Valtyp)
+                                   Msg : String_Acc)
    is
       pragma Unreferenced (Inst);
       use Grt.Severity;
@@ -1431,10 +1431,10 @@ package body Simul.Vhdl_Simul is
       end case;
       Diag_C ("): ");
 
-      if Msg = No_Valtyp then
+      if Msg = null then
          Diag_C ("Assertion violation");
       else
-         Diag_C (Value_To_String (Msg));
+         Diag_C (Msg.all);
       end if;
       Report_E;
    end Assertion_Report_Msg;
@@ -1460,7 +1460,7 @@ package body Simul.Vhdl_Simul is
             end if;
       end case;
 
-      Exec_Failed_Assertion (Inst, Stmt);
+      Execute_Failed_Assertion (Inst, Stmt);
    end Execute_Assertion_Statement;
 
    procedure Execute_Sequential_Statements_Inner (Process : Process_State_Acc;
@@ -2256,16 +2256,16 @@ package body Simul.Vhdl_Simul is
          case Get_Kind (E.Proc) is
             when Iir_Kind_Psl_Assert_Directive =>
                if Nvec (S_Num) then
-                  Exec_Failed_Assertion (E.Instance, E.Proc);
+                  Execute_Failed_Assertion (E.Instance, E.Proc);
                end if;
             when Iir_Kind_Psl_Assume_Directive =>
                if Nvec (S_Num) then
-                  Exec_Failed_Assertion (E.Instance, E.Proc);
+                  Execute_Failed_Assertion (E.Instance, E.Proc);
                end if;
             when Iir_Kind_Psl_Cover_Directive =>
                if Nvec (S_Num) then
                   if Get_Report_Expression (E.Proc) /= Null_Iir then
-                     Exec_Failed_Assertion (E.Instance, E.Proc);
+                     Execute_Failed_Assertion (E.Instance, E.Proc);
                   end if;
                   E.Done := True;
                end if;
@@ -2311,7 +2311,7 @@ package body Simul.Vhdl_Simul is
               and then
               Execute_Psl_Expr (Ent.Instance, Get_Edge_Expr (E), True)
             then
-               Exec_Failed_Assertion (Ent.Instance, Ent.Proc);
+               Execute_Failed_Assertion (Ent.Instance, Ent.Proc);
                exit;
             end if;
          end if;

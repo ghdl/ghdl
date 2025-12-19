@@ -3902,14 +3902,86 @@ package body Synth.Vhdl_Stmts is
    procedure Disp_A_Frame_Err is new
      Elab.Debugger.Gen_Disp_A_Frame (Simple_IO.Put_Err);
 
-   procedure Exec_Failed_Assertion (Syn_Inst : Synth_Instance_Acc;
-                                    Stmt : Node)
+   procedure Assertion_Report_Default (Syn_Inst : Synth_Instance_Acc;
+                                       Stmt : Node;
+                                       Severity : Natural;
+                                       Msg : String_Acc)
    is
       use Simple_IO;
+   begin
+      Put_Err (Disp_Location (Stmt));
+      Put_Err (":(");
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Report_Statement =>
+            Put_Err ("report");
+         when Iir_Kind_Assertion_Statement
+           | Iir_Kind_Concurrent_Assertion_Statement =>
+            Put_Err ("assert");
+
+         --  GCOV_EXCL_START (handler used instead)
+         when Iir_Kind_Psl_Assert_Directive =>
+            Put_Err ("psl assertion");
+         when Iir_Kind_Psl_Assume_Directive =>
+            Put_Err ("psl assumption");
+         when Iir_Kind_Psl_Cover_Directive =>
+            Put_Err ("psl cover");
+         when others => raise Internal_Error;
+         --  GCOV_EXCL_STOP
+      end case;
+      Put_Err (' ');
+      case Severity is
+         when Note_Severity =>
+            Put_Err ("note");
+         when Warning_Severity =>
+            Put_Err ("warning");
+         when Error_Severity =>
+            Put_Err ("error");
+         when Failure_Severity =>
+            Put_Err ("failure");
+         when others => raise Internal_Error;
+      end case;
+      Put_Err ("): ");
+
+      if Msg = null then
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Report_Statement
+              | Iir_Kind_Assertion_Statement
+              | Iir_Kind_Concurrent_Assertion_Statement
+              | Iir_Kind_Psl_Assert_Directive =>
+               Put_Line_Err ("Assertion violation.");
+            --  GCOV_EXCL_START (handler used instead)
+            when Iir_Kind_Psl_Assume_Directive =>
+               Put_Line_Err ("Assumption violation.");
+            when Iir_Kind_Psl_Cover_Directive =>
+               Put_Line_Err ("sequence covered.");
+            when others => raise Internal_Error;
+            --  GCOV_EXCL_STOP
+         end case;
+      else
+         Put_Line_Err (Msg.all);
+      end if;
+
+      declare
+         Inst : Synth_Instance_Acc;
+      begin
+         Inst := Get_Caller_Instance (Syn_Inst);
+         while Inst /= null loop
+            Simple_IO.Put_Err (" called from: ");
+            Disp_A_Frame_Err (Inst);
+            Simple_IO.New_Line_Err;
+            Inst := Get_Caller_Instance (Inst);
+         end loop;
+      end;
+   end Assertion_Report_Default;
+
+   procedure Execute_Failed_Assertion (Syn_Inst : Synth_Instance_Acc;
+                                       Stmt : Node)
+   is
       Rep_Expr : constant Node := Get_Report_Expression (Stmt);
       Sev_Expr : Node;
       Marker : Mark_Type;
       Rep : Valtyp;
+      Rep_Str : String_Acc;
       Sev : Valtyp;
       Sev_V : Natural;
    begin
@@ -3922,7 +3994,9 @@ package body Synth.Vhdl_Stmts is
             Release_Expr_Pool (Marker);
             return;
          end if;
-         Strip_Const (Rep);
+         Rep_Str := new String'(Value_To_String (Rep));
+      else
+         Rep_Str := null;
       end if;
 
       if Get_Kind (Stmt) /= Iir_Kind_Psl_Cover_Directive then
@@ -3957,85 +4031,25 @@ package body Synth.Vhdl_Stmts is
          Sev_V := Note_Severity;
       end if;
 
+      Release_Expr_Pool (Marker);
+
       if Assertion_Report_Handler /= null then
-         Assertion_Report_Handler (Syn_Inst, Stmt, Sev_V, Rep);
+         Assertion_Report_Handler (Syn_Inst, Stmt, Sev_V, Rep_Str);
       else
-         Put_Err (Disp_Location (Stmt));
-         Put_Err (":(");
-         case Get_Kind (Stmt) is
-            when Iir_Kind_Report_Statement =>
-               Put_Err ("report");
-            when Iir_Kind_Assertion_Statement
-              | Iir_Kind_Concurrent_Assertion_Statement =>
-               Put_Err ("assert");
-
-            --  GCOV_EXCL_START (handler used instead)
-            when Iir_Kind_Psl_Assert_Directive =>
-               Put_Err ("psl assertion");
-            when Iir_Kind_Psl_Assume_Directive =>
-               Put_Err ("psl assumption");
-            when Iir_Kind_Psl_Cover_Directive =>
-               Put_Err ("psl cover");
-            when others => raise Internal_Error;
-            --  GCOV_EXCL_STOP
-         end case;
-         Put_Err (' ');
-         case Sev_V is
-            when Note_Severity =>
-               Put_Err ("note");
-            when Warning_Severity =>
-               Put_Err ("warning");
-            when Error_Severity =>
-               Put_Err ("error");
-            when Failure_Severity =>
-               Put_Err ("failure");
-            when others => raise Internal_Error;
-         end case;
-         Put_Err ("): ");
-
-         if Rep = No_Valtyp then
-            case Get_Kind (Stmt) is
-               when Iir_Kind_Report_Statement
-                 | Iir_Kind_Assertion_Statement
-                 | Iir_Kind_Concurrent_Assertion_Statement
-                 | Iir_Kind_Psl_Assert_Directive =>
-                  Put_Line_Err ("Assertion violation.");
-               --  GCOV_EXCL_START (handler used instead)
-               when Iir_Kind_Psl_Assume_Directive =>
-                  Put_Line_Err ("Assumption violation.");
-               when Iir_Kind_Psl_Cover_Directive =>
-                  Put_Line_Err ("sequence covered.");
-               when others => raise Internal_Error;
-               --  GCOV_EXCL_STOP
-            end case;
-         else
-            Put_Line_Err (Value_To_String (Rep));
-         end if;
-
-         declare
-            Inst : Synth_Instance_Acc;
-         begin
-            Inst := Get_Caller_Instance (Syn_Inst);
-            while Inst /= null loop
-               Simple_IO.Put_Err (" called from: ");
-               Disp_A_Frame_Err (Inst);
-               Simple_IO.New_Line_Err;
-               Inst := Get_Caller_Instance (Inst);
-            end loop;
-         end;
+         Assertion_Report_Default (Syn_Inst, Stmt, Sev_V, Rep_Str);
       end if;
 
-      Release_Expr_Pool (Marker);
+      Free (Rep_Str);
 
       if Sev_V >= Flags.Severity_Level then
          Error_Msg_Synth (Syn_Inst, Stmt, "error due to assertion failure");
       end if;
-   end Exec_Failed_Assertion;
+   end Execute_Failed_Assertion;
 
    procedure Execute_Report_Statement (Inst : Synth_Instance_Acc;
                                        Stmt : Node) is
    begin
-      Exec_Failed_Assertion (Inst, Stmt);
+      Execute_Failed_Assertion (Inst, Stmt);
    end Execute_Report_Statement;
 
    procedure Execute_Assertion_Statement (Inst : Synth_Instance_Acc;
@@ -4059,7 +4073,7 @@ package body Synth.Vhdl_Stmts is
       if C then
          return;
       end if;
-      Exec_Failed_Assertion (Inst, Stmt);
+      Execute_Failed_Assertion (Inst, Stmt);
    end Execute_Assertion_Statement;
 
    procedure Synth_Dynamic_Assertion_Statement (C : Seq_Context; Stmt : Node)
@@ -4476,7 +4490,7 @@ package body Synth.Vhdl_Stmts is
          Set_Error (Syn_Inst);
       elsif Is_Static (Val.Val) then
          if Read_Discrete (Val) /= 1 then
-            Exec_Failed_Assertion (Syn_Inst, Stmt);
+            Execute_Failed_Assertion (Syn_Inst, Stmt);
          end if;
       elsif Flags.Flag_Formal then
          Inst := Build_Assert

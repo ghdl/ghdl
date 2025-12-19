@@ -32,7 +32,7 @@ package Synth.Vhdl_Stmts is
      (Inst : Synth_Instance_Acc;
       Stmt : Node;
       Severity : Natural;
-      Msg : Valtyp);
+      Msg : String_Acc);
 
    --  Procedure to call for report/assertion message.
    Assertion_Report_Handler : Assertion_Report_Handler_Acc;
@@ -135,8 +135,8 @@ package Synth.Vhdl_Stmts is
 
    procedure Execute_Report_Statement (Inst : Synth_Instance_Acc;
                                        Stmt : Node);
-   procedure Exec_Failed_Assertion (Syn_Inst : Synth_Instance_Acc;
-                                    Stmt : Node);
+   procedure Execute_Failed_Assertion (Syn_Inst : Synth_Instance_Acc;
+                                       Stmt : Node);
 
    procedure Init_For_Loop_Statement (Inst : Synth_Instance_Acc;
                                       Stmt : Node;
