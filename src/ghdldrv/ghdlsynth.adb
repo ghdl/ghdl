@@ -14,93 +14,42 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Types; use Types;
 with Name_Table;
 with Files_Map;
-with Ghdllocal; use Ghdllocal;
 with Ghdlcomp; use Ghdlcomp;
 with Ghdlmain; use Ghdlmain;
 with Ghdlverilog;
-with Options; use Options;
 with Errorout;
-with Errorout.Console;
-with Bug;
 with Simple_IO;
 with Outputs;
-
 with Libraries;
 with Flags;
-with Vhdl.Nodes; use Vhdl.Nodes;
+
 with Vhdl.Scanner;
-with Vhdl.Std_Package;
 with Vhdl.Canon;
 with Vhdl.Configuration;
 with Vhdl.Utils;
 
+with Netlists; use Netlists;
 with Netlists.Dump;
 with Netlists.Disp_Vhdl;
 with Netlists.Disp_Verilog;
 with Netlists.Disp_Dot;
-with Netlists.Errors;
 with Netlists.Inference;
 with Netlists.Rename;
+with Netlists.Errors;
 
 with Elab.Debugger;
 with Elab.Vhdl_Errors;
 with Elab.Vhdl_Annotations;
-with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Insts;
-with Elab.Vhdl_Objtypes;
 
 with Synthesis;
-with Synth.Context; use Synth.Context;
 with Synth.Disp_Vhdl;
 with Synth.Vhdl_Context;
-with Synth.Flags; use Synth.Flags;
 with Synth.Vhdl_Foreign;
 
 package body Ghdlsynth is
-   type Out_Format is
-     (Format_Default,
-      Format_Raw, Format_Dump, Format_Dot,
-      Format_Vhdl, Format_Raw_Vhdl,
-      Format_Verilog,
-      Format_None);
-
-   type Name_Id_Array is array (Natural range <>) of Name_Id;
-
-   --  Command --synth
-   type Command_Synth is new Command_Lib with record
-      --  Control format of the output.
-      Disp_Inline : Boolean := True;
-      Disp_Id : Boolean := True;
-      Oformat     : Out_Format := Format_Default;
-      Ofile       : String_Acc := null;
-
-      Flag_Stats : Boolean := False;
-
-      --  Control name encoding of the top-entity.
-      Top_Encoding : Name_Encoding := Name_Asis;
-
-      --  If True, a failure is expected.  For tests.
-      Expect_Failure : Boolean := False;
-
-      Nbr_Vendor_Libraries : Natural := 0;
-      Vendor_Libraries : Name_Id_Array (1 .. 8) := (others => No_Name_Id);
-   end record;
-
-   function Decode_Command (Cmd : Command_Synth; Name : String)
-                           return Boolean;
-   function Get_Short_Help (Cmd : Command_Synth) return String;
-   procedure Disp_Long_Help (Cmd : Command_Synth);
-   procedure Decode_Option (Cmd : in out Command_Synth;
-                            Option : String;
-                            Arg : String;
-                            Res : out Option_State);
-   procedure Perform_Action (Cmd : in out Command_Synth;
-                             Args : String_Acc_Array;
-                             Success : out Boolean);
-
    function Decode_Command (Cmd : Command_Synth; Name : String)
                            return Boolean
    is
@@ -286,13 +235,11 @@ package body Ghdlsynth is
    end Find_Dash_E;
 
    --  Set flags, load libraries.
-   procedure Synth_Compile_Init (Enable_Translate_Off : Boolean;
-                                 Load_Work : Boolean) is
+   procedure Synth_Compile_Init (Load_Work : Boolean) is
    begin
-      if Enable_Translate_Off then
-         Vhdl.Scanner.Flag_Comment_Keyword := True;
-         Vhdl.Scanner.Flag_Pragma_Comment := True;
-      end if;
+      --  Enable translate_off
+      Vhdl.Scanner.Flag_Comment_Keyword := True;
+      Vhdl.Scanner.Flag_Pragma_Comment := True;
 
       Common_Compile_Init (False);
       --  Will elaborate.
@@ -312,31 +259,9 @@ package body Ghdlsynth is
       end if;
    end Synth_Compile_Init;
 
-   --  Init, analyze and configure.
-   --  Return the top configuration.
-   function Ghdl_Synth_Configure (Init : Boolean;
-                                  Vendor_Libraries : Name_Id_Array;
-                                  Args : String_Acc_Array;
-                                  Enable_Translate_Off : Boolean) return Node
-   is
-      use Errorout;
-      E_Opt : Integer;
-      Opt_Arg : Natural;
-      Design_File : Iir;
-      Config : Iir;
-      Lib_Id : Name_Id;
-      Prim_Id : Name_Id;
-      Sec_Id : Name_Id;
-      Has_Vhdl, Has_Verilog : Boolean;
+   --  Mark vendor libraries.
+   procedure Mark_Vendor_Libraries (Vendor_Libraries : Name_Id_Array) is
    begin
-      --  If the '-e' switch is present, there is a list of files.
-      E_Opt := Find_Dash_E (Args);
-
-      if Init then
-         Synth_Compile_Init (Enable_Translate_Off, E_Opt >= Args'First);
-      end if;
-
-      --  Mark vendor libraries.
       for I in Vendor_Libraries'Range loop
          declare
             Lib : Node;
@@ -346,19 +271,20 @@ package body Ghdlsynth is
             Set_Vendor_Library_Flag (Lib, True);
          end;
       end loop;
+   end Mark_Vendor_Libraries;
 
-      --  Maybe a vendor library is unknown.
-      if Errorout.Nbr_Errors > 0 then
-         return Null_Iir;
-      end if;
-
-      Flags.Flag_Elaborate_With_Outdated := E_Opt >= Args'First;
+   function Synth_Load_Files (Args : String_Acc_Array) return Boolean
+   is
+      use Errorout;
+      Has_Vhdl, Has_Verilog : Boolean;
+   begin
+      Flags.Flag_Elaborate_With_Outdated := True;
 
       Has_Vhdl := False;
       Has_Verilog := False;
 
-      --  Analyze files (if any)
-      for I in Args'First .. E_Opt - 1 loop
+      --  Import files
+      for I in Args'Range loop
          declare
             Arg : String renames Args (I).all;
             pragma Assert (Arg'First = 1);
@@ -367,7 +293,7 @@ package body Ghdlsynth is
             if Arg'Last > 7 and then Arg (1 .. 7) = "--work=" then
                Id := Libraries.Decode_Work_Option (Arg);
                if Id = Null_Identifier then
-                  return Null_Iir;
+                  return False;
                end if;
                Libraries.Work_Library_Name := Id;
                Libraries.Load_Work_Library (True);
@@ -389,11 +315,10 @@ package body Ghdlsynth is
             end if;
          end;
       end loop;
-      pragma Unreferenced (Design_File);
 
       if Nbr_Errors > 0 then
          --  No need to configure if there are missing units.
-         return Null_Iir;
+         return False;
       end if;
 
       if Has_Verilog then
@@ -403,6 +328,44 @@ package body Ghdlsynth is
 
       if Has_Vhdl and Has_Verilog then
          Ghdlverilog.Export_Vhdl_Units;
+      end if;
+
+      return True;
+   end Synth_Load_Files;
+
+   --  Init, analyze and configure.
+   --  Return the top configuration.
+   function Ghdl_Synth_Configure (Init : Boolean;
+                                  Vendor_Libraries : Name_Id_Array;
+                                  Args : String_Acc_Array) return Node
+   is
+      use Errorout;
+      E_Opt : Integer;
+      Opt_Arg : Natural;
+      Config : Iir;
+      Lib_Id : Name_Id;
+      Prim_Id : Name_Id;
+      Sec_Id : Name_Id;
+   begin
+      --  If the '-e' switch is present, there is a list of files.
+      E_Opt := Find_Dash_E (Args);
+
+      if Init then
+         Synth_Compile_Init (E_Opt >= Args'First);
+      end if;
+
+      --  Mark vendor libraries.
+      Mark_Vendor_Libraries (Vendor_Libraries);
+
+      --  Maybe a vendor library is unknown.
+      if Errorout.Nbr_Errors > 0 then
+         return Null_Iir;
+      end if;
+
+      if E_Opt >= Args'First then
+         if not Synth_Load_Files (Args (Args'First .. E_Opt - 1)) then
+            return Null_Iir;
+         end if;
       end if;
 
       --  Elaborate
@@ -513,81 +476,6 @@ package body Ghdlsynth is
       Outputs.Close;
    end Disp_Design;
 
-   function Ghdl_Synth
-     (Init : Natural; Argc : Natural; Argv : C_String_Array_Acc)
-     return Module
-   is
-      use Vhdl.Configuration;
-      use Elab.Vhdl_Objtypes;
-      Args : String_Acc_Array (1 .. Argc);
-      Res : Base_Instance_Acc;
-      Cmd : Command_Synth;
-      First_Arg : Natural;
-      Config : Node;
-      Inst : Synth_Instance_Acc;
-   begin
-      --  Create arguments list.
-      for I in 0 .. Argc - 1 loop
-         declare
-            Arg : constant Ghdl_C_String := Argv (I);
-         begin
-            Args (I + 1) := new String'(Arg (1 .. strlen (Arg)));
-         end;
-      end loop;
-
-      --  Forget any previous errors.
-      Errorout.Nbr_Errors := 0;
-
-      --  Find the command.  This is a little bit convoluted...
-      Decode_Command_Options (Cmd, Args, First_Arg);
-
-      --  Do the real work!
-      Config := Ghdl_Synth_Configure
-        (Init /= 0,
-         Cmd.Vendor_Libraries (1 .. Cmd.Nbr_Vendor_Libraries),
-         Args (First_Arg .. Args'Last),
-         True);
-      if Config = Null_Iir then
-         return No_Module;
-      end if;
-
-      Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Get_Library_Unit (Config));
-
-      pragma Assert (Is_Expr_Pool_Empty);
-
-      Res := Synthesis.Synth_Design (Config, Inst, Cmd.Top_Encoding);
-      if Res = null then
-         return No_Module;
-      end if;
-
-      pragma Assert (Is_Expr_Pool_Empty);
-
-      Disp_Design (Cmd, Format_None, Res, Config, Inst);
-
-      --  De-elaborate all packages, so that they could be re-used for
-      --  synthesis of a second design.
-      --  FIXME: move to vhdl.configure ?
-      for I in Design_Units.First .. Design_Units.Last loop
-         Set_Elab_Flag (Design_Units.Table (I), False);
-      end loop;
-      Set_Elab_Flag (Vhdl.Std_Package.Std_Standard_Unit, False);
-
-      pragma Assert (Is_Expr_Pool_Empty);
-
-      Elab.Vhdl_Annotations.Finalize_Annotate;
-      Synth.Vhdl_Context.Free_Base_Instance;
-      return Res.Top_Module;
-
-   exception
-      when Option_Error
-        | Errorout.Compilation_Error =>
-         return No_Module;
-      when E: others =>
-         --  Avoid possible issues with exceptions...
-         Bug.Disp_Bug_Box (E);
-         return No_Module;
-   end Ghdl_Synth;
-
    procedure Perform_Action (Cmd : in out Command_Synth;
                              Args : String_Acc_Array;
                              Success : out Boolean)
@@ -599,7 +487,7 @@ package body Ghdlsynth is
    begin
       Config := Ghdl_Synth_Configure
         (True, Cmd.Vendor_Libraries (1 .. Cmd.Nbr_Vendor_Libraries),
-         Args, True);
+         Args);
 
       if Config = Null_Iir then
          Success := Cmd.Expect_Failure;
@@ -645,13 +533,4 @@ package body Ghdlsynth is
    begin
       Ghdlmain.Register_Command (new Command_Synth);
    end Register_Commands;
-
-   procedure Init_For_Ghdl_Synth is
-   begin
-      Ghdlsynth.Register_Commands;
-      Errorout.Console.Install_Handler;
-      Options.Initialize;
-      Netlists.Errors.Initialize;
-      Synth.Vhdl_Foreign.Initialize;
-   end Init_For_Ghdl_Synth;
 end Ghdlsynth;

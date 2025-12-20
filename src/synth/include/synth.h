@@ -171,6 +171,13 @@ namespace GhdlSynth {
     return res;
   }
 
+  extern "C" int libghdl_synth__ghdl_synth_read(int init,
+						int argc, const char **argv,
+						void (*cb)(unsigned int raw_id,
+							   unsigned int node,
+							   void *arg),
+						void *arg);
+
   //  Disp ghdl version.
   extern "C" void ghdlmain__disp_ghdl_version (void);
 
