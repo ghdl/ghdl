@@ -33,6 +33,20 @@ namespace GhdlSynth {
     return res; \
   }
 
+#define GHDLSYNTH_ADA_WRAPPER_WD(NAME, RESTYPE, ARGTYPE)	\
+  extern "C" unsigned int GHDLSYNTH_ADA_PREFIX(NAME) (unsigned int);\
+  inline RESTYPE NAME(ARGTYPE arg) {	\
+    RESTYPE res; \
+    res.id = GHDLSYNTH_ADA_PREFIX(NAME) (arg);	\
+    return res; \
+  }
+
+#define GHDLSYNTH_ADA_WRAPPER_VWDD(NAME, ARGTYPE1, ARGTYPE2, ARGTYPE3)	\
+  extern "C" void GHDLSYNTH_ADA_PREFIX(NAME) (unsigned int, ARGTYPE2, ARGTYPE3);	\
+  inline void NAME(ARGTYPE1 arg1, ARGTYPE2 arg2, ARGTYPE3 arg3) {	\
+    GHDLSYNTH_ADA_PREFIX(NAME) (arg1.id, arg2, arg3);			\
+  }
+
 #define GHDLSYNTH_ADA_WRAPPER_WWD(NAME, RESTYPE, ARGTYPE1, ARGTYPE2)	\
   extern "C" unsigned int GHDLSYNTH_ADA_PREFIX(NAME) (unsigned int, ARGTYPE2);\
   inline RESTYPE NAME(ARGTYPE1 arg1, ARGTYPE2 arg2) {	\
@@ -128,6 +142,9 @@ namespace GhdlSynth {
   GHDLSYNTH_ADA_WRAPPER_WWD(get_param_pval, Pval, Instance, Param_Idx);
   GHDLSYNTH_ADA_WRAPPER_DW(get_pval_length, unsigned int, Pval);
   GHDLSYNTH_ADA_WRAPPER_DWD(read_pval, struct logic_32, Pval, unsigned int);
+  GHDLSYNTH_ADA_WRAPPER_VWDD(write_pval, Pval, unsigned int, struct logic_32);
+  GHDLSYNTH_ADA_WRAPPER_WD(create_pval4, Pval, unsigned int);
+  GHDLSYNTH_ADA_WRAPPER_WD(create_pval2, Pval, unsigned int);
 
   struct Input { unsigned int id; };
   GHDLSYNTH_ADA_WRAPPER_WWD(get_input, Input, Instance, Port_Idx);
