@@ -630,6 +630,70 @@ package body Vhdl.Configuration is
       end loop;
    end Add_Design_Block_Configuration;
 
+   function Configure_From_Configuration (Top_Unit : Iir) return Iir
+   is
+      use Libraries;
+   begin
+      --  Exclude std.standard
+      Set_Configuration_Mark_Flag (Vhdl.Std_Package.Std_Standard_Unit, True);
+      Set_Configuration_Done_Flag (Vhdl.Std_Package.Std_Standard_Unit, True);
+
+      Add_Design_Unit (Top_Unit, Command_Line_Location);
+      return Top_Unit;
+   end Configure_From_Configuration;
+
+   function Configure_From_Entity (Entity_Unit : Iir; Arch_Id : Name_Id)
+                                  return Iir
+   is
+      use Libraries;
+
+      Lib_Unit : Iir;
+      Unit : Iir;
+      Res : Iir;
+   begin
+      --  Use WORK as location (should use a command line location ?)
+      Load_Design_Unit (Entity_Unit, Command_Line_Location);
+      if Nbr_Errors /= 0 then
+         return Null_Iir;
+      end if;
+      Lib_Unit := Get_Library_Unit (Entity_Unit);
+
+      if Arch_Id /= Null_Identifier then
+         Unit := Find_Secondary_Unit (Entity_Unit, Arch_Id);
+         if Unit = Null_Iir then
+            Error_Msg_Elab ("cannot find architecture %i of %n",
+              (+Arch_Id, +Lib_Unit));
+            return Null_Iir;
+         end if;
+      else
+         declare
+            Arch_Unit : Iir_Architecture_Body;
+         begin
+            Arch_Unit := Get_Latest_Architecture (Lib_Unit);
+            if Arch_Unit = Null_Iir then
+               Error_Msg_Elab
+                 ("%n has no architecture in library %i",
+                 (+Lib_Unit, +Work_Library));
+               return Null_Iir;
+            end if;
+            Unit := Get_Design_Unit (Arch_Unit);
+         end;
+      end if;
+      Load_Design_Unit (Unit, Command_Line_Location);
+      if Nbr_Errors /= 0 then
+         return Null_Iir;
+      end if;
+      Lib_Unit := Get_Library_Unit (Unit);
+      pragma Assert
+        (Is_Null (Get_Default_Configuration_Declaration (Lib_Unit)));
+
+      Res := Vhdl.Canon.Create_Default_Configuration_Declaration (Lib_Unit);
+      Set_Default_Configuration_Declaration (Lib_Unit, Res);
+      pragma Assert (Is_Valid (Res));
+
+      return Configure_From_Configuration (Res);
+   end Configure_From_Entity;
+
    --  elaboration of a design hierarchy:
    --  creates a list of design unit.
    --
@@ -649,7 +713,6 @@ package body Vhdl.Configuration is
       Library : Iir;
       Unit : Iir_Design_Unit;
       Lib_Unit : Iir;
-      Top : Iir;
    begin
       if Library_Id /= Null_Identifier then
          Library := Get_Library (Library_Id, Command_Line_Location);
@@ -672,45 +735,7 @@ package body Vhdl.Configuration is
       Lib_Unit := Get_Library_Unit (Unit);
       case Get_Kind (Lib_Unit) is
          when Iir_Kind_Entity_Declaration =>
-            --  Use WORK as location (should use a command line location ?)
-            Load_Design_Unit (Unit, Command_Line_Location);
-            if Nbr_Errors /= 0 then
-               return Null_Iir;
-            end if;
-            Lib_Unit := Get_Library_Unit (Unit);
-            if Secondary_Id /= Null_Identifier then
-               Unit := Find_Secondary_Unit (Unit, Secondary_Id);
-               if Unit = Null_Iir then
-                  Error_Msg_Elab ("cannot find architecture %i of %n",
-                                  (+Secondary_Id, +Lib_Unit));
-                  return Null_Iir;
-               end if;
-            else
-               declare
-                  Arch_Unit : Iir_Architecture_Body;
-               begin
-                  Arch_Unit := Get_Latest_Architecture (Lib_Unit);
-                  if Arch_Unit = Null_Iir then
-                     Error_Msg_Elab
-                       ("%n has no architecture in library %i",
-                        (+Lib_Unit, +Work_Library));
-                     return Null_Iir;
-                  end if;
-                  Unit := Get_Design_Unit (Arch_Unit);
-               end;
-            end if;
-            Load_Design_Unit (Unit, Command_Line_Location);
-            if Nbr_Errors /= 0 then
-               return Null_Iir;
-            end if;
-            Lib_Unit := Get_Library_Unit (Unit);
-            pragma Assert
-              (Is_Null (Get_Default_Configuration_Declaration (Lib_Unit)));
-
-            Top := Vhdl.Canon.Create_Default_Configuration_Declaration
-              (Lib_Unit);
-            Set_Default_Configuration_Declaration (Lib_Unit, Top);
-            pragma Assert (Is_Valid (Top));
+            return Configure_From_Entity (Unit, Secondary_Id);
          when Iir_Kind_Configuration_Declaration =>
             if Secondary_Id /= Null_Identifier then
                Error_Msg_Elab
@@ -718,21 +743,15 @@ package body Vhdl.Configuration is
                   +Primary_Id);
                return Null_Iir;
             end if;
-            Top := Unit;
+            return Configure_From_Configuration (Unit);
          when Iir_Kind_Foreign_Module =>
-            Top := Unit;
+            return Configure_From_Configuration (Unit);
          when others =>
             Error_Msg_Elab ("%i is neither an entity nor a configuration",
                            +Primary_Id);
             return Null_Iir;
       end case;
 
-      --  Exclude std.standard
-      Set_Configuration_Mark_Flag (Vhdl.Std_Package.Std_Standard_Unit, True);
-      Set_Configuration_Done_Flag (Vhdl.Std_Package.Std_Standard_Unit, True);
-
-      Add_Design_Unit (Top, Command_Line_Location);
-      return Top;
    end Configure;
 
    procedure Add_Verification_Unit (Vunit : Iir)
