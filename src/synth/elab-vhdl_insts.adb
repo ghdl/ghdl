@@ -1426,12 +1426,10 @@ package body Elab.Vhdl_Insts is
         (Syn_Inst, Stmt, Ent, Arch, Config);
    end Elab_Design_Instantiation_Statement;
 
-   function Elab_Top_Unit (Config : Node) return Synth_Instance_Acc
-   is
-      Arch : Node;
-      Entity : Node;
-      Inter : Node;
-      Top_Inst : Synth_Instance_Acc;
+   procedure Elab_Top_Init (Config : Node;
+                            Entity : out Node;
+                            Arch : out Node;
+                            Top_Inst : out Synth_Instance_Acc) is
    begin
       Arch := Get_Named_Entity
         (Get_Block_Specification (Get_Block_Configuration (Config)));
@@ -1465,36 +1463,15 @@ package body Elab.Vhdl_Insts is
       Elab_Configuration_Declaration (Root_Instance, Config);
 
       pragma Assert (Is_Expr_Pool_Empty);
+   end Elab_Top_Init;
 
-      --  Compute generics.
-      Inter := Get_Generic_Chain (Entity);
-      while Is_Valid (Inter) loop
-         declare
-            Em : Mark_Type;
-            Val : Valtyp;
-            Inter_Typ : Type_Acc;
-            Defval : Node;
-         begin
-            Mark_Expr_Pool (Em);
-            Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
-            Defval := Get_Default_Value (Inter);
-            if Defval /= Null_Node then
-               Val := Synth_Expression_With_Type (Top_Inst, Defval, Inter_Typ);
-            else
-               --  Only for simulation, expect override.
-               Val := Create_Value_Default (Inter_Typ);
-            end if;
-            if Val /= No_Valtyp then
-               pragma Assert (Is_Static (Val.Val));
-               Val := Unshare (Val, Instance_Pool);
-               Val.Typ := Unshare_Type_Instance (Val.Typ, Inter_Typ);
-               Create_Object (Top_Inst, Inter, Val);
-            end if;
-            Release_Expr_Pool (Em);
-         end;
-         Inter := Get_Chain (Inter);
-      end loop;
-
+   procedure Elab_Top_Finish (Config : Node;
+                              Entity : Node;
+                              Arch : Node;
+                              Top_Inst : Synth_Instance_Acc)
+   is
+      Inter : Node;
+   begin
       pragma Assert (Is_Expr_Pool_Empty);
 
       --  Elaborate port types.
@@ -1577,6 +1554,49 @@ package body Elab.Vhdl_Insts is
             end if;
          end;
       end loop;
+   end Elab_Top_Finish;
+
+   function Elab_Top_Unit (Config : Node) return Synth_Instance_Acc
+   is
+      Arch : Node;
+      Entity : Node;
+      Inter : Node;
+      Top_Inst : Synth_Instance_Acc;
+   begin
+      Elab_Top_Init (Config, Entity, Arch, Top_Inst);
+
+      --  Compute generics.
+      Inter := Get_Generic_Chain (Entity);
+      while Is_Valid (Inter) loop
+         declare
+            Em : Mark_Type;
+            Val : Valtyp;
+            Inter_Typ : Type_Acc;
+            Defval : Node;
+         begin
+            Mark_Expr_Pool (Em);
+            Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
+            Defval := Get_Default_Value (Inter);
+            if Defval /= Null_Node then
+               Val := Synth_Expression_With_Type (Top_Inst, Defval, Inter_Typ);
+            else
+               --  Only for simulation, expect override.
+               Val := Create_Value_Default (Inter_Typ);
+            end if;
+            if Val /= No_Valtyp then
+               pragma Assert (Is_Static (Val.Val));
+               Val := Unshare (Val, Instance_Pool);
+               Val.Typ := Unshare_Type_Instance (Val.Typ, Inter_Typ);
+               Create_Object (Top_Inst, Inter, Val);
+            end if;
+            Release_Expr_Pool (Em);
+         end;
+         Inter := Get_Chain (Inter);
+      end loop;
+
+      pragma Assert (Is_Expr_Pool_Empty);
+
+      Elab_Top_Finish (Config, Entity, Arch, Top_Inst);
 
       return Top_Inst;
 
