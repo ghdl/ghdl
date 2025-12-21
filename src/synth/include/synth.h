@@ -188,6 +188,8 @@ namespace GhdlSynth {
     return res;
   }
 
+  //  Handle options and import files from ARGC/ARGV.
+  //  Call CB (with ARG) for each entity found in the given files.
   extern "C" int libghdl_synth__ghdl_synth_read(int init,
 						int argc, const char **argv,
 						void (*cb)(unsigned int raw_id,
@@ -206,4 +208,22 @@ namespace GhdlSynth {
 
   // More initialization for synthesis.
   extern "C" void ghdlsynth__init_for_ghdl_synth (void);
+
+  struct Pval_Cstring_tuple {
+    const char *str;
+    struct Pval val;
+  };
+
+  extern "C" unsigned int libghdl_synth__ghdl_synth_with_params(unsigned node,
+								struct Pval_Cstring_tuple *params,
+								unsigned nparams);
+
+  inline Module ghdl_synth_with_params(unsigned node,
+				       struct Pval_Cstring_tuple *params,
+				       unsigned nparams) {
+    Module res;
+    res.id = libghdl_synth__ghdl_synth_with_params(node, params, nparams);
+    return res;
+  }
+
 };

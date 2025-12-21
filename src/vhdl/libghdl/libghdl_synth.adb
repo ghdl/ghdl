@@ -18,25 +18,33 @@ with Options; use Options;
 with Errorout;
 with Errorout.Console;
 with Libraries;
+with Outputs;
+with Name_Table;
+with Types_Utils;
 
 with Bug;
 
 with Netlists.Errors;
+with Netlists.Dump;
 
-with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Std_Package;
 with Vhdl.Configuration;
 with Vhdl.Errors;
+with Vhdl.Scanner;
 
-with Elab.Vhdl_Objtypes;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Insts;
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Annotations;
+with Elab.Vhdl_Types;
 
 with Synth;
+with Synth.Flags;
 with Synth.Vhdl_Foreign;
 with Synth.Context; use Synth.Context;
 with Synth.Vhdl_Context;
+with Synth.Vhdl_Expr;
 
 with Synthesis;
 
@@ -58,7 +66,6 @@ package body Libghdl_Synth is
      return Module
    is
       use Vhdl.Configuration;
-      use Elab.Vhdl_Objtypes;
       Args : String_Acc_Array (1 .. Argc);
       Res : Base_Instance_Acc;
       Cmd : Command_Synth;
@@ -180,7 +187,7 @@ package body Libghdl_Synth is
                Report_Msg (Msgid_Note, Option, No_Source_Coord,
                  "import %n", (1 => +Unit));
 
-               Cb.all (Uns32 (Get_Identifier (Unit)), Uns32 (Unit), Cb_Arg);
+               Cb.all (Get_Identifier (Unit), Unit, Cb_Arg);
 
             end if;
             Design := Get_Chain (Design);
@@ -190,4 +197,159 @@ package body Libghdl_Synth is
 
       return 0;
    end Ghdl_Synth_Read;
+
+   function Convert_Pval_To_Val (V : Pval; Typ : Type_Acc) return Valtyp
+   is
+      use Types_Utils;
+      W : constant Uns32 := Get_Pval_Length (V);
+      W32 : constant Uns32 := (W + 31) / 32;
+      Res : Valtyp;
+   begin
+      case Typ.Kind is
+         when Type_Discrete =>
+            declare
+               Val : Uns64;
+               L : Logic_32;
+               Msb : Uns32;
+            begin
+               --  Check no Z/X.
+               for I in 0 .. W32 - 1 loop
+                  L := Read_Pval (V, I);
+                  if L.Zx /= 0 then
+                     return No_Valtyp;
+                  end if;
+               end loop;
+
+               L := Read_Pval (V, 0);
+               Val := Uns64 (L.Val);
+               if W > 32 then
+                  L := Read_Pval (V, 1);
+                  Val := Val + Shift_Left (Uns64(L.Val), 32);
+               end if;
+               if W32 > 2 then
+                  if Typ.Drange.Is_Signed then
+                     Msb := Uns32 (Shift_Right_Arithmetic (Val, 64)
+                       and 16#ffff_ffff#);
+                  else
+                     Msb := 0;
+                  end if;
+                  for I in 2 .. W32 - 1 loop
+                     if Read_Pval (V, I).Val /= Msb then
+                        return No_Valtyp;
+                     end if;
+                  end loop;
+               end if;
+               Res := Create_Value_Memory (Typ, Expr_Pool'Access);
+               Write_Discrete (Res, To_Int64 (Val));
+               return Res;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Convert_Pval_To_Val;
+
+   function Ghdl_Synth_With_Params(Entity_Decl : Node;
+                                   Params : Pval_Cstring_Array_Acc;
+                                   Nparams : Natural) return Module
+   is
+      use Vhdl.Configuration;
+      use Elab.Vhdl_Insts;
+      use Elab.Vhdl_Types;
+      use Synth.Vhdl_Expr;
+      use Synth.Flags;
+      Conf : Node;
+      Entity : Node;
+      Arch : Node;
+      Top_Inst : Synth_Instance_Acc;
+      Inter : Node;
+      Names : Name_Id_Array (0 .. Nparams - 1);
+      Res : Base_Instance_Acc;
+   begin
+      for I in 1 .. Nparams loop
+         declare
+            use Outputs;
+            use Netlists.Dump;
+            Cname : constant Ghdl_C_String := Params (I - 1).Str;
+            Name_Len : constant Natural := strlen (Cname);
+            Name : String (1 .. Name_Len);
+            Err: Boolean;
+         begin
+            Name := Cname (1 .. Name_Len);
+            Vhdl.Scanner.Convert_Identifier (Name, Err);
+            if Err then
+               --  Error_Msg_Elab ("parameter name is not a valid vhdl name");
+               return No_Module;
+            end if;
+
+            Names (I - 1) := Name_Table.Get_Identifier (Name);
+
+            if Boolean'(False) then
+               Wr (Name);
+               Wr (": ");
+               Disp_Pval_Binary_Digits (Params (I - 1).Val);
+               Wr_Line;
+            end if;
+         end;
+      end loop;
+
+      --  TODO:
+      --  1. call a modified configure to analyze files
+      Conf := Configure_From_Entity
+        (Get_Design_Unit (Entity_Decl), Null_Identifier);
+
+      --  2. elab_top_unit with modified generics
+      Elab_Top_Init (Get_Library_Unit (Conf), Entity, Arch, Top_Inst);
+
+      Inter := Get_Generic_Chain (Entity);
+      while Is_Valid (Inter) loop
+         declare
+            Inter_Id : constant Name_Id := Get_Identifier (Inter);
+            Em : Mark_Type;
+            Val : Valtyp;
+            Inter_Typ : Type_Acc;
+            Defval : Node;
+            Over_Pos : Integer;
+         begin
+            Mark_Expr_Pool (Em);
+            Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
+
+            Over_Pos := -1;
+            for I in Names'Range loop
+               if Names (I) = Inter_Id then
+                  Over_Pos := I;
+                  exit;
+               end if;
+            end loop;
+            if Over_Pos >= 0 then
+               Val := Convert_Pval_To_Val (Params (Over_Pos).Val, Inter_Typ);
+            else
+               Defval := Get_Default_Value (Inter);
+               if Defval /= Null_Node then
+                  Val := Synth_Expression_With_Type
+                    (Top_Inst, Defval, Inter_Typ);
+               else
+                  --  Only for simulation, expect override.
+                  Val := Create_Value_Default (Inter_Typ);
+               end if;
+            end if;
+            if Val /= No_Valtyp then
+               pragma Assert (Is_Static (Val.Val));
+               Val := Unshare (Val, Instance_Pool);
+               Val.Typ := Unshare_Type_Instance (Val.Typ, Inter_Typ);
+               Create_Object (Top_Inst, Inter, Val);
+            end if;
+            Release_Expr_Pool (Em);
+         end;
+         Inter := Get_Chain (Inter);
+      end loop;
+
+      pragma Assert (Is_Expr_Pool_Empty);
+
+      Elab_Top_Finish (Get_Library_Unit (Conf), Entity, Arch, Top_Inst);
+
+      --  3. synth
+      Res := Synthesis.Synth_Design (Conf, Top_Inst, Name_Hash);
+
+      return Res.Top_Module;
+   end Ghdl_Synth_With_Params;
 end Libghdl_Synth;

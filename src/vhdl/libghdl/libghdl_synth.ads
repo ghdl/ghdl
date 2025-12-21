@@ -19,6 +19,8 @@ with Grt.Types; use Grt.Types;
 
 with Netlists; use Netlists;
 
+with Vhdl.Nodes; use Vhdl.Nodes;
+
 package Libghdl_Synth is
    --  When used from a library, this init procedure must be called before
    --  ghdl_synth.
@@ -36,7 +38,7 @@ package Libghdl_Synth is
    type Pointer_Generic is access Character;
 
    type Ghdl_Synth_Read_Cb is access procedure
-     (Id : Uns32; Node : Uns32; Arg: Pointer_Generic);
+     (Id : Name_Id; N : Node; Arg: Pointer_Generic);
    pragma Convention (C, Ghdl_Synth_Read_Cb);
 
    function Ghdl_Synth_Read (Init : Natural;
@@ -44,4 +46,17 @@ package Libghdl_Synth is
                              Argv : C_String_Array_Acc;
                              Cb : Ghdl_Synth_Read_Cb;
                              Cb_Arg : Pointer_Generic) return Integer;
+
+   type Pval_Cstring_Tuple is record
+      Str : Ghdl_C_String;
+      Val : Pval;
+   end record;
+
+   type Pval_Cstring_Array is array (Natural) of Pval_Cstring_Tuple;
+   type Pval_Cstring_Array_Acc is access Pval_Cstring_Array;
+
+   function Ghdl_Synth_With_Params(Entity_Decl : Node;
+                                   Params : Pval_Cstring_Array_Acc;
+                                   Nparams : Natural) return Module;
+
 end Libghdl_Synth;
