@@ -1241,6 +1241,12 @@ package body Ortho_Debug.Disp is
       Disp_Tnode (N, True);
    end Disp_Tnode_Decl;
 
+   procedure Disp_To_File (File : Interfaces.C_Streams.FILEs) is
+   begin
+      Init_Context (File);
+      Disp_Ortho (Ortho_Debug.Top);
+   end Disp_To_File;
+
    procedure Debug_Tnode (N : O_Tnode)
    is
       Ctx : Disp_Context;

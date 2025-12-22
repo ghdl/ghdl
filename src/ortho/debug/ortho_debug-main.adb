@@ -127,19 +127,16 @@ begin
    if (R and (Output /= NULL_Stream or not Flag_Silent))
      or Flag_Force
    then
-      if Output = NULL_Stream then
-         Ortho_Debug.Disp.Init_Context (stdout);
-      else
-         Ortho_Debug.Disp.Init_Context (Output);
-      end if;
-      Ortho_Debug.Disp.Disp_Ortho (Ortho_Debug.Top);
       if Output /= NULL_Stream then
+         Ortho_Debug.Disp_To_File (Output);
          declare
             Status : int;
             pragma Unreferenced (Status);
          begin
             Status := fclose (Output);
          end;
+      else
+         Ortho_Debug.Disp_To_File (stdout);
       end if;
    end if;
 

@@ -23,5 +23,6 @@ package Ortho_Debug.Disp is
    --  Disp nodes in a pseudo-language.
    procedure Disp_Ortho (Decls : O_Snode);
 
+   procedure Disp_To_File (File : Interfaces.C_Streams.FILEs);
 private
 end Ortho_Debug.Disp;
