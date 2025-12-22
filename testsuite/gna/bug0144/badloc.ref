@@ -1,0 +1,3 @@
+badloc.vhdl:5:41:error: invalid character in bit string
+  constant v : std_logic_vector := b"01_X0";
+                                        ^

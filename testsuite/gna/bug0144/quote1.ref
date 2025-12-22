@@ -1,0 +1,3 @@
+quote1.vhdl:5:42:error: '"' cannot close a bit string opened by '%'
+  constant v : std_logic_vector := b%0_10";
+                                         ^

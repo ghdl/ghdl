@@ -1,0 +1,3 @@
+underscore1.vhdl:5:38:error: underscore not allowed at the start of a bit string
+  constant v : std_logic_vector := b"_10";
+                                     ^
