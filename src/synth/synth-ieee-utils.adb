@@ -69,6 +69,16 @@ package body Synth.Ieee.Utils is
       return Res;
    end Null_Res;
 
+   function Has_X (V : Memtyp) return Boolean is
+   begin
+      for I in 1 .. V.Typ.Abound.Len loop
+         if Sl_To_X01 (Read_Std_Logic (V.Mem, I - 1)) = 'X' then
+            return True;
+         end if;
+      end loop;
+      return False;
+   end Has_X;
+
    procedure Report_Division_By_Zero (Inst : Synth_Instance_Acc;
                                       Loc : Node;
                                       Msg : String)

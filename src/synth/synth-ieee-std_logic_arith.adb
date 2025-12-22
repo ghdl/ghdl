@@ -26,32 +26,6 @@ with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 
 package body Synth.Ieee.Std_Logic_Arith is
 
-   function Create_Res_Type (Otyp : Type_Acc; Len : Uns32) return Type_Acc is
-   begin
-      if Otyp.Abound.Len = Len
-        and then Otyp.Abound.Right = 0
-        and then Otyp.Abound.Dir = Dir_Downto
-        and then not Otyp.Is_Global
-      then
-         --  Try to reuse the same type as the parameter.
-         --  But the result type must be allocated on the expr_pool.
-         --  FIXME: is this code ever executed ?
-         pragma Assert (Otyp.Abound.Left = Int32 (Len) - 1);
-         return Otyp;
-      end if;
-      return Create_Vec_Type_By_Length (Len, Otyp.Arr_El);
-   end Create_Res_Type;
-
-   function Has_X (V : Memtyp) return Boolean is
-   begin
-      for I in 1 .. V.Typ.Abound.Len loop
-         if Sl_To_X01 (Read_Std_Logic (V.Mem, I - 1)) = 'X' then
-            return True;
-         end if;
-      end loop;
-      return False;
-   end Has_X;
-
    procedure Fill (Res : Memory_Ptr; Len : Uns32; V : Std_Ulogic) is
    begin
       for I in 1 .. Len loop
@@ -410,12 +384,15 @@ package body Synth.Ieee.Std_Logic_Arith is
       Res.Typ := Create_Res_Type (L.Typ, Len);
       Res := Create_Memory (Res.Typ);
 
-      if Has_X (L) then
+      if Len > 0 and Sl_To_X01 (Read_Std_Logic (L.Mem, 0)) = '0' then
+         --  If L is positive (first bit is '0'), return L.
+         Copy_Memory (Res.Mem, L.Mem, Size_Type (Len));
+      elsif Has_X (L) then
          --  Humm, there is no warning if the MSB is '0'.
          Warn_X (Loc);
          Fill (Res.Mem, Len, 'X');
       else
-         Abs_Vec (L.Mem, Res.Mem, Len);
+         Neg_Vec (L.Mem, Res.Mem, Len);
       end if;
 
       return Res;
@@ -585,21 +562,16 @@ package body Synth.Ieee.Std_Logic_Arith is
       return Equal;
    end Compare_Vec;
 
-   function Compare_Uns_Sgn (L, R : Memtyp; Loc : Location_Type)
-                            return Order_Type
+   function Compare_Uns_Sgn (L, R : Memtyp;
+                             Res_X : Order_Type;
+                             Loc : Location_Type) return Order_Type
    is
       X_In_L : constant Boolean := Has_X (L);
       X_In_R : constant Boolean := Has_X (R);
    begin
       if X_In_L or X_In_R then
          Warn_X (Loc);
-         if X_In_L and X_In_R then
-            return Equal;
-         elsif X_In_L then
-            return Less;
-         else
-            return Greater;
-         end if;
+         return Res_X;
       end if;
 
       return Compare_Vec (L.Mem, R.Mem,
@@ -607,8 +579,10 @@ package body Synth.Ieee.Std_Logic_Arith is
                           False, True);
    end Compare_Uns_Sgn;
 
-   function Compare_Uns_Int (L : Memtyp; R : Int64; Loc : Location_Type)
-                            return Order_Type
+   function Compare_Uns_Int (L : Memtyp;
+                             R : Int64;
+                             Res_X : Order_Type;
+                             Loc : Location_Type) return Order_Type
    is
       Len : constant Uns32 := L.Typ.Abound.Len;
       Rlen : constant Uns32 := Uns32'Min (Len + 1, 64);
@@ -617,15 +591,17 @@ package body Synth.Ieee.Std_Logic_Arith is
    begin
       if Has_X (L) then
          Warn_X (Loc);
-         return Less;
+         return Res_X;
       end if;
 
       To_Signed (Rmem, Rlen, To_Uns64 (R));
       return Compare_Vec (L.Mem, Rmem, Len, Rlen, False, True);
    end Compare_Uns_Int;
 
-   function Compare_Sgn_Int (L : Memtyp; R : Int64; Loc : Location_Type)
-                            return Order_Type
+   function Compare_Sgn_Int (L : Memtyp;
+                             R : Int64;
+                             Res_X : Order_Type;
+                             Loc : Location_Type) return Order_Type
    is
       Len : constant Uns32 := L.Typ.Abound.Len;
       Rlen : constant Uns32 := Uns32'Min (Len, 64);
@@ -634,7 +610,7 @@ package body Synth.Ieee.Std_Logic_Arith is
    begin
       if Has_X (L) then
          Warn_X (Loc);
-         return Less;
+         return Res_X;
       end if;
 
       To_Signed (Rmem, Rlen, To_Uns64 (R));

@@ -2156,141 +2156,165 @@ package body Synth.Vhdl_Eval is
             return Create_Memory_Boolean (Ord < Equal);
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Sgn =>
-            Ord := Compare_Uns_Sgn (Param1, Param2, +Expr);
+            Ord := Compare_Uns_Sgn (Param1, Param2, Greater, +Expr);
             return Create_Memory_Boolean (Ord < Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Uns =>
-            Ord := Compare_Uns_Sgn (Param2, Param1, +Expr);
+            Ord := Compare_Uns_Sgn (Param2, Param1, Less, +Expr);
             return Create_Memory_Boolean (Ord > Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Int
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Int =>
-            Ord := Compare_Uns_Int (Param1, Read_Discrete (Param2), +Expr);
+            Ord := Compare_Uns_Int
+              (Param1, Read_Discrete (Param2), Greater, +Expr);
             return Create_Memory_Boolean (Ord < Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Int_Uns
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Int_Slv =>
-            Ord := Compare_Uns_Int (Param2, Read_Discrete (Param1), +Expr);
+            Ord := Compare_Uns_Int
+              (Param2, Read_Discrete (Param1), Less, +Expr);
             return Create_Memory_Boolean (Ord > Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Int
             | Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Slv_Int =>
-            Ord := Compare_Sgn_Int (Param1, Read_Discrete (Param2), +Expr);
+            Ord := Compare_Sgn_Int
+              (Param1, Read_Discrete (Param2), Greater, +Expr);
             return Create_Memory_Boolean (Ord < Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Int_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Int_Slv =>
-            Ord := Compare_Sgn_Int (Param2, Read_Discrete (Param1), +Expr);
+            Ord := Compare_Sgn_Int
+              (Param2, Read_Discrete (Param1), Less, +Expr);
             return Create_Memory_Boolean (Ord > Equal);
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Sgn =>
-            Ord := Compare_Uns_Sgn (Param1, Param2, +Expr);
+            Ord := Compare_Uns_Sgn (Param1, Param2, Greater, +Expr);
             return Create_Memory_Boolean (Ord <= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Uns =>
-            Ord := Compare_Uns_Sgn (Param2, Param1, +Expr);
+            Ord := Compare_Uns_Sgn (Param2, Param1, Less,  +Expr);
             return Create_Memory_Boolean (Ord >= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Int
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Int =>
-            Ord := Compare_Uns_Int (Param1, Read_Discrete (Param2), +Expr);
+            Ord := Compare_Uns_Int
+              (Param1, Read_Discrete (Param2), Greater, +Expr);
             return Create_Memory_Boolean (Ord <= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Int_Uns
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Int_Slv =>
-            Ord := Compare_Uns_Int (Param2, Read_Discrete (Param1), +Expr);
+            Ord := Compare_Uns_Int
+              (Param2, Read_Discrete (Param1), Less, +Expr);
             return Create_Memory_Boolean (Ord >= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Int
             | Iir_Predefined_Ieee_Std_Logic_Signed_Le_Slv_Int =>
-            Ord := Compare_Sgn_Int (Param1, Read_Discrete (Param2), +Expr);
+            Ord := Compare_Sgn_Int
+              (Param1, Read_Discrete (Param2), Greater, +Expr);
             return Create_Memory_Boolean (Ord <= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Le_Int_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Signed_Le_Int_Slv =>
-            Ord := Compare_Sgn_Int (Param2, Read_Discrete (Param1), +Expr);
+            Ord := Compare_Sgn_Int
+              (Param2, Read_Discrete (Param1), Less,  +Expr);
             return Create_Memory_Boolean (Ord >= Equal);
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Sgn =>
-            Ord := Compare_Uns_Sgn (Param1, Param2, +Expr);
+            Ord := Compare_Uns_Sgn (Param1, Param2, Equal, +Expr);
             return Create_Memory_Boolean (Ord > Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Uns =>
-            Ord := Compare_Uns_Sgn (Param2, Param1, +Expr);
+            Ord := Compare_Uns_Sgn (Param2, Param1, Equal, +Expr);
             return Create_Memory_Boolean (Ord < Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Int
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Int =>
-            Ord := Compare_Uns_Int (Param1, Read_Discrete (Param2), +Expr);
+            Ord := Compare_Uns_Int
+              (Param1, Read_Discrete (Param2), Equal, +Expr);
             return Create_Memory_Boolean (Ord > Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Int_Uns
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Int_Slv =>
-            Ord := Compare_Uns_Int (Param2, Read_Discrete (Param1), +Expr);
+            Ord := Compare_Uns_Int
+              (Param2, Read_Discrete (Param1), Equal, +Expr);
             return Create_Memory_Boolean (Ord < Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Int
             | Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Slv_Int =>
-            Ord := Compare_Sgn_Int (Param1, Read_Discrete (Param2), +Expr);
+            Ord := Compare_Sgn_Int
+              (Param1, Read_Discrete (Param2), Equal, +Expr);
             return Create_Memory_Boolean (Ord > Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Int_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Int_Slv =>
-            Ord := Compare_Sgn_Int (Param2, Read_Discrete (Param1), +Expr);
+            Ord := Compare_Sgn_Int
+              (Param2, Read_Discrete (Param1), Equal, +Expr);
             return Create_Memory_Boolean (Ord < Equal);
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Sgn =>
-            Ord := Compare_Uns_Sgn (Param1, Param2, +Expr);
+            Ord := Compare_Uns_Sgn (Param1, Param2, Less, +Expr);
             return Create_Memory_Boolean (Ord >= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Uns =>
-            Ord := Compare_Uns_Sgn (Param2, Param1, +Expr);
+            Ord := Compare_Uns_Sgn (Param2, Param1, Greater, +Expr);
             return Create_Memory_Boolean (Ord <= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Int
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Int =>
-            Ord := Compare_Uns_Int (Param1, Read_Discrete (Param2), +Expr);
+            Ord := Compare_Uns_Int
+              (Param1, Read_Discrete (Param2), Less, +Expr);
             return Create_Memory_Boolean (Ord >= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Int_Uns
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Int_Slv =>
-            Ord := Compare_Uns_Int (Param2, Read_Discrete (Param1), +Expr);
+            Ord := Compare_Uns_Int
+              (Param2, Read_Discrete (Param1), Greater, +Expr);
             return Create_Memory_Boolean (Ord <= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Int
             | Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Slv_Int =>
-            Ord := Compare_Sgn_Int (Param1, Read_Discrete (Param2), +Expr);
+            Ord := Compare_Sgn_Int
+              (Param1, Read_Discrete (Param2), Less, +Expr);
             return Create_Memory_Boolean (Ord >= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Int_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Int_Slv =>
-            Ord := Compare_Sgn_Int (Param2, Read_Discrete (Param1), +Expr);
+            Ord := Compare_Sgn_Int
+              (Param2, Read_Discrete (Param1), Greater, +Expr);
             return Create_Memory_Boolean (Ord <= Equal);
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Sgn =>
-            Ord := Compare_Uns_Sgn (Param1, Param2, +Expr);
+            Ord := Compare_Uns_Sgn (Param1, Param2, Less, +Expr);
             return Create_Memory_Boolean (Ord = Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Uns =>
-            Ord := Compare_Uns_Sgn (Param2, Param1, +Expr);
+            Ord := Compare_Uns_Sgn (Param2, Param1, Less, +Expr);
             return Create_Memory_Boolean (Ord = Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Int
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Int =>
-            Ord := Compare_Uns_Int (Param1, Read_Discrete (Param2), +Expr);
+            Ord := Compare_Uns_Int
+              (Param1, Read_Discrete (Param2), Less, +Expr);
             return Create_Memory_Boolean (Ord = Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Int_Uns
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Int_Slv =>
-            Ord := Compare_Uns_Int (Param2, Read_Discrete (Param1), +Expr);
+            Ord := Compare_Uns_Int
+              (Param2, Read_Discrete (Param1), Less, +Expr);
             return Create_Memory_Boolean (Ord = Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Int
             | Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Slv_Int =>
-            Ord := Compare_Sgn_Int (Param1, Read_Discrete (Param2), +Expr);
+            Ord := Compare_Sgn_Int
+              (Param1, Read_Discrete (Param2), Less, +Expr);
             return Create_Memory_Boolean (Ord = Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Int_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Int_Slv =>
-            Ord := Compare_Sgn_Int (Param2, Read_Discrete (Param1), +Expr);
+            Ord := Compare_Sgn_Int
+              (Param2, Read_Discrete (Param1), Less, +Expr);
             return Create_Memory_Boolean (Ord = Equal);
 
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Sgn =>
-            Ord := Compare_Uns_Sgn (Param1, Param2, +Expr);
+            Ord := Compare_Uns_Sgn (Param1, Param2, Equal, +Expr);
             return Create_Memory_Boolean (Ord /= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Uns =>
-            Ord := Compare_Uns_Sgn (Param2, Param1, +Expr);
+            Ord := Compare_Uns_Sgn (Param2, Param1, Equal, +Expr);
             return Create_Memory_Boolean (Ord /= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Int
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Int =>
-            Ord := Compare_Uns_Int (Param1, Read_Discrete (Param2), +Expr);
+            Ord := Compare_Uns_Int
+              (Param1, Read_Discrete (Param2), Equal, +Expr);
             return Create_Memory_Boolean (Ord /= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Int_Uns
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Int_Slv =>
-            Ord := Compare_Uns_Int (Param2, Read_Discrete (Param1), +Expr);
+            Ord := Compare_Uns_Int
+              (Param2, Read_Discrete (Param1), Equal, +Expr);
             return Create_Memory_Boolean (Ord /= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Int
             | Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Slv_Int =>
-            Ord := Compare_Sgn_Int (Param1, Read_Discrete (Param2), +Expr);
+            Ord := Compare_Sgn_Int
+              (Param1, Read_Discrete (Param2), Equal, +Expr);
             return Create_Memory_Boolean (Ord /= Equal);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Int_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Int_Slv =>
-            Ord := Compare_Sgn_Int (Param2, Read_Discrete (Param1), +Expr);
+            Ord := Compare_Sgn_Int
+              (Param2, Read_Discrete (Param1), Equal, +Expr);
             return Create_Memory_Boolean (Ord /= Equal);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
