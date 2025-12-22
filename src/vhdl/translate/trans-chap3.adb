@@ -1922,6 +1922,7 @@ package body Trans.Chap3 is
       begin
          Start_Subprogram_Body (Info.B.Prot_Init_Subprg);
          Subprgs.Start_Subprg_Instance_Use (Info.B.Prot_Init_Instance);
+         Push_Local_Factory;
          New_Var_Decl (Var_Obj, Wki_Obj, O_Storage_Local,
                        Info.Ortho_Ptr_Type (Mode_Value));
 
@@ -1953,6 +1954,7 @@ package body Trans.Chap3 is
          New_Return_Stmt (New_Obj_Value (Var_Obj));
          Subprgs.Finish_Subprg_Instance_Use (Info.B.Prot_Init_Instance);
 
+         Pop_Local_Factory;
          Finish_Subprogram_Body;
       end;
 
