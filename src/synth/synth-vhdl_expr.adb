@@ -1567,7 +1567,8 @@ package body Synth.Vhdl_Expr is
                            Err := V < Fp64 (Conv_Typ.Drange.Right)
                              or V > Fp64 (Conv_Typ.Drange.Left);
                      end case;
-                     if Err then
+                     --  Also check for NaN.
+                     if Err or not V'Valid then
                         Error_Msg_Synth (Syn_Inst, Loc, "value out of range");
                         return No_Valtyp;
                      end if;
