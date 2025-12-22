@@ -597,15 +597,15 @@ package body Vhdl.Scanner is
       pragma Assert (Mark = '"' or else Mark = '%');
       --  No need to diagnose use of '%' in vhdl 2008, already done.
 
+      --  Skip quote
       Pos := Pos + 1;
+
       Length := 0;
       Has_Invalid := False;
       Current_Context.Str_Id := Str_Table.Create_String8;
       loop
          << Again >> null;
          C := Source (Pos);
-         Pos := Pos + 1;
-         exit when C = Mark;
 
          -- LRM93 13.7
          -- If the base specifier is 'B', the extended digits in the bit
@@ -626,25 +626,27 @@ package body Vhdl.Scanner is
                --  in lowercase or in upper case, with the same meaning.
                V := Character'Pos (C) - Character'Pos ('a') + 10;
             when '_' =>
-               if Source (Pos) = '_' then
+               if Source (Pos + 1) = '_' then
                   Error_Msg_Scan
                     ("double underscore not allowed in a bit string");
                end if;
-               if Source (Pos - 2) = Mark then
+               if Source (Pos - 1) = Mark then
                   Error_Msg_Scan
                     ("underscore not allowed at the start of a bit string");
-               elsif Source (Pos) = Mark then
+               elsif Source (Pos + 1) = Mark then
                   Error_Msg_Scan
                     ("underscore not allowed at the end of a bit string");
                end if;
+               --  Skip '_'
+               Pos := Pos + 1;
                goto Again;
             when '"' =>
-               pragma Assert (Mark = '%');
+               exit when Mark = '"';
                Error_Msg_Scan
                  ("'""' cannot close a bit string opened by '%%'");
                exit;
             when '%' =>
-               pragma Assert (Mark = '"');
+               exit when Mark = '%';
                Error_Msg_Scan
                  ("'%%' cannot close a bit string opened by '""'");
                exit;
@@ -654,7 +656,8 @@ package body Vhdl.Scanner is
                      V := Nat8'Last;
                   else
                      if not Has_Invalid then
-                        Error_Msg_Scan ("invalid character in bit string");
+                        Error_Msg_Scan
+                          ("invalid character in bit string");
                         Has_Invalid := True;
                      end if;
                      --  Continue the bit string
@@ -716,7 +719,11 @@ package body Vhdl.Scanner is
          end if;
 
          Length := Length + Base_Log;
+         Pos := Pos + 1;
       end loop;
+
+      --  Skip quote.
+      Pos := Pos + 1;
 
       --  Note: the length of the bit string may be 0.
 
