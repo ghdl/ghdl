@@ -128,7 +128,7 @@ begin
      or Flag_Force
    then
       if Output /= NULL_Stream then
-         Ortho_Debug.Disp_To_File (Output);
+         Ortho_Debug.Disp.Disp_To_File (Output);
          declare
             Status : int;
             pragma Unreferenced (Status);
@@ -136,7 +136,7 @@ begin
             Status := fclose (Output);
          end;
       else
-         Ortho_Debug.Disp_To_File (stdout);
+         Ortho_Debug.Disp.Disp_To_File (stdout);
       end if;
    end if;
 
