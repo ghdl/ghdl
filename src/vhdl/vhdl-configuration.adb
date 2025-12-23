@@ -684,11 +684,13 @@ package body Vhdl.Configuration is
          return Null_Iir;
       end if;
       Lib_Unit := Get_Library_Unit (Unit);
-      pragma Assert
-        (Is_Null (Get_Default_Configuration_Declaration (Lib_Unit)));
 
-      Res := Vhdl.Canon.Create_Default_Configuration_Declaration (Lib_Unit);
-      Set_Default_Configuration_Declaration (Lib_Unit, Res);
+      Res := Get_Default_Configuration_Declaration (Lib_Unit);
+      if Res = Null_Iir then
+         Res := Vhdl.Canon.Create_Default_Configuration_Declaration (Lib_Unit);
+         Set_Default_Configuration_Declaration (Lib_Unit, Res);
+      end if;
+
       pragma Assert (Is_Valid (Res));
 
       return Configure_From_Configuration (Res);
@@ -751,7 +753,6 @@ package body Vhdl.Configuration is
                            +Primary_Id);
             return Null_Iir;
       end case;
-
    end Configure;
 
    procedure Add_Verification_Unit (Vunit : Iir)

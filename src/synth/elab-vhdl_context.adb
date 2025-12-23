@@ -44,17 +44,22 @@ package body Elab.Vhdl_Context is
       return Inst.Id;
    end Get_Instance_Id;
 
-   procedure Make_Root_Instance is
+   procedure Deallocate is new Ada.Unchecked_Deallocation
+     (Synth_Instance_Type, Synth_Instance_Acc);
+
+   procedure Make_Root_Instance
+   is
+      Res : Synth_Instance_Acc;
    begin
       --  Allow multiple elaborations
       --  pragma Assert (Root_Instance = null);
 
-      Root_Instance :=
+      Res :=
         new Synth_Instance_Type'(Max_Objs => Global_Info.Nbr_Objects,
                                  Is_Const => False,
                                  Is_Error => False,
                                  Flag1 | Flag2 => False,
-                                 Id => Inst_Tables.Last + 1,
+                                 Id => Inst_Tables.First,
                                  Block_Scope => Global_Info,
                                  Up_Block => null,
                                  Uninst_Scope => null,
@@ -67,7 +72,15 @@ package body Elab.Vhdl_Context is
                                  Extra_Link   => null,
                                  Elab_Objects => 0,
                                  Objects => (others => (Kind => Obj_None)));
-      Inst_Tables.Append (Root_Instance);
+      if Root_Instance /= null then
+         Res.Objects (1 .. Root_Instance.Max_Objs) := Root_Instance.Objects;
+         Inst_Tables.Table (Inst_Tables.First) := Res;
+         Deallocate (Root_Instance);
+      else
+         pragma Assert (Inst_Tables.Last + 1 = Inst_Tables.First);
+         Inst_Tables.Append (Res);
+      end if;
+      Root_Instance := Res;
    end Make_Root_Instance;
 
    procedure Free_Base_Instance is
@@ -119,8 +132,6 @@ package body Elab.Vhdl_Context is
 
    procedure Free_Elab_Instance (Synth_Inst : in out Synth_Instance_Acc)
    is
-      procedure Deallocate is new Ada.Unchecked_Deallocation
-        (Synth_Instance_Type, Synth_Instance_Acc);
       Id : constant Instance_Id_Type := Synth_Inst.Id;
    begin
       Deallocate (Synth_Inst);

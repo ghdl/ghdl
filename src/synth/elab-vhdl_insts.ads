@@ -40,10 +40,12 @@ package Elab.Vhdl_Insts is
    function Elab_Top_Unit (Config : Node) return Synth_Instance_Acc;
 
    --  Sub-routines of Elab_Top_Unit.
-   procedure Elab_Top_Init (Config : Node;
-                            Entity : out Node;
-                            Arch : out Node;
-                            Top_Inst : out Synth_Instance_Acc);
+   procedure Elab_Top_Init;
+   procedure Elab_Top_Create (Config : Node;
+                              Entity : out Node;
+                              Arch : out Node;
+                              Top_Inst : out Synth_Instance_Acc);
+   procedure Elab_Top_Ports (Entity : Node; Top_Inst : Synth_Instance_Acc);
    procedure Elab_Top_Finish (Config : Node;
                               Entity : Node;
                               Arch : Node;

@@ -164,6 +164,7 @@ package body Libghdl_Synth is
 
       if Init /= 0 then
          Synth_Compile_Init (First_Arg <= Args'Last);
+         Elab.Vhdl_Insts.Elab_Top_Init;
       end if;
 
       Mark_Vendor_Libraries
@@ -297,9 +298,10 @@ package body Libghdl_Synth is
       Conf := Configure_From_Entity
         (Get_Design_Unit (Entity_Decl), Null_Identifier);
 
-      --  2. elab_top_unit with modified generics
-      Elab_Top_Init (Get_Library_Unit (Conf), Entity, Arch, Top_Inst);
+      --  2. Create synth_instance
+      Elab_Top_Create (Get_Library_Unit (Conf), Entity, Arch, Top_Inst);
 
+      --  3. Set generics.
       Inter := Get_Generic_Chain (Entity);
       while Is_Valid (Inter) loop
          declare
@@ -344,6 +346,12 @@ package body Libghdl_Synth is
       end loop;
 
       pragma Assert (Is_Expr_Pool_Empty);
+
+      --  4. Elab ports
+      Top_Elab_Ports (Entity, Top_Inst);
+
+      --  5. Get existing index.
+      --  6. If already synthesized, free the instance and return the index.
 
       Elab_Top_Finish (Get_Library_Unit (Conf), Entity, Arch, Top_Inst);
 

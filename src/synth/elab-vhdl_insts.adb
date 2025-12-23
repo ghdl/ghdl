@@ -50,6 +50,9 @@ package body Elab.Vhdl_Insts is
    --  Otherwise, sub-instances are elaborated at the end of each unit.
    Flag_Elab_Sub_Instances : constant Boolean := True;
 
+   --  Index of the last annotated element of Design_Units.
+   Last_Annotated_Unit : Integer;
+
    procedure Elab_Instance_Body (Syn_Inst : Synth_Instance_Acc);
    procedure Elab_Recurse_Instantiations
      (Syn_Inst : Synth_Instance_Acc; Head : Node);
@@ -1426,23 +1429,30 @@ package body Elab.Vhdl_Insts is
         (Syn_Inst, Stmt, Ent, Arch, Config);
    end Elab_Design_Instantiation_Statement;
 
-   procedure Elab_Top_Init (Config : Node;
-                            Entity : out Node;
-                            Arch : out Node;
-                            Top_Inst : out Synth_Instance_Acc) is
+   procedure Elab_Top_Init is
    begin
-      Arch := Get_Named_Entity
-        (Get_Block_Specification (Get_Block_Configuration (Config)));
-      Entity := Get_Entity (Arch);
-
       Elab_Units.Init;
 
       --  Annotate units.
       Elab.Vhdl_Annotations.Initialize_Annotate;
       Elab.Vhdl_Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
-      for I in Design_Units.First .. Design_Units.Last loop
+      Last_Annotated_Unit := Design_Units.First - 1;
+   end Elab_Top_Init;
+
+   procedure Elab_Top_Create (Config : Node;
+                              Entity : out Node;
+                              Arch : out Node;
+                              Top_Inst : out Synth_Instance_Acc) is
+   begin
+      for I in Last_Annotated_Unit + 1 .. Design_Units.Last loop
          Elab.Vhdl_Annotations.Annotate (Design_Units.Table (I));
       end loop;
+
+      Last_Annotated_Unit := Design_Units.Last;
+
+      Arch := Get_Named_Entity
+        (Get_Block_Specification (Get_Block_Configuration (Config)));
+      Entity := Get_Entity (Arch);
 
       --  Use global memory.
       Instance_Pool := Global_Pool'Access;
@@ -1460,15 +1470,14 @@ package body Elab.Vhdl_Insts is
 
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Entity));
       Elab_Dependencies (Root_Instance, Get_Design_Unit (Arch));
-      Elab_Configuration_Declaration (Root_Instance, Config);
+      if not Get_Elab_Flag (Get_Design_Unit (Config)) then
+         Elab_Configuration_Declaration (Root_Instance, Config);
+      end if;
 
       pragma Assert (Is_Expr_Pool_Empty);
-   end Elab_Top_Init;
+   end Elab_Top_Create;
 
-   procedure Elab_Top_Finish (Config : Node;
-                              Entity : Node;
-                              Arch : Node;
-                              Top_Inst : Synth_Instance_Acc)
+   procedure Elab_Top_Ports (Entity : Node; Top_Inst : Synth_Instance_Acc)
    is
       Inter : Node;
    begin
@@ -1507,7 +1516,18 @@ package body Elab.Vhdl_Insts is
       end loop;
 
       pragma Assert (Is_Expr_Pool_Empty);
+   end Elab_Top_Ports;
 
+   procedure Elab_Top_Finish (Config : Node;
+                              Entity : Node;
+                              Arch : Node;
+                              Top_Inst : Synth_Instance_Acc) is
+   begin
+      pragma Assert (Is_Expr_Pool_Empty);
+
+      Elab_Top_Ports (Entity, Top_Inst);
+
+      --  Set Top_Instance for external names
       Top_Instance := Top_Inst;
 
       Add_To_Elab_Units (Entity);
@@ -1538,7 +1558,10 @@ package body Elab.Vhdl_Insts is
             end if;
          end;
       end loop;
+   end Elab_Top_Finish;
 
+   procedure Elab_Top_Clear is
+   begin
       --  Clear elab flag.
       for I in Elab_Units.First .. Elab_Units.Last loop
          declare
@@ -1554,7 +1577,7 @@ package body Elab.Vhdl_Insts is
             end if;
          end;
       end loop;
-   end Elab_Top_Finish;
+   end Elab_Top_Clear;
 
    function Elab_Top_Unit (Config : Node) return Synth_Instance_Acc
    is
@@ -1563,7 +1586,8 @@ package body Elab.Vhdl_Insts is
       Inter : Node;
       Top_Inst : Synth_Instance_Acc;
    begin
-      Elab_Top_Init (Config, Entity, Arch, Top_Inst);
+      Elab_Top_Init;
+      Elab_Top_Create (Config, Entity, Arch, Top_Inst);
 
       --  Compute generics.
       Inter := Get_Generic_Chain (Entity);
@@ -1597,6 +1621,8 @@ package body Elab.Vhdl_Insts is
       pragma Assert (Is_Expr_Pool_Empty);
 
       Elab_Top_Finish (Config, Entity, Arch, Top_Inst);
+
+      Elab_Top_Clear;
 
       return Top_Inst;
 

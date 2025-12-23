@@ -1593,15 +1593,11 @@ package body Synth.Vhdl_Insts is
                                Syn_Inst : Synth_Instance_Acc)
    is
       Config : constant Node := Get_Library_Unit (Design_Unit);
+      Blk_Conf : constant Node := Get_Block_Configuration (Config);
       Arch : Node;
       Entity : Node;
       Inst_Obj : Inst_Object;
    begin
-      --  Extract architecture from design.
-      Arch := Get_Named_Entity
-        (Get_Block_Specification (Get_Block_Configuration (Config)));
-      Entity := Get_Entity (Arch);
-
       Make_Base_Instance (Base);
 
       Global_Base_Instance := Base;
@@ -1614,6 +1610,10 @@ package body Synth.Vhdl_Insts is
 
       pragma Assert (Is_Expr_Pool_Empty);
 
+      --  Extract architecture from design.
+      Arch := Get_Named_Entity (Get_Block_Specification (Blk_Conf));
+      Entity := Get_Entity (Arch);
+
       Set_Extra
         (Syn_Inst, Base, New_Sname_User (Get_Identifier (Entity), No_Sname));
 
@@ -1625,7 +1625,7 @@ package body Synth.Vhdl_Insts is
       Inst_Obj := Insts_Interning.Get
         ((Decl => Entity,
           Arch => Arch,
-          Config => Get_Block_Configuration (Config),
+          Config => Blk_Conf,
           Syn_Inst => Syn_Inst,
           Encoding => Encoding));
       pragma Unreferenced (Inst_Obj);
