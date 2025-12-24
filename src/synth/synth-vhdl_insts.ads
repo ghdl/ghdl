@@ -37,7 +37,8 @@ package Synth.Vhdl_Insts is
                               Syn_Inst : Synth_Instance_Acc)
                              return Synth_Instance_Acc;
 
-   --  Synthesize the top entity and all the sub-modules.
+   --  Synthesize the top entity and all the sub-modules (well, only the new
+   --  ones added since the last call).
    procedure Synth_All_Instances;
 
    procedure Synth_Design_Instantiation_Statement

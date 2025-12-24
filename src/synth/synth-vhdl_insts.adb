@@ -599,6 +599,8 @@ package body Synth.Vhdl_Insts is
       Build => Build,
       Equal => Equal);
 
+   Next_Synth_Instance : Insts_Interning.Index_Type;
+
    function Is_Arch_Black_Box (Inst : Synth_Instance_Acc; Arch : Node)
                               return Boolean
    is
@@ -1587,13 +1589,17 @@ package body Synth.Vhdl_Insts is
       end loop;
    end Synth_Dependencies;
 
-   procedure Set_Base_Instance (Base : Base_Instance_Acc) is
+   procedure Set_Base_Instance (Base : Base_Instance_Acc)
+   is
+      use Insts_Interning;
    begin
       Make_Base_Instance (Base);
 
       Global_Base_Instance := Base;
 
       Insts_Interning.Init;
+
+      Next_Synth_Instance := First_Index;
    end Set_Base_Instance;
 
    function Synth_Top_Entity (Design_Unit : Node;
@@ -1918,10 +1924,11 @@ package body Synth.Vhdl_Insts is
       use Insts_Interning;
       Idx : Index_Type;
    begin
-      Idx := First_Index;
+      Idx := Next_Synth_Instance;
       while Idx <= Last_Index loop
          Synth_Instance (Get_By_Index (Idx));
          Idx := Idx + 1;
       end loop;
+      Next_Synth_Instance := Last_Index + 1;
    end Synth_All_Instances;
 end Synth.Vhdl_Insts;
