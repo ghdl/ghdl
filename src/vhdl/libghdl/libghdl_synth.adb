@@ -254,24 +254,52 @@ package body Libghdl_Synth is
       end case;
    end Convert_Pval_To_Val;
 
+   function Name_To_Idx (Name : String) return Integer
+   is
+      Res : Integer;
+   begin
+      Res := 0;
+      for I in Name'Range loop
+         if Name (I) in '0' .. '9' then
+            Res := Res * 10 + Character'Pos (Name (I)) - Character'Pos ('0');
+         else
+            return -1;
+         end if;
+      end loop;
+      return Res;
+   end Name_To_Idx;
+
    function Ghdl_Synth_With_Params (Entity_Decl : Node;
                                     Params : Pval_Cstring_Array_Acc;
                                     Nparams : Natural)
                                    return Synth_Instance_Acc
    is
       use Vhdl.Configuration;
+      use Vhdl.Errors;
+      use Errorout;
       use Elab.Vhdl_Insts;
       use Elab.Vhdl_Types;
       use Synth.Vhdl_Expr;
       use Synth.Flags;
+      type Integer_Array is array (Natural range <>) of Integer;
+      type Boolean_Array is array (Natural range <>) of Boolean;
       Conf : Node;
       Entity : Node;
       Arch : Node;
       Top_Inst : Synth_Instance_Acc;
       Inter : Node;
+      Inter_Pos : Natural;
+      --  Name for each PARAMS (or Null_Identifier if not a name).
       Names : Name_Id_Array (0 .. Nparams - 1);
+      --  Index of each PARAMS (or -1 if a name).
+      Idxes : Integer_Array (0 .. Nparams - 1);
+      --  Parameters used.
+      Used : Boolean_Array (0 .. Nparams - 1);
       Res : Synth_Instance_Acc;
    begin
+      Idxes := (others => -1);
+      Used := (others => False);
+
       for I in 1 .. Nparams loop
          declare
             use Outputs;
@@ -279,22 +307,31 @@ package body Libghdl_Synth is
             Cname : constant Ghdl_C_String := Params (I - 1).Str;
             Name_Len : constant Natural := strlen (Cname);
             Name : String (1 .. Name_Len);
+            Idx : Integer;
             Err: Boolean;
          begin
             Name := Cname (1 .. Name_Len);
-            Vhdl.Scanner.Convert_Identifier (Name, Err);
-            if Err then
-               --  Error_Msg_Elab ("parameter name is not a valid vhdl name");
-               return null;
-            end if;
-
-            Names (I - 1) := Name_Table.Get_Identifier (Name);
 
             if Boolean'(False) then
                Wr (Name);
                Wr (": ");
                Disp_Pval_Binary_Digits (Params (I - 1).Val);
                Wr_Line;
+            end if;
+
+            Idx := Name_To_Idx (Name);
+            if Idx > 0 then
+               Idxes (Idx - 1) := I - 1;
+               Names (I - 1) := Null_Identifier;
+            else
+               Vhdl.Scanner.Convert_Identifier (Name, Err);
+               Names (I - 1) := Name_Table.Get_Identifier (Name);
+               if Err then
+                  Error_Msg_Elab
+                    ("parameter %i is not a valid vhdl name",
+                    (1 => +Names (I - 1)));
+                  return null;
+               end if;
             end if;
          end;
       end loop;
@@ -309,6 +346,7 @@ package body Libghdl_Synth is
 
       --  3. Set generics.
       Inter := Get_Generic_Chain (Entity);
+      Inter_Pos := 0;
       while Is_Valid (Inter) loop
          declare
             Inter_Id : constant Name_Id := Get_Identifier (Inter);
@@ -328,7 +366,17 @@ package body Libghdl_Synth is
                   exit;
                end if;
             end loop;
+            if Idxes (Inter_Pos) /= -1 then
+               if Over_Pos /= -1 then
+                  Error_Msg_Elab
+                    ("parameter %i is both set by name and by position",
+                    (1 => +Inter_Id));
+                  return null;
+               end if;
+               Over_Pos := Idxes (Inter_Pos);
+            end if;
             if Over_Pos >= 0 then
+               Used (Over_Pos) := True;
                Val := Convert_Pval_To_Val (Params (Over_Pos).Val, Inter_Typ);
             else
                Defval := Get_Default_Value (Inter);
@@ -349,9 +397,22 @@ package body Libghdl_Synth is
             Release_Expr_Pool (Em);
          end;
          Inter := Get_Chain (Inter);
+         Inter_Pos := Inter_Pos + 1;
       end loop;
 
       pragma Assert (Is_Expr_Pool_Empty);
+
+      for I in Used'Range loop
+         if not Used (I) then
+            if Names (I) = Null_Identifier then
+               Error_Msg_Elab ("positional parameter %v not used",
+                               +Uns32 (Idxes (I) + 1));
+            else
+               Error_Msg_Elab ("parameter %i not present", (1 => +Names (I)));
+            end if;
+            return null;
+         end if;
+      end loop;
 
       --  4. Elab ports
       Elab_Top_Ports (Entity, Top_Inst);
