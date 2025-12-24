@@ -28,6 +28,9 @@ with Synth.Context; use Synth.Context;
 with Synth.Flags; use Synth.Flags;
 
 package Synthesis is
+   --  Initialization: create the top module.
+   function Make_Base_Instance return Base_Instance_Acc;
+
    function Synth_Design (Design : Iir;
                           Inst : Synth_Instance_Acc;
                           Encoding : Name_Encoding) return Base_Instance_Acc;

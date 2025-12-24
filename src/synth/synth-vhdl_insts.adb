@@ -1587,10 +1587,19 @@ package body Synth.Vhdl_Insts is
       end loop;
    end Synth_Dependencies;
 
-   procedure Synth_Top_Entity (Base : Base_Instance_Acc;
-                               Design_Unit : Node;
-                               Encoding : Name_Encoding;
-                               Syn_Inst : Synth_Instance_Acc)
+   procedure Set_Base_Instance (Base : Base_Instance_Acc) is
+   begin
+      Make_Base_Instance (Base);
+
+      Global_Base_Instance := Base;
+
+      Insts_Interning.Init;
+   end Set_Base_Instance;
+
+   function Synth_Top_Entity (Design_Unit : Node;
+                              Encoding : Name_Encoding;
+                              Syn_Inst : Synth_Instance_Acc)
+                             return Synth_Instance_Acc
    is
       Config : constant Node := Get_Library_Unit (Design_Unit);
       Blk_Conf : constant Node := Get_Block_Configuration (Config);
@@ -1598,12 +1607,6 @@ package body Synth.Vhdl_Insts is
       Entity : Node;
       Inst_Obj : Inst_Object;
    begin
-      Make_Base_Instance (Base);
-
-      Global_Base_Instance := Base;
-
-      Insts_Interning.Init;
-
       if Flags.Flag_Debug_Init then
          Elab.Debugger.Debug_Elab (Syn_Inst);  -- GCOV_EXCL_LINE
       end if;
@@ -1614,8 +1617,8 @@ package body Synth.Vhdl_Insts is
       Arch := Get_Named_Entity (Get_Block_Specification (Blk_Conf));
       Entity := Get_Entity (Arch);
 
-      Set_Extra
-        (Syn_Inst, Base, New_Sname_User (Get_Identifier (Entity), No_Sname));
+      Set_Extra (Syn_Inst, Global_Base_Instance,
+                 New_Sname_User (Get_Identifier (Entity), No_Sname));
 
       --  Search if corresponding module has already been used.
       --  If not create a new module
@@ -1628,9 +1631,10 @@ package body Synth.Vhdl_Insts is
           Config => Blk_Conf,
           Syn_Inst => Syn_Inst,
           Encoding => Encoding));
-      pragma Unreferenced (Inst_Obj);
 
       pragma Assert (Is_Expr_Pool_Empty);
+
+      return Inst_Obj.Syn_Inst;
    end Synth_Top_Entity;
 
    procedure Create_Input_Wire (Syn_Inst : Synth_Instance_Acc;

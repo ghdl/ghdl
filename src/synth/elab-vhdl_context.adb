@@ -50,12 +50,20 @@ package body Elab.Vhdl_Context is
    procedure Make_Root_Instance
    is
       Res : Synth_Instance_Acc;
+      Max_Objs : Object_Slot_Type;
    begin
       --  Allow multiple elaborations
       --  pragma Assert (Root_Instance = null);
 
+      if Global_Info /= null then
+         Max_Objs := Global_Info.Nbr_Objects;
+      else
+         --  Maybe there is no vhdl units.
+         Max_Objs := 0;
+      end if;
+
       Res :=
-        new Synth_Instance_Type'(Max_Objs => Global_Info.Nbr_Objects,
+        new Synth_Instance_Type'(Max_Objs => Max_Objs,
                                  Is_Const => False,
                                  Is_Error => False,
                                  Flag1 | Flag2 => False,
@@ -73,7 +81,10 @@ package body Elab.Vhdl_Context is
                                  Elab_Objects => 0,
                                  Objects => (others => (Kind => Obj_None)));
       if Root_Instance /= null then
+         --  There is already an existing Root_Instance.  Copy the existing
+         --  values to increase the number of objects.
          Res.Objects (1 .. Root_Instance.Max_Objs) := Root_Instance.Objects;
+         Res.Elab_Objects := Root_Instance.Elab_Objects;
          Inst_Tables.Table (Inst_Tables.First) := Res;
          Deallocate (Root_Instance);
       else

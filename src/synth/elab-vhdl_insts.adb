@@ -1525,8 +1525,6 @@ package body Elab.Vhdl_Insts is
    begin
       pragma Assert (Is_Expr_Pool_Empty);
 
-      Elab_Top_Ports (Entity, Top_Inst);
-
       --  Set Top_Instance for external names
       Top_Instance := Top_Inst;
 
@@ -1619,6 +1617,8 @@ package body Elab.Vhdl_Insts is
       end loop;
 
       pragma Assert (Is_Expr_Pool_Empty);
+
+      Elab_Top_Ports (Entity, Top_Inst);
 
       Elab_Top_Finish (Config, Entity, Arch, Top_Inst);
 

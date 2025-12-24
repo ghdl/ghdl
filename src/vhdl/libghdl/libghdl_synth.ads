@@ -21,6 +21,8 @@ with Netlists; use Netlists;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
+with Elab.Vhdl_Context; use Elab.Vhdl_Context;
+
 package Libghdl_Synth is
    --  When used from a library, this init procedure must be called before
    --  ghdl_synth.
@@ -55,8 +57,8 @@ package Libghdl_Synth is
    type Pval_Cstring_Array is array (Natural) of Pval_Cstring_Tuple;
    type Pval_Cstring_Array_Acc is access Pval_Cstring_Array;
 
-   function Ghdl_Synth_With_Params(Entity_Decl : Node;
-                                   Params : Pval_Cstring_Array_Acc;
-                                   Nparams : Natural) return Module;
-
+   function Ghdl_Synth_With_Params (Entity_Decl : Node;
+                                    Params : Pval_Cstring_Array_Acc;
+                                    Nparams : Natural)
+                                   return Synth_Instance_Acc;
 end Libghdl_Synth;

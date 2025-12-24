@@ -214,16 +214,25 @@ namespace GhdlSynth {
     struct Pval val;
   };
 
-  extern "C" unsigned int libghdl_synth__ghdl_synth_with_params(unsigned node,
-								struct Pval_Cstring_tuple *params,
-								unsigned nparams);
+  struct synth_instance_type {};
+  typedef synth_instance_type *synth_instance_acc;
 
-  inline Module ghdl_synth_with_params(unsigned node,
-				       struct Pval_Cstring_tuple *params,
-				       unsigned nparams) {
+  extern "C" synth_instance_type *libghdl_synth__ghdl_synth_with_params(
+    unsigned node, struct Pval_Cstring_tuple *params, unsigned nparams);
+
+  extern "C" unsigned synth__vhdl_context__get_instance_module(synth_instance_type *inst);
+
+  inline Module get_instance_module(synth_instance_type *inst) {
     Module res;
-    res.id = libghdl_synth__ghdl_synth_with_params(node, params, nparams);
+    res.id = synth__vhdl_context__get_instance_module(inst);
     return res;
   }
 
+  extern "C" unsigned synth__vhdl_context__get_top_module(synth_instance_type *inst);
+
+  inline Module get_top_module(synth_instance_type *inst) {
+    Module res;
+    res.id = synth__vhdl_context__get_top_module(inst);
+    return res;
+  }
 };

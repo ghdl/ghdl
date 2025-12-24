@@ -35,7 +35,6 @@ with Vhdl.Scanner;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Insts;
-with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Annotations;
 with Elab.Vhdl_Types;
 
@@ -45,6 +44,7 @@ with Synth.Vhdl_Foreign;
 with Synth.Context; use Synth.Context;
 with Synth.Vhdl_Context;
 with Synth.Vhdl_Expr;
+with Synth.Vhdl_Insts;
 
 with Synthesis;
 
@@ -134,6 +134,9 @@ package body Libghdl_Synth is
          return No_Module;
    end Ghdl_Synth;
 
+   Global_Base : Base_Instance_Acc;
+   pragma Unreferenced (Global_Base);
+
    function Ghdl_Synth_Read (Init : Natural;
                              Argc : Natural;
                              Argv : C_String_Array_Acc;
@@ -165,6 +168,8 @@ package body Libghdl_Synth is
       if Init /= 0 then
          Synth_Compile_Init (First_Arg <= Args'Last);
          Elab.Vhdl_Insts.Elab_Top_Init;
+         Make_Root_Instance;
+         Global_Base := Synthesis.Make_Base_Instance;
       end if;
 
       Mark_Vendor_Libraries
@@ -249,9 +254,10 @@ package body Libghdl_Synth is
       end case;
    end Convert_Pval_To_Val;
 
-   function Ghdl_Synth_With_Params(Entity_Decl : Node;
-                                   Params : Pval_Cstring_Array_Acc;
-                                   Nparams : Natural) return Module
+   function Ghdl_Synth_With_Params (Entity_Decl : Node;
+                                    Params : Pval_Cstring_Array_Acc;
+                                    Nparams : Natural)
+                                   return Synth_Instance_Acc
    is
       use Vhdl.Configuration;
       use Elab.Vhdl_Insts;
@@ -264,7 +270,7 @@ package body Libghdl_Synth is
       Top_Inst : Synth_Instance_Acc;
       Inter : Node;
       Names : Name_Id_Array (0 .. Nparams - 1);
-      Res : Base_Instance_Acc;
+      Res : Synth_Instance_Acc;
    begin
       for I in 1 .. Nparams loop
          declare
@@ -279,7 +285,7 @@ package body Libghdl_Synth is
             Vhdl.Scanner.Convert_Identifier (Name, Err);
             if Err then
                --  Error_Msg_Elab ("parameter name is not a valid vhdl name");
-               return No_Module;
+               return null;
             end if;
 
             Names (I - 1) := Name_Table.Get_Identifier (Name);
@@ -348,16 +354,24 @@ package body Libghdl_Synth is
       pragma Assert (Is_Expr_Pool_Empty);
 
       --  4. Elab ports
-      Top_Elab_Ports (Entity, Top_Inst);
+      Elab_Top_Ports (Entity, Top_Inst);
 
       --  5. Get existing index.
-      --  6. If already synthesized, free the instance and return the index.
+      Res := Synth.Vhdl_Insts.Synth_Top_Entity (Conf, Name_Hash, Top_Inst);
 
-      Elab_Top_Finish (Get_Library_Unit (Conf), Entity, Arch, Top_Inst);
+      if Res = Top_Inst then
+         --  New instance.
+         --  6. Elaborate it
+         Elab_Top_Finish (Get_Library_Unit (Conf), Entity, Arch, Res);
 
-      --  3. synth
-      Res := Synthesis.Synth_Design (Conf, Top_Inst, Name_Hash);
+         --  FIXME: RES is before its dependencies
+         Synth.Vhdl_Insts.Synth_All_Instances;
+      else
+         --  Already synthesized.
+         --  FIXME: free TOP_INST.
+         null;
+      end if;
 
-      return Res.Top_Module;
+      return Res;
    end Ghdl_Synth_With_Params;
 end Libghdl_Synth;

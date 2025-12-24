@@ -44,6 +44,13 @@ package body Synthesis is
       Base := new Base_Instance_Type'(Builder => Ctxt,
                                       Top_Module => Top_Module,
                                       Cur_Module => No_Module);
+
+      if Synth_Initialize_Foreign /= null then
+         Synth_Initialize_Foreign.all;
+      end if;
+
+      Synth.Vhdl_Insts.Set_Base_Instance (Base);
+
       return Base;
    end Make_Base_Instance;
 
@@ -53,13 +60,8 @@ package body Synthesis is
    is
       Base : Base_Instance_Acc;
       Unit : Iir;
+      Res : Synth_Instance_Acc;
    begin
-      Base := Make_Base_Instance;
-
-      if Synth_Initialize_Foreign /= null then
-         Synth_Initialize_Foreign.all;
-      end if;
-
       pragma Assert (Is_Expr_Pool_Empty);
 
       Unit := Get_Library_Unit (Design);
@@ -67,10 +69,16 @@ package body Synthesis is
          if Synth_Top_Foreign = null then
             raise Internal_Error;
          end if;
+
+         Make_Root_Instance;
+         Base := Make_Base_Instance;
+
          Synth_Top_Foreign (Base, Get_Foreign_Node (Unit), Encoding);
       else
-         Synth_Top_Entity (Base, Design, Encoding, Inst);
+         Base := Make_Base_Instance;
+         Res := Synth_Top_Entity (Design, Encoding, Inst);
       end if;
+      pragma Unreferenced (Res);
 
       pragma Assert (Is_Expr_Pool_Empty);
 
