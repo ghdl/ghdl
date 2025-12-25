@@ -1,5 +1,5 @@
---  GHDL Run Time (GRT) - Constants definition
---  Copyright (C) 2020 Tristan Gingold
+--  GHDL Run Time (GRT) -  asserts subprograms.
+--  Copyright (C) 2025 Tristan Gingold
 --
 --  This program is free software: you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -21,16 +21,22 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
-package Grt.Severity is
-   pragma Pure (Grt.Severity);
+package body Grt.Asserts is
+   type Natural_Array is array (Natural range <>) of Std_Integer;
+   Assert_Count : Natural_Array (Severity_Level) := (others => 0);
 
-   Note_Severity    : constant Integer := 0;
-   Warning_Severity : constant Integer := 1;
-   Error_Severity   : constant Integer := 2;
-   Failure_Severity : constant Integer := 3;
+   procedure Inc_Assert_Count (Level : Severity_Level) is
+   begin
+      Assert_Count (Level) := Assert_Count (Level) + 1;
+   end Inc_Assert_Count;
 
-   subtype Severity_Level is Natural range Note_Severity .. Failure_Severity;
+   function Ghdl_Get_Assert_Count (Level : Ghdl_E8) return Std_Integer is
+   begin
+      return Assert_Count (Severity_Level (Level));
+   end Ghdl_Get_Assert_Count;
 
-   --  Value returned by Parse_Severity for 'none'.
-   None_Severity    : constant Integer := 4;
-end Grt.Severity;
+   procedure Ghdl_Clear_Assert_Count is
+   begin
+      Assert_Count := (others => 0);
+   end Ghdl_Clear_Assert_Count;
+end Grt.Asserts;

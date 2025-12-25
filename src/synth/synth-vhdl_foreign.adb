@@ -22,6 +22,7 @@ with Ada.Unchecked_Conversion;
 with Hash; use Hash;
 with Interning;
 with Types; use Types;
+with Std_Names;
 
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Back_End; use Vhdl.Back_End;
@@ -31,46 +32,33 @@ with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Synth.Errors; use Synth.Errors;
 
 with Grt.Types; use Grt.Types;
-with Grt.Dynload; use Grt.Dynload;
+with Grt.Asserts;
+with Trans_Foreign;
 
 package body Synth.Vhdl_Foreign is
-
-   --  Cache of shlib to handle.
-   --  This is used to avoid calling dlopen multiple times.
-
-   type Shlib_Object_Type is record
-      Name : String_Access;
-      Handler : Address;
-   end record;
-
-   function Shlib_Build (Name : String) return Shlib_Object_Type
-   is
-      Name_Acc : constant String_Access := new String'(Name);
-      C_Name : constant String := Name & NUL;
-      Handler : Address;
-   begin
-      Handler :=
-        Grt_Dynload_Open (Grt.Types.To_Ghdl_C_String (C_Name'Address));
-      return (Name => Name_Acc,
-              Handler => Handler);
-   end Shlib_Build;
-
-   function Shlib_Equal (Obj : Shlib_Object_Type; Param : String)
-                        return Boolean is
-   begin
-      return Obj.Name.all = Param;
-   end Shlib_Equal;
-
-   package Shlib_Interning is new Interning
-     (Key_Type => String,
-      Object_Type => Shlib_Object_Type,
-      Hash => Hash.String_Hash,
-      Build => Shlib_Build,
-      Equal => Shlib_Equal);
-
    --  Cache of node to subprogram address.
    --  Avoid multiple lookups (and decoding of FOREIGN value).
    --  TODO: maybe also cache the caller ?
+
+   function Get_Intrinsic_Address (Decl : Iir) return Address
+   is
+      use Std_Names;
+      Id : constant Name_Id := Get_Identifier (Decl);
+   begin
+      case Id is
+         when Name_Get_Assert_Count =>
+            return Grt.Asserts.Ghdl_Get_Assert_Count'Address;
+         when Name_Clear_Assert_Count =>
+            return Grt.Asserts.Ghdl_Clear_Assert_Count'Address;
+         when Name_Control_Simulation
+            | Name_Get_Resolution_Limit =>
+            --  Handled in vhdl_eval.
+            null;
+         when others =>
+            Error_Msg_Sem (+Decl, "unknown foreign intrinsic %i", +Decl);
+      end case;
+      return Null_Address;
+   end Get_Intrinsic_Address;
 
    type Sym_Object_Type is record
       N : Node;
@@ -84,36 +72,15 @@ package body Synth.Vhdl_Foreign is
    begin
       Info := Translate_Foreign_Id (N);
 
-      if Info.Kind /= Foreign_Vhpidirect then
-         return (N => N,
-                 Handler => Null_Address);
-      end if;
-
-      declare
-         Lib : constant String :=
-           Info.Lib_Name (1 .. Info.Lib_Len);
-         Shlib : Shlib_Object_Type;
-      begin
-         if Info.Lib_Len = 0 or else Lib = "null" then
-            return (N => N,
-                    Handler => Null_Address);
-         end if;
-
-         Shlib := Shlib_Interning.Get (Lib);
-         if Shlib.Handler = Null_Address then
-            return (N => N,
-                    Handler => Null_Address);
-         end if;
-
-         Info.Subprg_Name (Info.Subprg_Len + 1) := NUL;
-
-         Handler := Grt_Dynload_Symbol
-           (Shlib.Handler,
-            Grt.Types.To_Ghdl_C_String (Info.Subprg_Name'Address));
-
-         return (N => N,
-                 Handler => Handler);
-      end;
+      case Info.Kind is
+         when Foreign_Vhpidirect =>
+            Handler := Trans_Foreign.Get_Foreign_Address (N, Info);
+         when Foreign_Intrinsic =>
+            Handler := Get_Intrinsic_Address (N);
+         when Foreign_Unknown =>
+            Handler := Null_Address;
+      end case;
+      return (N, Handler);
    end Sym_Build;
 
    function Sym_Equal (Obj : Sym_Object_Type; N : Node) return Boolean is
@@ -134,7 +101,7 @@ package body Synth.Vhdl_Foreign is
       Equal => Sym_Equal);
 
    --  Classify a type; this determines the profile of the function.
-   type Type_Class is (Class_I32, Class_Unknown);
+   type Type_Class is (Class_Void, Class_I32, Class_I8, Class_Unknown);
 
    type Type_Class_Array is array (Nat32 range <>) of Type_Class;
 
@@ -144,6 +111,8 @@ package body Synth.Vhdl_Foreign is
          when Type_Discrete =>
             if T.Sz = 4 then
                return Class_I32;
+            elsif T.Sz = 1 then
+               return Class_I8;
             end if;
          when others =>
             null;
@@ -153,6 +122,21 @@ package body Synth.Vhdl_Foreign is
 
    --  Callers for each profile.
    --  This doesn't scale!
+
+   procedure Call_Proc (Args : Valtyp_Array;
+                        Res : Memory_Ptr;
+                        Handler : Address)
+   is
+      pragma Assert (Args'Length = 0);
+      pragma Assert (Res = null);
+      type Proto_Acc is access procedure;
+      pragma Convention (C, Proto_Acc);
+      function To_Proto_Acc is new Ada.Unchecked_Conversion
+        (Address, Proto_Acc);
+      Proto : constant Proto_Acc := To_Proto_Acc (Handler);
+   begin
+      Proto.all;
+   end Call_Proc;
 
    --  For functions that returns an int32 and no arguments.
    procedure Call_I32 (Args : Valtyp_Array;
@@ -170,6 +154,24 @@ package body Synth.Vhdl_Foreign is
       R := Proto.all;
       Write_I32 (Res, R);
    end Call_I32;
+
+   procedure Call_I32_I8 (Args : Valtyp_Array;
+                          Res : Memory_Ptr;
+                          Handler : Address)
+   is
+      pragma Assert (Args'Length = 1);
+      type Proto_Acc is access function (Arg : Ghdl_E8) return Ghdl_I32;
+      pragma Convention (C, Proto_Acc);
+      function To_Proto_Acc is new Ada.Unchecked_Conversion
+        (Address, Proto_Acc);
+      Proto : constant Proto_Acc := To_Proto_Acc (Handler);
+      R : Ghdl_I32;
+      Arg : Ghdl_E8;
+   begin
+      Arg := Read_U8 (Get_Memtyp (Args (1)));
+      R := Proto.all (Arg);
+      Write_I32 (Res, R);
+   end Call_I32_I8;
 
    type Call_Acc is access procedure (Args : Valtyp_Array;
                                       Res : Memory_Ptr;
@@ -203,10 +205,18 @@ package body Synth.Vhdl_Foreign is
    type Profile_Array is array (Natural range <>) of Profile_Record;
 
    Profiles : constant Profile_Array :=
-     (1 => (Nargs => 0,
+     (0 => (Nargs => 0,
+            Args => (others => Class_Unknown),
+            Res => Class_Void,
+            Call => Call_Proc'Access),
+      1 => (Nargs => 0,
             Args => (others => Class_Unknown),
             Res => Class_I32,
-            Call => Call_I32'Access));
+            Call => Call_I32'Access),
+      2 => (Nargs => 1,
+            Args => (1 => Class_I8, others => Class_Unknown),
+            Res => Class_I32,
+            Call => Call_I32_I8'Access));
 
    function Call_Subprogram (Syn_Inst : Synth_Instance_Acc;
                              Sub_Inst : Synth_Instance_Acc;
@@ -267,7 +277,7 @@ package body Synth.Vhdl_Foreign is
 
          when Iir_Kind_Procedure_Declaration =>
             Ret_Typ := null;
-            Profile.Res := Class_Unknown;
+            Profile.Res := Class_Void;
       end case;
 
       --  Find the profile.
@@ -301,7 +311,7 @@ package body Synth.Vhdl_Foreign is
 
    procedure Initialize is
    begin
-      Shlib_Interning.Init;
+      Trans_Foreign.Init;
       Sym_Interning.Init;
    end Initialize;
 end Synth.Vhdl_Foreign;

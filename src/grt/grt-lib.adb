@@ -23,11 +23,12 @@
 
 with Grt.Errors; use Grt.Errors;
 with Grt.Errors_Exec; use Grt.Errors_Exec;
-with Grt.Severity;
 with Grt.Options; use Grt.Options;
 with Grt.Fcvt;
 with Grt.Backtraces;
 with Grt.Arith;
+with Grt.Severity; use Grt.Severity;
+with Grt.Asserts; use Grt.Asserts;
 
 package body Grt.Lib is
    --procedure Memcpy (Dst : Address; Src : Address; Size : Size_T);
@@ -50,7 +51,6 @@ package body Grt.Lib is
                         Severity : Integer;
                         Loc : Ghdl_Location_Ptr)
    is
-      use Grt.Severity;
       Level : constant Integer := Severity mod 256;
       Bt : Backtrace_Addrs;
    begin
@@ -84,7 +84,7 @@ package body Grt.Lib is
          Diag_C (Default_Str);
       end if;
       Report_E;
-      if Level >= Grt.Options.Severity_Level then
+      if Level >= Grt.Options.Severity_Stop_Level then
          Save_Backtrace (Bt, 2);
          Error_S (Msg);
          Diag_C (" failed");
@@ -109,6 +109,7 @@ package body Grt.Lib is
       if Is_Assert_Disabled (Asserts_Policy) then
          return;
       end if;
+      Inc_Assert_Count (Severity);
       Do_Report ("assertion", Base, Len, "Assertion violation", Severity, Loc);
    end Ghdl_Assert_Failed;
 
@@ -120,6 +121,7 @@ package body Grt.Lib is
       if Is_Assert_Disabled (Ieee_Asserts) then
          return;
       end if;
+      Inc_Assert_Count (Severity);
       Do_Report ("assertion", Base, Len, "Assertion violation", Severity, Loc);
    end Ghdl_Ieee_Assert_Failed;
 
@@ -162,6 +164,7 @@ package body Grt.Lib is
                           Severity : Integer;
                           Loc : Ghdl_Location_Ptr) is
    begin
+      Inc_Assert_Count (Severity);
       Do_Report ("report", Base, Len, "Assertion violation", Severity, Loc);
    end Ghdl_Report;
 

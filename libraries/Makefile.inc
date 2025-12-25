@@ -25,7 +25,6 @@
 # VHDLLIBS_COPY_OBJS: must be set to 'no' for jit
 
 vhdl.libs.all: vhdl.libs.v87 vhdl.libs.v93 vhdl.libs.v08 vhdl.libs.v19
-vhdl.libs.jit.all: vhdl.libs.all
 
 enable_gplcompat=false
 

@@ -90,7 +90,7 @@ package body Simul.Main is
       pragma Assert (Areapools.Is_Empty (Process_Pool));
 
       --  Copy flag.
-      Synth.Flags.Severity_Level := Grt.Options.Severity_Level;
+      Synth.Flags.Severity_Level := Grt.Options.Severity_Stop_Level;
 
       if Flag_Interractive then
          Elab.Debugger.Debug_Elab (Vhdl_Elab.Top_Instance);

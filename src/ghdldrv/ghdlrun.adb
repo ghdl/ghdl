@@ -36,7 +36,6 @@ with Vhdl.Std_Package;
 with Vhdl.Sem;
 with Vhdl.Canon;
 with Vhdl.Ieee.Std_Logic_1164;
-with Vhdl.Back_End;
 with Vhdl.Nodes_GC;
 with Vhdl.Utils;
 with Vhdl.Configuration;
@@ -50,7 +49,7 @@ with Ortho_Nodes; use Ortho_Nodes;
 with Trans_Decls;
 with Translation;
 with Trans_Link;
-with Trans_Foreign;
+with Trans_Foreign_Jit;
 with Trans.Coverage;
 
 with Simul.Main;
@@ -99,10 +98,6 @@ package body Ghdlrun is
 
    Run_Mode : Run_Mode_Kind := Run_Jit;
 
-   procedure Foreign_Hook (Decl : Iir;
-                           Info : Vhdl.Back_End.Foreign_Info_Type;
-                           Ortho : O_Dnode);
-
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
       Common_Compile_Init (Analyze_Only);
@@ -110,8 +105,8 @@ package body Ghdlrun is
          return;
       end if;
 
-      Translation.Foreign_Hook := Foreign_Hook'Access;
-      Trans_Foreign.Init;
+      Translation.Foreign_Hook := Trans_Foreign_Jit.Foreign_Hook'Access;
+      Trans_Foreign_Jit.Init;
 
       --  FIXME: add a flag to force unnesting.
       --  Translation.Flag_Unnest_Subprograms := True;
@@ -309,18 +304,6 @@ package body Ghdlrun is
    procedure Def (Decl : O_Dnode; Addr : Address)
      renames Ortho_Jit.Set_Address;
 
-   procedure Foreign_Hook (Decl : Iir;
-                           Info : Vhdl.Back_End.Foreign_Info_Type;
-                           Ortho : O_Dnode)
-   is
-      Res : Address;
-   begin
-      Res := Trans_Foreign.Get_Foreign_Address (Decl, Info);
-      if Res /= Null_Address then
-         Def (Ortho, Res);
-      end if;
-   end Foreign_Hook;
-
    procedure Register_Modules is
    begin
       --  List of modules to be registered.
@@ -410,7 +393,7 @@ package body Ghdlrun is
                return;
             end if;
 
-            Synth.Flags.Severity_Level := Grt.Options.Severity_Level;
+            Synth.Flags.Severity_Level := Grt.Options.Severity_Stop_Level;
 
             if Run_Mode = Run_Jit then
                Elaborate_Proc := Simul.Vhdl_Compile.Elaborate'Access;

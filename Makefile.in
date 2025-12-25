@@ -277,6 +277,7 @@ copy-sources.gcc: version.ads scripts/gcc/Make-lang.in
 	$(CP) -p $(srcdir)/src/grt/grt-vhdl_types.ads $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-c.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-fcvt.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-asserts.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-algos.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-arith.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-vstrings.ad? $(gcc_vhdl_dir)

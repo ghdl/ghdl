@@ -21,6 +21,7 @@ with Ada.Unchecked_Deallocation;
 with Grt.Types; use Grt.Types;
 with Grt.Algos;
 with Grt.Severity; use Grt.Severity;
+with Grt.Asserts;
 with Areapools;
 with Std_Names;
 with Errorout; use Errorout;
@@ -4005,7 +4006,7 @@ package body Synth.Vhdl_Stmts is
       Rep : Valtyp;
       Rep_Str : String_Acc;
       Sev : Valtyp;
-      Sev_V : Natural;
+      Level : Natural;
    begin
       Mark_Expr_Pool (Marker);
 
@@ -4038,24 +4039,32 @@ package body Synth.Vhdl_Stmts is
             case Get_Kind (Stmt) is
                when Iir_Kind_Report_Statement
                  | Iir_Kind_Psl_Cover_Directive =>
-                  Sev_V := Note_Severity;
+                  Level := Note_Severity;
                when Iir_Kind_Assertion_Statement
                  | Iir_Kind_Concurrent_Assertion_Statement
                  | Iir_Kind_Psl_Assert_Directive
                  | Iir_Kind_Psl_Assume_Directive =>
-                  Sev_V := Error_Severity;
+                  Level := Error_Severity;
                when others => raise Internal_Error;
             end case;
          else
-            Sev_V := Natural (Read_Discrete (Sev));
+            Level := Natural (Read_Discrete (Sev));
          end if;
       else
-         Sev_V := Note_Severity;
+         Level := Note_Severity;
       end if;
 
       Release_Expr_Pool (Marker);
 
-      Report_Assertion_Failure (Syn_Inst, Stmt, Sev_V, Rep_Str);
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Assertion_Statement
+           | Iir_Kind_Concurrent_Assertion_Statement =>
+            Grt.Asserts.Inc_Assert_Count (Level);
+         when others =>
+            null;
+      end case;
+
+      Report_Assertion_Failure (Syn_Inst, Stmt, Level, Rep_Str);
    end Execute_Failed_Assertion;
 
    procedure Execute_Report_Statement (Inst : Synth_Instance_Acc;

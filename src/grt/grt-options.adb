@@ -367,7 +367,7 @@ package body Grt.Options is
          begin
             Level := Parse_Severity ("--assert-level", Option (16 .. Len));
             if Level >= 0 then
-               Severity_Level := Level;
+               Severity_Stop_Level := Level;
             end if;
          end;
       elsif Len > 21 and then Option (1 .. 21) = "--backtrace-severity=" then

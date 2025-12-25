@@ -1,4 +1,4 @@
---  Nodes recognizer for ieee.math_real.
+--  Nodes recognizer for std.env.
 --  Copyright (C) 2019 Tristan Gingold
 --
 --  This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Types; use Types;
 with Std_Names; use Std_Names;
 
 package body Vhdl.Std_Env is
@@ -50,7 +49,7 @@ package body Vhdl.Std_Env is
                pragma Assert (Inter = Null_Iir);
                Predef := Iir_Predefined_Std_Env_Resolution_Limit;
             when others =>
-               raise Internal_Error;
+               Predef := Iir_Predefined_None;
          end case;
          Set_Implicit_Definition (Decl, Predef);
          Decl := Get_Chain (Decl);

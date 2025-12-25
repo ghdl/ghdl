@@ -630,6 +630,8 @@ package body Std_Names is
       Def ("textio_write_real",     Name_Textio_Write_Real);
       Def ("get_resolution_limit",  Name_Get_Resolution_Limit);
       Def ("control_simulation",    Name_Control_Simulation);
+      Def ("get_assert_count",      Name_Get_Assert_Count);
+      Def ("clear_assert_count",    Name_Clear_Assert_Count);
       Def ("step",                  Name_Step);
       Def ("index",                 Name_Index);
       Def ("item",                  Name_Item);

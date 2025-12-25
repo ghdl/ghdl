@@ -23,4 +23,13 @@ package Env is
   procedure Finish;
 
   function Resolution_Limit return Delay_Length;
+
+--START-V19
+  -- VHDL Assert Count
+  impure function GetVhdlAssertCount return natural;
+  impure function GetVhdlAssertCount (Level : SEVERITY_LEVEL ) return natural;
+
+   --  Clear VHDL Assert Errors
+  procedure ClearVhdlAssert;
+--END-V19
 end package Env;

@@ -43,7 +43,6 @@ with Elab.Debugger;
 with Elab.Vhdl_Types;
 with Elab.Vhdl_Debug;
 
-with Synth.Errors;
 with Synth.Vhdl_Stmts; use Synth.Vhdl_Stmts;
 with Synth.Vhdl_Expr;
 with Synth.Vhdl_Oper;
@@ -51,6 +50,7 @@ with Synth.Vhdl_Decls;
 with Synth.Vhdl_Static_Proc;
 with Synth.Flags;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
+with Synth.Vhdl_Foreign;
 
 with Simul.Main;
 
@@ -949,14 +949,8 @@ package body Simul.Vhdl_Simul is
               Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
             Inter_Chain : constant Node :=
               Get_Interface_Declaration_Chain (Imp);
+            Res : Valtyp;
          begin
-            if Get_Foreign_Flag (Imp) then
-               Synth.Errors.Error_Msg_Synth
-                 (Inst, Stmt, "call to foreign %n is not supported", +Imp);
-               Next_Stmt := Null_Node;
-               return;
-            end if;
-
             if Obj /= Null_Node then
                Sub_Inst := Synth_Protected_Call_Instance (Inst, Obj, Imp, Bod);
             else
@@ -970,24 +964,30 @@ package body Simul.Vhdl_Simul is
             Synth_Subprogram_Associations
               (Sub_Inst, Inst, Inter_Chain, Assoc_Chain, Call);
 
-            Process.Instance := Sub_Inst;
-            Synth.Vhdl_Decls.Synth_Declarations
-              (Sub_Inst, Get_Declaration_Chain (Bod), True);
+            if Get_Foreign_Flag (Imp) then
+               Res := Synth.Vhdl_Foreign.Call_Subprogram
+                 (Inst, Sub_Inst, Imp, Stmt);
+               pragma Assert (Res = No_Valtyp);
+            else
+               Process.Instance := Sub_Inst;
+               Synth.Vhdl_Decls.Synth_Declarations
+                 (Sub_Inst, Get_Declaration_Chain (Bod), True);
 
-            if Process.Has_State and then Get_Suspend_Flag (Bod) then
-               --  The procedure may suspend, in a suspendable process.
-               Next_Stmt := Get_Sequential_Statement_Chain (Bod);
-               if Next_Stmt /= Null_Node then
-                  return;
+               if Process.Has_State and then Get_Suspend_Flag (Bod) then
+                  --  The procedure may suspend, in a suspendable process.
+                  Next_Stmt := Get_Sequential_Statement_Chain (Bod);
+                  if Next_Stmt /= Null_Node then
+                     return;
+                  end if;
                end if;
-            end if;
 
-            --  No suspension (or no statements).
-            Execute_Sequential_Statements (Process);
-            Synth.Vhdl_Decls.Finalize_Declarations
-              (Sub_Inst, Get_Declaration_Chain (Bod), True);
-            Synth_Subprogram_Back_Association
-              (Sub_Inst, Inst, Inter_Chain, Assoc_Chain);
+               --  No suspension (or no statements).
+               Execute_Sequential_Statements (Process);
+               Synth.Vhdl_Decls.Finalize_Declarations
+                 (Sub_Inst, Get_Declaration_Chain (Bod), True);
+               Synth_Subprogram_Back_Association
+                 (Sub_Inst, Inst, Inter_Chain, Assoc_Chain);
+            end if;
             Next_Stmt := Null_Node;
          end;
       end if;

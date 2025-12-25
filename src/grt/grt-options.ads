@@ -127,7 +127,7 @@ package Grt.Options is
 
    --  For --assert-level
    --  Level at which an assert stop the simulation.
-   Severity_Level : Integer := Grt.Severity.Failure_Severity;
+   Severity_Stop_Level : Integer := Grt.Severity.Failure_Severity;
 
    --  Level at which an assert displays a backtrace.
    Backtrace_Severity : Integer := Grt.Severity.None_Severity;

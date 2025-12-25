@@ -1,5 +1,5 @@
---  GHDL Run Time (GRT) - Constants definition
---  Copyright (C) 2020 Tristan Gingold
+--  GHDL Run Time (GRT) -  misc subprograms.
+--  Copyright (C) 2002 - 2016 Tristan Gingold
 --
 --  This program is free software: you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
@@ -20,17 +20,19 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
+with Grt.Types; use Grt.Types;
+with Grt.Vhdl_Types; use Grt.Vhdl_Types;
+with Grt.Severity; use Grt.Severity;
 
-package Grt.Severity is
-   pragma Pure (Grt.Severity);
+package Grt.Asserts is
+   procedure Inc_Assert_Count (Level : Severity_Level);
 
-   Note_Severity    : constant Integer := 0;
-   Warning_Severity : constant Integer := 1;
-   Error_Severity   : constant Integer := 2;
-   Failure_Severity : constant Integer := 3;
+   function Ghdl_Get_Assert_Count (Level : Ghdl_E8) return Std_Integer;
+   procedure Ghdl_Clear_Assert_Count;
 
-   subtype Severity_Level is Natural range Note_Severity .. Failure_Severity;
-
-   --  Value returned by Parse_Severity for 'none'.
-   None_Severity    : constant Integer := 4;
-end Grt.Severity;
+private
+   pragma Export (C, Ghdl_Get_Assert_Count,
+                  "std__env__get_assert_count");
+   pragma Export (C, Ghdl_Clear_Assert_Count,
+                  "std__env__clear_assert_count");
+end Grt.Asserts;

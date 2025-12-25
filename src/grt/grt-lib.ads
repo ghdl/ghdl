@@ -130,6 +130,7 @@ package Grt.Lib is
 
    procedure Ghdl_Control_Simulation
      (Stop : Ghdl_B1; Has_Status : Ghdl_B1; Status : Std_Integer);
+
 private
    pragma Export (C, Ghdl_Memcpy, "__ghdl_memcpy");
 

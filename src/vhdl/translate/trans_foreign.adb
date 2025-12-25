@@ -15,9 +15,6 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 with Hash;
 with Interning;
-with Types;
-with Std_Names;
-with Flags;
 
 with Foreigns;
 
@@ -25,8 +22,6 @@ with Vhdl.Errors; use Vhdl.Errors;
 
 with Grt.Types; use Grt.Types;
 with Grt.Dynload; use Grt.Dynload;
-with Grt.Lib;
-with Grt.Files_Lib;
 
 package body Trans_Foreign is
    --  Elaboration mode.
@@ -60,87 +55,46 @@ package body Trans_Foreign is
       Build => Shlib_Build,
       Equal => Shlib_Equal);
 
-   function Get_Intrinsic_Address (Decl : Iir) return Address
-   is
-      use Types;
-      use Std_Names;
-      Id : constant Name_Id := Get_Identifier (Decl);
-   begin
-      case Id is
-         when Name_Untruncated_Text_Read =>
-            if Flags.Flag_Integer_64 then
-               return Grt.Files_Lib.Ghdl_Untruncated_Text_Read_64'Address;
-            else
-               return Grt.Files_Lib.Ghdl_Untruncated_Text_Read_32'Address;
-            end if;
-         when Name_Textio_Read_Real =>
-            return Grt.Lib.Textio_Read_Real'Address;
-         when Name_Textio_Write_Real =>
-            return Grt.Lib.Textio_Write_Real'Address;
-         when Name_Control_Simulation =>
-            return Grt.Lib.Ghdl_Control_Simulation'Address;
-         when Name_Get_Resolution_Limit =>
-            return Grt.Lib.Ghdl_Get_Resolution_Limit'Address;
-         when others =>
-            Error_Msg_Sem (+Decl, "unknown foreign intrinsic %i", +Decl);
-            return Null_Address;
-      end case;
-   end Get_Intrinsic_Address;
-
    function Get_Foreign_Address
      (Decl : Iir; Info : Vhdl.Back_End.Foreign_Info_Type) return Address
    is
       use Vhdl.Back_End;
+         Name : constant String :=
+           Info.Subprg_Name (1 .. Info.Subprg_Len);
+         Lib : constant String :=
+           Info.Lib_Name (1 .. Info.Lib_Len);
+         Shlib : Shlib_Object_Type;
       Res : Address;
    begin
-      case Info.Kind is
-         when Foreign_Vhpidirect =>
-            declare
-               Name : constant String :=
-                 Info.Subprg_Name (1 .. Info.Subprg_Len);
-               Lib : constant String :=
-                 Info.Lib_Name (1 .. Info.Lib_Len);
-               Shlib : Shlib_Object_Type;
-            begin
-               if Info.Lib_Len = 0
-                 or else Lib = "null"
-               then
-                  Res := Foreigns.Find_Foreign (Name);
-                  if Res = Null_Address then
-                     Error_Msg_Sem
-                       (+Decl, "unknown foreign VHPIDIRECT '" & Name & "'");
-                     return Null_Address;
-                  end if;
-               else
-                  Shlib := Shlib_Interning.Get (Lib);
-                  if Shlib.Handler = Null_Address then
-                     Error_Msg_Sem
-                       (+Decl, "cannot load VHPIDIRECT shared library '" &
-                          Lib & "'");
-                     return Null_Address;
-                  end if;
+      if Info.Lib_Len = 0
+        or else Lib = "null"
+      then
+         Res := Foreigns.Find_Foreign (Name);
+         if Res = Null_Address then
+            Error_Msg_Sem
+              (+Decl, "unknown foreign VHPIDIRECT '" & Name & "'");
+            return Null_Address;
+         end if;
+      else
+         Shlib := Shlib_Interning.Get (Lib);
+         if Shlib.Handler = Null_Address then
+            Error_Msg_Sem
+              (+Decl, "cannot load VHPIDIRECT shared library '" & Lib & "'");
+            return Null_Address;
+         end if;
 
-                  declare
-                     C_Name : constant String := Name & NUL;
-                  begin
-                     Res := Grt_Dynload_Symbol
-                       (Shlib.Handler,
-                        Grt.Types.To_Ghdl_C_String (C_Name'Address));
-                  end;
-                  if Res = Null_Address then
-                     Error_Msg_Sem
-                       (+Decl, "cannot resolve VHPIDIRECT symbol '"
-                          & Name & "'");
-                     return Null_Address;
-                  end if;
-               end if;
-               return Res;
-            end;
-         when Foreign_Intrinsic =>
-            return Get_Intrinsic_Address (Decl);
-         when Foreign_Unknown =>
-            null;
-      end case;
+         declare
+            C_Name : constant String := Name & NUL;
+         begin
+            Res := Grt_Dynload_Symbol
+              (Shlib.Handler, Grt.Types.To_Ghdl_C_String (C_Name'Address));
+         end;
+         if Res = Null_Address then
+            Error_Msg_Sem
+              (+Decl, "cannot resolve VHPIDIRECT symbol '" & Name & "'");
+            return Null_Address;
+         end if;
+      end if;
       return Res;
    end Get_Foreign_Address;
 

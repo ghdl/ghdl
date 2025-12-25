@@ -21,13 +21,11 @@ with Ada.Unchecked_Conversion;
 
 with Types; use Types;
 with Tables;
-
 with Libraries;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
-with Vhdl.Back_End;
 with Vhdl.Configuration;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
@@ -55,7 +53,7 @@ with Trans.Chap4;
 with Trans.Chap9;
 with Trans.Rtis;
 with Trans_Link;
-with Trans_Foreign;
+with Trans_Foreign_Jit;
 with Trans_Decls;
 with Trans.Coverage;
 
@@ -2071,19 +2069,6 @@ package body Simul.Vhdl_Compile is
    procedure Def (Decl : O_Dnode; Addr : System.Address)
      renames Ortho_Jit.Set_Address;
 
-   procedure Foreign_Hook (Decl : Iir;
-                           Info : Vhdl.Back_End.Foreign_Info_Type;
-                           Ortho : O_Dnode)
-   is
-      use System;
-      Res : Address;
-   begin
-      Res := Trans_Foreign.Get_Foreign_Address (Decl, Info);
-      if Res /= Null_Address then
-         Def (Ortho, Res);
-      end if;
-   end Foreign_Hook;
-
    procedure Disp_Process_Name (Stream : Grt.Stdio.FILEs;
                                 Proc : Grt.Signals.Process_Acc)
    is
@@ -2112,8 +2097,8 @@ package body Simul.Vhdl_Compile is
    begin
       Ortho_Jit.Init;
 
-      Translation.Foreign_Hook := Foreign_Hook'Access;
-      Trans_Foreign.Init;
+      Translation.Foreign_Hook := Trans_Foreign_Jit.Foreign_Hook'Access;
+      Trans_Foreign_Jit.Init;
 
       Translation.Initialize;
 
