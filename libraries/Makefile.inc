@@ -24,7 +24,8 @@
 # MKDIR
 # VHDLLIBS_COPY_OBJS: must be set to 'no' for jit
 
-vhdl.libs.all: vhdl.libs.v87 vhdl.libs.v93 vhdl.libs.v08
+vhdl.libs.all: vhdl.libs.v87 vhdl.libs.v93 vhdl.libs.v08 vhdl.libs.v19
+vhdl.libs.jit.all: vhdl.libs.all
 
 enable_gplcompat=false
 
@@ -36,6 +37,11 @@ vhdl.libs.v19: std.v19 ieee.v19
 STD_SRCS := \
   textio.vhdl \
   textio-body.vhdl
+
+# For vhdl 2008, 2019...
+STD08_SRCS := $(STD_SRCS) \
+  env.vhdl \
+  env-body.vhdl
 
 SYNOPSYS_BSRCS := \
   std_logic_arith.vhdl \
@@ -120,8 +126,8 @@ ANALYZE_DEP=$(GHDL)
 
 STD87_BSRCS := $(addprefix std/v87/,$(STD_SRCS))
 STD93_BSRCS := $(addprefix std/v93/,$(STD_SRCS))
-STD08_BSRCS := $(addprefix std/v08/,$(STD_SRCS)) std/env.vhdl std/env-body.vhdl
-STD19_BSRCS := $(addprefix std/v19/,$(STD_SRCS)) std/env.vhdl std/env-body.vhdl
+STD08_BSRCS := $(addprefix std/v08/,$(STD08_SRCS))
+STD19_BSRCS := $(addprefix std/v19/,$(STD08_SRCS))
 
 SYNOPSYS87_BSRCS := $(addprefix synopsys/,$(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS))
 SYNOPSYS93_BSRCS := $(addprefix synopsys/,$(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS))
@@ -138,10 +144,14 @@ SED_V87:= sed -e '/--!V87/s/^/  --/' -e '/--V08/s/^/  --/' \
  -e '/--START-V08/,/--END-V08/s/^/--/'
 
 SED_V08:= sed -e '/--V87/s/^/  --/' -e '/--!V08/s/^/  --/' \
- -e '/--START-!V08/,/--END-!V08/s/^/--/'
+ -e '/--START-!V08/,/--END-!V08/s/^/--/' \
+ -e '/--START-V19/,/--END-V19/d'
 
 SED_V19:= sed -e '/--V87/s/^/  --/' -e '/--!V19/s/^/  --/' \
- -e '/--START-!V19/,/--END-!V19/s/^/--/'
+ -e '/--START-!V19/,/--END-!V19/s/^/--/' \
+ -e '/--START-V19/d' \
+ -e '/--END-V19/d'
+
 
 STD87_DIR:=$(LIBDST_DIR)/std/v87
 IEEE87_DIR:=$(LIBDST_DIR)/ieee/v87
@@ -268,9 +278,6 @@ $(IEEE93_DIR)/ieee-obj93.cf: $(ANALYZE_DEP) $(IEEE93_SRCS) $(VITAL2000_SRCS) $(S
 $(LIBDST_DIR)/src/std/v08/%.vhdl: $(LIBSRC_DIR)/std/%.vhdl
 	$(SED_V08) < $< > $@
 
-$(LIBDST_DIR)/src/std/%.vhdl: $(LIBSRC_DIR)/std/%.vhdl
-	$(CP) $< $@
-
 std.v08: $(STD08_DIR)/std-obj08.cf
 
 $(STD08_DIR)/std-obj08.cf: $(ANALYZE_DEP) $(STD08_SRCS)
@@ -377,4 +384,5 @@ $(STD19_DIR)/std_standard.o: $(GHDL) std.v19
 
 libs.vhdl.standard: $(STD87_DIR)/std_standard.o \
  $(STD93_DIR)/std_standard.o \
- $(STD08_DIR)/std_standard.o
+ $(STD08_DIR)/std_standard.o \
+ $(STD19_DIR)/std_standard.o

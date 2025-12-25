@@ -657,9 +657,11 @@ VHDLLIB_SUBDIRS= \
   ieee/v87 \
   ieee/v93 \
   ieee/v08 \
+  ieee/v19 \
   std/v87 \
   std/v93 \
   std/v08 \
+  std/v19 \
   src/ieee \
   src/ieee/v87 \
   src/ieee/v93 \
@@ -668,6 +670,7 @@ VHDLLIB_SUBDIRS= \
   src/std/v87 \
   src/std/v93 \
   src/std/v08 \
+  src/std/v19 \
   src/synopsys \
   src/synopsys/v08 \
   src/upf
