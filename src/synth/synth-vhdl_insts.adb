@@ -35,8 +35,6 @@ with Netlists.Concats;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Locations; use Netlists.Locations;
 
-with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
-with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors;
@@ -45,6 +43,8 @@ with Vhdl.Ieee.Math_Real;
 with Vhdl.Std_Package;
 
 with Elab.Memtype; use Elab.Memtype;
+with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
+with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Files;
 with Elab.Debugger;
 with Elab.Vhdl_Errors;
@@ -1593,7 +1593,7 @@ package body Synth.Vhdl_Insts is
    is
       use Insts_Interning;
    begin
-      Make_Base_Instance (Base);
+      Vhdl_Context.Set_Base_Instance (Base);
 
       Global_Base_Instance := Base;
 
@@ -1601,6 +1601,14 @@ package body Synth.Vhdl_Insts is
 
       Next_Synth_Instance := First_Index;
    end Set_Base_Instance;
+
+   procedure Free_Base_Instance is
+   begin
+      Vhdl_Context.Free_Extra;
+      Global_Base_Instance := null;
+      Elab.Vhdl_Context.Free_Base_Instance;
+      Insts_Interning.Init;
+   end Free_Base_Instance;
 
    function Synth_Top_Entity (Design_Unit : Node;
                               Encoding : Name_Encoding;

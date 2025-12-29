@@ -46,8 +46,8 @@ with Elab.Vhdl_Insts;
 
 with Synthesis;
 with Synth.Disp_Vhdl;
-with Synth.Vhdl_Context;
 with Synth.Vhdl_Foreign;
+with Synth.Vhdl_Insts;
 
 package body Ghdlsynth is
    function Decode_Command (Cmd : Command_Synth; Name : String)
@@ -524,7 +524,7 @@ package body Ghdlsynth is
       end if;
 
       Elab.Vhdl_Annotations.Finalize_Annotate;
-      Synth.Vhdl_Context.Free_Base_Instance;
+      Synth.Vhdl_Insts.Free_Base_Instance;
 
       Success := True;
    end Perform_Action;

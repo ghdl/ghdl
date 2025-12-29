@@ -35,11 +35,11 @@ package Synth.Vhdl_Context is
    --  Values are stored into Synth_Instance, which is parallel to simulation
    --  Block_Instance_Type.
 
-   --  Create the root instance.
-   procedure Make_Base_Instance (Base : Base_Instance_Acc);
+   --  Use BASE for the root instance.
+   procedure Set_Base_Instance (Base : Base_Instance_Acc);
 
-   --  Free the first instance.
-   procedure Free_Base_Instance;
+   --  Free the extra table
+   procedure Free_Extra;
 
    --  Create a synth instance.
    procedure Set_Extra (Inst : Synth_Instance_Acc;

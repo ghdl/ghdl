@@ -96,8 +96,9 @@ package body Elab.Vhdl_Context is
 
    procedure Free_Base_Instance is
    begin
-      --  TODO: really free.
-      null;
+      Deallocate (Root_Instance);
+      Root_Instance := null;
+      Inst_Tables.Init;
    end Free_Base_Instance;
 
    function Make_Elab_Instance (Parent : Synth_Instance_Acc;

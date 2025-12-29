@@ -48,16 +48,15 @@ package body Synth.Vhdl_Context is
       Extra_Tables.Table (Id) := Extra;
    end Set_Extra;
 
-   procedure Make_Base_Instance (Base : Base_Instance_Acc) is
+   procedure Set_Base_Instance (Base : Base_Instance_Acc) is
    begin
       Set_Extra (Root_Instance, (Base => Base, Name => No_Sname));
-   end Make_Base_Instance;
+   end Set_Base_Instance;
 
-   procedure Free_Base_Instance is
+   procedure Free_Extra is
    begin
-      --  TODO: really free.
-      null;
-   end Free_Base_Instance;
+      Extra_Tables.Init;
+   end Free_Extra;
 
    function Get_Instance_Extra (Inst : Synth_Instance_Acc)
                                return Extra_Vhdl_Instance_Type is

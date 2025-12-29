@@ -30,6 +30,7 @@ package Synth.Vhdl_Insts is
    --  Initialization: set base module.
    --  Must be called before synth_top_entity.
    procedure Set_Base_Instance (Base : Base_Instance_Acc);
+   procedure Free_Base_Instance;
 
    --  Create the declaration of the top entity.
    function Synth_Top_Entity (Design_Unit : Node;

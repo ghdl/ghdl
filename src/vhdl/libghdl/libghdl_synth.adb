@@ -42,7 +42,6 @@ with Synth;
 with Synth.Flags;
 with Synth.Vhdl_Foreign;
 with Synth.Context; use Synth.Context;
-with Synth.Vhdl_Context;
 with Synth.Vhdl_Expr;
 with Synth.Vhdl_Insts;
 
@@ -121,7 +120,7 @@ package body Libghdl_Synth is
       pragma Assert (Is_Expr_Pool_Empty);
 
       Elab.Vhdl_Annotations.Finalize_Annotate;
-      Synth.Vhdl_Context.Free_Base_Instance;
+      Synth.Vhdl_Insts.Free_Base_Instance;
       return Res.Top_Module;
 
    exception
