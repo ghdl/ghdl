@@ -33,17 +33,6 @@ package body Synth.Ieee.Utils is
       end loop;
    end Neg_Vec;
 
-   procedure Abs_Vec (Src : Memory_Ptr; Dst : Memory_Ptr; Len : Uns32) is
-   begin
-      if Len > 0 and then Sl_To_X01 (Read_Std_Logic (Src, 0)) = '1' then
-         Neg_Vec (Src, Dst, Len);
-      else
-         for I in 1 .. Size_Type (Len) loop
-            Write_U8 (Dst + (I - 1), Read_U8 (Src + (I - 1)));
-         end loop;
-      end if;
-   end Abs_Vec;
-
    function Create_Res_Type (Otyp : Type_Acc; Len : Uns32) return Type_Acc is
    begin
       if Otyp.Abound.Len = Len

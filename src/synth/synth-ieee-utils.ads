@@ -59,9 +59,6 @@ package Synth.Ieee.Utils is
    --  Note: SRC = DST is allowed.
    procedure Neg_Vec (Src : Memory_Ptr; Dst : Memory_Ptr; Len : Uns32);
 
-   --  Note: SRC = DST is allowed.
-   procedure Abs_Vec (Src : Memory_Ptr; Dst : Memory_Ptr; Len : Uns32);
-
    --  Function to create the result vector type (from LEN) to most numerical
    --  operations.
    function Create_Res_Type (Otyp : Type_Acc; Len : Uns32) return Type_Acc;
