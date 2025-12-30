@@ -554,6 +554,30 @@ package body Grt.Vpi is
       end case;
    end Vpi_Get_Vector;
 
+   function Vpi_Get_Signed (Ref : vpiHandle) return Boolean
+   is
+      Info : Verilog_Wire_Info;
+   begin
+      Get_Verilog_Wire (Ref.Ref, Info);
+      case Info.Vtype is
+         when Vcd_Integer32
+           | Vcd_Float64 =>
+            return True;
+         when Vcd_Bool
+           | Vcd_Bit
+           | Vcd_Stdlogic
+           | Vcd_Enum8 =>
+            return False;
+         when Vcd_Bitvector
+           | Vcd_Stdlogic_Vector =>
+            return False;
+         when Vcd_Bad
+           | Vcd_Struct
+           | Vcd_Array =>
+            return False;
+      end case;
+   end Vpi_Get_Signed;
+
    function vpi_get (Property: integer; Ref: vpiHandle) return Integer
    is
       Res : Integer;
@@ -575,6 +599,8 @@ package body Grt.Vpi is
             Res := Vpi_Get_Size (Ref);
          when vpiVector =>
             Res := Boolean'Pos (Vpi_Get_Vector (Ref));
+         when vpiSigned =>
+            Res := Boolean'Pos (Vpi_Get_Signed (Ref));
          when vpiDirection =>
             case Vhpi_Get_Mode (Ref.Ref) is
                when VhpiInMode =>

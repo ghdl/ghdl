@@ -63,6 +63,7 @@ package Grt.Vpi is
    vpiRealVar :       constant Integer := 47;
    vpiReg :           constant Integer := 48;
    vpiTchk :          constant Integer := 61;
+   vpiSigned :        constant Integer := 65;
 
    vpiLeftRange :     constant Integer := 79;
    vpiRightRange :    constant Integer := 83;
