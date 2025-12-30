@@ -2051,6 +2051,39 @@ package body Vhdl.Sem_Specs is
       return Res;
    end Sem_Create_Default_Binding_Indication;
 
+   --  Create default associations for type subprograms.
+   function Create_Default_Type_Map
+     (Ent_Inter : Iir; Comp_Inter : Iir; Parent : Iir) return Iir
+   is
+      Ent_Subprg, Comp_Subprg : Iir;
+      First, Last : Iir;
+      Assoc : Iir;
+      Name : Iir;
+   begin
+      Ent_Subprg := Get_Interface_Type_Subprograms (Ent_Inter);
+      Comp_Subprg := Get_Interface_Type_Subprograms (Comp_Inter);
+      Chain_Init (First, Last);
+
+      loop
+         Assoc := Create_Iir (Iir_Kind_Association_Element_Subprogram);
+         Location_Copy (Assoc, Parent);
+         Set_Whole_Association_Flag (Assoc, True);
+         Name := Build_Simple_Name (Comp_Subprg, Comp_Subprg);
+         Set_Actual (Assoc, Name);
+         Name := Build_Simple_Name (Ent_Subprg, Ent_Subprg);
+         Set_Is_Forward_Ref (Name, True);
+         Set_Formal (Assoc, Name);
+
+         Chain_Append (First, Last, Assoc);
+
+         Ent_Subprg := Get_Chain (Ent_Subprg);
+         Comp_Subprg := Get_Chain (Comp_Subprg);
+         exit when Ent_Subprg = Null_Iir;
+      end loop;
+      pragma Assert (Comp_Subprg = Null_Iir);
+      return First;
+   end Create_Default_Type_Map;
+
    --  LRM 5.2.2
    --  The default binding indication includes a default generic map aspect
    --  if the design entity implied by the entity aspect contains formal
@@ -2236,6 +2269,12 @@ package body Vhdl.Sem_Specs is
                  (Ent_El, Comp_El, Assoc);
                Set_Collapse_Signal_Flag
                  (Assoc, Can_Collapse_Signals (Assoc, Ent_El));
+            end if;
+
+            if Inter_Kind = Iir_Kind_Interface_Type_Declaration then
+               --  Extra associations for subprograms.
+               Set_Subprogram_Association_Chain
+                 (Assoc, Create_Default_Type_Map (Ent_El, Comp_El, Parent));
             end if;
 
             Chain_Append (Res, Last, Assoc);
