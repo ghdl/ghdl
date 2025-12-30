@@ -18,5 +18,7 @@ synth_failure externalerr03.vhdl -e
 synth_failure externalerr04.vhdl -e
 synth_failure externalerr05.vhdl -e
 synth_failure externalerr06.vhdl -e
+synth_failure $GHDL_SYNTH_FLAGS externalerr07.vhdl -e
+synth_failure $GHDL_SYNTH_FLAGS externalerr08.vhdl -e
 
 echo "Test successful"
