@@ -1544,6 +1544,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Identifier (Field3)
    --
+   --  Chain of extra interfaces for = and /=.
    --   Get/Set_Interface_Type_Subprograms (Field4)
    --
    --   Get/Set_Has_Identifier_List (Flag3)

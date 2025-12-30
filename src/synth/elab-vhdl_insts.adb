@@ -235,6 +235,10 @@ package body Elab.Vhdl_Insts is
                     (Sub_Inst, Get_Interface_Type_Definition (Inter),
                      Act_Typ, Act);
                   Release_Expr_Pool (Marker);
+                  Elab_Generics_Association
+                    (Sub_Inst, Syn_Inst,
+                     Get_Interface_Type_Subprograms (Inter),
+                     Get_Subprogram_Association_Chain (Assoc));
                end;
 
             when Iir_Kind_Interface_Variable_Declaration

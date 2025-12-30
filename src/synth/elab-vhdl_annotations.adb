@@ -349,6 +349,8 @@ package body Elab.Vhdl_Annotations is
             --  nodes are not instantiated.
             Create_Object_Info
               (Block_Info, Get_Interface_Type_Definition (Decl));
+            Annotate_Interface_List
+              (Block_Info, Get_Interface_Type_Subprograms (Decl), With_Types);
          when Iir_Kinds_Interface_Subprogram_Declaration =>
             Create_Object_Info (Block_Info, Decl);
          when Iir_Kind_Interface_Quantity_Declaration => raise Internal_Error;

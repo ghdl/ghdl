@@ -2212,7 +2212,8 @@ package body Synth.Vhdl_Expr is
       case Get_Kind (Expr) is
          when Iir_Kinds_Dyadic_Operator =>
             declare
-               Imp : constant Node := Get_Implementation (Expr);
+               Imp : constant Node :=
+                 Get_Subprogram_Implementation (Syn_Inst, Expr);
                Def : constant Iir_Predefined_Functions :=
                  Get_Implicit_Definition (Imp);
                Edge : Net;
@@ -2279,7 +2280,8 @@ package body Synth.Vhdl_Expr is
             end;
          when Iir_Kinds_Monadic_Operator =>
             declare
-               Imp : constant Node := Get_Implementation (Expr);
+               Imp : constant Node :=
+                 Get_Subprogram_Implementation (Syn_Inst, Expr);
                Def : constant Iir_Predefined_Functions :=
                  Get_Implicit_Definition (Imp);
             begin
@@ -2457,22 +2459,9 @@ package body Synth.Vhdl_Expr is
                Get_Subtype_Object (Syn_Inst, Get_Type (Get_Type_Mark (Expr))));
          when Iir_Kind_Function_Call =>
             declare
-               Imp : Node;
+               Imp : constant Node :=
+                 Get_Subprogram_Implementation (Syn_Inst, Expr);
             begin
-               Imp := Get_Implementation (Expr);
-               --  For instantiations.
-               loop
-                  case Get_Kind (Imp) is
-                     when Iir_Kind_Interface_Function_Declaration =>
-                        Imp := Get_Interface_Subprogram (Syn_Inst, Imp);
-                     when Iir_Kind_Function_Declaration =>
-                        exit;
-                     when Iir_Kind_Function_Instantiation_Declaration =>
-                        return Synth_User_Function_Call (Syn_Inst, Expr, Imp);
-                     when others => Error_Kind ("function_call", Imp);
-                  end case;
-               end loop;
-
                case Get_Implicit_Definition (Imp) is
                   when Iir_Predefined_Operators
                      | Iir_Predefined_Ieee_Numeric_Std_Binary_Operators
