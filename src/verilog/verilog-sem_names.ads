@@ -48,6 +48,10 @@ package Verilog.Sem_Names is
    function Find_Name_In_Scope (Scope : Node; Name : Node) return Node;
    function Find_Name_In_Decls (Items : Node; Name : Node) return Node;
 
+   --  Like Find_Name_In_Decls, but for foreign modules.
+   --  Convert the NAME identifier to lower case.
+   function Find_Name_In_Foreign_Decls (Items : Node; Name : Node) return Node;
+
    --  Find ID in an item chain.
    function Find_Id_In_Chain (Items : Node; Id : Name_Id) return Node;
 

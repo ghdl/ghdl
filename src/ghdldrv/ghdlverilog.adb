@@ -223,6 +223,22 @@ package body Ghdlverilog is
    begin
       Set_Ansi_Port_Flag (N, True);
 
+      Fport := Get_Generic_Chain (Funit);
+      Last := Null_Vlg_Node;
+      while Fport /= Null_Vhdl_Node loop
+         Port := Create_Node (N_Parameter);
+         Set_Location (Port, Get_Location (Fport));
+         Set_Identifier (Port, Get_Identifier (Fport));
+         if Last = Null_Vlg_Node then
+            Set_Parameter_Port_Chain (N, Port);
+         else
+            Set_Chain (Last, Port);
+         end if;
+         Last := Port;
+         Fport := Get_Chain (Fport);
+      end loop;
+
+      --  Ports
       Last := Null_Vlg_Node;
       Fport := Get_Port_Chain (Funit);
       while Fport /= Null_Vhdl_Node loop

@@ -1563,6 +1563,8 @@ package body Verilog.Sem is
    procedure Sem_Instance_Parameter_Value_Assignment (Inst : Node)
    is
       Module : constant Node := Get_Instance (Inst);
+      Is_Foreign : constant Boolean := Get_Kind (Module) = N_Foreign_Module;
+      Params : Node;
       Param_Decl : Node;
       Param_Item : Node;
       Param_Val : Node;
@@ -1619,13 +1621,18 @@ package body Verilog.Sem is
       else
          --  1800-2017 23.10.2.2 Parameter value assignment by name
          --  TODO.
+         Params := Get_Parameter_Port_Chain (Module);
          while Param_Val /= Null_Node loop
             --  First the parameter ID.
-            Param_Decl := Find_Name_In_Decls
-              (Get_Parameter_Port_Chain (Module), Param_Val);
-            if Param_Decl = Null_Node then
-               Param_Decl := Find_Name_In_Decls
-                 (Get_Items_Chain (Module), Param_Val);
+            if Is_Foreign then
+               --  Only parameter ports in foreign modules.
+               Param_Decl := Find_Name_In_Foreign_Decls (Params, Param_Val);
+            else
+               Param_Decl := Find_Name_In_Decls (Params, Param_Val);
+               if Param_Decl = Null_Node then
+                  Param_Decl := Find_Name_In_Decls
+                    (Get_Items_Chain (Module), Param_Val);
+               end if;
             end if;
 
             if Param_Decl = Null_Node then

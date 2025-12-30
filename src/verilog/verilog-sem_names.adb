@@ -15,6 +15,7 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Std_Names; use Std_Names;
+with Name_Table;
 with Errorout; use Errorout;
 with Verilog.Nutils; use Verilog.Nutils;
 with Verilog.Errors; use Verilog.Errors;
@@ -97,6 +98,30 @@ package body Verilog.Sem_Names is
    begin
       return Find_Id_In_Chain (Items, Get_Identifier (Name));
    end Find_Name_In_Decls;
+
+   function Find_Name_In_Foreign_Decls (Items : Node; Name : Node) return Node
+   is
+      use Name_Table;
+      Id : constant Name_Id := Get_Identifier (Name);
+      S : String := Image (Id);
+      Fid : Name_Id;
+      C : Character;
+   begin
+      --  Convert to lower case, only deal with ASCII letters
+      for I in S'Range loop
+         C := S (I);
+         if C >= 'A' and C <= 'Z' then
+            S (I) := Character'Val
+              (Character'Pos (C) - Character'Pos ('A') + Character'Pos ('a'));
+         end if;
+      end loop;
+      Fid := Get_Identifier_No_Create (S);
+      if Fid /= Null_Identifier then
+         return Find_Id_In_Chain (Items, Fid);
+      else
+         return Null_Node;
+      end if;
+   end Find_Name_In_Foreign_Decls;
 
    function Find_Name_In_Scope (Scope : Node; Name : Node) return Node
    is
