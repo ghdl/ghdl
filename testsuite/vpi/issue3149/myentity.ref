@@ -1,0 +1,9 @@
+Hello world
+Top myentity
+Port in1 direction 1 size 2, sgn 0, type 44
+Port in2 direction 1 size 32, sgn 1, type 44
+Port in3 direction 1 size 0, sgn 1, type 44
+Port in4 direction 1 size 32, sgn 1, type 44
+Port out1 direction 2 size 3, sgn 0, type 44
+Port inout1 direction 3 size 4, sgn 0, type 44
+Port inout2 direction 5 size 3, sgn 0, type 44
