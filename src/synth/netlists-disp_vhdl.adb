@@ -264,8 +264,7 @@ package body Netlists.Disp_Vhdl is
             Disp_Const_Log (Inst);
          when Id_Extract =>
             Disp_Extract (Inst);
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Disp_Constant_Inline;
 
@@ -305,8 +304,7 @@ package body Netlists.Disp_Vhdl is
          when Id_Const_X =>
             Zx := 1;
             Val := 1;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
       Wr (Bchar (Zx * 2 + Val));
    end Disp_Const_Bit;
@@ -567,8 +565,7 @@ package body Netlists.Disp_Vhdl is
                      pragma Assert (Idx = 0);
                      pragma Assert (Conv = Conv_None);
                      Put_Name (Get_Instance_Name (Inst));
-                  when others =>
-                     raise Internal_Error;
+                  when others => raise Internal_Error;
                end case;
 
                I := I + 2;
@@ -700,8 +697,7 @@ package body Netlists.Disp_Vhdl is
             when Id_Memory
               | Id_Memory_Init =>
                exit;
-            when others =>
-               raise Internal_Error;
+            when others => raise Internal_Error;
          end case;
          if Port /= Ports then
             Wr (", ");
@@ -788,8 +784,7 @@ package body Netlists.Disp_Vhdl is
             when Id_Memory
               | Id_Memory_Init =>
                exit;
-            when others =>
-               raise Internal_Error;
+            when others => raise Internal_Error;
          end case;
          Port := Get_Output (Port_Inst, 0);
       end loop;
@@ -1470,8 +1465,7 @@ package body Netlists.Disp_Vhdl is
                         when Id_Nop =>
                            --  Used in renaming
                            null;
-                        when others =>
-                           raise Internal_Error;
+                        when others => raise Internal_Error;
                      end case;
                   end if;
                   for N of Outputs_Iterate (Inst) loop
