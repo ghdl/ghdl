@@ -224,8 +224,11 @@ package Elab.Vhdl_Context is
 
    --  Utility to return the real implementation for CALL.
    --  Handle interface subprograms.
-   function Get_Subprogram_Implementation (Syn_Inst : Synth_Instance_Acc;
-                                           Call : Node) return Node;
+   procedure Get_Subprogram_Implementation
+     (Syn_Inst : Synth_Instance_Acc;
+      Call : Node;
+      Imp : out Node;
+      Def : out Iir_Predefined_Functions);
 
    function Get_Sub_Instance
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node) return Synth_Instance_Acc;

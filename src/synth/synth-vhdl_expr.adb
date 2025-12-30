@@ -2212,12 +2212,11 @@ package body Synth.Vhdl_Expr is
       case Get_Kind (Expr) is
          when Iir_Kinds_Dyadic_Operator =>
             declare
-               Imp : constant Node :=
-                 Get_Subprogram_Implementation (Syn_Inst, Expr);
-               Def : constant Iir_Predefined_Functions :=
-                 Get_Implicit_Definition (Imp);
+               Imp : Node;
+               Def : Iir_Predefined_Functions;
                Edge : Net;
             begin
+               Get_Subprogram_Implementation (Syn_Inst, Expr, Imp, Def);
                --  Match clock-edge (only for synthesis)
                if Def = Iir_Predefined_Boolean_And
                  and then Hook_Signal_Expr = null
@@ -2280,11 +2279,10 @@ package body Synth.Vhdl_Expr is
             end;
          when Iir_Kinds_Monadic_Operator =>
             declare
-               Imp : constant Node :=
-                 Get_Subprogram_Implementation (Syn_Inst, Expr);
-               Def : constant Iir_Predefined_Functions :=
-                 Get_Implicit_Definition (Imp);
+               Imp : Node;
+               Def : Iir_Predefined_Functions;
             begin
+               Get_Subprogram_Implementation (Syn_Inst, Expr, Imp, Def);
                if Def = Iir_Predefined_None then
                   if Error_Ieee_Operator (Syn_Inst, Imp, Expr) then
                      --  GCOV_EXCL_START
@@ -2459,10 +2457,11 @@ package body Synth.Vhdl_Expr is
                Get_Subtype_Object (Syn_Inst, Get_Type (Get_Type_Mark (Expr))));
          when Iir_Kind_Function_Call =>
             declare
-               Imp : constant Node :=
-                 Get_Subprogram_Implementation (Syn_Inst, Expr);
+               Imp : Node;
+               Def : Iir_Predefined_Functions;
             begin
-               case Get_Implicit_Definition (Imp) is
+               Get_Subprogram_Implementation (Syn_Inst, Expr, Imp, Def);
+               case Def is
                   when Iir_Predefined_Operators
                      | Iir_Predefined_Ieee_Numeric_Std_Binary_Operators
                      | Iir_Predefined_Ieee_Numeric_Std_Unsigned_Operators =>

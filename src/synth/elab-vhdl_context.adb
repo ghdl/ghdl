@@ -793,21 +793,25 @@ package body Elab.Vhdl_Context is
       return Obj_Inst.Objects (Info.Slot).S_Decl;
    end Get_Interface_Subprogram;
 
-   function Get_Subprogram_Implementation (Syn_Inst : Synth_Instance_Acc;
-                                           Call : Node) return Node
-   is
-      Res : Node;
+   procedure Get_Subprogram_Implementation
+     (Syn_Inst : Synth_Instance_Acc;
+      Call : Node;
+      Imp : out Node;
+      Def : out Iir_Predefined_Functions) is
    begin
-      Res := Get_Implementation (Call);
+      Imp := Get_Implementation (Call);
       --  For instantiations.
       loop
-         case Get_Kind (Res) is
+         case Get_Kind (Imp) is
             when Iir_Kind_Interface_Function_Declaration =>
-               Res := Get_Interface_Subprogram (Syn_Inst, Res);
-            when Iir_Kind_Function_Declaration
-              | Iir_Kind_Function_Instantiation_Declaration =>
-               return Res;
-            when others => Error_Kind ("get_subprogram_implementation", Res);
+               Imp := Get_Interface_Subprogram (Syn_Inst, Imp);
+            when Iir_Kind_Function_Declaration =>
+               Def := Get_Implicit_Definition (Imp);
+               return;
+            when Iir_Kind_Function_Instantiation_Declaration =>
+               Def := Iir_Predefined_None;
+               return;
+            when others => Error_Kind ("get_subprogram_implementation", Imp);
          end case;
       end loop;
    end Get_Subprogram_Implementation;
