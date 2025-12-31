@@ -214,6 +214,10 @@ package body Synth.Vhdl_Insts is
          when Type_Bit
            | Type_Logic =>
             null;
+         when Type_Discrete =>
+            Hash_Uns64 (C, Direction_Type'Pos (Typ.Drange.Dir));
+            Hash_Uns64 (C, To_Uns64 (Typ.Drange.Left));
+            Hash_Uns64 (C, To_Uns64 (Typ.Drange.Right));
          when others => raise Internal_Error;
       end case;
    end Hash_Bounds;
