@@ -5127,6 +5127,7 @@ package body Vhdl.Sem_Names is
             if Expr /= Null_Iir then
                Expr := Sem_Expression_Wildcard
                  (Expr, Wildcard_Any_Discrete_Type);
+               Set_Pathname_Expression (Path, Expr);
             end if;
          end if;
          Path := Get_Pathname_Suffix (Path);
