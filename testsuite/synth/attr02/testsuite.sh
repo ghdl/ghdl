@@ -22,6 +22,9 @@ analyze rightof02.vhdl
 elab_simulate rightof02
 clean
 
+synth_only name01
+synth_only name02
+
 synth_failure leftof03.vhdl -e
 
 GHDL_STD_FLAGS=--std=08
