@@ -5,11 +5,14 @@
 export GHDL_STD_FLAGS=--std=08
 
 if ghdl_is_preelaboration; then
-  for f in a b c d; do
+  for f in a b c d e; do
     analyze $f.vhdl
     elab_simulate ent
     clean
   done
+
+  analyze --force-analysis e.vhdl
+  elab_simulate --force-analysis ent
 
   analyze rec_aggr.vhdl
   elab_simulate rec_aggr
