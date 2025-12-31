@@ -83,10 +83,12 @@ package body Elab.Vhdl_Context is
       if Root_Instance /= null then
          --  There is already an existing Root_Instance.  Copy the existing
          --  values to increase the number of objects.
+         --  GCOV_EXCL_START (used only by the plugin)
          Res.Objects (1 .. Root_Instance.Max_Objs) := Root_Instance.Objects;
          Res.Elab_Objects := Root_Instance.Elab_Objects;
          Inst_Tables.Table (Inst_Tables.First) := Res;
          Deallocate (Root_Instance);
+         --  GCOV_EXCL_STOP
       else
          pragma Assert (Inst_Tables.Last + 1 = Inst_Tables.First);
          Inst_Tables.Append (Res);
@@ -244,12 +246,6 @@ package body Elab.Vhdl_Context is
       Inst.Is_Const := Val;
    end Set_Instance_Const;
 
-   procedure Set_Instance_Config (Inst : Synth_Instance_Acc; Config : Node) is
-   begin
-      pragma Assert (Inst.Config = Null_Node);
-      Inst.Config := Config;
-   end Set_Instance_Config;
-
    function Get_Instance_Config (Inst : Synth_Instance_Acc) return Node is
    begin
       return Inst.Config;
@@ -277,10 +273,12 @@ package body Elab.Vhdl_Context is
       return Inst.Flag1;
    end Get_Indiv_Signal_Assoc_Flag;
 
+   --  GCOV_EXCL_START (TODO)
    procedure Set_Indiv_Signal_Assoc_Parent_Flag (Inst : Synth_Instance_Acc) is
    begin
       Inst.Flag2 := True;
    end Set_Indiv_Signal_Assoc_Parent_Flag;
+   --  GCOV_EXCL_STOP
 
    function Get_Indiv_Signal_Assoc_Parent_Flag (Inst : Synth_Instance_Acc)
                                                return Boolean is
@@ -340,8 +338,10 @@ package body Elab.Vhdl_Context is
       if Slot /= Syn_Inst.Elab_Objects + 1
         or else Syn_Inst.Objects (Slot).Kind /= Obj_None
       then
+         --  GCOV_EXCL_START (should not happen)
          Error_Msg_Elab ("synth: bad elaboration order of objects");
          raise Internal_Error;
+         --  GCOV_EXCL_STOP
       end if;
       Syn_Inst.Elab_Objects := Slot + Num - 1;
    end Create_Object;
@@ -711,8 +711,7 @@ package body Elab.Vhdl_Context is
                --  Instantiated package.
                return Get_Package_Object (Syn_Inst, Scope);
             end if;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Get_Instance_By_Scope;
 

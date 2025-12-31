@@ -90,7 +90,6 @@ package Elab.Vhdl_Context is
    function Get_Instance_Parent (Inst : Synth_Instance_Acc)
                                 return Synth_Instance_Acc;
 
-   procedure Set_Instance_Config (Inst : Synth_Instance_Acc; Config : Node);
    function Get_Instance_Config (Inst : Synth_Instance_Acc) return Node;
 
    procedure Set_Instance_Foreign (Inst : Synth_Instance_Acc; N : Int32);
