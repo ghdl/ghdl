@@ -68,6 +68,8 @@ synth_failure foreign02.vhdl -e
 
 synth_failure err_var01.vhdl -e
 
+synth_failure err_image01.vhdl -e
+
 synth_failure err_value01.vhdl -e
 synth_failure err_value02.vhdl -e
 synth_failure err_value03.vhdl -e
