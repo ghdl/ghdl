@@ -1039,7 +1039,8 @@ package body Elab.Vhdl_Expr is
             end;
 
          when Iir_Kind_Enumeration_Literal
-            | Iir_Kind_Unit_Declaration =>
+            | Iir_Kind_Unit_Declaration
+            | Iir_Kind_Character_Literal =>
             return Get_Subtype_Object (Syn_Inst, Get_Type (Name));
 
          when Iir_Kind_String_Literal8 =>
