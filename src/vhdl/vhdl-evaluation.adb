@@ -5378,11 +5378,17 @@ package body Vhdl.Evaluation is
 
       procedure Path_Add_Name (N : Iir)
       is
-         Img : constant String := Eval_Simple_Name (Get_Identifier (N));
+         Id : constant Name_Id := Get_Identifier (N);
       begin
-         if Img (Img'First) /= 'P' then
-            --  Skip anonymous processes.
-            Path_Add (Img);
+         if Id /= Null_Identifier then
+            declare
+               Img : constant String := Eval_Simple_Name (Id);
+            begin
+               if Img (Img'First) /= 'P' then
+                  --  Skip anonymous processes.
+                  Path_Add (Img);
+               end if;
+            end;
          end if;
       end Path_Add_Name;
 
