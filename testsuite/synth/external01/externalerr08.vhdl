@@ -57,5 +57,6 @@ begin
               a => a,
               o => o);
   accum <= << signal dut.accum : std_logic_vector(7 downto 0) >>;
+  --  Not the same bounds
   r2 <= << signal dut.r : integer >>;
 end behav;

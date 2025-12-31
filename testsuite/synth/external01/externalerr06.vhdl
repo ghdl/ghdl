@@ -50,5 +50,6 @@ begin
               rst => rst,
               a => a,
               o => o);
+  --  Bad kind: not a variable
   accum <= << variable .externalerr06.dut.accum : std_logic_vector(7 downto 0) >>;
 end behav;

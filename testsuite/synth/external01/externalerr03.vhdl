@@ -61,5 +61,6 @@ begin
               rst => rst,
               a => a,
               o => o);
+  --  Bad name: dut is an instance.
   accum <= << signal .externalerr03.dut : std_logic_vector(7 downto 0) >>;
 end behav;

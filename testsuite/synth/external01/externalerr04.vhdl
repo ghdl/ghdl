@@ -61,5 +61,6 @@ begin
               rst => rst,
               a => a,
               o => o);
+  --  Bad kind: not a constant
   accum <= << constant .externalerr04.dut.accum : std_logic_vector(7 downto 0) >>;
 end behav;

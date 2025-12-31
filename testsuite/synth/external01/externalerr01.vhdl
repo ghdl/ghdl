@@ -54,5 +54,6 @@ begin
               rst => rst,
               a => a,
               o => o);
+  --  Wrong type.
   accum <= << signal .externalerr01.dut.accum : bit_vector(7 downto 0) >>;
 end behav;
