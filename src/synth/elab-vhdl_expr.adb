@@ -1155,11 +1155,6 @@ package body Elab.Vhdl_Expr is
          Stmt := Get_Statement_Scope (Instance);
 
          case Get_Kind (Label) is
-            when Iir_Kind_Entity_Declaration =>
-               if Parent = null then
-                  Prepend (Rstr, Image (Get_Identifier (Label)));
-                  exit;
-               end if;
             when Iir_Kind_Architecture_Body =>
                if Is_Instance then
                   Prepend (Rstr, ')');
