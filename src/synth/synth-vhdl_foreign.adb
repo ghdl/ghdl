@@ -53,11 +53,13 @@ package body Synth.Vhdl_Foreign is
          when Name_Control_Simulation
             | Name_Get_Resolution_Limit =>
             --  Handled in vhdl_eval.
-            null;
+            return Null_Address;
+         --  GCOV_EXCL_START (should not happen)
          when others =>
             Error_Msg_Sem (+Decl, "unknown foreign intrinsic %i", +Decl);
+            return Null_Address;
+         --  GCOV_EXCL_STOP
       end case;
-      return Null_Address;
    end Get_Intrinsic_Address;
 
    type Sym_Object_Type is record
@@ -234,8 +236,10 @@ package body Synth.Vhdl_Foreign is
       --  Find the handle.
       Sym := Sym_Interning.Get (Imp);
       if Sym.Handler = Null_Address then
+         --  GCOV_EXCL_START (should not happen)
          Error_Msg_Synth (Sub_Inst, Loc, "cannot load FOREIGN %n", +Imp);
          return No_Valtyp;
+         --  GCOV_EXCL_STOP
       end if;
 
       --  Determine the profile.
@@ -252,11 +256,13 @@ package body Synth.Vhdl_Foreign is
             Val := Get_Value (Sub_Inst, Inter);
             C := Classify (Val.Typ);
             if C = Class_Unknown then
+               --  GCOV_EXCL_START (should not happen)
                Error_Msg_Synth
                  (Syn_Inst, Loc,
                   "unhandled type for interface %n of FOREIGN %n",
                   (+Inter, +Imp));
                return No_Valtyp;
+               --  GCOV_EXCL_STOP
             end if;
             Profile.Args (Profile.Nargs) := C;
             Args (Profile.Nargs) := Val;
@@ -269,10 +275,12 @@ package body Synth.Vhdl_Foreign is
             Ret_Typ := Get_Subtype_Object (Syn_Inst, Get_Return_Type (Imp));
             Profile.Res := Classify (Ret_Typ);
             if Profile.Res = Class_Unknown then
+               --  GCOV_EXCL_START (should not happen)
                Error_Msg_Synth
                  (Syn_Inst, Loc,
                   "unhandled type for result of FOREIGN %n", +Imp);
                return No_Valtyp;
+               --  GCOV_EXCL_STOP
             end if;
 
          when Iir_Kind_Procedure_Declaration =>
@@ -289,9 +297,11 @@ package body Synth.Vhdl_Foreign is
       end loop;
 
       if Profile.Call = null then
+         --  GCOV_EXCL_START (should not happen)
          Error_Msg_Synth
            (Syn_Inst, Loc, "unhandled caller for FOREIGN %n", +Imp);
          return No_Valtyp;
+         --  GCOV_EXCL_STOP
       end if;
 
       --  Allocate result.
