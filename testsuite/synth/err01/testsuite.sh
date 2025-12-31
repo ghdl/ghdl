@@ -68,6 +68,14 @@ synth_failure foreign02.vhdl -e
 
 synth_failure err_var01.vhdl -e
 
+synth_failure err_value01.vhdl -e
+synth_failure err_value02.vhdl -e
+synth_failure err_value03.vhdl -e
+synth_failure err_value04.vhdl -e
+synth_failure err_value05.vhdl -e
+synth_failure err_value06.vhdl -e
+synth_failure err_value07.vhdl -e
+
 GHDL_STD_FLAGS=--std=08
 synth_tb eq01
 
