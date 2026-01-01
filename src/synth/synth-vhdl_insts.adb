@@ -1611,7 +1611,7 @@ package body Synth.Vhdl_Insts is
       Vhdl_Context.Free_Extra;
       Global_Base_Instance := null;
       Elab.Vhdl_Context.Free_Base_Instance;
-      Insts_Interning.Init;
+      Insts_Interning.Free;
    end Free_Base_Instance;
 
    function Synth_Top_Entity (Design_Unit : Node;

@@ -1176,7 +1176,7 @@ package body Elab.Vhdl_Annotations is
       Saved_Info : constant Sim_Info_Type (Kind_Block) := Entity_Info.all;
       Arch_Info: Sim_Info_Acc;
    begin
-      --  Annotate architecture using the entity as the architecture extend
+      --  Annotate architecture using the entity as the architecture extends
       --  the scope of the entity, and the entity is the reference.
 
       Annotate_Declaration_List (Entity_Info, Get_Declaration_Chain (Decl));
@@ -1184,6 +1184,7 @@ package body Elab.Vhdl_Annotations is
         (Entity_Info, Get_Concurrent_Statement_Chain (Decl));
 
       Arch_Info := new Sim_Info_Type'(Entity_Info.all);
+      Arch_Info.Ref := Decl;
       Entity_Info.all := Saved_Info;
       Set_Ann (Decl, Arch_Info);
    end Annotate_Architecture;

@@ -22,6 +22,11 @@ package body Interning is
       Implementation.Init (Inst);
    end Init;
 
+   procedure Free is
+   begin
+      Implementation.Free (Inst);
+   end Free;
+
    function Get (Key : Key_Type) return Object_Type
    is
       Res : Object_Type;

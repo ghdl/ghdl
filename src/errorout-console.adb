@@ -61,13 +61,13 @@ package body Errorout.Console is
          end if;
 
          V := Getenv ("TERM");
-         if V = null or else V.all = "dumb" then
+         if V /= null and then V.all /= "dumb" then
             --  No color if TERM=dumb
             --  Should we use a black list, or a white list or terminfo ?
-            return;
+            Flag_Color_Diagnostics := On;
          end if;
 
-         Flag_Color_Diagnostics := On;
+         Free (V);
       end if;
    end Detect_Terminal;
 

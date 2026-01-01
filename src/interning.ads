@@ -55,6 +55,9 @@ package Interning is
    --  Initialize.  Required before any other operation.
    procedure Init;
 
+   --  Free memory.
+   procedure Free;
+
    --  If there is already an existing object for PARAMS, return it.
    --  Otherwise create it.
    function Get (Key : Key_Type) return Object_Type;

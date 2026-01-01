@@ -41,7 +41,6 @@ with Netlists.Errors;
 
 with Elab.Debugger;
 with Elab.Vhdl_Errors;
-with Elab.Vhdl_Annotations;
 with Elab.Vhdl_Insts;
 
 with Synthesis;
@@ -523,7 +522,7 @@ package body Ghdlsynth is
          Netlists.Disp_Stats;
       end if;
 
-      Elab.Vhdl_Annotations.Finalize_Annotate;
+      Options.Finalize;
       Synth.Vhdl_Insts.Free_Base_Instance;
 
       Success := True;
