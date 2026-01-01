@@ -2171,6 +2171,7 @@ package body Synth.Vhdl_Stmts is
             Val := Create_Value_Alias
               (Info.Obj, Info.Off, Info.Targ_Type, Instance_Pool);
             --  LRM08 4.2.2.3 Signal parameters
+            --  LRM93 2.1.1.2 Signal parameter
             --  If an actual signal is associated with a signal parameter
             --  of mode IN or INOUT, and if the type of the formal is a
             --  scalar type, then it is an error if the subtype of the
