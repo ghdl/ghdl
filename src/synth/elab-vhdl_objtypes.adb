@@ -69,6 +69,7 @@ package body Elab.Vhdl_Objtypes is
       end if;
 
       case L.Kind is
+         --  GCOV_EXCL_START (used only on types derived from unbounded types)
          when Type_Bit
            | Type_Logic =>
             return True;
@@ -76,6 +77,22 @@ package body Elab.Vhdl_Objtypes is
             return L.Drange = R.Drange;
          when Type_Float =>
             return L.Frange = R.Frange;
+         when Type_Access =>
+            return Are_Types_Equal (L.Acc_Acc, R.Acc_Acc);
+         when Type_File =>
+            return Are_Types_Equal (L.File_Typ, R.File_Typ);
+         when Type_Protected =>
+            return False;
+         when Type_Slice =>
+            return Are_Types_Equal (L.Slice_El, R.Slice_El);
+         when Type_Unbounded_Array
+            | Type_Unbounded_Vector =>
+            if L.Ulast /= R.Ulast then
+               return False;
+            end if;
+            --  Also check index ?
+            return Are_Types_Equal (L.Uarr_El, R.Uarr_El);
+         --  GCOV_EXCL_STOP
          when Type_Array
             | Type_Array_Unbounded
             | Type_Vector =>
@@ -86,15 +103,6 @@ package body Elab.Vhdl_Objtypes is
                return False;
             end if;
             return Are_Types_Equal (L.Arr_El, R.Arr_El);
-         when Type_Unbounded_Array
-            | Type_Unbounded_Vector =>
-            if L.Ulast /= R.Ulast then
-               return False;
-            end if;
-            --  Also check index ?
-            return Are_Types_Equal (L.Uarr_El, R.Uarr_El);
-         when Type_Slice =>
-            return Are_Types_Equal (L.Slice_El, R.Slice_El);
          when Type_Record
            | Type_Unbounded_Record =>
             if L.Rec.Len /= R.Rec.Len then
@@ -106,12 +114,6 @@ package body Elab.Vhdl_Objtypes is
                end if;
             end loop;
             return True;
-         when Type_Access =>
-            return Are_Types_Equal (L.Acc_Acc, R.Acc_Acc);
-         when Type_File =>
-            return Are_Types_Equal (L.File_Typ, R.File_Typ);
-         when Type_Protected =>
-            return False;
       end case;
    end Are_Types_Equal;
 
