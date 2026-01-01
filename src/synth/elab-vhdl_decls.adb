@@ -111,8 +111,7 @@ package body Elab.Vhdl_Decls is
    end Elab_Signal_Declaration;
 
    procedure Elab_Variable_Declaration (Syn_Inst : Synth_Instance_Acc;
-                                        Decl : Node;
-                                        Force_Init : Boolean)
+                                        Decl : Node)
    is
       Def : constant Node := Get_Default_Value (Decl);
       Marker : Mark_Type;
@@ -137,18 +136,14 @@ package body Elab.Vhdl_Decls is
       else
          --  Always create shared variables, as they might be referenced
          --  during elaboration.
-         if (Force_Init or else Get_Shared_Flag (Decl)) then
-            if Obj_Typ.Kind /= Type_Protected then
-               Current_Pool := Instance_Pool;
-               Init := Create_Value_Default (Obj_Typ);
-               Current_Pool := Expr_Pool'Access;
-            else
-               Init := Synth.Vhdl_Decls.Create_Protected_Object
-                 (Syn_Inst, Decl, Obj_Typ);
-               Init := Unshare (Init, Instance_Pool);
-            end if;
+         if Obj_Typ.Kind /= Type_Protected then
+            Current_Pool := Instance_Pool;
+            Init := Create_Value_Default (Obj_Typ);
+            Current_Pool := Expr_Pool'Access;
          else
-            Init := (Typ => Obj_Typ, Val => null);
+            Init := Synth.Vhdl_Decls.Create_Protected_Object
+              (Syn_Inst, Decl, Obj_Typ);
+            Init := Unshare (Init, Instance_Pool);
          end if;
       end if;
       Release_Expr_Pool (Marker);
@@ -368,14 +363,13 @@ package body Elab.Vhdl_Decls is
 
    procedure Elab_Declaration (Syn_Inst : Synth_Instance_Acc;
                                Decl : Node;
-                               Force_Init : Boolean;
                                Last_Type : in out Node)
    is
       use Synth.Vhdl_Decls;
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration =>
-            Elab_Variable_Declaration (Syn_Inst, Decl, Force_Init);
+            Elab_Variable_Declaration (Syn_Inst, Decl);
          --  when Iir_Kind_Interface_Variable_Declaration =>
          --     --  Ignore default value.
          --     Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
@@ -471,11 +465,12 @@ package body Elab.Vhdl_Decls is
             Elab_Implicit_Quantity_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Terminal_Declaration =>
             Elab_Terminal_Declaration (Syn_Inst, Decl);
-         --  GCOV_EXCL_STOP
 
          when Iir_Kinds_Signal_Attribute =>
             --  Handled by Attribute_Implicit_Declaration
             raise Program_Error;
+         --  GCOV_EXCL_STOP
+
          when Iir_Kind_Disconnection_Specification =>
             null;
 
@@ -483,16 +478,13 @@ package body Elab.Vhdl_Decls is
            | Iir_Kind_Group_Declaration =>
             null;
 
-         when others =>
-            Vhdl.Errors.Error_Kind ("elab_declaration", Decl);
+         when others => Vhdl.Errors.Error_Kind ("elab_declaration", Decl);
       end case;
 
       pragma Assert (Is_Expr_Pool_Empty);
    end Elab_Declaration;
 
-   procedure Elab_Declarations (Syn_Inst : Synth_Instance_Acc;
-                                Decls : Iir;
-                                Force_Init : Boolean := False)
+   procedure Elab_Declarations (Syn_Inst : Synth_Instance_Acc; Decls : Iir)
    is
       Decl : Node;
       Last_Type : Node;
@@ -500,7 +492,7 @@ package body Elab.Vhdl_Decls is
       Last_Type := Null_Node;
       Decl := Decls;
       while Is_Valid (Decl) loop
-         Elab_Declaration (Syn_Inst, Decl, Force_Init, Last_Type);
+         Elab_Declaration (Syn_Inst, Decl, Last_Type);
 
          exit when Is_Error (Syn_Inst);
 
