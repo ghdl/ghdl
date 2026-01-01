@@ -142,6 +142,16 @@ package body Elab.Vhdl_Objtypes is
       end case;
    end Is_Null_Range;
 
+   function Is_Null_Float_Range (Rng : Float_Range_Type) return Boolean is
+   begin
+      case Rng.Dir is
+         when Dir_To =>
+            return Rng.Left > Rng.Right;
+         when Dir_Downto =>
+            return Rng.Left < Rng.Right;
+      end case;
+   end Is_Null_Float_Range;
+
    function Is_Scalar_Subtype_Compatible (L, R : Type_Acc) return Boolean is
    begin
       pragma Assert (L.Kind = R.Kind);
@@ -157,7 +167,11 @@ package body Elab.Vhdl_Objtypes is
             return In_Range (R.Drange, L.Drange.Left)
               and then In_Range (R.Drange, L.Drange.Right);
          when Type_Float =>
-            return L.Frange = R.Frange;
+            if Is_Null_Float_Range (L.Frange) then
+               return True;
+            end if;
+            return In_Float_Range (R.Frange, L.Frange.Left)
+              and then In_Float_Range (R.Frange, L.Frange.Right);
          when others => raise Internal_Error;
       end case;
    end Is_Scalar_Subtype_Compatible;
