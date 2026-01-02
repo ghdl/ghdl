@@ -319,8 +319,7 @@ package body Netlists.Disp_Verilog is
             Disp_Const_Log (Inst);
          when Id_Extract =>
             Disp_Extract (Inst);
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
    end Disp_Constant_Inline;
 
@@ -360,8 +359,7 @@ package body Netlists.Disp_Verilog is
          when Id_Const_X =>
             Zx := 1;
             Val := 1;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
       Wr (Bchar (Zx * 2 + Val));
    end Disp_Const_Bit;
@@ -445,9 +443,7 @@ package body Netlists.Disp_Verilog is
                Wr ("$signed(");
                Disp_Constant_Inline (Net_Inst);
                Wr (")");
-            when Conv_Edge =>
-               --  Not expected: a constant is not an edge.
-               raise Internal_Error;
+            when Conv_Edge => raise Internal_Error; --  Not expected
          end case;
       else
          case Conv is
@@ -538,16 +534,13 @@ package body Netlists.Disp_Verilog is
                         Wr_Uns32 (V);
                      when Conv_Signed =>
                         Wr_Int32 (To_Int32 (V));
-                     when Conv_Edge
-                       | Conv_Const =>
-                        raise Internal_Error;
+                     when Conv_Edge | Conv_Const => raise Internal_Error;
                   end case;
                when 'l' =>
                   pragma Assert (Idx = 0);
                   pragma Assert (Conv = Conv_None);
                   Put_Name (Get_Instance_Name (Inst));
-               when others =>
-                  raise Internal_Error;
+               when others => raise Internal_Error;
             end case;
 
             I := I + 2;
@@ -641,8 +634,7 @@ package body Netlists.Disp_Verilog is
             when Id_Memory
               | Id_Memory_Init =>
                exit;
-            when others =>
-               raise Internal_Error;
+            when others => raise Internal_Error;
          end case;
          Port := Get_Output (Port_Inst, 0);
       end loop;
@@ -705,8 +697,7 @@ package body Netlists.Disp_Verilog is
             when Id_Memory
               | Id_Memory_Init =>
                exit;
-            when others =>
-               raise Internal_Error;
+            when others => raise Internal_Error;
          end case;
          Port := Get_Output (Port_Inst, 0);
       end loop;
@@ -825,25 +816,7 @@ package body Netlists.Disp_Verilog is
                  ("  assign \o0 = \i0 * \p0;" & NL, Inst, (0 => Step));
             end;
          when Id_Addidx =>
-            declare
-               W0 : constant Width := Get_Width (Get_Input_Net (Inst, 0));
-               W1 : constant Width := Get_Width (Get_Input_Net (Inst, 1));
-            begin
-               if W0 > W1 then
-                  Disp_Template
-                    ("  \o0 <= std_logic_vector (\ui0 + resize(\ui1, \n0));"
-                       & NL, Inst, (0 => W0));
-               elsif W0 < W1 then
-                  Disp_Template
-                    ("  \o0 <= std_logic_vector (resize (\ui0, \n0) + \ui1);"
-                       & NL, Inst, (0 => W1));
-               else
-                  pragma Assert (W0 = W1);
-                  Disp_Template
-                    ("  \o0 <= std_logic_vector (\ui0 + \ui1);"
-                       & NL, Inst);
-               end if;
-            end;
+            Disp_Template ("  \o0 <= \i0 + \i1;" & NL, Inst);
          when Id_Dyn_Extract =>
             declare
                O : constant Net := Get_Output (Inst, 0);
@@ -1211,8 +1184,7 @@ package body Netlists.Disp_Verilog is
                         when Id_Nop =>
                            --  Used for renaming
                            null;
-                        when others =>
-                           raise Internal_Error;
+                        when others => raise Internal_Error;
                      end case;
                   end if;
 
