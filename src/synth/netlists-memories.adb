@@ -1232,6 +1232,14 @@ package body Netlists.Memories is
                end if;
                Is_Logic := False;
             end;
+         when Id_Const_UL32 =>
+            declare
+               N : Net;
+            begin
+               N := Build_Const_UL32 (Ctxt, 0, 0, Mem_Wd);
+               Res := Get_Net_Parent (N);
+               Is_Logic := True;
+            end;
          when Id_Const_Log =>
             Res := Build_Const_Log (Ctxt, Mem_Wd);
             Is_Logic := True;
