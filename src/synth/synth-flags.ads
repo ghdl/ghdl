@@ -29,7 +29,7 @@ package Synth.Flags is
       Name_Asis,
 
       --  Add generic values or/and an hash.  Results in unique but long names.
-      --  This allows partial synthesis: black-boxes can be synthesized later.
+      --  This allows partial synthesis: sub-modules can be synthesized later.
       Name_Hash,
 
       --  Just append a unique index.  Create shorter names than Name_Hash,
@@ -39,6 +39,7 @@ package Synth.Flags is
       Name_Index,
 
       --  Use the entity name but also add parameters to the module.
+      --  Used for black-boxes, so that parameters can be propagated.
       Name_Parameters
      );
 
