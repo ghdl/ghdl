@@ -22,4 +22,8 @@ clean
 synth_failure blackbox1_adder_err01.vhdl blackbox1.vhdl -e
 synth_failure blackbox1_adder_err02.vhdl blackbox1.vhdl -e
 
+# With generics
+synth_only blackbox2
+synth --out=verilog blackbox2.vhdl -e > syn_blackbox2.v
+
 echo "Test successful"
