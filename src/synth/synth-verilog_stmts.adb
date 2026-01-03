@@ -908,8 +908,9 @@ package body Synth.Verilog_Stmts is
             else
                Synth_Complex_Edge_Process (Inst, N, Sub_Stmt, Ev);
             end if;
-         when others =>
-            Error_Kind ("synth_always", Ev);
+         when N_Name =>
+            Synth_Comb_Process (Inst, Sub_Stmt);
+         when others => Error_Kind ("synth_always", Ev);
       end case;
    end Synth_Always;
 
