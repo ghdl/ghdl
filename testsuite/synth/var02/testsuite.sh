@@ -4,7 +4,7 @@
 
 GHDL_STD_FLAGS=--std=08
 
-for t in var01; do
+for t in var01 var02; do
     synth_tb $t
 done
 
