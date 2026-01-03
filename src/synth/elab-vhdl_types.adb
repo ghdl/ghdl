@@ -755,11 +755,8 @@ package body Elab.Vhdl_Types is
                Parent_Typ : constant Type_Acc :=
                  Get_Subtype_Object (Syn_Inst, Parent_Type);
             begin
-               if Parent_Typ = null then
-                  Elab.Vhdl_Errors.Error_Msg_Elab
-                    (Syn_Inst, Atype, "base type is not yet elaborated");
-                  raise Elab.Vhdl_Errors.Elaboration_Error;
-               end if;
+               --  Base type must have been elaborated
+               pragma Assert (Parent_Typ /= null);
                return Synth_Array_Subtype_Indication
                  (Syn_Inst, Parent_Typ, Atype);
             end;
@@ -769,11 +766,8 @@ package body Elab.Vhdl_Types is
                Parent_Typ : constant Type_Acc :=
                  Get_Subtype_Object (Syn_Inst, Parent_Type);
             begin
-               if Parent_Typ = null then
-                  Elab.Vhdl_Errors.Error_Msg_Elab
-                    (Syn_Inst, Atype, "base type is not yet elaborated");
-                  raise Elab.Vhdl_Errors.Elaboration_Error;
-               end if;
+               --  Base type must have been elaborated
+               pragma Assert (Parent_Typ /= null);
                return Synth_Record_Type_Definition
                  (Syn_Inst, Parent_Typ, Atype);
             end;
@@ -902,8 +896,6 @@ package body Elab.Vhdl_Types is
                      Atype2 := Get_Subtype_Indication (Decl);
                   when Iir_Kind_Interface_Type_Declaration =>
                      Atype2 := Get_Interface_Type_Definition (Decl);
-                  when Iir_Kind_Anonymous_Type_Declaration =>
-                     raise Internal_Error;
                   when others => raise Internal_Error;
                end case;
                return Get_Elaborated_Subtype_Indication (Syn_Inst, Atype2);
