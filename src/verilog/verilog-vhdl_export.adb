@@ -153,7 +153,8 @@ package body Verilog.Vhdl_Export is
               | N_Generate_Region
               | N_Loop_Generate
               | N_Always
-              | N_Initial =>
+              | N_Initial
+              | Nkinds_Gate =>
                null;
             when others =>
                Error_Kind ("convert_decl_chain", N);
