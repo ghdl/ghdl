@@ -161,12 +161,14 @@ package body Elab.Vhdl_Heap is
       return To_Slot_Prefix_Acc (Pfx).Slot;
    end Get_Index;
 
+   --  GCOV_EXCL_START (used only by debugger)
    function Get_Pointer (Idx : Heap_Slot) return Heap_Ptr
    is
       E : Heap_Entry renames Heap_Table.Table (Idx);
    begin
       return Heap_Ptr (Entry_To_Obj_Ptr (E));
    end Get_Pointer;
+   --  GCOV_EXCL_STOP
 
    function Synth_Dereference (Ptr : Heap_Ptr) return Memtyp
    is
