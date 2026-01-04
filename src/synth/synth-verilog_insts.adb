@@ -306,8 +306,7 @@ package body Synth.Verilog_Insts is
                   end;
                end if;
                Nbr_Outputs := Nbr_Outputs + 1;
-            when others =>
-               Error_Kind ("synth_module_instance", Port);
+            when others => Error_Kind ("synth_module_instance", Port);
          end case;
          Conn := Get_Chain (Conn);
       end loop;
@@ -420,8 +419,7 @@ package body Synth.Verilog_Insts is
                   | N_Parameter =>
                   --  Skip non-port items.
                   null;
-               when others =>
-                  Error_Kind ("build_module", Port);
+               when others => Error_Kind ("build_module", Port);
             end case;
             Port := Get_Chain (Port);
             Order := Order + 1;
@@ -633,8 +631,7 @@ package body Synth.Verilog_Insts is
          when N_Specify =>
             null;
 
-         when others =>
-            Error_Kind ("synth_decl_item", N);
+         when others => Error_Kind ("synth_decl_item", N);
       end case;
    end Synth_Decl_Item;
 
@@ -684,8 +681,7 @@ package body Synth.Verilog_Insts is
 
          when N_Specify =>
             null;
-         when others =>
-            Error_Kind ("synth_initial_item", N);
+         when others => Error_Kind ("synth_initial_item", N);
       end case;
    end Synth_Initial_Item;
 
@@ -738,8 +734,7 @@ package body Synth.Verilog_Insts is
          when N_Specify =>
             null;
 
-         when others =>
-            Error_Kind ("synth_always_item", N);
+         when others => Error_Kind ("synth_always_item", N);
       end case;
    end Synth_Always_Item;
 
@@ -857,8 +852,7 @@ package body Synth.Verilog_Insts is
             null;
          when N_Specify =>
             null;
-         when others =>
-            Error_Kind ("synth_finalize_item", N);
+         when others => Error_Kind ("synth_finalize_item", N);
       end case;
    end Synth_Finalize_Item;
 
@@ -1131,8 +1125,7 @@ package body Synth.Verilog_Insts is
                return Back_Elab_Vector_Type (T, Logic_Type);
             when N_Bit_Packed_Array_Cst =>
                return Back_Elab_Vector_Type (T, Bit_Type);
-            when others =>
-               Error_Kind ("back_elab_type", T);
+            when others => Error_Kind ("back_elab_type", T);
          end case;
       end Back_Elab_Type;
 

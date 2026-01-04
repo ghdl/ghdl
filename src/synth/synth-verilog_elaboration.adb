@@ -143,8 +143,7 @@ package body Synth.Verilog_Elaboration is
          when N_Queue_Cst =>
             Elaborate_Type (Get_Type_Element_Type (N));
             Set_Size_Flag (N, True);
-         when others =>
-            Error_Kind ("allocate_type", N);
+         when others => Error_Kind ("allocate_type", N);
       end case;
    end Elaborate_Type;
 
@@ -193,8 +192,7 @@ package body Synth.Verilog_Elaboration is
             | N_Function
             | N_Specify =>
             null;
-         when others =>
-            Error_Kind ("allocate_param_node", N);
+         when others => Error_Kind ("allocate_param_node", N);
       end case;
    end Allocate_Param_Node;
 
@@ -290,8 +288,7 @@ package body Synth.Verilog_Elaboration is
                | N_Function
                | N_Specify =>
                null;
-            when others =>
-               Error_Kind ("elaborate_param_chain", Item);
+            when others => Error_Kind ("elaborate_param_chain", Item);
          end case;
          Item := Get_Chain (Item);
       end loop;
@@ -401,8 +398,7 @@ package body Synth.Verilog_Elaboration is
 
          when N_Module_Instance =>
             null;
-         when others =>
-            Error_Kind ("allocate_node", N);
+         when others => Error_Kind ("allocate_node", N);
       end case;
    end Allocate_Node;
 
@@ -577,8 +573,7 @@ package body Synth.Verilog_Elaboration is
             null;
          when N_Package_Import =>
             null;
-         when others =>
-            Error_Kind ("allocate_data", N);
+         when others => Error_Kind ("allocate_data", N);
       end case;
    end Elaborate_Data;
 
