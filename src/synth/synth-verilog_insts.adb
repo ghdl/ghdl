@@ -186,10 +186,8 @@ package body Synth.Verilog_Insts is
       Build => Build,
       Equal => Equal);
 
-   function Synth_Foreign_Module_Instance
-     (Sub_Inst : Synth_Instance_Acc; Foreign_Module : Node) return Module
+   function Synth_Foreign_Module_Instance (Foreign_Module : Node) return Module
    is
-      pragma Unreferenced (Sub_Inst);
       use Vhdl.Nodes;
       Vhd_Unit : constant Vhdl_Node :=
         Vhdl_Node (Get_Foreign_Node (Foreign_Module));
@@ -242,16 +240,16 @@ package body Synth.Verilog_Insts is
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
    begin
-      --  Allocate obj_id for parameters/localparam and compute their
-      --   expressions.
-      Sub_Inst := Elaborate_Sub_Instance_Params (Parent_Inst, Inst_Module);
-
       if Get_Kind (Inst_Module) = N_Foreign_Module then
          --  Create the vhdl instance,
          --  with the vhdl value of the generics,
          --  and vhdl types of generics and ports.
-         M := Synth_Foreign_Module_Instance (Sub_Inst, Inst_Module);
+         M := Synth_Foreign_Module_Instance (Inst_Module);
       else
+         --  Allocate obj_id for parameters/localparam and compute their
+         --   expressions.
+         Sub_Inst := Elaborate_Sub_Instance_Params (Parent_Inst, Inst_Module);
+
          --  Check for existing module with same name and same parameters
          --    or create a new module and put it in a list.
          Obj := Insts_Interning.Get (Inst_Params'(M => Inst_Module,
