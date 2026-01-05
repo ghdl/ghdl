@@ -1170,7 +1170,7 @@ impl Kind {
     }
 
     fn is_terminal_or_connection(self: Self) -> bool {
-        self >= Kind::Control_Terminal && self <= Kind::Wildcard_Connection
+        self >= Kind::Control_Terminal && self <= Kind::Implicit_Connection
     }
 
     fn is_case(self: Self) -> bool {

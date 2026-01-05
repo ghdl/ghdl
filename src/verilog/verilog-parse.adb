@@ -6170,33 +6170,51 @@ package body Verilog.Parse is
                --  Skip '.*'.
                Scan;
             else
-               Conn := Create_Node (N_Port_Connection);
+               Loc := Get_Token_Location;
+
                Set_Token_Location (Conn);
                Expr := Null_Node;
                if Current_Token = Tok_Dot then
                   --  Skip '.'.
                   Scan;
 
-                  --  Skip identifier.
-                  Scan_Identifier (Conn, "port identifier expected after '.'");
+                  if Current_Token = Tok_Identifier then
+                     Id := Current_Identifier;
 
-                  --  Skip '('.
-                  Scan_Or_Error (Tok_Left_Paren,
-                                 "'(' expected after port identifier");
-
-                  if Current_Token /= Tok_Right_Paren then
-                     Expr := Parse_Expression;
+                     --  Skip identifier.
+                     Scan;
+                  else
+                     Error_Msg_Parse ("port identifier expected after '.'");
+                     Id := Null_Identifier;
                   end if;
 
-                  Scan_Or_Error
-                    (Tok_Right_Paren,
-                     "')' expected after expression in port connection");
+                  if Current_Token = Tok_Left_Paren then
+                     Conn := Create_Node (N_Port_Connection);
+
+                     --  Skip '('.
+                     Scan;
+
+                     if Current_Token /= Tok_Right_Paren then
+                        Expr := Parse_Expression;
+                        Set_Expression (Conn, Expr);
+                     end if;
+
+                     Scan_Or_Error
+                       (Tok_Right_Paren,
+                       "')' expected after expression in port connection");
+                  else
+                     Conn := Create_Node (N_Implicit_Connection);
+                  end if;
+                  Set_Identifier (Conn, Id);
                else
+                  Conn := Create_Node (N_Port_Connection);
+
                   if Current_Token /= Tok_Comma then
                      Expr := Parse_Expression;
+                     Set_Expression (Conn, Expr);
                   end if;
                end if;
-               Set_Expression (Conn, Expr);
+               Set_Location (Conn, Loc);
             end if;
 
             if Last_Conn = Null_Node then

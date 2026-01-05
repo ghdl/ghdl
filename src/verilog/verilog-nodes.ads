@@ -651,7 +651,8 @@ package Verilog.Nodes is
    --N_Inout_Terminal
    --N_Output_Terminal
    --N_Port_Connection
-     N_Wildcard_Connection;
+   --N_Wildcard_Connection
+     N_Implicit_Connection;
 
    subtype Nkinds_Case is Nkind range
      N_Case ..

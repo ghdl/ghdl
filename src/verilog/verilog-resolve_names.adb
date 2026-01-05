@@ -162,6 +162,14 @@ package body Verilog.Resolve_Names is
          case Nkinds_Terminal_Or_Connection (Get_Kind (Conn)) is
             when N_Wildcard_Connection =>
                null;
+            when N_Implicit_Connection =>
+               --  1800-2017 23.3.2.3 Conneting module instance using implicit
+               --  name
+               --
+               --  If a signal of the same name does not exist in the
+               --  instantiating module, the port connection shall not create
+               --  an implicit net declaration [...]
+               null;
             when N_Port_Connection
               | Nkinds_Terminal =>
                N := Get_Expression (Conn);
