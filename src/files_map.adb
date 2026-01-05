@@ -548,7 +548,7 @@ package body Files_Map is
                   return Language_Vhdl;
                end if;
                if Ext (E + 1 .. Ext'Last) = "v"
-                 or else Ext (E + 1 .. Ext'Last) = "v"
+                 or else Ext (E + 1 .. Ext'Last) = "vh"
                  or else Ext (E + 1 .. Ext'Last) = "sv"
                  or else Ext (E + 1 .. Ext'Last) = "svh"
                then
