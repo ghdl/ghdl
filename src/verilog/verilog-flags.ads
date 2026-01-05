@@ -38,4 +38,7 @@ package Verilog.Flags is
 
    --  If true, the parser create a node for parentheses.
    Flag_Keep_Parentheses : Boolean := False;
+
+   --  Unit parsed must be considered as blackboxes
+   Flag_Blackbox : Boolean := False;
 end Verilog.Flags;

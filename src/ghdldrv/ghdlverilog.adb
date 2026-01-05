@@ -102,65 +102,73 @@ package body Ghdlverilog is
       Verilog.Sem.Sem_Compilation_Unit (Res);
    end Load_Verilog_File;
 
-   --  Create a foreign module for VHDL library for each module.
-   procedure Export_Verilog_Units
+   procedure Export_Verilog_File (File : Vlg_Node)
    is
       use Vhdl.Nodes;
-      File : Vlg_Node;
       Design : Vhdl_Node;
       Unit : Vhdl_Node;
       N : Vlg_Node;
       Vhdn : Vhdl_Node;
       Last : Vhdl_Node;
    begin
+      Design := Create_Iir (Iir_Kind_Design_File);
+
+      declare
+         use Files_Map;
+         Loc : constant Location_Type := Get_Location (File);
+         Sfe : constant Source_File_Entry := Location_To_File (Loc);
+      begin
+         Set_Location (Design, Loc);
+         Set_Design_File_Source (Design, Sfe);
+         Set_Design_File_Filename (Design, Get_File_Name (Sfe));
+         Set_Design_File_Directory (Design, Get_Directory_Name (Sfe));
+      end;
+
+      N := Get_Descriptions (File);
+      Last := Null_Vhdl_Node;
+      while N /= Null_Vlg_Node loop
+         case Get_Kind (N) is
+            when N_Module =>
+               Unit := Create_Iir (Iir_Kind_Design_Unit);
+               Set_Location (Unit, Get_Location (N));
+               Set_Design_File (Unit, Design);
+               Set_Identifier (Unit, Get_Identifier (N));
+               Set_Date (Unit, Date_Parsed);
+               Set_Date_State (Unit, Date_Extern);
+
+               Vhdn := Create_Iir (Iir_Kind_Foreign_Module);
+               Set_Location (Vhdn, Get_Location (N));
+               Set_Library_Unit (Unit, Vhdn);
+               Set_Identifier (Vhdn, Get_Identifier (N));
+               Set_Foreign_Node (Vhdn, Int32 (N));
+               Set_Design_Unit (Vhdn, Unit);
+
+               if Last = Null_Vhdl_Node then
+                  Set_First_Design_Unit (Design, Unit);
+               else
+                  Set_Chain (Last, Unit);
+               end if;
+               Last := Unit;
+
+            when others =>
+               null;
+         end case;
+         N := Get_Chain (N);
+      end loop;
+      Set_Last_Design_Unit (Design, Last);
+      Add_Design_File_Into_Library (Design);
+   end Export_Verilog_File;
+
+   --  Create a foreign module for VHDL library for each module.
+   procedure Export_Verilog_Units
+   is
+      File : Vlg_Node;
+   begin
       File := First_File;
       while File /= Null_Vlg_Node loop
-         Design := Create_Iir (Iir_Kind_Design_File);
-
-         declare
-            use Files_Map;
-            Loc : constant Location_Type := Get_Location (File);
-            Sfe : constant Source_File_Entry := Location_To_File (Loc);
-         begin
-            Set_Location (Design, Loc);
-            Set_Design_File_Source (Design, Sfe);
-            Set_Design_File_Filename (Design, Get_File_Name (Sfe));
-            Set_Design_File_Directory (Design, Get_Directory_Name (Sfe));
-         end;
-
-         N := Get_Descriptions (File);
-         Last := Null_Vhdl_Node;
-         while N /= Null_Vlg_Node loop
-            case Get_Kind (N) is
-               when N_Module =>
-                  Unit := Create_Iir (Iir_Kind_Design_Unit);
-                  Set_Location (Unit, Get_Location (N));
-                  Set_Design_File (Unit, Design);
-                  Set_Identifier (Unit, Get_Identifier (N));
-                  Set_Date (Unit, Date_Parsed);
-                  Set_Date_State (Unit, Date_Extern);
-
-                  Vhdn := Create_Iir (Iir_Kind_Foreign_Module);
-                  Set_Location (Vhdn, Get_Location (N));
-                  Set_Library_Unit (Unit, Vhdn);
-                  Set_Identifier (Vhdn, Get_Identifier (N));
-                  Set_Foreign_Node (Vhdn, Int32 (N));
-                  Set_Design_Unit (Vhdn, Unit);
-
-                  if Last = Null_Vhdl_Node then
-                     Set_First_Design_Unit (Design, Unit);
-                  else
-                     Set_Chain (Last, Unit);
-                  end if;
-                  Last := Unit;
-
-               when others =>
-                  null;
-            end case;
-            N := Get_Chain (N);
-         end loop;
-         Set_Last_Design_Unit (Design, Last);
-         Add_Design_File_Into_Library (Design);
+         if not Get_Blackbox_Flag (File) then
+            Export_Verilog_File (File);
+         end if;
 
          File := Get_Chain (File);
       end loop;

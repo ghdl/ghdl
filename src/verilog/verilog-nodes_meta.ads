@@ -228,6 +228,7 @@ package Verilog.Nodes_Meta is
       Field_This_Declaration,
       Field_Default_Value,
       Field_Instantiated_Flag,
+      Field_Blackbox_Flag,
       Field_Ansi_Port_Flag,
       Field_Event,
       Field_Min_Expr,
@@ -683,6 +684,7 @@ package Verilog.Nodes_Meta is
    function Has_This_Declaration (K : Nkind) return Boolean;
    function Has_Default_Value (K : Nkind) return Boolean;
    function Has_Instantiated_Flag (K : Nkind) return Boolean;
+   function Has_Blackbox_Flag (K : Nkind) return Boolean;
    function Has_Ansi_Port_Flag (K : Nkind) return Boolean;
    function Has_Event (K : Nkind) return Boolean;
    function Has_Min_Expr (K : Nkind) return Boolean;

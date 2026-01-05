@@ -9461,6 +9461,7 @@ package body Verilog.Parse is
       Attr : Node;
    begin
       Res := Create_Node (N_Module);
+      Set_Blackbox_Flag (Res, Flags.Flag_Blackbox);
 
       if Attrs /= Null_Node then
          Set_Attributes_Chain (Res, Attrs);
@@ -11482,6 +11483,7 @@ package body Verilog.Parse is
 
       Source := Create_Node (N_Compilation_Unit);
       Set_Token_Location (Source);
+      Set_Blackbox_Flag (Source, Flags.Flag_Blackbox);
 
       --  Scan first token.
       Scan;

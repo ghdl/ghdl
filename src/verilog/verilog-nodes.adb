@@ -3764,6 +3764,22 @@ package body Verilog.Nodes is
       Set_Flag1 (N, Flag);
    end Set_Instantiated_Flag;
 
+   function Get_Blackbox_Flag (N : Node) return Boolean is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Blackbox_Flag (Get_Kind (N)),
+                     "no field Blackbox_Flag");
+      return Get_Flag2 (N);
+   end Get_Blackbox_Flag;
+
+   procedure Set_Blackbox_Flag (N : Node; Flag : Boolean) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Blackbox_Flag (Get_Kind (N)),
+                     "no field Blackbox_Flag");
+      Set_Flag2 (N, Flag);
+   end Set_Blackbox_Flag;
+
    function Get_Ansi_Port_Flag (N : Node) return Boolean is
    begin
       pragma Assert (N /= Null_Node);

@@ -30,6 +30,8 @@ with Vhdl.Canon;
 with Vhdl.Configuration;
 with Vhdl.Utils;
 
+with Verilog.Flags;
+
 with Netlists; use Netlists;
 with Netlists.Dump;
 with Netlists.Disp_Vhdl;
@@ -296,6 +298,10 @@ package body Ghdlsynth is
                end if;
                Libraries.Work_Library_Name := Id;
                Libraries.Load_Work_Library (True);
+            elsif Arg = "-lib" then
+               Verilog.Flags.Flag_Blackbox := True;
+            elsif Arg = "-no-lib" then
+               Verilog.Flags.Flag_Blackbox := False;
             else
                case Files_Map.Find_Language (Arg) is
                   when Language_Vhdl
