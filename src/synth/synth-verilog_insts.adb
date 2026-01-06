@@ -273,7 +273,6 @@ package body Synth.Verilog_Insts is
       --  TODO: assume same order
       --  TODO: non-ANSI style
       while Conn /= Null_Node loop
-         pragma Assert (Get_Kind (Conn) = N_Port_Connection);
          Port := Get_Port (Conn);
          if Get_Kind (Port) = N_Port then
             Port := Get_Expression (Port);

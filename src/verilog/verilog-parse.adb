@@ -6172,7 +6172,6 @@ package body Verilog.Parse is
             else
                Loc := Get_Token_Location;
 
-               Set_Token_Location (Conn);
                Expr := Null_Node;
                if Current_Token = Tok_Dot then
                   --  Skip '.'.

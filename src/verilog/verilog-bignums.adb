@@ -1846,7 +1846,7 @@ package body Verilog.Bignums is
                                    Src_Off : Bit_Offset;
                                    Src_Wd : Width_Type)
    is
-      pragma Assert (Dest_Wd >= Src_Wd);
+      pragma Assert (Dest_Wd <= Src_Wd);
    begin
       if Dest_Off = 0 and then Src_Wd = Dest_Wd then
          --  Normal case: no overflow

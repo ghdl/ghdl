@@ -29,6 +29,7 @@ package body Verilog.Resolve_Names is
    procedure Resolve_Names_Chain (Items : Node);
    procedure Resolve_Names_Name (Name : Node; Soft : Boolean := False);
    procedure Resolve_Names_Type (Atype : Node; Owner : Boolean);
+   procedure Set_Name_Declaration (Name : Node; Decl : Node);
    procedure Add_Names_Chain (Chain : Node);
 
    procedure Add_Item_Decl (Item : Node);
@@ -156,6 +157,7 @@ package body Verilog.Resolve_Names is
       Conn : Node;
       N : Node;
       Net : Node;
+      Id : Name_Id;
    begin
       Conn := Chain;
       while Conn /= Null_Node loop
@@ -169,7 +171,20 @@ package body Verilog.Resolve_Names is
                --  If a signal of the same name does not exist in the
                --  instantiating module, the port connection shall not create
                --  an implicit net declaration [...]
-               null;
+               Id := Get_Identifier (Conn);
+               Net := Get_Decl (Id);
+               if Net = Null_Node then
+                  --  [...] and an error shall be issued, even if the port has
+                  --  a specified default value.
+                  Error_Msg_Sem (+Conn, "no signal %i in the module", +Id);
+               else
+                  --  Create a name.
+                  N := Create_Node (N_Name);
+                  Location_Copy (N, Conn);
+                  Set_Identifier (N, Id);
+                  Set_Name_Declaration (N, Net);
+                  Set_Expression (Conn, N);
+               end if;
             when N_Port_Connection
               | Nkinds_Terminal =>
                N := Get_Expression (Conn);
@@ -272,11 +287,36 @@ package body Verilog.Resolve_Names is
       end if;
    end Maybe_Mutate_Name;
 
+   --  Subroutine of Resolve_Names_Identifier
+   --  Once a name (NAME) has been resolved to DECL, set the declaration for
+   --  NAME.  Might need to create implicit nets.
+   procedure Set_Name_Declaration (Name : Node; Decl : Node)
+   is
+      Decl2 : Node;
+   begin
+      if Get_Kind (Decl) in Nkinds_Net_Port then
+         --  If the identifier refers to a port, freeze the port by
+         --  creating the net type if not already present.
+         Decl2 := Get_Redeclaration (Decl);
+         if Decl2 = Null_Node then
+            Create_Implicit_Net_For_Port_Declaration (Decl, Decl2);
+         end if;
+         Set_Declaration (Name, Decl2);
+      else
+         Set_Declaration (Name, Decl);
+
+         --  For a property add an implicit 'this.' prefix.
+         --  This is done at the call for a method too.
+         if Get_Kind (Decl) = N_Var then
+            Maybe_Mutate_Name (Name, Decl);
+         end if;
+      end if;
+   end Set_Name_Declaration;
+
    procedure Resolve_Names_Identifier (Name : Node; Soft : Boolean)
    is
       Id : constant Name_Id := Get_Identifier (Name);
       Decl : Node;
-      Decl2 : Node;
    begin
       pragma Assert (Resolve_Mode = Mode_Complete
                        or else Get_Declaration (Name) = Null_Node);
@@ -303,23 +343,7 @@ package body Verilog.Resolve_Names is
          return;
       end if;
 
-      if Get_Kind (Decl) in Nkinds_Net_Port then
-         --  If the identifier refers to a port, freeze the port by
-         --  creating the net type if not already present.
-         Decl2 := Get_Redeclaration (Decl);
-         if Decl2 = Null_Node then
-            Create_Implicit_Net_For_Port_Declaration (Decl, Decl2);
-         end if;
-         Set_Declaration (Name, Decl2);
-      else
-         Set_Declaration (Name, Decl);
-
-         --  For a property add an implicit 'this.' prefix.
-         --  This is done at the call for a method too.
-         if Get_Kind (Decl) = N_Var then
-            Maybe_Mutate_Name (Name, Decl);
-         end if;
-      end if;
+      Set_Name_Declaration (Name, Decl);
    end Resolve_Names_Identifier;
 
    function Get_Class_Declaration (Name : Node) return Node
