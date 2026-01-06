@@ -94,7 +94,9 @@ package body Synth.Verilog_Exprs is
             return 1;
          when N_Typedef =>
             return Get_Type_Bitwidth (Get_Type_Data_Type (N));
-         when N_Log_Packed_Array_Cst =>
+         when N_Log_Packed_Array_Cst
+           | N_Bit_Packed_Array_Cst
+           | N_Enum_Type =>
             return Uns32 (Get_Type_Width (N));
          when N_Array_Cst =>
             return Uns32 (Verilog.Sem_Utils.Compute_Length (N))
@@ -151,6 +153,14 @@ package body Synth.Verilog_Exprs is
                      Has_Zx := True;
                   end if;
                end if;
+            end;
+         when N_Bit_Packed_Array_Cst =>
+            declare
+               W : constant Width_Type := Get_Type_Width (Typ);
+               Mem_Ptr : constant Bitvec_Ptr := To_Bitvec_Ptr (Mem);
+            begin
+               Compute_Log_Bit_Part_Insert (Vec, Vec_Off, Mem_Ptr, W);
+               Vec_Off := Vec_Off + Bit_Offset (W);
             end;
          when N_Array_Cst =>
             declare
@@ -328,6 +338,10 @@ package body Synth.Verilog_Exprs is
                Res := Build_Dyadic (Ctxt, Id_Sub, Ln, Rn);
             when Binop_Smul =>
                Res := Build_Dyadic (Ctxt, Id_Smul, Ln, Rn);
+            when Binop_Umul =>
+               Res := Build_Dyadic (Ctxt, Id_Umul, Ln, Rn);
+            when Binop_Udiv =>
+               Res := Build_Dyadic (Ctxt, Id_Udiv, Ln, Rn);
 
             when Binop_Log_Ne =>
                Res := Build_Compare (Ctxt, Id_Ne, Ln, Rn);
@@ -346,8 +360,12 @@ package body Synth.Verilog_Exprs is
                Res := Build_Compare (Ctxt, Id_Slt, Ln, Rn);
             when Binop_Ult =>
                Res := Build_Compare (Ctxt, Id_Ult, Ln, Rn);
+            when Binop_Ule =>
+               Res := Build_Compare (Ctxt, Id_Ule, Ln, Rn);
             when Binop_Uge =>
                Res := Build_Compare (Ctxt, Id_Uge, Ln, Rn);
+            when Binop_Ugt =>
+               Res := Build_Compare (Ctxt, Id_Ugt, Ln, Rn);
 
             when Binop_Left_Lshift =>
                Res := Build_Shift_Rotate (Ctxt, Id_Lsl, Ln, Rn);
@@ -528,7 +546,8 @@ package body Synth.Verilog_Exprs is
               (Ctxt, Nv, Get_Type_Bitwidth (Rtyp), Get_Location (N));
          when Convop_Lv_Log =>
             Res := Build2_Extract (Ctxt, Nv, 0, 1, Get_Location (N));
-         when Convop_Lv_Nop =>
+         when Convop_Lv_Nop
+           | Convop_Bv_Lv =>
             Res := Nv;
          when others =>
             Error_Kind ("synth_conversion - "
@@ -877,6 +896,33 @@ package body Synth.Verilog_Exprs is
       return Res;
    end Synth_Name_To_Expression;
 
+   function Synth_Number (Inst : Synth_Instance_Acc; N : Node) return Valtyp
+   is
+      Res : Valtyp;
+      Typ : Node;
+   begin
+      Typ := Get_Expr_Type (N);
+      if Get_Kind (Typ) = N_Enum_Type then
+         Typ := Get_Enum_Base_Type (Typ);
+      end if;
+
+      --  Allocate memory (for the result)
+      Res := (Kind => Value_Memory,
+              Typ => Typ,
+              Mem => null);
+      Res.Mem := Allocate_Memory (Inst, Res.Typ);
+      --  Fill with the value
+      case Get_Kind (Typ) is
+         when N_Log_Packed_Array_Cst =>
+            Compute_Number (To_Logvec_Ptr (Res.Mem), N);
+         when N_Bit_Packed_Array_Cst =>
+            Compute_Number (To_Bitvec_Ptr (Res.Mem), N);
+         when others =>
+            Error_Kind ("synth_number", Typ);
+      end case;
+      return Res;
+   end Synth_Number;
+
    function Synth_Expression (Inst : Synth_Instance_Acc; N : Node)
                              return Valtyp is
    begin
@@ -902,27 +948,11 @@ package body Synth.Verilog_Exprs is
             | N_Part_Select_Cst
             | N_Indexed_Name =>
             return Synth_Name_To_Expression (Inst, N);
+         when N_Enum_Name =>
+            return Synth_Expression (Inst, Get_Expression (N));
          when N_Number
             | N_Computed_Number =>
-            declare
-               Res : Valtyp;
-            begin
-               --  Allocate memory (for the result)
-               Res := (Kind => Value_Memory,
-                       Typ => Get_Expr_Type (N),
-                       Mem => null);
-               Res.Mem := Allocate_Memory (Inst, Res.Typ);
-               --  Fill with the value
-               case Get_Kind (Res.Typ) is
-                  when N_Log_Packed_Array_Cst =>
-                     Compute_Number (To_Logvec_Ptr (Res.Mem), N);
-                  when N_Bit_Packed_Array_Cst =>
-                     Compute_Number (To_Bitvec_Ptr (Res.Mem), N);
-                  when others =>
-                     Error_Kind ("synth_expression(number)", Res.Typ);
-               end case;
-               return Res;
-            end;
+            return Synth_Number (Inst, N);
          when N_Unbased_Literal =>
             declare
                Res : Valtyp;
@@ -1141,6 +1171,8 @@ package body Synth.Verilog_Exprs is
    begin
       Base := No_Valtyp;
       Doff := No_Net;
+      Off := (Net_Off => 0, Mem_Off => 0, Bit_Off => 0);
+
       case Get_Kind (N) is
          when N_Name =>
             Synth_Name (Inst, Get_Declaration (N), Base, Doff, Off);
@@ -1191,7 +1223,6 @@ package body Synth.Verilog_Exprs is
             | N_Wire_Direct
             | N_Var =>
             Synth_Object_Name (Inst, N, Base);
-            Off := (Net_Off => 0, Mem_Off => 0, Bit_Off => 0);
          when N_Parameter
            | N_Localparam =>
             declare
@@ -1199,8 +1230,9 @@ package body Synth.Verilog_Exprs is
                  (Verilog.Allocates.Get_Parameter_Data (N));
             begin
                Base := Create_Value_Memory (Data, Get_Param_Type (N));
-               Off := (Net_Off => 0, Mem_Off => 0, Bit_Off => 0);
             end;
+         when N_Enum_Name =>
+            Base := Synth_Expression (Inst, N);
          when others =>
             Error_Kind ("synth_name", N);
       end case;

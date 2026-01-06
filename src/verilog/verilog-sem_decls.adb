@@ -79,6 +79,7 @@ package body Verilog.Sem_Decls is
                pragma Assert (not Get_Type_Owner (Parent));
                exit;
             when N_Name
+              | N_Enum_Type
               | N_Scoped_Name
               | N_Packed_Array =>
                pragma Assert (Get_Type_Owner (Parent));
