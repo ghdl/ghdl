@@ -165,8 +165,7 @@ package body Synth.Verilog_Exprs is
          when N_Array_Cst =>
             declare
                El_Typ : constant Node := Get_Type_Element_Type (Typ);
-               El_Sz : constant Size_Type :=
-                 Size_Type (Verilog.Allocates.Get_Storage_Size (El_Typ));
+               El_Sz : constant Size_Type := Size_Type (Get_Stride_Size (Typ));
                Arr_Len : constant Int32 :=
                  Verilog.Sem_Utils.Compute_Length (Typ);
                Mem_Off : Size_Type;
@@ -267,6 +266,7 @@ package body Synth.Verilog_Exprs is
       Vec_Off := 0;
       Has_Zx := False;
       if Nd > 64 then
+         --  Dynamically allocate the temporary memory.
          declare
             Vecp : Logvec_Array_Acc;
          begin
@@ -279,6 +279,7 @@ package body Synth.Verilog_Exprs is
             return Res;
          end;
       else
+         --  Use stack memory.
          declare
             Vec : Logvec_Array (0 .. Nd - 1) := (others => (0, 0));
          begin

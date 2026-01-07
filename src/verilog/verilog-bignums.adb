@@ -1987,119 +1987,73 @@ package body Verilog.Bignums is
                                   Width : Width_Type;
                                   Change : out Boolean)
    is
-      Bit_Shift : constant Natural := Natural (Dst_Off mod Digit_Width);
-      Words_Shift : constant Digit_Index :=
-        Digit_Index (Dst_Off / Digit_Width);
-      Last_Width : constant Natural := Natural (Width mod Digit_Width);
-      Last : constant Digit_Index := To_Last (Width);
+      Wd, Src_W, Dst_W, D_W : Width_Type;
+      D, D1, Old : Logic_32;
+      Src_Idx, Dst_Idx : Digit_Index;
+      D_Off : Bit_Offset;
+      Mask : Uns32;
    begin
       Change := False;
       if Width = 0 then
          return;
       end if;
 
-      if Src_Off = 0 then
-         if Bit_Shift = 0 then
-            --  Simple: no shift.
-            if Last_Width = 0 then
-               --  Even simpler: only words.
-               for I in 0 .. Last loop
-                  Change := Change or (Dst (I + Words_Shift) /= Src (I));
-                  Dst (I + Words_Shift) := Src (I);
-               end loop;
-            else
-               for I in 0 .. Last - 1 loop
-                  Change := Change or (Dst (I + Words_Shift) /= Src (I));
-                  Dst (I + Words_Shift) := Src (I);
-               end loop;
-               declare
-                  Mask : constant Uns32 := Shift_Left (1, Last_Width) - 1;
-                  Old : constant Logic_32 := Dst (Last + Words_Shift);
-               begin
-                  Change := Change
-                    or ((Old and Mask) /= (Src (Last) and Mask));
-                  Dst (Last + Words_Shift) :=
-                    (Old and not Mask) or (Src (Last) and Mask);
-               end;
-            end if;
-         else
-            --  General: shift.
-            declare
-               Mask : Uns32;
-               W : Width_Type;
-               Idx : Digit_Index;
-               Old : Logic_32;
-               Ins : Logic_32;
-            begin
-               W := Width;
-               Idx := 0;
-               Mask := Shift_Left (1, Bit_Shift) - 1;
-               while W > Digit_Width loop
-                  --  Insert low part of VAL(Idx) to RES.
-                  Old := Dst (Idx + Words_Shift);
-                  Ins := Shift_Left (Src (Idx), Bit_Shift);
-                  Change := Change or ((Old and not Mask) /= Ins);
-                  Dst (Idx + Words_Shift) := (Old and Mask) or Ins;
-                  Idx := Idx + 1;
+      --  Read the first word
+      D := Shift_Left (Src (0), Natural (Src_Off));
+      Src_W := Digit_Width - Width_Type (Src_Off);
 
-                  --  Insert high part of VAL(Idx)
-                  Old := Dst (Idx + Words_Shift);
-                  Ins := Shift_Right (Src (Idx), Bit_Shift);
-                  Change := Change or ((Old and Mask) /= Ins);
-                  Dst (Idx + Words_Shift) := (Old and (not Mask)) or Ins;
-                  W := W - Digit_Width;
-               end loop;
-               if W > 0 then
-                  --  The remaining.
-                  if W + Width_Type (Bit_Shift) > Digit_Width then
-                     --  Needs to be written on 2 words.
-                     Old := Dst (Idx + Words_Shift);
-                     Ins := Shift_Left (Src (Idx), Bit_Shift);
-                     Change := Change or ((Old and not Mask) /= Ins);
-                     Dst (Idx + Words_Shift) := (Old and Mask) or Ins;
-                     W := W - (Digit_Width - Width_Type (Bit_Shift));
+      --  Destination position.
+      Dst_Idx := Digit_Index (Dst_Off / Digit_Width);
+      D_Off := Dst_Off mod Digit_Width;
+      pragma Unreferenced (Dst_Off);
 
-                     Mask := Shift_Left (1, Natural (W)) - 1;
-                     Old := Dst (Idx + Words_Shift + 1);
-                     Ins := Shift_Right (Src (Idx), Bit_Shift) and Mask;
-                     Change := Change or ((Old and Mask) /= Ins);
-                     Dst (Idx + Words_Shift + 1) :=
-                       (Old and (not Mask)) or Ins;
-                  else
-                     Mask := Shift_Left (Shift_Left (1, Natural (W)) - 1,
-                                         Bit_Shift);
-                     Old := Dst (Idx + Words_Shift);
-                     Ins := Shift_Left (Src (Idx), Bit_Shift) and Mask;
-                     Change := Change or ((Old and Mask) /= Ins);
-                     Dst (Idx + Words_Shift) := (Old and (not Mask)) or Ins;
-                  end if;
-               end if;
-            end;
+      -- From now, only full words will be read from the source.
+      Src_Idx := 1;
+      Wd := Width;
+
+      loop
+         --  Compute number of bits to be copied.
+         Dst_W := Digit_Width - Width_Type (D_Off);
+         D_W := Width_Type'Min (Src_W, Dst_W);
+         D_W := Width_Type'Min (D_W, Wd);
+
+         --  Compute the mask (for the destination).
+         Mask := Shift_Right (not 0, Natural (Digit_Width - D_W));
+         Mask := Shift_Left (Mask, Natural (D_Off));
+
+         --  Shift data for the destination.
+         D1 := Shift_Left (D, Natural (D_Off)) and Mask;
+
+         --  Check for changes.
+         Old := Dst (Dst_Idx);
+         Change := Change or ((Old and Mask) /= D1);
+
+         --  Copy.
+         Dst (Dst_Idx) := (Old and (not Mask)) or D1;
+
+         --  Update remaining number of bits.
+         Wd := Wd - D_W;
+         exit when Wd = 0;
+         Src_W := Src_W - D_W;
+         Dst_W := Dst_W - D_W;
+
+         --  Update destination bit offset.
+         D_Off := D_Off + Bit_Offset (D_W);
+         if D_Off = Digit_Width then
+            D_Off := 0;
+            Dst_Idx := Dst_Idx + 1;
          end if;
-      else
-         --  TODO: optimize
-         --  Bit per bit.
-         declare
-            L : Logic_32;
-            M : Uns32;
-            Di : Digit_Index;
-            Db : Natural;
-         begin
-            for I in 0 .. Bit_Offset (Width - 1) loop
-               --  Extract bit #I
-               L := Shift_Right (Src (Digit_Index (Src_Off + I) / Digit_Width),
-                                 Natural (Src_Off + I) mod Digit_Width)
-                 and (1, 1);
-               --  Insert it
-               Di := Digit_Index (Dst_Off + I) / Digit_Width;
-               Db := Natural (Dst_Off + I) mod Digit_Width;
-               L := Shift_Left (L, Db);
-               M := Shift_Left (1, Db);
-               Change := Change or ((Dst (Di) and (M, M)) /= L);
-               Dst (Di) := (Dst (Di) and (not M, not M)) or L;
-            end loop;
-         end;
-      end if;
+
+         if Src_W = 0 then
+            --  If all the source bits have been used, read the next word.
+            D := Src (Src_Idx);
+            Src_W := Digit_Width;
+            Src_Idx := Src_Idx + 1;
+         else
+            --  Otherwise, move to the left.
+            D := Shift_Right (D, Natural (D_W));
+         end if;
+      end loop;
    end Compute_Part_Insert;
 
    procedure Compute_Log_Bit_Part_Insert (Dst : Logvec_Ptr;

@@ -4361,6 +4361,7 @@ package Verilog.Nodes is
    function Get_Stride_Width (N : Node) return Width_Type;
    procedure Set_Stride_Width (N : Node; Width : Width_Type);
 
+   --  Storage size of the element (distance in bytes between two elements).
    --  Field: Field1 (uc)
    function Get_Stride_Size (N : Node) return Tsize_Type;
    procedure Set_Stride_Size (N : Node; Width : Tsize_Type);

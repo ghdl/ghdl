@@ -111,6 +111,7 @@ package body Verilog.Allocates is
       pragma Assert (Obj.Next = null);
    end Scope_Append;
 
+   --  Get number of bytes to store TYP.
    function Get_Storage_Size (Typ : Node) return Storage_Index is
    begin
       case Get_Kind (Typ) is
