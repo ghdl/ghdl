@@ -1158,7 +1158,8 @@ package body Synth.Verilog_Exprs is
                raise Internal_Error;
             end if;
             if Base_Doff /= No_Net then
-               raise Internal_Error;
+               Doff := Build_Addidx (Ctxt, Base_Doff, Doff);
+               Set_Location (Doff, N);
             end if;
          end;
       end if;
