@@ -348,7 +348,7 @@ package body Synth.Verilog_Insts is
    begin
       if Expr = Null_Node then
          --  Default value is 1.
-         Ptype := Param_Uns32;
+         Ptype := Param_Pval_Boolean;
          --  TODO: create the value only once ?
          Pv := Create_Pval2 (1);
          Write_Pval (Pv, 0, (Val => 1, Zx => 0));
