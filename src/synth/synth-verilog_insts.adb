@@ -327,6 +327,10 @@ package body Synth.Verilog_Insts is
    is
       Attr : Node;
    begin
+      pragma Assert (Get_Kind (M) = N_Module);
+      if Get_Blackbox_Flag (M) then
+         return True;
+      end if;
       Attr := Get_Attributes_Chain (M);
       while Attr /= Null_Node loop
          if Get_Identifier (Attr) = Std_Names.Name_Syn_Black_Box
