@@ -44,7 +44,7 @@ package body Synth.Disp_Vhdl is
          Wr ("\");
       end if;
       Wr ("typ_");
-      Put_Name_Inner (Name);
+      Put_Name_Inner (Name, Language_Vhdl, Is_Extended);
       if Is_Extended then
          Wr ("\");
       end if;

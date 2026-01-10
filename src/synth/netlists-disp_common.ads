@@ -17,13 +17,15 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 package Netlists.Disp_Common is
+   --  Languages supported (to create extended identifiers).
+   subtype Language_Range is
+     Language_Type range Language_Vhdl .. Language_Verilog;
+
    --  Disp name N without extended character.
    --  Useful when a suffix or a prefix is needed.
    --  Use Is_Extended_Sname if N must be displayed as an extended identifier.
-   procedure Put_Name_Inner (N : Sname);
-
-   subtype Language_Range is
-     Language_Type range Language_Vhdl .. Language_Verilog;
+   procedure Put_Name_Inner
+     (N : Sname; Lang : Language_Range; Is_Extended : Boolean);
 
    --  Disp name N (as a normal identifier or as an extended identifier).
    procedure Put_Name (N : Sname; Lang : Language_Range);

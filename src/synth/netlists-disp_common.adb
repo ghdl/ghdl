@@ -23,9 +23,23 @@ with Netlists.Gates; use Netlists.Gates;
 with Netlists.Utils;
 
 package body Netlists.Disp_Common is
-   procedure Put_Id (N : Name_Id) is
+   procedure Put_Id (N : Name_Id; Lang : Language_Range; Is_Extended : Boolean)
+   is
+      Img : constant String := Name_Table.Image (N);
    begin
-      Wr (Name_Table.Image (N));
+      if Is_Extended then
+         --  Name N is printed within an extended identifier.
+         case Lang is
+            when Language_Vhdl
+              | Language_Verilog =>
+               if Img (Img'First) = '\' then
+                  Wr (Img (Img'First + 1 .. Img'Last - 1));
+                  return;
+               end if;
+         end case;
+      end if;
+
+      Wr (Img);
    end Put_Id;
 
    procedure Put_Name_Version (N : Sname) is
@@ -53,7 +67,8 @@ package body Netlists.Disp_Common is
       end case;
    end Is_Extended_Sname;
 
-   procedure Put_Name_Inner (N : Sname)
+   procedure Put_Name_Inner
+     (N : Sname; Lang : Language_Range; Is_Extended : Boolean)
    is
       Kind : constant Sname_Kind := Get_Sname_Kind (N);
       Prefix : Sname;
@@ -67,7 +82,7 @@ package body Netlists.Disp_Common is
       if Kind in Sname_Kind_Prefix then
          Prefix := Get_Sname_Prefix (N);
          if Prefix /= No_Sname then
-            Put_Name_Inner (Prefix);
+            Put_Name_Inner (Prefix, Lang, Is_Extended);
             if Kind /= Sname_Field then
                Wr ("_");
             end if;
@@ -76,12 +91,12 @@ package body Netlists.Disp_Common is
 
       case Kind is
          when Sname_User =>
-            Put_Id (Get_Sname_Suffix (N));
+            Put_Id (Get_Sname_Suffix (N), Lang, Is_Extended);
          when Sname_System =>
-            Put_Id (Get_Sname_Suffix (N));
+            Put_Id (Get_Sname_Suffix (N), Lang, Is_Extended);
          when Sname_Field =>
             Wr ("[");
-            Put_Id (Get_Sname_Suffix (N));
+            Put_Id (Get_Sname_Suffix (N), Lang, Is_Extended);
             Wr ("]");
          when Sname_Version
            | Sname_Unique =>
@@ -108,7 +123,7 @@ package body Netlists.Disp_Common is
          Wr ("\");
       end if;
 
-      Put_Name_Inner (N);
+      Put_Name_Inner (N, Lang, Is_Extended);
 
       if Is_Extended then
          Put_Extended_End (Lang);
@@ -158,9 +173,9 @@ package body Netlists.Disp_Common is
                  | Id_User_None .. Module_Id'Last =>
                   --  Gates with multiple outputs.
                   Wr ("\");
-                  Put_Name_Inner (Inst_Name);
+                  Put_Name_Inner (Inst_Name, Lang, True);
                   Wr (".");
-                  Put_Name_Inner (Get_Output_Desc (M, Idx).Name);
+                  Put_Name_Inner (Get_Output_Desc (M, Idx).Name, Lang, True);
                   Put_Extended_End (Lang);
                when others =>
                   Put_Name (Inst_Name, Lang);
