@@ -25,7 +25,6 @@ with Netlists.Utils; use Netlists.Utils;
 with Netlists.Iterators; use Netlists.Iterators;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Locations;
-with Netlists.Dump; use Netlists.Dump;
 with Netlists.Disp_Common; use Netlists.Disp_Common;
 
 package body Netlists.Disp_Vhdl is
@@ -101,11 +100,13 @@ package body Netlists.Disp_Vhdl is
                when Param_Pval_String =>
                   Disp_Pval_String (Get_Param_Pval (Inst, P - 1));
                when Param_Pval_Vector
-                 | Param_Pval_Integer
-                 | Param_Pval_Real
                  | Param_Pval_Time_Ps
                  | Param_Pval_Boolean =>
                   Disp_Pval_Binary (Get_Param_Pval (Inst, P - 1));
+               when Param_Pval_Real =>
+                  Disp_Pval_Fp64 (Get_Param_Pval (Inst, P - 1));
+               when Param_Pval_Integer =>
+                  Disp_Pval_Integer (Get_Param_Pval (Inst, P - 1));
                when Param_Invalid =>
                   Wr ("*invalid*");
             end case;

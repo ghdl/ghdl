@@ -24,80 +24,13 @@ with Netlists.Utils; use Netlists.Utils;
 with Netlists.Iterators; use Netlists.Iterators;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Locations;
+with Netlists.Disp_Common; use Netlists.Disp_Common;
 
 package body Netlists.Dump is
    procedure Put_Width (W : Width) is
    begin
       Wr_Trim (Width'Image (W));
    end Put_Width;
-
-   procedure Put_Id (N : Name_Id) is
-   begin
-      Wr (Name_Table.Image (N));
-   end Put_Id;
-
-   procedure Disp_Binary_Digit (Va : Uns32; Zx : Uns32; I : Natural) is
-   begin
-      Wr (Bchar (((Va / 2**I) and 1) + ((Zx / 2**I) and 1) * 2));
-   end Disp_Binary_Digit;
-
-   procedure Disp_Binary_Digits (Va : Uns32; Zx : Uns32; W : Natural) is
-   begin
-      for I in 1 .. W loop
-         Disp_Binary_Digit (Va, Zx, W - I);
-      end loop;
-   end Disp_Binary_Digits;
-
-   procedure Disp_Pval_Binary_Digits (Pv : Pval)
-   is
-      Len : constant Uns32 := Get_Pval_Length (Pv);
-      V   : Logic_32;
-      Off : Uns32;
-   begin
-      if Len = 0 then
-         return;
-      end if;
-
-      V := Read_Pval (Pv, (Len - 1) / 32);
-      for I in reverse 0 .. Len - 1 loop
-         Off := I mod 32;
-         if Off = 31 then
-            V := Read_Pval (Pv, I / 32);
-         end if;
-         Disp_Binary_Digit (V.Val, V.Zx, Natural (Off));
-      end loop;
-   end Disp_Pval_Binary_Digits;
-
-   procedure Disp_Pval_Binary (Pv : Pval) is
-   begin
-      Wr ('"');
-      Disp_Pval_Binary_Digits (Pv);
-      Wr ('"');
-   end Disp_Pval_Binary;
-
-   procedure Disp_Pval_String (Pv : Pval)
-   is
-      Len : constant Uns32 := Get_Pval_Length (Pv);
-      pragma Assert (Len rem 8 = 0);
-      V   : Logic_32;
-      Off : Uns32;
-      C   : Uns32;
-   begin
-      Wr ('"');
-      if Len > 0 then
-         V := Read_Pval (Pv, (Len - 1) / 32);
-         for I in reverse 0 .. (Len / 8) - 1 loop
-            Off := I mod 4;
-            if Off = 3 then
-               V := Read_Pval (Pv, I / 4);
-            end if;
-            pragma Assert (V.Zx = 0);
-            C := Shift_Right (V.Val, Natural (8 * Off)) and 16#ff#;
-            Wr (Character'Val (C));
-         end loop;
-      end if;
-      Wr ('"');
-   end Disp_Pval_String;
 
    procedure Disp_Instance_Id (Inst : Instance) is
    begin
@@ -204,13 +137,16 @@ package body Netlists.Dump is
             Wr ("invalid");
          when Param_Uns32 =>
             Wr_Uns32 (Get_Param_Uns32 (Inst, Idx));
-         when Param_Pval_Vector
-            | Param_Pval_String
-            | Param_Pval_Integer
-            | Param_Pval_Real
+         when Param_Pval_String =>
+            Disp_Pval_String (Get_Param_Pval (Inst, Idx));
+         when Param_Pval_Vector =>
+            Disp_Pval_Binary (Get_Param_Pval (Inst, Idx));
+         when Param_Pval_Integer
             | Param_Pval_Time_Ps
             | Param_Pval_Boolean =>
-            Wr ("generic");
+            Disp_Pval_Integer (Get_Param_Pval (Inst, Idx));
+         when Param_Pval_Real =>
+            Disp_Common.Disp_Pval_Fp64 (Get_Param_Pval (Inst, Idx));
       end case;
    end Dump_Parameter;
 
@@ -403,17 +339,17 @@ package body Netlists.Dump is
             when Param_Uns32 =>
                Wr ("uns32");
             when Param_Pval_Vector =>
-               Wr ("pval.vector");
+               Wr ("vector");
             when Param_Pval_String =>
-               Wr ("pval.string");
+               Wr ("string");
             when Param_Pval_Integer =>
-               Wr ("pval.integer");
+               Wr ("integer");
             when Param_Pval_Real =>
-               Wr ("pval.real");
+               Wr ("real");
             when Param_Pval_Time_Ps =>
-               Wr ("pval.time.ps");
+               Wr ("time.ps");
             when Param_Pval_Boolean =>
-               Wr ("pval.boolean");
+               Wr ("boolean");
          end case;
          Wr_Line;
       end loop;

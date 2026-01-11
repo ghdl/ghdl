@@ -19,20 +19,17 @@ with Ada.Unchecked_Conversion;
 with Types; use Types;
 
 package Types_Utils is
-   function To_Int32 is new Ada.Unchecked_Conversion
-     (Uns32, Int32);
+   function To_Int32 is new Ada.Unchecked_Conversion (Uns32, Int32);
 
-   function To_Uns32 is new Ada.Unchecked_Conversion
-     (Int32, Uns32);
+   function To_Uns32 is new Ada.Unchecked_Conversion (Int32, Uns32);
 
-   function To_Uns64 is new Ada.Unchecked_Conversion
-     (Int64, Uns64);
+   function To_Uns64 is new Ada.Unchecked_Conversion (Int64, Uns64);
 
-   function To_Int64 is new Ada.Unchecked_Conversion
-     (Uns64, Int64);
+   function To_Int64 is new Ada.Unchecked_Conversion (Uns64, Int64);
 
-   function To_Uns64 is new Ada.Unchecked_Conversion
-     (Fp64, Uns64);
+   function To_Uns64 is new Ada.Unchecked_Conversion (Fp64, Uns64);
+
+   function To_Fp64 is new Ada.Unchecked_Conversion (Uns64, Fp64);
 
    --  Sign extend V: bit SZ is copied to bits SZ + 1 .. 63/31.
    function Sext (V : Uns64; Sz : Natural) return Uns64;

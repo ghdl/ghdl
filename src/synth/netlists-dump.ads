@@ -23,20 +23,6 @@ package Netlists.Dump is
    --  If set, print nets/instances/modules identifier.
    Flag_Disp_Id : Boolean := True;
 
-   Bchar : constant array (Uns32 range 0 .. 3) of Character := "01ZX";
-
-   procedure Put_Id (N : Name_Id);
-   procedure Disp_Binary_Digits (Va : Uns32; Zx : Uns32; W : Natural);
-
-   --  Display the digits of binary value PV.
-   procedure Disp_Pval_Binary_Digits (Pv : Pval);
-
-   --  Display PV within double quotes.
-   procedure Disp_Pval_Binary (Pv : Pval);
-
-   --  Display parameter value PV as a string.
-   procedure Disp_Pval_String (Pv : Pval);
-
    procedure Dump_Name (N : Sname);
 
    procedure Dump_Net_Name (N : Net; With_Id : Boolean := False);
