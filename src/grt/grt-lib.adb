@@ -104,25 +104,29 @@ package body Grt.Lib is
    procedure Ghdl_Assert_Failed (Base : Std_String_Basep;
                                  Len : Ghdl_Index_Type;
                                  Severity : Integer;
-                                 Loc : Ghdl_Location_Ptr) is
+                                 Loc : Ghdl_Location_Ptr)
+   is
+      Level : constant Integer := Severity mod 256;
    begin
       if Is_Assert_Disabled (Asserts_Policy) then
          return;
       end if;
-      Inc_Assert_Count (Severity);
-      Do_Report ("assertion", Base, Len, "Assertion violation", Severity, Loc);
+      Inc_Assert_Count (Level);
+      Do_Report ("assertion", Base, Len, "Assertion violation", Level, Loc);
    end Ghdl_Assert_Failed;
 
    procedure Ghdl_Ieee_Assert_Failed (Base : Std_String_Basep;
                                       Len : Ghdl_Index_Type;
                                       Severity : Integer;
-                                      Loc : Ghdl_Location_Ptr) is
+                                      Loc : Ghdl_Location_Ptr)
+   is
+      Level : constant Integer := Severity mod 256;
    begin
       if Is_Assert_Disabled (Ieee_Asserts) then
          return;
       end if;
-      Inc_Assert_Count (Severity);
-      Do_Report ("assertion", Base, Len, "Assertion violation", Severity, Loc);
+      Inc_Assert_Count (Level);
+      Do_Report ("assertion", Base, Len, "Assertion violation", Level, Loc);
    end Ghdl_Ieee_Assert_Failed;
 
    procedure Ghdl_Psl_Assert_Failed (Base : Std_String_Basep;
@@ -162,10 +166,12 @@ package body Grt.Lib is
    procedure Ghdl_Report (Base : Std_String_Basep;
                           Len : Ghdl_Index_Type;
                           Severity : Integer;
-                          Loc : Ghdl_Location_Ptr) is
+                          Loc : Ghdl_Location_Ptr)
+   is
+      Level : constant Integer := Severity mod 256;
    begin
-      Inc_Assert_Count (Severity);
-      Do_Report ("report", Base, Len, "Assertion violation", Severity, Loc);
+      Inc_Assert_Count (Level);
+      Do_Report ("report", Base, Len, "Assertion violation", Level, Loc);
    end Ghdl_Report;
 
    procedure Ghdl_Program_Error (Filename : Ghdl_C_String;
