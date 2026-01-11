@@ -248,7 +248,7 @@ package body Grt.Options is
       return Std_Time (Time);
    end Parse_Time;
 
-   function Parse_Severity (Opt_Name : String; Arg : String) return Integer is
+   function Parse_Severity (Opt_Name : String; Arg : String) return Ghdl_E8 is
    begin
       if Arg = "note" then
          return Note_Severity;
@@ -259,12 +259,12 @@ package body Grt.Options is
       elsif Arg = "failure" then
          return Failure_Severity;
       elsif Arg = "none" then
-         return 4;
+         return None_Severity;
       else
          Error_S ("bad argument for ");
          Diag_C (Opt_Name);
          Error_E (" option, try --help");
-         return -1;
+         return 10;
       end if;
    end Parse_Severity;
 
@@ -363,20 +363,20 @@ package body Grt.Options is
          end;
       elsif Len > 15 and then Option (1 .. 15) = "--assert-level=" then
          declare
-            Level : Integer;
+            Level : Ghdl_E8;
          begin
             Level := Parse_Severity ("--assert-level", Option (16 .. Len));
-            if Level >= 0 then
+            if Level <= None_Severity then
                Severity_Stop_Level := Level;
             end if;
          end;
       elsif Len > 21 and then Option (1 .. 21) = "--backtrace-severity=" then
          declare
-            Level : Integer;
+            Level : Ghdl_E8;
          begin
             Level := Parse_Severity
               ("--backtrace-severity", Option (22 .. Len));
-            if Level >= 0 then
+            if Level <= None_Severity then
                Backtrace_Severity := Level;
             end if;
          end;

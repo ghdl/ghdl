@@ -21,16 +21,18 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
+with Grt.Types; use Grt.Types;
+
 package Grt.Severity is
-   pragma Pure (Grt.Severity);
+   pragma Preelaborate (Grt.Severity);
 
-   Note_Severity    : constant Integer := 0;
-   Warning_Severity : constant Integer := 1;
-   Error_Severity   : constant Integer := 2;
-   Failure_Severity : constant Integer := 3;
+   Note_Severity    : constant Ghdl_E8 := 0;
+   Warning_Severity : constant Ghdl_E8 := 1;
+   Error_Severity   : constant Ghdl_E8 := 2;
+   Failure_Severity : constant Ghdl_E8 := 3;
 
-   subtype Severity_Level is Natural range Note_Severity .. Failure_Severity;
+   subtype Severity_Level is Ghdl_E8 range Note_Severity .. Failure_Severity;
 
    --  Value returned by Parse_Severity for 'none'.
-   None_Severity    : constant Integer := 4;
+   None_Severity    : constant Ghdl_E8 := 4;
 end Grt.Severity;

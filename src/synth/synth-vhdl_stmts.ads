@@ -19,6 +19,9 @@
 with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
+with Grt.Types; use Grt.Types;
+with Grt.Severity;
+
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
@@ -31,7 +34,7 @@ package Synth.Vhdl_Stmts is
    type Assertion_Report_Handler_Acc is access procedure
      (Inst : Synth_Instance_Acc;
       Stmt : Node;
-      Severity : Natural;
+      Severity : Grt.Severity.Severity_Level;
       Msg : String_Acc);
 
    --  Procedure to call for report/assertion message.
@@ -142,7 +145,7 @@ package Synth.Vhdl_Stmts is
    --  Free MSG.
    procedure Report_Assertion_Failure (Syn_Inst : Synth_Instance_Acc;
                                        Stmt : Node;
-                                       Severity : Natural;
+                                       Severity : Ghdl_E8;
                                        Msg : String_Acc);
 
    procedure Init_For_Loop_Statement (Inst : Synth_Instance_Acc;

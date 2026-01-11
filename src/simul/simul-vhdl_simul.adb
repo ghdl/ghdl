@@ -59,7 +59,7 @@ with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Options;
 with Grt.Processes;
 with Grt.Errors;
-with Grt.Severity;
+with Grt.Severity; use Grt.Severity;
 with Grt.Lib;
 with Grt.Stdio;
 with Grt.Astdio;
@@ -1390,11 +1390,10 @@ package body Simul.Vhdl_Simul is
 
    procedure Assertion_Report_Msg (Inst : Synth_Instance_Acc;
                                    Stmt : Node;
-                                   Severity : Natural;
+                                   Severity : Severity_Level;
                                    Msg : String_Acc)
    is
       pragma Unreferenced (Inst);
-      use Grt.Severity;
       use Grt.Errors;
    begin
       Report_S (Vhdl.Errors.Disp_Location (Stmt));
@@ -1427,8 +1426,6 @@ package body Simul.Vhdl_Simul is
             Diag_C ("error");
          when Failure_Severity =>
             Diag_C ("failure");
-         when others =>
-            Diag_C ("??");
       end case;
       Diag_C ("): ");
 

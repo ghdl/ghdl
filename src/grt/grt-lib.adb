@@ -48,10 +48,9 @@ package body Grt.Lib is
                         Base : Std_String_Basep;
                         Len : Ghdl_Index_Type;
                         Default_Str : String;
-                        Severity : Integer;
+                        Severity : Severity_Level;
                         Loc : Ghdl_Location_Ptr)
    is
-      Level : constant Integer := Severity mod 256;
       Bt : Backtrace_Addrs;
    begin
       Report_S;
@@ -65,7 +64,7 @@ package body Grt.Lib is
       Diag_C (":(");
       Diag_C (Msg);
       Diag_C (" ");
-      case Level is
+      case Severity is
          when Note_Severity =>
             Diag_C ("note");
          when Warning_Severity =>
@@ -74,8 +73,6 @@ package body Grt.Lib is
             Diag_C ("error");
          when Failure_Severity =>
             Diag_C ("failure");
-         when others =>
-            Diag_C ("???");
       end case;
       Diag_C ("): ");
       if Base /= null then
@@ -84,12 +81,12 @@ package body Grt.Lib is
          Diag_C (Default_Str);
       end if;
       Report_E;
-      if Level >= Grt.Options.Severity_Stop_Level then
+      if Severity >= Grt.Options.Severity_Stop_Level then
          Save_Backtrace (Bt, 2);
          Error_S (Msg);
          Diag_C (" failed");
          Error_E_Call_Stack (Bt);
-      elsif Level >= Grt.Options.Backtrace_Severity then
+      elsif Severity >= Grt.Options.Backtrace_Severity then
          Save_Backtrace (Bt, 2);
          Grt.Backtraces.Put_Err_Backtrace (Bt);
       end if;
@@ -103,35 +100,31 @@ package body Grt.Lib is
 
    procedure Ghdl_Assert_Failed (Base : Std_String_Basep;
                                  Len : Ghdl_Index_Type;
-                                 Severity : Integer;
-                                 Loc : Ghdl_Location_Ptr)
-   is
-      Level : constant Integer := Severity mod 256;
+                                 Severity : Ghdl_E8;
+                                 Loc : Ghdl_Location_Ptr) is
    begin
       if Is_Assert_Disabled (Asserts_Policy) then
          return;
       end if;
-      Inc_Assert_Count (Level);
-      Do_Report ("assertion", Base, Len, "Assertion violation", Level, Loc);
+      Inc_Assert_Count (Severity);
+      Do_Report ("assertion", Base, Len, "Assertion violation", Severity, Loc);
    end Ghdl_Assert_Failed;
 
    procedure Ghdl_Ieee_Assert_Failed (Base : Std_String_Basep;
                                       Len : Ghdl_Index_Type;
-                                      Severity : Integer;
-                                      Loc : Ghdl_Location_Ptr)
-   is
-      Level : constant Integer := Severity mod 256;
+                                      Severity : Ghdl_E8;
+                                      Loc : Ghdl_Location_Ptr) is
    begin
       if Is_Assert_Disabled (Ieee_Asserts) then
          return;
       end if;
-      Inc_Assert_Count (Level);
-      Do_Report ("assertion", Base, Len, "Assertion violation", Level, Loc);
+      Inc_Assert_Count (Severity);
+      Do_Report ("assertion", Base, Len, "Assertion violation", Severity, Loc);
    end Ghdl_Ieee_Assert_Failed;
 
    procedure Ghdl_Psl_Assert_Failed (Base : Std_String_Basep;
                                      Len : Ghdl_Index_Type;
-                                     Severity : Integer;
+                                     Severity : Ghdl_E8;
                                      Loc : Ghdl_Location_Ptr) is
    begin
       Do_Report
@@ -146,7 +139,7 @@ package body Grt.Lib is
 
    procedure Ghdl_Psl_Cover (Base : Std_String_Basep;
                              Len : Ghdl_Index_Type;
-                             Severity : Integer;
+                             Severity : Ghdl_E8;
                              Loc : Ghdl_Location_Ptr) is
    begin
       Do_Report ("psl cover", Base, Len, "sequence covered", Severity, Loc);
@@ -154,7 +147,7 @@ package body Grt.Lib is
 
    procedure Ghdl_Psl_Cover_Failed (Base : Std_String_Basep;
                                     Len : Ghdl_Index_Type;
-                                    Severity : Integer;
+                                    Severity : Ghdl_E8;
                                     Loc : Ghdl_Location_Ptr) is
    begin
       if Flag_Psl_Report_Uncovered then
@@ -165,13 +158,11 @@ package body Grt.Lib is
 
    procedure Ghdl_Report (Base : Std_String_Basep;
                           Len : Ghdl_Index_Type;
-                          Severity : Integer;
-                          Loc : Ghdl_Location_Ptr)
-   is
-      Level : constant Integer := Severity mod 256;
+                          Severity : Ghdl_E8;
+                          Loc : Ghdl_Location_Ptr) is
    begin
-      Inc_Assert_Count (Level);
-      Do_Report ("report", Base, Len, "Assertion violation", Level, Loc);
+      Inc_Assert_Count (Severity);
+      Do_Report ("report", Base, Len, "Assertion violation", Severity, Loc);
    end Ghdl_Report;
 
    procedure Ghdl_Program_Error (Filename : Ghdl_C_String;

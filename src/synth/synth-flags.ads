@@ -16,6 +16,7 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
+with Grt.Types;
 with Grt.Severity;
 
 package Synth.Flags is
@@ -73,7 +74,7 @@ package Synth.Flags is
    Flag_Max_Loop : Natural := 1000;
 
    --  Level at which an assert stop the simulation.
-   Severity_Level : Integer := Grt.Severity.Error_Severity;
+   Severity_Level : Grt.Types.Ghdl_E8 := Grt.Severity.Error_Severity;
 
    --  Synthesize PSL and assertions.
    Flag_Formal : Boolean := True;

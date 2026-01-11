@@ -18,7 +18,6 @@
 
 with Ada.Unchecked_Deallocation;
 
-with Grt.Types; use Grt.Types;
 with Grt.Algos;
 with Grt.Severity; use Grt.Severity;
 with Grt.Asserts;
@@ -3906,7 +3905,7 @@ package body Synth.Vhdl_Stmts is
 
    procedure Assertion_Report_Default (Syn_Inst : Synth_Instance_Acc;
                                        Stmt : Node;
-                                       Severity : Natural;
+                                       Severity : Severity_Level;
                                        Msg : String_Acc)
    is
       use Simple_IO;
@@ -3941,7 +3940,6 @@ package body Synth.Vhdl_Stmts is
             Put_Err ("error");
          when Failure_Severity =>
             Put_Err ("failure");
-         when others => raise Internal_Error;
       end case;
       Put_Err ("): ");
 
@@ -3979,7 +3977,7 @@ package body Synth.Vhdl_Stmts is
 
    procedure Report_Assertion_Failure (Syn_Inst : Synth_Instance_Acc;
                                        Stmt : Node;
-                                       Severity : Natural;
+                                       Severity : Ghdl_E8;
                                        Msg : String_Acc)
    is
       Tmp : String_Acc;
@@ -4007,7 +4005,7 @@ package body Synth.Vhdl_Stmts is
       Rep : Valtyp;
       Rep_Str : String_Acc;
       Sev : Valtyp;
-      Level : Natural;
+      Level : Ghdl_E8;
    begin
       Mark_Expr_Pool (Marker);
 
@@ -4049,7 +4047,7 @@ package body Synth.Vhdl_Stmts is
                when others => raise Internal_Error;
             end case;
          else
-            Level := Natural (Read_Discrete (Sev));
+            Level := Ghdl_E8 (Read_Discrete (Sev));
          end if;
       else
          Level := Note_Severity;

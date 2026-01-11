@@ -29,16 +29,16 @@ package Grt.Lib is
 
    procedure Ghdl_Assert_Failed (Base : Std_String_Basep;
                                  Len : Ghdl_Index_Type;
-                                 Severity : Integer;
+                                 Severity : Ghdl_E8;
                                  Loc : Ghdl_Location_Ptr);
    procedure Ghdl_Ieee_Assert_Failed (Base : Std_String_Basep;
                                       Len : Ghdl_Index_Type;
-                                      Severity : Integer;
+                                      Severity : Ghdl_E8;
                                       Loc : Ghdl_Location_Ptr);
 
    procedure Ghdl_Psl_Assert_Failed (Base : Std_String_Basep;
                                      Len : Ghdl_Index_Type;
-                                     Severity : Integer;
+                                     Severity : Ghdl_E8;
                                      Loc : Ghdl_Location_Ptr);
 
    procedure Ghdl_Psl_Assume_Failed (Loc : Ghdl_Location_Ptr);
@@ -46,17 +46,17 @@ package Grt.Lib is
    --  Called when a sequence is covered (in a cover directive)
    procedure Ghdl_Psl_Cover (Base : Std_String_Basep;
                              Len : Ghdl_Index_Type;
-                             Severity : Integer;
+                             Severity : Ghdl_E8;
                              Loc : Ghdl_Location_Ptr);
 
    procedure Ghdl_Psl_Cover_Failed (Base : Std_String_Basep;
                                     Len : Ghdl_Index_Type;
-                                    Severity : Integer;
+                                    Severity : Ghdl_E8;
                                     Loc : Ghdl_Location_Ptr);
 
    procedure Ghdl_Report (Base : Std_String_Basep;
                           Len : Ghdl_Index_Type;
-                          Severity : Integer;
+                          Severity : Ghdl_E8;
                           Loc : Ghdl_Location_Ptr);
 
    --  Bound / Direction error.
