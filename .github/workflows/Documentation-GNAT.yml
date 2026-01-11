@@ -46,7 +46,7 @@ jobs:
           ls -lAh gnat*
 
       - name: "📤 Upload artifact: '${{ inputs.html_artifact }}'"
-        uses: pyTooling/upload-artifact@v5
+        uses: pyTooling/upload-artifact@v6
         if: inputs.html_artifact != ''
         with:
           name: ${{ inputs.html_artifact }}
