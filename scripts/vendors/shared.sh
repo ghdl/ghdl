@@ -9,7 +9,7 @@
 #	   Provide Bash procedures to easily use GHDL in Bash scripts.
 #
 # ==============================================================================
-#  Copyright (C) 2017-2025 Patrick Lehmann - Boetzingen, Germany
+#  Copyright (C) 2017-2026 Patrick Lehmann - Boetzingen, Germany
 #  Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #
 #  This program is free software: you can redistribute it and/or modify
