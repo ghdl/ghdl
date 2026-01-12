@@ -45,7 +45,9 @@ package Verilog.Sem_Types is
    --      void
    --      chandle
    --      event
+   --      class handle (?)
    --      other types (?)
+   --  class (not a data type)
 
    --  IEEE1800-2017 6.24.3 Bit-stream casting
    --  bit-stream types:
