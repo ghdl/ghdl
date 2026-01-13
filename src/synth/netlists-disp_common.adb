@@ -1,5 +1,5 @@
 --  Routine to disp net names.
---  Copyright (C) 2025 Tristan Gingold
+--  Copyright (C) 2026 Tristan Gingold
 --
 --  This file is part of GHDL.
 --
