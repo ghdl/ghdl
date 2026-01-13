@@ -522,16 +522,16 @@ package body Synth.Ieee.Std_Logic_Arith is
                          Llen, Rlen : Uns32;
                          L_Sign, R_Sign : Boolean) return Order_Type
    is
-      Lb, Rb : Sl_01;
+      Lb, Rb : Sl_X01;
    begin
       --  The sign.
       if L_Sign and Llen > 0 then
-         Lb := Sl_To_01 (Read_Std_Logic (L, 0));
+         Lb := Sl_To_X01 (Read_Std_Logic (L, 0));
       else
          Lb := '0';
       end if;
       if R_Sign and Rlen > 0 then
-         Rb := Sl_To_01 (Read_Std_Logic (R, 0));
+         Rb := Sl_To_X01 (Read_Std_Logic (R, 0));
       else
          Rb := '0';
       end if;
@@ -548,10 +548,10 @@ package body Synth.Ieee.Std_Logic_Arith is
       --  Same sign.
       for I in reverse 1 .. Uns32'Max (Llen, Rlen) loop
          if I <= Llen then
-            Lb := Sl_To_01 (Read_Std_Logic (L, Llen - I));
+            Lb := Sl_To_X01 (Read_Std_Logic (L, Llen - I));
          end if;
          if I <= Rlen then
-            Rb := Sl_To_01 (Read_Std_Logic (R, Rlen - I));
+            Rb := Sl_To_X01 (Read_Std_Logic (R, Rlen - I));
          end if;
          if Lb = '0' and Rb = '1' then
             return Less;

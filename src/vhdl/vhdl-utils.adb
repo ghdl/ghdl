@@ -1056,6 +1056,8 @@ package body Vhdl.Utils is
             return;
          when Iir_Kind_Architecture_Body =>
             Free_Recursive (Get_Entity_Name (N));
+         when Iir_Kind_Vunit_Declaration =>
+            null;
          when Iir_Kind_Overload_List =>
             Free_Recursive_List (Get_Overload_List (N));
             if not Free_List then
