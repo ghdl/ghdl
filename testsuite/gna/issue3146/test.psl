@@ -1,0 +1,4 @@
+vunit pls_vunit_vu (test)
+{
+    default clock is rising_edge(clk);
+}
