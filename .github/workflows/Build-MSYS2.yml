@@ -45,7 +45,7 @@ on:
       python_version:
         description: 'Python version for pyGHDL testing.'
         required: false
-        default: '3.12'
+        default: '3.13'   # FIXME: MSYS2 is one or two versions behind for CPython
         type: string
       pyunit_testsuites:
         description: 'Name of the pyunit testsuites.'
@@ -379,12 +379,15 @@ jobs:
         run: |
           from os       import getenv
           from pathlib  import Path
-          from sys      import version
+          from sys      import version, version_info
           from textwrap import dedent
 
           print(f"Python: {version}")
 
-          from tomli import load as tomli_load
+          if version_info < (3, 11):
+            from tomli import load as toml_load
+          else:
+            from tomllib import load as toml_load
 
           htmlDirectory = Path("htmlcov")
           xmlFile =  Path("./coverage.xml")
@@ -394,7 +397,7 @@ jobs:
           pyProjectFile =  Path("pyproject.toml")
           if pyProjectFile.exists():
             with pyProjectFile.open("rb") as file:
-              pyProjectSettings = tomli_load(file)
+              pyProjectSettings = toml_load(file)
 
             htmlDirectory = Path(pyProjectSettings["tool"]["coverage"]["html"]["directory"])
             xmlFile       = Path(pyProjectSettings["tool"]["coverage"]["xml"]["output"])
