@@ -193,6 +193,11 @@ package body Trans.Chap9 is
 
       if Is_Component_Instantiation (Inst) then
          Ports := Get_Named_Entity (Get_Instantiated_Unit (Inst));
+         if Get_Macro_Expand_Flag (Ports) then
+            --  Get the macro-expanded component.
+            Ports := Get_Instantiated_Header (Inst);
+            Chap4.Translate_Component_Declaration (Ports);
+         end if;
       else
          Ports := Get_Entity_From_Entity_Aspect (Get_Instantiated_Unit (Inst));
       end if;

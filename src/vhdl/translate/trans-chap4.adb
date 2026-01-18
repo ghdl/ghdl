@@ -2139,7 +2139,9 @@ package body Trans.Chap4 is
             null;
 
          when Iir_Kind_Component_Declaration =>
-            Chap4.Translate_Component_Declaration (Decl);
+            if not Get_Macro_Expand_Flag (Decl) then
+               Chap4.Translate_Component_Declaration (Decl);
+            end if;
          when Iir_Kind_Type_Declaration =>
             --  A type declaration can be in fact a subtype declaration.
             Chap4.Translate_Type_Declaration (Decl);

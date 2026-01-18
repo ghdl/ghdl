@@ -2304,6 +2304,7 @@ package body Trans.Rtis is
    is
       Inst : constant Iir := Get_Instantiated_Unit (Stmt);
       Info : constant Block_Info_Acc := Get_Info (Stmt);
+      Comp : Iir;
       Name : O_Dnode;
       List : O_Record_Aggr_List;
       Val  : O_Cnode;
@@ -2325,8 +2326,14 @@ package body Trans.Rtis is
                              Ghdl_Ptr_Type));
       New_Record_Aggr_El (List, New_Rti_Address (Parent));
       if Is_Component_Instantiation (Stmt) then
-         Val := New_Rti_Address
-           (Get_Info (Get_Named_Entity (Inst)).Comp_Rti_Const);
+         Comp := Get_Named_Entity (Inst);
+         if Get_Macro_Expand_Flag (Comp) then
+            --  Macro-expanded component.
+            Val := New_Null_Access (Ghdl_Rti_Access);
+         else
+            Val := New_Rti_Address (Get_Info (Comp).Comp_Rti_Const);
+         end if;
+
       else
          declare
             Ent : Iir;
@@ -2442,7 +2449,9 @@ package body Trans.Rtis is
                   Add_Rti_Node (Rti);
                end;
             when Iir_Kind_Component_Declaration =>
-               Generate_Component_Declaration (Decl);
+               if not Get_Macro_Expand_Flag (Decl) then
+                  Generate_Component_Declaration (Decl);
+               end if;
             when Iir_Kind_Function_Declaration
                | Iir_Kind_Procedure_Declaration =>
                --  FIXME: to be added (for foreign).

@@ -22,6 +22,9 @@ package Trans.Chap4 is
    procedure Translate_Subtype_Declaration (Decl : Iir_Subtype_Declaration);
    procedure Translate_Bool_Type_Declaration (Decl : Iir_Type_Declaration);
 
+   --  For macro-expanded component.
+   procedure Translate_Component_Declaration (Decl : Iir);
+
    --  Translation of declarations occurs in three phases:
    --  1) instance is built by putting objects in a record.
    --  2) subprograms are declared (using instance as the first parameter).
