@@ -153,12 +153,21 @@ synth_tb()
   clean
 }
 
-synth_vlg_tb()
+synth_vlg2vhd()
 {
   t=$1
   shift
 
   synth $* $t.v -e $t > syn_$t.vhdl
+}
+
+synth_vlg_tb()
+{
+  t=$1
+  shift
+
+  synth_vlg2vhd $t $*
+
   analyze $* syn_$t.vhdl tb_$t.vhdl
   elab_simulate tb_$t --ieee-asserts=disable-at-0 --assert-level=error
   clean
