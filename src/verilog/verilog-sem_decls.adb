@@ -192,12 +192,6 @@ package body Verilog.Sem_Decls is
       --    declaration.  The sign and range shall not be affected by value
       --    overrides.
       Param_Type := Get_Data_Type (Param);
-      if Param_Type /= Null_Node then
-         if Get_Type_Owner (Param) then
-            Sem_Data_Type (Param_Type);
-         end if;
-         Param_Type := Get_Expr_Type (Param_Type);
-      end if;
 
       --  Parameter expression (possibly from an override).
       Expr := Get_Expression (Param);
@@ -227,13 +221,109 @@ package body Verilog.Sem_Decls is
          Expr := Val;
       end if;
 
-      Val := Sem_Constant_Expression (Val, Param_Type);
       if Param_Type = Null_Node then
          --  IEEE1364-2005 4.10.1 Module parameters
-         --  - A parameter declaration wih no type or range specification shall
-         --    default to the type and range of the final value assigned to the
-         --    parameter, after any value overrides have been applied.
+         --  IEEE1800-2017 6.20.2 Value parameters
+         --  - A parameter declaration with no type or range specification
+         --    shall default to the type and range of the final value assigned
+         --    to the parameter, after any value overrides have been applied.
+         --
+         --  IEEE1800-2017 6.20.2 Value parameters
+         --    If the expression is real, the parameter is real.  If the
+         --    expression is integral, the parameter is a LOGIC vector of the
+         --    same size with range [size-1:0].
+         --  TODO.
+
+         --  IEEE1800-2017 23.10 Overriding module parameters
+         --  - A value parameter declaration with no type or range
+         --    specification shall default to the type and range of the final
+         --    override value assigned to the parameter.
+         Val := Sem_Constant_Expression (Val, Null_Node);
          Param_Type := Get_Expr_Type (Val);
+      elsif Get_Kind (Param_Type) = N_Packed_Array
+        and then Get_Element_Data_Type (Param_Type) = Implicit_Typedef
+      then
+         --  IEEE1800-2017 6.20.2 Value parameters
+         --  - A parameter with a range specification, but with no type
+         --    specification, shall have the range of the parameter and shall
+         --    be unsigned.  The sign and range shall not be affected by
+         --    value overrides.
+
+         --  IEEE1800-2017 6.20.2 Value parameters
+         --  - A parameter with a signed type specification and with a range
+         --    specification shall be signed and shall have the range of its
+         --    declaration.  The sign and range shall not be affected by value
+         --    overrides
+         --  TODO: 2/4-state ?
+
+         --  IEEE1800-2017 23.10 Overriding module parameters
+         --  - A value parameter with a range specification, but with no type
+         --    specification, shall have the range of the parameter
+         --    declaration and shall be unsigned.  An override value shall be
+         --    converted to the type and range of the parameter.
+         if Get_Type_Owner (Param) then
+            Sem_Data_Type (Param_Type);
+         end if;
+         Param_Type := Get_Expr_Type (Param_Type);
+
+         Val := Sem_Constant_Expression (Val, Param_Type);
+      elsif Param_Type = Implicit_Unsigned_Typedef
+        or else Param_Type = Implicit_Signed_Typedef
+      then
+         --  IEEE1800-2017 6.20.2 Value parameters
+         --  - A parameter with a type specification, but with no range
+         --    specification, shall be of the type specificed.  A signed
+         --    parameter shall default to the range of the final value
+         --    assigned to the parameter, after any value overrides have been
+         --    applied.
+         --
+         --  IEEE1800-2017 6.20.2 Value parameters
+         --  - A parameter with no range specification and with either a signed
+         --    type specification or no type specification shall have an
+         --    implied range with an lsb equal to 0 and an msb equal to one
+         --    less than the size of the final value assigned to the parameter.
+         --
+         --  IEEE1800-2017 6.20.2 Value parameters
+         --  - A parameter with no range specification, with either a signed
+         --    type specification or no type specification, and for which the
+         --    final value assigned to it is unsized shall have an implied
+         --    range with an lsb equal to 0 and an msb equal to an
+         --    implementation-dependent value of at least 31.
+
+         Val := Sem_Constant_Expression (Val, Null_Node);
+
+         --  Cf Sem_Size_Cast.
+         declare
+            Base_Type : Node;
+            El_Type : Node;
+            Signed : Boolean;
+         begin
+            Base_Type := Get_Base_Integral_Type (Get_Expr_Type (Val));
+            if Base_Type = Null_Node then
+               Error_Msg_Sem (+Param, "expression must be an integral one");
+            else
+               case Get_Kind (Base_Type) is
+                  when N_Logic_Type
+                    | N_Log_Packed_Array_Cst =>
+                     El_Type := Unsigned_Logic_Type;
+                  when N_Bit_Type
+                    | N_Bit_Packed_Array_Cst =>
+                     El_Type := Unsigned_Bit_Type;
+                  when others => raise Internal_Error;
+               end case;
+               Signed := Param_Type = Implicit_Signed_Typedef;
+               Param_Type := Get_Packed_Array_Type
+                 (Int32 (Get_Type_Width (Base_Type)) - 1, 0, El_Type, Signed);
+               Val := Implicit_Conversion (Val, Param_Type);
+            end if;
+         end;
+      else
+         if Get_Type_Owner (Param) then
+            Sem_Data_Type (Param_Type);
+         end if;
+         Param_Type := Get_Expr_Type (Param_Type);
+
+         Val := Sem_Constant_Expression (Val, Param_Type);
       end if;
 
       Set_Param_Type (Param, Param_Type);
