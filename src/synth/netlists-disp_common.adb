@@ -190,7 +190,8 @@ package body Netlists.Disp_Common is
 
    procedure Put_Instance_Name (Name : Sname; Lang : Language_Range) is
    begin
-      if Get_Sname_Kind (Name) = Sname_Version then
+      if Get_Sname_Kind (Name) = Sname_Unique then
+         --  The name of the instance has the same name as a signal.
          Wr ("inst_");
          Put_Name_Version (Name);
       else

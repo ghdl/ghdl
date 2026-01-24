@@ -56,112 +56,6 @@ package body Netlists.Disp_Vhdl is
       Disp_Common.Disp_Net_Name (N, Language_Vhdl);
    end Disp_Net_Name;
 
-   procedure Disp_Instance_Gate (Inst : Instance)
-   is
-      Imod : constant Module := Get_Module (Inst);
-      Idx : Port_Idx;
-      Max_Idx : Port_Idx;
-      Name : Sname;
-      First : Boolean;
-      Param : Param_Desc;
-   begin
-      Wr ("  ");
-      Put_Instance_Name (Get_Instance_Name (Inst), Language_Vhdl);
-      Wr (" : ");
-
-      --  Gate name
-      Name := Get_Module_Name (Imod);
-      if Get_Id (Imod) < Id_User_None then
-         Wr ("gsynth.gate_");
-         pragma Assert (Get_Sname_Kind (Name) = Sname_System);
-         Put_Id (Get_Sname_Suffix (Name));
-      else
-         --  Even for blackbox, we assume the definition is in the work
-         --  library.  This might be correct or not.
-         --  The alternative would be to output all the blackboxes as
-         --  components.
-         Wr ("entity work.");
-         Put_Name (Name);
-      end if;
-
-      if Get_Nbr_Params (Imod) /= 0 then
-         Wr_Line (" generic map (");
-         for P in 1 .. Get_Nbr_Params (Inst) loop
-            Param := Get_Param_Desc (Imod, P - 1);
-            if P > 1 then
-               Wr_Line (",");
-            end if;
-            Wr ("    ");
-            Put_Interface_Name (Param.Name, Language_Vhdl);
-            Wr (" => ");
-            case Param.Typ is
-               when Param_Uns32 =>
-                  Wr_Uns32 (Get_Param_Uns32 (Inst, P - 1));
-               when Param_Pval_String =>
-                  Disp_Pval_String (Get_Param_Pval (Inst, P - 1));
-               when Param_Pval_Vector
-                 | Param_Pval_Time_Ps
-                 | Param_Pval_Boolean =>
-                  Disp_Pval_Binary (Get_Param_Pval (Inst, P - 1));
-               when Param_Pval_Real =>
-                  Disp_Pval_Fp64 (Get_Param_Pval (Inst, P - 1));
-               when Param_Pval_Integer =>
-                  Disp_Pval_Integer (Get_Param_Pval (Inst, P - 1));
-               when Param_Invalid =>
-                  Wr ("*invalid*");
-            end case;
-         end loop;
-         Wr_Line (")");
-         Wr_Line ("    port map (");
-      else
-         Wr_Line (" port map (");
-      end if;
-
-      First := True;
-      --  Inputs
-      Idx := 0;
-      Max_Idx := Get_Nbr_Inputs (Imod);
-      for I of Inputs (Inst) loop
-         if First then
-            First := False;
-         else
-            Wr_Line (",");
-         end if;
-         Wr ("    ");
-         if Idx < Max_Idx then
-            Put_Interface_Name
-              (Get_Input_Desc (Imod, Idx).Name, Language_Vhdl);
-            Idx := Idx + 1;
-            Wr (" => ");
-         end if;
-         Disp_Net_Name (Get_Driver (I));
-      end loop;
-      --  Outputs
-      Idx := 0;
-      for O of Outputs_Iterate (Inst) loop
-         if First then
-            First := False;
-         else
-            Wr_Line (",");
-         end if;
-         Wr ("    ");
-         Put_Interface_Name (Get_Output_Desc (Imod, Idx).Name, Language_Vhdl);
-         Idx := Idx + 1;
-         Wr (" => ");
-         declare
-            I : Input;
-         begin
-            I := Get_First_Sink (O);
-            if I = No_Input then
-               Wr ("open");
-            else
-               Disp_Net_Name (O);
-            end if;
-         end;
-      end loop;
-      Wr_Line (");");
-   end Disp_Instance_Gate;
-
    function Get_Lit_Quote (Wd : Width; Force_Arr : Boolean) return Character is
    begin
       if Force_Arr or else Wd /= 1 then
@@ -309,6 +203,120 @@ package body Netlists.Disp_Vhdl is
       end case;
       Wr (Bchar (Zx * 2 + Val));
    end Disp_Const_Bit;
+
+   procedure Disp_Instance_Gate (Inst : Instance)
+   is
+      Imod : constant Module := Get_Module (Inst);
+      Idx : Port_Idx;
+      Max_Idx : Port_Idx;
+      Name : Sname;
+      First : Boolean;
+      Param : Param_Desc;
+      Drv : Net;
+      Drv_Inst : Instance;
+   begin
+      Wr ("  ");
+      Put_Instance_Name (Get_Instance_Name (Inst), Language_Vhdl);
+      Wr (" : ");
+
+      --  Gate name
+      Name := Get_Module_Name (Imod);
+      if Get_Id (Imod) < Id_User_None then
+         Wr ("entity work.gate_");
+         pragma Assert (Get_Sname_Kind (Name) = Sname_System);
+         Put_Id (Get_Sname_Suffix (Name));
+      else
+         --  Even for blackbox, we assume the definition is in the work
+         --  library.  This might be correct or not.
+         --  The alternative would be to output all the blackboxes as
+         --  components.
+         Wr ("entity work.");
+         Put_Name (Name);
+      end if;
+
+      if Get_Nbr_Params (Imod) /= 0 then
+         Wr_Line (" generic map (");
+         for P in 1 .. Get_Nbr_Params (Inst) loop
+            Param := Get_Param_Desc (Imod, P - 1);
+            if P > 1 then
+               Wr_Line (",");
+            end if;
+            Wr ("    ");
+            Put_Interface_Name (Param.Name, Language_Vhdl);
+            Wr (" => ");
+            case Param.Typ is
+               when Param_Uns32 =>
+                  Wr_Uns32 (Get_Param_Uns32 (Inst, P - 1));
+               when Param_Pval_String =>
+                  Disp_Pval_String (Get_Param_Pval (Inst, P - 1));
+               when Param_Pval_Vector
+                 | Param_Pval_Time_Ps
+                 | Param_Pval_Boolean =>
+                  Disp_Pval_Binary (Get_Param_Pval (Inst, P - 1));
+               when Param_Pval_Real =>
+                  Disp_Pval_Fp64 (Get_Param_Pval (Inst, P - 1));
+               when Param_Pval_Integer =>
+                  Disp_Pval_Integer (Get_Param_Pval (Inst, P - 1));
+               when Param_Invalid =>
+                  Wr ("*invalid*");
+            end case;
+         end loop;
+         Wr_Line (")");
+         Wr_Line ("    port map (");
+      else
+         Wr_Line (" port map (");
+      end if;
+
+      First := True;
+      --  Inputs
+      Idx := 0;
+      Max_Idx := Get_Nbr_Inputs (Imod);
+      for I of Inputs (Inst) loop
+         if First then
+            First := False;
+         else
+            Wr_Line (",");
+         end if;
+         Wr ("    ");
+         if Idx < Max_Idx then
+            Put_Interface_Name
+              (Get_Input_Desc (Imod, Idx).Name, Language_Vhdl);
+            Idx := Idx + 1;
+            Wr (" => ");
+         end if;
+         Drv := Get_Driver (I);
+         Drv_Inst := Get_Net_Parent (Drv);
+         if Get_Id (Drv_Inst) in Constant_Module_Id then
+            Disp_Constant_Inline (Drv_Inst);
+         else
+            Disp_Net_Name (Drv);
+         end if;
+      end loop;
+      --  Outputs
+      Idx := 0;
+      for O of Outputs_Iterate (Inst) loop
+         if First then
+            First := False;
+         else
+            Wr_Line (",");
+         end if;
+         Wr ("    ");
+         Put_Interface_Name (Get_Output_Desc (Imod, Idx).Name, Language_Vhdl);
+         Idx := Idx + 1;
+         Wr (" => ");
+         declare
+            I : Input;
+         begin
+            I := Get_First_Sink (O);
+            if I = No_Input then
+               Wr ("open");
+            else
+               Disp_Net_Name (O);
+            end if;
+         end;
+      end loop;
+      Wr_Line (");");
+   end Disp_Instance_Gate;
 
    procedure Disp_Memory_Init_Full (W : Width; Val : Character) is
    begin

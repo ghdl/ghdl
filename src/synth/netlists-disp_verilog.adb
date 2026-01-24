@@ -120,129 +120,6 @@ package body Netlists.Disp_Verilog is
       return True;
    end Has_Single_User_Driver;
 
-   procedure Disp_Instance_Gate (Inst : Instance)
-   is
-      Imod : constant Module := Get_Module (Inst);
-      Idx : Port_Idx;
-      Drv : Net;
-      Max_Idx : Port_Idx;
-      Name : Sname;
-      First : Boolean;
-      Param : Param_Desc;
-      Desc : Port_Desc;
-   begin
-      Wr ("  ");
-
-      --  Gate name
-      Name := Get_Module_Name (Imod);
-      if Get_Id (Imod) < Id_User_None then
-         Wr (" gate_");
-         pragma Assert (Get_Sname_Kind (Name) = Sname_System);
-         Put_Id (Get_Sname_Suffix (Name));
-      else
-         Put_Name (Name);
-      end if;
-
-      if Get_Nbr_Params (Imod) /= 0 then
-         Wr_Line (" #(");
-         for P in 1 .. Get_Nbr_Params (Inst) loop
-            Param := Get_Param_Desc (Imod, P - 1);
-            if P > 1 then
-               Wr_Line (",");
-            end if;
-            Wr ("    .");
-            Put_Interface_Name (Param.Name, Language_Vhdl);
-            Wr ("(");
-            case Param.Typ is
-               when Param_Uns32 =>
-                  Wr_Uns32 (Get_Param_Uns32 (Inst, P - 1));
-               when Param_Pval_String =>
-                  Disp_Pval_String (Get_Param_Pval (Inst, P - 1));
-               when Param_Pval_Vector
-                 | Param_Pval_Time_Ps
-                 | Param_Pval_Boolean =>
-                  Disp_Pval_Vector (Get_Param_Pval (Inst, P - 1));
-               when Param_Pval_Integer =>
-                  Disp_Pval_Integer (Get_Param_Pval (Inst, P - 1));
-               when Param_Pval_Real =>
-                  Disp_Pval_Fp64 (Get_Param_Pval (Inst, P - 1));
-               when Param_Invalid =>
-                  Wr ("*invalid*");
-            end case;
-            Wr (")");
-         end loop;
-         Wr_Line (")");
-         Wr ("    ");
-      else
-         Wr (" ");
-      end if;
-
-      --  Instance name
-      Put_Instance_Name (Get_Instance_Name (Inst), Language_Verilog);
-      Wr_Line (" (");
-
-      First := True;
-      --  Inputs
-      Idx := 0;
-      Max_Idx := Get_Nbr_Inputs (Imod);
-      for I of Inputs (Inst) loop
-         Drv := Get_Driver (I);
-         if Flag_Null_Wires or else Get_Width (Drv) /= 0 then
-            if First then
-               First := False;
-            else
-               Wr_Line (",");
-            end if;
-            Wr ("    ");
-            if Idx < Max_Idx then
-               Wr (".");
-               Put_Interface_Name
-                 (Get_Input_Desc (Imod, Idx).Name, Language_Verilog);
-               Wr ("(");
-            end if;
-            Disp_Net_Name (Get_Driver (I));
-            if Idx < Max_Idx then
-               Wr (")");
-            end if;
-         end if;
-         Idx := Idx + 1;
-      end loop;
-      --  Outputs
-      Idx := 0;
-      for O of Outputs_Iterate (Inst) loop
-         Desc := Get_Output_Desc (Imod, Idx);
-         Idx := Idx + 1;
-         if Flag_Null_Wires or else Desc.W /= 0 then
-            if First then
-               First := False;
-            else
-               Wr_Line (",");
-            end if;
-            Wr ("    .");
-            Put_Interface_Name (Desc.Name, Language_Verilog);
-            Wr ("(");
-            declare
-               I : Input;
-               Nop : Net;
-            begin
-               I := Get_First_Sink (O);
-               if I /= No_Input then
-                  --  Output is connected.
-                  Nop := Is_Nop_Drv (O);
-                  if Nop /= No_Net then
-                     --  Output has been renamed.
-                     Disp_Net_Name (Nop);
-                  else
-                     Disp_Net_Name (O);
-                  end if;
-               end if;
-            end;
-            Wr (")");
-         end if;
-      end loop;
-      Wr_Line (");");
-   end Disp_Instance_Gate;
-
    procedure Disp_Binary_Lit (Va : Uns32; Zx : Uns32; Wd : Width) is
    begin
       Wr_Uns32 (Wd);
@@ -323,6 +200,135 @@ package body Netlists.Disp_Verilog is
          when others => raise Internal_Error;
       end case;
    end Disp_Constant_Inline;
+
+   procedure Disp_Instance_Gate (Inst : Instance)
+   is
+      Imod : constant Module := Get_Module (Inst);
+      Idx : Port_Idx;
+      Drv : Net;
+      Max_Idx : Port_Idx;
+      Name : Sname;
+      First : Boolean;
+      Param : Param_Desc;
+      Desc : Port_Desc;
+      Drv_Inst : Instance;
+   begin
+      Wr ("  ");
+
+      --  Gate name
+      Name := Get_Module_Name (Imod);
+      if Get_Id (Imod) < Id_User_None then
+         Wr (" gate_");
+         pragma Assert (Get_Sname_Kind (Name) = Sname_System);
+         Put_Id (Get_Sname_Suffix (Name));
+      else
+         Put_Name (Name);
+      end if;
+
+      if Get_Nbr_Params (Imod) /= 0 then
+         Wr_Line (" #(");
+         for P in 1 .. Get_Nbr_Params (Inst) loop
+            Param := Get_Param_Desc (Imod, P - 1);
+            if P > 1 then
+               Wr_Line (",");
+            end if;
+            Wr ("    .");
+            Put_Interface_Name (Param.Name, Language_Vhdl);
+            Wr ("(");
+            case Param.Typ is
+               when Param_Uns32 =>
+                  Wr_Uns32 (Get_Param_Uns32 (Inst, P - 1));
+               when Param_Pval_String =>
+                  Disp_Pval_String (Get_Param_Pval (Inst, P - 1));
+               when Param_Pval_Vector
+                 | Param_Pval_Time_Ps
+                 | Param_Pval_Boolean =>
+                  Disp_Pval_Vector (Get_Param_Pval (Inst, P - 1));
+               when Param_Pval_Integer =>
+                  Disp_Pval_Integer (Get_Param_Pval (Inst, P - 1));
+               when Param_Pval_Real =>
+                  Disp_Pval_Fp64 (Get_Param_Pval (Inst, P - 1));
+               when Param_Invalid =>
+                  Wr ("*invalid*");
+            end case;
+            Wr (")");
+         end loop;
+         Wr_Line (")");
+         Wr ("    ");
+      else
+         Wr (" ");
+      end if;
+
+      --  Instance name
+      Put_Instance_Name (Get_Instance_Name (Inst), Language_Verilog);
+      Wr_Line (" (");
+
+      First := True;
+      --  Inputs
+      Idx := 0;
+      Max_Idx := Get_Nbr_Inputs (Imod);
+      for I of Inputs (Inst) loop
+         Drv := Get_Driver (I);
+         if Flag_Null_Wires or else Get_Width (Drv) /= 0 then
+            if First then
+               First := False;
+            else
+               Wr_Line (",");
+            end if;
+            Wr ("    ");
+            if Idx < Max_Idx then
+               Wr (".");
+               Put_Interface_Name
+                 (Get_Input_Desc (Imod, Idx).Name, Language_Verilog);
+               Wr ("(");
+            end if;
+            Drv_Inst := Get_Net_Parent (Drv);
+            if Get_Id (Drv_Inst) in Constant_Module_Id then
+               Disp_Constant_Inline (Drv_Inst);
+            else
+               Disp_Net_Name (Drv);
+            end if;
+            if Idx < Max_Idx then
+               Wr (")");
+            end if;
+         end if;
+         Idx := Idx + 1;
+      end loop;
+      --  Outputs
+      Idx := 0;
+      for O of Outputs_Iterate (Inst) loop
+         Desc := Get_Output_Desc (Imod, Idx);
+         Idx := Idx + 1;
+         if Flag_Null_Wires or else Desc.W /= 0 then
+            if First then
+               First := False;
+            else
+               Wr_Line (",");
+            end if;
+            Wr ("    .");
+            Put_Interface_Name (Desc.Name, Language_Verilog);
+            Wr ("(");
+            declare
+               I : Input;
+               Nop : Net;
+            begin
+               I := Get_First_Sink (O);
+               if I /= No_Input then
+                  --  Output is connected.
+                  Nop := Is_Nop_Drv (O);
+                  if Nop /= No_Net then
+                     --  Output has been renamed.
+                     Disp_Net_Name (Nop);
+                  else
+                     Disp_Net_Name (O);
+                  end if;
+               end if;
+            end;
+            Wr (")");
+         end if;
+      end loop;
+      Wr_Line (");");
+   end Disp_Instance_Gate;
 
    procedure Disp_Const_Bit (Inst : Instance; Off : Uns32)
    is
