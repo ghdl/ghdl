@@ -39,6 +39,7 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 
 """
+
 from typing import Iterable
 
 from pyTooling.Decorators import export

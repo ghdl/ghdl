@@ -125,18 +125,14 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         # Call the constructor of the ArgParseMixin
         # --------------------------------------------------------------------------
         textWidth = min(max(self.Width, 80), 160)
-        description = dedent(
-            """\
+        description = dedent("""\
             Application to test pyGHDL's DOM API.
-            """
-        )
+            """)
         epilog = "\n".join(
             wrap(
-                dedent(
-                    """\
+                dedent("""\
                     pyGHDL is a Python binding for libghdl.
-                    """
-                ),
+                    """),
                 textWidth,
                 replace_whitespace=False,
             )
@@ -170,14 +166,10 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         return self.__PLATFORM
 
     def PrintHeadline(self):
-        self.WriteNormal(
-            dedent(
-                """\
+        self.WriteNormal(dedent("""\
                 {HEADLINE}{line}
                 {headline: ^80s}
-                {line}"""
-            ).format(line="=" * 80, headline=self.HeadLine, **TerminalApplication.Foreground)
-        )
+                {line}""").format(line="=" * 80, headline=self.HeadLine, **TerminalApplication.Foreground))
 
     # ============================================================================
     # Common commands
@@ -259,12 +251,10 @@ class Application(TerminalApplication, ArgParseHelperMixin):
                 self.WriteNormal(f"Parsing file '{file!s}'")
                 document = self.addFile(file, "pretty")
                 self.WriteInfo(
-                    dedent(
-                        """\
+                    dedent("""\
                           libghdl processing time: {: 5.3f} us
                           DOM translation time:    {:5.3f} us
-                        """
-                    ).format(
+                        """).format(
                         document.LibGHDLProcessingTime * 10**6,
                         document.DOMTranslationTime * 10**6,
                     )
@@ -312,12 +302,10 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         self._design.LoadDefaultLibraries()
         self._design.Analyze()
         self.WriteInfo(
-            dedent(
-                """\
+            dedent("""\
                   default library load time: {:5.3f} us
                   dependency analysis time:  {:5.3f} us
-                """
-            ).format(
+                """).format(
                 self._design._loadDefaultLibraryTime * 10**6,
                 self._design._analyzeTime * 10**6,
             )

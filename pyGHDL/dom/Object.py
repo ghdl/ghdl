@@ -33,6 +33,7 @@
 """
 This module implements derived object classes from :mod:`pyVHDLModel.Object`.
 """
+
 from typing import Union, List, Iterable
 
 from pyTooling.Decorators import export

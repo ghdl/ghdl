@@ -34,6 +34,7 @@ Python binding and low-level API for shared library ``libghdl``.
 
 In case of an error, a :exc:`LibGHDLException` is raised.
 """
+
 from ctypes import c_char_p, CDLL
 from sys import version_info as sys_version_info
 from os import environ as os_environ
@@ -51,7 +52,6 @@ from pyGHDL import __version__ as ghdlVersion
 
 # from pyGHDL.libghdl._decorator import BindToLibGHDL
 from pyGHDL.libghdl._types import Iir
-
 
 Nullable = Optional
 

@@ -33,6 +33,7 @@
 """
 This module implements derived symbol classes from :mod:`pyVHDLModel.Symbol`.
 """
+
 from typing import List, Mapping
 
 from pyGHDL.dom.Name import SimpleName

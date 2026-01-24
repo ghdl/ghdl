@@ -40,7 +40,6 @@ from pyGHDL.libghdl import libghdl
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl._decorator import BindToLibGHDL
 
-
 __all__ = ["Flag_Parse_Parenthesis"]
 
 

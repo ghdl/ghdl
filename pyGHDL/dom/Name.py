@@ -33,6 +33,7 @@
 """
 This module implements derived name classes from :mod:`pyVHDLModel.Name`.
 """
+
 from typing import List
 
 from pyTooling.Decorators import export

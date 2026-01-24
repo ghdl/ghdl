@@ -90,7 +90,6 @@ from pyGHDL.dom.Subprogram import Procedure
 from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.PSL import DefaultClock
 
-
 StringBuffer = List[str]
 
 

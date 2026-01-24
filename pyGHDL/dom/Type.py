@@ -33,6 +33,7 @@
 """
 This module implements derived type classes from :mod:`pyVHDLModel.Type`.
 """
+
 from typing import List, Union, Iterator, Tuple, Iterable
 
 from pyGHDL.dom.Name import SimpleName

@@ -35,6 +35,7 @@
 .. todo::
    Add a module documentation.
 """
+
 from pyTooling.Decorators import export
 
 from pyVHDLModel.Declaration import Alias as VHDLModel_Alias

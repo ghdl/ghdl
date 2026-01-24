@@ -37,7 +37,6 @@ from pyTooling.Decorators import export
 
 from pyGHDL.libghdl._decorator import BindToLibGHDL
 
-
 __all__ = ["Flist_Type", "Ffirst"]
 
 Flist_Type = c_int32  #: First index of a ``FList``.

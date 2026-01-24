@@ -31,6 +31,7 @@
 """
 Document object model (DOM) for :mod:`pyGHDL.libghdl` based on :doc:`pyVHDLModel <vhdlmodel:index>`.
 """
+
 from pathlib import Path
 
 from pyTooling.Decorators import export, readonly

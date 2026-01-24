@@ -41,7 +41,6 @@ from pyGHDL.libghdl._types import (
     Iir_Enumeration_Type_Definition,
 )
 
-
 __all__ = ["Std_Location", "Standard_Package", "Character_Type_Definition"]
 
 

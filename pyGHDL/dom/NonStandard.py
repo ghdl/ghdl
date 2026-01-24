@@ -35,6 +35,7 @@
 .. todo::
    Add a module documentation.
 """
+
 import ctypes
 import time
 from pathlib import Path
