@@ -276,6 +276,35 @@ enum ParseStatus {
     CommandExpectedError,
 }
 
+fn get_warn_id_by_name(name: &str) -> Option<usize> {
+    for (i, warn_name) in crate::errorout_def::Warnid::IMAGES.iter().enumerate() {
+        if name == *warn_name {
+            return Some(i);
+        }
+    }
+    if name == "reserved" {
+        return Some(crate::errorout_def::Warnid::ReservedWord as usize);
+    }
+    None
+}
+
+fn parse_warn_option(s: &str, flags: &mut VhdlAnalyzeFlags) -> Option<ParseStatus> {
+    let enable: WarnValue;
+    let warn_name: &str;
+    if s.starts_with("no-") {
+        warn_name = &s[3..];
+        enable = WarnValue::Disable;
+    } else {
+        warn_name = s;
+        enable = WarnValue::Enable;
+    }
+    if let Some(warn_id) = get_warn_id_by_name(warn_name) {
+        flags.warnings[warn_id].enable = enable;
+        return None;
+    }
+    return Some(ParseStatus::OptionError);
+}
+
 //  Try to parse an analysis flag and return None if ok or the error.
 fn parse_analyze_flags(flags: &mut VhdlAnalyzeFlags, arg: &str) -> Option<ParseStatus> {
     if !is_option(arg) {
@@ -356,6 +385,12 @@ fn parse_analyze_flags(flags: &mut VhdlAnalyzeFlags, arg: &str) -> Option<ParseS
             w.error = WarnValue::Enable;
         }
         return None;
+    }
+    if arg.starts_with("--warn-") {
+        return parse_warn_option(&arg[7..], flags);
+    }
+    if arg.starts_with("-W") {
+        return parse_warn_option(&arg[2..], flags);
     }
     return Some(ParseStatus::UnknownOption {
         msg: arg.to_string(),
@@ -779,6 +814,7 @@ const COMMANDS: &[&dyn Command] = &[
     &CommandElab {},
     &CommandRun {},
     &CommandRemove {},
+    &CommandImport {},
     &CommandVerilog2Comp {},
 ];
 
