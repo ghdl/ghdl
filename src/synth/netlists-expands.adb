@@ -20,7 +20,6 @@ with Mutils; use Mutils;
 
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Utils; use Netlists.Utils;
-with Netlists.Butils; use Netlists.Butils;
 with Netlists.Locations; use Netlists.Locations;
 with Netlists.Memories; use Netlists.Memories;
 with Netlists.Concats; use Netlists.Concats;
@@ -125,41 +124,6 @@ package body Netlists.Expands is
          end case;
       end loop;
    end Remove_Memidx;
-
-   --  IDX is the next index to be fill in ELS.
-   --  OFF is offset for extraction from VAL.
-   --  ADDR_OFF is the address offset.
-   procedure Fill_Els (Ctxt : Context_Acc;
-                       Memidx_Arr : Memidx_Array_Type;
-                       Arr_Idx : Natural;
-                       Val : Net;
-                       Els : Case_Element_Array_Acc;
-                       Idx : in out Positive;
-                       Addr : Net;
-                       Init_Off : Uns32;
-                       W : Width;
-                       Sel : in out Uns64)
-   is
-      Inst : constant Instance := Memidx_Arr (Arr_Idx);
-      Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
-      Max : constant Uns32 := Get_Param_Uns32 (Inst, 1);
-      Off : Uns32;
-   begin
-      Off := Init_Off;
-      for I in 0 .. Max loop
-         if Arr_Idx < Memidx_Arr'Last then
-            --  Recurse.
-            Fill_Els (Ctxt, Memidx_Arr, Arr_Idx + 1,
-                      Val, Els, Idx, Addr, Off, W, Sel);
-         else
-            Els (Idx) := (Sel => Sel,
-                          Val => Build_Extract (Ctxt, Val, Off, W));
-            Idx := Idx + 1;
-            Sel := Sel + 1;
-         end if;
-         Off := Off + Step;
-      end loop;
-   end Fill_Els;
 
    --  Extract address from memidx/addidx and disconnect those gates.
    procedure Extract_Address
@@ -391,7 +355,6 @@ package body Netlists.Expands is
 
    procedure Expand_Dyn_Extract (Ctxt : Context_Acc; Inst : Instance)
    is
-      Val : constant Net := Get_Input_Net (Inst, 0);
       Loc : constant Location_Type := Get_Location (Inst);
       Mem : constant Net := Get_Input_Net (Inst, 0);
       W : constant Width := Get_Width (Get_Output (Inst, 0));
@@ -402,10 +365,8 @@ package body Netlists.Expands is
 
       Memidx_Arr : Memidx_Array_Type (1 .. Ndims);
 
-      Els : Case_Element_Array_Acc;
       Res : Net;
       Addr : Net;
-      Def : Net;
    begin
       --  1.1  Fill memidx_arr.
       --  2. compute number of cells.
@@ -433,7 +394,7 @@ package body Netlists.Expands is
                Res := Build2_Extract (Ctxt, Res, 0, W, Loc);
             end if;
          end;
-      elsif True then
+      else
          --  2. Compute index
          Addr := Extract_Flat_Address (Ctxt, Memidx_Arr);
 
@@ -441,28 +402,6 @@ package body Netlists.Expands is
          --  Keep Dyn_Extract, but the index is a single value
          Connect (Get_Input (Inst, 1), Addr);
          return;
-      else
-         --  2. build extract gates
-         Els := new Case_Element_Array (1 .. Nbr_Els);
-         declare
-            Idx : Positive;
-            Off : Uns32;
-            Sel : Uns64;
-         begin
-            Idx := 1;
-            Off := Get_Param_Uns32 (Inst, 0);
-            Sel := 0;
-            Fill_Els (Ctxt, Memidx_Arr,
-                      1, Val, Els, Idx, Addr_Net, Off, W, Sel);
-         end;
-
-         --  3. build mux tree
-         Extract_Address (Ctxt, Memidx_Arr, Addr);
-         Truncate_Address (Ctxt, Addr, Nbr_Els);
-         Def := No_Net;
-         Synth_Case (Ctxt, Addr, Els.all, Def, Res, Loc);
-
-         Free_Case_Element_Array (Els);
       end if;
 
       Remove_Memidx (Addr_Net);
