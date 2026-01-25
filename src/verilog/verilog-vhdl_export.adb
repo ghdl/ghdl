@@ -19,7 +19,7 @@ with Name_Table;
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Types; use Vhdl.Types;
 with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
-with Vhdl.Scanner;
+with Vhdl.Chars;
 
 with Verilog.Nodes; use Verilog.Nodes;
 with Verilog.Errors; use Verilog.Errors;
@@ -81,7 +81,7 @@ package body Verilog.Vhdl_Export is
             Name (Id_Len) := '\';
             Err := False;
          else
-            Vhdl.Scanner.Convert_Identifier (Name, Err);
+            Vhdl.Chars.Convert_Identifier (Name, Err);
          end if;
 
          if not Err then

@@ -25,6 +25,7 @@ with Outputs;
 with Libraries;
 with Flags;
 
+with Vhdl.Chars;
 with Vhdl.Scanner;
 with Vhdl.Canon;
 with Vhdl.Configuration;
@@ -150,7 +151,7 @@ package body Ghdlsynth is
                Name : String := Option (18 .. Option'Last);
                Err : Boolean;
             begin
-               Vhdl.Scanner.Convert_Identifier (Name, Err);
+               Vhdl.Chars.Convert_Identifier (Name, Err);
                if Err then
                   Res := Option_Err;
                else

@@ -31,7 +31,7 @@ with Version;
 
 with Vhdl.Sem_Lib;
 with Vhdl.Std_Package;
-with Vhdl.Scanner;
+with Vhdl.Chars;
 with Vhdl.Configuration;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Prints;
@@ -1854,7 +1854,7 @@ package body Ghdllocal is
       declare
          Res : String := Name;
       begin
-         Vhdl.Scanner.Convert_Identifier (Res, Err);
+         Vhdl.Chars.Convert_Identifier (Res, Err);
          if Err then
             return Null_Identifier;
          end if;

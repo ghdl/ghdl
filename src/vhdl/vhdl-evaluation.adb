@@ -23,7 +23,7 @@ with Flags; use Flags;
 with Std_Names;
 with Errorout; use Errorout;
 
-with Vhdl.Scanner;
+with Vhdl.Chars;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
@@ -2989,7 +2989,7 @@ package body Vhdl.Evaluation is
       -- Separate string into numeric value and make lowercase unit.
       for I in reverse Val'range loop
          UnitName (I) := Ada.Characters.Handling.To_Lower (Val (I));
-         if Vhdl.Scanner.Is_Whitespace (Val (I)) and Found_Unit then
+         if Vhdl.Chars.Is_Whitespace (Val (I)) and Found_Unit then
             Sep := I;
             exit;
          else
@@ -3291,11 +3291,11 @@ package body Vhdl.Evaluation is
       First := Value'First;
       Last := Value'Last;
       while First <= Last loop
-         exit when not Vhdl.Scanner.Is_Whitespace (Value (First));
+         exit when not Vhdl.Chars.Is_Whitespace (Value (First));
          First := First + 1;
       end loop;
       while Last >= First loop
-         exit when not Vhdl.Scanner.Is_Whitespace (Value (Last));
+         exit when not Vhdl.Chars.Is_Whitespace (Value (Last));
          Last := Last - 1;
       end loop;
 

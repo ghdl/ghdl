@@ -19,6 +19,7 @@ with Str_Table;
 with Flags;
 with Errorout; use Errorout;
 with Libraries;
+
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Std_Package;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -27,7 +28,7 @@ with Vhdl.Sem_Scopes;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Vhdl.Canon;
 with Vhdl.Evaluation;
-with Vhdl.Scanner;
+with Vhdl.Chars;
 
 package body Vhdl.Configuration is
    procedure Add_Design_Concurrent_Stmts (Parent : Iir);
@@ -1347,7 +1348,7 @@ package body Vhdl.Configuration is
                      Inter : Iir;
                      Err : Boolean;
                   begin
-                     Vhdl.Scanner.Convert_Identifier (Gen_Name, Err);
+                     Vhdl.Chars.Convert_Identifier (Gen_Name, Err);
                      if Err then
                         Error_Msg_Option
                           ("incorrect name in generic override option");

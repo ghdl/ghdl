@@ -124,18 +124,4 @@ package Vhdl.Scanner is
    --  the blanks, comments and newlines have been skipped).  Useful for the
    --  location of a missing token.
    function Get_Prev_Location return Location_Type;
-
-   --  Convert (canonicalize) identifier STR.
-   --  Upper case letters are converted into lower case.
-   --  Lexical checks are performed.
-   --  This procedure is not used by Scan, but should be used for identifiers
-   --  given in the command line.
-   --  Errors are directly reported through error_msg_option, and ERR set.
-   --  Also, Vhdl_Std should be set.
-   procedure Convert_Identifier (Str : in out String; Err : out Boolean);
-
-   --  Return TRUE iff C is a whitespace.
-   --  LRM93 13.2 Lexical elements, separators, and delimiters
-   --  A space character (SPACE or NBSP) ...
-   function Is_Whitespace (C : Character) return Boolean;
 end Vhdl.Scanner;

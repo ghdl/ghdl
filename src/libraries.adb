@@ -27,6 +27,7 @@ with Files_Map;
 with Flags;
 with Std_Names;
 
+with Vhdl.Chars;
 with Vhdl.Tokens;
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
@@ -1711,7 +1712,7 @@ package body Libraries is
       Err : Boolean;
    begin
       Name := Opt (Opt'First + 7 .. Opt'Last);
-      Vhdl.Scanner.Convert_Identifier (Name, Err);
+      Vhdl.Chars.Convert_Identifier (Name, Err);
       if Err then
          return Null_Identifier;
       end if;

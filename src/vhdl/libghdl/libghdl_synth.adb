@@ -30,7 +30,7 @@ with Netlists.Disp_Common;
 with Vhdl.Std_Package;
 with Vhdl.Configuration;
 with Vhdl.Errors;
-with Vhdl.Scanner;
+with Vhdl.Chars;
 
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
@@ -323,7 +323,7 @@ package body Libghdl_Synth is
                Idxes (Idx - 1) := I - 1;
                Names (I - 1) := Null_Identifier;
             else
-               Vhdl.Scanner.Convert_Identifier (Name, Err);
+               Vhdl.Chars.Convert_Identifier (Name, Err);
                Names (I - 1) := Name_Table.Get_Identifier (Name);
                if Err then
                   Error_Msg_Elab

@@ -24,7 +24,7 @@ with Errorout;
 with Netlists;
 
 with Vhdl.Errors; use Vhdl.Errors;
-with Vhdl.Scanner;
+with Vhdl.Chars;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Sem_Expr;
@@ -683,11 +683,11 @@ package body Elab.Vhdl_Expr is
       First := 0;
       Last := Size_Type (L - 1);
       while First <= Last loop
-         exit when not Vhdl.Scanner.Is_Whitespace (Read_Char (M + First));
+         exit when not Vhdl.Chars.Is_Whitespace (Read_Char (M + First));
          First := First + 1;
       end loop;
       while Last >= First loop
-         exit when not Vhdl.Scanner.Is_Whitespace (Read_Char (M + Last));
+         exit when not Vhdl.Chars.Is_Whitespace (Read_Char (M + Last));
          Last := Last - 1;
       end loop;
       Len := Uns32 (Last - First + 1);
