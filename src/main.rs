@@ -9,8 +9,8 @@ mod verilog;
 mod vhdl;
 
 use files_map::SourceFileEntry;
-use vhdl::nodes_def::{Node as VhdlNode, Kind as VhdKind};
 use types::VhdlStd;
+use vhdl::nodes_def::{Kind as VhdKind, Node as VhdlNode};
 
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
@@ -321,10 +321,7 @@ fn parse_analyze_flags(flags: &mut VhdlAnalyzeFlags, arg: &str) -> Option<ParseS
         return None;
     }
     if arg.starts_with("--work=") {
-        let name = vhdl::chars::convert_identifier(
-            &arg[7..],
-            flags.std,
-        );
+        let name = vhdl::chars::convert_identifier(&arg[7..], flags.std);
         match name {
             Ok(id_bytes) => {
                 flags.work_name = NameId::from_bytes(&id_bytes);
@@ -393,7 +390,7 @@ fn analyze(args: &[String], save: bool) -> Result<(), ParseStatus> {
     // And analyze every file
     for file in &files {
         let id = unsafe { get_identifier_with_len(file.as_ptr(), file.len() as u32) };
-        eprintln!("analyze {file}\n");
+        //eprintln!("analyze {file}\n");
         status = unsafe { analyze_file(id) };
         if !status {
             break;
@@ -404,11 +401,11 @@ fn analyze(args: &[String], save: bool) -> Result<(), ParseStatus> {
     if status && save {
         unsafe { save_work_library() };
     }
-    return if status == !expect_failure {
-        Ok(())
+    if status ^ expect_failure {
+        return Ok(());
     } else {
-        Err(ParseStatus::OptionError)
-    };
+        return Err(ParseStatus::CommandError);
+    }
 }
 
 trait Command {
@@ -492,11 +489,11 @@ impl Command for CommandImport {
         if status {
             unsafe { save_work_library() };
         }
-        return if status == !expect_failure {
-            Ok(())
+        if status ^ expect_failure {
+            return Ok(());
         } else {
-            Err(ParseStatus::OptionError)
-        };
+            return Err(ParseStatus::CommandExpectedError);
+        }
     }
 }
 
@@ -538,7 +535,6 @@ impl Command for CommandRemove {
 
 fn analyze_elab(args: &[String]) -> Result<Vec<String>, ParseStatus> {
     let mut flags = VhdlAnalyzeFlags::default();
-    let mut expect_failure = false;
     let mut unit = NameId::NULL;
     let mut arch = NameId::NULL;
     let mut runflags = vec![];
@@ -550,16 +546,13 @@ fn analyze_elab(args: &[String]) -> Result<Vec<String>, ParseStatus> {
             if has_unit {
                 runflags.push(arg.clone());
             } else if arg == "--expect-failure" {
-                expect_failure = true;
+                // Handled by parent
             } else if let Some(err) = parse_analyze_flags(&mut flags, &arg) {
                 return Err(err);
             }
         } else {
             if unit == NameId::NULL {
-                let name = vhdl::chars::convert_identifier(
-                    &arg,
-                    flags.std,
-                );
+                let name = vhdl::chars::convert_identifier(&arg, flags.std);
                 match name {
                     Ok(id_bytes) => {
                         unit = NameId::from_bytes(&id_bytes);
@@ -569,10 +562,7 @@ fn analyze_elab(args: &[String]) -> Result<Vec<String>, ParseStatus> {
                     }
                 }
             } else if arch == NameId::NULL {
-                let name = vhdl::chars::convert_identifier(
-                    &arg,
-                    flags.std,
-                );
+                let name = vhdl::chars::convert_identifier(&arg, flags.std);
                 match name {
                     Ok(id_bytes) => {
                         arch = NameId::from_bytes(&id_bytes);
@@ -597,22 +587,13 @@ fn analyze_elab(args: &[String]) -> Result<Vec<String>, ParseStatus> {
     };
     let top = unsafe { compile_elab_top(NameId::NULL, unit, arch, false) };
     if top == VhdlNode::NULL {
-        if expect_failure {
-            return Result::Err(ParseStatus::CommandExpectedError);
-        }
         eprintln!("Failed to build top");
-        return Result::Err(ParseStatus::OptionError);
+        return Result::Err(ParseStatus::CommandError);
     }
     unsafe {
         if !compile_elab_setup(top) {
-            if expect_failure {
-                return Result::Err(ParseStatus::CommandExpectedError);
-            }
             return Result::Err(ParseStatus::CommandError);
         }
-    }
-    if expect_failure {
-        return Result::Err(ParseStatus::CommandError);
     }
     return Ok(runflags);
 }
@@ -625,11 +606,28 @@ impl Command for CommandElab {
     }
 
     fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
+        //  Set if option is present in args
+        let expect_failure = args.iter().any(|x| x == "--expect-failure");
+
         match analyze_elab(args) {
-            Ok(_) => {}
+            Ok(_) => {
+                if expect_failure {
+                    eprintln!("elaboration failure expected");
+                    return Err(ParseStatus::CommandError);
+                } else {
+                    return Ok(());
+                }
+            }
+            Err(ParseStatus::CommandError) => {
+                if expect_failure {
+                    return Ok(());
+                } else {
+                    eprintln!("elaboration failed unexpectedly");
+                    return Err(ParseStatus::CommandError);
+                }
+            }
             Err(err) => return Err(err),
         }
-        Ok(())
     }
 }
 
@@ -642,10 +640,20 @@ impl Command for CommandRun {
 
     fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
         let runflags: Vec<String>;
+        //  Set if option is present in args
+        let expect_failure = args.iter().any(|x| x == "--expect-failure");
 
         match analyze_elab(args) {
             Ok(flags) => {
                 runflags = flags;
+            }
+            Err(ParseStatus::CommandError) => {
+                if expect_failure {
+                    return Ok(());
+                }
+                else {
+                    return Err(ParseStatus::CommandError);
+                }
             }
             Err(err) => return Err(err),
         }
@@ -732,8 +740,7 @@ impl Command for CommandVerilog2Comp {
                 }
                 println!();
             }
-        }
-        else {
+        } else {
             let unit = VhdlNode::new(VhdKind::Design_Unit);
             //  Add 'package PACKAGE_NAME'
             let pkg = VhdlNode::new(VhdKind::Package_Declaration);
@@ -758,7 +765,9 @@ impl Command for CommandVerilog2Comp {
             usec.set_selected_name(allname);
             lib.set_chain(usec);
 
-            unsafe { vhdl::disp_vhdl(unit); }
+            unsafe {
+                vhdl::disp_vhdl(unit);
+            }
         }
         return Ok(());
     }
