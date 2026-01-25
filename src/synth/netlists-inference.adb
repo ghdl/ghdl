@@ -168,126 +168,10 @@ package body Netlists.Inference is
       end if;
    end Find_Longest_Loop;
 
-   procedure Extract_Clock_And (Ctxt : Context_Acc; Inst : Instance)
-   is
-   begin
-      pragma Assert (Get_Id (Inst) = Id_And);
-
-      declare
-         I0 : constant Input := Get_Input (Inst, 0);
-         N0 : constant Net := Get_Driver (I0);
-         Inst0 : constant Instance := Get_Net_Parent (N0);
-      begin
-         case Get_Id (Inst0) is
-            when Edge_Module_Id =>
-               null;
-            when Id_And =>
-               Extract_Clock_And (Ctxt, Inst0);
-
-               --  If we have:       AND      convert to:     AND
-               --                    / \                      / \
-               --                  N1  AND0       ==>     AND0   EDGE
-               --                      /  \               /  \
-               --                     N2  EDGE           N1   N2
-               declare
-                  I3 : constant Input := Get_Input (Inst0, 0);
-                  N3 : constant Net := Get_Driver (I3);
-                  Inst3 : constant Instance := Get_Net_Parent (N3);
-               begin
-                  if Get_Id (Inst3) in Edge_Module_Id then
-                     declare
-                        Can_Rotate : constant Boolean :=
-                          Has_One_Connection (N0);
-                        I2 : constant Input := Get_Input (Inst0, 1);
-                        N2 : constant Net := Get_Driver (I2);
-                        I1 : constant Input := Get_Input (Inst, 1);
-                        N1 : constant Net := Get_Driver (I1);
-                        N4 : Net;
-                     begin
-                        Disconnect (I0);
-                        Disconnect (I1);
-                        Connect (I0, N3);
-                        if Can_Rotate then
-                           Disconnect (I2);
-                           Disconnect (I3);
-
-                           Connect (I1, N0);
-                           Connect (I3, N2);
-                           Connect (I2, N1);
-                        else
-                           N4 := Build_Dyadic (Ctxt, Id_And, N2, N1);
-                           Copy_Location (N4, Inst);
-                           Connect (I1, N4);
-                        end if;
-                     end;
-                  end if;
-               end;
-            when others =>
-               null;
-         end case;
-      end;
-
-      declare
-         I0 : constant Input := Get_Input (Inst, 1);
-         N0 : constant Net := Get_Driver (I0);
-         Inst0 : constant Instance := Get_Net_Parent (N0);
-      begin
-         case Get_Id (Inst0) is
-            when Edge_Module_Id =>
-               --  Swap inputs 0 and 1.
-               declare
-                  I1 : constant Input := Get_Input (Inst, 0);
-                  N1 : constant Net := Get_Driver (I1);
-               begin
-                  Disconnect (I0);
-                  Disconnect (I1);
-                  Connect (I1, N0);
-                  Connect (I0, N1);
-               end;
-            when Id_And =>
-               Extract_Clock_And (Ctxt, Inst0);
-
-               --  If we have:       AND      convert to:     AND
-               --                    / \                      / \
-               --                 AND0  N1     ==>         AND0  EDGE
-               --                 /  \                     /  \
-               --                N2  EDGE                N2   N1
-               declare
-                  I3 : constant Input := Get_Input (Inst0, 0);
-                  N3 : constant Net := Get_Driver (I3);
-               begin
-                  if Get_Id (Get_Net_Parent (N3)) in Edge_Module_Id then
-                     declare
-                        Can_Rotate : constant Boolean :=
-                          Has_One_Connection (N0);
-                        I1 : constant Input := Get_Input (Inst, 0);
-                        N1 : constant Net := Get_Driver (I1);
-                        N4 : Net;
-                     begin
-                        Disconnect (I3);
-                        Disconnect (I1);
-                        Connect (I1, N3);
-                        if Can_Rotate then
-                           Connect (I3, N1);
-                        else
-                           N4 := Build_Dyadic
-                             (Ctxt, Id_And, N1, Get_Input_Net (Inst0, 1));
-                           Connect (I3, N4);
-                        end if;
-                     end;
-                  end if;
-               end;
-            when others =>
-               null;
-         end case;
-      end;
-   end Extract_Clock_And;
-
    --  Walk the And-net N, and extract clock (posedge/negedge) if found.
    --  ENABLE is N without the clock.
    --  If not found, CLK and ENABLE are set to No_Net.
-   procedure Extract_Clock
-     (Ctxt : Context_Acc; N : Net; Clk : out Net; Enable : out Net)
+   procedure Extract_Clock (N : Net; Clk : out Net; Enable : out Net)
    is
       Inst : constant Instance := Get_Net_Parent (N);
    begin
@@ -298,9 +182,6 @@ package body Netlists.Inference is
          when Edge_Module_Id =>
             Clk := N;
          when Id_And =>
-            --  Canonicalize conditions.
-            Extract_Clock_And (Ctxt, Inst);
-
             --  Condition should be in the form: CLK and EXPR
             declare
                I0 : constant Net := Get_Input_Net (Inst, 0);
@@ -507,7 +388,7 @@ package body Netlists.Inference is
             Els_Inst := Get_Net_Parent (Els2);
          end if;
          if Get_Id (Els_Inst) = Id_Mux2 then
-            Extract_Clock (Ctxt, Get_Driver (Get_Mux2_Sel (Els_Inst)),
+            Extract_Clock (Get_Driver (Get_Mux2_Sel (Els_Inst)),
                            Els_Clk, Els_En);
          else
             Els_Clk := No_Net;
@@ -1204,7 +1085,7 @@ package body Netlists.Inference is
 
       --  So there is a logical loop.
       Sel := Get_Mux2_Sel (Last_Mux);
-      Extract_Clock (Ctxt, Get_Driver (Sel), Clk, Enable);
+      Extract_Clock (Get_Driver (Sel), Clk, Enable);
       if Clk = No_Net then
          --  No clock -> latch or combinational loop
          Res := Infere_Latch (Ctxt, Val2, Prev_Val, Last_Mux, Last_Use, Loc);
@@ -1282,7 +1163,7 @@ package body Netlists.Inference is
                return Val;
             when others => raise Internal_Error;
          end case;
-         Extract_Clock (Ctxt, Get_Input_Net (Inst, 0), Clk, En);
+         Extract_Clock (Get_Input_Net (Inst, 0), Clk, En);
          exit when Clk /= No_Net;
 
          --  No clock.  Try the father.

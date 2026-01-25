@@ -2261,8 +2261,7 @@ package body Netlists.Memories is
                      Clk : Net;
                   begin
                      Inp2 := Get_Input (Inst, 0);
-                     Inference.Extract_Clock
-                       (Ctxt, Get_Driver (Inp2), Clk, En);
+                     Inference.Extract_Clock (Get_Driver (Inp2), Clk, En);
                      Disconnect (Inp2);
                      --  Assign clock.
                      for I in Ports'First .. N_Ports loop

@@ -408,12 +408,12 @@ package body Netlists.Folds is
       Inst_Pp : Instance;
       E, N : Net;
    begin
-      --  Swap R and L
+      --  The canonical form.
       if Get_Id (Get_Net_Parent (R)) in Edge_Module_Id then
          return Build_Dyadic (Ctxt, Id_And, R, L);
       end if;
 
-      --  L = Edge and X
+      --  L = (Edge and X)
       --  Rotate with L parent: result = Edge and (R and X)
       Inst_L := Get_Net_Parent (L);
       if Get_Id (Inst_L) = Id_And then
