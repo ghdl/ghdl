@@ -22,11 +22,6 @@ package body Netlists.Errors is
       return Make_Earg_Synth_Instance (Uns32 (N));
    end "+";
 
-   function "+" (N : Net) return Earg_Type is
-   begin
-      return Make_Earg_Synth_Net (Uns32 (N));
-   end "+";
-
    function "+" (N : Sname) return Earg_Type is
    begin
       return Make_Earg_Synth_Name (Uns32 (N));
@@ -88,31 +83,6 @@ package body Netlists.Errors is
       end case;
    end Synth_Instance_Handler;
 
-   procedure Synth_Net_Handler
-     (Format : Character; Err : Error_Record; Val : Uns32)
-   is
-      pragma Unreferenced (Err);
-      N : constant Net := Net (Val);
-   begin
-      case Format is
-         when 'n' =>
-            declare
-               Inst : constant Instance := Get_Net_Parent (N);
-               Idx : constant Port_Idx := Get_Port_Idx (N);
-               Name : Sname;
-            begin
-               if Is_Self_Instance (Inst) then
-                  Name := Get_Input_Desc (Get_Module (Inst), Idx).Name;
-               else
-                  Name := Get_Output_Desc (Get_Module (Inst), Idx).Name;
-               end if;
-               Output_Name (Name);
-            end;
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Synth_Net_Handler;
-
    procedure Synth_Name_Handler
      (Format : Character; Err : Error_Record; Val : Uns32)
    is
@@ -130,8 +100,6 @@ package body Netlists.Errors is
    begin
       Register_Earg_Handler
         (Earg_Synth_Instance, Synth_Instance_Handler'Access);
-      Register_Earg_Handler
-        (Earg_Synth_Net, Synth_Net_Handler'Access);
       Register_Earg_Handler
         (Earg_Synth_Name, Synth_Name_Handler'Access);
    end Initialize;

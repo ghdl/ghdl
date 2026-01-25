@@ -25,7 +25,6 @@ package Netlists.Errors is
    --  %i : instance number
    function "+" (N : Instance) return Earg_Type;
 
-   function "+" (N : Net) return Earg_Type;
    function "+" (N : Sname) return Earg_Type;
    function "+" (N : Instance) return Location_Type
      renames Netlists.Locations.Get_Location;
