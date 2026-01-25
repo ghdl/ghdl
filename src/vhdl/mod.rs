@@ -1,5 +1,6 @@
 pub mod nodes_def;
 pub mod nodes_utils;
+pub mod chars;
 
 use nodes_def::Node;
 

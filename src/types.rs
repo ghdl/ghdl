@@ -9,3 +9,14 @@ pub struct Logic32 {
     pub val: u32,
     pub zx: u32
 }
+
+#[derive(Clone, Copy, PartialEq)]
+#[repr(u8)]
+pub enum VhdlStd {
+    Vhdl87,
+    Vhdl93,
+    Vhdl00,
+    Vhdl02,
+    Vhdl08,
+    Vhdl19,
+}

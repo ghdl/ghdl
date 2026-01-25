@@ -10,17 +10,7 @@ mod vhdl;
 
 use files_map::SourceFileEntry;
 use vhdl::nodes_def::{Node as VhdlNode, Kind as VhdKind};
-
-#[derive(Clone, Copy)]
-#[repr(u8)]
-enum VhdlStd {
-    Vhdl87,
-    Vhdl93,
-    Vhdl00,
-    Vhdl02,
-    Vhdl08,
-    Vhdl19,
-}
+use types::VhdlStd;
 
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
@@ -88,7 +78,7 @@ extern "C" {
     fn compile_init(analyze_only: bool);
 
     #[link_name = "ghdlrun__compile_elab_setup"]
-    fn compile_elab_setup(config: VhdlNode);
+    fn compile_elab_setup(config: VhdlNode) -> bool;
 
     #[link_name = "ghdlrun__run"]
     fn run();
@@ -133,6 +123,9 @@ impl NameId {
     const NULL: NameId = NameId(0);
 
     fn from_string(s: &str) -> NameId {
+        unsafe { get_identifier_with_len(s.as_ptr(), s.len() as u32) }
+    }
+    fn from_bytes(s: &Vec<u8>) -> NameId {
         unsafe { get_identifier_with_len(s.as_ptr(), s.len() as u32) }
     }
 
@@ -328,7 +321,18 @@ fn parse_analyze_flags(flags: &mut VhdlAnalyzeFlags, arg: &str) -> Option<ParseS
         return None;
     }
     if arg.starts_with("--work=") {
-        flags.work_name = NameId::from_string(&arg[7..]);
+        let name = vhdl::chars::convert_identifier(
+            &arg[7..],
+            flags.std,
+        );
+        match name {
+            Ok(id_bytes) => {
+                flags.work_name = NameId::from_bytes(&id_bytes);
+            }
+            Err(_) => {
+                return Some(ParseStatus::OptionError);
+            }
+        }
         return None;
     }
     if arg.starts_with("--workdir=") {
@@ -552,9 +556,31 @@ fn analyze_elab(args: &[String]) -> Result<Vec<String>, ParseStatus> {
             }
         } else {
             if unit == NameId::NULL {
-                unit = NameId::from_string(arg);
+                let name = vhdl::chars::convert_identifier(
+                    &arg,
+                    flags.std,
+                );
+                match name {
+                    Ok(id_bytes) => {
+                        unit = NameId::from_bytes(&id_bytes);
+                    }
+                    Err(_) => {
+                        return Err(ParseStatus::OptionError);
+                    }
+                }
             } else if arch == NameId::NULL {
-                arch = NameId::from_string(arg);
+                let name = vhdl::chars::convert_identifier(
+                    &arg,
+                    flags.std,
+                );
+                match name {
+                    Ok(id_bytes) => {
+                        arch = NameId::from_bytes(&id_bytes);
+                    }
+                    Err(_) => {
+                        return Err(ParseStatus::OptionError);
+                    }
+                }
             } else {
                 eprintln!("too many unit names");
                 return Err(ParseStatus::OptionError);
@@ -578,7 +604,12 @@ fn analyze_elab(args: &[String]) -> Result<Vec<String>, ParseStatus> {
         return Result::Err(ParseStatus::OptionError);
     }
     unsafe {
-        compile_elab_setup(top);
+        if !compile_elab_setup(top) {
+            if expect_failure {
+                return Result::Err(ParseStatus::CommandExpectedError);
+            }
+            return Result::Err(ParseStatus::CommandError);
+        }
     }
     if expect_failure {
         return Result::Err(ParseStatus::CommandError);

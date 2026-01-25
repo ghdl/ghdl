@@ -24,7 +24,7 @@ private
    --  To be called before any compilation.
    procedure Compile_Init (Analyze_Only : Boolean);
 
-   procedure Compile_Elab_Setup (Config : Vhdl.Nodes.Iir);
+   function Compile_Elab_Setup (Config : Vhdl.Nodes.Iir) return Boolean;
 
    procedure Run;
 end Ghdlrun;

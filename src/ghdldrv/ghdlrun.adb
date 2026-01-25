@@ -124,7 +124,7 @@ package body Ghdlrun is
       end case;
    end Compile_Init;
 
-   procedure Compile_Elab_Setup (Config : Iir) is
+   function Compile_Elab_Setup (Config : Iir) return Boolean is
    begin
       if Time_Resolution = 'a' then
          Time_Resolution := Vhdl.Std_Package.Get_Minimal_Time_Resolution;
@@ -192,7 +192,7 @@ package body Ghdlrun is
                Vhdl.Configuration.Check_Entity_Declaration_Top (Top, False);
 
                if Errorout.Nbr_Errors > 0 then
-                  raise Errorout.Compilation_Error;
+                  return False;
                end if;
 
                if Run_Mode = Run_Jit then
@@ -206,7 +206,7 @@ package body Ghdlrun is
                Inst := Elab.Vhdl_Insts.Elab_Top_Unit (Lib_Unit);
 
                if Errorout.Nbr_Errors > 0 then
-                  raise Errorout.Compilation_Error;
+                  return False;
                end if;
 
                --  Finish elaboration: gather processes, signals.
@@ -219,12 +219,14 @@ package body Ghdlrun is
 
       if Errorout.Nbr_Errors > 0 then
          --  This may happen (bad entity for example).
-         raise Compilation_Error;
+         return False;
       end if;
 
       if Flags.Check_Ast_Level > 0 then
          Vhdl.Nodes_GC.Report_Unreferenced;
       end if;
+
+      return True;
    end Compile_Elab_Setup;
 
    procedure Compile_Elab
@@ -256,7 +258,9 @@ package body Ghdlrun is
          end loop;
       end if;
 
-      Compile_Elab_Setup (Config);
+      if not Compile_Elab_Setup (Config) then
+         raise Compilation_Error;
+      end if;
    end Compile_Elab;
 
    --  Set options.
