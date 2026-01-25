@@ -606,8 +606,7 @@ package body Netlists.Inference is
            | Id_Output
            | Id_Inout =>
             Init := No_Net;
-         when others =>
-            raise Internal_Error;
+         when others => raise Internal_Error;
       end case;
 
       --  As an enable signal, start with the enable extracted from the clock
@@ -658,8 +657,7 @@ package body Netlists.Inference is
                         Loop_Off := 0;
                         exit;
                      end if;
-                  when others =>
-                     raise Internal_Error;
+                  when others => raise Internal_Error;
                end case;
                Snk := Get_Next_Sink (Snk);
             end loop;
@@ -1282,8 +1280,7 @@ package body Netlists.Inference is
             when Id_Const_UB32
                | Id_Pmux =>
                return Val;
-            when others =>
-               raise Internal_Error;
+            when others => raise Internal_Error;
          end case;
          Extract_Clock (Ctxt, Get_Input_Net (Inst, 0), Clk, En);
          exit when Clk /= No_Net;
