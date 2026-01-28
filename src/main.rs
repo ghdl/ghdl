@@ -730,6 +730,41 @@ fn get_prefix() -> String {
     }
     return exe_path.to_str().unwrap().to_string();
 }
+
+fn execute_spawn(args: &[String], extra_args: &[&str]) -> Result<(), ParseStatus> {
+    let mut first: usize = 1;
+    while first < args.len() && is_option(&args[first]) {
+        if args[first] == "-v" {
+        } else {
+            eprintln!("Unknown option '{}'", args[first]);
+            return Err(ParseStatus::OptionError);
+        }
+        first += 1;
+    }
+    if first >= args.len() {
+        eprintln!("No program to execute");
+        return Err(ParseStatus::CommandError);
+    }
+    let program = &args[first];
+    let res = std::process::Command::new(program.as_str())
+        .args(&args[first + 1..])
+        .args(extra_args)
+        .status();
+    match res {
+        Err(_) => {
+            eprintln!("Cannot execute {program}");
+            return Err(ParseStatus::CommandError);
+        }
+        Ok(status) => {
+            if status.success() {
+                return Ok(());
+            } else {
+                return Err(ParseStatus::CommandError);
+            }
+        }
+    }
+}
+
 struct CommandVpiCompile {}
 
 impl Command for CommandVpiCompile {
@@ -738,39 +773,26 @@ impl Command for CommandVpiCompile {
     }
 
     fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
-        let mut first: usize = 1;
-        while first < args.len() && is_option(&args[first]) {
-            if args[first] == "-v" {
-            } else {
-                eprintln!("Unknown option '{}'", args[first]);
-                return Err(ParseStatus::OptionError);
-            }
-            first += 1;
-        }
-        if first >= args.len() {
-            eprintln!("No program to execute");
-            return Err(ParseStatus::CommandError);
-        }
         let prefix = get_prefix();
         let incflags = "-I".to_owned() + prefix.as_str() + "/include/ghdl";
-        let program = &args[first];
-        let res = std::process::Command::new(program.as_str())
-            .args(&args[first + 1..])
-            .arg(incflags)
-            .status();
-        match res {
-            Err(_) => {
-                eprintln!("Cannot execute {program}");
-                return Err(ParseStatus::CommandError);
-            }
-            Ok(status) => {
-                if status.success() {
-                    return Ok(());
-                } else {
-                    return Err(ParseStatus::CommandError);
-                }
-            }
-        }
+        execute_spawn(args, &[&incflags.to_owned()])
+    }
+}
+struct CommandVpiLink {}
+
+impl Command for CommandVpiLink {
+    fn get_names(&self) -> &'static [&'static str] {
+        return &["--vpi-link"];
+    }
+
+    fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
+        let prefix = get_prefix();
+        let libdir = prefix + "/lib";
+        let ldflags = "-L".to_owned() + libdir.as_str();
+        let rpath = "-Wl,-rpath,".to_owned() + libdir.as_str();
+        let flags = [
+            "--shared", ldflags.as_str(), "-lghdlvpi", &rpath];
+        execute_spawn(args, &flags)
     }
 }
 
@@ -873,6 +895,7 @@ const COMMANDS: &[&dyn Command] = &[
     &CommandImport {},
     &CommandVerilog2Comp {},
     &CommandVpiCompile {},
+    &CommandVpiLink {},
 ];
 
 fn execute_command(args: &[String]) -> Result<(), ParseStatus> {
