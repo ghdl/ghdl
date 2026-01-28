@@ -685,8 +685,7 @@ impl Command for CommandRun {
             Err(ParseStatus::CommandError) => {
                 if expect_failure {
                     return Ok(());
-                }
-                else {
+                } else {
                     return Err(ParseStatus::CommandError);
                 }
             }
@@ -715,6 +714,63 @@ impl Command for CommandRun {
             run();
         }
         Ok(())
+    }
+}
+
+fn get_prefix() -> String {
+    let mut exe_path = env::current_exe().unwrap();
+    // Remove executable name
+    exe_path.pop();
+    if exe_path.ends_with("bin") {
+        return exe_path.parent().unwrap().to_str().unwrap().to_string();
+    }
+    if exe_path.ends_with("target/debug") || exe_path.ends_with("target/release") {
+        let pfx_path = exe_path.parent().unwrap().parent().unwrap();
+        return pfx_path.to_str().unwrap().to_string();
+    }
+    return exe_path.to_str().unwrap().to_string();
+}
+struct CommandVpiCompile {}
+
+impl Command for CommandVpiCompile {
+    fn get_names(&self) -> &'static [&'static str] {
+        return &["--vpi-compile"];
+    }
+
+    fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
+        let mut first: usize = 1;
+        while first < args.len() && is_option(&args[first]) {
+            if args[first] == "-v" {
+            } else {
+                eprintln!("Unknown option '{}'", args[first]);
+                return Err(ParseStatus::OptionError);
+            }
+            first += 1;
+        }
+        if first >= args.len() {
+            eprintln!("No program to execute");
+            return Err(ParseStatus::CommandError);
+        }
+        let prefix = get_prefix();
+        let incflags = "-I".to_owned() + prefix.as_str() + "/include/ghdl";
+        let program = &args[first];
+        let res = std::process::Command::new(program.as_str())
+            .args(&args[first + 1..])
+            .arg(incflags)
+            .status();
+        match res {
+            Err(_) => {
+                eprintln!("Cannot execute {program}");
+                return Err(ParseStatus::CommandError);
+            }
+            Ok(status) => {
+                if status.success() {
+                    return Ok(());
+                } else {
+                    return Err(ParseStatus::CommandError);
+                }
+            }
+        }
     }
 }
 
@@ -816,6 +872,7 @@ const COMMANDS: &[&dyn Command] = &[
     &CommandRemove {},
     &CommandImport {},
     &CommandVerilog2Comp {},
+    &CommandVpiCompile {},
 ];
 
 fn execute_command(args: &[String]) -> Result<(), ParseStatus> {
