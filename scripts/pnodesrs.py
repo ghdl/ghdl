@@ -12,7 +12,7 @@ except:
     import pnodes
 
 
-def print_enum(name, vals, extra_derives=[]):
+def print_enum(name, vals, extra_derives=[], keep_underscore=True):
     if len(vals) < 256:
         repr = 8
     elif len(vals) < 65536:
@@ -26,26 +26,29 @@ def print_enum(name, vals, extra_derives=[]):
     print(f"#[derive({derives_str})]")
     print(f"pub enum {name} {{")
     for k in vals:
-        print(f"    {k},")
+        val_name = k if keep_underscore else k.replace('_', '')
+        print(f"    {val_name},")
     print(f"}}");
 
     print(f"")
     print(f"impl {name} {{")
     print(f"    pub const VALUES: [Self; {len(vals)}] = [")
     for k in vals:
-        print(f"        Self::{k},")
+        val_name = k if keep_underscore else k.replace('_', '')
+        print(f"        Self::{val_name},")
     print(f"    ];");
     print(f"")
     print(f"    pub const IMAGES: [&'static str; {len(vals)}] = [")
     for k in vals:
-        print(f"        \"{k.lower()}\",")
+        val_name = k if keep_underscore else k.replace('_', '-')
+        print(f"        \"{val_name.lower()}\",")
     print(f"    ];");
     print(f"}}")
 
 def do_class_kinds():
     typ = "Kind"
     # print(f"#[derive(Copy, Clone, PartialEq, PartialOrd)]")
-    print_enum(typ, pnodes.kinds, ["PartialOrd"])
+    print_enum(typ, pnodes.kinds, extra_derives=["PartialOrd"])
     print(f"impl {typ} {{")
     for k, v in pnodes.kinds_ranges.items():
         print(f"    fn is_{k.lower()}(self: Self) -> bool {{")
@@ -351,9 +354,8 @@ def do_errorout():
     print("")
     # Remove prefix, remove '_'
     pfx="Warnid_"
-    warn_toks = [t[len(pfx):].replace('_', '')
-                 for t in toks if t.startswith(pfx)]
-    print_enum("Warnid", warn_toks)
+    warn_toks = [t[len(pfx):] for t in toks if t.startswith(pfx)]
+    print_enum("Warnid", warn_toks, keep_underscore=False)
     print(f"pub const WARNID_USIZE: usize = {len(warn_toks)};")
 
 
