@@ -789,7 +789,9 @@ impl Command for CommandVpiCompile {
     fn execute(&self, args: &[String]) -> Result<(), ParseStatus> {
         let prefix = get_prefix();
         let incflags = "-I".to_owned() + prefix.as_str() + "/include/ghdl";
-        execute_spawn(args, &[&incflags.to_owned()])
+        let flags = [
+            "-fPIC", &incflags.as_str()];
+        execute_spawn(args, &flags)
     }
 }
 struct CommandVpiLink {}
