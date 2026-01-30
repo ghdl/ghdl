@@ -277,13 +277,19 @@ enum ParseStatus {
 }
 
 fn get_warn_id_by_name(name: &str) -> Option<usize> {
+    if name == "no-wait" {
+        return Some(crate::errorout_def::Warnid::MissingWait as usize);
+    }
+    if name == "reserved" {
+        return Some(crate::errorout_def::Warnid::ReservedWord as usize);
+    }
+    if name == "no-assoc" {
+        return Some(crate::errorout_def::Warnid::MissingAssoc as usize);
+    }
     for (i, warn_name) in crate::errorout_def::Warnid::IMAGES.iter().enumerate() {
         if name == *warn_name {
             return Some(i);
         }
-    }
-    if name == "reserved" {
-        return Some(crate::errorout_def::Warnid::ReservedWord as usize);
     }
     None
 }
@@ -385,6 +391,14 @@ fn parse_analyze_flags(flags: &mut VhdlAnalyzeFlags, arg: &str) -> Option<ParseS
             w.error = WarnValue::Enable;
         }
         return None;
+    }
+    if arg.starts_with("-Werror=") {
+        let warn_name = &arg[8..];
+        if let Some(warn_id) = get_warn_id_by_name(warn_name) {
+            flags.warnings[warn_id].error = WarnValue::Enable;
+            return None;
+        }
+        return Some(ParseStatus::OptionError);
     }
     if arg.starts_with("--warn-") {
         return parse_warn_option(&arg[7..], flags);
