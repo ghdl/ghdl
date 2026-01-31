@@ -67,6 +67,9 @@ package body Grt.Vcd is
 
    Stream : FILEs;
 
+   --  Last simulation time written to VCD.  Used to output final timestamp.
+   Last_Time_Written : Std_Time := 0;
+
    procedure My_Vcd_Put (Str : String)
    is
       R : size_t;
@@ -983,19 +986,27 @@ package body Grt.Vcd is
    end Vcd_Start;
 
    --  Called before each non delta cycle.
-   procedure Vcd_Cycle is
+   procedure Vcd_Cycle
+   is
+      Time_Displayed : Boolean := False;
    begin
-      --  Disp values.
-      Vcd_Put_Time;
       if Current_Time = 0 then
          --  Disp all values.
+         Vcd_Put_Time;
+         Last_Time_Written := Current_Time;
          for I in Vcd_Table.First .. Vcd_Table.Last loop
             Vcd_Put_Var (I);
          end loop;
       else
          --  Disp only values changed.
+         --  Output timestamp only if at least one signal changed.
          for I in Vcd_Table.First .. Vcd_Table.Last loop
             if Verilog_Wire_Changed (Vcd_Table.Table (I), Current_Time) then
+               if not Time_Displayed then
+                  Vcd_Put_Time;
+                  Last_Time_Written := Current_Time;
+                  Time_Displayed := True;
+               end if;
                Vcd_Put_Var (I);
             end if;
          end loop;
@@ -1006,6 +1017,14 @@ package body Grt.Vcd is
    procedure Vcd_End is
    begin
       if Vcd_Close /= null then
+         --  Output final timestamp to mark end of simulation, but only if
+         --  it differs from the last written time and is not Std_Time'Last
+         --  (which indicates simulation ended due to no more events).
+         if Current_Time /= Last_Time_Written
+           and then Current_Time /= Std_Time'Last
+         then
+            Vcd_Put_Time;
+         end if;
          Vcd_Close.all;
       end if;
    end Vcd_End;
