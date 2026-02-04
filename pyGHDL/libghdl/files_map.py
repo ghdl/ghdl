@@ -32,6 +32,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 
+from ctypes import POINTER, c_char, c_void_p, cast
+
 from pyTooling.Decorators import export
 
 from pyGHDL.libghdl._decorator import BindToLibGHDL
@@ -180,15 +182,18 @@ def Get_Directory_Name(File: SourceFileEntry) -> NameId:
 
 @export
 @BindToLibGHDL("files_map__get_file_buffer")
-def Get_File_Buffer(File: SourceFileEntry) -> bytes:
+def Get_File_Buffer_voidp(File: SourceFileEntry) -> c_void_p:
+    return 0  # pragma: no cover
+
+
+def Get_File_Buffer(File: SourceFileEntry) -> POINTER(c_char):
     """
     Return a buffer (access to the contents of the file) for a file entry.
 
     :param File: Source file to get the buffer from.
     :return:     Type: ``File_Buffer_Ptr``
     """
-    return 0  # pragma: no cover
-
+    return cast(Get_File_Buffer_voidp(File), POINTER(c_char))
 
 @export
 @BindToLibGHDL("files_map__get_file_length")
