@@ -1326,7 +1326,6 @@ package body Synth.Vhdl_Insts is
       Component : constant Node :=
         Get_Named_Entity (Get_Instantiated_Unit (Stmt));
       Bind : constant Node := Get_Binding_Indication (Config);
-      Aspect : constant Node := Get_Entity_Aspect (Bind);
 
       Marker : Mark_Type;
       Ent : Node;
@@ -1341,7 +1340,6 @@ package body Synth.Vhdl_Insts is
    begin
       Mark_Expr_Pool (Marker);
       pragma Assert (Is_Expr_Pool_Empty);
-      pragma Assert (Get_Kind (Aspect) = Iir_Kind_Entity_Aspect_Entity);
 
       Inst_Name := New_Sname_User (Get_Identifier (Stmt),
                                    Get_Sname (Syn_Inst));
