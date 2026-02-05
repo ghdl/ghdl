@@ -195,6 +195,7 @@ def Get_File_Buffer(File: SourceFileEntry) -> POINTER(c_char):
     """
     return cast(Get_File_Buffer_voidp(File), POINTER(c_char))
 
+
 @export
 @BindToLibGHDL("files_map__get_file_length")
 def Get_File_Length(File: SourceFileEntry) -> int:
