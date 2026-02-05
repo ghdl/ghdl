@@ -415,18 +415,33 @@ fn analyze(args: &[String], save: bool) -> Result<(), ParseStatus> {
     let mut status = true;
     let mut flags = VhdlAnalyzeFlags::default();
     let mut expect_failure = false;
-    let mut files = vec![];
 
     // Parse arguments
-    for arg in &args[1..] {
+    let mut first_file = 0;
+    for (idx, arg) in args[1..].iter().enumerate() {
         if arg == "--expect-failure" {
             expect_failure = true;
         } else {
             match parse_analyze_flags(&mut flags, &arg) {
                 None => {}
-                Some(ParseStatus::NotOption) => files.push(arg.clone()),
+                Some(ParseStatus::NotOption) => {
+                    // The first index is 0, but we need to add 1 because of the args[1..]
+                    first_file = idx + 1;
+                    break;
+                } //files.push(arg.clone()),
                 Some(err) => return Err(err),
             }
+        }
+    }
+
+    if first_file >= args.len() {
+        eprintln!("no file to analyze");
+        return Err(ParseStatus::CommandError);
+    }
+    for file in &args[first_file..] {
+        if is_option(file) {
+            eprintln!("no option expected after files, got '{}'", file);
+            return Err(ParseStatus::CommandError);
         }
     }
 
@@ -436,8 +451,9 @@ fn analyze(args: &[String], save: bool) -> Result<(), ParseStatus> {
         compile_init(true);
     };
 
+
     // And analyze every file
-    for file in &files {
+    for file in &args[first_file..] {
         let id = unsafe { get_identifier_with_len(file.as_ptr(), file.len() as u32) };
         //eprintln!("analyze {file}\n");
         status = unsafe { analyze_file(id) };
