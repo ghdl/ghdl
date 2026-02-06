@@ -1227,6 +1227,7 @@ package body Vhdl.Utils is
             | Iir_Kind_Interface_Signal_Declaration
             | Iir_Kind_Object_Alias_Declaration
             | Iir_Kind_Interface_Constant_Declaration
+            | Iir_Kind_Interface_View_Declaration
             | Iir_Kinds_External_Name =>
             declare
                Ind : constant Iir := Get_Subtype_Indication (Base);

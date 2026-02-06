@@ -905,10 +905,13 @@ package body Vhdl.Configuration is
       --  Check port.
       El := Get_Port_Chain (Entity);
       while El /= Null_Iir loop
-         if not Is_Fully_Constrained_Type (Get_Type (El))
-           and then Get_Default_Value (El) = Null_Iir
-         then
-            Error (El, "(%n is unconstrained and has no default value)", +El);
+         if not Is_Fully_Constrained_Type (Get_Type (El)) then
+            if Get_Kind (El) = Iir_Kind_Interface_View_Declaration
+              or else Get_Default_Value (El) = Null_Iir
+            then
+               Error
+                 (El, "(%n is unconstrained and has no default value)", +El);
+            end if;
          end if;
          El := Get_Chain (El);
       end loop;
