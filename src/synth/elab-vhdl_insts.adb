@@ -1581,6 +1581,32 @@ package body Elab.Vhdl_Insts is
       end loop;
    end Elab_Top_Clear;
 
+   procedure Elab_Top_Interface_Constant
+     (Inst : Synth_Instance_Acc; Inter : Node)
+   is
+      Em : Mark_Type;
+      Val : Valtyp;
+      Inter_Typ : Type_Acc;
+      Defval : Node;
+   begin
+      Mark_Expr_Pool (Em);
+      Inter_Typ := Elab_Declaration_Type (Inst, Inter);
+      Defval := Get_Default_Value (Inter);
+      if Defval /= Null_Node then
+         Val := Synth_Expression_With_Type (Inst, Defval, Inter_Typ);
+      else
+         --  Only for simulation, expect override.
+         Val := Create_Value_Default (Inter_Typ);
+      end if;
+      if Val /= No_Valtyp then
+         pragma Assert (Is_Static (Val.Val));
+         Val := Unshare (Val, Instance_Pool);
+         Val.Typ := Unshare_Type_Instance (Val.Typ, Inter_Typ);
+         Create_Object (Inst, Inter, Val);
+      end if;
+      Release_Expr_Pool (Em);
+   end Elab_Top_Interface_Constant;
+
    function Elab_Top_Unit (Config : Node) return Synth_Instance_Acc
    is
       Arch : Node;
@@ -1594,29 +1620,14 @@ package body Elab.Vhdl_Insts is
       --  Compute generics.
       Inter := Get_Generic_Chain (Entity);
       while Is_Valid (Inter) loop
-         declare
-            Em : Mark_Type;
-            Val : Valtyp;
-            Inter_Typ : Type_Acc;
-            Defval : Node;
-         begin
-            Mark_Expr_Pool (Em);
-            Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
-            Defval := Get_Default_Value (Inter);
-            if Defval /= Null_Node then
-               Val := Synth_Expression_With_Type (Top_Inst, Defval, Inter_Typ);
-            else
-               --  Only for simulation, expect override.
-               Val := Create_Value_Default (Inter_Typ);
-            end if;
-            if Val /= No_Valtyp then
-               pragma Assert (Is_Static (Val.Val));
-               Val := Unshare (Val, Instance_Pool);
-               Val.Typ := Unshare_Type_Instance (Val.Typ, Inter_Typ);
-               Create_Object (Top_Inst, Inter, Val);
-            end if;
-            Release_Expr_Pool (Em);
-         end;
+         case Get_Kind (Inter) is
+            when Iir_Kind_Interface_Constant_Declaration =>
+               Elab_Top_Interface_Constant (Top_Inst, Inter);
+            when Iir_Kind_Interface_Package_Declaration =>
+               Elab_Package_Instantiation (Top_Inst, Inter);
+            when others =>
+               Error_Kind ("elab_top_unit", Inter);
+         end case;
          Inter := Get_Chain (Inter);
       end loop;
 
@@ -1629,7 +1640,6 @@ package body Elab.Vhdl_Insts is
       Elab_Top_Clear;
 
       return Top_Inst;
-
    exception
       when Elaboration_Error =>
          return null;

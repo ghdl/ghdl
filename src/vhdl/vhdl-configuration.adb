@@ -895,7 +895,9 @@ package body Vhdl.Configuration is
             when Iir_Kind_Interface_Type_Declaration =>
                Error (El, "(%n is a type generic)", +El);
             when Iir_Kind_Interface_Package_Declaration =>
-               Error (El, "(%n is a package generic)", +El);
+               if Get_Generic_Map_Aspect_Chain (El) = Null_Iir then
+                  Error (El, "(%n is a package generic)", +El);
+               end if;
             when Iir_Kind_Interface_Terminal_Declaration =>
                null;
          end case;
