@@ -55,6 +55,7 @@ with Synth.Vhdl_Expr; use Synth.Vhdl_Expr;
 with Synth.Vhdl_Insts; use Synth.Vhdl_Insts;
 with Synth.Vhdl_Eval;
 with Synth.Vhdl_Foreign;
+with Synth.Vhdl_Oper;
 with Synth.Source;
 with Synth.Vhdl_Static_Proc;
 with Synth.Flags;
@@ -1192,6 +1193,8 @@ package body Synth.Vhdl_Stmts is
       end case;
    end Ignore_Choice_Logic;
 
+   --  True if choice expression V should be ignored (because it contains
+   --  a metavalue like 'Z').
    function Ignore_Choice_Expression (V : Valtyp; Loc : Node) return Boolean is
    begin
       case V.Typ.Kind is
@@ -1225,9 +1228,13 @@ package body Synth.Vhdl_Stmts is
 
    --  Create the condition for choices of CHOICE chain belonging to the same
    --  alternative.  Update CHOICE to the next alternative.
+   --
+   --  Increment CHOICE_IDX and set NETS(CHOICE_IDX) to the condition to
+   --  select the choices.
    procedure Synth_Choice (Syn_Inst : Synth_Instance_Acc;
                            Sel : Net;
                            Choice_Typ : Type_Acc;
+                           Matching : Boolean;
                            Nets : in out Net_Array;
                            Other_Choice : in out Nat32;
                            Choice_Idx : in out Nat32;
@@ -1250,12 +1257,16 @@ package body Synth.Vhdl_Stmts is
                     (Syn_Inst, Get_Choice_Expression (Choice));
                   V := Synth_Subtype_Conversion
                     (Syn_Inst, V, Choice_Typ, False, Choice);
-                  if Ignore_Choice_Expression (V, Choice) then
-                     Cond := No_Net;
+                  if Matching then
+                     Cond := Vhdl_Oper.Synth_Match (Ctxt, V, Sel, Choice);
                   else
-                     Cond := Build_Compare
-                       (Ctxt, Id_Eq, Sel, Get_Net (Ctxt, V));
-                     Set_Location (Cond, Choice);
+                     if Ignore_Choice_Expression (V, Choice) then
+                        Cond := No_Net;
+                     else
+                        Cond := Build_Compare
+                          (Ctxt, Id_Eq, Sel, Get_Net (Ctxt, V));
+                        Set_Location (Cond, Choice);
+                     end if;
                   end if;
                   Release_Expr_Pool (Marker);
                end;
@@ -1485,6 +1496,7 @@ package body Synth.Vhdl_Stmts is
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
 
       Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
+      Matching : constant Boolean := Get_Matching_Flag (Stmt);
 
       Case_Info : Choice_Info_Type;
 
@@ -1563,7 +1575,7 @@ package body Synth.Vhdl_Stmts is
             Pop_Phi (Phi);
             Alts (Alt_Idx).Asgns := Sort_Phi (Phi);
 
-            Synth_Choice (C.Inst, Sel_Net, Sel.Typ,
+            Synth_Choice (C.Inst, Sel_Net, Sel.Typ, Matching,
                           Nets.all, Other_Choice, Choice_Idx, Choice);
          end loop;
          pragma Assert (Choice_Idx = Nbr_Choices);
@@ -1854,6 +1866,7 @@ package body Synth.Vhdl_Stmts is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Kind : constant Iir_Kind := Get_Kind (Stmt);
       Expr : constant Node := Get_Expression (Stmt);
+      Matching : constant Boolean := Get_Matching_Flag (Stmt);
 
       Marker : Mark_Type;
 
@@ -1933,7 +1946,7 @@ package body Synth.Vhdl_Stmts is
                Alt_Idx := Alt_Idx + 1;
                Alts (Alt_Idx).Val := Get_Net (Ctxt, Val);
 
-               Synth_Choice (Syn_Inst, Sel_Net, Sel.Typ,
+               Synth_Choice (Syn_Inst, Sel_Net, Sel.Typ, Matching,
                              Nets.all, Other_Choice, Choice_Idx, Choice);
             end loop;
             pragma Assert (Choice_Idx = Nbr_Choices);

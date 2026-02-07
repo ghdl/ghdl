@@ -28,9 +28,6 @@ with Vhdl.Utils; use Vhdl.Utils;
 
 with Areapools;
 
-with Netlists; use Netlists;
-with Netlists.Gates; use Netlists.Gates;
-with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Utils;
 
@@ -175,7 +172,7 @@ package body Synth.Vhdl_Oper is
    --  Return No_Net if CST has incorrect value.
    function Synth_Match (Ctxt : Context_Acc;
                          Cst : Valtyp;
-                         Oper : Valtyp;
+                         Sel : Net;
                          Expr : Node;
                          Op : Compare_Module_Id := Id_Eq) return Net
    is
@@ -238,7 +235,7 @@ package body Synth.Vhdl_Oper is
       Nm := Build2_Const_Vec (Ctxt, Wd, Mask.all);
       Set_Location (Nm, Expr);
       Unchecked_Deallocate (Mask);
-      Res := Build_Dyadic (Ctxt, Id_And, Get_Net (Ctxt, Oper), Nm);
+      Res := Build_Dyadic (Ctxt, Id_And, Sel, Nm);
       Set_Location (Res, Expr);
       Res := Build_Compare (Ctxt, Op, Res, Nv);
       Set_Location (Res, Expr);
@@ -1228,7 +1225,7 @@ package body Synth.Vhdl_Oper is
                   --  but the result is std_logic - so still useful.
                   return Synth_Compare (Id_Eq, Logic_Type);
                end if;
-               Res := Synth_Match (Ctxt, Cst, Oper, Expr);
+               Res := Synth_Match (Ctxt, Cst, Get_Net (Ctxt, Oper), Expr);
                if Res = No_Net then
                   return Create_Value_Discrete (Std_Logic_X_Pos, Res_Typ);
                else
@@ -1255,7 +1252,8 @@ package body Synth.Vhdl_Oper is
                else
                   return Synth_Compare (Id_Ne, Logic_Type);
                end if;
-               Res := Synth_Match (Ctxt, Cst, Oper, Expr, Id_Ne);
+               Res := Synth_Match
+                 (Ctxt, Cst, Get_Net (Ctxt, Oper), Expr, Id_Ne);
                if Res = No_Net then
                   return Create_Value_Discrete (Std_Logic_X_Pos, Res_Typ);
                else
@@ -2238,7 +2236,7 @@ package body Synth.Vhdl_Oper is
                   return Create_Value_Discrete (0, Boolean_Type);
                end if;
                Strip_Const (Cst);
-               Res := Synth_Match (Ctxt, Cst, Oper, Expr);
+               Res := Synth_Match (Ctxt, Cst, Get_Net (Ctxt, Oper), Expr);
                if Res = No_Net then
                   return Create_Value_Discrete (0, Boolean_Type);
                else

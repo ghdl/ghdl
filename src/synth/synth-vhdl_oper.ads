@@ -22,6 +22,10 @@ with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 
+with Netlists; use Netlists;
+with Netlists.Builders; use Netlists.Builders;
+with Netlists.Gates; use Netlists.Gates;
+
 package Synth.Vhdl_Oper is
    function Synth_Predefined_Function_Call
      (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
@@ -43,6 +47,13 @@ package Synth.Vhdl_Oper is
      (Syn_Inst : Synth_Instance_Acc; Atype : Iir; Len : Iir_Index32)
      return Bound_Type;
 
+   --  Do a match comparison between CST and SEL.
+   --  Return No_Net if CST has incorrect value.
+   function Synth_Match (Ctxt : Context_Acc;
+                         Cst : Valtyp;
+                         Sel : Net;
+                         Expr : Node;
+                         Op : Compare_Module_Id := Id_Eq) return Net;
 
    type Eval_Predefined_Acc is access
      function (Param : Valtyp; Res_Typ : Type_Acc) return Memtyp;
