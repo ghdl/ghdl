@@ -1,15 +1,15 @@
 -r ../pyGHDL/requirements.txt
 
-sphinx ~= 8.2
+sphinx ~= 9.1
 python-dateutil ~= 2.9
 
 # Sphinx Extenstions
 autoapi ~= 2.0
-myst-parser ~= 4.0
-sphinx_autodoc_typehints ~= 3.2
+myst-parser ~= 5.0
+sphinx_autodoc_typehints ~= 3.6
 
 # Theme
-furo
+furo >= 2025.12.19
 
 # BuildTheDocs Extensions (mostly patched Sphinx extensions)
 #btd.sphinx.autoprogram>=0.1.7.post1
