@@ -59,4 +59,4 @@ def Get_Source_Identifier_Str(n: Iir) -> str:
     sfe = files_map.Location_To_File(loc)
     pos = files_map.Location_File_To_Pos(loc, sfe)
     buf = files_map.Get_File_Buffer(sfe)
-    return buf[pos : pos + l].decode("utf-8")
+    return buf[pos : pos + l].decode("iso-8859-1")
