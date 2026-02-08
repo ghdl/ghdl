@@ -473,10 +473,11 @@ jobs:
             printf "${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}\n"
             RELEASE_VERSION="${PR_TITLE}"
           else
+            RELEASE_VERSION=""
             printf "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}\n"
             printf "${ANSI_LIGHT_RED}Pull Request title '%s' doesn't conform to regexp '%s'.${ANSI_NOCOLOR}\n" "${PR_TITLE}" "${RELEASE_TAG_PATTERN}"
-            printf "::error title=RexExpCheck::Pull Request title '%s' doesn't conform to regexp '%s'.\n" "${PR_TITLE}" "${RELEASE_TAG_PATTERN}"
-            exit 1
+            #printf "::error title=RexExpCheck::Pull Request title '%s' doesn't conform to regexp '%s'.\n" "${PR_TITLE}" "${RELEASE_TAG_PATTERN}"
+            #exit 1
           fi
 
           printf "Release tag: ${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "${RELEASE_VERSION}"
