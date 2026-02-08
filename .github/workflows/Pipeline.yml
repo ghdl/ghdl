@@ -210,8 +210,8 @@ jobs:
         other:
           - {runtime: ''}
         include:
-          - {os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2025', libghdl_artifact: 'MSYS2-mingw64', pyghdl_artifact: 'Windows-mingw64'}, py: {icon: '🟡', version: '3.13'}, other: {runtime: 'mingw64'}}
-          - {os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', libghdl_artifact: 'MSYS2-ucrt64',  pyghdl_artifact: 'Windows-ucrt64' }, py: {icon: '🟡', version: '3.13'}, other: {runtime: 'ucrt64' }}
+          - {os: {icon: '🪟🟦', name: 'Windows', image: 'windows-2025', libghdl_artifact: 'MSYS2-mingw64', pyghdl_artifact: 'Windows-mingw64'}, py: {icon: '🟢', version: '3.14'}, other: {runtime: 'mingw64'}}
+          - {os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', libghdl_artifact: 'MSYS2-ucrt64',  pyghdl_artifact: 'Windows-ucrt64' }, py: {icon: '🟢', version: '3.14'}, other: {runtime: 'ucrt64' }}
     with:
       os_name:               ${{ matrix.os.name }}
       os_image:              ${{ matrix.os.image }}
@@ -348,8 +348,8 @@ jobs:
         pyGHDL-Windows-x86_64-Python-3.12:      pyghdl-%pyghdl%-cp312-cp312-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.12,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.12
         pyGHDL-Windows-x86_64-Python-3.13:      pyghdl-%pyghdl%-cp313-cp313-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.13,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.13
         #pyGHDL-Windows-x86_64-Python-3.14:      pyghdl-%pyghdl%-cp314-cp314-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.14,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.14
-        pyGHDL-Windows-mingw64-Python-3.13:     pyghdl-%pyghdl%-cp313-cp313-mingw_x86_64_msvcrt_gnu.whl:      pyGHDL,windows,2025,x86-64,py3.13,mingw64,mcode: pyGHDL - v%ghdl% - Windows (x86-64) + MSYS2/MinGW64 - Wheel for Python 3.13
-        pyGHDL-Windows-ucrt64-Python-3.13:      pyghdl-%pyghdl%-cp313-cp313-mingw_x86_64_ucrt_gnu.whl:        pyGHDL,windows,2025,x86-64,py3.13,ucrt64,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) + MSYS2/UCRT64 - Wheel for Python 3.13
+        pyGHDL-Windows-mingw64-Python-3.14:     pyghdl-%pyghdl%-cp314-cp314-mingw_x86_64_msvcrt_gnu.whl:      pyGHDL,windows,2025,x86-64,py3.14,mingw64,mcode: pyGHDL - v%ghdl% - Windows (x86-64) + MSYS2/MinGW64 - Wheel for Python 3.14
+        pyGHDL-Windows-ucrt64-Python-3.14:      pyghdl-%pyghdl%-cp314-cp314-mingw_x86_64_ucrt_gnu.whl:        pyGHDL,windows,2025,x86-64,py3.14,ucrt64,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) + MSYS2/UCRT64 - Wheel for Python 3.14
 
   Release:
     uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r7

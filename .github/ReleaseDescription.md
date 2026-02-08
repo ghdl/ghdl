@@ -2,6 +2,9 @@
 
 # GHDL %ghdl%
 
+![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/ghdl/ghdl/%%TAG%%/total)
+
+
 GHDL offers the simulator and synthesis tool for VHDL. GHDL can be built for various backends:
 * `gcc` - using the GCC compiler framework
 * `mcode` - in memory code generation
