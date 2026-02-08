@@ -1241,7 +1241,7 @@ package body Trans.Chap4 is
                Start_Association (Assoc, Ghdl_Signal_Set_Mode);
                New_Association (Assoc,
                                 New_Lit
-                                  (New_Unsigned_Literal
+                                  (New_Signed_Literal
                                      (Ghdl_I32_Type, Iir_Mode'Pos (N_Mode))));
                New_Procedure_Call (Assoc);
             end;

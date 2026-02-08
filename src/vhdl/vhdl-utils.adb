@@ -558,6 +558,17 @@ package body Vhdl.Utils is
       end case;
    end Is_Signal_Object;
 
+   function Is_View_Object (Name : Iir) return Boolean is
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kind_Interface_View_Declaration
+           | Iir_Kind_Mode_View_Declaration =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Is_View_Object;
+
    function Is_Quantity_Object (Name : Iir) return Boolean
    is
       Adecl: Iir;

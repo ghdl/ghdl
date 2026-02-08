@@ -442,6 +442,9 @@ package Vhdl.Utils is
    --  Return TRUE if the base name of NAME is a signal object.
    function Is_Signal_Object (Name: Iir) return Boolean;
 
+   --  Return TRUE iff EXPR is a view object (either an interface or a decl).
+   function Is_View_Object (Name : Iir) return Boolean;
+
    --  Return True IFF kind of N is K1 or K2.
    function Kind_In (N : Iir; K1, K2 : Iir_Kind) return Boolean;
    function Kind_In (N : Iir; K1, K2, K3 : Iir_Kind) return Boolean;
