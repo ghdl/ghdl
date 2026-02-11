@@ -172,10 +172,10 @@ package body Netlists.Memories is
                when Id_Dyn_Extract =>
                   --  Extract step from memidx gate.
                   Idx := Get_Net_Parent (Get_Input_Net (Extr_Inst, 1));
-                  while Get_Id (Idx) = Id_Addidx loop
+                  if Get_Id (Idx) = Id_Addidx then
                      --  Multi-dim arrays, lowest index is the last one.
-                     Idx := Get_Net_Parent (Get_Input_Net (Idx, 1));
-                  end loop;
+                     Idx := Get_Net_Parent (Get_Input_Net (Idx, 0));
+                  end if;
                   pragma Assert (Get_Id (Idx) = Id_Memidx);
                   Step := Get_Param_Uns32 (Idx, 0);
 
@@ -247,11 +247,10 @@ package body Netlists.Memories is
             when Id_Memidx =>
                return Res + 1;
             when Id_Addidx =>
-               if Get_Id (Get_Input_Instance (Inst, 1)) /= Id_Memidx then
-                  raise Internal_Error;
-               end if;
+               pragma Assert
+                 (Get_Id (Get_Input_Instance (Inst, 0)) = Id_Memidx);
                Res := Res + 1;
-               N := Get_Input_Net (Inst, 0);
+               N := Get_Input_Net (Inst, 1);
             when Id_Const_X =>
                --  For a null wire.
                pragma Assert (Res = 0);
@@ -276,8 +275,6 @@ package body Netlists.Memories is
       Nbr_Idx : constant Positive := Count_Memidx (Addr);
       Can_Free : constant Boolean := not Is_Connected (Addr);
 
-      Mem_Depth : Uns32;
-      Last_Size : Uns32;
       Low_Addr : Net;
       Is_Pow2 : Boolean;
 
@@ -308,15 +305,12 @@ package body Netlists.Memories is
                   exit;
                when Id_Addidx =>
                   Inst2 := Get_Input_Instance (Inst, 0);
-                  if Get_Id (Inst2) /= Id_Memidx then
-                     --  That's the convention.
-                     raise Internal_Error;
-                  end if;
+                  --  That's the convention.
+                  pragma Assert (Get_Id (Inst2) = Id_Memidx);
                   P := P + 1;
                   Indexes (P) := (Inst => Inst2, Addr => No_Net, Step => 0);
                   N := Get_Input_Net (Inst, 1);
-               when others =>
-                  raise Internal_Error;
+               when others => raise Internal_Error;
             end case;
          end loop;
          pragma Assert (P = Nbr_Idx);
@@ -324,14 +318,9 @@ package body Netlists.Memories is
 
       --  Memory size is a multiple of data width.
       --  FIXME: doesn't work if only a part of the reg is a memory.
-      if Mem_Size mod Val_Wd /= 0 then
-         raise Internal_Error;
-      end if;
-      Mem_Depth := Mem_Size / Val_Wd;
-      pragma Unreferenced (Mem_Depth);
+      pragma Assert (Mem_Size mod Val_Wd = 0);
 
       --  Do checks on memidx.
-      Last_Size := Mem_Size;
       Is_Pow2 := True;
       for I in Indexes'Range loop
          declare
@@ -342,30 +331,21 @@ package body Netlists.Memories is
             Max : constant Uns32 := Get_Param_Uns32 (Inst, 1);
             Max_W : constant Width := Clog2 (Max + 1);
             Sub_Addr1 : Net;
-            Sz : Uns32;
          begin
-            --  Check max (from previous dimension).
-            --  Check the memidx can index its whole input.
-            pragma Assert (Max /= 0);
-            Sz := (Max + 1) * Step;
-            if Sz /= Last_Size then
-               raise Internal_Error;
-            end if;
-            Last_Size := Step;
+            pragma Assert (I /= Indexes'First or else Step = Val_Wd);
 
-            if I = Indexes'Last then
-               if Step /= Val_Wd then
-                  raise Internal_Error;
-               end if;
-            else
-               --  As the addresses are concatenated, the step must be
-               --  a power of 2.
-               if not Mutils.Is_Power2 (Uns64 (Step)) then
-                  Is_Pow2 := False;
-                  Info_Msg_Synth
-                    (+Inst, "internal width %v of memory is not a power of 2",
-                     (1 => +Step));
-               end if;
+            --  For the addresses to be concatenated, the step must be
+            --  a power of 2.
+            --  The step of the first index is ignored as this is the width
+            --  of the data.
+            if I /= Indexes'First
+              and then Is_Pow2
+              and then not Mutils.Is_Power2 (Uns64 (Step))
+            then
+               Is_Pow2 := False;
+               Info_Msg_Synth
+                 (+Inst, "internal width %v of memory is not a power of 2",
+                 (1 => +Step));
             end if;
 
             --  Check addr width.
@@ -380,7 +360,7 @@ package body Netlists.Memories is
                Sub_Addr1 := Sub_Addr;
             end if;
             Indexes (I).Addr := Sub_Addr1;
-            Indexes (I).Step := Max + 1;
+            Indexes (I).Step := Step;
          end;
       end loop;
 
@@ -393,7 +373,7 @@ package body Netlists.Memories is
             use Netlists.Concats;
             Concat : Concat_Type;
          begin
-            for I in reverse Indexes'Range loop
+            for I in Indexes'Range loop
                Append (Concat, Indexes (I).Addr);
             end loop;
 
@@ -402,24 +382,28 @@ package body Netlists.Memories is
          end;
       else
          declare
-            Step, Nstep : Uns32;
+            Step : Uns32;
             Addr_W : Width;
+            Addr_El : Uns32;
             Addr : Net;
             Loc : Location_Type;
+            Midx : Instance;
          begin
-            for I in reverse Indexes'Range loop
-               if I = Indexes'Last then
+            for I in Indexes'Range loop
+               if I = Indexes'First then
                   Low_Addr := Indexes (I).Addr;
-                  Step := Indexes (I).Step;
+                  Step := 1;
                else
-                  Nstep := Step * Indexes (I).Step;
-                  if Mutils.Is_Power2 (Uns64 (Step)) then
+                  Midx := Indexes (I).Inst;
+                  Step := Step * Get_Param_Uns32 (Midx, 0);
+                  Addr_El := Step * (Get_Param_Uns32 (Midx, 1) + 1);
+                  if Mutils.Is_Power2 (Uns64 (Addr_El)) then
                      Low_Addr := Build_Concat2
                        (Ctxt, Indexes (I).Addr, Low_Addr);
                   else
-                     --  Compute the new width
-                     Addr_W := Clog2 (Nstep);
-                     Loc := Get_Location (Indexes (I).Inst);
+                     --  Compute the new width (in bit)
+                     Addr_W := Clog2 (Addr_El);
+                     Loc := Get_Location (Midx);
                      --  Extend low_addr and addr
                      Addr := Indexes (I).Addr;
                      Low_Addr := Build2_Uresize (Ctxt, Low_Addr, Addr_W, Loc);
@@ -433,7 +417,6 @@ package body Netlists.Memories is
                      Low_Addr := Build_Dyadic (Ctxt, Id_Add, Low_Addr, Addr);
                      Set_Location (Low_Addr, Loc);
                   end if;
-                  Step := Nstep;
                end if;
             end loop;
          end;
@@ -979,8 +962,10 @@ package body Netlists.Memories is
                when others =>
                   raise Internal_Error;
             end case;
+            if Res.Dim = 0 then
+               Res.Data_Wd := Get_Param_Uns32 (Idx, 0);
+            end if;
             Res.Dim := Res.Dim + 1;
-            Res.Data_Wd := Get_Param_Uns32 (Idx, 0);
             Res.Depth := Res.Depth * (Get_Param_Uns32 (Idx, 1) + 1);
 
             exit when Inst = No_Instance;

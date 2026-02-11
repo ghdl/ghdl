@@ -141,6 +141,7 @@ package Netlists.Builders is
      (Ctxt : Context_Acc; Mem : Net; V : Net; Idx : Net; En : Net; Off : Uns32)
      return Net;
 
+   --  W is the width of the output.
    function Build_Memidx
      (Ctxt : Context_Acc;
       I : Net; Step : Uns32; Max : Uns32; W : Width) return Net;

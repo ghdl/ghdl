@@ -139,7 +139,7 @@ package body Synth.Vhdl_Stmts is
             Dest_Off := Dest_Off + Off;
 
             Dest_Dyn.Voff := Build_Addidx
-              (Get_Build (Syn_Inst), Dest_Dyn.Voff, Voff);
+              (Get_Build (Syn_Inst), Voff, Dest_Dyn.Voff);
             Set_Location (Dest_Dyn.Voff, Pfx);
          end if;
       end if;
@@ -205,7 +205,7 @@ package body Synth.Vhdl_Stmts is
             end if;
 
             Dest_Dyn.Voff := Build_Addidx
-              (Get_Build (Syn_Inst), Dest_Dyn.Voff, Sl_Voff);
+              (Get_Build (Syn_Inst), Sl_Voff, Dest_Dyn.Voff);
             Set_Location (Dest_Dyn.Voff, Pfx);
          end if;
          Arr_Typ := Create_Array_Type (Res_Bnd, False, True, El_Typ);

@@ -114,6 +114,7 @@ package Netlists.Gates is
    --  Output: 0: selected value
    Id_Pmux : constant Module_Id := 49;
 
+   --  Non-overlap dynamic extraction (get a slice of IN0).
    --  The width of the index gives the maximum index value.
    --  The WD = width(IN0) / 2**width(IN1), and the division must be exact.
    --  OUT := IN0[IN1*WD+WD-1:IN1*WD]
@@ -290,7 +291,7 @@ package Netlists.Gates is
 
    --  Combine (simply add) indexes for dynamic insert or extract.
    --  Despite the addition being commutative, the inputs are ordered.
-   --  Input 0 must be a memidx (the most significant one, so with the larger
+   --  Input 0 must be a memidx (the least significant one, so with the smaller
    --   step), and input 1 must be either a memidx or an addidx.
    --  OUT := IN0 + IN1, size extension (max of inputs width).
    --  Inputs:  0: a memidx

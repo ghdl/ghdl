@@ -870,12 +870,10 @@ package body Synth.Vhdl_Expr is
 
    procedure Synth_Indexes (Syn_Inst : Synth_Instance_Acc;
                             Indexes : Iir_Flist;
-                            Dim : Natural;
                             Arr_Typ : Type_Acc;
                             El_Typ : out Type_Acc;
                             Voff : out Net;
                             Off : out Value_Offsets;
-                            Stride : out Uns32;
                             Error : out Boolean)
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
@@ -885,70 +883,67 @@ package body Synth.Vhdl_Expr is
       Bnd : Bound_Type;
       Ivoff : Net;
       Idx_Off : Value_Offsets;
+      Stride : Uns32;
    begin
-      if Dim > Flist_Last (Indexes) then
-         --  Initialize values
-         Voff := No_Net;
-         Off := (0, 0);
-         Error := False;
-         Stride := 1;
-         El_Typ := Arr_Typ;
-         return;
-      else
-         --  First recurse to start with least significant indexes.
-         Synth_Indexes
-           (Syn_Inst, Indexes, Dim + 1, Get_Array_Element (Arr_Typ),
-            El_Typ, Voff, Off, Stride, Error);
-      end if;
+      --  Initialize values
+      Voff := No_Net;
+      Off := (0, 0);
+      Error := False;
+      Stride := 1;
+      El_Typ := Arr_Typ;
 
-      Idx_Expr := Get_Nth_Element (Indexes, Dim);
+      for I in Flist_First .. Flist_Last (Indexes) loop
+         Idx_Expr := Get_Nth_Element (Indexes, I);
 
-      --  Use the base type as the subtype of the index is not synth-ed.
-      Idx_Val := Synth_Expression_With_Basetype (Syn_Inst, Idx_Expr);
-      if Idx_Val = No_Valtyp then
-         --  Propagate error.
-         Error := True;
-         return;
-      end if;
-
-      Strip_Const (Idx_Val);
-
-      Bnd := Get_Array_Bound (Arr_Typ);
-
-      if Is_Static_Val (Idx_Val.Val) then
-         --  For a static index, compute offset.
-         Idx := Get_Static_Discrete (Idx_Val);
-         if not In_Bounds (Bnd, Int32 (Idx)) then
-            Bound_Error (Syn_Inst, Idx_Expr, Bnd, Int32 (Idx));
+         --  Use the base type as the subtype of the index is not synth-ed.
+         Idx_Val := Synth_Expression_With_Basetype (Syn_Inst, Idx_Expr);
+         if Idx_Val = No_Valtyp then
+            --  Propagate error.
             Error := True;
-         else
-            Idx_Off := Index_To_Offset (Bnd, Arr_Typ.Wkind, Idx);
-            Off.Net_Off := Off.Net_Off
-              + Idx_Off.Net_Off * Stride * El_Typ.W;
-            Off.Mem_Off := Off.Mem_Off
-              + Idx_Off.Mem_Off * Size_Type (Stride) * El_Typ.Sz;
+            return;
          end if;
-      elsif Bnd.Len <= 1 then
-         --  Nothing to select.
-         null;
-      else
-         --  Dynamic index.
-         Ivoff := Dyn_Index_To_Offset (Ctxt, Bnd, Idx_Val, Idx_Expr);
-         Ivoff := Build_Memidx
-           (Get_Build (Syn_Inst), Ivoff, El_Typ.W * Stride,
-            Bnd.Len - 1,
-            Width (Clog2 (Uns64 (El_Typ.W * Stride * Bnd.Len))));
-         Set_Location (Ivoff, Idx_Expr);
 
-         if Voff = No_Net then
-            Voff := Ivoff;
+         Strip_Const (Idx_Val);
+
+         Bnd := Get_Array_Bound (El_Typ);
+
+         Stride := El_Typ.W / Bnd.Len;
+
+         if Is_Static_Val (Idx_Val.Val) then
+            --  For a static index, compute offset.
+            Idx := Get_Static_Discrete (Idx_Val);
+            if not In_Bounds (Bnd, Int32 (Idx)) then
+               Bound_Error (Syn_Inst, Idx_Expr, Bnd, Int32 (Idx));
+               Error := True;
+            else
+               Idx_Off := Index_To_Offset (Bnd, Arr_Typ.Wkind, Idx);
+               Off.Net_Off := Off.Net_Off
+                 + Idx_Off.Net_Off * Stride;
+               Off.Mem_Off := Off.Mem_Off
+                 + Idx_Off.Mem_Off * El_Typ.Sz / Size_Type (Bnd.Len);
+            end if;
+         elsif Bnd.Len <= 1 then
+            --  Nothing to select.
+            null;
          else
-            Voff := Build_Addidx (Get_Build (Syn_Inst), Ivoff, Voff);
-            Set_Location (Voff, Idx_Expr);
-         end if;
-      end if;
+            --  Dynamic index.
+            Ivoff := Dyn_Index_To_Offset (Ctxt, Bnd, Idx_Val, Idx_Expr);
+            Ivoff := Build_Memidx
+              (Get_Build (Syn_Inst), Ivoff, Stride,
+               Bnd.Len - 1,
+               Width (Clog2 (Uns64 (Bnd.Len))));
+            Set_Location (Ivoff, Idx_Expr);
 
-      Stride := Stride * Bnd.Len;
+            if Voff = No_Net then
+               Voff := Ivoff;
+            else
+               Voff := Build_Addidx (Get_Build (Syn_Inst), Ivoff, Voff);
+               Set_Location (Voff, Idx_Expr);
+            end if;
+         end if;
+
+         El_Typ := Get_Array_Element (El_Typ);
+      end loop;
    end Synth_Indexes;
 
    procedure Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc;
@@ -960,7 +955,6 @@ package body Synth.Vhdl_Expr is
                                  Error : out Boolean)
    is
       Indexes : constant Iir_Flist := Get_Index_List (Name);
-      Stride : Uns32;
    begin
       if Pfx_Typ.Abound.Len = 0 then
          Error_Msg_Synth (Syn_Inst, Name, "indexing a null array");
@@ -971,8 +965,8 @@ package body Synth.Vhdl_Expr is
          return;
       end if;
 
-      Synth_Indexes (Syn_Inst, Indexes, Flist_First, Pfx_Typ,
-                     El_Typ, Voff, Off, Stride, Error);
+      Synth_Indexes (Syn_Inst, Indexes, Pfx_Typ,
+                     El_Typ, Voff, Off, Error);
    end Synth_Indexed_Name;
 
    function Is_Static (N : Net) return Boolean is
