@@ -266,21 +266,16 @@ package body Elab.Vhdl_Stmts is
       Create_Sub_Instance (Syn_Inst, Bod, Sub_Inst);
    end Elab_Case_Generate_Statement;
 
-   procedure Elab_Block_Statement (Syn_Inst : Synth_Instance_Acc;
-                                   Blk : Node;
-                                   Parent_Cfgs : in out Configs_Rec)
+   procedure Elab_Block_Statement_1 (Syn_Inst : Synth_Instance_Acc;
+                                     Blk : Node;
+                                     Cfgs : in out Configs_Rec)
    is
       Hdr : constant Node := Get_Block_Header (Blk);
       Guard : constant Node := Get_Guard_Decl (Blk);
-      Blk_Cfg : Node;
       Blk_Inst : Synth_Instance_Acc;
       Assoc : Node;
       Inter : Node;
-      Cfgs : Configs_Rec;
    begin
-      Get_Next_Block_Configuration (Parent_Cfgs, Blk_Cfg);
-      Cfgs := Apply_Block_Configuration (Blk_Cfg, Blk);
-
       Blk_Inst := Make_Elab_Instance (Syn_Inst, Blk, Blk, Null_Iir);
       Create_Sub_Instance (Syn_Inst, Blk, Blk_Inst);
 
@@ -293,18 +288,50 @@ package body Elab.Vhdl_Stmts is
          if Inter /= Null_Node then
             Assoc := Get_Generic_Map_Aspect_Chain (Hdr);
             Elab_Generics_Association (Blk_Inst, Syn_Inst, Inter, Assoc);
+
+            if Is_Error (Blk_Inst) then
+               Set_Error (Syn_Inst);
+               return;
+            end if;
          end if;
 
          Inter := Get_Port_Chain (Hdr);
          if Inter /= Null_Node then
             Assoc := Get_Port_Map_Aspect_Chain (Hdr);
             Elab_Ports_Association_Type (Blk_Inst, Syn_Inst, Inter, Assoc);
+
+            if Is_Error (Blk_Inst) then
+               Set_Error (Syn_Inst);
+               return;
+            end if;
          end if;
       end if;
 
       Elab_Declarations (Blk_Inst, Get_Declaration_Chain (Blk));
+      if Is_Error (Blk_Inst) then
+         Set_Error (Syn_Inst);
+         return;
+      end if;
+
       Elab_Concurrent_Statements
         (Blk_Inst, Get_Concurrent_Statement_Chain (Blk), Cfgs);
+      if Is_Error (Blk_Inst) then
+         Set_Error (Syn_Inst);
+         return;
+      end if;
+   end Elab_Block_Statement_1;
+
+   procedure Elab_Block_Statement (Syn_Inst : Synth_Instance_Acc;
+                                   Blk : Node;
+                                   Parent_Cfgs : in out Configs_Rec)
+   is
+      Blk_Cfg : Node;
+      Cfgs : Configs_Rec;
+   begin
+      Get_Next_Block_Configuration (Parent_Cfgs, Blk_Cfg);
+      Cfgs := Apply_Block_Configuration (Blk_Cfg, Blk);
+
+      Elab_Block_Statement_1 (Syn_Inst, Blk, Cfgs);
 
       Free_Configs_Rec (Cfgs);
    end Elab_Block_Statement;

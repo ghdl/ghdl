@@ -335,8 +335,10 @@ package body Elab.Vhdl_Decls is
          end if;
          Synth_Object_Name (Syn_Inst, Name, Base, Typ, Off);
       end if;
-      if Base /= No_Valtyp then
+      if Base = No_Valtyp then
          --  In case of error (invalid name or invalid external name).
+         Set_Error (Syn_Inst);
+      else
          Res := Create_Value_Alias (Base, Off, Typ, Expr_Pool'Access);
          if Obj_Typ /= null and then Obj_Typ.Kind not in Type_Scalars then
             --  Reshape bounds.
