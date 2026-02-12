@@ -1476,6 +1476,7 @@ package Vhdl.Nodes is
    --   Get/Set_Has_Disconnect_Flag (Flag1)
    --
    -- Only for Iir_Kind_Interface_Signal_Declaration:
+   -- Only for Iir_Kind_Interface_View_Declaration:
    --   Get/Set_Has_Active_Flag (Flag2)
    --
    --   Get/Set_Has_Identifier_List (Flag3)

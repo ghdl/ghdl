@@ -1019,6 +1019,63 @@ package body Simul.Vhdl_Compile is
       end loop;
    end Build_Interfaces_Instance;
 
+   procedure Build_Signal_Interface (Mem : Memory_Ptr;
+                                     Inst : Synth_Instance_Acc;
+                                     Decl : Node)
+   is
+      use Simul.Vhdl_Simul;
+      Sig_Info : constant Signal_Info_Acc := Get_Info (Decl);
+      Sig_Type : constant Node := Get_Type (Decl);
+      Tinfo : constant Type_Info_Acc := Get_Info (Sig_Type);
+      Src : constant Valtyp := Get_Value (Inst, Decl);
+      E : Signal_Entry renames Signals_Table.Table (Src.Val.S);
+      Valp : Memory_Ptr;
+      Sig : Memory_Ptr;
+   begin
+      pragma Assert (Sig_Info.Signal_Driver = Null_Var);
+      Build_Subtype_Indication (Mem, Inst, Get_Subtype_Indication (Decl));
+
+      --  Set Sig and Valp.
+      Valp := Get_Var_Mem (Mem, Sig_Info.Signal_Valp);
+      Sig := Get_Var_Mem (Mem, Sig_Info.Signal_Sig);
+
+      if E.Collapsed_By = No_Signal_Index then
+         --  A normal signal
+
+         if Is_Unbounded_Type (Tinfo) then
+            E.Sig := Alloc_Mem (Size_Type (Src.Typ.W) * Sig_Size);
+
+            Build_Unbounded_Signal
+              (Valp, Sig, Tinfo, Sig_Type, Src.Typ, E.Val, E.Sig);
+         elsif Is_Complex_Type (Tinfo) then
+            E.Sig := Alloc_Mem (Size_Type (Src.Typ.W) * Sig_Size);
+            Write_Ptr (Sig, E.Sig);
+            Write_Ptr (Valp, E.Val);
+         else
+            E.Sig := Sig;
+            Write_Ptr (Valp, E.Val);
+         end if;
+         Create_Signal (E);
+      else
+         --  A collapsed signal.
+         --  Copy sig.
+         --  FIXME: what about a sub part, need an offset!
+         Vhdl_Simul.Collapse_Signal (E);
+
+         if Is_Unbounded_Type (Tinfo) then
+            Build_Unbounded_Signal
+              (Valp, Sig, Tinfo, Sig_Type, Src.Typ, E.Val, E.Sig);
+         elsif Is_Complex_Type (Tinfo) then
+            Write_Ptr (Sig, E.Sig);
+            Write_Ptr (Valp, E.Val);
+         else
+            Elab.Vhdl_Objtypes.Copy_Memory
+              (Sig, E.Sig, Size_Type (Src.Typ.W) * Sig_Size);
+            Write_Ptr (Valp, E.Val);
+         end if;
+      end if;
+   end Build_Signal_Interface;
+
    procedure Build_Decl_Instance (Mem : Memory_Ptr;
                                   Inst : Synth_Instance_Acc;
                                   Decl : Node) is
@@ -1038,61 +1095,9 @@ package body Simul.Vhdl_Compile is
 
                Src.Val.Mem := Dst_Mem;
             end;
-         when Iir_Kind_Interface_Signal_Declaration =>
-            declare
-               use Simul.Vhdl_Simul;
-               Sig_Info : constant Signal_Info_Acc := Get_Info (Decl);
-               Sig_Type : constant Node := Get_Type (Decl);
-               Tinfo : constant Type_Info_Acc := Get_Info (Sig_Type);
-               Src : constant Valtyp := Get_Value (Inst, Decl);
-               E : Signal_Entry renames Signals_Table.Table (Src.Val.S);
-               Valp : Memory_Ptr;
-               Sig : Memory_Ptr;
-            begin
-               pragma Assert (Sig_Info.Signal_Driver = Null_Var);
-               Build_Subtype_Indication
-                 (Mem, Inst, Get_Subtype_Indication (Decl));
-
-               --  Set Sig and Valp.
-               Valp := Get_Var_Mem (Mem, Sig_Info.Signal_Valp);
-               Sig := Get_Var_Mem (Mem, Sig_Info.Signal_Sig);
-
-               if E.Collapsed_By = No_Signal_Index then
-                  --  A normal signal
-
-                  if Is_Unbounded_Type (Tinfo) then
-                     E.Sig := Alloc_Mem (Size_Type (Src.Typ.W) * Sig_Size);
-
-                     Build_Unbounded_Signal
-                       (Valp, Sig, Tinfo, Sig_Type, Src.Typ, E.Val, E.Sig);
-                  elsif Is_Complex_Type (Tinfo) then
-                     E.Sig := Alloc_Mem (Size_Type (Src.Typ.W) * Sig_Size);
-                     Write_Ptr (Sig, E.Sig);
-                     Write_Ptr (Valp, E.Val);
-                  else
-                     E.Sig := Sig;
-                     Write_Ptr (Valp, E.Val);
-                  end if;
-                  Create_Signal (E);
-               else
-                  --  A collapsed signal.
-                  --  Copy sig.
-                  --  FIXME: what about a sub part, need an offset!
-                  Vhdl_Simul.Collapse_Signal (E);
-
-                  if Is_Unbounded_Type (Tinfo) then
-                     Build_Unbounded_Signal
-                       (Valp, Sig, Tinfo, Sig_Type, Src.Typ, E.Val, E.Sig);
-                  elsif Is_Complex_Type (Tinfo) then
-                     Write_Ptr (Sig, E.Sig);
-                     Write_Ptr (Valp, E.Val);
-                  else
-                     Elab.Vhdl_Objtypes.Copy_Memory
-                       (Sig, E.Sig, Size_Type (Src.Typ.W) * Sig_Size);
-                     Write_Ptr (Valp, E.Val);
-                  end if;
-               end if;
-            end;
+         when Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_View_Declaration =>
+            Build_Signal_Interface (Mem, Inst, Decl);
          when Iir_Kind_Interface_Package_Declaration =>
             declare
                Pkg_Inst : constant Synth_Instance_Acc :=
@@ -1212,6 +1217,9 @@ package body Simul.Vhdl_Compile is
          when Iir_Kind_Subtype_Declaration =>
             Build_Subtype_Indication
               (Mem, Inst, Get_Subtype_Indication (Decl));
+
+         when Iir_Kind_Mode_View_Declaration =>
+            null;
 
          when Iir_Kind_Package_Declaration =>
             if not Is_Uninstantiated_Package (Decl) then

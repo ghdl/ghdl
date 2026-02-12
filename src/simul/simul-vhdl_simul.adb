@@ -2982,6 +2982,24 @@ package body Simul.Vhdl_Simul is
       end case;
    end Create_Scalar_Signal;
 
+   function To_Mode_Signal (Mode : Iir_Mode) return Mode_Signal_Type is
+   begin
+      case Mode is
+         when Iir_In_Mode =>
+            return Mode_In;
+         when Iir_Out_Mode =>
+            return Mode_Out;
+         when Iir_Linkage_Mode =>
+            return Mode_Linkage;
+         when Iir_Inout_Mode =>
+            return Mode_Inout;
+         when Iir_Buffer_Mode =>
+            return Mode_Buffer;
+         when Iir_Unknown_Mode =>
+            raise Internal_Error;
+      end case;
+   end To_Mode_Signal;
+
    function Get_Signal_Mode (E : Signal_Entry) return Mode_Signal_Type is
    begin
       case E.Kind is
@@ -2990,20 +3008,7 @@ package body Simul.Vhdl_Simul is
                when Iir_Kind_Signal_Declaration =>
                   return Mode_Signal;
                when Iir_Kind_Interface_Signal_Declaration =>
-                  case Get_Mode (E.Decl) is
-                     when Iir_In_Mode =>
-                        return Mode_In;
-                     when Iir_Out_Mode =>
-                        return Mode_Out;
-                     when Iir_Linkage_Mode =>
-                        return Mode_Linkage;
-                     when Iir_Inout_Mode =>
-                        return Mode_Inout;
-                     when Iir_Buffer_Mode =>
-                        return Mode_Buffer;
-                     when Iir_Unknown_Mode =>
-                        raise Internal_Error;
-                  end case;
+                  return To_Mode_Signal (Get_Mode (E.Decl));
                when others =>
                   raise Internal_Error;
             end case;
@@ -3141,21 +3146,71 @@ package body Simul.Vhdl_Simul is
          end case;
       end Create_Signal;
 
+      procedure Create_View (View : Iir;
+                             Reversed : Boolean;
+                             Val : Memory_Ptr;
+                             Sig_Type1 : Iir;
+                             Typ : Type_Acc;
+                             Sig_Off : Uns32) is
+      begin
+         if Get_Kind (View) = Iir_Kind_Simple_Mode_View_Element then
+            declare
+               Sub_Mode : Iir_Mode;
+            begin
+               Sub_Mode := Get_Mode (View);
+               if Reversed then
+                  Sub_Mode := Get_Converse_Mode (Sub_Mode);
+               end if;
+               Grt.Signals.Ghdl_Signal_Set_Mode_Kind
+                 (To_Mode_Signal (Sub_Mode), Kind_Signal_No, E.Has_Active);
+               Create_Signal
+                 (Val, Sig_Off, Sig_Type1, Typ, E.Nbr_Sources.all, False);
+            end;
+         else
+            declare
+               El_List : constant Iir_Flist := Get_Elements_Declaration_List
+                 (Sig_Type1);
+               El_Type : Iir;
+               Sub_View : Iir;
+               Sub_Reversed : Boolean;
+            begin
+               for I in 1 .. E.Typ.Rec.Len loop
+                  El_Type := Get_Nth_Element (El_List, Natural (I - 1));
+                  Update_Mode_View_By_Pos
+                    (Sub_View, Sub_Reversed, View, Reversed, Natural (I - 1));
+                  Create_View
+                    (Sub_View, Sub_Reversed,
+                     Val + Typ.Rec.E (I).Offs.Mem_Off,
+                     El_Type, Typ.Rec.E (I).Typ,
+                     Sig_Off + Typ.Rec.E (I).Offs.Net_Off);
+               end loop;
+            end;
+         end if;
+      end Create_View;
+
       Sig_Type: constant Iir := Get_Type (E.Decl);
       Kind : Kind_Signal_Type;
    begin
-      if Get_Kind (E.Decl) /= Iir_Kind_Interface_View_Declaration
-        and then Get_Guarded_Signal_Flag (E.Decl)
-      then
-         Kind := Iir_Kind_To_Kind_Signal (Get_Signal_Kind (E.Decl));
+      if Get_Kind (E.Decl) = Iir_Kind_Interface_View_Declaration then
+         declare
+            View : Iir;
+            Reversed : Boolean;
+         begin
+            Get_Mode_View_From_Name (E.Decl, View, Reversed);
+            Create_View (View, Reversed, E.Val, Sig_Type, E.Typ, 0);
+         end;
       else
-         Kind := Kind_Signal_No;
+         if Get_Guarded_Signal_Flag (E.Decl) then
+            Kind := Iir_Kind_To_Kind_Signal (Get_Signal_Kind (E.Decl));
+         else
+            Kind := Kind_Signal_No;
+         end if;
+
+         Grt.Signals.Ghdl_Signal_Set_Mode_Kind
+           (Get_Signal_Mode (E), Kind, E.Has_Active);
+
+         Create_Signal (E.Val, 0, Sig_Type, E.Typ, E.Nbr_Sources.all, False);
       end if;
-
-      Grt.Signals.Ghdl_Signal_Set_Mode_Kind
-        (Get_Signal_Mode (E), Kind, E.Has_Active);
-
-      Create_Signal (E.Val, 0, Sig_Type, E.Typ, E.Nbr_Sources.all, False);
    end Create_User_Signal;
 
    type Guard_Instance_Type is record
