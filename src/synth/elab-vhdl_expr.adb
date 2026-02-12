@@ -146,6 +146,9 @@ package body Elab.Vhdl_Expr is
                   if Obj = Null_Node then
                      Obj := Find_Name_In_Chain (Get_Generic_Chain (Ent), Id);
                   end if;
+                  if Obj = Null_Node then
+                     Obj := Find_Name_In_Declaration_Chain (Ent, Id);
+                  end if;
                end;
             end if;
          when others => Error_Kind ("synth_pathname_object(1)", Scope);
