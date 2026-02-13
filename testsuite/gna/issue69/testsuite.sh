@@ -2,8 +2,7 @@
 
 . ../../testenv.sh
 
-mkdir mylib
-mkdir mylib/v93
+mkdir -p mylib/v93
 
 analyze --workdir=mylib/v93 --work=mylib mylib.vhdl
 analyze mytest.vhdl 
