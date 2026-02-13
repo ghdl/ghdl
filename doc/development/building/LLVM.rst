@@ -8,7 +8,7 @@ LLVM backend
 * GCC (Gnu Compiler Collection)
 * GNAT (Ada compiler for GCC)
 * LLVM (Low-Level-Virtual Machine) and CLANG (Compiler front-end for LLVM): 3.5, 3.8, 3.9, 4.0, 5.0, 6.0, 7.0, 8.0,
-  9.0, 10.0, 11.0, 11.1, 12.0, 13.0 or 14.0
+  9.0, 10.0, 11.0, 11.1, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.1, 19.x or 20.x
 
 .. _BUILD:llvm:GNAT:
 
