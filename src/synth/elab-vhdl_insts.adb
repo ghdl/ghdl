@@ -854,7 +854,7 @@ package body Elab.Vhdl_Insts is
                   if not Check_Matching_Bounds (Syn_Inst, Inter_Typ,
                     Actual_Typ, Assoc)
                   then
-                     null;
+                     Set_Error (Sub_Inst);
                   end if;
                   Same := True;
                when Type_Slice
@@ -867,6 +867,7 @@ package body Elab.Vhdl_Insts is
                Error_Msg_Elab
                  (Syn_Inst, Assoc,
                   "range of formal %i is different from formal range", +Inter);
+               Set_Error (Sub_Inst);
             end if;
                Release_Expr_Pool (Marker);
             end;
