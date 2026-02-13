@@ -3067,7 +3067,9 @@ package body Simul.Vhdl_Simul is
               and then Resolv_Func = Vhdl.Ieee.Std_Logic_1164.Resolved
             then
                if Vec (Sig_Off).Total > 1
-                 or else Get_Guarded_Signal_Flag (E.Decl)
+                 or else
+                 (Get_Kind (E.Decl) /= Iir_Kind_Interface_View_Declaration
+                  and then Get_Guarded_Signal_Flag (E.Decl))
                then
                   pragma Assert (Typ.W = 1);
                   Sub_Resolved := True;
@@ -3170,18 +3172,18 @@ package body Simul.Vhdl_Simul is
             declare
                El_List : constant Iir_Flist := Get_Elements_Declaration_List
                  (Sig_Type1);
-               El_Type : Iir;
+               El : Iir;
                Sub_View : Iir;
                Sub_Reversed : Boolean;
             begin
                for I in 1 .. E.Typ.Rec.Len loop
-                  El_Type := Get_Nth_Element (El_List, Natural (I - 1));
+                  El := Get_Nth_Element (El_List, Natural (I - 1));
                   Update_Mode_View_By_Pos
                     (Sub_View, Sub_Reversed, View, Reversed, Natural (I - 1));
                   Create_View
                     (Sub_View, Sub_Reversed,
                      Val + Typ.Rec.E (I).Offs.Mem_Off,
-                     El_Type, Typ.Rec.E (I).Typ,
+                     Get_Type (El), Typ.Rec.E (I).Typ,
                      Sig_Off + Typ.Rec.E (I).Offs.Net_Off);
                end loop;
             end;
