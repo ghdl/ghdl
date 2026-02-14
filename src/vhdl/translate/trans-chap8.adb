@@ -1459,7 +1459,7 @@ package body Trans.Chap8 is
       Expr       : constant Iir := Get_Expression (Stmt);
       Expr_Type  : Iir;
       Tinfo      : Type_Info_Acc;
-      Sel_Length : Int64;
+      Sel_Length : Uns64;
       Cond       : O_Enode;
    begin
       --  Translate into if/elsif statements.
@@ -1542,7 +1542,7 @@ package body Trans.Chap8 is
       --  Number of associations.
       Nbr_Assocs  : Natural;
 
-      Sel_Length  : Int64;
+      Sel_Length  : Uns64;
 
       --  Dichotomy table (table of choices).
       String_Type     : O_Tnode;

@@ -137,10 +137,10 @@ package Vhdl.Evaluation is
    function Eval_Int_In_Range (Val : Int64; Bound : Iir) return Boolean;
 
    --  Return the length of the discrete range CONSTRAINT.
-   function Eval_Discrete_Range_Length (Constraint : Iir) return Int64;
+   function Eval_Discrete_Range_Length (Constraint : Iir) return Uns64;
 
    --  Return the length of SUB_TYPE.
-   function Eval_Discrete_Type_Length (Sub_Type : Iir) return Int64;
+   function Eval_Discrete_Type_Length (Sub_Type : Iir) return Uns64;
 
    --  Get the left bound of a range constraint.
    --  Note: the range constraint may be an attribute or a subtype.
@@ -148,6 +148,9 @@ package Vhdl.Evaluation is
 
    --  Return true iff RNG is a null range.
    function Eval_Is_Null_Discrete_Range (Rng : Iir) return Boolean;
+
+   --  True iff RNG has an overflow.
+   function Eval_Is_Range_Overflow (Rng : Iir) return Boolean;
 
    --  Return the position of EXPR, ie the result of sub_type'pos (EXPR), where
    --  sub_type is the type of expr.

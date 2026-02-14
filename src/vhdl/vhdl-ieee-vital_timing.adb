@@ -580,7 +580,7 @@ package body Vhdl.Ieee.Vital_Timing is
             if Get_Type_Staticness (Itype) /= Locally then
                return Port_Length_Unknown;
             end if;
-            return Vhdl.Evaluation.Eval_Discrete_Type_Length (Itype);
+            return Int64 (Vhdl.Evaluation.Eval_Discrete_Type_Length (Itype));
          else
             return Port_Length_Error;
          end if;
@@ -650,7 +650,7 @@ package body Vhdl.Ieee.Vital_Timing is
          if Get_Type_Staticness (Itype) /= Locally then
             return Port_Length_Unknown;
          else
-            return Vhdl.Evaluation.Eval_Discrete_Type_Length (Itype);
+            return Int64 (Vhdl.Evaluation.Eval_Discrete_Type_Length (Itype));
          end if;
       end Get_Timing_Generic_Type_Length;
 

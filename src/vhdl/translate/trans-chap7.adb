@@ -200,10 +200,10 @@ package body Trans.Chap7 is
                Index_Type : constant Iir :=
                  Get_Index_Type (Aggr_Type, Dim - 1);
                Index_Range : constant Iir := Eval_Static_Range (Index_Type);
-               Len : constant Int64 :=
+               Len : constant Uns64 :=
                  Eval_Discrete_Range_Length (Index_Range);
                Assocs : constant Iir := Get_Association_Choices_Chain (Aggr);
-               Vect : Iir_Array (0 .. Integer (Len - 1));
+               Vect : Iir_Array (0 .. Integer (Len) - 1);
             begin
                if Len = 0 then
                   --  Should be automatically handled, but fails with some
@@ -1576,7 +1576,7 @@ package body Trans.Chap7 is
       Info       : constant Type_Info_Acc := Get_Info (Expr_Type);
       Is_Unbounded_El : constant Boolean :=
         not Is_Fully_Constrained_Type (El_Type);
-      Static_Length : Int64 := 0;
+      Static_Length : Uns64 := 0;
       Nbr_Dyn_Expr : Natural := 0;
 
       --  Call handlers for each leaf of LEFT CONCAT_IMP RIGHT.
@@ -3500,7 +3500,7 @@ package body Trans.Chap7 is
          Inc_Var (Var_Index);
       end Do_Assign_El;
 
-      procedure Do_Assign_Vec (Assoc : Iir; Expr : Iir; Assoc_Len : out Int64)
+      procedure Do_Assign_Vec (Assoc : Iir; Expr : Iir; Assoc_Len : out Uns64)
       is
          Dest : Mnode;
          Src : Mnode;
@@ -3555,7 +3555,7 @@ package body Trans.Chap7 is
                            New_Obj_Value (Var_Index), El_Len));
       end Do_Assign_Vec;
 
-      procedure Do_Assign (Assoc : Iir; Expr : Iir; Assoc_Len : out Int64) is
+      procedure Do_Assign (Assoc : Iir; Expr : Iir; Assoc_Len : out Uns64) is
       begin
          if Final then
             if Get_Element_Type_Flag (Assoc) then
@@ -3575,7 +3575,7 @@ package body Trans.Chap7 is
       is
          P  : Natural;
          El : Iir;
-         Assoc_Len : Int64;
+         Assoc_Len : Uns64;
       begin
          --  First, assign positionnal association.
          --  FIXME: count the number of positionnal association and generate
@@ -3646,7 +3646,7 @@ package body Trans.Chap7 is
       procedure Translate_Array_Aggregate_Gen_Named
       is
          El : Iir;
-         Assoc_Len : Int64;
+         Assoc_Len : Uns64;
       begin
          El := Get_Association_Choices_Chain (Aggr);
 
@@ -4125,7 +4125,7 @@ package body Trans.Chap7 is
    is
       Aggr_Type : constant Iir := Get_Base_Type (Get_Type (Aggr));
       Assoc : Iir;
-      Static_Len : Int64;
+      Static_Len : Uns64;
       Var_Len : O_Dnode;
       Expr_Type : Iir;
       Range_Type : Iir;

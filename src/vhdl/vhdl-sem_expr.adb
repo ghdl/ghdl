@@ -2295,7 +2295,7 @@ package body Vhdl.Sem_Expr is
          --  The type of the context is constrained.
          Index_Type := Get_Index_Type (Lit_Type, 0);
          if Get_Type_Staticness (Index_Type) = Locally then
-            if Eval_Discrete_Type_Length (Index_Type) = Int64 (Len) then
+            if Eval_Discrete_Type_Length (Index_Type) = Uns64 (Len) then
                return;
             else
                Error_Msg_Sem (+Lit, "string length does not match that of %n",
@@ -2429,10 +2429,10 @@ package body Vhdl.Sem_Expr is
       --  Type of the element of SEL.
       Sel_El_Type : Iir;
       --  Number of literals in the element type.
-      Sel_El_Length : Int64;
+      Sel_El_Length : Uns64;
 
       --  Length of SEL (number of characters in SEL).
-      Sel_Length : Int64;
+      Sel_Length : Uns64;
 
       --  True if length of a choice mismatches
       Has_Length_Error : Boolean := False;
@@ -2444,7 +2444,7 @@ package body Vhdl.Sem_Expr is
       procedure Sem_Simple_Choice (Choice : Iir)
       is
          Expr : Iir;
-         Choice_Len : Int64;
+         Choice_Len : Uns64;
       begin
          --  LRM93 8.8
          --  In such case, each choice appearing in any of the case statement
@@ -2594,7 +2594,7 @@ package body Vhdl.Sem_Expr is
       --  easily overflow.
       if Info.Others_Choice = Null_Iir then
          declare
-            Nbr : Int64 := Int64 (Info.Nbr_Choices);
+            Nbr : Uns64 := Uns64 (Info.Nbr_Choices);
          begin
             for I in 1 .. Sel_Length loop
                Nbr := Nbr / Sel_El_Length;
@@ -2924,7 +2924,7 @@ package body Vhdl.Sem_Expr is
                                 Is_Case_Stmt : Boolean)
    is
       --  Number of positionnal choice.
-      Nbr_Pos : Int64;
+      Nbr_Pos : Uns64;
 
       --  Number of named choices.
       Nbr_Named : Natural;
@@ -2938,7 +2938,7 @@ package body Vhdl.Sem_Expr is
 
       Has_Error : Boolean;
 
-      Pos_Max : Int64;
+      Pos_Max : Uns64;
       El : Iir;
       Prev_El : Iir;
 
@@ -4193,7 +4193,7 @@ package body Vhdl.Sem_Expr is
                --  from associated expressions.
                if Vhdl_Std >= Vhdl_08
                  and then Get_Index_Constraint_Flag (A_Type)
-                 and then Eval_Discrete_Type_Length (Index_Type) /= Int64 (Len)
+                 and then Eval_Discrete_Type_Length (Index_Type) /= Uns64 (Len)
                then
                   Error_Msg_Sem (+Aggr, "incorrect number of elements");
                end if;
@@ -4324,7 +4324,7 @@ package body Vhdl.Sem_Expr is
                Error_Msg_Sem (+Aggr, "subaggregate bounds mismatch");
             else
                if Eval_Discrete_Type_Length (Info.Index_Subtype)
-                 /= Int64 (Len)
+                 /= Uns64 (Len)
                then
                   Error_Msg_Sem (+Aggr, "subaggregate length mismatch");
                end if;
@@ -4451,7 +4451,7 @@ package body Vhdl.Sem_Expr is
             --  Compute ratio of elements vs size of the aggregate to determine
             --  if the aggregate can be expanded.
             declare
-               Size : Int64;
+               Size : Uns64;
             begin
                Size := 1;
                for I in Infos'Range loop

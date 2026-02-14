@@ -1052,8 +1052,9 @@ package body Trans.Chap3 is
    is
       Indexes_List : constant Iir_Flist := Get_Index_Subtype_List (Def);
       Index        : Iir;
-      Idx_Len      : Int64;
-      Len          : Int64;
+      Rng          : Iir;
+      Idx_Len      : Uns64;
+      Len          : Uns64;
    begin
       --  Check if the bounds of the array are locally static.
       Len := 1;
@@ -1063,10 +1064,11 @@ package body Trans.Chap3 is
          if Get_Type_Staticness (Index) /= Locally then
             return -1;
          end if;
-         Idx_Len := Eval_Discrete_Type_Length (Index);
-         if Idx_Len < 0 then
+         Rng := Get_Range_Constraint (Index);
+         if Eval_Is_Range_Overflow (Rng) then
             return -1;
          end if;
+         Idx_Len := Eval_Discrete_Range_Length (Rng);
 
          --  Do not consider very large arrays as static, to avoid overflow at
          --  compile time.
@@ -1078,7 +1080,7 @@ package body Trans.Chap3 is
             return -1;
          end if;
       end loop;
-      return Len;
+      return Int64 (Len);
    end Get_Array_Subtype_Length;
 
    procedure Translate_Bounded_Array_Subtype_Definition
@@ -2867,12 +2869,12 @@ package body Trans.Chap3 is
       end if;
    end Elab_Subtype_Declaration;
 
-   function Get_Static_Array_Length (Atype : Iir) return Int64
+   function Get_Static_Array_Length (Atype : Iir) return Uns64
    is
       Indexes_List : constant Iir_Flist := Get_Index_Subtype_List (Atype);
       Nbr_Dim      : constant Natural := Get_Nbr_Elements (Indexes_List);
       Index        : Iir;
-      Val          : Int64;
+      Val          : Uns64;
       Rng          : Iir;
    begin
       Val := 1;

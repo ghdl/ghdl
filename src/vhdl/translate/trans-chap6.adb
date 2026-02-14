@@ -650,8 +650,8 @@ package body Trans.Chap6 is
             Slice_Range : constant Iir :=
               Get_Range_Constraint (Slice_Index_Type);
             Prefix_Left, Slice_Left : Int64;
-            Off                     : Int64;
-            Slice_Length            : Int64;
+            Soff                    : Int64;
+            Slice_Length, Off       : Uns64;
          begin
             Prefix_Left := Eval_Pos (Get_Left_Limit (Index_Range));
             Slice_Left := Eval_Pos (Get_Left_Limit (Slice_Range));
@@ -670,14 +670,16 @@ package body Trans.Chap6 is
                --  Both prefix and slice are thin array.
                case Get_Direction (Index_Range) is
                   when Dir_To =>
-                     Off := Slice_Left - Prefix_Left;
+                     Soff := Slice_Left - Prefix_Left;
                   when Dir_Downto =>
-                     Off := Prefix_Left - Slice_Left;
+                     Soff := Prefix_Left - Slice_Left;
                end case;
-               if Off < 0 then
+               if Soff < 0 then
                   Gen_Bound_Error (Index_Range);
                   Off := 0;
                   Slice_Length := 0;
+               else
+                  Off := Uns64 (Soff);
                end if;
                if Off + Slice_Length
                  > Eval_Discrete_Range_Length (Index_Range)

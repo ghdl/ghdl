@@ -651,7 +651,7 @@ package body Vhdl.Evaluation is
                   Cur_Pos := Cur_Pos + 1;
                else
                   declare
-                     Assoc_Len : Int64;
+                     Assoc_Len : Uns64;
                   begin
                      pragma Assert (Last_Dim);
                      Assoc_Len := Eval_Discrete_Type_Length
@@ -667,7 +667,7 @@ package body Vhdl.Evaluation is
                declare
                   Rng : constant Iir := Get_Choice_Range (Assoc);
                   Rng_Start : Iir;
-                  Rng_Len : Int64;
+                  Rng_Len : Uns64;
                   E : Iir;
                begin
                   if Get_Direction (Rng) = Get_Direction (Choice_Range) then
@@ -710,9 +710,9 @@ package body Vhdl.Evaluation is
       Aggr_Type : constant Iir := Get_Type (Aggr);
       Index_Type : constant Iir := Get_Index_Type (Aggr_Type, 0);
       Index_Range : constant Iir := Eval_Static_Range (Index_Type);
-      Len : constant Int64 := Eval_Discrete_Range_Length (Index_Range);
+      Len : constant Uns64 := Eval_Discrete_Range_Length (Index_Range);
       Assocs : constant Iir := Get_Association_Choices_Chain (Aggr);
-      Vect : Iir_Array (0 .. Integer (Len - 1));
+      Vect : Iir_Array (0 .. Integer (Len) - 1);
       List : Iir_Flist;
       Assoc : Iir;
       Expr : Iir;
@@ -3573,7 +3573,7 @@ package body Vhdl.Evaluation is
    function Eval_Slice_Name (Expr : Iir) return Iir
    is
       Suffix : constant Iir := Get_Suffix (Expr);
-      Len : constant Int64 := Eval_Discrete_Range_Length (Suffix);
+      Len : constant Uns64 := Eval_Discrete_Range_Length (Suffix);
       Idx_Type, Idx_Rng : Iir;
       Prefix : Iir;
       Dir : Direction_Type;
@@ -4014,7 +4014,9 @@ package body Vhdl.Evaluation is
                Index : Iir;
             begin
                Index := Eval_Array_Attribute (Expr);
-               return Build_Discrete (Eval_Discrete_Type_Length (Index), Expr);
+               --  Handle overflow ?
+               return Build_Discrete
+                 (Int64 (Eval_Discrete_Type_Length (Index)), Expr);
             end;
          when Iir_Kind_Left_Array_Attribute =>
             declare
@@ -4222,7 +4224,7 @@ package body Vhdl.Evaluation is
    is
       Expr_Type : constant Iir := Get_Type (Expr);
       Indexes : Iir_Flist;
-      Len : Int64;
+      Len : Uns64;
    begin
       --  Consider only arrays.  Records are never composite.
       if Get_Kind (Expr_Type) /= Iir_Kind_Array_Subtype_Definition then
@@ -4714,19 +4716,19 @@ package body Vhdl.Evaluation is
       end case;
    end Is_Null_Range;
 
-   function Eval_Discrete_Range_Length (Constraint : Iir) return Int64
+   function Eval_Discrete_Range_Length (Constraint : Iir) return Uns64
    is
       --  We don't want to deal with very large ranges here.
       pragma Suppress (Overflow_Check);
       Left_Expr : constant Iir := Get_Left_Limit (Constraint);
       Right_Expr : constant Iir := Get_Right_Limit (Constraint);
-      Res : Int64;
+      Res : Uns64;
       Left, Right : Int64;
    begin
       if Is_Overflow_Literal (Left_Expr)
         or else Is_Overflow_Literal (Right_Expr)
       then
-         return -1;
+         return 0;
       end if;
 
       Left := Eval_Pos (Left_Expr);
@@ -4737,20 +4739,20 @@ package body Vhdl.Evaluation is
                --  Null range.
                return 0;
             else
-               Res := Right - Left + 1;
+               Res := Uns64 (Right - Left) + 1;
             end if;
          when Dir_Downto =>
             if Left < Right then
                --  Null range
                return 0;
             else
-               Res := Left - Right + 1;
+               Res := Uns64 (Left - Right) + 1;
             end if;
       end case;
       return Res;
    end Eval_Discrete_Range_Length;
 
-   function Eval_Discrete_Type_Length (Sub_Type : Iir) return Int64
+   function Eval_Discrete_Type_Length (Sub_Type : Iir) return Uns64
    is
    begin
       case Get_Kind (Sub_Type) is
@@ -4772,6 +4774,12 @@ package body Vhdl.Evaluation is
       Right := Eval_Pos (Get_Right_Limit (Rng));
       return Null_Int_Range (Get_Direction (Rng), Left, Right);
    end Eval_Is_Null_Discrete_Range;
+
+   function Eval_Is_Range_Overflow (Rng : Iir) return Boolean is
+   begin
+      return Is_Overflow_Literal (Get_Left_Limit (Rng))
+        or else Is_Overflow_Literal (Get_Right_Limit (Rng));
+   end Eval_Is_Range_Overflow;
 
    function Eval_Pos (Expr : Iir) return Int64 is
    begin
