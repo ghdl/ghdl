@@ -88,6 +88,11 @@ package body Grt.Errors is
       Put_I32 (Error_Stream, N);
    end Diag_C;
 
+   procedure Diag_C (N : Ghdl_I64) is
+   begin
+      Put_I64 (Error_Stream, N);
+   end Diag_C;
+
    procedure Diag_C (Str : Ghdl_C_String) is
    begin
       Put (Error_Stream, Str);

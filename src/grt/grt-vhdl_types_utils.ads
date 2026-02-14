@@ -1,4 +1,4 @@
---  GHDL Run Time (GRT) -  'name* subprograms.
+--  GHDL Run Time (GRT) - common types.
 --  Copyright (C) 2002 - 2014 Tristan Gingold
 --
 --  This program is free software: you can redistribute it and/or modify
@@ -20,22 +20,14 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
-with System; use System;
+
 with Grt.Types; use Grt.Types;
 with Grt.Vhdl_Types; use Grt.Vhdl_Types;
-with Grt.Rtis; use Grt.Rtis;
 
-package Grt.Names is
-   procedure Ghdl_Get_Path_Name (Res : Std_String_Any_Ptr;
-                                 Ctxt : Ghdl_Rti_Access;
-                                 Base : Address;
-                                 Name : Ghdl_Str_Len_Ptr);
+package Grt.Vhdl_Types_Utils is
+   function Get_Std_String_Len (Str : Std_String_Any_Ptr)
+                               return Ghdl_Index_Type;
 
-   procedure Ghdl_Get_Instance_Name (Res : Std_String_Any_Ptr;
-                                     Ctxt : Ghdl_Rti_Access;
-                                     Base : Address;
-                                     Name : Ghdl_Str_Len_Ptr);
-private
-   pragma Export (C, Ghdl_Get_Path_Name, "__ghdl_get_path_name");
-   pragma Export (C, Ghdl_Get_Instance_Name, "__ghdl_get_instance_name");
-end Grt.Names;
+   function Get_Std_String_Base (Str : Std_String_Any_Ptr)
+                                return Std_String_Basep;
+end Grt.Vhdl_Types_Utils;

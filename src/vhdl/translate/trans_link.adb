@@ -53,8 +53,13 @@ package body Trans_Link is
            Grt.Lib.Ghdl_Direction_Check_Failed'Address);
       Def (Trans_Decls.Ghdl_Access_Check_Failed,
            Grt.Lib.Ghdl_Access_Check_Failed'Address);
-      Def (Trans_Decls.Ghdl_Integer_Index_Check_Failed,
-           Grt.Lib.Ghdl_Integer_Index_Check_Failed'Address);
+      if Flags.Flag_Integer_64 then
+         Def (Trans_Decls.Ghdl_Integer_Index_Check_Failed,
+           Grt.Lib.Ghdl_Integer_64_Index_Check_Failed'Address);
+      else
+         Def (Trans_Decls.Ghdl_Integer_Index_Check_Failed,
+             Grt.Lib.Ghdl_Integer_32_Index_Check_Failed'Address);
+      end if;
 
       Def (Trans_Decls.Ghdl_Malloc,
            Grt.Lib.Ghdl_Malloc'Address);

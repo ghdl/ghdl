@@ -109,7 +109,8 @@ package Grt.Files_Operations is
                              Status : out Op_Status);
 
    procedure Ghdl_Text_Write (File : Ghdl_File_Index;
-                              Str : Std_String_Ptr;
+                              Str_Base : Std_String_Basep;
+                              Str_Len : Ghdl_Index_Type;
                               Status : out Op_Status);
    procedure Ghdl_Write_Scalar (File : Ghdl_File_Index;
                                 Ptr : Ghdl_Ptr;
@@ -122,7 +123,8 @@ package Grt.Files_Operations is
                                Status : out Op_Status);
 
    procedure Ghdl_Text_Read_Length (File : Ghdl_File_Index;
-                                    Str : Std_String_Ptr;
+                                    Str_Base : Std_String_Basep;
+                                    Str_Len : Ghdl_Index_Type;
                                     Status : out Op_Status;
                                     Length : out Ghdl_Index_Type);
 

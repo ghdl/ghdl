@@ -41,23 +41,38 @@ package Grt.Vhdl_Types is
    type Std_Integer_64_Acc is access Std_Integer_64;
    pragma Convention (C, Std_Integer_64_Acc);
 
-   subtype Std_Integer is Ghdl_I32;
+--   subtype Std_Integer is Ghdl_I32;
 
-   type Std_Integer_Acc is access Std_Integer;
-   pragma Convention (C, Std_Integer_Acc);
+   subtype Std_Integer_Any_Acc is Address;
+
+   function To_Std_Integer_32_Acc is new Ada.Unchecked_Conversion
+     (Source => Address, Target => Std_Integer_32_Acc);
+
+   function To_Std_Integer_64_Acc is new Ada.Unchecked_Conversion
+     (Source => Address, Target => Std_Integer_64_Acc);
 
    type Std_Time is new Ghdl_I64;
    Bad_Time : constant Std_Time := Std_Time'First;
 
-   type Std_Integer_Trt is record
-      Left : Std_Integer;
-      Right : Std_Integer;
+   type Std_Integer_32_Trt is record
+      Left : Std_Integer_32;
+      Right : Std_Integer_32;
       Dir : Ghdl_Dir_Type;
       Length : Ghdl_Index_Type;
    end record;
 
-   type Std_Integer_Range_Ptr is access Std_Integer_Trt;
-   pragma Convention (C, Std_Integer_Range_Ptr);
+   type Std_Integer_64_Trt is record
+      Left : Std_Integer_64;
+      Right : Std_Integer_64;
+      Dir : Ghdl_Dir_Type;
+      Length : Ghdl_Index_Type;
+   end record;
+
+   type Std_Integer_32_Range_Ptr is access Std_Integer_32_Trt;
+   pragma Convention (C, Std_Integer_32_Range_Ptr);
+
+   type Std_Integer_64_Range_Ptr is access Std_Integer_64_Trt;
+   pragma Convention (C, Std_Integer_64_Range_Ptr);
 
    subtype Std_Character is Character;
    type Std_String_Uncons is array (Ghdl_Index_Type range <>) of Std_Character;
@@ -68,20 +83,38 @@ package Grt.Vhdl_Types is
    function To_Address is new Ada.Unchecked_Conversion
      (Source => Std_String_Basep, Target => Address);
 
-   type Std_String_Bound is record
-      Dim_1 : Std_Integer_Trt;
+   type Std_String_32_Bound is record
+      Dim_1 : Std_Integer_32_Trt;
    end record;
-   type Std_String_Boundp is access all Std_String_Bound;
-   function To_Std_String_Boundp is new Ada.Unchecked_Conversion
-     (Source => Address, Target => Std_String_Boundp);
+   type Std_String_32_Boundp is access all Std_String_32_Bound;
+   function To_Std_String_32_Boundp is new Ada.Unchecked_Conversion
+     (Source => Address, Target => Std_String_32_Boundp);
 
-   type Std_String is record
-      Base : Std_String_Basep;
-      Bounds : Std_String_Boundp;
+   type Std_String_64_Bound is record
+      Dim_1 : Std_Integer_64_Trt;
    end record;
-   type Std_String_Ptr is access all Std_String;
-   function To_Std_String_Ptr is new Ada.Unchecked_Conversion
-     (Source => Address, Target => Std_String_Ptr);
+   type Std_String_64_Boundp is access all Std_String_64_Bound;
+   function To_Std_String_64_Boundp is new Ada.Unchecked_Conversion
+     (Source => Address, Target => Std_String_64_Boundp);
+
+   type Std_String_32 is record
+      Base : Std_String_Basep;
+      Bounds : Std_String_32_Boundp;
+   end record;
+   type Std_String_32_Ptr is access all Std_String_32;
+   function To_Std_String_32_Ptr is new Ada.Unchecked_Conversion
+     (Source => Address, Target => Std_String_32_Ptr);
+
+   type Std_String_64 is record
+      Base : Std_String_Basep;
+      Bounds : Std_String_64_Boundp;
+   end record;
+   type Std_String_64_Ptr is access all Std_String_64;
+   function To_Std_String_64_Ptr is new Ada.Unchecked_Conversion
+     (Source => Address, Target => Std_String_64_Ptr);
+
+   --  Std_String_32_Ptr or Std_String_64_Ptr.
+   subtype Std_String_Any_Ptr is Address;
 
    type Std_Bit is ('0', '1');
    type Std_Bit_Vector_Uncons is array (Ghdl_Index_Type range <>) of Std_Bit;

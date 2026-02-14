@@ -537,14 +537,14 @@ package body Elab.Vhdl_Files is
                                           Length : Valtyp;
                                           Loc : Node)
    is
-      Bnd : aliased Std_String_Bound;
-      Str : aliased Std_String;
       Status : Op_Status;
       Len : Ghdl_Index_Type;
+      Str_Base : Std_String_Basep;
+      Str_Len : Ghdl_Index_Type;
    begin
-      Str := (Base => To_Std_String_Basep (Value.Val.Mem.all'Address),
-              Bounds => Bnd'Unrestricted_Access);
-      Ghdl_Text_Read_Length (File, Str'Unrestricted_Access, Status, Len);
+      Str_Base := To_Std_String_Basep (Value.Val.Mem.all'Address);
+      Str_Len := Ghdl_Index_Type (Value.Typ.Abound.Len);
+      Ghdl_Text_Read_Length (File, Str_Base, Str_Len, Status, Len);
       if Status /= Op_Ok then
          File_Error (Syn_Inst, Loc, Status);
          Len := 0;
@@ -637,34 +637,18 @@ package body Elab.Vhdl_Files is
       end case;
    end File_Write_Value;
 
-   function Dir_To_Dir (Dir : Direction_Type) return Ghdl_Dir_Type is
-   begin
-      case Dir is
-         when Dir_To =>
-            return Grt.Vhdl_Types.Dir_To;
-         when Dir_Downto =>
-            return Grt.Vhdl_Types.Dir_Downto;
-      end case;
-   end Dir_To_Dir;
-
    procedure File_Write_Text (Syn_Inst : Synth_Instance_Acc;
                               File : File_Index;
                               Val : Memtyp;
                               Loc : Node)
    is
-      B : Bound_Type;
       Status : Op_Status;
-      Str : Std_String;
-      Bnd : Std_String_Bound;
+      Str_Base : Std_String_Basep;
+      Str_Len : Ghdl_Index_Type;
    begin
-      B := Val.Typ.Abound;
-      Bnd.Dim_1 := (Left => Ghdl_I32 (B.Left),
-                    Right => Ghdl_I32 (B.Right),
-                    Dir => Dir_To_Dir (B.Dir),
-                    Length => Ghdl_Index_Type (B.Len));
-      Str := (Base => To_Std_String_Basep (Val.Mem.all'Address),
-              Bounds => To_Std_String_Boundp (Bnd'Address));
-      Ghdl_Text_Write (File, To_Std_String_Ptr (Str'Address), Status);
+      Str_Base := To_Std_String_Basep (Val.Mem.all'Address);
+      Str_Len := Ghdl_Index_Type (Val.Typ.Abound.Len);
+      Ghdl_Text_Write (File, Str_Base, Str_Len, Status);
       if Status /= Op_Ok then
          File_Error (Syn_Inst, Loc, Status);
       end if;

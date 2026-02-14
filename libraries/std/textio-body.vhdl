@@ -338,13 +338,15 @@ package body textio is
     write (l, str (1 to pos - 1), justified, field);
   end write;
 
+  type nat32 is range 0 to 2**31 - 1;
+
   procedure textio_write_real
-    (s : out string; len : out natural; value: real; ndigits : natural);
+    (s : out string; len : out nat32; value: real; ndigits : nat32);
 
   attribute foreign of textio_write_real : procedure is "GHDL intrinsic";
 
   procedure textio_write_real
-    (s : out string; len : out natural; value: real; ndigits : natural) is
+    (s : out string; len : out nat32; value: real; ndigits : nat32) is
   begin
     assert false report "must not be called" severity failure;
   end textio_write_real;
@@ -365,9 +367,11 @@ package body textio is
     --  STR contains the result of the conversion.
     variable str : string (1 to 320);
 
+    variable len32 : nat32;
     variable len : natural;
   begin
-    textio_write_real (str, len, value, digits);
+    textio_write_real (str, len32, value, nat32 (digits));
+    len := natural (len32);
     assert len <= str'length severity failure;
 
     write (l, str (1 to len), justified, field);

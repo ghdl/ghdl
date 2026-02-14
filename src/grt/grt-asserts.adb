@@ -22,7 +22,7 @@
 --  covered by the GNU Public License.
 
 package body Grt.Asserts is
-   type Natural_Array is array (Ghdl_E8 range <>) of Std_Integer;
+   type Natural_Array is array (Ghdl_E8 range <>) of Std_Integer_64;
    Assert_Count : Natural_Array (Severity_Level) := (others => 0);
 
    procedure Inc_Assert_Count (Level : Severity_Level) is
@@ -30,7 +30,7 @@ package body Grt.Asserts is
       Assert_Count (Level) := Assert_Count (Level) + 1;
    end Inc_Assert_Count;
 
-   function Ghdl_Get_Assert_Count (Level : Ghdl_E8) return Std_Integer is
+   function Ghdl_Get_Assert_Count (Level : Ghdl_E8) return Std_Integer_64 is
    begin
       return Assert_Count (Severity_Level (Level));
    end Ghdl_Get_Assert_Count;

@@ -28,10 +28,14 @@ with Grt.Processes; use Grt.Processes;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
 with Grt.Rstrings; use Grt.Rstrings;
+with Grt.Options;
 
 package body Grt.Names is
-   function To_Str_String_Boundp is new Ada.Unchecked_Conversion
-     (Source => System.Address, Target => Std_String_Boundp);
+   function To_Str_String_32_Boundp is new Ada.Unchecked_Conversion
+     (Source => System.Address, Target => Std_String_32_Boundp);
+
+   function To_Str_String_64_Boundp is new Ada.Unchecked_Conversion
+     (Source => System.Address, Target => Std_String_64_Boundp);
 
    function To_Std_String_Basep is new Ada.Unchecked_Conversion
      (Source => Ghdl_C_String, Target => Std_String_Basep);
@@ -39,7 +43,7 @@ package body Grt.Names is
    function To_Std_String_Basep is new Ada.Unchecked_Conversion
      (Source => System.Address, Target => Std_String_Basep);
 
-   procedure Get_Name (Res : Std_String_Ptr;
+   procedure Get_Name (Res : Std_String_Any_Ptr;
                        Ctxt : Rti_Context;
                        Name : Ghdl_Str_Len_Ptr;
                        Is_Path : Boolean)
@@ -47,8 +51,8 @@ package body Grt.Names is
       procedure Memcpy (Dst : Address; Src : Address; Len : Integer);
       pragma Import (C, Memcpy);
 
-      Bounds : Std_String_Boundp;
       Len : Ghdl_Index_Type;
+      Base : Std_String_Basep;
 
       Rstr : Rstring;
       R_Len : Ghdl_Index_Type;
@@ -62,26 +66,54 @@ package body Grt.Names is
          Len := Name.Len;
       end if;
 
-      Bounds := To_Str_String_Boundp
-        (Ghdl_Stack2_Allocate (Std_String_Bound'Size / System.Storage_Unit));
-      Bounds.Dim_1.Left := 1;
-      Bounds.Dim_1.Right := Ghdl_I32 (Len);
-      Bounds.Dim_1.Dir := Dir_To;
-      Bounds.Dim_1.Length := Len;
-      Res.Bounds := Bounds;
       if Ctxt.Block /= null then
-         Res.Base := To_Std_String_Basep (Ghdl_Stack2_Allocate (Len));
-         Memcpy (Res.Base (0)'Address, Get_Address (Rstr), Natural (R_Len));
-         Memcpy (Res.Base (R_Len)'Address,
+         Base := To_Std_String_Basep (Ghdl_Stack2_Allocate (Len));
+         Memcpy (Base (0)'Address, Get_Address (Rstr), Natural (R_Len));
+         Memcpy (Base (R_Len)'Address,
                  Name.Str (1)'Address,
                  Natural (Name.Len));
          Free (Rstr);
       else
-         Res.Base := To_Std_String_Basep (Name.Str);
+         Base := To_Std_String_Basep (Name.Str);
       end if;
+
+      if Options.Flag_Integer_64 then
+         declare
+            Bounds : Std_String_64_Boundp;
+            Str : Std_String_64_Ptr;
+         begin
+            Bounds := To_Str_String_64_Boundp
+              (Ghdl_Stack2_Allocate (Std_String_64_Bound'Size
+                                     / System.Storage_Unit));
+            Bounds.Dim_1.Left := 1;
+            Bounds.Dim_1.Right := Ghdl_I64 (Len);
+            Bounds.Dim_1.Dir := Dir_To;
+            Bounds.Dim_1.Length := Len;
+            Str := To_Std_String_64_Ptr (Res);
+            Str.Bounds := Bounds;
+            Str.Base := Base;
+         end;
+      else
+         declare
+            Bounds : Std_String_32_Boundp;
+            Str : Std_String_32_Ptr;
+         begin
+            Bounds := To_Str_String_32_Boundp
+              (Ghdl_Stack2_Allocate (Std_String_32_Bound'Size
+                                     / System.Storage_Unit));
+            Bounds.Dim_1.Left := 1;
+            Bounds.Dim_1.Right := Ghdl_I32 (Len);
+            Bounds.Dim_1.Dir := Dir_To;
+            Bounds.Dim_1.Length := Len;
+            Str := To_Std_String_32_Ptr (Res);
+            Str.Bounds := Bounds;
+            Str.Base := Base;
+         end;
+      end if;
+
    end Get_Name;
 
-   procedure Ghdl_Get_Path_Name (Res : Std_String_Ptr;
+   procedure Ghdl_Get_Path_Name (Res : Std_String_Any_Ptr;
                                  Ctxt : Ghdl_Rti_Access;
                                  Base : Address;
                                  Name : Ghdl_Str_Len_Ptr)
@@ -90,7 +122,7 @@ package body Grt.Names is
       Get_Name (Res, (Base, Ctxt), Name, True);
    end Ghdl_Get_Path_Name;
 
-   procedure Ghdl_Get_Instance_Name (Res : Std_String_Ptr;
+   procedure Ghdl_Get_Instance_Name (Res : Std_String_Any_Ptr;
                                      Ctxt : Ghdl_Rti_Access;
                                      Base : Address;
                                      Name : Ghdl_Str_Len_Ptr)

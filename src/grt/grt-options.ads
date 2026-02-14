@@ -54,6 +54,9 @@ package Grt.Options is
    Flag_String : constant String (1 .. 5);
    pragma Import (C, Flag_String, "__ghdl_flag_string");
 
+   --  Set by grt-main when Std.Standard.Integer is a 64b type.
+   Flag_Integer_64 : Boolean;
+
    --  Time resolution extracted from Flag_String, in multiple of -3:
    --  0: sec
    --  1: ms

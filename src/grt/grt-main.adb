@@ -75,15 +75,12 @@ package body Grt.Main is
    is
       Err : Boolean;
    begin
+      Flag_Integer_64 := Flag_String (3) = 'I';
+
       --  The conditions may be statically known.
       pragma Warnings (Off);
 
       Err := False;
-      if (Std_Integer'Size = 32 and Flag_String (3) /= 'i')
-        or else (Std_Integer'Size = 64 and Flag_String (3) /= 'I')
-      then
-         Err := True;
-      end if;
       if (Std_Time'Size = 32 and Flag_String (4) /= 't')
         or else (Std_Time'Size = 64 and Flag_String (4) /= 'T')
       then

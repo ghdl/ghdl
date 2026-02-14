@@ -29,6 +29,7 @@ with Grt.Backtraces;
 with Grt.Arith;
 with Grt.Severity; use Grt.Severity;
 with Grt.Asserts; use Grt.Asserts;
+with Grt.Vhdl_Types_Utils; use Grt.Vhdl_Types_Utils;
 
 package body Grt.Lib is
    --procedure Memcpy (Dst : Address; Src : Address; Size : Size_T);
@@ -227,23 +228,28 @@ package body Grt.Lib is
       Error_E_Call_Stack (Bt);
    end Ghdl_Access_Check_Failed;
 
-   procedure Diag_C_Range (Rng : Std_Integer_Range_Ptr) is
+   procedure Diag_C_Dir (Dir : Ghdl_Dir_Type) is
    begin
-      Diag_C (Rng.Left);
-      case Rng.Dir is
+      case Dir is
          when Dir_Downto =>
             Diag_C (" downto ");
          when Dir_To =>
             Diag_C (" to ");
       end case;
-      Diag_C (Rng.Right);
-   end Diag_C_Range;
+   end Diag_C_Dir;
 
-   procedure Ghdl_Integer_Index_Check_Failed
+   procedure Diag_C_Range_32 (Rng : Std_Integer_32_Range_Ptr) is
+   begin
+      Diag_C (Rng.Left);
+      Diag_C_Dir (Rng.Dir);
+      Diag_C (Rng.Right);
+   end Diag_C_Range_32;
+
+   procedure Ghdl_Integer_32_Index_Check_Failed
      (Filename : Ghdl_C_String;
       Line     : Ghdl_I32;
-      Val      : Std_Integer;
-      Rng      : Std_Integer_Range_Ptr)
+      Val      : Std_Integer_32;
+      Rng      : Std_Integer_32_Range_Ptr)
    is
       Bt : Backtrace_Addrs;
    begin
@@ -251,13 +257,40 @@ package body Grt.Lib is
       Error_S ("index (");
       Diag_C (Val);
       Diag_C (") out of bounds (");
-      Diag_C_Range (Rng);
+      Diag_C_Range_32 (Rng);
       Diag_C (") at ");
       Diag_C (Filename);
       Diag_C (":");
       Diag_C (Line);
       Error_E_Call_Stack (Bt);
-   end Ghdl_Integer_Index_Check_Failed;
+   end Ghdl_Integer_32_Index_Check_Failed;
+
+   procedure Diag_C_Range_64 (Rng : Std_Integer_64_Range_Ptr) is
+   begin
+      Diag_C (Rng.Left);
+      Diag_C_Dir (Rng.Dir);
+      Diag_C (Rng.Right);
+   end Diag_C_Range_64;
+
+   procedure Ghdl_Integer_64_Index_Check_Failed
+     (Filename : Ghdl_C_String;
+      Line     : Ghdl_I32;
+      Val      : Std_Integer_64;
+      Rng      : Std_Integer_64_Range_Ptr)
+   is
+      Bt : Backtrace_Addrs;
+   begin
+      Save_Backtrace (Bt, 1);
+      Error_S ("index (");
+      Diag_C (Val);
+      Diag_C (") out of bounds (");
+      Diag_C_Range_64 (Rng);
+      Diag_C (") at ");
+      Diag_C (Filename);
+      Diag_C (":");
+      Diag_C (Line);
+      Error_E_Call_Stack (Bt);
+   end Ghdl_Integer_64_Index_Check_Failed;
 
    function Ghdl_I32_Exp_32 (V : Ghdl_I32; E : Std_Integer_32) return Ghdl_I32
    is
@@ -441,33 +474,35 @@ package body Grt.Lib is
       return Ghdl_Real_Exp_64 (X, Ghdl_I64 (Exp));
    end Ghdl_Real_Exp_32;
 
-   function Textio_Read_Real (Str : Std_String_Ptr) return Ghdl_F64
+   function Textio_Read_Real (Str : Std_String_Any_Ptr) return Ghdl_F64
    is
-      Len : Natural;
+      Base : constant Std_String_Basep := Get_Std_String_Base (Str);
+      Len : constant Natural := Natural (Get_Std_String_Len (Str));
       Valid : Boolean;
       Res : Ghdl_F64;
    begin
-      Len := Natural (Str.Bounds.Dim_1.Length);
-      Grt.Fcvt.From_String (To_Ghdl_C_String (To_Address (Str.Base)), Len,
+      Grt.Fcvt.From_String (To_Ghdl_C_String (To_Address (Base)), Len,
                             Res, Valid);
       pragma Assert (Valid);
       return Res;
    end Textio_Read_Real;
 
-   procedure Textio_Write_Real (Str : Std_String_Ptr;
-                                Len : Std_Integer_Acc;
+   procedure Textio_Write_Real (Str : Std_String_Any_Ptr;
+                                Len : Ghdl_I32_Acc;
                                 V : Ghdl_F64;
-                                Ndigits : Std_Integer)
+                                Ndigits : Ghdl_I32)
    is
+      Str_Len : constant Ghdl_Index_Type := Get_Std_String_Len (Str);
+      Str_Base : constant Std_String_Basep := Get_Std_String_Base (Str);
       --  FIXME: avoid that copy.
-      S : String (1 .. Natural (Str.Bounds.Dim_1.Length));
+      S : String (1 .. Natural (Str_Len));
       Last : Natural;
    begin
       Grt.Fcvt.Format_Digits (S, Last, V, Natural (Ndigits));
-      Len.all := Std_Integer (Last);
       for I in 1 .. Last loop
-         Str.Base (Ghdl_Index_Type (I - 1)) := S (I);
+         Str_Base (Ghdl_Index_Type (I - 1)) := S (I);
       end loop;
+      Len.all := Ghdl_I32 (Last);
    end Textio_Write_Real;
 
    function Ghdl_Get_Resolution_Limit return Std_Time is
@@ -476,7 +511,7 @@ package body Grt.Lib is
    end Ghdl_Get_Resolution_Limit;
 
    procedure Ghdl_Control_Simulation
-     (Stop : Ghdl_B1; Has_Status : Ghdl_B1; Status : Std_Integer) is
+     (Stop : Ghdl_B1; Has_Status : Ghdl_B1; Status : Ghdl_I32) is
    begin
       Report_S;
       --  Report_C (Grt.Options.Progname);
@@ -490,7 +525,7 @@ package body Grt.Lib is
       Diag_C_Now;
       if Has_Status then
          Diag_C (" with status ");
-         Diag_C (Integer (Status));
+         Diag_C (Status);
       end if;
       Report_E;
       if Has_Status then
@@ -498,5 +533,4 @@ package body Grt.Lib is
       end if;
       Exit_Simulation;
    end Ghdl_Control_Simulation;
-
 end Grt.Lib;

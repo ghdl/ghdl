@@ -1080,9 +1080,12 @@ package body Translation is
       --    line : ghdl_i32;
       --    val : standard_integer;
       --    rng : integer_range_ptr);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_integer_index_check_failed"),
-         O_Storage_External);
+      if Flag_Integer_64 then
+         Id := Get_Identifier ("__ghdl_integer_64_index_check_failed");
+      else
+         Id := Get_Identifier ("__ghdl_integer_32_index_check_failed");
+      end if;
+      Start_Procedure_Decl (Interfaces, Id, O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
       New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       New_Interface_Decl (Interfaces, Param, Wki_Val, Std_Integer_Otype);

@@ -27,7 +27,7 @@ with Grt.Severity; use Grt.Severity;
 package Grt.Asserts is
    procedure Inc_Assert_Count (Level : Severity_Level);
 
-   function Ghdl_Get_Assert_Count (Level : Ghdl_E8) return Std_Integer;
+   function Ghdl_Get_Assert_Count (Level : Ghdl_E8) return Std_Integer_64;
    procedure Ghdl_Clear_Assert_Count;
 
 private

@@ -16,21 +16,23 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 package body Env is
+  type int32 is range -2**31 to 2**31 - 1;
+
   procedure control_simulation (Is_Stop : Boolean;
                                 Has_Status : Boolean;
-                                Status : Integer);
+                                Status : int32);
   attribute foreign of control_simulation : procedure is "GHDL intrinsic";
 
   procedure control_simulation (Is_Stop : Boolean;
                                 Has_Status : Boolean;
-                                Status : Integer) is
+                                Status : int32) is
   begin
     assert false report "must not be called" severity failure;
   end control_simulation;
 
   procedure Stop (Status : Integer) is
   begin
-    control_simulation (True, True, Status);
+    control_simulation (True, True, int32 (Status));
   end Stop;
 
   procedure Stop is
@@ -40,7 +42,7 @@ package body Env is
 
   procedure Finish (status : integer) is
   begin
-    control_simulation (False, True, Status);
+    control_simulation (False, True, int32 (Status));
   end Finish;
 
   procedure Finish is

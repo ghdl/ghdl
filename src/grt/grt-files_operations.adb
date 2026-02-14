@@ -347,11 +347,12 @@ package body Grt.Files_Operations is
       File_Open (File, Mode, Name, Status);
    end Ghdl_File_Open;
 
-   procedure Ghdl_Text_Write (File : Ghdl_File_Index; Str : Std_String_Ptr;
-                                                      Status : out Op_Status)
+   procedure Ghdl_Text_Write (File : Ghdl_File_Index;
+                              Str_Base : Std_String_Basep;
+                              Str_Len : Ghdl_Index_Type;
+                              Status : out Op_Status)
    is
       Res : C_Files;
-      Len : size_t;
       R : size_t;
    begin
       Get_File (File, Res, Status);
@@ -363,13 +364,12 @@ package body Grt.Files_Operations is
          return;
       end if;
 
-      Len := size_t (Str.Bounds.Dim_1.Length);
-      if Len = 0 then
+      if Str_Len = 0 then
          Status := Op_Ok;
          return;
       end if;
 
-      R := fwrite (Str.Base (0)'Address, Len, 1, Res);
+      R := fwrite (Str_Base (0)'Address, size_t (Str_Len), 1, Res);
       if R /= 1 then
          Status := Op_Write_Error;
          return;
@@ -438,13 +438,13 @@ package body Grt.Files_Operations is
    end Ghdl_Read_Scalar;
 
    procedure Ghdl_Text_Read_Length (File : Ghdl_File_Index;
-                                    Str : Std_String_Ptr;
+                                    Str_Base : Std_String_Basep;
+                                    Str_Len : Ghdl_Index_Type;
                                     Status : out Op_Status;
                                     Length : out Ghdl_Index_Type)
    is
       Stream : C_Files;
       C : int;
-      Len : Ghdl_Index_Type;
    begin
       Length := 0;
       Get_File (File, Stream, Status);
@@ -456,7 +456,6 @@ package body Grt.Files_Operations is
          return;
       end if;
 
-      Len := Str.Bounds.Dim_1.Length;
       --  Read until EOL (or EOF).
       --  Store as much as possible.
       for I in Ghdl_Index_Type loop
@@ -466,8 +465,8 @@ package body Grt.Files_Operations is
             Status := Op_End_Of_File;
             return;
          end if;
-         if I < Len then
-            Str.Base (I) := Character'Val (C);
+         if I < Str_Len then
+            Str_Base (I) := Character'Val (C);
          end if;
          --  End of line is '\n' or LF or character # 10.
          if C = C_LF then

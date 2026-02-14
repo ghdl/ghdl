@@ -39,18 +39,19 @@ package Grt.Files_Lib is
 
    --  Subprograms.
    procedure Ghdl_Text_File_Open
-     (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Ptr);
+     (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Any_Ptr);
    function Ghdl_Text_File_Open_Status
-     (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Ptr)
+     (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Any_Ptr)
      return Ghdl_I32;
 
    procedure Ghdl_File_Open
-     (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Ptr);
+     (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Any_Ptr);
    function Ghdl_File_Open_Status
-     (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Ptr)
+     (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Any_Ptr)
      return Ghdl_I32;
 
-   procedure Ghdl_Text_Write (File : Ghdl_File_Index; Str : Std_String_Ptr);
+   procedure Ghdl_Text_Write
+     (File : Ghdl_File_Index; Str : Std_String_Any_Ptr);
    procedure Ghdl_Write_Scalar (File : Ghdl_File_Index;
                                 Ptr : Ghdl_Ptr;
                                 Length : Ghdl_Index_Type);
@@ -60,16 +61,12 @@ package Grt.Files_Lib is
                                Length : Ghdl_Index_Type);
 
    function Ghdl_Text_Read_Length
-     (File : Ghdl_File_Index; Str : Std_String_Ptr) return Ghdl_Index_Type;
-
-   procedure Ghdl_Untruncated_Text_Read_32
-     (File : Ghdl_File_Index; Str : Std_String_Ptr; Len : Std_Integer_32_Acc);
-   procedure Ghdl_Untruncated_Text_Read_64
-     (File : Ghdl_File_Index; Str : Std_String_Ptr; Len : Std_Integer_64_Acc);
+     (File : Ghdl_File_Index; Str : Std_String_Any_Ptr) return Ghdl_Index_Type;
 
    --  For non-JIT version.
-   procedure Ghdl_Untruncated_Text_Read
-     (File : Ghdl_File_Index; Str : Std_String_Ptr; Len : Std_Integer_Acc);
+   procedure Ghdl_Untruncated_Text_Read (File : Ghdl_File_Index;
+                                         Str : Std_String_Any_Ptr;
+                                         Len : Std_Integer_Any_Acc);
 
    procedure Ghdl_Text_File_Close (File : Ghdl_File_Index);
    procedure Ghdl_File_Close (File : Ghdl_File_Index);
@@ -97,10 +94,6 @@ private
    pragma Export (C, Ghdl_Read_Scalar, "__ghdl_read_scalar");
 
    pragma Export (C, Ghdl_Text_Read_Length, "__ghdl_text_read_length");
-   pragma Export (C, Ghdl_Untruncated_Text_Read_32,
-                  "std__textio__untruncated_text_read_32");
-   pragma Export (C, Ghdl_Untruncated_Text_Read_64,
-                  "std__textio__untruncated_text_read_64");
    pragma Export (C, Ghdl_Untruncated_Text_Read,
                   "std__textio__untruncated_text_read");
 

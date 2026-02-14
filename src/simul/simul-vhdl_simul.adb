@@ -4439,14 +4439,17 @@ package body Simul.Vhdl_Simul is
       Inter : constant Node := Get_Interface_Declaration_Chain (Imp);
       Param : Valtyp;
       Status : Int64;
+      Has_Status : Ghdl_B1;
    begin
       if Inter /= Null_Node then
          Param := Get_Value (Inst, Inter);
          Status := Read_Discrete (Param);
-         Ghdl_Control_Simulation (False, True, Std_Integer (Status));
+         Has_Status := True;
       else
-         Ghdl_Control_Simulation (False, False, 0);
+         Status := 0;
+         Has_Status := False;
       end if;
+      Ghdl_Control_Simulation (False, Has_Status, Ghdl_I32 (Status));
    end Exec_Finish;
 
    procedure Set_Quantities_Values (Y : F64_C_Arr_Ptr; Yp : F64_C_Arr_Ptr)

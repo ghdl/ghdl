@@ -66,11 +66,17 @@ package Grt.Lib is
                                           Line: Ghdl_I32);
    procedure Ghdl_Access_Check_Failed;
 
-   procedure Ghdl_Integer_Index_Check_Failed
+   procedure Ghdl_Integer_32_Index_Check_Failed
      (Filename : Ghdl_C_String;
       Line     : Ghdl_I32;
-      Val      : Std_Integer;
-      Rng      : Std_Integer_Range_Ptr);
+      Val      : Std_Integer_32;
+      Rng      : Std_Integer_32_Range_Ptr);
+
+   procedure Ghdl_Integer_64_Index_Check_Failed
+     (Filename : Ghdl_C_String;
+      Line     : Ghdl_I32;
+      Val      : Std_Integer_64;
+      Rng      : Std_Integer_64_Range_Ptr);
 
    --  Program error has occurred:
    --  * configuration of an already configured block.
@@ -119,18 +125,20 @@ package Grt.Lib is
                                                      False  --  -
                                                     );
 
-   function Textio_Read_Real (Str : Std_String_Ptr) return Ghdl_F64;
+   function Textio_Read_Real (Str : Std_String_Any_Ptr) return Ghdl_F64;
 
-   procedure Textio_Write_Real (Str : Std_String_Ptr;
-                                Len : Std_Integer_Acc;
+   type Ghdl_I32_Acc is access Ghdl_I32;
+   pragma Convention (C, Ghdl_I32_Acc);
+
+   procedure Textio_Write_Real (Str : Std_String_Any_Ptr;
+                                Len : Ghdl_I32_Acc;
                                 V : Ghdl_F64;
-                                Ndigits : Std_Integer);
+                                Ndigits : Ghdl_I32);
 
    function Ghdl_Get_Resolution_Limit return Std_Time;
 
    procedure Ghdl_Control_Simulation
-     (Stop : Ghdl_B1; Has_Status : Ghdl_B1; Status : Std_Integer);
-
+     (Stop : Ghdl_B1; Has_Status : Ghdl_B1; Status : Ghdl_I32);
 private
    pragma Export (C, Ghdl_Memcpy, "__ghdl_memcpy");
 
@@ -146,8 +154,8 @@ private
                   "__ghdl_bound_check_failed");
    pragma Export (C, Ghdl_Direction_Check_Failed,
                   "__ghdl_direction_check_failed");
-   pragma Export (C, Ghdl_Integer_Index_Check_Failed,
-                  "__ghdl_integer_index_check_failed");
+   pragma Export (C, Ghdl_Integer_32_Index_Check_Failed,
+                  "__ghdl_integer_32_index_check_failed");
    pragma Export (C, Ghdl_Access_Check_Failed,
                   "__ghdl_access_check_failed");
 
