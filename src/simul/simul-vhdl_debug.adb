@@ -395,6 +395,9 @@ package body Simul.Vhdl_Debug is
                when Iir_Unknown_Mode =>
                   Put (" [??]");
             end case;
+         when Iir_Kind_Interface_View_Declaration =>
+            Put (Image (Get_Identifier (Decl)));
+            Put (" [view]");
          when Iir_Kind_Guard_Signal_Declaration =>
             Put (Image (Get_Identifier (Decl)));
             Put (" [guard]");
