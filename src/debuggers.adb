@@ -175,8 +175,14 @@ package body Debuggers is
       loop
          loop
             Raw_Line := Readline (Prompt);
+            --  EOF ?
+            if Raw_Line = null then
+               Command_Status := Status_Quit;
+               return;
+            end if;
+
             --  Skip empty lines
-            if Raw_Line = null or else Raw_Line (1) = ASCII.NUL then
+            if Raw_Line (1) = ASCII.NUL then
                if Cmd_Repeat /= null then
                   Cmd_Repeat.all ("");
                   case Command_Status is

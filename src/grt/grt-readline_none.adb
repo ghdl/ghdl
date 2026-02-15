@@ -54,6 +54,11 @@ package body Grt.Readline_None is
          end if;
          Linep (Len - 1) := Character'Val (C);
       end loop;
+      if C < 0 and then Len = 1 then
+         --  Return NULL on EOF.
+         free (Linep);
+         return null;
+      end if;
       Linep (Len) := ASCII.NUL;
       return Linep;
    end Readline;
