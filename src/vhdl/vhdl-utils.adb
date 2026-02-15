@@ -526,19 +526,21 @@ package body Vhdl.Utils is
    end Name_To_Value;
 
    --  Return TRUE if EXPR is a signal name.
-   function Is_Signal_Name (Expr : Iir) return Boolean
+   function Is_Signal_Name (Expr : Iir; With_View : Boolean := False)
+                           return Boolean
    is
       Obj : Iir;
    begin
       Obj := Name_To_Object (Expr);
       if Obj /= Null_Iir then
-         return Is_Signal_Object (Obj);
+         return Is_Signal_Object (Obj, With_View);
       else
          return False;
       end if;
    end Is_Signal_Name;
 
-   function Is_Signal_Object (Name : Iir) return Boolean
+   function Is_Signal_Object (Name : Iir; With_View : Boolean := False)
+                             return Boolean
    is
       Adecl: Iir;
    begin
@@ -550,6 +552,8 @@ package body Vhdl.Utils is
            | Iir_Kinds_Signal_Attribute
            | Iir_Kind_External_Signal_Name =>
             return True;
+         when Iir_Kind_Interface_View_Declaration =>
+            return With_View;
          when Iir_Kind_Object_Alias_Declaration =>
             --  Must have been handled by Get_Object_Prefix.
             raise Internal_Error;
@@ -561,8 +565,7 @@ package body Vhdl.Utils is
    function Is_View_Object (Name : Iir) return Boolean is
    begin
       case Get_Kind (Name) is
-         when Iir_Kind_Interface_View_Declaration
-           | Iir_Kind_Mode_View_Declaration =>
+         when Iir_Kind_Interface_View_Declaration =>
             return True;
          when others =>
             return False;

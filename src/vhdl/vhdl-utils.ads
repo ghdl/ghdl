@@ -83,7 +83,8 @@ package Vhdl.Utils is
    function Name_To_Value (Name : Iir) return Iir;
 
    --  Return TRUE iff EXPR is a signal name.
-   function Is_Signal_Name (Expr : Iir) return Boolean;
+   function Is_Signal_Name (Expr : Iir; With_View : Boolean := False)
+                           return Boolean;
 
    --  Return TRUE iff EXPR is a quantity name.
    function Is_Quantity_Name (Expr : Iir) return Boolean;
@@ -440,9 +441,10 @@ package Vhdl.Utils is
    function Is_Uninstantiated_Subprogram (Subprg : Iir) return Boolean;
 
    --  Return TRUE if the base name of NAME is a signal object.
-   function Is_Signal_Object (Name: Iir) return Boolean;
+   function Is_Signal_Object (Name : Iir; With_View : Boolean := False)
+                             return Boolean;
 
-   --  Return TRUE iff EXPR is a view object (either an interface or a decl).
+   --  Return TRUE iff EXPR is a view interface.
    function Is_View_Object (Name : Iir) return Boolean;
 
    --  Return True IFF kind of N is K1 or K2.

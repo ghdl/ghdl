@@ -165,7 +165,7 @@ package body Vhdl.Canon is
             null;
 
          when Iir_Kinds_Denoting_Name =>
-            if not Is_Target and then Is_Signal_Name (Expr) then
+            if not Is_Target and then Is_Signal_Name (Expr, True) then
                Sensitivity_Append_Name (Sensitivity_List, Expr);
             else
                --  For PSL endpoints
@@ -177,7 +177,7 @@ package body Vhdl.Canon is
             if not Is_Target and then
               Get_Name_Staticness (Expr) >= Globally
             then
-               if Is_Signal_Object (Expr) then
+               if Is_Signal_Object (Expr, True) then
                   Sensitivity_Append (Sensitivity_List, Expr);
                end if;
             else
@@ -200,7 +200,7 @@ package body Vhdl.Canon is
             if not Is_Target
               and then Get_Name_Staticness (Expr) >= Globally
             then
-               if Is_Signal_Object (Expr) then
+               if Is_Signal_Object (Expr, True) then
                   Sensitivity_Append (Sensitivity_List, Expr);
                end if;
             else
@@ -212,7 +212,7 @@ package body Vhdl.Canon is
             if not Is_Target
               and then Get_Name_Staticness (Expr) >= Globally
             then
-               if Is_Signal_Object (Expr) then
+               if Is_Signal_Object (Expr, True) then
                   Sensitivity_Append (Sensitivity_List, Expr);
                end if;
             else
@@ -324,7 +324,7 @@ package body Vhdl.Canon is
             end;
 
          when Iir_Kind_Object_Alias_Declaration =>
-            if not Is_Target and then Is_Signal_Object (Expr) then
+            if not Is_Target and then Is_Signal_Object (Expr, True) then
                Sensitivity_Append_Name (Sensitivity_List, Expr);
             end if;
 
