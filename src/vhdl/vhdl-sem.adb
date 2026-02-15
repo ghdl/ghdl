@@ -515,8 +515,8 @@ package body Vhdl.Sem is
       end if;
       Object := Name_To_Object (Actual);
 
-      if Is_Valid (Object) and then Is_Signal_Object (Object) then
-         --  Port or signal.
+      if Is_Valid (Object) and then Is_Signal_Object (Object, True) then
+         --  Port or signal or view.
 
          --  Mutate to By_Name.
          N_Assoc := Create_Iir (Iir_Kind_Association_Element_By_Name);
@@ -562,26 +562,6 @@ package body Vhdl.Sem is
                --  FIXME: attributes ?
                null;
          end case;
-         return N_Assoc;
-      elsif Is_Valid (Object) and then Is_View_Object (Object) then
-         N_Assoc := Create_Iir (Iir_Kind_Association_Element_By_Name);
-         Location_Copy (N_Assoc, Assoc);
-         Set_Formal (N_Assoc, Get_Formal (Assoc));
-         Set_Chain (N_Assoc, Get_Chain (Assoc));
-         Set_Actual (N_Assoc, Actual);
-         Set_Whole_Association_Flag
-           (N_Assoc, Get_Whole_Association_Flag (Assoc));
-         pragma Assert (not Get_In_Formal_Flag (Assoc));
-         if Flag_Elocations then
-            declare
-               use Vhdl.Elocations;
-            begin
-               Create_Elocations (N_Assoc);
-               Set_Arrow_Location (N_Assoc, Get_Arrow_Location (Assoc));
-            end;
-         end if;
-         Free_Iir (Assoc);
-
          return N_Assoc;
       else
          --  Expression.

@@ -471,7 +471,7 @@ package body Trans.Chap5 is
         and then Get_Formal_Conversion (Assoc) = Null_Iir
       then
          --  Usual case: without conversions.
-         if Is_Signal_Name (Actual) then
+         if Is_Signal_Name (Actual, True) then
             --  LRM93 4.3.1.2
             --  For a signal of a scalar type, each source is either
             --  a driver or an OUT, INOUT, BUFFER or LINKAGE port of
