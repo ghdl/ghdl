@@ -433,6 +433,7 @@ package body Synth.Vhdl_Eval is
          when 4 =>
             if Val < -2**31 or Val >= 2**31 then
                Error_Msg_Synth (Inst, Loc, "integer overflow");
+               Set_Error (Inst);
                --  Just keep the lower 32bit (and sign extend).
                Val := Int64
                  (To_Int32 (Uns32 (To_Uns64 (Val) and 16#ffff_ffff#)));

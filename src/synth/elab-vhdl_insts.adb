@@ -1498,6 +1498,9 @@ package body Elab.Vhdl_Insts is
                Inter_Typ : Type_Acc;
             begin
                Inter_Typ := Elab_Declaration_Type (Top_Inst, Inter);
+               if Is_Error (Top_Inst) then
+                  return;
+               end if;
                Create_Signal (Top_Inst, Inter, Inter_Typ);
             end;
          else
@@ -1514,6 +1517,9 @@ package body Elab.Vhdl_Insts is
                Val := Unshare (Val, Instance_Pool);
                Val.Typ := Unshare_Type_Instance (Val.Typ, Inter_Typ);
                Release_Expr_Pool (Marker);
+               if Is_Error (Top_Inst) then
+                  return;
+               end if;
                Create_Signal (Top_Inst, Inter, Val.Typ);
             end;
          end if;
@@ -1634,9 +1640,21 @@ package body Elab.Vhdl_Insts is
 
       pragma Assert (Is_Expr_Pool_Empty);
 
+      if Is_Error (Top_Inst) then
+         return null;
+      end if;
+
       Elab_Top_Ports (Entity, Top_Inst);
 
+      if Is_Error (Top_Inst) then
+         return null;
+      end if;
+
       Elab_Top_Finish (Config, Entity, Arch, Top_Inst);
+
+      if Is_Error (Top_Inst) then
+         return null;
+      end if;
 
       Elab_Top_Clear;
 
