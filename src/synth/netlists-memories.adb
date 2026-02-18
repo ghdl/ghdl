@@ -262,6 +262,52 @@ package body Netlists.Memories is
       end loop;
    end Count_Memidx;
 
+   --  Extract Memidx from ADDR_NET.
+   --  Memidx are ordered from the one with the largest step to the one
+   --   with the smallest step.
+   procedure Gather_Memidx (Addr_Net : Net; Memidx_Arr : out Instance_Array)
+   is
+      N : Net;
+      P : Nat32;
+      Ninst : Instance;
+      Memidx : Instance;
+      Inp_Net : Net;
+   begin
+      N := Addr_Net;
+      P := Memidx_Arr'First;
+      if P = 0 then
+         return;
+      end if;
+      loop
+         Ninst := Get_Net_Parent (N);
+         case Get_Id (Ninst) is
+            when Id_Memidx =>
+               Memidx := Ninst;
+            when Id_Addidx =>
+               --  Extract memidx.
+               Inp_Net := Get_Input_Net (Ninst, 0);
+               Memidx := Get_Net_Parent (Inp_Net);
+               pragma Assert (Get_Id (Memidx) = Id_Memidx);
+               --  Extract next element in the chain
+               N := Get_Input_Net (Ninst, 1);
+            when others =>
+               raise Internal_Error;
+         end case;
+
+         Memidx_Arr (P) := Memidx;
+
+         --  Check memidx are ordered by increasing step.
+         pragma Assert
+           (P = Memidx_Arr'First
+              or else (Get_Param_Uns32 (Memidx, 0)
+                         >= Get_Param_Uns32 (Memidx_Arr (P - 1), 0)));
+
+         P := P + 1;
+
+         exit when Memidx = Ninst;
+      end loop;
+   end Gather_Memidx;
+
    --  Get the address of memidx INST, after possible truncation.
    function Extract_Memidx_Addr (Ctxt : Context_Acc; Inst : Instance)
                                 return Net
@@ -283,13 +329,9 @@ package body Netlists.Memories is
    end Extract_Memidx_Addr;
 
    --  Lower memidx/addidx to simpler gates (concat).
-   --  MEM_SIZE: size of the memory (in bits).
    --  ADDR is the address net with memidx/addidx gates.
    --  VAL_WD is the width of the data port.
-   procedure Convert_Memidx (Ctxt : Context_Acc;
-                             Mem_Size : Uns32;
-                             Addr : in out Net;
-                             Val_Wd : Width)
+   procedure Convert_Memidx (Ctxt : Context_Acc; Addr : in out Net)
    is
       --  Number of memidx.
       Nbr_Idx : constant Nat32 := Nat32 (Count_Memidx (Addr));
@@ -302,42 +344,9 @@ package body Netlists.Memories is
 
       Step1 : Uns32;
    begin
-      --  Fill the INDEXES array.
-      --  The convention is that input 0 of addidx is a memidx.
-      declare
-         P : Nat32;
-         N : Net;
-         Inst : Instance;
-         Inst2 : Instance;
-      begin
-         N := Addr;
-         P := 0;
-         loop
-            Inst := Get_Net_Parent (N);
-            case Get_Id (Inst) is
-               when Id_Memidx =>
-                  P := P + 1;
-                  Indexes (P) := Inst;
-                  exit;
-               when Id_Addidx =>
-                  Inst2 := Get_Input_Instance (Inst, 0);
-                  --  That's the convention.
-                  pragma Assert (Get_Id (Inst2) = Id_Memidx);
-                  P := P + 1;
-                  Indexes (P) := Inst2;
-                  N := Get_Input_Net (Inst, 1);
-               when others => raise Internal_Error;
-            end case;
-         end loop;
-         pragma Assert (P = Nbr_Idx);
-      end;
-
-      --  Memory size is a multiple of data width.
-      --  FIXME: doesn't work if only a part of the reg is a memory.
-      pragma Assert (Mem_Size mod Val_Wd = 0);
+      Gather_Memidx (Addr, Indexes);
 
       Step1 := Get_Param_Uns32 (Indexes (1), 0);
-      pragma Assert (Val_Wd = Step1);
 
       --  Do checks on memidx.
       Is_Pow2 := True;
@@ -472,7 +481,11 @@ package body Netlists.Memories is
    is
       Mem_Size : constant Uns32 := Get_Width (Get_Output (Mem, 0));
    begin
-      Convert_Memidx (Ctxt, Mem_Size, Addr, Val_Wd);
+      --  Memory size is a multiple of data width.
+      --  FIXME: doesn't work if only a part of the reg is a memory.
+      pragma Assert (Mem_Size mod Val_Wd = 0);
+
+      Convert_Memidx (Ctxt, Addr);
    end Convert_Memidx;
 
    --  Return True iff MUX_INP is a mux2 input whose output is connected to a
@@ -2081,8 +2094,6 @@ package body Netlists.Memories is
    --  IN_INST is the Dyn_Extract gate.
    procedure Convert_RAM_Read_Port (Ctxt : Context_Acc;
                                     In_Inst : Instance;
-                                    Mem_Sz : Uns32;
-                                    Mem_W : Width;
                                     Offs : Off_Array_Acc;
                                     Tails : Net_Array_Acc;
                                     Outs : Net_Array_Acc)
@@ -2108,7 +2119,7 @@ package body Netlists.Memories is
       Disconnect (Inp2);
 
       --  Build the address net.
-      Convert_Memidx (Ctxt, Mem_Sz, Addr, Mem_W);
+      Convert_Memidx (Ctxt, Addr);
 
       --  Optimize the network.
       Maybe_Swap_Concat_Mux_Dff (Ctxt, In_Inst);
@@ -2145,8 +2156,6 @@ package body Netlists.Memories is
    --  OUTS is a temporary array.
    procedure Create_RAM_Ports (Ctxt : Context_Acc;
                                Sig : Instance;
-                               Mem_Sz : Uns32;
-                               Mem_W : Width;
                                Offs : Off_Array_Acc;
                                Tails : Net_Array_Acc;
                                Outs : Net_Array_Acc;
@@ -2167,8 +2176,7 @@ package body Netlists.Memories is
          Inst2 := Get_Input_Parent (Inp2);
          case Get_Id (Inst2) is
             when Id_Dyn_Extract =>
-               Convert_RAM_Read_Port
-                 (Ctxt, Inst2, Mem_Sz, Mem_W, Offs, Tails, Outs);
+               Convert_RAM_Read_Port (Ctxt, Inst2, Offs, Tails, Outs);
                Disconnect (Get_Input (Inst2, 0));
                Remove_Instance (Inst2);
             when Id_Dyn_Insert_En
@@ -2212,7 +2220,7 @@ package body Netlists.Memories is
                      Inp2 := Get_Input (Inst, 2);
                      Addr := Get_Driver (Inp2);
                      Disconnect (Inp2);
-                     Convert_Memidx (Ctxt, Mem_Sz, Addr, Mem_W);
+                     Convert_Memidx (Ctxt, Addr);
                      if Get_Id (Inst) = Id_Dyn_Insert_En then
                         Inp2 := Get_Input (Inst, 3);
                         En := Get_Driver (Inp2);
@@ -2292,8 +2300,7 @@ package body Netlists.Memories is
                N_Inp := Get_Next_Sink (Inp);
                case Get_Id (In_Inst) is
                   when Id_Dyn_Extract =>
-                     Convert_RAM_Read_Port
-                       (Ctxt, In_Inst, Mem_Sz, Mem_W, Offs, Tails, Outs);
+                     Convert_RAM_Read_Port (Ctxt, In_Inst, Offs, Tails, Outs);
                      pragma Assert (Inp = Get_Input (In_Inst, 0));
                      Disconnect (Inp);
                      Remove_Instance (In_Inst);
@@ -2547,7 +2554,7 @@ package body Netlists.Memories is
       end loop;
 
       --  5. For each part of the data, create memory ports
-      Create_RAM_Ports (Ctxt, Sig, Mem_Sz, Mem_W, Offs, Tails, Outs, Ports);
+      Create_RAM_Ports (Ctxt, Sig, Offs, Tails, Outs, Ports);
 
       --  Close loops.
       for I in Heads'Range loop

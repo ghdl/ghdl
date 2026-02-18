@@ -35,4 +35,8 @@ package Netlists.Memories is
    --  Count the number of memidx in a memory address.
    function Count_Memidx (Addr : Net) return Natural;
 
+   --  Extract Memidx from ADDR_NET.
+   --  Memidx are ordered from the one with the largest step to the one
+   --   with the smallest step.
+   procedure Gather_Memidx (Addr_Net : Net; Memidx_Arr : out Instance_Array);
 end Netlists.Memories;
