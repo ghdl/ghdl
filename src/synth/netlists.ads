@@ -129,7 +129,7 @@ package Netlists is
    type Instance is private;
    No_Instance : constant Instance;
 
-   type Instance_Array is array (Int32 range <>) of Instance;
+   type Instance_Array is array (Nat32 range <>) of Instance;
 
    --  Hash INST (simply return its index).
    function Hash (Inst : Instance) return Hash_Value_Type;
@@ -140,7 +140,7 @@ package Netlists is
    No_Net : constant Net;
 
    --  So pervasive that it is worth defining this array here.
-   type Net_Array is array (Int32 range <>) of Net;
+   type Net_Array is array (Nat32 range <>) of Net;
 
    type Input is private;
    No_Input : constant Input;

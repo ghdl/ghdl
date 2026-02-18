@@ -26,19 +26,17 @@ with Netlists.Concats; use Netlists.Concats;
 with Netlists.Folds; use Netlists.Folds;
 
 package body Netlists.Expands is
-   type Memidx_Array_Type is array (Natural range <>) of Instance;
-
    --  Extract Memidx from ADDR_NET and return the number of
    --   elements NBR_ELS (which is usually 2**width(ADDR_NET) / data_w).
    --  Memidx are ordered from the one with the largest step to the one
    --   with the smallest step.
    --  Addridx are removed.
    procedure Gather_Memidx (Addr_Net : Net;
-                            Memidx_Arr : out Memidx_Array_Type;
+                            Memidx_Arr : out Instance_Array;
                             Nbr_Els : out Natural)
    is
       N : Net;
-      P : Natural;
+      P : Nat32;
       Ninst : Instance;
       Memidx : Instance;
       Max : Uns32;
@@ -127,7 +125,7 @@ package body Netlists.Expands is
 
    --  Extract address from memidx/addidx and disconnect those gates.
    procedure Extract_Address
-     (Ctxt : Context_Acc; Memidx_Arr : Memidx_Array_Type; Addr : out Net)
+     (Ctxt : Context_Acc; Memidx_Arr : Instance_Array; Addr : out Net)
    is
       Inst : Instance;
       Max : Uns32;
@@ -194,7 +192,7 @@ package body Netlists.Expands is
 
    --  Extract address from memidx/addidx and disconnect those gates.
    function Extract_Flat_Address
-     (Ctxt : Context_Acc; Idx_Arr : Memidx_Array_Type) return Net
+     (Ctxt : Context_Acc; Idx_Arr : Instance_Array) return Net
    is
       Inst : Instance;
       Res : Net;
@@ -260,7 +258,7 @@ package body Netlists.Expands is
       return Res;
    end Extract_Flat_Address;
 
-   function Memidx_No_Overlap (Idx_Arr : Memidx_Array_Type; Wd : Width)
+   function Memidx_No_Overlap (Idx_Arr : Instance_Array; Wd : Width)
                               return Boolean is
    begin
       for I in Idx_Arr'Range loop
@@ -279,11 +277,11 @@ package body Netlists.Expands is
    --  Extract non-overlaping slices from INP using bmux...
    --  ... or build: INP[W*addr + (W-1):W*addr]
    function Extract_Bmux
-     (Ctxt : Context_Acc; Idx_Arr : Memidx_Array_Type; Inp : Net) return Net
+     (Ctxt : Context_Acc; Idx_Arr : Instance_Array; Inp : Net) return Net
    is
       Out_Wd : constant Uns32 := Get_Param_Uns32 (Idx_Arr (Idx_Arr'First), 0);
       Inst : Instance;
-      I, Il : Natural;
+      I, Il : Nat32;
       Res : Net;
       Res_Wd : Width;
       N_Wd : Width;
@@ -367,10 +365,10 @@ package body Netlists.Expands is
       W : constant Width := Get_Width (Get_Output (Inst, 0));
       Addr_Net : constant Net := Disconnect_And_Get (Inst, 1);
       --  1. compute number of dims, check order.
-      Ndims : constant Natural := Count_Memidx (Addr_Net);
+      Ndims : constant Nat32 := Nat32 (Count_Memidx (Addr_Net));
       Nbr_Els : Natural;
 
-      Memidx_Arr : Memidx_Array_Type (1 .. Ndims);
+      Memidx_Arr : Instance_Array (1 .. Ndims);
 
       Res : Net;
       Addr : Net;
@@ -468,7 +466,7 @@ package body Netlists.Expands is
                              Mem : Net;
                              Off : in out Uns32;
                              Dat : Net;
-                             Memidx_Arr : Memidx_Array_Type;
+                             Memidx_Arr : Instance_Array;
                              Net_Arr : Net_Array;
                              Loc : Location_Type;
                              En : Net := No_Net)
@@ -593,10 +591,10 @@ package body Netlists.Expands is
       O : constant Net := Get_Output (Inst, 0);
       O_W : constant Width := Get_Width (O);
       --  1. compute number of dims, check order.
-      Ndims : constant Natural := Count_Memidx (Addr_Net);
+      Ndims : constant Nat32 := Nat32 (Count_Memidx (Addr_Net));
       Nbr_Els : Natural;
 
-      Memidx_Arr : Memidx_Array_Type (1 .. Ndims);
+      Memidx_Arr : Instance_Array (1 .. Ndims);
 
       Net_Arr : Net_Array_Acc;
 

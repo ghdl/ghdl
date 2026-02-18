@@ -262,6 +262,26 @@ package body Netlists.Memories is
       end loop;
    end Count_Memidx;
 
+   --  Get the address of memidx INST, after possible truncation.
+   function Extract_Memidx_Addr (Ctxt : Context_Acc; Inst : Instance)
+                                return Net
+   is
+      Addr : constant Net := Get_Input_Net (Inst, 0);
+      Addr_W : constant Width := Get_Width (Addr);
+      Max : constant Uns32 := Get_Param_Uns32 (Inst, 1);
+      Max_W : constant Width := Clog2 (Max + 1);
+   begin
+      --  Check addr width.
+      pragma Assert (Addr_W /= 0);
+      if Addr_W > Max_W then
+         --  Need to truncate.
+         return Build2_Trunc
+           (Ctxt, Id_Utrunc, Addr, Max_W, Get_Location (Inst));
+      else
+         return Addr;
+      end if;
+   end Extract_Memidx_Addr;
+
    --  Lower memidx/addidx to simpler gates (concat).
    --  MEM_SIZE: size of the memory (in bits).
    --  ADDR is the address net with memidx/addidx gates.
@@ -272,25 +292,20 @@ package body Netlists.Memories is
                              Val_Wd : Width)
    is
       --  Number of memidx.
-      Nbr_Idx : constant Positive := Count_Memidx (Addr);
+      Nbr_Idx : constant Nat32 := Nat32 (Count_Memidx (Addr));
       Can_Free : constant Boolean := not Is_Connected (Addr);
 
       Low_Addr : Net;
       Is_Pow2 : Boolean;
 
-      type Idx_Data is record
-         Inst : Instance;
-         Addr : Net;
-      end record;
-      type Idx_Array is array (Natural range <>) of Idx_Data;
-      Indexes : Idx_Array (1 .. Nbr_Idx);
+      Indexes : Instance_Array (1 .. Nbr_Idx);
 
       Step1 : Uns32;
    begin
       --  Fill the INDEXES array.
       --  The convention is that input 0 of addidx is a memidx.
       declare
-         P : Natural;
+         P : Nat32;
          N : Net;
          Inst : Instance;
          Inst2 : Instance;
@@ -302,14 +317,14 @@ package body Netlists.Memories is
             case Get_Id (Inst) is
                when Id_Memidx =>
                   P := P + 1;
-                  Indexes (P) := (Inst => Inst, Addr => No_Net);
+                  Indexes (P) := Inst;
                   exit;
                when Id_Addidx =>
                   Inst2 := Get_Input_Instance (Inst, 0);
                   --  That's the convention.
                   pragma Assert (Get_Id (Inst2) = Id_Memidx);
                   P := P + 1;
-                  Indexes (P) := (Inst => Inst2, Addr => No_Net);
+                  Indexes (P) := Inst2;
                   N := Get_Input_Net (Inst, 1);
                when others => raise Internal_Error;
             end case;
@@ -321,20 +336,15 @@ package body Netlists.Memories is
       --  FIXME: doesn't work if only a part of the reg is a memory.
       pragma Assert (Mem_Size mod Val_Wd = 0);
 
-      Step1 := Get_Param_Uns32 (Indexes (1).Inst, 0);
+      Step1 := Get_Param_Uns32 (Indexes (1), 0);
       pragma Assert (Val_Wd = Step1);
 
       --  Do checks on memidx.
       Is_Pow2 := True;
       for I in Indexes'Range loop
          declare
-            Inst : constant Instance := Indexes (I).Inst;
+            Inst : constant Instance := Indexes (I);
             Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
-            Sub_Addr : constant Net := Get_Input_Net (Inst, 0);
-            Addr_W : constant Width := Get_Width (Sub_Addr);
-            Max : constant Uns32 := Get_Param_Uns32 (Inst, 1);
-            Max_W : constant Width := Clog2 (Max + 1);
-            Sub_Addr1 : Net;
 
             Step_Addr : constant Uns32 := Step / Step1;
          begin
@@ -351,25 +361,12 @@ package body Netlists.Memories is
                  (+Inst, "internal width %v of memory is not a power of 2",
                  (1 => +Step_Addr));
             end if;
-
-            --  Check addr width.
-            if Addr_W = 0 then
-               raise Internal_Error;
-            end if;
-            if Addr_W > Max_W then
-               --  Need to truncate.
-               Sub_Addr1 := Build2_Trunc
-                 (Ctxt, Id_Utrunc, Sub_Addr, Max_W, Get_Location (Inst));
-            else
-               Sub_Addr1 := Sub_Addr;
-            end if;
-            Indexes (I).Addr := Sub_Addr1;
          end;
       end loop;
 
       --  Lower
       if Nbr_Idx = 1 then
-         Low_Addr := Indexes (1).Addr;
+         Low_Addr := Extract_Memidx_Addr (Ctxt, Indexes (1));
       elsif Is_Pow2 then
          --  (just concat addresses)
          declare
@@ -377,7 +374,7 @@ package body Netlists.Memories is
             Concat : Concat_Type;
          begin
             for I in Indexes'Range loop
-               Append (Concat, Indexes (I).Addr);
+               Append (Concat, Extract_Memidx_Addr (Ctxt, Indexes (I)));
             end loop;
 
             Build (Ctxt, Concat,
@@ -393,22 +390,21 @@ package body Netlists.Memories is
             Midx : Instance;
          begin
             for I in Indexes'Range loop
+               Addr := Extract_Memidx_Addr (Ctxt, Indexes (I));
                if I = Indexes'First then
-                  Low_Addr := Indexes (I).Addr;
+                  Low_Addr := Addr;
                   Step := 1;
                else
-                  Midx := Indexes (I).Inst;
+                  Midx := Indexes (I);
                   Step := Get_Param_Uns32 (Midx, 0) / Step1;
                   Addr_El := Step * (Get_Param_Uns32 (Midx, 1) + 1);
                   if Mutils.Is_Power2 (Uns64 (Addr_El)) then
-                     Low_Addr := Build_Concat2
-                       (Ctxt, Indexes (I).Addr, Low_Addr);
+                     Low_Addr := Build_Concat2 (Ctxt, Addr, Low_Addr);
                   else
                      --  Compute the new width (in bit)
                      Addr_W := Clog2 (Addr_El);
                      Loc := Get_Location (Midx);
                      --  Extend low_addr and addr
-                     Addr := Indexes (I).Addr;
                      Low_Addr := Build2_Uresize (Ctxt, Low_Addr, Addr_W, Loc);
                      Addr := Build2_Uresize (Ctxt, Addr, Addr_W, Loc);
                      --  multiply addr
