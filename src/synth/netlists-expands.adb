@@ -39,48 +39,6 @@ package body Netlists.Expands is
       return Res;
    end Count_Nbr_Els;
 
-   procedure Remove_Memidx (Addr_Net : Net)
-   is
-      Inst : Instance;
-   begin
-      Inst := Get_Net_Parent (Addr_Net);
-
-      --  Still used by another dyn_insert/dyn_extract (subprogram interface)
-      if Is_Connected (Addr_Net) then
-         return;
-      end if;
-
-      loop
-         case Get_Id (Inst) is
-            when Id_Memidx =>
-               Disconnect (Get_Input (Inst, 0));
-               Remove_Instance (Inst);
-               exit;
-            when Id_Addidx =>
-               declare
-                  Inp_Net : Net;
-                  Memidx : Instance;
-               begin
-                  --  Extract memidx.
-                  Inp_Net := Disconnect_And_Get (Inst, 1);
-                  Memidx := Get_Net_Parent (Inp_Net);
-                  pragma Assert (Get_Id (Memidx) = Id_Memidx);
-
-                  Disconnect (Get_Input (Memidx, 0));
-                  Remove_Instance (Memidx);
-
-                  --  Extract next element in the chain
-                  Inp_Net := Disconnect_And_Get (Inst, 0);
-                  Remove_Instance (Inst);
-
-                  Inst := Get_Net_Parent (Inp_Net);
-               end;
-            when others =>
-               raise Internal_Error;
-         end case;
-      end loop;
-   end Remove_Memidx;
-
    --  Extract address from memidx/addidx and disconnect those gates.
    procedure Extract_Address
      (Ctxt : Context_Acc; Memidx_Arr : Instance_Array; Addr : out Net)

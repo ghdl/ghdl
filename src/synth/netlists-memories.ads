@@ -39,4 +39,8 @@ package Netlists.Memories is
    --  Memidx are ordered from the one with the largest step to the one
    --   with the smallest step.
    procedure Gather_Memidx (Addr_Net : Net; Memidx_Arr : out Instance_Array);
+
+   --  Disconnect and remove memidx/addridx rooted by ADDR_NET, but only if
+   --  this is the only connection.
+   procedure Remove_Memidx (Addr_Net : Net);
 end Netlists.Memories;

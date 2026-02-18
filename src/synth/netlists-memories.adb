@@ -308,6 +308,48 @@ package body Netlists.Memories is
       end loop;
    end Gather_Memidx;
 
+   procedure Remove_Memidx (Addr_Net : Net)
+   is
+      Inst : Instance;
+   begin
+      Inst := Get_Net_Parent (Addr_Net);
+
+      --  Still used by another dyn_insert/dyn_extract (subprogram interface)
+      if Is_Connected (Addr_Net) then
+         return;
+      end if;
+
+      loop
+         case Get_Id (Inst) is
+            when Id_Memidx =>
+               Disconnect (Get_Input (Inst, 0));
+               Remove_Instance (Inst);
+               exit;
+            when Id_Addidx =>
+               declare
+                  Inp_Net : Net;
+                  Memidx : Instance;
+               begin
+                  --  Extract memidx.
+                  Inp_Net := Disconnect_And_Get (Inst, 0);
+                  Memidx := Get_Net_Parent (Inp_Net);
+                  pragma Assert (Get_Id (Memidx) = Id_Memidx);
+
+                  Disconnect (Get_Input (Memidx, 0));
+                  Remove_Instance (Memidx);
+
+                  --  Extract next element in the chain
+                  Inp_Net := Disconnect_And_Get (Inst, 1);
+                  Remove_Instance (Inst);
+
+                  Inst := Get_Net_Parent (Inp_Net);
+               end;
+            when others =>
+               raise Internal_Error;
+         end case;
+      end loop;
+   end Remove_Memidx;
+
    --  Get the address of memidx INST, after possible truncation.
    function Extract_Memidx_Addr (Ctxt : Context_Acc; Inst : Instance)
                                 return Net
@@ -335,7 +377,6 @@ package body Netlists.Memories is
    is
       --  Number of memidx.
       Nbr_Idx : constant Nat32 := Nat32 (Count_Memidx (Addr));
-      Can_Free : constant Boolean := not Is_Connected (Addr);
 
       Low_Addr : Net;
       Is_Pow2 : Boolean;
@@ -431,45 +472,7 @@ package body Netlists.Memories is
       end if;
 
       --  Free addidx and memidx.
-      if Can_Free then
-         declare
-            N : Net;
-            Inp : Input;
-            Inst : Instance;
-            Inst2 : Instance;
-         begin
-            N := Addr;
-            loop
-               Inst := Get_Net_Parent (N);
-               case Get_Id (Inst) is
-                  when Id_Memidx =>
-                     Inp := Get_Input (Inst, 0);
-                     Disconnect (Inp);
-                     Remove_Instance (Inst);
-                     exit;
-                  when Id_Addidx =>
-                     --  Remove the first input (a memidx).
-                     Inp := Get_Input (Inst, 0);
-                     Inst2 := Get_Net_Parent (Get_Driver (Inp));
-                     pragma Assert (Get_Id (Inst2) = Id_Memidx);
-                     Disconnect (Inp);
-                     Inp := Get_Input (Inst2, 0);
-                     Disconnect (Inp);
-                     Remove_Instance (Inst2);
-
-                     --  Continue with the second input.
-                     Inp := Get_Input (Inst, 1);
-                     N := Get_Driver (Inp);
-                     Disconnect (Inp);
-
-                     --  Remove the addidx.
-                     Remove_Instance (Inst);
-                  when others =>
-                     raise Internal_Error;
-               end case;
-            end loop;
-         end;
-      end if;
+      Remove_Memidx (Addr);
 
       Addr := Low_Addr;
    end Convert_Memidx;
