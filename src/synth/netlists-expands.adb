@@ -26,24 +26,18 @@ with Netlists.Concats; use Netlists.Concats;
 with Netlists.Folds; use Netlists.Folds;
 
 package body Netlists.Expands is
-   --  Extract Memidx from ADDR_NET and return the number of
-   --   elements NBR_ELS (which is usually 2**width(ADDR_NET) / data_w).
+   --  Extract Memidx from ADDR_NET.
    --  Memidx are ordered from the one with the largest step to the one
    --   with the smallest step.
-   --  Addridx are removed.
-   procedure Gather_Memidx (Addr_Net : Net;
-                            Memidx_Arr : out Instance_Array;
-                            Nbr_Els : out Natural)
+   procedure Gather_Memidx (Addr_Net : Net; Memidx_Arr : out Instance_Array)
    is
       N : Net;
       P : Nat32;
       Ninst : Instance;
       Memidx : Instance;
-      Max : Uns32;
       Inp_Net : Net;
    begin
       N := Addr_Net;
-      Nbr_Els := 1;
       P := Memidx_Arr'First;
       if P = 0 then
          return;
@@ -72,14 +66,24 @@ package body Netlists.Expands is
               or else (Get_Param_Uns32 (Memidx, 0)
                          >= Get_Param_Uns32 (Memidx_Arr (P - 1), 0)));
 
-         Max := Get_Param_Uns32 (Memidx, 1);
-         Nbr_Els := Nbr_Els * Natural (Max + 1);
-
          P := P + 1;
 
          exit when Memidx = Ninst;
       end loop;
    end Gather_Memidx;
+
+   --  Count number of elements in MEMIDX_ARR (product of max + 1).
+   --  (usually 2**width(ADDR_NET) / data_w).
+   function Count_Nbr_Els (Memidx_Arr : Instance_Array) return Natural
+   is
+      Res : Natural;
+   begin
+      Res := 1;
+      for I in Memidx_Arr'Range loop
+         Res := Res * Natural (Get_Param_Uns32 (Memidx_Arr (I), 1) + 1);
+      end loop;
+      return Res;
+   end Count_Nbr_Els;
 
    procedure Remove_Memidx (Addr_Net : Net)
    is
@@ -375,7 +379,8 @@ package body Netlists.Expands is
    begin
       --  1.1  Fill memidx_arr.
       --  2. compute number of cells.
-      Gather_Memidx (Addr_Net, Memidx_Arr, Nbr_Els);
+      Gather_Memidx (Addr_Net, Memidx_Arr);
+      Nbr_Els := Count_Nbr_Els (Memidx_Arr);
 
       if Nbr_Els = 1 then
          --  There is only one element, so it's not really dynamic.
@@ -603,7 +608,8 @@ package body Netlists.Expands is
       Concat : Concat_Type;
       Res : Net;
    begin
-      Gather_Memidx (Addr_Net, Memidx_Arr, Nbr_Els);
+      Gather_Memidx (Addr_Net, Memidx_Arr);
+      Nbr_Els := Count_Nbr_Els (Memidx_Arr);
 
       Extract_Address (Ctxt, Memidx_Arr, Addr);
 
