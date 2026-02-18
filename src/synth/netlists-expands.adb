@@ -39,57 +39,6 @@ package body Netlists.Expands is
       return Res;
    end Count_Nbr_Els;
 
-   --  Extract address from memidx/addidx and disconnect those gates.
-   procedure Extract_Address
-     (Ctxt : Context_Acc; Memidx_Arr : Instance_Array; Addr : out Net)
-   is
-      Inst : Instance;
-      Max : Uns32;
-      Max_Width : Width;
-      Part_Addr : Net;
-   begin
-      --  Avoid warnings
-      Max := 0;
-      Max_Width := 0;
-
-      --  Dimension 1 is the least significant part of the address
-      for I in Memidx_Arr'Range loop
-         Inst := Memidx_Arr (I);
-
-         --  INST1 is a memidx.
-         Part_Addr := Get_Input_Net (Inst, 0);
-         if I = Memidx_Arr'First then
-            --  First memidx, which is the LSB.  Nothing to do.
-            Addr := Part_Addr;
-         else
-            --  Following memidx, need to be multiplied by (max+1) of the
-            --  previous memidx.
-            if 2**Natural (Max_Width) /= Max + 1 then
-               --  Not a power of 2!
-               --  ADDR := ADDR + PART_ADDR * (MAX + 1)
-               declare
-                  W : constant Width := Get_Width (Part_Addr) + Max_Width;
-                  Loc : constant Location_Type := Get_Location (Inst);
-                  Mul : Net;
-               begin
-                  Mul := Build2_Const_Uns (Ctxt, Uns64 (Max + 1), W);
-                  Part_Addr := Build2_Uresize (Ctxt, Part_Addr, W, Loc);
-                  Part_Addr := Build_Dyadic (Ctxt, Id_Umul, Part_Addr, Mul);
-                  Set_Location (Part_Addr, Loc);
-                  Addr := Build2_Uresize (Ctxt, Addr, W, Loc);
-                  Addr := Build_Dyadic (Ctxt, Id_Add, Addr, Part_Addr);
-                  Set_Location (Addr, Loc);
-               end;
-            else
-               Addr := Build_Concat2 (Ctxt, Part_Addr, Addr);
-               Copy_Location (Addr, Inst);
-            end if;
-         end if;
-         Max := Get_Param_Uns32 (Inst, 1);
-         Max_Width := Clog2 (Max + 1);
-      end loop;
-   end Extract_Address;
-
    procedure Truncate_Address
      (Ctxt : Context_Acc; Addr : in out Net; Nbr_Els : Natural)
    is
@@ -105,74 +54,6 @@ package body Netlists.Expands is
          Set_Location (Addr, Loc);
       end if;
    end Truncate_Address;
-
-   --  Extract address from memidx/addidx and disconnect those gates.
-   function Extract_Flat_Address
-     (Ctxt : Context_Acc; Idx_Arr : Instance_Array) return Net
-   is
-      Inst : Instance;
-      Res : Net;
-      Res_W : Width;
-      Inp_Net : Net;
-      Out_W : Width;
-      Loc : Location_Type;
-      Step : Uns32;
-      Cst : Net;
-      Log2_Step : Width;
-   begin
-      Res := No_Net;
-      Res_W := 0;
-
-      for I in Idx_Arr'Range loop
-         --  Extract parameters from memidx.
-         Inst := Idx_Arr (I);
-         Step := Get_Param_Uns32 (Inst, 0);
-         Loc := Get_Location (Inst);
-
-         --  Extract input of memidx.
-         Inp_Net := Get_Input_Net (Inst, 0);
-
-         Out_W := Get_Width (Get_Output (Inst, 0));
-
-         if Step = 1 then
-            Res := Inp_Net;
-            Res_W := Out_W;
-         elsif Is_Pow2 (Step) then
-            --  Step is a power of 2, simply concatenate
-            Log2_Step := Clog2 (Step);
-            if Log2_Step = Res_W then
-               Res := Build_Concat2 (Ctxt, Inp_Net, Res);
-               Set_Location (Res, Loc);
-            else
-               Cst := Build2_Const_Uns (Ctxt, 0, Log2_Step - Res_W);
-               if Res = No_Net then
-                  Res := Build_Concat2 (Ctxt, Inp_Net, Cst);
-               else
-                  Res := Build_Concat3 (Ctxt, Inp_Net, Cst, Res);
-               end if;
-            end if;
-            Res_W := Out_W;
-         else
-            --  RES := RES + INP*STEP
-            Res_W := Out_W;
-            Cst := Build2_Const_Uns (Ctxt, Uns64 (Step), Res_W);
-            Inp_Net := Build2_Uresize (Ctxt, Inp_Net, Res_W, Loc);
-
-            Inp_Net := Build_Dyadic (Ctxt, Id_Umul, Inp_Net, Cst);
-            Set_Location (Inp_Net, Loc);
-
-            if Res = No_Net then
-               Res := Inp_Net;
-            else
-               Res := Build2_Uresize (Ctxt, Res, Res_W, Loc);
-               Res := Build_Dyadic (Ctxt, Id_Add, Res, Inp_Net);
-               Set_Location (Res, Loc);
-            end if;
-         end if;
-      end loop;
-
-      return Res;
-   end Extract_Flat_Address;
 
    function Memidx_No_Overlap (Idx_Arr : Instance_Array; Wd : Width)
                               return Boolean is
@@ -318,7 +199,7 @@ package body Netlists.Expands is
          end;
       else
          --  2. Compute index
-         Addr := Extract_Flat_Address (Ctxt, Memidx_Arr);
+         Lower_Memidx_Address (Ctxt, Memidx_Arr, Addr);
 
          Remove_Memidx (Addr_Net);
          --  Keep Dyn_Extract, but the index is a single value
@@ -523,7 +404,7 @@ package body Netlists.Expands is
       Gather_Memidx (Addr_Net, Memidx_Arr);
       Nbr_Els := Count_Nbr_Els (Memidx_Arr);
 
-      Extract_Address (Ctxt, Memidx_Arr, Addr);
+      Lower_Memidx_Address (Ctxt, Memidx_Arr, Addr);
 
       --  Generate decoder.
       Net_Arr := new Net_Array(0 .. Int32 (Nbr_Els - 1));

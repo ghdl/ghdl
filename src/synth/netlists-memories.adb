@@ -350,6 +350,57 @@ package body Netlists.Memories is
       end loop;
    end Remove_Memidx;
 
+   --  Extract address from memidx/addidx.
+   procedure Lower_Memidx_Address
+     (Ctxt : Context_Acc; Memidx_Arr : Instance_Array; Addr : out Net)
+   is
+      Inst : Instance;
+      Max : Uns32;
+      Max_Width : Width;
+      Part_Addr : Net;
+   begin
+      --  Avoid warnings
+      Max := 0;
+      Max_Width := 0;
+
+      --  Dimension 1 is the least significant part of the address
+      for I in Memidx_Arr'Range loop
+         Inst := Memidx_Arr (I);
+
+         --  INST1 is a memidx.
+         Part_Addr := Get_Input_Net (Inst, 0);
+         if I = Memidx_Arr'First then
+            --  First memidx, which is the LSB.  Nothing to do.
+            Addr := Part_Addr;
+         else
+            --  Following memidx, need to be multiplied by (max+1) of the
+            --  previous memidx.
+            if 2**Natural (Max_Width) /= Max + 1 then
+               --  Not a power of 2!
+               --  ADDR := ADDR + PART_ADDR * (MAX + 1)
+               declare
+                  W : constant Width := Get_Width (Part_Addr) + Max_Width;
+                  Loc : constant Location_Type := Get_Location (Inst);
+                  Mul : Net;
+               begin
+                  Mul := Build2_Const_Uns (Ctxt, Uns64 (Max + 1), W);
+                  Part_Addr := Build2_Uresize (Ctxt, Part_Addr, W, Loc);
+                  Part_Addr := Build_Dyadic (Ctxt, Id_Umul, Part_Addr, Mul);
+                  Set_Location (Part_Addr, Loc);
+                  Addr := Build2_Uresize (Ctxt, Addr, W, Loc);
+                  Addr := Build_Dyadic (Ctxt, Id_Add, Addr, Part_Addr);
+                  Set_Location (Addr, Loc);
+               end;
+            else
+               Addr := Build_Concat2 (Ctxt, Part_Addr, Addr);
+               Copy_Location (Addr, Inst);
+            end if;
+         end if;
+         Max := Get_Param_Uns32 (Inst, 1);
+         Max_Width := Clog2 (Max + 1);
+      end loop;
+   end Lower_Memidx_Address;
+
    --  Get the address of memidx INST, after possible truncation.
    function Extract_Memidx_Addr (Ctxt : Context_Acc; Inst : Instance)
                                 return Net
@@ -431,44 +482,7 @@ package body Netlists.Memories is
                    Get_Location (Get_Net_Parent (Addr)), Low_Addr);
          end;
       else
-         declare
-            Step : Uns32;
-            Addr_W : Width;
-            Addr_El : Uns32;
-            Addr : Net;
-            Loc : Location_Type;
-            Midx : Instance;
-         begin
-            for I in Indexes'Range loop
-               Addr := Extract_Memidx_Addr (Ctxt, Indexes (I));
-               if I = Indexes'First then
-                  Low_Addr := Addr;
-                  Step := 1;
-               else
-                  Midx := Indexes (I);
-                  Step := Get_Param_Uns32 (Midx, 0) / Step1;
-                  Addr_El := Step * (Get_Param_Uns32 (Midx, 1) + 1);
-                  if Mutils.Is_Power2 (Uns64 (Addr_El)) then
-                     Low_Addr := Build_Concat2 (Ctxt, Addr, Low_Addr);
-                  else
-                     --  Compute the new width (in bit)
-                     Addr_W := Clog2 (Addr_El);
-                     Loc := Get_Location (Midx);
-                     --  Extend low_addr and addr
-                     Low_Addr := Build2_Uresize (Ctxt, Low_Addr, Addr_W, Loc);
-                     Addr := Build2_Uresize (Ctxt, Addr, Addr_W, Loc);
-                     --  multiply addr
-                     Addr := Build_Dyadic
-                       (Ctxt, Id_Umul, Addr,
-                        Build2_Const_Uns (Ctxt, Uns64 (Step), Addr_W));
-                     Set_Location (Addr, Loc);
-                     --  Add
-                     Low_Addr := Build_Dyadic (Ctxt, Id_Add, Low_Addr, Addr);
-                     Set_Location (Low_Addr, Loc);
-                  end if;
-               end if;
-            end loop;
-         end;
+         Lower_Memidx_Address (Ctxt, Indexes, Low_Addr);
       end if;
 
       --  Free addidx and memidx.

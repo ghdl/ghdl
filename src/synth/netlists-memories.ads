@@ -43,4 +43,8 @@ package Netlists.Memories is
    --  Disconnect and remove memidx/addridx rooted by ADDR_NET, but only if
    --  this is the only connection.
    procedure Remove_Memidx (Addr_Net : Net);
+
+   procedure Lower_Memidx_Address
+     (Ctxt : Context_Acc; Memidx_Arr : Instance_Array; Addr : out Net);
+
 end Netlists.Memories;
