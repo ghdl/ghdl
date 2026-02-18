@@ -281,10 +281,11 @@ package body Netlists.Memories is
       type Idx_Data is record
          Inst : Instance;
          Addr : Net;
-         Step : Uns32;
       end record;
       type Idx_Array is array (Natural range <>) of Idx_Data;
       Indexes : Idx_Array (1 .. Nbr_Idx);
+
+      Step1 : Uns32;
    begin
       --  Fill the INDEXES array.
       --  The convention is that input 0 of addidx is a memidx.
@@ -301,14 +302,14 @@ package body Netlists.Memories is
             case Get_Id (Inst) is
                when Id_Memidx =>
                   P := P + 1;
-                  Indexes (P) := (Inst => Inst, Addr => No_Net, Step => 0);
+                  Indexes (P) := (Inst => Inst, Addr => No_Net);
                   exit;
                when Id_Addidx =>
                   Inst2 := Get_Input_Instance (Inst, 0);
                   --  That's the convention.
                   pragma Assert (Get_Id (Inst2) = Id_Memidx);
                   P := P + 1;
-                  Indexes (P) := (Inst => Inst2, Addr => No_Net, Step => 0);
+                  Indexes (P) := (Inst => Inst2, Addr => No_Net);
                   N := Get_Input_Net (Inst, 1);
                when others => raise Internal_Error;
             end case;
@@ -319,6 +320,9 @@ package body Netlists.Memories is
       --  Memory size is a multiple of data width.
       --  FIXME: doesn't work if only a part of the reg is a memory.
       pragma Assert (Mem_Size mod Val_Wd = 0);
+
+      Step1 := Get_Param_Uns32 (Indexes (1).Inst, 0);
+      pragma Assert (Val_Wd = Step1);
 
       --  Do checks on memidx.
       Is_Pow2 := True;
@@ -331,21 +335,21 @@ package body Netlists.Memories is
             Max : constant Uns32 := Get_Param_Uns32 (Inst, 1);
             Max_W : constant Width := Clog2 (Max + 1);
             Sub_Addr1 : Net;
+
+            Step_Addr : constant Uns32 := Step / Step1;
          begin
-            pragma Assert (I /= Indexes'First or else Step = Val_Wd);
+            --  Check the step is a multiple of data width.
+            pragma Assert (Step_Addr * Step1 = Step);
 
             --  For the addresses to be concatenated, the step must be
             --  a power of 2.
             --  The step of the first index is ignored as this is the width
             --  of the data.
-            if I /= Indexes'First
-              and then Is_Pow2
-              and then not Mutils.Is_Power2 (Uns64 (Step))
-            then
+            if Is_Pow2 and then not Mutils.Is_Power2 (Uns64 (Step_Addr)) then
                Is_Pow2 := False;
                Info_Msg_Synth
                  (+Inst, "internal width %v of memory is not a power of 2",
-                 (1 => +Step));
+                 (1 => +Step_Addr));
             end if;
 
             --  Check addr width.
@@ -360,7 +364,6 @@ package body Netlists.Memories is
                Sub_Addr1 := Sub_Addr;
             end if;
             Indexes (I).Addr := Sub_Addr1;
-            Indexes (I).Step := Step;
          end;
       end loop;
 
@@ -395,7 +398,7 @@ package body Netlists.Memories is
                   Step := 1;
                else
                   Midx := Indexes (I).Inst;
-                  Step := Step * Get_Param_Uns32 (Midx, 0);
+                  Step := Get_Param_Uns32 (Midx, 0) / Step1;
                   Addr_El := Step * (Get_Param_Uns32 (Midx, 1) + 1);
                   if Mutils.Is_Power2 (Uns64 (Addr_El)) then
                      Low_Addr := Build_Concat2
