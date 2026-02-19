@@ -70,6 +70,8 @@ package body Synth.Vhdl_Insts is
                                     Entity : Node;
                                     Arch : Node);
 
+   function Last_Inst_Index return Uns32;
+
    function Mode_To_Port_Kind (Mode : Iir_Mode) return Port_Kind is
    begin
       case Mode is
@@ -131,13 +133,29 @@ package body Synth.Vhdl_Insts is
       end if;
       Inter := Get_Generic_Chain (Params.Decl);
       while Inter /= Null_Node loop
-         pragma Assert (Get_Kind (Inter)
-                          = Iir_Kind_Interface_Constant_Declaration);
-         if not Is_Equal (Get_Value (Obj.Syn_Inst, Inter),
-                          Get_Value (Params.Syn_Inst, Inter))
-         then
-            return False;
-         end if;
+         case Get_Kind (Inter) is
+            when Iir_Kind_Interface_Constant_Declaration =>
+               if not Is_Equal (Get_Value (Obj.Syn_Inst, Inter),
+                               Get_Value (Params.Syn_Inst, Inter))
+               then
+                  return False;
+               end if;
+            when Iir_Kind_Interface_Type_Declaration =>
+               declare
+                  Type_Def : constant Node :=
+                    Get_Interface_Type_Definition (Inter);
+               begin
+                  if not Are_Types_Equal
+                    (Get_Subtype_Object (Obj.Syn_Inst, Type_Def),
+                     Get_Subtype_Object (Params.Syn_Inst, Type_Def))
+                  then
+                     return False;
+                  end if;
+               end;
+            when others =>
+               -- Other kinds of generics not supported yet.
+               Vhdl.Errors.Error_Kind ("inst_object.equal", Inter);
+         end case;
          Inter := Get_Chain (Inter);
       end loop;
 
@@ -263,9 +281,14 @@ package body Synth.Vhdl_Insts is
       Str : String (1 .. Str_Len + 41);
       Len : Natural;
 
+      --  If true, add a uniq number because of non-(easily-)hashable generic
+      Add_Uniq : Boolean;
+
       Gen_Decl : Node;
       Gen : Valtyp;
    begin
+      Add_Uniq := False;
+
       --  Put entity name.
       Len := Id_Len;
       Str (1 .. Len) := Get_Name_Ptr (Id) (1 .. Len);
@@ -316,8 +339,8 @@ package body Synth.Vhdl_Insts is
                   Hash_Const (Ctxt, Gen.Val, Gen.Typ);
             end case;
          else
-            --  TODO: add a unique number (index)
-            null;
+            --  For non-constant generic, simply add a uniq id.
+            Add_Uniq := True;
          end if;
          Gen_Decl := Get_Chain (Gen_Decl);
       end loop;
@@ -336,7 +359,17 @@ package body Synth.Vhdl_Insts is
             Port_Decl := Get_Chain (Port_Decl);
          end loop;
       end;
-      if Has_Hash then
+
+      if Add_Uniq then
+         declare
+            Img : constant String := Uns32'Image (Last_Inst_Index + 1);
+         begin
+            Str (Len + 1) := '_';
+            Len := Len + 1;
+            Str (Len + 1 .. Len + Img'Length - 1) := Img (2 .. Img'Last);
+            Len := Len + Img'Last - 1;
+         end;
+      elsif Has_Hash then
          Str (Len + 1) := '_';
          Len := Len + 1;
          Str (Len + 1 .. Len + 40) := GNAT.SHA1.Digest (Ctxt);
@@ -604,6 +637,11 @@ package body Synth.Vhdl_Insts is
       Equal => Equal);
 
    Next_Synth_Instance : Insts_Interning.Index_Type;
+
+   function Last_Inst_Index return Uns32 is
+   begin
+      return Uns32 (Insts_Interning.Last_Index);
+   end Last_Inst_Index;
 
    function Is_Arch_Black_Box (Inst : Synth_Instance_Acc; Arch : Node)
                               return Boolean
