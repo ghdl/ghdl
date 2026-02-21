@@ -152,9 +152,8 @@ package body Synth.Vhdl_Insts is
                      return False;
                   end if;
                end;
-            when others =>
-               -- Other kinds of generics not supported yet.
-               Vhdl.Errors.Error_Kind ("inst_object.equal", Inter);
+            -- Other kinds of generics not supported yet.
+            when others => Vhdl.Errors.Error_Kind ("inst_object.equal", Inter);
          end case;
          Inter := Get_Chain (Inter);
       end loop;
