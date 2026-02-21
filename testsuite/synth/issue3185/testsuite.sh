@@ -3,8 +3,10 @@
 . ../../testenv.sh
 
 GHDL_STD_FLAGS="--std=08"
-synth_tb test
+if ghdl_is_preelaboration; then
+  synth_tb test
 
-clean
+  clean
+fi
 
 echo "Test successful"
