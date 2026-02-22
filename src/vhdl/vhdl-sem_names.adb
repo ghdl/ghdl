@@ -4262,7 +4262,8 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kinds_Library_Unit
-           | Iir_Kind_Non_Object_Alias_Declaration =>
+           | Iir_Kind_Non_Object_Alias_Declaration
+           | Iir_Kind_Object_Alias_Declaration =>
             null;
 
          when Iir_Kind_Interface_Signal_Declaration

@@ -5520,7 +5520,9 @@ package body Vhdl.Evaluation is
            | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
-           | Iir_Kind_Component_Declaration =>
+           | Iir_Kind_Component_Declaration
+           | Iir_Kind_Object_Alias_Declaration
+           | Iir_Kind_Non_Object_Alias_Declaration =>
             Path_Add_Element (Get_Parent (Prefix), Is_Instance);
             Path_Add_Name (Prefix);
          when Iir_Kind_Library_Declaration
