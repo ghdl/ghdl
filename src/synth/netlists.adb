@@ -315,6 +315,18 @@ package body Netlists is
         + Port_Desc_Idx (Modules_Table.Table (M).Nbr_Inputs);
    end Get_Output_First_Desc;
 
+   function Get_Input_Port_Desc_Idx (M : Module; Port : Port_Idx)
+                                    return Port_Desc_Idx is
+   begin
+      return Get_Input_First_Desc (M) + Port_Desc_Idx (Port);
+   end Get_Input_Port_Desc_Idx;
+
+   function Get_Output_Port_Desc_Idx (M : Module; Port : Port_Idx)
+                                     return Port_Desc_Idx is
+   begin
+      return Get_Output_First_Desc (M) + Port_Desc_Idx (Port);
+   end Get_Output_Port_Desc_Idx;
+
    function Get_Self_Instance (M : Module) return Instance is
    begin
       pragma Assert (Is_Valid (M));
@@ -935,34 +947,32 @@ package body Netlists is
 
    function Get_Input_Desc (M : Module; I : Port_Idx) return Port_Desc
    is
-      F : constant Port_Desc_Idx := Get_Input_First_Desc (M);
       pragma Assert (I < Get_Nbr_Inputs (M));
+      Idx : constant Port_Desc_Idx := Get_Input_Port_Desc_Idx (M, I);
    begin
-      return Get_Port_Desc (F + Port_Desc_Idx (I));
+      return Get_Port_Desc (Idx);
    end Get_Input_Desc;
 
    function Get_Output_Desc (M : Module; O : Port_Idx) return Port_Desc
    is
-      F : constant Port_Desc_Idx := Get_Output_First_Desc (M);
       pragma Assert (O < Get_Nbr_Outputs (M));
+      Idx : constant Port_Desc_Idx := Get_Output_Port_Desc_Idx (M, O);
    begin
-      return Get_Port_Desc (F + Port_Desc_Idx (O));
+      return Get_Port_Desc (Idx);
    end Get_Output_Desc;
 
    procedure Set_Input_Desc (M : Module; I : Port_Idx; Desc : Port_Desc)
    is
-      F : constant Port_Desc_Idx := Get_Input_First_Desc (M);
       pragma Assert (I < Get_Nbr_Inputs (M));
-      Idx : constant Port_Desc_Idx := F + Port_Desc_Idx (I);
+      Idx : constant Port_Desc_Idx := Get_Input_Port_Desc_Idx (M, I);
    begin
       Set_Port_Desc (Idx, Desc);
    end Set_Input_Desc;
 
    procedure Set_Output_Desc (M : Module; O : Port_Idx; Desc : Port_Desc)
    is
-      F : constant Port_Desc_Idx := Get_Output_First_Desc (M);
       pragma Assert (O < Get_Nbr_Outputs (M));
-      Idx : constant Port_Desc_Idx := F + Port_Desc_Idx (O);
+      Idx : constant Port_Desc_Idx := Get_Output_Port_Desc_Idx (M, O);
    begin
       Set_Port_Desc (Idx, Desc);
    end Set_Output_Desc;
@@ -1445,8 +1455,7 @@ package body Netlists is
    function Get_Input_Port_First_Attribute (M : Module; Port : Port_Idx)
                                            return Attribute
    is
-      Idx  : constant Port_Desc_Idx :=
-        Get_Input_First_Desc (M) + Port_Desc_Idx (Port);
+      Idx  : constant Port_Desc_Idx := Get_Input_Port_Desc_Idx (M, Port);
    begin
       return Get_Port_First_Attribute (Idx);
    end Get_Input_Port_First_Attribute;
@@ -1454,8 +1463,7 @@ package body Netlists is
    function Get_Output_Port_First_Attribute (M : Module; Port : Port_Idx)
                                             return Attribute
    is
-      Idx  : constant Port_Desc_Idx :=
-        Get_Output_First_Desc (M) + Port_Desc_Idx (Port);
+      Idx  : constant Port_Desc_Idx := Get_Output_Port_Desc_Idx (M, Port);
    begin
       return Get_Port_First_Attribute (Idx);
    end Get_Output_Port_First_Attribute;
