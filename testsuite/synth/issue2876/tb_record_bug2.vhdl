@@ -23,6 +23,31 @@ uut : entity work.record_bug2
 clk <= not clk after 5 ns;
 rst <= '0' after 20 ns;
 
+--  process (clk)
+--  begin
+--    if rising_edge(clk) then
+--      report "i=" & to_hstring(<<signal uut.i : std_logic_vector(1 downto 0)>>) & ", j=" & to_hstring(<<signal uut.j : std_logic_vector(1 downto 0)>>);
+--      report "v=" & to_hstring(<<signal uut.v : std_logic_vector(95 downto 0)>>);
+--    end if;
+--  end process;
+
+--  Result:
+-- @35ns:(report note): i=0, j=0
+-- @35ns:(report note): v=000000BB0000000000000000
+-- @45ns:(report note): i=1, j=0
+-- @45ns:(report note): v=AA0000BB0000000000000000
+-- @55ns:(report note): i=2, j=0
+-- @55ns:(report note): v=AA0000BBAA00000000000000
+-- @65ns:(report note): i=0, j=1
+-- @65ns:(report note): v=AA0000BBAA000000AA000000
+-- @75ns:(report note): i=1, j=1
+-- @75ns:(report note): v=AAAA00BBAA000000AA000000
+-- @85ns:(report note): i=2, j=1
+-- @85ns:(report note): v=AAAA00BBAAAA0000AA000000
+-- @95ns:(report note): i=0, j=2
+-- @95ns:(report note): v=AAAA00BBAAAA0000AAAA0000
+-- @100ns:(report note): Test OK!
+
 process
 begin
     wait for 100 ns;
