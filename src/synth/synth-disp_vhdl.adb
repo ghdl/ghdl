@@ -358,9 +358,9 @@ package body Synth.Disp_Vhdl is
             for I in 0 .. Bnd.Len - 1 loop
                case Bnd.Dir is
                   when Dir_To =>
-                     Idx := Bnd.Left + Int32 (I);
+                     Idx := Bnd.Right - Int32 (I);
                   when Dir_Downto =>
-                     Idx := Bnd.Left - Int32 (I);
+                     Idx := Bnd.Right + Int32 (I);
                end case;
                Disp_Converter
                  (Wname,
