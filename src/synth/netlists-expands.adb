@@ -212,13 +212,7 @@ package body Netlists.Expands is
          end;
       else
          --  2. Compute index
-         Lower_Memidx_Address (Ctxt, Memidx_Arr, Addr);
-
-         --  dyn_extract is not a memory, the address is a bit offset (and
-         --  not a data address).  Need to multiply by the first step.
-         Addr := Build2_Umul
-           (Ctxt, Addr, Get_Memidx_Step (Memidx_Arr (1)),
-            Get_Location (Memidx_Arr (1)));
+         Lower_Memidx_Address (Ctxt, Memidx_Arr, Lower_Extract, Addr);
 
          Remove_Memidx (Addr_Net);
          --  Keep Dyn_Extract, but the index is a single value
@@ -423,7 +417,7 @@ package body Netlists.Expands is
       Gather_Memidx (Addr_Net, Memidx_Arr);
       Nbr_Els := Count_Nbr_Els (Memidx_Arr);
 
-      Lower_Memidx_Address (Ctxt, Memidx_Arr, Addr);
+      Lower_Memidx_Address (Ctxt, Memidx_Arr, Lower_Insert, Addr);
 
       --  Generate decoder.
       Net_Arr := new Net_Array(0 .. Int32 (Nbr_Els - 1));

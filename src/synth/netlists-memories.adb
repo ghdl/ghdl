@@ -347,53 +347,56 @@ package body Netlists.Memories is
    end Remove_Memidx;
 
    --  Extract address from memidx/addidx.
-   procedure Lower_Memidx_Address
-     (Ctxt : Context_Acc; Memidx_Arr : Instance_Array; Addr : out Net)
+   --  If IS_PARALLEL is set, each step is divided by the step of the first
+   --  memidx.  This is to handle memories, where the output is parallel and
+   --  the address is a word address.
+   --  When IS_PARALLEL is not set, the address is a bit address.
+   procedure Lower_Memidx_Address (Ctxt : Context_Acc;
+                                   Memidx_Arr : Instance_Array;
+                                   Mode : Lower_Mode;
+                                   Addr : out Net)
    is
       Inst : Instance;
-      Max : Uns32;
-      Max_Width : Width;
       Part_Addr : Net;
+      Step, Step0 : Uns32;
    begin
       --  Avoid warnings
-      Max := 0;
-      Max_Width := 0;
+      Step0 := 1;
+      Addr := No_Net;
 
       --  Dimension 1 is the least significant part of the address
       for I in Memidx_Arr'Range loop
          Inst := Memidx_Arr (I);
 
-         --  INST1 is a memidx.
          Part_Addr := Get_Input_Net (Inst, 0);
-         if I = Memidx_Arr'First then
-            --  First memidx, which is the LSB.  Nothing to do.
-            Addr := Part_Addr;
-         else
-            --  Following memidx, need to be multiplied by (max+1) of the
-            --  previous memidx.
-            if 2**Natural (Max_Width) /= Max + 1 then
-               --  Not a power of 2!
-               --  ADDR := ADDR + PART_ADDR * (MAX + 1)
-               declare
-                  W : constant Width := Get_Width (Part_Addr) + Max_Width;
-                  Loc : constant Location_Type := Get_Location (Inst);
-                  Mul : Net;
-               begin
-                  Mul := Build2_Const_Uns (Ctxt, Uns64 (Max + 1), W);
-                  Part_Addr := Build2_Uresize (Ctxt, Part_Addr, W, Loc);
-                  Part_Addr := Build_Dyadic (Ctxt, Id_Umul, Part_Addr, Mul);
-                  Set_Location (Part_Addr, Loc);
-                  Addr := Build2_Uresize (Ctxt, Addr, W, Loc);
-                  Addr := Build_Dyadic (Ctxt, Id_Add, Addr, Part_Addr);
-                  Set_Location (Addr, Loc);
-               end;
-            else
-               Addr := Build_Concat2 (Ctxt, Part_Addr, Addr);
-               Copy_Location (Addr, Inst);
-            end if;
-         end if;
-         Max := Get_Memidx_Max (Inst);
-         Max_Width := Clog2 (Max + 1);
+         case Mode is
+            when Lower_Memory =>
+               --  In memory mode, the step of the first index corresponds
+               --  to the data width.
+               --  The address is the word address, so the steps should be
+               --  divided by the data width (= the first step).
+               Step := Get_Memidx_Step (Inst);
+               if I = Memidx_Arr'First then
+                  --  Extract data width from the first step.
+                  Step0 := Step;
+                  Step := 1;
+               else
+                  Step := Step / Step0;
+               end if;
+            when Lower_Extract =>
+               --  In extract mode, the offset is a bit offset.  Each index
+               --  must be multiplied by the step.
+               Step := Get_Memidx_Step (Inst);
+            when Lower_Insert =>
+               --  In insert mode, the address is an index, so there must be
+               --  no hole.  Each memidx index must be multiplied by the
+               --  product of the length of previous dimensions.
+               Step := Step0;
+               Step0 := Step0 * (Get_Memidx_Max (Inst) + 1);
+         end case;
+
+         Addr := Build2_Addmul
+           (Ctxt, Part_Addr, Step, Addr, Get_Location (Inst));
       end loop;
    end Lower_Memidx_Address;
 
@@ -478,7 +481,7 @@ package body Netlists.Memories is
                    Get_Location (Get_Net_Parent (Addr)), Low_Addr);
          end;
       else
-         Lower_Memidx_Address (Ctxt, Indexes, Low_Addr);
+         Lower_Memidx_Address (Ctxt, Indexes, Lower_Memory, Low_Addr);
       end if;
 
       --  Free addidx and memidx.

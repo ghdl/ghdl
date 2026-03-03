@@ -43,7 +43,11 @@ package Netlists.Memories is
    --  this is the only connection.
    procedure Remove_Memidx (Addr_Net : Net);
 
-   procedure Lower_Memidx_Address
-     (Ctxt : Context_Acc; Memidx_Arr : Instance_Array; Addr : out Net);
+   type Lower_Mode is (Lower_Memory, Lower_Extract, Lower_Insert);
+
+   procedure Lower_Memidx_Address (Ctxt : Context_Acc;
+                                   Memidx_Arr : Instance_Array;
+                                   Mode : Lower_Mode;
+                                   Addr : out Net);
 
 end Netlists.Memories;
