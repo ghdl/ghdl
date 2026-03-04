@@ -680,7 +680,10 @@ package body Synth.Vhdl_Stmts is
          then
             pragma Assert (Off = No_Value_Offsets);
             M := Unshare (Get_Memtyp (V), Wireval_Pool'Access);
-            M.Typ := Unshare (M.Typ, Wireval_Pool'Access);
+            --  M.Typ can be in instance_pool, which could be free before
+            --  (subprogram calls).  Simply use the wire type for the value
+            --  type.
+            M.Typ := Targ.Typ;
             Phi_Assign_Static (W, M);
          else
             if V.Typ.W = 0 then

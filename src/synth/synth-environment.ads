@@ -138,7 +138,7 @@ package Synth.Environment is
    procedure Phi_Assign_Net
      (Ctxt : Builders.Context_Acc; Dest : Wire_Id; Val : Net; Offset : Uns32);
 
-   --  Assign a static value to DEST.  VAL is copied.
+   --  Assign a static value VAL to DEST.
    procedure Phi_Assign_Static (Dest : Wire_Id; Val : Static_Type);
 
    --  A Phi represent a split in the control flow (two or more branches).
