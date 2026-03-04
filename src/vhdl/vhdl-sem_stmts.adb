@@ -532,7 +532,7 @@ package body Vhdl.Sem_Stmts is
          Error_Msg_Sem (+Stmt, "signal name must be static");
       end if;
 
-      Sem_Check_Pure (Target, Target_Object);
+      Sem_Check_Pure (Target, Target_Prefix);
 
       --  LRM93 2.1.1.2
       --  A formal signal parameter is a guarded signal if and only if
