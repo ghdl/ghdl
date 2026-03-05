@@ -130,7 +130,8 @@ package body Netlists.Cleanup is
                when Param_Invalid =>
                   raise Internal_Error;
                when Param_Uns32
-                  | Param_Pval_Integer
+                  | Param_Pval_Signed
+                  | Param_Pval_Unsigned
                   | Param_Pval_Real
                   | Param_Pval_Time_Ps =>
                   raise Internal_Error;

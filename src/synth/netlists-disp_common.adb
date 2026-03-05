@@ -293,7 +293,7 @@ package body Netlists.Disp_Common is
       Wr ('"');
    end Disp_Pval_Binary;
 
-   procedure Disp_Pval_Integer (Pv : Pval)
+   procedure Disp_Pval_Integer (Pv : Pval; Signed : Boolean)
    is
       use Types_Utils;
       Len : constant Uns32 := Get_Pval_Length (Pv);
@@ -316,12 +316,26 @@ package body Netlists.Disp_Common is
 
          --  Sign extend.
          V := Shift_Left (V, Natural (64 - Len));
-         V := Shift_Right_Arithmetic (V, Natural (64 - Len));
+         if Signed then
+            V := Shift_Right_Arithmetic (V, Natural (64 - Len));
+         else
+            V := Shift_Right (V, Natural (64 - Len));
+         end if;
 
          Res := To_Int64 (V);
          Wr_Trim (Int64'Image (Res));
       end if;
    end Disp_Pval_Integer;
+
+   procedure Disp_Pval_Signed (Pv : Pval) is
+   begin
+      Disp_Pval_Integer (Pv, True);
+   end Disp_Pval_Signed;
+
+   procedure Disp_Pval_Unsigned (Pv : Pval) is
+   begin
+      Disp_Pval_Integer (Pv, False);
+   end Disp_Pval_Unsigned;
 
    procedure Disp_Pval_String (Pv : Pval)
    is

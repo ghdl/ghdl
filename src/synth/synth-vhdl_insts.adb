@@ -547,7 +547,8 @@ package body Synth.Vhdl_Insts is
             Nbr_Params := 0;
             while Inter /= Null_Node loop
                --  Bounds or range of the type.
-               Ptype := Type_To_Param_Type (Get_Type (Inter));
+               Inter_Typ := Get_Value (Params.Syn_Inst, Inter).Typ;
+               Ptype := Type_To_Param_Type (Get_Type (Inter), Inter_Typ);
                Nbr_Params := Nbr_Params + 1;
                Descs (Nbr_Params) :=
                  (Name => Create_Inter_Name (Inter, Params.Encoding),

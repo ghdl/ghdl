@@ -26,7 +26,8 @@ with Netlists; use Netlists;
 
 package Synth.Vhdl_Decls is
    --  Return the Param_Type for ATYPE.
-   function Type_To_Param_Type (Atype : Node) return Param_Type;
+   function Type_To_Param_Type (Atype : Node; Typ : Type_Acc)
+                               return Param_Type;
 
    --  Convert MT to a Pval.
    function Memtyp_To_Pval (Mt : Memtyp) return Pval;

@@ -141,10 +141,12 @@ package body Netlists.Dump is
             Disp_Pval_String (Get_Param_Pval (Inst, Idx));
          when Param_Pval_Vector =>
             Disp_Pval_Binary (Get_Param_Pval (Inst, Idx));
-         when Param_Pval_Integer
-            | Param_Pval_Time_Ps
+         when Param_Pval_Signed
+            | Param_Pval_Time_Ps =>
+            Disp_Pval_Signed (Get_Param_Pval (Inst, Idx));
+         when Param_Pval_Unsigned
             | Param_Pval_Boolean =>
-            Disp_Pval_Integer (Get_Param_Pval (Inst, Idx));
+            Disp_Pval_Unsigned (Get_Param_Pval (Inst, Idx));
          when Param_Pval_Real =>
             Disp_Common.Disp_Pval_Fp64 (Get_Param_Pval (Inst, Idx));
       end case;
@@ -165,7 +167,8 @@ package body Netlists.Dump is
          when Param_Pval_String =>
             Disp_Pval_String (Val);
          when Param_Pval_Vector
-            | Param_Pval_Integer
+            | Param_Pval_Signed
+            | Param_Pval_Unsigned
             | Param_Pval_Boolean
             | Param_Pval_Real
             | Param_Pval_Time_Ps =>
@@ -342,8 +345,10 @@ package body Netlists.Dump is
                Wr ("vector");
             when Param_Pval_String =>
                Wr ("string");
-            when Param_Pval_Integer =>
-               Wr ("integer");
+            when Param_Pval_Signed =>
+               Wr ("signed");
+            when Param_Pval_Unsigned =>
+               Wr ("unsigned");
             when Param_Pval_Real =>
                Wr ("real");
             when Param_Pval_Time_Ps =>
@@ -615,7 +620,8 @@ package body Netlists.Dump is
                   when Param_Pval_String =>
                      Disp_Pval_String (Val);
                   when Param_Pval_Vector
-                    | Param_Pval_Integer
+                    | Param_Pval_Signed
+                    | Param_Pval_Unsigned
                     | Param_Pval_Boolean
                     | Param_Pval_Real
                     | Param_Pval_Time_Ps =>

@@ -211,10 +211,10 @@ package Netlists is
 
       --  A Generic value (with a hint of the type).  This is a bit/logic
       --  vector.
-      --  TODO: Replace Integer with Signed/Unsigned.
       Param_Pval_Vector,
       Param_Pval_String,
-      Param_Pval_Integer,
+      Param_Pval_Signed,
+      Param_Pval_Unsigned,
       Param_Pval_Real,
       Param_Pval_Time_Ps,
       Param_Pval_Boolean

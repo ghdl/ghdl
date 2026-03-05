@@ -38,8 +38,9 @@ package Netlists.Disp_Common is
    --  Disp PV as a 64b floating point.
    procedure Disp_Pval_Fp64 (Pv : Pval);
 
-   --  Disp PV (32/64) as an decimal integer.
-   procedure Disp_Pval_Integer (Pv : Pval);
+   --  Disp PV as an decimal integer.
+   procedure Disp_Pval_Signed (Pv : Pval);
+   procedure Disp_Pval_Unsigned (Pv : Pval);
 
    --  Disp name N without extended character.
    --  Useful when a suffix or a prefix is needed.

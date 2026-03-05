@@ -244,8 +244,10 @@ package body Netlists.Disp_Verilog is
                  | Param_Pval_Time_Ps
                  | Param_Pval_Boolean =>
                   Disp_Pval_Vector (Get_Param_Pval (Inst, P - 1));
-               when Param_Pval_Integer =>
-                  Disp_Pval_Integer (Get_Param_Pval (Inst, P - 1));
+               when Param_Pval_Signed =>
+                  Disp_Pval_Signed (Get_Param_Pval (Inst, P - 1));
+               when Param_Pval_Unsigned =>
+                  Disp_Pval_Unsigned (Get_Param_Pval (Inst, P - 1));
                when Param_Pval_Real =>
                   Disp_Pval_Fp64 (Get_Param_Pval (Inst, P - 1));
                when Param_Invalid =>

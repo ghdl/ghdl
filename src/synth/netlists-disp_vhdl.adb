@@ -255,8 +255,10 @@ package body Netlists.Disp_Vhdl is
                   Disp_Pval_Binary (Get_Param_Pval (Inst, P - 1));
                when Param_Pval_Real =>
                   Disp_Pval_Fp64 (Get_Param_Pval (Inst, P - 1));
-               when Param_Pval_Integer =>
-                  Disp_Pval_Integer (Get_Param_Pval (Inst, P - 1));
+               when Param_Pval_Signed =>
+                  Disp_Pval_Signed (Get_Param_Pval (Inst, P - 1));
+               when Param_Pval_Unsigned =>
+                  Disp_Pval_Unsigned (Get_Param_Pval (Inst, P - 1));
                when Param_Invalid =>
                   Wr ("*invalid*");
             end case;
@@ -625,7 +627,8 @@ package body Netlists.Disp_Vhdl is
          when Param_Pval_Boolean =>
             Wr ("boolean");
          when Param_Pval_Vector
-           | Param_Pval_Integer
+           | Param_Pval_Signed
+           | Param_Pval_Unsigned
            | Param_Pval_Real
            | Param_Pval_Time_Ps =>
             Wr ("integer");
@@ -660,7 +663,8 @@ package body Netlists.Disp_Vhdl is
                Wr ("false");
             end if;
          when Param_Pval_Vector
-           | Param_Pval_Integer
+           | Param_Pval_Signed
+           | Param_Pval_Unsigned
            | Param_Pval_Real
            | Param_Pval_Time_Ps =>
             Disp_Pval_Binary (Val);

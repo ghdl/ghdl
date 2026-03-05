@@ -79,7 +79,7 @@ package body Synth.Vhdl_Decls is
       return Create_Value_Wire (Wid, Init.Typ, Instance_Pool);
    end Create_Var_Wire;
 
-   function Type_To_Param_Type (Atype : Node) return Param_Type
+   function Type_To_Param_Type (Atype : Node; Typ : Type_Acc) return Param_Type
    is
       use Vhdl.Std_Package;
       Btype : constant Node := Get_Base_Type (Atype);
@@ -93,7 +93,11 @@ package body Synth.Vhdl_Decls is
       else
          case Get_Kind (Btype) is
             when Iir_Kind_Integer_Type_Definition =>
-               return Param_Pval_Integer;
+               if Typ.Drange.Is_Signed then
+                  return Param_Pval_Signed;
+               else
+                  return Param_Pval_Unsigned;
+               end if;
             when Iir_Kind_Floating_Type_Definition =>
                return Param_Pval_Real;
             when others =>
@@ -233,7 +237,7 @@ package body Synth.Vhdl_Decls is
    begin
       --  Keep original case.
       Id := Get_Source_Identifier (Attr_Decl);
-      Ptype := Type_To_Param_Type (Get_Type (Attr_Decl));
+      Ptype := Type_To_Param_Type (Get_Type (Attr_Decl), Val.Typ);
       Pv := Memtyp_To_Pval (Get_Memtyp (Val));
    end Synth_Attribute_Value;
 
