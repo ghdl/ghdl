@@ -302,21 +302,25 @@ package body Netlists.Disp_Common is
       V : Uns64;
       Res : Int64;
    begin
-      Lg := Read_Pval (Pv, 0);
-      pragma Assert (Lg.Zx = 0);
-      V := Uns64 (Lg.Val);
-      if Len > 32 then
-         Lg := Read_Pval (Pv, 1);
+      if Len = 0 then
+         Wr ('0');
+      else
+         Lg := Read_Pval (Pv, 0);
          pragma Assert (Lg.Zx = 0);
-         V := V or Shift_Left (Uns64 (Lg.Val), 32);
+         V := Uns64 (Lg.Val);
+         if Len > 32 then
+            Lg := Read_Pval (Pv, 1);
+            pragma Assert (Lg.Zx = 0);
+            V := V or Shift_Left (Uns64 (Lg.Val), 32);
+         end if;
+
+         --  Sign extend.
+         V := Shift_Left (V, Natural (64 - Len));
+         V := Shift_Right_Arithmetic (V, Natural (64 - Len));
+
+         Res := To_Int64 (V);
+         Wr_Trim (Int64'Image (Res));
       end if;
-
-      --  Sign extend.
-      V := Shift_Left (V, Natural (64 - Len));
-      V := Shift_Right_Arithmetic (V, Natural (64 - Len));
-
-      Res := To_Int64 (V);
-      Wr_Trim (Int64'Image (Res));
    end Disp_Pval_Integer;
 
    procedure Disp_Pval_String (Pv : Pval)
