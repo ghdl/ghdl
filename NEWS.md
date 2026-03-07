@@ -1,3 +1,8 @@
+## [2026-03-07] 6.0
+
+- Initial support of vhdl2019 (with --std=19)
+- --finteger64 fully supported (with jit backends)
+
 ## [2025-06-17] 5.1
 
 - Improve release management
