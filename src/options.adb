@@ -175,6 +175,10 @@ package body Options is
          else
             Libraries.Add_Library_Path (Opt (3 .. Opt'Last));
          end if;
+      elsif Opt = "--no-notes" then
+         Errorout.Flag_Notes := False;
+      elsif Opt = "--notes" then
+         Errorout.Flag_Notes := True;
       elsif Opt'Length > 10 and then Opt (1 .. 10) = "--workdir=" then
          Libraries.Set_Work_Library_Path (Opt (11 .. Opt'Last));
       elsif Opt'Length > 10 and then Opt (1 .. 10) = "--warn-no-" then

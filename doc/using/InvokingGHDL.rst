@@ -772,6 +772,10 @@ Diagnostics Control
 
   Control whether the source line of the error is displayed with a caret indicating the column of the error.
 
+.. option:: --notes
+.. option:: --no-notes
+
+  Control whether note diagnositcs are displayed.  They are displayed by default.
 
 Library commands
 ================

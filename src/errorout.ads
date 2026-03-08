@@ -24,6 +24,9 @@ package Errorout is
    --  Maximum number of errors, before silent them.
    Max_Nbr_Errors : Natural := 100;
 
+   --  Display notes
+   Flag_Notes : Boolean := True;
+
    type Msgid_Type is
      (
       --  Any note

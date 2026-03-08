@@ -344,9 +344,20 @@ package body Errorout is
       Err : Error_Record;
    begin
       --  Discard warnings that aren't enabled.
-      if Id in Msgid_Warnings and then not Is_Warning_Enabled (Id) then
-         return;
-      end if;
+      case Id is
+         when Msgid_Note =>
+            if not Flag_Notes then
+               return;
+            end if;
+         when Msgid_Warnings =>
+            if not Is_Warning_Enabled (Id) then
+               return;
+            end if;
+         when Msgid_Warning
+           | Msgid_Error
+           | Msgid_Fatal =>
+            null;
+      end case;
 
       --  Reclassify warnings to errors if -Werror.
       if Id in Msgid_All_Warnings and then Is_Warning_Error (Id) then
