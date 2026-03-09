@@ -1383,7 +1383,6 @@ package body Vhdl.Sem_Stmts is
          when others =>
             Error_Kind ("sem_return_statement", Stmt);
       end case;
-      Set_Type (Stmt, Get_Return_Type (Current_Subprogram));
       Expr := Sem_Expression (Expr, Get_Return_Type (Current_Subprogram));
       if Expr /= Null_Iir then
          Check_Read (Expr);
