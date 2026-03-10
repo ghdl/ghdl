@@ -45,7 +45,6 @@ package body Elab.Debugger is
    Current_Loc : Node;
 
    Current_Frame : Synth_Instance_Acc;
-   Current_Frame_Stmt : Node;
 
    type Debug_Reason is
      (
@@ -58,8 +57,8 @@ package body Elab.Debugger is
    procedure Get_Debug_Frame (Inst : out Synth_Instance_Acc;
                               Stmt : out Node) is
    begin
-      Inst := Current_Frame;
-      Stmt := Current_Frame_Stmt;
+      Inst := Current_Instance;
+      Stmt := Current_Loc;
    end Get_Debug_Frame;
 
    package Breakpoints is new Tables
@@ -534,7 +533,6 @@ package body Elab.Debugger is
          Put_Line ("top frame reached");
          return;
       end if;
-      Current_Frame_Stmt := Get_Statement_Scope (Current_Frame);
       Current_Frame := Inst;
    end Up_Proc;
 
@@ -614,7 +612,10 @@ package body Elab.Debugger is
          Put_Line ("usage: ch ..");
          Put_Line ("       ch LABEL");
          return;
-      elsif Line (F .. Line'Last) = ".." then
+      end if;
+
+      --  TODO: handle xxx/yyy
+      if Line (F .. Line'Last) = ".." then
          Res := Get_Instance_Path_Parent (Current_Instance);
          if Res = null then
             Put_Line ("already at top");
@@ -858,7 +859,6 @@ package body Elab.Debugger is
       Current_Loc := Top;
 
       Current_Frame := null;
-      Current_Frame_Stmt := Null_Node;
 
       --  To avoid warnings.
       Exec_Statement := Null_Node;
@@ -873,7 +873,6 @@ package body Elab.Debugger is
       Current_Loc := Get_Source_Scope (Top);
 
       Current_Frame := Top;
-      Current_Frame_Stmt := Null_Node;
 
       Flag_Debug_Enable := True;
 
@@ -890,7 +889,6 @@ package body Elab.Debugger is
       Current_Loc := Stmt;
 
       Current_Frame := Inst;
-      Current_Frame_Stmt := Stmt;
 
       Debug (Reason_Break);
    end Debug_Break;
@@ -901,7 +899,6 @@ package body Elab.Debugger is
       Current_Loc := Null_Node;
 
       Current_Frame := Top;
-      Current_Frame_Stmt := Null_Node;
 
       Debug (Reason_Time);
    end Debug_Time;
@@ -932,7 +929,6 @@ package body Elab.Debugger is
          Current_Loc := Expr;
 
          Current_Frame := Inst;
-         Current_Frame_Stmt := Null_Node;
 
          Debug (Reason_Error);
       end if;
