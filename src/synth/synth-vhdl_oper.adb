@@ -110,8 +110,8 @@ package body Synth.Vhdl_Oper is
 
       To_Logic (Ghdl_U8 (Read_Discrete (Cst)), Cst.Typ, Val, Zx);
       if Zx /= 0 then
-         --  Equal unknown -> return X
-         N := Build_Const_UL32 (Ctxt, 0, 1, 1);
+         --  Equal unknown -> return 0
+         N := Build_Const_UB32 (Ctxt, 0, 1);
          Set_Location (N, Loc);
          return Create_Value_Net (N, Boolean_Type);
       elsif Val = 1 then
