@@ -4275,6 +4275,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Parent (Field0)
    --
+   --   Get/Set_Condition (Field1)
+   --
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Label (Field3)
@@ -4285,6 +4287,8 @@ package Vhdl.Nodes is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Covered_Flag (Flag10)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Case_Statement (Short)
    --

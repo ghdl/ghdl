@@ -3859,11 +3859,44 @@ package body Synth.Vhdl_Stmts is
 
    procedure Synth_Return_Statement (C : in out Seq_Context; Stmt : Node)
    is
+      Cond : constant Node := Get_Condition (Stmt);
       Is_Dyn : constant Boolean := not Get_Instance_Const (C.Inst);
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
       Expr : constant Node := Get_Expression (Stmt);
+      Cond_Static : Int64;
+      Marker : Mark_Type;
+      Cond_Val : Valtyp;
+      Cond_Net : Net;
+      Phi_True : Phi_Type;
+      Phi_False : Phi_Type;
       Val : Valtyp;
    begin
+      if Cond /= Null_Node then
+         Mark_Expr_Pool (Marker);
+
+         Cond_Val := Synth_Expression (C.Inst, Cond);
+         if Cond_Val = No_Valtyp then
+            Set_Error (C.Inst);
+            Release_Expr_Pool (Marker);
+            return;
+         end if;
+
+         if Is_Static_Val (Cond_Val.Val) then
+            Strip_Const (Cond_Val);
+            Cond_Static := Read_Discrete (Get_Value_Memtyp (Cond_Val));
+            Release_Expr_Pool (Marker);
+
+            if Cond_Static = 0 then
+               return;
+            end if;
+         else
+            Cond_Net := Get_Net (Ctxt, Cond_Val);
+            Release_Expr_Pool (Marker);
+
+            Push_Phi;
+         end if;
+      end if;
+
       if Expr /= Null_Node then
          --  Return in function.
          Val := Synth_Expression_With_Type (C.Inst, Expr, C.Ret_Typ);
@@ -3914,6 +3947,15 @@ package body Synth.Vhdl_Stmts is
       end if;
 
       C.Nbr_Ret := C.Nbr_Ret + 1;
+
+      if Cond /= Null_Node and then not Is_Static_Val (Cond_Val.Val) then
+         Pop_Phi (Phi_True);
+
+         Push_Phi;
+         Pop_Phi (Phi_False);
+
+         Merge_Phis (Ctxt, Cond_Net, Phi_True, Phi_False, Get_Location (Stmt));
+      end if;
    end Synth_Return_Statement;
 
    procedure Disp_A_Frame_Err is new

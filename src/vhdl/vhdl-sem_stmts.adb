@@ -1356,8 +1356,9 @@ package body Vhdl.Sem_Stmts is
       end case;
    end Sem_Variable_Assignment;
 
-   procedure Sem_Return_Statement (Stmt: Iir_Return_Statement) is
-      Expr: Iir;
+   procedure Sem_Return_Statement (Stmt: Iir_Return_Statement)
+   is
+      Expr : Iir;
    begin
       if Current_Subprogram = Null_Iir then
          Error_Msg_Sem (+Stmt, "return statement not in a subprogram body");
@@ -1388,6 +1389,8 @@ package body Vhdl.Sem_Stmts is
          Check_Read (Expr);
          Set_Expression (Stmt, Eval_Expr_If_Static (Expr));
       end if;
+
+      Sem_Condition_Opt (Stmt);
    end Sem_Return_Statement;
 
    procedure Sem_Report_Expression (Stmt : Iir)

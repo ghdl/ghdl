@@ -122,6 +122,14 @@ package body Vhdl.Parse is
       end if;
    end Check_Vhdl_At_Least_2008;
 
+   procedure Check_Vhdl_At_Least_2019 (Msg: String) is
+   begin
+      if Vhdl_Std < Vhdl_19 then
+         Report_Msg (Msgid_Error, Errorout.Parse, Get_Token_Coord, Msg &
+                     " not allowed before VHDL 2019. Compile with --std=19");
+      end if;
+   end Check_Vhdl_At_Least_2019;
+
    procedure Error_Msg_Parse (Loc : Location_Type;
                               Msg: String;
                               Args : Earg_Arr := No_Eargs) is
@@ -8838,6 +8846,15 @@ package body Vhdl.Parse is
 
                if Current_Token /= Tok_Semi_Colon then
                   Set_Expression (Stmt, Parse_Expression);
+               end if;
+
+               if Current_Token = Tok_When then
+                  Check_Vhdl_At_Least_2019 ("conditional return statement");
+
+                  --  Skip 'when'.
+                  Scan;
+
+                  Set_Condition (Stmt, Parse_Expression);
                end if;
 
             when Tok_For =>

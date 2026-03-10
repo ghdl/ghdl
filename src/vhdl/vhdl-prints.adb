@@ -3469,14 +3469,23 @@ package body Vhdl.Prints is
             when Iir_Kind_Report_Statement =>
                Disp_Report_Statement (Ctxt, Stmt);
             when Iir_Kind_Return_Statement =>
-               Start_Hbox (Ctxt);
-               Disp_Label (Ctxt, Stmt);
-               Disp_Token (Ctxt, Tok_Return);
-               if Get_Expression (Stmt) /= Null_Iir then
-                  Print (Ctxt, Get_Expression (Stmt));
-               end if;
-               Disp_Token (Ctxt, Tok_Semi_Colon);
-               Close_Hbox (Ctxt);
+               declare
+                  Expr : constant Iir := Get_Expression (Stmt);
+                  Cond : constant Iir := Get_Condition (Stmt);
+               begin
+                  Start_Hbox (Ctxt);
+                  Disp_Label (Ctxt, Stmt);
+                  Disp_Token (Ctxt, Tok_Return);
+                  if Expr /= Null_Iir then
+                     Print (Ctxt, Expr);
+                  end if;
+                  if Cond /= Null_Iir then
+                     Disp_Token (Ctxt, Tok_When);
+                     Print (Ctxt, Cond);
+                  end if;
+                  Disp_Token (Ctxt, Tok_Semi_Colon);
+                  Close_Hbox (Ctxt);
+               end;
             when Iir_Kind_Case_Statement =>
                Disp_Case_Statement (Ctxt, Stmt);
             when Iir_Kind_Wait_Statement =>

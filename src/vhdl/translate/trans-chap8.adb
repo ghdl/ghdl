@@ -166,11 +166,44 @@ package body Trans.Chap8 is
       New_Return_Stmt;
    end State_Suspend;
 
+   --  Translate the condition COND of a control statement.
+   --  This is special as it frees immediately the stack2 (if needed) because
+   --  the control statement may prevent the execution of the normal stack2
+   --  release at the end of the temporary region.
+   --  As a consequence, this function must be called within a brand new
+   --  and dedicated temporary region.
+   --  Use of this function is not needed for processes with state, because
+   --  the control statement becomes an assignment to the next state.
+   function Translate_Condition (Cond : Iir) return O_Enode
+   is
+      Res     : O_Enode;
+      Res_Var : O_Dnode;
+   begin
+      --  As a statement is always wrapped into a temporary region, the
+      --  stack2 is not used (in the inner region).
+      pragma Assert (not Has_Stack2_Mark);
+
+      --  Translate the condition.
+      Res := Chap7.Translate_Expression (Cond);
+
+      --  If the condition needs stack2, free it now as a inner statement
+      --  may return (and this skipping the release of stack2).
+      if Has_Stack2_Mark then
+         Res_Var := Create_Temp_Init (Std_Boolean_Type_Node, Res);
+         Stack2_Release;
+         Res := New_Obj_Value (Res_Var);
+      end if;
+
+      return Res;
+   end Translate_Condition;
+
    procedure Translate_Return_Statement (Stmt : Iir_Return_Statement)
    is
+      Cond       : constant Iir := Get_Condition (Stmt);
       Subprg_Info : constant Ortho_Info_Acc :=
         Get_Info (Chap2.Current_Subprogram);
       Expr        : constant Iir := Get_Expression (Stmt);
+      If_Blk      : O_If_Block;
       Ret_Type    : Iir;
       Ret_Info    : Type_Info_Acc;
 
@@ -194,6 +227,11 @@ package body Trans.Chap8 is
       end Gen_Return_Value;
    begin
       Trans.Coverage.Cover_Statement (Stmt);
+
+      --  Common part.
+      if Cond /= Null_Iir then
+         Start_If_Stmt (If_Blk, Translate_Condition (Cond));
+      end if;
 
       if Expr = Null_Iir then
          --  Return in a procedure.
@@ -278,38 +316,11 @@ package body Trans.Chap8 is
             | Type_Mode_Protected =>
             raise Internal_Error;
       end case;
-   end Translate_Return_Statement;
 
-   --  Translate the condition COND of a control statement.
-   --  This is special as it frees immediately the stack2 (if needed) because
-   --  the control statement may prevent the execution of the normal stack2
-   --  release at the end of the temporary region.
-   --  As a consequence, this function must be called within a brand new
-   --  and dedicated temporary region.
-   --  Use of this function is not needed for processes with state, because
-   --  the control statement becomes an assignment to the next state.
-   function Translate_Condition (Cond : Iir) return O_Enode
-   is
-      Res     : O_Enode;
-      Res_Var : O_Dnode;
-   begin
-      --  As a statement is always wrapped into a temporary region, the
-      --  stack2 is not used (in the inner region).
-      pragma Assert (not Has_Stack2_Mark);
-
-      --  Translate the condition.
-      Res := Chap7.Translate_Expression (Cond);
-
-      --  If the condition needs stack2, free it now as a inner statement
-      --  may return (and this skipping the release of stack2).
-      if Has_Stack2_Mark then
-         Res_Var := Create_Temp_Init (Std_Boolean_Type_Node, Res);
-         Stack2_Release;
-         Res := New_Obj_Value (Res_Var);
+      if Cond /= Null_Iir then
+         Finish_If_Stmt (If_Blk);
       end if;
-
-      return Res;
-   end Translate_Condition;
+   end Translate_Return_Statement;
 
    procedure Translate_If_Statement_State_Jumps
      (Stmt : Iir; Fall_State : State_Type)
