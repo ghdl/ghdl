@@ -970,7 +970,8 @@ package body Elab.Vhdl_Expr is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name =>
             return Exec_Name_Subtype (Syn_Inst, Get_Named_Entity (Name));
-         when Iir_Kind_Parenthesis_Expression =>
+         when Iir_Kind_Parenthesis_Expression
+           | Iir_Kind_Qualified_Expression =>
             return Exec_Name_Subtype (Syn_Inst, Get_Expression (Name));
          when Iir_Kinds_Object_Declaration =>
             return Get_Value (Syn_Inst, Name).Typ;
