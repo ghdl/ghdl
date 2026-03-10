@@ -156,6 +156,8 @@ private
                   "__ghdl_direction_check_failed");
    pragma Export (C, Ghdl_Integer_32_Index_Check_Failed,
                   "__ghdl_integer_32_index_check_failed");
+   pragma Export (C, Ghdl_Integer_64_Index_Check_Failed,
+                  "__ghdl_integer_64_index_check_failed");
    pragma Export (C, Ghdl_Access_Check_Failed,
                   "__ghdl_access_check_failed");
 
