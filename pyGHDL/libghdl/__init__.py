@@ -100,19 +100,19 @@ def _get_libghdl_path() -> Path:
     6. Try ``../../lib`` when running from the build directory.
     """
 
-    def _check_libghdl_libdir(libDirectory: Path, libraryFilename: Path) -> Path:
-        libGHDLSharedLibraryFile = libDirectory / libraryFilename
-        if not libGHDLSharedLibraryFile.exists():
-            raise FileNotFoundError(f"{libGHDLSharedLibraryFile}")
-
-        return libGHDLSharedLibraryFile
-
-    def _check_libghdl_bindir(binDirectory: Path, libraryFilename: Path) -> Path:
-        libDirectory = (binDirectory / "../lib").resolve()
-        return _check_libghdl_libdir(libDirectory, libraryFilename)
-
     libGHDLSharedLibraryFile = _get_libghdl_name()
     searchedAt = []
+
+    def _check_libghdl_libdir(libDirectory: Path) -> Path:
+        libFile = libDirectory / libGHDLSharedLibraryFile
+        if not libFile.exists():
+            raise FileNotFoundError(f"{libFile}")
+
+        return libFile
+
+    def _check_libghdl_bindir(binDirectory: Path) -> Path:
+        libDirectory = (binDirectory / "../lib").resolve()
+        return _check_libghdl_libdir(libDirectory)
 
     # Try GHDL_PREFIX
     # GHDL_PREFIX is the prefix of the vhdl libraries, so remove the
@@ -123,7 +123,7 @@ def _get_libghdl_path() -> Path:
         searchedAt.append(f"  Tried variable 'GHDL_PREFIX':        {varGHDLPrefix}")
         ghdlPrefix = Path(varGHDLPrefix)
         try:
-            return _check_libghdl_libdir(ghdlPrefix.parent, libGHDLSharedLibraryFile)
+            return _check_libghdl_libdir(ghdlPrefix.parent)
         except FileNotFoundError:
             pass
 
@@ -132,9 +132,14 @@ def _get_libghdl_path() -> Path:
         searchedAt.append(f"  Checked variable 'GHDL':             not set.")
     else:
         searchedAt.append(f"  Tried variable 'GHDL':               {varGHDL}")
+        ghdl = Path(varGHDL)
         try:
-            ghdl = Path(varGHDL)
-            return _check_libghdl_bindir(ghdl.parent, libGHDLSharedLibraryFile)
+            return _check_libghdl_bindir(ghdl.parent)
+        except (TypeError, FileNotFoundError):
+            pass
+        try:
+            libDirectory = (ghdl.parent / "lib").resolve()
+            return _check_libghdl_libdir(libDirectory)
         except (TypeError, FileNotFoundError):
             pass
 
@@ -145,7 +150,7 @@ def _get_libghdl_path() -> Path:
         searchedAt.append(f"  Tried variable 'VUNIT_GHDL_PATH':    {varVUnitGHDLPath}")
         vunitGHDLPath = Path(varVUnitGHDLPath)
         try:
-            return _check_libghdl_bindir(vunitGHDLPath, libGHDLSharedLibraryFile)
+            return _check_libghdl_bindir(vunitGHDLPath)
         except FileNotFoundError:
             pass
 
@@ -162,15 +167,15 @@ def _get_libghdl_path() -> Path:
         whichGHDL = which("ghdl")
         searchedAt.append(f"  Tried 'which ghdl':                  {whichGHDL}")
         ghdl = Path(whichGHDL)
-        return _check_libghdl_bindir(ghdl.parent, libGHDLSharedLibraryFile)
+        return _check_libghdl_bindir(ghdl.parent)
     except (TypeError, FileNotFoundError):
         pass
 
-    # Try when running from the build directory
+    # Try when running from the source directory
     try:
         libDirectory = (Path(__file__).parent / "../../lib").resolve()
-        searchedAt.append(f"  Relative to build directory:         {libDirectory}")
-        return _check_libghdl_libdir(libDirectory, libGHDLSharedLibraryFile)
+        searchedAt.append(f"  Relative to source directory:         {libDirectory}")
+        return _check_libghdl_libdir(libDirectory)
     except (TypeError, FileNotFoundError):
         pass
 
