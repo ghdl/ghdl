@@ -11,6 +11,7 @@ for t in min01 smin01 smin02 smin03 umin01 umin02 umin03 \
 	 nand01 nand02 \
 	 nor01 nor02; do
     synth_tb $t
+    GHDL_SYNTH_FLAGS=--out=vhdl-ieee synth_tb $t
 done
 
 synth_only shift02
