@@ -36,7 +36,7 @@ package Ghdlsynth is
    type Out_Format is
      (Format_Default,
       Format_Raw, Format_Dump, Format_Dot,
-      Format_Vhdl, Format_Raw_Vhdl,
+      Format_Vhdl, Format_Vhdl_Ieee, Format_Raw_Vhdl,
       Format_Verilog,
       Format_None);
 

@@ -17,6 +17,9 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 package Netlists.Disp_Vhdl is
+   --  Simulation flavour: avoid potential overflow/bound errors
+   Flag_Flavour_Sim : Boolean := True;
+
    procedure Disp_Vhdl (M : Module);
 
    procedure Disp_Architecture_Declarations (M : Module);

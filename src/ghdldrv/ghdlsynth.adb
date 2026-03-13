@@ -180,6 +180,8 @@ package body Ghdlsynth is
             Cmd.Oformat := Format_None;
          elsif Option (7 .. Option'Last) = "vhdl" then
             Cmd.Oformat := Format_Vhdl;
+         elsif Option (7 .. Option'Last) = "vhdl-ieee" then
+            Cmd.Oformat := Format_Vhdl_Ieee;
          elsif Option (7 .. Option'Last) = "raw-vhdl" then
             Cmd.Oformat := Format_Raw_Vhdl;
          elsif Option (7 .. Option'Last) = "verilog" then
@@ -459,7 +461,9 @@ package body Ghdlsynth is
             Netlists.Dump.Dump_Module (Top);
          when Format_Dot =>
             Netlists.Disp_Dot.Disp_Dot_Top_Module (Top);
-         when Format_Vhdl =>
+         when Format_Vhdl
+           | Format_Vhdl_Ieee =>
+            Netlists.Disp_Vhdl.Flag_Flavour_Sim := Format = Format_Vhdl;
             Netlists.Rename.Rename_Module
               (Res.Builder, Top, Language_Vhdl);
 

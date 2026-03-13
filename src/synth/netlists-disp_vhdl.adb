@@ -1165,17 +1165,29 @@ package body Netlists.Disp_Vhdl is
             Disp_Template
               ("  \o0 <= std_logic_vector (\ui0 / \ui1);" & NL, Inst);
          when Id_Lsl =>
-            Disp_Template
-              ("  \o0 <= std_logic_vector "
-                 & "(shift_left (\ui0, to_integer (\ui1)));" & NL, Inst);
+            if Flag_Flavour_Sim then
+               Disp_Template ("  \o0 <= \i0 sll \i1;" & NL, Inst);
+            else
+               Disp_Template
+                 ("  \o0 <= std_logic_vector "
+                  & "(shift_left (\ui0, to_integer (\ui1)));" & NL, Inst);
+            end if;
          when Id_Lsr =>
-            Disp_Template
-              ("  \o0 <= std_logic_vector "
-                 & "(shift_right (\ui0, to_integer(\ui1)));" & NL, Inst);
+            if Flag_Flavour_Sim then
+               Disp_Template ("  \o0 <= \i0 srl \i1;" & NL, Inst);
+            else
+               Disp_Template
+                 ("  \o0 <= std_logic_vector "
+                   & "(shift_right (\ui0, to_integer(\ui1)));" & NL, Inst);
+            end if;
          when Id_Asr =>
-            Disp_Template
-              ("  \o0 <= std_logic_vector "
-                 & "(shift_right (\si0, to_integer (\ui1)));" & NL, Inst);
+            if Flag_Flavour_Sim then
+               Disp_Template ("  \o0 <= \i0 sra \i1;" & NL, Inst);
+            else
+               Disp_Template
+                 ("  \o0 <= std_logic_vector "
+                  & "(shift_right (\si0, to_integer (\ui1)));" & NL, Inst);
+            end if;
          when Id_Rol =>
             Disp_Template
               ("  \o0 <= std_logic_vector "
@@ -1417,13 +1429,76 @@ package body Netlists.Disp_Vhdl is
       end if;
    end Disp_Attribute_Decl_Maybe;
 
+   procedure Disp_Shift_Definition (Arith : Boolean; Right : Boolean)
+   is
+      Name : String (1 .. 3);
+   begin
+      --  Name of the operator
+      --  1. It's a shift
+      Name (1) := 's';
+      --  2. Direction
+      if Right then
+         Name (2) := 'r';
+      else
+         Name (2) := 'l';
+      end if;
+      --  3. Logical or arith.
+      if Arith then
+         Name (3) := 'a';
+      else
+         Name (3) := 'l';
+      end if;
+
+      Wr_Line;
+      Wr_Line ("  function """ & Name
+               & """ (v : std_logic_vector; sh : std_logic_vector)");
+      Wr_Line ("    return std_logic_vector");
+      Wr_Line ("  is");
+      Wr_Line ("    alias av : std_logic_vector(v'length - 1 downto 0) is v;");
+      Wr_Line ("    alias ash : std_logic_vector(sh'length - 1 downto 0) "
+               & "is sh;");
+      Wr ("    variable res : std_logic_vector(av'range) := (others => ");
+      if Arith then
+         --  TODO: if AV is a null vector ?
+         Wr ("av (av'left)");
+      else
+         Wr ("'0'");
+      end if;
+      Wr_Line (");");
+      Wr_Line ("    variable off : natural := 0;");
+      Wr_Line ("  begin");
+      Wr_Line ("    for i in ash'reverse_range loop");
+      Wr_Line ("      if ash(i) = '1' then");
+      Wr_Line ("        if i >= 31 then");
+      Wr_Line ("          --  Will overflow, the shift amount is very large!");
+      Wr_Line ("          return res;");
+      Wr_Line ("        end if;");
+      Wr_Line ("        off := off + 2**i;");
+      Wr_Line ("      end if;");
+      Wr_Line ("    end loop;");
+      Wr_Line ("    for i in av'left downto off loop");
+      if Right then
+         Wr_Line ("      res (i - off) := av (i);");
+      else
+         Wr_Line ("      res (i) := av (i - off);");
+      end if;
+      Wr_Line ("    end loop;");
+      Wr_Line ("    return res;");
+      Wr_Line ("  end """ & Name & """;");
+   end Disp_Shift_Definition;
+
    procedure Disp_Architecture_Declarations (M : Module)
    is
       Map : Attr_Maps.Instance;
       Id : Module_Id;
       With_Attr : Boolean;
+      Has_Lsl, Has_Lsr, Has_Asr : Boolean;
    begin
       Attr_Maps.Init (Map);
+
+      Has_Lsl := False;
+      Has_Lsr := False;
+      Has_Asr := False;
 
       --  Display signal declarations.
       --  There are as many signals as gate outputs.
@@ -1511,6 +1586,19 @@ package body Netlists.Disp_Vhdl is
                end if;
          end case;
 
+         if Flag_Flavour_Sim then
+            case Id is
+               when Id_Lsl =>
+                  Has_Lsl := True;
+               when Id_Lsr =>
+                  Has_Lsr := True;
+               when Id_Asr =>
+                  Has_Asr := True;
+               when others =>
+                  null;
+            end case;
+         end if;
+
          if With_Attr and then Has_Instance_Attribute (Inst)
            and then not (Flag_Merge_Lit
                          and then Id in Constant_Module_Id
@@ -1533,6 +1621,16 @@ package body Netlists.Disp_Vhdl is
       end loop;
 
       Attr_Maps.Free (Map);
+
+      if Has_Lsl then
+         Disp_Shift_Definition (False, False);
+      end if;
+      if Has_Lsr then
+         Disp_Shift_Definition (False, True);
+      end if;
+      if Has_Asr then
+         Disp_Shift_Definition (True, True);
+      end if;
    end Disp_Architecture_Declarations;
 
    procedure Disp_Architecture_Statements (M : Module)

@@ -87,7 +87,7 @@ In addition to those options, there are some synthesis specific options.
 
     $ ghdl --synth --std=08 -gDEPTH=12 [library.]top_unit [arch]
 
-.. option:: --out=<vhdl|raw-vhdl|verilog|dot|none|raw|dump>
+.. option:: --out=<vhdl|vhdl-ieee|raw-vhdl|verilog|dot|none|raw|dump>
 
   * **vhdl** *(default)*: equivalent to ``raw-vhdl``, but the original top-level unit is preserved unmodified, so the
     synthesized design can be simulated with the same testbench.
@@ -95,6 +95,10 @@ In addition to those options, there are some synthesis specific options.
   * **raw-vhdl**: all statements are converted to a simple VHDL 1993
     netlist, for allowing instantiation in other synthesis tools
     without modern VHDL support.
+
+  * **vhdl-ieee**: equivalent to ``vhdl``, but shift operators are implemented
+    using operators from the ``ieee`` packages and are subject to overflow
+    issues that could happen during simulation.
 
   * **verilog**: generate a verilog netlist.
 
