@@ -1203,6 +1203,18 @@ package body Vhdl.Utils is
       return Get_Type_Constraint_State (Def) = Fully_Constrained;
    end Is_Fully_Constrained_Type;
 
+   --  Return TRUE iff subtype indication IND is a type attribute.
+   function Is_Fully_Constrained_Type_Attribute (Ind : Iir) return Boolean is
+   begin
+      case Get_Kind (Ind) is
+         when Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Element_Attribute =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Is_Fully_Constrained_Type_Attribute;
+
    function Is_Object_Fully_Constrained (Decl : Iir) return Boolean is
    begin
       --  That's true if the object type is constrained.
@@ -1211,7 +1223,7 @@ package body Vhdl.Utils is
       end if;
 
       --  That's also true if the object is declared with a subtype attribute.
-      if Get_Kind (Get_Subtype_Indication (Decl)) = Iir_Kind_Subtype_Attribute
+      if Is_Fully_Constrained_Type_Attribute (Get_Subtype_Indication (Decl))
       then
          return True;
       end if;
@@ -1248,7 +1260,7 @@ package body Vhdl.Utils is
             begin
                --  Note: an object alias may not have subtype indication.
                if Ind /= Null_Iir
-                 and then Get_Kind (Ind) = Iir_Kind_Subtype_Attribute
+                 and then Is_Fully_Constrained_Type_Attribute (Ind)
                then
                   return True;
                end if;
