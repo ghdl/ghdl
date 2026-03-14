@@ -261,6 +261,7 @@ package body Vhdl.Sem is
             end if;
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_View_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_External_Signal_Name =>
             null;
@@ -372,7 +373,11 @@ package body Vhdl.Sem is
       --  If the formal can have sources and is guarded, but the actual is
       --  not guarded (or has not the same kind of guard), signals cannot
       --  be collapsed.
-      if (Get_Guarded_Signal_Flag (Formal_Base)
+      if Get_Kind (Actual_Base) = Iir_Kind_Interface_View_Declaration then
+         if Get_Guarded_Signal_Flag (Formal_Base) then
+            return False;
+         end if;
+      elsif (Get_Guarded_Signal_Flag (Formal_Base)
             /= Get_Guarded_Signal_Flag (Actual_Base))
         or else (Get_Signal_Kind (Formal_Base)
                    /= Get_Signal_Kind (Actual_Base))
