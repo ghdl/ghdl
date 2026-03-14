@@ -359,7 +359,8 @@ package body Synth.Vhdl_Decls is
                raise Internal_Error;  --  Is it possible ?
                --  Synth_Attribute_Net (Syn_Inst, Obj, Attr_Decl, Val);
             end if;
-         when Iir_Kind_Entity_Declaration =>
+         when Iir_Kind_Entity_Declaration
+            | Iir_Kind_Architecture_Body =>
             declare
                Top : constant Module := Get_Instance_Module (Syn_Inst);
                Inst : constant Instance := Get_Self_Instance (Top);
