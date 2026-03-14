@@ -4967,6 +4967,8 @@ package body Synth.Vhdl_Stmts is
       Iterator : constant Node := Get_Parameter_Specification (Stmt);
       Bod : constant Node := Get_Generate_Statement_Body (Stmt);
       It_Rng : Type_Acc;
+      Is_Rng_32 : Boolean;
+      Idx, Inc : Int32;
       Sub_Inst : Synth_Instance_Acc;
       Gen_Inst : Synth_Instance_Acc;
       Name : Sname;
@@ -4978,9 +4980,27 @@ package body Synth.Vhdl_Stmts is
       Name := New_Sname_User (Get_Identifier (Stmt), Get_Sname (Syn_Inst));
       Set_Extra (Gen_Inst, Syn_Inst, Name);
 
+      case It_Rng.Drange.Dir is
+         when Dir_To =>
+            Is_Rng_32 := It_Rng.Drange.Left >= Int64 (Int32'First)
+              and then It_Rng.Drange.Right <= Int64 (Int32'Last);
+            Inc := 1;
+         when Dir_Downto =>
+            Is_Rng_32 := It_Rng.Drange.Left <= Int64 (Int32'Last)
+              and then It_Rng.Drange.Right >= Int64 (Int32'First);
+            Inc := -1;
+      end case;
+
+      if Is_Rng_32 then
+         Idx := Int32 (It_Rng.Drange.Left);
+      else
+         Idx := 1;
+         Inc := 1;
+      end if;
+
       for I in 1 .. Get_Range_Length (It_Rng.Drange) loop
-         --  FIXME: get position ?
-         Lname := New_Sname_Version (Uns32 (I), Name);
+         Lname := New_Sname_Index (Idx, Name);
+         Idx := Idx + Inc;
 
          Sub_Inst := Get_Generate_Sub_Instance (Gen_Inst, Positive (I));
          Set_Extra (Sub_Inst, Gen_Inst, Lname);

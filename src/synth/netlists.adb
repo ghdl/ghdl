@@ -21,6 +21,7 @@ with Name_Table;
 with Tables;
 with Simple_IO;
 with Dyn_Maps;
+with Types_Utils; use Types_Utils;
 
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates;
@@ -37,16 +38,16 @@ package body Netlists is
       --  Suffix is an Int32 and encode an index of an array.
       Sn_Array,
 
-      --  Suffix is an Id or an Int32 (depending on bit 0), and encode a
-      --  hierachical name (block, generate, instance).
+      --  Suffix is an Id, and encode a hierachical name (block,
+      --  generate, instance).
+      --  TODO: use bit 0 of suffix to differentiate between internal or
+      --   external hierarchy.
       Sn_Hierarchy,
 
       --  If prefix is No_Sname, the suffix is an Id to encode an artificial
       --  name. Else, suffix is a version.
       Sn_Number
      );
-
-   pragma Unreferenced (Sn_Array);
 
    --  We don't care about C compatible representation of Sname_Record.
    pragma Warnings (Off, "*convention*");
@@ -112,6 +113,14 @@ package body Netlists is
       return Snames_Table.Last;
    end New_Sname_Field;
 
+   function New_Sname_Index (Idx : Int32; Prefix : Sname) return Sname is
+   begin
+      Snames_Table.Append ((Kind => Sn_Array,
+                            Prefix => Prefix,
+                            Suffix => To_Uns32 (Idx)));
+      return Snames_Table.Last;
+   end New_Sname_Index;
+
    function Is_Valid (Name : Sname) return Boolean is
    begin
       return Name > System_Sname and Name <= Snames_Table.Last;
@@ -135,8 +144,8 @@ package body Netlists is
             return Sname_User;
          when Sn_Record =>
             return Sname_Field;
-         when others =>
-            raise Internal_Error;
+         when Sn_Array =>
+            return Sname_Index;
       end case;
    end Get_Sname_Kind;
 
@@ -169,6 +178,12 @@ package body Netlists is
       return Snames_Table.Table (Name).Suffix;
    end Get_Sname_Version;
 
+   function Get_Sname_Index (Name : Sname) return Int32 is
+   begin
+      pragma Assert (Is_Valid (Name));
+      pragma Assert (Get_Sname_Kind (Name) = Sname_Index);
+      return To_Int32 (Snames_Table.Table (Name).Suffix);
+   end Get_Sname_Index;
 
    --  Modules
 

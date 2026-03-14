@@ -48,7 +48,8 @@ package body Netlists.Errors is
 
       case Get_Sname_Kind (N) is
          when Sname_User
-           | Sname_Field =>
+           | Sname_Field
+           | Sname_Index =>
             Output_Identifier (Get_Sname_Suffix (N));
          when Sname_System =>
             Output_Identifier (Get_Sname_Suffix (N));

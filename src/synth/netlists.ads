@@ -59,8 +59,11 @@ package Netlists is
       --  Prefix required.
       Sname_Field,
 
-      --  Create a new version of an existing prefix.
-      --  Prefix required
+      --  An indexed name, mainly for generate statements.
+      --  Prefix required.
+      Sname_Index,
+
+      --  New version of an existing prefix.  Prefix required
       Sname_Version
      );
    pragma Convention (C, Sname_Kind);
@@ -84,6 +87,7 @@ package Netlists is
    function New_Sname_System (Id : Name_Id) return Sname;
    function New_Sname_Version (Ver : Uns32; Prefix : Sname) return Sname;
    function New_Sname_Field (Id : Name_Id; Prefix : Sname) return Sname;
+   function New_Sname_Index (Idx : Int32; Prefix : Sname) return Sname;
    function New_Sname_Unique (Num : Uns32) return Sname;
 
    --  Read the content of an Sname.
@@ -91,6 +95,7 @@ package Netlists is
    function Get_Sname_Prefix (Name : Sname) return Sname;
    function Get_Sname_Suffix (Name : Sname) return Name_Id;
    function Get_Sname_Version (Name : Sname) return Uns32;
+   function Get_Sname_Index (Name : Sname) return Int32;
 
    --  Modifies an Sname.
    --  Used only for display.

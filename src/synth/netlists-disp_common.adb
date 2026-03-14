@@ -64,7 +64,8 @@ package body Netlists.Disp_Common is
             return Is_Extended_Sname (Get_Sname_Prefix (N));
          when Sname_System =>
             return False;
-         when Sname_Field =>
+         when Sname_Field
+            | Sname_Index =>
             return True;
          when Sname_Unique =>
             return False;
@@ -101,6 +102,10 @@ package body Netlists.Disp_Common is
          when Sname_Field =>
             Wr ("[");
             Put_Id (Get_Sname_Suffix (N), Lang, Is_Extended);
+            Wr ("]");
+         when Sname_Index =>
+            Wr ("[");
+            Wr_Int32 (Get_Sname_Index (N));
             Wr ("]");
          when Sname_Version
            | Sname_Unique =>

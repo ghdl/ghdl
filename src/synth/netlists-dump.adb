@@ -67,6 +67,8 @@ package body Netlists.Dump is
             Wr (Image (Get_Sname_Suffix (N)));
          when Sname_Field =>
             Wr (Image (Get_Sname_Suffix (N)));
+         when Sname_Index =>
+            Wr_Int32 (Get_Sname_Index (N));
          when Sname_System =>
             Wr ("$");
             Put_Id (Get_Sname_Suffix (N));
