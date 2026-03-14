@@ -464,14 +464,18 @@ package body Vhdl.Sem_Decls is
    is
       Name : Iir;
       View : Iir;
+      St_Ind : Iir;
+      St_Type : Iir;
+      Atype : Iir;
    begin
       Name := Get_Name (Ind);
       Name := Sem_Mode_View_Name (Name);
       Set_Name (Ind, Name);
 
-      if Get_Subtype_Indication (Ind) /= Null_Iir then
-         --  TODO.
-         raise Internal_Error;
+      St_Ind := Get_Subtype_Indication (Ind);
+      if St_Ind /= Null_Iir then
+         St_Ind := Sem_Subtype_Indication (St_Ind);
+         Set_Subtype_Indication (Ind, St_Ind);
       end if;
 
       if Is_Error (Name) then
@@ -488,8 +492,40 @@ package body Vhdl.Sem_Decls is
             Error_Kind ("sem_mode_view_indication", Ind);
       end case;
 
-      Set_Type
-        (Ind, Get_Type_Of_Subtype_Indication (Get_Subtype_Indication (View)));
+      Atype := Get_Type_Of_Subtype_Indication (Get_Subtype_Indication (View));
+      if St_Ind /= Null_Iir and then not Is_Error (St_Ind) then
+         St_Type := Get_Type_Of_Subtype_Indication (St_Ind);
+
+         case Iir_Kinds_Mode_View_Indication (Get_Kind (Ind)) is
+            when Iir_Kind_Record_Mode_View_Indication =>
+               if Get_Base_Type (Atype) /= Get_Base_Type (St_Type) then
+                  Error_Msg_Sem (+St_Ind,
+                    "subtype indication is not of the same type as the view");
+                  --  Continue with
+                  St_Type := Atype;
+               else
+                  Atype := St_Type;
+               end if;
+               --  TODO: add static check for compatibility.
+            when Iir_Kind_Array_Mode_View_Indication =>
+               if not Is_Array_Type (St_Type) then
+                  Error_Msg_Sem
+                    (+St_Ind, "subtype indication is not an array type");
+                  --  Ignore.
+                  Atype := Null_Iir;
+               elsif Get_Base_Type (Get_Element_Subtype (St_Type))
+                 /= Get_Base_Type (Atype)
+               then
+                  Error_Msg_Sem
+                    (+St_Ind,
+                    "incompatible element type of the subtype indication");
+                  Atype := Null_Iir;
+               else
+                  Atype := St_Type;
+               end if;
+         end case;
+      end if;
+      Set_Type (Ind, Atype);
    end Sem_Mode_View_Indication;
 
    procedure Sem_Interface_View_Declaration

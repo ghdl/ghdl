@@ -1349,6 +1349,10 @@ impl Kind {
         self >= Kind::Simple_Mode_View_Element && self <= Kind::Record_Mode_View_Element
     }
 
+    fn is_mode_view_indication(self: Self) -> bool {
+        self >= Kind::Record_Mode_View_Indication && self <= Kind::Array_Mode_View_Indication
+    }
+
 }
 #[repr(u8)]
 #[derive(Copy, Clone, PartialEq)]

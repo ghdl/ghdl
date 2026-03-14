@@ -4527,6 +4527,41 @@ package body Vhdl.Evaluation is
       end case;
    end Eval_In_Range;
 
+   function Eval_Compatible_Array_Subtype (Atype : Iir; Sub_Type : Iir)
+                                          return Boolean is
+   begin
+      --  TODO: even if ATYPE is not fully constrained, the indexes of SUB_TYPE
+      --  should be compatible with the index ranges of ATYPE.
+      if Get_Constraint_State (Atype) /= Fully_Constrained
+        or else Get_Kind (Sub_Type) /= Iir_Kind_Array_Subtype_Definition
+        or else Get_Constraint_State (Sub_Type) /= Fully_Constrained
+      then
+         --  Cannot say no.
+         return True;
+      end if;
+
+      declare
+         E_Indexes : constant Iir_Flist := Get_Index_Subtype_List (Sub_Type);
+         T_Indexes : constant Iir_Flist := Get_Index_Subtype_List (Atype);
+         E_El : Iir;
+         T_El : Iir;
+      begin
+         for I in Flist_First .. Flist_Last (E_Indexes) loop
+            E_El := Get_Index_Type (E_Indexes, I);
+            T_El := Get_Index_Type (T_Indexes, I);
+
+            if Get_Type_Staticness (E_El) = Locally
+              and then Get_Type_Staticness (T_El) = Locally
+              and then (Eval_Discrete_Type_Length (E_El)
+                         /= Eval_Discrete_Type_Length (T_El))
+            then
+               return False;
+            end if;
+         end loop;
+         return True;
+      end;
+   end Eval_Compatible_Array_Subtype;
+
    --  Return FALSE if literal EXPR is not in SUB_TYPE bounds.
    function Eval_Is_In_Bound
      (Expr : Iir; Sub_Type : Iir; Overflow : Boolean := False) return Boolean
@@ -4612,37 +4647,7 @@ package body Vhdl.Evaluation is
                   return True;
                end if;
 
-               if Get_Constraint_State (Sub_Type) /= Fully_Constrained
-                 or else
-                 Get_Kind (Val_Type) /= Iir_Kind_Array_Subtype_Definition
-                 or else
-                 Get_Constraint_State (Val_Type) /= Fully_Constrained
-               then
-                  --  Cannot say no.
-                  return True;
-               end if;
-               declare
-                  E_Indexes : constant Iir_Flist :=
-                    Get_Index_Subtype_List (Val_Type);
-                  T_Indexes : constant Iir_Flist :=
-                    Get_Index_Subtype_List (Sub_Type);
-                  E_El : Iir;
-                  T_El : Iir;
-               begin
-                  for I in Flist_First .. Flist_Last (E_Indexes) loop
-                     E_El := Get_Index_Type (E_Indexes, I);
-                     T_El := Get_Index_Type (T_Indexes, I);
-
-                     if Get_Type_Staticness (E_El) = Locally
-                       and then Get_Type_Staticness (T_El) = Locally
-                       and then (Eval_Discrete_Type_Length (E_El)
-                                   /= Eval_Discrete_Type_Length (T_El))
-                     then
-                        return False;
-                     end if;
-                  end loop;
-                  return True;
-               end;
+               return Eval_Compatible_Array_Subtype (Sub_Type, Val_Type);
             end;
 
          when Iir_Kind_Access_Type_Definition

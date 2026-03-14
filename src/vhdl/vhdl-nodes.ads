@@ -7764,6 +7764,10 @@ package Vhdl.Nodes is
    --Iir_Kind_Array_Mode_View_Element
      Iir_Kind_Record_Mode_View_Element;
 
+   subtype Iir_Kinds_Mode_View_Indication is Iir_Kind range
+     Iir_Kind_Record_Mode_View_Indication ..
+     Iir_Kind_Array_Mode_View_Indication;
+
    --  Nodes and lists.
 
    subtype Iir is Vhdl.Nodes_Priv.Node_Type;

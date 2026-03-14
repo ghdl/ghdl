@@ -1199,6 +1199,11 @@ class Iir_Kinds:
         Iir_Kind.Record_Mode_View_Element,
     ]
 
+    Mode_View_Indication = [
+        Iir_Kind.Record_Mode_View_Indication,
+        Iir_Kind.Array_Mode_View_Indication,
+    ]
+
 
 @export
 @unique
