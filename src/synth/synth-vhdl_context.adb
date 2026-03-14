@@ -35,7 +35,9 @@ package body Synth.Vhdl_Context is
    procedure Resize_Extra_Tables (Id : Instance_Id_Type) is
    begin
       while Id > Extra_Tables.Last loop
-         Extra_Tables.Append ((Base => null, Name => No_Sname));
+         Extra_Tables.Append ((Base => null,
+                               Inst => No_Instance,
+                               Name => No_Sname));
       end loop;
    end Resize_Extra_Tables;
 
@@ -50,7 +52,9 @@ package body Synth.Vhdl_Context is
 
    procedure Set_Base_Instance (Base : Base_Instance_Acc) is
    begin
-      Set_Extra (Root_Instance, (Base => Base, Name => No_Sname));
+      Set_Extra (Root_Instance, (Base => Base,
+                                 Inst => No_Instance,
+                                 Name => No_Sname));
    end Set_Base_Instance;
 
    procedure Free_Extra is
@@ -68,7 +72,7 @@ package body Synth.Vhdl_Context is
                         Base : Base_Instance_Acc;
                         Name : Sname := No_Sname) is
    begin
-      Set_Extra (Inst, (Base => Base, Name => Name));
+      Set_Extra (Inst, (Base => Base, Inst => No_Instance, Name => Name));
    end Set_Extra;
 
    procedure Set_Extra (Inst : Synth_Instance_Acc;
@@ -79,6 +83,7 @@ package body Synth.Vhdl_Context is
    begin
       Resize_Extra_Tables (Id);
       Extra_Tables.Table (Id) := (Base => Get_Instance_Extra (Parent).Base,
+                                  Inst => No_Instance,
                                   Name => Name);
    end Set_Extra;
 

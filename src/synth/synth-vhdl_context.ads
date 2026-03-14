@@ -118,6 +118,8 @@ private
    type Extra_Vhdl_Instance_Type is record
       Base : Base_Instance_Acc;
 
+      Inst : Instance;
+
       --  Name prefix for declarations.
       Name : Sname;
    end record;
