@@ -100,6 +100,7 @@ namespace GhdlSynth {
     Sname_System,
     Sname_User,
     Sname_Field,
+    Sname_Index,
     Sname_Version
   };
   GHDLSYNTH_ADA_WRAPPER_DW(get_sname_kind, Sname_Kind, Sname);
@@ -109,6 +110,7 @@ namespace GhdlSynth {
   GHDLSYNTH_ADA_WRAPPER_WW(get_sname_suffix, Name_Id, Sname);
 
   GHDLSYNTH_ADA_WRAPPER_DW(get_sname_version, unsigned int, Sname);
+  GHDLSYNTH_ADA_WRAPPER_DW(get_sname_index, int, Sname);
 
   typedef unsigned int Width;
   typedef unsigned int Port_Idx;
