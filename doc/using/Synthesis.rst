@@ -87,18 +87,15 @@ In addition to those options, there are some synthesis specific options.
 
     $ ghdl --synth --std=08 -gDEPTH=12 [library.]top_unit [arch]
 
-.. option:: --out=<vhdl|vhdl-ieee|raw-vhdl|verilog|dot|none|raw|dump>
+.. option:: --out=<vhdl|vhdl-ieee|raw-vhdl|raw-vhdl-ieee|verilog|dot|none|raw|dump>
 
-  * **vhdl** *(default)*: equivalent to ``raw-vhdl``, but the original top-level unit is preserved unmodified, so the
-    synthesized design can be simulated with the same testbench.
-
-  * **raw-vhdl**: all statements are converted to a simple VHDL 1993
-    netlist, for allowing instantiation in other synthesis tools
+  * **raw-vhdl**, **raw-vhdl-ieee**: all statements are converted to a simple
+    VHDL 1993 netlist, for allowing instantiation in other synthesis tools
     without modern VHDL support.
 
-  * **vhdl-ieee**: equivalent to ``vhdl``, but shift operators are implemented
-    using operators from the ``ieee`` packages and are subject to overflow
-    issues that could happen during simulation.
+  * **vhdl** *(default)*, **vhdl-ieee**: equivalent to ``raw-vhdl``,
+    but the original top-level unit is preserved unmodified, so the
+    synthesized design can be simulated with the same testbench.
 
   * **verilog**: generate a verilog netlist.
 
@@ -109,6 +106,13 @@ In addition to those options, there are some synthesis specific options.
   * **raw**: print the internal representation of the design, for debugging purposes.
 
   * **dump**: similar to ``raw``, with even more internal details for debugging.
+
+  The difference between ``vhdl`` and ``vhdl-ieee`` (resp. ``raw-vhdl`` and
+  ``raw-vhdl-ieee``) is for shift operators.  In the ``-ieee`` options, they
+  are implemented using the shift operators provided by the ``ieee`` packages,
+  which are recognized by other synthesizer, while in the non ``-ieee``
+  options, they are implemented by provided function which do not fail in case
+  of invalid value, so that simulation do not fail early on invalid values.
 
 .. option:: -o=FILENAME
 

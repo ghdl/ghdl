@@ -184,6 +184,8 @@ package body Ghdlsynth is
             Cmd.Oformat := Format_Vhdl_Ieee;
          elsif Option (7 .. Option'Last) = "raw-vhdl" then
             Cmd.Oformat := Format_Raw_Vhdl;
+         elsif Option (7 .. Option'Last) = "raw-vhdl-ieee" then
+            Cmd.Oformat := Format_Raw_Vhdl_Ieee;
          elsif Option (7 .. Option'Last) = "verilog" then
             Cmd.Oformat := Format_Verilog;
          else
@@ -475,7 +477,9 @@ package body Ghdlsynth is
                Ent := Vhdl.Utils.Get_Entity_From_Configuration (Config);
                Synth.Disp_Vhdl.Disp_Vhdl_Wrapper (Ent, Top, Inst);
             end if;
-         when Format_Raw_Vhdl =>
+         when Format_Raw_Vhdl
+           | Format_Raw_Vhdl_Ieee =>
+            Netlists.Disp_Vhdl.Flag_Flavour_Sim := Format = Format_Raw_Vhdl;
             Netlists.Disp_Vhdl.Disp_Vhdl (Top);
          when Format_Verilog =>
             Netlists.Rename.Rename_Module
