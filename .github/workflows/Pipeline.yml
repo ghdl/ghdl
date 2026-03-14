@@ -254,13 +254,14 @@ jobs:
 #      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   IntermediateCleanUp:
-    uses: pyTooling/Actions/.github/workflows/IntermediateCleanUp.yml@r7
+    uses: pyTooling/Actions/.github/workflows/CleanupArtifacts.yml@r7
     needs:
       - PublishCoverageResults
       - PublishPytestResults
     with:
-      sqlite_coverage_artifacts_prefix: 'pyGHDL-Coverage-SQLite-'
-      xml_unittest_artifacts_prefix:    'pyGHDL-Unittest-XML-'
+      others: |
+        pyGHDL-Coverage-SQLite-*
+        pyGHDL-Unittest-XML-*
 
 #  GNATdoc:
 #    uses: ./.github/workflows/Documentation-GNAT.yml
