@@ -88,7 +88,7 @@ package body Netlists.Disp_Common is
          Prefix := Get_Sname_Prefix (N);
          if Prefix /= No_Sname then
             Put_Name_Inner (Prefix, Lang, Is_Extended);
-            if Kind /= Sname_Field then
+            if Kind /= Sname_Field and Kind /= Sname_Index then
                Wr ("_");
             end if;
          end if;
