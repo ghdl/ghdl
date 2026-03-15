@@ -201,6 +201,30 @@ package body Netlists.Disp_Verilog is
       end case;
    end Disp_Constant_Inline;
 
+   procedure Disp_Attributes (Attrs : Attribute)
+   is
+      Attr : Attribute;
+      Val : Pval;
+   begin
+      Wr ("(* ");
+         Attr := Attrs;
+         loop
+            Put_Id (Get_Attribute_Name (Attr));
+            Wr ('=');
+            Val := Get_Attribute_Pval (Attr);
+            case Get_Attribute_Type (Attr) is
+               when Param_Pval_String =>
+                  Disp_Pval_String (Val);
+               when others =>
+                  Disp_Pval_Vector (Val);
+            end case;
+            Attr := Get_Attribute_Next (Attr);
+            exit when Attr = No_Attribute;
+            Wr (", ");
+         end loop;
+         Wr (" *) ");
+   end Disp_Attributes;
+
    procedure Disp_Instance_Gate (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
@@ -214,6 +238,10 @@ package body Netlists.Disp_Verilog is
       Drv_Inst : Instance;
    begin
       Wr ("  ");
+
+      if Has_Instance_Attribute (Inst) then
+         Disp_Attributes (Get_Instance_First_Attribute (Inst));
+      end if;
 
       --  Gate name
       Name := Get_Module_Name (Imod);
@@ -581,30 +609,6 @@ package body Netlists.Disp_Verilog is
          end if;
       end if;
    end Disp_Extract;
-
-   procedure Disp_Attributes (Attrs : Attribute)
-   is
-      Attr : Attribute;
-      Val : Pval;
-   begin
-      Wr ("(* ");
-         Attr := Attrs;
-         loop
-            Put_Id (Get_Attribute_Name (Attr));
-            Wr ('=');
-            Val := Get_Attribute_Pval (Attr);
-            case Get_Attribute_Type (Attr) is
-               when Param_Pval_String =>
-                  Disp_Pval_String (Val);
-               when others =>
-                  Disp_Pval_Vector (Val);
-            end case;
-            Attr := Get_Attribute_Next (Attr);
-            exit when Attr = No_Attribute;
-            Wr (", ");
-         end loop;
-         Wr (" *) ");
-   end Disp_Attributes;
 
    procedure Disp_Memory (Mem : Instance)
    is

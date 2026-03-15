@@ -1130,10 +1130,11 @@ package body Synth.Vhdl_Insts is
 
       --  Do the instantiation.
       Inst := New_Instance
-        (Get_Instance_Module (Syn_Inst),
-         Inst_Obj.M,
+        (Get_Instance_Module (Syn_Inst), Inst_Obj.M,
          New_Sname_User (Get_Identifier (Stmt), Get_Sname (Syn_Inst)));
       Set_Location (Inst, Stmt);
+      Set_Extra (Sub_Inst, Syn_Inst, No_Sname);
+      Set_Gate (Sub_Inst, Inst);
 
       pragma Assert (Is_Expr_Pool_Empty);
 
@@ -1391,6 +1392,8 @@ package body Synth.Vhdl_Insts is
             Inst := New_Instance
               (Get_Instance_Module (Syn_Inst), M, Inst_Name);
             Set_Location (Inst, Stmt);
+            Set_Extra (Comp_Inst, Syn_Inst, No_Sname);
+            Set_Gate (Comp_Inst, Inst);
 
             Synth_Instantiate_Module_Ports
               (Comp_Inst, Inst, Sub_Inst, Arch,
@@ -1418,6 +1421,8 @@ package body Synth.Vhdl_Insts is
             Inst := New_Instance (Get_Instance_Module (Syn_Inst),
                                   Inst_Obj.M, Inst_Name);
             Set_Location (Inst, Stmt);
+            Set_Extra (Comp_Inst, Syn_Inst, No_Sname);
+            Set_Gate (Comp_Inst, Inst);
 
             Synth_Instantiate_Module_Ports
               (Comp_Inst, Inst, Inst_Obj.Syn_Inst, Inst_Obj.Decl,

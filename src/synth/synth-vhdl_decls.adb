@@ -17,7 +17,6 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 with Types; use Types;
-with Std_Names;
 with Areapools;
 with Errorout; use Errorout;
 
@@ -227,160 +226,6 @@ package body Synth.Vhdl_Decls is
       Release_Expr_Pool (Marker);
    end Synth_Constant_Declaration;
 
-   --  Convert attribute declaration ATTR_DECL and value VAL from the
-   --  specification to netlist attribute ID, PTYPE, PV.
-   procedure Synth_Attribute_Value (Attr_Decl : Node;
-                                    Val : Valtyp;
-                                    Id : out Name_Id;
-                                    Ptype : out Param_Type;
-                                    Pv : out Pval) is
-   begin
-      --  Keep original case.
-      Id := Get_Source_Identifier (Attr_Decl);
-      Ptype := Type_To_Param_Type (Get_Type (Attr_Decl), Val.Typ);
-      Pv := Memtyp_To_Pval (Get_Memtyp (Val));
-   end Synth_Attribute_Value;
-
-   procedure Synth_Attribute_Inst
-     (Inst : Instance; Attr_Decl : Node; Val : Valtyp)
-   is
-      Id : Name_Id;
-      Ptype : Param_Type;
-      Pv    : Pval;
-   begin
-      Synth_Attribute_Value (Attr_Decl, Val, Id, Ptype, Pv);
-
-      Set_Instance_Attribute (Inst, Id, Ptype, Pv);
-   end Synth_Attribute_Inst;
-
-   procedure Synth_Attribute_Port (Syn_Inst : Synth_Instance_Acc;
-                                   Obj : Node;
-                                   Attr_Decl : Node;
-                                   Val : Valtyp)
-   is
-      Id : Name_Id;
-      V : Valtyp;
-      N : Net;
-      Ptype : Param_Type;
-      Pv    : Pval;
-      M : Module;
-      Inst : Instance;
-      Port : Port_Idx;
-      Inp, N_Inp : Input;
-   begin
-      Synth_Attribute_Value (Attr_Decl, Val, Id, Ptype, Pv);
-
-      V := Get_Value (Syn_Inst, Obj);
-      case V.Val.Kind is
-         when Value_Net =>
-            --  For an input
-            N := Get_Value_Net (V.Val);
-            Inst := Get_Net_Parent (N);
-            if Is_Self_Instance (Inst) then
-               --  This is really a port
-               Port := Get_Port_Idx (N);
-               M := Get_Module (Inst);
-               Set_Input_Port_Attribute (M, Port, Id, Ptype, Pv);
-            else
-               --  A net (because of --keep-hierarchy=no).
-               Synth_Attribute_Inst (Inst, Attr_Decl, Val);
-            end if;
-         when Value_Wire =>
-            --  For an output
-            N := Get_Wire_Gate (Get_Value_Wire (V.Val));
-            Inst := Get_Net_Parent (N);
-            if Get_Id (Inst) = Netlists.Gates.Id_Output then
-               --  This is really a port
-               --  Get last sink.
-               Inp := Get_First_Sink (N);
-               loop
-                  N_Inp := Get_Next_Sink (Inp);
-                  exit when N_Inp = No_Input;
-                  Inp := N_Inp;
-               end loop;
-               Inst := Get_Input_Parent (Inp);
-               pragma Assert (Is_Self_Instance (Inst));
-               Port := Get_Port_Idx (Inp);
-               M := Get_Module (Inst);
-               Set_Output_Port_Attribute (M, Port, Id, Ptype, Pv);
-            else
-               --  A net (--keep-hierarchy=no)
-               Synth_Attribute_Inst (Inst, Attr_Decl, Val);
-            end if;
-         when others => raise Internal_Error;
-      end case;
-   end Synth_Attribute_Port;
-
-   procedure Synth_Attribute_Net (Syn_Inst : Synth_Instance_Acc;
-                                  Obj : Node;
-                                  Attr_Decl  : Node;
-                                  Val        : Valtyp)
-   is
-      N     : Net;
-      Inst  : Instance;
-      V     : Valtyp;
-   begin
-      V := Get_Value (Syn_Inst, Obj);
-      case V.Val.Kind is
-         when Value_Wire =>
-            N := Get_Wire_Gate (Get_Value_Wire (V.Val));
-         when Value_Net
-            | Value_Const =>
-            N := Get_Net (Get_Build (Syn_Inst), V);
-         when others => raise Internal_Error;
-      end case;
-      Inst := Get_Net_Parent (N);
-
-      Synth_Attribute_Inst (Inst, Attr_Decl, Val);
-   end Synth_Attribute_Net;
-
-   procedure Synth_Attribute_Object (Syn_Inst : Synth_Instance_Acc;
-                                     Attr_Value : Node;
-                                     Attr_Decl  : Node;
-                                     Val        : Valtyp)
-   is
-      Obj   : constant Node := Get_Designated_Entity (Attr_Value);
-      Id    : constant Name_Id := Get_Identifier (Attr_Decl);
-   begin
-      if Id = Std_Names.Name_Foreign then
-         --  Not for synthesis.
-         return;
-      end if;
-
-      case Get_Kind (Obj) is
-         when Iir_Kind_Signal_Declaration
-            | Iir_Kind_Variable_Declaration
-            | Iir_Kind_Constant_Declaration =>
-            Synth_Attribute_Net (Syn_Inst, Obj, Attr_Decl, Val);
-         when Iir_Kind_Interface_Signal_Declaration =>
-            if Get_Kind (Get_Parent (Obj)) = Iir_Kind_Entity_Declaration then
-               Synth_Attribute_Port (Syn_Inst, Obj, Attr_Decl, Val);
-            else
-               raise Internal_Error;  --  Is it possible ?
-               --  Synth_Attribute_Net (Syn_Inst, Obj, Attr_Decl, Val);
-            end if;
-         when Iir_Kind_Entity_Declaration
-            | Iir_Kind_Architecture_Body =>
-            declare
-               Top : constant Module := Get_Instance_Module (Syn_Inst);
-               Inst : constant Instance := Get_Self_Instance (Top);
-            begin
-               Synth_Attribute_Inst (Inst, Attr_Decl, Val);
-            end;
-         when Iir_Kind_Component_Instantiation_Statement =>
-            --  TODO
-            null;
-         when others =>
-            --  TODO: components ?
-            --  TODO: Interface_Signal ?  But no instance for them.
-            Warning_Msg_Synth
-              (Warnid_Unkept_Attribute,
-               +Attr_Value,
-               "attribute %i for %n is not kept in the netlist",
-               (+Attr_Decl, +Obj));
-      end case;
-   end Synth_Attribute_Object;
-
    procedure Synth_Attribute_Specification
      (Syn_Inst : Synth_Instance_Acc; Spec : Node)
    is
@@ -421,29 +266,6 @@ package body Synth.Vhdl_Decls is
          Value := Get_Spec_Chain (Value);
       end loop;
    end Synth_Attribute_Specification;
-
-   --  Apply attribute specification.
-   procedure Synth_Concurrent_Attribute_Specification
-     (Syn_Inst : Synth_Instance_Acc; Spec : Node)
-   is
-      Attr_Decl : constant Node :=
-        Get_Named_Entity (Get_Attribute_Designator (Spec));
-      Value : Node;
-      Val : Valtyp;
-   begin
-      if Get_Instance_Const (Syn_Inst) then
-         return;
-      end if;
-
-      Value := Get_Attribute_Value_Spec_Chain (Spec);
-      while Value /= Null_Iir loop
-         Val := Get_Value (Syn_Inst, Value);
-         --  TODO: check VAL is constant ?
-         Synth_Attribute_Object (Syn_Inst, Value, Attr_Decl, Val);
-
-         Value := Get_Spec_Chain (Value);
-      end loop;
-   end Synth_Concurrent_Attribute_Specification;
 
    procedure Synth_Concurrent_Package_Declaration
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Top_Level : Boolean)
@@ -1253,7 +1075,7 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Object_Alias_Declaration =>
             Synth_Concurrent_Object_Alias_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Attribute_Specification =>
-            Synth_Concurrent_Attribute_Specification (Syn_Inst, Decl);
+            null;
          when Iir_Kind_Package_Instantiation_Declaration =>
             Synth_Concurrent_Package_Instantiation (Syn_Inst, Decl, Top_Level);
          when Iir_Kind_Attribute_Implicit_Declaration =>

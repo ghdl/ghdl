@@ -63,6 +63,11 @@ package Synth.Vhdl_Context is
    function Get_Build (Inst : Synth_Instance_Acc) return Context_Acc;
    pragma Inline (Get_Build);
 
+   function Get_Gate (Inst : Synth_Instance_Acc) return Instance;
+   pragma Inline (Get_Gate);
+
+   procedure Set_Gate (Inst : Synth_Instance_Acc; Gate : Instance);
+
    function Get_Top_Module (Inst : Synth_Instance_Acc) return Module;
 
    function Get_Instance_Module (Inst : Synth_Instance_Acc) return Module;
@@ -118,7 +123,8 @@ private
    type Extra_Vhdl_Instance_Type is record
       Base : Base_Instance_Acc;
 
-      Inst : Instance;
+      --  The instantiation.  Used only to add attributes.
+      Gate : Instance;
 
       --  Name prefix for declarations.
       Name : Sname;

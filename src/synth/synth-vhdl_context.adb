@@ -36,7 +36,7 @@ package body Synth.Vhdl_Context is
    begin
       while Id > Extra_Tables.Last loop
          Extra_Tables.Append ((Base => null,
-                               Inst => No_Instance,
+                               Gate => No_Instance,
                                Name => No_Sname));
       end loop;
    end Resize_Extra_Tables;
@@ -53,7 +53,7 @@ package body Synth.Vhdl_Context is
    procedure Set_Base_Instance (Base : Base_Instance_Acc) is
    begin
       Set_Extra (Root_Instance, (Base => Base,
-                                 Inst => No_Instance,
+                                 Gate => No_Instance,
                                  Name => No_Sname));
    end Set_Base_Instance;
 
@@ -72,7 +72,7 @@ package body Synth.Vhdl_Context is
                         Base : Base_Instance_Acc;
                         Name : Sname := No_Sname) is
    begin
-      Set_Extra (Inst, (Base => Base, Inst => No_Instance, Name => Name));
+      Set_Extra (Inst, (Base => Base, Gate => No_Instance, Name => Name));
    end Set_Extra;
 
    procedure Set_Extra (Inst : Synth_Instance_Acc;
@@ -83,7 +83,7 @@ package body Synth.Vhdl_Context is
    begin
       Resize_Extra_Tables (Id);
       Extra_Tables.Table (Id) := (Base => Get_Instance_Extra (Parent).Base,
-                                  Inst => No_Instance,
+                                  Gate => No_Instance,
                                   Name => Name);
    end Set_Extra;
 
@@ -144,6 +144,20 @@ package body Synth.Vhdl_Context is
    begin
       return Extra_Tables.Table (Get_Instance_Id (Inst)).Name;
    end Get_Sname;
+
+   function Get_Gate (Inst : Synth_Instance_Acc) return Instance is
+   begin
+      return Extra_Tables.Table (Get_Instance_Id (Inst)).Gate;
+   end Get_Gate;
+
+   procedure Set_Gate (Inst : Synth_Instance_Acc; Gate : Instance)
+   is
+      Extra : Extra_Vhdl_Instance_Type renames
+        Extra_Tables.Table (Get_Instance_Id (Inst));
+   begin
+      pragma Assert (Extra.Gate = No_Instance);
+      Extra.Gate := Gate;
+   end Set_Gate;
 
    function Get_Build (Inst : Synth_Instance_Acc)
                       return Netlists.Builders.Context_Acc
