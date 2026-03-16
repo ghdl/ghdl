@@ -3448,7 +3448,6 @@ package body Trans.Chap4 is
       Base_Block : Iir;
       Entity     : Iir)
    is
-      pragma Unreferenced (Num);
       use Trans.Chap5;
       Formal     : constant Iir := Get_Association_Formal (Assoc, Inter);
       Actual     : constant Iir := Get_Actual (Assoc);
@@ -3464,7 +3463,7 @@ package body Trans.Chap4 is
       --  Declare the subprogram.
       Assoc_Info := Add_Info (Assoc, Kind_Inertial_Assoc);
       Start_Procedure_Decl
-        (Inter_List, Create_Identifier (Inter, "INERTIAL"),
+        (Inter_List, Create_Identifier (Inter, Num, "INERTIAL"),
          O_Storage_Private);
       New_Interface_Decl (Inter_List, Assoc_Info.Inertial_Inst,
                           Wki_Instance, Base_Block_Info.Block_Decls_Ptr_Type);
@@ -3563,6 +3562,7 @@ package body Trans.Chap4 is
       Assoc_Inter : Iir;
       Inter : Iir;
       Info  : Assoc_Info_Acc;
+      Formal : Iir;
       Num : Iir_Int32;
    begin
       Assoc := Get_Port_Map_Aspect_Chain (Stmt);
@@ -3574,6 +3574,15 @@ package body Trans.Chap4 is
       end if;
       while Assoc /= Null_Iir loop
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+
+         --  If the formal is a slice, it will potentially be used at several
+         --  places.  Create the type/variables for the slice now.
+         Formal := Get_Formal (Assoc);
+         if Formal /= Null_Iir and then Get_Kind (Formal) = Iir_Kind_Slice_Name
+         then
+            Chap3.Create_Composite_Subtype (Get_Type (Formal), False);
+         end if;
+
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_By_Name =>
                Info := null;
@@ -3594,7 +3603,6 @@ package body Trans.Chap4 is
                        (Stmt, Block, Assoc, Inter,
                         Conv_Mode_Out, Info.Assoc_Out,
                         Num, Base_Block, Entity);
-                     Num := Num + 1;
                   end if;
                end if;
             when Iir_Kind_Association_Element_By_Expression =>
@@ -3608,6 +3616,7 @@ package body Trans.Chap4 is
             when others =>
                Error_Kind ("translate_association_subprograms", Assoc);
          end case;
+         Num := Num + 1;
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
    end Translate_Association_Subprograms;
