@@ -285,6 +285,7 @@ package body Ortho_Front is
             --  Declarations
             Decl_Storage : O_Storage;
             --  For constants: True iff fully defined.
+            --  For subprograms: True iff body already declared.
             Decl_Defined : Boolean;
             --  All declarations but NODE_PROCEDURE have a type.
             Decl_Dtype : Node_Acc;
@@ -2603,6 +2604,12 @@ package body Ortho_Front is
       Param : Node_Acc;
       Prev_Subprg : Node_Acc;
    begin
+      if Subprg.Decl_Defined then
+         Parse_Error ("subprogram body already declared");
+      else
+         Subprg.Decl_Defined := True;
+      end if;
+
       Prev_Subprg := Current_Subprg;
       Current_Subprg := Subprg;
 
