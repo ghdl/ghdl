@@ -36,7 +36,9 @@ package body Elab.Vhdl_Values is
            | Value_Dyn_Alias
            | Value_Sig_Val
            | Value_Quantity
-           | Value_Terminal =>
+           | Value_Terminal
+           | Value_Array
+           | Value_Record =>
             return False;
          when Value_File =>
             return False;
@@ -318,6 +320,7 @@ package body Elab.Vhdl_Values is
             Res := Create_Value_File (Src.Typ, Src.Val.File, Current_Pool);
          when Value_Quantity | Value_Terminal => raise Internal_Error;
          when Value_Signal => raise Internal_Error;
+         when Value_Array | Value_Record => raise Internal_Error;
          when Value_Const =>
             declare
                Cst : Valtyp;
@@ -524,7 +527,9 @@ package body Elab.Vhdl_Values is
            | Value_Wire
            | Value_Signal
            | Value_Dyn_Alias
-           | Value_Sig_Val =>
+           | Value_Sig_Val
+           | Value_Array
+           | Value_Record =>
             raise Internal_Error;
          when Value_Memory =>
             return (V.Typ, V.Val.Mem);

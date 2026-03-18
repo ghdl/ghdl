@@ -62,6 +62,9 @@ package Elab.Vhdl_Values is
       --  Used only for associations.
       Value_Dyn_Alias,
 
+      Value_Array,
+      Value_Record,
+
       --  Used only for individual signal associations in simulation
       Value_Sig_Val
      );
@@ -83,6 +86,9 @@ package Elab.Vhdl_Values is
 
    type Terminal_Index_Type is new Uns32;
    No_Terminal_Index : constant Terminal_Index_Type := 0;
+
+   type Value_Array_Type (<>);
+   type Value_Arr_Acc is access Value_Array_Type;
 
    type Value_Type (Kind : Value_Kind) is record
       case Kind is
@@ -114,6 +120,9 @@ package Elab.Vhdl_Values is
             D_Ptyp : Type_Acc;  --  Type of the prefix (after offset).
             D_Voff : Uns32;     --  Variable offset
             D_Eoff : Uns32;     --  Fixed offset.
+         when Value_Array
+           | Value_Record =>
+            Arr : Value_Arr_Acc;
          when Value_Sig_Val =>
             I_Sigs : Memory_Ptr;
             I_Vals : Memory_Ptr;
@@ -127,6 +136,8 @@ package Elab.Vhdl_Values is
    end record;
 
    No_Valtyp : constant Valtyp := (null, null);
+
+   type Value_Array_Type is array (Nat32 range <>) of Value_Acc;
 
    type Valtyp_Array is array (Nat32 range <>) of Valtyp;
    type Valtyp_Array_Acc is access Valtyp_Array;

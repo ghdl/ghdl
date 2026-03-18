@@ -463,7 +463,9 @@ package body Synth.Vhdl_Context is
          when Value_Net
            | Value_Signal
            | Value_Dyn_Alias
-           | Value_Sig_Val =>
+           | Value_Sig_Val
+           | Value_Array
+           | Value_Record =>
             return False;
          when Value_Quantity
            | Value_Terminal =>

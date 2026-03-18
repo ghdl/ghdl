@@ -138,7 +138,9 @@ package body Simul.Vhdl_Simul is
            | Value_Quantity
            | Value_Terminal
            | Value_Dyn_Alias
-           | Value_Const =>
+           | Value_Const
+           | Value_Array
+           | Value_Record =>
             raise Internal_Error;
       end case;
    end Hook_Signal_Expr;
@@ -437,7 +439,9 @@ package body Simul.Vhdl_Simul is
            | Value_Terminal
            | Value_Const
            | Value_Dyn_Alias
-           | Value_Alias =>
+           | Value_Alias
+           | Value_Array
+           | Value_Record =>
             raise Internal_Error;
       end case;
       return Sig_Index (Base, Idx);
