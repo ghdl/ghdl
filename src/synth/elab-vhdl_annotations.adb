@@ -197,6 +197,13 @@ package body Elab.Vhdl_Annotations is
       Annotate_Declaration_List (Prot_Info, Get_Declaration_Chain (Prot));
    end Annotate_Protected_Type_Body;
 
+   procedure Annotate_Subtype_Indication (Info : Sim_Info_Acc; Ind : Iir) is
+   begin
+      if Is_Proper_Subtype_Indication (Ind) then
+         Annotate_Type_Definition (Info, Ind);
+      end if;
+   end Annotate_Subtype_Indication;
+
    procedure Annotate_Type_Definition (Block_Info: Sim_Info_Acc; Def: Iir)
    is
       El: Iir;
@@ -230,12 +237,7 @@ package body Elab.Vhdl_Annotations is
             --  referenced by the implicit concat function definition for
             --  concatenation with element.
             El := Get_Element_Subtype_Indication (Def);
-            if Get_Kind (El) in Iir_Kinds_Subtype_Definition then
-               --  But only if it is a proper new subtype definition
-               --  (ie not a denoting name, or attributes like 'subtype).
-               El := Get_Element_Subtype (Def);
-               Annotate_Type_Definition (Block_Info, El);
-            end if;
+            Annotate_Subtype_Indication (Block_Info, El);
 
             --  Then for the array.
             Create_Object_Info (Block_Info, Def, Kind_Type);
@@ -294,7 +296,7 @@ package body Elab.Vhdl_Annotations is
               | Iir_Kind_Interface_File_Declaration =>
                --  Elaborate the subtype indication only if it not shared.
                if Has_Owned_Subtype_Indication (El) then
-                  Annotate_Type_Definition
+                  Annotate_Subtype_Indication
                     (Block_Info, Get_Subtype_Indication (El));
                end if;
             when others => Error_Kind ("annotate_interface_list_subtype", El);
@@ -331,14 +333,16 @@ package body Elab.Vhdl_Annotations is
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_View_Declaration =>
             if With_Types and then Has_Owned_Subtype_Indication (Decl) then
-               Annotate_Type_Definition (Block_Info, Get_Type (Decl));
+               Annotate_Subtype_Indication
+                 (Block_Info, Get_Subtype_Indication (Decl));
             end if;
             Create_Signal_Info (Block_Info, Decl);
          when Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_File_Declaration =>
             if With_Types and then Has_Owned_Subtype_Indication (Decl) then
-               Annotate_Type_Definition (Block_Info, Get_Type (Decl));
+               Annotate_Subtype_Indication
+                 (Block_Info, Get_Subtype_Indication (Decl));
             end if;
             Create_Object_Info (Block_Info, Decl);
          when Iir_Kind_Interface_Package_Declaration =>
@@ -578,7 +582,8 @@ package body Elab.Vhdl_Annotations is
       if Has_Owned_Subtype_Indication (Decl) then
          --  Really annotate the subtype indication, which might be different
          --  from the type (for constant declarations).
-         Annotate_Type_Definition (Block_Info, Get_Subtype_Indication (Decl));
+         Annotate_Subtype_Indication
+           (Block_Info, Get_Subtype_Indication (Decl));
       end if;
    end Annotate_Declaration_Type;
 
@@ -587,9 +592,7 @@ package body Elab.Vhdl_Annotations is
    is
       Ind : constant Iir := Get_Subtype_Indication (Decl);
    begin
-      if Is_Proper_Subtype_Indication (Ind) then
-         Annotate_Type_Definition (Block_Info, Ind);
-      end if;
+      Annotate_Subtype_Indication (Block_Info, Ind);
    end Annotate_External_Name_Type;
 
    procedure Annotate_Declaration (Block_Info: Sim_Info_Acc; Decl: Iir) is
@@ -661,27 +664,16 @@ package body Elab.Vhdl_Annotations is
             Add_Quantity_Info (Block_Info, Decl);
 
          when Iir_Kind_Mode_View_Declaration =>
-            declare
-               Ind : constant Iir := Get_Subtype_Indication (Decl);
-            begin
-               if Get_Kind (Ind) not in Iir_Kinds_Denoting_Name then
-                  Annotate_Type_Definition (Block_Info, Ind);
-               end if;
-            end;
+            Annotate_Subtype_Indication
+              (Block_Info, Get_Subtype_Indication (Decl));
          --  GCOV_EXCL_STOP
 
          when Iir_Kind_Type_Declaration
            | Iir_Kind_Anonymous_Type_Declaration =>
             Annotate_Type_Definition (Block_Info, Get_Type_Definition (Decl));
          when Iir_Kind_Subtype_Declaration =>
-            declare
-               Ind : constant Iir := Get_Subtype_Indication (Decl);
-            begin
-               --  No annotation for aliases.
-               if Is_Proper_Subtype_Indication (Ind) then
-                  Annotate_Type_Definition (Block_Info, Get_Type (Decl));
-               end if;
-            end;
+            Annotate_Subtype_Indication
+              (Block_Info, Get_Subtype_Indication (Decl));
 
          when Iir_Kind_Protected_Type_Body =>
             Annotate_Protected_Type_Body (Block_Info, Decl);
@@ -719,7 +711,8 @@ package body Elab.Vhdl_Annotations is
                if Get_Kind (Name) in Iir_Kinds_External_Name then
                   Annotate_External_Name_Type (Block_Info, Name);
                elsif Has_Owned_Subtype_Indication (Decl) then
-                  Annotate_Type_Definition (Block_Info, Get_Type (Decl));
+                  Annotate_Subtype_Indication
+                    (Block_Info, Get_Subtype_Indication (Decl));
                end if;
                Create_Object_Info (Block_Info, Decl);
             end;
