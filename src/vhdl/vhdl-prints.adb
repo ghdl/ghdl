@@ -1176,24 +1176,45 @@ package body Vhdl.Prints is
    procedure Disp_Interface_Mode_And_Type
      (Ctxt : in out Ctxt_Class; Inter: Iir)
    is
-      Ind : constant Iir := Get_Subtype_Indication (Inter);
+      View_Ind : Iir;
+      Ind : Iir;
    begin
       Valign (Ctxt, Valign_Colon);
       Disp_Token (Ctxt, Tok_Colon);
-      if Get_Has_Mode (Inter) then
-         Disp_Mode (Ctxt, Get_Mode (Inter));
-      end if;
-      Valign (Ctxt, Valign_Typemark);
-      if Ind = Null_Iir then
-         --  For implicit subprogram
-         Disp_Type (Ctxt, Get_Type (Inter));
+
+      if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
+         Disp_Token (Ctxt, Tok_View);
+         View_Ind := Get_Mode_View_Indication (Inter);
+         case Iir_Kinds_Mode_View_Indication (Get_Kind (View_Ind)) is
+            when Iir_Kind_Record_Mode_View_Indication =>
+               Print (Ctxt, Get_Name (View_Ind));
+            when Iir_Kind_Array_Mode_View_Indication =>
+               Disp_Token (Ctxt, Tok_Left_Paren);
+               Print (Ctxt, Get_Name (View_Ind));
+               Disp_Token (Ctxt, Tok_Right_Paren);
+         end case;
+         Ind := Get_Subtype_Indication (View_Ind);
+         if Ind /= Null_Iir then
+            Disp_Token (Ctxt, Tok_Of);
+            Disp_Subtype_Indication (Ctxt, Ind);
+         end if;
       else
-         Disp_Subtype_Indication (Ctxt, Ind);
+         if Get_Has_Mode (Inter) then
+            Disp_Mode (Ctxt, Get_Mode (Inter));
+         end if;
+         Valign (Ctxt, Valign_Typemark);
+         Ind := Get_Subtype_Indication (Inter);
+         if Ind = Null_Iir then
+            --  For implicit subprogram
+            Disp_Type (Ctxt, Get_Type (Inter));
+         else
+            Disp_Subtype_Indication (Ctxt, Ind);
+         end if;
+         if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
+            Disp_Signal_Kind (Ctxt, Inter);
+         end if;
+         Disp_Default_Value_Opt (Ctxt, Inter);
       end if;
-      if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
-         Disp_Signal_Kind (Ctxt, Inter);
-      end if;
-      Disp_Default_Value_Opt (Ctxt, Inter);
    end Disp_Interface_Mode_And_Type;
 
    --  Disp interfaces, followed by END_STR (';' in general).
