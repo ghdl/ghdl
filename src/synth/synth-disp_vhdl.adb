@@ -459,6 +459,66 @@ package body Synth.Disp_Vhdl is
       end if;
    end Disp_Port_Converter;
 
+   procedure Disp_Record_View_Converter (Wname : Sname;
+                                         View_Name : String;
+                                         View : Node;
+                                         Reversed : Boolean;
+                                         View_Type : Node;
+                                         Typ : Type_Acc)
+   is
+      Def_List : constant Iir_Flist := Get_Elements_Definition_List (View);
+      Rec_List : constant Node_Flist :=
+        Get_Elements_Declaration_List (View_Type);
+      View_El : Node;
+      El_Typ : Type_Acc;
+      El : Node;
+      El_Type : Node;
+      El_Id : Name_Id;
+   begin
+      for I in Flist_First .. Flist_Last (Def_List) loop
+         View_El := Get_Nth_Element (Def_List, I);
+         El := Get_Nth_Element (Rec_List, I);
+         El_Id := Get_Identifier (El);
+         El_Typ := Typ.Rec.E (Iir_Index32 (I + 1)).Typ;
+         El_Type := Get_Type (El);
+         case Get_Kind (View_El) is
+            when Iir_Kind_Simple_Mode_View_Element =>
+               Disp_Converter
+                 (New_Sname_Field (El_Id, Wname),
+                  View_Name & '.' & Name_Table.Image (El_Id),
+                  0, El_Type, El_Typ, True,
+                  (Get_Mode (View_El) /= Iir_In_Mode) xor Reversed);
+            when others =>
+               raise Internal_Error;
+         end case;
+      end loop;
+   end Disp_Record_View_Converter;
+
+   procedure Disp_View_Converter (Inst : Synth_Instance_Acc;
+                                  Port : Node)
+   is
+      Ind : constant Node := Get_Mode_View_Indication (Port);
+      Port_Id : constant Name_Id := Get_Identifier (Port);
+      Port_Name : constant String := Name_Table.Image (Port_Id);
+      Port_Type : constant Node := Get_Type (Port);
+      Typ : constant Type_Acc := Get_Subtype_Object (Inst, Port_Type);
+      Wname : Sname;
+      View : Node;
+      Reversed : Boolean;
+   begin
+      Extract_Mode_View_Name (Get_Name (Ind), View, Reversed);
+
+      Wname := New_Sname_User (Std_Names.Name_Wrap, No_Sname);
+      Wname := New_Sname_User (Port_Id, Wname);
+
+      case Get_Kind (Ind) is
+         when Iir_Kind_Record_Mode_View_Indication =>
+            Disp_Record_View_Converter
+              (Wname, Port_Name, View, Reversed, Port_Type, Typ);
+         when others => raise Internal_Error;
+      end case;
+   end Disp_View_Converter;
+
    function Has_Floating_Type (Atype : Node) return Boolean is
    begin
       case Get_Kind (Atype) is
@@ -587,15 +647,19 @@ package body Synth.Disp_Vhdl is
       begin
          Port := Get_Port_Chain (Ent);
          while Port /= Null_Node loop
-            case Get_Mode (Port) is
-               when Iir_In_Mode =>
-                  Disp_Port_Converter (Inst, Port, False);
-               when Iir_Out_Mode =>
-                  Disp_Port_Converter (Inst, Port, True);
-               when others =>
-                  --  TODO ?
-                  null;
-            end case;
+            if Get_Kind (Port) = Iir_Kind_Interface_View_Declaration then
+               Disp_View_Converter (Inst, Port);
+            else
+               case Get_Mode (Port) is
+                  when Iir_In_Mode =>
+                     Disp_Port_Converter (Inst, Port, False);
+                  when Iir_Out_Mode =>
+                     Disp_Port_Converter (Inst, Port, True);
+                  when others =>
+                     --  TODO ?
+                     null;
+               end case;
+            end if;
             Port := Get_Chain (Port);
          end loop;
       end;
