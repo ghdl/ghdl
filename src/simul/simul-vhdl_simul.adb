@@ -1933,8 +1933,10 @@ package body Simul.Vhdl_Simul is
       Mark_Expr_Pool (Mark);
       Val := Synth_Expression_With_Type
         (Proc.Inst, Get_Actual (Proc.Proc), Drv.Sig.Typ);
+      --  The target of the assignment is the driver.
       Assign_Value_To_Signal
-        ((Drv.Sig.Typ, Sig.Sig), True, 0, 0, Get_Value_Memtyp (Val));
+        ((Drv.Sig.Typ, Sig_Index (Sig.Sig, Drv.Sig.Offs.Net_Off)),
+         True, 0, 0, Get_Value_Memtyp (Val));
       Release_Expr_Pool (Mark);
    end Execute_Expression_Association;
 
