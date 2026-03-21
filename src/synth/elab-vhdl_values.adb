@@ -24,6 +24,8 @@ with Grt.Types; use Grt.Types;
 package body Elab.Vhdl_Values is
    function To_Value_Acc is new Ada.Unchecked_Conversion
      (System.Address, Value_Acc);
+   function To_Value_Arr_Acc is new Ada.Unchecked_Conversion
+     (System.Address, Value_Arr_Acc);
 
    function Is_Static (Val : Value_Acc) return Boolean is
    begin
@@ -295,6 +297,23 @@ package body Elab.Vhdl_Values is
    begin
       return (Typ, Create_Value_Sig_Val (Sigs, Vals, Pool));
    end Create_Value_Sig_Val;
+
+   function Create_Value_Record (Typ : Type_Acc; Pool : Areapool_Acc)
+                                return Value_Acc
+   is
+      subtype Value_Type_Record is Value_Type (Value_Record);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Record);
+
+      Len : constant Iir_Index32 := Typ.Rec.Len;
+      subtype This_Value_Array is Value_Array_Rec (Len);
+      function Alloc_Arr is new
+        Areapools.Alloc_On_Pool_Addr (This_Value_Array);
+      Arr : Value_Arr_Acc;
+   begin
+      Arr := To_Value_Arr_Acc
+        (Alloc_Arr (Pool, (Len => Len, E => (others => null))));
+      return To_Value_Acc (Alloc (Pool, (Kind => Value_Record, Arr => Arr)));
+   end Create_Value_Record;
 
    procedure Write_Value (Dest : Memory_Ptr; Vt : Valtyp)
    is

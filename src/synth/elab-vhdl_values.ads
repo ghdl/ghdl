@@ -87,8 +87,8 @@ package Elab.Vhdl_Values is
    type Terminal_Index_Type is new Uns32;
    No_Terminal_Index : constant Terminal_Index_Type := 0;
 
-   type Value_Array_Type (<>);
-   type Value_Arr_Acc is access Value_Array_Type;
+   type Value_Array_Rec (<>);
+   type Value_Arr_Acc is access Value_Array_Rec;
 
    type Value_Type (Kind : Value_Kind) is record
       case Kind is
@@ -137,7 +137,10 @@ package Elab.Vhdl_Values is
 
    No_Valtyp : constant Valtyp := (null, null);
 
-   type Value_Array_Type is array (Nat32 range <>) of Value_Acc;
+   type Value_Array_Type is array (Iir_Index32 range <>) of Value_Acc;
+   type Value_Array_Rec (Len : Iir_Index32) is record
+      E : Value_Array_Type (1 .. Len);
+   end record;
 
    type Valtyp_Array is array (Nat32 range <>) of Valtyp;
    type Valtyp_Array_Acc is access Valtyp_Array;
@@ -206,6 +209,9 @@ package Elab.Vhdl_Values is
                                   Vals : Memory_Ptr;
                                   Typ : Type_Acc;
                                   Pool : Areapool_Acc) return Valtyp;
+
+   function Create_Value_Record (Typ : Type_Acc; Pool : Areapool_Acc)
+                                 return Value_Acc;
 
    --  If VAL is a const, replace it by its value.
    procedure Strip_Const (Vt : in out Valtyp);
