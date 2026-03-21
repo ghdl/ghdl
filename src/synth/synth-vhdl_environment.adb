@@ -48,6 +48,11 @@ package body Synth.Vhdl_Environment is
    procedure Warning_No_Assignment
      (Decl : Decl_Type; First_Off : Uns32; Last_Off : Uns32) is
    begin
+      if Decl.Obj = Null_Iir then
+         --  For interface view.  TODO: improve ?
+         return;
+      end if;
+
       if Last_Off < First_Off then
          Warning_Msg_Synth
            (Warnid_Nowrite, +Decl.Obj, "no assignment for %n", +Decl.Obj);

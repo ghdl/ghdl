@@ -154,12 +154,20 @@ package body Synth.Vhdl_Stmts is
                                          Dest_Off : in out Value_Offsets;
                                          Dest_Dyn : in out Dyn_Name)
    is
-      pragma Unreferenced (Syn_Inst, Dest_Base, Dest_Dyn);
+      pragma Unreferenced (Syn_Inst, Dest_Dyn);
       Idx : constant Iir_Index32 :=
         Get_Element_Position (Get_Named_Entity (Pfx));
+      El_Typ : Type_Acc;
    begin
-      Dest_Off := Dest_Off + Dest_Typ.Rec.E (Idx + 1).Offs;
-      Dest_Typ := Dest_Typ.Rec.E (Idx + 1).Typ;
+      El_Typ := Dest_Typ.Rec.E (Idx + 1).Typ;
+      if Dest_Base.Val /= null and then Dest_Base.Val.Kind = Value_Record then
+         --  For view mode.
+         pragma Assert (Dest_Off = No_Value_Offsets);
+         Dest_Base := (Typ => El_Typ, Val => Dest_Base.Val.Arr.E (Idx + 1));
+      else
+         Dest_Off := Dest_Off + Dest_Typ.Rec.E (Idx + 1).Offs;
+      end if;
+      Dest_Typ := El_Typ;
    end Synth_Object_Selected_Name;
 
    procedure Synth_Object_Slice_Name (Syn_Inst : Synth_Instance_Acc;

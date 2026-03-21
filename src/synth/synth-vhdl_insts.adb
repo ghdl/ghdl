@@ -406,41 +406,93 @@ package body Synth.Vhdl_Insts is
       return New_Sname_User (Get_Encoded_Name_Id (Decl, Enc), No_Sname);
    end Create_Inter_Name;
 
-   --  Record interfaces
-   function Can_Expand_Interface (Inter : Node) return Boolean
-   is
-      Inter_Type : constant Node := Get_Base_Type (Get_Type (Inter));
-   begin
-      return Get_Kind (Inter_Type) = Iir_Kind_Record_Type_Definition;
-   end Can_Expand_Interface;
-
    --  Return the number of ports for a type.  A record type create one
    --  port per immediate subelement.  Sub-records are not expanded.
-   function Count_Nbr_Ports (Inter : Node; Typ : Type_Acc) return Port_Nbr is
+   function Count_Nbr_Ports (Typ : Type_Acc) return Port_Nbr is
    begin
-      if Can_Expand_Interface (Inter) then
+      if Typ.Kind in Type_Records then
          return Port_Nbr (Typ.Rec.Len);
       else
          return 1;
       end if;
    end Count_Nbr_Ports;
 
+   procedure Count_Record_View_Ports (View : Node;
+                                      Typ : Type_Acc;
+                                      Mul : Port_Nbr;
+                                      Reversed : Boolean;
+                                      Vt : out Valtyp;
+                                      Nbr_Inputs : in out Port_Nbr;
+                                      Nbr_Outputs : in out Port_Nbr)
+   is
+      Def_List : constant Iir_Flist := Get_Elements_Definition_List (View);
+      View_El : Node;
+      El_Typ : Type_Acc;
+      Val : Value_Acc;
+      Idx : Iir_Index32;
+   begin
+      Val := Create_Value_Record (Typ, Current_Pool);
+      Vt := (Typ => Typ, Val => Val);
+      for I in Flist_First .. Flist_Last (Def_List) loop
+         View_El := Get_Nth_Element (Def_List, I);
+         Idx := Iir_Index32 (I + 1);
+         El_Typ := Typ.Rec.E (Idx).Typ;
+         case Get_Kind (View_El) is
+            when Iir_Kind_Simple_Mode_View_Element =>
+               case Mode_To_Port_Kind (Get_Mode (View_El), Reversed) is
+                  when Port_In =>
+                     Val.Arr.E (Idx) := Create_Value_Net (No_Net, El_Typ).Val;
+                     Nbr_Inputs :=
+                       Nbr_Inputs + Count_Nbr_Ports (El_Typ) * Mul;
+                  when Port_Out | Port_Inout =>
+                     Val.Arr.E (Idx) := Create_Value_Wire
+                       (No_Wire_Id, El_Typ, Current_Pool).Val;
+                     Nbr_Outputs :=
+                       Nbr_Outputs + Count_Nbr_Ports (El_Typ) * Mul;
+               end case;
+            when others =>
+               Vhdl.Errors.Error_Kind ("count_view_ports(rec)", View_El);
+         end case;
+      end loop;
+   end Count_Record_View_Ports;
+
+   procedure Count_View_Ports (Ind : Node;
+                               Typ : Type_Acc;
+                               Mul : Port_Nbr;
+                               Vt : out Valtyp;
+                               Nbr_Inputs : in out Port_Nbr;
+                               Nbr_Outputs : in out Port_Nbr)
+   is
+      View : Node;
+      Reversed : Boolean;
+   begin
+      Extract_Mode_View_Name (Get_Name (Ind), View, Reversed);
+
+      case Get_Kind (Ind) is
+         when Iir_Kind_Record_Mode_View_Indication =>
+            Count_Record_View_Ports (View, Typ, Mul, Reversed,
+              Vt, Nbr_Inputs, Nbr_Outputs);
+         when Iir_Kind_Array_Mode_View_Indication =>
+            Count_Record_View_Ports
+              (View, Typ.Arr_El, Mul * Port_Nbr (Typ.Abound.Len), Reversed,
+               Vt, Nbr_Inputs, Nbr_Outputs);
+         when others => Vhdl.Errors.Error_Kind ("count_view_ports", Ind);
+      end case;
+   end Count_View_Ports;
+
    procedure Build_Ports_Desc (Descs : in out Port_Desc_Array;
                                Idx : in out Port_Nbr;
+                               Port_Sname : Sname;
                                Pkind : Port_Kind;
                                Order : Uns32;
                                Encoding : Name_Encoding;
                                Typ : Type_Acc;
-                               Inter : Node)
-   is
-      Port_Sname : Sname;
+                               Inter_Type : Node) is
    begin
-      Port_Sname := Create_Inter_Name (Inter, Encoding);
-
-      if Can_Expand_Interface (Inter) then
+      if Typ.Kind in Type_Records then
          declare
             Els : constant Node_Flist :=
-              Get_Elements_Declaration_List (Get_Type (Inter));
+              Get_Elements_Declaration_List (Inter_Type);
             El : Node;
          begin
             for I in Typ.Rec.E'Range loop
@@ -462,6 +514,81 @@ package body Synth.Vhdl_Insts is
                          W => Get_Type_Width (Typ));
       end if;
    end Build_Ports_Desc;
+
+   procedure Build_Record_View_Ports_Desc (View : Node;
+                                           Typ : Type_Acc;
+                                           Reversed : Boolean;
+                                           Port_Sname : Sname;
+                                           Order : Uns32;
+                                           Encoding : Name_Encoding;
+                                           Inports : in out Port_Desc_Array;
+                                           Outports : in out Port_Desc_Array;
+                                           Nbr_Inputs : in out Port_Nbr;
+                                           Nbr_Outputs : in out Port_Nbr)
+   is
+      View_Type : constant Node := Get_Type_Of_Subtype_Indication
+        (Get_Subtype_Indication (View));
+      Rec_List : constant Iir_Flist :=
+        Get_Elements_Declaration_List (View_Type);
+      Def_List : constant Iir_Flist := Get_Elements_Definition_List (View);
+      View_El : Node;
+      El_Typ : Type_Acc;
+      El : Node;
+      El_Type : Node;
+      Pkind : Port_Kind;
+      Sub_Sname : Sname;
+   begin
+      for I in Flist_First .. Flist_Last (Def_List) loop
+         View_El := Get_Nth_Element (Def_List, I);
+         El_Typ := Typ.Rec.E (Iir_Index32 (I + 1)).Typ;
+         El := Get_Nth_Element (Rec_List, I);
+         Sub_Sname := New_Sname_Field
+           (Get_Encoded_Name_Id (El, Encoding), Port_Sname);
+         El_Type := Get_Type (El);
+         case Get_Kind (View_El) is
+            when Iir_Kind_Simple_Mode_View_Element =>
+               Pkind := Mode_To_Port_Kind (Get_Mode (View_El), Reversed);
+               case Pkind is
+                  when Port_In =>
+                     Build_Ports_Desc (Inports, Nbr_Inputs, Sub_Sname,
+                                       Pkind, Order, Encoding,
+                                       El_Typ, El_Type);
+                  when Port_Out
+                    | Port_Inout =>
+                     Build_Ports_Desc (Outports, Nbr_Outputs, Sub_Sname,
+                                       Pkind, Order, Encoding,
+                                       El_Typ, El_Type);
+               end case;
+            when others => Vhdl.Errors.Error_Kind
+               ("build_record_view_ports_desc", View_El);
+         end case;
+      end loop;
+   end Build_Record_View_Ports_Desc;
+
+   procedure Build_View_Ports_Desc (Ind : Node;
+                                    Typ : Type_Acc;
+                                    Port_Sname : Sname;
+                                    Order : Uns32;
+                                    Encoding : Name_Encoding;
+                                    Inports : in out Port_Desc_Array;
+                                    Outports : in out Port_Desc_Array;
+                                    Nbr_Inputs : in out Port_Nbr;
+                                    Nbr_Outputs : in out Port_Nbr)
+   is
+      View : Node;
+      Reversed : Boolean;
+   begin
+      Extract_Mode_View_Name (Get_Name (Ind), View, Reversed);
+
+      case Get_Kind (Ind) is
+         when Iir_Kind_Record_Mode_View_Indication =>
+            Build_Record_View_Ports_Desc (View, Typ, Reversed,
+              Port_Sname, Order, Encoding, Inports, Outports,
+              Nbr_Inputs, Nbr_Outputs);
+         when Iir_Kind_Array_Mode_View_Indication => raise Internal_Error;
+         when others => Vhdl.Errors.Error_Kind ("build_view_ports_desc", Ind);
+      end case;
+   end Build_View_Ports_Desc;
 
    function Build (Params : Inst_Params) return Inst_Object
    is
@@ -494,16 +621,22 @@ package body Synth.Vhdl_Insts is
       while Is_Valid (Inter) loop
          Inter_Typ := Get_Value (Params.Syn_Inst, Inter).Typ;
 
-         case Mode_To_Port_Kind (Get_Mode (Inter)) is
-            when Port_In =>
-               Val := Create_Value_Net (No_Net, Inter_Typ);
-               Nbr_Inputs := Nbr_Inputs + Count_Nbr_Ports (Inter, Inter_Typ);
-            when Port_Out
-              | Port_Inout =>
-               Val := Create_Value_Wire
-                 (No_Wire_Id, Inter_Typ, Current_Pool);
-               Nbr_Outputs := Nbr_Outputs + Count_Nbr_Ports (Inter, Inter_Typ);
-         end case;
+         if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
+            Count_View_Ports (Get_Mode_View_Indication (Inter),
+                              Inter_Typ, 1, Val,
+                              Nbr_Inputs, Nbr_Outputs);
+         else
+            case Mode_To_Port_Kind (Get_Mode (Inter)) is
+               when Port_In =>
+                  Val := Create_Value_Net (No_Net, Inter_Typ);
+                  Nbr_Inputs := Nbr_Inputs + Count_Nbr_Ports (Inter_Typ);
+               when Port_Out
+                 | Port_Inout =>
+                  Val := Create_Value_Wire
+                    (No_Wire_Id, Inter_Typ, Current_Pool);
+                  Nbr_Outputs := Nbr_Outputs + Count_Nbr_Ports (Inter_Typ);
+            end case;
+         end if;
          Replace_Signal (Params.Syn_Inst, Inter, Val);
          Inter := Get_Chain (Inter);
       end loop;
@@ -552,26 +685,39 @@ package body Synth.Vhdl_Insts is
          Pkind : Port_Kind;
          Vt : Valtyp;
          Order : Uns32;
+         Port_Sname : Sname;
+         Inter_Type : Node;
       begin
          Inter := Get_Port_Chain (Decl);
          Nbr_Inputs := 0;
          Nbr_Outputs := 0;
          Order := 0;
          while Is_Valid (Inter) loop
-            Pkind := Mode_To_Port_Kind (Get_Mode (Inter));
             Vt := Get_Value (Params.Syn_Inst, Inter);
+            Port_Sname := Create_Inter_Name (Inter, Params.Encoding);
 
-            case Pkind is
-               when Port_In =>
-                  Build_Ports_Desc (Inports, Nbr_Inputs,
-                                    Pkind, Order, Params.Encoding,
-                                    Vt.Typ, Inter);
-               when Port_Out
-                 | Port_Inout =>
-                  Build_Ports_Desc (Outports, Nbr_Outputs,
-                                    Pkind, Order, Params.Encoding,
-                                    Vt.Typ, Inter);
-            end case;
+            if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
+               Build_View_Ports_Desc
+                 (Get_Mode_View_Indication (Inter), Vt.Typ,
+                  Port_Sname, Order, Params.Encoding,
+                  Inports, Outports, Nbr_Inputs, Nbr_Outputs);
+            else
+               Inter_Type := Get_Concrete_Type
+                 (Params.Syn_Inst, Get_Type (Inter));
+               Pkind := Mode_To_Port_Kind (Get_Mode (Inter));
+
+               case Pkind is
+                  when Port_In =>
+                     Build_Ports_Desc (Inports, Nbr_Inputs, Port_Sname,
+                                       Pkind, Order, Params.Encoding,
+                                       Vt.Typ, Inter_Type);
+                  when Port_Out
+                    | Port_Inout =>
+                     Build_Ports_Desc (Outports, Nbr_Outputs, Port_Sname,
+                                       Pkind, Order, Params.Encoding,
+                                       Vt.Typ, Inter_Type);
+               end case;
+            end if;
             Inter := Get_Chain (Inter);
             Order := Order + 1;
          end loop;
@@ -939,12 +1085,11 @@ package body Synth.Vhdl_Insts is
 
    procedure Inst_Input_Connect (Syn_Inst : Synth_Instance_Acc;
                                  Inst : Instance;
-                                 Inter : Node;
                                  Port : in out Port_Idx;
                                  Inter_Typ : Type_Acc;
                                  N : Net) is
    begin
-      if Can_Expand_Interface (Inter) then
+      if Inter_Typ.Kind in Type_Records then
          for I in Inter_Typ.Rec.E'Range loop
             if N /= No_Net then
                Connect (Get_Input (Inst, Port),
@@ -965,12 +1110,11 @@ package body Synth.Vhdl_Insts is
 
    procedure Inst_Output_Connect (Syn_Inst : Synth_Instance_Acc;
                                   Inst : Instance;
-                                  Inter : Node;
                                   Idx : in out Port_Idx;
                                   Inter_Typ : Type_Acc;
                                   N : out Net) is
    begin
-      if Can_Expand_Interface (Inter) then
+      if Inter_Typ.Kind in Type_Records then
          declare
             Nets : Net_Array (1 .. Nat32 (Inter_Typ.Rec.Len));
          begin
@@ -1030,12 +1174,12 @@ package body Synth.Vhdl_Insts is
                   N := Synth_Input_Assoc
                     (Syn_Inst, Assoc, Ent_Inst, Inter, Inter_Typ);
                   Inst_Input_Connect
-                    (Syn_Inst, Inst, Inter, Nbr_Inputs, Inter_Typ, N);
+                    (Syn_Inst, Inst, Nbr_Inputs, Inter_Typ, N);
 
                when Port_Out
                  | Port_Inout =>
                   Inst_Output_Connect
-                    (Syn_Inst, Inst, Inter, Nbr_Outputs, Inter_Typ, N);
+                    (Syn_Inst, Inst, Nbr_Outputs, Inter_Typ, N);
 
                   Synth_Output_Assoc
                     (N, Syn_Inst, Assoc, Ent_Inst, Inter, True);
@@ -1639,7 +1783,6 @@ package body Synth.Vhdl_Insts is
 
    procedure Create_Input_Wire (Syn_Inst : Synth_Instance_Acc;
                                 Self_Inst : Instance;
-                                Inter : Node;
                                 Idx : in out Port_Idx;
                                 Val : Valtyp)
    is
@@ -1647,7 +1790,7 @@ package body Synth.Vhdl_Insts is
    begin
       pragma Assert (Val.Val.Kind = Value_Net);
       --  Get the net from the port(s).
-      Inst_Output_Connect (Syn_Inst, Self_Inst, Inter, Idx, Val.Typ, N);
+      Inst_Output_Connect (Syn_Inst, Self_Inst, Idx, Val.Typ, N);
       Set_Value_Net (Val.Val, N);
    end Create_Input_Wire;
 
@@ -1658,11 +1801,11 @@ package body Synth.Vhdl_Insts is
                                  Val : Valtyp)
    is
       Ctxt      : constant Context_Acc := Get_Build (Syn_Inst);
-      Default   : constant Node := Get_Default_Value (Inter);
       Desc      : constant Port_Desc :=
         Get_Output_Desc (Get_Module (Self_Inst), Idx);
       Marker : Mark_Type;
       Inter_Typ : Type_Acc;
+      Default : Node;
       Value     : Net;
       Vout      : Net;
       Init      : Valtyp;
@@ -1674,16 +1817,18 @@ package body Synth.Vhdl_Insts is
       Set_Value_Wire (Val.Val, Alloc_Wire (Wire_Output, (Inter, Val.Typ)));
       --  pragma Assert (Desc.W = Get_Type_Width (Val.Typ));
 
-      if Default /= Null_Node then
-         Mark_Expr_Pool (Marker);
-         Inter_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Inter));
-         Init := Synth_Expression_With_Type (Syn_Inst, Default, Inter_Typ);
-         Init := Synth_Subtype_Conversion
-           (Syn_Inst, Init, Inter_Typ, False, Inter);
-         Init_Net := Get_Net (Ctxt, Init);
-         Release_Expr_Pool (Marker);
-      else
-         Init_Net := No_Net;
+      Init_Net := No_Net;
+      if Get_Kind (Inter) /= Iir_Kind_Interface_View_Declaration then
+         Default := Get_Default_Value (Inter);
+         if Default /= Null_Node then
+            Mark_Expr_Pool (Marker);
+            Inter_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Inter));
+            Init := Synth_Expression_With_Type (Syn_Inst, Default, Inter_Typ);
+            Init := Synth_Subtype_Conversion
+              (Syn_Inst, Init, Inter_Typ, False, Inter);
+            Init_Net := Get_Net (Ctxt, Init);
+            Release_Expr_Pool (Marker);
+         end if;
       end if;
 
       if Desc.Dir = Port_Inout then
@@ -1712,7 +1857,7 @@ package body Synth.Vhdl_Insts is
       Set_Location (Value, Inter);
       Set_Wire_Gate (Get_Value_Wire (Val.Val), Value);
 
-      Inst_Input_Connect (Syn_Inst, Self_Inst, Inter, Idx, Val.Typ, Vout);
+      Inst_Input_Connect (Syn_Inst, Self_Inst, Idx, Val.Typ, Vout);
    end Create_Output_Wire;
 
    procedure Synth_Verification_Units (Syn_Inst : Synth_Instance_Acc)
@@ -1838,6 +1983,67 @@ package body Synth.Vhdl_Insts is
       end case;
    end Finalize_Package;
 
+   procedure Create_Record_View_Wire (Syn_Inst : Synth_Instance_Acc;
+                                      Self_Inst : Instance;
+                                      View : Node;
+                                      Reversed : Boolean;
+                                      Input_Idx : in out Port_Idx;
+                                      Output_Idx : in out Port_Idx;
+                                      Val : Valtyp;
+                                      Loc : Node)
+   is
+      Def_List : Iir_Flist;
+      View_El : Node;
+      El_Val : Valtyp;
+      Idx : Iir_Index32;
+      Pkind : Port_Kind;
+   begin
+      Def_List := Get_Elements_Definition_List (View);
+      for I in Flist_First .. Flist_Last (Def_List) loop
+         View_El := Get_Nth_Element (Def_List, I);
+         Idx := Iir_Index32 (I + 1);
+         El_Val := (Typ => Val.Typ.Rec.E (Idx).Typ,
+                    Val => Val.Val.Arr.E (Idx));
+         case Get_Kind (View_El) is
+            when Iir_Kind_Simple_Mode_View_Element =>
+               Pkind := Mode_To_Port_Kind (Get_Mode (View_El), Reversed);
+               case Pkind is
+                  when Port_In =>
+                     Create_Input_Wire
+                       (Syn_Inst, Self_Inst, Input_Idx, El_Val);
+                  when Port_Out
+                    | Port_Inout =>
+                     Create_Output_Wire
+                       (Syn_Inst, Self_Inst, Loc, Output_Idx, El_Val);
+               end case;
+            when others => Vhdl.Errors.Error_Kind
+               ("create_record_view_wire", View_El);
+         end case;
+      end loop;
+   end Create_Record_View_Wire;
+
+   procedure Create_View_Wire (Syn_Inst : Synth_Instance_Acc;
+                               Self_Inst : Instance;
+                               Inter : Node;
+                               Input_Idx : in out Port_Idx;
+                               Output_Idx : in out Port_Idx;
+                               Val : Valtyp)
+   is
+      Ind : constant Node := Get_Mode_View_Indication (Inter);
+      View : Node;
+      Reversed : Boolean;
+   begin
+      Extract_Mode_View_Name (Get_Name (Ind), View, Reversed);
+
+      case Get_Kind (Ind) is
+         when Iir_Kind_Record_Mode_View_Indication =>
+            Create_Record_View_Wire (Syn_Inst, Self_Inst, View, Reversed,
+                                     Input_Idx, Output_Idx, Val, Inter);
+         when Iir_Kind_Array_Mode_View_Indication => raise Internal_Error;
+         when others => Vhdl.Errors.Error_Kind ("create_view_wire", Ind);
+      end case;
+   end Create_View_Wire;
+
    procedure Synth_Instance (Inst : Inst_Object)
    is
       Entity : constant Node := Inst.Decl;
@@ -1881,14 +2087,20 @@ package body Synth.Vhdl_Insts is
       Nbr_Outputs := 0;
       while Is_Valid (Inter) loop
          Vt := Get_Value (Syn_Inst, Inter);
-         case Mode_To_Port_Kind (Get_Mode (Inter)) is
-            when Port_In =>
-               Create_Input_Wire (Syn_Inst, Self_Inst, Inter, Nbr_Inputs, Vt);
-            when Port_Out
-              | Port_Inout =>
-               Create_Output_Wire
-                 (Syn_Inst, Self_Inst, Inter, Nbr_Outputs, Vt);
-         end case;
+         if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
+            Create_View_Wire
+              (Syn_Inst, Self_Inst, Inter, Nbr_Inputs, Nbr_Outputs, Vt);
+         else
+            case Mode_To_Port_Kind (Get_Mode (Inter)) is
+               when Port_In =>
+                  Create_Input_Wire
+                    (Syn_Inst, Self_Inst, Nbr_Inputs, Vt);
+               when Port_Out
+                 | Port_Inout =>
+                  Create_Output_Wire
+                    (Syn_Inst, Self_Inst, Inter, Nbr_Outputs, Vt);
+            end case;
+         end if;
          pragma Assert (Is_Expr_Pool_Empty);
          Inter := Get_Chain (Inter);
       end loop;

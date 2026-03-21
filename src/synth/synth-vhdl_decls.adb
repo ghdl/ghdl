@@ -883,6 +883,78 @@ package body Synth.Vhdl_Decls is
    end Synth_Declarations;
 
    --  Finalize a variable or a signal.
+   procedure Finalize_Signal_Wire (Syn_Inst : Synth_Instance_Acc;
+                                   Decl : Node;
+                                   Vt : in out Valtyp)
+   is
+      use Netlists.Gates;
+      Gate_Net : Net;
+      Gate : Instance;
+      Drv : Net;
+      Def_Val : Net;
+      W : Wire_Id;
+   begin
+      if Vt = No_Valtyp then
+         pragma Assert (Is_Error (Syn_Inst));
+         return;
+      end if;
+      if Vt.Val.Kind /= Value_Wire then
+         --  Could be a net for in ports.
+         --  Could be a static value for a variable of type file.
+         return;
+      end if;
+
+      W := Get_Value_Wire (Vt.Val);
+
+      Finalize_Assignment (Get_Build (Syn_Inst), W);
+
+      Gate_Net := Get_Wire_Gate (W);
+
+      Free_Wire (W);
+
+      --  Replace the wire with a net so that external names can refer to it.
+      Vt := (Vt.Typ, Create_Value_Net (Gate_Net, Process_Pool'Access));
+
+      Gate := Get_Net_Parent (Gate_Net);
+      case Get_Id (Gate) is
+         when Id_Signal
+            | Id_Output
+            | Id_Inout =>
+            Drv := Get_Input_Net (Gate, 0);
+            Def_Val := No_Net;
+         when Id_Isignal
+            | Id_Ioutput
+            | Id_Iinout =>
+            Drv := Get_Input_Net (Gate, 0);
+            Def_Val := Get_Input_Net (Gate, 1);
+         when others => raise Internal_Error; --  Todo: output ?
+      end case;
+      if Drv = No_Net then
+         --  Undriven signals.
+         if Is_Connected (Get_Output (Gate, 0)) then
+            --  No warning if the signal is not used.
+            --  TODO: maybe simply remove it.
+            if Def_Val = No_Net then
+               Warning_Msg_Synth
+                 (Warnid_Nowrite, +Decl,
+                  "%n is never assigned and has no default value", +Decl);
+            else
+               Warning_Msg_Synth
+                 (Warnid_Nowrite, +Decl, "%n is never assigned", +Decl);
+            end if;
+         end if;
+         if Def_Val = No_Net then
+            --  The initial value of an undriven signal is X.
+            Def_Val := Build_Const_X (Get_Build (Syn_Inst),
+                                      Get_Width (Gate_Net));
+         end if;
+
+         --  The value of an undriven signal is its initial value.
+         Connect (Get_Input (Gate, 0), Def_Val);
+      end if;
+   end Finalize_Signal_Wire;
+
+   --  Finalize a variable or a signal.
    procedure Finalize_Signal (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
       use Netlists.Gates;
@@ -956,6 +1028,66 @@ package body Synth.Vhdl_Decls is
       end if;
    end Finalize_Signal;
 
+   procedure Finalize_Record_Interface_View (Syn_Inst : Synth_Instance_Acc;
+                                             View : Node;
+                                             Reversed : Boolean;
+                                             Vt : Valtyp)
+   is
+      Def_List : constant Iir_Flist :=
+        Get_Elements_Definition_List (View);
+      View_El : Node;
+      Pkind : Port_Kind;
+      El_Typ : Type_Acc;
+      Idx : Iir_Index32;
+      El_Vt : Valtyp;
+   begin
+      for I in Flist_First .. Flist_Last (Def_List) loop
+         View_El := Get_Nth_Element (Def_List, I);
+         Idx := Iir_Index32 (I + 1);
+         El_Typ := Vt.Typ.Rec.E (Idx).Typ;
+         case Get_Kind (View_El) is
+            when Iir_Kind_Simple_Mode_View_Element =>
+               Pkind := Mode_To_Port_Kind (Get_Mode (View_El), Reversed);
+               case Pkind is
+                  when Port_In =>
+                     null;
+                  when Port_Out
+                    | Port_Inout =>
+                     El_Vt := (Typ => El_Typ, Val => Vt.Val.Arr.E (Idx));
+                     Finalize_Signal_Wire (Syn_Inst, View, El_Vt);
+                     Vt.Val.Arr.E (Idx) := El_Vt.Val;
+               end case;
+            when others => Vhdl.Errors.Error_Kind
+               ("finalize_record_interface_view", View_El);
+         end case;
+      end loop;
+   end Finalize_Record_Interface_View;
+
+   procedure Finalize_Interface_View
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+   is
+      Ind : constant Node := Get_Mode_View_Indication (Decl);
+      Vt : Valtyp;
+      View : Node;
+      Reversed : Boolean;
+   begin
+      Vt := Get_Value (Syn_Inst, Decl);
+      if Vt = No_Valtyp then
+         pragma Assert (Is_Error (Syn_Inst));
+         return;
+      end if;
+
+      Extract_Mode_View_Name (Get_Name (Ind), View, Reversed);
+
+      case Get_Kind (Ind) is
+         when Iir_Kind_Record_Mode_View_Indication =>
+            Finalize_Record_Interface_View (Syn_Inst, View, Reversed, Vt);
+         when Iir_Kind_Array_Mode_View_Indication => raise Internal_Error;
+         when others => Vhdl.Errors.Error_Kind
+            ("finalize_interface_view", Ind);
+      end case;
+   end Finalize_Interface_View;
+
    procedure Finalize_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean) is
    begin
@@ -974,6 +1106,9 @@ package body Synth.Vhdl_Decls is
             | Iir_Kind_Interface_Signal_Declaration =>
             pragma Assert (not Is_Subprg);
             Finalize_Signal (Syn_Inst, Decl);
+         when Iir_Kind_Interface_View_Declaration =>
+            pragma Assert (not Is_Subprg);
+            Finalize_Interface_View (Syn_Inst, Decl);
          when Iir_Kind_Object_Alias_Declaration =>
             null;
          when Iir_Kind_Procedure_Declaration
@@ -982,19 +1117,13 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Procedure_Body
            | Iir_Kind_Function_Body =>
             null;
-         when Iir_Kind_Non_Object_Alias_Declaration =>
-            null;
-         when Iir_Kind_Attribute_Declaration =>
-            null;
-         when Iir_Kind_Attribute_Specification =>
-            null;
-         when Iir_Kind_Type_Declaration =>
-            null;
-         when Iir_Kind_Anonymous_Type_Declaration =>
-            null;
-         when  Iir_Kind_Subtype_Declaration =>
-            null;
-         when Iir_Kind_Component_Declaration =>
+         when Iir_Kind_Non_Object_Alias_Declaration
+            | Iir_Kind_Attribute_Declaration
+            | Iir_Kind_Attribute_Specification
+            | Iir_Kind_Type_Declaration
+            | Iir_Kind_Anonymous_Type_Declaration
+            | Iir_Kind_Subtype_Declaration
+            | Iir_Kind_Component_Declaration =>
             null;
          when Iir_Kind_File_Declaration =>
             Elab.Vhdl_Files.Finalize_File (Syn_Inst, Decl);
@@ -1092,6 +1221,7 @@ package body Synth.Vhdl_Decls is
            | Iir_Kind_Configuration_Specification
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Non_Object_Alias_Declaration
+           | Iir_Kind_Mode_View_Declaration
            | Iir_Kind_Use_Clause =>
             --  Fully handled during elaboration.
             null;
