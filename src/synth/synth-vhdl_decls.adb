@@ -47,6 +47,29 @@ with Synth.Errors; use Synth.Errors;
 with Synth.Vhdl_Context; use Synth.Vhdl_Context;
 
 package body Synth.Vhdl_Decls is
+   function Mode_To_Port_Kind (Mode : Iir_Mode; Converse : Boolean := False)
+                              return Port_Kind is
+   begin
+      case Mode is
+         when Iir_In_Mode =>
+            if Converse then
+               return Port_Out;
+            else
+               return Port_In;
+            end if;
+         when Iir_Buffer_Mode
+           | Iir_Out_Mode =>
+            if Converse then
+               return Port_In;
+            else
+               return Port_Out;
+            end if;
+         when Iir_Inout_Mode =>
+            return Port_Inout;
+         when Iir_Linkage_Mode | Iir_Unknown_Mode => raise Internal_Error;
+      end case;
+   end Mode_To_Port_Kind;
+
    function Create_Var_Wire (Syn_Inst : Synth_Instance_Acc;
                              Decl : Node;
                              Kind : Wire_Kind;

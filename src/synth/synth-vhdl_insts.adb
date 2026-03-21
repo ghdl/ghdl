@@ -72,20 +72,6 @@ package body Synth.Vhdl_Insts is
 
    function Last_Inst_Index return Uns32;
 
-   function Mode_To_Port_Kind (Mode : Iir_Mode) return Port_Kind is
-   begin
-      case Mode is
-         when Iir_In_Mode =>
-            return Port_In;
-         when Iir_Buffer_Mode
-           | Iir_Out_Mode =>
-            return Port_Out;
-         when Iir_Inout_Mode =>
-            return Port_Inout;
-         when Iir_Linkage_Mode | Iir_Unknown_Mode => raise Internal_Error;
-      end case;
-   end Mode_To_Port_Kind;
-
    --  Parameters that define an instance.
    type Inst_Params is record
       --  Declaration: either the entity or the component.

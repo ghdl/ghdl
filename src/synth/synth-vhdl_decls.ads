@@ -25,6 +25,9 @@ with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Netlists; use Netlists;
 
 package Synth.Vhdl_Decls is
+   function Mode_To_Port_Kind (Mode : Iir_Mode; Converse : Boolean := False)
+                              return Port_Kind;
+
    --  Return the Param_Type for ATYPE.
    function Type_To_Param_Type (Atype : Node; Typ : Type_Acc)
                                return Param_Type;
