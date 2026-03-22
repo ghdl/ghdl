@@ -129,13 +129,14 @@ package Synth.Vhdl_Expr is
                                  Off : out Value_Offsets;
                                  Error : out Boolean);
 
-   --  If VOFF is No_Net then OFF is valid, if VOFF is not No_Net then
+   --  If DYN_OFF is No_Net then OFF is valid, if DYN_OFF is not No_Net then
    --  OFF is 0.
+   --  (the index is either static or dynamic).
    procedure Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
                                  Pfx_Typ : Type_Acc;
                                  El_Typ : out Type_Acc;
-                                 Voff : out Net;
+                                 Dyn_Off : out Net;
                                  Off : out Value_Offsets;
                                  Error : out Boolean);
 

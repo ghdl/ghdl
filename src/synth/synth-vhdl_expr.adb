@@ -872,7 +872,7 @@ package body Synth.Vhdl_Expr is
                             Indexes : Iir_Flist;
                             Arr_Typ : Type_Acc;
                             El_Typ : out Type_Acc;
-                            Voff : out Net;
+                            Dyn_Off : out Net;
                             Off : out Value_Offsets;
                             Error : out Boolean)
    is
@@ -886,7 +886,7 @@ package body Synth.Vhdl_Expr is
       Stride : Uns32;
    begin
       --  Initialize values
-      Voff := No_Net;
+      Dyn_Off := No_Net;
       Off := (0, 0);
       Error := False;
       El_Typ := Arr_Typ;
@@ -932,11 +932,11 @@ package body Synth.Vhdl_Expr is
                Clog2 (El_Typ.W));
             Set_Location (Ivoff, Idx_Expr);
 
-            if Voff = No_Net then
-               Voff := Ivoff;
+            if Dyn_Off = No_Net then
+               Dyn_Off := Ivoff;
             else
-               Voff := Build_Addidx (Get_Build (Syn_Inst), Ivoff, Voff);
-               Set_Location (Voff, Idx_Expr);
+               Dyn_Off := Build_Addidx (Get_Build (Syn_Inst), Ivoff, Dyn_Off);
+               Set_Location (Dyn_Off, Idx_Expr);
             end if;
          end if;
 
@@ -948,7 +948,7 @@ package body Synth.Vhdl_Expr is
                                  Name : Node;
                                  Pfx_Typ : Type_Acc;
                                  El_Typ : out Type_Acc;
-                                 Voff : out Net;
+                                 Dyn_Off : out Net;
                                  Off : out Value_Offsets;
                                  Error : out Boolean)
    is
@@ -957,14 +957,13 @@ package body Synth.Vhdl_Expr is
       if Pfx_Typ.Abound.Len = 0 then
          Error_Msg_Synth (Syn_Inst, Name, "indexing a null array");
          El_Typ := null;
-         Voff := No_Net;
+         Dyn_Off := No_Net;
          Off := No_Value_Offsets;
          Error := True;
          return;
       end if;
 
-      Synth_Indexes (Syn_Inst, Indexes, Pfx_Typ,
-                     El_Typ, Voff, Off, Error);
+      Synth_Indexes (Syn_Inst, Indexes, Pfx_Typ, El_Typ, Dyn_Off, Off, Error);
    end Synth_Indexed_Name;
 
    function Is_Static (N : Net) return Boolean is
