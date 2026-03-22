@@ -1967,8 +1967,12 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Path_Name_Attribute
            | Iir_Kind_Instance_Name_Attribute
            | Iir_Kind_Converse_Attribute =>
-            Free_Iir (Name);
-            return Res;
+            if Get_Kind (Name) = Iir_Kind_Attribute_Name then
+               Free_Iir (Name);
+               return Res;
+            else
+               return Name;
+            end if;
          when Iir_Kinds_External_Name =>
             pragma Assert (Name = Res);
             return Res;

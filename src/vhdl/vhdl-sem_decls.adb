@@ -467,6 +467,7 @@ package body Vhdl.Sem_Decls is
       St_Ind : Iir;
       St_Type : Iir;
       Atype : Iir;
+      Reversed : Boolean;
    begin
       Name := Get_Name (Ind);
       Name := Sem_Mode_View_Name (Name);
@@ -483,14 +484,8 @@ package body Vhdl.Sem_Decls is
          return;
       end if;
 
-      case Get_Kind (Name) is
-         when Iir_Kinds_Denoting_Name =>
-            View := Get_Named_Entity (Name);
-         when Iir_Kind_Converse_Attribute =>
-            View := Get_Named_Entity (Get_Prefix (Name));
-         when others =>
-            Error_Kind ("sem_mode_view_indication", Ind);
-      end case;
+      Extract_Mode_View_Name (Name, View, Reversed);
+      pragma Unreferenced (Reversed);
 
       Atype := Get_Type_Of_Subtype_Indication (Get_Subtype_Indication (View));
       if St_Ind /= Null_Iir and then not Is_Error (St_Ind) then

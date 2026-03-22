@@ -259,6 +259,7 @@ package body Vhdl.Prints is
            | Iir_Kind_Terminal_Declaration
            | Iir_Kinds_Quantity_Declaration
            | Iir_Kind_Group_Template_Declaration
+           | Iir_Kind_Mode_View_Declaration
            | Iir_Kind_Character_Literal
            | Iir_Kinds_Process_Statement
            | Iir_Kind_Psl_Endpoint_Declaration
@@ -2080,7 +2081,7 @@ package body Vhdl.Prints is
          El := Get_Chain (El);
       end loop;
       Close_Vbox (Ctxt);
-      Disp_End_Label (Ctxt, Decl, Tok_View);
+      Disp_End (Ctxt, Decl, Tok_View);
    end Disp_Mode_View_Declaration;
 
    procedure Print_Expr (Ctxt : in out Ctxt_Class;
