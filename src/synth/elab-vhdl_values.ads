@@ -212,6 +212,8 @@ package Elab.Vhdl_Values is
 
    function Create_Value_Record (Typ : Type_Acc; Pool : Areapool_Acc)
                                  return Value_Acc;
+   function Create_Value_Array (Typ : Type_Acc; Pool : Areapool_Acc)
+                                return Value_Acc;
 
    --  If VAL is a const, replace it by its value.
    procedure Strip_Const (Vt : in out Valtyp);

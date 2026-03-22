@@ -546,6 +546,11 @@ package body Vhdl.Sem_Decls is
       else
          Sem_Mode_View_Indication (A_View);
          A_Type := Get_Type (A_View);
+
+         --  Move subtype indication from view indication to interface.
+         --  This makes interface view more regular.
+         Set_Subtype_Indication (Inter, Get_Subtype_Indication (A_View));
+         Set_Is_Ref (A_View, False);
       end if;
 
       Set_Name_Staticness (Inter, Locally);

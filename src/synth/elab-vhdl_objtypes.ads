@@ -369,9 +369,8 @@ package Elab.Vhdl_Objtypes is
    --  Return the length of a vector type.
    function Vec_Length (Typ : Type_Acc) return Iir_Index32;
 
-   --  Get the number of indexes in array type TYP without counting
-   --  sub-elements.
-   function Get_Array_Flat_Length (Typ : Type_Acc) return Iir_Index32;
+   --  Get the number of indexes in array type TYP, handling multidim arrays.
+   function Get_Array_Length_Multidim (Typ : Type_Acc) return Iir_Index32;
 
    --  Return True iff TYP is linear: array or vectors composed of logic type.
    function Is_Linear_Type (Typ : Type_Acc) return Boolean;

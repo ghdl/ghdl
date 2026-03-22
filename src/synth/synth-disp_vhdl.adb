@@ -494,6 +494,48 @@ package body Synth.Disp_Vhdl is
       end loop;
    end Disp_Record_View_Converter;
 
+   procedure Disp_Array_View_Converter (Wname : Sname;
+                                        View_Name : String;
+                                        View : Node;
+                                        Reversed : Boolean;
+                                        View_Type : Node;
+                                        Typ : Type_Acc)
+   is
+      Bnd : constant Bound_Type := Get_Array_Bound (Typ);
+      Last_Dim : constant Boolean := Is_Last_Dimension (Typ);
+      El_Typ : constant Type_Acc := Get_Array_Element (Typ);
+      Idx : Int32;
+      El_Type : Node;
+   begin
+      if Last_Dim then
+         El_Type := Get_Element_Subtype (View_Type);
+      else
+         El_Type := View_Type;
+      end if;
+      Idx := Bnd.Left;
+      for I in 1 .. Bnd.Len loop
+         declare
+            Sub_Name : constant String :=
+              View_Name & "(" & Int32'Image (Idx) & ")";
+            Sub_Wname : constant Sname := New_Sname_Index (Idx, Wname);
+         begin
+            if Last_Dim then
+               Disp_Record_View_Converter
+                 (Sub_Wname, Sub_Name, View, Reversed, El_Type, El_Typ);
+            else
+               Disp_Array_View_Converter
+                 (Sub_Wname, Sub_Name, View, Reversed, El_Type, El_Typ);
+            end if;
+         end;
+         case Bnd.Dir is
+            when Dir_To =>
+               Idx := Idx + 1;
+            when Dir_Downto =>
+               Idx := Idx - 1;
+         end case;
+      end loop;
+   end Disp_Array_View_Converter;
+
    procedure Disp_View_Converter (Inst : Synth_Instance_Acc;
                                   Port : Node)
    is
@@ -511,11 +553,13 @@ package body Synth.Disp_Vhdl is
       Wname := New_Sname_User (Std_Names.Name_Wrap, No_Sname);
       Wname := New_Sname_User (Port_Id, Wname);
 
-      case Get_Kind (Ind) is
+      case Iir_Kinds_Mode_View_Indication (Get_Kind (Ind)) is
          when Iir_Kind_Record_Mode_View_Indication =>
             Disp_Record_View_Converter
               (Wname, Port_Name, View, Reversed, Port_Type, Typ);
-         when others => raise Internal_Error;
+         when Iir_Kind_Array_Mode_View_Indication =>
+            Disp_Array_View_Converter
+              (Wname, Port_Name, View, Reversed, Port_Type, Typ);
       end case;
    end Disp_View_Converter;
 
@@ -602,20 +646,22 @@ package body Synth.Disp_Vhdl is
       declare
          Name_Wrap : Name_Id;
          Pfx_Wrap : Sname;
-         Pfx : Sname;
+         Pfx, N_Pfx : Sname;
       begin
          Name_Wrap := Name_Table.Get_Identifier ("wrap");
          Pfx_Wrap := New_Sname_User (Name_Wrap, No_Sname);
          for P of Ports_Desc (Main) loop
             --  INOUT ports are handled specially.
             if P.Dir /= Port_Inout then
-               Pfx := Get_Sname_Prefix (P.Name);
-               if Pfx = No_Sname then
-                  --  Normal port, without a prefix.
-                  Set_Sname_Prefix (P.Name, Pfx_Wrap);
-               elsif Get_Sname_Prefix (Pfx) = No_Sname then
-                  --  Prefixed port (for an expanded record).
-                  --  Add a prefix but once (prefix is shared).
+               Pfx := P.Name;
+               loop
+                  N_Pfx := Get_Sname_Prefix (Pfx);
+                  exit when N_Pfx = No_Sname;
+                  Pfx := N_Pfx;
+               end loop;
+               --  Prefixes are shared for records/views.
+               --  Only add the "wrap" prefix if not already added.
+               if Get_Sname_Suffix (Pfx) /= Name_Wrap then
                   Set_Sname_Prefix (Pfx, Pfx_Wrap);
                end if;
             end if;

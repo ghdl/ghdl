@@ -123,6 +123,21 @@ package body Synth.Vhdl_Stmts is
 
       if Err then
          Dest_Base := No_Valtyp;
+      elsif Dest_Base.Val /= null and then Dest_Base.Val.Kind = Value_Array
+      then
+         --  For views.
+         if Voff /= No_Net then
+            Error_Msg_Synth
+              (Syn_Inst, Pfx,
+               "dynamically indexed mode view is not supported");
+            Dest_Base := No_Valtyp;
+         else
+            Dest_Base :=
+              (Typ => El_Typ,
+              Val => Dest_Base.Val.Arr.E
+              (Iir_Index32 (1 + Off.Mem_Off / El_Typ.Sz)));
+            Dest_Off := No_Value_Offsets;
+         end if;
       elsif Voff = No_Net then
          --  Static index.
          Dest_Off := Dest_Off + Off;

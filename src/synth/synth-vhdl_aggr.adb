@@ -500,7 +500,7 @@ package body Synth.Vhdl_Aggr is
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Strides : constant Stride_Array := Fill_Stride (Aggr_Typ);
-      Flen : constant Iir_Index32 := Get_Array_Flat_Length (Aggr_Typ);
+      Flen : constant Iir_Index32 := Get_Array_Length_Multidim (Aggr_Typ);
       Tab_Res : Valtyp_Array_Acc;
       Const_P : Boolean;
       Err_P : Boolean;

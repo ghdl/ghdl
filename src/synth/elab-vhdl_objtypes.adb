@@ -1081,7 +1081,7 @@ package body Elab.Vhdl_Objtypes is
       return Iir_Index32 (Typ.Abound.Len);
    end Vec_Length;
 
-   function Get_Array_Flat_Length (Typ : Type_Acc) return Iir_Index32 is
+   function Get_Array_Length_Multidim (Typ : Type_Acc) return Iir_Index32 is
    begin
       case Type_Vectors_Arrays (Typ.Kind) is
          when Type_Vector =>
@@ -1103,7 +1103,7 @@ package body Elab.Vhdl_Objtypes is
             end;
          when others => raise Internal_Error;
       end case;
-   end Get_Array_Flat_Length;
+   end Get_Array_Length_Multidim;
 
    function Is_Linear_Type (Typ : Type_Acc) return Boolean is
    begin

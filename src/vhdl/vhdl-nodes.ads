@@ -1453,6 +1453,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Identifier (Field3)
    --
+   --  For interface view, this is the subtype indication of the view
+   --  indication.
    --   Get/Set_Subtype_Indication (Field5)
    --
    --  Must always be null_iir for iir_kind_interface_file_declaration.

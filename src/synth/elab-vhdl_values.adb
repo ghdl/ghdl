@@ -298,22 +298,40 @@ package body Elab.Vhdl_Values is
       return (Typ, Create_Value_Sig_Val (Sigs, Vals, Pool));
    end Create_Value_Sig_Val;
 
+   function Create_Value_Arr_Acc (Len : Iir_Index32; Pool : Areapool_Acc)
+                                 return Value_Arr_Acc
+   is
+      subtype This_Value_Array is Value_Array_Rec (Len);
+      function Alloc_Arr is new
+        Areapools.Alloc_On_Pool_Addr (This_Value_Array);
+   begin
+      return To_Value_Arr_Acc
+        (Alloc_Arr (Pool, (Len => Len, E => (others => null))));
+   end Create_Value_Arr_Acc;
+
    function Create_Value_Record (Typ : Type_Acc; Pool : Areapool_Acc)
                                 return Value_Acc
    is
       subtype Value_Type_Record is Value_Type (Value_Record);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Record);
 
-      Len : constant Iir_Index32 := Typ.Rec.Len;
-      subtype This_Value_Array is Value_Array_Rec (Len);
-      function Alloc_Arr is new
-        Areapools.Alloc_On_Pool_Addr (This_Value_Array);
       Arr : Value_Arr_Acc;
    begin
-      Arr := To_Value_Arr_Acc
-        (Alloc_Arr (Pool, (Len => Len, E => (others => null))));
+      Arr := Create_Value_Arr_Acc (Typ.Rec.Len, Pool);
       return To_Value_Acc (Alloc (Pool, (Kind => Value_Record, Arr => Arr)));
    end Create_Value_Record;
+
+   function Create_Value_Array (Typ : Type_Acc; Pool : Areapool_Acc)
+                                return Value_Acc
+   is
+      subtype Value_Type_Array is Value_Type (Value_Array);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Array);
+
+      Arr : Value_Arr_Acc;
+   begin
+      Arr := Create_Value_Arr_Acc (Get_Array_Length_Multidim (Typ), Pool);
+      return To_Value_Acc (Alloc (Pool, (Kind => Value_Array, Arr => Arr)));
+   end Create_Value_Array;
 
    procedure Write_Value (Dest : Memory_Ptr; Vt : Valtyp)
    is
