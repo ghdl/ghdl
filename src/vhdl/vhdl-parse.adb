@@ -2791,6 +2791,8 @@ package body Vhdl.Parse is
                --  Skip ','.
                Scan;
             when Tok_Semi_Colon =>
+               Set_Has_Semicolon (Last, True);
+
                --  Skip ';'.
                Scan;
             when Tok_Right_Paren =>

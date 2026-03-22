@@ -487,31 +487,32 @@ class fields(IntEnum):
     Has_Identifier_List = 366
     Has_Mode = 367
     Has_Class = 368
-    Has_Delay_Mechanism = 369
-    Suspend_Flag = 370
-    Covered_Flag = 371
-    Stop_Flag = 372
-    Is_Ref = 373
-    Is_Forward_Ref = 374
-    Psl_Property = 375
-    Psl_Sequence = 376
-    Psl_Declaration = 377
-    Psl_Expression = 378
-    Psl_Boolean = 379
-    PSL_Clock = 380
-    PSL_Abort = 381
-    PSL_NFA = 382
-    PSL_Nbr_States = 383
-    PSL_Clock_Sensitivity = 384
-    PSL_EOS_Flag = 385
-    Count_Expression = 386
-    Clock_Expression = 387
-    Default_Clock = 388
-    Foreign_Node = 389
-    Suspend_State_Index = 390
-    Suspend_State_Chain = 391
-    Suspend_State_Last = 392
-    Suspend_State_Decl = 393
+    Has_Semicolon = 369
+    Has_Delay_Mechanism = 370
+    Suspend_Flag = 371
+    Covered_Flag = 372
+    Stop_Flag = 373
+    Is_Ref = 374
+    Is_Forward_Ref = 375
+    Psl_Property = 376
+    Psl_Sequence = 377
+    Psl_Declaration = 378
+    Psl_Expression = 379
+    Psl_Boolean = 380
+    PSL_Clock = 381
+    PSL_Abort = 382
+    PSL_NFA = 383
+    PSL_Nbr_States = 384
+    PSL_Clock_Sensitivity = 385
+    PSL_EOS_Flag = 386
+    Count_Expression = 387
+    Clock_Expression = 388
+    Default_Clock = 389
+    Foreign_Node = 390
+    Suspend_State_Index = 391
+    Suspend_State_Chain = 392
+    Suspend_State_Last = 393
+    Suspend_State_Decl = 394
 
 
 def Get_Boolean(node, field):
@@ -2857,6 +2858,12 @@ def Has_Has_Mode(kind: IirKind) -> bool:
 @export
 @BindToLibGHDL("vhdl__nodes_meta__has_has_class")
 def Has_Has_Class(kind: IirKind) -> bool:
+    """"""
+
+
+@export
+@BindToLibGHDL("vhdl__nodes_meta__has_has_semicolon")
+def Has_Has_Semicolon(kind: IirKind) -> bool:
     """"""
 
 

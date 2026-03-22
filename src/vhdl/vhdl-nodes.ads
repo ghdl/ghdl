@@ -1473,6 +1473,7 @@ package Vhdl.Nodes is
    --   Get/Set_Mode (Flag13,Flag14,Flag15)
    --
    -- Only for Iir_Kind_Interface_Signal_Declaration:
+   -- Only for Iir_Kind_Interface_View_Declaration:
    --   Get/Set_Has_Disconnect_Flag (Flag1)
    --
    -- Only for Iir_Kind_Interface_Signal_Declaration:
@@ -1483,6 +1484,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
+   -- Only for Iir_Kind_Interface_Signal_Declaration:
+   -- Only for Iir_Kind_Interface_View_Declaration:
    --   Get/Set_After_Drivers_Flag (Flag5)
    --
    --   Get/Set_Use_Flag (Flag6)
@@ -1496,6 +1499,8 @@ package Vhdl.Nodes is
    --   Get/Set_Has_Mode (Flag10)
    --
    --   Get/Set_Has_Class (Flag11)
+   --
+   --   Get/Set_Has_Semicolon (Flag16)
    --
    --   Get/Set_Is_Ref (Flag12)
    --
@@ -1529,6 +1534,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Has_Class (Flag11)
    --
+   --   Get/Set_Has_Semicolon (Flag16)
+   --
    --   Get/Set_Is_Ref (Flag12)
    --
    --   Get/Set_Name_Staticness (State2)
@@ -1557,6 +1564,8 @@ package Vhdl.Nodes is
    --   Get/Set_Is_Ref (Flag12)
    --
    --   Get/Set_Open_Flag (Flag7)
+   --
+   --   Get/Set_Has_Semicolon (Flag16)
    --
    --   Get/Set_Name_Staticness (State2)
 
@@ -1603,6 +1612,8 @@ package Vhdl.Nodes is
    --   Get/Set_Is_Within_Flag (Flag5)
    --
    --   Get/Set_Open_Flag (Flag7)
+   --
+   --   Get/Set_Has_Semicolon (Flag16)
 
    -- Iir_Kind_Function_Declaration (Medium)
    -- Iir_Kind_Procedure_Declaration (Medium)
@@ -1873,6 +1884,8 @@ package Vhdl.Nodes is
    --   Get/Set_All_Sensitized_State (State3)
    --
    --   Get/Set_Open_Flag (Flag7)
+   --
+   --   Get/Set_Has_Semicolon (Flag16)
 
    -- Iir_Kind_Signal_Declaration (Short)
    --
@@ -10077,6 +10090,13 @@ package Vhdl.Nodes is
    --  Field: Flag11
    function Get_Has_Class (Decl : Iir) return Boolean;
    procedure Set_Has_Class (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag for interface declaration.  If True, ';' is present after
+   --  the interface.  In case of multiple names separated with colon, it
+   --  cannot be set with Has_Identifier_List.
+   --  Field: Flag16
+   function Get_Has_Semicolon (Decl : Iir) return Boolean;
+   procedure Set_Has_Semicolon (Decl : Iir; Flag : Boolean);
 
    --  Layout flag for signal assignment.  If True, the delay mechanism is
    --  present.  This is obviously true for transport or inertial with reject,

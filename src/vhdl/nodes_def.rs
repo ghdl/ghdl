@@ -6757,6 +6757,12 @@ extern "C" {
     #[link_name = "vhdl__nodes__set_has_class"]
     fn set_has_class(n: Node, v: bool);
 
+    #[link_name = "vhdl__nodes__get_has_semicolon"]
+    fn get_has_semicolon(n: Node) -> bool;
+
+    #[link_name = "vhdl__nodes__set_has_semicolon"]
+    fn set_has_semicolon(n: Node, v: bool);
+
     #[link_name = "vhdl__nodes__get_has_delay_mechanism"]
     fn get_has_delay_mechanism(n: Node) -> bool;
 
@@ -9891,6 +9897,14 @@ impl Node {
 
     pub fn set_has_class(self: Self, v : bool) {
         unsafe { set_has_class(self, v); }
+    }
+
+    pub fn has_semicolon(self: Self) -> bool {
+        unsafe { get_has_semicolon(self) }
+    }
+
+    pub fn set_has_semicolon(self: Self, v : bool) {
+        unsafe { set_has_semicolon(self, v); }
     }
 
     pub fn has_delay_mechanism(self: Self) -> bool {

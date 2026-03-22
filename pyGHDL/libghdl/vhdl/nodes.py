@@ -7040,6 +7040,19 @@ def Set_Has_Class(obj: Iir, value: Boolean) -> None:
 
 
 @export
+@BindToLibGHDL("vhdl__nodes__get_has_semicolon")
+def Get_Has_Semicolon(obj: Iir) -> Boolean:
+    """"""
+    return 0  # pragma: no cover
+
+
+@export
+@BindToLibGHDL("vhdl__nodes__set_has_semicolon")
+def Set_Has_Semicolon(obj: Iir, value: Boolean) -> None:
+    """"""
+
+
+@export
 @BindToLibGHDL("vhdl__nodes__get_has_delay_mechanism")
 def Get_Has_Delay_Mechanism(obj: Iir) -> Boolean:
     """"""

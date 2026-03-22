@@ -1298,7 +1298,7 @@ package body Vhdl.Prints is
             --     Error_Kind ("disp_interface_chain", Inter);
          end case;
 
-         if Next_Inter /= Null_Iir then
+         if Get_Has_Semicolon (Inter) then
             Disp_Token (Ctxt, Tok_Semi_Colon);
          end if;
 

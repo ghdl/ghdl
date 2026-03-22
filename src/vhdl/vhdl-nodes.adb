@@ -50,6 +50,9 @@ package body Vhdl.Nodes is
    --   Flag13 : Boolean
    --   Flag14 : Boolean
    --   Flag15 : Boolean
+   --   Flag16 : Boolean
+   --   Flag17 : Boolean
+   --   Flag18 : Boolean
    --   Nkind : Kind_Type
    --   State1 : Bit2_Type
    --   State2 : Bit2_Type
@@ -705,6 +708,16 @@ package body Vhdl.Nodes is
    begin
       Nodet.Table (N).Flag15 := V;
    end Set_Flag15;
+
+   function Get_Flag16 (N : Node_Type) return Boolean is
+   begin
+      return Nodet.Table (N).Flag16;
+   end Get_Flag16;
+
+   procedure Set_Flag16 (N : Node_Type; V : Boolean) is
+   begin
+      Nodet.Table (N).Flag16 := V;
+   end Set_Flag16;
 
 
    function Get_State1 (N : Node_Type) return Bit2_Type is
@@ -7357,6 +7370,22 @@ package body Vhdl.Nodes is
                      "no field Has_Class");
       Set_Flag11 (Decl, Flag);
    end Set_Has_Class;
+
+   function Get_Has_Semicolon (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Has_Semicolon (Get_Kind (Decl)),
+                     "no field Has_Semicolon");
+      return Get_Flag16 (Decl);
+   end Get_Has_Semicolon;
+
+   procedure Set_Has_Semicolon (Decl : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Has_Semicolon (Get_Kind (Decl)),
+                     "no field Has_Semicolon");
+      Set_Flag16 (Decl, Flag);
+   end Set_Has_Semicolon;
 
    function Get_Has_Delay_Mechanism (Stmt : Iir) return Boolean is
    begin

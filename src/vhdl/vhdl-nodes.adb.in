@@ -50,6 +50,9 @@ package body Vhdl.Nodes is
    --   Flag13 : Boolean
    --   Flag14 : Boolean
    --   Flag15 : Boolean
+   --   Flag16 : Boolean
+   --   Flag17 : Boolean
+   --   Flag18 : Boolean
    --   Nkind : Kind_Type
    --   State1 : Bit2_Type
    --   State2 : Bit2_Type
@@ -705,6 +708,16 @@ package body Vhdl.Nodes is
    begin
       Nodet.Table (N).Flag15 := V;
    end Set_Flag15;
+
+   function Get_Flag16 (N : Node_Type) return Boolean is
+   begin
+      return Nodet.Table (N).Flag16;
+   end Get_Flag16;
+
+   procedure Set_Flag16 (N : Node_Type; V : Boolean) is
+   begin
+      Nodet.Table (N).Flag16 := V;
+   end Set_Flag16;
 
 
    function Get_State1 (N : Node_Type) return Bit2_Type is
