@@ -2466,6 +2466,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Chain (Field2)
    --
+   --   Get/Set_Is_Forward_Ref (Flag1)
+   --
    --   Get/Set_Has_Identifier_List (Flag3)
 
    -- Iir_Kind_Mode_View_Declaration (Short)
