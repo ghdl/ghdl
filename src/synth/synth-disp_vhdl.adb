@@ -397,19 +397,21 @@ package body Synth.Disp_Vhdl is
             declare
                Els : constant Node_Flist :=
                  Get_Elements_Declaration_List (Ptype);
-               Rec_Full : constant Boolean := Full and Typ.W = 1;
             begin
                for I in Flist_First .. Flist_Last (Els) loop
                   declare
                      El : constant Node := Get_Nth_Element (Els, I);
+                     El_Id : constant Name_Id := Get_Identifier (El);
                      Et : Rec_El_Type renames
                        Typ.Rec.E (Iir_Index32 (I + 1));
                   begin
+                     --  Each field is now its own leaf port; extend the
+                     --  signal name and reset the bit offset to 0.
                      Disp_Converter
-                       (Wname,
-                        Pfx & '.' & Name_Table.Image (Get_Identifier (El)),
-                        Off + Et.Offs.Net_Off,
-                        Get_Type (El), Et.Typ, Rec_Full, Is_Out);
+                       (New_Sname_Field (El_Id, Wname),
+                        Pfx & '.' & Name_Table.Image (El_Id),
+                        0,
+                        Get_Type (El), Et.Typ, True, Is_Out);
                   end;
                end loop;
             end;
