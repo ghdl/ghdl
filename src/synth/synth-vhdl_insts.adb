@@ -406,12 +406,17 @@ package body Synth.Vhdl_Insts is
       return New_Sname_User (Get_Encoded_Name_Id (Decl, Enc), No_Sname);
    end Create_Inter_Name;
 
-   --  Return the number of ports for a type.  A record type create one
-   --  port per immediate subelement.  Sub-records are not expanded.
+   --  Return the number of leaf-level ports for a type.  A record type
+   --  expands each field recursively; sub-records are expanded to leaf level.
    function Count_Nbr_Ports (Typ : Type_Acc) return Port_Nbr is
+      Count : Port_Nbr;
    begin
       if Typ.Kind in Type_Records then
-         return Port_Nbr (Typ.Rec.Len);
+         Count := 0;
+         for I in Typ.Rec.E'Range loop
+            Count := Count + Count_Nbr_Ports (Typ.Rec.E (I).Typ);
+         end loop;
+         return Count;
       else
          return 1;
       end if;
@@ -526,16 +531,25 @@ package body Synth.Vhdl_Insts is
             Els : constant Node_Flist :=
               Get_Elements_Declaration_List (Inter_Type);
             El : Node;
+            El_Sname : Sname;
          begin
             for I in Typ.Rec.E'Range loop
                El := Get_Nth_Element (Els, Natural (I - 1));
-               Idx := Idx + 1;
-               Descs (Idx) :=
-                 (Name => New_Sname_Field
-                   (Get_Encoded_Name_Id (El, Encoding), Port_Sname),
-                 Dir => Pkind,
-                 Order => Order,
-                 W => Get_Type_Width (Typ.Rec.E (I).Typ));
+               El_Sname := New_Sname_Field
+                 (Get_Encoded_Name_Id (El, Encoding), Port_Sname);
+               if Typ.Rec.E (I).Typ.Kind in Type_Records then
+                  --  Nested record: recurse to expand leaf fields.
+                  Build_Ports_Desc (Descs, Idx, El_Sname, Pkind, Order,
+                                    Encoding, Typ.Rec.E (I).Typ,
+                                    Get_Type (El));
+               else
+                  Idx := Idx + 1;
+                  Descs (Idx) :=
+                    (Name => El_Sname,
+                     Dir => Pkind,
+                     Order => Order,
+                     W => Get_Type_Width (Typ.Rec.E (I).Typ));
+               end if;
             end loop;
          end;
       else
@@ -1153,23 +1167,46 @@ package body Synth.Vhdl_Insts is
       end case;
    end Synth_Output_Assoc;
 
+   --  Recursively connect input ports for a record type.
+   --  Base_Off is the accumulated bit offset from the parent record.
+   procedure Inst_Input_Connect_Rec (Syn_Inst : Synth_Instance_Acc;
+                                     Inst : Instance;
+                                     Port : in out Port_Idx;
+                                     Typ : Type_Acc;
+                                     N : Net;
+                                     Base_Off : Uns32) is
+   begin
+      for I in Typ.Rec.E'Range loop
+         declare
+            El_Typ : Type_Acc renames Typ.Rec.E (I).Typ;
+            El_Off : constant Uns32 :=
+              Base_Off + Typ.Rec.E (I).Offs.Net_Off;
+         begin
+            if El_Typ.Kind in Type_Records then
+               Inst_Input_Connect_Rec
+                 (Syn_Inst, Inst, Port, El_Typ, N, El_Off);
+            else
+               if N /= No_Net then
+                  Connect (Get_Input (Inst, Port),
+                           Build2_Extract (Get_Build (Syn_Inst), N,
+                                           El_Off,
+                                           El_Typ.W,
+                                           Get_Location (Inst)));
+               end if;
+               Port := Port + 1;
+            end if;
+         end;
+      end loop;
+   end Inst_Input_Connect_Rec;
+
    procedure Inst_Input_Connect (Syn_Inst : Synth_Instance_Acc;
-                                 Inst : Instance;
-                                 Port : in out Port_Idx;
-                                 Inter_Typ : Type_Acc;
-                                 N : Net) is
+                                  Inst : Instance;
+                                  Port : in out Port_Idx;
+                                  Inter_Typ : Type_Acc;
+                                  N : Net) is
    begin
       if Inter_Typ.Kind in Type_Records then
-         for I in Inter_Typ.Rec.E'Range loop
-            if N /= No_Net then
-               Connect (Get_Input (Inst, Port),
-                        Build2_Extract (Get_Build (Syn_Inst), N,
-                                        Inter_Typ.Rec.E (I).Offs.Net_Off,
-                                        Inter_Typ.Rec.E (I).Typ.W,
-                                        Get_Location (Inst)));
-            end if;
-            Port := Port + 1;
-         end loop;
+         Inst_Input_Connect_Rec (Syn_Inst, Inst, Port, Inter_Typ, N, 0);
       else
          if N /= No_Net then
             Connect (Get_Input (Inst, Port), N);
@@ -1178,20 +1215,41 @@ package body Synth.Vhdl_Insts is
       end if;
    end Inst_Input_Connect;
 
+   --  Recursively collect output nets from leaf ports of a record type.
+   procedure Inst_Output_Collect_Rec (Inst : Instance;
+                                      Idx : in out Port_Idx;
+                                      Typ : Type_Acc;
+                                      Nets : in out Net_Array;
+                                      Net_Idx : in out Nat32) is
+   begin
+      for I in Typ.Rec.E'Range loop
+         declare
+            El_Typ : Type_Acc renames Typ.Rec.E (I).Typ;
+         begin
+            if El_Typ.Kind in Type_Records then
+               Inst_Output_Collect_Rec (Inst, Idx, El_Typ, Nets, Net_Idx);
+            else
+               Net_Idx := Net_Idx + 1;
+               Nets (Net_Idx) := Get_Output (Inst, Idx);
+               Idx := Idx + 1;
+            end if;
+         end;
+      end loop;
+   end Inst_Output_Collect_Rec;
+
    procedure Inst_Output_Connect (Syn_Inst : Synth_Instance_Acc;
-                                  Inst : Instance;
-                                  Idx : in out Port_Idx;
-                                  Inter_Typ : Type_Acc;
-                                  N : out Net) is
+                                   Inst : Instance;
+                                   Idx : in out Port_Idx;
+                                   Inter_Typ : Type_Acc;
+                                   N : out Net) is
    begin
       if Inter_Typ.Kind in Type_Records then
          declare
-            Nets : Net_Array (1 .. Nat32 (Inter_Typ.Rec.Len));
+            Nbr : constant Port_Nbr := Count_Nbr_Ports (Inter_Typ);
+            Nets : Net_Array (1 .. Nat32 (Nbr));
+            Net_Idx : Nat32 := 0;
          begin
-            for I in Inter_Typ.Rec.E'Range loop
-               Nets (Nat32 (I)) := Get_Output (Inst, Idx);
-               Idx := Idx + 1;
-            end loop;
+            Inst_Output_Collect_Rec (Inst, Idx, Inter_Typ, Nets, Net_Idx);
             N := Build2_Concat
               (Get_Build (Syn_Inst), Nets, Get_Location (Inst));
          end;

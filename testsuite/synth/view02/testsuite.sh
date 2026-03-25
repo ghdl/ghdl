@@ -1,0 +1,28 @@
+#! /bin/sh
+
+. ../../testenv.sh
+
+GHDL_STD_FLAGS=--std=19
+
+synth_tb view02 pkg_view02.vhdl
+
+# Verify that a nested record field under a mode view produces individual
+# leaf-level signals (\wrap_m[data][a]\, \wrap_m[data][b]\) rather than
+# a packed sub-record vector (\wrap_m[data]\).
+synth pkg_view02.vhdl view02.vhdl -e view02 > syn_view02_check.vhdl
+if ! fgrep -q '\wrap_m[data][a]\' syn_view02_check.vhdl; then
+  echo "FAIL: expected chained bracket signal \\wrap_m[data][a]\\ not found"
+  exit 1
+fi
+if ! fgrep -q '\wrap_m[data][b]\' syn_view02_check.vhdl; then
+  echo "FAIL: expected chained bracket signal \\wrap_m[data][b]\\ not found"
+  exit 1
+fi
+if fgrep -q 'typ_wrap_m[data]' syn_view02_check.vhdl; then
+  echo "FAIL: packed sub-record type typ_wrap_m[data] still present"
+  exit 1
+fi
+
+clean
+
+echo "Test successful"
