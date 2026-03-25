@@ -131,6 +131,7 @@ package body Synth.Disp_Vhdl is
                              Ptype : Node;
                              Typ : Type_Acc;
                              Full : Boolean;
+                             Expand_Rec : Boolean;
                              Is_Out : Boolean);
 
    --  PTYPE is the type of the original port, while TYP is the type of
@@ -365,7 +366,7 @@ package body Synth.Disp_Vhdl is
                Disp_Converter
                  (Wname,
                   Pfx & " (" & Int32'Image (Idx) & ")",
-                  Off + I * El_W, El_Type, Typ.Arr_El, False, Is_Out);
+                  Off + I * El_W, El_Type, Typ.Arr_El, False, False, Is_Out);
             end loop;
          end;
       end if;
@@ -373,12 +374,16 @@ package body Synth.Disp_Vhdl is
 
    --  PTYPE is the type of the original port, while TYP is the type of
    --  the netlist port.
+   --  EXPAND_REC is set to true to expand records.  Records within arrays are
+   --   not expanded.
+   --  FULL means the whole net should be converted (not a slice).
    procedure Disp_Converter (Wname : Sname;
                              Pfx : String;
                              Off : Uns32;
                              Ptype : Node;
                              Typ : Type_Acc;
                              Full : Boolean;
+                             Expand_Rec : Boolean;
                              Is_Out : Boolean)
    is
       Btype : constant Node := Get_Base_Type (Ptype);
@@ -404,14 +409,23 @@ package body Synth.Disp_Vhdl is
                      El_Id : constant Name_Id := Get_Identifier (El);
                      Et : Rec_El_Type renames
                        Typ.Rec.E (Iir_Index32 (I + 1));
+                     Rec_Full : constant Boolean := Full or Typ.W = 1;
                   begin
-                     --  Each field is now its own leaf port; extend the
-                     --  signal name and reset the bit offset to 0.
-                     Disp_Converter
-                       (New_Sname_Field (El_Id, Wname),
-                        Pfx & '.' & Name_Table.Image (El_Id),
-                        0,
-                        Get_Type (El), Et.Typ, True, Is_Out);
+                     if Expand_Rec then
+                        --  Each field is now its own leaf port; extend the
+                        --  signal name and reset the bit offset to 0.
+                        Disp_Converter
+                          (New_Sname_Field (El_Id, Wname),
+                           Pfx & '.' & Name_Table.Image (El_Id),
+                           0,
+                           Get_Type (El), Et.Typ, Rec_Full, True, Is_Out);
+                     else
+                        Disp_Converter
+                          (Wname,
+                           Pfx & '.' & Name_Table.Image (Get_Identifier (El)),
+                           Off + Et.Offs.Net_Off,
+                           Get_Type (El), Et.Typ, Rec_Full, False, Is_Out);
+                     end if;
                   end;
                end loop;
             end;
@@ -452,12 +466,13 @@ package body Synth.Disp_Vhdl is
                   Disp_Converter
                     (New_Sname_Field (El_Id, Wname),
                      Port_Name & '.' & Name_Table.Image (El_Id),
-                     0, Get_Type (El), Et.Typ, True, Is_Out);
+                     0, Get_Type (El), Et.Typ, True, True, Is_Out);
                end;
             end loop;
          end;
       else
-         Disp_Converter (Wname, Port_Name, 0, Port_Type, Typ, True, Is_Out);
+         Disp_Converter
+           (Wname, Port_Name, 0, Port_Type, Typ, True, False, Is_Out);
       end if;
    end Disp_Port_Converter;
 
@@ -488,7 +503,7 @@ package body Synth.Disp_Vhdl is
                Disp_Converter
                  (New_Sname_Field (El_Id, Wname),
                   View_Name & '.' & Name_Table.Image (El_Id),
-                  0, El_Type, El_Typ, True,
+                  0, El_Type, El_Typ, True, True,
                   (Get_Mode (View_El) /= Iir_In_Mode) xor Reversed);
             when others =>
                raise Internal_Error;
