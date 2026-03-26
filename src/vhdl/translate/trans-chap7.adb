@@ -4738,10 +4738,10 @@ package body Trans.Chap7 is
 
       Res       : Mnode;
       E         : Mnode;
-      Bounds    : O_Dnode;
+      Bounds    : Mnode;
    begin
       Res := Create_Temp (Res_Info, Mode_Value);
-      Bounds := Create_Temp (Res_Info.B.Bounds_Type);
+      Bounds := Create_Temp_Bounds (Res_Info);
 
       Open_Temp;
       E := Stabilize (E2M (Expr, Expr_Info, Mode_Value));
@@ -4753,15 +4753,16 @@ package body Trans.Chap7 is
            Res_Info.B.Base_Ptr_Type (Mode_Value)));
       --  Set bounds.
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Composite_Bounds (Res)),
-         New_Address (New_Obj (Bounds), Res_Info.B.Bounds_Ptr_Type));
+        (M2Lp (Chap3.Get_Composite_Bounds (Res)), M2Addr (Bounds));
 
       --  Convert bounds.
-      Translate_Type_Conversion_Array_Bounds
-        (Dv2M (Bounds, Res_Info, Mode_Value,
-               Res_Info.B.Bounds_Type, Res_Info.B.Bounds_Ptr_Type),
-         Stabilize (Chap3.Get_Composite_Bounds (E)),
-         Res_Type, Expr_Type, Loc);
+      if not Get_Index_Constraint_Flag (Res_Type) then
+         Translate_Type_Conversion_Array_Bounds
+           (Bounds, Stabilize (Chap3.Get_Composite_Bounds (E)),
+            Res_Type, Expr_Type, Loc);
+      else
+         Chap3.Copy_Bounds (Bounds, Chap3.Get_Composite_Bounds (E), Res_Type);
+      end if;
 
       Close_Temp;
       return M2E (Res);
