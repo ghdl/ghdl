@@ -6050,8 +6050,8 @@ package body Vhdl.Sem_Expr is
 
                      if Res_Type = Null_Iir then
                         --  No matching type.  This is an error.
-                        Error_Not_Match (Expr, Atype);
-                        Set_Type (Expr, Error_Type);
+                        Error_Not_Match (Res, Atype);
+                        Set_Type (Res, Error_Type);
                      elsif Is_Defined_Type (Res_Type) then
                         --  Known and defined matching type.
                         if Res_Type /= Prev_Res_Type then
@@ -6060,7 +6060,7 @@ package body Vhdl.Sem_Expr is
                         end if;
                      else
                         --  Matching but not defined type (overload).
-                        Set_Type (Expr, Res_Type);
+                        Set_Type (Res, Res_Type);
                      end if;
                      if Is_Overload_List (Prev_Res_Type) then
                         Free_Overload_List (Prev_Res_Type);
