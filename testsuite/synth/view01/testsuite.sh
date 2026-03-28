@@ -11,6 +11,9 @@ analyze axis_pkg.vhdl syn_view01.vhdl
 synth axis_pkg.vhdl view02.vhdl -e > syn_view02.vhdl
 analyze axis_pkg.vhdl syn_view02.vhdl
 
+synth axis_pkg.vhdl view03.vhdl -e > syn_view03.vhdl
+analyze axis_pkg.vhdl syn_view03.vhdl
+
 clean
 
 echo "Test successful"
