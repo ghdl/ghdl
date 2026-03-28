@@ -1528,6 +1528,70 @@ package body Synth.Vhdl_Expr is
       return No_Net;
    end Synth_Clock_Edge;
 
+   function Synth_Composite_Type_Conversion (Syn_Inst : Synth_Instance_Acc;
+                                             Val_Typ : Type_Acc;
+                                             Conv_Typ : Type_Acc;
+                                             Loc : Node) return Type_Acc
+   is
+      Res_Typ : Type_Acc;
+   begin
+      if Val_Typ = Conv_Typ then
+         return Conv_Typ;
+      end if;
+
+      case Conv_Typ.Kind is
+         when Type_All_Discrete =>
+            pragma Assert (Val_Typ.Drange = Conv_Typ.Drange);
+            return Conv_Typ;
+         when Type_Float =>
+            pragma Assert (Val_Typ.Frange = Conv_Typ.Frange);
+            return Conv_Typ;
+         when Type_Slice => raise Internal_Error;
+         when Type_Vector =>
+            if Val_Typ.Abound.Len /= Conv_Typ.Abound.Len then
+               Error_Msg_Synth (Syn_Inst, Loc, "array length mismatch");
+               return null;
+            end if;
+            return Conv_Typ;
+         when Type_Array
+            | Type_Array_Unbounded =>
+            --  Check length, replace bounds.
+            if Val_Typ.Abound.Len /= Conv_Typ.Abound.Len then
+               Error_Msg_Synth (Syn_Inst, Loc, "array length mismatch");
+               return null;
+            end if;
+            Res_Typ := Synth_Composite_Type_Conversion
+              (Syn_Inst, Val_Typ.Arr_El, Conv_Typ.Arr_El, Loc);
+            if Res_Typ = null then
+               return null;
+            end if;
+            if Res_Typ = Conv_Typ.Arr_El then
+               pragma Assert (Conv_Typ.Kind = Type_Array);
+               return Res_Typ;
+            else
+               pragma Assert (Conv_Typ.Kind = Type_Array_Unbounded);
+               Res_Typ := Create_Array_Type
+                 (Conv_Typ.Abound,
+                  Conv_Typ.Is_Bnd_Static, Conv_Typ.Alast, Res_Typ);
+               return Res_Typ;
+            end if;
+         when Type_Unbounded_Vector
+            | Type_Unbounded_Array =>
+            --  Check bounds fit in target
+            Elab.Vhdl_Types.Check_Bound_Compatibility
+              (Syn_Inst, Loc, Val_Typ.Abound, Conv_Typ.Uarr_Idx);
+            Res_Typ := Synth_Composite_Type_Conversion
+              (Syn_Inst, Val_Typ.Arr_El, Conv_Typ.Uarr_El, Loc);
+            pragma Assert (Res_Typ = null or else Res_Typ = Val_Typ.Arr_El);
+            return Val_Typ;
+         when Type_Record
+           | Type_Unbounded_Record =>
+            --  TODO: check bounds
+            return Val_Typ;
+         when Type_Access | Type_Protected | Type_File => raise Internal_Error;
+      end case;
+   end Synth_Composite_Type_Conversion;
+
    function Synth_Type_Conversion (Syn_Inst : Synth_Instance_Acc;
                                    Val : Valtyp;
                                    Conv_Typ : Type_Acc;
@@ -1536,6 +1600,9 @@ package body Synth.Vhdl_Expr is
       Res : Valtyp;
    begin
       case Conv_Typ.Kind is
+         when Type_Bit
+           | Type_Logic =>
+            return Val;
          when Type_Discrete =>
             case Val.Typ.Kind is
                when Type_Discrete =>
@@ -1588,50 +1655,23 @@ package body Synth.Vhdl_Expr is
                return No_Valtyp;
             end if;
          when Type_Vector
-            | Type_Array =>
-            --  Check length, replace bounds.
+            | Type_Array
+            | Type_Array_Unbounded
+            | Type_Unbounded_Vector
+            | Type_Unbounded_Array
+            | Type_Record
+            | Type_Unbounded_Record =>
             declare
-               Src_Typ, Dst_Typ : Type_Acc;
+               Res_Typ : Type_Acc;
             begin
-               Src_Typ := Val.Typ;
-               Dst_Typ := Conv_Typ;
-               loop
-                  if Src_Typ.Abound.Len /= Dst_Typ.Abound.Len then
-                     Error_Msg_Synth (Syn_Inst, Loc, "array length mismatch");
-                     return No_Valtyp;
-                  end if;
-                  exit when Src_Typ.Alast;
-                  Src_Typ := Src_Typ.Arr_El;
-                  Dst_Typ := Dst_Typ.Arr_El;
-               end loop;
-
-               return (Typ => Conv_Typ, Val => Val.Val);
+               Res_Typ := Synth_Composite_Type_Conversion
+                 (Syn_Inst, Val.Typ, Conv_Typ, Loc);
+               if Res_Typ = null then
+                  return No_Valtyp;
+               else
+                  return (Typ => Res_Typ, Val => Val.Val);
+               end if;
             end;
-         when Type_Unbounded_Vector
-            | Type_Unbounded_Array =>
-            --  Check bounds fit in target
-            declare
-               Src_Typ, Dst_Typ : Type_Acc;
-            begin
-               Src_Typ := Val.Typ;
-               Dst_Typ := Conv_Typ;
-               loop
-                  Elab.Vhdl_Types.Check_Bound_Compatibility
-                    (Syn_Inst, Loc, Src_Typ.Abound, Dst_Typ.Uarr_Idx);
-                  exit when Src_Typ.Alast;
-                  Src_Typ := Src_Typ.Arr_El;
-                  Dst_Typ := Dst_Typ.Uarr_El;
-               end loop;
-
-               return Val;
-            end;
-         when Type_Bit
-           | Type_Logic =>
-            return Val;
-         when Type_Record
-           | Type_Unbounded_Record =>
-            return Val;
-         when Type_Array_Unbounded => raise Internal_Error;
          when Type_Slice => raise Internal_Error;
          when Type_Access | Type_Protected | Type_File => raise Internal_Error;
       end case;
