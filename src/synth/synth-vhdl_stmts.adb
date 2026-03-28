@@ -369,10 +369,10 @@ package body Synth.Vhdl_Stmts is
    end Synth_Object_Name;
 
    procedure Synth_Object_Name (Syn_Inst : Synth_Instance_Acc;
-                                      Pfx : Node;
-                                      Dest_Base : out Valtyp;
-                                      Dest_Typ : out Type_Acc;
-                                      Dest_Off : out Value_Offsets)
+                                Pfx : Node;
+                                Dest_Base : out Valtyp;
+                                Dest_Typ : out Type_Acc;
+                                Dest_Off : out Value_Offsets)
    is
       Dyn : Dyn_Name;
    begin

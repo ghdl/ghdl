@@ -678,7 +678,7 @@ package body Synth.Vhdl_Insts is
    begin
       Extract_Mode_View_Name (Get_Name (Ind), View, Reversed);
 
-      case Get_Kind (Ind) is
+      case Iir_Kinds_Mode_View_Indication (Get_Kind (Ind)) is
          when Iir_Kind_Record_Mode_View_Indication =>
             Build_Record_View_Ports_Desc (View, Typ, Reversed,
               Port_Sname, Order, Encoding, Inports, Outports,
@@ -687,7 +687,6 @@ package body Synth.Vhdl_Insts is
             Build_Array_View_Ports_Desc (View, Typ, Reversed,
               Port_Sname, Order, Encoding, Inports, Outports,
               Nbr_Inputs, Nbr_Outputs);
-         when others => Vhdl.Errors.Error_Kind ("build_view_ports_desc", Ind);
       end case;
    end Build_View_Ports_Desc;
 
@@ -918,6 +917,8 @@ package body Synth.Vhdl_Insts is
       end if;
    end Synth_Function_Conversion;
 
+   --  Synthesize the actual of an input association.
+   --  Handle conversions.
    function Synth_Single_Input_Assoc (Syn_Inst : Synth_Instance_Acc;
                                       Inter_Typ : Type_Acc;
                                       Act_Inst : Synth_Instance_Acc;
@@ -986,6 +987,8 @@ package body Synth.Vhdl_Insts is
       Heap_Sort (Value_Offset_Tables.Last (Els));
    end Sort_Value_Offset;
 
+   --  Concatenate all individual nets for an inputs and return the
+   --  resulting net.
    function Synth_Individual_Input_Assoc (Syn_Inst : Synth_Instance_Acc;
                                           Inter_Inst : Synth_Instance_Acc;
                                           Inter_Typ : Type_Acc;
@@ -1045,6 +1048,7 @@ package body Synth.Vhdl_Insts is
       return N;
    end Synth_Individual_Input_Assoc;
 
+   --  Synthesize an input association.  Deals with open/individual/name.
    function Synth_Input_Assoc (Syn_Inst : Synth_Instance_Acc;
                                Assoc : Node;
                                Inter_Inst : Synth_Instance_Acc;
@@ -1199,11 +1203,13 @@ package body Synth.Vhdl_Insts is
       end loop;
    end Inst_Input_Connect_Rec;
 
+   --  Connect a net to an input.  If an input port is a record, the ports
+   --  are scathered.
    procedure Inst_Input_Connect (Syn_Inst : Synth_Instance_Acc;
-                                  Inst : Instance;
-                                  Port : in out Port_Idx;
-                                  Inter_Typ : Type_Acc;
-                                  N : Net) is
+                                 Inst : Instance;
+                                 Port : in out Port_Idx;
+                                 Inter_Typ : Type_Acc;
+                                 N : Net) is
    begin
       if Inter_Typ.Kind in Type_Records then
          Inst_Input_Connect_Rec (Syn_Inst, Inst, Port, Inter_Typ, N, 0);
@@ -1237,11 +1243,13 @@ package body Synth.Vhdl_Insts is
       end loop;
    end Inst_Output_Collect_Rec;
 
+   --  Gather all the nets for a module outputs.
+   --  When a port is a record, the port is scathered.
    procedure Inst_Output_Connect (Syn_Inst : Synth_Instance_Acc;
-                                   Inst : Instance;
-                                   Idx : in out Port_Idx;
-                                   Inter_Typ : Type_Acc;
-                                   N : out Net) is
+                                  Inst : Instance;
+                                  Idx : in out Port_Idx;
+                                  Inter_Typ : Type_Acc;
+                                  N : out Net) is
    begin
       if Inter_Typ.Kind in Type_Records then
          declare
@@ -1258,6 +1266,199 @@ package body Synth.Vhdl_Insts is
          Idx := Idx + 1;
       end if;
    end Inst_Output_Connect;
+
+   procedure Inst_View_Element_Connect (Syn_Inst : Synth_Instance_Acc;
+                                        Inst : Instance;
+                                        Act_Inst : Synth_Instance_Acc;
+                                        Pkind : Port_Kind;
+                                        Assoc : Node;
+                                        Inter_Vt : Valtyp;
+                                        Act_Base : Valtyp;
+                                        Act_Typ : Type_Acc;
+                                        Act_Off : Value_Offsets;
+                                        Input_Idx : in out Port_Idx;
+                                        Output_Idx : in out Port_Idx)
+   is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+      Marker : Mark_Type;
+      N : Net;
+   begin
+      Mark_Expr_Pool (Marker);
+
+      case Pkind is
+         when Port_In =>
+            --  Connect the net to the input.
+            N := Get_Net (Ctxt, Synth_Read_Memory
+              (Act_Inst, Act_Base, Act_Typ, Act_Off.Net_Off,
+               No_Dyn_Name, Assoc));
+            Inst_Input_Connect
+              (Syn_Inst, Inst, Input_Idx, Inter_Vt.Typ, N);
+
+         when Port_Out
+           | Port_Inout =>
+            Inst_Output_Connect
+              (Syn_Inst, Inst, Output_Idx, Inter_Vt.Typ, N);
+
+            Phi_Assign_Net
+              (Ctxt, Get_Value_Wire (Act_Base.Val), N, Act_Off.Net_Off);
+      end case;
+      Release_Expr_Pool (Marker);
+   end Inst_View_Element_Connect;
+
+   procedure Inst_Record_View_Connect (Syn_Inst : Synth_Instance_Acc;
+                                       Inst : Instance;
+                                       Act_Inst : Synth_Instance_Acc;
+                                       View_Ind : Node;
+                                       Reversed : Boolean;
+                                       View_Vt : Valtyp;
+                                       Act_Base : Valtyp;
+                                       Act_Typ : Type_Acc;
+                                       Act_Off : Value_Offsets;
+                                       Assoc : Node;
+                                       Input_Idx : in out Port_Idx;
+                                       Output_Idx : in out Port_Idx)
+   is
+      pragma Unreferenced (Act_Typ);
+      Def_List : constant Iir_Flist := Get_Elements_Definition_List (View_Ind);
+      Idx : Iir_Index32;
+      View_El : Node;
+      El_Vt : Valtyp;
+      Pkind : Port_Kind;
+      Sub_Act_Base : Valtyp;
+      Sub_Act_Typ : Type_Acc;
+      Sub_Act_Off : Value_Offsets;
+   begin
+      for I in Flist_First .. Flist_Last (Def_List) loop
+         View_El := Get_Nth_Element (Def_List, I);
+         Idx := Iir_Index32 (I + 1);
+
+         --  The formal is a view, get the element.
+         pragma Assert (View_Vt.Val.Kind = Value_Record);
+         El_Vt := (Typ => View_Vt.Typ.Rec.E (Idx).Typ,
+                   Val => View_Vt.Val.Arr.E (Idx));
+
+         --  The actual can be a view or a signal.
+         Sub_Act_Typ := Act_Base.Typ.Rec.E (Idx).Typ;
+         if Act_Base.Val.Kind = Value_Record then
+            --  View to view assoc.
+            pragma Assert (Act_Off = No_Value_Offsets);
+            Sub_Act_Base := (Typ => Sub_Act_Typ,
+                             Val => Act_Base.Val.Arr.E (Idx));
+            Sub_Act_Off := No_Value_Offsets;
+         else
+            --  View to signal assoc.
+            Sub_Act_Base := Act_Base;
+            Sub_Act_Off := Act_Off + Act_Base.Typ.Rec.E (Idx).Offs;
+         end if;
+         case Get_Kind (View_El) is
+            when Iir_Kind_Simple_Mode_View_Element =>
+               Pkind := Mode_To_Port_Kind (Get_Mode (View_El), Reversed);
+               Inst_View_Element_Connect
+                 (Syn_Inst, Inst, Act_Inst, Pkind, Assoc, El_Vt,
+                  Sub_Act_Base, Sub_Act_Typ, Sub_Act_Off,
+                  Input_Idx, Output_Idx);
+            when others => Vhdl.Errors.Error_Kind
+               ("inst_record_view_connect", View_El);
+         end case;
+      end loop;
+   end Inst_Record_View_Connect;
+
+   procedure Inst_Array_View_Connect (Syn_Inst : Synth_Instance_Acc;
+                                      Inst : Instance;
+                                      Act_Inst : Synth_Instance_Acc;
+                                      View_Ind : Node;
+                                      Reversed : Boolean;
+                                      View_Vt : Valtyp;
+                                      Act_Base : Valtyp;
+                                      Act_Typ : Type_Acc;
+                                      Act_Off : Value_Offsets;
+                                      Assoc : Node;
+                                      Input_Idx : in out Port_Idx;
+                                      Output_Idx : in out Port_Idx)
+   is
+      pragma Unreferenced (Act_Typ);
+      Bnd : constant Bound_Type := Get_Array_Bound (View_Vt.Typ);
+      El_Vt : Valtyp;
+      Sub_Act_Base : Valtyp;
+      Sub_Act_Typ : Type_Acc;
+      Sub_Act_Off : Value_Offsets;
+   begin
+      pragma Assert (View_Vt.Val.Kind = Value_Array);
+      El_Vt.Typ := Get_Array_Element (View_Vt.Typ);
+
+      Sub_Act_Typ := Get_Array_Element (Act_Base.Typ);
+      Sub_Act_Off := No_Value_Offsets;
+
+      --  TODO: multi-dim
+      pragma Assert (Is_Last_Dimension (View_Vt.Typ));
+
+      for I in 1 .. Iir_Index32 (Bnd.Len) loop
+         --  Formal
+         El_Vt.Val := View_Vt.Val.Arr.E (I);
+
+         --  The actual can be a view or a signal.
+         if Act_Base.Val.Kind = Value_Array then
+            --  View to view assoc.
+            pragma Assert (Act_Off = No_Value_Offsets);
+            Sub_Act_Base := (Typ => Sub_Act_Typ,
+                             Val => Act_Base.Val.Arr.E (I));
+         else
+            --  View to signal assoc.
+            Sub_Act_Base := (Typ => Sub_Act_Typ, Val => Act_Base.Val);
+         end if;
+
+         Inst_Record_View_Connect
+           (Syn_Inst, Inst, Act_Inst, View_Ind, Reversed, El_Vt,
+           Sub_Act_Base, Sub_Act_Typ, Sub_Act_Off, Assoc,
+           Input_Idx, Output_Idx);
+
+         if Act_Base.Val.Kind /= Value_Array then
+            --  For view to signal assoc: next element
+            Sub_Act_Off := Sub_Act_Off + (Sub_Act_Typ.W, Sub_Act_Typ.Sz);
+         end if;
+      end loop;
+   end Inst_Array_View_Connect;
+
+   procedure Inst_View_Connect (Syn_Inst : Synth_Instance_Acc;
+                                Inst : Instance;
+                                Ent_Inst : Synth_Instance_Acc;
+                                Assoc : Node;
+                                Inter : Node;
+                                Inter_Vt : Valtyp;
+                                Input_Idx : in out Port_Idx;
+                                Output_Idx : in out Port_Idx)
+   is
+      use Synth.Errors;
+      Ind : constant Node := Get_Mode_View_Indication (Inter);
+      View : Node;
+      Reversed : Boolean;
+      Act_Base : Valtyp;
+      Act_Typ : Type_Acc;
+      Act_Off : Value_Offsets;
+   begin
+      if Get_Kind (Assoc) /= Iir_Kind_Association_Element_By_Name then
+         Error_Msg_Synth (Syn_Inst, Assoc,
+           "individual association not handled for views");
+         return;
+      end if;
+
+      Extract_Mode_View_Name (Get_Name (Ind), View, Reversed);
+      Synth_Object_Name (Syn_Inst, Get_Actual (Assoc),
+                         Act_Base, Act_Typ, Act_Off);
+
+      case Iir_Kinds_Mode_View_Indication (Get_Kind (Ind)) is
+         when Iir_Kind_Record_Mode_View_Indication =>
+            Inst_Record_View_Connect
+              (Syn_Inst, Inst, Ent_Inst, View, Reversed, Inter_Vt,
+               Act_Base, Act_Typ, Act_Off, Assoc,
+               Input_Idx, Output_Idx);
+         when Iir_Kind_Array_Mode_View_Indication =>
+            Inst_Array_View_Connect
+              (Syn_Inst, Inst, Ent_Inst, View, Reversed, Inter_Vt,
+               Act_Base, Act_Typ, Act_Off, Assoc,
+               Input_Idx, Output_Idx);
+      end case;
+   end Inst_View_Connect;
 
    --  Subprogram used for instantiation (direct or by component).
    --  PORTS_ASSOC belong to SYN_INST.
@@ -1296,23 +1497,29 @@ package body Synth.Vhdl_Insts is
             Inter_Vt := Get_Value (Ent_Inst, Inter);
             Inter_Typ := Inter_Vt.Typ;
 
-            case Mode_To_Port_Kind (Get_Mode (Inter)) is
-               when Port_In =>
-                  --  Connect the net to the input.
-                  N := Synth_Input_Assoc
-                    (Syn_Inst, Assoc, Ent_Inst, Inter, Inter_Typ);
-                  Inst_Input_Connect
-                    (Syn_Inst, Inst, Nbr_Inputs, Inter_Typ, N);
+            if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
+               Inst_View_Connect
+                 (Syn_Inst, Inst, Ent_Inst, Assoc, Inter, Inter_Vt,
+                  Nbr_Inputs, Nbr_Outputs);
+            else
+               case Mode_To_Port_Kind (Get_Mode (Inter)) is
+                  when Port_In =>
+                     --  Connect the net to the input.
+                     N := Synth_Input_Assoc
+                       (Syn_Inst, Assoc, Ent_Inst, Inter, Inter_Typ);
+                     Inst_Input_Connect
+                       (Syn_Inst, Inst, Nbr_Inputs, Inter_Typ, N);
 
-               when Port_Out
-                 | Port_Inout =>
-                  Inst_Output_Connect
-                    (Syn_Inst, Inst, Nbr_Outputs, Inter_Typ, N);
+                  when Port_Out
+                    | Port_Inout =>
+                     Inst_Output_Connect
+                       (Syn_Inst, Inst, Nbr_Outputs, Inter_Typ, N);
 
-                  Synth_Output_Assoc
-                    (N, Syn_Inst, Assoc, Ent_Inst, Inter, True);
+                     Synth_Output_Assoc
+                       (N, Syn_Inst, Assoc, Ent_Inst, Inter, True);
 
-            end case;
+               end case;
+            end if;
             pragma Assert (Areapools.Is_At_Mark (Expr_Pool, Marker));
          end if;
          Next_Association_Interface (Assoc, Assoc_Inter);
