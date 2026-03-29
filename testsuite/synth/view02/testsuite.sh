@@ -23,6 +23,14 @@ if fgrep -q 'typ_wrap_m[data]' syn_view02_check.vhdl; then
   exit 1
 fi
 
+analyze view03_pkg.vhdl view03.vhdl tb_view03.vhdl
+elab_simulate tb_view03
+clean
+
+synth view03_pkg.vhdl view03.vhdl -e > syn_view03.vhdl
+analyze view03_pkg.vhdl syn_view03.vhdl tb_view03.vhdl
+elab_simulate tb_view03
+
 clean
 
 echo "Test successful"
