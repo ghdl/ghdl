@@ -1037,14 +1037,13 @@ package body Synth.Vhdl_Decls is
         Get_Elements_Definition_List (View);
       View_El : Node;
       Pkind : Port_Kind;
-      El_Typ : Type_Acc;
       Idx : Iir_Index32;
       El_Vt : Valtyp;
    begin
       for I in Flist_First .. Flist_Last (Def_List) loop
          View_El := Get_Nth_Element (Def_List, I);
          Idx := Iir_Index32 (I + 1);
-         El_Typ := Vt.Typ.Rec.E (Idx).Typ;
+         El_Vt := (Typ => Vt.Typ.Rec.E (Idx).Typ, Val => Vt.Val.Arr.E (Idx));
          case Get_Kind (View_El) is
             when Iir_Kind_Simple_Mode_View_Element =>
                Pkind := Mode_To_Port_Kind (Get_Mode (View_El), Reversed);
@@ -1053,13 +1052,22 @@ package body Synth.Vhdl_Decls is
                      null;
                   when Port_Out
                     | Port_Inout =>
-                     El_Vt := (Typ => El_Typ, Val => Vt.Val.Arr.E (Idx));
                      Finalize_Signal_Wire (Syn_Inst, View, El_Vt);
-                     Vt.Val.Arr.E (Idx) := El_Vt.Val;
                end case;
+            when Iir_Kind_Record_Mode_View_Element =>
+               declare
+                  Sub_Ind : Node;
+                  Sub_Reversed : Boolean;
+               begin
+                  Extract_Mode_View_Name
+                    (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
+                  Finalize_Record_Interface_View
+                    (Syn_Inst, Sub_Ind, Reversed xor Sub_Reversed, El_Vt);
+               end;
             when others => Vhdl.Errors.Error_Kind
                ("finalize_record_interface_view", View_El);
          end case;
+         Vt.Val.Arr.E (Idx) := El_Vt.Val;
       end loop;
    end Finalize_Record_Interface_View;
 

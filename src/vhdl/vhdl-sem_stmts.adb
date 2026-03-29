@@ -368,13 +368,13 @@ package body Vhdl.Sem_Stmts is
             if Mode_Ind = Null_Iir then
                return;
             end if;
-            -- Extract the view element.
             if Get_Kind (Mode_Ind) = Iir_Kind_Simple_Mode_View_Element then
                return;
             end if;
             pragma Assert
               (Get_Kind (Mode_Ind) = Iir_Kind_Mode_View_Declaration);
 
+            -- Extract the view element.
             declare
                El : constant Iir := Get_Named_Entity (Name);
                Def_List : Iir_Flist;
@@ -384,7 +384,8 @@ package body Vhdl.Sem_Stmts is
                Def_List := Get_Elements_Definition_List (Mode_Ind);
                Mode_Ind := Get_Nth_Element (Def_List, Pos);
             end;
-            case Get_Kind (Mode_Ind) is
+            case Iir_Kinds_Mode_View_Element_Definition (Get_Kind (Mode_Ind))
+            is
                when Iir_Kind_Simple_Mode_View_Element =>
                   --  End of view.
                   return;
@@ -392,17 +393,15 @@ package body Vhdl.Sem_Stmts is
                  | Iir_Kind_Array_Mode_View_Element =>
                   --  Extract mode view declaration.
                   declare
-                     Name : Iir;
+                     Sub_Ind : Node;
+                     Sub_Reversed : Boolean;
                   begin
-                     Name := Get_Mode_View_Name (Mode_Ind);
-                     if Get_Kind (Name) = Iir_Kind_Converse_Attribute then
-                        Name := Get_Prefix (Name);
-                        Reversed := not Reversed;
-                     end if;
-                     Mode_Ind := Get_Named_Entity (Name);
+                     Extract_Mode_View_Name
+                       (Get_Mode_View_Name (Mode_Ind), Sub_Ind, Sub_Reversed);
+
+                     Mode_Ind := Sub_Ind;
+                     Reversed := Reversed xor Sub_Reversed;
                   end;
-               when others =>
-                  raise Internal_Error;
             end case;
          when others =>
             Error_Kind ("extract_view_target_prefix", Name);

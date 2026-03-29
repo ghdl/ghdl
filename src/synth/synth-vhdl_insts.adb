@@ -464,10 +464,21 @@ package body Synth.Vhdl_Insts is
                Count_Ports
                  (El_Typ, Mode_To_Port_Kind (Get_Mode (View_El), Reversed),
                   El_Vt, Nbr_Inputs, Nbr_Outputs);
-               Val.Arr.E (Idx) := El_Vt.Val;
+            when Iir_Kind_Record_Mode_View_Element =>
+               declare
+                  Sub_Ind : Node;
+                  Sub_Reversed : Boolean;
+               begin
+                  Extract_Mode_View_Name
+                    (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
+                  Count_Record_View_Ports
+                    (Sub_Ind, El_Typ, Reversed xor Sub_Reversed,
+                     El_Vt, Nbr_Inputs, Nbr_Outputs);
+               end;
             when others =>
                Vhdl.Errors.Error_Kind ("count_view_ports(rec)", View_El);
          end case;
+         Val.Arr.E (Idx) := El_Vt.Val;
       end loop;
    end Count_Record_View_Ports;
 
@@ -619,6 +630,18 @@ package body Synth.Vhdl_Insts is
                Build_Port_Desc
                  (Inports, Outports, Nbr_Inputs, Nbr_Outputs,
                   Sub_Sname, Pkind, Order, Encoding, El_Typ, El_Type);
+            when Iir_Kind_Record_Mode_View_Element =>
+               declare
+                  Sub_Ind : Node;
+                  Sub_Reversed : Boolean;
+               begin
+                  Extract_Mode_View_Name
+                    (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
+                  Build_Record_View_Ports_Desc
+                    (Sub_Ind, El_Typ, Reversed xor Sub_Reversed,
+                    Sub_Sname, Order, Encoding,
+                    Inports, Outports, Nbr_Inputs, Nbr_Outputs);
+               end;
             when others => Vhdl.Errors.Error_Kind
                ("build_record_view_ports_desc", View_El);
          end case;
@@ -2351,6 +2374,17 @@ package body Synth.Vhdl_Insts is
                      Create_Output_Wire
                        (Syn_Inst, Self_Inst, Loc, Output_Idx, El_Val);
                end case;
+            when Iir_Kind_Record_Mode_View_Element =>
+               declare
+                  Sub_Ind : Node;
+                  Sub_Reversed : Boolean;
+               begin
+                  Extract_Mode_View_Name
+                    (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
+                  Create_Record_View_Wire
+                    (Syn_Inst, Self_Inst, Sub_Ind, Reversed xor Sub_Reversed,
+                    Input_Idx, Output_Idx, El_Val, Loc);
+               end;
             when others => Vhdl.Errors.Error_Kind
                ("create_record_view_wire", View_El);
          end case;

@@ -505,6 +505,18 @@ package body Synth.Disp_Vhdl is
                   View_Name & '.' & Name_Table.Image (El_Id),
                   0, El_Type, El_Typ, True, True,
                   (Get_Mode (View_El) /= Iir_In_Mode) xor Reversed);
+            when Iir_Kind_Record_Mode_View_Element =>
+               declare
+                  Sub_Ind : Node;
+                  Sub_Reversed : Boolean;
+               begin
+                  Extract_Mode_View_Name
+                    (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
+                  Disp_Record_View_Converter
+                    (New_Sname_Field (El_Id, Wname),
+                     View_Name & '.' & Name_Table.Image (El_Id),
+                     Sub_Ind, Reversed xor Sub_Reversed, El_Type, El_Typ);
+               end;
             when others =>
                raise Internal_Error;
          end case;
