@@ -416,6 +416,7 @@ package body Elab.Vhdl_Debug is
             | Iir_Kind_Interface_File_Declaration
             | Iir_Kind_Object_Alias_Declaration
             | Iir_Kind_Interface_Signal_Declaration
+            | Iir_Kind_Interface_View_Declaration
             | Iir_Kind_Signal_Declaration
             | Iir_Kind_File_Declaration =>
             declare
