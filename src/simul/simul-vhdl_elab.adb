@@ -724,31 +724,86 @@ package body Simul.Vhdl_Elab is
       end loop;
    end Increment_Nbr_Sources;
 
-   procedure Increment_View_Nbr_Sources
-     (View : Node; Reversed : Boolean; Actual_Ep : Sub_Signal_Type) is
+   procedure Increment_Record_View_Nbr_Sources
+     (View : Node; Reversed : Boolean; Actual_Ep : Sub_Signal_Type);
+
+   procedure Increment_Array_View_Nbr_Sources
+     (View : Node; Reversed : Boolean; Actual_Ep : Sub_Signal_Type)
+   is
+      Typ : constant Type_Acc := Actual_Ep.Typ;
+      El_Typ : constant Type_Acc := Get_Array_Element_Multidim (Typ);
+      Alen : constant Iir_Index32 := Get_Array_Length_Multidim (Typ);
+      Sub_View : Iir;
+      Sub_Reversed : Boolean;
+      Sub_Ep : Sub_Signal_Type;
    begin
-      if Get_Kind (View) = Iir_Kind_Simple_Mode_View_Element then
-         if Get_Mode (View) /= Iir_In_Mode xor Reversed then
-            Increment_Nbr_Sources (Actual_Ep, View);
-         end if;
-      else
-         declare
-            Typ : constant Type_Acc := Actual_Ep.Typ;
-            Sub_View : Iir;
-            Sub_Reversed : Boolean;
-            Sub_Ep : Sub_Signal_Type;
-         begin
-            pragma Assert (Typ.Kind = Type_Record);
-            for I in 1 .. Typ.Rec.Len loop
-               Update_Mode_View_By_Pos
-                 (Sub_View, Sub_Reversed, View, Reversed, Natural (I - 1));
-               Sub_Ep := (Base => Actual_Ep.Base,
-                          Offs => Actual_Ep.Offs + Typ.Rec.E (I).Offs,
-                          Typ => Typ.Rec.E (I).Typ);
-               Increment_View_Nbr_Sources (Sub_View, Sub_Reversed, Sub_Ep);
-            end loop;
-         end;
-      end if;
+      pragma Assert (Typ.Kind = Type_Array);
+      pragma Assert (Is_Last_Dimension (Typ)); --  Because of offsets
+
+      Extract_Mode_View_Name
+        (Get_Mode_View_Name (View), Sub_View, Sub_Reversed);
+      Sub_Reversed := Sub_Reversed xor Reversed;
+      Sub_Ep := (Base => Actual_Ep.Base,
+                 Offs => Actual_Ep.Offs + (El_Typ.W, El_Typ.Sz),
+                 Typ => El_Typ);
+      for I in 1 .. Alen loop
+         Increment_Record_View_Nbr_Sources (Sub_View, Sub_Reversed, Sub_Ep);
+         Sub_Ep.Offs := Sub_Ep.Offs + (El_Typ.W, El_Typ.Sz);
+      end loop;
+   end Increment_Array_View_Nbr_Sources;
+
+   procedure Increment_Record_View_Nbr_Sources
+     (View : Node; Reversed : Boolean; Actual_Ep : Sub_Signal_Type)
+   is
+      Def_List : constant Iir_Flist := Get_Elements_Definition_List (View);
+      Typ : constant Type_Acc := Actual_Ep.Typ;
+      View_El : Node;
+      Idx : Iir_Index32;
+      Sub_Ep : Sub_Signal_Type;
+   begin
+      for I in Flist_First .. Flist_Last (Def_List) loop
+         View_El := Get_Nth_Element (Def_List, I);
+         Idx := Iir_Index32 (I + 1);
+         Sub_Ep := (Base => Actual_Ep.Base,
+                    Offs => Actual_Ep.Offs + Typ.Rec.E (Idx).Offs,
+                    Typ => Typ.Rec.E (Idx).Typ);
+
+         case Iir_Kinds_Mode_View_Element_Definition (Get_Kind (View_El)) is
+            when Iir_Kind_Simple_Mode_View_Element =>
+               if Get_Mode (View_El) /= Iir_In_Mode xor Reversed then
+                  Increment_Nbr_Sources (Actual_Ep, View);
+               end if;
+            when Iir_Kind_Record_Mode_View_Element =>
+               declare
+                  Sub_Ind : Node;
+                  Sub_Reversed : Boolean;
+               begin
+                  Extract_Mode_View_Name
+                    (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
+                  Increment_Record_View_Nbr_Sources
+                    (Sub_Ind, Reversed xor Sub_Reversed, Sub_Ep);
+               end;
+            when Iir_Kind_Array_Mode_View_Element =>
+               Increment_Array_View_Nbr_Sources (View_El, Reversed, Sub_Ep);
+         end case;
+      end loop;
+   end Increment_Record_View_Nbr_Sources;
+
+   procedure Increment_View_Nbr_Sources
+     (Ind : Node; Parent_Reversed : Boolean; Actual_Ep : Sub_Signal_Type)
+   is
+      View : Node;
+      Reversed : Boolean;
+   begin
+      Extract_Mode_View_Name (Get_Name (Ind), View, Reversed);
+      Reversed := Reversed xor Parent_Reversed;
+
+      case Iir_Kinds_Mode_View_Indication (Get_Kind (Ind)) is
+         when Iir_Kind_Record_Mode_View_Indication =>
+            Increment_Record_View_Nbr_Sources (View, Reversed, Actual_Ep);
+         when Iir_Kind_Array_Mode_View_Indication =>
+            Increment_Array_View_Nbr_Sources (View, Reversed, Actual_Ep);
+      end case;
    end Increment_View_Nbr_Sources;
 
    procedure Gather_Connection_By_Name (Port_Inst : Synth_Instance_Acc;
@@ -800,14 +855,9 @@ package body Simul.Vhdl_Elab is
          Assoc_Inst => Assoc_Inst);
 
       if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
-         --  TODO: increase nbr sources
-         declare
-            View : Iir;
-            Reversed : Boolean;
-         begin
-            Get_Mode_View_From_Name (Formal, View, Reversed);
-            Increment_View_Nbr_Sources (View, Reversed, Actual_Ep);
-         end;
+         --  Increase nbr sources
+         Increment_View_Nbr_Sources
+           (Get_Mode_View_Indication (Inter), False, Actual_Ep);
       else
          --  LRM08 6.4.2.3 Signal declarations
          --  [...], each source is either a driver or an OUT, INOUT,

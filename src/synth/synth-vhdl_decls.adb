@@ -1031,6 +1031,25 @@ package body Synth.Vhdl_Decls is
    procedure Finalize_Record_Interface_View (Syn_Inst : Synth_Instance_Acc;
                                              View : Node;
                                              Reversed : Boolean;
+                                             Vt : Valtyp);
+
+   procedure Finalize_Array_Interface_View (Syn_Inst : Synth_Instance_Acc;
+                                            View : Node;
+                                            Reversed : Boolean;
+                                            Vt : Valtyp)
+   is
+      Sub_Vt : Valtyp;
+   begin
+      Sub_Vt.Typ := Get_Array_Element_Multidim (Vt.Typ);
+      for I in Vt.Val.Arr.E'Range loop
+         Sub_Vt.Val := Vt.Val.Arr.E (I);
+         Finalize_Record_Interface_View (Syn_Inst, View, Reversed, Sub_Vt);
+      end loop;
+   end Finalize_Array_Interface_View;
+
+   procedure Finalize_Record_Interface_View (Syn_Inst : Synth_Instance_Acc;
+                                             View : Node;
+                                             Reversed : Boolean;
                                              Vt : Valtyp)
    is
       Def_List : constant Iir_Flist :=
@@ -1064,6 +1083,16 @@ package body Synth.Vhdl_Decls is
                   Finalize_Record_Interface_View
                     (Syn_Inst, Sub_Ind, Reversed xor Sub_Reversed, El_Vt);
                end;
+            when Iir_Kind_Array_Mode_View_Element =>
+               declare
+                  Sub_Ind : Node;
+                  Sub_Reversed : Boolean;
+               begin
+                  Extract_Mode_View_Name
+                    (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
+                  Finalize_Array_Interface_View
+                    (Syn_Inst, Sub_Ind, Reversed xor Sub_Reversed, El_Vt);
+               end;
             when others => Vhdl.Errors.Error_Kind
                ("finalize_record_interface_view", View_El);
          end case;
@@ -1078,7 +1107,6 @@ package body Synth.Vhdl_Decls is
       Vt : Valtyp;
       View : Node;
       Reversed : Boolean;
-      Sub_Vt : Valtyp;
    begin
       Vt := Get_Value (Syn_Inst, Decl);
       if Vt = No_Valtyp then
@@ -1092,12 +1120,7 @@ package body Synth.Vhdl_Decls is
          when Iir_Kind_Record_Mode_View_Indication =>
             Finalize_Record_Interface_View (Syn_Inst, View, Reversed, Vt);
          when Iir_Kind_Array_Mode_View_Indication =>
-            Sub_Vt.Typ := Get_Array_Element_Multidim (Vt.Typ);
-            for I in Vt.Val.Arr.E'Range loop
-               Sub_Vt.Val := Vt.Val.Arr.E (I);
-               Finalize_Record_Interface_View
-                 (Syn_Inst, View, Reversed, Sub_Vt);
-            end loop;
+            Finalize_Array_Interface_View (Syn_Inst, View, Reversed, Vt);
          when others => Vhdl.Errors.Error_Kind
             ("finalize_interface_view", Ind);
       end case;

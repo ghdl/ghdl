@@ -103,7 +103,9 @@ package Synth.Vhdl_Context is
                               Ntype : Type_Acc;
                               Pool : Areapool_Acc) return Valtyp;
 
-   --  Create a Value_Wire.  For a bit wire, RNG must be null.
+   --  Create a Value_Wire.
+   function Create_Value_Wire (W : Wire_Id; Pool : Areapool_Acc)
+                              return Value_Acc;
    function Create_Value_Wire (W : Wire_Id;
                                Wtype : Type_Acc;
                                Pool : Areapool_Acc) return Valtyp;

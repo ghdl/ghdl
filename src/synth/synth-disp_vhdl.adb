@@ -476,6 +476,13 @@ package body Synth.Disp_Vhdl is
       end if;
    end Disp_Port_Converter;
 
+   procedure Disp_Array_View_Converter (Wname : Sname;
+                                        View_Name : String;
+                                        View : Node;
+                                        Reversed : Boolean;
+                                        View_Type : Node;
+                                        Typ : Type_Acc);
+
    procedure Disp_Record_View_Converter (Wname : Sname;
                                          View_Name : String;
                                          View : Node;
@@ -513,6 +520,18 @@ package body Synth.Disp_Vhdl is
                   Extract_Mode_View_Name
                     (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
                   Disp_Record_View_Converter
+                    (New_Sname_Field (El_Id, Wname),
+                     View_Name & '.' & Name_Table.Image (El_Id),
+                     Sub_Ind, Reversed xor Sub_Reversed, El_Type, El_Typ);
+               end;
+            when Iir_Kind_Array_Mode_View_Element =>
+               declare
+                  Sub_Ind : Node;
+                  Sub_Reversed : Boolean;
+               begin
+                  Extract_Mode_View_Name
+                    (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
+                  Disp_Array_View_Converter
                     (New_Sname_Field (El_Id, Wname),
                      View_Name & '.' & Name_Table.Image (El_Id),
                      Sub_Ind, Reversed xor Sub_Reversed, El_Type, El_Typ);
