@@ -30,7 +30,15 @@ clean
 synth view03_pkg.vhdl view03.vhdl -e > syn_view03.vhdl
 analyze view03_pkg.vhdl syn_view03.vhdl tb_view03.vhdl
 elab_simulate tb_view03
+clean
 
+analyze view04_pkg.vhdl view04.vhdl tb_view04.vhdl
+elab_simulate tb_view04
+clean
+
+synth view04_pkg.vhdl view04.vhdl -e > syn_view04.vhdl
+analyze view04_pkg.vhdl syn_view04.vhdl tb_view04.vhdl
+elab_simulate tb_view04
 clean
 
 echo "Test successful"
