@@ -484,7 +484,7 @@ package body Vhdl.Sem_Decls is
          return;
       end if;
 
-      Extract_Mode_View_Name (Name, View, Reversed);
+      Extract_Mode_View_Decl (Name, View, Reversed);
       pragma Unreferenced (Reversed);
 
       Atype := Get_Type_Of_Subtype_Indication (Get_Subtype_Indication (View));

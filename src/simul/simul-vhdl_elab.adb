@@ -740,7 +740,7 @@ package body Simul.Vhdl_Elab is
       pragma Assert (Typ.Kind = Type_Array);
       pragma Assert (Is_Last_Dimension (Typ)); --  Because of offsets
 
-      Extract_Mode_View_Name
+      Extract_Mode_View_Decl
         (Get_Mode_View_Name (View), Sub_View, Sub_Reversed);
       Sub_Reversed := Sub_Reversed xor Reversed;
       Sub_Ep := (Base => Actual_Ep.Base,
@@ -778,7 +778,7 @@ package body Simul.Vhdl_Elab is
                   Sub_Ind : Node;
                   Sub_Reversed : Boolean;
                begin
-                  Extract_Mode_View_Name
+                  Extract_Mode_View_Decl
                     (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
                   Increment_Record_View_Nbr_Sources
                     (Sub_Ind, Reversed xor Sub_Reversed, Sub_Ep);

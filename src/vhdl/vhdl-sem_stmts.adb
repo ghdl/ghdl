@@ -354,7 +354,7 @@ package body Vhdl.Sem_Stmts is
       case Get_Kind (Name) is
          when Iir_Kind_Interface_View_Declaration =>
             --  Extract the mode view from a mode view indication
-            Extract_Mode_View_Name
+            Extract_Mode_View_Decl
               (Get_Mode_View_Indication (Name), Mode_Ind, Reversed);
          when Iir_Kinds_Denoting_Name =>
             Extract_View_Target_Prefix
@@ -396,7 +396,7 @@ package body Vhdl.Sem_Stmts is
                      Sub_Ind : Node;
                      Sub_Reversed : Boolean;
                   begin
-                     Extract_Mode_View_Name
+                     Extract_Mode_View_Decl
                        (Get_Mode_View_Name (Mode_Ind), Sub_Ind, Sub_Reversed);
 
                      Mode_Ind := Sub_Ind;

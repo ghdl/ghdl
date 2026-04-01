@@ -2277,7 +2277,7 @@ package body Vhdl.Utils is
       end case;
    end Get_Converse_Mode;
 
-   procedure Extract_Mode_View_Name
+   procedure Extract_Mode_View_Decl
      (Name : Iir; View : out Iir; Reversed : out Boolean)
    is
       Pfx : Iir;
@@ -2303,7 +2303,7 @@ package body Vhdl.Utils is
                Error_Kind ("extract_mode_view_name", Pfx);
          end case;
       end loop;
-   end Extract_Mode_View_Name;
+   end Extract_Mode_View_Decl;
 
    procedure Update_Mode_View_By_Pos (Sub_View : out Iir;
                                       Sub_Reversed : out Boolean;
@@ -2321,7 +2321,7 @@ package body Vhdl.Utils is
             Sub_Reversed := Reversed;
          when Iir_Kind_Array_Mode_View_Element
            | Iir_Kind_Record_Mode_View_Element =>
-            Extract_Mode_View_Name
+            Extract_Mode_View_Decl
               (Get_Mode_View_Name (El_Name), Sub_View, Reversed1);
             Sub_Reversed := Reversed xor Reversed1;
       end case;
@@ -2347,11 +2347,10 @@ package body Vhdl.Utils is
          when Iir_Kinds_Denoting_Name =>
             Get_Mode_View_From_Name (Get_Named_Entity (Name), View, Reversed);
          when Iir_Kind_Interface_View_Declaration =>
-            Extract_Mode_View_Name
+            Extract_Mode_View_Decl
               (Get_Mode_View_Indication (Name), View, Reversed);
          when Iir_Kind_Selected_Element =>
-            Get_Mode_View_From_Name
-              (Get_Prefix (Name), View, Reversed);
+            Get_Mode_View_From_Name (Get_Prefix (Name), View, Reversed);
             if Get_Kind (View) = Iir_Kind_Simple_Mode_View_Element then
                return;
             end if;

@@ -1078,7 +1078,7 @@ package body Synth.Vhdl_Decls is
                   Sub_Ind : Node;
                   Sub_Reversed : Boolean;
                begin
-                  Extract_Mode_View_Name
+                  Extract_Mode_View_Decl
                     (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
                   Finalize_Record_Interface_View
                     (Syn_Inst, Sub_Ind, Reversed xor Sub_Reversed, El_Vt);
@@ -1088,7 +1088,7 @@ package body Synth.Vhdl_Decls is
                   Sub_Ind : Node;
                   Sub_Reversed : Boolean;
                begin
-                  Extract_Mode_View_Name
+                  Extract_Mode_View_Decl
                     (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
                   Finalize_Array_Interface_View
                     (Syn_Inst, Sub_Ind, Reversed xor Sub_Reversed, El_Vt);
@@ -1114,7 +1114,7 @@ package body Synth.Vhdl_Decls is
          return;
       end if;
 
-      Extract_Mode_View_Name (Get_Name (Ind), View, Reversed);
+      Extract_Mode_View_Decl (Get_Name (Ind), View, Reversed);
 
       case Get_Kind (Ind) is
          when Iir_Kind_Record_Mode_View_Indication =>

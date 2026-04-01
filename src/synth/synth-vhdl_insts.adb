@@ -474,7 +474,7 @@ package body Synth.Vhdl_Insts is
                   Sub_Ind : Node;
                   Sub_Reversed : Boolean;
                begin
-                  Extract_Mode_View_Name
+                  Extract_Mode_View_Decl
                     (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
                   Count_Record_View_Ports
                     (Sub_Ind, El_Typ, Reversed xor Sub_Reversed,
@@ -501,7 +501,7 @@ package body Synth.Vhdl_Insts is
       Sub_Reversed : Boolean;
       El_Val : Value_Acc;
    begin
-      Extract_Mode_View_Name (Name, Sub_View, Sub_Reversed);
+      Extract_Mode_View_Decl (Name, Sub_View, Sub_Reversed);
       Sub_Reversed := Sub_Reversed xor Reversed;
 
       Val := Create_Value_Array (Typ, Current_Pool);
@@ -523,7 +523,7 @@ package body Synth.Vhdl_Insts is
    begin
       case Get_Kind (Ind) is
          when Iir_Kind_Record_Mode_View_Indication =>
-            Extract_Mode_View_Name (Get_Name (Ind), View, Reversed);
+            Extract_Mode_View_Decl (Get_Name (Ind), View, Reversed);
             Count_Record_View_Ports
               (View, Typ, Reversed, Val, Nbr_Inputs, Nbr_Outputs);
          when Iir_Kind_Array_Mode_View_Indication =>
@@ -651,7 +651,7 @@ package body Synth.Vhdl_Insts is
                   Sub_Ind : Node;
                   Sub_Reversed : Boolean;
                begin
-                  Extract_Mode_View_Name
+                  Extract_Mode_View_Decl
                     (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
                   Build_Record_View_Ports_Desc
                     (Sub_Ind, El_Typ, Reversed xor Sub_Reversed,
@@ -663,7 +663,7 @@ package body Synth.Vhdl_Insts is
                   Sub_Ind : Node;
                   Sub_Reversed : Boolean;
                begin
-                  Extract_Mode_View_Name
+                  Extract_Mode_View_Decl
                     (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
                   Build_Array_View_Ports_Desc
                     (Sub_Ind, El_Typ, Reversed xor Sub_Reversed,
@@ -728,7 +728,7 @@ package body Synth.Vhdl_Insts is
       View : Node;
       Reversed : Boolean;
    begin
-      Extract_Mode_View_Name (Get_Name (Ind), View, Reversed);
+      Extract_Mode_View_Decl (Get_Name (Ind), View, Reversed);
 
       case Iir_Kinds_Mode_View_Indication (Get_Kind (Ind)) is
          when Iir_Kind_Record_Mode_View_Indication =>
@@ -1495,7 +1495,7 @@ package body Synth.Vhdl_Insts is
          return;
       end if;
 
-      Extract_Mode_View_Name (Get_Name (Ind), View, Reversed);
+      Extract_Mode_View_Decl (Get_Name (Ind), View, Reversed);
       Synth_Object_Name (Syn_Inst, Get_Actual (Assoc),
                          Act_Base, Act_Typ, Act_Off);
 
@@ -2437,7 +2437,7 @@ package body Synth.Vhdl_Insts is
                   Sub_Ind : Node;
                   Sub_Reversed : Boolean;
                begin
-                  Extract_Mode_View_Name
+                  Extract_Mode_View_Decl
                     (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
                   Create_Record_View_Wire
                     (Syn_Inst, Self_Inst, Sub_Ind, Reversed xor Sub_Reversed,
@@ -2448,7 +2448,7 @@ package body Synth.Vhdl_Insts is
                   Sub_Ind : Node;
                   Sub_Reversed : Boolean;
                begin
-                  Extract_Mode_View_Name
+                  Extract_Mode_View_Decl
                     (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
                   Create_Array_View_Wire
                     (Syn_Inst, Self_Inst, Sub_Ind, Reversed xor Sub_Reversed,
@@ -2469,7 +2469,7 @@ package body Synth.Vhdl_Insts is
       View : Node;
       Reversed : Boolean;
    begin
-      Extract_Mode_View_Name (Get_Name (Ind), View, Reversed);
+      Extract_Mode_View_Decl (Get_Name (Ind), View, Reversed);
 
       case Iir_Kinds_Mode_View_Indication (Get_Kind (Ind)) is
          when Iir_Kind_Record_Mode_View_Indication =>

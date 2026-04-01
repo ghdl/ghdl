@@ -482,7 +482,7 @@ package Vhdl.Utils is
 
    --  Return the mode_view_declaration for NAME.
    --  Also handle 'Converse attributes.
-   procedure Extract_Mode_View_Name
+   procedure Extract_Mode_View_Decl
      (Name : Iir; View : out Iir; Reversed : out Boolean);
 
    --  Adjust VIEW using EL.
