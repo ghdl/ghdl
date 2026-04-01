@@ -311,6 +311,7 @@ package Errorout is
    procedure Output_Location (Err : Error_Record; Loc : Location_Type);
    procedure Output_Message (S : String);
    procedure Output_Uns32 (V : Uns32);
+   procedure Output_Int32 (V : Int32);
 
    function Make_Earg_Vhdl_Node (V : Uns32) return Earg_Type;
    function Make_Earg_Vhdl_Token (V : Uns32) return Earg_Type;
