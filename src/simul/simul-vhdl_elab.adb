@@ -771,7 +771,7 @@ package body Simul.Vhdl_Elab is
          case Iir_Kinds_Mode_View_Element_Definition (Get_Kind (View_El)) is
             when Iir_Kind_Simple_Mode_View_Element =>
                if Get_Mode (View_El) /= Iir_In_Mode xor Reversed then
-                  Increment_Nbr_Sources (Actual_Ep, View);
+                  Increment_Nbr_Sources (Sub_Ep, View);
                end if;
             when Iir_Kind_Record_Mode_View_Element =>
                declare
@@ -790,21 +790,65 @@ package body Simul.Vhdl_Elab is
    end Increment_Record_View_Nbr_Sources;
 
    procedure Increment_View_Nbr_Sources
-     (Ind : Node; Parent_Reversed : Boolean; Actual_Ep : Sub_Signal_Type)
+     (View_Decl : Node; Reversed : Boolean; Actual_Ep : Sub_Signal_Type)
    is
-      View : Node;
-      Reversed : Boolean;
+      Typ : constant Type_Acc := Actual_Ep.Typ;
    begin
-      Extract_Mode_View_Name (Get_Name (Ind), View, Reversed);
-      Reversed := Reversed xor Parent_Reversed;
-
-      case Iir_Kinds_Mode_View_Indication (Get_Kind (Ind)) is
-         when Iir_Kind_Record_Mode_View_Indication =>
-            Increment_Record_View_Nbr_Sources (View, Reversed, Actual_Ep);
-         when Iir_Kind_Array_Mode_View_Indication =>
-            Increment_Array_View_Nbr_Sources (View, Reversed, Actual_Ep);
+      case Typ.Kind is
+         when Type_Record =>
+            Increment_Record_View_Nbr_Sources (View_Decl, Reversed, Actual_Ep);
+         when Type_Array =>
+            Increment_Array_View_Nbr_Sources (View_Decl, Reversed, Actual_Ep);
+         when others =>
+            raise Internal_Error;
       end case;
    end Increment_View_Nbr_Sources;
+
+   --  From a name, whose prefix designate a view,
+   --  extract the sub view selected (result in RES_NAME and RES_REVERSED)
+   --  or just the mode (result in RES_MODE and RES_NAME set to Null_Node),
+   --   if the selected element designates at some point a mode view element.
+   procedure Extract_Sub_View_Name (Name : Node;
+                                    Res_Name : out Node;
+                                    Res_Reversed : out Boolean;
+                                    Res_Mode : out Iir_Mode)
+   is
+   begin
+      if Get_Kind (Name) in Iir_Kinds_Denoting_Name then
+         Get_Mode_View_From_Name (Name, Res_Name, Res_Reversed);
+         Res_Mode := Iir_Unknown_Mode;
+      else
+         Extract_Sub_View_Name
+           (Get_Prefix (Name), Res_Name, Res_Reversed, Res_Mode);
+         if Res_Name = Null_Node then
+            --  Either error, or a mode view element was selected.
+            return;
+         end if;
+         case Get_Kind (Name) is
+            when Iir_Kind_Selected_Element =>
+               declare
+                  El : constant Node := Get_Named_Entity (Name);
+                  Pos : constant Iir_Index32 := Get_Element_Position (El);
+                  Def_List : constant Iir_Flist :=
+                    Get_Elements_Definition_List (Res_Name);
+                  View_El : constant Node :=
+                    Get_Nth_Element (Def_List, Natural (Pos));
+               begin
+                  case Get_Kind (View_El) is
+                     when Iir_Kind_Simple_Mode_View_Element =>
+                        Res_Mode := Get_Mode (View_El);
+                        if Res_Reversed then
+                           Res_Mode := Get_Converse_Mode (Res_Mode);
+                        end if;
+                        Res_Name := Null_Node;
+                     when others => Error_Kind
+                        ("extract_sub_view_name(el)", View_El);
+                  end case;
+               end;
+            when others => Error_Kind ("extract_sub_view_name", Name); -- TODO
+         end case;
+      end if;
+   end Extract_Sub_View_Name;
 
    procedure Gather_Connection_By_Name (Port_Inst : Synth_Instance_Acc;
                                         Inter : Node;
@@ -822,6 +866,9 @@ package body Simul.Vhdl_Elab is
       Conn : Connect_Entry;
       Formal_Ep, Actual_Ep : Sub_Signal_Type;
       Is_Collapsed : Boolean;
+      Mode : Iir_Mode;
+      View_Name : Node;
+      View_Reversed : Boolean;
    begin
       Formal := Get_Formal (Assoc);
       if Formal = Null_Iir then
@@ -855,14 +902,21 @@ package body Simul.Vhdl_Elab is
          Assoc_Inst => Assoc_Inst);
 
       if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
+         Extract_Sub_View_Name (Formal, View_Name, View_Reversed, Mode);
+      else
+         Mode := Get_Mode (Inter);
+         View_Name := Null_Node;
+         View_Reversed := False;
+      end if;
+
+      if View_Name /= Null_Node then
          --  Increase nbr sources
-         Increment_View_Nbr_Sources
-           (Get_Mode_View_Indication (Inter), False, Actual_Ep);
+         Increment_View_Nbr_Sources (View_Name, View_Reversed, Actual_Ep);
       else
          --  LRM08 6.4.2.3 Signal declarations
          --  [...], each source is either a driver or an OUT, INOUT,
          --  BUFFER, or LINKAGE port [...]
-         if Get_Mode (Inter) /= Iir_In_Mode then
+         if Mode /= Iir_In_Mode then
             Increment_Nbr_Sources (Actual_Ep, Assoc);
          end if;
       end if;
