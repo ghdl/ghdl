@@ -3182,7 +3182,7 @@ package body Simul.Vhdl_Simul is
                Sub_View : Iir;
                Sub_Reversed : Boolean;
             begin
-               for I in 1 .. E.Typ.Rec.Len loop
+               for I in 1 .. Typ.Rec.Len loop
                   El := Get_Nth_Element (El_List, Natural (I - 1));
                   Update_Mode_View_By_Pos
                     (Sub_View, Sub_Reversed, View, Reversed, Natural (I - 1));
@@ -3911,8 +3911,7 @@ package body Simul.Vhdl_Simul is
          end;
       else
          declare
-            Typ : constant Type_Acc :=
-              Signals_Table.Table (C.Formal.Base).Typ;
+            Typ : constant Type_Acc := C.Formal.Typ;
             Sub_View : Iir;
             Sub_Reversed : Boolean;
             Sub_Connect : Connect_Entry;
