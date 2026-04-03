@@ -144,17 +144,23 @@ package body Synth.Vhdl_Insts is
          Inter := Get_Chain (Inter);
       end loop;
 
+      --  For ports: if the type is not constrained, it is set by the
+      --  association.
       Inter := Get_Port_Chain (Params.Decl);
       while Inter /= Null_Node loop
-         pragma Assert (Get_Kind (Inter)
-                          = Iir_Kind_Interface_Signal_Declaration);
-         if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
-            if not Are_Types_Equal (Get_Value (Obj.Syn_Inst, Inter).Typ,
-                                    Get_Value (Params.Syn_Inst, Inter).Typ)
-            then
-               return False;
-            end if;
-         end if;
+         case Get_Kind (Inter) is
+            when Iir_Kind_Interface_Signal_Declaration
+               | Iir_Kind_Interface_View_Declaration =>
+               if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
+                  if not Are_Types_Equal
+                    (Get_Value (Obj.Syn_Inst, Inter).Typ,
+                     Get_Value (Params.Syn_Inst, Inter).Typ)
+                  then
+                     return False;
+                  end if;
+               end if;
+            when others => raise Internal_Error;
+         end case;
          Inter := Get_Chain (Inter);
       end loop;
 
