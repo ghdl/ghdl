@@ -1371,7 +1371,6 @@ package body Synth.Vhdl_Insts is
                                        Input_Idx : in out Port_Idx;
                                        Output_Idx : in out Port_Idx)
    is
-      pragma Unreferenced (Act_Typ);
       Def_List : constant Iir_Flist := Get_Elements_Definition_List (View_Ind);
       Idx : Iir_Index32;
       View_El : Node;
@@ -1391,7 +1390,7 @@ package body Synth.Vhdl_Insts is
                    Val => View_Vt.Val.Arr.E (Idx));
 
          --  The actual can be a view or a signal.
-         Sub_Act_Typ := Act_Base.Typ.Rec.E (Idx).Typ;
+         Sub_Act_Typ := Act_Typ.Rec.E (Idx).Typ;
          if Act_Base.Val.Kind = Value_Record then
             --  View to view assoc.
             pragma Assert (Act_Off = No_Value_Offsets);
@@ -1401,7 +1400,7 @@ package body Synth.Vhdl_Insts is
          else
             --  View to signal assoc.
             Sub_Act_Base := Act_Base;
-            Sub_Act_Off := Act_Off + Act_Base.Typ.Rec.E (Idx).Offs;
+            Sub_Act_Off := Act_Off + Act_Typ.Rec.E (Idx).Offs;
          end if;
          case Get_Kind (View_El) is
             when Iir_Kind_Simple_Mode_View_Element =>
@@ -1483,6 +1482,7 @@ package body Synth.Vhdl_Insts is
    is
       use Synth.Errors;
       Ind : constant Node := Get_Mode_View_Indication (Inter);
+      Marker : Mark_Type;
       View : Node;
       Reversed : Boolean;
       Act_Base : Valtyp;
@@ -1494,6 +1494,8 @@ package body Synth.Vhdl_Insts is
            "individual association not handled for views");
          return;
       end if;
+
+      Mark_Expr_Pool (Marker);
 
       Extract_Mode_View_Decl (Get_Name (Ind), View, Reversed);
       Synth_Object_Name (Syn_Inst, Get_Actual (Assoc),
@@ -1511,6 +1513,7 @@ package body Synth.Vhdl_Insts is
                Act_Base, Act_Typ, Act_Off, Assoc,
                Input_Idx, Output_Idx);
       end case;
+      Release_Expr_Pool (Marker);
    end Inst_View_Connect;
 
    --  Subprogram used for instantiation (direct or by component).
