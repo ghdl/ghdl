@@ -1560,15 +1560,19 @@ package body Synth.Vhdl_Expr is
                Error_Msg_Synth (Syn_Inst, Loc, "array length mismatch");
                return null;
             end if;
+            --  Convert element
             Res_Typ := Synth_Composite_Type_Conversion
               (Syn_Inst, Val_Typ.Arr_El, Conv_Typ.Arr_El, Loc);
             if Res_Typ = null then
                return null;
             end if;
+            --  Note: target bounds are given
             if Res_Typ = Conv_Typ.Arr_El then
+               --  The element type is the same as the target, use the target.
                pragma Assert (Conv_Typ.Kind = Type_Array);
                return Res_Typ;
             else
+               --  The element type is different, create the result type.
                pragma Assert (Conv_Typ.Kind = Type_Array_Unbounded);
                Res_Typ := Create_Array_Type
                  (Conv_Typ.Abound,
@@ -1577,12 +1581,23 @@ package body Synth.Vhdl_Expr is
             end if;
          when Type_Unbounded_Vector
             | Type_Unbounded_Array =>
-            --  Check bounds fit in target
-            Elab.Vhdl_Types.Check_Bound_Compatibility
-              (Syn_Inst, Loc, Val_Typ.Abound, Conv_Typ.Uarr_Idx);
-            Res_Typ := Synth_Composite_Type_Conversion
-              (Syn_Inst, Val_Typ.Arr_El, Conv_Typ.Uarr_El, Loc);
-            pragma Assert (Res_Typ = null or else Res_Typ = Val_Typ.Arr_El);
+            if Val_Typ.Kind = Type_Slice then
+               --  TODO: check bounds fit in target.
+               Res_Typ := Synth_Composite_Type_Conversion
+                 (Syn_Inst, Val_Typ.Slice_El, Conv_Typ.Uarr_El, Loc);
+               --  TODO: what if element type is different ?
+               pragma Assert (Res_Typ = null
+                 or else Res_Typ = Val_Typ.Slice_El);
+            else
+               --  Check bounds fit in target
+               Elab.Vhdl_Types.Check_Bound_Compatibility
+                 (Syn_Inst, Loc, Val_Typ.Abound, Conv_Typ.Uarr_Idx);
+               --  Convert element.
+               Res_Typ := Synth_Composite_Type_Conversion
+                 (Syn_Inst, Val_Typ.Arr_El, Conv_Typ.Uarr_El, Loc);
+               --  TODO: what if element is different ?
+               pragma Assert (Res_Typ = null or else Res_Typ = Val_Typ.Arr_El);
+            end if;
             return Val_Typ;
          when Type_Record
            | Type_Unbounded_Record =>
