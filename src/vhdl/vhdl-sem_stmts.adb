@@ -2004,9 +2004,7 @@ package body Vhdl.Sem_Stmts is
       Sem_Procedure_Call (Call, Stmt);
 
       Imp := Get_Implementation (Call);
-      if Imp /= Null_Iir
-        and then Get_Kind (Imp) = Iir_Kind_Procedure_Declaration
-      then
+      if Imp /= Null_Iir and then Is_Procedure_Declaration (Imp) then
          --  Sane procedure call.
 
          --  Set suspend flag, if calling a suspendable procedure
@@ -2022,7 +2020,9 @@ package body Vhdl.Sem_Stmts is
          end if;
 
          --  To avoid inifinite loop warning.
-         if Get_Kind (Current_Subprogram) = Iir_Kind_Process_Statement then
+         if Get_Kind (Current_Subprogram) = Iir_Kind_Process_Statement
+           and then Get_Kind (Imp) = Iir_Kind_Procedure_Declaration
+         then
             Def := Get_Implicit_Definition (Imp);
             case Def is
                when Iir_Predefined_Std_Env_Stop_Status

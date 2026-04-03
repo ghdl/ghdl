@@ -1883,6 +1883,9 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Has_Parameter (Flag10)
    --
+   -- Only for Iir_Kind_Interface_Procedure_Declaration:
+   --   Get/Set_Suspend_Flag (Flag11)
+   --
    --   Get/Set_All_Sensitized_State (State3)
    --
    --   Get/Set_Open_Flag (Flag7)
