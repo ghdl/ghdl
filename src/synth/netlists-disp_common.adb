@@ -254,6 +254,43 @@ package body Netlists.Disp_Common is
       return False;
    end Need_Edge;
 
+   function Direct_Conn_Input (I : Input) return Boolean
+   is
+      use Netlists.Utils;
+      Drv : constant Net := Get_Driver (I);
+      D_Inst : Instance;
+   begin
+      if not Has_One_Connection (Drv) then
+         return False;
+      end if;
+      D_Inst := Get_Net_Parent (Drv);
+      if Get_Input_Parent (I) = D_Inst then
+         return False;
+      end if;
+      return Get_Id (D_Inst) >= Id_User_None;
+   end Direct_Conn_Input;
+
+   function Direct_Conn_Output (Inst : Instance; O : Net) return Boolean
+   is
+      Snk : constant Input := Get_First_Sink (O);
+      Top : Instance;
+      M : Module;
+   begin
+      if Snk = No_Input then
+         return False;
+      end if;
+      if Get_Next_Sink (Snk) /= No_Input then
+         return False;
+      end if;
+      Top := Get_Input_Parent (Snk);
+      M := Get_Instance_Parent (Inst);
+      if not Is_Self_Instance (Top) then
+         return False;
+      end if;
+      pragma Assert (Get_Module (Top) = M);
+      return True;
+   end Direct_Conn_Output;
+
    procedure Put_Id (N : Name_Id) is
    begin
       Wr (Name_Table.Image (N));

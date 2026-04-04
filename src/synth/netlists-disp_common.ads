@@ -66,6 +66,15 @@ package Netlists.Disp_Common is
    --  inputs.
    function Need_Edge (Inst : Instance) return Boolean;
 
+   --  True if input I of the top module is directly connected to an output
+   --  of a user instance.
+   --  In that case, there is no need to create an intermediate signal.
+   function Direct_Conn_Input (I : Input) return Boolean;
+
+   --  Likewise: True if output O of a user instance is directly connected
+   --  to an input of the top module.
+   function Direct_Conn_Output (Inst : Instance; O : Net) return Boolean;
+
    --  Disp the name of am instance.
    procedure Put_Instance_Name (Name : Sname; Lang : Language_Range);
 

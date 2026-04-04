@@ -207,6 +207,7 @@ package body Netlists.Disp_Vhdl is
    procedure Disp_Instance_Gate (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
+      Id : constant Module_Id := Get_Id (Imod);
       Idx : Port_Idx;
       Max_Idx : Port_Idx;
       Name : Sname;
@@ -221,7 +222,7 @@ package body Netlists.Disp_Vhdl is
 
       --  Gate name
       Name := Get_Module_Name (Imod);
-      if Get_Id (Imod) < Id_User_None then
+      if Id < Id_User_None then
          Wr ("entity work.gate_");
          pragma Assert (Get_Sname_Kind (Name) = Sname_System);
          Put_Id (Get_Sname_Suffix (Name));
@@ -312,6 +313,14 @@ package body Netlists.Disp_Vhdl is
             I := Get_First_Sink (O);
             if I = No_Input then
                Wr ("open");
+            elsif Direct_Conn_Output (Inst, O) then
+               declare
+                  I_Inst : constant Instance := Get_Input_Parent (I);
+                  I_M : constant Module := Get_Module (I_Inst);
+                  I_Idx : constant Port_Idx := Get_Port_Idx (I);
+               begin
+                  Put_Name (Get_Output_Desc (I_M, I_Idx).Name);
+               end;
             else
                Disp_Net_Name (O);
             end if;
@@ -1487,6 +1496,34 @@ package body Netlists.Disp_Vhdl is
       Wr_Line ("  end """ & Name & """;");
    end Disp_Shift_Definition;
 
+   procedure Disp_Signal (Inst : Instance; N : Net)
+   is
+      Id : constant Module_Id := Get_Id (Inst);
+   begin
+      if Id in Constant_Module_Id then
+         Wr ("  constant ");
+      else
+         Wr ("  signal ");
+      end if;
+      Disp_Net_Name (N);
+      Wr (" : ");
+      Put_Type (Get_Width (N));
+      case Id is
+         when Id_Idff =>
+            Wr (" := ");
+            Disp_Constant_Inline (Get_Net_Parent (Get_Input_Net (Inst, 2)));
+         when Id_Iadff =>
+            Wr (" := ");
+            Disp_Constant_Inline (Get_Net_Parent (Get_Input_Net (Inst, 4)));
+         when Constant_Module_Id =>
+            Wr (" := ");
+            Disp_Constant_Inline (Inst);
+         when others =>
+            null;
+      end case;
+      Wr_Line (";");
+   end Disp_Signal;
+
    procedure Disp_Architecture_Declarations (M : Module)
    is
       Map : Attr_Maps.Instance;
@@ -1558,30 +1595,11 @@ package body Netlists.Disp_Vhdl is
                      end case;
                   end if;
                   for N of Outputs_Iterate (Inst) loop
-                     if Id in Constant_Module_Id then
-                        Wr ("  constant ");
-                     else
-                        Wr ("  signal ");
+                     if Id < Id_User_None
+                       or else not Direct_Conn_Output (Inst, N)
+                     then
+                        Disp_Signal (Inst, N);
                      end if;
-                     Disp_Net_Name (N);
-                     Wr (" : ");
-                     Put_Type (Get_Width (N));
-                     case Id is
-                        when Id_Idff =>
-                           Wr (" := ");
-                           Disp_Constant_Inline
-                             (Get_Net_Parent (Get_Input_Net (Inst, 2)));
-                        when Id_Iadff =>
-                           Wr (" := ");
-                           Disp_Constant_Inline
-                             (Get_Net_Parent (Get_Input_Net (Inst, 4)));
-                        when Constant_Module_Id =>
-                           Wr (" := ");
-                           Disp_Constant_Inline (Inst);
-                        when others =>
-                           null;
-                     end case;
-                     Wr_Line (";");
                   end loop;
                end if;
          end case;
@@ -1643,11 +1661,13 @@ package body Netlists.Disp_Vhdl is
       begin
          Idx := 0;
          for I of Inputs (Self_Inst) loop
-            Wr ("  ");
-            Put_Name (Get_Output_Desc (M, Idx).Name);
-            Wr (" <= ");
-            Disp_Net_Name (Get_Driver (I));
-            Wr_Line (";");
+            if not Direct_Conn_Input (I) then
+               Wr ("  ");
+               Put_Name (Get_Output_Desc (M, Idx).Name);
+               Wr (" <= ");
+               Disp_Net_Name (Get_Driver (I));
+               Wr_Line (";");
+            end if;
             Idx := Idx + 1;
          end loop;
       end;

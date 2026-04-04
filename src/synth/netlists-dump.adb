@@ -309,7 +309,7 @@ package body Netlists.Dump is
          when Port_Out =>
             Wr ("output");
          when Port_Inout =>
-            raise Internal_Error;
+            Wr ("inout");
       end case;
       Wr (' ');
       Dump_Name (Desc.Name);
@@ -377,7 +377,7 @@ package body Netlists.Dump is
             Desc : constant Port_Desc := Get_Output_Desc (M, I - 1);
          begin
             Wr_Indent (Indent + 1);
-            Dump_Module_Port (Desc, Port_Out);
+            Dump_Module_Port (Desc, Desc.Dir);
             Dump_Port_Attributes
               (Desc, Get_Output_Port_First_Attribute (M, I - 1), Indent + 1);
          end;

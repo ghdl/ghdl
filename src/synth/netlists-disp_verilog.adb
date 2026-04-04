@@ -345,12 +345,22 @@ package body Netlists.Disp_Verilog is
                I := Get_First_Sink (O);
                if I /= No_Input then
                   --  Output is connected.
-                  Nop := Is_Nop_Drv (O);
-                  if Nop /= No_Net then
-                     --  Output has been renamed.
-                     Disp_Net_Name (Nop);
+                  if Direct_Conn_Output (Inst, O) then
+                     declare
+                        I_Inst : constant Instance := Get_Input_Parent (I);
+                        I_M : constant Module := Get_Module (I_Inst);
+                        I_Idx : constant Port_Idx := Get_Port_Idx (I);
+                     begin
+                        Put_Name (Get_Output_Desc (I_M, I_Idx).Name);
+                     end;
                   else
-                     Disp_Net_Name (O);
+                     Nop := Is_Nop_Drv (O);
+                     if Nop /= No_Net then
+                        --  Output has been renamed.
+                        Disp_Net_Name (Nop);
+                     else
+                        Disp_Net_Name (O);
+                     end if;
                   end if;
                end if;
             end;
@@ -1202,7 +1212,11 @@ package body Netlists.Disp_Verilog is
 
                   --  Display reg/wire for each output.
                   for N of Outputs_Iterate (Inst) loop
-                     Disp_Module_Output (Inst, Id, N);
+                     if Id < Id_User_None
+                       or else not Direct_Conn_Output (Inst, N)
+                     then
+                        Disp_Module_Output (Inst, Id, N);
+                     end if;
                   end loop;
                end if;
          end case;
@@ -1221,14 +1235,16 @@ package body Netlists.Disp_Verilog is
       begin
          Idx := 0;
          for I of Inputs (Self_Inst) loop
-            Desc := Get_Output_Desc (M, Idx);
-            if Desc.W /= 0 or Flag_Null_Wires then
-               Drv := Get_Driver (I);
-               Wr ("  assign ");
-               Put_Name (Desc.Name);
-               Wr (" = ");
-               Disp_Net_Name (Drv);
-               Wr_Line ("; //(module output)");
+            if not Direct_Conn_Input (I) then
+               Desc := Get_Output_Desc (M, Idx);
+               if Desc.W /= 0 or Flag_Null_Wires then
+                  Drv := Get_Driver (I);
+                  Wr ("  assign ");
+                  Put_Name (Desc.Name);
+                  Wr (" = ");
+                  Disp_Net_Name (Drv);
+                  Wr_Line ("; //(module output)");
+               end if;
             end if;
             Idx := Idx + 1;
          end loop;
