@@ -70,13 +70,29 @@ package body Netlists.Cleanup is
 
          case Get_Id (Inst) is
             when Id_Output
-              |  Id_Ioutput
-              |  Id_Port
-              |  Id_Enable
-              |  Id_Nop =>
+               | Id_Ioutput
+               | Id_Port
+               | Id_Enable
+               | Id_Nop =>
                --  Keep gates with an attribute.
                if not Has_Instance_Attribute (Inst) then
                   Remove_Output_Gate (Inst);
+               end if;
+            when Id_Inout =>
+               if Get_First_Sink (Get_Output (Inst, 0)) = No_Input then
+                  --  Direct value not connected.
+                  --  This means the inout port is only used as an output,
+                  --  so the intermediate inout gate can be removed.
+                  declare
+                     Oport : constant Net := Get_Output (Inst, 1);
+                     Mod_Port : constant Input := Get_First_Sink (Oport);
+                     Iport : constant Input := Get_Input (Inst, 0);
+                     Iport_Net : constant Net := Get_Driver (Iport);
+                  begin
+                     Disconnect (Mod_Port);
+                     Disconnect (Iport);
+                     Connect (Mod_Port, Iport_Net);
+                  end;
                end if;
             when others =>
                null;
