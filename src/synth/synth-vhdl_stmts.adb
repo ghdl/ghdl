@@ -5278,14 +5278,15 @@ package body Synth.Vhdl_Stmts is
                  Get_Sub_Instance (Syn_Inst, Obj);
                Sub_Inst : constant Instance := Get_Gate (Comp_Inst);
             begin
+               --  In case of no hierarchy kept, there might be no gate.
                if Sub_Inst /= No_Instance then
                   Synth_Attribute_Inst (Sub_Inst, Attr_Decl, Val);
-               else
-                  null;
                end if;
             end;
+         when Iir_Kind_Component_Declaration =>
+            --  Applied when the component is instantiated.
+            null;
          when others =>
-            --  TODO: components ?
             --  TODO: Interface_Signal ?  But no instance for them.
             Warning_Msg_Synth
               (Warnid_Unkept_Attribute,

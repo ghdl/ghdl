@@ -1802,6 +1802,30 @@ package body Synth.Vhdl_Insts is
       end if;
    end Synth_Design_Instantiation_Statement;
 
+   --  Apply attributes from COMPONENT to GATE.
+   procedure Apply_Component_Attributes (Syn_Inst : Synth_Instance_Acc;
+                                         Component : Node;
+                                         Gate : Instance)
+   is
+      Attr_Val : Node;
+      Attr_Decl : Node;
+      Attr_Spec : Node;
+      Val : Valtyp;
+   begin
+      Attr_Val := Get_Attribute_Value_Chain (Get_Parent (Component));
+      while Attr_Val /= Null_Node loop
+         if Get_Designated_Entity (Attr_Val) = Component then
+            Attr_Spec := Get_Attribute_Specification (Attr_Val);
+            Attr_Decl := Get_Named_Entity
+              (Get_Attribute_Designator (Attr_Spec));
+            Val := Get_Value (Syn_Inst, Attr_Val);
+            Synth_Attribute_Inst (Gate, Attr_Decl, Val);
+         end if;
+
+         Attr_Val := Get_Value_Chain (Attr_Val);
+      end loop;
+   end Apply_Component_Attributes;
+
    procedure Synth_Blackbox_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
@@ -1812,6 +1836,8 @@ package body Synth.Vhdl_Insts is
    begin
       Synth_Direct_Instantiation_Statement
         (Syn_Inst, Stmt, Sub_Inst, Comp, Null_Node, Null_Node);
+
+      Apply_Component_Attributes (Syn_Inst, Comp, Get_Gate (Sub_Inst));
    end Synth_Blackbox_Instantiation_Statement;
 
    procedure Create_Component_Wire (Ctxt : Context_Acc;
@@ -1956,6 +1982,8 @@ package body Synth.Vhdl_Insts is
                Get_Port_Map_Aspect_Chain (Bind));
             Synth_Instantiate_Module_Generics (Inst, Inst_Obj);
          end if;
+
+         Apply_Component_Attributes (Syn_Inst, Component, Inst);
 
          pragma Unreferenced (M);
 

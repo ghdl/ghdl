@@ -845,6 +845,7 @@ package Vhdl.Nodes is
    --  Chain of all attribute_value for the node containing declarations
    --   Get/Set_Value_Chain (Field0)
    --
+   --  The entity (as a declaration) on which the value applies.
    --   Get/Set_Designated_Entity (Field3)
    --
    --   Get/Set_Attribute_Specification (Field4)

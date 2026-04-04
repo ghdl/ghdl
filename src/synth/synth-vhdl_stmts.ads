@@ -132,6 +132,9 @@ package Synth.Vhdl_Stmts is
    procedure Synth_Attribute_Values
      (Syn_Inst : Synth_Instance_Acc; Unit : Node);
 
+   procedure Synth_Attribute_Inst
+     (Inst : Instance; Attr_Decl : Node; Val : Valtyp);
+
    procedure Synth_Verification_Unit (Syn_Inst : Synth_Instance_Acc;
                                       Unit : Node;
                                       Parent_Inst : Synth_Instance_Acc);
