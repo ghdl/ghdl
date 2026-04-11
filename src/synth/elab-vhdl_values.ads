@@ -212,6 +212,8 @@ package Elab.Vhdl_Values is
 
    function Create_Value_Record (Typ : Type_Acc; Pool : Areapool_Acc)
                                  return Value_Acc;
+
+   --  Note: the indexing convention is the memory one: left at index 0.
    function Create_Value_Array (Typ : Type_Acc; Pool : Areapool_Acc)
                                 return Value_Acc;
 
