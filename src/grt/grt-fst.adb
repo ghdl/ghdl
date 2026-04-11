@@ -610,7 +610,8 @@ package body Grt.Fst is
          when Vcd_Integer32 =>
             Fst_Put_Integer32 (Hand, Verilog_Wire_Val (V.Wire).E32);
          when Vcd_Float64 =>
-            null;
+            fstWriterEmitValueChange
+              (Context, Hand, Verilog_Wire_Val (V.Wire).F64'Address);
          when Vcd_Enum8 =>
             Fst_Put_Enum8 (Hand, Verilog_Wire_Val (V.Wire).E8, V.Wire.Rti);
          when Vcd_Bad
