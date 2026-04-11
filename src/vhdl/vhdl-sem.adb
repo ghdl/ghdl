@@ -505,6 +505,94 @@ package body Vhdl.Sem is
       Res := Sem_Generic_Association_Chain (Inter_Parent, Assoc_Parent);
    end Sem_Generic_Association_Chain;
 
+   function Get_Slice_Range_Staticness (Slice : Iir) return Iir_Staticness
+   is
+      Suffix : constant Iir := Get_Suffix (Slice);
+   begin
+      case Get_Kind (Suffix) is
+         when Iir_Kinds_Denoting_Name =>
+            return Get_Type_Staticness (Get_Type (Suffix));
+         when Iir_Kinds_Scalar_Subtype_Definition =>
+            return Get_Type_Staticness (Suffix);
+         when Iir_Kind_Range_Expression
+           | Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Reverse_Range_Array_Attribute =>
+            return Get_Expr_Staticness (Suffix);
+         when others =>
+            return Unknown;
+      end case;
+   end Get_Slice_Range_Staticness;
+
+   --  LRM08 6.5.6.3 Port clauses
+   --  If a formal signal port of mode IN is associated with an expression
+   --  that is not globally static and the formal is of an unconstrained or
+   --  partially constrained composite type requiring determination of index
+   --  ranges from the actual according to the rules of 5.3.2.2, then the
+   --  expression shall be one of the following:
+   procedure Check_Inertial_Association_Expr (Expr : Iir) is
+   begin
+      case Get_Kind (Expr) is
+         when Iir_Kinds_Denoting_Name =>
+            --  - The name of an object whose subtype is globally static
+            if Get_Type_Staticness (Get_Type (Expr)) = None then
+               Error_Msg_Sem
+                 (+Expr,
+                 "type of name must be static for this inertial association");
+            end if;
+         when Iir_Kind_Indexed_Name =>
+            --  - An indexed name whose prefix is one of the members of this
+            --    list
+            Check_Inertial_Association_Expr (Get_Prefix (Expr));
+         when Iir_Kind_Slice_Name =>
+            --  - A slice name whose prefix is one of the members of this list
+            --    and whose discrete range is a globally static discrete range
+            if Get_Slice_Range_Staticness (Expr) = None then
+               Error_Msg_Sem
+                 (+Expr,
+                  "range of slice must be static "
+                  & "for this inertial association");
+               return;
+            end if;
+            Check_Inertial_Association_Expr (Get_Prefix (Expr));
+         when Iir_Kind_Aggregate =>
+            --  - An aggregate, provided all choices are locally static and
+            --    all expressions in element associations are expressions
+            --    described in this list
+            --  TODO: this is a shortcut.
+            if Get_Type_Staticness (Get_Type (Expr)) = None then
+               Error_Msg_Sem
+                 (+Expr, "aggregate choices must be locally static "
+                 & "for this inertial association");
+            end if;
+         when Iir_Kind_Function_Call =>
+            --  - A function call whose return type mark denotes a globally
+            --    static subtype
+            if Get_Type_Staticness (Get_Type (Expr)) = None then
+               Error_Msg_Sem
+                 (+Expr, "type of function call must be static "
+                 & "for this inertial association");
+            end if;
+         when Iir_Kind_Qualified_Expression
+           | Iir_Kind_Type_Conversion =>
+            --  - A qualified expression or type conversion whose type mark
+            --    denotes a globally static subtype
+            if Get_Type_Staticness (Get_Type (Expr)) < Globally then
+               Error_Msg_Sem
+                 (+Expr,
+                 "type mark must be static for this inertial association");
+            end if;
+         when Iir_Kind_Parenthesis_Expression =>
+            --  - An expression described in this list and enclosed in
+            --    parentheses
+            Check_Inertial_Association_Expr (Get_Expression (Expr));
+         when others =>
+            Error_Msg_Sem
+              (+Expr,
+               "incorrect form of expression for "
+                &"unbounded inertial association");
+      end case;
+   end Check_Inertial_Association_Expr;
+
    function Sem_Signal_Port_Association
      (Assoc : Iir; Formal : Iir; Formal_Base : Iir) return Iir
    is
@@ -599,6 +687,9 @@ package body Vhdl.Sem is
                   --  LRM08 6.5.6.3 Port clauses
                   Error_Msg_Sem
                     (+Actual, "actual expression must be globally static");
+               elsif not Is_Object_Fully_Constrained (Formal) then
+                  --  LRM08 6.5.6.3 Port clauses
+                  Check_Inertial_Association_Expr (Actual);
                end if;
             end if;
          else
