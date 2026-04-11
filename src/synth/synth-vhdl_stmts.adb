@@ -134,8 +134,8 @@ package body Synth.Vhdl_Stmts is
          else
             Dest_Base :=
               (Typ => El_Typ,
-              Val => Dest_Base.Val.Arr.E
-              (Iir_Index32 (1 + Off.Mem_Off / El_Typ.Sz)));
+               Val => Dest_Base.Val.Arr.E (Iir_Index32
+                                           (1 + Off.Mem_Off / El_Typ.Sz)));
             Dest_Off := No_Value_Offsets;
          end if;
       elsif Voff = No_Net then

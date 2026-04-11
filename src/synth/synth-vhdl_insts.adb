@@ -2429,12 +2429,22 @@ package body Synth.Vhdl_Insts is
       Sub_Val : Valtyp;
    begin
       Sub_Val.Typ := Get_Array_Element_Multidim (Val.Typ);
-      for I in Val.Val.Arr.E'Range loop
-         Sub_Val.Val := Val.Val.Arr.E (I);
-         Create_Record_View_Wire
-           (Syn_Inst, Self_Inst, View, Reversed,
-            Input_Idx, Output_Idx, Sub_Val, Loc);
-      end loop;
+      case Val.Typ.Abound.Dir is
+         when Dir_To =>
+            for I in Val.Val.Arr.E'Range loop
+               Sub_Val.Val := Val.Val.Arr.E (I);
+               Create_Record_View_Wire
+                 (Syn_Inst, Self_Inst, View, Reversed,
+                 Input_Idx, Output_Idx, Sub_Val, Loc);
+            end loop;
+         when Dir_Downto =>
+            for I in reverse Val.Val.Arr.E'Range loop
+               Sub_Val.Val := Val.Val.Arr.E (I);
+               Create_Record_View_Wire
+                 (Syn_Inst, Self_Inst, View, Reversed,
+                 Input_Idx, Output_Idx, Sub_Val, Loc);
+            end loop;
+      end case;
    end Create_Array_View_Wire;
 
    procedure Create_Record_View_Wire (Syn_Inst : Synth_Instance_Acc;
