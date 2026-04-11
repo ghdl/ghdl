@@ -733,21 +733,16 @@ package body Simul.Vhdl_Elab is
       Typ : constant Type_Acc := Actual_Ep.Typ;
       El_Typ : constant Type_Acc := Get_Array_Element_Multidim (Typ);
       Alen : constant Iir_Index32 := Get_Array_Length_Multidim (Typ);
-      Sub_View : Iir;
-      Sub_Reversed : Boolean;
       Sub_Ep : Sub_Signal_Type;
    begin
       pragma Assert (Typ.Kind = Type_Array);
       pragma Assert (Is_Last_Dimension (Typ)); --  Because of offsets
 
-      Extract_Mode_View_Decl
-        (Get_Mode_View_Name (View), Sub_View, Sub_Reversed);
-      Sub_Reversed := Sub_Reversed xor Reversed;
       Sub_Ep := (Base => Actual_Ep.Base,
-                 Offs => Actual_Ep.Offs + (El_Typ.W, El_Typ.Sz),
+                 Offs => Actual_Ep.Offs,
                  Typ => El_Typ);
       for I in 1 .. Alen loop
-         Increment_Record_View_Nbr_Sources (Sub_View, Sub_Reversed, Sub_Ep);
+         Increment_Record_View_Nbr_Sources (View, Reversed, Sub_Ep);
          Sub_Ep.Offs := Sub_Ep.Offs + (El_Typ.W, El_Typ.Sz);
       end loop;
    end Increment_Array_View_Nbr_Sources;
@@ -784,7 +779,15 @@ package body Simul.Vhdl_Elab is
                     (Sub_Ind, Reversed xor Sub_Reversed, Sub_Ep);
                end;
             when Iir_Kind_Array_Mode_View_Element =>
-               Increment_Array_View_Nbr_Sources (View_El, Reversed, Sub_Ep);
+               declare
+                  Sub_Ind : Node;
+                  Sub_Reversed : Boolean;
+               begin
+                  Extract_Mode_View_Decl
+                    (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
+                  Increment_Array_View_Nbr_Sources
+                    (Sub_Ind, Reversed xor Sub_Reversed, Sub_Ep);
+               end;
          end case;
       end loop;
    end Increment_Record_View_Nbr_Sources;
