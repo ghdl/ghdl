@@ -1445,7 +1445,7 @@ package body Synth.Vhdl_Insts is
       El_Vt.Typ := Get_Array_Element (View_Vt.Typ);
 
       Sub_Act_Typ := Get_Array_Element (Act_Base.Typ);
-      Sub_Act_Off := No_Value_Offsets;
+      Sub_Act_Off := (Act_Base.Typ.W, Act_Base.Typ.Sz);
 
       --  TODO: multi-dim
       pragma Assert (Is_Last_Dimension (View_Vt.Typ));
@@ -1453,6 +1453,12 @@ package body Synth.Vhdl_Insts is
       for I in 1 .. Iir_Index32 (Bnd.Len) loop
          --  Formal
          El_Vt.Val := View_Vt.Val.Arr.E (I);
+
+         --  For view to signal assoc: next element.
+         --  Views (as Value_Array) are ordered from left to right, while
+         --  nets are ordered from right to left.
+         Sub_Act_Off := (Sub_Act_Off.Net_Off - Sub_Act_Typ.W,
+                         Sub_Act_Off.Mem_Off - Sub_Act_Typ.Sz);
 
          --  The actual can be a view or a signal.
          if Act_Base.Val.Kind = Value_Array then
@@ -1469,11 +1475,6 @@ package body Synth.Vhdl_Insts is
            (Syn_Inst, Inst, Act_Inst, View_Ind, Reversed, El_Vt,
            Sub_Act_Base, Sub_Act_Typ, Sub_Act_Off, Assoc,
            Input_Idx, Output_Idx);
-
-         if Act_Base.Val.Kind /= Value_Array then
-            --  For view to signal assoc: next element
-            Sub_Act_Off := Sub_Act_Off + (Sub_Act_Typ.W, Sub_Act_Typ.Sz);
-         end if;
       end loop;
    end Inst_Array_View_Connect;
 
@@ -2206,85 +2207,6 @@ package body Synth.Vhdl_Insts is
       return Inst_Obj.Syn_Inst;
    end Synth_Top_Entity;
 
-   procedure Create_Input_Wire (Syn_Inst : Synth_Instance_Acc;
-                                Self_Inst : Instance;
-                                Idx : in out Port_Idx;
-                                Val : Valtyp)
-   is
-      N : Net;
-   begin
-      pragma Assert (Val.Val.Kind = Value_Net);
-      --  Get the net from the port(s).
-      Inst_Output_Connect (Syn_Inst, Self_Inst, Idx, Val.Typ, N);
-      Set_Value_Net (Val.Val, N);
-   end Create_Input_Wire;
-
-   procedure Create_Output_Wire (Syn_Inst : Synth_Instance_Acc;
-                                 Self_Inst : Instance;
-                                 Inter : Node;
-                                 Idx : in out Port_Idx;
-                                 Val : Valtyp)
-   is
-      Ctxt      : constant Context_Acc := Get_Build (Syn_Inst);
-      Desc      : constant Port_Desc :=
-        Get_Output_Desc (Get_Module (Self_Inst), Idx);
-      Marker : Mark_Type;
-      Inter_Typ : Type_Acc;
-      Default : Node;
-      Value     : Net;
-      Vout      : Net;
-      Init      : Valtyp;
-      Init_Net  : Net;
-   begin
-      pragma Assert (Val.Val.Kind = Value_Wire);
-
-      --  Create a gate for the output, so that it could be read.
-      Set_Value_Wire (Val.Val, Alloc_Wire (Wire_Output, (Inter, Val.Typ)));
-      --  pragma Assert (Desc.W = Get_Type_Width (Val.Typ));
-
-      Init_Net := No_Net;
-      if Get_Kind (Inter) /= Iir_Kind_Interface_View_Declaration then
-         Default := Get_Default_Value (Inter);
-         if Default /= Null_Node then
-            Mark_Expr_Pool (Marker);
-            Inter_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Inter));
-            Init := Synth_Expression_With_Type (Syn_Inst, Default, Inter_Typ);
-            Init := Synth_Subtype_Conversion
-              (Syn_Inst, Init, Inter_Typ, False, Inter);
-            Init_Net := Get_Net (Ctxt, Init);
-            Release_Expr_Pool (Marker);
-         end if;
-      end if;
-
-      if Desc.Dir = Port_Inout then
-         declare
-            Io_Inst : Instance;
-         begin
-            if Init_Net /= No_Net then
-               Io_Inst := Builders.Build_Iinout (Ctxt, Val.Typ.W);
-               Connect (Get_Input (Io_Inst, 1), Init_Net);
-            else
-               Io_Inst := Builders.Build_Inout (Ctxt, Val.Typ.W);
-            end if;
-            --  Connect port1 of gate inout to the pin.
-            Vout := Get_Output (Io_Inst, 1);
-            --  And port0 of the gate will be use to read from the pin.
-            Value := Get_Output (Io_Inst, 0);
-         end;
-      else
-         if Init_Net /= No_Net then
-            Value := Builders.Build_Ioutput (Ctxt, Init_Net);
-         else
-            Value := Builders.Build_Output (Ctxt, Val.Typ.W);
-         end if;
-         Vout := Value;
-      end if;
-      Set_Location (Value, Inter);
-      Set_Wire_Gate (Get_Value_Wire (Val.Val), Value);
-
-      Inst_Input_Connect (Syn_Inst, Self_Inst, Idx, Val.Typ, Vout);
-   end Create_Output_Wire;
-
    procedure Synth_Verification_Units (Syn_Inst : Synth_Instance_Acc)
    is
       Extra : Synth_Instance_Acc;
@@ -2408,6 +2330,85 @@ package body Synth.Vhdl_Insts is
       end case;
    end Finalize_Package;
 
+   procedure Create_Input_Wire (Syn_Inst : Synth_Instance_Acc;
+                                Self_Inst : Instance;
+                                Idx : in out Port_Idx;
+                                Val : Valtyp)
+   is
+      N : Net;
+   begin
+      pragma Assert (Val.Val.Kind = Value_Net);
+      --  Get the net from the port(s).
+      Inst_Output_Connect (Syn_Inst, Self_Inst, Idx, Val.Typ, N);
+      Set_Value_Net (Val.Val, N);
+   end Create_Input_Wire;
+
+   procedure Create_Output_Wire (Syn_Inst : Synth_Instance_Acc;
+                                 Self_Inst : Instance;
+                                 Inter : Node;
+                                 Idx : in out Port_Idx;
+                                 Val : Valtyp)
+   is
+      Ctxt      : constant Context_Acc := Get_Build (Syn_Inst);
+      Desc      : constant Port_Desc :=
+        Get_Output_Desc (Get_Module (Self_Inst), Idx);
+      Marker : Mark_Type;
+      Inter_Typ : Type_Acc;
+      Default : Node;
+      Value     : Net;
+      Vout      : Net;
+      Init      : Valtyp;
+      Init_Net  : Net;
+   begin
+      pragma Assert (Val.Val.Kind = Value_Wire);
+
+      --  Create a gate for the output, so that it could be read.
+      Set_Value_Wire (Val.Val, Alloc_Wire (Wire_Output, (Inter, Val.Typ)));
+      --  pragma Assert (Desc.W = Get_Type_Width (Val.Typ));
+
+      Init_Net := No_Net;
+      if Get_Kind (Inter) /= Iir_Kind_Interface_View_Declaration then
+         Default := Get_Default_Value (Inter);
+         if Default /= Null_Node then
+            Mark_Expr_Pool (Marker);
+            Inter_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Inter));
+            Init := Synth_Expression_With_Type (Syn_Inst, Default, Inter_Typ);
+            Init := Synth_Subtype_Conversion
+              (Syn_Inst, Init, Inter_Typ, False, Inter);
+            Init_Net := Get_Net (Ctxt, Init);
+            Release_Expr_Pool (Marker);
+         end if;
+      end if;
+
+      if Desc.Dir = Port_Inout then
+         declare
+            Io_Inst : Instance;
+         begin
+            if Init_Net /= No_Net then
+               Io_Inst := Builders.Build_Iinout (Ctxt, Val.Typ.W);
+               Connect (Get_Input (Io_Inst, 1), Init_Net);
+            else
+               Io_Inst := Builders.Build_Inout (Ctxt, Val.Typ.W);
+            end if;
+            --  Connect port1 of gate inout to the pin.
+            Vout := Get_Output (Io_Inst, 1);
+            --  And port0 of the gate will be use to read from the pin.
+            Value := Get_Output (Io_Inst, 0);
+         end;
+      else
+         if Init_Net /= No_Net then
+            Value := Builders.Build_Ioutput (Ctxt, Init_Net);
+         else
+            Value := Builders.Build_Output (Ctxt, Val.Typ.W);
+         end if;
+         Vout := Value;
+      end if;
+      Set_Location (Value, Inter);
+      Set_Wire_Gate (Get_Value_Wire (Val.Val), Value);
+
+      Inst_Input_Connect (Syn_Inst, Self_Inst, Idx, Val.Typ, Vout);
+   end Create_Output_Wire;
+
    procedure Create_Record_View_Wire (Syn_Inst : Synth_Instance_Acc;
                                       Self_Inst : Instance;
                                       View : Node;
@@ -2429,22 +2430,14 @@ package body Synth.Vhdl_Insts is
       Sub_Val : Valtyp;
    begin
       Sub_Val.Typ := Get_Array_Element_Multidim (Val.Typ);
-      case Val.Typ.Abound.Dir is
-         when Dir_To =>
-            for I in Val.Val.Arr.E'Range loop
-               Sub_Val.Val := Val.Val.Arr.E (I);
-               Create_Record_View_Wire
-                 (Syn_Inst, Self_Inst, View, Reversed,
-                 Input_Idx, Output_Idx, Sub_Val, Loc);
-            end loop;
-         when Dir_Downto =>
-            for I in reverse Val.Val.Arr.E'Range loop
-               Sub_Val.Val := Val.Val.Arr.E (I);
-               Create_Record_View_Wire
-                 (Syn_Inst, Self_Inst, View, Reversed,
-                 Input_Idx, Output_Idx, Sub_Val, Loc);
-            end loop;
-      end case;
+      for I in Val.Val.Arr.E'Range loop
+         --  The ports are in the same order (left to right) than the
+         --  Value_Array.
+         Sub_Val.Val := Val.Val.Arr.E (I);
+         Create_Record_View_Wire
+           (Syn_Inst, Self_Inst, View, Reversed,
+           Input_Idx, Output_Idx, Sub_Val, Loc);
+      end loop;
    end Create_Array_View_Wire;
 
    procedure Create_Record_View_Wire (Syn_Inst : Synth_Instance_Acc;
