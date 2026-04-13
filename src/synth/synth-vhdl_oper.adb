@@ -678,28 +678,32 @@ package body Synth.Vhdl_Oper is
         (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Valtyp is
       begin
          return Synth_Compare_Xxx_Xxx
-           (Ctxt, Id, L.Typ.W, L, R, False, False, Res_Typ, Expr);
+           (Ctxt, Id, Width'Max (L.Typ.W, R.Typ.W),
+            L, R, False, False, Res_Typ, Expr);
       end Synth_Compare_Uns_Nat;
 
       function Synth_Compare_Nat_Uns
         (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Valtyp is
       begin
          return Synth_Compare_Xxx_Xxx
-           (Ctxt, Id, R.Typ.W, L, R, False, False, Res_Typ, Expr);
+           (Ctxt, Id, Width'Max (L.Typ.W, R.Typ.W),
+            L, R, False, False, Res_Typ, Expr);
       end Synth_Compare_Nat_Uns;
 
       function Synth_Compare_Sgn_Int
         (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Valtyp is
       begin
          return Synth_Compare_Xxx_Xxx
-           (Ctxt, Id, L.Typ.W, L, R, True, True, Res_Typ, Expr);
+           (Ctxt, Id, Width'Max (L.Typ.W, R.Typ.W),
+            L, R, True, True, Res_Typ, Expr);
       end Synth_Compare_Sgn_Int;
 
       function Synth_Compare_Int_Sgn
         (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Valtyp is
       begin
          return Synth_Compare_Xxx_Xxx
-           (Ctxt, Id, R.Typ.W, L, R, True, True, Res_Typ, Expr);
+           (Ctxt, Id, Width'Max (L.Typ.W, R.Typ.W),
+            L, R, True, True, Res_Typ, Expr);
       end Synth_Compare_Int_Sgn;
 
       --  For std_logic_arith
@@ -707,7 +711,8 @@ package body Synth.Vhdl_Oper is
         (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Valtyp is
       begin
          return Synth_Compare_Xxx_Xxx
-           (Ctxt, Id, L.Typ.W + 1, L, R, False, True, Res_Typ, Expr);
+           (Ctxt, Id, Width'Max (L.Typ.W + 1, R.Typ.W),
+            L, R, False, True, Res_Typ, Expr);
       end Synth_Compare_Uns_Int;
 
       --  For std_logic_arith
@@ -715,7 +720,8 @@ package body Synth.Vhdl_Oper is
         (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Valtyp is
       begin
          return Synth_Compare_Xxx_Xxx
-           (Ctxt, Id, R.Typ.W + 1, L, R, True, False, Res_Typ, Expr);
+           (Ctxt, Id, Width'Max (L.Typ.W, R.Typ.W + 1),
+            L, R, True, False, Res_Typ, Expr);
       end Synth_Compare_Int_Uns;
 
       function Synth_Vec_Dyadic (Id : Dyadic_Module_Id) return Valtyp
