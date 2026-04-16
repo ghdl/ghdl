@@ -1358,6 +1358,12 @@ package body Vhdl.Sem_Inst is
       end if;
    end Instantiate_Package_Declaration;
 
+   --  This procedure is called before instantiation of a package body or
+   --  architecture body when there are type or suprogram interfaces.
+   --
+   --  It redirects those interfaces to the actual types or subprograms so
+   --  that formal names will denote the actuals.
+   --
    --  Adjust references to interfaces:
    --  * references to an interface object are redirected to the instantiated
    --    interface object,
@@ -1372,26 +1378,12 @@ package body Vhdl.Sem_Inst is
                                                Inst_Parent : Iir;
                                                Map_Parent : Iir)
    is
+      pragma Unreferenced (Orig_Parent);
       Orig_El : Iir;
-      Inst_El : Iir;
       Inter_El : Iir;
       Inter_Assoc : Iir;
       Assoc_El : Iir;
    begin
-      --  In the arch/body, references to interface object are redirected to
-      --  the instantiated interface objects (of the entity or package spec).
-      Orig_El := Get_Generic_Chain (Orig_Parent);
-      Inst_El := Get_Generic_Chain (Inst_Parent);
-      while Is_Valid (Orig_El) loop
-         if Get_Kind (Orig_El)
-           not in Iir_Kinds_Interface_Subprogram_Declaration
-         then
-            Set_Instance (Orig_El, Inst_El);
-         end if;
-         Orig_El := Get_Chain (Orig_El);
-         Inst_El := Get_Chain (Inst_El);
-      end loop;
-
       --  In the arch/body, references to interface type are substitued to the
       --  mapped type.
       Assoc_El := Get_Generic_Map_Aspect_Chain (Map_Parent);
@@ -1400,8 +1392,9 @@ package body Vhdl.Sem_Inst is
          --  Note: INTER_ASSOC references the original node.
          Inter_El := Get_Association_Interface (Assoc_El, Inter_Assoc);
          Orig_El := Get_Origin (Inter_El);
-         case Get_Kind (Inter_El) is
+         case Iir_Kinds_Interface_Declaration (Get_Kind (Inter_El)) is
             when Iir_Kind_Interface_Type_Declaration =>
+               Set_Instance (Orig_El, Inter_El);
                --  Redirect the interface type definition.
                Set_Instance (Get_Interface_Type_Definition (Orig_El),
                              Get_Actual_Type (Assoc_El));
@@ -1430,9 +1423,20 @@ package body Vhdl.Sem_Inst is
                end if;
 
             when Iir_Kind_Interface_Constant_Declaration =>
-               null;
-            when others =>
-               --  TODO.
+               --  In the arch/body, references to interface object are
+               --  redirected to  the instantiated interface objects
+               --  (of the entity or package spec).
+               Set_Instance (Orig_El, Inter_El);
+            when Iir_Kind_Interface_Package_Declaration =>
+               --  TODO
+               raise Internal_Error;
+            when Iir_Kind_Interface_Variable_Declaration
+              | Iir_Kind_Interface_File_Declaration
+              | Iir_Kind_Interface_Signal_Declaration
+              | Iir_Kind_Interface_View_Declaration
+              | Iir_Kind_Interface_Quantity_Declaration
+              | Iir_Kind_Interface_Terminal_Declaration =>
+               --  Cannot be used as generics.
                raise Internal_Error;
          end case;
          Next_Association_Interface (Assoc_El, Inter_Assoc);
