@@ -1043,7 +1043,7 @@ package body Vhdl.Sem_Inst is
    --  references to the instance, so that any name designating an interface
    --  is substitued by the instance.
    --  INTER is the interface of the instantiated unit.
-   procedure Instantiate_Generic_Map (Assoc : Iir; Inter: Iir)
+   procedure Set_Instance_On_Generic_Map (Assoc : Iir; Inter: Iir)
    is
       Orig_Inter : constant Iir := Get_Origin (Inter);
    begin
@@ -1144,7 +1144,7 @@ package body Vhdl.Sem_Inst is
          when others =>
             Error_Kind ("instantiate_generic_map", Assoc);
       end case;
-   end Instantiate_Generic_Map;
+   end Set_Instance_On_Generic_Map;
 
    --  Like Get_Interface_Of_Formal, but also change it to the instantiated
    --  interface.
@@ -1174,9 +1174,9 @@ package body Vhdl.Sem_Inst is
 
    --  INST is the package/subprogram instantiation declaration.
    --  (or the instantiated package interface - TBC)
-   procedure Instantiate_Generic_Map_Chain (Inter_Parent : Iir;
-                                            Map_Parent : Iir;
-                                            Pkg : Iir)
+   procedure Set_Instance_On_Generic_Map_Chain (Inter_Parent : Iir;
+                                                Map_Parent : Iir;
+                                                Pkg : Iir)
    is
       pragma Unreferenced (Pkg);
       Assoc, Inter : Iir;
@@ -1198,11 +1198,11 @@ package body Vhdl.Sem_Inst is
          end if;
          --  In case of error...
          if Inter /= Null_Iir then
-            Instantiate_Generic_Map (Assoc, Inter);
+            Set_Instance_On_Generic_Map (Assoc, Inter);
          end if;
          Next_Association_Interface (Assoc, Inter_Iter);
       end loop;
-   end Instantiate_Generic_Map_Chain;
+   end Set_Instance_On_Generic_Map_Chain;
 
    function Copy_Tree (Orig : Iir) return Iir
    is
@@ -1241,7 +1241,7 @@ package body Vhdl.Sem_Inst is
       Set_Generic_Chain
         (Inst,
          Instantiate_Generic_Chain (Inst, Get_Generic_Chain (Subprg), True));
-      Instantiate_Generic_Map_Chain (Inst, Inst, Subprg);
+      Set_Instance_On_Generic_Map_Chain (Inst, Inst, Subprg);
       if Get_Kind (Inst) = Iir_Kind_Function_Instantiation_Declaration then
          Set_Return_Type (Inst,
                           Instantiate_Iir (Get_Return_Type (Subprg), True));
@@ -1280,7 +1280,7 @@ package body Vhdl.Sem_Inst is
       Set_Generic_Chain (Inter,
                          Instantiate_Generic_Chain
                            (Inter, Get_Generic_Chain (Header), Is_Inter));
-      Instantiate_Generic_Map_Chain (Inter, Inter, Pkg);
+      Set_Instance_On_Generic_Map_Chain (Inter, Inter, Pkg);
       Set_Declaration_Chain
         (Inter, Instantiate_Iir_Chain (Get_Declaration_Chain (Pkg)));
       Set_Attribute_Value_Chain
@@ -1594,7 +1594,7 @@ package body Vhdl.Sem_Inst is
       Set_Generic_Chain
         (Inst,
          Instantiate_Generic_Chain (Inst, Get_Generic_Chain (Comp), True));
-      Instantiate_Generic_Map_Chain (Inst, Map_Parent, Null_Iir);
+      Set_Instance_On_Generic_Map_Chain (Inst, Map_Parent, Null_Iir);
 
       Set_Port_Chain
         (Inst, Instantiate_Iir_Chain (Get_Port_Chain (Comp)));
