@@ -58,7 +58,7 @@ use STD.TEXTIO.all;
 
 package NUMERIC_BIT is
   constant CopyRightNotice : STRING
-    := "Copyright © 2008 IEEE. All rights reserved.";
+    := "Copyright 2008 IEEE. All rights reserved.";
 
   --============================================================================
   -- Numeric Array Type Definitions

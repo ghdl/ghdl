@@ -68,7 +68,7 @@ use IEEE.STD_LOGIC_1164.all;
 
 package NUMERIC_STD is
   constant CopyRightNotice : STRING
-    := "Copyright © 2008 IEEE. All rights reserved.";
+    := "Copyright 2008 IEEE. All rights reserved.";
 
 
   --============================================================================
