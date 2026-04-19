@@ -732,7 +732,7 @@ package body Netlists.Disp_Vhdl is
       Depth := Get_Width (Ports) / Data_W;
 
       --  Declare the memory.
-      Disp_Template ("    type \l0_type is array (0 to \n0)" & NL,
+      Disp_Template ("    type mem_type is array (0 to \n0)" & NL,
                      Mem, (0 => Depth - 1));
       if Data_W = 1 then
          Disp_Template ("      of std_logic;" & NL, Mem);
@@ -740,7 +740,7 @@ package body Netlists.Disp_Vhdl is
          Disp_Template ("      of std_logic_vector (\n0 downto 0);" & NL,
                         Mem, (0 => Data_W - 1));
       end if;
-      Disp_Template ("    variable \l0 : \l0_type", Mem);
+      Disp_Template ("    variable \l0 : mem_type", Mem);
       if Get_Id (Mem) = Id_Memory_Init then
          declare
             Val : Net;
