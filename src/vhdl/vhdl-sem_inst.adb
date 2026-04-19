@@ -1651,10 +1651,10 @@ package body Vhdl.Sem_Inst is
       --  Redirect references to interfaces.
       Instantiate_Interface_References (Ent_Orig, Ent, Map_Parent);
 
-      --  Hummm.
+      --  References to the ports will reference the instantiated entity.
       Set_Instance_On_Chain
         (Get_Port_Chain (Ent_Orig), Get_Port_Chain (Ent));
-
+      --  Likewise for declarations in the entity.
       Set_Instance_On_Chain
         (Get_Declaration_Chain (Ent_Orig), Get_Declaration_Chain (Ent));
 
