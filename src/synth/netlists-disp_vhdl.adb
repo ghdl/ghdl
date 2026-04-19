@@ -1631,7 +1631,11 @@ package body Netlists.Disp_Vhdl is
                Attr := Attrs;
                while Attr /= No_Attribute loop
                   Disp_Attribute_Decl_Maybe (Attr, Map);
-                  Disp_Attribute (Attr, Sig_Name, "signal");
+                  if Get_Id (Inst) >= Id_User_None then
+                     Disp_Attribute (Attr, Sig_Name, "label");
+                  else
+                     Disp_Attribute (Attr, Sig_Name, "signal");
+                  end if;
                   Attr := Get_Attribute_Next (Attr);
                end loop;
             end;
