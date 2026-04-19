@@ -29,6 +29,7 @@ with Vhdl.Utils; use Vhdl.Utils;
 
 with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 
+with Netlists.Utils;
 with Netlists.Iterators; use Netlists.Iterators;
 with Netlists.Disp_Vhdl; use Netlists.Disp_Vhdl;
 with Netlists.Disp_Common; use Netlists.Disp_Common;
@@ -625,15 +626,9 @@ package body Synth.Disp_Vhdl is
      (Ent : Node; Top : Module; Inst : Synth_Instance_Acc)
    is
       Unit : constant Node := Get_Design_Unit (Ent);
-      Main : Module;
+      Main : constant Module := Netlists.Utils.Extract_Main_User_Module (Top);
       Inter : Node;
    begin
-      --  Extract the first user submodule.
-      Main := Get_First_Sub_Module (Top);
-      while Get_Id (Main) < Id_User_None loop
-         Main := Get_Next_Sub_Module (Main);
-      end loop;
-
       --  Ports with a floating point type are not supported.
       Inter := Get_Port_Chain (Ent);
       while Inter /= Null_Node loop
@@ -650,44 +645,8 @@ package body Synth.Disp_Vhdl is
       --  Disp the original design unit.
       Vhdl.Prints.Disp_Vhdl (Unit);
 
-      --  Disp sub-units (in reverse order).
-      declare
-         M : Module;
-         Num : Natural;
-      begin
-         --  Count number of modules.
-         Num := 0;
-         M := Get_Next_Sub_Module (Main);
-         while M /= No_Module loop
-            if Get_Id (M) >= Id_User_None then
-               Num := Num + 1;
-            end if;
-            M := Get_Next_Sub_Module (M);
-         end loop;
-
-         --  Fill array of modules, display.
-         declare
-            type Module_Array is array (1 .. Num) of Module;
-            Modules : Module_Array;
-         begin
-            Num := 0;
-            M := Get_Next_Sub_Module (Main);
-            while M /= No_Module loop
-               if Get_Id (M) >= Id_User_None then
-                  Num := Num + 1;
-                  Modules (Num) := M;
-               end if;
-               M := Get_Next_Sub_Module (M);
-            end loop;
-
-            for I in reverse Modules'Range loop
-               --  Skip blackboxes.
-               if Get_Self_Instance (Modules (I)) /= No_Instance then
-                  Netlists.Disp_Vhdl.Disp_Vhdl (Modules (I), False);
-               end if;
-            end loop;
-         end;
-      end;
+      --  Disp sub-units.
+      Disp_Vhdl_Submodules (Main);
       Wr_Line;
 
       --  Rename ports.

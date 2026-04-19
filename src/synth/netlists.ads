@@ -263,6 +263,9 @@ package Netlists is
    procedure Set_Params_Desc (M : Module;
                               Params : Param_Desc_Array);
 
+   --  Get the index of the last module.  Can be used to create tables.
+   function Get_Last_Module return Module;
+
    --  Be sure the record is passed by reference.
    pragma Convention (C, Set_Input_Desc);
    pragma Convention (C, Set_Output_Desc);

@@ -284,6 +284,18 @@ package body Netlists.Utils is
       end loop;
    end Copy_Instance_Attributes;
 
+   --  Extract the first user submodule.
+   function Extract_Main_User_Module (Top : Module) return Module
+   is
+      Main : Module;
+   begin
+      Main := Get_First_Sub_Module (Top);
+      while Get_Id (Main) < Id_User_None loop
+         Main := Get_Next_Sub_Module (Main);
+      end loop;
+      return Main;
+   end Extract_Main_User_Module;
+
    function Clog2 (W : Width) return Width is
    begin
       return Uns32 (Mutils.Clog2 (Uns64 (W)));

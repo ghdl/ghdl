@@ -472,7 +472,7 @@ package body Ghdlsynth is
             if Get_Kind (Get_Library_Unit (Config)) = Iir_Kind_Foreign_Module
             then
                --  Not a VHDL design.
-               Netlists.Disp_Vhdl.Disp_Vhdl (Top);
+               Netlists.Disp_Vhdl.Disp_Vhdl_Hierarchy (Top);
             else
                Ent := Vhdl.Utils.Get_Entity_From_Configuration (Config);
                Synth.Disp_Vhdl.Disp_Vhdl_Wrapper (Ent, Top, Inst);
@@ -480,7 +480,7 @@ package body Ghdlsynth is
          when Format_Raw_Vhdl
            | Format_Raw_Vhdl_Ieee =>
             Netlists.Disp_Vhdl.Flag_Flavour_Sim := Format = Format_Raw_Vhdl;
-            Netlists.Disp_Vhdl.Disp_Vhdl (Top);
+            Netlists.Disp_Vhdl.Disp_Vhdl_Hierarchy (Top);
          when Format_Verilog =>
             Netlists.Rename.Rename_Module
               (Res.Builder, Top, Language_Verilog);

@@ -279,6 +279,11 @@ package body Netlists is
       return Res;
    end New_User_Module;
 
+   function Get_Last_Module return Module is
+   begin
+      return Modules_Table.Last;
+   end Get_Last_Module;
+
    function Get_Module_Name (M : Module) return Sname is
    begin
       pragma Assert (Is_Valid (M));

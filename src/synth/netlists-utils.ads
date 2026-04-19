@@ -98,6 +98,11 @@ package Netlists.Utils is
    --  Copy attribtues of SRC to DEST.
    procedure Copy_Instance_Attributes (Dest : Instance; Src : Instance);
 
+   --  Extract the first user submodule from TOP.
+   --  (TOP is the Id_Top module, which contains all predefined modules and
+   --   user modules).
+   function Extract_Main_User_Module (Top : Module) return Module;
+
    --  Used at many places.
    package Net_Tables is new Dyn_Tables
      (Table_Component_Type => Net,

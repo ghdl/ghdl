@@ -208,8 +208,10 @@ package body Netlists.Disp_Vhdl is
    is
       Imod : constant Module := Get_Module (Inst);
       Id : constant Module_Id := Get_Id (Imod);
+      Max_Inp_Idx : constant Port_Idx := Get_Nbr_Inputs (Imod);
+      Max_Out_Idx : constant Port_Idx := Get_Nbr_Outputs (Imod);
+      Has_Ports : constant Boolean := Max_Inp_Idx + Max_Out_Idx > 0;
       Idx : Port_Idx;
-      Max_Idx : Port_Idx;
       Name : Sname;
       First : Boolean;
       Param : Param_Desc;
@@ -265,68 +267,73 @@ package body Netlists.Disp_Vhdl is
             end case;
          end loop;
          Wr_Line (")");
-         Wr_Line ("    port map (");
-      else
-         Wr_Line (" port map (");
+         if Has_Ports then
+            Wr ("   ");
+         end if;
       end if;
 
-      First := True;
-      --  Inputs
-      Idx := 0;
-      Max_Idx := Get_Nbr_Inputs (Imod);
-      for I of Inputs (Inst) loop
-         if First then
-            First := False;
-         else
-            Wr_Line (",");
-         end if;
-         Wr ("    ");
-         if Idx < Max_Idx then
+      if Has_Ports then
+         Wr_Line (" port map (");
+
+         First := True;
+         --  Inputs
+         Idx := 0;
+         for I of Inputs (Inst) loop
+            if First then
+               First := False;
+            else
+               Wr_Line (",");
+            end if;
+            Wr ("    ");
+            if Idx < Max_Inp_Idx then
+               Put_Interface_Name
+                 (Get_Input_Desc (Imod, Idx).Name, Language_Vhdl);
+               Idx := Idx + 1;
+               Wr (" => ");
+            end if;
+            Drv := Get_Driver (I);
+            Drv_Inst := Get_Net_Parent (Drv);
+            if Get_Id (Drv_Inst) in Constant_Module_Id then
+               Disp_Constant_Inline (Drv_Inst);
+            else
+               Disp_Net_Name (Drv);
+            end if;
+         end loop;
+         --  Outputs
+         Idx := 0;
+         for O of Outputs_Iterate (Inst) loop
+            if First then
+               First := False;
+            else
+               Wr_Line (",");
+            end if;
+            Wr ("    ");
             Put_Interface_Name
-              (Get_Input_Desc (Imod, Idx).Name, Language_Vhdl);
+              (Get_Output_Desc (Imod, Idx).Name, Language_Vhdl);
             Idx := Idx + 1;
             Wr (" => ");
-         end if;
-         Drv := Get_Driver (I);
-         Drv_Inst := Get_Net_Parent (Drv);
-         if Get_Id (Drv_Inst) in Constant_Module_Id then
-            Disp_Constant_Inline (Drv_Inst);
-         else
-            Disp_Net_Name (Drv);
-         end if;
-      end loop;
-      --  Outputs
-      Idx := 0;
-      for O of Outputs_Iterate (Inst) loop
-         if First then
-            First := False;
-         else
-            Wr_Line (",");
-         end if;
-         Wr ("    ");
-         Put_Interface_Name (Get_Output_Desc (Imod, Idx).Name, Language_Vhdl);
-         Idx := Idx + 1;
-         Wr (" => ");
-         declare
-            I : Input;
-         begin
-            I := Get_First_Sink (O);
-            if I = No_Input then
-               Wr ("open");
-            elsif Direct_Conn_Output (Inst, O) then
-               declare
-                  I_Inst : constant Instance := Get_Input_Parent (I);
-                  I_M : constant Module := Get_Module (I_Inst);
-                  I_Idx : constant Port_Idx := Get_Port_Idx (I);
-               begin
-                  Put_Name (Get_Output_Desc (I_M, I_Idx).Name);
-               end;
-            else
-               Disp_Net_Name (O);
-            end if;
-         end;
-      end loop;
-      Wr_Line (");");
+            declare
+               I : Input;
+            begin
+               I := Get_First_Sink (O);
+               if I = No_Input then
+                  Wr ("open");
+               elsif Direct_Conn_Output (Inst, O) then
+                  declare
+                     I_Inst : constant Instance := Get_Input_Parent (I);
+                     I_M : constant Module := Get_Module (I_Inst);
+                     I_Idx : constant Port_Idx := Get_Port_Idx (I);
+                  begin
+                     Put_Name (Get_Output_Desc (I_M, I_Idx).Name);
+                  end;
+               else
+                  Disp_Net_Name (O);
+               end if;
+            end;
+         end loop;
+         Wr (")");
+      end if;
+      Wr_Line (";");
    end Disp_Instance_Gate;
 
    procedure Disp_Memory_Init_Full (W : Width; Val : Character) is
@@ -1853,45 +1860,63 @@ package body Netlists.Disp_Vhdl is
       Attr_Maps.Free (Map);
    end Disp_Entity;
 
-   procedure Disp_Vhdl (M : Module; Is_Top : Boolean) is
+   type Module_Array is array (Natural range <>) of Module;
+   type Flag_Array is array (Module range <>) of Boolean;
+
+   procedure Order_Modules (Modules : in out Module_Array;
+                            Flags : in out Flag_Array;
+                            Pos : in out Natural;
+                            M : Module)
+   is
+      Sub : Module;
+      Inst : Instance;
    begin
-      --  Disp in reverse order.
-      declare
-         Num : Natural;
-      begin
-         Num := 0;
-         for S of Sub_Modules (M) loop
-            if Get_Id (S) >= Id_User_None then
-               Num := Num + 1;
-            end if;
-         end loop;
-
-         declare
-            type Module_Array is array (1 .. Num) of Module;
-            Modules : Module_Array;
-         begin
-            Num := 0;
-            for S of Sub_Modules (M) loop
-               if Get_Id (S) >= Id_User_None then
-                  Num := Num + 1;
-                  Modules (Num) := S;
-               end if;
-            end loop;
-
-            for I in reverse Modules'Range loop
-               Disp_Vhdl (Modules (I), False);
-            end loop;
-         end;
-      end;
-
-      if not Is_Top then
-         Disp_Entity (M);
-         Disp_Architecture (M);
-      end if;
-   end Disp_Vhdl;
+      Inst := Get_First_Instance (M);
+      while Inst /= No_Instance loop
+         Sub := Get_Module (Inst);
+         if Get_Id (Sub) >= Id_User_None
+           and then not Flags (Sub)
+         then
+            Flags (Sub) := True;
+            Order_Modules (Modules, Flags, Pos, Sub);
+         end if;
+         Inst := Get_Next_Instance (Inst);
+      end loop;
+      Pos := Pos + 1;
+      Modules (Pos) := M;
+   end Order_Modules;
 
    procedure Disp_Vhdl (M : Module) is
    begin
-      Disp_Vhdl (M, True);
+      Disp_Entity (M);
+      Disp_Architecture (M);
    end Disp_Vhdl;
+
+   --  Disp sub-units (in reverse order).
+   procedure Disp_Vhdl_Submodules (Top : Module)
+   is
+      First : constant Module := No_Module;
+      Last : constant Module := Get_Last_Module;
+
+      Modules : Module_Array (1 .. Natural (Last - First + 1));
+      Flags : Flag_Array (First .. Last) := (others => False);
+      Pos : Natural := 0;
+   begin
+      Order_Modules (Modules, Flags, Pos, Top);
+
+      for I in 1 .. Pos - 1 loop
+         --  Skip blackboxes.
+         if Get_Self_Instance (Modules (I)) /= No_Instance then
+            Disp_Vhdl (Modules (I));
+         end if;
+      end loop;
+   end Disp_Vhdl_Submodules;
+
+   procedure Disp_Vhdl_Hierarchy (Top : Module)
+   is
+      Main : constant Module := Extract_Main_User_Module (Top);
+   begin
+      Disp_Vhdl_Submodules (Main);
+      Disp_Vhdl (Main);
+   end Disp_Vhdl_Hierarchy;
 end Netlists.Disp_Vhdl;

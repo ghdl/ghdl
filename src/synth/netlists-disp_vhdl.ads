@@ -20,12 +20,15 @@ package Netlists.Disp_Vhdl is
    --  Simulation flavour: avoid potential overflow/bound errors
    Flag_Flavour_Sim : Boolean := True;
 
-   procedure Disp_Vhdl (M : Module);
+   --  Display all the submodules of TOP (but not TOP).
+   procedure Disp_Vhdl_Submodules (Top : Module);
+
+   --  Display the top user module and its submodules.
+   --  (TOP is the Id_Top module).
+   procedure Disp_Vhdl_Hierarchy (Top : Module);
 
    procedure Disp_Architecture_Declarations (M : Module);
    procedure Disp_Architecture_Statements (M : Module);
 
    procedure Put_Type (W : Width);
-
-   procedure Disp_Vhdl (M : Module; Is_Top : Boolean);
 end Netlists.Disp_Vhdl;
