@@ -202,23 +202,6 @@ package body Ghdllocal is
       return Get_Basename_Pos (Pathname) < Pathname'First;
    end Is_Basename;
 
-   --  Simple lower case conversion, used to compare with "bin".
-   function To_Lower (S : String) return String
-   is
-      Res : String (S'Range);
-      C : Character;
-   begin
-      for I in S'Range loop
-         C := S (I);
-         if C >= 'A' and then C <= 'Z' then
-            C := Character'Val
-              (Character'Pos (C) - Character'Pos ('A') + Character'Pos ('a'));
-         end if;
-         Res (I) := C;
-      end loop;
-      return Res;
-   end To_Lower;
-
    procedure Set_Prefix_From_Program_Path (Prog_Path : String)
    is
       Last : Natural;
@@ -310,13 +293,26 @@ package body Ghdllocal is
          --  Remove last '/'
          Last := Last - 1;
 
-         --  Skip '/bin' directory if present
+         --  Skip binaries directory (like '/bin') if present
          Pos := Get_Basename_Pos (Pathname (Pathname'First .. Last));
          if Pos < Pathname'First then
             return;
          end if;
-         if To_Lower (Pathname (Pos + 1 .. Last)) = "bin" then
+         if Is_Directory (Pathname (Pathname'First .. Pos)
+                          & Get_Directory_Separator & "lib"
+                          & Get_Directory_Separator & "ghdl")
+         then
+            --  Usual installation: from 'PREFIX/bin/ghdl' to 'PREFIX'
             Last := Pos - 1;
+         elsif Is_Directory (Pathname (Pathname'First .. Last)
+                             & Get_Directory_Separator & "lib"
+                             & Get_Directory_Separator & "ghdl")
+         then
+            --  Running from build dir: 'SRCDIR/ghdl' to 'SRCDIR'
+            null;
+         else
+            --  Unhandled
+            return;
          end if;
 
          Exec_Prefix := new String'(Pathname (Pathname'First .. Last));
