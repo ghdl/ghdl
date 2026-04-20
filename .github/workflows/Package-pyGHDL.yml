@@ -84,7 +84,7 @@ jobs:
           python -m pip install --disable-pip-version-check "pyTooling[packaging]" wheel
 
       - name: 📥 Download artifacts '${{ inputs.libghdl_artifact }}-${{ inputs.backend }}' from 'Build' job
-        uses: pyTooling/download-artifact@v7
+        uses: pyTooling/download-artifact@v8
         with:
           name: ${{ inputs.libghdl_artifact }}-${{ inputs.backend }}
           path: install
@@ -109,7 +109,7 @@ jobs:
         run: python setup.py bdist_wheel
 
       - name: '📤 Upload artifact: ${{ inputs.pyghdl_artifact }}'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.pyghdl_artifact }}
           path: dist/pyghdl*.whl
@@ -199,7 +199,7 @@ jobs:
           python-version: ${{ inputs.python_version }}
 
       - name: 📥 Download artifacts '${{ inputs.pyghdl_artifact }}' from 'Package' job
-        uses: pyTooling/download-artifact@v7
+        uses: pyTooling/download-artifact@v8
         with:
           name: ${{ inputs.pyghdl_artifact }}
           path: wheels
@@ -376,7 +376,7 @@ jobs:
 # Upload test result artifacts
 
       - name: 📤 Upload 'TestReportSummary.xml' artifact
-        uses: pyTooling/upload-artifact@v6
+        uses: pyTooling/upload-artifact@v7
         if: inputs.unittest_xml_artifact != ''
         continue-on-error: true
         with:
@@ -389,7 +389,7 @@ jobs:
 #      - name: 📤 Upload 'Unit Tests HTML Report' artifact
 #        if: inputs.unittest_html_artifact != ''
 #        continue-on-error: true
-#        uses: pyTooling/upload-artifact@v6
+#        uses: pyTooling/upload-artifact@v7
 #        with:
 #          name: ${{ inputs.unittest_html_artifact }}-${{ inputs.python_version }}
 #          path: ${{ steps.getVariables.outputs.unittest_report_html_directory }}

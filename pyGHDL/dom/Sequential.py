@@ -571,7 +571,8 @@ class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
         sensitivityList = None
         sensitivityListNode = nodes.Get_Sensitivity_List(waitNode)
         if sensitivityListNode is not nodes.Null_Iir:
-            print(GetIirKindOfNode(sensitivityListNode))
+            pass
+            # print(f"WaitStatement: wait on {GetIirKindOfNode(sensitivityListNode)}")
 
         conditionNode = nodes.Get_Condition_Clause(waitNode)
         condition = None if conditionNode is nodes.Null_Iir else GetExpressionFromNode(conditionNode)
