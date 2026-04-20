@@ -376,7 +376,7 @@ jobs:
 # Upload test result artifacts
 
       - name: 📤 Upload 'TestReportSummary.xml' artifact
-        uses: pyTooling/upload-artifact@v6
+        uses: pyTooling/upload-artifact@v7
         if: inputs.unittest_xml_artifact != ''
         continue-on-error: true
         with:
@@ -389,7 +389,7 @@ jobs:
 #      - name: 📤 Upload 'Unit Tests HTML Report' artifact
 #        if: inputs.unittest_html_artifact != ''
 #        continue-on-error: true
-#        uses: pyTooling/upload-artifact@v6
+#        uses: pyTooling/upload-artifact@v7
 #        with:
 #          name: ${{ inputs.unittest_html_artifact }}-${{ inputs.python_version }}
 #          path: ${{ steps.getVariables.outputs.unittest_report_html_directory }}

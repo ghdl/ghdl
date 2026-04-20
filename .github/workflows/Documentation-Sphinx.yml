@@ -92,7 +92,7 @@ jobs:
           make html
 
       - name: '📤 Upload artifact: HTML'
-        uses: pyTooling/upload-artifact@v6
+        uses: pyTooling/upload-artifact@v7
         if: inputs.html_artifact != ''
         with:
           name: ${{ inputs.html_artifact }}
@@ -143,7 +143,7 @@ jobs:
           make latex
 
       - name: '📤 Upload artifact: LaTeX'
-        uses: pyTooling/upload-artifact@v6
+        uses: pyTooling/upload-artifact@v7
         if: inputs.latex_artifact != ''
         with:
           name: ${{ inputs.latex_artifact }}
@@ -172,7 +172,7 @@ jobs:
           root_file: ${{ inputs.latex_document }}.tex
 
       - name: 📤 Upload 'PDF Documentation' artifact
-        uses: pyTooling/upload-artifact@v6
+        uses: pyTooling/upload-artifact@v7
         if: inputs.pdf_artifact != ''
         with:
           name: ${{ inputs.pdf_artifact }}
