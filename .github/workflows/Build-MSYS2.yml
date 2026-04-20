@@ -504,7 +504,7 @@ jobs:
           pacboy: "diffutils:p"
 
       - name: 📥 Download artifacts '${{ needs.Build.outputs.pacman_artifact }}' from 'Package' job
-        uses: pyTooling/download-artifact@v7
+        uses: pyTooling/download-artifact@v8
         with:
           name: ${{ needs.Build.outputs.pacman_artifact }}
           path: pacman
@@ -542,7 +542,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: 📥 Download artifacts '${{ needs.Build.outputs.windows_artifact }}' from 'Package' job
-        uses: pyTooling/download-artifact@v7
+        uses: pyTooling/download-artifact@v8
         with:
           name: ${{ needs.Build.outputs.windows_artifact }}
           path: install
