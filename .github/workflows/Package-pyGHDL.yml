@@ -109,7 +109,7 @@ jobs:
         run: python setup.py bdist_wheel
 
       - name: '📤 Upload artifact: ${{ inputs.pyghdl_artifact }}'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.pyghdl_artifact }}
           path: dist/pyghdl*.whl
