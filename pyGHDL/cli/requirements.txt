@@ -1,3 +1,3 @@
 -r ../dom/requirements.txt
 
-pyTooling[terminal] ~= 8.12
+pyTooling[terminal] ~= 8.14
