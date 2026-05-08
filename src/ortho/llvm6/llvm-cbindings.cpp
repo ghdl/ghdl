@@ -111,6 +111,7 @@ static LLVMValueRef Fp0_5;
 #ifdef USE_ATTRIBUTES
 static LLVMAttributeRef NounwindAttr;
 static LLVMAttributeRef UwtableAttr;
+static LLVMAttributeRef SignExtAttr;
 #endif
 
 static bool Unreach;
@@ -130,6 +131,9 @@ static DIScope *DebugCurrentScope;
 
 static DIBuilder *DBuilder;
 #endif
+
+/* Set signext attribute on signed scalar parameters */
+static bool AbiSignExt;
 
 extern "C" void
 set_optimization_level (unsigned level)
@@ -354,6 +358,12 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
     (TheTarget, Triple, "", "", OptimizationCGLev, TheReloc,
      LLVMCodeModelDefault);
 
+  //  Extract ABI flags from triple or cpu
+  //  Some CPU (mainly 64b) need sign extension when passing a < 64b signed
+  //  parameter.
+  if (strncmp(Triple, "powerpc64le-", 12) == 0)
+    AbiSignExt = true;
+
 #if LLVM_VERSION_MAJOR < 4
   TheTargetData = LLVMGetTargetMachineData (TheTargetMachine);
   LLVMSetDataLayout (TheModule, LLVMCopyStringRepOfTargetData (TheTargetData));
@@ -403,6 +413,10 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
   val = 0;  // Not an int, just a flag
 #endif
   UwtableAttr = LLVMCreateEnumAttribute(LLVMGetGlobalContext(), AttrId, val);
+
+  AttrId = LLVMGetEnumAttributeKindForName("signext", 7);
+  assert (AttrId != 0);
+  SignExtAttr = LLVMCreateEnumAttribute(LLVMGetGlobalContext(), AttrId, 0);
 #endif
 
 #ifdef USE_DEBUG
@@ -1592,7 +1606,16 @@ finish_subprogram_decl(OInterList *Inters, ODnodeSubprg **Res)
   for (ODnodeInter *Inter: *Inters->Inters) {
     Inter->Ref = LLVMGetParam(Decl, i);
     LLVMSetValueName(Inter->Ref, Inter->Ident.cstr);
-    i++;
+
+#ifdef USE_ATTRIBUTES
+    if (AbiSignExt) {
+      OTnode Itype = Inter->Dtype;
+      if (Itype->Kind == OTKSigned)
+	LLVMAddAttributeAtIndex(Decl, 1 + i, SignExtAttr);
+    }
+#endif
+
+      i++;
   }
 
   //  Create the result.
