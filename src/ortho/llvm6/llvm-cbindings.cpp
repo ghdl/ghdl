@@ -2708,6 +2708,8 @@ new_global_selected_element (OGnode Rec, OFnodeBase *El)
   case OF_Union:
     Res = LLVMConstBitCast(Rec.Ref, static_cast<OFnodeUnion *>(El)->PtrType);
     break;
+  default:
+    abort();
   }
   return {Res, El->FType};
 }
@@ -2832,6 +2834,8 @@ new_selected_element (OLnode *Rec, OFnodeBase *El)
       Res = LLVMBuildBitCast(Builder, Rec->Ref,
 			     static_cast<OFnodeUnion *>(El)->PtrType, "");
       break;
+    default:
+      abort();
     }
   }
   return { false, Res, El->FType };
