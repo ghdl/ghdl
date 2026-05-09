@@ -361,7 +361,8 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
   //  Extract ABI flags from triple or cpu
   //  Some CPU (mainly 64b) need sign extension when passing a < 64b signed
   //  parameter.
-  if (strncmp(Triple, "powerpc64le-", 12) == 0)
+  if (strncmp(Triple, "powerpc64le-", 12) == 0
+      || strncmp(Triple, "sparc64-", 8) == 0)
     AbiSignExt = true;
 
 #if LLVM_VERSION_MAJOR < 4
