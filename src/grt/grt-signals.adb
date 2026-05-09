@@ -3539,7 +3539,8 @@ package body Grt.Signals is
                Sig := Propagation.Table (I).Sig;
                if Sig.Active then
                   if not Sig.Flags.Is_Eff_Forced then
-                     Set_Effective_Value (Sig, Sig.S.Effective.Value_Ptr.all);
+                     Set_Effective_Value
+                       (Sig, Read_Value (Sig.S.Effective.Value_Ptr, Sig.Mode));
                   end if;
                end if;
             when Imp_Forward
@@ -3893,7 +3894,8 @@ package body Grt.Signals is
                      if not Sig.Flags.Is_Eff_Forced then
                         --  Save old value.
                         Save_Forced_Value
-                          (Sig, Sig.Value_Ptr.all, Force_Effective);
+                          (Sig, Read_Value (Sig.Value_Ptr, Sig.Mode),
+                           Force_Effective);
                      end if;
                      Sig.Flags.Is_Eff_Forced := True;
                      Set_Effective_Value (Sig, Fv.Val);
