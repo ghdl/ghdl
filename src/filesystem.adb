@@ -16,6 +16,7 @@
 
 with Ada.Calendar;
 with Ada.Calendar.Time_Zones;
+with Ada.Environment_Variables;
 
 with GNAT.Directory_Operations;
 
@@ -74,6 +75,41 @@ package body Filesystem is
       return File_Time_Stamp (Filename);
    end Get_File_Modification_Time;
 
+   -- The time override variables allow setting the time returned by
+   -- Split_Now_Utc to a fixed value according to the SOURCE_DATE_EPOCH
+   -- environment variable.
+   Use_Time_Override : Boolean := False;
+   Time_Override : Ada.Calendar.Time;
+
+   procedure Init_Time is
+      use Ada.Calendar;
+      use Ada.Environment_Variables;
+
+      Year : Year_Range;
+      Month : Month_Range;
+      Day : Day_Range;
+      Sec : Sec_Range;
+      Ms : Ms_Range;
+   begin
+      if not Exists("SOURCE_DATE_EPOCH") then
+         Use_Time_Override := False;
+      else
+         begin
+            Time_Override :=
+               Time_Of(1970, 1, 1) +
+               Duration'Value(Value("SOURCE_DATE_EPOCH"));
+            Use_Time_Override := True;
+
+            -- Attempt the call to catch any exception the Time_Override value
+            -- would cause right away.
+            Split_Now_Utc(Year, Month, Day, Sec, Ms);
+         exception
+            when others =>
+               Use_Time_Override := False;
+         end;
+      end if;
+   end Init_Time;
+
    procedure Split_Now_Utc (Year : out Year_Range;
                             Month : out Month_Range;
                             Day : out Day_Range;
@@ -83,8 +119,18 @@ package body Filesystem is
       use Ada.Calendar;
       use Ada.Calendar.Time_Zones;
 
-      Now : constant Time := Clock;
-      Now_UTC : constant Time := Now - Duration (UTC_Time_Offset (Now) * 60);
+      function UTC_Time return Time is
+         Now : Time;
+      begin
+         if Use_Time_Override then
+            return Time_Override;
+         else
+            Now := Clock;
+            return Now - Duration (UTC_Time_Offset (Now) * 60);
+         end if;
+      end UTC_Time;
+
+      Now_UTC : constant Time := UTC_Time;
       Sec1 : Day_Duration;
       S : Integer;
       M : Integer;
@@ -270,4 +316,6 @@ package body Filesystem is
          end;
       end if;
    end Locate_Executable_On_Path;
+begin
+   Init_Time;
 end Filesystem;
