@@ -6,9 +6,11 @@ GHDL_STD_FLAGS=--std=08
 
 analyze tb_finish.vhdl
 analyze tb_no_finish.vhdl
+analyze tb_late_finish.vhdl
 
 elab tb_finish
 elab tb_no_finish
+elab tb_late_finish
 
 # Explicit finish before timeout.  std.env.finish should exit gracefully.
 simulate tb_finish --expect-finish --stop-time=10ns
