@@ -19,7 +19,13 @@ if simulate tb_no_finish --expect-finish --stop-time=1ns; then
     exit 1
 fi
 
-# Preservice old functionality; that is a timeout on --stop-time
+# Timeout before std.env.finish should return an error code.
+if simulate tb_no_finish --expect-finish --stop-time=500ps; then
+    echo "Failure: An error expected on stop time being reached."
+    exit 1
+fi
+
+# Preserve old functionality; that is a timeout on --stop-time
 # without --expect-failure returns a 0 status for success.
 simulate tb_no_finish --stop-time=1ns
 
