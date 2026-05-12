@@ -353,10 +353,31 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
     exit (1);
   }
 
+#if LLVM_VERSION_MAJOR >= 18
+  LLVMTargetMachineOptionsRef TargetMachineOpt;
+
+  TargetMachineOpt = LLVMCreateTargetMachineOptions();
+
+  if (strncmp(Triple, "riscv64-", 8) == 0) {
+    //  Hard-float on riscv64
+    LLVMTargetMachineOptionsSetFeatures
+      (TargetMachineOpt, "+64bit,+a,+c,+d,+f,+m");
+    LLVMTargetMachineOptionsSetABI
+      (TargetMachineOpt, "lp64d");
+  }
+
+  LLVMTargetMachineOptionsSetRelocMode(TargetMachineOpt, TheReloc);
+
+  TheTargetMachine = LLVMCreateTargetMachineWithOptions
+    (TheTarget, Triple, TargetMachineOpt);
+
+  LLVMDisposeTargetMachineOptions(TargetMachineOpt);
+#else
   //  Create a target machine
   TheTargetMachine = LLVMCreateTargetMachine
     (TheTarget, Triple, "", "", OptimizationCGLev, TheReloc,
      LLVMCodeModelDefault);
+#endif
 
   //  Extract ABI flags from triple or cpu
   //  Some CPU (mainly 64b) need sign extension when passing a < 64b signed
