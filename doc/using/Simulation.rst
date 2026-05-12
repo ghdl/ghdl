@@ -110,6 +110,15 @@ Here is the list of the most useful options. For further info, see :ref:`DEV:Deb
 
   .. index:: display time
 
+.. option:: --expect-finish
+
+  Simulations may timeout before they are complete. This option will return a
+  non-zero exit code status (indicating an error) unless ``std.env.finish`` is
+  explicitly called to terminate the simulation. This option will allow
+  automated testbenches to distinguish between a timeout and a successfully
+  completed test. When combined with ``--stop-time``, it can be assured that
+  the simulated terminated gracefully rather than reaching the stop time.
+
 .. option:: --disp-time
 
   Display the time and delta cycle number as simulation advances.
