@@ -93,6 +93,7 @@ package body Grt.Options is
       P ("       X is expressed as a time value, without spaces: 1ns, ps...");
       P (" --stop-delta=X    stop the simulation cycle after X delta");
       P (" --expect-failure  invert exit status");
+      P (" --expect-finish  return non-zero unless std.env.finish is called");
       P (" --max-stack-alloc=X  error if variables are larger than X KB");
       P (" --no-run          do not simulate, only elaborate");
       P (" --unbuffered      disable buffering on stdout, stderr and");
@@ -342,6 +343,8 @@ package body Grt.Options is
             --  In case of error...
             return;
          end if;
+      elsif Option = "--expect-finish" then
+         Expect_Finish := True;
       elsif Len > 13 and then Option (1 .. 13) = "--stop-delta=" then
          declare
             Ok : Boolean;

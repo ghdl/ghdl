@@ -153,6 +153,10 @@ package Grt.Options is
    --  Set by --stop-time=X to stop the simulation at time X.
    Stop_Time : Std_Time := Std_Time'Last;
 
+   -- Specify that the test must be ended by std.env.finish, otherwise
+   -- a non-zero exit code (error) will be returned.
+   Expect_Finish : Boolean := False;
+
    --  Set by --no-run
    --  If set, do not simulate, only elaborate.
    Flag_No_Run : Boolean := False;

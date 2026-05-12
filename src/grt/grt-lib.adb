@@ -520,6 +520,7 @@ package body Grt.Lib is
          Diag_C ("stopped");
       else
          Diag_C ("finished");
+         Finished_By_Std_Env_Finish := True;
       end if;
       Diag_C (" @");
       Diag_C_Now;

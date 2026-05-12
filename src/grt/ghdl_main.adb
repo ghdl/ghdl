@@ -64,6 +64,17 @@ begin
    --  Initialize, elaborate and simulate.
    Grt.Main.Run;
 
+   -- If the simulation is expected to be finished by std.env.finish, check if
+   -- that is the case, and set a non-zero status (indicating an error)
+   -- otherwise.  This is useful for distinguishing between timeouts or tests
+   -- that finish explicitly.
+   if Grt.Options.Expect_Finish
+     and then not Grt.Errors.Finished_By_Std_Env_Finish
+     and then Grt.Errors.Exit_Status = 0
+   then
+      Grt.Errors.Exit_Status := 1;
+   end if;
+
    --  Return the status.
    return Grt.Errors.Exit_Status;
 end Ghdl_Main;
