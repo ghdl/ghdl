@@ -58,7 +58,7 @@ package Filesystem is
 
    --  Ranges for UTC time (allow leap second).
    --  Millisecond precision.
-   subtype Year_Range is Natural range 2000 .. 2099;
+   subtype Year_Range is Natural range 1970 .. 2399;
    subtype Month_Range is Natural range 1 .. 12;
    subtype Day_Range is Natural range 1 .. 31;
    subtype Sec_Range is Natural range 0 .. 86400;
