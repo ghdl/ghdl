@@ -1134,16 +1134,14 @@ package body Synth.Environment is
    begin
       case Wire_Rec.Nbr_Final_Assign is
          when 0 =>
-            --  TODO: use initial value ?
-            --  TODO: fix that in synth-decls.finalize_object.
-            if Wire_Rec.Kind = Wire_Output then
+            if Wire_Rec.Kind = Wire_Output
+              and then Get_Id (Gate_Inst) = Gates.Id_Iinout
+            then
+               --  Should it be driven ?
                Warning_No_Assignment (Wire_Rec.Decl, 1, 0);
-               if Get_Id (Gate_Inst) = Gates.Id_Iinout then
-                  Value := Get_Input_Net (Gate_Inst, 1);
-               else
-                  Value := Build_Const_Z (Ctxt, Get_Width (Wire_Rec.Gate));
-               end if;
+               Value := Get_Input_Net (Gate_Inst, 1);
             else
+               --  Warning emitted in synth-decls.finalize_object.
                return;
             end if;
          when 1 =>
