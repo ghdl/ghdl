@@ -944,9 +944,16 @@ package body Synth.Vhdl_Decls is
             end if;
          end if;
          if Def_Val = No_Net then
-            --  The initial value of an undriven signal is X.
-            Def_Val := Build_Const_X (Get_Build (Syn_Inst),
-                                      Get_Width (Gate_Net));
+            declare
+               Marker : Mark_Type;
+               Init : Valtyp;
+            begin
+               Mark_Expr_Pool (Marker);
+               --  Use default value for the type.
+               Init := Create_Value_Default (Vt.Typ);
+               Def_Val := Get_Net (Get_Build (Syn_Inst), Init);
+               Release_Expr_Pool (Marker);
+            end;
          end if;
 
          --  The value of an undriven signal is its initial value.
@@ -957,74 +964,14 @@ package body Synth.Vhdl_Decls is
    --  Finalize a variable or a signal.
    procedure Finalize_Signal (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
-      use Netlists.Gates;
       Vt : Valtyp;
-      Gate_Net : Net;
-      Gate : Instance;
-      Drv : Net;
-      Def_Val : Net;
-      W : Wire_Id;
    begin
       Vt := Get_Value (Syn_Inst, Decl);
-      if Vt = No_Valtyp then
-         pragma Assert (Is_Error (Syn_Inst));
-         return;
-      end if;
-      if Vt.Val.Kind /= Value_Wire then
-         --  Could be a net for in ports.
-         --  Could be a static value for a variable of type file.
-         return;
-      end if;
-
-      W := Get_Value_Wire (Vt.Val);
-
-      Finalize_Assignment (Get_Build (Syn_Inst), W);
-
-      Gate_Net := Get_Wire_Gate (W);
-
-      Free_Wire (W);
+      Finalize_Signal_Wire (Syn_Inst, Decl, Vt);
 
       --  Replace the wire with a net so that external names can refer to it.
-      Mutate_Object
-        (Syn_Inst, Decl,
-         (Vt.Typ, Create_Value_Net (Gate_Net, Process_Pool'Access)));
-
-      Gate := Get_Net_Parent (Gate_Net);
-      case Get_Id (Gate) is
-         when Id_Signal
-            | Id_Output
-            | Id_Inout =>
-            Drv := Get_Input_Net (Gate, 0);
-            Def_Val := No_Net;
-         when Id_Isignal
-            | Id_Ioutput
-            | Id_Iinout =>
-            Drv := Get_Input_Net (Gate, 0);
-            Def_Val := Get_Input_Net (Gate, 1);
-         when others => raise Internal_Error; --  Todo: output ?
-      end case;
-      if Drv = No_Net then
-         --  Undriven signals.
-         if Is_Connected (Get_Output (Gate, 0)) then
-            --  No warning if the signal is not used.
-            --  TODO: maybe simply remove it.
-            if Def_Val = No_Net then
-               Warning_Msg_Synth
-                 (Warnid_Nowrite, +Decl,
-                  "%n is never assigned and has no default value", +Decl);
-            else
-               Warning_Msg_Synth
-                 (Warnid_Nowrite, +Decl, "%n is never assigned", +Decl);
-            end if;
-         end if;
-         if Def_Val = No_Net then
-            --  The initial value of an undriven signal is X.
-            Def_Val := Build_Const_X (Get_Build (Syn_Inst),
-                                      Get_Width (Gate_Net));
-         end if;
-
-         --  The value of an undriven signal is its initial value.
-         Connect (Get_Input (Gate, 0), Def_Val);
+      if Vt.Val /= null then
+         Mutate_Object (Syn_Inst, Decl, Vt);
       end if;
    end Finalize_Signal;
 
