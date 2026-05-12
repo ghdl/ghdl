@@ -1,15 +1,15 @@
 library std;
 use std.env.finish;
 
-entity tb_finish is
-end entity tb_finish;
+entity tb_late_finish is
+end entity tb_late_finish;
 
-architecture behav of tb_finish is
+architecture behav of tb_late_finish is
 begin
 
    main_p : process
    begin
-      wait for 5 ns;
+      wait for 1 us;
       finish;
    end process main_p;
 

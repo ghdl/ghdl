@@ -14,20 +14,20 @@ elab tb_no_finish
 simulate tb_finish --expect-finish --stop-time=10ns
 
 # No std.env.finish should return an error code.
-if simulate tb_no_finish --expect-finish --stop-time=1ns; then
+if simulate tb_no_finish --expect-finish --stop-time=5ns; then
     echo "Failure: An error expected on stop time being reached."
     exit 1
 fi
 
 # Timeout before std.env.finish should return an error code.
-if simulate tb_no_finish --expect-finish --stop-time=500ps; then
+if simulate tb_late_finish --expect-finish --stop-time=5ns; then
     echo "Failure: An error expected on stop time being reached."
     exit 1
 fi
 
-# Preserve old functionality; that is a timeout on --stop-time
-# without --expect-failure returns a 0 status for success.
-simulate tb_no_finish --stop-time=1ns
+# Preservice old functionality; that is a timeout on --stop-time
+# without --expect-finish returns a 0 status for success.
+simulate tb_no_finish --stop-time=5ns
 
 clean
 
