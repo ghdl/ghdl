@@ -383,6 +383,7 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
   //  Some CPU (mainly 64b) need sign extension when passing a < 64b signed
   //  parameter.
   if (strncmp(Triple, "powerpc64le-", 12) == 0
+      || strncmp(Triple, "powerpc64-", 10) == 0
       || strncmp(Triple, "sparc64-", 8) == 0)
     AbiSignExt = true;
 
