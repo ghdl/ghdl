@@ -2259,7 +2259,8 @@ package body Vhdl.Sem_Types is
          then
             --  This defines an alias, and must have been handled just
             --  before the case statment.
-            raise Internal_Error;
+            pragma Assert (Flags.Flag_Force_Analysis);
+            null;
          end if;
 
          -- There are limits.  Create a new subtype.
