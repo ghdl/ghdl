@@ -869,7 +869,7 @@ package body Vhdl.Evaluation is
             when Iir_Kind_Simple_Aggregate =>
                declare
                   Els : constant Iir_Flist := Get_Simple_Aggregate_List (N);
-                  Last : constant Natural := Flist_Last (Els);
+                  Last : constant Integer := Flist_Last (Els);
                   Val : Iir;
                begin
                   pragma Assert (Typ.Kind = Type_Vector);
