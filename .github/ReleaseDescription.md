@@ -12,7 +12,6 @@ GHDL offers the simulator and synthesis tool for VHDL. GHDL can be built for var
 * `llvm-jit` - using the LLVM compiler framework, but in memory
 
 The following asset categories are provided for GHDL:
-* macOS x64-64 builds as TAR/GZ file
 * macOS aarch64 builds as TAR/GZ file
 * Ubuntu 24.04 LTS builds as TAR/GZ file
 * Windows builds for standalone usage (without MSYS2) as ZIP file
