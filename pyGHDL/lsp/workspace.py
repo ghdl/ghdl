@@ -370,8 +370,9 @@ class Workspace(object):
     def show_message(self, message, msg_type=lsp.MessageType.Info):
         self._server.notify("window/showMessage", params={"type": msg_type, "message": message})
 
-    def declaration_to_location(self, decl):
-        """Convert declaration :param decl: to an LSP Location."""
+    def declaration_to_location(self, decl, decl_name):
+        """Convert declaration :param decl: to an LSP Location.
+           :param decl_name: holds the identifier (used by subprogram bodies)"""
         decl_loc = nodes.Get_Location(decl)
         if decl_loc == std_package.Std_Location.value:
             # There is no real file for the std.standard package.
@@ -382,7 +383,7 @@ class Workspace(object):
         fe = files_map.Location_To_File(decl_loc)
         doc = self.sfe_to_document(fe)
         res = {"uri": doc.uri}
-        nid = nodes.Get_Identifier(decl)
+        nid = nodes.Get_Identifier(decl_name)
         res["range"] = {
             "start": symbols.location_to_position(fe, decl_loc),
             "end": symbols.location_to_position(fe, decl_loc + name_table.Get_Name_Length(nid)),
@@ -393,7 +394,7 @@ class Workspace(object):
         decl = self._docs[doc_uri].find_definition(position)
         if decl is None:
             return None
-        decl_loc = self.declaration_to_location(decl)
+        decl_loc = self.declaration_to_location(decl, decl)
         if decl_loc is None:
             return None
         return [decl_loc]
@@ -403,18 +404,23 @@ class Workspace(object):
         if decl is None:
             return None
         k = nodes.Get_Kind(decl)
+        bod = decl
         if k == nodes.Iir_Kind.Component_Declaration:
+            # The implementation of a component is an entity of the same name
+            # Not strictly correct but good enough.
             ent = libraries.Find_Entity_For_Component(nodes.Get_Identifier(decl))
             if ent != nodes.Null_Iir:
                 decl = nodes.Get_Library_Unit(ent)
+                bod = decl
         elif k in nodes.Iir_Kinds.Subprogram_Declaration:
             bod = nodes.Get_Subprogram_Body(decl)
-            if bod != nodes.Null_Iir:
-                # FIXME: it crashes as :var bod: is not a declaration
-                # (declaration_to_location calls get_identifier)
-                decl = bod
+            if bod == nodes.Null_Iir:
+                # Body not yet known, simply refer to the decl
+                bod = decl
 
-        decl_loc = self.declaration_to_location(decl)
+        if bod == nodes.Null_Iir or decl == nodes.Null_Iir:
+            return None
+        decl_loc = self.declaration_to_location(bod, decl)
         if decl_loc is None:
             return None
         return [decl_loc]
