@@ -750,9 +750,14 @@ package body Vhdl.Sem_Expr is
             case Get_Kind (Res) is
                when Iir_Kind_Simple_Name
                  | Iir_Kind_Selected_Name =>
-                  pragma Assert (Get_Kind (Get_Named_Entity (Res))
-                                   in Iir_Kinds_Type_Declaration);
-                  Res_Type := Get_Type (Get_Named_Entity (Res));
+                  if Get_Kind (Get_Named_Entity (Res))
+                    in Iir_Kinds_Type_Declaration
+                  then
+                     Res_Type := Get_Type (Get_Named_Entity (Res));
+                  else
+                     pragma Assert (Flags.Flag_Force_Analysis);
+                     return  Null_Iir;
+                  end if;
                when Iir_Kind_Range_Array_Attribute
                  | Iir_Kind_Reverse_Range_Array_Attribute =>
                   Res_Type := Get_Type (Res);
