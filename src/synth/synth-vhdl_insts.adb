@@ -527,7 +527,7 @@ package body Synth.Vhdl_Insts is
       View : Node;
       Reversed : Boolean;
    begin
-      case Get_Kind (Ind) is
+      case Iir_Kinds_Mode_View_Indication (Get_Kind (Ind)) is
          when Iir_Kind_Record_Mode_View_Indication =>
             Extract_Mode_View_Decl (Get_Name (Ind), View, Reversed);
             Count_Record_View_Ports
@@ -535,7 +535,6 @@ package body Synth.Vhdl_Insts is
          when Iir_Kind_Array_Mode_View_Indication =>
             Count_Array_View_Ports
               (Get_Name (Ind), Typ, False, Val, Nbr_Inputs, Nbr_Outputs);
-         when others => Vhdl.Errors.Error_Kind ("count_view_ports", Ind);
       end case;
    end Count_View_Ports;
 
@@ -1267,14 +1266,22 @@ package body Synth.Vhdl_Insts is
    procedure Inst_Input_Connect (Syn_Inst : Synth_Instance_Acc;
                                  Inst : Instance;
                                  Port : in out Port_Idx;
-                                 Inter_Typ : Type_Acc;
-                                 N : Net) is
+                                 Inter_Vt : Valtyp;
+                                 N : Net;
+                                 Is_Flat : Boolean)
+   is
+      Ainst : Instance;
    begin
-      if Inter_Typ.Kind in Type_Records then
-         Inst_Input_Connect_Rec (Syn_Inst, Inst, Port, Inter_Typ, N, 0);
+      if not Is_Flat and then Inter_Vt.Typ.Kind in Type_Records then
+         Inst_Input_Connect_Rec (Syn_Inst, Inst, Port, Inter_Vt.Typ, N, 0);
       else
          if N /= No_Net then
-            Connect (Get_Input (Inst, Port), N);
+            if Is_Flat then
+               Ainst := Get_Net_Parent (Get_Value_Net (Inter_Vt.Val));
+               Connect (Get_Input (Ainst, 0), N);
+            else
+               Connect (Get_Input (Inst, Port), N);
+            end if;
          end if;
          Port := Port + 1;
       end if;
@@ -1307,16 +1314,19 @@ package body Synth.Vhdl_Insts is
    procedure Inst_Output_Connect (Syn_Inst : Synth_Instance_Acc;
                                   Inst : Instance;
                                   Idx : in out Port_Idx;
-                                  Inter_Typ : Type_Acc;
-                                  N : out Net) is
+                                  Inter_Vt : Valtyp;
+                                  N : out Net;
+                                  Is_Flat : Boolean) is
    begin
-      if Inter_Typ.Kind in Type_Records then
+      if Is_Flat then
+         N := Get_Wire_Gate (Get_Value_Wire (Inter_Vt.Val));
+      elsif Inter_Vt.Typ.Kind in Type_Records then
          declare
-            Nbr : constant Port_Nbr := Count_Nbr_Ports (Inter_Typ);
+            Nbr : constant Port_Nbr := Count_Nbr_Ports (Inter_Vt.Typ);
             Nets : Net_Array (1 .. Nat32 (Nbr));
             Net_Idx : Nat32 := 0;
          begin
-            Inst_Output_Collect_Rec (Inst, Idx, Inter_Typ, Nets, Net_Idx);
+            Inst_Output_Collect_Rec (Inst, Idx, Inter_Vt.Typ, Nets, Net_Idx);
             N := Build2_Concat
               (Get_Build (Syn_Inst), Nets, Get_Location (Inst));
          end;
@@ -1335,6 +1345,7 @@ package body Synth.Vhdl_Insts is
                                         Act_Base : Valtyp;
                                         Act_Typ : Type_Acc;
                                         Act_Off : Value_Offsets;
+                                        Is_Flat : Boolean;
                                         Input_Idx : in out Port_Idx;
                                         Output_Idx : in out Port_Idx)
    is
@@ -1351,12 +1362,12 @@ package body Synth.Vhdl_Insts is
               (Act_Inst, Act_Base, Act_Typ, Act_Off.Net_Off,
                No_Dyn_Name, Assoc));
             Inst_Input_Connect
-              (Syn_Inst, Inst, Input_Idx, Inter_Vt.Typ, N);
+              (Syn_Inst, Inst, Input_Idx, Inter_Vt, N, Is_Flat);
 
          when Port_Out
            | Port_Inout =>
             Inst_Output_Connect
-              (Syn_Inst, Inst, Output_Idx, Inter_Vt.Typ, N);
+              (Syn_Inst, Inst, Output_Idx, Inter_Vt, N, Is_Flat);
 
             Phi_Assign_Net
               (Ctxt, Get_Value_Wire (Act_Base.Val), N, Act_Off.Net_Off);
@@ -1374,6 +1385,7 @@ package body Synth.Vhdl_Insts is
                                        Act_Typ : Type_Acc;
                                        Act_Off : Value_Offsets;
                                        Assoc : Node;
+                                       Is_Flat : Boolean;
                                        Input_Idx : in out Port_Idx;
                                        Output_Idx : in out Port_Idx)
    is
@@ -1413,7 +1425,7 @@ package body Synth.Vhdl_Insts is
                Pkind := Mode_To_Port_Kind (Get_Mode (View_El), Reversed);
                Inst_View_Element_Connect
                  (Syn_Inst, Inst, Act_Inst, Pkind, Assoc, El_Vt,
-                  Sub_Act_Base, Sub_Act_Typ, Sub_Act_Off,
+                  Sub_Act_Base, Sub_Act_Typ, Sub_Act_Off, Is_Flat,
                   Input_Idx, Output_Idx);
             when others => Vhdl.Errors.Error_Kind
                ("inst_record_view_connect", View_El);
@@ -1431,6 +1443,7 @@ package body Synth.Vhdl_Insts is
                                       Act_Typ : Type_Acc;
                                       Act_Off : Value_Offsets;
                                       Assoc : Node;
+                                      Is_Flat : Boolean;
                                       Input_Idx : in out Port_Idx;
                                       Output_Idx : in out Port_Idx)
    is
@@ -1473,7 +1486,7 @@ package body Synth.Vhdl_Insts is
 
          Inst_Record_View_Connect
            (Syn_Inst, Inst, Act_Inst, View_Ind, Reversed, El_Vt,
-           Sub_Act_Base, Sub_Act_Typ, Sub_Act_Off, Assoc,
+           Sub_Act_Base, Sub_Act_Typ, Sub_Act_Off, Assoc, Is_Flat,
            Input_Idx, Output_Idx);
       end loop;
    end Inst_Array_View_Connect;
@@ -1484,6 +1497,7 @@ package body Synth.Vhdl_Insts is
                                 Assoc : Node;
                                 Inter : Node;
                                 Inter_Vt : Valtyp;
+                                Is_Flat : Boolean;
                                 Input_Idx : in out Port_Idx;
                                 Output_Idx : in out Port_Idx)
    is
@@ -1512,12 +1526,12 @@ package body Synth.Vhdl_Insts is
          when Iir_Kind_Record_Mode_View_Indication =>
             Inst_Record_View_Connect
               (Syn_Inst, Inst, Ent_Inst, View, Reversed, Inter_Vt,
-               Act_Base, Act_Typ, Act_Off, Assoc,
+               Act_Base, Act_Typ, Act_Off, Assoc, Is_Flat,
                Input_Idx, Output_Idx);
          when Iir_Kind_Array_Mode_View_Indication =>
             Inst_Array_View_Connect
               (Syn_Inst, Inst, Ent_Inst, View, Reversed, Inter_Vt,
-               Act_Base, Act_Typ, Act_Off, Assoc,
+               Act_Base, Act_Typ, Act_Off, Assoc, Is_Flat,
                Input_Idx, Output_Idx);
       end case;
       Release_Expr_Pool (Marker);
@@ -1529,7 +1543,8 @@ package body Synth.Vhdl_Insts is
                                              Inst : Instance;
                                              Ent_Inst : Synth_Instance_Acc;
                                              Ent : Node;
-                                             Ports_Assoc : Node)
+                                             Ports_Assoc : Node;
+                                             Is_Flat : Boolean)
    is
       --  Instantiate the module
       --  Elaborate ports + map aspect for the inputs (component then entity)
@@ -1562,7 +1577,7 @@ package body Synth.Vhdl_Insts is
 
             if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
                Inst_View_Connect
-                 (Syn_Inst, Inst, Ent_Inst, Assoc, Inter, Inter_Vt,
+                 (Syn_Inst, Inst, Ent_Inst, Assoc, Inter, Inter_Vt, Is_Flat,
                   Nbr_Inputs, Nbr_Outputs);
             else
                case Mode_To_Port_Kind (Get_Mode (Inter)) is
@@ -1570,17 +1585,19 @@ package body Synth.Vhdl_Insts is
                      --  Connect the net to the input.
                      N := Synth_Input_Assoc
                        (Syn_Inst, Assoc, Ent_Inst, Inter, Inter_Typ);
-                     Inst_Input_Connect
-                       (Syn_Inst, Inst, Nbr_Inputs, Inter_Typ, N);
+                     if N /= No_Net then
+                        --  Ignore errors
+                        Inst_Input_Connect
+                          (Syn_Inst, Inst, Nbr_Inputs, Inter_Vt, N, Is_Flat);
+                     end if;
 
                   when Port_Out
                     | Port_Inout =>
                      Inst_Output_Connect
-                       (Syn_Inst, Inst, Nbr_Outputs, Inter_Typ, N);
+                       (Syn_Inst, Inst, Nbr_Outputs, Inter_Vt, N, Is_Flat);
 
                      Synth_Output_Assoc
                        (N, Syn_Inst, Assoc, Ent_Inst, Inter, True);
-
                end case;
             end if;
             pragma Assert (Areapools.Is_At_Mark (Expr_Pool, Marker));
@@ -1670,7 +1687,7 @@ package body Synth.Vhdl_Insts is
 
       Synth_Instantiate_Module_Ports
         (Syn_Inst, Inst, Inst_Obj.Syn_Inst, Inst_Obj.Decl,
-         Get_Port_Map_Aspect_Chain (Stmt));
+         Get_Port_Map_Aspect_Chain (Stmt), False);
       pragma Assert (Is_Expr_Pool_Empty);
 
       Synth_Instantiate_Module_Generics (Inst, Inst_Obj);
@@ -1681,6 +1698,167 @@ package body Synth.Vhdl_Insts is
       pragma Assert (Is_Expr_Pool_Empty);
    end Synth_Direct_Instantiation_Statement;
 
+   procedure Replace_Single_Signal (Ctxt : Context_Acc;
+                                    Inter: Node;
+                                    Pkind : Port_Kind;
+                                    Typ : Type_Acc;
+                                    Port_Sname : Sname;
+                                    Val : out Value_Acc)
+   is
+      N : Net;
+      Wid : Wire_Id;
+   begin
+      N := Build_Signal
+        (Ctxt, New_Internal_Name (Ctxt, Port_Sname), Get_Type_Width (Typ));
+      Set_Location (N, Inter);
+
+      case Pkind is
+         when Port_In =>
+            --  TODO: default value (isignal).
+            Val := Create_Value_Net (N, Current_Pool);
+         when Port_Out
+           | Port_Inout =>
+            Wid := Alloc_Wire (Wire_Output, (Inter, Typ));
+            Set_Wire_Gate (Wid, N);
+            Val := Create_Value_Wire (Wid, Current_Pool);
+      end case;
+   end Replace_Single_Signal;
+
+   procedure Replace_Array_View_Signals (Ctxt : Context_Acc;
+                                         Vname : Node;
+                                         Inter : Node;
+                                         Typ : Type_Acc;
+                                         Reversed : Boolean;
+                                         Port_Sname : Sname;
+                                         Val : out Value_Acc);
+
+   procedure Replace_Record_View_Signals (Ctxt : Context_Acc;
+                                          View : Node;
+                                          Inter : Node;
+                                          Typ : Type_Acc;
+                                          Reversed : Boolean;
+                                          Port_Sname : Sname;
+                                          Val : out Value_Acc)
+   is
+      View_Type : constant Node := Get_Type_Of_Subtype_Indication
+        (Get_Subtype_Indication (View));
+      Rec_List : constant Iir_Flist :=
+        Get_Elements_Declaration_List (View_Type);
+      Def_List : constant Iir_Flist := Get_Elements_Definition_List (View);
+      View_El : Node;
+      El_Typ : Type_Acc;
+      El : Node;
+      Pkind : Port_Kind;
+      Sub_Sname : Sname;
+      Idx : Iir_Index32;
+   begin
+      Val := Create_Value_Record (Typ, Current_Pool);
+
+      Idx := 1;
+      for I in Flist_First .. Flist_Last (Def_List) loop
+         View_El := Get_Nth_Element (Def_List, I);
+         El_Typ := Typ.Rec.E (Iir_Index32 (I + 1)).Typ;
+         El := Get_Nth_Element (Rec_List, I);
+         Sub_Sname := New_Sname_Field (Get_Identifier (El), Port_Sname);
+         case Get_Kind (View_El) is
+            when Iir_Kind_Simple_Mode_View_Element =>
+               Pkind := Mode_To_Port_Kind (Get_Mode (View_El), Reversed);
+               Replace_Single_Signal
+                 (Ctxt, Inter, Pkind, El_Typ, Sub_Sname, Val.Arr.E (Idx));
+            when Iir_Kind_Record_Mode_View_Element =>
+               declare
+                  Sub_Ind : Node;
+                  Sub_Reversed : Boolean;
+               begin
+                  Extract_Mode_View_Decl
+                    (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
+                  Replace_Record_View_Signals
+                    (Ctxt, Sub_Ind, Inter, El_Typ, Reversed xor Sub_Reversed,
+                     Sub_Sname, Val.Arr.E (Idx));
+               end;
+            when Iir_Kind_Array_Mode_View_Element =>
+               declare
+                  Sub_Ind : Node;
+                  Sub_Reversed : Boolean;
+               begin
+                  Extract_Mode_View_Decl
+                    (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
+                  Replace_Array_View_Signals
+                    (Ctxt, Sub_Ind, Inter, El_Typ, Reversed xor Sub_Reversed,
+                     Sub_Sname, Val.Arr.E (Idx));
+               end;
+
+            when others => Vhdl.Errors.Error_Kind
+               ("replace_record_view_signals", View_El);
+         end case;
+         Idx := Idx + 1;
+      end loop;
+   end Replace_Record_View_Signals;
+
+   procedure Replace_Array_View_Signals (Ctxt : Context_Acc;
+                                         Vname : Node;
+                                         Inter : Node;
+                                         Typ : Type_Acc;
+                                         Reversed : Boolean;
+                                         Port_Sname : Sname;
+                                         Val : out Value_Acc)
+   is
+      Bnd : constant Bound_Type := Get_Array_Bound (Typ);
+      Last_Dim : constant Boolean := Is_Last_Dimension (Typ);
+      El_Typ : constant Type_Acc := Get_Array_Element (Typ);
+      Sub_View : Node;
+      Sub_Reversed : Boolean;
+      Idx : Int32;
+      Sub_Sname : Sname;
+      El_Val : Value_Acc;
+   begin
+      Extract_Mode_View_Decl (Vname, Sub_View, Sub_Reversed);
+      Sub_Reversed := Sub_Reversed xor Reversed;
+
+      Val := Create_Value_Array (Typ, Current_Pool);
+
+      Idx := Bnd.Left;
+      for I in 1 .. Bnd.Len loop
+         Sub_Sname := New_Sname_Index (Idx, Port_Sname);
+         if Last_Dim then
+            Replace_Record_View_Signals
+              (Ctxt, Sub_View, Inter, El_Typ, Reversed, Sub_Sname, El_Val);
+            Val.Arr.E (Iir_Index32 (I)) := El_Val;
+         else
+            raise Internal_Error; --  TODO
+         end if;
+         case Bnd.Dir is
+            when Dir_To =>
+               Idx := Idx + 1;
+            when Dir_Downto =>
+               Idx := Idx - 1;
+         end case;
+      end loop;
+   end Replace_Array_View_Signals;
+
+   procedure Replace_View_Signals (Ctxt : Context_Acc;
+                                   Ind : Node;
+                                   Inter : Node;
+                                   Typ : Type_Acc;
+                                   Port_Sname : Sname;
+                                   Val : out Value_Acc)
+   is
+      View : Node;
+      Reversed : Boolean;
+   begin
+
+      case Iir_Kinds_Mode_View_Indication (Get_Kind (Ind)) is
+         when Iir_Kind_Record_Mode_View_Indication =>
+            Extract_Mode_View_Decl (Get_Name (Ind), View, Reversed);
+            Replace_Record_View_Signals
+              (Ctxt, View, Inter, Typ, Reversed, Port_Sname, Val);
+         when Iir_Kind_Array_Mode_View_Indication =>
+            Replace_Array_View_Signals
+              (Ctxt, Get_Name (Ind), Inter, Typ, Reversed, Port_Sname, Val);
+      end case;
+   end Replace_View_Signals;
+
+   --  When hierarchy is not kept.
    procedure Synth_Flat_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc;
       Stmt : Node;
@@ -1692,10 +1870,8 @@ package body Synth.Vhdl_Insts is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Inter : Node;
       Inter_Typ : Type_Acc;
-      Val : Valtyp;
-      N : Net;
+      Val : Value_Acc;
       Name : Sname;
-      Wid : Wire_Id;
    begin
       pragma Assert (Is_Expr_Pool_Empty);
 
@@ -1708,23 +1884,19 @@ package body Synth.Vhdl_Insts is
       Current_Pool := Process_Pool'Access;
       while Is_Valid (Inter) loop
          Inter_Typ := Get_Value (Sub_Inst, Inter).Typ;
+         Name := New_Sname_User
+           (Get_Identifier (Inter), Get_Sname (Sub_Inst));
 
-         Name := New_Sname_User (Get_Identifier (Inter), Get_Sname (Sub_Inst));
-         N := Build_Signal
-           (Ctxt, New_Internal_Name (Ctxt, Name), Get_Type_Width (Inter_Typ));
-         Set_Location (N, Inter);
-
-         case Mode_To_Port_Kind (Get_Mode (Inter)) is
-            when Port_In =>
-               --  TODO: default value (isignal).
-               Val := Create_Value_Net (N, Inter_Typ);
-            when Port_Out
-              | Port_Inout =>
-               Wid := Alloc_Wire (Wire_Output, (Inter, Inter_Typ));
-               Set_Wire_Gate (Wid, N);
-               Val := Create_Value_Wire (Wid, Inter_Typ, Current_Pool);
-         end case;
-         Replace_Signal (Sub_Inst, Inter, Val);
+         if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
+            Replace_View_Signals
+              (Ctxt, Get_Mode_View_Indication (Inter), Inter, Inter_Typ, Name,
+               Val);
+         else
+            Replace_Single_Signal
+              (Ctxt, Inter, Mode_To_Port_Kind (Get_Mode (Inter)),
+              Inter_Typ, Name, Val);
+         end if;
+         Replace_Signal (Sub_Inst, Inter, (Inter_Typ, Val));
          Inter := Get_Chain (Inter);
       end loop;
       Current_Pool := Expr_Pool'Access;
@@ -1732,50 +1904,9 @@ package body Synth.Vhdl_Insts is
       --  Connections.
       Push_Phi;
 
-      declare
-         Marker : Mark_Type;
-
-         Assoc : Node;
-         Assoc_Inter : Node;
-         Inter : Node;
-         Inter_Typ : Type_Acc;
-         N : Net;
-         Vt : Valtyp;
-         Inst : Instance;
-      begin
-         Mark_Expr_Pool (Marker);
-
-         Assoc := Get_Port_Map_Aspect_Chain (Assocs);
-         Assoc_Inter := Get_Port_Chain (Entity);
-         while Is_Valid (Assoc) loop
-            if Get_Whole_Association_Flag (Assoc) then
-               Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-               Inter_Typ := Get_Subtype_Object (Sub_Inst, Get_Type (Inter));
-               Vt := Get_Value (Sub_Inst, Inter);
-
-               case Mode_To_Port_Kind (Get_Mode (Inter)) is
-                  when Port_In =>
-                     --  Connect the net to the input.
-                     N := Synth_Input_Assoc
-                       (Syn_Inst, Assoc, Sub_Inst, Inter, Inter_Typ);
-                     if N /= No_Net then
-                        --  Ignore errors.
-                        Inst := Get_Net_Parent (Get_Value_Net (Vt.Val));
-                        Connect (Get_Input (Inst, 0), N);
-                     end if;
-
-                  when Port_Out
-                    | Port_Inout =>
-                     N := Get_Wire_Gate (Get_Value_Wire (Vt.Val));
-                     Synth_Output_Assoc
-                       (N, Syn_Inst, Assoc, Sub_Inst, Inter, False);
-               end case;
-
-               Release_Expr_Pool (Marker);
-            end if;
-            Next_Association_Interface (Assoc, Assoc_Inter);
-         end loop;
-      end;
+      Synth_Instantiate_Module_Ports
+        (Syn_Inst, No_Instance, Sub_Inst, Entity,
+         Get_Port_Map_Aspect_Chain (Assocs), True);
 
       Pop_And_Merge_Phi (Ctxt, Get_Location (Stmt));
 
@@ -1951,7 +2082,7 @@ package body Synth.Vhdl_Insts is
 
             Synth_Instantiate_Module_Ports
               (Comp_Inst, Inst, Sub_Inst, Arch,
-               Get_Port_Map_Aspect_Chain (Bind));
+               Get_Port_Map_Aspect_Chain (Bind), False);
          else
             Ent := Get_Entity (Arch);
 
@@ -1980,7 +2111,7 @@ package body Synth.Vhdl_Insts is
 
             Synth_Instantiate_Module_Ports
               (Comp_Inst, Inst, Inst_Obj.Syn_Inst, Inst_Obj.Decl,
-               Get_Port_Map_Aspect_Chain (Bind));
+               Get_Port_Map_Aspect_Chain (Bind), False);
             Synth_Instantiate_Module_Generics (Inst, Inst_Obj);
          end if;
 
@@ -2339,7 +2470,7 @@ package body Synth.Vhdl_Insts is
    begin
       pragma Assert (Val.Val.Kind = Value_Net);
       --  Get the net from the port(s).
-      Inst_Output_Connect (Syn_Inst, Self_Inst, Idx, Val.Typ, N);
+      Inst_Output_Connect (Syn_Inst, Self_Inst, Idx, Val, N, False);
       Set_Value_Net (Val.Val, N);
    end Create_Input_Wire;
 
@@ -2406,7 +2537,7 @@ package body Synth.Vhdl_Insts is
       Set_Location (Value, Inter);
       Set_Wire_Gate (Get_Value_Wire (Val.Val), Value);
 
-      Inst_Input_Connect (Syn_Inst, Self_Inst, Idx, Val.Typ, Vout);
+      Inst_Input_Connect (Syn_Inst, Self_Inst, Idx, Val, Vout, False);
    end Create_Output_Wire;
 
    procedure Create_Record_View_Wire (Syn_Inst : Synth_Instance_Acc;
