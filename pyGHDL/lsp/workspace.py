@@ -372,7 +372,7 @@ class Workspace(object):
 
     def declaration_to_location(self, decl, decl_name):
         """Convert declaration :param decl: to an LSP Location.
-           :param decl_name: holds the identifier (used by subprogram bodies)"""
+        :param decl_name: holds the identifier (used by subprogram bodies)"""
         decl_loc = nodes.Get_Location(decl)
         if decl_loc == std_package.Std_Location.value:
             # There is no real file for the std.standard package.
