@@ -49,6 +49,7 @@ def Disp_Tree(Tree: Iir, Flat: bool = False) -> None:
     :param Tree:      The node to display.
     """
 
+
 @export
 @BindToLibGHDL("vhdl__disp_tree__disp_iir")
 def Disp_Iir(N: Iir, Indent: int, Depth: int) -> None:
@@ -58,7 +59,6 @@ def Disp_Iir(N: Iir, Indent: int, Depth: int) -> None:
     :param N:      The node to display.
     """
 
+
 def debug_iir(N: Iir) -> None:
     Disp_Iir(N, 0, 1)
-
-
