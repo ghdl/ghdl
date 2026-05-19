@@ -51,6 +51,74 @@ package body Netlists.Disp_Vhdl is
       Disp_Common.Put_Name (N, Language_Vhdl);
    end Put_Name;
 
+   procedure Disp_Generics (M : Module)
+   is
+      Nbr : constant Param_Nbr := Get_Nbr_Params (M);
+      Desc : Param_Desc;
+   begin
+      if Nbr = 0 then
+         return;
+      end if;
+      for I in 1 .. Nbr loop
+         if I = 1 then
+            Wr_Line ("  generic (");
+         else
+            Wr_Line (";");
+         end if;
+         Desc := Get_Param_Desc (M, I - 1);
+         Wr ("    ");
+         Put_Name (Desc.Name);
+         Wr (" : ");
+         Wr ("std_logic_vector");
+      end loop;
+      Wr_Line (");");
+   end Disp_Generics;
+
+   procedure Disp_Port
+     (Desc : Port_Desc; Pfx : String; First : in out Boolean) is
+   begin
+      if First then
+         Wr (Pfx);
+         Wr_Line ("  port (");
+         First := False;
+      else
+         Wr_Line (";");
+      end if;
+      Wr ("    ");
+      Wr (Pfx);
+      Put_Name (Desc.Name);
+      Wr (" : ");
+      case Desc.Dir is
+         when Port_In =>
+            Wr ("in");
+         when Port_Out =>
+            Wr ("out");
+         when Port_Inout =>
+            Wr ("inout");
+      end case;
+      Wr (' ');
+      Put_Type (Desc.W);
+   end Disp_Port;
+
+   procedure Disp_Ports (M : Module; Pfx : String)
+   is
+      First : Boolean;
+      Desc : Port_Desc;
+   begin
+      First := True;
+      for I in 1 .. Get_Nbr_Inputs (M) loop
+         Desc := Get_Input_Desc (M, I - 1);
+         Disp_Port (Desc, Pfx, First);
+      end loop;
+      for I in 1 .. Get_Nbr_Outputs (M) loop
+         Desc := Get_Output_Desc (M, I - 1);
+         Disp_Port (Desc, Pfx, First);
+      end loop;
+      if not First then
+         Wr_Line (");");
+      end if;
+   end Disp_Ports;
+
    procedure Disp_Net_Name (N : Net) is
    begin
       Disp_Common.Disp_Net_Name (N, Language_Vhdl);
@@ -229,11 +297,11 @@ package body Netlists.Disp_Vhdl is
          pragma Assert (Get_Sname_Kind (Name) = Sname_System);
          Put_Id (Get_Sname_Suffix (Name));
       else
-         --  Even for blackbox, we assume the definition is in the work
-         --  library.  This might be correct or not.
-         --  The alternative would be to output all the blackboxes as
-         --  components.
-         Wr ("entity work.");
+         if Get_Self_Instance (Imod) /= No_Instance then
+            --  For blackboxes, use component instantiation.
+            --  For normal instances, use entity instantiation.
+            Wr ("entity work.");
+         end if;
          Put_Name (Name);
       end if;
 
@@ -1421,7 +1489,7 @@ package body Netlists.Disp_Vhdl is
       Val := False;
    end Build_Name_Id;
 
-   package Attr_Maps is new Dyn_Maps
+   package Name_Id_Set is new Dyn_Maps
      (Key_Type => Name_Id,
       Object_Type => Name_Id,
       Value_Type => Boolean,
@@ -1432,16 +1500,16 @@ package body Netlists.Disp_Vhdl is
    --  Call Disp_Attribute_Decl only if the name of ATTR is not in MAP.
    --  So that the attribute is declared only once.
    procedure Disp_Attribute_Decl_Maybe
-     (Attr : Attribute; Map : in out Attr_Maps.Instance)
+     (Attr : Attribute; Map : in out Name_Id_Set.Instance)
    is
       Attr_Name : constant Name_Id := Get_Attribute_Name (Attr);
-      Name_Idx : Attr_Maps.Index_Type;
+      Name_Idx : Name_Id_Set.Index_Type;
    begin
       --  Maybe declare the attribute.
-      Attr_Maps.Get_Index (Map, Attr_Name, Name_Idx);
-      if not Attr_Maps.Get_Value (Map, Name_Idx) then
+      Name_Id_Set.Get_Index (Map, Attr_Name, Name_Idx);
+      if not Name_Id_Set.Get_Value (Map, Name_Idx) then
          Disp_Attribute_Decl (Attr);
-         Attr_Maps.Set_Value (Map, Name_Idx, True);
+         Name_Id_Set.Set_Value (Map, Name_Idx, True);
       end if;
    end Disp_Attribute_Decl_Maybe;
 
@@ -1533,12 +1601,14 @@ package body Netlists.Disp_Vhdl is
 
    procedure Disp_Architecture_Declarations (M : Module)
    is
-      Map : Attr_Maps.Instance;
+      Attr_Map, Comp_Map : Name_Id_Set.Instance;
+      Imod : Module;
       Id : Module_Id;
       With_Attr : Boolean;
       Has_Lsl, Has_Lsr, Has_Asr : Boolean;
    begin
-      Attr_Maps.Init (Map);
+      Name_Id_Set.Init (Attr_Map);
+      Name_Id_Set.Init (Comp_Map);
 
       Has_Lsl := False;
       Has_Lsr := False;
@@ -1548,7 +1618,8 @@ package body Netlists.Disp_Vhdl is
       --  There are as many signals as gate outputs.
       for Inst of Instances (M) loop
          With_Attr := True;
-         Id := Get_Id (Inst);
+         Imod := Get_Module (Inst);
+         Id := Get_Id (Imod);
          case Id is
             when Id_Memory
               | Id_Memory_Init =>
@@ -1611,6 +1682,29 @@ package body Netlists.Disp_Vhdl is
                end if;
          end case;
 
+         if Id >= Id_User_None
+           and then Get_Self_Instance (Imod) = No_Instance
+         then
+            --  For a blackbox, declare a component (only once).
+            declare
+               Comp_Name : constant Sname := Get_Module_Name (Imod);
+               Comp_Id : constant Name_Id := Get_Sname_Suffix (Comp_Name);
+               Comp_Idx : Name_Id_Set.Index_Type;
+            begin
+               Name_Id_Set.Get_Index (Comp_Map, Comp_Id, Comp_Idx);
+               if not Name_Id_Set.Get_Value (Comp_Map, Comp_Idx) then
+                  --  Declare the component for blackboxes.
+                  Wr ("  component ");
+                  Put_Name (Get_Module_Name (Imod));
+                  Wr_Line (" is");
+                  Disp_Generics (Imod);
+                  Disp_Ports (Imod, "  ");
+                  Wr_Line ("  end component;");
+                  Name_Id_Set.Set_Value (Comp_Map, Comp_Idx, True);
+               end if;
+            end;
+         end if;
+
          if Flag_Flavour_Sim then
             case Id is
                when Id_Lsl =>
@@ -1637,7 +1731,7 @@ package body Netlists.Disp_Vhdl is
             begin
                Attr := Attrs;
                while Attr /= No_Attribute loop
-                  Disp_Attribute_Decl_Maybe (Attr, Map);
+                  Disp_Attribute_Decl_Maybe (Attr, Attr_Map);
                   if Get_Id (Inst) >= Id_User_None then
                      Disp_Attribute (Attr, Sig_Name, "label");
                   else
@@ -1649,7 +1743,8 @@ package body Netlists.Disp_Vhdl is
          end if;
       end loop;
 
-      Attr_Maps.Free (Map);
+      Name_Id_Set.Free (Attr_Map);
+      Name_Id_Set.Free (Comp_Map);
 
       if Has_Lsl then
          Disp_Shift_Definition (False, False);
@@ -1726,31 +1821,8 @@ package body Netlists.Disp_Vhdl is
       Wr_Line;
    end Disp_Architecture;
 
-   procedure Disp_Entity_Port (Desc : Port_Desc; First : in out Boolean) is
-   begin
-      if First then
-         Wr_Line ("  port (");
-         First := False;
-      else
-         Wr_Line (";");
-      end if;
-      Wr ("    ");
-      Put_Name (Desc.Name);
-      Wr (" : ");
-      case Desc.Dir is
-         when Port_In =>
-            Wr ("in");
-         when Port_Out =>
-            Wr ("out");
-         when Port_Inout =>
-            Wr ("inout");
-      end case;
-      Wr (' ');
-      Put_Type (Desc.W);
-   end Disp_Entity_Port;
-
    procedure Disp_Port_Attributes
-     (Attrs : Attribute; Name : Sname; Map : in out Attr_Maps.Instance)
+     (Attrs : Attribute; Name : Sname; Map : in out Name_Id_Set.Instance)
    is
       Attr  : Attribute;
    begin
@@ -1762,24 +1834,12 @@ package body Netlists.Disp_Vhdl is
       end loop;
    end Disp_Port_Attributes;
 
-   procedure Disp_Entity_Ports (M : Module; Map : in out Attr_Maps.Instance)
+   procedure Disp_Entity_Ports_And_Attributes
+     (M : Module; Map : in out Name_Id_Set.Instance)
    is
-      First : Boolean;
-      Desc : Port_Desc;
       Attrs : Attribute;
    begin
-      First := True;
-      for I in 1 .. Get_Nbr_Inputs (M) loop
-         Desc := Get_Input_Desc (M, I - 1);
-         Disp_Entity_Port (Desc, First);
-      end loop;
-      for I in 1 .. Get_Nbr_Outputs (M) loop
-         Desc := Get_Output_Desc (M, I - 1);
-         Disp_Entity_Port (Desc, First);
-      end loop;
-      if not First then
-         Wr_Line (");");
-      end if;
+      Disp_Ports (M, "");
 
       for I in 1 .. Get_Nbr_Inputs (M) loop
          Attrs := Get_Input_Port_First_Attribute (M, I - 1);
@@ -1793,38 +1853,15 @@ package body Netlists.Disp_Vhdl is
             Disp_Port_Attributes (Attrs, Get_Output_Desc (M, I - 1).Name, Map);
          end if;
       end loop;
-   end Disp_Entity_Ports;
-
-   procedure Disp_Entity_Generics (M : Module)
-   is
-      Nbr : constant Param_Nbr := Get_Nbr_Params (M);
-      Desc : Param_Desc;
-   begin
-      if Nbr = 0 then
-         return;
-      end if;
-      for I in 1 .. Nbr loop
-         if I = 1 then
-            Wr_Line ("  generic (");
-         else
-            Wr_Line (";");
-         end if;
-         Desc := Get_Param_Desc (M, I - 1);
-         Wr ("    ");
-         Put_Name (Desc.Name);
-         Wr (" : ");
-         Wr ("std_logic_vector");
-      end loop;
-      Wr_Line (");");
-   end Disp_Entity_Generics;
+   end Disp_Entity_Ports_And_Attributes;
 
    procedure Disp_Entity (M : Module)
    is
       Self : constant Instance := Get_Self_Instance (M);
       Name : constant Sname := Get_Module_Name (M);
-      Map : Attr_Maps.Instance;
+      Map : Name_Id_Set.Instance;
    begin
-      Attr_Maps.Init (Map);
+      Name_Id_Set.Init (Map);
 
       --  Module id and name.
       Wr_Line ("library ieee;");
@@ -1835,9 +1872,9 @@ package body Netlists.Disp_Vhdl is
       Put_Name (Name);
       Wr_Line (" is");
 
-      Disp_Entity_Generics (M);
+      Disp_Generics (M);
 
-      Disp_Entity_Ports (M, Map);
+      Disp_Entity_Ports_And_Attributes (M, Map);
 
       if Has_Instance_Attribute (Self) then
          declare
@@ -1857,7 +1894,7 @@ package body Netlists.Disp_Vhdl is
       Wr_Line (";");
       Wr_Line;
 
-      Attr_Maps.Free (Map);
+      Name_Id_Set.Free (Map);
    end Disp_Entity;
 
    type Module_Array is array (Natural range <>) of Module;
