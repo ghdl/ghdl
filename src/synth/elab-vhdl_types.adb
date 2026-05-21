@@ -872,32 +872,25 @@ package body Elab.Vhdl_Types is
    is
       Marker : Mark_Type;
       Res_Type : Node;
+      Atype2 : Node;
    begin
-      case Get_Kind (Atype) is
+      Atype2 := Strip_Denoting_Name (Atype);
+
+      case Get_Kind (Atype2) is
          when Iir_Kinds_Subtype_Definition =>
-            Res_Type := Atype;
-         when Iir_Kinds_Denoting_Name =>
-            --  Already elaborated.
-            --  We cannot use the object type as it can be a subtype
-            --  deduced from the default value (for constants).
-            declare
-               Decl : constant Node := Get_Named_Entity (Atype);
-               Atype2 : Node;
-            begin
-               case Get_Kind (Decl) is
-                  when Iir_Kind_Type_Declaration =>
-                     Atype2 := Get_Type_Definition (Decl);
-                  when Iir_Kind_Subtype_Declaration =>
-                     Atype2 := Get_Subtype_Indication (Decl);
-                  when Iir_Kind_Interface_Type_Declaration =>
-                     Atype2 := Get_Interface_Type_Definition (Decl);
-                  when others => raise Internal_Error;
-               end case;
-               return Get_Elaborated_Subtype_Indication (Syn_Inst, Atype2);
-            end;
+            Res_Type := Atype2;
+         when Iir_Kind_Type_Declaration =>
+            Atype2 := Get_Type_Definition (Atype2);
+            return Get_Elaborated_Subtype_Indication (Syn_Inst, Atype2);
+         when Iir_Kind_Subtype_Declaration =>
+            Atype2 := Get_Subtype_Indication (Atype2);
+            return Get_Elaborated_Subtype_Indication (Syn_Inst, Atype2);
+         when Iir_Kind_Interface_Type_Declaration =>
+            Atype2 := Get_Interface_Type_Definition (Atype2);
+            return Get_Elaborated_Subtype_Indication (Syn_Inst, Atype2);
          when Iir_Kind_Subtype_Attribute =>
             declare
-               Pfx : constant Node := Get_Prefix (Atype);
+               Pfx : constant Node := Get_Prefix (Atype2);
                T : Type_Acc;
             begin
                Mark_Expr_Pool (Marker);
@@ -910,7 +903,7 @@ package body Elab.Vhdl_Types is
             declare
                T : Type_Acc;
             begin
-               T := Synth_Array_Attribute_Prefix (Syn_Inst, Atype);
+               T := Synth_Array_Attribute_Prefix (Syn_Inst, Atype2);
                pragma Assert (T.Is_Global);
                --  Always a bounded array/vector.
                return T.Arr_El;
@@ -924,12 +917,12 @@ package body Elab.Vhdl_Types is
            | Iir_Kind_Access_Type_Definition
            | Iir_Kind_File_Type_Definition =>
             --  For interface types of implicit operators.
-            Res_Type := Atype;
+            Res_Type := Atype2;
          when Iir_Kind_Interface_Type_Definition =>
-            Res_Type := Atype;
+            Res_Type := Atype2;
          when Iir_Kind_Protected_Type_Declaration =>
-            Res_Type := Atype;
-         when others => Error_Kind ("elab_subtype_indication", Atype);
+            Res_Type := Atype2;
+         when others => Error_Kind ("elab_subtype_indication", Atype2);
       end case;
 
       return Get_Subtype_Object (Syn_Inst, Res_Type);

@@ -1956,13 +1956,19 @@ package body Vhdl.Sem_Names is
             Free_Iir (Name);
             return Res;
          when Iir_Kind_Element_Attribute =>
-            pragma Assert (Get_Kind (Name) = Iir_Kind_Attribute_Name);
-            Finish_Sem_Array_Attribute_Prefix (Name, Res);
-            Set_Base_Name (Res, Res);
-            Set_Name_Staticness (Res, Get_Name_Staticness (Get_Prefix (Res)));
-            Set_Type_Staticness (Res, Get_Type_Staticness (Get_Type (Res)));
-            Free_Iir (Name);
-            return Res;
+            if Get_Kind (Name) = Iir_Kind_Attribute_Name then
+               Finish_Sem_Array_Attribute_Prefix (Name, Res);
+               Set_Base_Name (Res, Res);
+               Set_Name_Staticness
+                 (Res, Get_Name_Staticness (Get_Prefix (Res)));
+               Set_Type_Staticness
+                 (Res, Get_Type_Staticness (Get_Type (Res)));
+               Free_Iir (Name);
+               return Res;
+            else
+               --  For a name of an alias.
+               return Name;
+            end if;
          when Iir_Kind_Simple_Name_Attribute
            | Iir_Kind_Path_Name_Attribute
            | Iir_Kind_Instance_Name_Attribute
@@ -4995,6 +5001,9 @@ package body Vhdl.Sem_Names is
                         return Assoc_Type;
                      end if;
                   end;
+               when Iir_Kind_Subtype_Attribute
+                 | Iir_Kind_Element_Attribute =>
+                  return Get_Type (Atype);
                when Iir_Kind_Error =>
                   return Atype;
                when others =>

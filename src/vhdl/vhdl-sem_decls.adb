@@ -2126,6 +2126,9 @@ package body Vhdl.Sem_Decls is
             return;
          when Iir_Kind_Converse_Attribute =>
             null;
+         when Iir_Kind_Element_Attribute
+           | Iir_Kind_Subtype_Attribute =>
+            null;
          when others =>
             Error_Kind ("sem_non_object_alias_declaration", Named_Entity);
       end case;
@@ -2282,7 +2285,9 @@ package body Vhdl.Sem_Decls is
               | Iir_Kinds_External_Name =>
                Sem_Non_Object_Alias_Declaration
                  (Res, Get_Named_Entity (Get_Name (Res)));
-            when Iir_Kind_Converse_Attribute =>
+            when Iir_Kind_Converse_Attribute
+              | Iir_Kind_Element_Attribute
+              | Iir_Kind_Subtype_Attribute =>
                --  Maybe other attributes ?
                Sem_Non_Object_Alias_Declaration (Res, Name);
 
