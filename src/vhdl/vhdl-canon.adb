@@ -394,16 +394,21 @@ package body Vhdl.Canon is
    is
       Assoc : Iir;
       Inter : Iir;
+      Formal : Iir;
    begin
       Assoc := Get_Parameter_Association_Chain (Call);
       Inter := Get_Interface_Declaration_Chain (Get_Implementation (Call));
       while Assoc /= Null_Iir loop
-         if (Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression)
-           and then (Get_Mode (Get_Association_Interface (Assoc, Inter))
-                       /= Iir_Out_Mode)
-         then
-            Canon_Extract_Sensitivity_Expression
-              (Get_Actual (Assoc), Sensitivity_List);
+         if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression then
+            Formal := Get_Association_Interface (Assoc, Inter);
+            if Get_Kind (Formal) = Iir_Kind_Interface_View_Declaration
+              or else Get_Mode (Formal) /= Iir_Out_Mode
+            then
+               --  TODO: for view, extract only IN sub-elements.
+               --  TODO: are views supported ?  Not in 11.4
+               Canon_Extract_Sensitivity_Expression
+                 (Get_Actual (Assoc), Sensitivity_List);
+            end if;
          end if;
          Next_Association_Interface (Assoc, Inter);
       end loop;

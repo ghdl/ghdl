@@ -2198,7 +2198,8 @@ package body Synth.Vhdl_Stmts is
             end if;
             Val.Typ := Unshare (Val.Typ, Instance_Pool);
             return Val;
-         when Iir_Kind_Interface_Signal_Declaration =>
+         when Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_View_Declaration =>
             --  Always pass by reference (use an alias).
             if Info.Kind = Target_Memory then
                raise Internal_Error;
@@ -2254,7 +2255,6 @@ package body Synth.Vhdl_Stmts is
          when Iir_Kind_Interface_File_Declaration =>
             return Info.Obj;
          when Iir_Kind_Interface_Quantity_Declaration => raise Internal_Error;
-         when Iir_Kind_Interface_View_Declaration => raise Internal_Error;
       end case;
    end Synth_Subprogram_Association;
 
@@ -2732,8 +2732,8 @@ package body Synth.Vhdl_Stmts is
          Association_Iterate_Next (Iterator, Inter, Assoc);
          exit when Inter = Null_Node;
 
-         if Get_Mode (Inter) in Iir_Out_Modes
-           and then Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
+         if Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
+           and then Get_Mode (Inter) in Iir_Out_Modes
          then
             Val := Get_Value (Subprg_Inst, Inter);
             --  Arguments are passed by copy.

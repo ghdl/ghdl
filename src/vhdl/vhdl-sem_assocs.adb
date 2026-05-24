@@ -222,33 +222,37 @@ package body Vhdl.Sem_Assocs is
    procedure Check_Parameter_Association_Restriction
      (Inter : Iir; Base_Actual : Iir; Loc : Iir) is
    begin
-      case Iir_Parameter_Modes (Get_Mode (Inter)) is
-         when Iir_In_Mode =>
-            if Can_Interface_Be_Read (Base_Actual) then
-               return;
-            end if;
-         when Iir_Out_Mode =>
-            if Can_Interface_Be_Updated (Base_Actual) then
-               return;
-            end if;
-         when Iir_Inout_Mode =>
-            if Can_Interface_Be_Read (Base_Actual)
-              and then Can_Interface_Be_Updated (Base_Actual)
-            then
-               return;
-            end if;
-      end case;
-      if Get_Kind (Base_Actual) = Iir_Kind_Interface_View_Declaration then
-         Error_Msg_Sem
-           (+Loc, "cannot associate the interface view with "
-            & Get_Mode_Name (Get_Mode (Inter)) & " %n",
-            +Inter);
+      if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
+         null;
       else
-         Error_Msg_Sem
-           (+Loc, "cannot associate an "
-            & Get_Mode_Name (Get_Mode (Base_Actual))
-            & " object with " & Get_Mode_Name (Get_Mode (Inter)) & " %n",
-            +Inter);
+         case Iir_Parameter_Modes (Get_Mode (Inter)) is
+            when Iir_In_Mode =>
+               if Can_Interface_Be_Read (Base_Actual) then
+                  return;
+               end if;
+            when Iir_Out_Mode =>
+               if Can_Interface_Be_Updated (Base_Actual) then
+                  return;
+               end if;
+            when Iir_Inout_Mode =>
+               if Can_Interface_Be_Read (Base_Actual)
+                 and then Can_Interface_Be_Updated (Base_Actual)
+               then
+                  return;
+               end if;
+         end case;
+         if Get_Kind (Base_Actual) = Iir_Kind_Interface_View_Declaration then
+            Error_Msg_Sem
+              (+Loc, "cannot associate the interface view with "
+              & Get_Mode_Name (Get_Mode (Inter)) & " %n",
+              +Inter);
+         else
+            Error_Msg_Sem
+              (+Loc, "cannot associate an "
+              & Get_Mode_Name (Get_Mode (Base_Actual))
+              & " object with " & Get_Mode_Name (Get_Mode (Inter)) & " %n",
+              +Inter);
+         end if;
       end if;
    end Check_Parameter_Association_Restriction;
 
@@ -271,7 +275,8 @@ package body Vhdl.Sem_Assocs is
       end if;
 
       case Get_Kind (Formal) is
-         when Iir_Kind_Interface_Signal_Declaration =>
+         when Iir_Kind_Interface_Signal_Declaration
+            | Iir_Kind_Interface_View_Declaration =>
             --  LRM93 2.1.1
             --  In a subprogram call, the actual designator
             --  associated with a formal parameter of class

@@ -1600,6 +1600,25 @@ package body Vhdl.Sem is
             return True;
          when Iir_Kind_Interface_Type_Declaration =>
             return Get_Identifier (Left) = Get_Identifier (Right);
+         when Iir_Kind_Interface_View_Declaration =>
+            if Get_Identifier (Left) /= Get_Identifier (Right) then
+               return False;
+            end if;
+            if Get_Has_Class (Left) /= Get_Has_Class (Right)
+              or else (Get_Has_Identifier_List (Left)
+                         /= Get_Has_Identifier_List (Right))
+            then
+               return False;
+            end if;
+            if not Are_Trees_Equal (Get_Mode_View_Indication (Left),
+                                    Get_Mode_View_Indication (Right))
+            then
+               return False;
+            end if;
+            return True;
+         when Iir_Kind_Record_Mode_View_Indication
+           | Iir_Kind_Array_Mode_View_Indication =>
+            return Are_Trees_Equal (Get_Name (Left), Get_Name (Right));
          when Iir_Kind_Interface_Type_Definition =>
             return Are_Trees_Equal (Get_Type_Declarator (Left),
                                     Get_Type_Declarator (Right));

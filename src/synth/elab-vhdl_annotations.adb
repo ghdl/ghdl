@@ -299,6 +299,8 @@ package body Elab.Vhdl_Annotations is
                   Annotate_Subtype_Indication
                     (Block_Info, Get_Subtype_Indication (El));
                end if;
+            when Iir_Kind_Interface_View_Declaration =>
+               null;
             when others => Error_Kind ("annotate_interface_list_subtype", El);
          end case;
          El := Get_Chain (El);
