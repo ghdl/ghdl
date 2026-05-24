@@ -70,7 +70,7 @@ enable_gplcompat enable_libghdl libghdl_version ghdl_version
 with_sundials sundials_incflags sundials_ldflags
 COMPILER_GCC COMPILER_DEBUG COMPILER_MCODE COMPILER_LLVM POST_PROCESSOR
 INSTALL_PREFIX LIBDIR_SUFFIX LIBGHDLDIR_SUFFIX INCDIR_SUFFIX
-LLVM_LDFLAGS
+LLVM_LDFLAGS SOIMPEXT
 "
 
 # Find srcdir
@@ -345,9 +345,9 @@ fi
 # Define default file extensions for Windows or Linux-like systems and
 # use -fPIC or not.
 case "$build" in
-  *mingw* | *cygwin* | *windows-gnu*) SOEXT=".dll";   EXEEXT=".exe"; PIC_FLAGS="";;
-  *darwin*)           SOEXT=".dylib"; EXEEXT="";     PIC_FLAGS="";;
-  *)                  SOEXT=".so";    EXEEXT="";     PIC_FLAGS="-fPIC";;
+  *mingw* | *cygwin* | *windows-gnu*) SOEXT=".dll";   EXEEXT=".exe"; PIC_FLAGS=""; SOIMPEXT=".dll.a";;
+  *darwin*)           SOEXT=".dylib"; EXEEXT="";     PIC_FLAGS=""; SOIMPEXT=".dylib";;
+  *)                  SOEXT=".so";    EXEEXT="";     PIC_FLAGS="-fPIC"; SOIMPEXT=".so";;
 esac
 
 # Define libghdl_version

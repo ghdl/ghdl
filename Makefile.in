@@ -491,11 +491,30 @@ lib/$(libghdl_name): $(GRT_SRC_DEPS) $(LIBGHDL_GRT_OBJS) version.ads force
 #	Use -g for gnatlink so that the binder file is not removed.  We need
 #	it for libghdl.a
 	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ -gnat12 $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -R -g -shared $(SHLIB_FLAGS) $(filter-out -static,$(LDFLAGS)) $(LIBGHDL_GRT_OBJS)
-#       On windows, gnatmake (via Osint.Executable_Name) always appends .exe
-#       Adjust.  (Other solution: use gnatmake for compilation and binding,
-#       then use gnatlink directly for linking).
 ifeq ($(SOEXT),.dll)
+#       On windows, gnatmake (via Osint.Executable_Name) always appends .exe
+#       GNU ld can link directly against DLLs, while MSVC cannot. However,
+#       the DLL "remembers" the filename it was created with (via the Name RVA
+#       in .edata). So even if the DLL is moved to remove the .exe extension,
+#       applications linked directly against this DLL will still try to load a
+#       DLL with the old name.
+#
+#       Instead of linking directly to the DLL, use an import lib. The Name RVA
+#       in the DLL (with .exe appended) is not  touched. GNU ld's can create a
+#       DEF file from the DLL, which can be used to create an MSVC-style import
+#       library with external tools. dlltool can use this DEF file to create a
+#       GNU/GNAT-style import library, while also telling applications to load
+#       a DLL filename without .exe appended.
+#       Note that MSVC's LIB.exe does not have an equivalent to dlltool's -D
+#       arg. So to change the DLL name that applications try to load, you'll
+#       need to add a LIBRARY section to your DEF file. See:
+#       * https://gcc.gnu.org/onlinedocs/gnat_ugn/Creating-an-Import-Library.html#g_t1f6
+#       * https://learn.microsoft.com/en-us/cpp/build/reference/library?view=msvc-170
+	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ -gnat12 $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -R -g -Wl,--output-def lib/libghdl-$(libghdl_version).def.orig -shared $(SHLIB_FLAGS) $(filter-out -static,$(LDFLAGS)) $(LIBGHDL_GRT_OBJS)
+	dlltool -D libghdl-$(libghdl_version).dll -d lib/libghdl-$(libghdl_version).def -l lib/libghdl-$(libghdl_version).dll.a
 	-mv lib/$(libghdl_name).exe $@
+else
+	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ -gnat12 $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -R -g -shared $(SHLIB_FLAGS) $(filter-out -static,$(LDFLAGS)) $(LIBGHDL_GRT_OBJS)
 endif
 
 libghdl.a: lib/$(libghdl_name)
@@ -531,7 +550,13 @@ install.libghdl.local: all.libghdl $(srcdir)/src/synth/include/synth_gates.h
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/include/synth_gates.h $(incdirsuffix)/ghdl/
 
 install.libghdl.lib:
-	$(INSTALL_PROGRAM) -p lib/$(libghdl_name) "$(DESTDIR)$(libdir)/"
+ifeq ($(SOEXT),.dll)
+		$(INSTALL_PROGRAM) -p lib/$(libghdl_name) "$(DESTDIR)$(bindir)/"
+		$(INSTALL_PROGRAM) -p lib/libghdl-$(libghdl_version).dll.a "$(DESTDIR)$(libdir)/"
+		$(INSTALL_PROGRAM) -p lib/libghdl-$(libghdl_version).def "$(DESTDIR)$(libdir)/"
+else
+		$(INSTALL_PROGRAM) -p lib/$(libghdl_name) "$(DESTDIR)$(libdir)/"
+endif
 	$(INSTALL_PROGRAM) -p libghdl.a "$(DESTDIR)$(libdir)/"
 	$(INSTALL_DATA) -p libghdl.link "$(DESTDIR)$(libdir)/"
 
@@ -557,6 +582,9 @@ uninstall.libghdl:
 	$(RM) $(DESTDIR)$(libdir)/libghdl.a
 	$(RM) $(DESTDIR)$(libdir)/libghdl.link
 	$(RM) $(DESTDIR)$(libdir)/libghdl$(SOEXT)
+ifeq ($(SOEXT),.dll)
+
+endif
 	$(RM) $(DESTDIR)$(libdir)/libghw.dll
 	$(RM) $(DESTDIR)$(libdir)/libghw$(SOEXT)
 	$(RM) $(DESTDIR)$(incdir)/synth.h
