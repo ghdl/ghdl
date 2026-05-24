@@ -298,18 +298,19 @@ package body Ghdllocal is
          if Pos < Pathname'First then
             return;
          end if;
-         if Is_Directory (Pathname (Pathname'First .. Pos)
+         if Is_Directory (Pathname (Pathname'First .. Last)
+                             & Get_Directory_Separator & "lib"
+                             & Get_Directory_Separator & "ghdl")
+         then
+            --  Running from build dir: 'SRCDIR/ghdl' to 'SRCDIR'
+            --  Test before the next one in case there is also ../lib/ghdl.
+            null;
+         elsif Is_Directory (Pathname (Pathname'First .. Pos)
                           & Get_Directory_Separator & "lib"
                           & Get_Directory_Separator & "ghdl")
          then
             --  Usual installation: from 'PREFIX/bin/ghdl' to 'PREFIX'
             Last := Pos - 1;
-         elsif Is_Directory (Pathname (Pathname'First .. Last)
-                             & Get_Directory_Separator & "lib"
-                             & Get_Directory_Separator & "ghdl")
-         then
-            --  Running from build dir: 'SRCDIR/ghdl' to 'SRCDIR'
-            null;
          else
             --  Unhandled
             return;
