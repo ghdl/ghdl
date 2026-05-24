@@ -1473,6 +1473,11 @@ package Vhdl.Nodes is
    --  present for uniformity (and speed).
    --   Get/Set_Type (Field1)
    --
+   -- Only for Iir_Kind_Interface_Signal_Declaration:
+   -- Only for Iir_Kind_Interface_Constant_Declaration:
+   -- Only for Iir_Kind_Interface_Variable_Declaration:
+   -- Only for Iir_Kind_Interface_File_Declaration:
+   -- Only for Iir_Kind_Interface_Quantity_Declaration:
    --   Get/Set_Mode (Flag13,Flag14,Flag15)
    --
    -- Only for Iir_Kind_Interface_Signal_Declaration:

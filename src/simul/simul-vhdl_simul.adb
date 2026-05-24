@@ -3557,7 +3557,9 @@ package body Simul.Vhdl_Simul is
         Sig_Index (Ec.Sig, E.Collapsed_Offs.Net_Off);
       Nval : constant Memory_Ptr := Ec.Val + E.Collapsed_Offs.Mem_Off;
    begin
-      if Get_Mode (E.Decl) in Iir_Out_Modes then
+      if Get_Kind (E.Decl) /= Iir_Kind_Interface_View_Declaration
+        and then Get_Mode (E.Decl) in Iir_Out_Modes
+      then
          --  As an out connection creates a source, if a signal is
          --  collapsed and has no source, an extra source needs to be
          --  created.

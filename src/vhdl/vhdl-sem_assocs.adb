@@ -644,15 +644,17 @@ package body Vhdl.Sem_Assocs is
       else
          A2f_Type := Atype;
       end if;
-      if Get_Mode (Inter) in Iir_In_Modes
-        and then not Is_Scalar_Type_Compatible (A2f_Type, Ftype)
-      then
-         Error_Msg;
-      end if;
-      if Get_Mode (Inter) in Iir_Out_Modes
-        and then not Is_Scalar_Type_Compatible (F2a_Type, Atype)
-      then
-         Error_Msg;
+      if Get_Kind (Inter) /= Iir_Kind_Interface_View_Declaration then
+         if Get_Mode (Inter) in Iir_In_Modes
+           and then not Is_Scalar_Type_Compatible (A2f_Type, Ftype)
+         then
+            Error_Msg;
+         end if;
+         if Get_Mode (Inter) in Iir_Out_Modes
+           and then not Is_Scalar_Type_Compatible (F2a_Type, Atype)
+         then
+            Error_Msg;
+         end if;
       end if;
    end Check_Port_Association_Bounds_Restrictions;
 
@@ -2358,18 +2360,18 @@ package body Vhdl.Sem_Assocs is
       --         conversion shall define a constraint for the index range
       --         corresponding to the index range of the object, [...]
       if not Is_Fully_Constrained_Type (Formal_Type) then
-         if (Get_Mode (Inter) in Iir_In_Modes
-               or else Get_Mode (Inter) = Iir_Linkage_Mode)
-           and then In_Conv /= Null_Iir
+         if In_Conv /= Null_Iir
+           and then (Get_Mode (Inter) in Iir_In_Modes
+                     or else Get_Mode (Inter) = Iir_Linkage_Mode)
            and then not Is_Fully_Constrained_Type (Get_Type (In_Conv))
          then
             Error_Msg_Sem
               (+In_Conv,
                "type of actual conversion must be fully constrained");
          end if;
-         if (Get_Mode (Inter) in Iir_Out_Modes
-               or else Get_Mode (Inter) = Iir_Linkage_Mode)
-           and then Out_Conv /= Null_Iir
+         if Out_Conv /= Null_Iir
+           and then (Get_Mode (Inter) in Iir_Out_Modes
+                     or else Get_Mode (Inter) = Iir_Linkage_Mode)
            and then not Is_Fully_Constrained_Type (Get_Type (Out_Conv))
          then
             declare
@@ -2395,7 +2397,9 @@ package body Vhdl.Sem_Assocs is
       --  FIXME: LRM refs
       --  This is somewhat wrong.  A missing conversion is not an error but
       --  may result in a type mismatch.
-      if Get_Mode (Inter) = Iir_Inout_Mode then
+      if Get_Kind (Inter) /= Iir_Kind_Interface_View_Declaration
+        and then Get_Mode (Inter) = Iir_Inout_Mode
+      then
          if In_Conv = Null_Iir and then Out_Conv /= Null_Iir then
             Error_Msg_Sem
               (+Assoc, "out conversion without corresponding in conversion");
