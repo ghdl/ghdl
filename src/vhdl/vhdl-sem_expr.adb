@@ -4884,74 +4884,151 @@ package body Vhdl.Sem_Expr is
       return Expr;
    end Sem_Qualified_Expression;
 
+   function Check_Record_View_Mode
+     (View : Iir; Reversed : Boolean; R_W : Boolean) return Boolean
+   is
+      Def_List : constant Iir_Flist := Get_Elements_Definition_List (View);
+      View_El : Node;
+      Res_El : Boolean;
+   begin
+      for I in Flist_First .. Flist_Last (Def_List) loop
+         View_El := Get_Nth_Element (Def_List, I);
+         case Iir_Kinds_Mode_View_Element_Definition (Get_Kind (View_El)) is
+            when Iir_Kind_Simple_Mode_View_Element =>
+               case Get_Mode (View_El) is
+                  when Iir_In_Mode
+                    | Iir_Buffer_Mode =>
+                     if R_W then
+                        Res_El := not Reversed;
+                     else
+                        Res_El := Reversed;
+                     end if;
+                  when Iir_Out_Mode =>
+                     if R_W then
+                        Res_El := Reversed;
+                     else
+                        Res_El := not Reversed;
+                     end if;
+                  when Iir_Inout_Mode =>
+                     Res_El := True;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            when Iir_Kind_Record_Mode_View_Element =>
+               declare
+                  Sub_Ind : Node;
+                  Sub_Reversed : Boolean;
+               begin
+                  Extract_Mode_View_Decl
+                    (Get_Mode_View_Name (View_El), Sub_Ind, Sub_Reversed);
+                  Res_El := Check_Record_View_Mode
+                    (Sub_Ind, Reversed xor Sub_Reversed, R_W);
+               end;
+            when Iir_Kind_Array_Mode_View_Element =>
+               declare
+                  Name : constant Iir := Get_Mode_View_Name (View_El);
+                  Sub_View : Node;
+                  Sub_Reversed : Boolean;
+               begin
+                  Extract_Mode_View_Decl (Name, Sub_View, Sub_Reversed);
+                  Res_El := Check_Record_View_Mode
+                    (Sub_View, Sub_Reversed xor Reversed, R_W);
+               end;
+         end case;
+         if not Res_El then
+            return False;
+         end if;
+      end loop;
+      return True;
+   end Check_Record_View_Mode;
+
+   function Check_Interface_View_Mode (Inter : Iir; R_W : Boolean)
+                                      return Boolean
+   is
+      Ind : constant Iir := Get_Mode_View_Indication (Inter);
+      View : Iir;
+      Reversed : Boolean;
+   begin
+      Extract_Mode_View_Decl (Get_Name (Ind), View, Reversed);
+      return Check_Record_View_Mode (View, Reversed, R_W);
+   end Check_Interface_View_Mode;
+
    function Can_Interface_Be_Read (Inter : Iir) return Boolean is
    begin
-      case Get_Mode (Inter) is
-         when Iir_In_Mode
-           | Iir_Inout_Mode
-           | Iir_Buffer_Mode =>
-            --  LRM08 6.5.3 Interface object declarations
-            --  - in. The value of the interface object is allowed
-            --     to be read, [...]
-            --  - inout or buffer.  Reading and updating the value of
-            --     the interface object is allowed. [...]
-            null;
-         when Iir_Out_Mode =>
-            --  LRM93 4.3.2 Interface declarations
-            --  - out. The value of the interface object is allowed to be
-            --    updated, but it must not be read.
-            --
-            --  LRM08 6.5.3 Interface object declarations
-            --  - out. The value of the interface object is allowed
-            --    [to be updated and,]  provided it is not a signal
-            --    parameter, read.
-            if Vhdl_Std < Vhdl_08 or else Is_Signal_Parameter (Inter) then
+      if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
+         return Check_Interface_View_Mode (Inter, True);
+      else
+         case Get_Mode (Inter) is
+            when Iir_In_Mode
+              | Iir_Inout_Mode
+              | Iir_Buffer_Mode =>
+               --  LRM08 6.5.3 Interface object declarations
+               --  - in. The value of the interface object is allowed
+               --     to be read, [...]
+               --  - inout or buffer.  Reading and updating the value of
+               --     the interface object is allowed. [...]
+               null;
+            when Iir_Out_Mode =>
+               --  LRM93 4.3.2 Interface declarations
+               --  - out. The value of the interface object is allowed to be
+               --    updated, but it must not be read.
+               --
+               --  LRM08 6.5.3 Interface object declarations
+               --  - out. The value of the interface object is allowed
+               --    [to be updated and,]  provided it is not a signal
+               --    parameter, read.
+               if Vhdl_Std < Vhdl_08 or else Is_Signal_Parameter (Inter) then
+                  return False;
+               end if;
+            when Iir_Linkage_Mode =>
+               --  LRM08 6.5.3 Interface object declarations
+               --  - linkage.  Reading and updating the value of the
+               --    interface object is allowed, but only by appearing
+               --    as an actual corresponding to an interface object
+               --    of mode LINKAGE.  No other reading or updating is
+               --    permitted.
                return False;
-            end if;
-         when Iir_Linkage_Mode =>
-            --  LRM08 6.5.3 Interface object declarations
-            --  - linkage.  Reading and updating the value of the
-            --    interface object is allowed, but only by appearing
-            --    as an actual corresponding to an interface object
-            --    of mode LINKAGE.  No other reading or updating is
-            --    permitted.
-            return False;
-         when Iir_Unknown_Mode =>
-            raise Internal_Error;
-      end case;
-      return True;
+            when Iir_Unknown_Mode =>
+               raise Internal_Error;
+         end case;
+         return True;
+      end if;
    end Can_Interface_Be_Read;
 
    function Can_Interface_Be_Updated (Inter : Iir) return Boolean is
    begin
-      case Get_Mode (Inter) is
-         when Iir_In_Mode =>
-            --  LRM08 6.5.3 Interface object declarations
-            --  - in. The value of the interface object is allowed to be read,
-            --    but it shall not be updated.
-            return False;
-         when Iir_Out_Mode =>
-            --  LRM08 6.5.3 Interface object declarations
-            --  - out. The value of the interface object is allowed
-            --    to be updated [and, ...]
+      if Get_Kind (Inter) = Iir_Kind_Interface_View_Declaration then
+         return Check_Interface_View_Mode (Inter, False);
+      else
+         case Get_Mode (Inter) is
+            when Iir_In_Mode =>
+               --  LRM08 6.5.3 Interface object declarations
+               --  - in. The value of the interface object is allowed to be
+               --    read, but it shall not be updated.
+               return False;
+            when Iir_Out_Mode =>
+               --  LRM08 6.5.3 Interface object declarations
+               --  - out. The value of the interface object is allowed
+               --    to be updated [and, ...]
             return True;
-         when Iir_Inout_Mode
-           | Iir_Buffer_Mode =>
-            --  LRM08 6.5.3 Interface object declarations
-            --  - inout or buffer.  Reading and updating the value of the
-            --    interface is allowed.
-            return True;
-         when Iir_Linkage_Mode =>
-            --  LRM08 6.5.3 Interface object declarations
-            --  - linkage.  Reading and updating the value of the
-            --    interface object is allowed, but only by appearing
-            --    as an actual corresponding to an interface object
-            --    of mode LINKAGE.  No other reading or updating is
-            --    permitted.
-            return False;
-         when Iir_Unknown_Mode =>
-            raise Internal_Error;
-      end case;
+            when Iir_Inout_Mode
+              | Iir_Buffer_Mode =>
+               --  LRM08 6.5.3 Interface object declarations
+               --  - inout or buffer.  Reading and updating the value of the
+               --    interface is allowed.
+               return True;
+            when Iir_Linkage_Mode =>
+               --  LRM08 6.5.3 Interface object declarations
+               --  - linkage.  Reading and updating the value of the
+               --    interface object is allowed, but only by appearing
+               --    as an actual corresponding to an interface object
+               --    of mode LINKAGE.  No other reading or updating is
+               --    permitted.
+               return False;
+            when Iir_Unknown_Mode =>
+               raise Internal_Error;
+         end case;
+      end if;
    end Can_Interface_Be_Updated;
 
    procedure Sem_Check_Pure (Loc : Iir; Obj : Iir)

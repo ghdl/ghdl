@@ -238,10 +238,18 @@ package body Vhdl.Sem_Assocs is
                return;
             end if;
       end case;
-      Error_Msg_Sem
-        (+Loc, "cannot associate an " & Get_Mode_Name (Get_Mode (Base_Actual))
-           & " object with " & Get_Mode_Name (Get_Mode (Inter)) & " %n",
-         +Inter);
+      if Get_Kind (Base_Actual) = Iir_Kind_Interface_View_Declaration then
+         Error_Msg_Sem
+           (+Loc, "cannot associate the interface view with "
+            & Get_Mode_Name (Get_Mode (Inter)) & " %n",
+            +Inter);
+      else
+         Error_Msg_Sem
+           (+Loc, "cannot associate an "
+            & Get_Mode_Name (Get_Mode (Base_Actual))
+            & " object with " & Get_Mode_Name (Get_Mode (Inter)) & " %n",
+            +Inter);
+      end if;
    end Check_Parameter_Association_Restriction;
 
    procedure Check_Subprogram_Association_Expression
@@ -270,6 +278,7 @@ package body Vhdl.Sem_Assocs is
             --  signal must be a signal.
             case Get_Kind (Prefix) is
                when Iir_Kind_Interface_Signal_Declaration
+                 | Iir_Kind_Interface_View_Declaration
                  | Iir_Kind_Signal_Declaration
                  | Iir_Kind_Guard_Signal_Declaration
                  | Iir_Kinds_Signal_Attribute
@@ -292,7 +301,8 @@ package body Vhdl.Sem_Assocs is
             end case;
 
             case Get_Kind (Prefix) is
-               when Iir_Kind_Interface_Signal_Declaration =>
+               when Iir_Kind_Interface_Signal_Declaration
+                  | Iir_Kind_Interface_View_Declaration =>
                   Check_Parameter_Association_Restriction
                     (Formal, Prefix, Loc);
                when Iir_Kind_Guard_Signal_Declaration =>
