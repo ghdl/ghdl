@@ -5,4 +5,7 @@
 GHDL_STD_FLAGS=--std=19
 synth_only top
 
+GHDL_STD_FLAGS="--std=19 --keep-hierarchy=no"
+synth_only top
+
 echo "Test successful"
