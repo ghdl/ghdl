@@ -1595,8 +1595,8 @@ package body Elab.Vhdl_Objtypes is
                Res.Rec := To_Rec_El_Array_Acc (Raw_Res);
                for I in Typ.Rec.E'Range loop
                   Res.Rec.E (I).Offs := Typ.Rec.E (I).Offs;
-                  Save_Type (Res.Rec.E (I).Typ,
-                             Typ.Rec.E (I).Typ,
+                  Save_Type (Typ.Rec.E (I).Typ,
+                             Res.Rec.E (I).Typ,
                              Mem, Off, Mem_Sz);
                end loop;
             end;
