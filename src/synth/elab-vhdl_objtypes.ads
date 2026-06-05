@@ -313,16 +313,8 @@ package Elab.Vhdl_Objtypes is
                                      Els : Rec_El_Array_Acc) return Type_Acc;
 
    --  ACC_TYPE can be null for an incomplete type.
-   --  For an access subtype: keep the bound size of the parent.
-   --  HAS_SIGNAL must be true if the designed type (ACC_TYPE) can be a signal
-   --  (used to compute the bounds size if unbounded)
-   function Create_Access_Type (Parent_Type : Type_Acc;
-                                Acc_Type : Type_Acc;
-                                Has_Signal : Boolean) return Type_Acc;
-   procedure Complete_Access_Type (Acc_Type : Type_Acc;
-                                   Des_Typ : Type_Acc;
-                                   Has_Signal : Boolean);
-
+   function Create_Access_Type (Acc_Type : Type_Acc) return Type_Acc;
+   procedure Complete_Access_Type (Acc_Type : Type_Acc; Des_Typ : Type_Acc);
 
    function Create_File_Type (File_Type : Type_Acc) return Type_Acc;
 
@@ -435,6 +427,8 @@ package Elab.Vhdl_Objtypes is
    function Save_Type (Typ : Type_Acc;
                        Mem : Memory_Ptr;
                        Mem_Sz : Size_Type) return Type_Acc;
+
+   function Align (Off : Size_Type; Al : Palign_Type) return Size_Type;
 
    procedure Initialize;
    procedure Finalize;
