@@ -519,6 +519,7 @@ package body Elab.Debugger is
             Put ("  ");
          end if;
          Disp_A_Frame (Inst);
+         New_Line;
          Inst := Get_Caller_Instance (Inst);
       end loop;
    end Where_Proc;
