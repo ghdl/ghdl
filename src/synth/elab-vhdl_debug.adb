@@ -276,13 +276,13 @@ package body Elab.Vhdl_Debug is
             Disp_Value_Record (M, Inst, C_Type);
          when Type_Access =>
             declare
-               Ptr : constant Heap_Ptr := Read_Access (M);
+               Ptr : constant Heap_Slot := Read_Access (M);
             begin
-               if Ptr = Null_Heap_Ptr then
+               if Ptr = Null_Heap_Slot then
                   Put ("null");
                else
                   Put ("@");
-                  Put_Uns32 (Uns32 (Elab.Vhdl_Heap.Get_Index (Ptr)));
+                  Put_Uns32 (Uns32 (Ptr));
                end if;
             end;
          when Type_Protected =>
@@ -1613,7 +1613,7 @@ package body Elab.Vhdl_Debug is
       F : Natural;
       Idx : Uns32;
       Valid : Boolean;
-      Ptr : Heap_Ptr;
+      Slot : Heap_Slot;
       Mt : Memtyp;
    begin
       F := Skip_Blanks (Line, Line'First);
@@ -1622,11 +1622,11 @@ package body Elab.Vhdl_Debug is
          Put_Line ("invalid heap index");
          return;
       end if;
-      Ptr := Elab.Vhdl_Heap.Get_Pointer (Elab.Vhdl_Heap.Heap_Slot (Idx));
-      if Ptr = Null_Heap_Ptr then
+      Slot := Heap_Slot (Idx);
+      if Slot = Null_Heap_Slot then
          Put_Line ("invalid heap index");
       else
-         Mt := Elab.Vhdl_Heap.Synth_Dereference (Ptr);
+         Mt := Elab.Vhdl_Heap.Synth_Dereference (Slot);
          Debug_Memtyp (Mt);
       end if;
    end Print_Heap_Proc;

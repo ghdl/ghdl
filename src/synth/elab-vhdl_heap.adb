@@ -27,10 +27,8 @@ package body Elab.Vhdl_Heap is
    type Slot_Prefix is record
       --  The slot number.
       Slot : Heap_Slot;
-
-      --  Alignment pad.
-      Pad : Uns32;
    end record;
+   for Slot_Prefix'Size use 8 * 8;
 
    pragma Assert (Slot_Prefix'Size = 8 * 8);
 
@@ -76,6 +74,15 @@ package body Elab.Vhdl_Heap is
       return (Res + Align - 1) and not (Align - 1);
    end Realign;
 
+   procedure Write_Access_Ptr (Mem : Memory_Ptr; Val : Heap_Ptr)
+   is
+      V : Heap_Ptr;
+      for V'Address use Mem.all'Address;
+      pragma Import (Ada, V);
+   begin
+      V := Val;
+   end Write_Access_Ptr;
+
    --  Return the data memory address from an heap entry.
    function Entry_To_Obj_Ptr (E : Heap_Entry) return Memory_Ptr
    is
@@ -96,7 +103,7 @@ package body Elab.Vhdl_Heap is
    procedure Allocate (Acc_Def : Node;
                        Acc_Typ : Type_Acc;
                        Obj_Typ : Type_Acc;
-                       Res : out Memory_Ptr;
+                       Res : out Heap_Slot;
                        Data_Mem : out Memory_Ptr)
    is
       Typ_Sz : constant Size_Type := Acc_Typ.Acc_Type_Sz;
@@ -109,8 +116,7 @@ package body Elab.Vhdl_Heap is
 
       --  Allocate memory for the object, the bounds and the prefix.
       E.Ptr := Alloc_Mem (Prefix_Size + Bnd_Sz + Obj_Typ.Sz);
-      Res := E.Ptr + Prefix_Size;
-      Data_Mem := Res + Bnd_Sz;
+      Data_Mem := E.Ptr + Prefix_Size + Bnd_Sz;
 
       --  Allocate the memory for the type.
       if Typ_Sz > 0 then
@@ -129,26 +135,29 @@ package body Elab.Vhdl_Heap is
 
       Heap_Table.Append (E);
       To_Slot_Prefix_Acc (E.Ptr).Slot := Heap_Table.Last;
+      Res := Heap_Table.Last;
    end Allocate;
 
    function Allocate_By_Type (Acc_Def : Node; Acc_Typ : Type_Acc; T : Type_Acc)
-                             return Heap_Ptr
+                             return Heap_Slot
    is
-      Res, Obj_Ptr : Memory_Ptr;
+      Obj_Ptr : Memory_Ptr;
+      Res : Heap_Slot;
    begin
       Allocate (Acc_Def, Acc_Typ, T, Res, Obj_Ptr);
       Write_Value_Default (Obj_Ptr, T);
-      return Heap_Ptr (Res);
+      return Res;
    end Allocate_By_Type;
 
    function Allocate_By_Value (Acc_Def : Node; Acc_Typ : Type_Acc; V : Valtyp)
-                              return Heap_Ptr
+                              return Heap_Slot
    is
-      Mem, Obj_Ptr : Memory_Ptr;
+      Obj_Ptr : Memory_Ptr;
+      Res : Heap_Slot;
    begin
-      Allocate (Acc_Def, Acc_Typ, V.Typ, Mem, Obj_Ptr);
+      Allocate (Acc_Def, Acc_Typ, V.Typ, Res, Obj_Ptr);
       Write_Value (Obj_Ptr, V);
-      return Heap_Ptr (Mem);
+      return Res;
    end Allocate_By_Value;
 
    function Get_Index (Ptr : Heap_Ptr) return Heap_Slot
@@ -161,19 +170,21 @@ package body Elab.Vhdl_Heap is
       return To_Slot_Prefix_Acc (Pfx).Slot;
    end Get_Index;
 
-   --  GCOV_EXCL_START (used only by debugger)
-   function Get_Pointer (Idx : Heap_Slot) return Heap_Ptr
-   is
-      E : Heap_Entry renames Heap_Table.Table (Idx);
+   function Get_Pointer (Idx : Heap_Slot) return Heap_Ptr is
    begin
-      return Heap_Ptr (Entry_To_Obj_Ptr (E));
+      if Idx = Null_Heap_Slot then
+         return null;
+      else
+         declare
+            E : Heap_Entry renames Heap_Table.Table (Idx);
+         begin
+            return Heap_Ptr (E.Ptr + Prefix_Size);
+         end;
+      end if;
    end Get_Pointer;
-   --  GCOV_EXCL_STOP
 
-   function Synth_Dereference (Ptr : Heap_Ptr) return Memtyp
+   function Synth_Dereference (Slot : Heap_Slot) return Memtyp
    is
-      Slot : constant Heap_Slot := Get_Index (Ptr);
-
       E : Heap_Entry renames Heap_Table.Table (Slot);
    begin
       return (E.Obj_Typ, Entry_To_Obj_Ptr (E));
@@ -186,9 +197,8 @@ package body Elab.Vhdl_Heap is
       Obj := (null, null, null, Null_Node);
    end Free;
 
-   procedure Synth_Deallocate (Ptr : Heap_Ptr)
+   procedure Synth_Deallocate (Slot : Heap_Slot)
    is
-      Slot : constant Heap_Slot := Get_Index (Ptr);
    begin
       if Heap_Table.Table (Slot).Ptr = null then
          return;

@@ -877,11 +877,11 @@ package body Elab.Vhdl_Objtypes is
       end if;
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Access,
                                                 Wkind => Wkind_Sim,
-                                                Al => Heap_Ptr_Al,
+                                                Al => Heap_Slot_Al,
                                                 Is_Global => False,
                                                 Is_Static => True,
                                                 Is_Bnd_Static => True,
-                                                Sz => Heap_Ptr_Sz,
+                                                Sz => Heap_Slot_Sz,
                                                 W => 1,
                                                 Acc_Acc => Acc_Type,
                                                 Acc_Type_Sz => Type_Sz,

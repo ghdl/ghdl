@@ -2677,14 +2677,14 @@ package body Synth.Vhdl_Expr is
                return Create_Value_Memtyp (Mt);
             end;
          when Iir_Kind_Null_Literal =>
-            return Create_Value_Access (Null_Heap_Ptr, Typ);
+            return Create_Value_Access (Null_Heap_Slot, Typ);
          when Iir_Kind_Allocator_By_Subtype =>
             declare
                Acc_Tdef : constant Node := Get_Type (Expr);
                Acc_Typ : constant Type_Acc :=
                  Get_Subtype_Object (Syn_Inst, Acc_Tdef);
                T : Type_Acc;
-               Acc : Heap_Ptr;
+               Acc : Heap_Slot;
             begin
                T := Synth_Subtype_Indication
                  (Syn_Inst, Get_Subtype_Indication (Expr));
@@ -2697,7 +2697,7 @@ package body Synth.Vhdl_Expr is
                Acc_Typ : constant Type_Acc :=
                  Get_Subtype_Object (Syn_Inst, Acc_Tdef);
                V : Valtyp;
-               Acc : Heap_Ptr;
+               Acc : Heap_Slot;
             begin
                V := Synth_Expression_With_Type
                  (Syn_Inst, Get_Expression (Expr), Typ.Acc_Acc);

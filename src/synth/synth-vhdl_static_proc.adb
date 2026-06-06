@@ -38,16 +38,16 @@ package body Synth.Vhdl_Static_Proc is
       use Elab.Vhdl_Objtypes;
       Inter : constant Node := Get_Interface_Declaration_Chain (Imp);
       Param : constant Valtyp := Get_Value (Syn_Inst, Inter);
-      Val : Heap_Ptr;
+      Val : Heap_Slot;
    begin
       if not Is_Static (Param.Val) then
          --  Certainly an error (and certainly already reported).
          return;
       end if;
       Val := Read_Access (Param);
-      if Val /= Null_Heap_Ptr then
+      if Val /= Null_Heap_Slot then
          Elab.Vhdl_Heap.Synth_Deallocate (Val);
-         Write_Access (Param.Val.Mem, Null_Heap_Ptr);
+         Write_Access (Param.Val.Mem, Null_Heap_Slot);
       end if;
    end Synth_Deallocate;
 

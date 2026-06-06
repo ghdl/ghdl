@@ -338,13 +338,13 @@ package body Synth.Vhdl_Stmts is
            | Iir_Kind_Dereference =>
             declare
                Acc : Memtyp;
-               Idx : Heap_Ptr;
+               Idx : Heap_Slot;
             begin
                Synth_Object_Name
                  (Syn_Inst, Get_Prefix (Pfx), Dest_Base, Dest_Typ, Dest_Off);
                Acc := (Dest_Typ, Dest_Base.Val.Mem + Dest_Off.Mem_Off);
                Idx := Read_Access (Acc);
-               if Idx = Null_Heap_Ptr then
+               if Idx = Null_Heap_Slot then
                   Error_Msg_Synth (Syn_Inst, Pfx, "NULL access dereferenced");
                   Dest_Base := No_Valtyp;
                   Dest_Typ := Dest_Typ.Acc_Acc;

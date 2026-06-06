@@ -30,17 +30,21 @@ package Elab.Vhdl_Heap is
 
    --  Allocate a value.
    function Allocate_By_Type (Acc_Def : Node; Acc_Typ : Type_Acc; T : Type_Acc)
-                             return Heap_Ptr;
+                             return Heap_Slot;
    function Allocate_By_Value (Acc_Def : Node; Acc_Typ : Type_Acc; V : Valtyp)
-                              return Heap_Ptr;
+                              return Heap_Slot;
 
-   function Synth_Dereference (Ptr : Heap_Ptr) return Memtyp;
+   function Synth_Dereference (Slot : Heap_Slot) return Memtyp;
 
-   procedure Synth_Deallocate (Ptr : Heap_Ptr);
+   procedure Synth_Deallocate (Slot : Heap_Slot);
 
-   type Heap_Slot is new Uns32;
-   Null_Heap_Slot : constant Heap_Slot := 0;
    First_Heap_Slot : constant Heap_Slot := 1;
+
+   --  Representation of an access: a pointer inside the heap.
+   type Heap_Ptr is new Memory_Ptr;
+   Null_Heap_Ptr : constant Heap_Ptr := null;
+
+   procedure Write_Access_Ptr (Mem : Memory_Ptr; Val : Heap_Ptr);
 
    function Get_Index (Ptr : Heap_Ptr) return Heap_Slot;
    function Get_Pointer (Idx : Heap_Slot) return Heap_Ptr;
