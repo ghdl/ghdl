@@ -615,14 +615,11 @@ package body Trans.Chap7 is
       return Translate_Numeric_Literal (Expr, Expr_Otype);
    end Translate_Numeric_Literal;
 
-   function Translate_Null_Literal (Expr : Iir; Res_Type : Iir)
-                                   return O_Cnode
+   function Translate_Null_Literal (Expr : Iir) return O_Cnode
    is
       pragma Unreferenced (Expr);
-      Tinfo : constant Type_Info_Acc := Get_Info (Res_Type);
-      Otype : constant O_Tnode := Tinfo.Ortho_Type (Mode_Value);
    begin
-      return New_Null_Access (Otype);
+      return Ghdl_Access_Null;
    end Translate_Null_Literal;
 
    function Translate_Static_Expression (Expr : Iir; Res_Type : Iir)
@@ -632,7 +629,7 @@ package body Trans.Chap7 is
    begin
       case Get_Kind (Expr) is
          when Iir_Kind_Null_Literal =>
-            return Translate_Null_Literal (Expr, Res_Type);
+            return Translate_Null_Literal (Expr);
 
          when Iir_Kind_Integer_Literal
             | Iir_Kind_Enumeration_Literal
@@ -4462,14 +4459,23 @@ package body Trans.Chap7 is
       end case;
    end Translate_Aggregate_Bounds;
 
-   function Gen_Heap_Alloc (Size : O_Enode; Ptype : O_Tnode) return O_Enode
+   function Gen_Heap_Alloc (Size : O_Enode) return O_Enode
    is
       Constr : O_Assoc_List;
    begin
       Start_Association (Constr, Ghdl_Allocate);
       New_Association (Constr, Size);
-      return New_Convert_Ov (New_Function_Call (Constr), Ptype);
+      return New_Function_Call (Constr);
    end Gen_Heap_Alloc;
+
+   function Gen_Deref (Slot : O_Enode; Ptype : O_Tnode) return O_Enode
+   is
+      Constr : O_Assoc_List;
+   begin
+      Start_Association (Constr, Ghdl_Deref);
+      New_Association (Constr, Slot);
+      return New_Convert_Ov (New_Function_Call (Constr), Ptype);
+   end Gen_Deref;
 
    function Translate_Allocator_By_Expression (Expr : Iir) return O_Enode
    is
@@ -4479,21 +4485,26 @@ package body Trans.Chap7 is
       D_Type : constant Iir := Get_Designated_Type (A_Type);
       D_Info : constant Type_Info_Acc := Get_Info (D_Type);
       Val    : O_Enode;
-      R      : Mnode;
+      Slot : O_Dnode;
    begin
       --  Compute the expression.
       Val := Translate_Expression (Get_Expression (Expr), D_Type);
+
+      Slot := Create_Temp (Ghdl_Access_Type);
 
       --  Allocate memory for the object.
       case A_Info.Type_Mode is
          when Type_Mode_Bounds_Acc =>
             declare
-               Res : O_Dnode;
+               Ptr_Type : constant O_Tnode :=
+                 D_Info.Ortho_Ptr_Type (Mode_Value);
+               Ptr : O_Dnode;
                Val_Size : O_Dnode;
                Bounds_Size : O_Cnode;
                Val_M  : Mnode;
             begin
-               Res := Create_Temp (A_Info.Ortho_Type (Mode_Value));
+               Ptr := Create_Temp (Ptr_Type);
+
                Val_M := Stabilize (E2M (Val, D_Info, Mode_Value));
 
                --  Size of the value (object without the bounds).
@@ -4508,41 +4519,50 @@ package body Trans.Chap7 is
 
                --  Allocate the object.
                New_Assign_Stmt
-                 (New_Obj (Res),
+                 (New_Obj (Slot),
                   Gen_Heap_Alloc (New_Dyadic_Op
                                     (ON_Add_Ov,
                                      New_Lit (Bounds_Size),
-                                     New_Obj_Value (Val_Size)),
-                                  A_Info.Ortho_Type (Mode_Value)));
+                                     New_Obj_Value (Val_Size))));
+
+               New_Assign_Stmt
+                 (New_Obj (Ptr), Gen_Deref (New_Obj_Value (Slot), Ptr_Type));
 
                --  Copy bounds.
                Gen_Memcpy
-                 (New_Obj_Value (Res),
+                 (New_Obj_Value (Ptr),
                   M2Addr (Chap3.Get_Composite_Bounds (Val_M)),
                   New_Lit (Bounds_Size));
 
                --  Copy values.
                Gen_Memcpy
-                 (Chap3.Get_Bounds_Acc_Base (New_Obj_Value (Res), D_Type),
+                 (Chap3.Get_Bounds_Acc_Base (New_Obj_Value (Ptr), D_Type),
                   M2Addr (Chap3.Get_Composite_Base (Val_M)),
                   New_Obj_Value (Val_Size));
-
-               return New_Obj_Value (Res);
             end;
          when Type_Mode_Acc =>
-            R := Dp2M (Create_Temp (D_Info.Ortho_Ptr_Type (Mode_Value)),
-                       D_Info, Mode_Value);
-            New_Assign_Stmt
-              (M2Lp (R),
-               Gen_Heap_Alloc
-                 (Chap3.Get_Object_Size (T2M (D_Type, Mode_Value), D_Type),
-                  D_Info.Ortho_Ptr_Type (Mode_Value)));
-            Chap3.Translate_Object_Copy
-              (R, E2M (Val, D_Info, Mode_Value), D_Type);
-            return New_Convert_Ov (M2Addr (R), A_Info.Ortho_Type (Mode_Value));
+            declare
+               Ptr_Type : constant O_Tnode :=
+                 D_Info.Ortho_Ptr_Type (Mode_Value);
+               R      : Mnode;
+            begin
+               R := Dp2M (Create_Temp (Ptr_Type), D_Info, Mode_Value);
+               New_Assign_Stmt
+                 (New_Obj (Slot),
+                  Gen_Heap_Alloc
+                    (Chap3.Get_Object_Size (T2M (D_Type, Mode_Value),
+                     D_Type)));
+               New_Assign_Stmt
+                 (M2Lp (R), Gen_Deref (New_Obj_Value (Slot), Ptr_Type));
+
+               Chap3.Translate_Object_Copy
+                 (R, E2M (Val, D_Info, Mode_Value), D_Type);
+            end;
          when others =>
             raise Internal_Error;
       end case;
+
+      return New_Obj_Value (Slot);
    end Translate_Allocator_By_Expression;
 
    function Bounds_Acc_To_Fat_Pointer (Ptr : O_Dnode; Acc_Type : Iir)
@@ -4572,10 +4592,15 @@ package body Trans.Chap7 is
       D_Type   : constant Iir := Get_Designated_Type (A_Type);
       D_Info   : constant Type_Info_Acc := Get_Info (D_Type);
       Res      : Mnode;
+      Slot     : O_Dnode;
    begin
+      Slot := Create_Temp (Ghdl_Access_Type);
+
       case A_Info.Type_Mode is
          when Type_Mode_Bounds_Acc =>
             declare
+               Ptr_Type : constant O_Tnode :=
+                 D_Info.Ortho_Ptr_Type (Mode_Value);
                Sub_Type : Iir;
                Ptr : O_Dnode;
                Val_Size : O_Dnode;
@@ -4585,7 +4610,7 @@ package body Trans.Chap7 is
                Sub_Type := Get_Type_Of_Subtype_Indication (Sub_Type);
                Chap3.Create_Composite_Subtype (Sub_Type);
 
-               Ptr := Create_Temp (A_Info.Ortho_Type (Mode_Value));
+               Ptr := Create_Temp (Ptr_Type);
 
                --  Size of the value (object without the bounds).
                Val_Size := Create_Temp_Init
@@ -4600,12 +4625,14 @@ package body Trans.Chap7 is
 
                --  Allocate the object.
                New_Assign_Stmt
-                 (New_Obj (Ptr),
+                 (New_Obj (Slot),
                   Gen_Heap_Alloc (New_Dyadic_Op
                                     (ON_Add_Ov,
                                      New_Lit (Bounds_Size),
-                                     New_Obj_Value (Val_Size)),
-                                  A_Info.Ortho_Type (Mode_Value)));
+                                     New_Obj_Value (Val_Size))));
+
+               New_Assign_Stmt
+                 (New_Obj (Ptr), Gen_Deref (New_Obj_Value (Slot), Ptr_Type));
 
                --  Copy bounds.
                Gen_Memcpy (New_Obj_Value (Ptr),
@@ -4615,23 +4642,28 @@ package body Trans.Chap7 is
                --  Create a fat pointer to initialize the object.
                Res := Bounds_Acc_To_Fat_Pointer (Ptr, A_Type);
                Chap4.Init_Object (Res, D_Type);
-
-               return New_Obj_Value (Ptr);
             end;
          when Type_Mode_Acc =>
-            Res := Dp2M (Create_Temp (D_Info.Ortho_Ptr_Type (Mode_Value)),
-                         D_Info, Mode_Value);
-            New_Assign_Stmt
-              (M2Lp (Res),
-               Gen_Heap_Alloc
-                 (Chap3.Get_Object_Size (T2M (D_Type, Mode_Value), D_Type),
-                  D_Info.Ortho_Ptr_Type (Mode_Value)));
-            Chap4.Init_Object (Res, D_Type);
-            return New_Convert_Ov
-              (M2Addr (Res), A_Info.Ortho_Type (Mode_Value));
+            declare
+               Ptr_Type : constant O_Tnode :=
+                 D_Info.Ortho_Ptr_Type (Mode_Value);
+            begin
+               Res := Dp2M (Create_Temp (Ptr_Type), D_Info, Mode_Value);
+               New_Assign_Stmt
+                 (New_Obj (Slot),
+                  Gen_Heap_Alloc
+                    (Chap3.Get_Object_Size
+                      (T2M (D_Type, Mode_Value), D_Type)));
+               New_Assign_Stmt
+                 (M2Lp (Res), Gen_Deref (New_Obj_Value (Slot), Ptr_Type));
+
+               Chap4.Init_Object (Res, D_Type);
+            end;
          when others =>
             raise Internal_Error;
       end case;
+
+      return New_Obj_Value (Slot);
    end Translate_Allocator_By_Subtype;
 
    --  Convert the bounds of an array (and only the bounds).
@@ -5116,7 +5148,7 @@ package body Trans.Chap7 is
             end if;
 
          when Iir_Kind_Null_Literal =>
-            return New_Lit (Translate_Null_Literal (Expr, Res_Type));
+            return New_Lit (Translate_Null_Literal (Expr));
 
          when Iir_Kind_Overflow_Literal =>
             return Translate_Overflow_Literal (Expr, Res_Type);

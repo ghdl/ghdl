@@ -183,6 +183,7 @@ package Trans_Decls is
    Ghdl_Memcpy : O_Dnode;
    Ghdl_Deallocate : O_Dnode;
    Ghdl_Allocate : O_Dnode;
+   Ghdl_Deref : O_Dnode;
    Ghdl_Malloc : O_Dnode;
    Ghdl_Malloc0 : O_Dnode;
    Ghdl_Free_Mem : O_Dnode;

@@ -380,6 +380,16 @@ package body Translation is
       Ghdl_Ptr_Type := New_Access_Type (Char_Type_Node);
       New_Type_Decl (Get_Identifier ("__ghdl_ptr"), Ghdl_Ptr_Type);
 
+      --  Generic access
+      Ghdl_Access_Type := New_Unsigned_Type (32);
+      New_Type_Decl (Get_Identifier ("__ghdl_access_type"), Ghdl_Access_Type);
+
+      Ghdl_Access_Null := New_Unsigned_Literal (Ghdl_Access_Type, 0);
+
+      Ghdl_Access_Ptr_Type := New_Access_Type (Ghdl_Access_Type);
+      New_Type_Decl (Get_Identifier ("__ghdl_access_ptr_type"),
+                     Ghdl_Access_Ptr_Type);
+
       --  Create record
       --     len : natural;
       --     str : C_String;
@@ -586,17 +596,25 @@ package body Translation is
       Finish_Subprogram_Decl (Interfaces, Ghdl_Memcpy);
 
       -- function __ghdl_allocate (length : ghdl_index_type)
-      --    return ghdl_ptr_type;
+      --    return ghdl_access_type;
       Start_Function_Decl
         (Interfaces, Get_Identifier ("__ghdl_allocate"), O_Storage_External,
-         Ghdl_Ptr_Type);
+         Ghdl_Access_Type);
       New_Interface_Decl (Interfaces, Param, Wki_Length, Ghdl_Index_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Allocate);
 
-      --  procedure __ghdl_deallocate (ptr : ghdl_ptr_type);
+      -- function __ghdl_deref (ptr : ghdl_access_type)
+      --    return ghdl_ptr_type;
+      Start_Function_Decl
+        (Interfaces, Get_Identifier ("__ghdl_deref"), O_Storage_External,
+         Ghdl_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_This, Ghdl_Access_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Deref);
+
+      --  procedure __ghdl_deallocate (ptr : ghdl_access_type);
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_deallocate"), O_Storage_External);
-      New_Interface_Decl (Interfaces, Param, Wki_Obj, Ghdl_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Obj, Ghdl_Access_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Deallocate);
 
       -- function __ghdl_malloc (length : ghdl_index_type)

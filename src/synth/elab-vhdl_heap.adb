@@ -21,28 +21,6 @@ with Ada.Unchecked_Conversion;
 with Tables;
 
 package body Elab.Vhdl_Heap is
-
-   --  Each object on the heap is prefixed by this prefix (to easily convert
-   --  to an index).
-   type Slot_Prefix is record
-      --  The slot number.
-      Slot : Heap_Slot;
-   end record;
-   for Slot_Prefix'Size use 8 * 8;
-
-   pragma Assert (Slot_Prefix'Size = 8 * 8);
-
-   --  Maximum alignment required to store any object.
---   Max_Align : constant := 8;
-
-   --  Size of the prefix.
-   Prefix_Size : constant Size_Type := Size_Type (Slot_Prefix'Size / 8);
-
-   type Slot_Prefix_Acc is access all Slot_Prefix;
-
-   function To_Slot_Prefix_Acc is new Ada.Unchecked_Conversion
-     (Source => Memory_Ptr, Target => Slot_Prefix_Acc);
-
    --  Each allocated object on the heap is referenced in the heap table.
    --  This is the entry in the table.
    type Heap_Entry is record
@@ -74,15 +52,6 @@ package body Elab.Vhdl_Heap is
       return (Res + Align - 1) and not (Align - 1);
    end Realign;
 
-   procedure Write_Access_Ptr (Mem : Memory_Ptr; Val : Heap_Ptr)
-   is
-      V : Heap_Ptr;
-      for V'Address use Mem.all'Address;
-      pragma Import (Ada, V);
-   begin
-      V := Val;
-   end Write_Access_Ptr;
-
    --  Return the data memory address from an heap entry.
    function Entry_To_Obj_Ptr (E : Heap_Entry) return Memory_Ptr
    is
@@ -90,7 +59,7 @@ package body Elab.Vhdl_Heap is
    begin
       Bnd_Sz := Realign (E.Acc_Typ.Acc_Bnd_Sz, 2**Natural (E.Obj_Typ.Al));
 
-      return E.Ptr + Prefix_Size + Bnd_Sz;
+      return E.Ptr + Bnd_Sz;
    end Entry_To_Obj_Ptr;
 
    function Get_Last_Slot return Heap_Slot is
@@ -115,8 +84,8 @@ package body Elab.Vhdl_Heap is
       Bnd_Sz := Realign (Acc_Typ.Acc_Bnd_Sz, 2**Natural (Obj_Typ.Al));
 
       --  Allocate memory for the object, the bounds and the prefix.
-      E.Ptr := Alloc_Mem (Prefix_Size + Bnd_Sz + Obj_Typ.Sz);
-      Data_Mem := E.Ptr + Prefix_Size + Bnd_Sz;
+      E.Ptr := Alloc_Mem (Bnd_Sz + Obj_Typ.Sz);
+      Data_Mem := E.Ptr + Bnd_Sz;
 
       --  Allocate the memory for the type.
       if Typ_Sz > 0 then
@@ -134,7 +103,6 @@ package body Elab.Vhdl_Heap is
       E.Acc_Typ := Acc_Typ;
 
       Heap_Table.Append (E);
-      To_Slot_Prefix_Acc (E.Ptr).Slot := Heap_Table.Last;
       Res := Heap_Table.Last;
    end Allocate;
 
@@ -160,17 +128,7 @@ package body Elab.Vhdl_Heap is
       return Res;
    end Allocate_By_Value;
 
-   function Get_Index (Ptr : Heap_Ptr) return Heap_Slot
-   is
-      Pfx : constant Memory_Ptr := Memory_Ptr (Ptr) - Prefix_Size;
-   begin
-      if Ptr = null then
-         return Null_Heap_Slot;
-      end if;
-      return To_Slot_Prefix_Acc (Pfx).Slot;
-   end Get_Index;
-
-   function Get_Pointer (Idx : Heap_Slot) return Heap_Ptr is
+   function Get_Pointer (Idx : Heap_Slot) return Memory_Ptr is
    begin
       if Idx = Null_Heap_Slot then
          return null;
@@ -178,7 +136,7 @@ package body Elab.Vhdl_Heap is
          declare
             E : Heap_Entry renames Heap_Table.Table (Idx);
          begin
-            return Heap_Ptr (E.Ptr + Prefix_Size);
+            return E.Ptr;
          end;
       end if;
    end Get_Pointer;
@@ -234,37 +192,30 @@ package body Elab.Vhdl_Heap is
    begin
       pragma Assert (E.Acc_Typ.Acc_Bnd_Sz = Bnd_Sz);
 
-      return E.Ptr + Prefix_Size;
+      return E.Ptr;
    end Insert_Bounds;
 
-   function Ghdl_Allocate (Sz : Ghdl_Index_Type) return Heap_Ptr
+   function Ghdl_Allocate (Sz : Ghdl_Index_Type) return Heap_Slot
    is
       Ptr : Memory_Ptr;
    begin
       --  Allocate memory for the object and the prefix.
-      Ptr := Alloc_Mem (Prefix_Size + Size_Type (Sz));
+      Ptr := Alloc_Mem (Size_Type (Sz));
       Heap_Table.Append ((Ptr => Ptr,
                           Obj_Typ => null,
                           Acc_Typ => null,
                           Def => Null_Node));
 
-      To_Slot_Prefix_Acc (Ptr).Slot := Heap_Table.Last;
-
-      return Heap_Ptr (Ptr + Prefix_Size);
+      return Heap_Table.Last;
    end Ghdl_Allocate;
 
-   procedure Ghdl_Deallocate (Ptr : Heap_Ptr)
-   is
-      Slot : Heap_Slot;
+   procedure Ghdl_Deallocate (Slot : Heap_Slot) is
    begin
-      if Ptr = null then
+      if Slot = Null_Heap_Slot then
          return;
       end if;
-
-      Slot := Get_Index (Ptr);
 
       Free_Mem (Heap_Table.Table (Slot).Ptr);
       Heap_Table.Table (Slot).Ptr := null;
    end Ghdl_Deallocate;
-
 end Elab.Vhdl_Heap;

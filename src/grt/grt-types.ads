@@ -46,6 +46,9 @@ package Grt.Types is
    type Ghdl_Index_Type is mod 2 ** 32;
    subtype Ghdl_Real is Ghdl_F64;
 
+   type Ghdl_Access_Type is range 0 .. 2**31 - 1;
+   Ghdl_Access_Null : constant Ghdl_Access_Type := 0;
+
    --  Access to an unconstrained string.
    type String_Access is access String;
    type String_Cst is access constant String;

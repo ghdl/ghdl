@@ -1652,34 +1652,10 @@ package body Trans.Chap3 is
    --  Access  --
    --------------
 
-   --  Get the ortho designated type for access type DEF.
-   function Get_Ortho_Designated_Type (Def : Iir_Access_Type_Definition)
-                                      return O_Tnode
-   is
-      D_Type   : constant Iir := Get_Designated_Type (Def);
-      D_Info   : constant Type_Info_Acc := Get_Info (D_Type);
-   begin
-      if not Is_Fully_Constrained_Type (D_Type) then
-         return D_Info.B.Bounds_Type;
-      else
-         if D_Info.Type_Mode in Type_Mode_Arrays then
-            --  The designated type cannot be a sub array inside ortho.
-            --  FIXME: lift this restriction.
-            return D_Info.B.Base_Type (Mode_Value);
-         else
-            return D_Info.Ortho_Type (Mode_Value);
-         end if;
-      end if;
-   end Get_Ortho_Designated_Type;
-
    procedure Translate_Access_Type (Def : Iir_Access_Type_Definition)
    is
       D_Type   : constant Iir := Get_Designated_Type (Def);
-      --  Info for designated type may not be a type info: it may be an
-      --  incomplete type.
-      D_Info   : constant Ortho_Info_Acc := Get_Info (D_Type);
       Def_Info : constant Type_Info_Acc := Get_Info (Def);
-      Dtype    : O_Tnode;
    begin
       --  No access types for signals.
       Def_Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
@@ -1694,25 +1670,15 @@ package body Trans.Chap3 is
       end if;
       Def_Info.B.Align := Align_Ptr;
 
-      if D_Info.Kind = Kind_Incomplete_Type then
-         --  Incomplete access.
-         Dtype := O_Tnode_Null;
-      else
-         Dtype := Get_Ortho_Designated_Type (Def);
-      end if;
-
-      Def_Info.Ortho_Type (Mode_Value) := New_Access_Type (Dtype);
-      Finish_Type_Definition (Def_Info);
+      Def_Info.Ortho_Type (Mode_Value) := Ghdl_Access_Type;
+      Def_Info.Ortho_Ptr_Type (Mode_Value) := Ghdl_Access_Ptr_Type;
    end Translate_Access_Type;
 
    ------------------------
    --  Incomplete types  --
    ------------------------
 
-   procedure Translate_Incomplete_Type (Def : Iir)
-   is
-      Info  : Incomplete_Type_Info_Acc;
-      Ctype : Iir;
+   procedure Translate_Incomplete_Type (Def : Iir) is
    begin
       if Is_Null (Get_Incomplete_Type_Ref_Chain (Def)) then
          --  FIXME:
@@ -1720,32 +1686,7 @@ package body Trans.Chap3 is
          --  types not used before the full type declaration).
          return;
       end if;
-
-      --  Get the complete type definition.
-      Ctype := Get_Complete_Type_Definition (Def);
-      Info := Add_Info (Ctype, Kind_Incomplete_Type);
-      Info.Incomplete_Type := Def;
    end Translate_Incomplete_Type;
-
-   procedure Translate_Complete_Type
-     (Incomplete_Info : in out Incomplete_Type_Info_Acc)
-   is
-      Atype    : Iir;
-      Def_Info : Type_Info_Acc;
-   begin
-      Atype := Get_Incomplete_Type_Ref_Chain (Incomplete_Info.Incomplete_Type);
-      while Is_Valid (Atype) loop
-         --  Only access type can be completed.
-         pragma Assert (Get_Kind (Atype) = Iir_Kind_Access_Type_Definition);
-
-         Def_Info := Get_Info (Atype);
-         Finish_Access_Type (Def_Info.Ortho_Type (Mode_Value),
-                             Get_Ortho_Designated_Type (Atype));
-
-         Atype := Get_Incomplete_Type_Ref_Chain (Atype);
-      end loop;
-      Unchecked_Deallocation (Incomplete_Info);
-   end Translate_Complete_Type;
 
    -----------------
    --  protected  --
@@ -2382,7 +2323,6 @@ package body Trans.Chap3 is
    procedure Translate_Type_Definition (Def : Iir)
    is
       Info          : Ortho_Info_Acc;
-      Complete_Info : Incomplete_Type_Info_Acc;
    begin
       --  Handle the special case of incomplete type.
       if Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition then
@@ -2393,19 +2333,8 @@ package body Trans.Chap3 is
       --  If the definition is already translated, return now.
       Info := Get_Info (Def);
       if Info /= null then
-         case Info.Kind is
-            when Kind_Type =>
-               --  The subtype was already translated.
-               return;
-            when Kind_Incomplete_Type =>
-               --  Type is being completed.
-               Complete_Info := Info;
-               Clear_Info (Def);
-            when others =>
-               raise Internal_Error;
-         end case;
-      else
-         Complete_Info := null;
+         pragma Assert (Info.Kind = Kind_Type);
+         return;
       end if;
 
       Info := Add_Info (Def, Kind_Type);
@@ -2467,10 +2396,6 @@ package body Trans.Chap3 is
          when others =>
             Error_Kind ("translate_type_definition", Def);
       end case;
-
-      if Complete_Info /= null then
-         Translate_Complete_Type (Complete_Info);
-      end if;
    end Translate_Type_Definition;
 
    procedure Translate_Bool_Type_Definition (Def : Iir)
@@ -2498,24 +2423,12 @@ package body Trans.Chap3 is
      (Def : Iir; With_Vars : Boolean := True)
    is
       Info          : Ortho_Info_Acc;
-      Complete_Info : Incomplete_Type_Info_Acc;
    begin
       --  If the definition is already translated, return now.
       Info := Get_Info (Def);
       if Info /= null then
-         case Info.Kind is
-            when Kind_Type =>
-               --  The subtype was already translated.
-               return;
-            when Kind_Incomplete_Type =>
-               --  Type is being completed.
-               Complete_Info := Info;
-               Clear_Info (Def);
-            when others =>
-               raise Internal_Error;
-         end case;
-      else
-         Complete_Info := null;
+         pragma Assert (Info.Kind = Kind_Type);
+         return;
       end if;
 
       Info := Add_Info (Def, Kind_Type);
@@ -2567,10 +2480,6 @@ package body Trans.Chap3 is
          when others =>
             Error_Kind ("translate_subtype_definition", Def);
       end case;
-
-      if Complete_Info /= null then
-         Translate_Complete_Type (Complete_Info);
-      end if;
    end Translate_Subtype_Definition;
 
    procedure Translate_Type_Subprograms
@@ -3498,10 +3407,8 @@ package body Trans.Chap3 is
    --  Performs deallocation of PARAM (the parameter of a deallocate call).
    procedure Translate_Object_Deallocation (Param : Iir)
    is
-      Param_Type : constant Iir := Get_Type (Param);
-      Info       : constant Type_Info_Acc := Get_Info (Param_Type);
       Assocs : O_Assoc_List;
-      Val        : Mnode;
+      Val    : Mnode;
    begin
       --  Compute parameter
       Val := Chap6.Translate_Name (Param, Mode_Value);
@@ -3509,13 +3416,11 @@ package body Trans.Chap3 is
 
       --  Call deallocator.
       Start_Association (Assocs, Ghdl_Deallocate);
-      New_Association (Assocs, New_Convert_Ov (New_Value (M2Lv (Val)),
-                                               Ghdl_Ptr_Type));
+      New_Association (Assocs, New_Value (M2Lv (Val)));
       New_Procedure_Call (Assocs);
 
       --  Set the value to null.
-      New_Assign_Stmt
-        (M2Lv (Val), New_Lit (New_Null_Access (Info.Ortho_Type (Mode_Value))));
+      New_Assign_Stmt (M2Lv (Val), New_Lit (Ghdl_Access_Null));
    end Translate_Object_Deallocation;
 
    function Not_In_Range (Value : O_Dnode; Atype : Iir) return O_Enode

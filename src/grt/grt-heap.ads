@@ -23,9 +23,11 @@
 with Grt.Types; use Grt.Types;
 
 package Grt.Heap is
-   function Ghdl_Allocate (Size : Ghdl_Index_Type) return Ghdl_Ptr;
-   procedure Ghdl_Deallocate (Ptr : Ghdl_Ptr);
+   function Ghdl_Allocate (Size : Ghdl_Index_Type) return Ghdl_Access_Type;
+   procedure Ghdl_Deallocate (Slot : Ghdl_Access_Type);
+   function Ghdl_Deref (Slot : Ghdl_Access_Type) return Ghdl_Ptr;
 private
    pragma Export (C, Ghdl_Allocate, "__ghdl_allocate");
    pragma Export (C, Ghdl_Deallocate, "__ghdl_deallocate");
+   pragma Export (C, Ghdl_Deref, "__ghdl_deref");
 end Grt.Heap;

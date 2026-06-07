@@ -488,7 +488,7 @@ package body Trans.Chap4 is
             return Chap14.Translate_Left_Type_Attribute (Atype);
          when Type_Mode_Acc
            | Type_Mode_Bounds_Acc =>
-            return New_Lit (New_Null_Access (Tinfo.Ortho_Type (Mode_Value)));
+            return New_Lit (Ghdl_Access_Null);
          when others =>
             Error_Kind ("get_scalar_initial_value", Atype);
       end case;

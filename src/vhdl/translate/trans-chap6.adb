@@ -1136,39 +1136,20 @@ package body Trans.Chap6 is
       Prefix_Type : constant Iir := Get_Type (Prefix);
       Pt_Info : constant Type_Info_Acc := Get_Info (Prefix_Type);
       Pfx : O_Enode;
+      Ptr_Type : O_Tnode;
+      Ptr : O_Enode;
       Pfx_Var : O_Dnode;
-      If_Blk : O_If_Block;
-      Constr    : O_Assoc_List;
    begin
       Pfx := Chap7.Translate_Expression (Prefix);
       if Pt_Info.Type_Mode = Type_Mode_Bounds_Acc then
-         Pfx_Var := Create_Temp_Init (Pt_Info.Ortho_Type (Mode_Value), Pfx);
-
-         --  Check null access
-         --  There is no dereference (so no SEGV) for unbounded access, so
-         --  we need to add an explicit check.
-         --  Also, an implicit dereference is immediately followed by an
-         --  access, so check only in case of explicit dereference.
-         --  We could try to do a manual dereference but some backends (llvm)
-         --  optimize this check.
-         if Get_Kind (Name) = Iir_Kind_Dereference then
-            Start_If_Stmt
-              (If_Blk,
-               New_Compare_Op
-                 (ON_Eq, New_Obj_Value (Pfx_Var),
-                  New_Lit (New_Null_Access (Pt_Info.Ortho_Type (Mode_Value))),
-                  Ghdl_Bool_Type));
-            Start_Association (Constr, Ghdl_Access_Check_Failed);
-            New_Procedure_Call (Constr);
-            Finish_If_Stmt (If_Blk);
-         end if;
-
+         Ptr_Type := Pt_Info.Ortho_Ptr_Type (Mode_Value);
+         Ptr := Chap7.Gen_Deref (Pfx, Ptr_Type);
+         Pfx_Var := Create_Temp_Init (Ptr_Type, Ptr);
          return Chap7.Bounds_Acc_To_Fat_Pointer (Pfx_Var, Prefix_Type);
       else
-         return Lv2M (New_Access_Element
-                        (New_Convert_Ov
-                           (Pfx, Type_Info.Ortho_Ptr_Type (Mode_Value))),
-                      Type_Info, Mode_Value);
+         Ptr_Type := Type_Info.Ortho_Ptr_Type (Mode_Value);
+         Ptr := Chap7.Gen_Deref (Pfx, Ptr_Type);
+         return Lv2M (New_Access_Element (Ptr), Type_Info, Mode_Value);
       end if;
    end Translate_Dereferenced_Name;
 

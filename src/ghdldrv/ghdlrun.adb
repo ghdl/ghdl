@@ -346,6 +346,8 @@ package body Ghdlrun is
                  Grt.Heap.Ghdl_Allocate'Address);
             Def (Trans_Decls.Ghdl_Deallocate,
                  Grt.Heap.Ghdl_Deallocate'Address);
+            Def (Trans_Decls.Ghdl_Deref,
+                 Grt.Heap.Ghdl_Deref'Address);
 
             Ortho_Jit.Link (Err);
             if Err then

@@ -25,20 +25,47 @@ with System; use System;
 with Ada.Unchecked_Conversion;
 
 with Grt.C; use Grt.C;
+with Grt.Table;
+with Grt.Errors;
 
 package body Grt.Heap is
-   function Ghdl_Allocate (Size : Ghdl_Index_Type) return Ghdl_Ptr
+   package Heap_Table is new Grt.Table
+     (Table_Component_Type => Ghdl_Ptr,
+      Table_Index_Type => Ghdl_Access_Type,
+      Table_Low_Bound => 1,
+      Table_Initial => 8);
+
+   function Ghdl_Allocate (Size : Ghdl_Index_Type) return Ghdl_Access_Type
    is
       function To_Ghdl_Ptr is new Ada.Unchecked_Conversion
         (Source => Address, Target => Ghdl_Ptr);
+      Ptr : Ghdl_Ptr;
    begin
-      return To_Ghdl_Ptr (Malloc (size_t (Size)));
+      Ptr := To_Ghdl_Ptr (Malloc (size_t (Size)));
+      Heap_Table.Append (Ptr);
+      return Heap_Table.Last;
    end Ghdl_Allocate;
 
-   procedure Ghdl_Deallocate (Ptr : Ghdl_Ptr) is
+   procedure Ghdl_Deallocate (Slot : Ghdl_Access_Type)
+   is
       function To_Address is new Ada.Unchecked_Conversion
         (Source => Ghdl_Ptr, Target => Address);
+      Ptr : Ghdl_Ptr;
    begin
+      if Slot = Ghdl_Access_Null then
+         return;
+      end if;
+      Ptr := Heap_Table.Table (Slot);
       Free (To_Address (Ptr));
+      Heap_Table.Table (Slot) := Ghdl_Ptr (Null_Address);
    end Ghdl_Deallocate;
+
+   function Ghdl_Deref (Slot : Ghdl_Access_Type) return Ghdl_Ptr is
+   begin
+      if Slot = Ghdl_Access_Null then
+         Errors.Error ("NULL access deferenced");
+      else
+         return Heap_Table.Table (Slot);
+      end if;
+   end Ghdl_Deref;
 end Grt.Heap;

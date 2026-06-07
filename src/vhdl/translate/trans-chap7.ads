@@ -156,6 +156,9 @@ package Trans.Chap7 is
                                    return O_Enode;
 
    function Get_ON_Op (Imp : Iir) return ON_Op_Kind;
+
+   --  Dereference an access.
+   function Gen_Deref (Slot : O_Enode; Ptype : O_Tnode) return O_Enode;
 private
    type Implicit_Subprogram_Infos is record
       Arr_Eq_Info     : Operator_Info_Acc;

@@ -36,7 +36,7 @@ with Elab.Vhdl_Objtypes; use Elab.Vhdl_Objtypes;
 with Elab.Vhdl_Values; use Elab.Vhdl_Values;
 with Elab.Vhdl_Context; use Elab.Vhdl_Context;
 with Elab.Vhdl_Prot;
-with Elab.Vhdl_Heap;
+with Elab.Vhdl_Heap.Rt;
 with Elab.Vhdl_Insts;
 with Elab.Vhdl_Debug;
 
@@ -743,15 +743,15 @@ package body Simul.Vhdl_Compile is
       Src : constant Memtyp := Get_Memtyp (Src_Vt);
       Dst_Mem : Memory_Ptr;
    begin
+      --  Address of the object
       Dst_Mem := Get_Var_Mem (Mem, Var_Info.Object_Var);
 
       case Src.Typ.Kind is
          when Type_Access =>
             declare
-               use Elab.Vhdl_Heap;
                Slot : constant Heap_Slot := Read_Access (Src);
             begin
-               Write_Access_Ptr (Dst_Mem, Get_Pointer (Slot));
+               Write_Access (Dst_Mem, Slot);
                Src_Vt.Val.Mem := Dst_Mem;
             end;
          when Type_Protected =>
@@ -2225,6 +2225,8 @@ package body Simul.Vhdl_Compile is
 
       Def (Trans_Decls.Ghdl_Allocate,
            Elab.Vhdl_Heap.Ghdl_Allocate'Address);
+      Def (Trans_Decls.Ghdl_Deref,
+           Elab.Vhdl_Heap.Rt.Ghdl_Deref'Address);
       Def (Trans_Decls.Ghdl_Deallocate,
            Elab.Vhdl_Heap.Ghdl_Deallocate'Address);
 

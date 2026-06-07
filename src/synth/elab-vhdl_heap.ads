@@ -40,14 +40,7 @@ package Elab.Vhdl_Heap is
 
    First_Heap_Slot : constant Heap_Slot := 1;
 
-   --  Representation of an access: a pointer inside the heap.
-   type Heap_Ptr is new Memory_Ptr;
-   Null_Heap_Ptr : constant Heap_Ptr := null;
-
-   procedure Write_Access_Ptr (Mem : Memory_Ptr; Val : Heap_Ptr);
-
-   function Get_Index (Ptr : Heap_Ptr) return Heap_Slot;
-   function Get_Pointer (Idx : Heap_Slot) return Heap_Ptr;
+   function Get_Pointer (Idx : Heap_Slot) return Memory_Ptr;
 
    --  For compiled environment:
    --  * conversion of types to bounds,
@@ -61,6 +54,6 @@ package Elab.Vhdl_Heap is
                           return Memory_Ptr;
 
    --  When called by generated code.
-   function Ghdl_Allocate (Sz : Ghdl_Index_Type) return Heap_Ptr;
-   procedure Ghdl_Deallocate (Ptr : Heap_Ptr);
+   function Ghdl_Allocate (Sz : Ghdl_Index_Type) return Heap_Slot;
+   procedure Ghdl_Deallocate (Slot : Heap_Slot);
 end Elab.Vhdl_Heap;

@@ -44,6 +44,11 @@ package Trans is
    --  Ortho type node for std.standard.time.
    Std_Time_Otype : O_Tnode;
 
+   --  Ortho type for any access (index in the heap table).
+   Ghdl_Access_Type : O_Tnode;
+   Ghdl_Access_Null : O_Cnode;
+   Ghdl_Access_Ptr_Type : O_Tnode;
+
    --  Node for the variable containing the current filename.
    Current_Filename_Node : O_Dnode := O_Dnode_Null;
    Current_Library_Unit  : Iir := Null_Iir;
@@ -718,7 +723,6 @@ package Trans is
    type Ortho_Info_Kind is
      (
       Kind_Type,
-      Kind_Incomplete_Type,
       Kind_Index,
       Kind_Enum_Lit,
       Kind_Subprg,
@@ -1193,7 +1197,6 @@ package Trans is
    type Ortho_Info_Acc is access Ortho_Info_Type;
 
    subtype Type_Info_Acc is Ortho_Info_Acc (Kind_Type);
-   subtype Incomplete_Type_Info_Acc is Ortho_Info_Acc (Kind_Incomplete_Type);
    subtype Index_Info_Acc is Ortho_Info_Acc (Kind_Index);
    subtype Subprg_Info_Acc is Ortho_Info_Acc (Kind_Subprg);
    subtype Operator_Info_Acc is Ortho_Info_Acc (Kind_Operator);
@@ -1734,10 +1737,6 @@ package Trans is
 
             --  Run-time information.
             Type_Rti : O_Dnode := O_Dnode_Null;
-
-         when Kind_Incomplete_Type =>
-            --  The declaration of the incomplete type.
-            Incomplete_Type  : Iir;
 
          when Kind_Index =>
             --  For index_subtype_declaration, the field containing
