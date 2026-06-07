@@ -430,7 +430,8 @@ package body Simul.Vhdl_Compile is
       end case;
    end Build_Composite_Subtype_Layout;
 
-   procedure Build_Subtype_Definition (Mem : Memory_Ptr;
+   procedure Build_Subtype_Definition (Inst : Synth_Instance_Acc;
+                                       Mem : Memory_Ptr;
                                        Def : Node;
                                        Typ : Type_Acc) is
    begin
@@ -507,10 +508,13 @@ package body Simul.Vhdl_Compile is
          when Iir_Kind_Access_Subtype_Definition =>
             declare
                Ind : constant Node := Get_Designated_Subtype_Indication (Def);
+               Parent_Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Inst, Get_Parent_Type (Def));
             begin
                if Ind /= Null_Node then
-                  Build_Subtype_Definition (Mem, Ind, Typ.Acc_Acc);
+                  Build_Subtype_Definition (Inst, Mem, Ind, Typ.Acc_Acc);
                end if;
+               Typ.Acc_Bnd_Sz := Parent_Typ.Acc_Bnd_Sz;
             end;
          when others =>
             Error_Kind ("build_subtype_definition", Def);
@@ -550,7 +554,8 @@ package body Simul.Vhdl_Compile is
          when others =>
             Error_Kind ("build_subtype_indication", Def);
       end case;
-      Build_Subtype_Definition (Mem, Def, Get_Subtype_Object (Inst, Def));
+      Build_Subtype_Definition
+        (Inst, Mem, Def, Get_Subtype_Object (Inst, Def));
    end Build_Subtype_Indication;
 
    procedure Build_Type_Definition (Mem : Memory_Ptr;
@@ -564,18 +569,14 @@ package body Simul.Vhdl_Compile is
                Dtype : constant Node := Get_Designated_Type (Def);
                Dinfo : constant Type_Info_Acc := Get_Info (Dtype);
                Typ : constant Type_Acc := Get_Subtype_Object (Inst, Def);
-               Sz : Size_Type;
             begin
                Build_Subtype_Definition
-                 (Mem, Get_Designated_Subtype_Indication (Def), Typ.Acc_Acc);
+                 (Inst, Mem, Get_Designated_Subtype_Indication (Def),
+                  Typ.Acc_Acc);
 
                if not Is_Fully_Constrained_Type (Dtype) then
-                  Sz := Size_Type (Get_Byte_Size (Dinfo.B.Bounds_Type));
-               else
-                  Sz := 0;
-               end if;
-               if Sz /= Typ.Acc_Bnd_Sz then
-                  raise Internal_Error;
+                  Typ.Acc_Bnd_Sz :=
+                    Size_Type (Get_Byte_Size (Dinfo.B.Bounds_Type));
                end if;
             end;
 
@@ -602,7 +603,7 @@ package body Simul.Vhdl_Compile is
                   El := Get_Nth_Element (Els, I);
                   El_St := Get_Subtype_Indication (El);
                   Build_Subtype_Definition
-                    (Mem, El_St,
+                    (Inst, Mem, El_St,
                      Typ.Rec.E (Iir_Index32 (I - Flist_First + 1)).Typ);
                end loop;
 
@@ -653,26 +654,39 @@ package body Simul.Vhdl_Compile is
       return Bnd;
    end Build_Unbounded_Bounds;
 
+   function Realign (Res : Size_Type;
+                     Align : Size_Type) return Size_Type is
+   begin
+      return (Res + Align - 1) and not (Align - 1);
+   end Realign;
+
    --  Add bounds to heap slots.
    procedure Build_Heap_Bounds
    is
       use Elab.Vhdl_Heap;
-      Ptr : Memory_Ptr;
-      Typ : Type_Acc;
+      Ptr, New_Ptr : Memory_Ptr;
+      Acc_Typ, Obj_Typ : Type_Acc;
+      Obj_Off : Size_Type;
       Def : Node;
    begin
       for I in First_Heap_Slot .. Get_Last_Slot loop
-         Typ := Get_Slot_Acc_Type (I);
-         if Typ /= null and then Typ.Acc_Bnd_Sz /= 0 then
-            Ptr := Insert_Bounds (I, Typ.Acc_Bnd_Sz);
+         Acc_Typ := Get_Slot_Acc_Type (I);
+         if Acc_Typ /= null and then Acc_Typ.Acc_Bnd_Sz /= 0 then
             Def := Get_Slot_Type_Def (I);
             Def := Get_Designated_Type (Def);
-            Typ := Get_Slot_Obj_Type (I);
-            case Typ.Kind is
+            Obj_Typ := Get_Slot_Obj_Type (I);
+            Ptr := Get_Pointer (I);
+
+            Obj_Off := Realign (Acc_Typ.Acc_Bnd_Sz, 2**Natural (Obj_Typ.Al));
+            New_Ptr := Alloc_Mem (Obj_Off + Obj_Typ.Sz);
+            Copy_Memory (New_Ptr + Obj_Off, Ptr, Obj_Typ.Sz);
+            Replace_Object (I, New_Ptr);
+
+            case Obj_Typ.Kind is
                when Type_Vectors_Arrays =>
-                  Build_Array_Subtype_Bounds (Ptr, Def, Typ);
+                  Build_Array_Subtype_Bounds (New_Ptr, Def, Obj_Typ);
                when Type_Records =>
-                  Build_Record_Subtype_Layout (Ptr, Def, Typ);
+                  Build_Record_Subtype_Layout (New_Ptr, Def, Obj_Typ);
                when others =>
                   raise Internal_Error;
             end case;
@@ -791,7 +805,8 @@ package body Simul.Vhdl_Compile is
    is
       Val : constant Valtyp := Get_Value (Inst, Decl);
    begin
-      Build_Subtype_Definition (Mem, Get_Subtype_Indication (Decl), Val.Typ);
+      Build_Subtype_Definition
+        (Inst, Mem, Get_Subtype_Indication (Decl), Val.Typ);
       Build_Object_Value (Mem, Inst, Decl);
    end Build_Object_Decl;
 
@@ -1156,7 +1171,7 @@ package body Simul.Vhdl_Compile is
                   if Ind /= Null_Iir
                     and then Is_Proper_Subtype_Indication (Ind)
                   then
-                     Build_Subtype_Definition (Mem, Ind_Type, Val.Typ);
+                     Build_Subtype_Definition (Inst, Mem, Ind_Type, Val.Typ);
                   end if;
 
                   --  For unbounded subtype indication, the real type is
@@ -1164,7 +1179,7 @@ package body Simul.Vhdl_Compile is
                   if Def /= Ind_Type
                     and then Is_Anonymous_Type_Definition (Def)
                   then
-                     Build_Subtype_Definition (Mem, Def, Val.Typ);
+                     Build_Subtype_Definition (Inst, Mem, Def, Val.Typ);
                   end if;
                end;
                if not Get_Info (Decl).Object_Static then
@@ -1931,8 +1946,6 @@ package body Simul.Vhdl_Compile is
       Top_Arch : Node;
       Nbr_Pkgs : Natural;
    begin
-      Build_Heap_Bounds;
-
       --  Build instances for the packages.
       Nbr_Pkgs := 1;
       for I in Design_Units.First .. Design_Units.Last loop
@@ -1987,6 +2000,8 @@ package body Simul.Vhdl_Compile is
       --  External names may reference signals or protected objects which
       --  may be created after the external name.
       Build_Elab_External_Names;
+
+      Build_Heap_Bounds;
 
       --  Call ghdl_rti_add_top, with:
       --   number of pkgs, array of pkgs, arch rti, arch_instance

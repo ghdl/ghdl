@@ -891,7 +891,6 @@ package body Elab.Vhdl_Objtypes is
    procedure Complete_Access_Type (Acc_Type : Type_Acc; Des_Typ : Type_Acc) is
    begin
       Acc_Type.Acc_Acc := Des_Typ;
-      Acc_Type.Acc_Type_Sz := Compute_Size_Type (Des_Typ);
    end Complete_Access_Type;
 
    function Create_File_Type (File_Type : Type_Acc) return Type_Acc

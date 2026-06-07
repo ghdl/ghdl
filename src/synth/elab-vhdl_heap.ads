@@ -16,8 +16,6 @@
 --  You should have received a copy of the GNU General Public License
 --  along with this program.  If not, see <gnu.org/licenses>.
 
-with Types; use Types;
-
 with Grt.Types; use Grt.Types;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
@@ -50,8 +48,7 @@ package Elab.Vhdl_Heap is
    function Get_Slot_Obj_Type (Slot : Heap_Slot) return Type_Acc;
    function Get_Slot_Type_Def (Slot : Heap_Slot) return Node;
 
-   function Insert_Bounds (Slot : Heap_Slot; Bnd_Sz : Size_Type)
-                          return Memory_Ptr;
+   procedure Replace_Object (Slot : Heap_Slot; Nptr : Memory_Ptr);
 
    --  When called by generated code.
    function Ghdl_Allocate (Sz : Ghdl_Index_Type) return Heap_Slot;

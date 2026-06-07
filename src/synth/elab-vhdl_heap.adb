@@ -18,6 +18,7 @@
 
 with Ada.Unchecked_Conversion;
 
+with Types; use Types;
 with Tables;
 
 package body Elab.Vhdl_Heap is
@@ -46,22 +47,6 @@ package body Elab.Vhdl_Heap is
    procedure Free_Mem (Ptr : Memory_Ptr);
    pragma Import (C, Free_Mem, "free");
 
-   function Realign (Res : Size_Type;
-                     Align : Size_Type) return Size_Type is
-   begin
-      return (Res + Align - 1) and not (Align - 1);
-   end Realign;
-
-   --  Return the data memory address from an heap entry.
-   function Entry_To_Obj_Ptr (E : Heap_Entry) return Memory_Ptr
-   is
-      Bnd_Sz : Size_Type;
-   begin
-      Bnd_Sz := Realign (E.Acc_Typ.Acc_Bnd_Sz, 2**Natural (E.Obj_Typ.Al));
-
-      return E.Ptr + Bnd_Sz;
-   end Entry_To_Obj_Ptr;
-
    function Get_Last_Slot return Heap_Slot is
    begin
       return Heap_Table.Last;
@@ -76,16 +61,13 @@ package body Elab.Vhdl_Heap is
                        Data_Mem : out Memory_Ptr)
    is
       Typ_Sz : constant Size_Type := Acc_Typ.Acc_Type_Sz;
-      Bnd_Sz : Size_Type;
       E : Heap_Entry;
    begin
       pragma Assert (Acc_Typ.Kind = Type_Access);
 
-      Bnd_Sz := Realign (Acc_Typ.Acc_Bnd_Sz, 2**Natural (Obj_Typ.Al));
-
       --  Allocate memory for the object, the bounds and the prefix.
-      E.Ptr := Alloc_Mem (Bnd_Sz + Obj_Typ.Sz);
-      Data_Mem := E.Ptr + Bnd_Sz;
+      E.Ptr := Alloc_Mem (Obj_Typ.Sz);
+      Data_Mem := E.Ptr;
 
       --  Allocate the memory for the type.
       if Typ_Sz > 0 then
@@ -145,7 +127,7 @@ package body Elab.Vhdl_Heap is
    is
       E : Heap_Entry renames Heap_Table.Table (Slot);
    begin
-      return (E.Obj_Typ, Entry_To_Obj_Ptr (E));
+      return (E.Obj_Typ, E.Ptr);
    end Synth_Dereference;
 
    procedure Free (Obj : in out Heap_Entry) is
@@ -185,15 +167,13 @@ package body Elab.Vhdl_Heap is
       return E.Def;
    end Get_Slot_Type_Def;
 
-   function Insert_Bounds (Slot : Heap_Slot; Bnd_Sz : Size_Type)
-                          return Memory_Ptr
+   procedure Replace_Object (Slot : Heap_Slot; Nptr : Memory_Ptr)
    is
       E : Heap_Entry renames Heap_Table.Table (Slot);
    begin
-      pragma Assert (E.Acc_Typ.Acc_Bnd_Sz = Bnd_Sz);
-
-      return E.Ptr;
-   end Insert_Bounds;
+      Free_Mem (E.Ptr);
+      E.Ptr := Nptr;
+   end Replace_Object;
 
    function Ghdl_Allocate (Sz : Ghdl_Index_Type) return Heap_Slot
    is

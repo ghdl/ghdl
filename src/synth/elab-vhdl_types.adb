@@ -359,142 +359,6 @@ package body Elab.Vhdl_Types is
       end if;
    end Synth_Record_Type_Definition;
 
-   --  Compute size and alignment for bounds of TYP.
-   procedure Update_Bounds_Size (Typ : Type_Acc;
-                                 Has_Signal : Boolean;
-                                 Sz : in out Size_Type;
-                                 Al : in out Palign_Type);
-
-   procedure Update_Layout_Size (Typ : Type_Acc;
-                                 Has_Signal : Boolean;
-                                 Sz : in out Size_Type;
-                                 Al : in out Palign_Type) is
-   begin
-      case Typ.Kind is
-         when Type_Scalars
-           | Type_Array
-           | Type_Vector
-           | Type_Record
-           | Type_Access =>
-            null;
-         when Type_Unbounded_Vector
-            | Type_Unbounded_Array
-            | Type_Array_Unbounded =>
-            declare
-               B_Sz : Size_Type;
-               B_Al : Palign_Type;
-            begin
-               --  Layout of an array is sizes + bounds.
-               B_Sz := 2 * Ghdl_Index_Sz;
-               B_Al := Ghdl_Index_Al;
-               Update_Bounds_Size (Typ, Has_Signal, B_Sz, B_Al);
-               Sz := Align (Sz, B_Al);
-               Sz := Sz + B_Sz;
-               Al := Palign_Type'Max (Al, B_Al);
-            end;
-         when Type_Unbounded_Record =>
-            --  Same as bounds.
-            Update_Bounds_Size (Typ, Has_Signal, Sz, Al);
-         when Type_Slice | Type_File | Type_Protected => raise Internal_Error;
-      end case;
-   end Update_Layout_Size;
-
-   procedure Update_Bounds_Size (Typ : Type_Acc;
-                                 Has_Signal : Boolean;
-                                 Sz : in out Size_Type;
-                                 Al : in out Palign_Type) is
-   begin
-      case Typ.Kind is
-         when Type_Scalars
-           | Type_Array
-           | Type_Vector
-           | Type_Record
-           | Type_Access =>
-            null;
-         when Type_Array_Unbounded =>
-            Update_Bounds_Size (Typ.Arr_El, Has_Signal, Sz, Al);
-         when Type_Unbounded_Array
-           | Type_Unbounded_Vector =>
-            declare
-               Idx : constant Type_Acc := Typ.Uarr_Idx;
-               B_Sz : Size_Type;
-               B_Al : Palign_Type;
-            begin
-               --  Compute size of left, right and dir fields.
-               case Idx.Sz is
-                  when 1 =>
-                     B_Sz := 3;
-                     B_Al := 0;
-                  when 4 =>
-                     B_Sz := 9;
-                     B_Al := 2;
-                  when 8 =>
-                     B_Sz := 17;
-                     B_Al := 2;
-                  when others => raise Internal_Error;
-               end case;
-               --  Add length field.
-               Sz := Align (Sz, Ghdl_Index_Al);
-               B_Sz := B_Sz + Ghdl_Index_Sz;
-               --  Compute whole alignment.
-               B_Al := Palign_Type'Max (3, Ghdl_Index_Al);
-               B_Sz := Align (B_Sz, B_Al);
-               --  Add to the result.
-               Sz := Align (Sz, B_Al);
-               Sz := Sz + B_Sz;
-
-               if not Typ.Ulast then
-                  --  Continue with next index.
-                  Update_Bounds_Size (Typ.Uarr_El, Has_Signal, Sz, Al);
-               else
-                  --  Continue with the element.
-                  Update_Layout_Size (Typ.Uarr_El, Has_Signal, Sz, Al);
-               end if;
-
-            end;
-         when Type_Unbounded_Record =>
-            declare
-               B_Sz : Size_Type;
-               B_Al : Palign_Type;
-            begin
-               --  Layout of an array is sizes + bounds.
-               B_Sz := 2 * Ghdl_Index_Sz;
-               B_Al := Ghdl_Index_Al;
-               for I in Typ.Rec.E'Range loop
-                  declare
-                     El : Rec_El_Type renames Typ.Rec.E (I);
-                  begin
-                     if not El.Typ.Is_Static then
-                        --  Add offset fields (val and sig, alignment is ok).
-                        if Has_Signal then
-                           B_Sz := B_Sz + 2 * Ghdl_Index_Sz;
-                        else
-                           B_Sz := B_Sz + Ghdl_Index_Sz;
-                        end if;
-                        Update_Layout_Size (El.Typ, Has_Signal, B_Sz, B_Al);
-                     end if;
-                  end;
-               end loop;
-               Sz := Align (Sz, B_Al);
-               Sz := Sz + B_Sz;
-               Al := Palign_Type'Max (Al, B_Al);
-            end;
-         when Type_Slice | Type_File | Type_Protected => raise Internal_Error;
-      end case;
-   end Update_Bounds_Size;
-
-   function Compute_Bounds_Size (Typ : Type_Acc; Has_Signal : Boolean)
-                                return Size_Type
-   is
-      Res : Size_Type;
-      Al : Palign_Type;
-   begin
-      Res := 0;
-      Al := 0;
-      Update_Bounds_Size (Typ, Has_Signal, Res, Al);
-      return Res;
-   end Compute_Bounds_Size;
-
    function Synth_Access_Type_Definition
      (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
    is
@@ -503,7 +367,6 @@ package body Elab.Vhdl_Types is
       T : Node;
       Des_Typ : Type_Acc;
       Typ : Type_Acc;
-      Has_Signal : Boolean;
    begin
       --  Need to handle incomplete access type.
       if Get_Kind (Des_Ind) in Iir_Kinds_Denoting_Name then
@@ -524,14 +387,6 @@ package body Elab.Vhdl_Types is
 
       Typ := Create_Access_Type (Des_Typ);
 
-      if Des_Typ = null then
-         Typ.Acc_Bnd_Sz := 0;
-      else
-         Has_Signal := Get_Signal_Type_Flag (Des_Type)
-           and then Get_Has_Signal_Flag (Des_Type);
-         Typ.Acc_Bnd_Sz := Compute_Bounds_Size (Des_Typ, Has_Signal);
-      end if;
-
       return Typ;
    end Synth_Access_Type_Definition;
 
@@ -539,8 +394,6 @@ package body Elab.Vhdl_Types is
                                           Incomp : Node;
                                           Des_Def : Node)
    is
-      Has_Signal : constant Boolean :=
-        Get_Signal_Type_Flag (Des_Def) and then Get_Has_Signal_Flag (Des_Def);
       Des_Typ : Type_Acc;
       Acc : Node;
       Acc_Typ : Type_Acc;
@@ -552,7 +405,6 @@ package body Elab.Vhdl_Types is
       while Acc /= Null_Node loop
          Acc_Typ := Get_Subtype_Object (Syn_Inst, Acc);
          Complete_Access_Type (Acc_Typ, Des_Typ);
-         Acc_Typ.Acc_Bnd_Sz := Compute_Bounds_Size (Des_Typ, Has_Signal);
          Acc := Get_Incomplete_Type_Ref_Chain (Acc);
       end loop;
    end Elab_Incomplete_Type_Finish;
@@ -950,15 +802,12 @@ package body Elab.Vhdl_Types is
             end;
          when Iir_Kind_Access_Subtype_Definition =>
             declare
-               Parent_Typ : constant Type_Acc :=
-                 Get_Subtype_Object (Syn_Inst, Get_Parent_Type (Atype));
                Acc_Typ : Type_Acc;
                Res : Type_Acc;
             begin
                Acc_Typ := Synth_Subtype_Indication
                  (Syn_Inst, Get_Designated_Type (Atype));
                Res := Create_Access_Type (Acc_Typ);
-               Res.Acc_Bnd_Sz := Parent_Typ.Acc_Bnd_Sz;
                return Res;
             end;
          when Iir_Kind_Record_Type_Definition
