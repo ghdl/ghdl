@@ -2388,6 +2388,10 @@ package body Synth.Vhdl_Expr is
                      --  Get the value of the signal.
                      Base := Hook_Signal_Expr (Base);
                   elsif Flags.Flag_Relaxed_Rules then
+                     --  LRM08 14.4 Elaboration of a declarative part
+                     --  Note 1: it is a consequence of this rule that the
+                     --   name of a signal [...] cannot be referenced in
+                     --   expressions [...] during the elaboration.
                      Warning_Msg_Synth
                        (Warnid_Elaboration, +Expr,
                        "cannot use signal value during elaboration");
@@ -2405,6 +2409,7 @@ package body Synth.Vhdl_Expr is
                         Base := (Base.Typ, Base.Val.Init);
                      end if;
                   else
+                     --  See comment just above for Warning_Msg_Synth.
                      Error_Msg_Synth
                        (Syn_Inst, Expr,
                        "cannot use signal value during elaboration");
