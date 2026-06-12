@@ -78,7 +78,8 @@ package body Netlists.Cleanup is
                if not Has_Instance_Attribute (Inst) then
                   Remove_Output_Gate (Inst);
                end if;
-            when Id_Inout =>
+            when Id_Inout
+              | Id_Iinout =>
                if Get_First_Sink (Get_Output (Inst, 0)) = No_Input then
                   --  Direct value not connected.
                   --  This means the inout port is only used as an output,
