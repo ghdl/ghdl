@@ -63,6 +63,12 @@ from pyVHDLModel.Expression import (
     NorExpression as VHDLModel_NorExpression,
     XorExpression as VHDLModel_XorExpression,
     XnorExpression as VHDLModel_XnorExpression,
+    UnaryAndExpression as VHDLModel_UnaryAndExpression,
+    UnaryNandExpression as VHDLModel_UnaryNandExpression,
+    UnaryOrExpression as VHDLModel_UnaryOrExpression,
+    UnaryNorExpression as VHDLModel_UnaryNorExpression,
+    UnaryXorExpression as VHDLModel_UnaryXorExpression,
+    UnaryXnorExpression as VHDLModel_UnaryXnorExpression,
     EqualExpression as VHDLModel_EqualExpression,
     UnequalExpression as VHDLModel_UnequalExpression,
     GreaterThanExpression as VHDLModel_GreaterThanExpression,
@@ -303,6 +309,48 @@ class XorExpression(VHDLModel_XorExpression, DOMMixin, _ParseBinaryExpressionMix
 class XnorExpression(VHDLModel_XnorExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         super().__init__(left, right)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class UnaryAndExpression(VHDLModel_UnaryAndExpression, DOMMixin, _ParseUnaryExpressionMixin):
+    def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
+        super().__init__(operand)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class UnaryNandExpression(VHDLModel_UnaryNandExpression, DOMMixin, _ParseUnaryExpressionMixin):
+    def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
+        super().__init__(operand)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class UnaryOrExpression(VHDLModel_UnaryOrExpression, DOMMixin, _ParseUnaryExpressionMixin):
+    def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
+        super().__init__(operand)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class UnaryNorExpression(VHDLModel_UnaryNorExpression, DOMMixin, _ParseUnaryExpressionMixin):
+    def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
+        super().__init__(operand)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class UnaryXorExpression(VHDLModel_UnaryXorExpression, DOMMixin, _ParseUnaryExpressionMixin):
+    def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
+        super().__init__(operand)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class UnaryXnorExpression(VHDLModel_UnaryXnorExpression, DOMMixin, _ParseUnaryExpressionMixin):
+    def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
+        super().__init__(operand)
         DOMMixin.__init__(self, node)
 
 
