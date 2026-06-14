@@ -134,7 +134,7 @@ jobs:
           if ${{ startsWith(inputs.ghdl_backend, 'mcode') }}; then
             CONFIG_ARGS=""
           elif ${{ startsWith(inputs.ghdl_backend, 'llvm') }}; then
-            CONFIG_ARGS="--with-llvm-config"
+            CONFIG_ARGS="--with-llvm-config --with-backtrace-lib=$(dpkg -L libbacktrace-dev | grep "libbacktrace.a")"
             if ${{ endsWith(inputs.ghdl_backend, 'jit') }}; then
               CONFIG_ARGS="$CONFIG_ARGS --with-llvm-jit"
             fi
