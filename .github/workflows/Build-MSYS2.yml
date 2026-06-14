@@ -115,7 +115,7 @@ jobs:
           # Runtime (and backend) specific packages
           common_packages="python:p python-pip:p gcc:p gcc-ada:p binutils:p diffutils:p zlib:p"
           mcode_packages=""
-          llvm_packages="llvm:p clang:p"
+          llvm_packages="llvm:p clang:p libbacktrace:p"
 
           if ${{ startsWith(inputs.backend, 'mcode') }}; then
             tee -a "${GITHUB_OUTPUT}" <<EOF
