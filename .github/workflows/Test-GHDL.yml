@@ -6,7 +6,7 @@ on:
       os_image:
         description: 'Name of the OS image.'
         required: false
-        default: 'ubuntu-24.04'
+        default: 'ubuntu-26.04'
         type: string
       runtime:
         description: 'MSYS2 runtime if MSYS2 is used.'

@@ -11,6 +11,10 @@ on:
         description: 'Name of the OS image.'
         required: true
         type: string
+      libgnat:
+        description: 'Version of libgnat on Ubuntu.'
+        required: true
+        type: string
       runtime:
         description: 'MSYS2 runtime if MSYS2 is used.'
         required: true
@@ -208,7 +212,7 @@ jobs:
       - name: 🔧 Install dependencies (Ubuntu)
         if: startsWith(inputs.os_image, 'ubuntu')
         run: |
-          sudo apt-get install -y --no-install-recommends libgnat-13
+          sudo apt-get install -y --no-install-recommends libgnat-${{ inputs.libgnat }}
           python -m pip install -v --disable-pip-version-check ./wheels/pyghdl-*.whl
           python -m pip install --disable-pip-version-check -r testsuite/requirements.txt
 

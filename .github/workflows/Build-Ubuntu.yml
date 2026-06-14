@@ -34,7 +34,7 @@ on:
       python_version:
         description: 'Python version for pyGHDL testing.'
         required: false
-        default: '3.12'
+        default: '3.14'
         type: string
       pyunit_testsuites:
         description: 'Name of the pyunit testsuites.'
@@ -99,7 +99,13 @@ jobs:
           if ${{ startsWith(inputs.ghdl_backend, 'mcode') }}; then
             APT_ARGS="$APT_ARGS"
           elif ${{ startsWith(inputs.ghdl_backend, 'llvm') }}; then
-            APT_ARGS="$APT_ARGS llvm clang libbacktrace-dev"
+            APT_ARGS="$APT_ARGS llvm clang"
+
+            if ${{ contains(fromJson('["22.04", "24.04"]'), inputs.ubuntu_version) }}; then
+              printf "%s\n" "libbacktrace is part of GCC but not a standalone library."
+            else
+              APT_ARGS="$APT_ARGS libbacktrace-dev"
+            fi
           elif ${{ startsWith(inputs.ghdl_backend, 'gcc') }}; then
             APT_ARGS="$APT_ARGS libgmp-dev libmpfr-dev libmpc-dev libgettextpo-dev flex"
           else
@@ -134,11 +140,25 @@ jobs:
           if ${{ startsWith(inputs.ghdl_backend, 'mcode') }}; then
             CONFIG_ARGS=""
           elif ${{ startsWith(inputs.ghdl_backend, 'llvm') }}; then
-            CONFIG_ARGS="--with-llvm-config --with-backtrace-lib=$(dpkg -L libbacktrace-dev | grep "libbacktrace.a")"
+            CONFIG_ARGS="--with-llvm-config CXX=clang++"
             if ${{ endsWith(inputs.ghdl_backend, 'jit') }}; then
               CONFIG_ARGS="$CONFIG_ARGS --with-llvm-jit"
+            else
+              if ${{ contains(fromJson('["22.04", "24.04"]'), inputs.ubuntu_version) }}; then
+                printf "%s\n" "libbacktrace is part of GCC but not a standalone library."
+                GCC_MAJOR=$(gcc -dumpversion | cut -d. -f1)
+                LIBBACKTRACE_PATH="/usr/lib/gcc/x86_64-linux-gnu/${GCC_MAJOR}/libbacktrace.a"
+                if [[ -f "${LIBBACKTRACE_PATH}" ]]; then
+                  printf -- "%s\n" "Found libbacktrace: ${LIBBACKTRACE_PATH}"
+                  CONFIG_ARGS="$CONFIG_ARGS --with-backtrace-lib=${LIBBACKTRACE_PATH}"
+                else
+                  printf -- "%s\n" "libbacktrace not found at '${LIBBACKTRACE_PATH}'."
+                  printf "::warning title=%s::%s\n" "Configure GHDL for LLVM on Ubuntu ${{ inputs.ubuntu_version }}" "libbacktrace not found at '${LIBBACKTRACE_PATH}'."
+                fi
+              else
+                CONFIG_ARGS="$CONFIG_ARGS --with-backtrace-lib=$(dpkg -L libbacktrace-dev | grep "libbacktrace.a")"
+              fi
             fi
-            CONFIG_ARGS="$CONFIG_ARGS CXX=clang++"
           elif ${{ startsWith(inputs.ghdl_backend, 'gcc') }}; then
             CONFIG_ARGS="--with-gcc=../../gcc-srcs"
           else
@@ -303,7 +323,7 @@ jobs:
           retention-days: 7
 
       - name: ✂ Remove binaries, libraries and other files for libghdl (only mcode backend)
-        if: inputs.ubuntu_version == '24.04' && inputs.ghdl_backend == 'mcode'
+        if: contains(fromJson('["24.04", "26.04"]'), inputs.ubuntu_version) && inputs.ghdl_backend == 'mcode'
         run: |
           sudo chown -R runner:docker ./install
           rm -Rf ./install/bin
@@ -316,14 +336,14 @@ jobs:
           rm -Rf ./install/*.requirements
 
       - name: Copy additional dependencies (only mcode backend)
-        if: inputs.ubuntu_version == '24.04' && inputs.ghdl_backend == 'mcode'
+        if: contains(fromJson('["24.04", "26.04"]'), inputs.ubuntu_version) && inputs.ghdl_backend == 'mcode'
         run: |
           # libgnat
           cp -v /lib/x86_64-linux-gnu/libgnat-${{ steps.requirements.outputs.GNAT_MAJOR_VERSION }}.so ./install/lib
 
       - name: 📤 Upload '${{ steps.artifact_name.outputs.libghdl_artifact }}' artifact (only mcode backend)
         uses: pyTooling/upload-artifact@v7
-        if: inputs.ubuntu_version == '24.04' && inputs.ghdl_backend == 'mcode'
+        if: contains(fromJson('["24.04", "26.04"]'), inputs.ubuntu_version) && inputs.ghdl_backend == 'mcode'
         with:
           name: ${{ steps.artifact_name.outputs.libghdl_artifact }}
           working-directory: install

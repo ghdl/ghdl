@@ -169,11 +169,12 @@ jobs:
           LLVM_LDFLAGS='\`\$(LLVM_CONFIG) --link-static --ldflags --libs --system-libs\`'
 
           if ${{ startsWith(inputs.backend, 'llvm') }}; then
-            CONFIG_ARGS="--with-llvm-config --with-backtrace-lib=${MINGW_PREFIX}/lib/libbacktrace.a"
+            CONFIG_ARGS="--with-llvm-config CXX=clang++"
             if ${{ endsWith(inputs.backend, 'jit') }}; then
               CONFIG_ARGS="$CONFIG_ARGS --with-llvm-jit"
+            else
+              CONFIG_ARGS="$CONFIG_ARGS --with-backtrace-lib=${MINGW_PREFIX}/lib/libbacktrace.a"
             fi
-            CONFIG_ARGS="$CONFIG_ARGS CXX=clang++"
           fi
           echo "CONFIG_ARGS=$CONFIG_ARGS"
 
