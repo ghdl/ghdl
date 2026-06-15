@@ -6,12 +6,12 @@ on:
       ubuntu_image:
         description: 'Name of the Ubuntu image.'
         required: false
-        default: 'ubuntu-24.04'
+        default: 'ubuntu-26.04'
         type: string
       python_version:
         description: 'Use Python version'
         required: false
-        default: '3.12'
+        default: '3.14'
         type: string
       black:
         description: 'Check Python source code using black.'

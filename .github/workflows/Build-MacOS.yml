@@ -32,7 +32,7 @@ on:
       python_version:
         description: 'Python version for pyGHDL testing.'
         required: false
-        default: '3.12'
+        default: '3.14'
         type: string
       pyunit_testsuites:
         description: 'Name of the pyunit testsuites.'

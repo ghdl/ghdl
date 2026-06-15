@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 120
-target-version = ['py311', 'py312', 'py313']  # , 'py314']
+target-version = ['py311', 'py312', 'py313', 'py314']
 
 [tool.mypy]
 files = ["pyGHDL"]

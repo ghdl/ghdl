@@ -115,7 +115,7 @@ jobs:
           # Runtime (and backend) specific packages
           common_packages="python:p python-pip:p gcc:p gcc-ada:p binutils:p diffutils:p zlib:p"
           mcode_packages=""
-          llvm_packages="llvm:p clang:p"
+          llvm_packages="llvm:p clang:p libbacktrace:p"
 
           if ${{ startsWith(inputs.backend, 'mcode') }}; then
             tee -a "${GITHUB_OUTPUT}" <<EOF
@@ -169,11 +169,12 @@ jobs:
           LLVM_LDFLAGS='\`\$(LLVM_CONFIG) --link-static --ldflags --libs --system-libs\`'
 
           if ${{ startsWith(inputs.backend, 'llvm') }}; then
-            CONFIG_ARGS="--with-llvm-config"
+            CONFIG_ARGS="--with-llvm-config CXX=clang++"
             if ${{ endsWith(inputs.backend, 'jit') }}; then
               CONFIG_ARGS="$CONFIG_ARGS --with-llvm-jit"
+            else
+              CONFIG_ARGS="$CONFIG_ARGS --with-backtrace-lib=${MINGW_PREFIX}/lib/libbacktrace.a"
             fi
-            CONFIG_ARGS="$CONFIG_ARGS CXX=clang++"
           fi
           echo "CONFIG_ARGS=$CONFIG_ARGS"
 
