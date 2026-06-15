@@ -84,6 +84,7 @@ static bool FlagVerifyLLVM = false;
 static bool FlagDebugLines = true;
 static bool FlagDebug = false;
 
+static LLVMContextRef TheContext;
 static LLVMModuleRef TheModule;
 static LLVMTargetRef TheTarget;
 static LLVMTargetMachineRef TheTargetMachine;
@@ -332,7 +333,9 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
   LLVMInitializeNativeTarget();
   LLVMInitializeNativeAsmPrinter();
 
-  TheModule = LLVMModuleCreateWithName ("ortho");
+  TheContext = LLVMGetGlobalContext();
+
+  TheModule = LLVMModuleCreateWithNameInContext ("ortho", TheContext);
 
   //  Get target triple (from how llvm was configured).
   char *Triple = LLVMGetDefaultTargetTriple();
@@ -395,11 +398,11 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
   LLVMSetModuleDataLayout(TheModule, TheTargetData);
 #endif
 
-  Builder = LLVMCreateBuilder();
-  DeclBuilder = LLVMCreateBuilder();
-  ExtraBuilder = LLVMCreateBuilder();
+  Builder = LLVMCreateBuilderInContext(TheContext);
+  DeclBuilder = LLVMCreateBuilderInContext(TheContext);
+  ExtraBuilder = LLVMCreateBuilderInContext(TheContext);
 
-  LLVMTypeRef I8Ptr = LLVMPointerType(LLVMInt8Type(), 0);
+  LLVMTypeRef I8Ptr = LLVMPointerType(LLVMInt8TypeInContext(TheContext), 0);
 
   StackSaveFunType = LLVMFunctionType (I8Ptr, NULL, 0, false);
   StackSaveFun = LLVMAddFunction
@@ -408,17 +411,18 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
   LLVMTypeRef ParamTypes[2];
 
   ParamTypes[0] = I8Ptr;
-  StackRestoreFunType = LLVMFunctionType(LLVMVoidType(), ParamTypes, 1, false);
+  StackRestoreFunType = LLVMFunctionType
+    (LLVMVoidTypeInContext(TheContext), ParamTypes, 1, false);
   StackRestoreFun = LLVMAddFunction
     (TheModule, "llvm.stackrestore", StackRestoreFunType);
 
-  ParamTypes[0] = LLVMDoubleType();
-  ParamTypes[1] = LLVMDoubleType();
-  CopySignFunType = LLVMFunctionType(LLVMDoubleType(), ParamTypes, 2, false);
+  ParamTypes[0] = LLVMDoubleTypeInContext(TheContext);
+  ParamTypes[1] = LLVMDoubleTypeInContext(TheContext);
+  CopySignFunType = LLVMFunctionType(LLVMDoubleTypeInContext(TheContext), ParamTypes, 2, false);
   CopySignFun = LLVMAddFunction
      (TheModule, "llvm.copysign.f64", CopySignFunType);
 
-  Fp0_5 = LLVMConstReal(LLVMDoubleType(), 0.5);
+  Fp0_5 = LLVMConstReal(LLVMDoubleTypeInContext(TheContext), 0.5);
 
 #ifdef USE_ATTRIBUTES
   unsigned AttrId;
@@ -426,7 +430,7 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
 
   AttrId = LLVMGetEnumAttributeKindForName("nounwind", 8);
   assert (AttrId != 0);
-  NounwindAttr = LLVMCreateEnumAttribute(LLVMGetGlobalContext(), AttrId, 0);
+  NounwindAttr = LLVMCreateEnumAttribute(TheContext, AttrId, 0);
 
   AttrId = LLVMGetEnumAttributeKindForName("uwtable", 7);
   assert (AttrId != 0);
@@ -435,11 +439,11 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
 #else
   val = 0;  // Not an int, just a flag
 #endif
-  UwtableAttr = LLVMCreateEnumAttribute(LLVMGetGlobalContext(), AttrId, val);
+  UwtableAttr = LLVMCreateEnumAttribute(TheContext, AttrId, val);
 
   AttrId = LLVMGetEnumAttributeKindForName("signext", 7);
   assert (AttrId != 0);
-  SignExtAttr = LLVMCreateEnumAttribute(LLVMGetGlobalContext(), AttrId, 0);
+  SignExtAttr = LLVMCreateEnumAttribute(TheContext, AttrId, 0);
 #endif
 
 #ifdef USE_DEBUG
@@ -543,11 +547,11 @@ SizeToLLVM (unsigned Sz)
 {
   switch (Sz) {
   case 8:
-    return LLVMInt8Type();
+    return LLVMInt8TypeInContext(TheContext);
   case 32:
-    return LLVMInt32Type();
+    return LLVMInt32TypeInContext(TheContext);
   case 64:
-    return LLVMInt64Type();
+    return LLVMInt64TypeInContext(TheContext);
   default:
     abort();
   }
@@ -568,7 +572,7 @@ new_signed_type(unsigned Sz)
 extern "C" OTnode
 new_float_type()
 {
-  return new OTnodeFloat(LLVMDoubleType(), 64);
+  return new OTnodeFloat(LLVMDoubleTypeInContext(TheContext), 64);
 }
 
 struct OTnodeEnumBase : OTnodeScal {
@@ -660,7 +664,7 @@ new_boolean_type(OTnode *Res,
 		 OIdent FalseId, OCnode *False_E,
 		 OIdent TrueId, OCnode *True_E)
 {
-  OTnodeBool *T = new OTnodeBool(LLVMInt1Type());
+  OTnodeBool *T = new OTnodeBool(LLVMInt1TypeInContext(TheContext));
   *Res = T;
 
   *False_E = {LLVMConstInt(T->Ref, 0, 0), T};
@@ -718,7 +722,7 @@ new_access_type(OTnode DType)
   LLVMTypeRef Ptr;
 
 #ifdef USE_OPAQUE_POINTERS
-  Ptr = LLVMPointerTypeInContext(LLVMGetGlobalContext(), 0);
+  Ptr = LLVMPointerTypeInContext(TheContext, 0);
 #else
   if (DType == nullptr) {
     return new OTnodeIncompleteAcc();
@@ -898,7 +902,7 @@ finish_record_type(OElementList *Els, OTnode *Res)
   } else {
     //  Non-completion.
     //  Debug info are created when the type is declared.
-    T = new OTnodeRec(LLVMStructType(Types, Els->BndCount, 0), Bounded);
+    T = new OTnodeRec(LLVMStructTypeInContext(TheContext, Types, Els->BndCount, 0), Bounded);
     T->Els = std::move(*Els->Els);
   }
   *Res = T;
@@ -944,7 +948,7 @@ finish_record_subtype(OElementSublist *Els, OTnode *Res)
   }
 
   OTnodeRecBase *T;
-  T = new OTnodeRec(LLVMStructType(Types, Els->Count, 0), true);
+  T = new OTnodeRec(LLVMStructTypeInContext(TheContext, Types, Els->Count, 0), true);
   T->Els = std::move(*Els->Els);
   *Res = T;
 }
@@ -1022,7 +1026,7 @@ finish_union_type(OElementList *Els, OTnode *Res)
     Types[0] = Els->AlignType;
     Pad = Els->Size - LLVMABISizeOfType(TheTargetData, Els->AlignType);
     if (Pad != 0) {
-      Types[1] = LLVMArrayType(LLVMInt8Type(), Pad);
+      Types[1] = LLVMArrayType(LLVMInt8TypeInContext(TheContext), Pad);
       Count = 2;
     } else {
       Count = 1;
@@ -1030,7 +1034,7 @@ finish_union_type(OElementList *Els, OTnode *Res)
   }
 
   OTnodeUnion *T;
-  T = new OTnodeUnion(LLVMStructType(Types, Count, 0),
+  T = new OTnodeUnion(LLVMStructTypeInContext(TheContext, Types, Count, 0),
                       Els->Size, Els->AlignType);
   T->Els = std::move(*Els->Els);
   *Res = T;
@@ -1103,10 +1107,10 @@ new_type_decl(OIdent Ident, OTnode Atype)
   switch(Atype->Kind) {
   case OTKIncompleteAccess:
     Atype->Ref = LLVMPointerType
-      (LLVMStructCreateNamed(LLVMGetGlobalContext(), Ident.cstr), 0);
+      (LLVMStructCreateNamed(TheContext, Ident.cstr), 0);
     break;
   case OTKIncompleteRecord:
-    Atype->Ref = LLVMStructCreateNamed(LLVMGetGlobalContext(), Ident.cstr);
+    Atype->Ref = LLVMStructCreateNamed(TheContext, Ident.cstr);
     break;
   default:
     break;
@@ -1226,7 +1230,7 @@ new_record_aggr_el(ORecordAggrList *List, OCnode *Val)
 extern "C" void
 finish_record_aggr(ORecordAggrList *List, OCnode *Res)
 {
-  *Res = {LLVMConstStruct(List->Els, List->Len, 0), List->Atype};
+  *Res = {LLVMConstStructInContext(TheContext, List->Els, List->Len, 0), List->Atype};
   delete [] List->Els;
 }
 
@@ -1266,13 +1270,13 @@ new_union_aggr(OTnodeUnion *Atype, OFnodeUnion *Field, OCnode *Value)
   Vals[0] = Value->Ref;
   if (Size < Atype->Size) {
     //  Add padding.
-    Vals[1] = LLVMGetUndef(LLVMArrayType(LLVMInt8Type(), Atype->Size - Size));
+    Vals[1] = LLVMGetUndef(LLVMArrayType(LLVMInt8TypeInContext(TheContext), Atype->Size - Size));
     Count = 2;
   } else {
     Count = 1;
   }
 
-  return {LLVMConstStruct(Vals, Count, false), Atype};
+  return {LLVMConstStructInContext(TheContext, Vals, Count, false), Atype};
 }
 
 extern "C" OCnode
@@ -1293,7 +1297,7 @@ constToConst(OTnode Rtype, uint64_t Val)
     break;
   case OTKAccess:
     //  It is possible to use an access type for offsetof.
-    Ref = LLVMConstInt(LLVMInt64Type(), Val, 0);
+    Ref = LLVMConstInt(LLVMInt64TypeInContext(TheContext), Val, 0);
     Ref = LLVMConstIntToPtr(Ref, Rtype->Ref);
     break;
   default:
@@ -1601,7 +1605,7 @@ finish_subprogram_decl(OInterList *Inters, ODnodeSubprg **Res)
   //  Return type.
   LLVMTypeRef Rtype;
   if (Inters->Rtype == nullptr)
-    Rtype = LLVMVoidType();
+    Rtype = LLVMVoidTypeInContext(TheContext);
   else
     Rtype = Inters->Rtype->Ref;
 
@@ -1692,7 +1696,7 @@ CreateDeclareBlock()
   CurrentDeclareBlock = Res;
 
   if (!Unreach) {
-    Res->StmtBB = LLVMAppendBasicBlock(CurrentFunc, "");
+    Res->StmtBB = LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "");
   }
 }
 
@@ -1720,7 +1724,7 @@ start_subprogram_body(ODnodeSubprg *Func)
 
   assert(!Unreach);
 
-  DeclBB = LLVMAppendBasicBlock(CurrentFunc, "");
+  DeclBB = LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "");
   LLVMPositionBuilderAtEnd(DeclBuilder, DeclBB);
 
   CreateDeclareBlock();
@@ -1844,7 +1848,7 @@ finish_declare_stmt ()
     LLVMBasicBlockRef Bb;
 
     //  Create a basic block for the statements after the dclare
-    Bb = LLVMAppendBasicBlock(CurrentFunc, "");
+    Bb = LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "");
 
     if (CurrentDeclareBlock->StackValue != nullptr) {
       //  Restore stack pointer
@@ -1883,9 +1887,9 @@ start_loop_stmt (OSNode *Label)
     return;
   }
 
-  *Label = { LLVMAppendBasicBlock(CurrentFunc, ""), nullptr };
+  *Label = { LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, ""), nullptr };
 #if 1
-  Label->BBExit = LLVMAppendBasicBlock(CurrentFunc, "");
+  Label->BBExit = LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "");
 #endif
   LLVMBuildBr(Builder, Label->BBEntry);
   LLVMPositionBuilderAtEnd(Builder, Label->BBEntry);
@@ -1949,8 +1953,8 @@ start_if_stmt (OIFBlock *Blk, OEnode Cond)
   LLVMBasicBlockRef BBThen;
 
   //  Create BB for Then and Else.
-  BBThen = LLVMAppendBasicBlock(CurrentFunc, "");
-  *Blk = { LLVMAppendBasicBlock(CurrentFunc, "") };
+  BBThen = LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "");
+  *Blk = { LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "") };
 
   LLVMBuildCondBr(Builder, Cond.Ref, BBThen, Blk->Bb);
   LLVMPositionBuilderAtEnd(Builder, BBThen);
@@ -1963,7 +1967,7 @@ new_else_stmt (OIFBlock *Blk)
 
   if (!Unreach) {
     //  Create a BB for after the If statement
-    BBNext = LLVMAppendBasicBlock(CurrentFunc, "");
+    BBNext = LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "");
     //  And jump to it.
     LLVMBuildBr(Builder, BBNext);
   } else {
@@ -1991,7 +1995,7 @@ finish_if_stmt (OIFBlock *Blk)
 
   if (!Unreach) {
     if (Blk->Bb == nullptr)
-      BBNext = LLVMAppendBasicBlock(CurrentFunc, "");
+      BBNext = LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "");
     else
       BBNext = Blk->Bb;
     LLVMBuildBr(Builder, BBNext);
@@ -2068,7 +2072,7 @@ finishBranch (OCaseBlock *Blk)
   if (Blk->BBNext == nullptr) {
     //  Create the BB for after the case statement.
     //  It also means the end is reachable.
-    Blk->BBNext = LLVMAppendBasicBlock(CurrentFunc, "");
+    Blk->BBNext = LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "");
   }
   LLVMBuildBr(Builder, Blk->BBNext);
 }
@@ -2091,7 +2095,7 @@ start_choice (OCaseBlock *Blk)
   Unreach = false;
 
   //  Create a new BB.
-  Blk->BBChoice = LLVMAppendBasicBlock(CurrentFunc, "");
+  Blk->BBChoice = LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "");
   LLVMPositionBuilderAtEnd(Builder, Blk->BBChoice);
 }
 
@@ -2165,7 +2169,7 @@ finish_case_stmt (OCaseBlock *Blk)
   }
 
   //  BB for the default case.
-  LLVMBasicBlockRef BBDefault = LLVMAppendBasicBlock(CurrentFunc, "");
+  LLVMBasicBlockRef BBDefault = LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "");
   LLVMPositionBuilderAtEnd(Builder, BBDefault);
 
   //  Put range choices in the default case.
@@ -2173,7 +2177,7 @@ finish_case_stmt (OCaseBlock *Blk)
   LLVMBasicBlockRef BBLast = BBDefault;
   for(auto &c: *Blk->Choices) {
     if (c.High != nullptr) {
-      BBLast = LLVMAppendBasicBlock(CurrentFunc, "");
+      BBLast = LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "");
       LLVMBuildCondBr(Builder,
 		      LLVMBuildAnd(Builder,
 				   LLVMBuildICmp(Builder, GE,
@@ -2436,8 +2440,8 @@ BuildSMod(LLVMBuilderRef Build, LLVMValueRef L, LLVMValueRef R, const char *s)
   LLVMValueRef PhiVals[3];
   LLVMBasicBlockRef PhiBB[3];
 
-  NextBB = LLVMAppendBasicBlock(CurrentFunc, "");
-  NormalBB = LLVMAppendBasicBlock(CurrentFunc, "");
+  NextBB = LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "");
+  NormalBB = LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "");
 
   //  Avoid overflow with -1
   //  if R = -1 then
@@ -2457,7 +2461,7 @@ BuildSMod(LLVMBuilderRef Build, LLVMValueRef L, LLVMValueRef R, const char *s)
   //  if Rm = 0 then
   //    result := 0
   //  else
-  AdjustBB = LLVMAppendBasicBlock(CurrentFunc, "");
+  AdjustBB = LLVMAppendBasicBlockInContext(TheContext, CurrentFunc, "");
   Cond = LLVMBuildICmp(Builder, LLVMIntEQ, Rm, LLVMConstNull(T), "");
   LLVMBuildCondBr(Builder, Cond, NextBB, AdjustBB);
   PhiBB[1] = NormalBB;
@@ -2688,7 +2692,7 @@ new_alloca (OTnode Rtype, OEnode Size)
       CurrentDeclareBlock->StackValue =
 	LLVMBuildCall2(Bld, StackSaveFunType, StackSaveFun, nullptr, 0, "");
     }
-    Res = LLVMBuildArrayAlloca(Builder, LLVMInt8Type(), Size.Ref, "");
+    Res = LLVMBuildArrayAlloca(Builder, LLVMInt8TypeInContext(TheContext), Size.Ref, "");
     //  Convert
     Res = LLVMBuildBitCast(Builder, Res, Rtype->Ref, "");
   }
@@ -2722,8 +2726,8 @@ new_global_selected_element (OGnode Rec, OFnodeBase *El)
     {
       LLVMValueRef Idx[2];
       OFnodeRec *F = static_cast<OFnodeRec *>(El);
-      Idx[0] = LLVMConstInt(LLVMInt32Type(), 0, 0);
-      Idx[1] = LLVMConstInt(LLVMInt32Type(), F->Index, 0);
+      Idx[0] = LLVMConstInt(LLVMInt32TypeInContext(TheContext), 0, 0);
+      Idx[1] = LLVMConstInt(LLVMInt32TypeInContext(TheContext), F->Index, 0);
       Res = LLVMConstGEP2(Rec.Gtype->Ref, Rec.Ref, Idx, 2);
     }
     break;
@@ -2810,7 +2814,7 @@ new_indexed_element (OLnode *Arr, OEnode Index)
   if (Unreach)
     Res = nullptr;
   else {
-    Idx[0] = LLVMConstInt(LLVMInt32Type(), 0, 0);
+    Idx[0] = LLVMConstInt(LLVMInt32TypeInContext(TheContext), 0, 0);
     Idx[1] = Index.Ref;
     Res = LLVMBuildGEP2(Builder, Arr->Ltype->Ref, Arr->Ref, Idx, 2, "");
   }
@@ -2826,7 +2830,7 @@ new_slice (OLnode *Arr, OTnode Rtype, OEnode Index)
   if (Unreach)
     Res = nullptr;
   else {
-    Idx[0] = LLVMConstInt(LLVMInt32Type(), 0, 0);
+    Idx[0] = LLVMConstInt(LLVMInt32TypeInContext(TheContext), 0, 0);
     Idx[1] = Index.Ref;
     Res = LLVMBuildGEP2(Builder, Arr->Ltype->Ref, Arr->Ref, Idx, 2, "");
     Res = LLVMBuildBitCast(Builder, Res, LLVMPointerType(Rtype->Ref, 0), "");
@@ -2847,8 +2851,8 @@ new_selected_element (OLnode *Rec, OFnodeBase *El)
       {
 	LLVMValueRef Idx[2];
         OFnodeRec *F = static_cast<OFnodeRec *>(El);
-	Idx[0] = LLVMConstInt(LLVMInt32Type(), 0, 0);
-	Idx[1] = LLVMConstInt(LLVMInt32Type(), F->Index, 0);
+	Idx[0] = LLVMConstInt(LLVMInt32TypeInContext(TheContext), 0, 0);
+	Idx[1] = LLVMConstInt(LLVMInt32TypeInContext(TheContext), F->Index, 0);
 	Res = LLVMBuildGEP2(Builder, Rec->Ltype->Ref, Rec->Ref, Idx, 2, "");
       }
       break;
@@ -2878,8 +2882,8 @@ new_access_element (OEnode Acc)
     {
       LLVMValueRef Idx[2];
 
-      Idx[0] = LLVMConstInt(LLVMInt32Type(), 0, 0);
-      Idx[1] = LLVMConstInt(LLVMInt32Type(), 0, 0);
+      Idx[0] = LLVMConstInt(LLVMInt32TypeInContext(TheContext), 0, 0);
+      Idx[1] = LLVMConstInt(LLVMInt32TypeInContext(TheContext), 0, 0);
       Res = LLVMBuildGEP2(Builder, Acc.Etype->Ref, Acc.Ref, Idx, 2, "");
     }
     break;
