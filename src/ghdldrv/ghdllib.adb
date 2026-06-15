@@ -34,7 +34,7 @@ package body Ghdllib is
          end if;
       end loop;
       return "libghdl-" & Libghdl_Version
-        & Default_Paths.Shared_Library_Extension;
+        & Default_Paths.Shared_Or_Import_Library_Extension;
    end Get_Libghdl_Name;
 
    function Get_Libghdl_Path return String is
