@@ -1230,9 +1230,24 @@ package body Simul.Flow is
                        Get_Sub_Instance (Inst, Stmt);
                   begin
                      for I in 1 .. Len loop
-                        Emit_Frame_Node
-                          (F, Get_Generate_Sub_Instance (Gen_Inst, I),
-                           "for", Get_Label (Stmt), I, First);
+                        declare
+                           GBody : constant Synth_Instance_Acc :=
+                             Get_Generate_Sub_Instance (Gen_Inst, I);
+                           --  The actual VHDL loop value (e.g. 0..N-1),
+                           --  not the 1-based iteration ordinal.
+                           Idx : Integer := I - 1;
+                        begin
+                           begin
+                              Idx := Integer
+                                (Read_Discrete (Get_Value (GBody, It)));
+                           exception
+                              when others =>
+                                 Idx := I - 1;
+                           end;
+                           Emit_Frame_Node
+                             (F, GBody, "for", Get_Label (Stmt), Idx,
+                              First);
+                        end;
                      end loop;
                   end;
                exception
