@@ -323,6 +323,38 @@ Export hierarchy and references
   * ``port`` Like ``proc`` but display ports and signals too.
     If `KIND` is not specified, the hierarchy is displayed with the ``port`` mode.
 
+.. option:: --flow[=<FILENAME>]
+
+  .. index:: dataflow database
+
+  .. index:: flow
+
+  Dump a :dfn:`dataflow database` of the elaborated design as a JSON file
+  (extension ``.flow``).  If `FILENAME` is omitted, the file ``ghdl.flow`` is
+  written.  The dump is produced at elaboration time, so a zero-time run
+  (``--stop-time=0ns``) is enough; the option also composes with the waveform
+  options so a single run can produce both a ``.flow`` and, e.g., a ``.vcd``.
+
+  Unlike a waveform, the database records the *structure* of the design rather
+  than signal values over time.  It contains:
+
+  * ``modules`` -- per entity/architecture: ports (with direction and type),
+    generics, signals, and the read-set / drive-set / sensitivity of every
+    process and concurrent assignment, with source locations.
+
+  * ``hierarchy`` -- the elaborated instance tree (generates unrolled), with the
+    real port map binding each formal to its actual net.
+
+  * ``nets`` -- one entry per canonical net, with the signals that collapse into
+    it (a port and the net it binds to share one net), and the driving and
+    reading cells (fan-in / fan-out).
+
+  * ``cells`` -- one entry per elaborated process/assignment, classified as
+    combinational or clocked (with the clock net), and its driven and read nets.
+
+  This is intended for dataflow tracing and netlist-style analysis tools.
+  Only the interpreted / JIT-elaboration run path builds the required model.
+
 .. option:: --xref-html [options] files...
 
   To easily navigate through your sources, you may generate cross-references.

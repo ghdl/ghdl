@@ -1,3 +1,12 @@
+## Unreleased
+
+- New `--flow[=FILE]` run option: dump a native dataflow database (JSON, with
+  the `.flow` extension) of the elaborated design.  It records modules
+  (ports/generics/signals and per-process read/drive sets), the elaborated
+  hierarchy with real port maps, canonical nets with fan-in/fan-out and
+  port/net collapsing, and combinational-vs-clocked cells.  Bare `--flow`
+  writes `ghdl.flow`.
+
 ## [2026-03-07] 6.0
 
 - Initial support of vhdl2019 (with --std=19)

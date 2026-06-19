@@ -53,6 +53,7 @@ with Trans_Foreign_Jit;
 with Trans.Coverage;
 
 with Simul.Main;
+with Simul.Flow;
 with Simul.Vhdl_Elab;
 with Simul.Vhdl_Simul;
 with Simul.Vhdl_Compile;
@@ -123,6 +124,33 @@ package body Ghdlrun is
             null;
       end case;
    end Compile_Init;
+
+   --  Front-end '--flow[=FILE]' run option: dump the native dataflow
+   --  database (.flow JSON) from the elaborated model.  The dump happens
+   --  at elaboration (in Compile_Elab_Setup), before grt decodes run
+   --  options, so the filename is captured here in the front-end and the
+   --  option is filtered out of the argv handed to grt (Set_Run_Options).
+   Flow_Filename : String_Acc := null;
+
+   Flow_Prefix : constant String := "--flow=";
+
+   function Is_Flow_Option (Arg : String) return Boolean is
+   begin
+      return Arg = "--flow"
+        or else (Arg'Length > Flow_Prefix'Length
+                 and then Arg (Arg'First .. Arg'First + Flow_Prefix'Length - 1)
+                            = Flow_Prefix);
+   end Is_Flow_Option;
+
+   procedure Capture_Flow_Option (Arg : String) is
+   begin
+      if Arg = "--flow" then
+         Flow_Filename := new String'("ghdl.flow");
+      elsif Is_Flow_Option (Arg) then
+         Flow_Filename :=
+           new String'(Arg (Arg'First + Flow_Prefix'Length .. Arg'Last));
+      end if;
+   end Capture_Flow_Option;
 
    function Compile_Elab_Setup (Config : Iir) return Boolean is
    begin
@@ -214,6 +242,13 @@ package body Ghdlrun is
                Simul.Vhdl_Elab.Gather_Processes (Inst);
                Simul.Vhdl_Elab.Elab_Processes;
                Simul.Vhdl_Elab.Compute_Sources;
+
+               --  Native dataflow exporter: if --flow[=FILE] was given,
+               --  dump the elaborated dataflow database now that the
+               --  Processes/Drivers/Sensitivity/Connect tables are built.
+               if Flow_Filename /= null then
+                  Simul.Flow.Dump (Flow_Filename.all);
+               end if;
             end;
       end case;
 
@@ -253,6 +288,8 @@ package body Ghdlrun is
                   Res := Decode_Generic_Override_Option (Arg);
                elsif Arg = "--expect-failure" then
                   Flag_Expect_Failure := True;
+               elsif Is_Flow_Option (Arg) then
+                  Capture_Flow_Option (Arg);
                end if;
             end;
          end loop;
@@ -282,15 +319,30 @@ package body Ghdlrun is
 --           T := new String'(Str & Ghdllocal.Nul);
 --           return To_Ghdl_C_String (T.all'Address);
 --        end Strdup;
+      Nbr : Natural;
+      J : Natural;
    begin
       --  Argc, Argv and Progname are from Grt.Options.
-      Argc := 1 + Args'Length;
+      --  '--flow' is a front-end option (handled at elaboration); filter
+      --  it out so it is not passed to (and rejected by) grt.
+      Nbr := 0;
+      for I in Args'Range loop
+         if not Is_Flow_Option (Args (I).all) then
+            Nbr := Nbr + 1;
+         end if;
+      end loop;
+
+      Argc := 1 + Nbr;
       Argv := Malloc
         (size_t (Argc * (Ghdl_C_String'Size / System.Storage_Unit)));
       Argv (0) := Strdup (Ada.Command_Line.Command_Name & Ghdllocal.Nul);
       Progname := Argv (0);
+      J := 1;
       for I in Args'Range loop
-         Argv (1 + I - Args'First) := Strdup (Args (I).all & Ghdllocal.Nul);
+         if not Is_Flow_Option (Args (I).all) then
+            Argv (J) := Strdup (Args (I).all & Ghdllocal.Nul);
+            J := J + 1;
+         end if;
       end loop;
    end Set_Run_Options;
 
