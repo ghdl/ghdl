@@ -13,18 +13,18 @@ if ghdl_has_feature tb evcd; then
 
   # Ports are declared with the extended-VCD "port" var type, scalars as
   # width 1 and vectors with their index range.
-  if ! grep -q '^\$var port 1 <0 clk \$end' tb.evcd; then
+  if ! grep -q '^.var port 1 <0 clk .end' tb.evcd; then
     echo "missing scalar port declaration in evcd"
     exit 1
   fi
-  if ! grep -q '^\$var port \[3:0\] <2 data_in \$end' tb.evcd; then
+  if ! grep -q '^.var port \[3:0\] <2 data_in .end' tb.evcd; then
     echo "missing vector port declaration in evcd"
     exit 1
   fi
 
-  # The initial values are wrapped in a $dumpports block ...
-  if ! grep -q '^\$dumpports' tb.evcd; then
-    echo "missing \$dumpports block in evcd"
+  # The initial values are wrapped in a dumpports block ...
+  if ! grep -q '^.dumpports' tb.evcd; then
+    echo "missing dumpports block in evcd"
     exit 1
   fi
 
@@ -43,8 +43,8 @@ if ghdl_has_feature tb evcd; then
   fi
 
   # The closing simulation time is recorded.
-  if ! grep -q '^\$vcdclose ' tb.evcd; then
-    echo "missing \$vcdclose marker in evcd"
+  if ! grep -q '^.vcdclose ' tb.evcd; then
+    echo "missing vcdclose marker in evcd"
     exit 1
   fi
 fi
