@@ -316,6 +316,24 @@ Export waveforms
   As ``std_ulogic`` has no `verilog` drive strength, driven values use the
   ``strong`` strength and high-impedance uses ``highz``.
 
+  A non-standard annotation selector may be appended as
+  ``--evcd=FILENAME:CODES``, where `CODES` is ``all`` or any combination of the
+  letters below.  Each annotation is written inside ``$comment`` blocks, so the
+  file stays loadable by any EVCD reader; a cooperating tool can pick them up.
+  A manifest comment ``$comment ghdl_evcd_annotate ... $end`` lists the active
+  codes.  (A trailing ``:CODES`` is only recognised when it consists solely of
+  valid letters, so Windows paths such as ``c:\dir\out.evcd`` are left intact.)
+
+  * ``d`` --- port direction, as ``i`` / ``o`` / ``b`` / ``f`` / ``l`` for
+    ``in`` / ``out`` / ``inout`` / ``buffer`` / ``linkage``.
+  * ``t`` --- the resolved VHDL type of the port.
+  * ``9`` --- the full nine-state ``std_logic`` value (``U X 0 1 Z W L H -``) at
+    each change.  The standard ``p`` record collapses these to a few states; this
+    annotation preserves the exact value.
+
+  For example, ``--evcd=waves.evcd:d9`` adds the direction and nine-state
+  annotations, while ``--evcd=waves.evcd:all`` adds all of them.
+
 .. option:: --evcd-nodate
 
   Do not write date in the extended VCD file.

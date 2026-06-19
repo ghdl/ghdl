@@ -47,9 +47,34 @@ if ghdl_has_feature tb evcd; then
     echo "missing vcdclose marker in evcd"
     exit 1
   fi
+
+  # Non-standard annotations via --evcd=FILE:CODES (all = d t 9).  They ride
+  # in $comment blocks, so the standard records above are unaffected.
+  simulate tb --evcd-nodate --evcd=tb_ann.evcd:all
+
+  # Manifest listing the active annotations.
+  if ! grep -q 'ghdl_evcd_annotate dt9' tb_ann.evcd; then
+    echo "missing annotation manifest in evcd"
+    exit 1
+  fi
+  # d: directions (inout port bus_io -> b).
+  if ! grep -q 'ghdl:d <5 b' tb_ann.evcd; then
+    echo "missing direction annotation in evcd"
+    exit 1
+  fi
+  # t: resolved VHDL type of the vector port.
+  if ! grep -q 'ghdl:t <2 std_logic_vector(3 downto 0)' tb_ann.evcd; then
+    echo "missing type annotation in evcd"
+    exit 1
+  fi
+  # 9: the inout high-Z is preserved exactly as Z (the 'p' record shows F).
+  if ! grep -q 'ghdl:9 <5 Z' tb_ann.evcd; then
+    echo "missing 9-state annotation in evcd"
+    exit 1
+  fi
 fi
 
 clean
-rm -f tb.evcd
+rm -f tb.evcd tb_ann.evcd
 
 echo "Test successful"

@@ -2,7 +2,9 @@
 
 - New signal dumper for the extended VCD (EVCD) format, selected with the
   `--evcd=FILENAME` run option (IEEE 1364 `$dumpports`).  It dumps the design
-  ports with direction-aware state and drive-strength information.
+  ports with direction-aware state and drive-strength information.  Optional,
+  non-standard annotations (port direction, VHDL type, full nine-state
+  `std_logic`) can be added as `$comment` blocks with `--evcd=FILENAME:CODES`.
 
 ## [2026-03-07] 6.0
 

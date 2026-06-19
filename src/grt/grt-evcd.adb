@@ -62,6 +62,23 @@ package body Grt.Evcd is
    --  If TRUE, write $date in the EVCD file.  Disable for reproducible output.
    Flag_Evcd_Date : Boolean := True;
 
+   --  Non-standard, opt-in annotations selected by --evcd=FILE:<letters>.
+   --  Each rides in a '$comment ghdl:<letter> ...$end' block, so a standard
+   --  EVCD reader ignores them and the file stays loadable.
+   --    d - port direction (i/o/b/f/l = in/out/inout/buffer/linkage)
+   --    t - the resolved VHDL type of the port
+   --    9 - the full 9-state std_logic value (U X 0 1 Z W L H -) per change,
+   --        which the standard 'p' record collapses to N/X
+   Ann_Dir : Boolean := False;
+   Ann_Type : Boolean := False;
+   Ann_9state : Boolean := False;
+
+   --  TRUE if any annotation is enabled.
+   function Any_Annotation return Boolean is
+   begin
+      return Ann_Dir or Ann_Type or Ann_9state;
+   end Any_Annotation;
+
    Stream : FILEs;
 
    --  Abstract IO, set up once an output file is selected.
@@ -150,12 +167,56 @@ package body Grt.Evcd is
       end if;
    end Evcd_Put_Name;
 
-   --  Option parsing: --evcd=FILE and --evcd-nodate.
+   --  TRUE if C may appear in an annotation-letter suffix.
+   function Is_Ann_Char (C : Character) return Boolean is
+   begin
+      return C = 'd' or C = 't' or C = '9';
+   end Is_Ann_Char;
+
+   --  Enable the annotations named by S (a sequence of letters, or "all").
+   procedure Set_Annotations (S : String) is
+   begin
+      if S = "all" then
+         Ann_Dir := True;
+         Ann_Type := True;
+         Ann_9state := True;
+         return;
+      end if;
+      for I in S'Range loop
+         case S (I) is
+            when 'd' => Ann_Dir := True;
+            when 't' => Ann_Type := True;
+            when '9' => Ann_9state := True;
+            when others => null;
+         end case;
+      end loop;
+   end Set_Annotations;
+
+   --  Return TRUE if S is a valid annotation suffix ("all" or letters only).
+   function Is_Ann_Suffix (S : String) return Boolean is
+   begin
+      if S'Length = 0 then
+         return False;
+      end if;
+      if S = "all" then
+         return True;
+      end if;
+      for I in S'Range loop
+         if not Is_Ann_Char (S (I)) then
+            return False;
+         end if;
+      end loop;
+      return True;
+   end Is_Ann_Suffix;
+
+   --  Option parsing: --evcd=FILE[:LETTERS] and --evcd-nodate.
    function Evcd_Option (Opt : String) return Boolean
    is
       F : constant Natural := Opt'First;
       Mode : constant String := "wt" & NUL;
       Filename : String_Access;
+      Path_Last : Natural;
+      Name_Len : Natural;
    begin
       if Opt'Length < 6 or else Opt (F .. F + 5) /= "--evcd" then
          return False;
@@ -170,9 +231,31 @@ package body Grt.Evcd is
             return True;
          end if;
 
+         --  Split off a trailing ":LETTERS" annotation selector, but only
+         --  when LETTERS is a valid suffix.  This keeps Windows drive paths
+         --  (e.g. C:\dir\out.evcd) intact, since the text after their colon
+         --  is not a valid annotation suffix.
+         Path_Last := Opt'Last;
+         for I in reverse F + 7 .. Opt'Last loop
+            if Opt (I) = ':' then
+               if I < Opt'Last and then Is_Ann_Suffix (Opt (I + 1 .. Opt'Last))
+               then
+                  Set_Annotations (Opt (I + 1 .. Opt'Last));
+                  Path_Last := I - 1;
+               end if;
+               exit;
+            end if;
+         end loop;
+
+         if Path_Last < F + 7 then
+            Error ("--evcd: missing filename");
+            return True;
+         end if;
+
          --  Add an extra NUL character.
-         Filename := new String (1 .. Opt'Length - 7 + 1);
-         Filename (1 .. Opt'Length - 7) := Opt (F + 7 .. Opt'Last);
+         Name_Len := Path_Last - (F + 7) + 1;
+         Filename := new String (1 .. Name_Len + 1);
+         Filename (1 .. Name_Len) := Opt (F + 7 .. Path_Last);
          Filename (Filename'Last) := NUL;
 
          if Filename.all = "-" & NUL then
@@ -197,6 +280,8 @@ package body Grt.Evcd is
    begin
       Put_Line (" --evcd=FILENAME    dump port values into an extended VCD"
                   & " file");
+      Put_Line (" --evcd=FILE:CODES  add non-standard annotations as comments"
+                  & " (d/t/9 or all)");
       Put_Line (" --evcd-nodate      do not write date in extended VCD file");
    end Evcd_Help;
 
@@ -255,6 +340,23 @@ package body Grt.Evcd is
             Evcd_Putline ("  1 sec");
       end case;
       Evcd_Put_End;
+
+      --  Record which non-standard annotations this file carries, so a
+      --  cooperating reader can self-configure.
+      if Any_Annotation then
+         Evcd_Put ("$comment ghdl_evcd_annotate ");
+         if Ann_Dir then
+            Evcd_Putc ('d');
+         end if;
+         if Ann_Type then
+            Evcd_Putc ('t');
+         end if;
+         if Ann_9state then
+            Evcd_Putc ('9');
+         end if;
+         Evcd_Putc (' ');
+         Evcd_Put_End;
+      end if;
    end Evcd_Init;
 
    --  One dumped port: its wire info (for value extraction) and its mode
@@ -414,6 +516,75 @@ package body Grt.Evcd is
       Evcd_Newline;
    end Evcd_Put_Var;
 
+   --  Annotation 'd': single-letter port direction.
+   function Dir_Letter (M : VhpiModeT) return Character is
+   begin
+      case M is
+         when VhpiInMode => return 'i';
+         when VhpiOutMode => return 'o';
+         when VhpiInoutMode => return 'b';
+         when VhpiBufferMode => return 'f';
+         when VhpiLinkageMode => return 'l';
+         when others => return '?';
+      end case;
+   end Dir_Letter;
+
+   --  Annotation 't': the resolved VHDL type of a port.
+   procedure Evcd_Put_Type (V : Verilog_Wire_Info) is
+   begin
+      case V.Vtype is
+         when Vcd_Bit => Evcd_Put ("bit");
+         when Vcd_Bool => Evcd_Put ("boolean");
+         when Vcd_Stdlogic => Evcd_Put ("std_logic");
+         when Vcd_Bitvector => Evcd_Put ("bit_vector");
+         when Vcd_Stdlogic_Vector => Evcd_Put ("std_logic_vector");
+         when others => Evcd_Putc ('?');
+      end case;
+      if V.Vtype in Vcd_Var_Vectors then
+         Evcd_Putc ('(');
+         Evcd_Put_I32 (V.Vec_Range.I32.Left);
+         if V.Vec_Range.I32.Left >= V.Vec_Range.I32.Right then
+            Evcd_Put (" downto ");
+         else
+            Evcd_Put (" to ");
+         end if;
+         Evcd_Put_I32 (V.Vec_Range.I32.Right);
+         Evcd_Putc (')');
+      end if;
+   end Evcd_Put_Type;
+
+   --  std_logic position (0..8) to its character (annotation '9').
+   function Std_Logic_Char (E : Ghdl_E8) return Character is
+      Map : constant String := "UX01ZWLH-";
+   begin
+      if E in 0 .. 8 then
+         return Map (Integer (E) + 1);
+      else
+         return '?';
+      end if;
+   end Std_Logic_Char;
+
+   --  Annotation '9': the full 9-state std_logic value of a port, which the
+   --  standard 'p' record collapses to N/X.  Only meaningful for std_logic
+   --  (bit/boolean are already lossless in the 'p' record).
+   procedure Evcd_Put_9 (I : Evcd_Index_Type)
+   is
+      V : Verilog_Wire_Info renames Evcd_Table.Table (I).Wire;
+      Len : constant Ghdl_Index_Type := Get_Wire_Length (V);
+   begin
+      if V.Vtype /= Vcd_Stdlogic and then V.Vtype /= Vcd_Stdlogic_Vector then
+         return;
+      end if;
+      Evcd_Put ("$comment ghdl:9 ");
+      Evcd_Put_Idcode (Ghdl_I32 (I));
+      Evcd_Putc (' ');
+      for J in 0 .. Len - 1 loop
+         Evcd_Putc (Std_Logic_Char (Bit_E8 (V, J)));
+      end loop;
+      Evcd_Putc (' ');
+      Evcd_Put_End;
+   end Evcd_Put_9;
+
    procedure Add_Port (Sig : VhpiHandleT)
    is
       N : Evcd_Index_Type;
@@ -461,6 +632,24 @@ package body Grt.Evcd is
       Evcd_Put_Name (Sig);
       Evcd_Putc (' ');
       Evcd_Put_End;
+
+      --  Optional non-standard annotations (comment-safe).
+      if Ann_Dir then
+         Evcd_Put ("$comment ghdl:d ");
+         Evcd_Put_Idcode (Ghdl_I32 (N));
+         Evcd_Putc (' ');
+         Evcd_Putc (Dir_Letter (Vhpi_Get_Mode (Sig)));
+         Evcd_Putc (' ');
+         Evcd_Put_End;
+      end if;
+      if Ann_Type then
+         Evcd_Put ("$comment ghdl:t ");
+         Evcd_Put_Idcode (Ghdl_I32 (N));
+         Evcd_Putc (' ');
+         Evcd_Put_Type (Wire);
+         Evcd_Putc (' ');
+         Evcd_Put_End;
+      end if;
    end Add_Port;
 
    procedure Evcd_Put_Hierarchy (Inst : VhpiHandleT)
@@ -574,6 +763,12 @@ package body Grt.Evcd is
             Evcd_Put_Var (I);
          end loop;
          Evcd_Put_End;
+         --  9-state annotations go after the block, never inside it.
+         if Ann_9state then
+            for I in Evcd_Table.First .. Evcd_Table.Last loop
+               Evcd_Put_9 (I);
+            end loop;
+         end if;
       else
          --  Only changed ports; emit the timestamp lazily.
          for I in Evcd_Table.First .. Evcd_Table.Last loop
@@ -585,6 +780,9 @@ package body Grt.Evcd is
                   Time_Displayed := True;
                end if;
                Evcd_Put_Var (I);
+               if Ann_9state then
+                  Evcd_Put_9 (I);
+               end if;
             end if;
          end loop;
       end if;
