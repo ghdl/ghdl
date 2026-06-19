@@ -1,3 +1,9 @@
+## Unreleased
+
+- New signal dumper for the extended VCD (EVCD) format, selected with the
+  `--evcd=FILENAME` run option (IEEE 1364 `$dumpports`).  It dumps the design
+  ports with direction-aware state and drive-strength information.
+
 ## [2026-03-07] 6.0
 
 - Initial support of vhdl2019 (with --std=19)
