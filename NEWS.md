@@ -5,7 +5,8 @@
   (ports/generics/signals and per-process read/drive sets), the elaborated
   hierarchy with real port maps, canonical nets with fan-in/fan-out and
   port/net collapsing, and combinational-vs-clocked cells.  Bare `--flow`
-  writes `ghdl.flow`.
+  writes `ghdl.flow`.  There is also a dedicated `ghdl --flow [--out=FILE]
+  UNIT` command that elaborates and dumps without running a simulation.
 
 ## [2026-03-07] 6.0
 

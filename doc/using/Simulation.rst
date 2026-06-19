@@ -355,6 +355,14 @@ Export hierarchy and references
   This is intended for dataflow tracing and netlist-style analysis tools.
   Only the interpreted / JIT-elaboration run path builds the required model.
 
+  There is also a dedicated command that elaborates and dumps the database
+  without running a simulation::
+
+    ghdl --flow [--out=FILE] UNIT [ARCH]
+
+  It writes ``ghdl.flow`` by default, or `FILE` with ``--out=FILE``.  It is
+  equivalent to ``ghdl -r UNIT --flow=FILE`` stopped at time zero.
+
 .. option:: --xref-html [options] files...
 
   To easily navigate through your sources, you may generate cross-references.
