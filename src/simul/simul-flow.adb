@@ -53,6 +53,17 @@ package body Simul.Flow is
       end if;
    end Img;
 
+   --  Int64 image without the leading space of 'Image.
+   function Img64 (N : Int64) return String is
+      S : constant String := Int64'Image (N);
+   begin
+      if S (S'First) = ' ' then
+         return S (S'First + 1 .. S'Last);
+      else
+         return S;
+      end if;
+   end Img64;
+
    function Hex1 (V : Natural) return Character is
       H : constant String := "0123456789abcdef";
    begin
@@ -1055,6 +1066,49 @@ package body Simul.Flow is
      (F : File_Type; Inst : Synth_Instance_Acc; Kind : String;
       Label : Name_Id; Index : Natural; First : in out Boolean);
 
+   --  Emit the resolved generics of an instance: {name, type, value}
+   --  with the elaborated discrete value when available.
+   procedure Emit_Resolved_Generics
+     (F : File_Type; Ent : Node; Inst : Synth_Instance_Acc)
+   is
+      Gen : Node;
+      First : Boolean := True;
+   begin
+      if Ent = Null_Node or else Inst = null then
+         return;
+      end if;
+      Gen := Get_Generic_Chain (Ent);
+      while Gen /= Null_Node loop
+         if Get_Kind (Gen) = Iir_Kind_Interface_Constant_Declaration then
+            declare
+               Has_Val : Boolean := False;
+               V : Int64 := 0;
+            begin
+               begin
+                  V := Read_Discrete (Get_Value (Inst, Gen));
+                  Has_Val := True;
+               exception
+                  when others =>
+                     Has_Val := False;
+               end;
+               if not First then
+                  Put (F, ", ");
+               end if;
+               First := False;
+               Put (F, "{""name"": ");
+               Put_Str (F, Name_Table.Image (Get_Identifier (Gen)));
+               Put (F, ", ""type"": ");
+               Put_Str (F, Type_Image (Gen));
+               if Has_Val then
+                  Put (F, ", ""value"": " & Img64 (V));
+               end if;
+               Put (F, "}");
+            end;
+         end if;
+         Gen := Get_Chain (Gen);
+      end loop;
+   end Emit_Resolved_Generics;
+
    procedure Emit_Instance_Node
      (F : File_Type; Inst : Synth_Instance_Acc; Stmt : Node;
       First : in out Boolean)
@@ -1063,9 +1117,17 @@ package body Simul.Flow is
       Arch_Name : Name_Id;
       Body_Inst : Synth_Instance_Acc;
       Lbl : Name_Id;
+      Ent : Node := Null_Node;
+      Scope : Node;
       Cf : Boolean := True;
    begin
       Inst_Module_Arch (Inst, Mod_Name, Arch_Name, Body_Inst);
+      Scope := Get_Source_Scope (Body_Inst);
+      if Scope /= Null_Node
+        and then Get_Kind (Scope) = Iir_Kind_Architecture_Body
+      then
+         Ent := Vhdl.Utils.Get_Entity (Scope);
+      end if;
       if Stmt /= Null_Node then
          Lbl := Get_Label (Stmt);
       else
@@ -1093,8 +1155,9 @@ package body Simul.Flow is
       else
          Put_Pos (F, Get_Source_Scope (Body_Inst));
       end if;
-      Put (F, ", ""generics"": []");
-      Put (F, ", ""generic_map"": [");
+      Put (F, ", ""generics"": [");
+      Emit_Resolved_Generics (F, Ent, Body_Inst);
+      Put (F, "], ""generic_map"": [");
       if Stmt /= Null_Node then
          Emit_Map (F, Get_Generic_Map_Aspect_Chain (Stmt));
       end if;
