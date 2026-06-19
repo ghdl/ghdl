@@ -269,6 +269,18 @@ package body Ghdlrun is
    is
       Config : Iir;
    begin
+      --  '--flow' exports begin/end source spans (architecture/process
+      --  'begin', unit 'end', ...) which live in the extended-locations
+      --  table.  That table is only populated by the parser when
+      --  Flag_Elocations is set, and units are (re)parsed during
+      --  Common_Compile_Elab below, so enable it here, before any load.
+      for I in Args'Range loop
+         if Is_Flow_Option (Args (I).all) then
+            Flags.Flag_Elocations := True;
+            exit;
+         end if;
+      end loop;
+
       Common_Compile_Elab (Cmd_Name, Args, True, Opt_Arg, Config);
 
       if Run_Mode /= Run_Elab_Jit then
