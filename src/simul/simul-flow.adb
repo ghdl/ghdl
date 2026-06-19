@@ -23,6 +23,7 @@ with Name_Table;
 with Files_Map;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
+with Vhdl.Elocations; use Vhdl.Elocations;
 with Vhdl.Utils;
 with Vhdl.Canon;
 
@@ -142,27 +143,253 @@ package body Simul.Flow is
       return Name_Table.Image (Fid);
    end Node_File;
 
-   --  Emit a {"off","line","col"} position object for node N.
-   procedure Put_Pos (F : File_Type; N : Iir) is
-      Loc : Location_Type;
+   --  The 0-based byte offset of a location within its file, as a string
+   --  ("" for No_Location).  Registers the file as a side effect.
+   function Off_Img (Loc : Location_Type) return String is
       Fid : Name_Id;
       Line : Positive;
       Col : Natural;
+      Sf : Source_File_Entry;
+      Pos : Source_Ptr;
    begin
-      if N = Null_Iir then
-         Put (F, "{""off"": 0, ""line"": 0, ""col"": 0}");
-         return;
-      end if;
-      Loc := Get_Location (N);
       if Loc = No_Location then
-         Put (F, "{""off"": 0, ""line"": 0, ""col"": 0}");
-         return;
+         return "";
       end if;
       Files_Map.Location_To_Position (Loc, Fid, Line, Col);
+      Files_Map.Location_To_File_Pos (Loc, Sf, Pos);
       Note_File (Fid);
-      Put (F, "{""off"": 0, ""line"": " & Img (Line)
-           & ", ""col"": " & Img (Col) & "}");
+      return Img (Integer (Pos));
+   end Off_Img;
+
+   --  Emit a position as the compact string "start:begin:end" of byte
+   --  offsets.  Missing parts are left empty: a plain point is "S::",
+   --  a span with no 'begin' keyword is "S::E".
+   procedure Put_Pos3
+     (F : File_Type; Start_Loc, Begin_Loc, End_Loc : Location_Type) is
+   begin
+      Put (F, '"');
+      Put (F, Off_Img (Start_Loc) & ":"
+           & Off_Img (Begin_Loc) & ":" & Off_Img (End_Loc));
+      Put (F, '"');
+   end Put_Pos3;
+
+   --  Emit the position of node N as a plain point "off::".
+   procedure Put_Pos (F : File_Type; N : Iir) is
+   begin
+      if N = Null_Iir then
+         Put (F, """::""");
+         return;
+      end if;
+      Put_Pos3 (F, Get_Location (N), No_Location, No_Location);
    end Put_Pos;
+
+   --  Safe extended-location reads: return No_Location when N has no
+   --  elocations (canon-synthesized processes, etc.), so the begin/end
+   --  span emitters omit the field instead of reading a garbage slot.
+   function E_Begin (N : Iir) return Location_Type is
+   begin
+      if N /= Null_Iir and then Has_Elocations (N) then
+         return Get_Begin_Location (N);
+      end if;
+      return No_Location;
+   end E_Begin;
+
+   function E_End (N : Iir) return Location_Type is
+   begin
+      if N /= Null_Iir and then Has_Elocations (N) then
+         return Get_End_Location (N);
+      end if;
+      return No_Location;
+   end E_End;
+
+   function E_Start (N : Iir) return Location_Type is
+   begin
+      if N /= Null_Iir and then Has_Elocations (N) then
+         return Get_Start_Location (N);
+      end if;
+      return No_Location;
+   end E_Start;
+
+   --  Component/entity instantiation statements carry no end location,
+   --  so locate their terminating ';' by scanning the source buffer from
+   --  the statement start, skipping comments, string/char literals and
+   --  parenthesised (generic/port map) regions.  Returns the location of
+   --  the ';' (No_Location if not found / no source).
+   function Stmt_Semicolon_Loc (N : Iir) return Location_Type is
+      Loc : constant Location_Type := Get_Location (N);
+      Sf : Source_File_Entry;
+      Pos : Source_Ptr;
+      Buf : File_Buffer_Acc;
+      Len : Source_Ptr;
+      Depth : Integer := 0;
+   begin
+      if Loc = No_Location then
+         return No_Location;
+      end if;
+      Files_Map.Location_To_File_Pos (Loc, Sf, Pos);
+      Buf := Files_Map.Get_File_Source (Sf);
+      Len := Files_Map.Get_File_Length (Sf);
+      while Pos < Len loop
+         case Buf (Pos) is
+            when '-' =>
+               if Pos + 1 < Len and then Buf (Pos + 1) = '-' then
+                  while Pos < Len and then Buf (Pos) /= ASCII.LF loop
+                     Pos := Pos + 1;
+                  end loop;
+               else
+                  Pos := Pos + 1;
+               end if;
+            when '"' =>
+               Pos := Pos + 1;
+               while Pos < Len and then Buf (Pos) /= '"' loop
+                  Pos := Pos + 1;
+               end loop;
+               Pos := Pos + 1;
+            when ''' =>
+               --  Character literal 'x' (tick-quote-tick); anything else
+               --  (e.g. an attribute tick) is just advanced over.
+               if Pos + 2 < Len and then Buf (Pos + 2) = ''' then
+                  Pos := Pos + 3;
+               else
+                  Pos := Pos + 1;
+               end if;
+            when '(' =>
+               Depth := Depth + 1;
+               Pos := Pos + 1;
+            when ')' =>
+               Depth := Depth - 1;
+               Pos := Pos + 1;
+            when ';' =>
+               if Depth <= 0 then
+                  return Files_Map.File_Pos_To_Location (Sf, Pos);
+               end if;
+               Pos := Pos + 1;
+            when others =>
+               Pos := Pos + 1;
+         end case;
+      end loop;
+      return No_Location;
+   exception
+      when others =>
+         return No_Location;
+   end Stmt_Semicolon_Loc;
+
+   --  Span-end of a statement: its 'end' location when available, else
+   --  the terminating ';' (for canon-synthesized processes built from a
+   --  single concurrent assignment, which have no end location).
+   function Stmt_Span_End (N : Iir) return Location_Type is
+      L : constant Location_Type := E_End (N);
+   begin
+      if L /= No_Location then
+         return L;
+      end if;
+      return Stmt_Semicolon_Loc (N);
+   end Stmt_Span_End;
+
+   --  Flatten a (possibly selected) name into its dotted source form,
+   --  e.g. "ieee.std_logic_1164.all".
+   function Flatten_Name (N : Iir) return String is
+   begin
+      if N = Null_Iir then
+         return "";
+      end if;
+      case Get_Kind (N) is
+         when Iir_Kind_Simple_Name
+            | Iir_Kind_Character_Literal =>
+            return Name_Table.Image (Get_Identifier (N));
+         when Iir_Kind_Selected_Name =>
+            declare
+               P : constant String := Flatten_Name (Get_Prefix (N));
+               S : constant String :=
+                 Name_Table.Image (Get_Identifier (N));
+            begin
+               if P = "" then
+                  return S;
+               else
+                  return P & "." & S;
+               end if;
+            end;
+         when Iir_Kind_Selected_By_All_Name =>
+            declare
+               P : constant String := Flatten_Name (Get_Prefix (N));
+            begin
+               if P = "" then
+                  return "all";
+               else
+                  return P & ".all";
+               end if;
+            end;
+         when others =>
+            return "";
+      end case;
+   end Flatten_Name;
+
+   --  Emit  "libraries": [...], "uses": [{name,pos}, ...],  recording the
+   --  package/library linkage of a single design unit (entity OR
+   --  architecture) from the context clauses that precede it in the source.
+   procedure Emit_Context (F : File_Type; Unit : Iir) is
+      Lib_First : Boolean := True;
+      Use_First : Boolean := True;
+      DU : constant Iir :=
+        (if Unit = Null_Iir then Null_Iir else Get_Design_Unit (Unit));
+      It : Iir;
+      UC : Iir;
+   begin
+      Put (F, "      ""libraries"": [");
+      if DU /= Null_Iir then
+         It := Get_Context_Items (DU);
+         while It /= Null_Iir loop
+            if Get_Kind (It) = Iir_Kind_Library_Clause then
+               declare
+                  Id : constant Name_Id := Get_Identifier (It);
+               begin
+                  if Id /= Null_Identifier then
+                     if not Lib_First then
+                        Put (F, ", ");
+                     end if;
+                     Lib_First := False;
+                     Put_Str (F, Name_Table.Image (Id));
+                  end if;
+               end;
+            end if;
+            It := Get_Chain (It);
+         end loop;
+      end if;
+      Put (F, "],");
+      New_Line (F);
+
+      Put (F, "      ""uses"": [");
+      if DU /= Null_Iir then
+         It := Get_Context_Items (DU);
+         while It /= Null_Iir loop
+            if Get_Kind (It) = Iir_Kind_Use_Clause then
+               UC := It;
+               while UC /= Null_Iir loop
+                  declare
+                     S : constant String :=
+                       Flatten_Name (Get_Selected_Name (UC));
+                  begin
+                     if S /= "" then
+                        if not Use_First then
+                           Put (F, ", ");
+                        end if;
+                        Use_First := False;
+                        Put (F, "{""name"": ");
+                        Put_Str (F, S);
+                        Put (F, ", ""pos"": ");
+                        Put_Pos (F, UC);
+                        Put (F, "}");
+                     end if;
+                  end;
+                  UC := Get_Use_Clause_Chain (UC);
+               end loop;
+            end if;
+            It := Get_Chain (It);
+         end loop;
+      end if;
+      Put (F, "],");
+      New_Line (F);
+   end Emit_Context;
 
    --  ------------------------------------------------------------------
    --  Name / type resolution.
@@ -582,8 +809,10 @@ package body Simul.Flow is
       else
          Put_Str (F, Name_Table.Image (Lbl));
       end if;
+      --  pos = "start:begin:end": process keyword : 'begin' (end of the
+      --  declarative part) : 'end process;'.
       Put (F, ", ""pos"": ");
-      Put_Pos (F, Proc);
+      Put_Pos3 (F, Get_Location (Proc), E_Begin (Proc), Stmt_Span_End (Proc));
 
       Put (F, ", ""sensitivity"": ");
       if Get_Kind (Proc) = Iir_Kind_Sensitized_Process_Statement then
@@ -641,7 +870,7 @@ package body Simul.Flow is
       Put (F, "{""target"": ");
       Put_Str (F, Obj_Name (Get_Target (Stmt)));
       Put (F, ", ""pos"": ");
-      Put_Pos (F, Stmt);
+      Put_Pos3 (F, Get_Location (Stmt), No_Location, Stmt_Span_End (Stmt));
 
       begin
          case Get_Kind (Stmt) is
@@ -837,7 +1066,7 @@ package body Simul.Flow is
       else
          Put_Str (F, Name_Table.Image (Lbl));
       end if;
-      Put (F, ", ""module"": ");
+      Put (F, ", ""entity"": ");
       if Mod_Name = Null_Identifier then
          Put_Str (F, "");
       else
@@ -849,8 +1078,12 @@ package body Simul.Flow is
       end if;
       Put (F, ", ""is_entity_inst"": ");
       Put (F, (if Is_Entity then "true" else "false"));
+      --  pos = "start::end": instantiation label .. terminating ';'
+      --  (instantiations have no 'begin' and carry no end location, so
+      --  the ';' is scanned from the source buffer).
       Put (F, ", ""pos"": ");
-      Put_Pos (F, Stmt);
+      Put_Pos3 (F, Get_Location (Stmt), No_Location,
+                Stmt_Semicolon_Loc (Stmt));
       Put (F, ", ""generic_map"": [");
       Emit_Map (F, Get_Generic_Map_Aspect_Chain (Stmt));
       Put (F, "], ""port_map"": [");
@@ -1019,42 +1252,58 @@ package body Simul.Flow is
    end Emit_Signals;
 
    --  ------------------------------------------------------------------
-   --  Module emission (one per architecture body).
+   --  Unit emission: entities[] and architectures[] (kept separate, as
+   --  they are distinct VHDL library units with their own source spans
+   --  and context clauses).
    --  ------------------------------------------------------------------
 
-   procedure Emit_Module (F : File_Type; Arch : Iir) is
-      Ent : constant Iir :=
-        Get_Named_Entity (Get_Entity_Name (Arch));
+   --  One entry in entities[]: ports, generics and the entity's own
+   --  context clause.  pos = "start:begin:end" of the entity declaration
+   --  (a 'begin' only when the entity has a passive statement part).
+   procedure Emit_Entity (F : File_Type; Ent : Iir) is
+   begin
+      Put (F, "    {""name"": ");
+      Put_Str (F, Name_Table.Image (Get_Identifier (Ent)));
+      Put (F, ", ""file"": ");
+      Put_Str (F, Node_File (Ent));
+      Put (F, ", ""pos"": ");
+      Put_Pos3 (F, E_Start (Ent), E_Begin (Ent), E_End (Ent));
+      Put (F, ",");
+      New_Line (F);
+      Emit_Context (F, Ent);
+      Put (F, "      ""generics"": [");
+      Emit_Generics (F, Ent);
+      Put (F, "],");
+      New_Line (F);
+      Put (F, "      ""ports"": [");
+      Emit_Ports (F, Ent);
+      Put (F, "]}");
+   end Emit_Entity;
+
+   --  One entry in architectures[]: signals/constants and the concurrent
+   --  body (processes, assignments, instances), plus a back-reference to
+   --  its entity and the architecture's own context clause.
+   --  pos = "start:begin:end" of "architecture .. begin .. end;".
+   procedure Emit_Architecture (F : File_Type; Arch : Iir) is
+      Ent : constant Iir := Get_Named_Entity (Get_Entity_Name (Arch));
       Chain : constant Iir := Get_Concurrent_Statement_Chain (Arch);
       First : Boolean;
    begin
       Put (F, "    {""name"": ");
+      Put_Str (F, Name_Table.Image (Get_Identifier (Arch)));
+      Put (F, ", ""entity"": ");
       if Ent /= Null_Iir then
          Put_Str (F, Name_Table.Image (Get_Identifier (Ent)));
       else
          Put_Str (F, "");
       end if;
-      Put (F, ", ""kind"": ");
-      Put_Str (F, "entity");
-      Put (F, ", ""lang"": ");
-      Put_Str (F, "vhdl");
       Put (F, ", ""file"": ");
       Put_Str (F, Node_File (Arch));
       Put (F, ", ""pos"": ");
-      Put_Pos (F, Arch);
-      Put (F, ", ""arch"": ");
-      Put_Str (F, Name_Table.Image (Get_Identifier (Arch)));
+      Put_Pos3 (F, E_Start (Arch), E_Begin (Arch), E_End (Arch));
       Put (F, ",");
-
       New_Line (F);
-      Put (F, "      ""ports"": [");
-      Emit_Ports (F, Ent);
-      Put (F, "],");
-      New_Line (F);
-      Put (F, "      ""generics"": [");
-      Emit_Generics (F, Ent);
-      Put (F, "],");
-      New_Line (F);
+      Emit_Context (F, Arch);
       Put (F, "      ""signals"": [");
       Emit_Signals (F, Arch);
       Put (F, "],");
@@ -1083,7 +1332,7 @@ package body Simul.Flow is
       First := True;
       Walk_Instances (F, Chain, First);
       Put (F, "]}");
-   end Emit_Module;
+   end Emit_Architecture;
 
    --  ------------------------------------------------------------------
    --  Elaborated hierarchy (hierarchy[] from the instance tree).
@@ -1174,7 +1423,7 @@ package body Simul.Flow is
      (F : File_Type; Inst : Synth_Instance_Acc; Stmt : Node;
       First : in out Boolean);
    procedure Emit_Frame_Node
-     (F : File_Type; Inst : Synth_Instance_Acc; Kind : String;
+     (F : File_Type; Inst : Synth_Instance_Acc; Stmt : Node; Kind : String;
       Label : Name_Id; Index : Natural; First : in out Boolean);
 
    --  Emit the resolved generics of an instance: {name, type, value}
@@ -1252,7 +1501,7 @@ package body Simul.Flow is
 
       Put (F, "{""name"": ");
       Put_Name (F, Lbl);
-      Put (F, ", ""module"": ");
+      Put (F, ", ""entity"": ");
       Put_Name (F, Mod_Name);
       if Arch_Name /= Null_Identifier then
          Put (F, ", ""arch"": ");
@@ -1262,7 +1511,8 @@ package body Simul.Flow is
       Put_Name (F, Lbl);
       Put (F, ", ""inst_pos"": ");
       if Stmt /= Null_Node then
-         Put_Pos (F, Stmt);
+         Put_Pos3 (F, Get_Location (Stmt), No_Location,
+                   Stmt_Semicolon_Loc (Stmt));
       else
          Put_Pos (F, Get_Source_Scope (Body_Inst));
       end if;
@@ -1282,10 +1532,11 @@ package body Simul.Flow is
    end Emit_Instance_Node;
 
    procedure Emit_Frame_Node
-     (F : File_Type; Inst : Synth_Instance_Acc; Kind : String;
+     (F : File_Type; Inst : Synth_Instance_Acc; Stmt : Node; Kind : String;
       Label : Name_Id; Index : Natural; First : in out Boolean)
    is
       Cf : Boolean := True;
+      Scope : constant Node := Get_Source_Scope (Inst);
    begin
       if not First then
          Put (F, ", ");
@@ -1297,6 +1548,21 @@ package body Simul.Flow is
          Put_Str (F, Name_Table.Image (Label) & "(" & Img (Index) & ")");
       else
          Put_Name (F, Label);
+      end if;
+      --  pos = "start:begin:end" of the frame.  For generates the span
+      --  lives on the generate statement (Generate_Location is the
+      --  'generate' keyword that opens the body); blocks carry begin/end
+      --  on the block statement scope itself.
+      Put (F, ", ""pos"": ");
+      if Stmt /= Null_Node
+        and then Has_Elocations (Stmt)
+        and then (Get_Kind (Stmt) = Iir_Kind_For_Generate_Statement
+                  or else Get_Kind (Stmt) = Iir_Kind_If_Generate_Statement)
+      then
+         Put_Pos3 (F, Get_Start_Location (Stmt),
+                   Get_Generate_Location (Stmt), Get_End_Location (Stmt));
+      else
+         Put_Pos3 (F, E_Start (Scope), E_Begin (Scope), E_End (Scope));
       end if;
       Put (F, ", ""scope"": true, ""generate"": {""kind"": ");
       Put_Str (F, Kind);
@@ -1356,8 +1622,8 @@ package body Simul.Flow is
                                  Idx := I - 1;
                            end;
                            Emit_Frame_Node
-                             (F, GBody, "for", Get_Label (Stmt), Idx,
-                              First);
+                             (F, GBody, Stmt, "for", Get_Label (Stmt),
+                              Idx, First);
                         end;
                      end loop;
                   end;
@@ -1373,7 +1639,7 @@ package body Simul.Flow is
                begin
                   if Sub /= null then
                      Emit_Frame_Node
-                       (F, Sub, "if", Get_Label (Stmt), 0, First);
+                       (F, Sub, Stmt, "if", Get_Label (Stmt), 0, First);
                   end if;
                end;
             when Iir_Kind_Block_Statement =>
@@ -1383,7 +1649,7 @@ package body Simul.Flow is
                begin
                   if Sub /= null then
                      Emit_Frame_Node
-                       (F, Sub, "block", Get_Label (Stmt), 0, First);
+                       (F, Sub, Stmt, "block", Get_Label (Stmt), 0, First);
                   end if;
                end;
             when others =>
@@ -1761,8 +2027,16 @@ package body Simul.Flow is
             end if;
             Put (F, ", ""path"": ");
             Put_Str (F, Inst_Path (E.Inst));
+            --  pos = "start:begin:end" (same as the source process); a
+            --  concurrent assignment has no 'begin'.
             Put (F, ", ""pos"": ");
-            Put_Pos (F, E.Proc);
+            if Is_Assign then
+               Put_Pos3 (F, Get_Location (E.Proc), No_Location,
+                         Stmt_Span_End (E.Proc));
+            else
+               Put_Pos3 (F, Get_Location (E.Proc), E_Begin (E.Proc),
+                         Stmt_Span_End (E.Proc));
+            end if;
 
             if not Is_Assign then
                begin
@@ -1898,7 +2172,7 @@ package body Simul.Flow is
                         Put (F, ", ""file"": ");
                         Put_Str (F, Node_File (LU));
                         Put (F, ", ""pos"": ");
-                        Put_Pos (F, LU);
+                        Put_Pos3 (F, E_Start (LU), No_Location, E_End (LU));
                         Put (F, ", ""constants"": [");
                         Emit_Constant_Decls
                           (F, Get_Declaration_Chain (LU));
@@ -1926,7 +2200,7 @@ package body Simul.Flow is
       Create (F, Out_File, Filename);
 
       Put_Line (F, "{");
-      Put_Line (F, "  ""schema"": ""flowtracer1.merged.v0"",");
+      Put_Line (F, "  ""schema"": ""flowtracer1.vhdl.v0"",");
       Put_Line
         (F, "  ""generated_by"": ""ghdl --flow (native)"",");
       Put (F, "  ""ghdl"": {""version"": ");
@@ -1952,7 +2226,46 @@ package body Simul.Flow is
       end;
       Put_Line (F, ",");
 
-      Put (F, "  ""modules"": [");
+      --  entities[]: one per entity declaration in the work/user libs.
+      Put (F, "  ""entities"": [");
+      Lib := Libraries.Get_Libraries_Chain;
+      while Lib /= Null_Iir loop
+         declare
+            Lib_Name : constant String :=
+              Name_Table.Image (Get_Identifier (Lib));
+         begin
+            if Lib_Name /= "std" and then Lib_Name /= "ieee" then
+               File := Get_Design_File_Chain (Lib);
+               while File /= Null_Iir loop
+                  Unit := Get_First_Design_Unit (File);
+                  while Unit /= Null_Iir loop
+                     LU := Get_Library_Unit (Unit);
+                     if LU /= Null_Iir
+                       and then Get_Kind (LU) = Iir_Kind_Entity_Declaration
+                     then
+                        if not Mod_First then
+                           Put (F, ",");
+                        end if;
+                        Mod_First := False;
+                        New_Line (F);
+                        Emit_Entity (F, LU);
+                     end if;
+                     Unit := Get_Chain (Unit);
+                  end loop;
+                  File := Get_Chain (File);
+               end loop;
+            end if;
+         end;
+         Lib := Get_Chain (Lib);
+      end loop;
+      New_Line (F);
+      Put_Line (F, "  ],");
+
+      --  architectures[]: one per architecture body whose entity resolves
+      --  (others are units present in the library but not loaded for this
+      --  top, which would otherwise emit empty entries).
+      Put (F, "  ""architectures"": [");
+      Mod_First := True;
       Lib := Libraries.Get_Libraries_Chain;
       while Lib /= Null_Iir loop
          declare
@@ -1967,13 +2280,15 @@ package body Simul.Flow is
                      LU := Get_Library_Unit (Unit);
                      if LU /= Null_Iir
                        and then Get_Kind (LU) = Iir_Kind_Architecture_Body
+                       and then Get_Named_Entity (Get_Entity_Name (LU))
+                                  /= Null_Iir
                      then
                         if not Mod_First then
                            Put (F, ",");
                         end if;
                         Mod_First := False;
                         New_Line (F);
-                        Emit_Module (F, LU);
+                        Emit_Architecture (F, LU);
                      end if;
                      Unit := Get_Chain (Unit);
                   end loop;

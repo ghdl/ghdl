@@ -32,7 +32,7 @@ check '"generate": {"kind": "for", "label": "g", "index": 2}' "generate index 2"
 check '"scope": true' "transparent generate scope"
 
 #  Each unrolled iteration instantiates the cell entity.
-check '"module": "cell"' "generate-internal instance"
+check '"entity": "cell"' "generate-internal instance"
 
 clean
 rm -f flow03.flow

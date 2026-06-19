@@ -29,7 +29,7 @@ check ()
 #  Both component instantiations bound to entity leaf(rtl).
 check '"instance_label": "u0"' "first component instance"
 check '"instance_label": "u1"' "second component instance"
-check '"module": "leaf"'       "component bound to entity"
+check '"entity": "leaf"'       "component bound to entity"
 
 #  The internal net t unifies the collapsed ports of both instances.
 check '"name": "t", "path"'    "internal chaining net"

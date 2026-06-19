@@ -338,9 +338,13 @@ Export hierarchy and references
   Unlike a waveform, the database records the *structure* of the design rather
   than signal values over time.  It contains:
 
-  * ``modules`` -- per entity/architecture: ports (with direction and type),
-    generics, signals, and the read-set / drive-set / sensitivity of every
-    process and concurrent assignment, with source locations.
+  * ``entities`` -- per entity: ports (with direction and type), generics, and
+    the entity's ``library``/``use`` context clauses.
+
+  * ``architectures`` -- per architecture (with an ``entity`` back-reference):
+    signals, constants, the architecture's own context clauses, and the
+    read-set / drive-set / sensitivity of every process, concurrent assignment
+    and instantiation.
 
   * ``hierarchy`` -- the elaborated instance tree (generates unrolled), with the
     real port map binding each formal to its actual net.
@@ -351,6 +355,22 @@ Export hierarchy and references
 
   * ``cells`` -- one entry per elaborated process/assignment, classified as
     combinational or clocked (with the clock net), and its driven and read nets.
+
+  To help source-scanning consumers (such as Perl lexers) locate constructs
+  without re-parsing, every position is a compact string of byte offsets,
+  ``"start:begin:end"``:
+
+  * *start* -- byte offset where the construct begins;
+  * *begin* -- byte offset of the ``begin`` keyword that ends the declarative
+    region (for a generate, its ``generate`` keyword) -- empty when there is
+    none;
+  * *end* -- byte offset of the closing ``end`` keyword or terminating ``;`` --
+    empty for a plain point.
+
+  So a port is ``"start::"``, an entity instantiation is ``"start::end"``, and an
+  architecture or process is ``"start:begin:end"``.  The ``library``/``use``
+  context clauses are reported per unit (on the entity and architecture
+  separately), recording each unit's linkage to the packages it uses.
 
   This is intended for dataflow tracing and netlist-style analysis tools.
   Only the interpreted / JIT-elaboration run path builds the required model.

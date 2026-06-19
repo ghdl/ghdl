@@ -21,7 +21,7 @@ if ! grep -qF '"kind": "if", "label": "g_on"' ifg.flow; then
   echo "FAILED: taken if-generate branch g_on missing"
   exit 1
 fi
-if ! grep -qF '"module": "cell2"' ifg.flow; then
+if ! grep -qF '"entity": "cell2"' ifg.flow; then
   echo "FAILED: instance inside taken branch missing"
   exit 1
 fi

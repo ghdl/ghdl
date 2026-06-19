@@ -26,10 +26,10 @@ check ()
 }
 
 #  Top-level provenance and elaborated top unit.
-check '"schema": "flowtracer1.merged.v0"' "merged schema"
+check '"schema": "flowtracer1.vhdl.v0"' "vhdl schema"
 check '"top": "tb"'                        "elaborated top unit"
 
-#  modules[]: process dataflow (read-set / drive-set) from the AST.
+#  architectures[]: process dataflow (read-set / drive-set) from the AST.
 check '"drives": ["cnt"]'                  "clocked process drive set"
 
 #  hierarchy[]: elaborated instance tree with the real port_map.

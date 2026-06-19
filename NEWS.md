@@ -1,12 +1,16 @@
 ## Unreleased
 
 - New `--flow[=FILE]` run option: dump a native dataflow database (JSON, with
-  the `.flow` extension) of the elaborated design.  It records modules
-  (ports/generics/signals and per-process read/drive sets), the elaborated
-  hierarchy with real port maps, canonical nets with fan-in/fan-out and
-  port/net collapsing, and combinational-vs-clocked cells.  Bare `--flow`
+  the `.flow` extension) of the elaborated design.  It records `entities` and
+  `architectures` (ports/generics/signals and per-process read/drive sets), the
+  elaborated hierarchy with real port maps, canonical nets with fan-in/fan-out
+  and port/net collapsing, and combinational-vs-clocked cells.  Bare `--flow`
   writes `ghdl.flow`.  There is also a dedicated `ghdl --flow [--out=FILE]
-  UNIT` command that elaborates and dumps without running a simulation.
+  UNIT` command that elaborates and dumps without running a simulation.  Every
+  source position is a compact `"start:begin:end"` byte-offset string (the
+  `begin`/`generate` keyword and closing `end`/`;`), and each unit carries its
+  `libraries`/`uses` context linkage, to help source-scanning consumers locate
+  constructs.
 
 ## [2026-03-07] 6.0
 
