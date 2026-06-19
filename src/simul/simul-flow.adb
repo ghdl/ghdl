@@ -236,6 +236,83 @@ package body Simul.Flow is
    end Obj_Name;
 
    --  Best-effort printable type name of a declaration's subtype.
+   --  Image of a static integer-literal expression, or "".
+   function Int_Expr_Image (E : Node) return String is
+   begin
+      if E /= Null_Node
+        and then Get_Kind (E) = Iir_Kind_Integer_Literal
+      then
+         return Img64 (Get_Value (E));
+      end if;
+      return "";
+   end Int_Expr_Image;
+
+   --  "L downto R" / "L to R" from a range expression, or "".
+   function Range_Image (Rng : Node) return String is
+   begin
+      if Rng = Null_Node
+        or else Get_Kind (Rng) /= Iir_Kind_Range_Expression
+      then
+         return "";
+      end if;
+      declare
+         L : constant String := Int_Expr_Image (Get_Left_Limit (Rng));
+         R : constant String := Int_Expr_Image (Get_Right_Limit (Rng));
+      begin
+         if L = "" or else R = "" then
+            return "";
+         end if;
+         if Get_Direction (Rng) = Dir_Downto then
+            return L & " downto " & R;
+         else
+            return L & " to " & R;
+         end if;
+      end;
+   end Range_Image;
+
+   --  The range node of an index-constraint element (a range expression
+   --  or an index subtype carrying a range constraint).
+   function Element_Range (E : Node) return Node is
+   begin
+      if E = Null_Node then
+         return Null_Node;
+      end if;
+      if Get_Kind (E) = Iir_Kind_Range_Expression then
+         return E;
+      end if;
+      begin
+         return Get_Range_Constraint (E);
+      exception
+         when others =>
+            return Null_Node;
+      end;
+   end Element_Range;
+
+   --  "(3 downto 0)" for a single-index constrained array subtype, else
+   --  "" (multi-dimensional or non-static constraints are skipped).
+   function Index_Constraint_Image (Ind : Node) return String is
+      Lst : Iir_Flist;
+   begin
+      begin
+         Lst := Get_Index_Constraint_List (Ind);
+      exception
+         when others =>
+            return "";
+      end;
+      if Lst = Null_Iir_Flist or else Flist_Last (Lst) /= 0 then
+         return "";
+      end if;
+      declare
+         R : constant String :=
+           Range_Image (Element_Range (Get_Nth_Element (Lst, 0)));
+      begin
+         if R = "" then
+            return "";
+         end if;
+         return "(" & R & ")";
+      end;
+   end Index_Constraint_Image;
+
    function Type_Image (Decl : Iir) return String is
       Ind : constant Iir := Get_Subtype_Indication (Decl);
       T, D, B : Iir;
@@ -262,7 +339,7 @@ package body Simul.Flow is
                           Decl_Ident (Resolve_Obj (TM));
                      begin
                         if Nm /= "" then
-                           return Nm;
+                           return Nm & Index_Constraint_Image (Ind);
                         end if;
                      end;
                   end if;
@@ -884,6 +961,38 @@ package body Simul.Flow is
       end loop;
    end Emit_Generics;
 
+   --  Emit constant declarations from a declaration chain, with the
+   --  static integer value when the default expression is a literal.
+   procedure Emit_Constant_Decls (F : File_Type; Chain : Node) is
+      Decl : Node := Chain;
+      First : Boolean := True;
+   begin
+      while Decl /= Null_Node loop
+         if Get_Kind (Decl) = Iir_Kind_Constant_Declaration then
+            if not First then
+               Put (F, ", ");
+            end if;
+            First := False;
+            Put (F, "{""name"": ");
+            Put_Str (F, Name_Table.Image (Get_Identifier (Decl)));
+            Put (F, ", ""type"": ");
+            Put_Str (F, Type_Image (Decl));
+            declare
+               IV : constant String :=
+                 Int_Expr_Image (Get_Default_Value (Decl));
+            begin
+               if IV /= "" then
+                  Put (F, ", ""value"": " & IV);
+               end if;
+            end;
+            Put (F, ", ""pos"": ");
+            Put_Pos (F, Decl);
+            Put (F, "}");
+         end if;
+         Decl := Get_Chain (Decl);
+      end loop;
+   end Emit_Constant_Decls;
+
    procedure Emit_Signals (F : File_Type; Arch : Iir) is
       Decl : Iir;
       First : Boolean := True;
@@ -950,7 +1059,9 @@ package body Simul.Flow is
       Emit_Signals (F, Arch);
       Put (F, "],");
       New_Line (F);
-      Put (F, "      ""constants"": [],");
+      Put (F, "      ""constants"": [");
+      Emit_Constant_Decls (F, Get_Declaration_Chain (Arch));
+      Put (F, "],");
       New_Line (F);
 
       Put (F, "      ""processes"": [");
@@ -1757,6 +1868,52 @@ package body Simul.Flow is
    --  Top-level dump.
    --  ------------------------------------------------------------------
 
+   --  Emit packages[] (work/user libraries only) with their constants.
+   procedure Emit_Packages (F : File_Type) is
+      First : Boolean := True;
+      Lib, File, Unit, LU : Node;
+   begin
+      Lib := Libraries.Get_Libraries_Chain;
+      while Lib /= Null_Node loop
+         declare
+            Lib_Name : constant String :=
+              Name_Table.Image (Get_Identifier (Lib));
+         begin
+            if Lib_Name /= "std" and then Lib_Name /= "ieee" then
+               File := Get_Design_File_Chain (Lib);
+               while File /= Null_Node loop
+                  Unit := Get_First_Design_Unit (File);
+                  while Unit /= Null_Node loop
+                     LU := Get_Library_Unit (Unit);
+                     if LU /= Null_Node
+                       and then Get_Kind (LU) = Iir_Kind_Package_Declaration
+                     then
+                        if not First then
+                           Put (F, ",");
+                        end if;
+                        First := False;
+                        New_Line (F);
+                        Put (F, "    {""name"": ");
+                        Put_Str (F, Name_Table.Image (Get_Identifier (LU)));
+                        Put (F, ", ""file"": ");
+                        Put_Str (F, Node_File (LU));
+                        Put (F, ", ""pos"": ");
+                        Put_Pos (F, LU);
+                        Put (F, ", ""constants"": [");
+                        Emit_Constant_Decls
+                          (F, Get_Declaration_Chain (LU));
+                        Put (F, "]}");
+                     end if;
+                     Unit := Get_Chain (Unit);
+                  end loop;
+                  File := Get_Chain (File);
+               end loop;
+            end if;
+         end;
+         Lib := Get_Chain (Lib);
+      end loop;
+   end Emit_Packages;
+
    procedure Dump (Filename : String) is
       F : File_Type;
       Lib : Iir;
@@ -1829,7 +1986,10 @@ package body Simul.Flow is
       New_Line (F);
       Put_Line (F, "  ],");
 
-      Put_Line (F, "  ""packages"": [],");
+      Put (F, "  ""packages"": [");
+      Emit_Packages (F);
+      New_Line (F);
+      Put_Line (F, "  ],");
 
       Put (F, "  ""hierarchy"": [");
       if Top_Instance /= null then
