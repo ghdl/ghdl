@@ -431,7 +431,9 @@ package body Grt.Vpi is
    begin
       case aType is
          when vpiPort
-            | vpiNet =>
+            | vpiNet
+            | vpiParameter
+            | vpiConstant =>
             Rel := VhpiDecls;
          when vpiModule =>
             if Ref = null then
@@ -612,6 +614,18 @@ package body Grt.Vpi is
                when others =>
                   Res := vpiNoDirection;
             end case;
+         when vpiLineNo =>
+            declare
+               Err : AvhpiErrorT;
+               Lineno : VhpiIntT;
+            begin
+               Vhpi_Get (VhpiLineNoP, Ref.Ref, Lineno, Err);
+               if Err = AvhpiErrorOk then
+                  Res := Integer (Lineno);
+               else
+                  Res := 0;
+               end if;
+            end;
          when others =>
             dbgPut_Line ("vpi_get: unknown property");
             Res := 0;
@@ -783,6 +797,10 @@ package body Grt.Vpi is
             Expected_Kind := vpiPort;
          when vpiNet =>
             Expected_Kind := vpiNet;
+         when vpiParameter =>
+            Expected_Kind := vpiParameter;
+         when vpiConstant =>
+            Expected_Kind := vpiConstant;
          when others =>
             Expected_Kind := vpiUndefined;
       end case;
@@ -923,7 +941,8 @@ package body Grt.Vpi is
             Prop := VhpiFullNameP;
          when vpiName =>
             Prop := VhpiNameP;
-         when vpiDefFile =>
+         when vpiDefFile
+            | vpiFile =>
             Prop := VhpiFileNameP;
          when vpiType =>
             Copy_VpiType_CString;
@@ -1284,6 +1303,123 @@ package body Grt.Vpi is
       end loop;
    end Vpi_Get_Value_Vecval;
 
+   --  Decimal string of the (possibly signed) integer value.  Used for
+   --  vpiDecStrVal, notably to read elaborated generic/parameter values.
+   function Vpi_Get_Value_Dec (Obj : VhpiHandleT) return Ghdl_C_String
+   is
+      Info : Verilog_Wire_Info;
+      V : VhpiIntT;
+      U : Unsigned_32;
+      Neg : Boolean;
+      Tmp : String (1 .. 11);
+      N : Natural := 0;
+   begin
+      --  Only numeric/logic objects have a decimal value; for anything else
+      --  (e.g. a string generic) report no value rather than a bogus number.
+      Info := Get_Value_Obj (Obj);
+      case Info.Vtype is
+         when Vcd_Bad
+            | Vcd_Float64
+            | Vcd_Array
+            | Vcd_Struct =>
+            return null;
+         when others =>
+            null;
+      end case;
+      V := Vpi_Get_Value_Int (Obj);
+      Reset (Buf_Value);
+      Neg := V < 0;
+      if Neg then
+         --  Two's complement magnitude (also correct for Integer'First).
+         U := (not To_Unsigned_32 (Integer (V))) + 1;
+      else
+         U := To_Unsigned_32 (Integer (V));
+      end if;
+      loop
+         N := N + 1;
+         Tmp (N) := Character'Val (Character'Pos ('0') + Natural (U mod 10));
+         U := U / 10;
+         exit when U = 0;
+      end loop;
+      if Neg then
+         Append (Buf_Value, '-');
+      end if;
+      for I in reverse 1 .. N loop
+         Append (Buf_Value, Tmp (I));
+      end loop;
+      Append (Buf_Value, NUL);
+      return Get_C_String (Buf_Value);
+   end Vpi_Get_Value_Dec;
+
+   --  Octal (Group = 3) or hexadecimal (Group = 4) string, built by grouping
+   --  the binary representation.  X/Z digits follow IEEE 1364: a group with any
+   --  unknown bit is 'X', an all-Z group is 'Z'.
+   function Vpi_Get_Value_Based (Obj : VhpiHandleT; Group : Natural)
+                                return Ghdl_C_String
+   is
+      Bin : Ghdl_C_String;
+      Blen : Natural;
+      Local : String (1 .. 1024);
+   begin
+      --  Vpi_Get_Value_Bin fills Buf_Value and returns a pointer into it.
+      Bin := Vpi_Get_Value_Bin (Obj);
+      if Bin = null then
+         return null;
+      end if;
+      Blen := strlen (Bin);
+      if Blen = 0 or else Blen > Local'Last then
+         return Bin;
+      end if;
+      --  Copy the binary digits out before reusing Buf_Value.
+      for I in 1 .. Blen loop
+         Local (I) := Bin (Bin'First + (I - 1));
+      end loop;
+      Reset (Buf_Value);
+      declare
+         R : String (1 .. Blen);
+         Digits_Map : constant String := "0123456789abcdef";
+         Ngroups : constant Natural := (Blen + Group - 1) / Group;
+      begin
+         --  R (1) is the least-significant bit.
+         for I in 1 .. Blen loop
+            R (I) := Local (Blen - I + 1);
+         end loop;
+         for K in reverse 0 .. Ngroups - 1 loop
+            declare
+               Val : Natural := 0;
+               Has_X, Has_Z, Has_Known : Boolean := False;
+               Lo : constant Natural := K * Group + 1;
+               Hi : constant Natural := Natural'Min (Blen, (K + 1) * Group);
+            begin
+               for J in Lo .. Hi loop
+                  case R (J) is
+                     when '0' | 'L' =>
+                        Has_Known := True;
+                     when '1' | 'H' =>
+                        Has_Known := True;
+                        Val := Val + 2 ** (J - Lo);
+                     when 'Z' =>
+                        Has_Z := True;
+                     when others =>
+                        Has_X := True;
+                  end case;
+               end loop;
+               if Has_X then
+                  Append (Buf_Value, 'X');
+               elsif Has_Z and not Has_Known then
+                  Append (Buf_Value, 'Z');
+               elsif Has_Z then
+                  Append (Buf_Value, 'X');
+               else
+                  Append (Buf_Value, Digits_Map (Digits_Map'First + Val));
+               end if;
+            end;
+         end loop;
+      end;
+      Append (Buf_Value, NUL);
+      return Get_C_String (Buf_Value);
+   end Vpi_Get_Value_Based;
+
    function Vpi_Get_Value_Range (Expr : vpiHandle) return Integer
    is
       Info : Verilog_Wire_Info;
@@ -1340,11 +1476,11 @@ package body Grt.Vpi is
             Value.Str := Vpi_Get_Value_Bin (Expr.Ref);
             --aValue.mStr := NulTerminate2(aExpr.mRef.Name.all);
          when vpiOctStrVal =>
-            dbgPut_Line ("vpi_get_value: vpiNet, vpiOctStrVal");
+            Value.Str := Vpi_Get_Value_Based (Expr.Ref, 3);
          when vpiDecStrVal =>
-            dbgPut_Line ("vpi_get_value: vpiNet, vpiDecStrVal");
+            Value.Str := Vpi_Get_Value_Dec (Expr.Ref);
          when vpiHexStrVal =>
-            dbgPut_Line ("vpi_get_value: vpiNet, vpiHexStrVal");
+            Value.Str := Vpi_Get_Value_Based (Expr.Ref, 4);
          when vpiScalarVal =>
             dbgPut_Line ("vpi_get_value: vpiNet, vpiScalarVal");
          when vpiIntVal =>
