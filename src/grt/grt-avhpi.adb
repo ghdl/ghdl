@@ -1277,7 +1277,9 @@ package body Grt.Avhpi is
                     | VhpiEntityDeclK
                     | VhpiProcessStmtK
                     | VhpiBlockStmtK
-                    | VhpiIfGenerateK =>
+                    | VhpiIfGenerateK
+                    | VhpiForGenerateK
+                    | VhpiRootInstK =>
                      --  Blocks.
                      Linecol :=
                        To_Ghdl_Rtin_Block_Acc (Obj.Ctxt.Block).Linecol;
