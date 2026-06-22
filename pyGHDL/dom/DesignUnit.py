@@ -73,6 +73,7 @@ from pyGHDL.dom.Symbol import (
     ContextReferenceSymbol,
     LibraryReferenceSymbol,
     PackageSymbol,
+    PackageReferenceSymbol,
     PackageMemberReferenceSymbol,
     AllPackageMembersReferenceSymbol,
 )
@@ -95,12 +96,26 @@ class UseClause(VHDLModel_UseClause, DOMMixin):
     def parse(cls, useNode: Iir):
         nameNode = nodes.Get_Selected_Name(useNode)
         name = GetName(nameNode)
-        symbolType = AllPackageMembersReferenceSymbol if isinstance(name, AllName) else PackageMemberReferenceSymbol
+
+        if name.Prefix is name.Root:
+            symbolType = PackageReferenceSymbol
+        elif isinstance(name, AllName):
+            symbolType = AllPackageMembersReferenceSymbol
+        else:
+            symbolType = PackageMemberReferenceSymbol
+
         uses = [symbolType(nameNode, name)]
         for use in utils.chain_iter(nodes.Get_Use_Clause_Chain(useNode)):
             nameNode = nodes.Get_Selected_Name(use)
             name = GetName(nameNode)
-            symbolType = AllPackageMembersReferenceSymbol if isinstance(name, AllName) else PackageMemberReferenceSymbol
+
+            if name.Prefix is name.Root:
+                symbolType = PackageReferenceSymbol
+            elif isinstance(name, AllName):
+                symbolType = AllPackageMembersReferenceSymbol
+            else:
+                symbolType = PackageMemberReferenceSymbol
+
             uses.append(symbolType(nameNode, name))
 
         return cls(useNode, uses)

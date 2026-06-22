@@ -123,7 +123,7 @@ class Display(Designs):
 
 
 class CompileOrder(Designs):
-    def test_Encoder(self):
+    def test_StopWatch(self):
         print()
 
         design = Design()
