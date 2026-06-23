@@ -56,7 +56,7 @@ jobs:
 
     steps:
       - name: '⏬ Checkout'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
         uses: pyTooling/download-artifact@v8
@@ -107,7 +107,7 @@ jobs:
 
     steps:
       - name: '⏬ Checkout'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: 📥 Download artifacts '${{ inputs.ghdl_artifact }}' from 'Build' job
         uses: pyTooling/download-artifact@v8

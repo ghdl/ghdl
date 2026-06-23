@@ -48,6 +48,8 @@ begin
 	end generate;
 end architecture;
 
+library ieee;
+use     ieee.std_logic_1164;
 
 -- Single-Bit Multi-stage FF synchronizer
 entity sync_Bit is
@@ -55,17 +57,17 @@ entity sync_Bit is
 		STAGES    : positive range 2 to 5 := 3
 	);
 	port (
-		Clock     : in  std_logic;
+		Clock     : in  std_logic_1164.std_logic;
 
-		Input     : in  std_logic;
-		output    : in  std_logic
+		Input     : in  std_logic_1164.std_logic;
+		output    : in  std_logic_1164.std_logic
 	);
 end entity;
 
 
 architecture rtl of sync_Bit is
-	signal meta   : std_logic := '0';
-	signal ffs    : std_logic_vector(STAGES - 1 downto 1) := (others => '0');
+	signal meta   : std_logic_1164.std_logic := '0';
+	signal ffs    : std_logic_1164.std_logic_vector(STAGES - 1 downto 1) := (others => '0');
 begin
 	meta   <= Input when rising_edge(Clock);
 	ffs    <= (ffs(ffs'left downto 1) & meta) when rising_edge(Clock);
