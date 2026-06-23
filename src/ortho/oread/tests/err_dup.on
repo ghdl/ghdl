@@ -9,14 +9,11 @@ TYPE integer_arr_ptr IS ACCESS integer_array;
 
 PUBLIC PROCEDURE test_alloca ()
 DECLARE
-  LOCAL VAR len : __ghdl_size_type;
 BEGIN
-  len := __ghdl_size_type'[16];
-  DECLARE
-    LOCAL VAR ptr : integer_arr_ptr;  
-  BEGIN
-    ptr := integer_arr_ptr'alloca (len);
-  END;
-  len := __ghdl_size_type'[0];
+END;
+
+PUBLIC PROCEDURE test_alloca ()
+DECLARE
+BEGIN
 END;
 

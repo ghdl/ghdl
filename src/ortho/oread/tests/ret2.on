@@ -1,7 +1,7 @@
-type __ghdl_index_type is unsigned (32);
+TYPE __ghdl_index_type IS UNSIGNED (32);
 
-public procedure test_ret ()
-declare
-begin
-  return;
-end;
+PUBLIC PROCEDURE test_ret ()
+DECLARE
+BEGIN
+  RETURN;
+END;

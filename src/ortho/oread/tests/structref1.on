@@ -1,22 +1,22 @@
-type __ghdl_index_type is unsigned (32);
+TYPE __ghdl_index_type IS UNSIGNED (32);
 
-type __ghdl_char is unsigned (8);
+TYPE __ghdl_char IS UNSIGNED (8);
 
-type __ghdl_chararray is array [__ghdl_index_type] of __ghdl_char;
+TYPE __ghdl_chararray IS ARRAY [__ghdl_index_type] OF __ghdl_char;
 
-type __ghdl_char_ptr is access __ghdl_chararray;
+TYPE __ghdl_char_ptr IS ACCESS __ghdl_chararray;
 
-type __ghdl_char_ptr_array is array [__ghdl_index_type] of __ghdl_char_ptr;
+TYPE __ghdl_char_ptr_array IS ARRAY [__ghdl_index_type] OF __ghdl_char_ptr;
 
-type __ghdl_str_len is record 
+TYPE __ghdl_str_len IS RECORD 
   len: __ghdl_index_type; 
   str: __ghdl_char_ptr; 
-end record;
+END RECORD;
 
-public var var1 : __ghdl_str_len;
+PUBLIC VAR var1 : __ghdl_str_len;
 
-public function get_len () return __ghdl_index_type
-declare
-begin
-  return var1.len;
-end;
+PUBLIC FUNCTION get_len () RETURN __ghdl_index_type
+DECLARE
+BEGIN
+  RETURN var1.len;
+END;

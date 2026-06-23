@@ -1,9 +1,9 @@
-type __ghdl_int is signed (32);
+TYPE __ghdl_int IS SIGNED (32);
 
-public function vla (a : __ghdl_int) return __ghdl_int
-declare
-  local var b : __ghdl_int;
-begin
+PUBLIC FUNCTION vla (a : __ghdl_int) RETURN __ghdl_int
+DECLARE
+  LOCAL VAR b : __ghdl_int;
+BEGIN
   b := a;
-  return b;
-end;
+  RETURN b;
+END;

@@ -13,7 +13,7 @@ EXTERNAL FUNCTION ieee__math_real__ceil (x: std__standard__real__BT)
 
 --F /Users/gingold/devel/vhdl-testsuite/OSVVM_2014_01/src/CoveragePkg.vhd
 
-TYPE work__coveragepkg__covptype__covbinbasetemptype IS RECORD 
+TYPE work__coveragepkg__covptype__covbinbasetempTYPE IS RECORD 
   action: std__standard__integer__BT; 
   action2: std__standard__integer__BT; 
   count: std__standard__integer__BT; 

@@ -1,32 +1,32 @@
-type int is signed (32);
+TYPE int IS SIGNED (32);
 
-public function smod (a : int; b : int) return int
-declare
-begin
-  return a mod# b;
-end;
+PUBLIC FUNCTION smod (a : int; b : int) RETURN int
+DECLARE
+BEGIN
+  RETURN a MOD# b;
+END;
 
-public function do_m3_m3 () return int
-declare
-begin
-  return -3 mod# -3;
-end;
+PUBLIC FUNCTION do_m3_m3 () RETURN int
+DECLARE
+BEGIN
+  RETURN -3 MOD# -3;
+END;
 
-public function do_m3_m2 () return int
-declare
-begin
-  return -3 mod# -2;
-end;
+PUBLIC FUNCTION do_m3_m2 () RETURN int
+DECLARE
+BEGIN
+  RETURN -3 MOD# -2;
+END;
 
-public function do_11_5 () return int
-declare
-begin
-  return 11 mod# 5;
-end;
+PUBLIC FUNCTION do_11_5 () RETURN int
+DECLARE
+BEGIN
+  RETURN 11 MOD# 5;
+END;
 
-public function do_m11_5 () return int
-declare
-begin
-  return -11 mod# 5;
-end;
+PUBLIC FUNCTION do_m11_5 () RETURN int
+DECLARE
+BEGIN
+  RETURN -11 MOD# 5;
+END;
 

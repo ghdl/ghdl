@@ -1,9 +1,9 @@
-type __ghdl_rtik is enum {__ghdl_rtik_top = 0, __ghdl_rtik_library = 1,
+TYPE __ghdl_rtik IS ENUM {__ghdl_rtik_top = 0, __ghdl_rtik_library = 1,
    __ghdl_rtik_package = 2, __ghdl_rtik_package_body = 3,
    __ghdl_rtik_entity = 4, __ghdl_rtik_architecture = 5,
    __ghdl_rtik_process = 6, __ghdl_rtik_block = 7,
    __ghdl_rtik_if_generate = 8, __ghdl_rtik_for_generate = 9,
-   __ghdl_rtik_instance = 10, __ghdl_rtik_constant = 11,
+   __ghdl_rtik_instance = 10, __ghdl_rtik_CONSTANT = 11,
    __ghdl_rtik_iterator = 12, __ghdl_rtik_variable = 13,
    __ghdl_rtik_signal = 14, __ghdl_rtik_file = 15, __ghdl_rtik_port = 16,
    __ghdl_rtik_generic = 17, __ghdl_rtik_alias = 18, __ghdl_rtik_guard = 19,
@@ -23,19 +23,19 @@ type __ghdl_rtik is enum {__ghdl_rtik_top = 0, __ghdl_rtik_library = 1,
    __ghdl_rtik_attribute_stable = 45, __ghdl_rtik_psl_assert = 46,
    __ghdl_rtik_error = 47};
 
-type __ghdl_rti_depth is unsigned (8);
+TYPE __ghdl_rti_depth IS UNSIGNED (8);
 
-type __ghdl_rti_u8 is unsigned (8);
+TYPE __ghdl_rti_u8 IS UNSIGNED (8);
 
-type __ghdl_rti_common is record 
+TYPE __ghdl_rti_common IS RECORD 
   kind: __ghdl_rtik; 
   depth: __ghdl_rti_depth; 
   mode: __ghdl_rti_u8; 
   max_depth: __ghdl_rti_depth; 
-end record;
+END RECORD;
 
-type __ghdl_rti_access is access __ghdl_rti_common;
+TYPE __ghdl_rti_access IS ACCESS __ghdl_rti_common;
 
-public var st3p : __ghdl_rti_access;
+PUBLIC VAR st3p : __ghdl_rti_access;
 
-public var st3 : __ghdl_rti_common;
+PUBLIC VAR st3 : __ghdl_rti_common;

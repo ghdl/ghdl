@@ -1,18 +1,18 @@
-type index_ptr1 is access;
+TYPE index_ptr1 IS ACCESS;
 
-type index is unsigned (32);
+TYPE index IS UNSIGNED (32);
 
-type index_ptr1 is access index;
+TYPE index_ptr1 IS ACCESS index;
 
-type index_ptr2 is access index;
+TYPE index_ptr2 IS ACCESS index;
 
-public var acc1 : index_ptr1;
+PUBLIC VAR acc1 : index_ptr1;
 
-public function Get () return index
-declare
-  local var acc2 : index_ptr2;
-begin
+PUBLIC FUNCTION Get () RETURN index
+DECLARE
+  LOCAL VAR acc2 : index_ptr2;
+BEGIN
   acc2 := index_ptr2'conv(acc1);
-  return acc2.all;
-end;
+  RETURN acc2.ALL;
+END;
 

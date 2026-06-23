@@ -1,25 +1,25 @@
-type __ghdl_rti_u8 is unsigned (8);
+TYPE __ghdl_rti_u8 IS UNSIGNED (8);
 
-type __ghdl_rti_common is record 
+TYPE __ghdl_rti_common IS RECORD 
   mode: __ghdl_rti_u8; 
-end record;
+END RECORD;
 
-type __ghdl_rti_access is access __ghdl_rti_common;
+TYPE __ghdl_rti_access IS ACCESS __ghdl_rti_common;
 
-type __ghdl_component_link_type is record;
+TYPE __ghdl_component_link_type IS RECORD;
 
-type __ghdl_component_link_acc is access __ghdl_component_link_type;
+TYPE __ghdl_component_link_acc IS ACCESS __ghdl_component_link_type;
 
-type __ghdl_entity_link_type is record 
+TYPE __ghdl_entity_link_type IS RECORD 
   rti: __ghdl_rti_access; 
   parent: __ghdl_component_link_acc; 
-end record;
+END RECORD;
 
-type __ghdl_entity_link_acc is access __ghdl_entity_link_type;
+TYPE __ghdl_entity_link_acc IS ACCESS __ghdl_entity_link_type;
 
-type __ghdl_component_link_type is record 
+TYPE __ghdl_component_link_type IS RECORD 
   stmt: __ghdl_rti_access; 
-end record;
+END RECORD;
 
-public var var1 : __ghdl_component_link_type;
-public var var2 : __ghdl_component_link_acc;
+PUBLIC VAR var1 : __ghdl_component_link_type;
+PUBLIC VAR var2 : __ghdl_component_link_acc;

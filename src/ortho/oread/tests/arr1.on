@@ -1,5 +1,5 @@
-type __ghdl_index_type is unsigned (32);
+TYPE __ghdl_index_type IS UNSIGNED (32);
 
-type __ghdl_char is unsigned (8);
+TYPE __ghdl_char IS UNSIGNED (8);
 
-type __ghdl_chararray is array [__ghdl_index_type] of __ghdl_char;
+TYPE __ghdl_chararray IS ARRAY [__ghdl_index_type] OF __ghdl_char;

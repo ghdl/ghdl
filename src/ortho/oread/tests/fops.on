@@ -67,7 +67,7 @@ END;
 PRIVATE CONSTANT fone : float64;
 CONSTANT fone := 1.0;
 
---  Return 0 in case of error.
+--  Return 0 in CASE OF error.
 PUBLIC FUNCTION main () RETURN int32
 DECLARE
   LOCAL VAR lf : float64;

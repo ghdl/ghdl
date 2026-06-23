@@ -29,16 +29,16 @@ PRIVATE CONSTANT zero_enum8 : enum8 := enum8'[e8_0];
 PRIVATE CONSTANT true_bool : bool := bool'[true];
 PRIVATE CONSTANT false_bool : bool := bool'[false];
 
---  Array of size 5 bytes
+--  Array OF size 5 bytes
 TYPE arr5 IS SUBARRAY string8[5];
 TYPE arr5_array IS ARRAY [uns32] OF arr5;
 
 PRIVATE VAR v_arr5_4: SUBARRAY arr5_array[4];
 
---  Record of 2 words.
+--  Record OF 2 words.
 TYPE rec8 IS RECORD a : int32; b : int32; END RECORD;
 TYPE rec8_array IS ARRAY [uns32] OF rec8;
---  Array of size 2 words and 8 words
+--  Array OF size 2 words and 8 words
 TYPE int32_array IS ARRAY [uns32] OF int32;
 TYPE arr32 IS SUBARRAY int32_array[8];
 TYPE arr32_array IS ARRAY [uns32] OF arr32;
@@ -53,12 +53,12 @@ EXTERNAL PROCEDURE putchar (v : int32);
 PRIVATE VAR status : int32;
 
 PRIVATE CONSTANT banner1 : SUBARRAY string8[6];
-CONSTANT banner1 := { 'h', 'e', 'l', 'l', 'o', 10 };
+CONSTANT banner1 := [6]{ 'h', 'e', 'l', 'l', 'o', 10 };
 
 PRIVATE CONSTANT banner1_acc : string_acc := string_acc'address (banner1);
 PRIVATE CONSTANT null_acc : string_acc := string_acc'[NULL];
 
---  Disp the LEN first characters of S.
+--  Disp the LEN first characters OF S.
 PRIVATE PROCEDURE disp_lstr (s : string_acc; len : uns32)
 DECLARE
   LOCAL VAR i : uns32;
@@ -111,7 +111,7 @@ BEGIN
 END;
 
 PRIVATE CONSTANT str_test : SUBARRAY string8[7];
-CONSTANT str_test := { 'T', 'e', 's', 't', ' ', '#', 0 };
+CONSTANT str_test := [7]{ 'T', 'e', 's', 't', ' ', '#', 0 };
 
 PRIVATE VAR test_num : uns32;
 
@@ -142,16 +142,16 @@ PRIVATE PROCEDURE puti32 (n : int32)
 DECLARE
   TYPE str8x11 IS SUBARRAY string8[11];
   LOCAL VAR s : str8x11;
-  LOCAL VAR is_neg : bool;
+  LOCAL VAR IS_neg : bool;
   LOCAL VAR i : uns32;
   LOCAL VAR n1 : int32;
   LOCAL VAR d : int32;
 BEGIN
   IF bool'(n < 0) THEN
-     is_neg := bool'[true];
+     IS_neg := bool'[true];
      n1 := -n;
   ELSE
-     is_neg := bool'[false];
+     IS_neg := bool'[false];
      n1 := n;
   END IF;
   i := 9;
@@ -165,7 +165,7 @@ BEGIN
     END IF;
     i := i -# 1;
   END LOOP;
-  IF is_neg THEN
+  IF IS_neg THEN
     i := i -# 1;
     s[i] := '-';
   END IF;
@@ -176,7 +176,7 @@ END;
 PRIVATE PROCEDURE error ()
 DECLARE
   PRIVATE CONSTANT str_error : SUBARRAY string8[8];
-  CONSTANT str_error := { 'E', 'R', 'R', 'O', 'R', '!', 10, 0 };
+  CONSTANT str_error := [8]{ 'E', 'R', 'R', 'O', 'R', '!', 10, 0 };
 BEGIN
   status := 1;
   puts (string_acc'address(str_error));
@@ -193,10 +193,10 @@ BEGIN
 END;
 
 PRIVATE CONSTANT str_true : SUBARRAY string8[5];
-CONSTANT str_true := { 'T', 'r', 'u', 'e', 0 };
+CONSTANT str_true := [5]{ 'T', 'r', 'u', 'e', 0 };
 
 PRIVATE CONSTANT str_false : SUBARRAY string8[6];
-CONSTANT str_false := { 'F', 'a', 'l', 's', 'e', 0 };
+CONSTANT str_false := [6]{ 'F', 'a', 'l', 's', 'e', 0 };
 
 PRIVATE PROCEDURE check_bool (a : bool; ref : bool)
 DECLARE
@@ -214,7 +214,7 @@ END;
 
 PRIVATE CONSTANT str_float : SUBARRAY string8[13];
 CONSTANT str_float :=
-  { 'F', 'l', 'o', 'a', 't', ' ', 't', 'e', 's', 't', 's', 10, 0 };
+  [13]{ 'F', 'l', 'o', 'a', 't', ' ', 't', 'e', 's', 't', 's', 10, 0 };
 
 PRIVATE PROCEDURE check_float (a : float; ref : float)
 DECLARE
@@ -310,13 +310,13 @@ PRIVATE PROCEDURE test_case ()
 DECLARE
   LOCAL VAR i : int32;
   PRIVATE CONSTANT str_zero : SUBARRAY string8[5];
-  CONSTANT str_zero := { 'z', 'e', 'r', 'o', 0 };
+  CONSTANT str_zero := [5]{ 'z', 'e', 'r', 'o', 0 };
   PRIVATE CONSTANT str_one : SUBARRAY string8[4];
-  CONSTANT str_one := { 'o', 'n', 'e', 0 };
+  CONSTANT str_one := [4]{ 'o', 'n', 'e', 0 };
   PRIVATE CONSTANT str_two_four : SUBARRAY string8[9];
-  CONSTANT str_two_four := { 't', 'w', 'o', '-', 'f', 'o', 'u', 'r', 0 };
+  CONSTANT str_two_four := [9]{ 't', 'w', 'o', '-', 'f', 'o', 'u', 'r', 0 };
   PRIVATE CONSTANT str_five_plus : SUBARRAY string8[6];
-  CONSTANT str_five_plus := { 'f', 'i', 'v', 'e', '+', 0 };
+  CONSTANT str_five_plus := [6]{ 'f', 'i', 'v', 'e', '+', 0 };
 BEGIN
   i := 0;
   LOOP 1:
@@ -414,7 +414,7 @@ BEGIN
 
   status := 0;
 
-  --  Start of tests.
+  --  Start OF tests.
   test_num := 4;
   disp_test ();
   --  Test putn with more than 1 digit.
@@ -477,14 +477,14 @@ BEGIN
     check_i32 (-v1, -12);
     check_i32 (-v2, 15);
 
-    --  Arith i32: rem (sign of the dividend)
+    --  Arith i32: rem (sign OF the dividend)
     disp_test ();
     check_i32 (v1 REM# 5, 2);
     check_i32 (v1 REM# (-5), 2);
     check_i32 (v2 REM# 4, -3);
     check_i32 (v2 REM# (-4), -3);
 
-    --  Arith i32: mod (sign of the divisor)
+    --  Arith i32: mod (sign OF the divisor)
     disp_test ();
     check_i32 (v1 MOD# 5, 2);
     check_i32 (v1 MOD# (-5), -3);
@@ -522,11 +522,11 @@ BEGIN
 
     puts(string_acc'address (str_float));
 
-    --  function call
+    --  FUNCTION call
     disp_test ();
     check_float (add_float (v1, v2), 1.25);
 
-    --  function call
+    --  FUNCTION call
     disp_test ();
     check_float (add3_float (v1, v2, v1), 4.75);
 
@@ -618,14 +618,14 @@ BEGIN
     check_i64 (-v1, -14);
     check_i64 (-v2, 11);
 
-    --  Arith i64: rem (sign of the dividend)
+    --  Arith i64: rem (sign OF the dividend)
     disp_test ();
     check_i64 (v1 REM# 5, 4);
     check_i64 (v1 REM# (-5), 4);
     check_i64 (v2 REM# 4, -3);
     check_i64 (v2 REM# (-4), -3);
 
-    --  Arith i64: mod (sign of the divisor)
+    --  Arith i64: mod (sign OF the divisor)
     disp_test ();
     check_i64 (v1 MOD# 5, 4);
     check_i64 (v1 MOD# (-5), -1);
@@ -664,7 +664,7 @@ BEGIN
     t := bool'[true];
     f := bool'[false];
 
-    --  Test function call
+    --  Test FUNCTION call
     disp_test ();
     check_bool (andn (t, f), bool'[true]);
     check_bool (cmpi32 (12), bool'[true]);
@@ -698,7 +698,7 @@ BEGIN
     check_bool (NOT t, bool'[false]);
     check_bool (NOT f, bool'[true]);
 
-    --  Test operators in if.
+    --  Test operators in IF.
     disp_test ();
     IF bool'(t < f) THEN
       error ();
@@ -760,7 +760,7 @@ BEGIN
     disp_test ();
     check_u32 (v1 /# 6, 20);
 
-    --  Arith u32: rem (sign of the dividend)
+    --  Arith u32: rem (sign OF the dividend)
     disp_test ();
     check_u32 (v2 REM# 3, 1);
 
@@ -814,7 +814,7 @@ BEGIN
     disp_test ();
     check_u64 (v1 /# 6, 20);
 
-    --  Arith u64: rem (sign of the dividend)
+    --  Arith u64: rem (sign OF the dividend)
     disp_test ();
     check_u64 (v2 REM# 3, 1);
 
@@ -882,7 +882,7 @@ BEGIN
   putchar ('|');
   putchar (10);
 
-  --  Test case
+  --  Test CASE
   disp_test ();
   test_case ();
 
@@ -999,7 +999,7 @@ BEGIN
   disp_test ();
   puts (banner1_acc);
 
-  --  Address of argument
+  --  Address OF argument
   disp_test ();
   call_arg_addr (1, 2, 3.0);
 
