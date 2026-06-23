@@ -20,7 +20,7 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Binary_File; use Binary_File;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ortho_Code.Debug;
-with Ortho_Mcode; use Ortho_Mcode;
+with Ortho_Mcode;
 with Ortho_Front; use Ortho_Front;
 with Ortho_Code.Flags; use Ortho_Code.Flags;
 with Binary_File.Elf;
