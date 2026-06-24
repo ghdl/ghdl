@@ -129,6 +129,16 @@ package Grt.Vpi is
    vpiSystem   : constant := 4;
    vpiInternal : constant := 5;
 
+   -- Scalar values
+
+   vpi0        : constant := 0;
+   vpi1        : constant := 1;
+   vpiZ        : constant := 2;
+   vpiX        : constant := 3;
+   vpiH        : constant := 4;
+   vpiL        : constant := 5;
+   vpiDontCare : constant := 6;
+
    type struct_vpiHandle (<>) is private;
    type vpiHandle is access struct_vpiHandle;
    pragma No_Strict_Aliasing (vpiHandle);

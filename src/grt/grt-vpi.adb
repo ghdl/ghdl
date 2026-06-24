@@ -654,14 +654,14 @@ package body Grt.Vpi is
            | Vcd_Bool
            | Vcd_Var_Vectors
            | Vcd_Integer32
+           | Vcd_Float64
            | Vcd_Bit
            | Vcd_Stdlogic =>
             return vpiNet;
          when Vcd_Array =>
             return vpiNetArray;
          when Vcd_Bad
-           | Vcd_Struct
-           | Vcd_Float64 =>
+           | Vcd_Struct =>
             return vpiUndefined;
       end case;
    end Vhpi_Handle_To_Vpi_Net;
@@ -1222,8 +1222,59 @@ package body Grt.Vpi is
       end case;
    end Vpi_Get_Value_Int;
 
+   function Vpi_Get_Value_Real (Obj : VhpiHandleT) return Ghdl_F64
+   is
+      Info : Verilog_Wire_Info;
+   begin
+      Info := Get_Value_Obj (Obj);
+      case Info.Vtype is
+         when Vcd_Float64 =>
+            return Verilog_Wire_Val (Info).F64;
+         when others =>
+            return Ghdl_F64 (Vpi_Get_Value_Int (Obj));
+      end case;
+   end Vpi_Get_Value_Real;
+
    function To_Unsigned_32 is new Ada.Unchecked_Conversion
      (Integer, Unsigned_32);
+
+   function Vpi_Get_Value_Scalar (Obj : VhpiHandleT) return Integer
+   is
+      Info : Verilog_Wire_Info;
+   begin
+      Info := Get_Value_Obj (Obj);
+
+      case Info.Vtype is
+         when Vcd_Bool
+            | Vcd_Bit =>
+            if Verilog_Wire_Val (Info).B1 then
+               return 1;
+            else
+               return 0;
+            end if;
+         when Vcd_Stdlogic =>
+            case E8_To_Char (Verilog_Wire_Val (Info).E8) is
+               when '0' =>
+                  return vpi0;
+               when '1' =>
+                  return vpi1;
+               when 'Z' =>
+                  return vpiZ;
+               when 'X'
+                  | 'W'
+                  | 'U' =>
+                  return vpiX;
+               when 'L' =>
+                  return vpiL;
+               when 'H' =>
+                  return vpiH;
+               when others =>
+                  return vpiDontCare;
+            end case;
+         when others =>
+            return vpiX;
+      end case;
+   end Vpi_Get_Value_Scalar;
 
    procedure Vpi_Get_Value_Vecval (Obj : VhpiHandleT; Vec : p_vpi_vecval)
    is
@@ -1482,7 +1533,7 @@ package body Grt.Vpi is
          when vpiHexStrVal =>
             Value.Str := Vpi_Get_Value_Based (Expr.Ref, 4);
          when vpiScalarVal =>
-            dbgPut_Line ("vpi_get_value: vpiNet, vpiScalarVal");
+            Value.Scalar := Vpi_Get_Value_Scalar (Expr.Ref);
          when vpiIntVal =>
             case Expr.mType is
                when vpiLeftRange
@@ -1491,7 +1542,8 @@ package body Grt.Vpi is
                when others =>
                   Value.Integer_m := Integer (Vpi_Get_Value_Int (Expr.Ref));
             end case;
-         when vpiRealVal =>     dbgPut_Line ("vpi_get_value: vpiRealVal");
+         when vpiRealVal =>
+            Value.Real_m := Vpi_Get_Value_Real (Expr.Ref);
          when vpiStringVal =>   dbgPut_Line ("vpi_get_value: vpiStringVal");
          when vpiTimeVal =>     dbgPut_Line ("vpi_get_value: vpiTimeVal");
          when vpiVectorVal =>
@@ -1533,6 +1585,7 @@ package body Grt.Vpi is
          when Vcd_Bad
             | Vcd_Array
             | Vcd_Struct =>
+            dbgPut_Line ("vpi_put_value: array or struct");
             return;
          when Vcd_Bit
            | Vcd_Bool
@@ -1608,6 +1661,7 @@ package body Grt.Vpi is
             end;
 
          when Vcd_Float64 =>
+            dbgPut_Line ("vpi_put_value: vpiRealVal");
             null;
       end case;
    end Ii_Vpi_Put_Value;
@@ -1665,6 +1719,37 @@ package body Grt.Vpi is
       end loop;
       Ii_Vpi_Put_Value (Info, Vec, Kind);
    end Ii_Vpi_Put_Value_Bin_Str;
+
+   procedure Ii_Vpi_Put_Value_Scalar (Info : Verilog_Wire_Info;
+                                       Val  : Integer;
+                                       Kind : Force_Kind)
+   is
+      Vec : Std_Ulogic_Array (0 .. 0);
+   begin
+      case Val is
+         when vpi0 => Vec (0) := '0';
+         when vpi1 => Vec (0) := '1';
+         when vpiZ => Vec (0) := 'Z';
+         when vpiX => Vec (0) := 'X';
+         when vpiL => Vec (0) := 'L';
+         when vpiH => Vec (0) := 'H';
+         when others => Vec (0) := '-';
+      end case;
+      Ii_Vpi_Put_Value (Info, Vec, Kind);
+   end Ii_Vpi_Put_Value_Scalar;
+
+   procedure Ii_Vpi_Put_Value_Real (Info : Verilog_Wire_Info;
+                                    Val  : Ghdl_F64;
+                                    Kind : Force_Kind)
+   is
+   begin
+      case Info.Vtype is
+         when Vcd_Float64 =>
+            Verilog_Wire_Val (Info).F64 := Val;
+         when others =>
+            Ii_Vpi_Put_Value_Int (Info, 1, Unsigned_32 (Val), Kind);
+      end case;
+   end Ii_Vpi_Put_Value_Real;
 
    procedure Ii_Vpi_Put_Value_Vecval (Info : Verilog_Wire_Info;
                                       Len  : Ghdl_Index_Type;
@@ -1827,12 +1912,12 @@ package body Grt.Vpi is
          when vpiHexStrVal =>
             dbgPut_Line ("vpi_put_value: vpiNet, vpiHexStrVal");
          when vpiScalarVal =>
-            dbgPut_Line ("vpi_put_value: vpiNet, vpiScalarVal");
+            Ii_Vpi_Put_Value_Scalar (Info, aValue.Scalar, Kind);
          when vpiIntVal =>
             Ii_Vpi_Put_Value_Int
               (Info, Len, To_Unsigned_32 (aValue.Integer_m), Kind);
          when vpiRealVal =>
-            dbgPut_Line("vpi_put_value: vpiRealVal");
+            Ii_Vpi_Put_Value_Real(Info, aValue.Real_m, Kind);
          when vpiStringVal =>
             dbgPut_Line("vpi_put_value: vpiStringVal");
          when vpiTimeVal =>
