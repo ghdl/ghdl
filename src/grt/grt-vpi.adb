@@ -1276,7 +1276,46 @@ package body Grt.Vpi is
       end case;
    end Vpi_Get_Value_Scalar;
 
-   procedure Vpi_Get_Value_Vecval (Obj : VhpiHandleT; Vec : p_vpi_vecval)
+   -- Buffers for caller-provided p_vpi_vecval values.
+   -- vpi_get_value() may be called to request a vector value
+   -- from a callback that itself needs a vector value.
+   -- This is very ugly!
+
+   type vpi_vecarray is array (Integer range <>) of s_vpi_vecval;
+   pragma Convention (C, vpi_vecarray);
+   type p_vpi_vecarray is access vpi_vecarray;
+   Vecvals : array (1 .. 2) of p_vpi_vecarray;
+   Vecvals_idx : Integer range 1 .. 2 := 1;
+
+   function Vpi_Get_Vecval_Buf (Size : Integer) return p_vpi_vecval
+      is
+         function To_p_vpi_vecval
+            is new Ada.Unchecked_Conversion(System.Address, p_vpi_vecval);
+         procedure Free_Vecarray
+            is new Ada.Unchecked_Deallocation
+               (Name => p_vpi_vecarray, Object => vpi_vecarray);
+         Chunks : Integer;
+         Pointer : p_vpi_vecval;
+      begin
+          Chunks := (Size + 31) / 32;
+         if Vecvals (Vecvals_idx) = null then
+            Vecvals (Vecvals_idx) :=  new vpi_vecarray (1 ..  Chunks);
+         end if;
+         if  Chunks > Vecvals (Vecvals_idx).all'Length then
+            Free_Vecarray (Vecvals (Vecvals_idx));
+            Vecvals (Vecvals_idx) :=  new vpi_vecarray (1 ..  Chunks);
+         end if;
+         Pointer := To_p_vpi_vecval (Vecvals (Vecvals_idx).all (1)'Address);
+
+         -- Vecvals_idx is reset to 1 when a value change callback
+         -- requests vpiVectorVal.
+         if Vecvals_idx = 1 then
+            Vecvals_idx := 2;
+         end if;
+         return Pointer;
+  end Vpi_Get_Vecval_Buf;
+
+  procedure Vpi_Get_Value_Vecval (Obj : VhpiHandleT; Vec : p_vpi_vecval)
    is
       procedure E8_To_VV
          (V : Ghdl_E8; A : out Unsigned_32; B : out Unsigned_32) is
@@ -1547,6 +1586,7 @@ package body Grt.Vpi is
          when vpiStringVal =>   dbgPut_Line ("vpi_get_value: vpiStringVal");
          when vpiTimeVal =>     dbgPut_Line ("vpi_get_value: vpiTimeVal");
          when vpiVectorVal =>
+            Value.Vector := Vpi_Get_Vecval_Buf (Vpi_Get_Size (Expr));
             Vpi_Get_Value_Vecval (Expr.Ref, Value.Vector);
          when vpiStrengthVal => dbgPut_Line ("vpi_get_value: vpiStrengthVal");
          when others =>         dbgPut_Line ("vpi_get_value: unknown mFormat");
@@ -2090,25 +2130,10 @@ package body Grt.Vpi is
          if Hand.Cb.Value /= null then
             -- Supply value before call.  May need to allocate vector space.
             if (Hand.Cb.Value.Format = vpiVectorVal) then
-               -- Storage for the vector must be allocated first.
-               declare
-                  Len : Integer;
-               begin
-                  Len := Integer ((Get_Wire_Length (Hand.Cb_Wire) + 31) / 32);
-                  vpi_vec_callback_helper (Hand.Cb'Access, Len);
-                  Hand.Cb_Refcnt := Hand.Cb_Refcnt - 1;
-                  --  The handler hasn't been removed from the queue, unless
-                  --  the user did it while the callback was executed.
-                  --  If so, thereference counter must now be 0
-                  --  and we can free it.
-                  if Hand.Cb_Refcnt = 0 then
-                     Free (Hand);
-                  end if;
-                  return; -- Callback made.
-               end;
-            else
-               vpi_get_value (Hand.Cb.Obj, Hand.Cb.Value);
+               -- Mark storage for vpiVectorVal as idle.
+               Vecvals_idx := 1;
             end if;
+            vpi_get_value (Hand.Cb.Obj, Hand.Cb.Value);
          end if;
          Execute_Callback (Hand);
          Hand.Cb_Refcnt := Hand.Cb_Refcnt - 1;

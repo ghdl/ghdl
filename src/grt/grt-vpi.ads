@@ -271,11 +271,6 @@ package Grt.Vpi is
    procedure vpi_get_value (Expr : vpiHandle; Value : p_vpi_value);
    pragma Export (C, vpi_get_value, "vpi_get_value");
 
-   -- Ugly, but C can do allocation on the fly with an auto.  Ada???
-   -- void  vpi_vec_callback_helper (p_cb_data cb, int Len);
-   procedure vpi_vec_callback_helper (cb : p_cb_data; Len : Integer);
-   pragma Import (C, vpi_vec_callback_helper, "vpi_get_value_vec_helper");
-
    -- void  vpi_get_time(vpiHandle obj, s_vpi_time*t);
    procedure vpi_get_time (Obj: vpiHandle; Time: p_vpi_time);
    pragma Export (C, vpi_get_time, "vpi_get_time");
