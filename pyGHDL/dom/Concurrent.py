@@ -30,11 +30,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import Iterable
+from typing import Iterable, Optional as Nullable
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel.Base import ExpressionUnion, WaveformElement as VHDLModel_WaveformElement
+from pyVHDLModel.Base import ExpressionUnion, WaveformElement as VHDLModel_WaveformElement, ModelEntity
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Association import (
     AssociationItem,
@@ -572,12 +572,17 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
         rng: Range,
         declaredItems: Iterable = None,
         statements: Iterable[ConcurrentStatement] = None,
+        parent: Nullable[ModelEntity] = None
     ) -> None:
-        super().__init__(label, loopIndex, rng, declaredItems, statements)
+        super().__init__(label, loopIndex, rng, declaredItems, statements, parent=parent)
         DOMMixin.__init__(self, generateNode)
 
     @classmethod
-    def parse(cls, generateNode: Iir, label: str) -> "ForGenerateStatement":
+    def parse(
+        cls,
+        generateNode: Iir,
+        label: str
+    ) -> "ForGenerateStatement":
         from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
