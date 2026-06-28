@@ -9,7 +9,7 @@ static s_vpi_time   when; // Structures are re-used.
 static s_cb_data    cb;
 static s_vpi_vecval vec;
 static s_vpi_value  val;
-static vpiHandle    port;
+static vpiHandle    port, val_cb;
 static char         buf[10];
 
 static void vec_to_text (s_vpi_vecval *vp, char *bp)
@@ -28,6 +28,38 @@ static void vec_to_text (s_vpi_vecval *vp, char *bp)
 }
 
 static PLI_INT32
+vpi_proc4 (s_cb_data *pcb)
+{
+    p_vpi_vecval vp = pcb->value->value.vector, vp2;
+
+  vpi_printf ("In VC callback.\n");
+  vpi_printf ("Got %#x %#x\n", vp->aval, vp->bval);
+  if (vp->aval != 0x33 || vp->bval != 0xaa)
+    vpi_printf ("Error: Vector data was %#x/%#x when 0x33/0xaa expected\n",
+                vp->aval, vp->bval);
+
+  /* Remove read it directly. */
+
+  val.value.vector = NULL;
+  vpi_get_value (port, &val);
+  vp2 = val.value.vector;
+  vpi_printf ("Read back %#x %#x\n", vp2->aval, vp2->bval);
+  if (vp == vp2) {
+      vpi_printf ("Error: Buffer for callback vector reused "
+                  "by vpi_get_value().\n");
+  }
+
+  /* Check for buffer corruption. */
+
+  if (vp->aval != 0x33 || vp->bval != 0xaa) {
+    vpi_printf ("Error: After vpi_get_value(), "
+                "vector data was %#x/%#x when 0x33/0xaa expected\n",
+                vp->aval, vp->bval);
+  }
+  return 0;
+}
+
+static PLI_INT32
 vpi_proc3 (s_cb_data *pcb)
 {
   vpi_printf ("Error: Cancelled callback called.\n");
@@ -37,11 +69,13 @@ vpi_proc3 (s_cb_data *pcb)
 static PLI_INT32
 vpi_proc2 (s_cb_data *pcb)
 {
-  vpiHandle h1, h2, h3;
+  p_vpi_vecval vp;
+  vpiHandle    h1, h2, h3;
 
   vpi_get_value (port, &val);
+  vp = val.value.vector;
   vpi_printf ("Got %#x %#x\n", vec.aval, vec.bval);
-  vec_to_text (&vec, buf);
+  vec_to_text (vp, buf);
   vpi_printf ("Translation of round-trip Verilog \"1X0Z1X0Z0\": %s\n", buf);
   if (strcmp(buf, "1X0Z1X0Z0")) {
     vpi_printf ("Error: Got %s but expected \"1X0Z1X0Z0\" for round trip.\n",
@@ -67,7 +101,10 @@ vpi_proc2 (s_cb_data *pcb)
 static PLI_INT32
 vpi_proc1 (s_cb_data *pcb)
 {
-  const char   port_name[] = "myentity.inout1";
+  static s_cb_data vccb = { .reason = cbValueChange, .value = &val,
+                            .cb_rtn = vpi_proc4 };
+  p_vpi_vecval     vp;
+  const char       port_name[] = "myentity.inout1";
 
   port = vpi_handle_by_name ((char *)port_name, NULL);
   if (port == NULL) {
@@ -76,18 +113,26 @@ vpi_proc1 (s_cb_data *pcb)
   }
  
   val.format = vpiVectorVal;
-  val.value.vector = &vec;
   vpi_get_value (port, &val);
-  vpi_printf ("Got %#x %#x\n", vec.aval, vec.bval);
-  vec_to_text (&vec, buf);
+  vp = val.value.vector;
+  vpi_printf ("Got %#x %#x\n", vp->aval, vp->bval);
+  vec_to_text (vp, buf);
   vpi_printf ("Translation of VHDL \"10ZWLH-UX\": %s\n", buf);
   if (strcmp(buf, "10ZX01XXX")) {
     vpi_printf ("Error: Got %s but expected \"10ZX01XXX\" for translation of "
                 "VHDL \"10ZWLH-UX\"\n", buf);
   }
 
+  /* Set a value change callback to test vpiVectorVal there. */
+
+  vccb.obj = port;
+  val_cb = vpi_register_cb (&vccb);
+  if (val_cb == NULL)
+    vpi_printf ("Error: Cannot register cbValueChange call back\n");
+
   vec.aval = 0x33;
   vec.bval = 0xaa;
+  val.value.vector = &vec;
   vpi_put_value (port, &val, NULL, vpiNoDelay); // Effect is not immediate.
   cb.cb_rtn = &vpi_proc2;
   if (vpi_register_cb (&cb) == NULL)
@@ -97,8 +142,6 @@ vpi_proc1 (s_cb_data *pcb)
 
 void my_handle_register()
 {
-  printf ("Hello world\n");
-
   when.type = vpiSimTime;
   when.low = 1000;
   when.high = 0;

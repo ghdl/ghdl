@@ -129,6 +129,16 @@ package Grt.Vpi is
    vpiSystem   : constant := 4;
    vpiInternal : constant := 5;
 
+   -- Scalar values
+
+   vpi0        : constant := 0;
+   vpi1        : constant := 1;
+   vpiZ        : constant := 2;
+   vpiX        : constant := 3;
+   vpiH        : constant := 4;
+   vpiL        : constant := 5;
+   vpiDontCare : constant := 6;
+
    type struct_vpiHandle (<>) is private;
    type vpiHandle is access struct_vpiHandle;
    pragma No_Strict_Aliasing (vpiHandle);
@@ -260,11 +270,6 @@ package Grt.Vpi is
    -- void  vpi_get_value(vpiHandle expr, p_vpi_value value);
    procedure vpi_get_value (Expr : vpiHandle; Value : p_vpi_value);
    pragma Export (C, vpi_get_value, "vpi_get_value");
-
-   -- Ugly, but C can do allocation on the fly with an auto.  Ada???
-   -- void  vpi_vec_callback_helper (p_cb_data cb, int Len);
-   procedure vpi_vec_callback_helper (cb : p_cb_data; Len : Integer);
-   pragma Import (C, vpi_vec_callback_helper, "vpi_get_value_vec_helper");
 
    -- void  vpi_get_time(vpiHandle obj, s_vpi_time*t);
    procedure vpi_get_time (Obj: vpiHandle; Time: p_vpi_time);

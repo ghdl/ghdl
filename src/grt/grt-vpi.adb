@@ -654,14 +654,14 @@ package body Grt.Vpi is
            | Vcd_Bool
            | Vcd_Var_Vectors
            | Vcd_Integer32
+           | Vcd_Float64
            | Vcd_Bit
            | Vcd_Stdlogic =>
             return vpiNet;
          when Vcd_Array =>
             return vpiNetArray;
          when Vcd_Bad
-           | Vcd_Struct
-           | Vcd_Float64 =>
+           | Vcd_Struct =>
             return vpiUndefined;
       end case;
    end Vhpi_Handle_To_Vpi_Net;
@@ -1222,10 +1222,100 @@ package body Grt.Vpi is
       end case;
    end Vpi_Get_Value_Int;
 
+   function Vpi_Get_Value_Real (Obj : VhpiHandleT) return Ghdl_F64
+   is
+      Info : Verilog_Wire_Info;
+   begin
+      Info := Get_Value_Obj (Obj);
+      case Info.Vtype is
+         when Vcd_Float64 =>
+            return Verilog_Wire_Val (Info).F64;
+         when others =>
+            return Ghdl_F64 (Vpi_Get_Value_Int (Obj));
+      end case;
+   end Vpi_Get_Value_Real;
+
    function To_Unsigned_32 is new Ada.Unchecked_Conversion
      (Integer, Unsigned_32);
 
-   procedure Vpi_Get_Value_Vecval (Obj : VhpiHandleT; Vec : p_vpi_vecval)
+   function Vpi_Get_Value_Scalar (Obj : VhpiHandleT) return Integer
+   is
+      Info : Verilog_Wire_Info;
+   begin
+      Info := Get_Value_Obj (Obj);
+
+      case Info.Vtype is
+         when Vcd_Bool
+            | Vcd_Bit =>
+            if Verilog_Wire_Val (Info).B1 then
+               return 1;
+            else
+               return 0;
+            end if;
+         when Vcd_Stdlogic =>
+            case E8_To_Char (Verilog_Wire_Val (Info).E8) is
+               when '0' =>
+                  return vpi0;
+               when '1' =>
+                  return vpi1;
+               when 'Z' =>
+                  return vpiZ;
+               when 'X'
+                  | 'W'
+                  | 'U' =>
+                  return vpiX;
+               when 'L' =>
+                  return vpiL;
+               when 'H' =>
+                  return vpiH;
+               when others =>
+                  return vpiDontCare;
+            end case;
+         when others =>
+            return vpiX;
+      end case;
+   end Vpi_Get_Value_Scalar;
+
+   -- Buffers for caller-provided p_vpi_vecval values.
+   -- vpi_get_value() may be called to request a vector value
+   -- from a callback that itself needs a vector value.
+   -- This is very ugly!
+
+   type vpi_vecarray is array (Integer range <>) of s_vpi_vecval;
+   pragma Convention (C, vpi_vecarray);
+   type p_vpi_vecarray is access vpi_vecarray;
+   Vecvals : array (1 .. 2) of p_vpi_vecarray;
+   Vecvals_idx : Integer range 1 .. 2 := 1;
+
+   function Vpi_Get_Vecval_Buf (Size : Integer) return p_vpi_vecval
+      is
+         function To_p_vpi_vecval
+            is new Ada.Unchecked_Conversion(System.Address, p_vpi_vecval);
+         procedure Free_Vecarray
+            is new Ada.Unchecked_Deallocation
+               (Name => p_vpi_vecarray, Object => vpi_vecarray);
+         Chunks : Integer;
+         Pointer : p_vpi_vecval;
+      begin
+          Chunks := (Size + 31) / 32;
+         if Vecvals (Vecvals_idx) = null then
+            Vecvals (Vecvals_idx) :=  new vpi_vecarray (1 ..  Chunks);
+         end if;
+         if  Chunks > Vecvals (Vecvals_idx).all'Length then
+            Free_Vecarray (Vecvals (Vecvals_idx));
+            Vecvals (Vecvals_idx) :=  new vpi_vecarray (1 ..  Chunks);
+         end if;
+         Pointer := To_p_vpi_vecval (Vecvals (Vecvals_idx).all (1)'Address);
+
+         -- Vecvals_idx is reset to 1 when a value change callback
+         -- requests vpiVectorVal.
+         if Vecvals_idx = 1 then
+            Vecvals_idx := 2;
+         end if;
+         return Pointer;
+  end Vpi_Get_Vecval_Buf;
+
+  procedure Vpi_Get_Value_Vecval (Obj : VhpiHandleT; Vec : p_vpi_vecval)
    is
       procedure E8_To_VV
          (V : Ghdl_E8; A : out Unsigned_32; B : out Unsigned_32) is
@@ -1482,7 +1572,7 @@ package body Grt.Vpi is
          when vpiHexStrVal =>
             Value.Str := Vpi_Get_Value_Based (Expr.Ref, 4);
          when vpiScalarVal =>
-            dbgPut_Line ("vpi_get_value: vpiNet, vpiScalarVal");
+            Value.Scalar := Vpi_Get_Value_Scalar (Expr.Ref);
          when vpiIntVal =>
             case Expr.mType is
                when vpiLeftRange
@@ -1491,10 +1581,12 @@ package body Grt.Vpi is
                when others =>
                   Value.Integer_m := Integer (Vpi_Get_Value_Int (Expr.Ref));
             end case;
-         when vpiRealVal =>     dbgPut_Line ("vpi_get_value: vpiRealVal");
+         when vpiRealVal =>
+            Value.Real_m := Vpi_Get_Value_Real (Expr.Ref);
          when vpiStringVal =>   dbgPut_Line ("vpi_get_value: vpiStringVal");
          when vpiTimeVal =>     dbgPut_Line ("vpi_get_value: vpiTimeVal");
          when vpiVectorVal =>
+            Value.Vector := Vpi_Get_Vecval_Buf (Vpi_Get_Size (Expr));
             Vpi_Get_Value_Vecval (Expr.Ref, Value.Vector);
          when vpiStrengthVal => dbgPut_Line ("vpi_get_value: vpiStrengthVal");
          when others =>         dbgPut_Line ("vpi_get_value: unknown mFormat");
@@ -1533,6 +1625,7 @@ package body Grt.Vpi is
          when Vcd_Bad
             | Vcd_Array
             | Vcd_Struct =>
+            dbgPut_Line ("vpi_put_value: array or struct");
             return;
          when Vcd_Bit
            | Vcd_Bool
@@ -1608,6 +1701,7 @@ package body Grt.Vpi is
             end;
 
          when Vcd_Float64 =>
+            dbgPut_Line ("vpi_put_value: vpiRealVal");
             null;
       end case;
    end Ii_Vpi_Put_Value;
@@ -1665,6 +1759,37 @@ package body Grt.Vpi is
       end loop;
       Ii_Vpi_Put_Value (Info, Vec, Kind);
    end Ii_Vpi_Put_Value_Bin_Str;
+
+   procedure Ii_Vpi_Put_Value_Scalar (Info : Verilog_Wire_Info;
+                                       Val  : Integer;
+                                       Kind : Force_Kind)
+   is
+      Vec : Std_Ulogic_Array (0 .. 0);
+   begin
+      case Val is
+         when vpi0 => Vec (0) := '0';
+         when vpi1 => Vec (0) := '1';
+         when vpiZ => Vec (0) := 'Z';
+         when vpiX => Vec (0) := 'X';
+         when vpiL => Vec (0) := 'L';
+         when vpiH => Vec (0) := 'H';
+         when others => Vec (0) := '-';
+      end case;
+      Ii_Vpi_Put_Value (Info, Vec, Kind);
+   end Ii_Vpi_Put_Value_Scalar;
+
+   procedure Ii_Vpi_Put_Value_Real (Info : Verilog_Wire_Info;
+                                    Val  : Ghdl_F64;
+                                    Kind : Force_Kind)
+   is
+   begin
+      case Info.Vtype is
+         when Vcd_Float64 =>
+            Verilog_Wire_Val (Info).F64 := Val;
+         when others =>
+            Ii_Vpi_Put_Value_Int (Info, 1, Unsigned_32 (Val), Kind);
+      end case;
+   end Ii_Vpi_Put_Value_Real;
 
    procedure Ii_Vpi_Put_Value_Vecval (Info : Verilog_Wire_Info;
                                       Len  : Ghdl_Index_Type;
@@ -1827,12 +1952,12 @@ package body Grt.Vpi is
          when vpiHexStrVal =>
             dbgPut_Line ("vpi_put_value: vpiNet, vpiHexStrVal");
          when vpiScalarVal =>
-            dbgPut_Line ("vpi_put_value: vpiNet, vpiScalarVal");
+            Ii_Vpi_Put_Value_Scalar (Info, aValue.Scalar, Kind);
          when vpiIntVal =>
             Ii_Vpi_Put_Value_Int
               (Info, Len, To_Unsigned_32 (aValue.Integer_m), Kind);
          when vpiRealVal =>
-            dbgPut_Line("vpi_put_value: vpiRealVal");
+            Ii_Vpi_Put_Value_Real(Info, aValue.Real_m, Kind);
          when vpiStringVal =>
             dbgPut_Line("vpi_put_value: vpiStringVal");
          when vpiTimeVal =>
@@ -2005,25 +2130,10 @@ package body Grt.Vpi is
          if Hand.Cb.Value /= null then
             -- Supply value before call.  May need to allocate vector space.
             if (Hand.Cb.Value.Format = vpiVectorVal) then
-               -- Storage for the vector must be allocated first.
-               declare
-                  Len : Integer;
-               begin
-                  Len := Integer ((Get_Wire_Length (Hand.Cb_Wire) + 31) / 32);
-                  vpi_vec_callback_helper (Hand.Cb'Access, Len);
-                  Hand.Cb_Refcnt := Hand.Cb_Refcnt - 1;
-                  --  The handler hasn't been removed from the queue, unless
-                  --  the user did it while the callback was executed.
-                  --  If so, thereference counter must now be 0
-                  --  and we can free it.
-                  if Hand.Cb_Refcnt = 0 then
-                     Free (Hand);
-                  end if;
-                  return; -- Callback made.
-               end;
-            else
-               vpi_get_value (Hand.Cb.Obj, Hand.Cb.Value);
+               -- Mark storage for vpiVectorVal as idle.
+               Vecvals_idx := 1;
             end if;
+            vpi_get_value (Hand.Cb.Obj, Hand.Cb.Value);
          end if;
          Execute_Callback (Hand);
          Hand.Cb_Refcnt := Hand.Cb_Refcnt - 1;
