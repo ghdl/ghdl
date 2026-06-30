@@ -194,7 +194,7 @@ package Grt.Vpi is
          when vpiIntVal =>
             Integer_m : Integer;
          when vpiRealVal=>
-            Real_M : Ghdl_F64;
+            Real_m : Ghdl_F64;
             --when vpiTimeVal=>     mTime:     p_vpi_time;
          when vpiVectorVal=>
             Vector: p_vpi_vecval;

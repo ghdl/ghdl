@@ -1288,45 +1288,45 @@ package body Grt.Vpi is
    Vecvals_idx : Integer range 1 .. 2 := 1;
 
    function Vpi_Get_Vecval_Buf (Size : Integer) return p_vpi_vecval
-      is
-         function To_p_vpi_vecval
-            is new Ada.Unchecked_Conversion(System.Address, p_vpi_vecval);
-         procedure Free_Vecarray
-            is new Ada.Unchecked_Deallocation
-               (Name => p_vpi_vecarray, Object => vpi_vecarray);
-         Chunks : Integer;
-         Pointer : p_vpi_vecval;
-      begin
-          Chunks := (Size + 31) / 32;
-         if Vecvals (Vecvals_idx) = null then
-            Vecvals (Vecvals_idx) :=  new vpi_vecarray (1 ..  Chunks);
-         end if;
-         if  Chunks > Vecvals (Vecvals_idx).all'Length then
-            Free_Vecarray (Vecvals (Vecvals_idx));
-            Vecvals (Vecvals_idx) :=  new vpi_vecarray (1 ..  Chunks);
-         end if;
-         Pointer := To_p_vpi_vecval (Vecvals (Vecvals_idx).all (1)'Address);
+   is
+      function To_p_vpi_vecval
+      is new Ada.Unchecked_Conversion(System.Address, p_vpi_vecval);
+      procedure Free_Vecarray
+      is new Ada.Unchecked_Deallocation
+        (Name => p_vpi_vecarray, Object => vpi_vecarray);
+      Chunks : Integer;
+      Pointer : p_vpi_vecval;
+   begin
+      Chunks := (Size + 31) / 32;
+      if Vecvals (Vecvals_idx) = null then
+         Vecvals (Vecvals_idx) :=  new vpi_vecarray (1 ..  Chunks);
+      end if;
+      if  Chunks > Vecvals (Vecvals_idx).all'Length then
+         Free_Vecarray (Vecvals (Vecvals_idx));
+         Vecvals (Vecvals_idx) :=  new vpi_vecarray (1 ..  Chunks);
+      end if;
+      Pointer := To_p_vpi_vecval (Vecvals (Vecvals_idx).all (1)'Address);
 
-         -- Vecvals_idx is reset to 1 when a value change callback
-         -- requests vpiVectorVal.
-         if Vecvals_idx = 1 then
-            Vecvals_idx := 2;
-         end if;
-         return Pointer;
-  end Vpi_Get_Vecval_Buf;
+      -- Vecvals_idx is reset to 1 when a value change callback
+      -- requests vpiVectorVal.
+      if Vecvals_idx = 1 then
+         Vecvals_idx := 2;
+      end if;
+      return Pointer;
+   end Vpi_Get_Vecval_Buf;
 
-  procedure Vpi_Get_Value_Vecval (Obj : VhpiHandleT; Vec : p_vpi_vecval)
+   procedure Vpi_Get_Value_Vecval (Obj : VhpiHandleT; Vec : p_vpi_vecval)
    is
       procedure E8_To_VV
-         (V : Ghdl_E8; A : out Unsigned_32; B : out Unsigned_32) is
+        (V : Ghdl_E8; A : out Unsigned_32; B : out Unsigned_32) is
       begin
          B := 0;
          case E8_To_Char (V) is
             when '0'
-               | 'L' =>
+              | 'L' =>
                A := 0;
             when '1'
-               | 'H' =>
+              | 'H' =>
                A := 1;
             when 'Z' =>
                A := 0;
@@ -1334,7 +1334,7 @@ package body Grt.Vpi is
             when others =>
                A := 1;
                B := 1;
-            end case;
+         end case;
       end E8_To_VV;
 
       Info : Verilog_Wire_Info;
@@ -1346,7 +1346,7 @@ package body Grt.Vpi is
 
       case Info.Vtype is
          when Vcd_Bitvector
-            | Vcd_Stdlogic_Vector =>
+           | Vcd_Stdlogic_Vector =>
             null; -- Continues below.
          when Vcd_Stdlogic =>
             E8_To_VV (Verilog_Wire_Val (Info).E8, Vec.aval, Vec.bval);
@@ -1442,10 +1442,10 @@ package body Grt.Vpi is
    end Vpi_Get_Value_Dec;
 
    --  Octal (Group = 3) or hexadecimal (Group = 4) string, built by grouping
-   --  the binary representation.  X/Z digits follow IEEE 1364: a group with any
-   --  unknown bit is 'X', an all-Z group is 'Z'.
+   --  the binary representation.  X/Z digits follow IEEE 1364: a group with
+   --  any unknown bit is 'X', an all-Z group is 'Z'.
    function Vpi_Get_Value_Based (Obj : VhpiHandleT; Group : Natural)
-                                return Ghdl_C_String
+                                 return Ghdl_C_String
    is
       Bin : Ghdl_C_String;
       Blen : Natural;
