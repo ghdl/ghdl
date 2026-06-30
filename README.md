@@ -65,6 +65,8 @@ One of the key integrations is with [Yosys](https://github.com/YosysHQ/yosys), a
 
 GHDL also integrates with [cocotb](https://github.com/potentialventures/cocotb), a coroutine-based co-simulation framework that allows Python-driven testing of VHDL designs. This is particularly useful for writing complex testbenches in Python and interacting with VHDL simulations in real-time.
 
+[Ngspice](https://ngspice.sourceforge.io) supports device models with behaviour defined by VHDL code in mixed-signal simulation, using GHDL.
+
 For verification, GHDL supports integration with frameworks such as [OSVVM](https://osvvm.org), [UVVM](https://github.com/UVVM/UVVM), and [VUnit](https://vunit.github.io), providing users with a full suite of tools for verifying VHDL designs. These verification libraries enable advanced testing techniques like constrained random verification, functional coverage, and automated regression testing.
 
 Together, these third-party integrations make GHDL a comprehensive tool for digital design, simulation, verification, and synthesis, suitable for both individual developers and large teams.
