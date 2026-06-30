@@ -288,11 +288,13 @@ package body Elab.Vhdl_Expr is
             if Name_Typ.Drange /= Res.Typ.Drange then
                Error_Msg_Synth
                  (Loc_Inst, Name, "bounds mismatch between name and object");
+               return No_Valtyp;
             end if;
          when Type_Float =>
             if Name_Typ.Frange /= Res.Typ.Frange then
                Error_Msg_Synth
                  (Loc_Inst, Name, "bounds mismatch between name and object");
+               return No_Valtyp;
             end if;
          when Type_Vector
            | Type_Unbounded_Vector

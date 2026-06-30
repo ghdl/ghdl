@@ -682,18 +682,18 @@ package body Synth.Vhdl_Expr is
                when Value_Net
                   | Value_Wire
                   | Value_Alias =>
-                  if Vtype.W /= Dtype.W then
+                  if Vtype.Drange /= Dtype.Drange then
                      --  Truncate.
                      --  TODO: check overflow.
+                     if Is_Static_Val (Vt.Val) then
+                        return Create_Value_Discrete
+                          (Get_Static_Discrete (Vt), Dtype);
+                     end if;
+
                      declare
                         Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
                         N : Net;
                      begin
-                        if Is_Static_Val (Vt.Val) then
-                           return Create_Value_Discrete
-                             (Get_Static_Discrete (Vt), Dtype);
-                        end if;
-
                         N := Get_Net (Ctxt, Vt);
                         if Vtype.Drange.Is_Signed then
                            N := Build2_Sresize
