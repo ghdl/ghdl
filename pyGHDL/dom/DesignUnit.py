@@ -304,7 +304,9 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
     def parse(cls, packageNode: Iir):
         name = GetNameOfNode(packageNode)
         documentation = GetDocumentationOfNode(packageNode)
-        uninstantiatedPackageName = GetName(uninstantiatedPackageNode := nodes.Get_Uninstantiated_Package_Name(packageNode))
+        uninstantiatedPackageName = GetName(
+            uninstantiatedPackageNode := nodes.Get_Uninstantiated_Package_Name(packageNode)
+        )
         uninstantiatedPackageSymbol = PackageReferenceSymbol(uninstantiatedPackageNode, uninstantiatedPackageName)
 
         # FIXME: read use clauses (does it apply here too?)

@@ -53,6 +53,7 @@ class DependencyGraphFormatter(Formatter):
         DependencyGraphEdgeKind.EntityInstantiation: "#000000",
         DependencyGraphEdgeKind.ComponentInstantiation: "#000000",
         DependencyGraphEdgeKind.ConfigurationInstantiation: "#000000",
+        DependencyGraphEdgeKind.PackageInstantiation: "#000000",
     }
 
     def WriteGraphML(self, path: Path):
