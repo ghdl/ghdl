@@ -266,7 +266,7 @@ class Document(VHDLModel_Document):
                 self._AddPackageBody(packageBody)
 
             elif nodeKind == nodes.Iir_Kind.Package_Instantiation_Declaration:
-                package = PackageInstantiation.parse(libraryUnit)
+                package = PackageInstantiation.parse(libraryUnit, contextItems)
                 self._AddPackage(package)
 
             elif nodeKind == nodes.Iir_Kind.Context_Declaration:

@@ -295,13 +295,14 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         identifier: str,
         uninstantiatedPackageName: Symbol,
         #        genericItems: List[GenericInterfaceItem] = None,
+        contextItems: Iterable[VHDLModel_ContextUnion] = None,
         documentation: str = None,
     ) -> None:
-        super().__init__(identifier, uninstantiatedPackageName, documentation)
+        super().__init__(identifier, uninstantiatedPackageName, contextItems, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, packageNode: Iir):
+    def parse(cls, packageNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion] = None):
         name = GetNameOfNode(packageNode)
         documentation = GetDocumentationOfNode(packageNode)
         uninstantiatedPackageName = GetName(
@@ -309,12 +310,11 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         )
         uninstantiatedPackageSymbol = PackageReferenceSymbol(uninstantiatedPackageNode, uninstantiatedPackageName)
 
-        # FIXME: read use clauses (does it apply here too?)
         # FIXME: read generics
         # FIXME: read generic map
         # genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
 
-        return cls(packageNode, name, uninstantiatedPackageSymbol, documentation)
+        return cls(packageNode, name, uninstantiatedPackageSymbol, contextItems, documentation)
 
 
 @export
