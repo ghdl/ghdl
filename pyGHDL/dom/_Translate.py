@@ -728,7 +728,7 @@ def GetMapAspect(mapAspect: Iir, cls: Type, entity: str) -> Generator[Associatio
 
             actual = GetExpressionFromNode(nodes.Get_Actual(item))
 
-            yield cls(item, actual, formal)
+            yield cls(item, formal, actual)
         elif kind is nodes.Iir_Kind.Association_Element_Open:
             formalNode = nodes.Get_Formal(item)
             if formalNode is nodes.Null_Iir:
@@ -736,7 +736,7 @@ def GetMapAspect(mapAspect: Iir, cls: Type, entity: str) -> Generator[Associatio
             else:
                 formal = GetName(formalNode)
 
-            yield cls(item, OpenName(item), formal)
+            yield cls(item, formal, OpenName(item))
         else:
             pos = Position.parse(item)
             raise DOMException(f"Unknown association kind '{kind.name}' in {entity} map at line {pos.Line}.")

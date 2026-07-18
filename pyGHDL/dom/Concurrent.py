@@ -81,22 +81,22 @@ from pyGHDL.dom.Symbol import (
 
 @export
 class GenericAssociationItem(VHDLModel_GenericAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None) -> None:
-        super().__init__(actual, formal)
+    def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
 class PortAssociationItem(VHDLModel_PortAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None) -> None:
-        super().__init__(actual, formal)
+    def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
 class ParameterAssociationItem(VHDLModel_ParameterAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None) -> None:
-        super().__init__(actual, formal)
+    def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
 
