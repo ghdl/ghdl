@@ -296,10 +296,10 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         identifier: str,
         uninstantiatedPackageName: Symbol,
         contextItems: Iterable[VHDLModel_ContextUnion] = None,
-        genericMapItems: Iterable[VHDLModel_GenericAssociationItem] = None,
+        genericAssociationItems: Iterable[VHDLModel_GenericAssociationItem] = None,
         documentation: str = None,
     ) -> None:
-        super().__init__(identifier, uninstantiatedPackageName, contextItems, genericMapItems, documentation)
+        super().__init__(identifier, uninstantiatedPackageName, contextItems, genericAssociationItems, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -318,11 +318,11 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         #       GenericInterfaceItemMixin) cannot be read at this stage.
         #       What is available right now is the generic *map* aspect - the associations actually written at the
         #       instantiation site (e.g. 'WIDTH => 16'), a list of GenericAssociationItem - that's what
-        #       genericMapItems holds here.
+        #       genericAssociationItems holds here.
         # FIXME: once semantic analysis is available, also read the referenced package's generic declarations.
-        genericMapItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(packageNode))
+        genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(packageNode))
 
-        return cls(packageNode, name, uninstantiatedPackageSymbol, contextItems, genericMapItems, documentation)
+        return cls(packageNode, name, uninstantiatedPackageSymbol, contextItems, genericAssociationItems, documentation)
 
 
 @export

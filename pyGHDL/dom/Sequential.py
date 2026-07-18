@@ -447,10 +447,10 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
         self,
         callNode: Iir,
         procedureName: Symbol,
-        parameterMappings: Iterable[ParameterAssociationItem],
+        parameterAssociationItems: Iterable[ParameterAssociationItem],
         label: str = None,
     ) -> None:
-        super().__init__(procedureName, parameterMappings, label)
+        super().__init__(procedureName, parameterAssociationItems, label)
         DOMMixin.__init__(self, callNode)
 
     @classmethod

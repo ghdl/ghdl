@@ -51,7 +51,7 @@ class PackageInstantiation(TestCase):
       computed by ``Document.translate()`` and then silently discarded instead of being forwarded to
       ``PackageInstantiation.parse()``), and
     * that the ``generic map (...)`` aspect written at the instantiation site is translated into
-      ``GenericAssociations``.
+      ``GenericAssociationItems``.
 
     Note: the generic *declarations* of the referenced (uninstantiated) package cannot be read from the
     instantiation at this stage - ``Get_Uninstantiated_Package_Decl``/``Get_Generic_Chain`` on the instantiation node
@@ -98,7 +98,7 @@ class PackageInstantiation(TestCase):
         self.assertIsInstance(useClause, UseClause)
         self.assertEqual(1, len(useClause.Symbols))
 
-    def test_GenericAssociations(self):
+    def test_GenericAssociationItems(self):
         print()
 
         design = Design()
@@ -110,9 +110,9 @@ class PackageInstantiation(TestCase):
 
         packageInstantiation = document.Packages["instantiatedpackage"]
 
-        self.assertEqual(1, len(packageInstantiation.GenericAssociations))
+        self.assertEqual(1, len(packageInstantiation.GenericAssociationItems))
 
-        association = packageInstantiation.GenericAssociations[0]
+        association = packageInstantiation.GenericAssociationItems[0]
         self.assertEqual("WIDTH", association.Formal.Identifier)
         self.assertEqual(16, association.Actual.Value)
 
