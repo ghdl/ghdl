@@ -43,7 +43,7 @@ if __name__ == "__main__":
     exit(1)
 
 
-class Instantiation(TestCase):
+class PackageInstantiation(TestCase):
     """
     Checks translation of ``Iir_Kind.Package_Instantiation_Declaration``, in particular:
 

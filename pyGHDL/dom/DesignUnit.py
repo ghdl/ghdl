@@ -295,12 +295,11 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         node: Iir,
         identifier: str,
         uninstantiatedPackageName: Symbol,
-        #        genericItems: List[GenericInterfaceItem] = None,
         contextItems: Iterable[VHDLModel_ContextUnion] = None,
-        genericAssociations: Iterable[VHDLModel_GenericAssociationItem] = None,
+        genericItems: Iterable[VHDLModel_GenericAssociationItem] = None,
         documentation: str = None,
     ) -> None:
-        super().__init__(identifier, uninstantiatedPackageName, contextItems, genericAssociations, documentation)
+        super().__init__(identifier, uninstantiatedPackageName, contextItems, genericItems, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -315,11 +314,15 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         # NOTE: Get_Generic_Chain on a package instantiation is only populated after semantic analysis has resolved
         #       and macro-expanded the uninstantiated package (same for Get_Uninstantiated_Package_Decl); since
         #       Document.translate() only parses (see sem_lib.Load_File), that chain is Null_Iir here and the
-        #       generic *declarations* cannot be read at this stage. What is available right now is the generic
-        #       *map* aspect - the associations actually written at the instantiation site (e.g. 'WIDTH => 16').
-        genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(packageNode))
+        #       generic *declarations* (what Entity.parse reads as its own 'genericItems', a list of
+        #       GenericInterfaceItemMixin) cannot be read at this stage.
+        #       What is available right now is the generic *map* aspect - the associations actually written at the
+        #       instantiation site (e.g. 'WIDTH => 16'), a list of GenericAssociationItem - that's what genericItems
+        #       holds here.
+        # FIXME: once semantic analysis is available, also read the referenced package's generic declarations.
+        genericItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(packageNode))
 
-        return cls(packageNode, name, uninstantiatedPackageSymbol, contextItems, genericAssociations, documentation)
+        return cls(packageNode, name, uninstantiatedPackageSymbol, contextItems, genericItems, documentation)
 
 
 @export
