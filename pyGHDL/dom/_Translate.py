@@ -1015,9 +1015,9 @@ def GetSequentialStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Null_Statement:
             yield NullStatement(statement, label)
         elif kind == nodes.Iir_Kind.Next_Statement:
-            yield NextStatement(statement, label)
+            yield NextStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Exit_Statement:
-            yield ExitStatement(statement, label)
+            yield ExitStatement.parse(statement, label)
         else:
             raise DOMException(
                 f"Unknown sequential statement of kind '{kind.name}' in {entity} '{name}' at {position}."
