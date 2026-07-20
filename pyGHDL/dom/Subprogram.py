@@ -52,17 +52,13 @@ class Function(VHDLModel_Function, DOMMixin):
         node: Iir,
         functionName: str,
         returnType: Symbol,
+        isPure: bool = True,
         genericItems: List[GenericInterfaceItemMixin] = None,
         parameterItems: List[ParameterInterfaceItemMixin] = None,
         documentation: str = None,
     ) -> None:
-        super().__init__(functionName, documentation)
+        super().__init__(functionName, returnType, isPure, genericItems, parameterItems, documentation=documentation)
         DOMMixin.__init__(self, node)
-
-        # TODO: move to model
-        self._genericItems = [] if genericItems is None else [g for g in genericItems]
-        self._parameterItems = [] if parameterItems is None else [p for p in parameterItems]
-        self._returnType = returnType
 
     @classmethod
     def parse(cls, functionNode: Iir) -> "Function":
@@ -74,6 +70,7 @@ class Function(VHDLModel_Function, DOMMixin):
 
         functionName = GetNameOfNode(functionNode)
         documentation = GetDocumentationOfNode(functionNode)
+        isPure = nodes.Get_Pure_Flag(functionNode)
 
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(functionNode))
         parameters = GetParameterFromChainedNodes(nodes.Get_Interface_Declaration_Chain(functionNode))
@@ -82,7 +79,7 @@ class Function(VHDLModel_Function, DOMMixin):
         returnTypeName = GetName(returnType)
         returnTypeSymbol = SimpleSubtypeSymbol(returnType, returnTypeName)
 
-        return cls(functionNode, functionName, returnTypeSymbol, generics, parameters, documentation)
+        return cls(functionNode, functionName, returnTypeSymbol, isPure, generics, parameters, documentation)
 
 
 @export
@@ -95,12 +92,8 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
         parameterItems: List[ParameterInterfaceItemMixin] = None,
         documentation: str = None,
     ) -> None:
-        super().__init__(procedureName, documentation)
+        super().__init__(procedureName, genericItems, parameterItems, documentation=documentation)
         DOMMixin.__init__(self, node)
-
-        # TODO: move to model
-        self._genericItems = [] if genericItems is None else [g for g in genericItems]
-        self._parameterItems = [] if parameterItems is None else [p for p in parameterItems]
 
     @classmethod
     def parse(cls, procedureNode: Iir) -> "Procedure":
