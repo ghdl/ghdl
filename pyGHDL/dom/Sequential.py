@@ -49,6 +49,7 @@ from pyVHDLModel.Sequential import CaseStatement as VHDLModel_CaseStatement
 from pyVHDLModel.Sequential import ForLoopStatement as VHDLModel_ForLoopStatement
 from pyVHDLModel.Sequential import WhileLoopStatement as VHDLModel_WhileLoopStatement
 from pyVHDLModel.Sequential import NullStatement as VHDLModel_NullStatement
+from pyVHDLModel.Sequential import ReturnStatement as VHDLModel_ReturnStatement
 from pyVHDLModel.Sequential import WaitStatement as VHDLModel_WaitStatement
 from pyVHDLModel.Sequential import NextStatement as VHDLModel_NextStatement
 from pyVHDLModel.Sequential import ExitStatement as VHDLModel_ExitStatement
@@ -515,6 +516,27 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
         severity = None if severityNode is nodes.Null_Iir else GetExpressionFromNode(severityNode)
 
         return cls(reportNode, message, severity, label)
+
+
+@export
+class ReturnStatement(VHDLModel_ReturnStatement, DOMMixin):
+    def __init__(
+        self,
+        returnNode: Iir,
+        returnValue: ExpressionUnion = None,
+        label: str = None,
+    ) -> None:
+        super().__init__(returnValue, label)
+        DOMMixin.__init__(self, returnNode)
+
+    @classmethod
+    def parse(cls, returnNode: Iir, label: str) -> "ReturnStatement":
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        returnValueNode = nodes.Get_Expression(returnNode)
+        returnValue = None if returnValueNode is nodes.Null_Iir else GetExpressionFromNode(returnValueNode)
+
+        return cls(returnNode, returnValue, label)
 
 
 @export

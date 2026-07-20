@@ -88,8 +88,64 @@ class Subprograms(TestCase):
         design.Documents.append(document)
 
         architecture = document.Architectures["subprograms"]["rtl"]
-        procedure = architecture.DeclaredItems[2]
+        procedure = architecture.DeclaredItems[3]
 
         self.assertIsInstance(procedure, Procedure)
         self.assertEqual("log", procedure.Identifier)
         self.assertEqual(2, len(procedure.ParameterItems))
+
+
+class SubprogramBodies(TestCase):
+    """
+    Regression tests: Function/Procedure bodies (local declarations and sequential statements) were
+    previously never translated at all - Function.parse()/Procedure.parse() only ever read the
+    specification (name, generics, parameters, return type), never the paired
+    Function_Body/Procedure_Body node. Every Function/Procedure object always had empty
+    DeclaredItems/Statements regardless of what the body actually contained.
+
+    Also covers ReturnStatement, which previously crashed on .ReturnValue access
+    (pyVHDLModel's ReturnStatement misused ConditionalMixin, which sets self._condition, not
+    self._returnValue) and had no way to carry a label at all.
+    """
+
+    _root = Path(__file__).resolve().parent
+    _filename: Path = _root / "examples/Subprograms.vhdl"
+
+    def test_SimpleReturnStatement(self):
+        design = Design()
+        document = Document(self._filename)
+        design.Documents.append(document)
+
+        architecture = document.Architectures["subprograms"]["rtl"]
+        function = architecture.DeclaredItems[0]
+
+        self.assertEqual(1, len(function.Statements))
+        returnStatement = function.Statements[0]
+        self.assertIsNotNone(returnStatement.ReturnValue)
+
+    def test_DeclaredItemsAndReturnValue(self):
+        design = Design()
+        document = Document(self._filename)
+        design.Documents.append(document)
+
+        architecture = document.Architectures["subprograms"]["rtl"]
+        function = architecture.DeclaredItems[2]
+
+        self.assertEqual("scale", function.Identifier)
+        self.assertEqual(2, len(function.DeclaredItems))
+        self.assertEqual(("FACTOR",), function.DeclaredItems[0].Identifiers)
+        self.assertEqual(("result",), function.DeclaredItems[1].Identifiers)
+
+        self.assertEqual(1, len(function.Statements))
+        self.assertIsNotNone(function.Statements[0].ReturnValue)
+
+    def test_EmptyProcedureBody(self):
+        design = Design()
+        document = Document(self._filename)
+        design.Documents.append(document)
+
+        architecture = document.Architectures["subprograms"]["rtl"]
+        procedure = architecture.DeclaredItems[3]
+
+        self.assertEqual(0, len(procedure.DeclaredItems))
+        self.assertEqual(0, len(procedure.Statements))
