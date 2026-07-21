@@ -109,9 +109,9 @@ class Design(VHDLModel_Design):
 
         if vhdlVersion not in self._SUPPORTED_VHDL_VERSIONS:
             supported = ", ".join(str(v) for v in self._SUPPORTED_VHDL_VERSIONS)
-            raise DOMException(
-                f"VHDL version '{vhdlVersion}' is not supported by pyGHDL.dom. Supported versions: {supported}."
-            )
+            ex = DOMException(f"VHDL version '{vhdlVersion}' is not supported by pyGHDL.dom.")
+            ex.add_note(f"Supported versions: {supported}.")
+            raise ex
 
         self._vhdlVersion = vhdlVersion
 

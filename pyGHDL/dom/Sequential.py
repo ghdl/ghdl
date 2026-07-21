@@ -558,7 +558,7 @@ class NextStatement(VHDLModel_NextStatement, DOMMixin):
         condition: ExpressionUnion = None,
         label: str = None,
     ) -> None:
-        super().__init__(condition=condition, loopLabel=label)
+        super().__init__(condition, loopLabel=label)
         DOMMixin.__init__(self, exitNode)
 
     @classmethod
@@ -579,7 +579,7 @@ class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
         condition: ExpressionUnion = None,
         label: str = None,
     ) -> None:
-        super().__init__(condition=condition, loopLabel=label)
+        super().__init__(condition, loopLabel=label)
         DOMMixin.__init__(self, exitNode)
 
     @classmethod
