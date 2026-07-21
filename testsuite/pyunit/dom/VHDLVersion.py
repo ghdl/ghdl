@@ -87,10 +87,9 @@ class VHDLVersionSelection(TestCase):
     def test_VHDL2019SyntaxIsAcceptedUnderVHDL2019(self):
         design = Design(vhdlVersion=VHDLVersion.VHDL2019)
 
-        # Parsing itself must succeed under --std=19. Translating the resulting Mode_View_Declaration
-        # into the DOM is a separate, not-yet-implemented step and is expected to still raise
-        # DOMException("Unknown declared item kind 'Mode_View_Declaration' ...") - update/remove this
-        # test once mode views are actually translated.
-        with self.assertRaises(DOMException):
-            document = Document(self._root / "examples/ModeView.vhdl")
-            design.Documents.append(document)
+        document = Document(self._root / "examples/ModeView.vhdl")
+        design.Documents.append(document)
+
+        modeView = document.Packages["modeviewpkg"].DeclaredItems[1]
+        self.assertEqual("MasterView", modeView.Identifier)
+        self.assertEqual(2, len(modeView.Elements))
