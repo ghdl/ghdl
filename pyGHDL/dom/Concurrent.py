@@ -81,22 +81,22 @@ from pyGHDL.dom.Symbol import (
 
 @export
 class GenericAssociationItem(VHDLModel_GenericAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None) -> None:
-        super().__init__(actual, formal)
+    def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
 class PortAssociationItem(VHDLModel_PortAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None) -> None:
-        super().__init__(actual, formal)
+    def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
 class ParameterAssociationItem(VHDLModel_ParameterAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None) -> None:
-        super().__init__(actual, formal)
+    def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
 
@@ -107,10 +107,10 @@ class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
         instantiationNode: Iir,
         label: str,
         componentSymbol: ComponentInstantiationSymbol,
-        genericAssociations: Iterable[AssociationItem] = None,
-        portAssociations: Iterable[AssociationItem] = None,
+        genericAssociationItems: Iterable[AssociationItem] = None,
+        portAssociationItems: Iterable[AssociationItem] = None,
     ) -> None:
-        super().__init__(label, componentSymbol, genericAssociations, portAssociations)
+        super().__init__(label, componentSymbol, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
@@ -118,10 +118,10 @@ class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
         from pyGHDL.dom._Translate import GetName, GetGenericMapAspect, GetPortMapAspect
 
         componentSymbol = ComponentInstantiationSymbol(instantiatedUnit, GetName(instantiatedUnit))
-        genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
-        portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
+        genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
+        portAssociationItems = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
 
-        return cls(instantiationNode, label, componentSymbol, genericAssociations, portAssociations)
+        return cls(instantiationNode, label, componentSymbol, genericAssociationItems, portAssociationItems)
 
 
 @export
@@ -132,10 +132,10 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         label: str,
         entitySymbol: EntityInstantiationSymbol,
         architectureSymbol: ArchitectureSymbol = None,  # TODO: merge both symbols ?
-        genericAssociations: Iterable[AssociationItem] = None,
-        portAssociations: Iterable[AssociationItem] = None,
+        genericAssociationItems: Iterable[AssociationItem] = None,
+        portAssociationItems: Iterable[AssociationItem] = None,
     ) -> None:
-        super().__init__(label, entitySymbol, architectureSymbol, genericAssociations, portAssociations)
+        super().__init__(label, entitySymbol, architectureSymbol, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
@@ -150,10 +150,10 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         if architectureId != nodes.Null_Iir:
             architectureSymbol = ArchitectureSymbol(GetName(architectureId), entitySymbol)
 
-        genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
-        portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
+        genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
+        portAssociationItems = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
 
-        return cls(instantiationNode, label, entitySymbol, architectureSymbol, genericAssociations, portAssociations)
+        return cls(instantiationNode, label, entitySymbol, architectureSymbol, genericAssociationItems, portAssociationItems)
 
 
 @export
@@ -163,10 +163,10 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
         instantiationNode: Iir,
         label: str,
         configurationSymbol: ConfigurationInstantiationSymbol,
-        genericAssociations: Iterable[AssociationItem] = None,
-        portAssociations: Iterable[AssociationItem] = None,
+        genericAssociationItems: Iterable[AssociationItem] = None,
+        portAssociationItems: Iterable[AssociationItem] = None,
     ) -> None:
-        super().__init__(label, configurationSymbol, genericAssociations, portAssociations)
+        super().__init__(label, configurationSymbol, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
@@ -176,10 +176,10 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
         configurationName = nodes.Get_Configuration_Name(instantiatedUnit)
         configurationSymbol = ConfigurationInstantiationSymbol(configurationName, GetName(configurationName))
 
-        genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
-        portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
+        genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
+        portAssociationItems = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
 
-        return cls(instantiationNode, label, configurationSymbol, genericAssociations, portAssociations)
+        return cls(instantiationNode, label, configurationSymbol, genericAssociationItems, portAssociationItems)
 
 
 @export
@@ -198,8 +198,8 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
     def parse(cls, blockNode: Iir, label: str) -> "ConcurrentBlockStatement":
         from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetConcurrentStatementsFromChainedNodes
 
-        #        genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
-        #        portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
+        #        genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
+        #        portAssociationItems = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
 
         declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(blockNode), "block", label)
         statements = GetConcurrentStatementsFromChainedNodes(
@@ -669,9 +669,9 @@ class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
         callNode: Iir,
         label: str,
         procedureName: Symbol,
-        parameterMappings: Iterable,
+        parameterAssociationItems: Iterable,
     ) -> None:
-        super().__init__(label, procedureName, parameterMappings)
+        super().__init__(label, procedureName, parameterAssociationItems)
         DOMMixin.__init__(self, callNode)
 
     @classmethod

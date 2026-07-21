@@ -49,6 +49,7 @@ from pyVHDLModel.Sequential import CaseStatement as VHDLModel_CaseStatement
 from pyVHDLModel.Sequential import ForLoopStatement as VHDLModel_ForLoopStatement
 from pyVHDLModel.Sequential import WhileLoopStatement as VHDLModel_WhileLoopStatement
 from pyVHDLModel.Sequential import NullStatement as VHDLModel_NullStatement
+from pyVHDLModel.Sequential import ReturnStatement as VHDLModel_ReturnStatement
 from pyVHDLModel.Sequential import WaitStatement as VHDLModel_WaitStatement
 from pyVHDLModel.Sequential import NextStatement as VHDLModel_NextStatement
 from pyVHDLModel.Sequential import ExitStatement as VHDLModel_ExitStatement
@@ -387,6 +388,7 @@ class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
             GetSequentialStatementsFromChainedNodes,
             GetRangeFromNode,
             GetName,
+            GetExpressionFromNode,
         )
 
         # spec = nodes.Get_Parameter_Specification(loopNode)
@@ -407,7 +409,8 @@ class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
         #         f"Unknown discrete range kind '{rangeKind.name}' in for...loop statement at line {pos.Line}."
         #     )
 
-        condition = None
+        conditionNode = nodes.Get_Condition(loopNode)
+        condition = None if conditionNode is nodes.Null_Iir else GetExpressionFromNode(conditionNode)
 
         statementChain = nodes.Get_Sequential_Statement_Chain(loopNode)
         statements = GetSequentialStatementsFromChainedNodes(statementChain, "while", label)
@@ -447,10 +450,10 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
         self,
         callNode: Iir,
         procedureName: Symbol,
-        parameterMappings: Iterable[ParameterAssociationItem],
+        parameterAssociationItems: Iterable[ParameterAssociationItem],
         label: str = None,
     ) -> None:
-        super().__init__(procedureName, parameterMappings, label)
+        super().__init__(procedureName, parameterAssociationItems, label)
         DOMMixin.__init__(self, callNode)
 
     @classmethod
@@ -516,6 +519,27 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
 
 
 @export
+class ReturnStatement(VHDLModel_ReturnStatement, DOMMixin):
+    def __init__(
+        self,
+        returnNode: Iir,
+        returnValue: ExpressionUnion = None,
+        label: str = None,
+    ) -> None:
+        super().__init__(returnValue, label)
+        DOMMixin.__init__(self, returnNode)
+
+    @classmethod
+    def parse(cls, returnNode: Iir, label: str) -> "ReturnStatement":
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        returnValueNode = nodes.Get_Expression(returnNode)
+        returnValue = None if returnValueNode is nodes.Null_Iir else GetExpressionFromNode(returnValueNode)
+
+        return cls(returnNode, returnValue, label)
+
+
+@export
 class NullStatement(VHDLModel_NullStatement, DOMMixin):
     def __init__(
         self,
@@ -531,11 +555,20 @@ class NextStatement(VHDLModel_NextStatement, DOMMixin):
     def __init__(
         self,
         exitNode: Iir,
+        condition: ExpressionUnion = None,
         label: str = None,
     ) -> None:
-        super().__init__(condition=None, loopLabel=label)
+        super().__init__(condition, loopLabel=label)
         DOMMixin.__init__(self, exitNode)
-        # TODO: parse condition
+
+    @classmethod
+    def parse(cls, exitNode: Iir, label: str) -> "NextStatement":
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        conditionNode = nodes.Get_Condition(exitNode)
+        condition = None if conditionNode is nodes.Null_Iir else GetExpressionFromNode(conditionNode)
+
+        return cls(exitNode, condition, label)
 
 
 @export
@@ -543,11 +576,20 @@ class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
     def __init__(
         self,
         exitNode: Iir,
+        condition: ExpressionUnion = None,
         label: str = None,
     ) -> None:
-        super().__init__(condition=None, loopLabel=label)
+        super().__init__(condition, loopLabel=label)
         DOMMixin.__init__(self, exitNode)
-        # TODO: parse condition
+
+    @classmethod
+    def parse(cls, exitNode: Iir, label: str) -> "ExitStatement":
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        conditionNode = nodes.Get_Condition(exitNode)
+        condition = None if conditionNode is nodes.Null_Iir else GetExpressionFromNode(conditionNode)
+
+        return cls(exitNode, condition, label)
 
 
 @export

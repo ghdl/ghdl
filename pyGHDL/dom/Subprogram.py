@@ -52,17 +52,24 @@ class Function(VHDLModel_Function, DOMMixin):
         node: Iir,
         functionName: str,
         returnType: Symbol,
+        isPure: bool = True,
         genericItems: List[GenericInterfaceItemMixin] = None,
         parameterItems: List[ParameterInterfaceItemMixin] = None,
+        declaredItems: List = None,
+        statements: List["SequentialStatement"] = None,
         documentation: str = None,
     ) -> None:
-        super().__init__(functionName, documentation)
+        super().__init__(
+            functionName,
+            returnType,
+            isPure,
+            genericItems,
+            parameterItems,
+            declaredItems,
+            statements,
+            documentation=documentation,
+        )
         DOMMixin.__init__(self, node)
-
-        # TODO: move to model
-        self._genericItems = [] if genericItems is None else [g for g in genericItems]
-        self._parameterItems = [] if parameterItems is None else [p for p in parameterItems]
-        self._returnType = returnType
 
     @classmethod
     def parse(cls, functionNode: Iir) -> "Function":
@@ -70,10 +77,13 @@ class Function(VHDLModel_Function, DOMMixin):
             GetName,
             GetGenericsFromChainedNodes,
             GetParameterFromChainedNodes,
+            GetDeclaredItemsFromChainedNodes,
+            GetSequentialStatementsFromChainedNodes,
         )
 
         functionName = GetNameOfNode(functionNode)
         documentation = GetDocumentationOfNode(functionNode)
+        isPure = nodes.Get_Pure_Flag(functionNode)
 
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(functionNode))
         parameters = GetParameterFromChainedNodes(nodes.Get_Interface_Declaration_Chain(functionNode))
@@ -82,7 +92,28 @@ class Function(VHDLModel_Function, DOMMixin):
         returnTypeName = GetName(returnType)
         returnTypeSymbol = SimpleSubtypeSymbol(returnType, returnTypeName)
 
-        return cls(functionNode, functionName, returnTypeSymbol, generics, parameters, documentation)
+        declaredItems = []
+        statements = []
+        bodyNode = nodes.Get_Subprogram_Body(functionNode)
+        if bodyNode != nodes.Null_Iir:
+            declaredItems = GetDeclaredItemsFromChainedNodes(
+                nodes.Get_Declaration_Chain(bodyNode), "function", functionName
+            )
+            statements = GetSequentialStatementsFromChainedNodes(
+                nodes.Get_Sequential_Statement_Chain(bodyNode), "function", functionName
+            )
+
+        return cls(
+            functionNode,
+            functionName,
+            returnTypeSymbol,
+            isPure,
+            generics,
+            parameters,
+            declaredItems,
+            statements,
+            documentation,
+        )
 
 
 @export
@@ -93,20 +124,27 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
         procedureName: str,
         genericItems: List[GenericInterfaceItemMixin] = None,
         parameterItems: List[ParameterInterfaceItemMixin] = None,
+        declaredItems: List = None,
+        statements: List["SequentialStatement"] = None,
         documentation: str = None,
     ) -> None:
-        super().__init__(procedureName, documentation)
+        super().__init__(
+            procedureName,
+            genericItems,
+            parameterItems,
+            declaredItems,
+            statements,
+            documentation=documentation,
+        )
         DOMMixin.__init__(self, node)
-
-        # TODO: move to model
-        self._genericItems = [] if genericItems is None else [g for g in genericItems]
-        self._parameterItems = [] if parameterItems is None else [p for p in parameterItems]
 
     @classmethod
     def parse(cls, procedureNode: Iir) -> "Procedure":
         from pyGHDL.dom._Translate import (
             GetGenericsFromChainedNodes,
             GetParameterFromChainedNodes,
+            GetDeclaredItemsFromChainedNodes,
+            GetSequentialStatementsFromChainedNodes,
         )
 
         procedureName = GetNameOfNode(procedureNode)
@@ -115,4 +153,15 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(procedureNode))
         parameters = GetParameterFromChainedNodes(nodes.Get_Interface_Declaration_Chain(procedureNode))
 
-        return cls(procedureNode, procedureName, generics, parameters, documentation)
+        declaredItems = []
+        statements = []
+        bodyNode = nodes.Get_Subprogram_Body(procedureNode)
+        if bodyNode != nodes.Null_Iir:
+            declaredItems = GetDeclaredItemsFromChainedNodes(
+                nodes.Get_Declaration_Chain(bodyNode), "procedure", procedureName
+            )
+            statements = GetSequentialStatementsFromChainedNodes(
+                nodes.Get_Sequential_Statement_Chain(bodyNode), "procedure", procedureName
+            )
+
+        return cls(procedureNode, procedureName, generics, parameters, declaredItems, statements, documentation)

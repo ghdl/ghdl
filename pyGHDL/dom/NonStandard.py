@@ -89,12 +89,31 @@ from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationM
 class Design(VHDLModel_Design):
     _loadDefaultLibraryTime: Nullable[float]
     _analyzeTime: Nullable[float]
+    _vhdlVersion: VHDLVersion
 
     _warnings: List
 
+    #: VHDL versions currently supported by this class. Older revisions (87, 93, 2000, 2002) are
+    #: not planned to be supported for now.
+    _SUPPORTED_VHDL_VERSIONS = (VHDLVersion.VHDL2008, VHDLVersion.VHDL2019)
+
+    #: Mapping from a supported VHDLVersion to GHDL's '--std=' option value.
+    _VHDL_VERSION_TO_STD_OPTION = {
+        VHDLVersion.VHDL2008: "08",
+        VHDLVersion.VHDL2019: "19",
+    }
+
     @InheritDocString(VHDLModel_Design)
-    def __init__(self, name: str = None) -> None:
+    def __init__(self, name: str = None, vhdlVersion: VHDLVersion = VHDLVersion.VHDL2008) -> None:
         super().__init__(name)
+
+        if vhdlVersion not in self._SUPPORTED_VHDL_VERSIONS:
+            supported = ", ".join(str(v) for v in self._SUPPORTED_VHDL_VERSIONS)
+            ex = DOMException(f"VHDL version '{vhdlVersion}' is not supported by pyGHDL.dom.")
+            ex.add_note(f"Supported versions: {supported}.")
+            raise ex
+
+        self._vhdlVersion = vhdlVersion
 
         self._loadDefaultLibraryTime = None
         self._analyzeTime = None
@@ -102,6 +121,10 @@ class Design(VHDLModel_Design):
         self._warnings = []
 
         self.__ghdl_init()
+
+    @readonly
+    def VHDLVersion(self) -> VHDLVersion:
+        return self._vhdlVersion
 
     def __ghdl_init(self):
         """Initialization: set options and then load libraries."""
@@ -112,7 +135,8 @@ class Design(VHDLModel_Design):
         # Collect error messages in memory
         errorout_memory.Install_Handler()
 
-        libghdl_set_option("--std=08")
+        stdOption = self._VHDL_VERSION_TO_STD_OPTION[self._vhdlVersion]
+        libghdl_set_option(f"--std={stdOption}")
 
         Flag_Gather_Comments.value = True
         Flag_Parse_Parenthesis.value = True
@@ -266,7 +290,7 @@ class Document(VHDLModel_Document):
                 self._AddPackageBody(packageBody)
 
             elif nodeKind == nodes.Iir_Kind.Package_Instantiation_Declaration:
-                package = PackageInstantiation.parse(libraryUnit)
+                package = PackageInstantiation.parse(libraryUnit, contextItems)
                 self._AddPackage(package)
 
             elif nodeKind == nodes.Iir_Kind.Context_Declaration:
