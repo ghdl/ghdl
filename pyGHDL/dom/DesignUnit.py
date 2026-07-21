@@ -311,15 +311,6 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         )
         uninstantiatedPackageSymbol = PackageReferenceSymbol(uninstantiatedPackageNode, uninstantiatedPackageName)
 
-        # NOTE: Get_Generic_Chain on a package instantiation is only populated after semantic analysis has resolved
-        #       and macro-expanded the uninstantiated package (same for Get_Uninstantiated_Package_Decl); since
-        #       Document.translate() only parses (see sem_lib.Load_File), that chain is Null_Iir here and the
-        #       generic *declarations* (what Entity.parse reads as its own 'genericItems', a list of
-        #       GenericInterfaceItemMixin) cannot be read at this stage.
-        #       What is available right now is the generic *map* aspect - the associations actually written at the
-        #       instantiation site (e.g. 'WIDTH => 16'), a list of GenericAssociationItem - that's what
-        #       genericAssociationItems holds here.
-        # FIXME: once semantic analysis is available, also read the referenced package's generic declarations.
         genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(packageNode))
 
         return cls(packageNode, name, uninstantiatedPackageSymbol, contextItems, genericAssociationItems, documentation)
