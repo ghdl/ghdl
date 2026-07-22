@@ -860,10 +860,7 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                 yield ModeViewDeclaration.parse(item)
 
             elif kind == nodes.Iir_Kind.Function_Declaration:
-                if nodes.Get_Has_Body(item):
-                    yield Function.parse(item)
-                else:
-                    WarningCollector.Raise(NotImplementedError("function declaration without body"))
+                yield Function.parse(item)
 
                 lastKind = kind
                 item = nodes.Get_Chain(item)
@@ -885,10 +882,7 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                         f"Found unexpected function body '{GetNameOfNode(item)}' in {entity} '{name}' at {position}."
                     )
             elif kind == nodes.Iir_Kind.Procedure_Declaration:
-                if nodes.Get_Has_Body(item):
-                    yield Procedure.parse(item)
-                else:
-                    WarningCollector.Raise(NotImplementedError("procedure declaration without body"))
+                yield Procedure.parse(item)
 
                 lastKind = kind
                 item = nodes.Get_Chain(item)
