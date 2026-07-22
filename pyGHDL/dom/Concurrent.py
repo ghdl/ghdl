@@ -83,6 +83,7 @@ from pyGHDL.dom.Symbol import (
     EntityInstantiationSymbol,
     ComponentInstantiationSymbol,
     ConfigurationInstantiationSymbol,
+    SignalSymbol,
 )
 
 
@@ -752,7 +753,7 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
         self,
         assignmentNode: Iir,
         label: str,
-        target: Symbol,
+        target: SignalSymbol,
         waveform: Iterable[WaveformElement],
     ) -> None:
         super().__init__(label, target, waveform)
@@ -762,8 +763,8 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
     def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentSimpleSignalAssignment":
         from pyGHDL.dom._Translate import GetName
 
-        target = nodes.Get_Target(assignmentNode)
-        targetName = GetName(target)
+        targetNode = nodes.Get_Target(assignmentNode)
+        targetName = SignalSymbol(targetNode, GetName(targetNode))
 
         waveform = []
         for wave in utils.chain_iter(nodes.Get_Waveform_Chain(assignmentNode)):
@@ -778,7 +779,7 @@ class ConcurrentConditionalSignalAssignment(VHDLModel_ConcurrentConditionalSigna
         self,
         assignmentNode: Iir,
         label: str,
-        target: Symbol,
+        target: SignalSymbol,
         conditionalWaveforms: Iterable[ConditionalWaveform],
     ) -> None:
         super().__init__(label, target, conditionalWaveforms)
@@ -788,7 +789,8 @@ class ConcurrentConditionalSignalAssignment(VHDLModel_ConcurrentConditionalSigna
     def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentConditionalSignalAssignment":
         from pyGHDL.dom._Translate import GetName
 
-        targetName = GetName(nodes.Get_Target(assignmentNode))
+        targetNode = nodes.Get_Target(assignmentNode)
+        targetName = SignalSymbol(targetNode, GetName(targetNode))
         conditionalWaveforms = GetConditionalWaveformsFromChainedNodes(nodes.Get_Conditional_Waveform_Chain(assignmentNode))
 
         return cls(assignmentNode, label, targetName, conditionalWaveforms)
@@ -800,7 +802,7 @@ class ConcurrentSelectedSignalAssignment(VHDLModel_ConcurrentSelectedSignalAssig
         self,
         assignmentNode: Iir,
         label: str,
-        target: Symbol,
+        target: SignalSymbol,
         expression: ExpressionUnion,
         selectedWaveforms: Iterable,
     ) -> None:
@@ -811,7 +813,8 @@ class ConcurrentSelectedSignalAssignment(VHDLModel_ConcurrentSelectedSignalAssig
     def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentSelectedSignalAssignment":
         from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
 
-        targetName = GetName(nodes.Get_Target(assignmentNode))
+        targetNode = nodes.Get_Target(assignmentNode)
+        targetName = SignalSymbol(targetNode, GetName(targetNode))
         expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
         selectedWaveforms = GetSelectedWaveformsFromChainedNodes(nodes.Get_Selected_Waveform_Chain(assignmentNode))
 

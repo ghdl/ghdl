@@ -73,6 +73,7 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
 from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Concurrent import WaveformElement, ParameterAssociationItem  # TODO: move out from concurrent?
+from pyGHDL.dom.Symbol import SignalSymbol, VariableSymbol
 from pyGHDL.dom.Concurrent import GetConditionalWaveformsFromChainedNodes, GetSelectedWaveformsFromChainedNodes
 
 
@@ -434,7 +435,7 @@ class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignmen
     def __init__(
         self,
         assignmentNode: Iir,
-        target: Symbol,
+        target: SignalSymbol,
         waveform: Iterable[WaveformElement],
         label: str = None,
     ) -> None:
@@ -445,8 +446,8 @@ class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignmen
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialSimpleSignalAssignment":
         from pyGHDL.dom._Translate import GetName
 
-        target = nodes.Get_Target(assignmentNode)
-        targetName = GetName(target)
+        targetNode = nodes.Get_Target(assignmentNode)
+        targetName = SignalSymbol(targetNode, GetName(targetNode))
 
         waveform = []
         for wave in utils.chain_iter(nodes.Get_Waveform_Chain(assignmentNode)):
@@ -556,7 +557,7 @@ class SequentialVariableAssignment(VHDLModel_SequentialVariableAssignment, DOMMi
     def __init__(
         self,
         assignmentNode: Iir,
-        target: Symbol,
+        target: VariableSymbol,
         expression: ExpressionUnion,
         label: str = None,
     ) -> None:
@@ -567,7 +568,8 @@ class SequentialVariableAssignment(VHDLModel_SequentialVariableAssignment, DOMMi
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialVariableAssignment":
         from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
 
-        targetName = GetName(nodes.Get_Target(assignmentNode))
+        targetNode = nodes.Get_Target(assignmentNode)
+        targetName = VariableSymbol(targetNode, GetName(targetNode))
         expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
 
         return cls(assignmentNode, targetName, expression, label)
@@ -578,7 +580,7 @@ class SequentialConditionalVariableAssignment(VHDLModel_SequentialConditionalVar
     def __init__(
         self,
         assignmentNode: Iir,
-        target: Symbol,
+        target: VariableSymbol,
         conditionalExpressions: Iterable[ConditionalExpression],
         label: str = None,
     ) -> None:
@@ -589,7 +591,8 @@ class SequentialConditionalVariableAssignment(VHDLModel_SequentialConditionalVar
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialConditionalVariableAssignment":
         from pyGHDL.dom._Translate import GetName
 
-        targetName = GetName(nodes.Get_Target(assignmentNode))
+        targetNode = nodes.Get_Target(assignmentNode)
+        targetName = VariableSymbol(targetNode, GetName(targetNode))
         conditionalExpressions = GetConditionalExpressionsFromChainedNodes(
             nodes.Get_Conditional_Expression_Chain(assignmentNode)
         )
@@ -602,7 +605,7 @@ class SequentialConditionalSignalAssignment(VHDLModel_SequentialConditionalSigna
     def __init__(
         self,
         assignmentNode: Iir,
-        target: Symbol,
+        target: SignalSymbol,
         conditionalWaveforms: Iterable,
         label: str = None,
     ) -> None:
@@ -613,7 +616,8 @@ class SequentialConditionalSignalAssignment(VHDLModel_SequentialConditionalSigna
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialConditionalSignalAssignment":
         from pyGHDL.dom._Translate import GetName
 
-        targetName = GetName(nodes.Get_Target(assignmentNode))
+        targetNode = nodes.Get_Target(assignmentNode)
+        targetName = SignalSymbol(targetNode, GetName(targetNode))
         conditionalWaveforms = GetConditionalWaveformsFromChainedNodes(
             nodes.Get_Conditional_Waveform_Chain(assignmentNode)
         )
@@ -626,7 +630,7 @@ class SequentialSelectedVariableAssignment(VHDLModel_SequentialSelectedVariableA
     def __init__(
         self,
         assignmentNode: Iir,
-        target: Symbol,
+        target: VariableSymbol,
         expression: ExpressionUnion,
         selectedExpressions: Iterable,
         label: str = None,
@@ -638,7 +642,8 @@ class SequentialSelectedVariableAssignment(VHDLModel_SequentialSelectedVariableA
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialSelectedVariableAssignment":
         from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
 
-        targetName = GetName(nodes.Get_Target(assignmentNode))
+        targetNode = nodes.Get_Target(assignmentNode)
+        targetName = VariableSymbol(targetNode, GetName(targetNode))
         expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
         selectedExpressions = GetSelectedExpressionsFromChainedNodes(
             nodes.Get_Selected_Expressions_Chain(assignmentNode)
@@ -652,7 +657,7 @@ class SequentialSelectedSignalAssignment(VHDLModel_SequentialSelectedSignalAssig
     def __init__(
         self,
         assignmentNode: Iir,
-        target: Symbol,
+        target: SignalSymbol,
         expression: ExpressionUnion,
         selectedWaveforms: Iterable,
         label: str = None,
@@ -664,7 +669,8 @@ class SequentialSelectedSignalAssignment(VHDLModel_SequentialSelectedSignalAssig
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialSelectedSignalAssignment":
         from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
 
-        targetName = GetName(nodes.Get_Target(assignmentNode))
+        targetNode = nodes.Get_Target(assignmentNode)
+        targetName = SignalSymbol(targetNode, GetName(targetNode))
         expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
         selectedWaveforms = GetSelectedWaveformsFromChainedNodes(nodes.Get_Selected_Waveform_Chain(assignmentNode))
 
@@ -676,7 +682,7 @@ class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
     def __init__(
         self,
         assignmentNode: Iir,
-        target: Symbol,
+        target: SignalSymbol,
         expression: ExpressionUnion,
         label: str = None,
     ) -> None:
@@ -687,7 +693,8 @@ class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SignalForceAssignment":
         from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
 
-        targetName = GetName(nodes.Get_Target(assignmentNode))
+        targetNode = nodes.Get_Target(assignmentNode)
+        targetName = SignalSymbol(targetNode, GetName(targetNode))
         expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
 
         return cls(assignmentNode, targetName, expression, label)
@@ -695,7 +702,7 @@ class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
 
 @export
 class SignalReleaseAssignment(VHDLModel_SignalReleaseAssignment, DOMMixin):
-    def __init__(self, assignmentNode: Iir, target: Symbol, label: str = None) -> None:
+    def __init__(self, assignmentNode: Iir, target: SignalSymbol, label: str = None) -> None:
         super().__init__(target, label)
         DOMMixin.__init__(self, assignmentNode)
 
@@ -703,7 +710,8 @@ class SignalReleaseAssignment(VHDLModel_SignalReleaseAssignment, DOMMixin):
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SignalReleaseAssignment":
         from pyGHDL.dom._Translate import GetName
 
-        targetName = GetName(nodes.Get_Target(assignmentNode))
+        targetNode = nodes.Get_Target(assignmentNode)
+        targetName = SignalSymbol(targetNode, GetName(targetNode))
 
         return cls(assignmentNode, targetName, label)
 

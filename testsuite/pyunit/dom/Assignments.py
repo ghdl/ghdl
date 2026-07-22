@@ -34,6 +34,7 @@ from pathlib import Path
 from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
+from pyGHDL.dom.Symbol import SignalSymbol, VariableSymbol
 from pyGHDL.dom.Concurrent import ConcurrentConditionalSignalAssignment, ConcurrentSelectedSignalAssignment
 from pyGHDL.dom.Concurrent import SelectedWaveform, OthersSelectedWaveform
 from pyGHDL.dom.Sequential import (
@@ -74,6 +75,7 @@ class Assignments(TestCase):
         statement = architecture.Statements[0]
 
         self.assertIsInstance(statement, ConcurrentConditionalSignalAssignment)
+        self.assertIsInstance(statement.Target, SignalSymbol)
         self.assertEqual(3, len(statement.ConditionalWaveforms))
         self.assertIsNotNone(statement.ConditionalWaveforms[0].Condition)
         self.assertIsNone(statement.ConditionalWaveforms[-1].Condition)
@@ -85,6 +87,7 @@ class Assignments(TestCase):
         statement = architecture.Statements[1]
 
         self.assertIsInstance(statement, ConcurrentSelectedSignalAssignment)
+        self.assertIsInstance(statement.Target, SignalSymbol)
         self.assertEqual(3, len(statement.SelectedWaveforms))
 
         grouped = statement.SelectedWaveforms[0]
@@ -99,6 +102,7 @@ class Assignments(TestCase):
         statement = process.Statements[0]
 
         self.assertIsInstance(statement, SequentialVariableAssignment)
+        self.assertIsInstance(statement.Target, VariableSymbol)
         self.assertIsNotNone(statement.Expression)
 
     def test_SequentialConditionalVariableAssignment(self) -> None:
@@ -107,6 +111,7 @@ class Assignments(TestCase):
         statement = process.Statements[1]
 
         self.assertIsInstance(statement, SequentialConditionalVariableAssignment)
+        self.assertIsInstance(statement.Target, VariableSymbol)
         self.assertEqual(3, len(statement.ConditionalExpressions))
         self.assertIsNone(statement.ConditionalExpressions[-1].Condition)
 
@@ -116,6 +121,7 @@ class Assignments(TestCase):
         statement = process.Statements[2]
 
         self.assertIsInstance(statement, SequentialConditionalSignalAssignment)
+        self.assertIsInstance(statement.Target, SignalSymbol)
         self.assertEqual(2, len(statement.ConditionalWaveforms))
 
     def test_SequentialSelectedVariableAssignment(self) -> None:
@@ -124,6 +130,7 @@ class Assignments(TestCase):
         statement = process.Statements[3]
 
         self.assertIsInstance(statement, SequentialSelectedVariableAssignment)
+        self.assertIsInstance(statement.Target, VariableSymbol)
         self.assertEqual(2, len(statement.SelectedExpressions))
         self.assertIsInstance(statement.SelectedExpressions[0], SelectedExpression)
         self.assertIsInstance(statement.SelectedExpressions[-1], OthersSelectedExpression)
@@ -134,6 +141,7 @@ class Assignments(TestCase):
         statement = process.Statements[4]
 
         self.assertIsInstance(statement, SequentialSelectedSignalAssignment)
+        self.assertIsInstance(statement.Target, SignalSymbol)
         self.assertEqual(2, len(statement.SelectedWaveforms))
 
     def test_SignalForceAssignment(self) -> None:
@@ -142,6 +150,7 @@ class Assignments(TestCase):
         statement = process.Statements[5]
 
         self.assertIsInstance(statement, SignalForceAssignment)
+        self.assertIsInstance(statement.Target, SignalSymbol)
         self.assertIsNotNone(statement.Expression)
 
     def test_SignalReleaseAssignment(self) -> None:
@@ -150,4 +159,4 @@ class Assignments(TestCase):
         statement = process.Statements[6]
 
         self.assertIsInstance(statement, SignalReleaseAssignment)
-        self.assertIsNotNone(statement.Target)
+        self.assertIsInstance(statement.Target, SignalSymbol)
