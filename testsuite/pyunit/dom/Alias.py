@@ -97,7 +97,7 @@ class Aliases(TestCase):
         """``alias "+" is add[integer, integer return integer];`` - Name is extracted from the
         Signature node's prefix; the parameter/return type marks are not captured (documented FIXME)."""
         pkg = self._package()
-        alias = pkg.DeclaredItems[5]
+        alias = pkg.DeclaredItems[6]
 
         self.assertIsInstance(alias, Alias)
         self.assertIsNotNone(alias.Name)
