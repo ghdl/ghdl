@@ -79,6 +79,17 @@ from pyGHDL.dom.Symbol import (
 )
 
 
+def GetAlternativeLabel(node: Iir) -> Nullable[str]:
+    """
+    Reads the optional alternative label of a generate-statement branch (``Get_Alternative_Label``
+    on a ``Generate_Statement_Body``) or a case-generate alternative (on the node returned by
+    ``Get_Associated_Block``), returning ``None`` if no label was given in the source rather than
+    an empty string.
+    """
+    alternativeLabelId = nodes.Get_Alternative_Label(node)
+    return None if alternativeLabelId == name_table.Null_Identifier else name_table.Get_Name_Ptr(alternativeLabelId)
+
+
 @export
 class GenericAssociationItem(VHDLModel_GenericAssociationItem, DOMMixin):
     def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
@@ -268,8 +279,7 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch, DOMMixin):
         condition = GetExpressionFromNode(nodes.Get_Condition(generateNode))
         body = nodes.Get_Generate_Statement_Body(generateNode)
 
-        alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = None if alternativeLabelId == name_table.Null_Identifier else name_table.Get_Name_Ptr(alternativeLabelId)
+        alternativeLabel = GetAlternativeLabel(body)
 
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "if-generate branch", alternativeLabel)
@@ -304,8 +314,7 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch, DOMMixin):
         condition = GetExpressionFromNode(condition)
         body = nodes.Get_Generate_Statement_Body(generateNode)
 
-        alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = None if alternativeLabelId == name_table.Null_Identifier else name_table.Get_Name_Ptr(alternativeLabelId)
+        alternativeLabel = GetAlternativeLabel(body)
 
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "elsif-generate branch", alternativeLabel)
@@ -337,8 +346,7 @@ class ElseGenerateBranch(VHDLModel_ElseGenerateBranch, DOMMixin):
 
         body = nodes.Get_Generate_Statement_Body(generateNode)
 
-        alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = None if alternativeLabelId == name_table.Null_Identifier else name_table.Get_Name_Ptr(alternativeLabelId)
+        alternativeLabel = GetAlternativeLabel(body)
 
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "else-generate branch", alternativeLabel)
@@ -420,8 +428,7 @@ class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
 
         body = nodes.Get_Associated_Block(caseNode)
 
-        alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = None if alternativeLabelId == name_table.Null_Identifier else name_table.Get_Name_Ptr(alternativeLabelId)
+        alternativeLabel = GetAlternativeLabel(body)
 
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "generate case", alternativeLabel)
@@ -453,8 +460,7 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
 
         body = nodes.Get_Associated_Block(caseNode)
 
-        alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = None if alternativeLabelId == name_table.Null_Identifier else name_table.Get_Name_Ptr(alternativeLabelId)
+        alternativeLabel = GetAlternativeLabel(body)
 
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "case-generate others", alternativeLabel)

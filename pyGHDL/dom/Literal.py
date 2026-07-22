@@ -30,7 +30,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import Union
+from typing import Union, Optional as Nullable
 
 from pyTooling.Decorators import export
 from pyTooling.Warning import WarningCollector
@@ -147,28 +147,28 @@ class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
 
 @export
 class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str, length: int = None, signed: bool = None) -> None:
+    def __init__(self, node: Iir, value: str, length: Nullable[int] = None, signed: Nullable[bool] = None) -> None:
         super().__init__(value, length, signed)
         DOMMixin.__init__(self, node)
 
 
 @export
 class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str, length: int = None, signed: bool = None) -> None:
+    def __init__(self, node: Iir, value: str, length: Nullable[int] = None, signed: Nullable[bool] = None) -> None:
         super().__init__(value, length, signed)
         DOMMixin.__init__(self, node)
 
 
 @export
 class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str, length: int = None, signed: bool = None) -> None:
+    def __init__(self, node: Iir, value: str, length: Nullable[int] = None, signed: Nullable[bool] = None) -> None:
         super().__init__(value, length, signed)
         DOMMixin.__init__(self, node)
 
 
 @export
 class HexadecimalBitStringLiteral(VHDLModel_HexadecimalBitStringLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str, length: int = None, signed: bool = None) -> None:
+    def __init__(self, node: Iir, value: str, length: Nullable[int] = None, signed: Nullable[bool] = None) -> None:
         super().__init__(value, length, signed)
         DOMMixin.__init__(self, node)
 
