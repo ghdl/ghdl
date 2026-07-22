@@ -551,6 +551,56 @@ def GetExpressionFromNode(node: Iir) -> ExpressionUnion:
 
 
 @export
+def GetModeViewElementsFromChainedNodes(nodeChain: Iir) -> Generator["ModeViewElement", None, None]:
+    """
+    Translates a chain of mode view elements (IIR nodes) to a sequence of
+    :class:`pyVHDLModel.Interface.ModeViewElement`.
+
+    :param nodeChain: The IIR node representing the first mode view element in the chain.
+    :return:          A generator returning mode view elements.
+
+    .. note::
+
+       Unlike declarations/interface items (where the *last* node in a ``Has_Identifier_List`` group owns
+       the shared subtype/value and earlier ones are Null), mode view elements are the other way around:
+       the *first* node in the group (``Has_Identifier_List == True``) owns the real ``Mode``/
+       ``Mode_View_Name`` - subsequent nodes only contribute their identifier, ending with the node where
+       ``Has_Identifier_List`` becomes ``False``. Verified against real GHDL analysis for
+       ``x, y : out;``: ``x`` has ``Has_Identifier_List=True``, ``Mode=out``; ``y`` has
+       ``Has_Identifier_List=False``, ``Mode=<unset>``.
+    """
+    from pyGHDL.dom.InterfaceItem import SimpleModeViewElement, CompositeModeViewElement
+
+    furtherIdentifiers = []
+    element = nodeChain
+    while element != nodes.Null_Iir:
+        kind = GetIirKindOfNode(element)
+        if kind == nodes.Iir_Kind.Simple_Mode_View_Element:
+            parseMethod = SimpleModeViewElement.parse
+        elif kind in (nodes.Iir_Kind.Array_Mode_View_Element, nodes.Iir_Kind.Record_Mode_View_Element):
+            parseMethod = CompositeModeViewElement.parse
+        else:
+            position = Position.parse(element)
+            raise DOMException(f"Unknown mode view element kind '{kind.name}' at {position}.")
+
+        elementToParse = element
+        if nodes.Get_Has_Identifier_List(element):
+            nextNode = nodes.Get_Chain(element)
+            for nextElement in utils.chain_iter(nextNode):
+                furtherIdentifiers.append(GetNameOfNode(nextElement))
+                if not nodes.Get_Has_Identifier_List(nextElement):
+                    element = nodes.Get_Chain(nextElement)
+                    break
+            else:
+                element = nodes.Null_Iir
+        else:
+            element = nodes.Get_Chain(element)
+
+        yield parseMethod(elementToParse, furtherIdentifiers)
+        furtherIdentifiers.clear()
+
+
+@export
 def GetGenericsFromChainedNodes(nodeChain: Iir) -> Generator[GenericInterfaceItemMixin, None, None]:
     """
     Translates a chain of generics (IIR nodes) to a sequence of :class:`pyVHDLModel.Interface.GenericInterfaceItem`.
@@ -626,36 +676,41 @@ def GetPortsFromChainedNodes(nodeChain: Iir) -> Generator[PortInterfaceItemMixin
     while port != nodes.Null_Iir:
         kind = GetIirKindOfNode(port)
         if kind == nodes.Iir_Kind.Interface_Signal_Declaration:
-            from pyGHDL.dom.InterfaceItem import PortSignalInterfaceItem
+            from pyGHDL.dom.InterfaceItem import PortSimpleSignalInterfaceItem
 
-            portToParse = port
+            parseMethod = PortSimpleSignalInterfaceItem.parse
+            parseNode = port
+        elif kind == nodes.Iir_Kind.Interface_View_Declaration:
+            from pyGHDL.dom.InterfaceItem import PortViewSignalInterfaceItem
 
-            # Lookahead for ports with multiple identifiers at once
-            if nodes.Get_Has_Identifier_List(port):
-                nextNode = nodes.Get_Chain(port)
-                for nextPort in utils.chain_iter(nextNode):
-                    # Consecutive identifiers are found, if the subtype indication is Null
-                    if nodes.Get_Subtype_Indication(nextPort) == nodes.Null_Iir:
-                        furtherIdentifiers.append(GetNameOfNode(nextPort))
-                    else:
-                        port = nextPort
-                        break
-
-                    # The last consecutive identifiers has no Identifier_List flag
-                    if not nodes.Get_Has_Identifier_List(nextPort):
-                        port = nodes.Get_Chain(nextPort)
-                        break
-                else:
-                    port = nodes.Null_Iir
-            else:
-                port = nodes.Get_Chain(port)
-
-            yield PortSignalInterfaceItem.parse(portToParse, furtherIdentifiers)
-            furtherIdentifiers.clear()
-            continue
+            parseMethod = PortViewSignalInterfaceItem.parse
+            parseNode = port
         else:
             position = Position.parse(port)
             raise DOMException(f"Unknown port kind '{kind.name}' in port '{port}' at {position}.")
+
+        # Lookahead for ports with multiple identifiers at once
+        if nodes.Get_Has_Identifier_List(port):
+            nextNode = nodes.Get_Chain(port)
+            for nextPort in utils.chain_iter(nextNode):
+                # Consecutive identifiers are found, if the subtype indication is Null
+                if nodes.Get_Subtype_Indication(nextPort) == nodes.Null_Iir:
+                    furtherIdentifiers.append(GetNameOfNode(nextPort))
+                else:
+                    port = nextPort
+                    break
+
+                # The last consecutive identifiers has no Identifier_List flag
+                if not nodes.Get_Has_Identifier_List(nextPort):
+                    port = nodes.Get_Chain(nextPort)
+                    break
+            else:
+                port = nodes.Null_Iir
+        else:
+            port = nodes.Get_Chain(port)
+
+        yield parseMethod(parseNode, furtherIdentifiers)
+        furtherIdentifiers.clear()
 
 
 @export
@@ -681,9 +736,14 @@ def GetParameterFromChainedNodes(nodeChain: Iir) -> Generator[ParameterInterface
             parseMethod = ParameterVariableInterfaceItem.parse
             parseNode = parameter
         elif kind == nodes.Iir_Kind.Interface_Signal_Declaration:
-            from pyGHDL.dom.InterfaceItem import ParameterSignalInterfaceItem
+            from pyGHDL.dom.InterfaceItem import ParameterSimpleSignalInterfaceItem
 
-            parseMethod = ParameterSignalInterfaceItem.parse
+            parseMethod = ParameterSimpleSignalInterfaceItem.parse
+            parseNode = parameter
+        elif kind == nodes.Iir_Kind.Interface_View_Declaration:
+            from pyGHDL.dom.InterfaceItem import ParameterViewSignalInterfaceItem
+
+            parseMethod = ParameterViewSignalInterfaceItem.parse
             parseNode = parameter
         elif kind == nodes.Iir_Kind.Interface_File_Declaration:
             from pyGHDL.dom.InterfaceItem import ParameterFileInterfaceItem
@@ -794,6 +854,11 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
 
             elif kind == nodes.Iir_Kind.Subtype_Declaration:
                 yield GetSubtypeFromNode(item)
+
+            elif kind == nodes.Iir_Kind.Mode_View_Declaration:
+                from pyGHDL.dom.InterfaceItem import ModeViewDeclaration
+
+                yield ModeViewDeclaration.parse(item)
 
             elif kind == nodes.Iir_Kind.Function_Declaration:
                 if nodes.Get_Has_Body(item):

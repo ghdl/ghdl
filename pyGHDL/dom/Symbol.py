@@ -42,6 +42,7 @@ from pyTooling.Decorators import export, InheritDocString
 from pyVHDLModel.Name import Name
 from pyVHDLModel.Symbol import LibraryReferenceSymbol as VHDLModel_LibraryReferenceSymbol
 from pyVHDLModel.Symbol import PackageReferenceSymbol as VHDLModel_PackageReferenceSymbol
+from pyVHDLModel.Symbol import ModeViewSymbol as VHDLModel_ModeViewSymbol
 from pyVHDLModel.Symbol import PackageMemberReferenceSymbol as VHDLModel_PackageMemberReferenceSymbol
 from pyVHDLModel.Symbol import AllPackageMembersReferenceSymbol as VHDLModel_AllPackageMembersReferenceSymbol
 from pyVHDLModel.Symbol import ContextReferenceSymbol as VHDLModel_ContextReferenceSymbol
@@ -101,6 +102,27 @@ class PackageReferenceSymbol(VHDLModel_PackageReferenceSymbol, DOMMixin):
     """
 
     @InheritDocString(VHDLModel_PackageReferenceSymbol)
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
+        super().__init__(name)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class ModeViewSymbol(VHDLModel_ModeViewSymbol, DOMMixin):
+    """
+    Represents a reference (name) to a mode view declaration.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.ModeViewSymbol`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          port (p : view MyView);
+          --          ^^^^^^
+    """
+
+    @InheritDocString(VHDLModel_ModeViewSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
