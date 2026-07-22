@@ -39,23 +39,52 @@
 from pyTooling.Decorators import export
 
 from pyVHDLModel.Declaration import Alias as VHDLModel_Alias
+from pyVHDLModel.Symbol import Symbol, PossibleReference
 
 from pyGHDL.libghdl._types import Iir
+from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
-from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetIirKindOfNode
 
 
 @export
 class Alias(VHDLModel_Alias, DOMMixin):
-    def __init__(self, node: Iir, aliasName: str, documentation: str = None) -> None:
-        super().__init__(aliasName, documentation)
+    def __init__(
+        self,
+        node: Iir,
+        aliasName: str,
+        name: Symbol,
+        subtype: Symbol = None,
+        documentation: str = None,
+    ) -> None:
+        super().__init__(aliasName, name, subtype, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, aliasNode: Iir):
+        from pyGHDL.dom._Translate import GetName, GetSubtypeIndicationFromNode
+        from pyGHDL.dom.Symbol import Symbol as DOMSymbol
+
         aliasName = GetNameOfNode(aliasNode)
         documentation = GetDocumentationOfNode(aliasNode)
 
-        # FIXME: add an implementation
+        nameNode = nodes.Get_Name(aliasNode)
+        if GetIirKindOfNode(nameNode) == nodes.Iir_Kind.Signature:
+            # FIXME: the parameter/return type marks of the signature (used to disambiguate between
+            #        overloaded subprograms/operators, e.g. 'add[integer, integer return integer]')
+            #        are not captured - only the aliased name itself (the signature's prefix).
+            nameNode = nodes.Get_Signature_Prefix(nameNode)
 
-        return cls(aliasNode, aliasName)
+        subtypeIndicationNode = nodes.Get_Subtype_Indication(aliasNode)
+        if subtypeIndicationNode == nodes.Null_Iir:
+            subtype = None
+            # Without a subtype indication, the alias can refer to almost anything nameable.
+            possibleReferences = PossibleReference.PackageMember | PossibleReference.EnumLiteral
+        else:
+            subtype = GetSubtypeIndicationFromNode(aliasNode, "alias", aliasName)
+            # With a subtype indication, the LRM restricts this to referencing an object.
+            possibleReferences = PossibleReference.Object
+
+        name = DOMSymbol(nameNode, GetName(nameNode), possibleReferences)
+
+        return cls(aliasNode, aliasName, name, subtype, documentation)

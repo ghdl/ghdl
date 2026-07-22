@@ -177,7 +177,6 @@ from pyGHDL.dom.Concurrent import (
     ConcurrentAssertStatement,
 )
 from pyGHDL.dom.Subprogram import Function, Procedure
-from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.PSL import DefaultClock
 
 
@@ -869,6 +868,14 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                 lastKind = kind
                 item = nodes.Get_Chain(item)
                 continue
+            elif kind == nodes.Iir_Kind.Function_Instantiation_Declaration:
+                from pyGHDL.dom.Subprogram import FunctionInstantiation
+
+                yield FunctionInstantiation.parse(item)
+            elif kind == nodes.Iir_Kind.Procedure_Instantiation_Declaration:
+                from pyGHDL.dom.Subprogram import ProcedureInstantiation
+
+                yield ProcedureInstantiation.parse(item)
             elif kind == nodes.Iir_Kind.Function_Body:
                 if lastKind is nodes.Iir_Kind.Function_Declaration:
                     pass
@@ -897,7 +904,9 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
             elif kind == nodes.Iir_Kind.Protected_Type_Body:
                 yield ProtectedTypeBody.parse(item)
             elif kind == nodes.Iir_Kind.Object_Alias_Declaration:
-                yield GetAliasFromNode(item)
+                from pyGHDL.dom.Misc import Alias
+
+                yield Alias.parse(item)
             elif kind == nodes.Iir_Kind.Component_Declaration:
                 from pyGHDL.dom.DesignUnit import Component
 
@@ -1092,7 +1101,4 @@ def GetSequentialStatementsFromChainedNodes(
             )
 
 
-def GetAliasFromNode(aliasNode: Iir):
-    aliasName = GetNameOfNode(aliasNode)
 
-    return Alias(aliasNode, aliasName)

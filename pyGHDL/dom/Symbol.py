@@ -40,9 +40,12 @@ from pyGHDL.dom.Name import SimpleName
 from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Name import Name
+from pyVHDLModel.Symbol import Symbol as VHDLModel_Symbol
+from pyVHDLModel.Symbol import PossibleReference
 from pyVHDLModel.Symbol import LibraryReferenceSymbol as VHDLModel_LibraryReferenceSymbol
 from pyVHDLModel.Symbol import PackageReferenceSymbol as VHDLModel_PackageReferenceSymbol
 from pyVHDLModel.Symbol import ModeViewSymbol as VHDLModel_ModeViewSymbol
+from pyVHDLModel.Symbol import SubprogramReferenceSymbol as VHDLModel_SubprogramReferenceSymbol
 from pyVHDLModel.Symbol import PackageMemberReferenceSymbol as VHDLModel_PackageMemberReferenceSymbol
 from pyVHDLModel.Symbol import AllPackageMembersReferenceSymbol as VHDLModel_AllPackageMembersReferenceSymbol
 from pyVHDLModel.Symbol import ContextReferenceSymbol as VHDLModel_ContextReferenceSymbol
@@ -63,6 +66,22 @@ from pyVHDLModel.Symbol import IndexedObjectOrFunctionCallSymbol as VHDLModel_In
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom.Range import Range
+
+
+@export
+class Symbol(VHDLModel_Symbol, DOMMixin):
+    """
+    Generic reference (name) to a language entity where no single, fixed
+    :class:`~pyVHDLModel.Symbol.PossibleReference` value fits - e.g. an alias's target, which may or may not
+    be restricted to an object depending on whether a subtype indication is present.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.Symbol`.
+    """
+
+    @InheritDocString(VHDLModel_Symbol)
+    def __init__(self, identifierNode: Iir, name: Name, possibleReferences: PossibleReference) -> None:
+        super().__init__(name, possibleReferences)
+        DOMMixin.__init__(self, identifierNode)
 
 
 @export
@@ -123,6 +142,28 @@ class ModeViewSymbol(VHDLModel_ModeViewSymbol, DOMMixin):
     """
 
     @InheritDocString(VHDLModel_ModeViewSymbol)
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
+        super().__init__(name)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class SubprogramReferenceSymbol(VHDLModel_SubprogramReferenceSymbol, DOMMixin):
+    """
+    Represents a reference (name) to a subprogram (procedure or function).
+
+    This class implements a :mod:`pyGHDL.dom` object derived from
+    :class:`pyVHDLModel.Symbol.SubprogramReferenceSymbol`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          function f is new g generic map (...);
+          --                  ^
+    """
+
+    @InheritDocString(VHDLModel_SubprogramReferenceSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
