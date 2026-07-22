@@ -55,6 +55,16 @@ from pyVHDLModel.Sequential import NextStatement as VHDLModel_NextStatement
 from pyVHDLModel.Sequential import ExitStatement as VHDLModel_ExitStatement
 from pyVHDLModel.Sequential import SequentialProcedureCall as VHDLModel_SequentialProcedureCall
 from pyVHDLModel.Sequential import SequentialSimpleSignalAssignment as VHDLModel_SequentialSimpleSignalAssignment
+from pyVHDLModel.Sequential import SequentialVariableAssignment as VHDLModel_SequentialVariableAssignment
+from pyVHDLModel.Sequential import SequentialConditionalVariableAssignment as VHDLModel_SequentialConditionalVariableAssignment
+from pyVHDLModel.Sequential import SequentialConditionalSignalAssignment as VHDLModel_SequentialConditionalSignalAssignment
+from pyVHDLModel.Sequential import SequentialSelectedVariableAssignment as VHDLModel_SequentialSelectedVariableAssignment
+from pyVHDLModel.Sequential import SequentialSelectedSignalAssignment as VHDLModel_SequentialSelectedSignalAssignment
+from pyVHDLModel.Sequential import SignalForceAssignment as VHDLModel_SignalForceAssignment
+from pyVHDLModel.Sequential import SignalReleaseAssignment as VHDLModel_SignalReleaseAssignment
+from pyVHDLModel.Common import ConditionalExpression as VHDLModel_ConditionalExpression
+from pyVHDLModel.Common import SelectedExpression as VHDLModel_SelectedExpression
+from pyVHDLModel.Common import OthersSelectedExpression as VHDLModel_OthersSelectedExpression
 from pyVHDLModel.Sequential import SequentialReportStatement as VHDLModel_SequentialReportStatement
 from pyVHDLModel.Sequential import SequentialAssertStatement as VHDLModel_SequentialAssertStatement
 
@@ -63,6 +73,7 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
 from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Concurrent import WaveformElement, ParameterAssociationItem  # TODO: move out from concurrent?
+from pyGHDL.dom.Concurrent import GetConditionalWaveformsFromChainedNodes, GetSelectedWaveformsFromChainedNodes
 
 
 @export
@@ -442,6 +453,259 @@ class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignmen
             waveform.append(WaveformElement.parse(wave))
 
         return cls(assignmentNode, targetName, waveform, label)
+
+
+@export
+class ConditionalExpression(VHDLModel_ConditionalExpression, DOMMixin):
+    def __init__(self, node: Iir, expression: ExpressionUnion, condition: ExpressionUnion = None) -> None:
+        super().__init__(expression, condition)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, node: Iir) -> "ConditionalExpression":
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        expression = GetExpressionFromNode(nodes.Get_Expression(node))
+
+        conditionNode = nodes.Get_Condition(node)
+        condition = None if conditionNode == nodes.Null_Iir else GetExpressionFromNode(conditionNode)
+
+        return cls(node, expression, condition)
+
+
+def GetConditionalExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable[ConditionalExpression]:
+    """Translates a chain of ``Conditional_Expression`` nodes into a sequence of :class:`ConditionalExpression`."""
+    return [ConditionalExpression.parse(node) for node in utils.chain_iter(nodeChain)]
+
+
+@export
+class SelectedExpression(VHDLModel_SelectedExpression, DOMMixin):
+    def __init__(self, node: Iir, choices: Iterable, expression: ExpressionUnion) -> None:
+        super().__init__(choices, expression)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class OthersSelectedExpression(VHDLModel_OthersSelectedExpression, DOMMixin):
+    def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
+        super().__init__(expression)
+        DOMMixin.__init__(self, node)
+
+
+def GetSelectedExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable:
+    """
+    Translates a chain of choices into a sequence of :class:`SelectedExpression`/
+    :class:`OthersSelectedExpression`. Same grouping algorithm as
+    :func:`pyGHDL.dom.Concurrent.GetSelectedWaveformsFromChainedNodes`, but the associated content is
+    a plain expression (``Get_Associated_Expr``) instead of a waveform chain.
+    """
+    from pyGHDL.dom._Utils import GetIirKindOfNode
+    from pyGHDL.dom._Translate import GetExpressionFromNode, GetRangeFromNode
+
+    alternatives = []
+    choices = None
+    ownerNode = None
+    choice = nodeChain
+    while choice != nodes.Null_Iir:
+        kind = GetIirKindOfNode(choice)
+        sameAlternative = nodes.Get_Same_Alternative_Flag(choice)
+
+        if kind == nodes.Iir_Kind.Choice_By_Expression:
+            choiceValue = IndexedChoice(choice, GetExpressionFromNode(nodes.Get_Choice_Expression(choice)))
+            if sameAlternative:
+                choices.append(choiceValue)
+                choice = nodes.Get_Chain(choice)
+                continue
+        elif kind == nodes.Iir_Kind.Choice_By_Range:
+            choiceValue = RangedChoice(choice, GetRangeFromNode(nodes.Get_Choice_Range(choice)))
+            if sameAlternative:
+                choices.append(choiceValue)
+                choice = nodes.Get_Chain(choice)
+                continue
+        elif kind == nodes.Iir_Kind.Choice_By_Others:
+            if choices is not None:
+                expression = GetExpressionFromNode(nodes.Get_Associated_Expr(ownerNode))
+                alternatives.append(SelectedExpression(ownerNode, choices, expression))
+                choices = None
+
+            othersExpression = GetExpressionFromNode(nodes.Get_Associated_Expr(choice))
+            alternatives.append(OthersSelectedExpression(choice, othersExpression))
+            choice = nodes.Get_Chain(choice)
+            continue
+        else:
+            position = Position.parse(choice)
+            raise DOMException(f"Unknown choice kind '{kind.name}' in selected expression at {position}.")
+
+        if choices is not None:
+            expression = GetExpressionFromNode(nodes.Get_Associated_Expr(ownerNode))
+            alternatives.append(SelectedExpression(ownerNode, choices, expression))
+
+        ownerNode = choice
+        choices = [choiceValue]
+        choice = nodes.Get_Chain(choice)
+
+    if choices is not None:
+        expression = GetExpressionFromNode(nodes.Get_Associated_Expr(ownerNode))
+        alternatives.append(SelectedExpression(ownerNode, choices, expression))
+
+    return alternatives
+
+
+@export
+class SequentialVariableAssignment(VHDLModel_SequentialVariableAssignment, DOMMixin):
+    def __init__(
+        self,
+        assignmentNode: Iir,
+        target: Symbol,
+        expression: ExpressionUnion,
+        label: str = None,
+    ) -> None:
+        super().__init__(target, expression, label)
+        DOMMixin.__init__(self, assignmentNode)
+
+    @classmethod
+    def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialVariableAssignment":
+        from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
+
+        targetName = GetName(nodes.Get_Target(assignmentNode))
+        expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
+
+        return cls(assignmentNode, targetName, expression, label)
+
+
+@export
+class SequentialConditionalVariableAssignment(VHDLModel_SequentialConditionalVariableAssignment, DOMMixin):
+    def __init__(
+        self,
+        assignmentNode: Iir,
+        target: Symbol,
+        conditionalExpressions: Iterable[ConditionalExpression],
+        label: str = None,
+    ) -> None:
+        super().__init__(target, conditionalExpressions, label)
+        DOMMixin.__init__(self, assignmentNode)
+
+    @classmethod
+    def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialConditionalVariableAssignment":
+        from pyGHDL.dom._Translate import GetName
+
+        targetName = GetName(nodes.Get_Target(assignmentNode))
+        conditionalExpressions = GetConditionalExpressionsFromChainedNodes(
+            nodes.Get_Conditional_Expression_Chain(assignmentNode)
+        )
+
+        return cls(assignmentNode, targetName, conditionalExpressions, label)
+
+
+@export
+class SequentialConditionalSignalAssignment(VHDLModel_SequentialConditionalSignalAssignment, DOMMixin):
+    def __init__(
+        self,
+        assignmentNode: Iir,
+        target: Symbol,
+        conditionalWaveforms: Iterable,
+        label: str = None,
+    ) -> None:
+        super().__init__(target, conditionalWaveforms, label)
+        DOMMixin.__init__(self, assignmentNode)
+
+    @classmethod
+    def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialConditionalSignalAssignment":
+        from pyGHDL.dom._Translate import GetName
+
+        targetName = GetName(nodes.Get_Target(assignmentNode))
+        conditionalWaveforms = GetConditionalWaveformsFromChainedNodes(
+            nodes.Get_Conditional_Waveform_Chain(assignmentNode)
+        )
+
+        return cls(assignmentNode, targetName, conditionalWaveforms, label)
+
+
+@export
+class SequentialSelectedVariableAssignment(VHDLModel_SequentialSelectedVariableAssignment, DOMMixin):
+    def __init__(
+        self,
+        assignmentNode: Iir,
+        target: Symbol,
+        expression: ExpressionUnion,
+        selectedExpressions: Iterable,
+        label: str = None,
+    ) -> None:
+        super().__init__(target, expression, selectedExpressions, label)
+        DOMMixin.__init__(self, assignmentNode)
+
+    @classmethod
+    def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialSelectedVariableAssignment":
+        from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
+
+        targetName = GetName(nodes.Get_Target(assignmentNode))
+        expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
+        selectedExpressions = GetSelectedExpressionsFromChainedNodes(
+            nodes.Get_Selected_Expressions_Chain(assignmentNode)
+        )
+
+        return cls(assignmentNode, targetName, expression, selectedExpressions, label)
+
+
+@export
+class SequentialSelectedSignalAssignment(VHDLModel_SequentialSelectedSignalAssignment, DOMMixin):
+    def __init__(
+        self,
+        assignmentNode: Iir,
+        target: Symbol,
+        expression: ExpressionUnion,
+        selectedWaveforms: Iterable,
+        label: str = None,
+    ) -> None:
+        super().__init__(target, expression, selectedWaveforms, label)
+        DOMMixin.__init__(self, assignmentNode)
+
+    @classmethod
+    def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialSelectedSignalAssignment":
+        from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
+
+        targetName = GetName(nodes.Get_Target(assignmentNode))
+        expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
+        selectedWaveforms = GetSelectedWaveformsFromChainedNodes(nodes.Get_Selected_Waveform_Chain(assignmentNode))
+
+        return cls(assignmentNode, targetName, expression, selectedWaveforms, label)
+
+
+@export
+class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
+    def __init__(
+        self,
+        assignmentNode: Iir,
+        target: Symbol,
+        expression: ExpressionUnion,
+        label: str = None,
+    ) -> None:
+        super().__init__(target, expression, label)
+        DOMMixin.__init__(self, assignmentNode)
+
+    @classmethod
+    def parse(cls, assignmentNode: Iir, label: str = None) -> "SignalForceAssignment":
+        from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
+
+        targetName = GetName(nodes.Get_Target(assignmentNode))
+        expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
+
+        return cls(assignmentNode, targetName, expression, label)
+
+
+@export
+class SignalReleaseAssignment(VHDLModel_SignalReleaseAssignment, DOMMixin):
+    def __init__(self, assignmentNode: Iir, target: Symbol, label: str = None) -> None:
+        super().__init__(target, label)
+        DOMMixin.__init__(self, assignmentNode)
+
+    @classmethod
+    def parse(cls, assignmentNode: Iir, label: str = None) -> "SignalReleaseAssignment":
+        from pyGHDL.dom._Translate import GetName
+
+        targetName = GetName(nodes.Get_Target(assignmentNode))
+
+        return cls(assignmentNode, targetName, label)
 
 
 @export

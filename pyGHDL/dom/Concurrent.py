@@ -35,6 +35,11 @@ from typing import Iterable, Optional as Nullable
 from pyTooling.Decorators import export
 
 from pyVHDLModel.Base import ExpressionUnion, WaveformElement as VHDLModel_WaveformElement, ModelEntity
+from pyVHDLModel.Common import (
+    ConditionalWaveform as VHDLModel_ConditionalWaveform,
+    SelectedWaveform as VHDLModel_SelectedWaveform,
+    OthersSelectedWaveform as VHDLModel_OthersSelectedWaveform,
+)
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Association import (
     AssociationItem,
@@ -59,6 +64,8 @@ from pyVHDLModel.Concurrent import (
     CaseGenerateStatement as VHDLModel_CaseGenerateStatement,
     ForGenerateStatement as VHDLModel_ForGenerateStatement,
     ConcurrentSimpleSignalAssignment as VHDLModel_ConcurrentSimpleSignalAssignment,
+    ConcurrentConditionalSignalAssignment as VHDLModel_ConcurrentConditionalSignalAssignment,
+    ConcurrentSelectedSignalAssignment as VHDLModel_ConcurrentSelectedSignalAssignment,
     ConcurrentAssertStatement as VHDLModel_ConcurrentAssertStatement,
     ConcurrentStatement,
     GenerateCase as VHDLModel_GenerateCase,
@@ -638,6 +645,108 @@ class WaveformElement(VHDLModel_WaveformElement, DOMMixin):
 
 
 @export
+class ConditionalWaveform(VHDLModel_ConditionalWaveform, DOMMixin):
+    def __init__(self, node: Iir, waveform: Iterable[WaveformElement], condition: ExpressionUnion = None) -> None:
+        super().__init__(waveform, condition)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, node: Iir) -> "ConditionalWaveform":
+        from pyGHDL.dom._Translate import GetExpressionFromNode
+
+        waveform = [WaveformElement.parse(wave) for wave in utils.chain_iter(nodes.Get_Waveform_Chain(node))]
+
+        conditionNode = nodes.Get_Condition(node)
+        condition = None if conditionNode == nodes.Null_Iir else GetExpressionFromNode(conditionNode)
+
+        return cls(node, waveform, condition)
+
+
+def GetConditionalWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable[ConditionalWaveform]:
+    """Translates a chain of ``Conditional_Waveform`` nodes (shared by concurrent and sequential
+    conditional signal assignments) into a sequence of :class:`ConditionalWaveform`."""
+    return [ConditionalWaveform.parse(node) for node in utils.chain_iter(nodeChain)]
+
+
+@export
+class SelectedWaveform(VHDLModel_SelectedWaveform, DOMMixin):
+    def __init__(self, node: Iir, choices: Iterable, waveform: Iterable[WaveformElement]) -> None:
+        super().__init__(choices, waveform)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class OthersSelectedWaveform(VHDLModel_OthersSelectedWaveform, DOMMixin):
+    def __init__(self, node: Iir, waveform: Iterable[WaveformElement]) -> None:
+        super().__init__(waveform)
+        DOMMixin.__init__(self, node)
+
+
+def GetSelectedWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable:
+    """
+    Translates a chain of choices (shared by concurrent and sequential selected signal assignments)
+    into a sequence of :class:`SelectedWaveform`/:class:`OthersSelectedWaveform`.
+
+    Mirrors the grouping algorithm already used for case-generate alternatives
+    (``Get_Same_Alternative_Flag`` groups e.g. ``when 0 | 1 =>`` into one alternative): the *first*
+    choice in a group owns the real content (``Get_Associated_Chain``, ``Same_Alternative_Flag=False``);
+    later choices in the same group (``Same_Alternative_Flag=True``) have a null associated chain and
+    are just additional choice values for that same, already-established alternative.
+    """
+    from pyGHDL.dom._Utils import GetIirKindOfNode
+    from pyGHDL.dom._Translate import GetExpressionFromNode, GetRangeFromNode
+    from pyGHDL.dom.Sequential import IndexedChoice, RangedChoice
+
+    alternatives = []
+    choices = None
+    ownerNode = None
+    choice = nodeChain
+    while choice != nodes.Null_Iir:
+        kind = GetIirKindOfNode(choice)
+        sameAlternative = nodes.Get_Same_Alternative_Flag(choice)
+
+        if kind == nodes.Iir_Kind.Choice_By_Expression:
+            choiceValue = IndexedChoice(choice, GetExpressionFromNode(nodes.Get_Choice_Expression(choice)))
+            if sameAlternative:
+                choices.append(choiceValue)
+                choice = nodes.Get_Chain(choice)
+                continue
+        elif kind == nodes.Iir_Kind.Choice_By_Range:
+            choiceValue = RangedChoice(choice, GetRangeFromNode(nodes.Get_Choice_Range(choice)))
+            if sameAlternative:
+                choices.append(choiceValue)
+                choice = nodes.Get_Chain(choice)
+                continue
+        elif kind == nodes.Iir_Kind.Choice_By_Others:
+            if choices is not None:
+                waveform = [WaveformElement.parse(wave) for wave in utils.chain_iter(nodes.Get_Associated_Chain(ownerNode))]
+                alternatives.append(SelectedWaveform(ownerNode, choices, waveform))
+                choices = None
+
+            othersWaveform = [WaveformElement.parse(wave) for wave in utils.chain_iter(nodes.Get_Associated_Chain(choice))]
+            alternatives.append(OthersSelectedWaveform(choice, othersWaveform))
+            choice = nodes.Get_Chain(choice)
+            continue
+        else:
+            position = Position.parse(choice)
+            raise DOMException(f"Unknown choice kind '{kind.name}' in selected waveform at {position}.")
+
+        if choices is not None:
+            waveform = [WaveformElement.parse(wave) for wave in utils.chain_iter(nodes.Get_Associated_Chain(ownerNode))]
+            alternatives.append(SelectedWaveform(ownerNode, choices, waveform))
+
+        ownerNode = choice
+        choices = [choiceValue]
+        choice = nodes.Get_Chain(choice)
+
+    if choices is not None:
+        waveform = [WaveformElement.parse(wave) for wave in utils.chain_iter(nodes.Get_Associated_Chain(ownerNode))]
+        alternatives.append(SelectedWaveform(ownerNode, choices, waveform))
+
+    return alternatives
+
+
+@export
 class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignment, DOMMixin):
     def __init__(
         self,
@@ -661,6 +770,52 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
             waveform.append(WaveformElement.parse(wave))
 
         return cls(assignmentNode, label, targetName, waveform)
+
+
+@export
+class ConcurrentConditionalSignalAssignment(VHDLModel_ConcurrentConditionalSignalAssignment, DOMMixin):
+    def __init__(
+        self,
+        assignmentNode: Iir,
+        label: str,
+        target: Symbol,
+        conditionalWaveforms: Iterable[ConditionalWaveform],
+    ) -> None:
+        super().__init__(label, target, conditionalWaveforms)
+        DOMMixin.__init__(self, assignmentNode)
+
+    @classmethod
+    def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentConditionalSignalAssignment":
+        from pyGHDL.dom._Translate import GetName
+
+        targetName = GetName(nodes.Get_Target(assignmentNode))
+        conditionalWaveforms = GetConditionalWaveformsFromChainedNodes(nodes.Get_Conditional_Waveform_Chain(assignmentNode))
+
+        return cls(assignmentNode, label, targetName, conditionalWaveforms)
+
+
+@export
+class ConcurrentSelectedSignalAssignment(VHDLModel_ConcurrentSelectedSignalAssignment, DOMMixin):
+    def __init__(
+        self,
+        assignmentNode: Iir,
+        label: str,
+        target: Symbol,
+        expression: ExpressionUnion,
+        selectedWaveforms: Iterable,
+    ) -> None:
+        super().__init__(label, target, expression, selectedWaveforms)
+        DOMMixin.__init__(self, assignmentNode)
+
+    @classmethod
+    def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentSelectedSignalAssignment":
+        from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
+
+        targetName = GetName(nodes.Get_Target(assignmentNode))
+        expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
+        selectedWaveforms = GetSelectedWaveformsFromChainedNodes(nodes.Get_Selected_Waveform_Chain(assignmentNode))
+
+        return cls(assignmentNode, label, targetName, expression, selectedWaveforms)
 
 
 @export
