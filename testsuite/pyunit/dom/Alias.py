@@ -35,6 +35,7 @@ from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.Misc import Alias
+from pyGHDL.dom.Symbol import Symbol
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -70,7 +71,7 @@ class Aliases(TestCase):
 
         self.assertIsInstance(alias, Alias)
         self.assertEqual("a", alias.Identifier)
-        self.assertIsNotNone(alias.Name)
+        self.assertIsInstance(alias.Name, Symbol)
         self.assertIsNotNone(alias.Subtype)
 
     def test_AliasWithoutSubtype(self) -> None:
