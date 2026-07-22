@@ -71,7 +71,7 @@ class Configurations(TestCase):
         cfg = document.Configurations["cfg"]
 
         self.assertEqual("Cfg", cfg.Identifier)
-        self.assertIsNotNone(cfg.Entity)
+        self.assertIsNotNone(cfg.Target)
 
         block = cfg.BlockConfiguration
         self.assertIsInstance(block, BlockConfiguration)
@@ -112,7 +112,7 @@ class Configurations(TestCase):
         """``for U4 : SubComp use entity work.Sub(Behav);`` - declared directly in the architecture,
         not inside a separate configuration declaration."""
         document = self._document()
-        architecture = document.Architectures["consumer"]["Rtl"]
+        architecture = document.Architectures["consumer"]["rtl"]
         item = architecture.DeclaredItems[1]
 
         self.assertIsInstance(item, ComponentConfiguration)

@@ -30,11 +30,14 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import List, Generator
+from typing import List, Generator, Union
 
 from pyTooling.Decorators import export
 
 from pyVHDLModel.Symbol import Symbol, PossibleReference
+from pyVHDLModel.Name import Name
+from pyVHDLModel.Association import GenericAssociationItem, PortAssociationItem
+from pyVHDLModel.Configuration import EntityAspect as VHDLModel_EntityAspect
 from pyVHDLModel.Configuration import EntityAspectEntity as VHDLModel_EntityAspectEntity
 from pyVHDLModel.Configuration import EntityAspectConfiguration as VHDLModel_EntityAspectConfiguration
 from pyVHDLModel.Configuration import EntityAspectOpen as VHDLModel_EntityAspectOpen
@@ -49,18 +52,18 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.libghdl import utils
 from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom._Utils import GetIirKindOfNode
+from pyGHDL.dom.Symbol import EntitySymbol, ArchitectureSymbol, ConfigurationSymbol, ComponentInstantiationSymbol
 
 
 @export
 class EntityAspectEntity(VHDLModel_EntityAspectEntity, DOMMixin):
-    def __init__(self, node: Iir, entity, architecture=None) -> None:
+    def __init__(self, node: Iir, entity: EntitySymbol, architecture: ArchitectureSymbol = None) -> None:
         super().__init__(entity, architecture)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, entityAspectNode: Iir) -> "EntityAspectEntity":
         from pyGHDL.dom._Translate import GetName
-        from pyGHDL.dom.Symbol import EntitySymbol, ArchitectureSymbol
 
         entityNameNode = nodes.Get_Entity_Name(entityAspectNode)
         entity = EntitySymbol(entityNameNode, GetName(entityNameNode))
@@ -75,14 +78,13 @@ class EntityAspectEntity(VHDLModel_EntityAspectEntity, DOMMixin):
 
 @export
 class EntityAspectConfiguration(VHDLModel_EntityAspectConfiguration, DOMMixin):
-    def __init__(self, node: Iir, configuration) -> None:
+    def __init__(self, node: Iir, configuration: ConfigurationSymbol) -> None:
         super().__init__(configuration)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, entityAspectNode: Iir) -> "EntityAspectConfiguration":
         from pyGHDL.dom._Translate import GetName
-        from pyGHDL.dom.Symbol import ConfigurationSymbol
 
         configurationNameNode = nodes.Get_Configuration_Name(entityAspectNode)
         configuration = ConfigurationSymbol(configurationNameNode, GetName(configurationNameNode))
@@ -101,7 +103,7 @@ class EntityAspectOpen(VHDLModel_EntityAspectOpen, DOMMixin):
         return cls(entityAspectNode)
 
 
-def GetEntityAspectFromNode(entityAspectNode: Iir):
+def GetEntityAspectFromNode(entityAspectNode: Iir) -> VHDLModel_EntityAspect:
     """Translates an entity aspect (IIR node) to the matching pyVHDLModel.Configuration.EntityAspect subclass."""
     kind = GetIirKindOfNode(entityAspectNode)
     if kind == nodes.Iir_Kind.Entity_Aspect_Entity:
@@ -117,7 +119,13 @@ def GetEntityAspectFromNode(entityAspectNode: Iir):
 
 @export
 class BindingIndication(VHDLModel_BindingIndication, DOMMixin):
-    def __init__(self, node: Iir, entityAspect=None, genericAssociationItems=None, portAssociationItems=None) -> None:
+    def __init__(
+        self,
+        node: Iir,
+        entityAspect: VHDLModel_EntityAspect = None,
+        genericAssociationItems: List[GenericAssociationItem] = None,
+        portAssociationItems: List[PortAssociationItem] = None,
+    ) -> None:
         super().__init__(entityAspect, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, node)
 
@@ -158,14 +166,19 @@ class ComponentConfiguration(VHDLModel_ComponentConfiguration, DOMMixin):
        field structure (``Instantiation_List``, ``Component_Name``, ``Binding_Indication``).
     """
 
-    def __init__(self, node: Iir, instantiationList, componentName, bindingIndication=None) -> None:
+    def __init__(
+        self,
+        node: Iir,
+        instantiationList: Union[List[Name], "AllInstantiationList", "OthersInstantiationList"],
+        componentName: ComponentInstantiationSymbol,
+        bindingIndication: BindingIndication = None,
+    ) -> None:
         super().__init__(instantiationList, componentName, bindingIndication)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, node: Iir) -> "ComponentConfiguration":
         from pyGHDL.dom._Translate import GetName
-        from pyGHDL.dom.Symbol import ComponentInstantiationSymbol
 
         instList = nodes.Get_Instantiation_List(node)
         if instList == nodes.Iir_Flist_All:
@@ -190,7 +203,12 @@ class ComponentConfiguration(VHDLModel_ComponentConfiguration, DOMMixin):
 
 @export
 class BlockConfiguration(VHDLModel_BlockConfiguration, DOMMixin):
-    def __init__(self, node: Iir, blockSpecification: Symbol, items: List = None) -> None:
+    def __init__(
+        self,
+        node: Iir,
+        blockSpecification: Symbol,
+        items: List[Union["BlockConfiguration", ComponentConfiguration]] = None,
+    ) -> None:
         super().__init__(blockSpecification, items)
         DOMMixin.__init__(self, node)
 
@@ -211,7 +229,9 @@ class BlockConfiguration(VHDLModel_BlockConfiguration, DOMMixin):
         return cls(node, blockSpecification, items)
 
 
-def GetConfigurationItemsFromChainedNodes(nodeChain: Iir) -> Generator:
+def GetConfigurationItemsFromChainedNodes(
+    nodeChain: Iir,
+) -> Generator[Union[BlockConfiguration, ComponentConfiguration], None, None]:
     """Translates a chain of configuration items (component/block configurations) to pyVHDLModel objects."""
     for item in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(item)

@@ -78,6 +78,7 @@ from pyGHDL.dom.Symbol import (
     PackageMemberReferenceSymbol,
     AllPackageMembersReferenceSymbol,
 )
+from pyGHDL.dom.Configuration import BlockConfiguration
 
 
 @export
@@ -364,26 +365,24 @@ class Configuration(VHDLModel_Configuration, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        entity,
-        blockConfiguration,
+        target: EntitySymbol,
+        blockConfiguration: BlockConfiguration,
         contextItems: Iterable[Context] = None,
         documentation: str = None,
     ) -> None:
-        super().__init__(identifier, entity, blockConfiguration, contextItems, documentation, None)
+        super().__init__(identifier, target, blockConfiguration, contextItems, documentation, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, configurationNode: Iir, contextItems: Iterable[Context]):
+    def parse(cls, configurationNode: Iir, contextItems: Iterable[Context]) -> "Configuration":
         from pyGHDL.dom._Translate import GetName
-        from pyGHDL.dom.Symbol import EntitySymbol
-        from pyGHDL.dom.Configuration import BlockConfiguration
 
         name = GetNameOfNode(configurationNode)
         documentation = GetDocumentationOfNode(configurationNode)
 
-        entityNameNode = nodes.Get_Entity_Name(configurationNode)
-        entity = EntitySymbol(entityNameNode, GetName(entityNameNode))
+        targetNameNode = nodes.Get_Entity_Name(configurationNode)
+        target = EntitySymbol(targetNameNode, GetName(targetNameNode))
 
         blockConfiguration = BlockConfiguration.parse(nodes.Get_Block_Configuration(configurationNode))
 
-        return cls(configurationNode, name, entity, blockConfiguration, contextItems, documentation)
+        return cls(configurationNode, name, target, blockConfiguration, contextItems, documentation)

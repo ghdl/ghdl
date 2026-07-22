@@ -5,32 +5,32 @@
 entity Sub is
 end entity Sub;
 
-architecture Behav of Sub is
+architecture rtl of Sub is
 begin
-end architecture Behav;
+end architecture rtl;
 
 configuration BaseCfg of Sub is
-	for Behav
+	for rtl
 	end for;
 end configuration BaseCfg;
 
 entity Consumer is
 end entity Consumer;
 
-architecture Rtl of Consumer is
+architecture rtl of Consumer is
 	component SubComp is
 	end component SubComp;
 
-	for U4 : SubComp use entity work.Sub(Behav);
+	for U4 : SubComp use entity work.Sub(rtl);
 begin
 	U1 : SubComp;
 	U2 : SubComp;
 	U3 : SubComp;
 	U4 : SubComp;
-end architecture Rtl;
+end architecture rtl;
 
 configuration Cfg of Consumer is
-	for Rtl
+	for rtl
 		for U1 : SubComp
 			use configuration work.BaseCfg;
 		end for;
@@ -38,7 +38,7 @@ configuration Cfg of Consumer is
 			use open;
 		end for;
 		for others : SubComp
-			use entity work.Sub(Behav);
+			use entity work.Sub(rtl);
 		end for;
 	end for;
 end configuration Cfg;
