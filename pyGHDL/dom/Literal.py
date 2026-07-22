@@ -147,29 +147,29 @@ class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
 
 @export
 class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str) -> None:
-        super().__init__(value)
+    def __init__(self, node: Iir, value: str, length: int = None, signed: bool = None) -> None:
+        super().__init__(value, length, signed)
         DOMMixin.__init__(self, node)
 
 
 @export
 class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str) -> None:
-        super().__init__(value)
+    def __init__(self, node: Iir, value: str, length: int = None, signed: bool = None) -> None:
+        super().__init__(value, length, signed)
         DOMMixin.__init__(self, node)
 
 
 @export
 class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str) -> None:
-        super().__init__(value)
+    def __init__(self, node: Iir, value: str, length: int = None, signed: bool = None) -> None:
+        super().__init__(value, length, signed)
         DOMMixin.__init__(self, node)
 
 
 @export
 class HexadecimalBitStringLiteral(VHDLModel_HexadecimalBitStringLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str) -> None:
-        super().__init__(value)
+    def __init__(self, node: Iir, value: str, length: int = None, signed: bool = None) -> None:
+        super().__init__(value, length, signed)
         DOMMixin.__init__(self, node)
 
 
@@ -194,22 +194,20 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
         # sourceIdentifier = utils.Get_Source_Identifier(literalNode)
         # test = name_table.Get_Name_Ptr(sourceIdentifier)
 
-        # TODO: add support for signed and unsigned BitStringLiteral
-        # TODO: add support for BitStringLiteral lengths
         if base is nodes.NumberBaseType.Base_None:
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return cls(literalNode, value)
         elif base is nodes.NumberBaseType.Base_2:
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
-            return BinaryBitStringLiteral(literalNode, value)
+            return BinaryBitStringLiteral(literalNode, value, length, signed)
         elif base is nodes.NumberBaseType.Base_8:
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
-            return OctalBitStringLiteral(literalNode, value)
+            return OctalBitStringLiteral(literalNode, value, length, signed)
         elif base is nodes.NumberBaseType.Base_10:
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
-            return DecimalBitStringLiteral(literalNode, value)
+            return DecimalBitStringLiteral(literalNode, value, length, signed)
         elif base is nodes.NumberBaseType.Base_16:
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
-            return HexadecimalBitStringLiteral(literalNode, value)
+            return HexadecimalBitStringLiteral(literalNode, value, length, signed)
         else:
             WarningCollector.Raise(NotImplementedError("Bit String Literal not supported yet"))

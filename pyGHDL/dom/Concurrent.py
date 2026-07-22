@@ -67,7 +67,7 @@ from pyVHDLModel.Concurrent import (
     RangedGenerateChoice as VHDLModel_RangedGenerateChoice,
 )
 
-from pyGHDL.libghdl import Iir, utils
+from pyGHDL.libghdl import Iir, utils, name_table
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom.Range import Range
@@ -268,9 +268,8 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch, DOMMixin):
         condition = GetExpressionFromNode(nodes.Get_Condition(generateNode))
         body = nodes.Get_Generate_Statement_Body(generateNode)
 
-        # TODO: alternative label
-        # alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = ""
+        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        alternativeLabel = None if alternativeLabelId == name_table.Null_Identifier else name_table.Get_Name_Ptr(alternativeLabelId)
 
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "if-generate branch", alternativeLabel)
@@ -305,9 +304,8 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch, DOMMixin):
         condition = GetExpressionFromNode(condition)
         body = nodes.Get_Generate_Statement_Body(generateNode)
 
-        # TODO: alternative label
-        # alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = ""
+        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        alternativeLabel = None if alternativeLabelId == name_table.Null_Identifier else name_table.Get_Name_Ptr(alternativeLabelId)
 
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "elsif-generate branch", alternativeLabel)
@@ -339,9 +337,8 @@ class ElseGenerateBranch(VHDLModel_ElseGenerateBranch, DOMMixin):
 
         body = nodes.Get_Generate_Statement_Body(generateNode)
 
-        # TODO: alternative label
-        # alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = ""
+        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        alternativeLabel = None if alternativeLabelId == name_table.Null_Identifier else name_table.Get_Name_Ptr(alternativeLabelId)
 
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "else-generate branch", alternativeLabel)
@@ -423,9 +420,8 @@ class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
 
         body = nodes.Get_Associated_Block(caseNode)
 
-        # TODO: alternative label
-        # alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = ""
+        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        alternativeLabel = None if alternativeLabelId == name_table.Null_Identifier else name_table.Get_Name_Ptr(alternativeLabelId)
 
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "generate case", alternativeLabel)
@@ -457,9 +453,8 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
 
         body = nodes.Get_Associated_Block(caseNode)
 
-        # TODO: alternative label
-        # alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = ""
+        alternativeLabelId = nodes.Get_Alternative_Label(body)
+        alternativeLabel = None if alternativeLabelId == name_table.Null_Identifier else name_table.Get_Name_Ptr(alternativeLabelId)
 
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "case-generate others", alternativeLabel)
@@ -536,7 +531,7 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
                     continue
             elif choiceKind is nodes.Iir_Kind.Choice_By_Others:
                 if choices is not None:
-                    cases.append(GenerateCase.parse(alternative, choices))
+                    cases.append(GenerateCase.parse(caseNode, choices))
                     choices = None
                 cases.append(OthersGenerateCase.parse(alternative))
                 alternative = nodes.Get_Chain(alternative)
