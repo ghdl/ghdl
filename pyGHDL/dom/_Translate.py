@@ -868,6 +868,14 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                 lastKind = kind
                 item = nodes.Get_Chain(item)
                 continue
+            elif kind == nodes.Iir_Kind.Function_Instantiation_Declaration:
+                from pyGHDL.dom.Subprogram import FunctionInstantiation
+
+                yield FunctionInstantiation.parse(item)
+            elif kind == nodes.Iir_Kind.Procedure_Instantiation_Declaration:
+                from pyGHDL.dom.Subprogram import ProcedureInstantiation
+
+                yield ProcedureInstantiation.parse(item)
             elif kind == nodes.Iir_Kind.Function_Body:
                 if lastKind is nodes.Iir_Kind.Function_Declaration:
                     pass
