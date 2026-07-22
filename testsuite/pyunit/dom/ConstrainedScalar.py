@@ -60,18 +60,27 @@ class ConstrainedScalarSubtypes(TestCase):
         design.Documents.append(document)
         return document.Architectures["constrainedscalar"]["rtl"]
 
-    def test_IntegerRange(self) -> None:
-        """``signal s : integer range 0 to 15;``"""
+    def test_LiteralBoundsRange(self) -> None:
+        """``signal s : integer range 0 to 15;`` - plain integer literal bounds."""
         architecture = self._architecture()
-        signal = architecture.DeclaredItems[0]
+        signal = architecture.DeclaredItems[2]
 
         self.assertIsInstance(signal.Subtype, ConstrainedScalarSubtypeSymbol)
         self.assertIsNotNone(signal.Subtype.Constraint)
 
-    def test_NaturalRange(self) -> None:
-        """``signal t : natural range 3 to 9;``"""
+    def test_ExpressionBoundsRange(self) -> None:
+        """``signal t : natural range 0 to max - 1;`` - one bound is an expression, not a literal."""
         architecture = self._architecture()
-        signal = architecture.DeclaredItems[1]
+        signal = architecture.DeclaredItems[3]
+
+        self.assertIsInstance(signal.Subtype, ConstrainedScalarSubtypeSymbol)
+        self.assertIsNotNone(signal.Subtype.Constraint)
+
+    def test_EnumerationRange(self) -> None:
+        """``signal u : color_t range red to blue;`` - range over enumeration literals, not a scalar
+        numeric type."""
+        architecture = self._architecture()
+        signal = architecture.DeclaredItems[4]
 
         self.assertIsInstance(signal.Subtype, ConstrainedScalarSubtypeSymbol)
         self.assertIsNotNone(signal.Subtype.Constraint)
