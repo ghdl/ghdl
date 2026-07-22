@@ -364,12 +364,8 @@ class SimpleSubtypeSymbol(VHDLModel_SimpleSubtypeSymbol, DOMMixin):
 class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, DOMMixin):
     @InheritDocString(VHDLModel_ConstrainedScalarSubtypeSymbol)
     def __init__(self, node: Iir, subtypeName: Name, rng: Range = None) -> None:
-        super().__init__(subtypeName)  # , rng)  # XXX: hacked
+        super().__init__(subtypeName, rng)
         DOMMixin.__init__(self, node)
-
-    @classmethod
-    def parse(cls, node: Iir):
-        pass
 
 
 @export
