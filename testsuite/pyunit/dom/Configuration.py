@@ -71,7 +71,7 @@ class Configurations(TestCase):
         cfg = document.Configurations["cfg"]
 
         self.assertEqual("Cfg", cfg.Identifier)
-        self.assertIsNotNone(cfg.Target)
+        self.assertIsNotNone(cfg.Entity)
 
         block = cfg.BlockConfiguration
         self.assertIsInstance(block, BlockConfiguration)

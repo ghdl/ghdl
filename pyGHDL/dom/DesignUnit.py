@@ -365,12 +365,12 @@ class Configuration(VHDLModel_Configuration, DOMMixin):
         self,
         node: Iir,
         identifier: str,
-        target: EntitySymbol,
+        entity: EntitySymbol,
         blockConfiguration: BlockConfiguration,
         contextItems: Iterable[Context] = None,
         documentation: str = None,
     ) -> None:
-        super().__init__(identifier, target, blockConfiguration, contextItems, documentation, None)
+        super().__init__(identifier, entity, blockConfiguration, contextItems, documentation, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -380,9 +380,9 @@ class Configuration(VHDLModel_Configuration, DOMMixin):
         name = GetNameOfNode(configurationNode)
         documentation = GetDocumentationOfNode(configurationNode)
 
-        targetNameNode = nodes.Get_Entity_Name(configurationNode)
-        target = EntitySymbol(targetNameNode, GetName(targetNameNode))
+        entityNameNode = nodes.Get_Entity_Name(configurationNode)
+        entity = EntitySymbol(entityNameNode, GetName(entityNameNode))
 
         blockConfiguration = BlockConfiguration.parse(nodes.Get_Block_Configuration(configurationNode))
 
-        return cls(configurationNode, name, target, blockConfiguration, contextItems, documentation)
+        return cls(configurationNode, name, entity, blockConfiguration, contextItems, documentation)
