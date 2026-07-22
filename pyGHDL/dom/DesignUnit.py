@@ -361,17 +361,29 @@ class Context(VHDLModel_Context, DOMMixin):
 @export
 class Configuration(VHDLModel_Configuration, DOMMixin):
     def __init__(
-        self, node: Iir, identifier: str, contextItems: Iterable[Context] = None, documentation: str = None
+        self,
+        node: Iir,
+        identifier: str,
+        entity,
+        blockConfiguration,
+        contextItems: Iterable[Context] = None,
+        documentation: str = None,
     ) -> None:
-        super().__init__(identifier, contextItems, documentation, None)
+        super().__init__(identifier, entity, blockConfiguration, contextItems, documentation, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, configurationNode: Iir, contextItems: Iterable[Context]):
+        from pyGHDL.dom._Translate import GetName
+        from pyGHDL.dom.Symbol import EntitySymbol
+        from pyGHDL.dom.Configuration import BlockConfiguration
+
         name = GetNameOfNode(configurationNode)
         documentation = GetDocumentationOfNode(configurationNode)
 
-        # FIXME: read use clauses
-        # FIXME: read specifications
+        entityNameNode = nodes.Get_Entity_Name(configurationNode)
+        entity = EntitySymbol(entityNameNode, GetName(entityNameNode))
 
-        return cls(configurationNode, name, contextItems, documentation)
+        blockConfiguration = BlockConfiguration.parse(nodes.Get_Block_Configuration(configurationNode))
+
+        return cls(configurationNode, name, entity, blockConfiguration, contextItems, documentation)

@@ -907,6 +907,10 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                 from pyGHDL.dom.Misc import Alias
 
                 yield Alias.parse(item)
+            elif kind == nodes.Iir_Kind.Configuration_Specification:
+                from pyGHDL.dom.Configuration import ComponentConfiguration
+
+                yield ComponentConfiguration.parse(item)
             elif kind == nodes.Iir_Kind.Component_Declaration:
                 from pyGHDL.dom.DesignUnit import Component
 

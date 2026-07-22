@@ -46,6 +46,7 @@ from pyVHDLModel.Symbol import LibraryReferenceSymbol as VHDLModel_LibraryRefere
 from pyVHDLModel.Symbol import PackageReferenceSymbol as VHDLModel_PackageReferenceSymbol
 from pyVHDLModel.Symbol import ModeViewSymbol as VHDLModel_ModeViewSymbol
 from pyVHDLModel.Symbol import SubprogramReferenceSymbol as VHDLModel_SubprogramReferenceSymbol
+from pyVHDLModel.Symbol import ConfigurationSymbol as VHDLModel_ConfigurationSymbol
 from pyVHDLModel.Symbol import PackageMemberReferenceSymbol as VHDLModel_PackageMemberReferenceSymbol
 from pyVHDLModel.Symbol import AllPackageMembersReferenceSymbol as VHDLModel_AllPackageMembersReferenceSymbol
 from pyVHDLModel.Symbol import ContextReferenceSymbol as VHDLModel_ContextReferenceSymbol
@@ -164,6 +165,29 @@ class SubprogramReferenceSymbol(VHDLModel_SubprogramReferenceSymbol, DOMMixin):
     """
 
     @InheritDocString(VHDLModel_SubprogramReferenceSymbol)
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
+        super().__init__(name)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class ConfigurationSymbol(VHDLModel_ConfigurationSymbol, DOMMixin):
+    """
+    Represents a reference (name) to a configuration declaration, e.g. in an entity aspect of a
+    binding indication.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from
+    :class:`pyVHDLModel.Symbol.ConfigurationSymbol`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          for U1 : comp use configuration work.cfg;
+          --                              ^^^^^^^
+    """
+
+    @InheritDocString(VHDLModel_ConfigurationSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
