@@ -195,7 +195,12 @@ class FunctionInstantiation(VHDLModel_FunctionInstantiation, DOMMixin):
         genericAssociationItems: List = None,
         documentation: str = None,
     ) -> None:
-        super().__init__(functionName, subprogramReference, genericAssociationItems=genericAssociationItems, documentation=documentation)
+        super().__init__(
+            functionName,
+            subprogramReference,
+            genericAssociationItems=genericAssociationItems,
+            documentation=documentation,
+        )
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -236,7 +241,12 @@ class ProcedureInstantiation(VHDLModel_ProcedureInstantiation, DOMMixin):
         genericAssociationItems: List = None,
         documentation: str = None,
     ) -> None:
-        super().__init__(procedureName, subprogramReference, genericAssociationItems=genericAssociationItems, documentation=documentation)
+        super().__init__(
+            procedureName,
+            subprogramReference,
+            genericAssociationItems=genericAssociationItems,
+            documentation=documentation,
+        )
         DOMMixin.__init__(self, node)
 
     @classmethod

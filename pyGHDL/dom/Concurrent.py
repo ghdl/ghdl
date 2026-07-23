@@ -172,7 +172,9 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
         portAssociationItems = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
 
-        return cls(instantiationNode, label, entitySymbol, architectureSymbol, genericAssociationItems, portAssociationItems)
+        return cls(
+            instantiationNode, label, entitySymbol, architectureSymbol, genericAssociationItems, portAssociationItems
+        )
 
 
 @export
@@ -794,7 +796,9 @@ class ConcurrentConditionalSignalAssignment(VHDLModel_ConcurrentConditionalSigna
 
         targetNode = nodes.Get_Target(assignmentNode)
         targetName = SignalSymbol(targetNode, GetName(targetNode))
-        conditionalWaveforms = GetConditionalWaveformsFromChainedNodes(nodes.Get_Conditional_Waveform_Chain(assignmentNode))
+        conditionalWaveforms = GetConditionalWaveformsFromChainedNodes(
+            nodes.Get_Conditional_Waveform_Chain(assignmentNode)
+        )
 
         return cls(assignmentNode, label, targetName, conditionalWaveforms)
 

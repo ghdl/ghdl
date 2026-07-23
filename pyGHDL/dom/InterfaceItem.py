@@ -293,7 +293,9 @@ class ParameterSimpleSignalInterfaceItem(VHDLModel_ParameterSimpleSignalInterfac
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterSimpleSignalInterfaceItem":
+    def parse(
+        cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None
+    ) -> "ParameterSimpleSignalInterfaceItem":
         name = GetNameOfNode(parameterNode)
         documentation = GetDocumentationOfNode(parameterNode)
         identifiers = [name]

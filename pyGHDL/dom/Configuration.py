@@ -70,7 +70,9 @@ class EntityAspectEntity(VHDLModel_EntityAspectEntity, DOMMixin):
 
         architectureNode = nodes.Get_Architecture(entityAspectNode)
         architecture = (
-            None if architectureNode == nodes.Null_Iir else ArchitectureSymbol(architectureNode, GetName(architectureNode))
+            None
+            if architectureNode == nodes.Null_Iir
+            else ArchitectureSymbol(architectureNode, GetName(architectureNode))
         )
 
         return cls(entityAspectNode, entity, architecture)

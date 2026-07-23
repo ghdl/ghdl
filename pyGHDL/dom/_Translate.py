@@ -1126,6 +1126,3 @@ def GetSequentialStatementsFromChainedNodes(
             raise DOMException(
                 f"Unknown sequential statement of kind '{kind.name}' in {entity} '{name}' at {position}."
             )
-
-
-
