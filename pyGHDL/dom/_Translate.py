@@ -34,7 +34,7 @@
 This module offers helper functions to translate often used IIR substructures to pyGHDL.dom (pyVHDLModel) constructs.
 """
 
-from typing import List, Generator, Type, Dict
+from typing import List, Generator, Type, Dict, Optional as Nullable
 
 from pyTooling.Decorators import export
 from pyTooling.Warning import WarningCollector
@@ -547,6 +547,19 @@ def GetExpressionFromNode(node: Iir) -> ExpressionUnion:
         raise DOMException(f"Unknown expression kind '{kind.name}' in expression '{node}' at {position}.")
 
     return cls.parse(node)
+
+
+def GetOptionalExpressionFromNode(node: Iir) -> Nullable[ExpressionUnion]:
+    """
+    Like :func:`GetExpressionFromNode`, but for fields that may legitimately be absent (e.g. an
+    optional condition on the final branch of a conditional assignment, or on an unconditional
+    ``exit``/``next`` statement) - returns ``None`` instead of translating when ``node`` is
+    ``Null_Iir``, rather than requiring every call site to repeat that check.
+
+    :param node: The IIR node representing an expression, or ``Null_Iir`` if absent.
+    :return:     The translated expression, or ``None``.
+    """
+    return None if node == nodes.Null_Iir else GetExpressionFromNode(node)
 
 
 @export

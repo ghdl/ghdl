@@ -73,6 +73,7 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
 from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Concurrent import WaveformElement, ParameterAssociationItem  # TODO: move out from concurrent?
+from pyGHDL.dom.Concurrent import GetWaveformElementsFromChainedNodes
 from pyGHDL.dom.Symbol import SignalSymbol, VariableSymbol
 from pyGHDL.dom.Concurrent import GetConditionalWaveformsFromChainedNodes, GetSelectedWaveformsFromChainedNodes
 
@@ -400,7 +401,7 @@ class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
             GetSequentialStatementsFromChainedNodes,
             GetRangeFromNode,
             GetName,
-            GetExpressionFromNode,
+            GetOptionalExpressionFromNode,
         )
 
         # spec = nodes.Get_Parameter_Specification(loopNode)
@@ -421,8 +422,7 @@ class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
         #         f"Unknown discrete range kind '{rangeKind.name}' in for...loop statement at line {pos.Line}."
         #     )
 
-        conditionNode = nodes.Get_Condition(loopNode)
-        condition = None if conditionNode is nodes.Null_Iir else GetExpressionFromNode(conditionNode)
+        condition = GetOptionalExpressionFromNode(nodes.Get_Condition(loopNode))
 
         statementChain = nodes.Get_Sequential_Statement_Chain(loopNode)
         statements = GetSequentialStatementsFromChainedNodes(statementChain, "while", label)
@@ -449,9 +449,7 @@ class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignmen
         targetNode = nodes.Get_Target(assignmentNode)
         targetName = SignalSymbol(targetNode, GetName(targetNode))
 
-        waveform = []
-        for wave in utils.chain_iter(nodes.Get_Waveform_Chain(assignmentNode)):
-            waveform.append(WaveformElement.parse(wave))
+        waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Waveform_Chain(assignmentNode))
 
         return cls(assignmentNode, targetName, waveform, label)
 
@@ -464,12 +462,10 @@ class ConditionalExpression(VHDLModel_ConditionalExpression, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir) -> "ConditionalExpression":
-        from pyGHDL.dom._Translate import GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetExpressionFromNode, GetOptionalExpressionFromNode
 
         expression = GetExpressionFromNode(nodes.Get_Expression(node))
-
-        conditionNode = nodes.Get_Condition(node)
-        condition = None if conditionNode == nodes.Null_Iir else GetExpressionFromNode(conditionNode)
+        condition = GetOptionalExpressionFromNode(nodes.Get_Condition(node))
 
         return cls(node, expression, condition)
 
@@ -756,13 +752,11 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
 
     @classmethod
     def parse(cls, assertNode: Iir, label: str) -> "SequentialAssertStatement":
-        from pyGHDL.dom._Translate import GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetExpressionFromNode, GetOptionalExpressionFromNode
 
         condition = GetExpressionFromNode(nodes.Get_Assertion_Condition(assertNode))
-        messageNode = nodes.Get_Report_Expression(assertNode)
-        message = None if messageNode is nodes.Null_Iir else GetExpressionFromNode(messageNode)
-        severityNode = nodes.Get_Severity_Expression(assertNode)
-        severity = None if severityNode is nodes.Null_Iir else GetExpressionFromNode(severityNode)
+        message = GetOptionalExpressionFromNode(nodes.Get_Report_Expression(assertNode))
+        severity = GetOptionalExpressionFromNode(nodes.Get_Severity_Expression(assertNode))
 
         return cls(assertNode, condition, message, severity, label)
 
@@ -781,11 +775,10 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
 
     @classmethod
     def parse(cls, reportNode: Iir, label: str) -> "SequentialReportStatement":
-        from pyGHDL.dom._Translate import GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetExpressionFromNode, GetOptionalExpressionFromNode
 
         message = GetExpressionFromNode(nodes.Get_Report_Expression(reportNode))
-        severityNode = nodes.Get_Severity_Expression(reportNode)
-        severity = None if severityNode is nodes.Null_Iir else GetExpressionFromNode(severityNode)
+        severity = GetOptionalExpressionFromNode(nodes.Get_Severity_Expression(reportNode))
 
         return cls(reportNode, message, severity, label)
 
@@ -803,10 +796,9 @@ class ReturnStatement(VHDLModel_ReturnStatement, DOMMixin):
 
     @classmethod
     def parse(cls, returnNode: Iir, label: str) -> "ReturnStatement":
-        from pyGHDL.dom._Translate import GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 
-        returnValueNode = nodes.Get_Expression(returnNode)
-        returnValue = None if returnValueNode is nodes.Null_Iir else GetExpressionFromNode(returnValueNode)
+        returnValue = GetOptionalExpressionFromNode(nodes.Get_Expression(returnNode))
 
         return cls(returnNode, returnValue, label)
 
@@ -835,10 +827,9 @@ class NextStatement(VHDLModel_NextStatement, DOMMixin):
 
     @classmethod
     def parse(cls, exitNode: Iir, label: str) -> "NextStatement":
-        from pyGHDL.dom._Translate import GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 
-        conditionNode = nodes.Get_Condition(exitNode)
-        condition = None if conditionNode is nodes.Null_Iir else GetExpressionFromNode(conditionNode)
+        condition = GetOptionalExpressionFromNode(nodes.Get_Condition(exitNode))
 
         return cls(exitNode, condition, label)
 
@@ -856,10 +847,9 @@ class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
 
     @classmethod
     def parse(cls, exitNode: Iir, label: str) -> "ExitStatement":
-        from pyGHDL.dom._Translate import GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 
-        conditionNode = nodes.Get_Condition(exitNode)
-        condition = None if conditionNode is nodes.Null_Iir else GetExpressionFromNode(conditionNode)
+        condition = GetOptionalExpressionFromNode(nodes.Get_Condition(exitNode))
 
         return cls(exitNode, condition, label)
 
@@ -880,7 +870,7 @@ class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
     @classmethod
     def parse(cls, waitNode: Iir, label: str) -> "WaitStatement":
         from pyGHDL.dom._Utils import GetIirKindOfNode
-        from pyGHDL.dom._Translate import GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 
         sensitivityList = None
         sensitivityListNode = nodes.Get_Sensitivity_List(waitNode)
@@ -888,10 +878,8 @@ class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
             pass
             # print(f"WaitStatement: wait on {GetIirKindOfNode(sensitivityListNode)}")
 
-        conditionNode = nodes.Get_Condition_Clause(waitNode)
-        condition = None if conditionNode is nodes.Null_Iir else GetExpressionFromNode(conditionNode)
+        condition = GetOptionalExpressionFromNode(nodes.Get_Condition_Clause(waitNode))
 
-        timeoutNode = nodes.Get_Timeout_Clause(waitNode)
-        timeout = None if timeoutNode is nodes.Null_Iir else GetExpressionFromNode(timeoutNode)
+        timeout = GetOptionalExpressionFromNode(nodes.Get_Timeout_Clause(waitNode))
 
         return cls(waitNode, sensitivityList, condition, timeout, label)

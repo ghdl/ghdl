@@ -30,7 +30,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import Iterable, Optional as Nullable
+from typing import Iterable, List, Optional as Nullable
 
 from pyTooling.Decorators import export
 
@@ -645,6 +645,13 @@ class WaveformElement(VHDLModel_WaveformElement, DOMMixin):
         return cls(waveNode, value, time)
 
 
+def GetWaveformElementsFromChainedNodes(nodeChain: Iir) -> List[WaveformElement]:
+    """Translates a chain of ``Waveform_Element`` nodes (used at multiple call sites: simple/
+    conditional/selected signal assignments, both concurrent and sequential) into a list of
+    :class:`WaveformElement`."""
+    return [WaveformElement.parse(wave) for wave in utils.chain_iter(nodeChain)]
+
+
 @export
 class ConditionalWaveform(VHDLModel_ConditionalWaveform, DOMMixin):
     def __init__(self, node: Iir, waveform: Iterable[WaveformElement], condition: ExpressionUnion = None) -> None:
@@ -653,12 +660,10 @@ class ConditionalWaveform(VHDLModel_ConditionalWaveform, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir) -> "ConditionalWaveform":
-        from pyGHDL.dom._Translate import GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 
-        waveform = [WaveformElement.parse(wave) for wave in utils.chain_iter(nodes.Get_Waveform_Chain(node))]
-
-        conditionNode = nodes.Get_Condition(node)
-        condition = None if conditionNode == nodes.Null_Iir else GetExpressionFromNode(conditionNode)
+        waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Waveform_Chain(node))
+        condition = GetOptionalExpressionFromNode(nodes.Get_Condition(node))
 
         return cls(node, waveform, condition)
 
@@ -720,11 +725,11 @@ def GetSelectedWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable:
                 continue
         elif kind == nodes.Iir_Kind.Choice_By_Others:
             if choices is not None:
-                waveform = [WaveformElement.parse(wave) for wave in utils.chain_iter(nodes.Get_Associated_Chain(ownerNode))]
+                waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Associated_Chain(ownerNode))
                 alternatives.append(SelectedWaveform(ownerNode, choices, waveform))
                 choices = None
 
-            othersWaveform = [WaveformElement.parse(wave) for wave in utils.chain_iter(nodes.Get_Associated_Chain(choice))]
+            othersWaveform = GetWaveformElementsFromChainedNodes(nodes.Get_Associated_Chain(choice))
             alternatives.append(OthersSelectedWaveform(choice, othersWaveform))
             choice = nodes.Get_Chain(choice)
             continue
@@ -733,7 +738,7 @@ def GetSelectedWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable:
             raise DOMException(f"Unknown choice kind '{kind.name}' in selected waveform at {position}.")
 
         if choices is not None:
-            waveform = [WaveformElement.parse(wave) for wave in utils.chain_iter(nodes.Get_Associated_Chain(ownerNode))]
+            waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Associated_Chain(ownerNode))
             alternatives.append(SelectedWaveform(ownerNode, choices, waveform))
 
         ownerNode = choice
@@ -741,7 +746,7 @@ def GetSelectedWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable:
         choice = nodes.Get_Chain(choice)
 
     if choices is not None:
-        waveform = [WaveformElement.parse(wave) for wave in utils.chain_iter(nodes.Get_Associated_Chain(ownerNode))]
+        waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Associated_Chain(ownerNode))
         alternatives.append(SelectedWaveform(ownerNode, choices, waveform))
 
     return alternatives
@@ -766,9 +771,7 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
         targetNode = nodes.Get_Target(assignmentNode)
         targetName = SignalSymbol(targetNode, GetName(targetNode))
 
-        waveform = []
-        for wave in utils.chain_iter(nodes.Get_Waveform_Chain(assignmentNode)):
-            waveform.append(WaveformElement.parse(wave))
+        waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Waveform_Chain(assignmentNode))
 
         return cls(assignmentNode, label, targetName, waveform)
 
@@ -861,14 +864,12 @@ class ConcurrentAssertStatement(VHDLModel_ConcurrentAssertStatement, DOMMixin):
 
     @classmethod
     def parse(cls, assertNode: Iir, label: str) -> "ConcurrentAssertStatement":
-        from pyGHDL.dom._Translate import GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 
         # FIXME: how to get the condition?
         # assertNode is a Psl_Assert_Directive
-        condition = None  # GetExpressionFromNode(nodes.Get_Assertion_Condition(assertNode))
-        messageNode = nodes.Get_Report_Expression(assertNode)
-        message = None if messageNode is nodes.Null_Iir else GetExpressionFromNode(messageNode)
-        severityNode = nodes.Get_Severity_Expression(assertNode)
-        severity = None if severityNode is nodes.Null_Iir else GetExpressionFromNode(severityNode)
+        condition = None  # GetOptionalExpressionFromNode(nodes.Get_Assertion_Condition(assertNode))
+        message = GetOptionalExpressionFromNode(nodes.Get_Report_Expression(assertNode))
+        severity = GetOptionalExpressionFromNode(nodes.Get_Severity_Expression(assertNode))
 
         return cls(assertNode, condition, message, severity, label)
