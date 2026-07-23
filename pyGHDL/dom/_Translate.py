@@ -34,7 +34,7 @@
 This module offers helper functions to translate often used IIR substructures to pyGHDL.dom (pyVHDLModel) constructs.
 """
 
-from typing import List, Generator, Type, Dict
+from typing import List, Generator, Type, Dict, Optional as Nullable
 
 from pyTooling.Decorators import export
 from pyTooling.Warning import WarningCollector
@@ -549,6 +549,19 @@ def GetExpressionFromNode(node: Iir) -> ExpressionUnion:
     return cls.parse(node)
 
 
+def GetOptionalExpressionFromNode(node: Iir) -> Nullable[ExpressionUnion]:
+    """
+    Like :func:`GetExpressionFromNode`, but for fields that may legitimately be absent (e.g. an
+    optional condition on the final branch of a conditional assignment, or on an unconditional
+    ``exit``/``next`` statement) - returns ``None`` instead of translating when ``node`` is
+    ``Null_Iir``, rather than requiring every call site to repeat that check.
+
+    :param node: The IIR node representing an expression, or ``Null_Iir`` if absent.
+    :return:     The translated expression, or ``None``.
+    """
+    return None if node == nodes.Null_Iir else GetExpressionFromNode(node)
+
+
 @export
 def GetModeViewElementsFromChainedNodes(nodeChain: Iir) -> Generator["ModeViewElement", None, None]:
     """
@@ -1000,17 +1013,13 @@ def GetConcurrentStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.Concurrent_Simple_Signal_Assignment:
             yield ConcurrentSimpleSignalAssignment.parse(statement, label)
         elif kind == nodes.Iir_Kind.Concurrent_Conditional_Signal_Assignment:
-            WarningCollector.Raise(
-                NotImplementedError(
-                    f"Concurrent (conditional) signal assignment (label: '{label}') at line {position.Line}"
-                )
-            )
+            from pyGHDL.dom.Concurrent import ConcurrentConditionalSignalAssignment
+
+            yield ConcurrentConditionalSignalAssignment.parse(statement, label)
         elif kind == nodes.Iir_Kind.Concurrent_Selected_Signal_Assignment:
-            WarningCollector.Raise(
-                NotImplementedError(
-                    f"Concurrent (selected) signal assignment (label: '{label}') at line {position.Line}"
-                )
-            )
+            from pyGHDL.dom.Concurrent import ConcurrentSelectedSignalAssignment
+
+            yield ConcurrentSelectedSignalAssignment.parse(statement, label)
         elif kind == nodes.Iir_Kind.Concurrent_Procedure_Call_Statement:
             yield ConcurrentProcedureCall.parse(statement, label)
         elif kind == nodes.Iir_Kind.Component_Instantiation_Statement:
@@ -1069,14 +1078,34 @@ def GetSequentialStatementsFromChainedNodes(
             yield WhileLoopStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Simple_Signal_Assignment_Statement:
             yield SequentialSimpleSignalAssignment.parse(statement, label)
-        elif kind in (
-            nodes.Iir_Kind.Variable_Assignment_Statement,
-            nodes.Iir_Kind.Conditional_Variable_Assignment_Statement,
-            nodes.Iir_Kind.Conditional_Signal_Assignment_Statement,
-        ):
-            WarningCollector.Raise(
-                NotImplementedError(f"Variable assignment (label: '{label}') at line {position.Line}")
-            )
+        elif kind == nodes.Iir_Kind.Variable_Assignment_Statement:
+            from pyGHDL.dom.Sequential import SequentialVariableAssignment
+
+            yield SequentialVariableAssignment.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Conditional_Variable_Assignment_Statement:
+            from pyGHDL.dom.Sequential import SequentialConditionalVariableAssignment
+
+            yield SequentialConditionalVariableAssignment.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Conditional_Signal_Assignment_Statement:
+            from pyGHDL.dom.Sequential import SequentialConditionalSignalAssignment
+
+            yield SequentialConditionalSignalAssignment.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Selected_Variable_Assignment_Statement:
+            from pyGHDL.dom.Sequential import SequentialSelectedVariableAssignment
+
+            yield SequentialSelectedVariableAssignment.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Selected_Waveform_Assignment_Statement:
+            from pyGHDL.dom.Sequential import SequentialSelectedSignalAssignment
+
+            yield SequentialSelectedSignalAssignment.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Signal_Force_Assignment_Statement:
+            from pyGHDL.dom.Sequential import SignalForceAssignment
+
+            yield SignalForceAssignment.parse(statement, label)
+        elif kind == nodes.Iir_Kind.Signal_Release_Assignment_Statement:
+            from pyGHDL.dom.Sequential import SignalReleaseAssignment
+
+            yield SignalReleaseAssignment.parse(statement, label)
         elif kind == nodes.Iir_Kind.Wait_Statement:
             yield WaitStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Procedure_Call_Statement:

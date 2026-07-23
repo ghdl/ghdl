@@ -74,10 +74,15 @@ class LoopConditions(TestCase):
         process = architecture.Statements[0]
         loop = process.Statements[0]
 
-        exitStatement, nextStatement = loop.Statements
+        exitStatement, nextStatement, variableAssignment = loop.Statements
 
         self.assertIsInstance(exitStatement, ExitStatement)
         self.assertIsNotNone(exitStatement.Condition)
 
         self.assertIsInstance(nextStatement, NextStatement)
         self.assertIsNotNone(nextStatement.Condition)
+
+        # Regression check: 'i := i + 1;' was previously silently dropped (warn-only), not even
+        # appearing in loop.Statements at all.
+        from pyGHDL.dom.Sequential import SequentialVariableAssignment
+        self.assertIsInstance(variableAssignment, SequentialVariableAssignment)

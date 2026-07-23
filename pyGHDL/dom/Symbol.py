@@ -47,6 +47,8 @@ from pyVHDLModel.Symbol import PackageReferenceSymbol as VHDLModel_PackageRefere
 from pyVHDLModel.Symbol import ModeViewSymbol as VHDLModel_ModeViewSymbol
 from pyVHDLModel.Symbol import SubprogramReferenceSymbol as VHDLModel_SubprogramReferenceSymbol
 from pyVHDLModel.Symbol import ConfigurationSymbol as VHDLModel_ConfigurationSymbol
+from pyVHDLModel.Symbol import SignalSymbol as VHDLModel_SignalSymbol
+from pyVHDLModel.Symbol import VariableSymbol as VHDLModel_VariableSymbol
 from pyVHDLModel.Symbol import PackageMemberReferenceSymbol as VHDLModel_PackageMemberReferenceSymbol
 from pyVHDLModel.Symbol import AllPackageMembersReferenceSymbol as VHDLModel_AllPackageMembersReferenceSymbol
 from pyVHDLModel.Symbol import ContextReferenceSymbol as VHDLModel_ContextReferenceSymbol
@@ -188,6 +190,48 @@ class ConfigurationSymbol(VHDLModel_ConfigurationSymbol, DOMMixin):
     """
 
     @InheritDocString(VHDLModel_ConfigurationSymbol)
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
+        super().__init__(name)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class SignalSymbol(VHDLModel_SignalSymbol, DOMMixin):
+    """
+    Represents a reference (name) to a signal, e.g. the target of a signal assignment.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.SignalSymbol`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          s <= '1';
+          --^
+    """
+
+    @InheritDocString(VHDLModel_SignalSymbol)
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
+        super().__init__(name)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class VariableSymbol(VHDLModel_VariableSymbol, DOMMixin):
+    """
+    Represents a reference (name) to a variable, e.g. the target of a variable assignment.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.VariableSymbol`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          v := '1';
+          --^
+    """
+
+    @InheritDocString(VHDLModel_VariableSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
