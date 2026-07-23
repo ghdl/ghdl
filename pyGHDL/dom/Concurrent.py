@@ -652,40 +652,10 @@ def GetWaveformElementsFromChainedNodes(nodeChain: Iir) -> List[WaveformElement]
     return [WaveformElement.parse(wave) for wave in utils.chain_iter(nodeChain)]
 
 
-@export
-class ConditionalWaveform(VHDLModel_ConditionalWaveform, DOMMixin):
-    def __init__(self, node: Iir, waveform: Iterable[WaveformElement], condition: ExpressionUnion = None) -> None:
-        super().__init__(waveform, condition)
-        DOMMixin.__init__(self, node)
-
-    @classmethod
-    def parse(cls, node: Iir) -> "ConditionalWaveform":
-        from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
-
-        waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Waveform_Chain(node))
-        condition = GetOptionalExpressionFromNode(nodes.Get_Condition(node))
-
-        return cls(node, waveform, condition)
-
-
-def GetConditionalWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable[ConditionalWaveform]:
+def GetConditionalWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable["ConditionalWaveform"]:
     """Translates a chain of ``Conditional_Waveform`` nodes (shared by concurrent and sequential
     conditional signal assignments) into a sequence of :class:`ConditionalWaveform`."""
     return [ConditionalWaveform.parse(node) for node in utils.chain_iter(nodeChain)]
-
-
-@export
-class SelectedWaveform(VHDLModel_SelectedWaveform, DOMMixin):
-    def __init__(self, node: Iir, choices: Iterable, waveform: Iterable[WaveformElement]) -> None:
-        super().__init__(choices, waveform)
-        DOMMixin.__init__(self, node)
-
-
-@export
-class OthersSelectedWaveform(VHDLModel_OthersSelectedWaveform, DOMMixin):
-    def __init__(self, node: Iir, waveform: Iterable[WaveformElement]) -> None:
-        super().__init__(waveform)
-        DOMMixin.__init__(self, node)
 
 
 def GetSelectedWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable:
@@ -750,6 +720,36 @@ def GetSelectedWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable:
         alternatives.append(SelectedWaveform(ownerNode, choices, waveform))
 
     return alternatives
+
+
+@export
+class ConditionalWaveform(VHDLModel_ConditionalWaveform, DOMMixin):
+    def __init__(self, node: Iir, waveform: Iterable[WaveformElement], condition: ExpressionUnion = None) -> None:
+        super().__init__(waveform, condition)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, node: Iir) -> "ConditionalWaveform":
+        from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
+
+        waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Waveform_Chain(node))
+        condition = GetOptionalExpressionFromNode(nodes.Get_Condition(node))
+
+        return cls(node, waveform, condition)
+
+
+@export
+class SelectedWaveform(VHDLModel_SelectedWaveform, DOMMixin):
+    def __init__(self, node: Iir, choices: Iterable, waveform: Iterable[WaveformElement]) -> None:
+        super().__init__(choices, waveform)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class OthersSelectedWaveform(VHDLModel_OthersSelectedWaveform, DOMMixin):
+    def __init__(self, node: Iir, waveform: Iterable[WaveformElement]) -> None:
+        super().__init__(waveform)
+        DOMMixin.__init__(self, node)
 
 
 @export

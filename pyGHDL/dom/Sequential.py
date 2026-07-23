@@ -454,39 +454,9 @@ class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignmen
         return cls(assignmentNode, targetName, waveform, label)
 
 
-@export
-class ConditionalExpression(VHDLModel_ConditionalExpression, DOMMixin):
-    def __init__(self, node: Iir, expression: ExpressionUnion, condition: ExpressionUnion = None) -> None:
-        super().__init__(expression, condition)
-        DOMMixin.__init__(self, node)
-
-    @classmethod
-    def parse(cls, node: Iir) -> "ConditionalExpression":
-        from pyGHDL.dom._Translate import GetExpressionFromNode, GetOptionalExpressionFromNode
-
-        expression = GetExpressionFromNode(nodes.Get_Expression(node))
-        condition = GetOptionalExpressionFromNode(nodes.Get_Condition(node))
-
-        return cls(node, expression, condition)
-
-
-def GetConditionalExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable[ConditionalExpression]:
+def GetConditionalExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable["ConditionalExpression"]:
     """Translates a chain of ``Conditional_Expression`` nodes into a sequence of :class:`ConditionalExpression`."""
     return [ConditionalExpression.parse(node) for node in utils.chain_iter(nodeChain)]
-
-
-@export
-class SelectedExpression(VHDLModel_SelectedExpression, DOMMixin):
-    def __init__(self, node: Iir, choices: Iterable, expression: ExpressionUnion) -> None:
-        super().__init__(choices, expression)
-        DOMMixin.__init__(self, node)
-
-
-@export
-class OthersSelectedExpression(VHDLModel_OthersSelectedExpression, DOMMixin):
-    def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
-        super().__init__(expression)
-        DOMMixin.__init__(self, node)
 
 
 def GetSelectedExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable:
@@ -546,6 +516,36 @@ def GetSelectedExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable:
         alternatives.append(SelectedExpression(ownerNode, choices, expression))
 
     return alternatives
+
+
+@export
+class ConditionalExpression(VHDLModel_ConditionalExpression, DOMMixin):
+    def __init__(self, node: Iir, expression: ExpressionUnion, condition: ExpressionUnion = None) -> None:
+        super().__init__(expression, condition)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, node: Iir) -> "ConditionalExpression":
+        from pyGHDL.dom._Translate import GetExpressionFromNode, GetOptionalExpressionFromNode
+
+        expression = GetExpressionFromNode(nodes.Get_Expression(node))
+        condition = GetOptionalExpressionFromNode(nodes.Get_Condition(node))
+
+        return cls(node, expression, condition)
+
+
+@export
+class SelectedExpression(VHDLModel_SelectedExpression, DOMMixin):
+    def __init__(self, node: Iir, choices: Iterable, expression: ExpressionUnion) -> None:
+        super().__init__(choices, expression)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class OthersSelectedExpression(VHDLModel_OthersSelectedExpression, DOMMixin):
+    def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
+        super().__init__(expression)
+        DOMMixin.__init__(self, node)
 
 
 @export
