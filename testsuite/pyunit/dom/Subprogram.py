@@ -35,6 +35,7 @@ from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.Subprogram import Function, Procedure
+from pyGHDL.dom.InterfaceItem import GenericFunctionInterfaceItem, GenericProcedureInterfaceItem
 
 
 if __name__ == "__main__":
@@ -149,3 +150,41 @@ class SubprogramBodies(TestCase):
 
         self.assertEqual(0, len(procedure.DeclaredItems))
         self.assertEqual(0, len(procedure.Statements))
+
+
+class GenericSubprograms(TestCase):
+    """
+    Regression test (HIGH PRIORITY, confirmed live): ``GenericFunctionInterfaceItem`` had no
+    ``returnType`` parameter of its own in pyVHDLModel, so ``GenericFunctionInterfaceItem.parse()``
+    crashed with ``AttributeError`` on any real ``generic (function f return t);`` clause - the most
+    common shape of a VHDL-2008 generic subprogram interface item. Fixed on both sides: pyVHDLModel's
+    ``GenericFunctionInterfaceItem.__init__`` now accepts ``returnType``, and this class's
+    ``.parse()`` now reads it off the IIR node via ``Get_Return_Type_Mark`` (mirroring
+    ``Function.parse()``) instead of never fetching it at all.
+    """
+
+    _root = Path(__file__).resolve().parent
+    _filename: Path = _root / "examples/GenericSubprograms.vhdl"
+
+    def test_GenericFunctionInterfaceItem(self):
+        design = Design()
+        document = Document(self._filename)
+        design.Documents.append(document)
+
+        package = document.Packages["genericsubprograms"]
+        generic = package.GenericItems[0]
+
+        self.assertIsInstance(generic, GenericFunctionInterfaceItem)
+        self.assertEqual("compare", generic.Identifier)
+        self.assertEqual("boolean", generic.ReturnType.Name.Identifier)
+
+    def test_GenericProcedureInterfaceItem(self):
+        design = Design()
+        document = Document(self._filename)
+        design.Documents.append(document)
+
+        package = document.Packages["genericsubprograms"]
+        generic = package.GenericItems[1]
+
+        self.assertIsInstance(generic, GenericProcedureInterfaceItem)
+        self.assertEqual("log", generic.Identifier)
