@@ -942,8 +942,6 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                 from pyGHDL.dom.DesignUnit import PackageInstantiation
 
                 yield PackageInstantiation.parse(item)
-            elif kind == nodes.Iir_Kind.Configuration_Specification:
-                WarningCollector.Raise(NotImplementedError(f"Configuration specification in {name}"))
             elif kind == nodes.Iir_Kind.Psl_Default_Clock:
                 yield DefaultClock.parse(item)
             elif kind == nodes.Iir_Kind.Group_Declaration:
