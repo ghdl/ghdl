@@ -94,7 +94,7 @@ class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, literals: List[EnumerationLiteral]) -> None:
-        super().__init__(identifier, literals, parent=None)
+        super().__init__(identifier, literals)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -130,7 +130,7 @@ class IntegerType(VHDLModel_IntegerType, DOMMixin):
     """
 
     def __init__(self, node: Iir, typeName: str, rng: Union[Range, "Name"]) -> None:
-        super().__init__(typeName, rng, parent=None)
+        super().__init__(typeName, rng)
         DOMMixin.__init__(self, node)
 
 
@@ -160,7 +160,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
         primaryUnit: str,
         units: List[Tuple[str, PhysicalIntegerLiteral]],
     ) -> None:
-        super().__init__(typeName, rng, primaryUnit, units, parent=None)
+        super().__init__(typeName, rng, primaryUnit, units)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -219,7 +219,7 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, indices: List, elementSubtype: Symbol) -> None:
-        super().__init__(identifier, indices, elementSubtype, parent=None)
+        super().__init__(identifier, indices, elementSubtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -315,7 +315,7 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, elements: List[RecordTypeElement] = None) -> None:
-        super().__init__(identifier, elements, parent=None)
+        super().__init__(identifier, elements)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -380,7 +380,7 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, methods: Union[List, Iterator] = None) -> None:
-        super().__init__(identifier, methods, parent=None)
+        super().__init__(identifier, methods)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -423,7 +423,7 @@ class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, declaredItems: Union[List, Iterator] = None) -> None:
-        super().__init__(identifier, declaredItems, parent=None)
+        super().__init__(identifier, declaredItems)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -462,7 +462,7 @@ class AccessType(VHDLModel_AccessType, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, designatedSubtype: Symbol) -> None:
-        super().__init__(identifier, designatedSubtype, parent=None)
+        super().__init__(identifier, designatedSubtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -497,7 +497,7 @@ class FileType(VHDLModel_FileType, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, designatedSubtype: Symbol) -> None:
-        super().__init__(identifier, designatedSubtype, parent=None)
+        super().__init__(identifier, designatedSubtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -529,5 +529,5 @@ class Subtype(VHDLModel_Subtype, DOMMixin):
     """
 
     def __init__(self, node: Iir, subtypeName: str, symbol: Symbol) -> None:
-        super().__init__(subtypeName, symbol, parent=None)
+        super().__init__(subtypeName, symbol)
         DOMMixin.__init__(self, node)
