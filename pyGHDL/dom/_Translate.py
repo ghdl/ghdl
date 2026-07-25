@@ -34,7 +34,7 @@
 This module offers helper functions to translate often used IIR substructures to pyGHDL.dom (pyVHDLModel) constructs.
 """
 
-from typing import List, Generator, Type, Dict, Optional as Nullable
+from typing import List, Generator, Type, Dict, Union, Optional as Nullable
 
 from pyTooling.Decorators import export
 from pyTooling.Warning import WarningCollector
@@ -464,6 +464,50 @@ def GetRangeFromNode(node: Iir) -> Range:
         GetExpressionFromNode(rightBound),
         Direction.DownTo if direction else Direction.To,
     )
+
+
+@export
+def GetDiscreteRangeFromNode(discreteRangeNode: Iir, entity: str) -> Union[Range, Name]:
+    """
+    Translate a discrete range IIR node to a :class:`~pyVHDLModel.Base.Range` or a :class:`~pyVHDLModel.Name.Name`.
+
+    A discrete range is either an explicit range (``0 to 7``, ``v'range``) or a discrete subtype
+    indication - a type mark (``bit``), optionally with a range constraint (``integer range 0 to 7``).
+
+    Shared by ``for ... loop`` statements, ``for ... generate`` statements and aggregate choices, which
+    all use the same VHDL ``discrete_range`` grammar rule.
+
+    :param discreteRangeNode: The IIR node representing a discrete range.
+    :param entity:            The construct the discrete range appears in (e.g. ``for...loop``). Used in exception messages.
+    :returns:                 The translated range, or a name referencing the discrete (sub)type.
+    :raises DOMException:     If the IIR node's kind isn't a known discrete range.
+    """
+    rangeKind = GetIirKindOfNode(discreteRangeNode)
+    if rangeKind == nodes.Iir_Kind.Range_Expression:
+        return GetRangeFromNode(discreteRangeNode)
+    elif rangeKind == nodes.Iir_Kind.Subtype_Definition:
+        # A constrained subtype indication like `integer range 0 to 7`. The range constraint carries the
+        # iteration bounds, so it's translated instead of the whole subtype indication.
+        # FIXME: the type mark (`integer`) is dropped - pyVHDLModel's range-typed fields can't hold it yet.
+        rangeConstraint = nodes.Get_Range_Constraint(discreteRangeNode)
+        if rangeConstraint != nodes.Null_Iir:
+            return GetRangeFromNode(rangeConstraint)
+
+        # An unconstrained subtype indication (e.g. a resolved subtype) - fall back to its type mark.
+        return GetName(nodes.Get_Subtype_Type_Mark(discreteRangeNode))
+    elif rangeKind in (
+        nodes.Iir_Kind.Attribute_Name,
+        nodes.Iir_Kind.Parenthesis_Name,
+        nodes.Iir_Kind.Simple_Name,
+        nodes.Iir_Kind.Selected_Name,
+    ):
+        # A bare type mark like `bit` or `work.pkg.sub`, or an explicit range name like `v'range`.
+        return GetName(discreteRangeNode)
+
+    position = Position.parse(discreteRangeNode)
+    ex = DOMException(f"Unknown discrete range kind '{rangeKind.name}' in {entity} at line {position.Line}.")
+    ex.add_note("Supported: a range expression, a range attribute name, or a discrete subtype indication.")
+    raise ex
 
 
 __EXPRESSION_TRANSLATION = {
