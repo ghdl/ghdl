@@ -59,7 +59,7 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode, GetModeOfNode, GetDocumentationOfNode
 from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode, GetExpressionFromNode, GetName
-from pyGHDL.dom.Symbol import ModeViewSymbol
+from pyGHDL.dom.Symbol import ModeViewSymbol, SimpleSubtypeSymbol
 
 
 @export
@@ -135,8 +135,8 @@ class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOM
 
 @export
 class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, documentation: str = None) -> None:
-        super().__init__(identifier, documentation)
+    def __init__(self, node: Iir, identifier: str, returnType: Symbol, documentation: str = None) -> None:
+        super().__init__(identifier, returnType, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -144,7 +144,11 @@ class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMi
         name = GetNameOfNode(genericNode)
         documentation = GetDocumentationOfNode(genericNode)
 
-        return cls(genericNode, name, documentation)
+        returnType = nodes.Get_Return_Type_Mark(genericNode)
+        returnTypeName = GetName(returnType)
+        returnTypeSymbol = SimpleSubtypeSymbol(returnType, returnTypeName)
+
+        return cls(genericNode, name, returnTypeSymbol, documentation)
 
 
 @export
