@@ -33,7 +33,7 @@
 # ============================================================================
 from pathlib import Path
 
-from pytest import mark
+from pytest import mark, param
 
 from pyGHDL.dom.NonStandard import Design, Document
 
@@ -98,8 +98,17 @@ def test_Synopsys(file):
         print(f"  {warning}")
 
 
-@mark.xfail(reason="Needs further investigations.")
-@mark.parametrize("file", [str(f.relative_to(_VITAL_ROOT)) for f in _VITAL_ROOT.glob("*.vhdl")])
+# An aggregate used as a name (e.g. as an assignment target) isn't translated yet.
+_VITAL_KNOWN_FAILURES = {"memory_b.vhdl": "Aggregate as a name isn't supported by GetName."}
+
+
+@mark.parametrize(
+    "file",
+    [
+        param(name, marks=mark.xfail(reason=_VITAL_KNOWN_FAILURES[name])) if name in _VITAL_KNOWN_FAILURES else name
+        for name in (str(f.relative_to(_VITAL_ROOT)) for f in _VITAL_ROOT.glob("*.vhdl"))
+    ],
+)
 def test_Vital(file):
     print()
 

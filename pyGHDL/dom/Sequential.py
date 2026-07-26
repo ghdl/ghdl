@@ -34,7 +34,7 @@ from typing import Iterable
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel.Base import ExpressionUnion
+from pyVHDLModel.Base import ExpressionUnion, Range
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Sequential import SequentialStatement, SequentialChoice, SequentialCase
 from pyVHDLModel.Sequential import IfBranch as VHDLModel_IfBranch
@@ -77,7 +77,6 @@ from pyVHDLModel.Sequential import SequentialAssertStatement as VHDLModel_Sequen
 from pyGHDL.libghdl import Iir, utils
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
-from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Concurrent import WaveformElement, ParameterAssociationItem  # TODO: move out from concurrent?
 from pyGHDL.dom.Concurrent import GetWaveformElementsFromChainedNodes
 from pyGHDL.dom.Symbol import SignalSymbol, VariableSymbol
@@ -357,30 +356,16 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
 
     @classmethod
     def parse(cls, loopNode: Iir, label: str) -> "ForLoopStatement":
-        from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
+        from pyGHDL.dom._Utils import GetNameOfNode
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
-            GetRangeFromNode,
-            GetName,
+            GetDiscreteRangeFromNode,
         )
 
         spec = nodes.Get_Parameter_Specification(loopNode)
         loopIndex = GetNameOfNode(spec)
 
-        discreteRange = nodes.Get_Discrete_Range(spec)
-        rangeKind = GetIirKindOfNode(discreteRange)
-        if rangeKind == nodes.Iir_Kind.Range_Expression:
-            rng = GetRangeFromNode(discreteRange)
-        elif rangeKind in (
-            nodes.Iir_Kind.Attribute_Name,
-            nodes.Iir_Kind.Parenthesis_Name,
-        ):
-            rng = GetName(discreteRange)
-        else:
-            pos = Position.parse(loopNode)
-            raise DOMException(
-                f"Unknown discrete range kind '{rangeKind.name}' in for...loop statement at line {pos.Line}."
-            )
+        rng = GetDiscreteRangeFromNode(nodes.Get_Discrete_Range(spec), "for...loop statement")
 
         statementChain = nodes.Get_Sequential_Statement_Chain(loopNode)
         statements = GetSequentialStatementsFromChainedNodes(statementChain, "for", label)

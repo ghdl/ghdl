@@ -30,11 +30,30 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
-from pyVHDLModel.Base import Range as VHDLModel_Range
+from pyVHDLModel.Base import Direction, ExpressionUnion
+from pyVHDLModel.Base import RangeFromName as VHDLModel_RangeFromName
+from pyVHDLModel.Base import SimpleRange as VHDLModel_SimpleRange
+from pyVHDLModel.Symbol import Symbol
+
+from pyGHDL.libghdl._types import Iir
+from pyGHDL.dom import DOMMixin
 
 
 @export
-class Range(VHDLModel_Range):
-    pass
+class SimpleRange(VHDLModel_SimpleRange, DOMMixin):
+    @InheritDocString(VHDLModel_SimpleRange)
+    def __init__(
+        self, node: Iir, leftBound: ExpressionUnion, rightBound: ExpressionUnion, direction: Direction
+    ) -> None:
+        super().__init__(leftBound, rightBound, direction)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class RangeFromName(VHDLModel_RangeFromName, DOMMixin):
+    @InheritDocString(VHDLModel_RangeFromName)
+    def __init__(self, node: Iir, symbol: Symbol) -> None:
+        super().__init__(symbol)
+        DOMMixin.__init__(self, node)

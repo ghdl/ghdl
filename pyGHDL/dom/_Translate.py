@@ -34,12 +34,12 @@
 This module offers helper functions to translate often used IIR substructures to pyGHDL.dom (pyVHDLModel) constructs.
 """
 
-from typing import List, Generator, Type, Dict, Optional as Nullable
+from typing import List, Generator, Type, Dict, Union, Optional as Nullable
 
 from pyTooling.Decorators import export
 from pyTooling.Warning import WarningCollector
 
-from pyVHDLModel.Base import ModelEntity, Direction, ExpressionUnion
+from pyVHDLModel.Base import ModelEntity, Direction, ExpressionUnion, Range
 from pyVHDLModel.Name import Name
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Association import AssociationItem
@@ -85,6 +85,7 @@ from pyGHDL.dom.Symbol import (
     ConstrainedScalarSubtypeSymbol,
     ConstrainedRecordSubtypeSymbol,
     RecordElementSymbol,
+    RangeAttributeSymbol,
 )
 from pyGHDL.dom.Type import (
     IntegerType,
@@ -99,7 +100,7 @@ from pyGHDL.dom.Type import (
     PhysicalType,
     IncompleteType,
 )
-from pyGHDL.dom.Range import Range
+from pyGHDL.dom.Range import RangeFromName, SimpleRange
 from pyGHDL.dom.Literal import (
     IntegerLiteral,
     CharacterLiteral,
@@ -448,9 +449,9 @@ def GetSubtypeFromNode(subtypeNode: Iir) -> Symbol:
 
 
 @export
-def GetRangeFromNode(node: Iir) -> Range:
+def GetRangeFromNode(node: Iir) -> SimpleRange:
     """
-    Translate a range IIR node to a :class:`~pyVHDLModel.Base.Range`.
+    Translate a range IIR node to a :class:`~pyVHDLModel.Base.SimpleRange`.
 
     :param node: The IIR node representing a range.
     :return:     The translated range object.
@@ -459,11 +460,56 @@ def GetRangeFromNode(node: Iir) -> Range:
     leftBound = nodes.Get_Left_Limit_Expr(node)
     rightBound = nodes.Get_Right_Limit_Expr(node)
 
-    return Range(
+    return SimpleRange(
+        node,
         GetExpressionFromNode(leftBound),
         GetExpressionFromNode(rightBound),
         Direction.DownTo if direction else Direction.To,
     )
+
+
+@export
+def GetDiscreteRangeFromNode(discreteRangeNode: Iir, entity: str) -> Range:
+    """
+    Translate a discrete range IIR node to a :class:`~pyVHDLModel.Base.Range`.
+
+    A discrete range is either an explicit range (``0 to 7``, ``vector'range``) or a discrete subtype
+    indication - a type mark (``bit``), optionally with a range constraint (``integer range 0 to 7``).
+    Everything but the explicit-bounds form becomes a
+    :class:`~pyVHDLModel.Base.RangeFromName` wrapping the referenced symbol.
+
+    Shared by ``for ... loop`` statements, ``for ... generate`` statements and aggregate choices, which
+    all use the same VHDL ``discrete_range`` grammar rule.
+
+    :param discreteRangeNode: The IIR node representing a discrete range.
+    :param entity:            The construct the discrete range appears in (e.g. ``for...loop``). Used in exception messages.
+    :returns:                 The translated range.
+    :raises DOMException:     If the IIR node's kind isn't a known discrete range.
+    """
+    rangeKind = GetIirKindOfNode(discreteRangeNode)
+    if rangeKind == nodes.Iir_Kind.Range_Expression:
+        return GetRangeFromNode(discreteRangeNode)
+    elif rangeKind == nodes.Iir_Kind.Subtype_Definition:
+        # A subtype indication like `integer range 0 to 7`, which keeps its type mark alongside the
+        # range constraint.
+        return RangeFromName(discreteRangeNode, GetScalarConstrainedSubtypeFromNode(discreteRangeNode))
+    elif rangeKind in (
+        nodes.Iir_Kind.Simple_Name,
+        nodes.Iir_Kind.Selected_Name,
+    ):
+        # A bare type mark like `bit` or `work.pkg.sub`.
+        return RangeFromName(discreteRangeNode, GetSimpleTypeFromNode(discreteRangeNode))
+    elif rangeKind in (
+        nodes.Iir_Kind.Attribute_Name,
+        nodes.Iir_Kind.Parenthesis_Name,
+    ):
+        # A range attribute like `vector'range`.
+        return RangeFromName(discreteRangeNode, RangeAttributeSymbol(discreteRangeNode, GetName(discreteRangeNode)))
+
+    position = Position.parse(discreteRangeNode)
+    ex = DOMException(f"Unknown discrete range kind '{rangeKind.name}' in {entity} at line {position.Line}.")
+    ex.add_note("Supported: a range expression, a range attribute name, or a discrete subtype indication.")
+    raise ex
 
 
 __EXPRESSION_TRANSLATION = {
@@ -942,8 +988,6 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
                 from pyGHDL.dom.DesignUnit import PackageInstantiation
 
                 yield PackageInstantiation.parse(item)
-            elif kind == nodes.Iir_Kind.Configuration_Specification:
-                WarningCollector.Raise(NotImplementedError(f"Configuration specification in {name}"))
             elif kind == nodes.Iir_Kind.Psl_Default_Clock:
                 yield DefaultClock.parse(item)
             elif kind == nodes.Iir_Kind.Group_Declaration:

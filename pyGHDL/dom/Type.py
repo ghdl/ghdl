@@ -60,7 +60,7 @@ from pyGHDL.libghdl.vhdl import nodes, flists
 from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 from pyGHDL.dom.Literal import EnumerationLiteral, PhysicalIntegerLiteral
-from pyGHDL.dom.Range import Range
+from pyVHDLModel.Base import Range
 from pyGHDL.dom.Subprogram import Function, Procedure
 
 

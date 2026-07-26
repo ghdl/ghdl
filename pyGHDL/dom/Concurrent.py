@@ -34,7 +34,7 @@ from typing import Iterable, List, Optional as Nullable
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel.Base import ExpressionUnion, WaveformElement as VHDLModel_WaveformElement, ModelEntity
+from pyVHDLModel.Base import ExpressionUnion, WaveformElement as VHDLModel_WaveformElement, ModelEntity, Range
 from pyVHDLModel.Common import (
     ConditionalWaveform as VHDLModel_ConditionalWaveform,
     SelectedWaveform as VHDLModel_SelectedWaveform,
@@ -77,7 +77,6 @@ from pyVHDLModel.Concurrent import (
 from pyGHDL.libghdl import Iir, utils, name_table
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, DOMException, Position
-from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Symbol import (
     ArchitectureSymbol,
     EntityInstantiationSymbol,
@@ -590,31 +589,17 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "ForGenerateStatement":
-        from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
+        from pyGHDL.dom._Utils import GetNameOfNode
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
-            GetRangeFromNode,
-            GetName,
+            GetDiscreteRangeFromNode,
         )
 
         spec = nodes.Get_Parameter_Specification(generateNode)
         loopIndex = GetNameOfNode(spec)
 
-        discreteRange = nodes.Get_Discrete_Range(spec)
-        rangeKind = GetIirKindOfNode(discreteRange)
-        if rangeKind == nodes.Iir_Kind.Range_Expression:
-            rng = GetRangeFromNode(discreteRange)
-        elif rangeKind in (
-            nodes.Iir_Kind.Attribute_Name,
-            nodes.Iir_Kind.Parenthesis_Name,
-        ):
-            rng = GetName(discreteRange)
-        else:
-            pos = Position.parse(generateNode)
-            raise DOMException(
-                f"Unknown discrete range kind '{rangeKind.name}' in for...generate statement at line {pos.Line}."
-            )
+        rng = GetDiscreteRangeFromNode(nodes.Get_Discrete_Range(spec), "for...generate statement")
 
         body = nodes.Get_Generate_Statement_Body(generateNode)
         declarationChain = nodes.Get_Declaration_Chain(body)
