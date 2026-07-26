@@ -39,7 +39,7 @@ from typing import List, Generator, Type, Dict, Union, Optional as Nullable
 from pyTooling.Decorators import export
 from pyTooling.Warning import WarningCollector
 
-from pyVHDLModel.Base import ModelEntity, Direction, ExpressionUnion
+from pyVHDLModel.Base import ModelEntity, Direction, ExpressionUnion, Range
 from pyVHDLModel.Name import Name
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Association import AssociationItem
@@ -100,7 +100,7 @@ from pyGHDL.dom.Type import (
     PhysicalType,
     IncompleteType,
 )
-from pyGHDL.dom.Range import Range, RangeFromName, SimpleRange
+from pyGHDL.dom.Range import RangeFromName, SimpleRange
 from pyGHDL.dom.Literal import (
     IntegerLiteral,
     CharacterLiteral,
@@ -461,6 +461,7 @@ def GetRangeFromNode(node: Iir) -> SimpleRange:
     rightBound = nodes.Get_Right_Limit_Expr(node)
 
     return SimpleRange(
+        node,
         GetExpressionFromNode(leftBound),
         GetExpressionFromNode(rightBound),
         Direction.DownTo if direction else Direction.To,
@@ -491,19 +492,19 @@ def GetDiscreteRangeFromNode(discreteRangeNode: Iir, entity: str) -> Range:
     elif rangeKind == nodes.Iir_Kind.Subtype_Definition:
         # A subtype indication like `integer range 0 to 7`, which keeps its type mark alongside the
         # range constraint.
-        return RangeFromName(GetScalarConstrainedSubtypeFromNode(discreteRangeNode))
+        return RangeFromName(discreteRangeNode, GetScalarConstrainedSubtypeFromNode(discreteRangeNode))
     elif rangeKind in (
         nodes.Iir_Kind.Simple_Name,
         nodes.Iir_Kind.Selected_Name,
     ):
         # A bare type mark like `bit` or `work.pkg.sub`.
-        return RangeFromName(GetSimpleTypeFromNode(discreteRangeNode))
+        return RangeFromName(discreteRangeNode, GetSimpleTypeFromNode(discreteRangeNode))
     elif rangeKind in (
         nodes.Iir_Kind.Attribute_Name,
         nodes.Iir_Kind.Parenthesis_Name,
     ):
         # A range attribute like `vector'range`.
-        return RangeFromName(RangeAttributeSymbol(discreteRangeNode, GetName(discreteRangeNode)))
+        return RangeFromName(discreteRangeNode, RangeAttributeSymbol(discreteRangeNode, GetName(discreteRangeNode)))
 
     position = Position.parse(discreteRangeNode)
     ex = DOMException(f"Unknown discrete range kind '{rangeKind.name}' in {entity} at line {position.Line}.")

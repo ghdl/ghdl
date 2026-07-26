@@ -42,7 +42,7 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel.Base import ExpressionUnion
+from pyVHDLModel.Base import ExpressionUnion, Range
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Expression import SimpleAggregateElement as VHDLModel_SimpleAggregateElement
 from pyVHDLModel.Expression import IndexedAggregateElement as VHDLModel_IndexedAggregateElement
@@ -52,7 +52,6 @@ from pyVHDLModel.Expression import OthersAggregateElement as VHDLModel_OthersAgg
 
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
-from pyGHDL.dom.Range import Range
 
 
 @export

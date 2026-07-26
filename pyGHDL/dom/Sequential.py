@@ -34,7 +34,7 @@ from typing import Iterable
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel.Base import ExpressionUnion
+from pyVHDLModel.Base import ExpressionUnion, Range
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Sequential import SequentialStatement, SequentialChoice, SequentialCase
 from pyVHDLModel.Sequential import IfBranch as VHDLModel_IfBranch
@@ -77,7 +77,6 @@ from pyVHDLModel.Sequential import SequentialAssertStatement as VHDLModel_Sequen
 from pyGHDL.libghdl import Iir, utils
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
-from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Concurrent import WaveformElement, ParameterAssociationItem  # TODO: move out from concurrent?
 from pyGHDL.dom.Concurrent import GetWaveformElementsFromChainedNodes
 from pyGHDL.dom.Symbol import SignalSymbol, VariableSymbol

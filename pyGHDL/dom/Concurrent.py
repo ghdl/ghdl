@@ -34,7 +34,7 @@ from typing import Iterable, List, Optional as Nullable
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel.Base import ExpressionUnion, WaveformElement as VHDLModel_WaveformElement, ModelEntity
+from pyVHDLModel.Base import ExpressionUnion, WaveformElement as VHDLModel_WaveformElement, ModelEntity, Range
 from pyVHDLModel.Common import (
     ConditionalWaveform as VHDLModel_ConditionalWaveform,
     SelectedWaveform as VHDLModel_SelectedWaveform,
@@ -77,7 +77,6 @@ from pyVHDLModel.Concurrent import (
 from pyGHDL.libghdl import Iir, utils, name_table
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, DOMException, Position
-from pyGHDL.dom.Range import Range
 from pyGHDL.dom.Symbol import (
     ArchitectureSymbol,
     EntityInstantiationSymbol,

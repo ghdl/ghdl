@@ -114,3 +114,12 @@ class DiscreteRanges(TestCase):
         # Explicit bounds, so no name to resolve.
         self.assertIsInstance(loop.Range, SimpleRange)
         self.assertEqual("0 to 3", str(loop.Range))
+
+    def test_EveryRangeTracksItsIIRNode(self) -> None:
+        """Both range classes mix in DOMMixin, so each keeps the position of its GHDL IIR node."""
+        ranges = [self._generate.Range] + [loop.Range for loop in self._statements[:4]]
+
+        for rng in ranges:
+            self.assertIsNotNone(rng.Position)
+            self.assertEqual("DiscreteRanges.vhdl", rng.Position.Filename.name)
+            self.assertGreater(rng.Position.Line, 0)

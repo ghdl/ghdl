@@ -69,7 +69,7 @@ from pyVHDLModel.Symbol import IndexedObjectOrFunctionCallSymbol as VHDLModel_In
 
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
-from pyGHDL.dom.Range import Range
+from pyVHDLModel.Base import Range
 
 
 @export
