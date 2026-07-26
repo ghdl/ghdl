@@ -33,8 +33,12 @@
 from pathlib import Path
 from unittest import TestCase
 
-from pyVHDLModel.Base import Range
-from pyVHDLModel.Name import AttributeName, SimpleName
+from pyVHDLModel.Base import RangeFromName, SimpleRange
+from pyVHDLModel.Symbol import (
+    ConstrainedScalarSubtypeSymbol,
+    RangeAttributeSymbol,
+    SimpleSubtypeSymbol,
+)
 
 from pyGHDL.dom.Concurrent import ForGenerateStatement
 from pyGHDL.dom.NonStandard import Design, Document
@@ -71,31 +75,42 @@ class DiscreteRanges(TestCase):
 
     def test_ForGenerateWithSubtypeIndication(self) -> None:
         self.assertIsInstance(self._generate, ForGenerateStatement)
-        self.assertIsInstance(self._generate.Range, Range)
+        self.assertIsInstance(self._generate.Range, RangeFromName)
 
     def test_ForLoopWithConstrainedSubtypeIndication(self) -> None:
         loop = self._statements[0]
 
         self.assertIsInstance(loop, ForLoopStatement)
-        # The range constraint of `integer range 0 to 3` carries the iteration bounds.
-        self.assertIsInstance(loop.Range, Range)
+        self.assertIsInstance(loop.Range, RangeFromName)
         self.assertIs(loop.Range.Parent, loop)
+
+        # `integer range 0 to 3` keeps its type mark alongside the range constraint.
+        symbol = loop.Range.Symbol
+        self.assertIsInstance(symbol, ConstrainedScalarSubtypeSymbol)
+        self.assertEqual("integer", symbol.Name.Identifier)
+        self.assertIsInstance(symbol.Constraint, SimpleRange)
+        self.assertEqual("0 to 3", str(symbol.Constraint))
 
     def test_ForLoopWithTypeMark(self) -> None:
         loop = self._statements[1]
 
         self.assertIsInstance(loop, ForLoopStatement)
-        # `bit` has no range constraint of its own, so the type mark's name is kept.
-        self.assertIsInstance(loop.Range, SimpleName)
+        # `bit` has no range constraint of its own, so only the type mark is referenced.
+        self.assertIsInstance(loop.Range, RangeFromName)
+        self.assertIsInstance(loop.Range.Symbol, SimpleSubtypeSymbol)
+        self.assertEqual("bit", loop.Range.Symbol.Name.Identifier)
 
     def test_ForLoopWithRangeAttribute(self) -> None:
         loop = self._statements[2]
 
         self.assertIsInstance(loop, ForLoopStatement)
-        self.assertIsInstance(loop.Range, AttributeName)
+        self.assertIsInstance(loop.Range, RangeFromName)
+        self.assertIsInstance(loop.Range.Symbol, RangeAttributeSymbol)
 
     def test_ForLoopWithRangeExpression(self) -> None:
         loop = self._statements[3]
 
         self.assertIsInstance(loop, ForLoopStatement)
-        self.assertIsInstance(loop.Range, Range)
+        # Explicit bounds, so no name to resolve.
+        self.assertIsInstance(loop.Range, SimpleRange)
+        self.assertEqual("0 to 3", str(loop.Range))

@@ -33,7 +33,7 @@
 from pathlib import Path
 from unittest import TestCase
 
-from pyVHDLModel.Base import Range
+from pyVHDLModel.Base import SimpleRange
 
 from pyGHDL.dom.Expression import (
     IndexedAggregateElement,
@@ -100,4 +100,4 @@ class AggregateChoices(TestCase):
         self.assertIsInstance(indexed, IndexedAggregateElement)
         self.assertIsInstance(ranged, RangedAggregateElement)
         self.assertIsInstance(others, OthersAggregateElement)
-        self.assertIsInstance(ranged.Range, Range)
+        self.assertIsInstance(ranged.Range, SimpleRange)

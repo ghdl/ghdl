@@ -85,6 +85,7 @@ from pyGHDL.dom.Symbol import (
     ConstrainedScalarSubtypeSymbol,
     ConstrainedRecordSubtypeSymbol,
     RecordElementSymbol,
+    RangeAttributeSymbol,
 )
 from pyGHDL.dom.Type import (
     IntegerType,
@@ -99,7 +100,7 @@ from pyGHDL.dom.Type import (
     PhysicalType,
     IncompleteType,
 )
-from pyGHDL.dom.Range import Range
+from pyGHDL.dom.Range import Range, RangeFromName, SimpleRange
 from pyGHDL.dom.Literal import (
     IntegerLiteral,
     CharacterLiteral,
@@ -448,9 +449,9 @@ def GetSubtypeFromNode(subtypeNode: Iir) -> Symbol:
 
 
 @export
-def GetRangeFromNode(node: Iir) -> Range:
+def GetRangeFromNode(node: Iir) -> SimpleRange:
     """
-    Translate a range IIR node to a :class:`~pyVHDLModel.Base.Range`.
+    Translate a range IIR node to a :class:`~pyVHDLModel.Base.SimpleRange`.
 
     :param node: The IIR node representing a range.
     :return:     The translated range object.
@@ -459,7 +460,7 @@ def GetRangeFromNode(node: Iir) -> Range:
     leftBound = nodes.Get_Left_Limit_Expr(node)
     rightBound = nodes.Get_Right_Limit_Expr(node)
 
-    return Range(
+    return SimpleRange(
         GetExpressionFromNode(leftBound),
         GetExpressionFromNode(rightBound),
         Direction.DownTo if direction else Direction.To,
@@ -467,42 +468,42 @@ def GetRangeFromNode(node: Iir) -> Range:
 
 
 @export
-def GetDiscreteRangeFromNode(discreteRangeNode: Iir, entity: str) -> Union[Range, Name]:
+def GetDiscreteRangeFromNode(discreteRangeNode: Iir, entity: str) -> Range:
     """
-    Translate a discrete range IIR node to a :class:`~pyVHDLModel.Base.Range` or a :class:`~pyVHDLModel.Name.Name`.
+    Translate a discrete range IIR node to a :class:`~pyVHDLModel.Base.Range`.
 
-    A discrete range is either an explicit range (``0 to 7``, ``v'range``) or a discrete subtype
+    A discrete range is either an explicit range (``0 to 7``, ``vector'range``) or a discrete subtype
     indication - a type mark (``bit``), optionally with a range constraint (``integer range 0 to 7``).
+    Everything but the explicit-bounds form becomes a
+    :class:`~pyVHDLModel.Base.RangeFromName` wrapping the referenced symbol.
 
     Shared by ``for ... loop`` statements, ``for ... generate`` statements and aggregate choices, which
     all use the same VHDL ``discrete_range`` grammar rule.
 
     :param discreteRangeNode: The IIR node representing a discrete range.
     :param entity:            The construct the discrete range appears in (e.g. ``for...loop``). Used in exception messages.
-    :returns:                 The translated range, or a name referencing the discrete (sub)type.
+    :returns:                 The translated range.
     :raises DOMException:     If the IIR node's kind isn't a known discrete range.
     """
     rangeKind = GetIirKindOfNode(discreteRangeNode)
     if rangeKind == nodes.Iir_Kind.Range_Expression:
         return GetRangeFromNode(discreteRangeNode)
     elif rangeKind == nodes.Iir_Kind.Subtype_Definition:
-        # A constrained subtype indication like `integer range 0 to 7`. The range constraint carries the
-        # iteration bounds, so it's translated instead of the whole subtype indication.
-        # FIXME: the type mark (`integer`) is dropped - pyVHDLModel's range-typed fields can't hold it yet.
-        rangeConstraint = nodes.Get_Range_Constraint(discreteRangeNode)
-        if rangeConstraint != nodes.Null_Iir:
-            return GetRangeFromNode(rangeConstraint)
-
-        # An unconstrained subtype indication (e.g. a resolved subtype) - fall back to its type mark.
-        return GetName(nodes.Get_Subtype_Type_Mark(discreteRangeNode))
+        # A subtype indication like `integer range 0 to 7`, which keeps its type mark alongside the
+        # range constraint.
+        return RangeFromName(GetScalarConstrainedSubtypeFromNode(discreteRangeNode))
     elif rangeKind in (
-        nodes.Iir_Kind.Attribute_Name,
-        nodes.Iir_Kind.Parenthesis_Name,
         nodes.Iir_Kind.Simple_Name,
         nodes.Iir_Kind.Selected_Name,
     ):
-        # A bare type mark like `bit` or `work.pkg.sub`, or an explicit range name like `v'range`.
-        return GetName(discreteRangeNode)
+        # A bare type mark like `bit` or `work.pkg.sub`.
+        return RangeFromName(GetSimpleTypeFromNode(discreteRangeNode))
+    elif rangeKind in (
+        nodes.Iir_Kind.Attribute_Name,
+        nodes.Iir_Kind.Parenthesis_Name,
+    ):
+        # A range attribute like `vector'range`.
+        return RangeFromName(RangeAttributeSymbol(discreteRangeNode, GetName(discreteRangeNode)))
 
     position = Position.parse(discreteRangeNode)
     ex = DOMException(f"Unknown discrete range kind '{rangeKind.name}' in {entity} at line {position.Line}.")

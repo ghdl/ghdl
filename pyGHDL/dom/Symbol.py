@@ -63,6 +63,7 @@ from pyVHDLModel.Symbol import ConstrainedScalarSubtypeSymbol as VHDLModel_Const
 from pyVHDLModel.Symbol import ConstrainedArraySubtypeSymbol as VHDLModel_ConstrainedArraySubtypeSymbol
 from pyVHDLModel.Symbol import ConstrainedRecordSubtypeSymbol as VHDLModel_ConstrainedRecordSubtypeSymbol
 from pyVHDLModel.Symbol import RecordElementSymbol as VHDLModel_RecordElementSymbol
+from pyVHDLModel.Symbol import RangeAttributeSymbol as VHDLModel_RangeAttributeSymbol
 from pyVHDLModel.Symbol import SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol
 from pyVHDLModel.Symbol import IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol
 
@@ -464,6 +465,14 @@ class ConstrainedRecordSubtypeSymbol(VHDLModel_ConstrainedRecordSubtypeSymbol, D
 class RecordElementSymbol(VHDLModel_RecordElementSymbol, DOMMixin):
     @InheritDocString(VHDLModel_RecordElementSymbol)
     def __init__(self, node: Iir, name: SimpleName) -> None:
+        super().__init__(name)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class RangeAttributeSymbol(VHDLModel_RangeAttributeSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_RangeAttributeSymbol)
+    def __init__(self, node: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, node)
 

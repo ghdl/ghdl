@@ -33,8 +33,20 @@
 from pyTooling.Decorators import export
 
 from pyVHDLModel.Base import Range as VHDLModel_Range
+from pyVHDLModel.Base import RangeFromName as VHDLModel_RangeFromName
+from pyVHDLModel.Base import SimpleRange as VHDLModel_SimpleRange
 
 
 @export
 class Range(VHDLModel_Range):
+    pass
+
+
+@export
+class SimpleRange(VHDLModel_SimpleRange):
+    pass
+
+
+@export
+class RangeFromName(VHDLModel_RangeFromName):
     pass
