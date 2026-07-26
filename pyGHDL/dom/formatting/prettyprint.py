@@ -32,6 +32,7 @@
 # ============================================================================
 from typing import List, Union
 
+from pyTooling.Common import getFullyQualifiedName
 from pyTooling.Decorators import export
 
 from pyVHDLModel.Base import NamedEntityMixin
@@ -81,9 +82,14 @@ from pyGHDL.dom.Type import (
 )
 from pyGHDL.dom.InterfaceItem import (
     GenericConstantInterfaceItem,
-    PortSignalInterfaceItem,
+    PortSimpleSignalInterfaceItem,
+    PortViewSignalInterfaceItem,
     GenericTypeInterfaceItem,
+    ModeViewDeclaration,
+    SimpleModeViewElement,
+    CompositeModeViewElement,
 )
+from pyVHDLModel.Interface import ModeViewElement
 from pyGHDL.dom.Object import Constant, Signal, SharedVariable, File
 from pyGHDL.dom.Attribute import Attribute, AttributeSpecification
 from pyGHDL.dom.Subprogram import Procedure
@@ -327,15 +333,17 @@ class PrettyPrint:
             return self.formatGenericType(generic, level)
         else:
             raise PrettyPrintException(
-                f"Unhandled generic kind '{generic.__class__.__name__}' for generic '{generic.Identifiers[0]}'."
+                f"Unhandled generic kind '{getFullyQualifiedName(generic)}' for generic '{generic.Identifiers[0]}'."
             )
 
     def formatPort(self, port: Union[NamedEntityMixin, PortInterfaceItemMixin], level: int = 0) -> StringBuffer:
-        if isinstance(port, PortSignalInterfaceItem):
+        if isinstance(port, PortSimpleSignalInterfaceItem):
             return self.formatPortSignal(port, level)
+        elif isinstance(port, PortViewSignalInterfaceItem):
+            return self.formatPortView(port, level)
         else:
             raise PrettyPrintException(
-                f"Unhandled port kind '{port.__class__.__name__}' for port '{port.Identifiers[0]}'."
+                f"Unhandled port kind '{getFullyQualifiedName(port)}' for port '{port.Identifiers[0]}'."
             )
 
     def formatGenericConstant(self, generic: GenericConstantInterfaceItem, level: int = 0) -> StringBuffer:
@@ -357,7 +365,7 @@ class PrettyPrint:
 
         return buffer
 
-    def formatPortSignal(self, port: PortSignalInterfaceItem, level: int = 0) -> StringBuffer:
+    def formatPortSignal(self, port: PortSimpleSignalInterfaceItem, level: int = 0) -> StringBuffer:
         buffer = []
         prefix = "  " * level
 
@@ -365,6 +373,15 @@ class PrettyPrint:
         buffer.append(
             f"{prefix}  - {', '.join(port.Identifiers)} : {port.Mode} {subTypeIndication}{self.formatInitialValue(port)}"
         )
+
+        return buffer
+
+    def formatPortView(self, port: PortViewSignalInterfaceItem, level: int = 0) -> StringBuffer:
+        buffer = []
+        prefix = "  " * level
+
+        # A mode view port has no mode of its own - the mode view reference takes that position.
+        buffer.append(f"{prefix}  - {', '.join(port.Identifiers)} : view {port.ModeViewIndication!s}")
 
         return buffer
 
@@ -411,10 +428,24 @@ class PrettyPrint:
             buffer.append(f"{prefix}- package {item.Identifier} is new {item.PackageReference} generic map (.....)")
         elif isinstance(item, DefaultClock):
             buffer.append(f"{prefix}- default {item.Identifier} is {'...'}")
+        elif isinstance(item, ModeViewDeclaration):
+            buffer.append(f"{prefix}- view {item.Identifier} of {item.Subtype!s} is")
+            for element in item.Elements:
+                buffer.append(f"{prefix}  - {self.formatModeViewElement(element)}")
         else:
-            raise PrettyPrintException(f"Unhandled declared item kind '{item.__class__.__name__}'.")
+            raise PrettyPrintException(f"Unhandled declared item kind '{getFullyQualifiedName(item)}'.")
 
         return buffer
+
+    def formatModeViewElement(self, element: ModeViewElement) -> str:
+        identifiers = ", ".join(element.Identifiers)
+
+        if isinstance(element, SimpleModeViewElement):
+            return f"{identifiers} : {element.Mode!s}"
+        elif isinstance(element, CompositeModeViewElement):
+            return f"{identifiers} : view {element.ModeViewName!s}"
+
+        raise PrettyPrintException(f"Unhandled mode view element kind '{getFullyQualifiedName(element)}'.")
 
     def formatType(self, item: BaseType) -> str:
         result = f"type {item.Identifier} is "
@@ -439,7 +470,7 @@ class PrettyPrint:
         elif isinstance(item, ProtectedTypeBody):
             result += "protected body ..... end protected body"
         else:
-            raise PrettyPrintException(f"Unknown type '{item.__class__.__name__}'")
+            raise PrettyPrintException(f"Unknown type '{getFullyQualifiedName(item)}'")
 
         return result
 
@@ -455,7 +486,7 @@ class PrettyPrint:
             return f"{subtypeIndication.Name.Identifier}({', '.join(constraints)})"
         else:
             raise PrettyPrintException(
-                f"Unhandled subtype kind '{subtypeIndication.__class__.__name__}' for {entity} '{name}'."
+                f"Unhandled subtype kind '{getFullyQualifiedName(subtypeIndication)}' for {entity} '{name}'."
             )
 
     def formatInitialValue(self, item: WithDefaultExpressionMixin) -> str:
