@@ -44,7 +44,9 @@ from pyGHDL.dom import DOMMixin
 @export
 class SimpleRange(VHDLModel_SimpleRange, DOMMixin):
     @InheritDocString(VHDLModel_SimpleRange)
-    def __init__(self, node: Iir, leftBound: ExpressionUnion, rightBound: ExpressionUnion, direction: Direction) -> None:
+    def __init__(
+        self, node: Iir, leftBound: ExpressionUnion, rightBound: ExpressionUnion, direction: Direction
+    ) -> None:
         super().__init__(leftBound, rightBound, direction)
         DOMMixin.__init__(self, node)
 
