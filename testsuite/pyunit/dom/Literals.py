@@ -98,7 +98,7 @@ class Literals(TestCase):
         default: ExpressionUnion = self.parse(_filename, 'constant c0 : bit_vector(3 downto 0) := x"F";')
 
         self.assertIsInstance(default, HexadecimalBitStringLiteral)
-        self.assertIsNone(default.Signed)
+        self.assertIsNone(default.IsSigned)
         self.assertIsNone(default.Length)
 
     def test_BitStringLiteral_Signed(self):
@@ -109,7 +109,7 @@ class Literals(TestCase):
         default: ExpressionUnion = self.parse(_filename, 'constant c0 : bit_vector(7 downto 0) := sx"F";')
 
         self.assertIsInstance(default, HexadecimalBitStringLiteral)
-        self.assertTrue(default.Signed)
+        self.assertTrue(default.IsSigned)
 
     def test_BitStringLiteral_Unsigned(self):
         """``ux"F"``"""
@@ -119,7 +119,7 @@ class Literals(TestCase):
         default: ExpressionUnion = self.parse(_filename, 'constant c0 : bit_vector(7 downto 0) := ux"F";')
 
         self.assertIsInstance(default, HexadecimalBitStringLiteral)
-        self.assertFalse(default.Signed)
+        self.assertFalse(default.IsSigned)
 
     def test_BitStringLiteral_ExplicitLength(self):
         """``4x"F"``"""
