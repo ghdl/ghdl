@@ -208,25 +208,61 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         self,
         blockNode: Iir,
         label: str,
+        genericItems: Iterable = None,
+        genericAssociationItems: Iterable = None,
+        portItems: Iterable = None,
+        portAssociationItems: Iterable = None,
         declaredItems: Iterable = None,
         statements: Iterable["ConcurrentStatement"] = None,
     ) -> None:
-        super().__init__(label, None, declaredItems, statements)
+        super().__init__(
+            label,
+            genericItems,
+            genericAssociationItems,
+            portItems,
+            portAssociationItems,
+            declaredItems,
+            statements,
+        )
         DOMMixin.__init__(self, blockNode)
 
     @classmethod
     def parse(cls, blockNode: Iir, label: str) -> "ConcurrentBlockStatement":
-        from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetConcurrentStatementsFromChainedNodes
+        from pyGHDL.dom._Translate import (
+            GetDeclaredItemsFromChainedNodes,
+            GetConcurrentStatementsFromChainedNodes,
+            GetGenericsFromChainedNodes,
+            GetPortsFromChainedNodes,
+            GetGenericMapAspect,
+            GetPortMapAspect,
+        )
 
-        #        genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
-        #        portAssociationItems = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
+        # A block's generic/port clauses and their map aspects live on the block *header*, not on the
+        # block node itself. A block without a header has none of them.
+        blockHeader = nodes.Get_Block_Header(blockNode)
+        if blockHeader != nodes.Null_Iir:
+            genericItems = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(blockHeader))
+            genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(blockHeader))
+            portItems = GetPortsFromChainedNodes(nodes.Get_Port_Chain(blockHeader))
+            portAssociationItems = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(blockHeader))
+        else:
+            genericItems = genericAssociationItems = portItems = portAssociationItems = None
 
         declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(blockNode), "block", label)
         statements = GetConcurrentStatementsFromChainedNodes(
             nodes.Get_Concurrent_Statement_Chain(blockNode), "block", label
         )
 
-        return cls(blockNode, label, declaredItems, statements)
+        return cls(
+            blockNode,
+            label,
+            genericItems,
+            genericAssociationItems,
+            portItems,
+            portAssociationItems,
+            declaredItems,
+            statements,
+        )
 
 
 @export
