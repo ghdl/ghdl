@@ -73,3 +73,17 @@ class TypeDocumentation(TestCase):
         for item, (identifier, documentation) in zip(items, expected):
             with self.subTest(type=identifier):
                 self.assertEqual(documentation, item.Documentation)
+
+    def test_RecordElementsKeepTheirDocumentation(self) -> None:
+        """A record element is a declaration too, so it carries its own comment."""
+        record = next(item for item in self._declaredItems(self._filename) if item.Identifier == "frame")
+
+        expected = [
+            (("a",), "--! The first field."),
+            (("b", "c"), "--! The second and third fields."),
+        ]
+        self.assertEqual(len(expected), len(record.Elements))
+        for element, (identifiers, documentation) in zip(record.Elements, expected):
+            with self.subTest(element=identifiers):
+                self.assertEqual(identifiers, element.Identifiers)
+                self.assertEqual(documentation, element.Documentation)

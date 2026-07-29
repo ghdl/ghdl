@@ -280,8 +280,8 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
           -- end record;
     """
 
-    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol) -> None:
-        super().__init__(identifiers, subtype)
+    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
+        super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -293,17 +293,18 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
         :param furtherIdentifiers:     The list of record element identifiers.
         :return:                       The record element instance.
         """
-        from pyGHDL.dom._Utils import GetNameOfNode
+        from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         elementName = GetNameOfNode(elementDeclarationNode)
         elementType = GetSubtypeIndicationFromNode(elementDeclarationNode, "record element", elementName)
+        documentation = GetDocumentationOfNode(elementDeclarationNode)
 
         identifiers = [elementName]
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)
 
-        return cls(elementDeclarationNode, identifiers, elementType)
+        return cls(elementDeclarationNode, identifiers, elementType, documentation)
 
 
 @export

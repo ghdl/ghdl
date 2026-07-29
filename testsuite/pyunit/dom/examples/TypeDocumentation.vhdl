@@ -7,7 +7,10 @@ package TypeDocumentation is
 
 	--! A record type.
 	type frame is record
+		--! The first field.
 		a : bit;
+		--! The second and third fields.
+		b, c : bit;
 	end record;
 
 	--! An array type.
