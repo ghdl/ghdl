@@ -68,7 +68,7 @@ from pyGHDL.dom.Sequential import (
 )
 
 from pyGHDL.dom import Position, DOMException
-from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode, GetDocumentationOfNode
 from pyGHDL.dom.Name import (
     SimpleName,
     SelectedName,
@@ -286,23 +286,26 @@ def GetRecordConstraintsFromSubtypeIndication(
 @export
 def GetTypeFromNode(node: Iir) -> BaseType:
     typeName = GetNameOfNode(node)
+    # A doc comment hangs off the type *declaration*, not the type definition inside it, so it is read
+    # here and handed to whichever class parses the definition.
+    documentation = GetDocumentationOfNode(node)
     typeDefinition = nodes.Get_Type_Definition(node)
     if typeDefinition is nodes.Null_Iir:
-        return IncompleteType(node, typeName)
+        return IncompleteType(node, typeName, documentation)
 
     kind = GetIirKindOfNode(typeDefinition)
     if kind == nodes.Iir_Kind.Enumeration_Type_Definition:
-        return EnumeratedType.parse(typeName, typeDefinition)
+        return EnumeratedType.parse(typeName, typeDefinition, documentation)
     elif kind == nodes.Iir_Kind.Array_Type_Definition:
-        return ArrayType.parse(typeName, typeDefinition)
+        return ArrayType.parse(typeName, typeDefinition, documentation)
     elif kind == nodes.Iir_Kind.Record_Type_Definition:
-        return RecordType.parse(typeName, typeDefinition)
+        return RecordType.parse(typeName, typeDefinition, documentation)
     elif kind == nodes.Iir_Kind.Access_Type_Definition:
-        return AccessType.parse(typeName, typeDefinition)
+        return AccessType.parse(typeName, typeDefinition, documentation)
     elif kind == nodes.Iir_Kind.File_Type_Definition:
-        return FileType.parse(typeName, typeDefinition)
+        return FileType.parse(typeName, typeDefinition, documentation)
     elif kind == nodes.Iir_Kind.Protected_Type_Declaration:
-        return ProtectedType.parse(typeName, typeDefinition)
+        return ProtectedType.parse(typeName, typeDefinition, documentation)
     else:
         position = Position.parse(typeDefinition)
         raise DOMException(
@@ -313,26 +316,27 @@ def GetTypeFromNode(node: Iir) -> BaseType:
 @export
 def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
     typeName = GetNameOfNode(node)
+    documentation = GetDocumentationOfNode(node)
     typeDefinition = nodes.Get_Type_Definition(node)
     if typeDefinition is nodes.Null_Iir:
-        return IncompleteType(node, typeName)
+        return IncompleteType(node, typeName, documentation)
 
     kind = GetIirKindOfNode(typeDefinition)
     if kind == nodes.Iir_Kind.Range_Expression:
         r = GetRangeFromNode(typeDefinition)
-        return IntegerType(node, typeName, r)
+        return IntegerType(node, typeName, r, documentation)
 
     elif kind in (nodes.Iir_Kind.Attribute_Name, nodes.Iir_Kind.Parenthesis_Name):
         n = GetName(typeDefinition)
 
-        return IntegerType(node, typeName, n)
+        return IntegerType(node, typeName, n, documentation)
     elif kind == nodes.Iir_Kind.Physical_Type_Definition:
-        return PhysicalType.parse(typeName, typeDefinition)
+        return PhysicalType.parse(typeName, typeDefinition, documentation)
 
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
         WarningCollector.Raise(NotImplementedError("Array_Subtype_Definition"))
 
-        return ArrayType(typeDefinition, "????", [], None)
+        return ArrayType(typeDefinition, "????", [], None, documentation)
     else:
         position = Position.parse(typeDefinition)
         raise DOMException(

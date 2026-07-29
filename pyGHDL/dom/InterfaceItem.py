@@ -383,8 +383,8 @@ class SimpleModeViewElement(VHDLModel_SimpleModeViewElement, DOMMixin):
           end view;
     """
 
-    def __init__(self, node: Iir, identifiers: List[str], mode: Mode) -> None:
-        super().__init__(identifiers, mode)
+    def __init__(self, node: Iir, identifiers: List[str], mode: Mode, documentation: str = None) -> None:
+        super().__init__(identifiers, mode, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -394,8 +394,9 @@ class SimpleModeViewElement(VHDLModel_SimpleModeViewElement, DOMMixin):
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)
         mode = GetModeOfNode(elementNode)
+        documentation = GetDocumentationOfNode(elementNode)
 
-        return cls(elementNode, identifiers, mode)
+        return cls(elementNode, identifiers, mode, documentation)
 
 
 @export
@@ -410,8 +411,10 @@ class CompositeModeViewElement(VHDLModel_CompositeModeViewElement, DOMMixin):
           end view;
     """
 
-    def __init__(self, node: Iir, identifiers: List[str], modeViewName: ModeViewSymbol) -> None:
-        super().__init__(identifiers, modeViewName)
+    def __init__(
+        self, node: Iir, identifiers: List[str], modeViewName: ModeViewSymbol, documentation: str = None
+    ) -> None:
+        super().__init__(identifiers, modeViewName, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -423,8 +426,9 @@ class CompositeModeViewElement(VHDLModel_CompositeModeViewElement, DOMMixin):
 
         modeViewNameNode = nodes.Get_Mode_View_Name(elementNode)
         modeViewName = ModeViewSymbol(modeViewNameNode, GetName(modeViewNameNode))
+        documentation = GetDocumentationOfNode(elementNode)
 
-        return cls(elementNode, identifiers, modeViewName)
+        return cls(elementNode, identifiers, modeViewName, documentation)
 
 
 @export

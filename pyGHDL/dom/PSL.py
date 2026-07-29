@@ -49,7 +49,7 @@ from pyVHDLModel.PSLModel import DefaultClock as VHDLModel_DefaultClock
 
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
-from pyGHDL.dom._Utils import GetNameOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
 
 
 @export
@@ -115,14 +115,16 @@ class DefaultClock(VHDLModel_DefaultClock, DOMMixin):
         self,
         node: Iir,
         identifier: str,
+        documentation: str = None,
     ) -> None:
-        super().__init__(identifier)
+        super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, defaultClockNode: Iir):
         name = GetNameOfNode(defaultClockNode)
+        documentation = GetDocumentationOfNode(defaultClockNode)
 
         # FIXME: needs an implementation
 
-        return cls(defaultClockNode, name)
+        return cls(defaultClockNode, name, documentation)
