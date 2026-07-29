@@ -100,6 +100,7 @@ from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom._Utils import GetIirKindOfNode
+from pyVHDLModel.Symbol import SubtypeSymbol
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol, RecordElementSymbol
 from pyGHDL.dom.Aggregates import (
     OthersAggregateElement,
@@ -173,8 +174,23 @@ class ParenthesisExpression(VHDLModel_ParenthesisExpression, DOMMixin, _ParseUna
 
 @export
 class TypeConversion(VHDLModel_TypeConversion, DOMMixin):
-    def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
-        super().__init__(operand)
+    """
+    Represents a *type conversion*, e.g. ``integer(x)``.
+
+    .. note::
+
+       Not reachable from this translator today. GHDL's parser cannot tell a type conversion from an
+       indexed name or a function call - ``integer(x)``, ``arr(x)`` and ``f(x)`` are all parsed as
+       ``Parenthesis_Name`` - and only semantic analysis rewrites one into ``Type_Conversion``.
+       :mod:`pyGHDL.dom` parses without that pass, so a ``Type_Conversion`` node never arrives and
+       ``Parenthesis_Name`` is translated to
+       :class:`~pyVHDLModel.Symbol.IndexedObjectOrFunctionCallSymbol`, which carries the ambiguity.
+
+       The constructor is kept correct so this class works if semantic analysis is ever run.
+    """
+
+    def __init__(self, node: Iir, targetSubtype: SubtypeSymbol, operand: ExpressionUnion) -> None:
+        super().__init__(targetSubtype, operand)
         DOMMixin.__init__(self, node)
 
 
