@@ -67,7 +67,7 @@ from pyGHDL.dom.Subprogram import Function, Procedure
 @export
 class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
     def __init__(self, node: Iir, identifier: str, documentation: str = None) -> None:
-        super().__init__(identifier, documentation=documentation, parent=None)
+        super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -281,7 +281,7 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol) -> None:
-        super().__init__(identifiers, subtype, None)
+        super().__init__(identifiers, subtype)
         DOMMixin.__init__(self, node)
 
     @classmethod
