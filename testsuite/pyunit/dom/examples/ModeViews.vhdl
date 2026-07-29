@@ -15,7 +15,9 @@ package ModeViews is
 	end record;
 
 	view InnerView of InnerRecord is
+		--! An output element.
 		x : out;
+		--! An input element.
 		y : in;
 	end view;
 

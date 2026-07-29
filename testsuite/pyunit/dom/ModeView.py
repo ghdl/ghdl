@@ -86,6 +86,15 @@ class ModeViews(TestCase):
         self.assertEqual(("c",), c.Identifiers)
         self.assertEqual("InnerView", c.ModeViewName.Name.Identifier)
 
+    def test_ElementsKeepTheirDocumentation(self) -> None:
+        """A mode view element is a declaration, so it carries its own comment."""
+        design = self._design()
+        innerView = design.Documents[0].Packages["modeviews"].DeclaredItems[2]
+
+        x, y = innerView.Elements
+        self.assertIn("--! An output element.", x.Documentation)
+        self.assertEqual("--! An input element.", y.Documentation)
+
     def test_PortWithModeView(self) -> None:
         design = self._design()
         document = design.Documents[0]
