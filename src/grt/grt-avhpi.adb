@@ -186,7 +186,8 @@ package body Grt.Avhpi is
          when Ghdl_Rtik_Generic
             | Ghdl_Rtik_Constant =>
             Is_Sig := False;
-         when Ghdl_Rtik_Signal =>
+         when Ghdl_Rtik_Signal
+            | Ghdl_Rtik_Port =>
             Is_Sig := True;
          when others =>
             Internal_Error ("add_index(1)");
@@ -199,7 +200,24 @@ package body Grt.Avhpi is
       end if;
 
       case El_Type1.Kind is
-         when Ghdl_Rtik_Type_P64 =>
+         when Ghdl_Rtik_Type_B1
+            | Ghdl_Rtik_Type_E8 =>
+            if Is_Sig then
+               El_Size := Address'Size / Storage_Unit;
+            else
+               El_Size := Ghdl_E8'Size / Storage_Unit;
+            end if;
+         when Ghdl_Rtik_Type_I32
+            | Ghdl_Rtik_Type_E32
+            | Ghdl_Rtik_Type_P32 =>
+            if Is_Sig then
+               El_Size := Address'Size / Storage_Unit;
+            else
+               El_Size := Ghdl_I32'Size / Storage_Unit;
+            end if;
+         when Ghdl_Rtik_Type_I64
+            | Ghdl_Rtik_Type_F64
+            | Ghdl_Rtik_Type_P64 =>
             if Is_Sig then
                El_Size := Address'Size / Storage_Unit;
             else
@@ -968,7 +986,8 @@ package body Grt.Avhpi is
                      end if;
                   when VhpiGenericDeclK
                      | VhpiConstDeclK
-                     | VhpiSigDeclK =>
+                     | VhpiSigDeclK
+                     | VhpiPortDeclK =>
                      Atype := Ref.Obj.Obj_Type;
                   when VhpiIndexedNameK =>
                      Atype := Ref.N_Type;
