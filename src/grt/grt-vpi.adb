@@ -1887,7 +1887,8 @@ package body Grt.Vpi is
       --   when it doesnt come from a callback.
       case Vhpi_Get_Kind (aObj.Ref) is
          when VhpiPortDeclK
-           | VhpiSigDeclK =>
+           | VhpiSigDeclK
+           | VhpiIndexedNameK =>
             null;
          when others =>
             return null;
