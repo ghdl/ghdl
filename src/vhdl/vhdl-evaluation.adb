@@ -1348,7 +1348,14 @@ package body Vhdl.Evaluation is
 
          when Iir_Predefined_IEEE_Explicit
             | Iir_Predefined_Bit_Vector_To_Hstring
-            | Iir_Predefined_Bit_Vector_To_Ostring =>
+            | Iir_Predefined_Bit_Vector_To_Ostring
+            | Iir_Predefined_TF_Reduction_And
+            | Iir_Predefined_TF_Reduction_Or
+            | Iir_Predefined_TF_Reduction_Nand
+            | Iir_Predefined_TF_Reduction_Nor
+            | Iir_Predefined_TF_Reduction_Xor
+            | Iir_Predefined_TF_Reduction_Xnor
+            | Iir_Predefined_TF_Reduction_Not =>
             return Eval_Ieee_Operation (Orig, Imp, Operand, Null_Iir);
 
          when others =>
