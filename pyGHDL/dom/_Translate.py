@@ -286,7 +286,7 @@ def GetRecordConstraintsFromSubtypeIndication(
 @export
 def GetTypeFromNode(node: Iir) -> BaseType:
     typeName = GetNameOfNode(node)
-    # A doc comment hangs off the type *declaration*, not the type definition inside it, so it is read
+    # A doc comment attaches to the type *declaration*, not the type definition inside it, so it is read
     # here and handed to whichever class parses the definition.
     documentation = GetDocumentationOfNode(node)
     typeDefinition = nodes.Get_Type_Definition(node)
