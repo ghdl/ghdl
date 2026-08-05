@@ -1,1 +1,1 @@
-pyTooling[terminal] ~= 8.17
+pyTooling[terminal] ~= 8.19
