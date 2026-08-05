@@ -432,7 +432,7 @@ class SimpleSubtypeSymbol(VHDLModel_SimpleSubtypeSymbol, DOMMixin):
 @export
 class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, DOMMixin):
     @InheritDocString(VHDLModel_ConstrainedScalarSubtypeSymbol)
-    def __init__(self, node: Iir, subtypeName: Name, rng: Range = None) -> None:
+    def __init__(self, node: Iir, subtypeName: Name, rng: Range) -> None:
         super().__init__(subtypeName, rng)
         DOMMixin.__init__(self, node)
 
@@ -440,7 +440,7 @@ class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, D
 @export
 class ConstrainedArraySubtypeSymbol(VHDLModel_ConstrainedArraySubtypeSymbol, DOMMixin):
     @InheritDocString(VHDLModel_ConstrainedArraySubtypeSymbol)
-    def __init__(self, node: Iir, subtypeName: Name, constraints: List = None) -> None:
+    def __init__(self, node: Iir, subtypeName: Name, constraints: List) -> None:
         super().__init__(subtypeName, constraints)
         DOMMixin.__init__(self, node)
 
@@ -452,7 +452,7 @@ class ConstrainedArraySubtypeSymbol(VHDLModel_ConstrainedArraySubtypeSymbol, DOM
 @export
 class ConstrainedRecordSubtypeSymbol(VHDLModel_ConstrainedRecordSubtypeSymbol, DOMMixin):
     @InheritDocString(VHDLModel_ConstrainedRecordSubtypeSymbol)
-    def __init__(self, node: Iir, subtypeName: Name, constraints: Mapping = None) -> None:
+    def __init__(self, node: Iir, subtypeName: Name, constraints: Mapping) -> None:
         super().__init__(subtypeName, constraints)
         DOMMixin.__init__(self, node)
 

@@ -404,20 +404,46 @@ def GetSimpleTypeFromNode(subtypeIndicationNode: Iir) -> SimpleSubtypeSymbol:
 @export
 def GetScalarConstrainedSubtypeFromNode(
     subtypeIndicationNode: Iir,
-) -> ConstrainedScalarSubtypeSymbol:
+) -> Union[SimpleSubtypeSymbol, ConstrainedScalarSubtypeSymbol]:
+    """
+    Translate a scalar subtype indication IIR node to a subtype symbol.
+
+    A ``Subtype_Definition`` node carries a type mark and *optionally* a range constraint, because the
+    node is also used for a subtype indication that only adds a resolution indication
+    (``subtype resolvedBit is resolveBit myBit;``). Without a range constraint the result is a
+    :class:`~pyVHDLModel.Symbol.SimpleSubtypeSymbol`; with one it is a
+    :class:`~pyVHDLModel.Symbol.ConstrainedScalarSubtypeSymbol`, whose constraint is mandatory.
+
+    :param subtypeIndicationNode: The subtype indication IIR node.
+    :returns:                     The translated subtype symbol.
+    :raises DOMException:         If the range constraint's IIR node isn't a known range.
+    """
     typeMark = nodes.Get_Subtype_Type_Mark(subtypeIndicationNode)
     typeMarkName = GetNameOfNode(typeMark)
     simpleTypeMark = SimpleName(typeMark, typeMarkName)
     rangeConstraint = nodes.Get_Range_Constraint(subtypeIndicationNode)
 
-    r = None
-    # Check if RangeExpression. Might also be an AttributeName (see §3.1)
-    if rangeConstraint != nodes.Null_Iir:
-        if GetIirKindOfNode(rangeConstraint) == nodes.Iir_Kind.Range_Expression:
-            r = GetRangeFromNode(rangeConstraint)
-    # TODO: Get actual range from AttributeName node?
+    if rangeConstraint == nodes.Null_Iir:
+        return SimpleSubtypeSymbol(subtypeIndicationNode, simpleTypeMark)
 
-    return ConstrainedScalarSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, r)
+    rangeKind = GetIirKindOfNode(rangeConstraint)
+    if rangeKind == nodes.Iir_Kind.Range_Expression:
+        constraint = GetRangeFromNode(rangeConstraint)
+    elif rangeKind in (
+        nodes.Iir_Kind.Attribute_Name,
+        nodes.Iir_Kind.Parenthesis_Name,
+    ):
+        # A range attribute like `natural range vector'range`.
+        constraint = RangeFromName(rangeConstraint, RangeAttributeSymbol(rangeConstraint, GetName(rangeConstraint)))
+    else:
+        position = Position.parse(subtypeIndicationNode)
+        ex = DOMException(
+            f"Unknown range constraint kind '{rangeKind.name}' in a subtype indication at line {position.Line}."
+        )
+        ex.add_note("Supported: a range expression or a range attribute name.")
+        raise ex
+
+    return ConstrainedScalarSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraint)
 
 
 @export
