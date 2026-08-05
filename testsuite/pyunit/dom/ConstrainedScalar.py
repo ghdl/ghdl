@@ -34,7 +34,8 @@ from pathlib import Path
 from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
-from pyGHDL.dom.Symbol import ConstrainedScalarSubtypeSymbol
+from pyGHDL.dom.Range import RangeFromName
+from pyGHDL.dom.Symbol import ConstrainedScalarSubtypeSymbol, RangeAttributeSymbol, SimpleSubtypeSymbol
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -84,3 +85,23 @@ class ConstrainedScalarSubtypes(TestCase):
 
         self.assertIsInstance(signal.Subtype, ConstrainedScalarSubtypeSymbol)
         self.assertIsNotNone(signal.Subtype.Constraint)
+
+    def test_RangeAttributeRange(self) -> None:
+        """``subtype index_t is natural range v'range;`` - the range constraint is a range attribute
+        rather than explicit bounds, which GHDL reports as an ``Attribute_Name``."""
+        architecture = self._architecture()
+        subtype = architecture.DeclaredItems[6]
+
+        self.assertIsInstance(subtype.Type, ConstrainedScalarSubtypeSymbol)
+        self.assertIsInstance(subtype.Type.Constraint, RangeFromName)
+        self.assertIsInstance(subtype.Type.Constraint.Symbol, RangeAttributeSymbol)
+
+    def test_ResolutionIndicationWithoutRange(self) -> None:
+        """``subtype resolved_t is resolveBit myBit;`` - a subtype indication that only adds a
+        resolution function. GHDL reports it as a ``Subtype_Definition`` too, but there is no range
+        constraint, so it is not a constrained scalar subtype."""
+        architecture = self._architecture()
+        subtype = architecture.DeclaredItems[10]
+
+        self.assertIsInstance(subtype.Type, SimpleSubtypeSymbol)
+        self.assertNotIsInstance(subtype.Type, ConstrainedScalarSubtypeSymbol)
