@@ -46,9 +46,9 @@ if __name__ == "__main__":  # pragma: no cover
 
 class ConstrainedScalarSubtypes(TestCase):
     """
-    Regression tests: ConstrainedScalarSubtypeSymbol previously read the range constraint (rng) but
-    never forwarded it to the base class ('# , rng)  # XXX: hacked') - every constrained scalar
-    subtype silently lost its range constraint.
+    Translation of the subtype indication shapes GHDL reports as a ``Subtype_Definition``: a range
+    constraint with explicit bounds, a range constraint denoted by a range attribute, and a subtype
+    indication that adds only a resolution function and therefore has no range constraint at all.
     """
 
     _root = Path(__file__).resolve().parent
