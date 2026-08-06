@@ -94,56 +94,61 @@ package body Grt.To_Strings is
       Last := strlen (To_Ghdl_C_String (Str'Address));
    end To_String;
 
-   procedure To_String (Str : out String_Time_Unit;
-                        First : out Natural;
-                        Value : Ghdl_I64;
-                        Unit : Ghdl_I64)
+   procedure To_String_Time (Str : out String_Time_Unit;
+                             Last : out Natural;
+                             Value : Ghdl_I64;
+                             Unit : Ghdl_I64)
    is
-      V, U : Ghdl_I64;
-      D : Natural;
-      P : Natural := Str'Last;
-      Has_Digits : Boolean;
+      V, U, R : Ghdl_I64;
+      Nd : Integer;
+      P : Natural := Str'First;
    begin
-      --  Always work on negative values.
+      --  Always work on negative values (to avoid overflow)
       if Value > 0 then
          V := -Value;
       else
          V := Value;
-      end if;
-
-      Has_Digits := False;
-      U := Unit;
-      loop
-         if U = 1 then
-            if Has_Digits then
-               Str (P) := '.';
-               P := P - 1;
-            else
-               Has_Digits := True;
-            end if;
-         end if;
-
-         D := Natural (-(V rem 10));
-         if D /= 0 or else Has_Digits then
-            Str (P) := Character'Val (48 + D);
-            P := P - 1;
-            Has_Digits := True;
-         end if;
-         U := U / 10;
-         V := V / 10;
-         exit when V = 0 and then U = 0;
-      end loop;
-      if not Has_Digits then
-         Str (P) := '0';
-      else
+         Str (P) := '-';
          P := P + 1;
       end if;
-      if Value < 0 then
-         P := P - 1;
-         Str (P) := '-';
-      end if;
-      First := P;
-   end To_String;
+
+      --  We'd like to get the representation of VALUE / UNIT.
+      --  Do the division like with paper and pen: shift UNIT (but
+      --  also avoid overflow...)
+      U := Unit;
+      Nd := 1;
+      while U < 1e18 and then (-U) * 10 > V loop
+         U := U * 10;
+         Nd := Nd + 1;
+      end loop;
+
+      loop
+         R := V / U;  -- Negative
+         V := V - R * U;
+         if U > 100 then
+            --  Shift divisor (as long as it is a multiple of 10, to avoid
+            --  shifting from 36 to 3).
+            U := U / 10;
+         else
+            --  Shift dividend otherwise (cannot always do it as it could
+            --  overflow like from 1.9 hr to 9 hr).
+            V := V * 10;
+         end if;
+         Str (P) := Character'Val (48 + Natural (-R));
+         P := P + 1;
+
+         exit when V = 0 and Nd <= 1;
+         exit when P > Str'Last;
+
+         if Nd = 1 then
+            Str (P) := '.';
+            P := P + 1;
+         end if;
+         Nd := Nd - 1;
+      end loop;
+
+      Last := P - 1;
+   end To_String_Time;
 
    NBSP : constant Character := Character'Val (160);
    HT : constant Character := Character'Val (9);

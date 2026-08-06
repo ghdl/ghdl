@@ -2914,7 +2914,7 @@ package body Synth.Vhdl_Eval is
                Time_Type : constant Node :=
                  Get_Type (Get_Interface_Declaration_Chain (Imp));
                Str : Grt.To_Strings.String_Time_Unit;
-               First : Natural;
+               Last : Natural;
                Unit : Iir;
                Uval : Int64;
             begin
@@ -2929,11 +2929,12 @@ package body Synth.Vhdl_Eval is
                     (Inst, Expr, "to_string for time called with wrong unit");
                   return Null_Memtyp;
                end if;
-               Grt.To_Strings.To_String (Str, First,
-                                         Ghdl_I64 (Read_Discrete (Param1)),
-                                         Ghdl_I64 (Uval));
+               Grt.To_Strings.To_String_Time
+                 (Str, Last,
+                  Ghdl_I64 (Read_Discrete (Param1)),
+                  Ghdl_I64 (Uval));
                return String_To_Memtyp
-                 (Str (First .. Str'Last) & ' '
+                 (Str (Str'First .. Last) & ' '
                     & Name_Table.Image (Get_Identifier (Unit)),
                  Res_Typ);
             end;

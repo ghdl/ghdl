@@ -60,10 +60,10 @@ package Grt.To_Strings is
    --  Write the image of VALUE to STR using UNIT as unit.  The output is in
    --  STR (FIRST .. STR'last).
    subtype String_Time_Unit is String (1 .. 22);
-   procedure To_String (Str : out String_Time_Unit;
-                        First : out Natural;
-                        Value : Ghdl_I64;
-                        Unit : Ghdl_I64);
+   procedure To_String_Time (Str : out String_Time_Unit;
+                             Last : out Natural;
+                             Value : Ghdl_I64;
+                             Unit : Ghdl_I64);
 
    type Value_Status is
      (

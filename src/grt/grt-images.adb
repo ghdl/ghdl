@@ -320,7 +320,7 @@ package body Grt.Images is
       Val : Std_Time; Unit : Std_Time; Rti : Ghdl_Rti_Access)
    is
       Str : String_Time_Unit;
-      First : Natural;
+      Last : Natural;
       Phys : constant Ghdl_Rtin_Type_Physical_Acc
         := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
       Unit_Name : Ghdl_C_String;
@@ -337,13 +337,13 @@ package body Grt.Images is
       if Unit_Name = null then
          Error ("no unit for to_string");
       end if;
-      To_String (Str, First, Ghdl_I64 (Val), Ghdl_I64 (Unit));
+      To_String_Time (Str, Last, Ghdl_I64 (Val), Ghdl_I64 (Unit));
       Unit_Len := strlen (Unit_Name);
       declare
-         L : constant Natural := Str'Last + 1 - First;
+         L : constant Natural := Last + 1 - Str'First;
          Str2 : String (1 .. L + 1 + Unit_Len);
       begin
-         Str2 (1 .. L) := Str (First .. Str'Last);
+         Str2 (1 .. L) := Str (Str'First .. Last);
          Str2 (L + 1) := ' ';
          Str2 (L + 2 .. Str2'Last) := Unit_Name (1 .. Unit_Len);
          Return_String (Res, Str2);
