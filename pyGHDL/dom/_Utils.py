@@ -30,13 +30,15 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from typing import Optional as Nullable
+
 from pyTooling.Decorators import export
 
 from pyVHDLModel.Base import Mode
 
 from pyGHDL.libghdl import LibGHDLException, name_table, errorout_memory, files_map, file_comments
 from pyGHDL.libghdl._types import Iir
-from pyGHDL.libghdl.vhdl import nodes, utils
+from pyGHDL.libghdl.vhdl import nodes, nodes_meta, utils
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
 from pyGHDL.dom import DOMException
 
@@ -106,6 +108,29 @@ def GetNameOfNode(node: Iir) -> str:
 
     identifier = utils.Get_Source_Identifier(node)
     return name_table.Get_Name_Ptr(identifier)
+
+
+@export
+def GetLabelOfNode(node: Iir) -> Nullable[str]:
+    """Return the Python string from node ``node``'s optional label.
+
+    A statement carries its label in ``Label``, while a generate-statement body - the branch of an
+    if-generate or case-generate statement - carries it in ``Alternative_Label``. No node kind has
+    both, so the field is chosen from the node's kind.
+
+    :returns:           The label, or ``None`` if the node has no label field or no label was given
+                        in the source.
+    :raises ValueError: If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
+    """
+    kind = GetIirKindOfNode(node)
+    if nodes_meta.Has_Label(kind):
+        label = nodes.Get_Label(node)
+    elif nodes_meta.Has_Alternative_Label(kind):
+        label = nodes.Get_Alternative_Label(node)
+    else:
+        return None
+
+    return None if label == name_table.Null_Identifier else name_table.Get_Name_Ptr(label)
 
 
 @export
