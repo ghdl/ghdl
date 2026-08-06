@@ -48,7 +48,7 @@ from pyVHDLModel.Type import BaseType
 from pyVHDLModel.Sequential import SequentialStatement
 from pyVHDLModel.Concurrent import ConcurrentStatement
 
-from pyGHDL.libghdl import utils, name_table
+from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom.Sequential import (
@@ -68,7 +68,7 @@ from pyGHDL.dom.Sequential import (
 )
 
 from pyGHDL.dom import Position, DOMException
-from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode, GetDocumentationOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetLabelOfNode, GetIirKindOfNode, GetDocumentationOfNode
 from pyGHDL.dom.Name import (
     SimpleName,
     SelectedName,
@@ -1072,8 +1072,7 @@ def GetConcurrentStatementsFromChainedNodes(
     nodeChain: Iir, entity: str, name: str
 ) -> Generator[ConcurrentStatement, None, None]:
     for statement in utils.chain_iter(nodeChain):
-        label = nodes.Get_Label(statement)
-        label = name_table.Get_Name_Ptr(label) if label != nodes.Null_Iir else None
+        label = GetLabelOfNode(statement)
 
         position = Position.parse(statement)
 
@@ -1137,8 +1136,7 @@ def GetSequentialStatementsFromChainedNodes(
     nodeChain: Iir, entity: str, name: str
 ) -> Generator[SequentialStatement, None, None]:
     for statement in utils.chain_iter(nodeChain):
-        label = nodes.Get_Label(statement)
-        label = name_table.Get_Name_Ptr(label) if label != nodes.Null_Iir else None
+        label = GetLabelOfNode(statement)
 
         position = Position.parse(statement)
         kind = GetIirKindOfNode(statement)
