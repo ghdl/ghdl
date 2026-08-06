@@ -313,12 +313,9 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch, DOMMixin):
 
         condition = GetExpressionFromNode(nodes.Get_Condition(generateNode))
         body = nodes.Get_Generate_Statement_Body(generateNode)
-
         alternativeLabel = GetLabelOfNode(body)
-
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "if-generate branch", alternativeLabel)
-
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
         statements = GetConcurrentStatementsFromChainedNodes(statementChain, "if-generate branch", alternativeLabel)
 
@@ -348,12 +345,9 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch, DOMMixin):
 
         condition = GetExpressionFromNode(condition)
         body = nodes.Get_Generate_Statement_Body(generateNode)
-
         alternativeLabel = GetLabelOfNode(body)
-
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "elsif-generate branch", alternativeLabel)
-
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
         statements = GetConcurrentStatementsFromChainedNodes(statementChain, "elsif-generate branch", alternativeLabel)
 
@@ -380,12 +374,9 @@ class ElseGenerateBranch(VHDLModel_ElseGenerateBranch, DOMMixin):
         )
 
         body = nodes.Get_Generate_Statement_Body(generateNode)
-
         alternativeLabel = GetLabelOfNode(body)
-
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "else-generate branch", alternativeLabel)
-
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
         statements = GetConcurrentStatementsFromChainedNodes(statementChain, "else-generate branch", alternativeLabel)
 
@@ -462,12 +453,9 @@ class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
         )
 
         body = nodes.Get_Associated_Block(caseNode)
-
         alternativeLabel = GetLabelOfNode(body)
-
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "generate case", alternativeLabel)
-
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
         statements = GetConcurrentStatementsFromChainedNodes(statementChain, "generate case", alternativeLabel)
 
@@ -494,12 +482,9 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
         )
 
         body = nodes.Get_Associated_Block(caseNode)
-
         alternativeLabel = GetLabelOfNode(body)
-
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "case-generate others", alternativeLabel)
-
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
         statements = GetConcurrentStatementsFromChainedNodes(statementChain, "case-generate others", alternativeLabel)
 
@@ -630,7 +615,6 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
         body = nodes.Get_Generate_Statement_Body(generateNode)
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "for-generate", label)
-
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
         statements = GetConcurrentStatementsFromChainedNodes(statementChain, "for-generate", label)
 
