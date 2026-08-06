@@ -609,9 +609,7 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
 
         spec = nodes.Get_Parameter_Specification(generateNode)
         loopIndex = GetNameOfNode(spec)
-
         rng = GetDiscreteRangeFromNode(nodes.Get_Discrete_Range(spec), "for...generate statement")
-
         body = nodes.Get_Generate_Statement_Body(generateNode)
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "for-generate", label)

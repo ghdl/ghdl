@@ -122,9 +122,6 @@ def GetLabelOfNode(node: Iir) -> Nullable[str]:
                         in the source.
     :raises ValueError: If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
     """
-    if node == Null_Iir:
-        raise ValueError("GetLabelOfNode: Parameter 'node' must not be 'Null_Iir'.")
-
     kind = GetIirKindOfNode(node)
     if nodes_meta.Has_Label(kind):
         label = nodes.Get_Label(node)
