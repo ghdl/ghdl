@@ -298,6 +298,9 @@ jobs:
     uses: ./.github/workflows/Publish-GitHubPages.yml
     if: >-
       ${{ !failure() && !cancelled()
+       && needs.Sphinx.result == 'success'
+       && needs.PublishCoverageResults.result == 'success'
+       && needs.StaticTypeCheck.result == 'success'
        && (needs.Params.outputs.on_main_branch == 'true'
         || needs.Params.outputs.is_release_tag == 'true'
         || needs.Params.outputs.is_nightly_tag == 'true'
@@ -309,6 +312,7 @@ jobs:
       - Params
       - Sphinx
       - PublishCoverageResults
+      - StaticTypeCheck
     with:
       documentation: 'documentation-HTML'
       coverage:      'pyGHDL-Coverage-HTML'
