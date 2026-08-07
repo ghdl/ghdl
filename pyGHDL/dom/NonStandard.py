@@ -87,11 +87,13 @@ from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationM
 
 @export
 class Design(VHDLModel_Design):
+    # fmt: off
     _loadDefaultLibraryTime: Nullable[float]  #: :meth:`LoadDefaultLibraries` duration in seconds, ``None`` if unused.
-    _analyzeTime: Nullable[float]  #: :meth:`Analyze` duration in seconds, ``None`` if not called.
-    _vhdlVersion: VHDLVersion  #: The VHDL version this design is analyzed with.
+    _analyzeTime:            Nullable[float]  #: :meth:`Analyze` duration in seconds, ``None`` if not called.
+    _vhdlVersion:            VHDLVersion      #: The VHDL version this design is analyzed with.
 
-    _warnings: List  #: Warnings collected from *libghdl* while the design's documents are analyzed.
+    _warnings:               List             #: Warnings from *libghdl* while the design's documents are analyzed.
+    # fmt: on
 
     #: VHDL versions currently supported by this class. Older revisions (87, 93, 2000, 2002) are
     #: not planned to be supported for now.
@@ -171,15 +173,17 @@ class Library(VHDLModel_Library):
 
 @export
 class Document(VHDLModel_Document):
+    # fmt: off
     _filename: Path  #: The source file this document was read from.
     _warnings: List  #: Warnings collected from *libghdl* while this document is translated.
 
-    __ghdlFileID: Any  #: *libghdl*'s name table identifier for :attr:`_filename`.
+    __ghdlFileID:          Any  #: *libghdl*'s name table identifier for :attr:`_filename`.
     __ghdlSourceFileEntry: Any  #: *libghdl*'s source file entry holding this document's source code.
-    __ghdlFile: Any  #: The IIR design file node returned by *libghdl* when the source code was parsed.
+    __ghdlFile:            Any  #: The IIR design file node returned by *libghdl* when the source code was parsed.
 
-    __ghdlProcessingTime: float  #: Duration of *libghdl*'s parsing in seconds, unset if ``dontParse`` was ``True``.
-    __domTranslateTime: float  #: Duration of the IIR to DOM translation in seconds, unset if it was skipped.
+    __ghdlProcessingTime: float  #: *libghdl*'s parsing duration in seconds, unset if ``dontParse`` was ``True``.
+    __domTranslateTime:   float  #: The IIR to DOM translation duration in seconds, unset if it was skipped.
+    # fmt: on
 
     def __init__(
         self,
