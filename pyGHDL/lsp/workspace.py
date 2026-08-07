@@ -17,22 +17,18 @@ import pyGHDL.libghdl.vhdl.sem_lib as sem_lib
 import pyGHDL.libghdl.utils as pyutils
 
 from . import lsp
-from pyGHDL import GHDLBaseException
+from pyGHDL.lsp import LSPException
 
 from . import document, symbols
 
 log = logging.getLogger(__name__)
 
 
-class ProjectError(GHDLBaseException):
+class ProjectError(LSPException):
     """The exception is raised in case of an unrecoverable error in the project file."""
 
-    def __init__(self, msg):
-        super().__init__(msg)
-        self.msg = msg
 
-
-class InitError(GHDLBaseException):
+class InitError(LSPException):
     """The exception is raised when the workspace could not be initialized."""
 
 
@@ -211,7 +207,7 @@ class Workspace(object):
                 if not libghdl.set_option(opt):
                     self._server.show_message(lsp.MessageType.Error, f"error with option: {opt}")
         except ProjectError as e:
-            self._server.show_message(lsp.MessageType.Error, f"error in project file: {e.msg}")
+            self._server.show_message(lsp.MessageType.Error, f"error in project file: {e.message}")
 
     def read_files_from_project(self):
         try:
@@ -229,7 +225,7 @@ class Workspace(object):
                 if lang == "vhdl":
                     self.add_vhdl_file(name, lib)
         except ProjectError as e:
-            self._server.show_message(lsp.MessageType.Error, f"error in project file: {e.msg}")
+            self._server.show_message(lsp.MessageType.Error, f"error in project file: {e.message}")
 
     def get_configuration(self):
         self._server.configuration([{"scopeUri": "", "section": "vhdl.maxNumberOfProblems"}])

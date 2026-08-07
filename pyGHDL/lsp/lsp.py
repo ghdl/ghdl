@@ -6,12 +6,12 @@ from urllib.parse import unquote, urlparse
 
 log = logging.getLogger("ghdl-ls")
 
-from pyGHDL import GHDLBaseException
+from pyGHDL.lsp import LSPException
 
 is_windows = os.name == "nt"
 
 
-class ProtocolError(GHDLBaseException):
+class ProtocolError(LSPException):
     """The exception is raised when the Language Server Protocol stream is malformed."""
 
 

@@ -1,3 +1,18 @@
+from pyTooling.Decorators import export
+
+from pyGHDL import GHDLBaseException
+
+
+@export
+class LSPException(GHDLBaseException):
+    """
+    The exception is raised for every failure of the language server.
+
+    It is the base-class of the language server's exceptions, so ``except LSPException`` catches them
+    without also catching failures of the analyzer or of the document object model.
+    """
+
+
 class LSPConnTrace(object):
     """Wrapper class to save in and out packets"""
 

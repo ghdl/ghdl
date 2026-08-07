@@ -57,8 +57,7 @@ __license__ = "GNU General Public License v2"
 __keywords__ = ["vhdl", "parser", "compiler", "simulator", "ghdl"]
 
 
-from sys import version_info
-from typing import List, Tuple
+from typing import Tuple
 
 from pyTooling.Decorators import export, readonly
 
@@ -77,22 +76,6 @@ class GHDLBaseException(Exception):
         """
         super().__init__()
         self._message = message
-
-    # WORKAROUND: for Python <3.11
-    # Implementing a dummy method for Python versions before
-    if version_info < (3, 11):  # pragma: no cover
-        __notes__: List[str]  #: A list of notes for this exception.
-
-        def add_note(self, message: str) -> None:
-            """
-            Add a note to the exception.
-
-            :param message: The note's message.
-            """
-            try:
-                self.__notes__.append(message)
-            except AttributeError:
-                self.__notes__ = [message]
 
     @readonly
     def HasNotes(self) -> bool:
