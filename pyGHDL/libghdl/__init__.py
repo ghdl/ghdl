@@ -62,6 +62,13 @@ ENCODING = "latin-1"
 
 @export
 class LibGHDLException(GHDLBaseException):
+    """
+    The exception is raised when ``libghdl`` cannot be loaded or reports an error.
+
+    Errors collected from libghdl's error buffer are attached as :data:`InternalErrors`, because they
+    describe a failure inside the shared library rather than in the Python binding.
+    """
+
     _internalErrors: Nullable[List[str]]
 
     def __init__(self, message: str, errors: List[str] = None):

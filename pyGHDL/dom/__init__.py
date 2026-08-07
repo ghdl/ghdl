@@ -130,4 +130,10 @@ class DOMMixin(metaclass=ExtendedType, mixin=True):
 
 @export
 class DOMException(GHDLBaseException):
-    pass
+    """
+    The exception is raised when an IIR node cannot be translated to a pyVHDLModel object.
+
+    It reports a node kind the translation does not handle, or a node whose shape does not match what
+    the surrounding construct expects. The message names the kind and, where available, the source
+    position.
+    """
