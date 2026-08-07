@@ -36,7 +36,7 @@ This module implements derived literal classes from :mod:`pyVHDLModel.Expression
 
 from typing import Union, Optional as Nullable
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel.Expression import NullLiteral as VHDLModel_NullLiteral
@@ -60,7 +60,12 @@ from pyGHDL.dom._Utils import GetNameOfNode
 
 
 @export
+@InheritDocString(VHDLModel_NullLiteral, merge=True)
 class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.NullLiteral`.
+    """
+
     def __init__(self, node: Iir) -> None:
         """
         Initializes a :vhdlkw:`null` literal.
@@ -76,7 +81,12 @@ class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_EnumerationLiteral, merge=True)
 class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.EnumerationLiteral`.
+    """
+
     def __init__(self, node: Iir, value: str) -> None:
         """
         Initializes an enumeration literal.
@@ -94,7 +104,12 @@ class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_IntegerLiteral, merge=True)
 class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.IntegerLiteral`.
+    """
+
     def __init__(self, node: Iir, value: int) -> None:
         """
         Initializes an integer literal.
@@ -112,7 +127,12 @@ class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_FloatingPointLiteral, merge=True)
 class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.FloatingPointLiteral`.
+    """
+
     def __init__(self, node: Iir, value: float) -> None:
         """
         Initializes a floating-point literal.
@@ -130,7 +150,12 @@ class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_PhysicalIntegerLiteral, merge=True)
 class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.PhysicalIntegerLiteral`.
+    """
+
     def __init__(self, node: Iir, value: int, unitName: str) -> None:
         """
         Initializes a physical literal with an integer value.
@@ -152,7 +177,12 @@ class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_PhysicalFloatingLiteral, merge=True)
 class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.PhysicalFloatingLiteral`.
+    """
+
     def __init__(self, node: Iir, value: int, unitName: float) -> None:
         """
         Initializes a physical literal with a floating-point value.
@@ -174,7 +204,12 @@ class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_CharacterLiteral, merge=True)
 class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.CharacterLiteral`.
+    """
+
     def __init__(self, node: Iir, value: str) -> None:
         """
         Initializes a character literal.
@@ -193,7 +228,12 @@ class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_BinaryBitStringLiteral, merge=True)
 class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.BinaryBitStringLiteral`.
+    """
+
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
         """
         Initializes a binary bit string literal.
@@ -208,7 +248,12 @@ class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_OctalBitStringLiteral, merge=True)
 class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.OctalBitStringLiteral`.
+    """
+
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
         """
         Initializes an octal bit string literal.
@@ -223,7 +268,12 @@ class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_DecimalBitStringLiteral, merge=True)
 class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.DecimalBitStringLiteral`.
+    """
+
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
         """
         Initializes a decimal bit string literal.
@@ -238,7 +288,12 @@ class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_HexadecimalBitStringLiteral, merge=True)
 class HexadecimalBitStringLiteral(VHDLModel_HexadecimalBitStringLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.HexadecimalBitStringLiteral`.
+    """
+
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
         """
         Initializes a hexadecimal bit string literal.
@@ -253,7 +308,12 @@ class HexadecimalBitStringLiteral(VHDLModel_HexadecimalBitStringLiteral, DOMMixi
 
 
 @export
+@InheritDocString(VHDLModel_StringLiteral, merge=True)
 class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.StringLiteral`.
+    """
+
     def __init__(self, node: Iir, value: str) -> None:
         """
         Initializes a string literal.

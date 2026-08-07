@@ -21,6 +21,13 @@ from pyVHDLModel import (
 
 @export
 class Formatter:  # (metaclass=ExtendedType):
+    """
+    Abstract base-class for writing a pyVHDLModel graph as a `GraphML <http://graphml.graphdrawing.org>`__ file.
+
+    A derived formatter provides the two color translation dictionaries and implements
+    :meth:`WriteGraphML` for the graph it can render.
+    """
+
     _graph: Graph  #: The graph to be written as GraphML.
 
     #: Translation dictionary of *vertex kind* to *fill color*; set by each derived formatter.
@@ -43,6 +50,10 @@ class Formatter:  # (metaclass=ExtendedType):
 
 @export
 class DependencyGraphFormatter(Formatter):
+    """
+    Writes a design's *dependency graph* as GraphML, grouping the vertices by library.
+    """
+
     NODE_COLORS = {
         DependencyGraphVertexKind.Document: "#999999",
         DependencyGraphVertexKind.Library: "#99ccff",
@@ -146,6 +157,10 @@ class DependencyGraphFormatter(Formatter):
 
 @export
 class HierarchyGraphFormatter(Formatter):
+    """
+    Writes a design's *hierarchy graph* as GraphML.
+    """
+
     NODE_COLORS = {
         DependencyGraphVertexKind.Document: "#999999",
         DependencyGraphVertexKind.Library: "#99ccff",
@@ -227,6 +242,10 @@ class HierarchyGraphFormatter(Formatter):
 
 @export
 class CompileOrderGraphFormatter(Formatter):
+    """
+    Writes a design's *compile order graph* as GraphML.
+    """
+
     NODE_COLORS = {
         DependencyGraphVertexKind.Document: "#999999",
         DependencyGraphVertexKind.Library: "#99ccff",

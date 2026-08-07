@@ -40,7 +40,7 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 """
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.PSLModel import VerificationUnit as VHDLModel_VerificationUnit
 from pyVHDLModel.PSLModel import VerificationProperty as VHDLModel_VerificationProperty
@@ -53,7 +53,12 @@ from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
 
 
 @export
+@InheritDocString(VHDLModel_VerificationUnit, merge=True)
 class VerificationUnit(VHDLModel_VerificationUnit, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.PSLModel.VerificationUnit`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -78,7 +83,12 @@ class VerificationUnit(VHDLModel_VerificationUnit, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_VerificationProperty, merge=True)
 class VerificationProperty(VHDLModel_VerificationProperty, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.PSLModel.VerificationProperty`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -103,7 +113,12 @@ class VerificationProperty(VHDLModel_VerificationProperty, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_VerificationMode, merge=True)
 class VerificationMode(VHDLModel_VerificationMode, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.PSLModel.VerificationMode`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -128,7 +143,12 @@ class VerificationMode(VHDLModel_VerificationMode, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_DefaultClock, merge=True)
 class DefaultClock(VHDLModel_DefaultClock, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.PSLModel.DefaultClock`.
+    """
+
     def __init__(
         self,
         node: Iir,

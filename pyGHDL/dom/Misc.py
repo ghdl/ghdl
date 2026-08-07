@@ -35,7 +35,7 @@
 This module implements derived classes for VHDL constructs not covered by another module, e.g. an alias.
 """
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Declaration import Alias as VHDLModel_Alias
 from pyVHDLModel.Symbol import Symbol, PossibleReference
@@ -47,7 +47,12 @@ from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetIirKindO
 
 
 @export
+@InheritDocString(VHDLModel_Alias, merge=True)
 class Alias(VHDLModel_Alias, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Declaration.Alias`.
+    """
+
     def __init__(
         self,
         node: Iir,

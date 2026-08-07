@@ -117,6 +117,13 @@ class PrettyPrintException(GHDLBaseException):
 
 @export
 class PrettyPrint:
+    """
+    Renders a :mod:`pyGHDL.dom` design, document or design unit as an indented plain-text tree.
+
+    Each ``Format*`` method returns a list of lines and is given an indentation ``level``, so the
+    methods compose from a whole design down to a single interface item.
+    """
+
     # _buffer: StringBuffer
     #
     # def __init__(self) -> None:

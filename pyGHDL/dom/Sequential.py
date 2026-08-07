@@ -36,7 +36,7 @@ This module implements derived sequential statement classes from :mod:`pyVHDLMod
 
 from typing import Iterable
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Base import ExpressionUnion, Range
 from pyVHDLModel.Symbol import Symbol
@@ -88,7 +88,12 @@ from pyGHDL.dom.Concurrent import GetConditionalWaveformsFromChainedNodes, GetSe
 
 
 @export
+@InheritDocString(VHDLModel_IfBranch, merge=True)
 class IfBranch(VHDLModel_IfBranch, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.IfBranch`.
+    """
+
     def __init__(
         self,
         branchNode: Iir,
@@ -120,7 +125,12 @@ class IfBranch(VHDLModel_IfBranch, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ElsifBranch, merge=True)
 class ElsifBranch(VHDLModel_ElsifBranch, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ElsifBranch`.
+    """
+
     def __init__(
         self,
         branchNode: Iir,
@@ -152,7 +162,12 @@ class ElsifBranch(VHDLModel_ElsifBranch, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ElseBranch, merge=True)
 class ElseBranch(VHDLModel_ElseBranch, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ElseBranch`.
+    """
+
     def __init__(
         self,
         branchNode: Iir,
@@ -180,7 +195,12 @@ class ElseBranch(VHDLModel_ElseBranch, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_IfStatement, merge=True)
 class IfStatement(VHDLModel_IfStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.IfStatement`.
+    """
+
     def __init__(
         self,
         ifNode: Iir,
@@ -224,7 +244,12 @@ class IfStatement(VHDLModel_IfStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_IndexedChoice, merge=True)
 class IndexedChoice(VHDLModel_IndexedChoice, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.IndexedChoice`.
+    """
+
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
         """
         Initializes a case choice given by a single value.
@@ -237,7 +262,12 @@ class IndexedChoice(VHDLModel_IndexedChoice, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_RangedChoice, merge=True)
 class RangedChoice(VHDLModel_RangedChoice, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.RangedChoice`.
+    """
+
     def __init__(self, node: Iir, rng: Range) -> None:
         """
         Initializes a case choice given by a range.
@@ -250,7 +280,12 @@ class RangedChoice(VHDLModel_RangedChoice, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_Case, merge=True)
 class Case(VHDLModel_Case, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.Case`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -278,7 +313,12 @@ class Case(VHDLModel_Case, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_OthersCase, merge=True)
 class OthersCase(VHDLModel_OthersCase, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.OthersCase`.
+    """
+
     def __init__(
         self,
         caseNode: Iir,
@@ -308,7 +348,12 @@ class OthersCase(VHDLModel_OthersCase, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_CaseStatement, merge=True)
 class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.CaseStatement`.
+    """
+
     def __init__(
         self,
         caseNode: Iir,
@@ -408,7 +453,12 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ForLoopStatement, merge=True)
 class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ForLoopStatement`.
+    """
+
     def __init__(
         self,
         loopNode: Iir,
@@ -449,7 +499,12 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_WhileLoopStatement, merge=True)
 class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.WhileLoopStatement`.
+    """
+
     def __init__(
         self,
         loopNode: Iir,
@@ -505,7 +560,12 @@ class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_SequentialSimpleSignalAssignment, merge=True)
 class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialSimpleSignalAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -610,7 +670,12 @@ def GetSelectedExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable:
 
 
 @export
+@InheritDocString(VHDLModel_ConditionalExpression, merge=True)
 class ConditionalExpression(VHDLModel_ConditionalExpression, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Common.ConditionalExpression`.
+    """
+
     def __init__(self, node: Iir, expression: ExpressionUnion, condition: ExpressionUnion = None) -> None:
         """
         Initializes a conditional expression.
@@ -633,7 +698,12 @@ class ConditionalExpression(VHDLModel_ConditionalExpression, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_SelectedExpression, merge=True)
 class SelectedExpression(VHDLModel_SelectedExpression, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Common.SelectedExpression`.
+    """
+
     def __init__(self, node: Iir, choices: Iterable, expression: ExpressionUnion) -> None:
         """
         Initializes a selected expression.
@@ -647,7 +717,12 @@ class SelectedExpression(VHDLModel_SelectedExpression, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_OthersSelectedExpression, merge=True)
 class OthersSelectedExpression(VHDLModel_OthersSelectedExpression, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Common.OthersSelectedExpression`.
+    """
+
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
         """
         Initializes an :vhdlkw:`others` selected expression.
@@ -660,7 +735,12 @@ class OthersSelectedExpression(VHDLModel_OthersSelectedExpression, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_SequentialVariableAssignment, merge=True)
 class SequentialVariableAssignment(VHDLModel_SequentialVariableAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialVariableAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -691,7 +771,12 @@ class SequentialVariableAssignment(VHDLModel_SequentialVariableAssignment, DOMMi
 
 
 @export
+@InheritDocString(VHDLModel_SequentialConditionalVariableAssignment, merge=True)
 class SequentialConditionalVariableAssignment(VHDLModel_SequentialConditionalVariableAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialConditionalVariableAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -724,7 +809,12 @@ class SequentialConditionalVariableAssignment(VHDLModel_SequentialConditionalVar
 
 
 @export
+@InheritDocString(VHDLModel_SequentialConditionalSignalAssignment, merge=True)
 class SequentialConditionalSignalAssignment(VHDLModel_SequentialConditionalSignalAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialConditionalSignalAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -757,7 +847,12 @@ class SequentialConditionalSignalAssignment(VHDLModel_SequentialConditionalSigna
 
 
 @export
+@InheritDocString(VHDLModel_SequentialSelectedVariableAssignment, merge=True)
 class SequentialSelectedVariableAssignment(VHDLModel_SequentialSelectedVariableAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialSelectedVariableAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -793,7 +888,12 @@ class SequentialSelectedVariableAssignment(VHDLModel_SequentialSelectedVariableA
 
 
 @export
+@InheritDocString(VHDLModel_SequentialSelectedSignalAssignment, merge=True)
 class SequentialSelectedSignalAssignment(VHDLModel_SequentialSelectedSignalAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialSelectedSignalAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -827,7 +927,12 @@ class SequentialSelectedSignalAssignment(VHDLModel_SequentialSelectedSignalAssig
 
 
 @export
+@InheritDocString(VHDLModel_SignalForceAssignment, merge=True)
 class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SignalForceAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -858,7 +963,12 @@ class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_SignalReleaseAssignment, merge=True)
 class SignalReleaseAssignment(VHDLModel_SignalReleaseAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SignalReleaseAssignment`.
+    """
+
     def __init__(self, assignmentNode: Iir, target: SignalSymbol, label: str = None) -> None:
         """
         Initializes a signal release assignment.
@@ -881,7 +991,12 @@ class SignalReleaseAssignment(VHDLModel_SignalReleaseAssignment, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_SequentialProcedureCall, merge=True)
 class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialProcedureCall`.
+    """
+
     def __init__(
         self,
         callNode: Iir,
@@ -914,7 +1029,12 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_SequentialAssertStatement, merge=True)
 class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialAssertStatement`.
+    """
+
     def __init__(
         self,
         assertNode: Iir,
@@ -947,7 +1067,12 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_SequentialReportStatement, merge=True)
 class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialReportStatement`.
+    """
+
     def __init__(
         self,
         reportNode: Iir,
@@ -977,7 +1102,12 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ReturnStatement, merge=True)
 class ReturnStatement(VHDLModel_ReturnStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ReturnStatement`.
+    """
+
     def __init__(
         self,
         returnNode: Iir,
@@ -1004,7 +1134,12 @@ class ReturnStatement(VHDLModel_ReturnStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_NullStatement, merge=True)
 class NullStatement(VHDLModel_NullStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.NullStatement`.
+    """
+
     def __init__(
         self,
         waitNode: Iir,
@@ -1021,7 +1156,12 @@ class NullStatement(VHDLModel_NullStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_NextStatement, merge=True)
 class NextStatement(VHDLModel_NextStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.NextStatement`.
+    """
+
     def __init__(
         self,
         exitNode: Iir,
@@ -1048,7 +1188,12 @@ class NextStatement(VHDLModel_NextStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ExitStatement, merge=True)
 class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ExitStatement`.
+    """
+
     def __init__(
         self,
         exitNode: Iir,
@@ -1075,7 +1220,12 @@ class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_WaitStatement, merge=True)
 class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.WaitStatement`.
+    """
+
     def __init__(
         self,
         waitNode: Iir,
