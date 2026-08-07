@@ -207,7 +207,7 @@ class Workspace(object):
                 if not libghdl.set_option(opt):
                     self._server.show_message(lsp.MessageType.Error, f"error with option: {opt}")
         except ProjectError as e:
-            self._server.show_message(lsp.MessageType.Error, f"error in project file: {e.message}")
+            self._server.show_message(lsp.MessageType.Error, f"error in project file: {e}")
 
     def read_files_from_project(self):
         try:
@@ -225,7 +225,7 @@ class Workspace(object):
                 if lang == "vhdl":
                     self.add_vhdl_file(name, lib)
         except ProjectError as e:
-            self._server.show_message(lsp.MessageType.Error, f"error in project file: {e.message}")
+            self._server.show_message(lsp.MessageType.Error, f"error in project file: {e}")
 
     def get_configuration(self):
         self._server.configuration([{"scopeUri": "", "section": "vhdl.maxNumberOfProblems"}])
