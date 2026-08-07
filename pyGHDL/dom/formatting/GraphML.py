@@ -1,3 +1,7 @@
+"""
+This module offers formatters to write a design's graphs as `GraphML <http://graphml.graphdrawing.org>`__ files.
+"""
+
 from enum import Flag
 from pathlib import Path
 from textwrap import dedent

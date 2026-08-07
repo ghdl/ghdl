@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived interface item classes from :mod:`pyVHDLModel.Interface`.
+"""
+
 from typing import List, Iterable
 
 from pyTooling.Decorators import export

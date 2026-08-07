@@ -107,7 +107,7 @@ class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
         :param documentation:      The documentation comment on the type declaration.
-        :return:                   The enumerated type instance.
+        :returns:                  The enumerated type instance.
         """
         literals = []
         enumerationLiterals = nodes.Get_Enumeration_Literal_List(typeDefinitionNode)
@@ -175,7 +175,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
         :param documentation:      The documentation comment on the type declaration.
-        :return:                   The physical type instance.
+        :returns:                  The physical type instance.
         """
         from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
         from pyGHDL.dom._Translate import GetRangeFromNode, GetName
@@ -237,7 +237,7 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
         :param documentation:      The documentation comment on the type declaration.
-        :return:                   The array type instance.
+        :returns:                  The array type instance.
         """
         from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
@@ -291,7 +291,7 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
 
         :param elementDeclarationNode: The IIR node to parse.
         :param furtherIdentifiers:     The list of record element identifiers.
-        :return:                       The record element instance.
+        :returns:                      The record element instance.
         """
         from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
@@ -337,7 +337,7 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
         :param documentation:      The documentation comment on the type declaration.
-        :return:                   The record type instance.
+        :returns:                  The record type instance.
         """
         from pyGHDL.dom._Utils import GetNameOfNode
 
@@ -405,7 +405,7 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
         :param documentation:      The documentation comment on the type declaration.
-        :return:                   The protected type instance.
+        :returns:                  The protected type instance.
         """
         from pyGHDL.dom._Utils import GetIirKindOfNode
 
@@ -449,7 +449,7 @@ class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
         Parses a *protected type body* IIR and returns an :class:`~pyVHDLModel.Type.ProtectedTypeBody` instance.
 
         :param protectedBodyNode: The IIR node to parse.
-        :return:                  The protected type body instance.
+        :returns:                 The protected type body instance.
         """
         from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
         from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes
@@ -491,7 +491,7 @@ class AccessType(VHDLModel_AccessType, DOMMixin):
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
         :param documentation:      The documentation comment on the type declaration.
-        :return:                   The access type instance.
+        :returns:                  The access type instance.
         """
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromIndicationNode
 
@@ -527,7 +527,7 @@ class FileType(VHDLModel_FileType, DOMMixin):
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
         :param documentation:      The documentation comment on the type declaration.
-        :return:                   The file type instance.
+        :returns:                  The file type instance.
         """
         from pyGHDL.dom._Utils import GetNameOfNode
 

@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived sequential statement classes from :mod:`pyVHDLModel.Sequential`.
+"""
+
 from typing import Iterable
 
 from pyTooling.Decorators import export
@@ -446,7 +450,12 @@ class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignmen
 
 
 def GetConditionalExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable["ConditionalExpression"]:
-    """Translates a chain of ``Conditional_Expression`` nodes into a sequence of :class:`ConditionalExpression`."""
+    """
+    Translates a chain of ``Conditional_Expression`` nodes into a sequence of :class:`ConditionalExpression`.
+
+    :param nodeChain: The IIR node starting the chain of conditional expressions.
+    :returns:         The translated conditional expressions, in source order.
+    """
     return [ConditionalExpression.parse(node) for node in utils.chain_iter(nodeChain)]
 
 
@@ -456,6 +465,10 @@ def GetSelectedExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable:
     :class:`OthersSelectedExpression`. Same grouping algorithm as
     :func:`pyGHDL.dom.Concurrent.GetSelectedWaveformsFromChainedNodes`, but the associated content is
     a plain expression (``Get_Associated_Expr``) instead of a waveform chain.
+
+    :param nodeChain:     The IIR node starting the chain of choices.
+    :returns:             The translated selected expressions, in source order.
+    :raises DOMException: If a choice's kind is not handled.
     """
     from pyGHDL.dom._Utils import GetIirKindOfNode
     from pyGHDL.dom._Translate import GetExpressionFromNode, GetRangeFromNode

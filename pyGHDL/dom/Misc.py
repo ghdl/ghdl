@@ -32,8 +32,7 @@
 # ============================================================================
 
 """
-.. todo::
-   Add a module documentation.
+This module implements derived classes for VHDL constructs not covered by another module, e.g. an alias.
 """
 
 from pyTooling.Decorators import export

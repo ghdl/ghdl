@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived attribute classes from :mod:`pyVHDLModel.Declaration`.
+"""
+
 from typing import List
 
 from pyTooling.Decorators import export
@@ -91,6 +95,9 @@ _TOKEN_TRANSLATION = {
     #    Tok.View: EntityClass.View,
     Tok.Others: EntityClass.Others,
 }
+"""
+Translation table of *libghdl* tokens to pyVHDLModel entity class enumeration values.
+"""
 
 
 @export

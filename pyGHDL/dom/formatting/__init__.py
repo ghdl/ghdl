@@ -30,3 +30,6 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This package offers formatters to render a :mod:`pyGHDL.dom` design in other representations.
+"""
