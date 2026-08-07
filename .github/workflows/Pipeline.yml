@@ -5,6 +5,12 @@ on:
   pull_request:
   workflow_dispatch:
 
+# A push and its pull-request run the same pipeline, so both share a group and the older one is canceled.
+# 'master' and tags are excluded: a release run must not be aborted by the next push.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.ref_type == 'branch' && github.ref_name != 'master' }}
+
 jobs:
 # Windows Standalone - ZIP
 #   UCRT64 - llvm
