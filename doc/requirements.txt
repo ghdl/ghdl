@@ -9,7 +9,7 @@ myst-parser ~= 5.1
 sphinx_autodoc_typehints ~= 3.13
 
 # Theme
-furo >= 2025.12.19
+sphinx_rtd_theme ~= 3.1
 
 # BuildTheDocs Extensions (mostly patched Sphinx extensions)
 #btd.sphinx.autoprogram>=0.1.7.post1
