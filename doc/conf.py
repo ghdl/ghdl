@@ -196,7 +196,6 @@ extensions = [
     # Other extensions
     'exec',
     'myst_parser',
-    # 'sphinx_fontawesome',
     'sphinx_autodoc_typehints',
     'autoapi.sphinx',
 ]

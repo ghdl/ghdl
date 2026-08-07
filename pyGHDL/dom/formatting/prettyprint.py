@@ -101,7 +101,11 @@ StringBuffer = List[str]
 
 @export
 class PrettyPrintException(GHDLBaseException):
-    pass
+    """
+    The exception is raised when a model item cannot be rendered back to VHDL source code.
+
+    It reports an item the pretty-printer has no formatting rule for.
+    """
 
 
 @export
