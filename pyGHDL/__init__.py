@@ -58,7 +58,7 @@ __keywords__ = ["vhdl", "parser", "compiler", "simulator", "ghdl"]
 
 
 from sys import version_info
-from typing import List
+from typing import List, Tuple
 
 from pyTooling.Decorators import export, readonly
 
@@ -93,6 +93,24 @@ class GHDLBaseException(Exception):
                 self.__notes__.append(message)
             except AttributeError:
                 self.__notes__ = [message]
+
+    @readonly
+    def HasNotes(self) -> bool:
+        """
+        Read-only property to return if the exception has attached notes.
+
+        :returns: ``True``, if the exception has attached notes.
+        """
+        return hasattr(self, "__notes__") and self.__notes__ is not None and len(self.__notes__) > 0
+
+    @readonly
+    def Notes(self) -> Tuple[str, ...]:
+        """
+        Read-only property to return the exception's attached notes.
+
+        :returns: Attached notes.
+        """
+        return tuple(self.__notes__) if hasattr(self, "__notes__") else tuple()
 
     @readonly
     def message(self) -> str:

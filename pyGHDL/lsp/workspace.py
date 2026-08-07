@@ -17,21 +17,23 @@ import pyGHDL.libghdl.vhdl.sem_lib as sem_lib
 import pyGHDL.libghdl.utils as pyutils
 
 from . import lsp
+from pyGHDL import GHDLBaseException
+
 from . import document, symbols
 
 log = logging.getLogger(__name__)
 
 
-class ProjectError(Exception):
-    """Exception raised in case of unrecoverable error in the project file."""
+class ProjectError(GHDLBaseException):
+    """The exception is raised in case of an unrecoverable error in the project file."""
 
     def __init__(self, msg):
-        super().__init__()
+        super().__init__(msg)
         self.msg = msg
 
 
-class InitError(Exception):
-    pass
+class InitError(GHDLBaseException):
+    """The exception is raised when the workspace could not be initialized."""
 
 
 class Workspace(object):
