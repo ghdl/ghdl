@@ -94,6 +94,13 @@ from pyGHDL.dom.Symbol import (
 @export
 class GenericAssociationItem(VHDLModel_GenericAssociationItem, DOMMixin):
     def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        """
+        Initializes an association item.
+
+        :param associationNode: The IIR node of the association element.
+        :param formal:          Reference to the formal part, or ``None`` for a positional association.
+        :param actual:          The actual part of this association.
+        """
         super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
@@ -101,6 +108,13 @@ class GenericAssociationItem(VHDLModel_GenericAssociationItem, DOMMixin):
 @export
 class PortAssociationItem(VHDLModel_PortAssociationItem, DOMMixin):
     def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        """
+        Initializes an association item.
+
+        :param associationNode: The IIR node of the association element.
+        :param formal:          Reference to the formal part, or ``None`` for a positional association.
+        :param actual:          The actual part of this association.
+        """
         super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
@@ -108,6 +122,13 @@ class PortAssociationItem(VHDLModel_PortAssociationItem, DOMMixin):
 @export
 class ParameterAssociationItem(VHDLModel_ParameterAssociationItem, DOMMixin):
     def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        """
+        Initializes an association item.
+
+        :param associationNode: The IIR node of the association element.
+        :param formal:          Reference to the formal part, or ``None`` for a positional association.
+        :param actual:          The actual part of this association.
+        """
         super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
@@ -122,6 +143,15 @@ class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
         genericAssociationItems: Iterable[AssociationItem] = None,
         portAssociationItems: Iterable[AssociationItem] = None,
     ) -> None:
+        """
+        Initializes a component instantiation.
+
+        :param instantiationNode:       The IIR node of the instantiation statement.
+        :param label:                   The label of a model entity.
+        :param componentSymbol:         Reference to the instantiated component.
+        :param genericAssociationItems: List of all generic associations in the generic map aspect.
+        :param portAssociationItems:    List of all port associations in the port map aspect.
+        """
         super().__init__(label, componentSymbol, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, instantiationNode)
 
@@ -147,6 +177,16 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         genericAssociationItems: Iterable[AssociationItem] = None,
         portAssociationItems: Iterable[AssociationItem] = None,
     ) -> None:
+        """
+        Initializes a direct entity instantiation.
+
+        :param instantiationNode:       The IIR node of the instantiation statement.
+        :param label:                   The label of a model entity.
+        :param entitySymbol:            Reference to the directly instantiated entity.
+        :param architectureSymbol:      Reference to the selected architecture, if one was given.
+        :param genericAssociationItems: List of all generic associations in the generic map aspect.
+        :param portAssociationItems:    List of all port associations in the port map aspect.
+        """
         super().__init__(label, entitySymbol, architectureSymbol, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, instantiationNode)
 
@@ -180,6 +220,15 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
         genericAssociationItems: Iterable[AssociationItem] = None,
         portAssociationItems: Iterable[AssociationItem] = None,
     ) -> None:
+        """
+        Initializes a configuration instantiation.
+
+        :param instantiationNode:       The IIR node of the instantiation statement.
+        :param label:                   The label of a model entity.
+        :param configurationSymbol:     Reference to the instantiated configuration.
+        :param genericAssociationItems: List of all generic associations in the generic map aspect.
+        :param portAssociationItems:    List of all port associations in the port map aspect.
+        """
         super().__init__(label, configurationSymbol, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, instantiationNode)
 
@@ -209,6 +258,18 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         declaredItems: Iterable = None,
         statements: Iterable["ConcurrentStatement"] = None,
     ) -> None:
+        """
+        Initializes a block statement.
+
+        :param blockNode:               The IIR node of the block statement.
+        :param label:                   The label of a model entity.
+        :param genericItems:            List of all generics, in declaration order.
+        :param genericAssociationItems: List of all generic associations in the generic map aspect.
+        :param portItems:               List of all ports, in declaration order.
+        :param portAssociationItems:    List of all port associations in the port map aspect.
+        :param declaredItems:           List of all declared items in this concurrent declaration region.
+        :param statements:              List of all concurrent statements in this construct.
+        """
         super().__init__(
             label,
             genericItems,
@@ -269,6 +330,15 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
         statements: Iterable[SequentialStatement] = None,
         sensitivityList: Iterable[Symbol] = None,
     ) -> None:
+        """
+        Initializes a process statement.
+
+        :param processNode:     The IIR node of the process statement.
+        :param label:           The label of a model entity.
+        :param declaredItems:   List of all declared items in this sequential declaration region.
+        :param statements:      List of all sequential statements in this construct.
+        :param sensitivityList: List of all signal names in the sensitivity list, or ``None`` if none was given.
+        """
         super().__init__(label, declaredItems, statements, sensitivityList)
         DOMMixin.__init__(self, processNode)
 
@@ -304,6 +374,15 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch, DOMMixin):
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
     ) -> None:
+        """
+        Initializes an if generate branch.
+
+        :param branchNode:       The IIR node of the branch this object represents.
+        :param condition:        The condition guarding this statement.
+        :param declaredItems:    List of all declared items in this concurrent declaration region.
+        :param statements:       List of all concurrent statements in this construct.
+        :param alternativeLabel: The branch's alternative label, if one was given.
+        """
         super().__init__(condition, declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, branchNode)
 
@@ -336,6 +415,15 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch, DOMMixin):
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
     ) -> None:
+        """
+        Initializes an elsif generate branch.
+
+        :param branchNode:       The IIR node of the branch this object represents.
+        :param condition:        The condition guarding this statement.
+        :param declaredItems:    List of all declared items in this concurrent declaration region.
+        :param statements:       List of all concurrent statements in this construct.
+        :param alternativeLabel: The branch's alternative label, if one was given.
+        """
         super().__init__(condition, declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, branchNode)
 
@@ -367,6 +455,14 @@ class ElseGenerateBranch(VHDLModel_ElseGenerateBranch, DOMMixin):
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
     ) -> None:
+        """
+        Initializes an else generate branch.
+
+        :param branchNode:       The IIR node of the branch this object represents.
+        :param declaredItems:    List of all declared items in this concurrent declaration region.
+        :param statements:       List of all concurrent statements in this construct.
+        :param alternativeLabel: The branch's alternative label, if one was given.
+        """
         super().__init__(declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, branchNode)
 
@@ -397,6 +493,15 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
         elsifBranches: Iterable[ElsifGenerateBranch] = None,
         elseBranch: ElseGenerateBranch = None,
     ) -> None:
+        """
+        Initializes an if-generate statement.
+
+        :param generateNode:  The IIR node of the generate statement.
+        :param label:         The label of a model entity.
+        :param ifBranch:      The mandatory ``if`` branch.
+        :param elsifBranches: List of all ``elsif`` branches, in the order they were written.
+        :param elseBranch:    The optional ``else`` branch, or ``None`` if none was given.
+        """
         super().__init__(label, ifBranch, elsifBranches, elseBranch)
         DOMMixin.__init__(self, generateNode)
 
@@ -425,6 +530,12 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
 @export
 class IndexedGenerateChoice(VHDLModel_IndexedGenerateChoice, DOMMixin):
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
+        """
+        Initializes a case-generate choice given by a single value.
+
+        :param node:       The IIR node this object was translated from.
+        :param expression: The expression this choice selects on.
+        """
         super().__init__(expression)
         DOMMixin.__init__(self, node)
 
@@ -432,6 +543,12 @@ class IndexedGenerateChoice(VHDLModel_IndexedGenerateChoice, DOMMixin):
 @export
 class RangedGenerateChoice(VHDLModel_RangedGenerateChoice, DOMMixin):
     def __init__(self, node: Iir, rng: Range) -> None:
+        """
+        Initializes a case-generate choice given by a range.
+
+        :param node: The IIR node this object was translated from.
+        :param rng:  The range this choice selects on.
+        """
         super().__init__(rng)
         DOMMixin.__init__(self, node)
 
@@ -446,6 +563,15 @@ class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
     ) -> None:
+        """
+        Initializes a generate case.
+
+        :param node:             The IIR node this object was translated from.
+        :param choices:          List of all choices selecting this alternative.
+        :param declaredItems:    List of all declared items in this concurrent declaration region.
+        :param statements:       List of all concurrent statements in this construct.
+        :param alternativeLabel: The alternative's label.
+        """
         super().__init__(choices, declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, node)
 
@@ -475,6 +601,14 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
     ) -> None:
+        """
+        Initializes a concurrent case.
+
+        :param caseNode:         The IIR node of the case statement.
+        :param declaredItems:    List of all declared items in this concurrent declaration region.
+        :param statements:       List of all concurrent statements in this construct.
+        :param alternativeLabel: The alternative's label.
+        """
         super().__init__(declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, caseNode)
 
@@ -504,6 +638,14 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
         expression: ExpressionUnion,
         cases: Iterable[ConcurrentCase],
     ) -> None:
+        """
+        Initializes a case-generate statement.
+
+        :param generateNode: The IIR node of the generate statement.
+        :param label:        The label of a model entity.
+        :param expression:   The expression being tested; it must be static.
+        :param cases:        List of all alternatives, in the order they were written.
+        """
         super().__init__(label, expression, cases)
         DOMMixin.__init__(self, generateNode)
 
@@ -599,6 +741,17 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
         statements: Iterable[ConcurrentStatement] = None,
         parent: Nullable[ModelEntity] = None,
     ) -> None:
+        """
+        Initializes a for-generate statement.
+
+        :param generateNode:  The IIR node of the generate statement.
+        :param label:         The label of a model entity.
+        :param loopIndex:     The name of the generate loop's index.
+        :param rng:           The range the generate loop iterates over.
+        :param declaredItems: List of all declared items in this concurrent declaration region.
+        :param statements:    List of all concurrent statements in this construct.
+        :param parent:        The parent model entity of this entity.
+        """
         super().__init__(label, loopIndex, rng, declaredItems, statements, parent=parent)
         DOMMixin.__init__(self, generateNode)
 
@@ -626,6 +779,13 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
 @export
 class WaveformElement(VHDLModel_WaveformElement, DOMMixin):
     def __init__(self, waveNode: Iir, expression: ExpressionUnion, after: ExpressionUnion) -> None:
+        """
+        Initializes a waveform element.
+
+        :param waveNode:   The IIR node of the waveform element.
+        :param expression: The value this waveform element assigns.
+        :param after:      The delay after which the value is assigned, or ``None`` if none was given.
+        """
         super().__init__(expression, after)
         DOMMixin.__init__(self, waveNode)
 
@@ -740,6 +900,13 @@ def GetSelectedWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable:
 @export
 class ConditionalWaveform(VHDLModel_ConditionalWaveform, DOMMixin):
     def __init__(self, node: Iir, waveform: Iterable[WaveformElement], condition: ExpressionUnion = None) -> None:
+        """
+        Initializes a conditional waveform.
+
+        :param node:      The IIR node this object was translated from.
+        :param waveform:  List of all waveform elements, in the order they were written.
+        :param condition: The condition selecting this alternative.
+        """
         super().__init__(waveform, condition)
         DOMMixin.__init__(self, node)
 
@@ -756,6 +923,13 @@ class ConditionalWaveform(VHDLModel_ConditionalWaveform, DOMMixin):
 @export
 class SelectedWaveform(VHDLModel_SelectedWaveform, DOMMixin):
     def __init__(self, node: Iir, choices: Iterable, waveform: Iterable[WaveformElement]) -> None:
+        """
+        Initializes a selected waveform.
+
+        :param node:     The IIR node this object was translated from.
+        :param choices:  List of all choices selecting this alternative.
+        :param waveform: List of all waveform elements, in the order they were written.
+        """
         super().__init__(choices, waveform)
         DOMMixin.__init__(self, node)
 
@@ -763,6 +937,12 @@ class SelectedWaveform(VHDLModel_SelectedWaveform, DOMMixin):
 @export
 class OthersSelectedWaveform(VHDLModel_OthersSelectedWaveform, DOMMixin):
     def __init__(self, node: Iir, waveform: Iterable[WaveformElement]) -> None:
+        """
+        Initializes an others selected waveform.
+
+        :param node:     The IIR node this object was translated from.
+        :param waveform: List of all waveform elements, in the order they were written.
+        """
         super().__init__(waveform)
         DOMMixin.__init__(self, node)
 
@@ -776,6 +956,14 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
         target: SignalSymbol,
         waveform: Iterable[WaveformElement],
     ) -> None:
+        """
+        Initializes a simple concurrent signal assignment.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The label of a model entity.
+        :param target:         Reference to the assignment's destination.
+        :param waveform:       List of all waveform elements, in the order they were written.
+        """
         super().__init__(label, target, waveform)
         DOMMixin.__init__(self, assignmentNode)
 
@@ -800,6 +988,14 @@ class ConcurrentConditionalSignalAssignment(VHDLModel_ConcurrentConditionalSigna
         target: SignalSymbol,
         conditionalWaveforms: Iterable[ConditionalWaveform],
     ) -> None:
+        """
+        Initializes a conditional concurrent signal assignment.
+
+        :param assignmentNode:       The IIR node of the assignment statement.
+        :param label:                The label of a model entity.
+        :param target:               Reference to the assignment's destination.
+        :param conditionalWaveforms: All alternatives, in order.
+        """
         super().__init__(label, target, conditionalWaveforms)
         DOMMixin.__init__(self, assignmentNode)
 
@@ -826,6 +1022,15 @@ class ConcurrentSelectedSignalAssignment(VHDLModel_ConcurrentSelectedSignalAssig
         expression: ExpressionUnion,
         selectedWaveforms: Iterable,
     ) -> None:
+        """
+        Initializes a selected concurrent signal assignment.
+
+        :param assignmentNode:    The IIR node of the assignment statement.
+        :param label:             The label of a model entity.
+        :param target:            Reference to the assignment's destination.
+        :param expression:        The selector expression.
+        :param selectedWaveforms: All alternatives, in order.
+        """
         super().__init__(label, target, expression, selectedWaveforms)
         DOMMixin.__init__(self, assignmentNode)
 
@@ -850,6 +1055,14 @@ class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
         procedureName: Symbol,
         parameterAssociationItems: Iterable,
     ) -> None:
+        """
+        Initializes a concurrent procedure call.
+
+        :param callNode:                  The IIR node of the subprogram call.
+        :param label:                     The label of a model entity.
+        :param procedureName:             Reference to the called procedure.
+        :param parameterAssociationItems: List of all parameter associations of the call.
+        """
         super().__init__(label, procedureName, parameterAssociationItems)
         DOMMixin.__init__(self, callNode)
 
@@ -876,6 +1089,15 @@ class ConcurrentAssertStatement(VHDLModel_ConcurrentAssertStatement, DOMMixin):
         severity: ExpressionUnion = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a concurrent assertion statement.
+
+        :param assertNode: The IIR node of the assertion.
+        :param condition:  The condition guarding this statement.
+        :param message:    The reported message, or ``None`` if none was given.
+        :param severity:   The reported severity level, or ``None`` if none was given.
+        :param label:      The label of a model entity.
+        """
         super().__init__(condition, message, severity, label)
         DOMMixin.__init__(self, assertNode)
 

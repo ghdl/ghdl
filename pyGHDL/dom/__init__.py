@@ -52,6 +52,13 @@ class Position(metaclass=ExtendedType):
     _column: int
 
     def __init__(self, filename: Path, line: int, column: int) -> None:
+        """
+        Initializes a source code position.
+
+        :param filename: The source file this position refers to.
+        :param line:     The line number in the source file, starting at 1.
+        :param column:   The character offset within the line, starting at 0.
+        """
         self._filename = filename
         self._line = line
         self._column = column
@@ -108,6 +115,13 @@ class DOMMixin(metaclass=ExtendedType, mixin=True):
     _position: Position
 
     def __init__(self, node: Iir) -> None:
+        """
+        Initializes the mixin with the IIR node a DOM object was translated from.
+
+        The source code position is not resolved here, but on first access of :attr:`Position`.
+
+        :param node: The IIR node in *libghdl*'s tree this DOM object was translated from.
+        """
         self._iirNode = node
         self._position = None
 

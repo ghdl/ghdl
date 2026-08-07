@@ -37,7 +37,7 @@ This module implements derived symbol classes from :mod:`pyVHDLModel.Symbol`.
 from typing import List, Mapping
 
 from pyGHDL.dom.Name import SimpleName
-from pyTooling.Decorators import export, InheritDocString
+from pyTooling.Decorators import export
 
 from pyVHDLModel.Name import Name
 from pyVHDLModel.Symbol import Symbol as VHDLModel_Symbol
@@ -82,8 +82,14 @@ class Symbol(VHDLModel_Symbol, DOMMixin):
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.Symbol`.
     """
 
-    @InheritDocString(VHDLModel_Symbol)
     def __init__(self, identifierNode: Iir, name: Name, possibleReferences: PossibleReference) -> None:
+        """
+        Initializes a symbol.
+
+        :param identifierNode:     The IIR node carrying the identifier this symbol references.
+        :param name:               The name to reference the language entity.
+        :param possibleReferences: An enumeration to filter possible references.
+        """
         super().__init__(name, possibleReferences)
         DOMMixin.__init__(self, identifierNode)
 
@@ -103,8 +109,13 @@ class LibraryReferenceSymbol(VHDLModel_LibraryReferenceSymbol, DOMMixin):
           --      ^^^^
     """
 
-    @InheritDocString(VHDLModel_LibraryReferenceSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a reference (name) to a library.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -124,8 +135,13 @@ class PackageReferenceSymbol(VHDLModel_PackageReferenceSymbol, DOMMixin):
           --  ^^^^^^^^^^^^^^^^
     """
 
-    @InheritDocString(VHDLModel_PackageReferenceSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a reference (name) to a package.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -145,8 +161,13 @@ class ModeViewSymbol(VHDLModel_ModeViewSymbol, DOMMixin):
           --          ^^^^^^
     """
 
-    @InheritDocString(VHDLModel_ModeViewSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a reference to a mode view (VHDL-2019).
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -167,8 +188,13 @@ class SubprogramReferenceSymbol(VHDLModel_SubprogramReferenceSymbol, DOMMixin):
           --                  ^
     """
 
-    @InheritDocString(VHDLModel_SubprogramReferenceSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a reference to a subprogram.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -190,8 +216,13 @@ class ConfigurationSymbol(VHDLModel_ConfigurationSymbol, DOMMixin):
           --                              ^^^^^^^
     """
 
-    @InheritDocString(VHDLModel_ConfigurationSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a reference to a configuration.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -211,8 +242,13 @@ class SignalSymbol(VHDLModel_SignalSymbol, DOMMixin):
           --^
     """
 
-    @InheritDocString(VHDLModel_SignalSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a signal symbol.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -232,8 +268,13 @@ class VariableSymbol(VHDLModel_VariableSymbol, DOMMixin):
           --^
     """
 
-    @InheritDocString(VHDLModel_VariableSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a variable symbol.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -253,8 +294,13 @@ class ContextReferenceSymbol(VHDLModel_ContextReferenceSymbol, DOMMixin):
           --      ^^^^^^^^^^^^^^^^^^^^^
     """
 
-    @InheritDocString(VHDLModel_ContextReferenceSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a reference (name) to a context.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -274,8 +320,13 @@ class PackageMemberReferenceSymbol(VHDLModel_PackageMemberReferenceSymbol, DOMMi
           --  ^^^^^^^^^^^^^^^^^^^^^^^^^
     """
 
-    @InheritDocString(VHDLModel_PackageMemberReferenceSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a reference (name) to a package member.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -295,8 +346,13 @@ class AllPackageMembersReferenceSymbol(VHDLModel_AllPackageMembersReferenceSymbo
           --  ^^^^^^^^^^^^^^^^^^^^
     """
 
-    @InheritDocString(VHDLModel_AllPackageMembersReferenceSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a reference (name) to all package members.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -316,8 +372,13 @@ class EntityInstantiationSymbol(VHDLModel_EntityInstantiationSymbol, DOMMixin):
           --            ^^^^^^^^^^^^
     """
 
-    @InheritDocString(VHDLModel_EntityInstantiationSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a reference (name) to an entity in a direct entity instantiation.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -337,8 +398,13 @@ class ComponentInstantiationSymbol(VHDLModel_ComponentInstantiationSymbol, DOMMi
           --               ^^^^^^^
     """
 
-    @InheritDocString(VHDLModel_ComponentInstantiationSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a reference (name) to an entity in a component instantiation.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -358,8 +424,13 @@ class ConfigurationInstantiationSymbol(VHDLModel_ConfigurationInstantiationSymbo
           --                   ^^^^^^^
     """
 
-    @InheritDocString(VHDLModel_ConfigurationInstantiationSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a reference (name) to an entity in a configuration instantiation.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -381,16 +452,26 @@ class EntitySymbol(VHDLModel_EntitySymbol, DOMMixin):
           end architecture;
     """
 
-    @InheritDocString(VHDLModel_EntitySymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a reference (name) to an entity in an architecture declaration.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
 
 @export
 class ArchitectureSymbol(VHDLModel_ArchitectureSymbol, DOMMixin):
-    @InheritDocString(VHDLModel_ArchitectureSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes an architecture symbol.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -411,8 +492,13 @@ class PackageSymbol(VHDLModel_PackageSymbol, DOMMixin):
           end package body;
     """
 
-    @InheritDocString(VHDLModel_PackageSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a reference (name) to a package in a package body declaration.
+
+        :param identifierNode: The IIR node carrying the identifier this symbol references.
+        :param name:           The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
 
@@ -423,24 +509,41 @@ class PackageSymbol(VHDLModel_PackageSymbol, DOMMixin):
 
 @export
 class SimpleSubtypeSymbol(VHDLModel_SimpleSubtypeSymbol, DOMMixin):
-    @InheritDocString(VHDLModel_SimpleSubtypeSymbol)
     def __init__(self, node: Iir, subtypeName: Name) -> None:
+        """
+        Initializes a subtype symbol.
+
+        :param node:        The IIR node this object was translated from.
+        :param subtypeName: The name of the referenced subtype.
+        """
         super().__init__(subtypeName)
         DOMMixin.__init__(self, node)
 
 
 @export
 class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, DOMMixin):
-    @InheritDocString(VHDLModel_ConstrainedScalarSubtypeSymbol)
     def __init__(self, node: Iir, subtypeName: Name, rng: Range) -> None:
+        """
+        Initializes a reference to a scalar subtype narrowed by a range.
+
+        :param node:        The IIR node this object was translated from.
+        :param subtypeName: The name of the referenced subtype.
+        :param rng:         The range constraining the scalar subtype.
+        """
         super().__init__(subtypeName, rng)
         DOMMixin.__init__(self, node)
 
 
 @export
 class ConstrainedArraySubtypeSymbol(VHDLModel_ConstrainedArraySubtypeSymbol, DOMMixin):
-    @InheritDocString(VHDLModel_ConstrainedArraySubtypeSymbol)
     def __init__(self, node: Iir, subtypeName: Name, constraints: List) -> None:
+        """
+        Initializes a reference to an array subtype narrowed by index ranges.
+
+        :param node:        The IIR node this object was translated from.
+        :param subtypeName: The name of the referenced subtype.
+        :param constraints: List of all index ranges, one per dimension.
+        """
         super().__init__(subtypeName, constraints)
         DOMMixin.__init__(self, node)
 
@@ -451,8 +554,14 @@ class ConstrainedArraySubtypeSymbol(VHDLModel_ConstrainedArraySubtypeSymbol, DOM
 
 @export
 class ConstrainedRecordSubtypeSymbol(VHDLModel_ConstrainedRecordSubtypeSymbol, DOMMixin):
-    @InheritDocString(VHDLModel_ConstrainedRecordSubtypeSymbol)
     def __init__(self, node: Iir, subtypeName: Name, constraints: Mapping) -> None:
+        """
+        Initializes a reference to a record subtype with constrained elements.
+
+        :param node:        The IIR node this object was translated from.
+        :param subtypeName: The name of the referenced subtype.
+        :param constraints: Dictionary of the constraint per constrained record element.
+        """
         super().__init__(subtypeName, constraints)
         DOMMixin.__init__(self, node)
 
@@ -463,24 +572,39 @@ class ConstrainedRecordSubtypeSymbol(VHDLModel_ConstrainedRecordSubtypeSymbol, D
 
 @export
 class RecordElementSymbol(VHDLModel_RecordElementSymbol, DOMMixin):
-    @InheritDocString(VHDLModel_RecordElementSymbol)
     def __init__(self, node: Iir, name: SimpleName) -> None:
+        """
+        Initializes a reference to a record element.
+
+        :param node: The IIR node this object was translated from.
+        :param name: The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, node)
 
 
 @export
 class RangeAttributeSymbol(VHDLModel_RangeAttributeSymbol, DOMMixin):
-    @InheritDocString(VHDLModel_RangeAttributeSymbol)
     def __init__(self, node: Iir, name: Name) -> None:
+        """
+        Initialize a range attribute symbol.
+
+        :param node: The IIR node this object was translated from.
+        :param name: The attribute name referencing the range.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, node)
 
 
 @export
 class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbol, DOMMixin):
-    @InheritDocString(VHDLModel_SimpleObjectOrFunctionCallSymbol)
     def __init__(self, node: Iir, name: Name) -> None:
+        """
+        Initializes a reference that is either an object or a parameterless function call.
+
+        :param node: The IIR node this object was translated from.
+        :param name: The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, node)
 
@@ -495,8 +619,13 @@ class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbo
 
 @export
 class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSymbol, DOMMixin):
-    @InheritDocString(VHDLModel_IndexedObjectOrFunctionCallSymbol)
     def __init__(self, node: Iir, name: Name) -> None:
+        """
+        Initializes a reference that is either an indexed object, a function call or a type conversion.
+
+        :param node: The IIR node this object was translated from.
+        :param name: The name to reference the language entity.
+        """
         super().__init__(name)
         DOMMixin.__init__(self, node)
 

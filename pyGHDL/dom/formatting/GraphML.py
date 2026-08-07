@@ -27,6 +27,11 @@ class Formatter:  # (metaclass=ExtendedType):
     EDGE_COLORS: ClassVar[Dict[Flag, str]]
 
     def __init__(self, graph: Graph) -> None:
+        """
+        Initializes a GraphML formatter for the given graph.
+
+        :param graph: The graph to be written as GraphML by :meth:`WriteGraphML`.
+        """
         self._graph = graph
 
     @abstractmethod

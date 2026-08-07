@@ -62,6 +62,13 @@ from pyGHDL.dom.Symbol import EntitySymbol, ArchitectureSymbol, ConfigurationSym
 @export
 class EntityAspectEntity(VHDLModel_EntityAspectEntity, DOMMixin):
     def __init__(self, node: Iir, entity: EntitySymbol, architecture: ArchitectureSymbol = None) -> None:
+        """
+        Initializes an entity aspect naming an entity, optionally with an architecture.
+
+        :param node:         The IIR node this object was translated from.
+        :param entity:       Reference to the named entity.
+        :param architecture: Reference to the selected architecture, or ``None`` if none was given.
+        """
         super().__init__(entity, architecture)
         DOMMixin.__init__(self, node)
 
@@ -85,6 +92,12 @@ class EntityAspectEntity(VHDLModel_EntityAspectEntity, DOMMixin):
 @export
 class EntityAspectConfiguration(VHDLModel_EntityAspectConfiguration, DOMMixin):
     def __init__(self, node: Iir, configuration: ConfigurationSymbol) -> None:
+        """
+        Initializes an entity aspect naming a configuration.
+
+        :param node:          The IIR node this object was translated from.
+        :param configuration: Reference to the named configuration.
+        """
         super().__init__(configuration)
         DOMMixin.__init__(self, node)
 
@@ -101,6 +114,11 @@ class EntityAspectConfiguration(VHDLModel_EntityAspectConfiguration, DOMMixin):
 @export
 class EntityAspectOpen(VHDLModel_EntityAspectOpen, DOMMixin):
     def __init__(self, node: Iir) -> None:
+        """
+        Initializes an entity aspect denoting ``open``.
+
+        :param node: The IIR node this object was translated from.
+        """
         super().__init__()
         DOMMixin.__init__(self, node)
 
@@ -138,6 +156,14 @@ class BindingIndication(VHDLModel_BindingIndication, DOMMixin):
         genericAssociationItems: List[GenericAssociationItem] = None,
         portAssociationItems: List[PortAssociationItem] = None,
     ) -> None:
+        """
+        Initializes a binding indication.
+
+        :param node:                    The IIR node this object was translated from.
+        :param entityAspect:            The bound design entity, or ``None`` if not given.
+        :param genericAssociationItems: List of all generic associations in the generic map aspect.
+        :param portAssociationItems:    List of all port associations in the port map aspect.
+        """
         super().__init__(entityAspect, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, node)
 
@@ -157,6 +183,11 @@ class BindingIndication(VHDLModel_BindingIndication, DOMMixin):
 @export
 class AllInstantiationList(VHDLModel_AllInstantiationList, DOMMixin):
     def __init__(self, node: Iir) -> None:
+        """
+        Initializes an instantiation list denoting ``all``.
+
+        :param node: The IIR node this object was translated from.
+        """
         super().__init__()
         DOMMixin.__init__(self, node)
 
@@ -164,6 +195,11 @@ class AllInstantiationList(VHDLModel_AllInstantiationList, DOMMixin):
 @export
 class OthersInstantiationList(VHDLModel_OthersInstantiationList, DOMMixin):
     def __init__(self, node: Iir) -> None:
+        """
+        Initializes an instantiation list denoting ``others``.
+
+        :param node: The IIR node this object was translated from.
+        """
         super().__init__()
         DOMMixin.__init__(self, node)
 
@@ -185,6 +221,14 @@ class ComponentConfiguration(VHDLModel_ComponentConfiguration, DOMMixin):
         componentName: ComponentInstantiationSymbol,
         bindingIndication: BindingIndication = None,
     ) -> None:
+        """
+        Initializes a component configuration.
+
+        :param node:              The IIR node this object was translated from.
+        :param instantiationList: The instances this configuration applies to.
+        :param componentName:     Reference to the component being configured.
+        :param bindingIndication: The binding indication, or ``None`` if none was given.
+        """
         super().__init__(instantiationList, componentName, bindingIndication)
         DOMMixin.__init__(self, node)
 
@@ -221,6 +265,13 @@ class BlockConfiguration(VHDLModel_BlockConfiguration, DOMMixin):
         blockSpecification: Symbol,
         items: List[Union["BlockConfiguration", ComponentConfiguration]] = None,
     ) -> None:
+        """
+        Initializes a block configuration.
+
+        :param node:               The IIR node this object was translated from.
+        :param blockSpecification: The configured block.
+        :param items:              Nested configurations.
+        """
         super().__init__(blockSpecification, items)
         DOMMixin.__init__(self, node)
 

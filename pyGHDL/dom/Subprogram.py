@@ -65,6 +65,19 @@ class Function(VHDLModel_Function, DOMMixin):
         statements: List["SequentialStatement"] = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a function.
+
+        :param node:           The IIR node this object was translated from.
+        :param functionName:   The function's identifier.
+        :param returnType:     Reference to the subtype of the function's return value.
+        :param isPure:         ``True`` if the subprogram was declared pure.
+        :param genericItems:   List of all generics, in declaration order.
+        :param parameterItems: List of all parameters, in declaration order.
+        :param declaredItems:  List of all declared items in this sequential declaration region.
+        :param statements:     List of all sequential statements in the subprogram's body.
+        :param documentation:  The documentation comment associated with this declaration.
+        """
         super().__init__(
             functionName,
             returnType,
@@ -134,6 +147,17 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
         statements: List["SequentialStatement"] = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a procedure.
+
+        :param node:           The IIR node this object was translated from.
+        :param procedureName:  The procedure's identifier.
+        :param genericItems:   List of all generics, in declaration order.
+        :param parameterItems: List of all parameters, in declaration order.
+        :param declaredItems:  List of all declared items in this sequential declaration region.
+        :param statements:     List of all sequential statements in the subprogram's body.
+        :param documentation:  The documentation comment associated with this declaration.
+        """
         super().__init__(
             procedureName,
             genericItems,
@@ -199,6 +223,15 @@ class FunctionInstantiation(VHDLModel_FunctionInstantiation, DOMMixin):
         genericAssociationItems: List = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a function instantiation.
+
+        :param node:                    The IIR node this object was translated from.
+        :param functionName:            The function's identifier.
+        :param subprogramReference:     Reference to the instantiated generic subprogram.
+        :param genericAssociationItems: List of all generic associations in the generic map aspect.
+        :param documentation:           The documentation comment associated with this declaration.
+        """
         super().__init__(
             functionName,
             subprogramReference,
@@ -245,6 +278,15 @@ class ProcedureInstantiation(VHDLModel_ProcedureInstantiation, DOMMixin):
         genericAssociationItems: List = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a procedure instantiation.
+
+        :param node:                    The IIR node this object was translated from.
+        :param procedureName:           The procedure's identifier.
+        :param subprogramReference:     Reference to the instantiated generic subprogram.
+        :param genericAssociationItems: List of all generic associations in the generic map aspect.
+        :param documentation:           The documentation comment associated with this declaration.
+        """
         super().__init__(
             procedureName,
             subprogramReference,

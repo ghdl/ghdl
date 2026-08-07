@@ -57,6 +57,12 @@ from pyGHDL.dom import DOMMixin
 @export
 class SimpleAggregateElement(VHDLModel_SimpleAggregateElement, DOMMixin):
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
+        """
+        Initializes an aggregate element.
+
+        :param node:       The IIR node this object was translated from.
+        :param expression: The expression this aggregate element supplies.
+        """
         super().__init__(expression)
         DOMMixin.__init__(self, node)
 
@@ -64,6 +70,13 @@ class SimpleAggregateElement(VHDLModel_SimpleAggregateElement, DOMMixin):
 @export
 class IndexedAggregateElement(VHDLModel_IndexedAggregateElement, DOMMixin):
     def __init__(self, node: Iir, index: ExpressionUnion, expression: ExpressionUnion) -> None:
+        """
+        Initializes an aggregate element chosen by an index.
+
+        :param node:       The IIR node this object was translated from.
+        :param index:      The index selecting the element this value is assigned to.
+        :param expression: The expression this aggregate element supplies.
+        """
         super().__init__(index, expression)
         DOMMixin.__init__(self, node)
 
@@ -71,6 +84,13 @@ class IndexedAggregateElement(VHDLModel_IndexedAggregateElement, DOMMixin):
 @export
 class RangedAggregateElement(VHDLModel_RangedAggregateElement, DOMMixin):
     def __init__(self, node: Iir, rng: Range, expression: ExpressionUnion) -> None:
+        """
+        Initializes an aggregate element chosen by a range.
+
+        :param node:       The IIR node this object was translated from.
+        :param rng:        The range selecting the elements this value is assigned to.
+        :param expression: The expression this aggregate element supplies.
+        """
         super().__init__(rng, expression)
         DOMMixin.__init__(self, node)
 
@@ -78,6 +98,13 @@ class RangedAggregateElement(VHDLModel_RangedAggregateElement, DOMMixin):
 @export
 class NamedAggregateElement(VHDLModel_NamedAggregateElement, DOMMixin):
     def __init__(self, node: Iir, name: Symbol, expression: ExpressionUnion) -> None:
+        """
+        Initializes an aggregate element chosen by a name.
+
+        :param node:       The IIR node this object was translated from.
+        :param name:       Reference to the name selecting the element this value is assigned to.
+        :param expression: The expression this aggregate element supplies.
+        """
         super().__init__(name, expression)
         DOMMixin.__init__(self, node)
 
@@ -85,5 +112,11 @@ class NamedAggregateElement(VHDLModel_NamedAggregateElement, DOMMixin):
 @export
 class OthersAggregateElement(VHDLModel_OthersAggregateElement, DOMMixin):
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
+        """
+        Initializes an aggregate element.
+
+        :param node:       The IIR node this object was translated from.
+        :param expression: The expression this aggregate element supplies.
+        """
         super().__init__(expression)
         DOMMixin.__init__(self, node)

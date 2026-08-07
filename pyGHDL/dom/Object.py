@@ -75,6 +75,15 @@ class Constant(VHDLModel_Constant, DOMMixin):
         defaultExpression: ExpressionUnion,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a constant.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
@@ -117,6 +126,14 @@ class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
+        """
+        Initializes a deferred constant.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifiers:   A list of identifiers.
+        :param subtype:       Reference to the object's subtype.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 
@@ -156,6 +173,15 @@ class Variable(VHDLModel_Variable, DOMMixin):
         defaultExpression: ExpressionUnion,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a variable.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
@@ -195,6 +221,14 @@ class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
+        """
+        Initializes an object.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifiers:   A list of identifiers.
+        :param subtype:       Reference to the object's subtype.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 
@@ -234,6 +268,15 @@ class Signal(VHDLModel_Signal, DOMMixin):
         defaultExpression: ExpressionUnion,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a signal.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
@@ -271,6 +314,14 @@ class File(VHDLModel_File, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
+        """
+        Initializes an object.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifiers:   A list of identifiers.
+        :param subtype:       Reference to the object's subtype.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 

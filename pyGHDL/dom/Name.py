@@ -67,6 +67,12 @@ class SimpleName(VHDLModel_SimpleName, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str) -> None:
+        """
+        Initializes a name.
+
+        :param node:       The IIR node this object was translated from.
+        :param identifier: The name's identifier.
+        """
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
@@ -87,6 +93,13 @@ class ParenthesisName(VHDLModel_ParenthesisName, DOMMixin):
     """
 
     def __init__(self, node: Iir, prefix: VHDLModel_Name, associations: List) -> None:
+        """
+        Initializes a name followed by a parenthesized association list.
+
+        :param node:         The IIR node this object was translated from.
+        :param prefix:       Reference to the name's prefix, or ``None`` for a simple name.
+        :param associations: List of all associations in the parenthesis.
+        """
         super().__init__(prefix, associations)
         DOMMixin.__init__(self, node)
 
@@ -94,6 +107,12 @@ class ParenthesisName(VHDLModel_ParenthesisName, DOMMixin):
 @export
 class IndexedName(VHDLModel_IndexedName, DOMMixin):
     def __init__(self, node: Iir, identifier: str) -> None:
+        """
+        Initializes a name indexing an array by one or more values.
+
+        :param node:       The IIR node this object was translated from.
+        :param identifier: The identifier of the indexed name.
+        """
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
@@ -114,6 +133,12 @@ class SlicedName(VHDLModel_SlicedName, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str) -> None:
+        """
+        Initializes a name.
+
+        :param node:       The IIR node this object was translated from.
+        :param identifier: The name's identifier.
+        """
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
@@ -134,6 +159,13 @@ class SelectedName(VHDLModel_SelectedName, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, prefix: VHDLModel_Name) -> None:
+        """
+        Initializes a selected name.
+
+        :param node:       The IIR node this object was translated from.
+        :param identifier: The name's identifier.
+        :param prefix:     Reference to the name's prefix, or ``None`` for a simple name.
+        """
         super().__init__(identifier, prefix)
         DOMMixin.__init__(self, node)
 
@@ -154,6 +186,13 @@ class AttributeName(VHDLModel_AttributeName, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, prefix: VHDLModel_Name) -> None:
+        """
+        Initializes a name selecting an attribute of its prefix.
+
+        :param node:       The IIR node this object was translated from.
+        :param identifier: The name's identifier.
+        :param prefix:     Reference to the name's prefix, or ``None`` for a simple name.
+        """
         super().__init__(identifier, prefix)
         DOMMixin.__init__(self, node)
 
@@ -174,6 +213,12 @@ class AllName(VHDLModel_AllName, DOMMixin):
     """
 
     def __init__(self, node: Iir, prefix: VHDLModel_Name) -> None:
+        """
+        Initializes an ``all`` name.
+
+        :param node:   The IIR node this object was translated from.
+        :param prefix: Reference to the name's prefix, or ``None`` for a simple name.
+        """
         super().__init__(prefix)
         DOMMixin.__init__(self, node)
 
@@ -193,5 +238,10 @@ class OpenName(VHDLModel_OpenName, DOMMixin):
     """
 
     def __init__(self, node: Iir) -> None:
+        """
+        Initializes an ``open`` name.
+
+        :param node: The IIR node this object was translated from.
+        """
         super().__init__()
         DOMMixin.__init__(self, node)
