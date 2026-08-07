@@ -1,0 +1,128 @@
+/* theme overrides */
+.rst-content h1,
+.rst-content h2 {
+	margin-top: 24px;
+	margin-bottom: 6px;
+	text-decoration: underline;
+}
+
+.rst-content h3,
+.rst-content h4,
+.rst-content h5,
+.rst-content h6 {
+	margin-top: 12px;
+	margin-bottom: 6px;
+}
+
+.rst-content p {
+	margin-bottom: 6px
+}
+
+/* general overrides */
+html {
+	font-size: 15px;
+}
+
+footer {
+  font-size: 95%;
+  text-align: center
+}
+
+footer p {
+  margin-bottom: 0px /* 12px */;
+  font-size: 95%
+}
+
+section > p,
+.section p,
+.simple li {
+	text-align: justify
+}
+
+.rst-content .topic-title {
+	font-size: larger;
+	font-weight: 700;
+	text-decoration: underline;
+	margin-top: 18px;
+	margin-bottom: 6px;
+}
+
+.rst-content p.rubric {
+	text-decoration: underline;
+	font-weight: 700;
+	margin-top: 18px;
+	margin-bottom: 16px;
+}
+
+/* wyrm overrides */
+.wy-menu-vertical header,
+.wy-menu-vertical p.caption {
+	color: #9b9b9b /* #55a5d9 */;
+	padding: 0 0.809em /* 0 1.618em */;
+	margin: 6px 0 0 0 /* 12px 0 0 */;
+	border-top: 1px solid #9b9b9b;
+}
+
+.wy-side-nav-search {
+	margin-bottom: 0 /* .809em */;
+	background-color: #333333 /* #2980b9 */;
+	/* BTD: */
+	/*color: #fcfcfc*/
+}
+
+.wy-side-nav-search input[type=text] {
+	border-radius: 0px /* 50px */;
+}
+
+.wy-side-nav-search .wy-dropdown > a, .wy-side-nav-search > a {
+	/* BTD: */
+	/*color: #fcfcfc;*/
+	margin-bottom: 0.404em /* .809em */;
+}
+
+.wy-side-nav-search > div.version {
+  margin: 0 0 6px 0;
+  /* BTD: */
+  /*margin-top: -.4045em;*/
+}
+
+.wy-nav .wy-menu-vertical a:hover {
+  background-color:  #333333 /* #2980b9 */;
+}
+
+.wy-nav-content {
+  max-width: 1600px /* 800px */ ;
+}
+
+.wy-nav-top {
+  background:  #333333 /* #2980b9 */;
+}
+
+/* Sphinx Design */
+.sd-tab-set {
+	margin: 0
+}
+
+.sd-tab-set > label {
+	padding-top: .5em;
+	padding-right: 1em;
+	padding-bottom: .5em;
+	padding-left: 1em
+}
+
+.sd-container-fluid {
+	padding-left: 0;
+	padding-right: 0;
+}
+
+.sd-container-fluid > .sd-row > .sd-col > p.rubric {
+	margin-bottom: 6px;
+}
+
+.sd-container-fluid > .sd-row > .sd-col > ul.simple {
+	margin-bottom: 0px;
+}
+
+html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.citation):not(.glossary):not(.simple) .property {
+	display: inline;  /* inline-block; */
+}
