@@ -17,10 +17,10 @@ from pyVHDLModel import (
 
 @export
 class Formatter:  # (metaclass=ExtendedType):
-    _graph: Graph
+    _graph: Graph  #: The graph to be written as GraphML.
 
-    NODE_COLORS: ClassVar[Dict[Flag, str]]
-    EDGE_COLORS: ClassVar[Dict[Flag, str]]
+    NODE_COLORS: ClassVar[Dict[Flag, str]]  #: Vertex kind to fill color; set by each derived formatter.
+    EDGE_COLORS: ClassVar[Dict[Flag, str]]  #: Edge kind to line color; set by each derived formatter.
 
     def __init__(self, graph: Graph) -> None:
         self._graph = graph
