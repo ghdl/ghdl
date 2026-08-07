@@ -98,7 +98,12 @@ class Position(metaclass=ExtendedType):
         """
         return self._column
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """
+        Formats the source code position as ``<filename>:<line>:<column>``.
+
+        :returns: A string representation of this source code position.
+        """
         return f"{self._filename}:{self._line}:{self._column}"
 
 

@@ -102,7 +102,12 @@ class Document(object):
             self.__extend_source_buffer(l)
         files_map_editor.Fill_Text(self._fe, ctypes.c_char_p(src_bytes), l)
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """
+        Returns the document's URI, which is how the language server protocol identifies a document.
+
+        :returns: A string representation of this document.
+        """
         return str(self.uri)
 
     def apply_change(self, change):
