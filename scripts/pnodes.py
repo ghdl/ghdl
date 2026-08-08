@@ -989,7 +989,7 @@ def do_get_format():
     """
     Generate the Ada ``Get_Format`` function, which maps a kind to its format.
     """
-    gen_get_format(formats, nodes)
+    gen_get_format(formats, nodes, kinds)
 
 
 def do_body():
