@@ -17,7 +17,7 @@ conversions = ["uc", "pos", "grp"]
 
 
 class FuncDesc:
-    def __init__(self, name, fields, conv, acc, pname, ptype, rname, rtype):
+    def __init__(self, name, fields, conv, acc, pname, ptype, rname, rtype, description=None):
         self.name = name
         self.fields = fields  # List of physical fields used
         self.conv = conv
@@ -27,15 +27,19 @@ class FuncDesc:
         self.ptype = ptype  # Parameter type
         self.rname = rname  # value name (for procedure)
         self.rtype = rtype  # value type
+        self.description = description or []  # Comment lines above '-- Field:'
 
 
 class NodeDesc:
-    def __init__(self, name, format, fields, attrs):
+    def __init__(self, name, format, fields, attrs, description=None):
         self.name = name
         self.format = format
         self.fields = fields  # {field: FuncDesc} dict, defined for all fields
         self.attrs = attrs  # A {attr: FuncDesc} dict
         self.order = []  # List of fields name, in order of appearance.
+        self.description = description or []  # Comment lines below the kind
+        self.field_descriptions = {}  # A {attr: comment lines} dict
+        self.disabled_fields = []  # (attr, comment lines) of commented out fields
 
 
 class line:
@@ -239,6 +243,63 @@ def read_kinds(filename):
 
 
 # Read functions
+def strip_comment(l):
+    """Return the text of comment line L, or None if L is not a comment.
+
+    Only the standard two space prefix is removed, so a line indented further
+    than that - the continuation of a grammar production, for instance - keeps
+    its relative indentation.
+    """
+    if not l.startswith("   --"):
+        return None
+    text = l[5:].rstrip()
+    return text[2:] if text.startswith("  ") else text.lstrip()
+
+
+def trim_description(lines):
+    """Drop the leading and trailing blank lines of a comment block."""
+    while lines and not lines[0]:
+        lines = lines[1:]
+    while lines and not lines[-1]:
+        lines = lines[:-1]
+    return lines
+
+
+# A field that was disabled by commenting out its 'Get/Set_' line, e.g.
+#   --  -- Get/Set_Signal_Driver (Field7)
+pat_disabled_field = re.compile(r"-- Get/Set_(\w+) \((Alias )?([\w,]+)\)$")
+
+
+def split_last_block(lines):
+    """Split a comment block at its last blank line.
+
+    Returns (everything before the last blank line, everything after it).
+    """
+    for i in range(len(lines) - 1, -1, -1):
+        if not lines[i]:
+            return (lines[:i], lines[i + 1 :])
+    return ([], lines)
+
+
+def split_disabled_fields(lines):
+    """Split a comment block into (description, disabled fields).
+
+    A field can be disabled by commenting out its 'Get/Set_' line.  The comment
+    then still describes that field, so it must not be attributed to the field
+    that happens to follow it.
+    """
+    description = []
+    disabled = []
+    for l in lines:
+        m = pat_disabled_field.match(l)
+        if m:
+            disabled.append((m.group(1), trim_description(description)))
+            description = []
+        else:
+            description.append(l)
+    return (trim_description(description), disabled)
+
+
 def read_methods(filename):
     lr = linereader(filename)
     # Note: this is a list so that the output is deterministic.
@@ -255,11 +316,20 @@ def read_methods(filename):
         # Start of methods
         if l == "   -- General methods.\n":
             break
+    description = []
     while True:
         l = lr.get()
         if pat_end.match(l):
             break
         m = pat_field.match(l)
+        if not m:
+            # Comment lines preceding a '-- Field:' describe the accessor.  Any
+            # other line (a declaration, a pragma, a blank line) ends the block.
+            comment = strip_comment(l)
+            if comment is None:
+                description = []
+            else:
+                description.append(comment)
         if m:
             fields = m.group(1).split(",")
             # Extract access modifier
@@ -308,8 +378,10 @@ def read_methods(filename):
                     mp.group(3),
                     mp.group(4),
                     mp.group(5),
+                    description,
                 )
             )
+            description = []
 
     return funcs
 
@@ -333,15 +405,24 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
         nodes[nm] = n
         cur_nodes.append(n)
 
-    # Skip comments
+    # The comments before the first field describe the node(s), except for the
+    # block after the last blank line: a field's description directly precedes
+    # its 'Get/Set_' line, so that block belongs to the first field.
     l = lr.l
+    comments = []
     while pat_comment.match(l):
+        comments.append(strip_comment(l))
         l = lr.get()
+    (comments, description) = split_last_block(comments)
+    for n in cur_nodes:
+        (n.description, disabled) = split_disabled_fields(comments)
+        n.disabled_fields.extend(disabled)
 
     # Look for fields
     while l != "\n":
-        # Skip comments
+        # The comments before a field describe that field on this node.
         while pat_comment.match(l):
+            description.append(strip_comment(l))
             l = lr.get()
 
         # Handle 'Only ...'
@@ -364,8 +445,10 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
             # By default a field applies to all nodes.
             only_nodes = cur_nodes
 
-        # Skip comments
+        # A field can be preceded by an 'Only for' comment, so continue
+        # collecting after it.
         while pat_comment.match(l):
+            description.append(strip_comment(l))
             l = lr.get()
 
         # Handle field: '--  Get/Set_FUNC (Alias? FIELD)'
@@ -398,7 +481,11 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
                     c.fields[f] = func
                     c.order.append(f)
             c.attrs[func.name] = func
+            (text, disabled) = split_disabled_fields(description)
+            c.field_descriptions[func.name] = text
+            c.disabled_fields.extend(disabled)
 
+        description = []
         l = lr.get()
 
 
@@ -661,6 +748,26 @@ def do_disp_nodes():
         flds = [fk for fk, fv in list(v.fields.items()) if fv]
         for fk in sorted(flds):
             print("  " + fk + ": " + v.fields[fk].name)
+
+
+def do_disp_doc():
+    """Display the comments attached to every node, field and accessor."""
+    for f in funcs:
+        if f.description:
+            print("Get/Set_" + f.name + ":")
+            for l in f.description:
+                print("  " + l)
+    for k in kinds:
+        v = nodes[k]
+        print(prefix_name + k + " (" + v.format + ")")
+        for l in v.description:
+            print("  " + l)
+        for fk in v.order:
+            func = v.fields[fk]
+            for l in v.field_descriptions.get(func.name, []):
+                print("  " + func.name + ": " + l)
+        for name, desc in v.disabled_fields:
+            print("  (disabled) " + name + ": " + " ".join(desc))
 
 
 def do_get_format():
@@ -959,6 +1066,7 @@ actions = {
     "disp-formats": do_disp_formats,
     "disp-funcs": do_disp_funcs,
     "disp-types": do_disp_types,
+    "disp-doc": do_disp_doc,
     "get_format": do_get_format,
     "body": do_body,
     "meta_specs": do_meta_specs,
@@ -1029,33 +1137,65 @@ def _generateCLIParser() -> ArgumentParser:
     return parser
 
 
-def main():
-    parser = _generateCLIParser()
-    args = parser.parse_args()
+def parse_files(
+    node_file_,
+    field_file_,
+    kind_file_,
+    template_file_="iirs.adb.in",
+    meta_basename="nodes_meta",
+    kind_type="Iir_Kind",
+    kind_prefix="Iir_Kind_",
+    kind_range_prefix="Iir_Kinds_",
+    node_type_="Iir",
+    keep_order=False,
+):
+    """Read the Ada sources and return the parsed meta-model.
 
+    This is the entry point for other tools: it sets the module state the
+    generators rely on and returns (formats, fields, kinds, kinds_ranges, funcs,
+    nodes).  ParseError is raised on a malformed description; callers that want
+    the command line behaviour should catch it and report LR themselves.
+    """
     # At some point, it would be simpler to create a class...
     global formats, fields, nodes, kinds, kinds_ranges, funcs
 
     global type_name, prefix_name, template_file, node_type, meta_base_file
     global prefix_range_name, flag_keep_order, kind_file
 
-    type_name = args.kind_type
-    prefix_name = args.kind_prefix
-    prefix_range_name = args.kind_range_prefix
-    template_file = args.template_file
-    node_type = args.node_type
-    meta_base_file = args.meta_basename
-    flag_keep_order = args.flag_keep_order
+    type_name = kind_type
+    prefix_name = kind_prefix
+    prefix_range_name = kind_range_prefix
+    template_file = template_file_
+    node_type = node_type_
+    meta_base_file = meta_basename
+    flag_keep_order = keep_order
+    kind_file = kind_file_
 
-    field_file = args.field_file
-    kind_file = args.kind_file
-    node_file = args.node_file
+    (formats, fields) = read_fields(field_file_)
+    (kinds, kinds_ranges) = read_kinds(kind_file_)
+    funcs = read_methods(node_file_)
+    nodes = read_nodes(node_file_, kinds, kinds_ranges, fields, funcs)
+
+    return (formats, fields, kinds, kinds_ranges, funcs, nodes)
+
+
+def main():
+    parser = _generateCLIParser()
+    args = parser.parse_args()
 
     try:
-        (formats, fields) = read_fields(field_file)
-        (kinds, kinds_ranges) = read_kinds(kind_file)
-        funcs = read_methods(node_file)
-        nodes = read_nodes(node_file, kinds, kinds_ranges, fields, funcs)
+        parse_files(
+            args.node_file,
+            args.field_file,
+            args.kind_file,
+            args.template_file,
+            args.meta_basename,
+            args.kind_type,
+            args.kind_prefix,
+            args.kind_range_prefix,
+            args.node_type,
+            args.flag_keep_order,
+        )
 
     except ParseError as e:
         print(e, file=sys.stderr)
