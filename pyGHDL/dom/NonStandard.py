@@ -32,8 +32,10 @@
 # ============================================================================
 
 """
-.. todo::
-   Add a module documentation.
+This module implements the non-standard classes :class:`Design`, :class:`Library` and :class:`Document`.
+
+These three are not VHDL language constructs, but the entry points of :mod:`pyGHDL.dom`: a document reads
+and parses a source file through *libghdl*, a library groups documents, and a design owns the libraries.
 """
 
 import ctypes

@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module offers a formatter to render a design, document or design unit as an indented plain-text tree.
+"""
+
 from typing import List, Union
 
 from pyTooling.Common import getFullyQualifiedName
@@ -97,6 +101,9 @@ from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.PSL import DefaultClock
 
 StringBuffer = List[str]
+"""
+A list of already formatted lines, which the ``Format*`` methods append to and return.
+"""
 
 
 @export

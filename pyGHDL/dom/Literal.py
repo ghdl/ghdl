@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived literal classes from :mod:`pyVHDLModel.Expression`.
+"""
+
 from typing import Union, Optional as Nullable
 
 from pyTooling.Decorators import export

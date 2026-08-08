@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived configuration classes from :mod:`pyVHDLModel.Configuration`.
+"""
+
 from typing import List, Generator, Union
 
 from pyTooling.Decorators import export
@@ -106,7 +110,13 @@ class EntityAspectOpen(VHDLModel_EntityAspectOpen, DOMMixin):
 
 
 def GetEntityAspectFromNode(entityAspectNode: Iir) -> VHDLModel_EntityAspect:
-    """Translates an entity aspect (IIR node) to the matching pyVHDLModel.Configuration.EntityAspect subclass."""
+    """
+    Translates an entity aspect to the matching :class:`~pyVHDLModel.Configuration.EntityAspect` subclass.
+
+    :param entityAspectNode: The IIR node of the entity aspect.
+    :returns:                The translated entity aspect.
+    :raises DOMException:    If the entity aspect's kind is not handled.
+    """
     kind = GetIirKindOfNode(entityAspectNode)
     if kind == nodes.Iir_Kind.Entity_Aspect_Entity:
         return EntityAspectEntity.parse(entityAspectNode)
@@ -234,7 +244,13 @@ class BlockConfiguration(VHDLModel_BlockConfiguration, DOMMixin):
 def GetConfigurationItemsFromChainedNodes(
     nodeChain: Iir,
 ) -> Generator[Union[BlockConfiguration, ComponentConfiguration], None, None]:
-    """Translates a chain of configuration items (component/block configurations) to pyVHDLModel objects."""
+    """
+    Translates a chain of configuration items to :class:`ComponentConfiguration` and :class:`BlockConfiguration`.
+
+    :param nodeChain:     The IIR node starting the chain of configuration items.
+    :returns:             Generator yielding the translated configuration items, in source order.
+    :raises DOMException: If a configuration item's kind is not handled.
+    """
     for item in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(item)
         if kind == nodes.Iir_Kind.Component_Configuration:

@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived subprogram classes from :mod:`pyVHDLModel.Subprogram`.
+"""
+
 from typing import List
 
 from pyTooling.Decorators import export

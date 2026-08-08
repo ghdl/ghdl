@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived range classes from :mod:`pyVHDLModel.Base`.
+"""
+
 from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Base import Direction, ExpressionUnion

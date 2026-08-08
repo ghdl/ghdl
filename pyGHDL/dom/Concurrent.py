@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived concurrent statement classes from :mod:`pyVHDLModel.Concurrent`.
+"""
+
 from typing import Iterable, List, Optional as Nullable
 
 from pyTooling.Decorators import export
@@ -641,15 +645,27 @@ class WaveformElement(VHDLModel_WaveformElement, DOMMixin):
 
 
 def GetWaveformElementsFromChainedNodes(nodeChain: Iir) -> List[WaveformElement]:
-    """Translates a chain of ``Waveform_Element`` nodes (used at multiple call sites: simple/
-    conditional/selected signal assignments, both concurrent and sequential) into a list of
-    :class:`WaveformElement`."""
+    """
+    Translates a chain of ``Waveform_Element`` nodes into a list of :class:`WaveformElement`.
+
+    The chain is used at multiple call sites: simple, conditional and selected signal assignments,
+    both concurrent and sequential.
+
+    :param nodeChain: The IIR node starting the chain of waveform elements.
+    :returns:         List of the translated waveform elements, in source order.
+    """
     return [WaveformElement.parse(wave) for wave in utils.chain_iter(nodeChain)]
 
 
 def GetConditionalWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable["ConditionalWaveform"]:
-    """Translates a chain of ``Conditional_Waveform`` nodes (shared by concurrent and sequential
-    conditional signal assignments) into a sequence of :class:`ConditionalWaveform`."""
+    """
+    Translates a chain of ``Conditional_Waveform`` nodes into a sequence of :class:`ConditionalWaveform`.
+
+    The chain is shared by concurrent and sequential conditional signal assignments.
+
+    :param nodeChain: The IIR node starting the chain of conditional waveforms.
+    :returns:         The translated conditional waveforms, in source order.
+    """
     return [ConditionalWaveform.parse(node) for node in utils.chain_iter(nodeChain)]
 
 
@@ -663,6 +679,10 @@ def GetSelectedWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable:
     choice in a group owns the real content (``Get_Associated_Chain``, ``Same_Alternative_Flag=False``);
     later choices in the same group (``Same_Alternative_Flag=True``) have a null associated chain and
     are just additional choice values for that same, already-established alternative.
+
+    :param nodeChain:     The IIR node starting the chain of choices.
+    :returns:             The translated selected waveforms, in source order.
+    :raises DOMException: If a choice's kind is not handled.
     """
     from pyGHDL.dom._Utils import GetIirKindOfNode
     from pyGHDL.dom._Translate import GetExpressionFromNode, GetRangeFromNode
