@@ -74,7 +74,7 @@ class Position(metaclass=ExtendedType):
     @readonly
     def Filename(self) -> Path:
         """
-        Read-only property to access the filename this source code position referres to (:attr:`_filename`).
+        Read-only property to access the filename this source code position refers to (:attr:`_filename`).
 
         :returns: The source code position's filename.
         """
@@ -83,7 +83,7 @@ class Position(metaclass=ExtendedType):
     @readonly
     def Line(self) -> int:
         """
-        Read-only property to access the line number this source code position referres to (:attr:`_line`).
+        Read-only property to access the line number this source code position refers to (:attr:`_line`).
 
         :returns: The source code position's line.
         """
@@ -92,7 +92,7 @@ class Position(metaclass=ExtendedType):
     @readonly
     def Column(self) -> int:
         """
-        Read-only property to access the column this source code position referres to (:attr:`_column`).
+        Read-only property to access the column this source code position refers to (:attr:`_column`).
 
         :returns: The source code position's column.
         """

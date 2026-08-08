@@ -124,6 +124,14 @@ class Design(VHDLModel_Design):
 
     @readonly
     def VHDLVersion(self) -> VHDLVersion:
+        """
+        Read-only property to access the VHDL version this design is analyzed with (:attr:`_vhdlVersion`).
+
+        The version is checked against :attr:`_SUPPORTED_VHDL_VERSIONS` when the design is created and is translated
+        to GHDL's ``--std=`` option value via :attr:`_VHDL_VERSION_TO_STD_OPTION`.
+
+        :returns: The design's VHDL version.
+        """
         return self._vhdlVersion
 
     def __ghdl_init(self):
@@ -318,8 +326,25 @@ class Document(VHDLModel_Document):
 
     @readonly
     def LibGHDLProcessingTime(self) -> float:
+        """
+        Read-only property to access the time *libghdl* spent parsing this document (:attr:`__ghdlProcessingTime`).
+
+        The duration is measured while the document is constructed, so it is set only if ``dontParse`` was ``False``.
+
+        :returns:               The parse duration in seconds.
+        :raises AttributeError: If the document was constructed with ``dontParse=True``.
+        """
         return self.__ghdlProcessingTime
 
     @readonly
     def DOMTranslationTime(self) -> float:
+        """
+        Read-only property to access the time spent translating the IIR tree to the DOM (:attr:`__domTranslateTime`).
+
+        The duration is measured while the document is constructed, so it is set only if neither ``dontParse`` nor
+        ``dontTranslate`` was ``True``.
+
+        :returns:               The translation duration in seconds.
+        :raises AttributeError: If the document was constructed with ``dontParse=True`` or ``dontTranslate=True``.
+        """
         return self.__domTranslateTime
