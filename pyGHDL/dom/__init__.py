@@ -47,11 +47,9 @@ from pyGHDL.libghdl.vhdl import nodes
 class Position(metaclass=ExtendedType):
     """Represents the source code position of a IIR node in a source file."""
 
-    # fmt: off
     _filename: Path  #: The source file this position refers to.
-    _line:     int   #: The line number in the source file, starting at 1.
-    _column:   int   #: The character offset within the line, starting at 0.
-    # fmt: on
+    _line: int  #: The line number in the source file, starting at 1.
+    _column: int  #: The character offset within the line, starting at 0.
 
     def __init__(self, filename: Path, line: int, column: int) -> None:
         self._filename = filename
@@ -106,10 +104,8 @@ class Position(metaclass=ExtendedType):
 
 @export
 class DOMMixin(metaclass=ExtendedType, mixin=True):
-    # fmt: off
-    _iirNode:  Iir       #: The IIR node in *libghdl*'s tree this DOM object was translated from.
+    _iirNode: Iir  #: The IIR node in *libghdl*'s tree this DOM object was translated from.
     _position: Position  #: The IIR node's position in the source file, resolved on first access and then cached.
-    # fmt: on
 
     def __init__(self, node: Iir) -> None:
         self._iirNode = node
