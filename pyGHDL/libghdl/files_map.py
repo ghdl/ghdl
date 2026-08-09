@@ -31,6 +31,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Files_Map`` in *libghdl*.
+
+Maps between a *location* - the compact position *libghdl* stores in a node - and a source file with a line and a
+column, and holds the source buffers themselves.
+"""
 
 from ctypes import POINTER, c_char, c_void_p, cast
 
@@ -183,6 +189,14 @@ def Get_Directory_Name(File: SourceFileEntry) -> NameId:
 @export
 @BindToLibGHDL("files_map__get_file_buffer")
 def Get_File_Buffer_voidp(File: SourceFileEntry) -> c_void_p:
+    """
+    Raw binding returning the source buffer as an untyped pointer.
+
+    Use :func:`Get_File_Buffer` instead, which types it as a character pointer.
+
+    :param File: The source file entry to read the buffer of.
+    :returns:        The address of the source buffer.
+    """
     return 0  # pragma: no cover
 
 

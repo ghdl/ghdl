@@ -31,6 +31,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Lists`` in *libghdl*.
+
+Growable lists of node references, used where a node appears in a collection it does not own - a sensitivity list, for
+instance. See :func:`~pyGHDL.libghdl.utils.list_iter` for iterating one.
+"""
 
 from ctypes import c_int32, c_bool, POINTER, Structure
 
@@ -42,6 +48,8 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 
 @export
 class Iterator(Structure):
+    """The cursor a list iteration walks with, mirroring the Ada record."""
+
     _fields_ = [("chunk", c_int32), ("chunk_idx", c_int32), ("remain", c_int32)]
 
 

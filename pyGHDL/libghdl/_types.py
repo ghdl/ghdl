@@ -30,6 +30,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Type aliases for the scalar handles the ``libghdl`` API passes around.
+
+A node, a name or a source file is an index into a table on the Ada side, not a pointer, so every one of these is a
+32-bit integer at run-time. The distinct names say which table an index belongs to.
+"""
+
 from enum import IntEnum, unique
 from ctypes import c_int32, c_uint32, c_int64, c_double, c_bool
 from typing import TypeVar
@@ -49,6 +56,8 @@ __all__ = [
 @export
 @unique
 class TriStateType(IntEnum):
+    """An Ada tri-state: unknown, false or true."""
+
     Unknown = 0
     TFalse = 1
     TTrue = 2
@@ -57,6 +66,8 @@ class TriStateType(IntEnum):
 @export
 @unique
 class DirectionType(IntEnum):
+    """The direction of a range: ``to`` or ``downto``."""
+
     To = 0
     Downto = 1
 

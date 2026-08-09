@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Sem_Lib`` in *libghdl*.
+
+Loads and analyzes a design file, which is the entry point :class:`~pyGHDL.dom.NonStandard.Document` uses.
+"""
 
 from pyTooling.Decorators import export
 

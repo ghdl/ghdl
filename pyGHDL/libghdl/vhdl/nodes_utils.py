@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Nodes_Utils`` in *libghdl*.
+
+Helpers that answer questions about a node which are more than a field access, such as stripping a denoting name.
+"""
 
 from pyTooling.Decorators import export
 

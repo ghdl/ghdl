@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Parse`` in *libghdl*.
+
+The parser: builds the AST of a design file from its source code.
+"""
 
 from ctypes import c_bool
 

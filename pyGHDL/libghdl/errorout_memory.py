@@ -31,6 +31,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Errorout.Memory`` in *libghdl*.
+
+Collects analysis messages in memory instead of printing them, so a caller can read them back with
+:func:`Get_Nbr_Messages` and :func:`Get_Error_Record`. :class:`~pyGHDL.dom.NonStandard.Design` installs this handler.
+"""
 
 from ctypes import c_int8, c_int32, c_char_p, Structure
 
@@ -112,6 +118,15 @@ def Get_Error_Record(Idx: ErrorIndex) -> Error_Message:
 # @export
 @BindToLibGHDL("errorout__memory__get_error_message_addr")
 def _Get_Error_Message(Idx: ErrorIndex) -> c_char_p:
+    """
+    Raw binding returning the message text as a C string.
+
+    Use :func:`Get_Error_Message` instead, which decodes it.
+
+    :param Idx: The index of the message to read.
+    :returns:     The message as a C string.
+
+    """
     return ""  # pragma: no cover
 
 

@@ -31,6 +31,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Flists`` in *libghdl*.
+
+Fixed-length lists of nodes, whose length is set when the list is created - the index constraints of an array subtype,
+for instance. See :func:`~pyGHDL.libghdl.utils.flist_iter` for iterating one.
+"""
+
 from ctypes import c_int32
 
 from pyTooling.Decorators import export
@@ -79,6 +86,7 @@ def Get_Nth_Element(FList: int, N: int) -> int:
     First element has index 0.
 
     :param FList: List to query.
-    :return:      Type: ``El_Type``
+    :param N:     The zero-based index of the element to read.
+    :return:           Type: ``El_Type``
     """
     return 0  # pragma: no cover

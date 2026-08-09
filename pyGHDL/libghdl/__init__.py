@@ -71,11 +71,22 @@ class LibGHDLException(GHDLBaseException):
     _internalErrors: Nullable[List[str]]
 
     def __init__(self, message: str, errors: List[str] = None):
+        """
+        Initializes an exception raised by the ``libghdl`` binding.
+
+        :param message: The message describing what failed on the Python side.
+        :param errors:  Messages collected from *libghdl*'s error buffer, or ``None`` if there are none.
+        """
         super().__init__(message)
         self._internalErrors = errors
 
     @readonly
     def InternalErrors(self) -> Nullable[List[str]]:
+        """
+        Read-only property to access the errors reported by *libghdl* (:attr:`_internalErrors`).
+
+        :returns: The messages from *libghdl*'s error buffer, or ``None`` if none were collected.
+        """
         return self._internalErrors
 
 
@@ -104,12 +115,21 @@ def _get_libghdl_path() -> Path:
     4. Try within ``pyGHDL/lib`` Python package installation path.
     5. Try searching the ``ghdl`` binary via ``which``.
     6. Try ``../../lib`` when running from the build directory.
+
+    :returns: The path of the ``libghdl`` shared library.
     """
 
     libGHDLSharedLibraryFile = _get_libghdl_name()
     searchedAt = []
 
     def _check_libghdl_libdir(libDirectory: Path) -> Path:
+        """
+        Check whether the shared library is below ``<libdir>`` and return its path.
+
+        :param libDirectory:      The library directory to look in.
+        :returns:                 The path of the shared library.
+        :raises FileNotFoundError: If the shared library is not in that directory.
+        """
         libFile = libDirectory / libGHDLSharedLibraryFile
         if not libFile.exists():
             raise FileNotFoundError(f"{libFile}")
@@ -117,6 +137,13 @@ def _get_libghdl_path() -> Path:
         return libFile
 
     def _check_libghdl_bindir(binDirectory: Path) -> Path:
+        """
+        Check whether the shared library is below ``<bindir>/../lib`` and return its path.
+
+        :param binDirectory:      The binary directory to look next to.
+        :returns:                 The path of the shared library.
+        :raises FileNotFoundError: If the shared library is not below that directory.
+        """
         libDirectory = (binDirectory / "../lib").resolve()
         return _check_libghdl_libdir(libDirectory)
 
@@ -195,6 +222,13 @@ def _get_libghdl_path() -> Path:
 @export
 def _initialize():
     # Load the shared library
+    """
+    Locate and load the ``libghdl`` shared library.
+
+    :returns:                            The loaded shared library.
+    :raises LibGHDLException: If the shared library cannot be found.
+
+    """
     _libghdl_path = _get_libghdl_path()
 
     # Load libghdl shared object

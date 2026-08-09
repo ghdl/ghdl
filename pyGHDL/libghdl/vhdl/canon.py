@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Canon`` in *libghdl*.
+
+Canonicalization: the pass that rewrites the AST into a simpler, equivalent form after semantic analysis.
+"""
 
 from ctypes import c_bool
 

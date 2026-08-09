@@ -31,6 +31,9 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Helpers on top of the raw :mod:`pyGHDL.libghdl.vhdl` bindings.
+"""
 
 from pyTooling.Decorators import export
 
@@ -48,12 +51,24 @@ def Get_Source_Identifier(Decl: Iir) -> NameId:
     Not useful for analysis as VHDL is case insensitive, but could be useful for error messages or tooling.
 
     :param Decl: Iir Node. Type: ``Iir``
+    :returns:    The identifier as written in the source file.
     """
     return 0
 
 
 @export
 def Get_Source_Identifier_Str(n: Iir) -> str:
+    """
+    Return a declaration's identifier as it was written in the source file.
+
+    :func:`~pyGHDL.libghdl.name_table.Get_Name_Ptr` returns the *normalized* identifier, which is lower:
+    case; this reads the characters back out of the source buffer instead, so the original casing is
+    preserved.
+
+    :param n: The IIR node of the declaration.
+    :returns: The identifier as written.
+
+    """
     loc = nodes.Get_Location(n)
     l = name_table.Get_Name_Length(nodes.Get_Identifier(n))
     sfe = files_map.Location_To_File(loc)

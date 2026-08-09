@@ -30,6 +30,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Generators and helpers on top of the raw ``libghdl`` bindings.
+
+Iterating a chain, a list or an flist, and resolving the leftmost source location of a node, are needed everywhere and
+are ugly against the raw API, so they live here.
+"""
 
 from ctypes import byref
 from typing import List, Any, Generator
@@ -78,6 +84,15 @@ def attr_image(a: int) -> str:
 
 @export
 def leftest_location(n):
+    """
+    Return the location of the leftmost token of a node.
+
+    A node's own location is the token the parser considered characteristic, which for a subtype indication or a name is
+    not the first one written. This walks left until there is nothing further.
+
+    :param n: The IIR node to locate.
+    :returns: The location of the leftmost token, or ``No_Location`` for ``Null_Iir``.
+    """
     while True:
         if n == nodes.Null_Iir:
             return files_map.No_Location

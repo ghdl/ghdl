@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Prints`` in *libghdl*.
+
+Unparses a node back to VHDL source code.
+"""
 
 from ctypes import c_int32, c_char_p, c_void_p
 
@@ -46,10 +51,8 @@ def Print_String(File: int, Handle: c_void_p) -> None:
     """
     Reindent all lines of F between [First_Line; Last_Line] to :obj:`Handle`.
 
-    :param File:      File to indent lines within. Type: ``Iir_Design_File``
+    :param File:        File to indent lines within. Type: ``Iir_Design_File``
     :param Handle:    undocumented. Type: ``Vstring_Acc``
-    :param FirstLine: undocumented.
-    :param LastLine:  undocumented.
     """
 
 

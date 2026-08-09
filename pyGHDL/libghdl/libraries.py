@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Libraries`` in *libghdl*.
+
+Manages the design libraries: which one is the work library, loading it, and adding a design unit to it.
+"""
 
 from ctypes import c_int32
 
@@ -147,8 +152,9 @@ def Get_Library(Ident: NameId, Loc: LocationType, Force: bool) -> Iir_Library_De
     Get the library named :obj:`Ident`.
 
     :param Ident: Library to look for.
-    :param Loc: Location in case of errors.
-    :return:      Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if it doesn't exist.
+    :param Loc:   Location in case of errors.
+    :param Force: ``True`` to load the library if it is not loaded yet.
+    :return:           Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if it doesn't exist.
     """
     return 0  # pragma: no cover
 

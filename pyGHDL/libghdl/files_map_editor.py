@@ -31,6 +31,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Files_Map.Editor`` in *libghdl*.
+
+Modifies the content of a source buffer in place, which is what the language server uses to apply an edit without
+reloading the file.
+"""
 
 from ctypes import c_int32, c_char_p, c_bool, c_uint32
 

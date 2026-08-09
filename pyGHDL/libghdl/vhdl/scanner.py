@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Scanner`` in *libghdl*.
+
+The lexer: turns a source buffer into the token stream the parser reads.
+"""
 
 from ctypes import c_int, c_bool
 

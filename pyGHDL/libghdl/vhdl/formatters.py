@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Formatters`` in *libghdl*.
+
+Reformats VHDL source code, used by the language server.
+"""
 
 from ctypes import c_void_p
 

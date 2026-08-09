@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Sem`` in *libghdl*.
+
+Semantic analysis: resolves names, computes types and decorates the AST with the results.
+"""
 
 from pyTooling.Decorators import export
 

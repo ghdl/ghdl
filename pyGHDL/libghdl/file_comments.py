@@ -32,6 +32,12 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
+"""
+Python binding for the Ada package ``File_Comments`` in *libghdl*.
+
+Gives access to the comments *libghdl* gathered while parsing, which is how doc-comments reach the DOM. Comments are
+only recorded if :data:`~pyGHDL.libghdl.flags.Flag_Gather_Comments` was set before parsing.
+"""
 
 from ctypes import c_uint32
 from typing import TypeVar

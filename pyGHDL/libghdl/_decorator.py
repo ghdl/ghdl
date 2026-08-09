@@ -31,6 +31,14 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
+"""
+Decorators binding a Python function to a subprogram in the shared library ``libghdl``.
+
+:func:`BindToLibGHDL` reads a function's type hints, derives the matching :mod:`ctypes` signature and replaces the
+function body with a call into the shared library. :func:`EnumLookupTable` precalculates an enum position to name
+table.
+"""
+
 from ctypes import (
     c_int32,
     c_uint32,
@@ -58,11 +66,24 @@ def EnumLookupTable(cls) -> Callable:
     Decorator to precalculate an enum lookup table (LUT) for enum position to
     enum literal name.
 
-    :param cls: Enumerator class for which a LUT shall be pre-calculated.
+    :returns:   Decorator function replacing the placeholder with a table lookup.
     """
 
     def decorator(func) -> Callable:
+        """
+        Replace the decorated placeholder with a lookup in the precalculated table.
+
+        :param func: The placeholder function being decorated.
+        :returns:    A function mapping an enum position to the literal's name.
+        """
+
         def gen() -> List[str]:
+            """
+            Build the lookup table from an enum position to the literal's name.
+
+            :returns: The list of literal names, indexed by enum position.
+
+            """
             d = [e for e in dir(cls) if e[0].isupper() and e[0] != "_"]
             res = [None] * len(d)
             for e in d:
@@ -73,7 +94,12 @@ def EnumLookupTable(cls) -> Callable:
 
         @wraps(func)
         def wrapper(id: int) -> str:
-            # function that replaces the placeholder function
+            """
+            Return the name of the enum literal at the given position.
+
+            :param id: The position of the enum literal.
+            :returns:  The literal's name.
+            """
             return __lut[id]
 
         return wrapper
@@ -90,6 +116,14 @@ def BindToLibGHDL(subprogramName):
     """
 
     def PythonTypeToCtype(typ):
+        """
+        Translate a Python type hint to the matching :mod:`ctypes` type.
+
+        :param typ:                   The type hint to translate.
+        :returns:                       The matching ctypes type, or ``None`` for a procedure's return type.
+        :raises TypeError:     If the type hint has no ctypes equivalent.
+
+        """
         if typ is None:
             return None
         elif typ is int:
@@ -125,6 +159,16 @@ def BindToLibGHDL(subprogramName):
         raise TypeError
 
     def wrapper(func: Callable):
+        """
+        Replace the decorated placeholder with a call into the shared library.
+
+        The :mod:`ctypes` signature is derived from the function's type hints, so the placeholder needs
+        a full annotation and no body.
+
+        :param func:       The placeholder function being decorated.
+        :returns:          A function calling ``subprogramName`` in *libghdl*.
+        :raises ValueError: If the function is not annotated, or the annotations do not match its parameters.
+        """
         typeHints: Dict[str, Any] = func.__annotations__
         typeHintCount = len(typeHints)
 
@@ -166,6 +210,13 @@ def BindToLibGHDL(subprogramName):
 
             @wraps(func)
             def inner(*args):
+                """
+                Call ``subprogramName`` in *libghdl* and translate a failure into an exception.
+
+                :param args:              The arguments to pass to the subprogram.
+                :returns:                 The subprogram's result.
+                :raises LibGHDLException: If the call into the shared library fails.
+                """
                 try:
                     returnValue = functionPointer(*args)
                 except OSError as ex:
@@ -182,6 +233,13 @@ def BindToLibGHDL(subprogramName):
 
             @wraps(func)
             def inner(*args):
+                """
+                Call ``subprogramName`` in *libghdl* and translate a failure into an exception.
+
+                :param args:              The arguments to pass to the subprogram.
+                :returns:                 The subprogram's result.
+                :raises LibGHDLException: If the call into the shared library fails.
+                """
                 try:
                     return functionPointer(*args)
                 except OSError as ex:

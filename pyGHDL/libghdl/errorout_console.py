@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Errorout.Console`` in *libghdl*.
+
+Reports analysis messages on the console.
+"""
 
 from pyTooling.Decorators import export
 
