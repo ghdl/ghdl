@@ -170,8 +170,7 @@ class Design(VHDLModel_Design):
         """
         Loads the ``std`` and ``ieee`` libraries into the design.
 
-        How long this took is measured and kept in :attr:`_loadDefaultLibraryTime`. There is no property to read it
-        with; :file:`pyGHDL/cli/dom.py` reads the field directly.
+        How long this took is measured and kept in :attr:`_loadDefaultLibraryTime`.
 
         :param flavor: The IEEE library flavor to load, or ``None`` for the default.
         """
@@ -187,8 +186,7 @@ class Design(VHDLModel_Design):
         Analyzes all documents of this design.
 
         How long this took is measured and kept in :attr:`_analyzeTime`, and the warnings *libghdl* raised during the
-        analysis are collected in :attr:`_warnings`. Neither has a property to read it with, so both are read as
-        fields today.
+        analysis are collected in :attr:`_warnings`.
         """
         t1 = time.perf_counter()
 
