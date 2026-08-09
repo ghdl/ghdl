@@ -43,7 +43,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional as Nullable, List
 
-from pyTooling.Decorators import export, readonly
+from pyTooling.Decorators import export, InheritDocString, readonly
 from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel import VHDLVersion, IEEEFlavor

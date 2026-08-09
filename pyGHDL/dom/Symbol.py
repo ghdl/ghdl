@@ -37,7 +37,7 @@ This module implements derived symbol classes from :mod:`pyVHDLModel.Symbol`.
 from typing import List, Mapping
 
 from pyGHDL.dom.Name import SimpleName
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Name import Name
 from pyVHDLModel.Symbol import Symbol as VHDLModel_Symbol

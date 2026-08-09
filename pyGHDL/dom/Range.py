@@ -34,7 +34,7 @@
 This module implements derived range classes from :mod:`pyVHDLModel.Base`.
 """
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Base import Direction, ExpressionUnion
 from pyVHDLModel.Base import RangeFromName as VHDLModel_RangeFromName
