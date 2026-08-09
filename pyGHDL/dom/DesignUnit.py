@@ -30,13 +30,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
 """
 This module contains all DOM classes for VHDL's design units (:class:`context <Entity>`,
 :class:`architecture <Architecture>`, :class:`package <Package>`,
 :class:`package body <PackageBody>`, :class:`context <Context>` and
 :class:`configuration <Configuration>`.
-
 
 """
 
@@ -118,6 +116,12 @@ class UseClause(VHDLModel_UseClause, DOMMixin):
 
     @classmethod
     def parse(cls, useNode: Iir):
+        """
+        Translates the IIR node of the use clause to an :class:`UseClause`.
+
+        :param useNode: The IIR node of the use clause.
+        :returns:       The translated use clause.
+        """
         nameNode = nodes.Get_Selected_Name(useNode)
         name = GetName(nameNode)
 
@@ -164,6 +168,12 @@ class ContextReference(VHDLModel_ContextReference, DOMMixin):
 
     @classmethod
     def parse(cls, contextNode: Iir):
+        """
+        Translates the IIR node of the context to a :class:`ContextReference`.
+
+        :param contextNode: The IIR node of the context.
+        :returns:           The translated context.
+        """
         nameNode = nodes.Get_Selected_Name(contextNode)
         contexts = [ContextReferenceSymbol(nameNode, GetName(nameNode))]
         for context in utils.chain_iter(nodes.Get_Context_Reference_Chain(contextNode)):
@@ -210,6 +220,13 @@ class Entity(VHDLModel_Entity, DOMMixin):
 
     @classmethod
     def parse(cls, entityNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion]):
+        """
+        Translates the IIR node of the entity declaration to an :class:`Entity`.
+
+        :param entityNode:   The IIR node of the entity declaration.
+        :param contextItems: List of all context items (library, use and context clauses) preceding the unit.
+        :returns:            The translated entity declaration.
+        """
         name = GetNameOfNode(entityNode)
         documentation = GetDocumentationOfNode(entityNode)
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(entityNode))
@@ -257,6 +274,13 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
 
     @classmethod
     def parse(cls, architectureNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion]):
+        """
+        Translates the IIR node of the architecture body to an :class:`Architecture`.
+
+        :param architectureNode: The IIR node of the architecture body.
+        :param contextItems:     List of all context items (library, use and context clauses) preceding the unit.
+        :returns:                The translated architecture body.
+        """
         name = GetNameOfNode(architectureNode)
         documentation = GetDocumentationOfNode(architectureNode)
         entityNameNode = nodes.Get_Entity_Name(architectureNode)
@@ -302,6 +326,12 @@ class Component(VHDLModel_Component, DOMMixin):
 
     @classmethod
     def parse(cls, componentNode: Iir):
+        """
+        Translates the IIR node of the component declaration to a :class:`Component`.
+
+        :param componentNode: The IIR node of the component declaration.
+        :returns:             The translated component declaration.
+        """
         name = GetNameOfNode(componentNode)
         documentation = GetDocumentationOfNode(componentNode)
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(componentNode))
@@ -341,6 +371,13 @@ class Package(VHDLModel_Package, DOMMixin):
 
     @classmethod
     def parse(cls, packageNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion]):
+        """
+        Translates the IIR node of the package declaration to a :class:`Package`.
+
+        :param packageNode:  The IIR node of the package declaration.
+        :param contextItems: List of all context items (library, use and context clauses) preceding the unit.
+        :returns:            The translated package declaration.
+        """
         name = GetNameOfNode(packageNode)
         documentation = GetDocumentationOfNode(packageNode)
 
@@ -386,6 +423,13 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
 
     @classmethod
     def parse(cls, packageBodyNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion]):
+        """
+        Translates the IIR node of the package body to a :class:`PackageBody`.
+
+        :param packageBodyNode: The IIR node of the package body.
+        :param contextItems:    List of all context items (library, use and context clauses) preceding the unit.
+        :returns:               The translated package body.
+        """
         packageIdentifier = GetNameOfNode(packageBodyNode)
         packageSymbol = PackageSymbol(packageBodyNode, SimpleName(packageBodyNode, packageIdentifier))
         documentation = GetDocumentationOfNode(packageBodyNode)
@@ -429,6 +473,13 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
 
     @classmethod
     def parse(cls, packageNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion] = None):
+        """
+        Translates the IIR node of the package declaration to a :class:`PackageInstantiation`.
+
+        :param packageNode:  The IIR node of the package declaration.
+        :param contextItems: List of all context items (library, use and context clauses) preceding the unit.
+        :returns:            The translated package declaration.
+        """
         name = GetNameOfNode(packageNode)
         documentation = GetDocumentationOfNode(packageNode)
         uninstantiatedPackageName = GetName(
@@ -468,6 +519,12 @@ class Context(VHDLModel_Context, DOMMixin):
 
     @classmethod
     def parse(cls, contextNode: Iir):
+        """
+        Translates the IIR node of the context to a :class:`Context`.
+
+        :param contextNode: The IIR node of the context.
+        :returns:           The translated context.
+        """
         from pyGHDL.dom._Utils import GetIirKindOfNode
 
         name = GetNameOfNode(contextNode)
@@ -527,6 +584,13 @@ class Configuration(VHDLModel_Configuration, DOMMixin):
 
     @classmethod
     def parse(cls, configurationNode: Iir, contextItems: Iterable[Context]) -> "Configuration":
+        """
+        Translates the IIR node of the configuration declaration to a :class:`Configuration`.
+
+        :param configurationNode: The IIR node of the configuration declaration.
+        :param contextItems:      List of all context items (library, use and context clauses) preceding the unit.
+        :returns:                 The translated configuration declaration.
+        """
         from pyGHDL.dom._Translate import GetName
 
         name = GetNameOfNode(configurationNode)

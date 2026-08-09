@@ -77,6 +77,12 @@ class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir) -> "NullLiteral":
+        """
+        Translates an IIR node to a :class:`NullLiteral`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         return cls(node)
 
 
@@ -99,6 +105,12 @@ class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
 
     @classmethod
     def parse(cls, literalNode: Iir) -> "EnumerationLiteral":
+        """
+        Translates the IIR node of the literal to an :class:`EnumerationLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
         literalName = GetNameOfNode(literalNode)
         return cls(literalNode, literalName)
 
@@ -122,6 +134,12 @@ class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
 
     @classmethod
     def parse(cls, literalNode: Iir) -> "IntegerLiteral":
+        """
+        Translates the IIR node of the literal to an :class:`IntegerLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
         value = nodes.Get_Value(literalNode)
         return cls(literalNode, value)
 
@@ -145,6 +163,12 @@ class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
 
     @classmethod
     def parse(cls, literalNode: Iir) -> "FloatingPointLiteral":
+        """
+        Translates the IIR node of the literal to a :class:`FloatingPointLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
         value = nodes.Get_Fp_Value(literalNode)
         return cls(literalNode, value)
 
@@ -169,6 +193,12 @@ class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
 
     @classmethod
     def parse(cls, literalNode: Iir) -> "PhysicalIntegerLiteral":
+        """
+        Translates the IIR node of the literal to a :class:`PhysicalIntegerLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
         value = nodes.Get_Value(literalNode)
         unit = nodes.Get_Unit_Name(literalNode)
         unitName = GetNameOfNode(unit)
@@ -196,6 +226,12 @@ class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
 
     @classmethod
     def parse(cls, literalNode: Iir) -> "PhysicalFloatingLiteral":
+        """
+        Translates the IIR node of the literal to a :class:`PhysicalFloatingLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
         value = nodes.Get_Fp_Value(literalNode)
         unit = nodes.Get_Unit_Name(literalNode)
         unitName = GetNameOfNode(unit)
@@ -222,6 +258,12 @@ class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
 
     @classmethod
     def parse(cls, literalNode: Iir) -> "CharacterLiteral":
+        """
+        Translates the IIR node of the literal to a :class:`CharacterLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
         identifier = nodes.Get_Identifier(literalNode)
         value = name_table.Get_Character(identifier)
         return cls(literalNode, value)
@@ -332,6 +374,12 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
         DecimalBitStringLiteral,
         HexadecimalBitStringLiteral,
     ]:
+        """
+        Translates the IIR node of the literal to a :class:`StringLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
         base = nodes.Get_Bit_String_Base(literalNode)
         isSigned = nodes.Get_Has_Signed(literalNode) if nodes.Get_Has_Sign(literalNode) else None
         length = nodes.Get_String_Length(literalNode) if nodes.Get_Has_Length(literalNode) else None

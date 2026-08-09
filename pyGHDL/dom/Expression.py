@@ -125,6 +125,12 @@ class _ParseUnaryExpressionMixin(metaclass=ExtendedType, mixin=True):
 
     @classmethod
     def parse(cls, node: Iir) -> VHDLModel_UnaryExpression:
+        """
+        Translates an IIR node to a :class:`_ParseUnaryExpressionMixin`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetExpressionFromNode
 
         operand = GetExpressionFromNode(nodes.Get_Operand(node))
@@ -141,6 +147,12 @@ class _ParseBinaryExpressionMixin(metaclass=ExtendedType, mixin=True):
 
     @classmethod
     def parse(cls, node: Iir) -> VHDLModel_BinaryExpression:
+        """
+        Translates an IIR node to a :class:`_ParseBinaryExpressionMixin`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetExpressionFromNode
 
         left = GetExpressionFromNode(nodes.Get_Left(node))
@@ -239,6 +251,12 @@ class ParenthesisExpression(VHDLModel_ParenthesisExpression, DOMMixin, _ParseUna
 
     @classmethod
     def parse(cls, node: Iir) -> "ParenthesisExpression":
+        """
+        Translates an IIR node to a :class:`ParenthesisExpression`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetExpressionFromNode
 
         operand = GetExpressionFromNode(nodes.Get_Expression(node))
@@ -305,6 +323,12 @@ class RangeExpression(VHDLModel_RangeExpression, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir) -> Union["AscendingRangeExpression", "DescendingRangeExpression"]:
+        """
+        Translates an IIR node to a :class:`RangeExpression`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetExpressionFromNode
 
         direction = nodes.Get_Direction(node)
@@ -1091,6 +1115,12 @@ class QualifiedExpression(VHDLModel_QualifiedExpression, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir) -> "QualifiedExpression":
+        """
+        Translates an IIR node to a :class:`QualifiedExpression`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetExpressionFromNode, GetName
 
         typeMarkName = GetName(nodes.Get_Type_Mark(node))
@@ -1118,6 +1148,12 @@ class SubtypeAllocation(VHDLModel_SubtypeAllocation, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir) -> "QualifiedExpressionAllocation":
+        """
+        Translates an IIR node to a :class:`SubtypeAllocation`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         subtype = GetSubtypeIndicationFromNode(node, "allocation", "?")
@@ -1144,6 +1180,12 @@ class QualifiedExpressionAllocation(VHDLModel_QualifiedExpressionAllocation, DOM
 
     @classmethod
     def parse(cls, node: Iir) -> "QualifiedExpressionAllocation":
+        """
+        Translates an IIR node to a :class:`QualifiedExpressionAllocation`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetExpressionFromNode
 
         expression = GetExpressionFromNode(nodes.Get_Expression(node))
@@ -1170,6 +1212,12 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir) -> "Aggregate":
+        """
+        Translates an IIR node to an :class:`Aggregate`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import (
             GetExpressionFromNode,
             GetDiscreteRangeFromNode,

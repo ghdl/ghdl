@@ -84,6 +84,13 @@ class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir, documentation: str = None) -> "IncompleteType":
+        """
+        Translates an IIR node to an :class:`IncompleteType`.
+
+        :param node:          The IIR node this object is translated from.
+        :param documentation: The documentation comment associated with this declaration.
+        :returns:             The translated object.
+        """
         from pyGHDL.dom._Utils import GetNameOfNode
 
         name = GetNameOfNode(node)

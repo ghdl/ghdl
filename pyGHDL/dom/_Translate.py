@@ -425,9 +425,9 @@ def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: s
     :param subtypeIndicationNode: The subtype indication IIR node.
     :param entity:                The entity kind the subtype indication is extracted from (e.g. :vhdlkw:`constant`).
                                   Used in exception messages.
-    :param name:                  The entity's name the subtype indication is extracted from (e.g. ``BITS``).
+    :param name: The entity's name the subtype indication is extracted from (e.g. ``BITS``).
                                   Used in exception messages.
-    :returns:                     A symbol referencing a type or subtype, with array or record constraints.
+    :returns: A symbol referencing a type or subtype, with array or record constraints.
     """
     if subtypeIndicationNode is nodes.Null_Iir:
         raise ValueError("Parameter 'subtypeIndicationNode' is 'Null_Iir'.")

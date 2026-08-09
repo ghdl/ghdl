@@ -45,6 +45,11 @@ class Formatter:  # (metaclass=ExtendedType):
 
     @abstractmethod
     def WriteGraphML(self, path: Path):
+        """
+        Writes the graph as a GraphML file.
+
+        :param path: The path of the file to write.
+        """
         pass
 
 
@@ -79,6 +84,11 @@ class DependencyGraphFormatter(Formatter):
     }
 
     def WriteGraphML(self, path: Path):
+        """
+        Writes the dependency graph as a GraphML file, grouping the vertices by library.
+
+        :param path: The path of the file to write.
+        """
         with path.open("w") as file:
             file.write(dedent(f"""\
             <graphml xmlns="http://graphml.graphdrawing.org/xmlns"
@@ -185,6 +195,11 @@ class HierarchyGraphFormatter(Formatter):
     }
 
     def WriteGraphML(self, path: Path):
+        """
+        Writes the hierarchy graph as a GraphML file.
+
+        :param path: The path of the file to write.
+        """
         with path.open("w") as file:
             file.write(dedent(f"""\
             <graphml xmlns="http://graphml.graphdrawing.org/xmlns"
@@ -270,6 +285,11 @@ class CompileOrderGraphFormatter(Formatter):
     }
 
     def WriteGraphML(self, path: Path):
+        """
+        Writes the compile order graph as a GraphML file.
+
+        :param path: The path of the file to write.
+        """
         with path.open("w") as file:
             file.write(dedent(f"""\
             <graphml xmlns="http://graphml.graphdrawing.org/xmlns"

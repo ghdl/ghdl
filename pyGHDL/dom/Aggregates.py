@@ -30,13 +30,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
 """
 This module contains all DOM classes for VHDL's design units (:class:`context <Entity>`,
 :class:`architecture <Architecture>`, :class:`package <Package>`,
 :class:`package body <PackageBody>`, :class:`context <Context>` and
 :class:`configuration <Configuration>`.
-
 
 """
 

@@ -79,6 +79,12 @@ class EntityAspectEntity(VHDLModel_EntityAspectEntity, DOMMixin):
 
     @classmethod
     def parse(cls, entityAspectNode: Iir) -> "EntityAspectEntity":
+        """
+        Translates the IIR node of the entity aspect to an :class:`EntityAspectEntity`.
+
+        :param entityAspectNode: The IIR node of the entity aspect.
+        :returns:                The translated entity aspect.
+        """
         from pyGHDL.dom._Translate import GetName
 
         entityNameNode = nodes.Get_Entity_Name(entityAspectNode)
@@ -113,6 +119,12 @@ class EntityAspectConfiguration(VHDLModel_EntityAspectConfiguration, DOMMixin):
 
     @classmethod
     def parse(cls, entityAspectNode: Iir) -> "EntityAspectConfiguration":
+        """
+        Translates the IIR node of the entity aspect to an :class:`EntityAspectConfiguration`.
+
+        :param entityAspectNode: The IIR node of the entity aspect.
+        :returns:                The translated entity aspect.
+        """
         from pyGHDL.dom._Translate import GetName
 
         configurationNameNode = nodes.Get_Configuration_Name(entityAspectNode)
@@ -139,6 +151,12 @@ class EntityAspectOpen(VHDLModel_EntityAspectOpen, DOMMixin):
 
     @classmethod
     def parse(cls, entityAspectNode: Iir) -> "EntityAspectOpen":
+        """
+        Translates the IIR node of the entity aspect to an :class:`EntityAspectOpen`.
+
+        :param entityAspectNode: The IIR node of the entity aspect.
+        :returns:                The translated entity aspect.
+        """
         return cls(entityAspectNode)
 
 
@@ -189,6 +207,12 @@ class BindingIndication(VHDLModel_BindingIndication, DOMMixin):
 
     @classmethod
     def parse(cls, bindingIndicationNode: Iir) -> "BindingIndication":
+        """
+        Translates the IIR node of the binding indication to a :class:`BindingIndication`.
+
+        :param bindingIndicationNode: The IIR node of the binding indication.
+        :returns:                     The translated binding indication.
+        """
         from pyGHDL.dom._Translate import GetGenericMapAspect, GetPortMapAspect
 
         entityAspectNode = nodes.Get_Entity_Aspect(bindingIndicationNode)
@@ -264,6 +288,12 @@ class ComponentConfiguration(VHDLModel_ComponentConfiguration, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir) -> "ComponentConfiguration":
+        """
+        Translates an IIR node to a :class:`ComponentConfiguration`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetName
 
         instList = nodes.Get_Instantiation_List(node)
@@ -312,6 +342,12 @@ class BlockConfiguration(VHDLModel_BlockConfiguration, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir) -> "BlockConfiguration":
+        """
+        Translates an IIR node to a :class:`BlockConfiguration`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetName
         from pyGHDL.dom.Symbol import Symbol as DOMSymbol
 

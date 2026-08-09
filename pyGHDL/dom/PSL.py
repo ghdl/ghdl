@@ -30,13 +30,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
 """
 This module contains all DOM classes for VHDL's design units (:class:`context <Entity>`,
 :class:`architecture <Architecture>`, :class:`package <Package>`,
 :class:`package body <PackageBody>`, :class:`context <Context>` and
 :class:`configuration <Configuration>`.
-
 
 """
 
@@ -75,6 +73,12 @@ class VerificationUnit(VHDLModel_VerificationUnit, DOMMixin):
 
     @classmethod
     def parse(cls, vunitNode: Iir):
+        """
+        Translates the IIR node of the verification unit to a :class:`VerificationUnit`.
+
+        :param vunitNode: The IIR node of the verification unit.
+        :returns:         The translated verification unit.
+        """
         name = GetNameOfNode(vunitNode)
 
         # FIXME: needs an implementation
@@ -105,6 +109,12 @@ class VerificationProperty(VHDLModel_VerificationProperty, DOMMixin):
 
     @classmethod
     def parse(cls, vpropNode: Iir):
+        """
+        Translates the IIR node of the verification property to a :class:`VerificationProperty`.
+
+        :param vpropNode: The IIR node of the verification property.
+        :returns:         The translated verification property.
+        """
         name = GetNameOfNode(vpropNode)
 
         # FIXME: needs an implementation
@@ -135,6 +145,12 @@ class VerificationMode(VHDLModel_VerificationMode, DOMMixin):
 
     @classmethod
     def parse(cls, vmodeNode: Iir):
+        """
+        Translates the IIR node of the verification mode to a :class:`VerificationMode`.
+
+        :param vmodeNode: The IIR node of the verification mode.
+        :returns:         The translated verification mode.
+        """
         name = GetNameOfNode(vmodeNode)
 
         # FIXME: needs an implementation
@@ -167,6 +183,12 @@ class DefaultClock(VHDLModel_DefaultClock, DOMMixin):
 
     @classmethod
     def parse(cls, defaultClockNode: Iir):
+        """
+        Translates the IIR node of the PSL default clock to a :class:`DefaultClock`.
+
+        :param defaultClockNode: The IIR node of the PSL default clock.
+        :returns:                The translated PSL default clock.
+        """
         name = GetNameOfNode(defaultClockNode)
         documentation = GetDocumentationOfNode(defaultClockNode)
 

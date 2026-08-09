@@ -128,8 +128,8 @@ def GetLabelOfNode(node: Iir) -> Nullable[str]:
     if-generate or case-generate statement - carries it in ``Alternative_Label``. No node kind has
     both, so the field is chosen from the node's kind.
 
-    :param node:        The IIR node to read the label of.
-    :returns:           The label, or ``None`` if the node has no label field or no label was given
+    :param node: The IIR node to read the label of.
+    :returns:    The label, or ``None`` if the node has no label field or no label was given
                         in the source.
     :raises ValueError: If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
     """

@@ -76,6 +76,12 @@ class Attribute(VHDLModel_Attribute, DOMMixin):
 
     @classmethod
     def parse(cls, attributeNode: Iir) -> "Attribute":
+        """
+        Translates the IIR node of the attribute declaration to an :class:`Attribute`.
+
+        :param attributeNode: The IIR node of the attribute declaration.
+        :returns:             The translated attribute declaration.
+        """
         name = GetNameOfNode(attributeNode)
         documentation = GetDocumentationOfNode(attributeNode)
         subtypeMark = nodes.Get_Type_Mark(attributeNode)
@@ -144,6 +150,12 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
 
     @classmethod
     def parse(cls, attributeNode: Iir) -> "AttributeSpecification":
+        """
+        Translates the IIR node of the attribute declaration to an :class:`AttributeSpecification`.
+
+        :param attributeNode: The IIR node of the attribute declaration.
+        :returns:             The translated attribute declaration.
+        """
         attributeDesignator = nodes.Get_Attribute_Designator(attributeNode)
         attributeName = GetName(attributeDesignator)
         documentation = GetDocumentationOfNode(attributeNode)

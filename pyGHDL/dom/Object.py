@@ -91,6 +91,13 @@ class Constant(VHDLModel_Constant, DOMMixin):
     def parse(
         cls, constantNode: Iir, furtherIdentifiers: Iterable[str] = None
     ) -> Union["Constant", "DeferredConstant"]:
+        """
+        Translates the IIR node of the constant declaration to a :class:`Constant`.
+
+        :param constantNode:       The IIR node of the constant declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated constant declaration.
+        """
         from pyGHDL.dom._Translate import (
             GetSubtypeIndicationFromNode,
             GetExpressionFromNode,
@@ -139,6 +146,13 @@ class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
 
     @classmethod
     def parse(cls, constantNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "DeferredConstant":
+        """
+        Translates the IIR node of the constant declaration to a :class:`DeferredConstant`.
+
+        :param constantNode:       The IIR node of the constant declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated constant declaration.
+        """
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(constantNode)
@@ -187,6 +201,13 @@ class Variable(VHDLModel_Variable, DOMMixin):
 
     @classmethod
     def parse(cls, variableNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "Variable":
+        """
+        Translates the IIR node of the variable declaration to a :class:`Variable`.
+
+        :param variableNode:       The IIR node of the variable declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated variable declaration.
+        """
         from pyGHDL.dom._Translate import (
             GetSubtypeIndicationFromNode,
             GetExpressionFromNode,
@@ -234,6 +255,13 @@ class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
 
     @classmethod
     def parse(cls, variableNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "SharedVariable":
+        """
+        Translates the IIR node of the variable declaration to a :class:`SharedVariable`.
+
+        :param variableNode:       The IIR node of the variable declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated variable declaration.
+        """
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(variableNode)
@@ -282,6 +310,13 @@ class Signal(VHDLModel_Signal, DOMMixin):
 
     @classmethod
     def parse(cls, signalNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "Signal":
+        """
+        Translates the IIR node of the signal declaration to a :class:`Signal`.
+
+        :param signalNode:         The IIR node of the signal declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated signal declaration.
+        """
         from pyGHDL.dom._Translate import (
             GetSubtypeIndicationFromNode,
             GetExpressionFromNode,
@@ -327,6 +362,13 @@ class File(VHDLModel_File, DOMMixin):
 
     @classmethod
     def parse(cls, fileNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "File":
+        """
+        Translates the IIR node of the file declaration to a :class:`File`.
+
+        :param fileNode:           The IIR node of the file declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated file declaration.
+        """
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(fileNode)

@@ -65,7 +65,13 @@ class Position(metaclass=ExtendedType):
 
     @classmethod
     def parse(cls, node: Iir) -> "Position":
-        """Return the source code position of a IIR node."""
+        """
+        Return the source code position of a IIR node.
+
+        :param node:        The IIR node to read the position of.
+        :returns:           The node's position in its source file.
+        :raises ValueError: If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
+        """
         if node == nodes.Null_Iir:
             raise ValueError("Position.parse(): Parameter 'node' must not be 'Null_iir'.")
 
