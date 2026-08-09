@@ -39,23 +39,23 @@ next to itself instead of somewhere on the system.
 
 **Contents of an installed package:**
 
-+-------------------------------+--------------------------------------------------------------------+
-| File or directory             | Purpose                                                            |
-+===============================+====================================================================+
-| :file:`libghdl-*.so`,         | GHDL's analyzer and simulator as a shared library, loaded by        |
-| :file:`libghdl-*.dll`,        | :mod:`pyGHDL.libghdl` through :mod:`ctypes <python:ctypes>`. The    |
-| :file:`libghdl-*.dylib`       | filename carries GHDL's version, e.g.                              |
-|                               | :file:`libghdl-7_0_0_dev.so`.                                      |
-+-------------------------------+--------------------------------------------------------------------+
-| :file:`libgnat-*.so`          | The GNAT runtime ``libghdl`` was linked against, shipped when it is |
-|                               | not expected to be present on the target system.                   |
-+-------------------------------+--------------------------------------------------------------------+
-| :file:`libghdlvpi.*`          | The VPI support library, used by simulations loading VPI modules.  |
-+-------------------------------+--------------------------------------------------------------------+
-| :file:`ghdl/`                 | The pre-analyzed VHDL libraries - ``std`` and ``ieee`` for each     |
-|                               | supported language revision (:file:`v87`, :file:`v93`, :file:`v08`, |
-|                               | :file:`v19`) - plus their sources in :file:`ghdl/src`.             |
-+-------------------------------+--------------------------------------------------------------------+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - File or directory
+     - Purpose
+   * - :file:`libghdl-*.so`, :file:`libghdl-*.dll`, :file:`libghdl-*.dylib`
+     - GHDL's analyzer and simulator as a shared library, loaded by :mod:`pyGHDL.libghdl` through
+       :mod:`ctypes <python:ctypes>`. The filename carries GHDL's version, e.g. :file:`libghdl-7_0_0_dev.so`.
+   * - :file:`libgnat-*.so`
+     - The GNAT runtime ``libghdl`` was linked against, shipped when it is not expected to be present on the
+       target system.
+   * - :file:`libghdlvpi.*`
+     - The VPI support library, used by simulations loading VPI modules.
+   * - :file:`ghdl/`
+     - The pre-analyzed VHDL libraries - ``std`` and ``ieee`` for each supported language revision
+       (:file:`v87`, :file:`v93`, :file:`v08`, :file:`v19`) - plus their sources in :file:`ghdl/src`.
 
 .. note::
 

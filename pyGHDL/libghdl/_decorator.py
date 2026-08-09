@@ -118,6 +118,31 @@ def BindToLibGHDL(subprogramName):
         """
         Translate a Python type hint to the matching :mod:`ctypes` type.
 
+        .. list-table::
+           :header-rows: 1
+           :widths: 40 60
+
+           * - Type hint
+             - ctypes type
+           * - ``None``
+             - ``None`` - a procedure's return type
+           * - :class:`int`
+             - ``c_int32``
+           * - :class:`float`
+             - ``c_double``
+           * - :class:`bool`
+             - ``c_bool``
+           * - :class:`bytes`
+             - ``c_char_p`` - passed through, *not* encoded
+           * - ``c_char``, ``c_char_p``, ``c_uint32``, ``c_void_p``
+             - itself
+           * - a :class:`~typing.TypeVar` from :mod:`~pyGHDL.libghdl._types`
+             - its ``__bound__``, or ``c_int32`` / ``c_double`` when bound to :class:`int` / :class:`float`
+           * - an :class:`~enum.IntEnum`
+             - ``c_int32``
+           * - a :class:`~ctypes.Structure`
+             - itself
+
         :param typ:        The type hint to translate.
         :returns:          The matching ctypes type, or ``None`` for a procedure's return type.
         :raises TypeError: If the type hint has no ctypes equivalent.
