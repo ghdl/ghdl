@@ -97,6 +97,12 @@ class Function(VHDLModel_Function, DOMMixin):
 
     @classmethod
     def parse(cls, functionNode: Iir) -> "Function":
+        """
+        Translates the IIR node of the function declaration to a :class:`Function`.
+
+        :param functionNode: The IIR node of the function declaration.
+        :returns:            The translated function declaration.
+        """
         from pyGHDL.dom._Translate import (
             GetName,
             GetGenericsFromChainedNodes,
@@ -180,6 +186,12 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
 
     @classmethod
     def parse(cls, procedureNode: Iir) -> "Procedure":
+        """
+        Translates the IIR node of the procedure declaration to a :class:`Procedure`.
+
+        :param procedureNode: The IIR node of the procedure declaration.
+        :returns:             The translated procedure declaration.
+        """
         from pyGHDL.dom._Translate import (
             GetGenericsFromChainedNodes,
             GetParameterFromChainedNodes,
@@ -252,6 +264,12 @@ class FunctionInstantiation(VHDLModel_FunctionInstantiation, DOMMixin):
 
     @classmethod
     def parse(cls, functionNode: Iir) -> "FunctionInstantiation":
+        """
+        Translates the IIR node of the function declaration to a :class:`FunctionInstantiation`.
+
+        :param functionNode: The IIR node of the function declaration.
+        :returns:            The translated function declaration.
+        """
         from pyGHDL.dom._Translate import GetName, GetGenericMapAspect
         from pyGHDL.dom.Symbol import SubprogramReferenceSymbol
 
@@ -307,6 +325,12 @@ class ProcedureInstantiation(VHDLModel_ProcedureInstantiation, DOMMixin):
 
     @classmethod
     def parse(cls, procedureNode: Iir) -> "ProcedureInstantiation":
+        """
+        Translates the IIR node of the procedure declaration to a :class:`ProcedureInstantiation`.
+
+        :param procedureNode: The IIR node of the procedure declaration.
+        :returns:             The translated procedure declaration.
+        """
         from pyGHDL.dom._Translate import GetName, GetGenericMapAspect
         from pyGHDL.dom.Symbol import SubprogramReferenceSymbol
 

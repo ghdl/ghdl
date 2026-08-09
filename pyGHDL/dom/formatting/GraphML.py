@@ -45,6 +45,11 @@ class Formatter:  # (metaclass=ExtendedType):
 
     @abstractmethod
     def WriteGraphML(self, path: Path):
+        """
+        Writes the graph as a GraphML file.
+
+        :param path: The path of the file to write.
+        """
         pass
 
 
@@ -79,6 +84,55 @@ class DependencyGraphFormatter(Formatter):
     }
 
     def WriteGraphML(self, path: Path):
+        """
+        Writes the dependency graph as a GraphML file, grouping the vertices by library.
+
+        The document declares six `GraphML <http://graphml.graphdrawing.org>`__ keys, four for nodes and two for edges:
+
+        .. list-table::
+           :header-rows: 1
+           :widths: 8 8 12 72
+
+           * - Key
+             - Applies to
+             - Attribute
+             - Value
+           * - ``nd1``
+             - node
+             - ``id``
+             - The vertex' ID, repeated as data so a reader ignoring the XML ``id`` still sees it.
+           * - ``nd2``
+             - node
+             - ``value``
+             - The label to display. An architecture is written as ``entity(architecture)``, a document as its ID,
+               anything else as its identifier.
+           * - ``nd3``
+             - node
+             - ``kind``
+             - The name of the vertex' :class:`~pyVHDLModel.DependencyGraphVertexKind`.
+           * - ``nd4``
+             - node
+             - ``color``
+             - The fill color from :attr:`NODE_COLORS`, selected by vertex kind.
+           * - ``ed3``
+             - edge
+             - ``kind``
+             - The name of the edge's :class:`~pyVHDLModel.DependencyGraphEdgeKind`.
+           * - ``ed4``
+             - edge
+             - ``color``
+             - The line color from :attr:`EDGE_COLORS`, selected by edge kind.
+
+        A node's XML ``id`` is the vertex' ID from the model. An edge has none, so edges are numbered in the order they
+        are written and get ``e1``, ``e2``, ...; their ``source`` and ``target`` are vertex IDs.
+
+        The graph is **grouped into one subgraph per library**: an enclosing node ``grp_<library>`` holds a nested
+        ``<graph id="<library>">`` with that library's vertices. A vertex is assigned to a library by asking the model -
+        a library vertex for itself, a document vertex through its first design unit, anything else through its own
+        ``Library``. Edges are written afterwards at the top level, so an edge may cross from one subgraph into another.
+
+        :param path: The path of the file to write.
+        """
         with path.open("w") as file:
             file.write(dedent(f"""\
             <graphml xmlns="http://graphml.graphdrawing.org/xmlns"
@@ -185,6 +239,51 @@ class HierarchyGraphFormatter(Formatter):
     }
 
     def WriteGraphML(self, path: Path):
+        """
+        Writes the hierarchy graph as a GraphML file.
+
+        The document declares six `GraphML <http://graphml.graphdrawing.org>`__ keys, four for nodes and two for edges:
+
+        .. list-table::
+           :header-rows: 1
+           :widths: 8 8 12 72
+
+           * - Key
+             - Applies to
+             - Attribute
+             - Value
+           * - ``nd1``
+             - node
+             - ``id``
+             - The vertex' ID, repeated as data so a reader ignoring the XML ``id`` still sees it.
+           * - ``nd2``
+             - node
+             - ``value``
+             - The label to display. The vertex' identifier.
+           * - ``nd3``
+             - node
+             - ``kind``
+             - The name of the vertex' :class:`~pyVHDLModel.DependencyGraphVertexKind`.
+           * - ``nd4``
+             - node
+             - ``color``
+             - The fill color from :attr:`NODE_COLORS`, selected by vertex kind.
+           * - ``ed3``
+             - edge
+             - ``kind``
+             - The name of the edge's :class:`~pyVHDLModel.DependencyGraphEdgeKind`.
+           * - ``ed4``
+             - edge
+             - ``color``
+             - The line color from :attr:`EDGE_COLORS`, selected by edge kind.
+
+        A node's XML ``id`` is the vertex' ID from the model. An edge has none, so edges are numbered in the order they
+        are written and get ``e1``, ``e2``, ...; their ``source`` and ``target`` are vertex IDs.
+
+        The vertices are written flat, without subgraphs.
+
+        :param path: The path of the file to write.
+        """
         with path.open("w") as file:
             file.write(dedent(f"""\
             <graphml xmlns="http://graphml.graphdrawing.org/xmlns"
@@ -270,6 +369,51 @@ class CompileOrderGraphFormatter(Formatter):
     }
 
     def WriteGraphML(self, path: Path):
+        """
+        Writes the compile order graph as a GraphML file.
+
+        The document declares six `GraphML <http://graphml.graphdrawing.org>`__ keys, four for nodes and two for edges:
+
+        .. list-table::
+           :header-rows: 1
+           :widths: 8 8 12 72
+
+           * - Key
+             - Applies to
+             - Attribute
+             - Value
+           * - ``nd1``
+             - node
+             - ``id``
+             - The vertex' ID, repeated as data so a reader ignoring the XML ``id`` still sees it.
+           * - ``nd2``
+             - node
+             - ``value``
+             - The label to display. The vertex' identifier.
+           * - ``nd3``
+             - node
+             - ``kind``
+             - The name of the vertex' :class:`~pyVHDLModel.DependencyGraphVertexKind`.
+           * - ``nd4``
+             - node
+             - ``color``
+             - The fill color from :attr:`NODE_COLORS`, selected by vertex kind.
+           * - ``ed3``
+             - edge
+             - ``kind``
+             - The name of the edge's :class:`~pyVHDLModel.DependencyGraphEdgeKind`.
+           * - ``ed4``
+             - edge
+             - ``color``
+             - The line color from :attr:`EDGE_COLORS`, selected by edge kind.
+
+        A node's XML ``id`` is the vertex' ID from the model. An edge has none, so edges are numbered in the order they
+        are written and get ``e1``, ``e2``, ...; their ``source`` and ``target`` are vertex IDs.
+
+        The vertices are written flat, without subgraphs.
+
+        :param path: The path of the file to write.
+        """
         with path.open("w") as file:
             file.write(dedent(f"""\
             <graphml xmlns="http://graphml.graphdrawing.org/xmlns"

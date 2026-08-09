@@ -30,7 +30,6 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
 """
 This module implements derived classes for VHDL constructs not covered by another module, e.g. an alias.
 """
@@ -75,6 +74,12 @@ class Alias(VHDLModel_Alias, DOMMixin):
 
     @classmethod
     def parse(cls, aliasNode: Iir):
+        """
+        Translates the IIR node of the alias declaration to an :class:`Alias`.
+
+        :param aliasNode: The IIR node of the alias declaration.
+        :returns:         The translated alias declaration.
+        """
         from pyGHDL.dom._Translate import GetName, GetSubtypeIndicationFromNode
         from pyGHDL.dom.Symbol import Symbol as DOMSymbol
 

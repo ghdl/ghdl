@@ -30,7 +30,6 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
 """
 This module implements the non-standard classes :class:`Design`, :class:`Library` and :class:`Document`.
 
@@ -168,6 +167,13 @@ class Design(VHDLModel_Design):
             )
 
     def LoadDefaultLibraries(self, flavor: Nullable[IEEEFlavor] = None):
+        """
+        Loads the ``std`` and ``ieee`` libraries into the design.
+
+        How long this took is measured and kept in :attr:`_loadDefaultLibraryTime`.
+
+        :param flavor: The IEEE library flavor to load, or ``None`` for the default.
+        """
         t1 = time.perf_counter()
 
         super().LoadStdLibrary()
@@ -176,6 +182,12 @@ class Design(VHDLModel_Design):
         self._loadDefaultLibraryTime = time.perf_counter() - t1
 
     def Analyze(self):
+        """
+        Analyzes all documents of this design.
+
+        How long this took is measured and kept in :attr:`_analyzeTime`, and the warnings *libghdl* raised during the
+        analysis are collected in :attr:`_warnings`.
+        """
         t1 = time.perf_counter()
 
         with WarningCollector(self._warnings) as warnings:
@@ -260,6 +272,11 @@ class Document(VHDLModel_Document):
                 self.__domTranslateTime = time.perf_counter() - t1
 
     def __loadFromPath(self):
+        """
+        Reads the source file named by :attr:`_filename` and hands it to *libghdl*.
+
+        :raises DOMException: If the source file does not exist.
+        """
         try:
             with self._filename.open("r", encoding=ENCODING) as file:
                 self.__loadFromString(file.read())
@@ -267,6 +284,15 @@ class Document(VHDLModel_Document):
             raise DOMException(f"Sourcefile '{self._filename}' not found.") from ex
 
     def __loadFromString(self, sourceCode: str):
+        """
+        Hands the given source code to *libghdl* under the name in :attr:`_filename`.
+
+        .. hint::
+
+           The source file itself is not read, which is how a document can be analyzed *in-memory* from a string.
+
+        :param sourceCode: The source code to analyze.
+        """
         sourcesBytes = sourceCode.encode(ENCODING)
         sourceLength = len(sourcesBytes)
         bufferLength = sourceLength + 128
@@ -281,6 +307,11 @@ class Document(VHDLModel_Document):
             raise DOMException(f"Source file '{self._filename}' already loaded.")
 
     def translate(self):
+        """
+        Translates the design units of the parsed IIR tree to :mod:`pyGHDL.dom` objects.
+
+        :raises DOMException: If a design unit's kind is not handled.
+        """
         firstUnit = nodes.Get_First_Design_Unit(self.__ghdlFile)
         self._documentation = GetDocumentationOfNode(firstUnit)
 

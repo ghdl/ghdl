@@ -592,6 +592,12 @@ class ConstrainedRecordSubtypeSymbol(VHDLModel_ConstrainedRecordSubtypeSymbol, D
 
     @classmethod
     def parse(cls, node: Iir):
+        """
+        Translates an IIR node to a :class:`ConstrainedRecordSubtypeSymbol`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         pass
 
 
@@ -650,6 +656,12 @@ class SimpleObjectOrFunctionCallSymbol(VHDLModel_SimpleObjectOrFunctionCallSymbo
 
     @classmethod
     def parse(cls, node: Iir):
+        """
+        Translates an IIR node to a :class:`SimpleObjectOrFunctionCallSymbol`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetName
 
         name = GetName(node)
@@ -676,6 +688,12 @@ class IndexedObjectOrFunctionCallSymbol(VHDLModel_IndexedObjectOrFunctionCallSym
 
     @classmethod
     def parse(cls, node: Iir):
+        """
+        Translates an IIR node to an :class:`IndexedObjectOrFunctionCallSymbol`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetName
 
         name = GetName(node)

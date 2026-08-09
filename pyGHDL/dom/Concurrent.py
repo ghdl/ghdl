@@ -177,6 +177,14 @@ class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
 
     @classmethod
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ComponentInstantiation":
+        """
+        Translates the IIR node of the instantiation statement to a :class:`ComponentInstantiation`.
+
+        :param instantiationNode: The IIR node of the instantiation statement.
+        :param instantiatedUnit:  The IIR node of the instantiated unit.
+        :param label:             The statement's label, or ``None`` if it has none.
+        :returns:                 The translated instantiation statement.
+        """
         from pyGHDL.dom._Translate import GetName, GetGenericMapAspect, GetPortMapAspect
 
         componentSymbol = ComponentInstantiationSymbol(instantiatedUnit, GetName(instantiatedUnit))
@@ -217,6 +225,14 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
 
     @classmethod
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "EntityInstantiation":
+        """
+        Translates the IIR node of the instantiation statement to an :class:`EntityInstantiation`.
+
+        :param instantiationNode: The IIR node of the instantiation statement.
+        :param instantiatedUnit:  The IIR node of the instantiated unit.
+        :param label:             The statement's label, or ``None`` if it has none.
+        :returns:                 The translated instantiation statement.
+        """
         from pyGHDL.dom._Translate import GetName, GetGenericMapAspect, GetPortMapAspect
 
         entityName = nodes.Get_Entity_Name(instantiatedUnit)
@@ -264,6 +280,14 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
 
     @classmethod
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ConfigurationInstantiation":
+        """
+        Translates the IIR node of the instantiation statement to a :class:`ConfigurationInstantiation`.
+
+        :param instantiationNode: The IIR node of the instantiation statement.
+        :param instantiatedUnit:  The IIR node of the instantiated unit.
+        :param label:             The statement's label, or ``None`` if it has none.
+        :returns:                 The translated instantiation statement.
+        """
         from pyGHDL.dom._Translate import GetName, GetGenericMapAspect, GetPortMapAspect
 
         configurationName = nodes.Get_Configuration_Name(instantiatedUnit)
@@ -318,6 +342,13 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
 
     @classmethod
     def parse(cls, blockNode: Iir, label: str) -> "ConcurrentBlockStatement":
+        """
+        Translates the IIR node of the block statement to a :class:`ConcurrentBlockStatement`.
+
+        :param blockNode: The IIR node of the block statement.
+        :param label:     The statement's label, or ``None`` if it has none.
+        :returns:         The translated block statement.
+        """
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
@@ -384,6 +415,14 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
 
     @classmethod
     def parse(cls, processNode: Iir, label: str, hasSensitivityList: bool) -> "ProcessStatement":
+        """
+        Translates the IIR node of the process statement to a :class:`ProcessStatement`.
+
+        :param processNode:        The IIR node of the process statement.
+        :param label:              The statement's label, or ``None`` if it has none.
+        :param hasSensitivityList: ``True`` if the process was declared with a sensitivity list.
+        :returns:                  The translated process statement.
+        """
         from pyGHDL.dom._Translate import (
             GetName,
             GetDeclaredItemsFromChainedNodes,
@@ -433,6 +472,12 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch, DOMMixin):
 
     @classmethod
     def parse(cls, generateNode: Iir) -> "IfGenerateBranch":
+        """
+        Translates the IIR node of the generate statement to an :class:`IfGenerateBranch`.
+
+        :param generateNode: The IIR node of the generate statement.
+        :returns:            The translated generate statement.
+        """
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
@@ -479,6 +524,13 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch, DOMMixin):
 
     @classmethod
     def parse(cls, generateNode: Iir, condition: Iir) -> "ElsifGenerateBranch":
+        """
+        Translates the IIR node of the generate statement to an :class:`ElsifGenerateBranch`.
+
+        :param generateNode: The IIR node of the generate statement.
+        :param condition:    The condition guarding the branch.
+        :returns:            The translated generate statement.
+        """
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
@@ -523,6 +575,12 @@ class ElseGenerateBranch(VHDLModel_ElseGenerateBranch, DOMMixin):
 
     @classmethod
     def parse(cls, generateNode: Iir) -> "ElseGenerateBranch":
+        """
+        Translates the IIR node of the generate statement to an :class:`ElseGenerateBranch`.
+
+        :param generateNode: The IIR node of the generate statement.
+        :returns:            The translated generate statement.
+        """
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
@@ -567,6 +625,13 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "IfGenerateStatement":
+        """
+        Translates the IIR node of the generate statement to an :class:`IfGenerateStatement`.
+
+        :param generateNode: The IIR node of the generate statement.
+        :param label:        The statement's label, or ``None`` if it has none.
+        :returns:            The translated generate statement.
+        """
         ifBranch = IfGenerateBranch.parse(generateNode)
         elsifBranches = []
         elseBranch = None
@@ -652,6 +717,13 @@ class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
 
     @classmethod
     def parse(cls, caseNode: Iir, choices: Iterable[ConcurrentChoice]) -> "GenerateCase":
+        """
+        Translates the IIR node of the alternative to a :class:`GenerateCase`.
+
+        :param caseNode: The IIR node of the alternative.
+        :param choices:  List of all choices selecting this alternative.
+        :returns:        The translated alternative.
+        """
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
@@ -694,6 +766,12 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
 
     @classmethod
     def parse(cls, caseNode: Iir) -> "OthersGenerateCase":
+        """
+        Translates the IIR node of the alternative to an :class:`OthersGenerateCase`.
+
+        :param caseNode: The IIR node of the alternative.
+        :returns:        The translated alternative.
+        """
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
@@ -736,6 +814,13 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "CaseGenerateStatement":
+        """
+        Translates the IIR node of the generate statement to a :class:`CaseGenerateStatement`.
+
+        :param generateNode: The IIR node of the generate statement.
+        :param label:        The statement's label, or ``None`` if it has none.
+        :returns:            The translated generate statement.
+        """
         from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetExpressionFromNode,
@@ -847,6 +932,13 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "ForGenerateStatement":
+        """
+        Translates the IIR node of the generate statement to a :class:`ForGenerateStatement`.
+
+        :param generateNode: The IIR node of the generate statement.
+        :param label:        The statement's label, or ``None`` if it has none.
+        :returns:            The translated generate statement.
+        """
         from pyGHDL.dom._Utils import GetNameOfNode
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
@@ -886,6 +978,12 @@ class WaveformElement(VHDLModel_WaveformElement, DOMMixin):
 
     @classmethod
     def parse(cls, waveNode: Iir):
+        """
+        Translates the IIR node of the waveform element to a :class:`WaveformElement`.
+
+        :param waveNode: The IIR node of the waveform element.
+        :returns:        The translated waveform element.
+        """
         from pyGHDL.dom._Translate import GetExpressionFromNode
 
         value = GetExpressionFromNode(nodes.Get_We_Value(waveNode))
@@ -1012,6 +1110,12 @@ class ConditionalWaveform(VHDLModel_ConditionalWaveform, DOMMixin):
 
     @classmethod
     def parse(cls, node: Iir) -> "ConditionalWaveform":
+        """
+        Translates an IIR node to a :class:`ConditionalWaveform`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 
         waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Waveform_Chain(node))
@@ -1084,6 +1188,13 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentSimpleSignalAssignment":
+        """
+        Translates the IIR node of the assignment statement to a :class:`ConcurrentSimpleSignalAssignment`.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The statement's label, or ``None`` if it has none.
+        :returns:              The translated assignment statement.
+        """
         from pyGHDL.dom._Translate import GetName
 
         targetNode = nodes.Get_Target(assignmentNode)
@@ -1121,6 +1232,13 @@ class ConcurrentConditionalSignalAssignment(VHDLModel_ConcurrentConditionalSigna
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentConditionalSignalAssignment":
+        """
+        Translates the IIR node of the assignment statement to a :class:`ConcurrentConditionalSignalAssignment`.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The statement's label, or ``None`` if it has none.
+        :returns:              The translated assignment statement.
+        """
         from pyGHDL.dom._Translate import GetName
 
         targetNode = nodes.Get_Target(assignmentNode)
@@ -1161,6 +1279,13 @@ class ConcurrentSelectedSignalAssignment(VHDLModel_ConcurrentSelectedSignalAssig
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentSelectedSignalAssignment":
+        """
+        Translates the IIR node of the assignment statement to a :class:`ConcurrentSelectedSignalAssignment`.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The statement's label, or ``None`` if it has none.
+        :returns:              The translated assignment statement.
+        """
         from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
@@ -1198,6 +1323,13 @@ class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
 
     @classmethod
     def parse(cls, concurrentCallNode: Iir, label: str) -> "ConcurrentProcedureCall":
+        """
+        Translates the IIR node of the concurrent procedure call to a :class:`ConcurrentProcedureCall`.
+
+        :param concurrentCallNode: The IIR node of the concurrent procedure call.
+        :param label:              The statement's label, or ``None`` if it has none.
+        :returns:                  The translated concurrent procedure call.
+        """
         from pyGHDL.dom._Translate import GetName, GetParameterMapAspect
 
         callNode = nodes.Get_Procedure_Call(concurrentCallNode)
@@ -1238,6 +1370,13 @@ class ConcurrentAssertStatement(VHDLModel_ConcurrentAssertStatement, DOMMixin):
 
     @classmethod
     def parse(cls, assertNode: Iir, label: str) -> "ConcurrentAssertStatement":
+        """
+        Translates the IIR node of the assertion to a :class:`ConcurrentAssertStatement`.
+
+        :param assertNode: The IIR node of the assertion.
+        :param label:      The statement's label, or ``None`` if it has none.
+        :returns:          The translated assertion.
+        """
         from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 
         # FIXME: how to get the condition?

@@ -97,6 +97,13 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
 
     @classmethod
     def parse(cls, genericNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "GenericConstantInterfaceItem":
+        """
+        Translates the IIR node of the generic declaration to a :class:`GenericConstantInterfaceItem`.
+
+        :param genericNode:        The IIR node of the generic declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated generic declaration.
+        """
         name = GetNameOfNode(genericNode)
         documentation = GetDocumentationOfNode(genericNode)
         identifiers = [name]
@@ -130,6 +137,12 @@ class GenericTypeInterfaceItem(VHDLModel_GenericTypeInterfaceItem, DOMMixin):
 
     @classmethod
     def parse(cls, genericNode: Iir) -> "GenericTypeInterfaceItem":
+        """
+        Translates the IIR node of the generic declaration to a :class:`GenericTypeInterfaceItem`.
+
+        :param genericNode: The IIR node of the generic declaration.
+        :returns:           The translated generic declaration.
+        """
         name = GetNameOfNode(genericNode)
         documentation = GetDocumentationOfNode(genericNode)
 
@@ -156,6 +169,12 @@ class GenericPackageInterfaceItem(VHDLModel_GenericPackageInterfaceItem, DOMMixi
 
     @classmethod
     def parse(cls, genericNode: Iir) -> "GenericPackageInterfaceItem":
+        """
+        Translates the IIR node of the generic declaration to a :class:`GenericPackageInterfaceItem`.
+
+        :param genericNode: The IIR node of the generic declaration.
+        :returns:           The translated generic declaration.
+        """
         name = GetNameOfNode(genericNode)
         documentation = GetDocumentationOfNode(genericNode)
 
@@ -182,6 +201,12 @@ class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOM
 
     @classmethod
     def parse(cls, genericNode: Iir) -> "GenericProcedureInterfaceItem":
+        """
+        Translates the IIR node of the generic declaration to a :class:`GenericProcedureInterfaceItem`.
+
+        :param genericNode: The IIR node of the generic declaration.
+        :returns:           The translated generic declaration.
+        """
         name = GetNameOfNode(genericNode)
         documentation = GetDocumentationOfNode(genericNode)
 
@@ -209,6 +234,12 @@ class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMi
 
     @classmethod
     def parse(cls, genericNode: Iir) -> "GenericFunctionInterfaceItem":
+        """
+        Translates the IIR node of the generic declaration to a :class:`GenericFunctionInterfaceItem`.
+
+        :param genericNode: The IIR node of the generic declaration.
+        :returns:           The translated generic declaration.
+        """
         name = GetNameOfNode(genericNode)
         documentation = GetDocumentationOfNode(genericNode)
 
@@ -250,6 +281,13 @@ class PortSimpleSignalInterfaceItem(VHDLModel_PortSimpleSignalInterfaceItem, DOM
 
     @classmethod
     def parse(cls, portNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "PortSimpleSignalInterfaceItem":
+        """
+        Translates the IIR node of the port declaration to a :class:`PortSimpleSignalInterfaceItem`.
+
+        :param portNode:           The IIR node of the port declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated port declaration.
+        """
         name = GetNameOfNode(portNode)
         documentation = GetDocumentationOfNode(portNode)
         identifiers = [name]
@@ -300,6 +338,13 @@ class PortViewSignalInterfaceItem(VHDLModel_PortViewSignalInterfaceItem, DOMMixi
 
     @classmethod
     def parse(cls, portNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "PortViewSignalInterfaceItem":
+        """
+        Translates the IIR node of the port declaration to a :class:`PortViewSignalInterfaceItem`.
+
+        :param portNode:           The IIR node of the port declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated port declaration.
+        """
         name = GetNameOfNode(portNode)
         documentation = GetDocumentationOfNode(portNode)
         identifiers = [name]
@@ -344,6 +389,13 @@ class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem, D
 
     @classmethod
     def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterConstantInterfaceItem":
+        """
+        Translates the IIR node of the parameter declaration to a :class:`ParameterConstantInterfaceItem`.
+
+        :param parameterNode:      The IIR node of the parameter declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated parameter declaration.
+        """
         name = GetNameOfNode(parameterNode)
         documentation = GetDocumentationOfNode(parameterNode)
         identifiers = [name]
@@ -389,6 +441,13 @@ class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem, D
 
     @classmethod
     def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterVariableInterfaceItem":
+        """
+        Translates the IIR node of the parameter declaration to a :class:`ParameterVariableInterfaceItem`.
+
+        :param parameterNode:      The IIR node of the parameter declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated parameter declaration.
+        """
         name = GetNameOfNode(parameterNode)
         documentation = GetDocumentationOfNode(parameterNode)
         identifiers = [name]
@@ -436,6 +495,13 @@ class ParameterSimpleSignalInterfaceItem(VHDLModel_ParameterSimpleSignalInterfac
     def parse(
         cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None
     ) -> "ParameterSimpleSignalInterfaceItem":
+        """
+        Translates the IIR node of the parameter declaration to a :class:`ParameterSimpleSignalInterfaceItem`.
+
+        :param parameterNode:      The IIR node of the parameter declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated parameter declaration.
+        """
         name = GetNameOfNode(parameterNode)
         documentation = GetDocumentationOfNode(parameterNode)
         identifiers = [name]
@@ -484,6 +550,13 @@ class ParameterViewSignalInterfaceItem(VHDLModel_ParameterViewSignalInterfaceIte
 
     @classmethod
     def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterViewSignalInterfaceItem":
+        """
+        Translates the IIR node of the parameter declaration to a :class:`ParameterViewSignalInterfaceItem`.
+
+        :param parameterNode:      The IIR node of the parameter declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated parameter declaration.
+        """
         name = GetNameOfNode(parameterNode)
         documentation = GetDocumentationOfNode(parameterNode)
         identifiers = [name]
@@ -518,6 +591,13 @@ class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin)
 
     @classmethod
     def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterFileInterfaceItem":
+        """
+        Translates the IIR node of the parameter declaration to a :class:`ParameterFileInterfaceItem`.
+
+        :param parameterNode:      The IIR node of the parameter declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated parameter declaration.
+        """
         name = GetNameOfNode(parameterNode)
         documentation = GetDocumentationOfNode(parameterNode)
         identifiers = [name]
@@ -554,6 +634,13 @@ class SimpleModeViewElement(VHDLModel_SimpleModeViewElement, DOMMixin):
 
     @classmethod
     def parse(cls, elementNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "SimpleModeViewElement":
+        """
+        Translates the IIR node of the element declaration to a :class:`SimpleModeViewElement`.
+
+        :param elementNode:        The IIR node of the element declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated element declaration.
+        """
         name = GetNameOfNode(elementNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
@@ -592,6 +679,13 @@ class CompositeModeViewElement(VHDLModel_CompositeModeViewElement, DOMMixin):
 
     @classmethod
     def parse(cls, elementNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "CompositeModeViewElement":
+        """
+        Translates the IIR node of the element declaration to a :class:`CompositeModeViewElement`.
+
+        :param elementNode:        The IIR node of the element declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated element declaration.
+        """
         name = GetNameOfNode(elementNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
@@ -639,6 +733,12 @@ class ModeViewDeclaration(VHDLModel_ModeViewDeclaration, DOMMixin):
 
     @classmethod
     def parse(cls, modeViewNode: Iir) -> "ModeViewDeclaration":
+        """
+        Translates the IIR node of the mode view declaration to a :class:`ModeViewDeclaration`.
+
+        :param modeViewNode: The IIR node of the mode view declaration.
+        :returns:            The translated mode view declaration.
+        """
         from pyGHDL.dom._Translate import GetModeViewElementsFromChainedNodes
 
         name = GetNameOfNode(modeViewNode)
