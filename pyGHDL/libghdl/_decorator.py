@@ -66,7 +66,7 @@ def EnumLookupTable(cls) -> Callable:
     Decorator to precalculate an enum lookup table (LUT) for enum position to
     enum literal name.
 
-    :returns:   Decorator function replacing the placeholder with a table lookup.
+    :returns: Decorator function replacing the placeholder with a table lookup.
     """
 
     def decorator(func) -> Callable:
@@ -82,7 +82,6 @@ def EnumLookupTable(cls) -> Callable:
             Build the lookup table from an enum position to the literal's name.
 
             :returns: The list of literal names, indexed by enum position.
-
             """
             d = [e for e in dir(cls) if e[0].isupper() and e[0] != "_"]
             res = [None] * len(d)
@@ -119,10 +118,9 @@ def BindToLibGHDL(subprogramName):
         """
         Translate a Python type hint to the matching :mod:`ctypes` type.
 
-        :param typ:                   The type hint to translate.
-        :returns:                       The matching ctypes type, or ``None`` for a procedure's return type.
-        :raises TypeError:     If the type hint has no ctypes equivalent.
-
+        :param typ:        The type hint to translate.
+        :returns:          The matching ctypes type, or ``None`` for a procedure's return type.
+        :raises TypeError: If the type hint has no ctypes equivalent.
         """
         if typ is None:
             return None
@@ -165,8 +163,8 @@ def BindToLibGHDL(subprogramName):
         The :mod:`ctypes` signature is derived from the function's type hints, so the placeholder needs
         a full annotation and no body.
 
-        :param func:       The placeholder function being decorated.
-        :returns:          A function calling ``subprogramName`` in *libghdl*.
+        :param func:        The placeholder function being decorated.
+        :returns:           A function calling ``subprogramName`` in *libghdl*.
         :raises ValueError: If the function is not annotated, or the annotations do not match its parameters.
         """
         typeHints: Dict[str, Any] = func.__annotations__

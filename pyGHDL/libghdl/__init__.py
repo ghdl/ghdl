@@ -126,8 +126,8 @@ def _get_libghdl_path() -> Path:
         """
         Check whether the shared library is below ``<libdir>`` and return its path.
 
-        :param libDirectory:      The library directory to look in.
-        :returns:                 The path of the shared library.
+        :param libDirectory:       The library directory to look in.
+        :returns:                  The path of the shared library.
         :raises FileNotFoundError: If the shared library is not in that directory.
         """
         libFile = libDirectory / libGHDLSharedLibraryFile
@@ -140,8 +140,8 @@ def _get_libghdl_path() -> Path:
         """
         Check whether the shared library is below ``<bindir>/../lib`` and return its path.
 
-        :param binDirectory:      The binary directory to look next to.
-        :returns:                 The path of the shared library.
+        :param binDirectory:       The binary directory to look next to.
+        :returns:                  The path of the shared library.
         :raises FileNotFoundError: If the shared library is not below that directory.
         """
         libDirectory = (binDirectory / "../lib").resolve()
@@ -225,9 +225,8 @@ def _initialize():
     """
     Locate and load the ``libghdl`` shared library.
 
-    :returns:                            The loaded shared library.
+    :returns:                 The loaded shared library.
     :raises LibGHDLException: If the shared library cannot be found.
-
     """
     _libghdl_path = _get_libghdl_path()
 
@@ -272,7 +271,7 @@ def set_option(opt: str) -> bool:
     Set option :obj:`opt`.
 
     :param opt: Option to set.
-    :return:    Return ``True``, if the option is known and handled.
+    :returns:   Return ``True``, if the option is known and handled.
     """
     opt = opt.encode(ENCODING)
     return libghdl.libghdl__set_option(c_char_p(opt), len(opt)) == 0
@@ -296,7 +295,7 @@ def analyze_init_status() -> int:
     """\
     Initialize the analyzer.
 
-    :return: Returns 0 in case of success.
+    :returns: Returns 0 in case of success.
     """
     return libghdl.libghdl__analyze_init_status()
 
@@ -308,7 +307,7 @@ def analyze_file(fname: str) -> Iir:
     Analyze a given filename :obj:`fname`.
 
     :param fname: File name
-    :return:      Internal Intermediate Representation (IIR)
+    :returns:     Internal Intermediate Representation (IIR)
     """
     fname = fname.encode(ENCODING)
     return libghdl.libghdl__analyze_file(c_char_p(fname), len(fname))

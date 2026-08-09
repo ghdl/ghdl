@@ -52,7 +52,8 @@ def Disp_Tree(Tree: Iir, Flat: bool = False) -> None:
     """
     Disp a tree for debugging.
 
-    :param Tree:      The node to display.
+    :param Tree: The node to display.
+    :param Flat: ``True`` to print only the node itself, without its sub-nodes.
     """
 
 
@@ -63,6 +64,8 @@ def Disp_Iir(N: Iir, Indent: int, Depth: int) -> None:
     Disp a node for debugging.
 
     :param N:      The node to display.
+    :param Indent: The indentation level to print at.
+    :param Depth:  How many levels of sub-nodes to print.
     """
 
 

@@ -50,8 +50,8 @@ def Indent_String(File: int, Handle: c_void_p, FirstLine: int, LastLine: int) ->
     """
     Reindent all lines of F between [First_Line; Last_Line] to :obj:`Handle`.
 
-    :param File:      File to indent lines within. Type: ``Iir_Design_File``
-    :param Handle:    undocumented. Type: ``Vstring_Acc``
-    :param FirstLine: undocumented.
-    :param LastLine:  undocumented.
+    :param File:      File to indent lines within
+    :param Handle:    The handle of the string buffer to append to.
+    :param FirstLine: The first line to reindent.
+    :param LastLine:  The last line to reindent.
     """

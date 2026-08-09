@@ -56,7 +56,6 @@ def _String8_Address(Id: String8Id) -> c_char_p:
     Use :func:`Get_String` instead, which reads a string out of it.
 
     :returns: The address of the string table.
-
     """
     """"""
     return ""  # pragma: no cover
@@ -71,6 +70,6 @@ def Get_String8_Ptr(Id: String8Id, Length: int) -> str:
 
     :param Id:     String8Id for the string to query.
     :param Length: The number of characters to read.
-    :return:         String8 as string.
+    :returns:      String8 as string.
     """
     return _String8_Address(Id)[:Length].decode(ENCODING)

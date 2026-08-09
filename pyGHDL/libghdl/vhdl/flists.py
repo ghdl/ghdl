@@ -60,7 +60,7 @@ def Flast(FList: int) -> int:
     .. hint:: Could be used to iterate.
 
     :param FList: List to query.
-    :return:      Index of the last element in the list.
+    :returns:     Index of the last element in the list.
     """
     return 0  # pragma: no cover
 
@@ -72,7 +72,7 @@ def Length(FList: int) -> int:
     Get the length of :obj:`FList`.
 
     :param FList: List to query.
-    :return:      Number of elements in the list.
+    :returns:     Number of elements in the list.
     """
     return 0  # pragma: no cover
 
@@ -87,6 +87,6 @@ def Get_Nth_Element(FList: int, N: int) -> int:
 
     :param FList: List to query.
     :param N:     The zero-based index of the element to read.
-    :return:           Type: ``El_Type``
+    :returns:
     """
     return 0  # pragma: no cover

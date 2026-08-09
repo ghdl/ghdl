@@ -65,7 +65,7 @@ def Location_To_File(Location: LocationType) -> SourceFileEntry:
     Convert :obj:`Location` to a source file.
 
     :param Location: Location
-    :return:         Source file. Return ``No_Source_File_Entry`` if location is incorrect.
+    :returns:        Source file. Return ``No_Source_File_Entry`` if location is incorrect.
     """
     return 0  # pragma: no cover
 
@@ -78,7 +78,7 @@ def Location_File_To_Pos(Location: LocationType, File: SourceFileEntry) -> int:
 
     :param Location: Location
     :param File:     Source file
-    :return:         Offset
+    :returns:        Offset
     """
     return 0  # pragma: no cover
 
@@ -91,7 +91,7 @@ def Location_File_To_Line(Location: LocationType, File: SourceFileEntry) -> int:
 
     :param Location: Location
     :param File:     Source file
-    :return:         Line number
+    :returns:        Line number
     """
     return 0  # pragma: no cover
 
@@ -105,7 +105,7 @@ def Location_File_Line_To_Offset(Location: LocationType, File: SourceFileEntry, 
     :param Location: Location
     :param File:     Source file
     :param Line:     Line number
-    :return:         Offset
+    :returns:        Offset
     """
     return 0  # pragma: no cover
 
@@ -120,7 +120,7 @@ def Location_File_Line_To_Col(Location: LocationType, File: SourceFileEntry, Lin
     :param Location: Location
     :param File:     Source file
     :param Line:     Line number
-    :return:         logical column (horizontal tabs are expanded)
+    :returns:        logical column (horizontal tabs are expanded)
     """
     return 0  # pragma: no cover
 
@@ -131,7 +131,7 @@ def File_To_Location(File: SourceFileEntry) -> LocationType:
     """Convert a :obj:`File` into a location.
 
     :param File: Source file
-    :return:     Location.
+    :returns:    Location.
     """
     return 0  # pragma: no cover
 
@@ -144,7 +144,7 @@ def File_Pos_To_Location(File: SourceFileEntry, Pos: int) -> LocationType:
 
     :param File: Source file
     :param Pos:  Offset in the file
-    :return:     Location.
+    :returns:    Location.
     """
     return 0  # pragma: no cover
 
@@ -157,7 +157,7 @@ def File_Line_To_Position(File: SourceFileEntry, Line: int) -> int:
 
     :param File: Source file
     :param Line: Line number
-    :return:     Return ``Source_Ptr_Bad`` in case of error (:obj:`Line` out of bounds).
+    :returns:    Return ``Source_Ptr_Bad`` in case of error (:obj:`Line` out of bounds).
     """
     return 0  # pragma: no cover
 
@@ -169,7 +169,7 @@ def Get_File_Name(File: SourceFileEntry) -> NameId:
     Return the name of the file.
 
     :param File: Source file to get the filename from.
-    :return:     NameId for the filename.
+    :returns:    NameId for the filename.
     """
     return 0  # pragma: no cover
 
@@ -181,7 +181,7 @@ def Get_Directory_Name(File: SourceFileEntry) -> NameId:
     Return the directory of the file.
 
     :param File: Source file to get the directory name from.
-    :return:     NameId for the directory.
+    :returns:    NameId for the directory.
     """
     return 0  # pragma: no cover
 
@@ -195,7 +195,7 @@ def Get_File_Buffer_voidp(File: SourceFileEntry) -> c_void_p:
     Use :func:`Get_File_Buffer` instead, which types it as a character pointer.
 
     :param File: The source file entry to read the buffer of.
-    :returns:        The address of the source buffer.
+    :returns:    The address of the source buffer.
     """
     return 0  # pragma: no cover
 
@@ -205,7 +205,7 @@ def Get_File_Buffer(File: SourceFileEntry) -> POINTER(c_char):
     Return a buffer (access to the contents of the file) for a file entry.
 
     :param File: Source file to get the buffer from.
-    :return:     Type: ``File_Buffer_Ptr``
+    :returns:
     """
     return cast(Get_File_Buffer_voidp(File), POINTER(c_char))
 
@@ -217,7 +217,7 @@ def Get_File_Length(File: SourceFileEntry) -> int:
     Get the position of the first EOT character.
 
     :param File: Source file
-    :return:     Type: ``Source_Ptr``
+    :returns:
     """
     return 0  # pragma: no cover
 
@@ -231,7 +231,7 @@ def Set_File_Length(File: SourceFileEntry, Length: int) -> None:
     Set also append two EOT at the end of the file.
 
     :param File:   Source file
-    :param Length: Length for the file. Type: ``Source_Ptr``
+    :param Length: Length for the file
     """
     return 0  # pragma: no cover
 
@@ -243,7 +243,7 @@ def Get_Buffer_Length(File: SourceFileEntry) -> int:
     Get the length of the buffer, including the gap and the two EOT.
 
     :param File: Source file
-    :return:     Type: ``Source_Ptr``
+    :returns:
     """
 
 
@@ -254,7 +254,7 @@ def Get_Buffer_Length(File: SourceFileEntry) -> int:
     Get the length of the buffer, including the gap and the two EOT.
 
     :param File: Source file
-    :return:     Type: ``Source_Ptr``
+    :returns:
     """
 
 
@@ -266,7 +266,7 @@ def Find_Source_File(Directory: NameId, Name: NameId) -> SourceFileEntry:
 
     :param Directory: ``Null_Identifier`` for :obj:`DirectoryId` means current directory.
     :param Name:      File name
-    :return:          Return ``No_Source_File_Entry``, if the file is not already open.
+    :returns:         Return ``No_Source_File_Entry``, if the file is not already open.
     """
     return 0
 
@@ -281,7 +281,7 @@ def Read_Source_File(Directory: NameId, Name: NameId) -> SourceFileEntry:
 
     :param Directory: ``Null_Identifier`` for :obj:`DirectoryId` means current directory.
     :param Name:      File name
-    :return:          Return ``No_Source_File_Entry``, if the file does not exist.
+    :returns:         Return ``No_Source_File_Entry``, if the file does not exist.
     """
     return 0  # pragma: no cover
 
@@ -296,8 +296,8 @@ def Reserve_Source_File(Directory: NameId, Name: NameId, Length: int) -> SourceF
 
     :param Directory: Directory name
     :param Name:      File name
-    :param Length:    Length to reserve. Type: ``Source_Ptr``
-    :return:          SourceFile
+    :param Length:    Length to reserve
+    :returns:         SourceFile
     """
     return 0  # pragma: no cover
 
@@ -334,6 +334,6 @@ def Get_Last_Source_File_Entry() -> SourceFileEntry:
 
     .. hint:: This allows creating a table of ``SourceFileEntry``.
 
-    :return: Last SourceFileEntry. Type: ``SourceFileEntry``
+    :returns: Last SourceFileEntry
     """
     return 0  # pragma: no cover

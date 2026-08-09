@@ -99,7 +99,7 @@ def Get_Nbr_Messages() -> ErrorIndex:
     """
     Get number of error messages available.
 
-    :return: Number of messages available.
+    :returns: Number of messages available.
     """
     return 0  # pragma: no cover
 
@@ -111,7 +111,7 @@ def Get_Error_Record(Idx: ErrorIndex) -> Error_Message:
     Get error messages by index :obj:`Idy` as structure :class:`Error_Message`.
 
     :param Idx: Index from 1 to ``Nbr_Messages`` See :func:`Get_Nbr_Messages`.
-    :return:    Type: ``Error_Message``
+    :returns:
     """
 
 
@@ -124,8 +124,7 @@ def _Get_Error_Message(Idx: ErrorIndex) -> c_char_p:
     Use :func:`Get_Error_Message` instead, which decodes it.
 
     :param Idx: The index of the message to read.
-    :returns:     The message as a C string.
-
+    :returns:   The message as a C string.
     """
     return ""  # pragma: no cover
 
@@ -136,7 +135,7 @@ def Get_Error_Message(Idx: ErrorIndex) -> str:
     Get error messages by index :obj:`Idx` as string.
 
     :param Idx: Index from 1 to ``Nbr_Messages`` See :func:`Get_Nbr_Messages`.
-    :return:    Error message.
+    :returns:   Error message.
     """
     return _Get_Error_Message(Idx).decode(ENCODING)
 

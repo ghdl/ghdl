@@ -51,7 +51,7 @@ def Strip_Denoting_Name(Name: Iir) -> Iir:
     Otherwise, return :obj:`Name`.
 
     :param Name: Simple or an expanded name.
-    :return:     Denoted declaration.
+    :returns:    Denoted declaration.
     """
     return 0
 
@@ -64,7 +64,7 @@ def Get_Entity(Decl: Iir) -> Iir:
     of the entity name of :obj:`Decl`, or ``Null_Iir`` in case of error.
 
     :param Decl: Declaration
-    :return:     Entity
+    :returns:    Entity
     """
     return 0
 
@@ -78,7 +78,7 @@ def Is_Second_Subprogram_Specification(Spec: Iir) -> bool:
     is to match the body with its declaration.
 
     :param Spec: Specification
-    :return:     ``True`` if subprogram specification and previously declared subprogram body match
+    :returns:    ``True`` if subprogram specification and previously declared subprogram body match
     """
     return False
 
@@ -93,7 +93,7 @@ def Get_Entity_From_Entity_Aspect(Aspect: Iir) -> Iir:
     open, return ``Null_Iir``
 
     :param Aspect: Aspect
-    :return:       Entity
+    :returns:      Entity
     """
     return 0
 
@@ -106,6 +106,6 @@ def Get_Interface_Of_Formal(Formal: Iir) -> Iir:
     always an interface, even if the formal is a name.
 
     :param Formal: The formal.
-    :return:       The corresponding interface.
+    :returns:      The corresponding interface.
     """
     return 0

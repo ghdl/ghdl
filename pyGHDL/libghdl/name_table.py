@@ -59,7 +59,7 @@ def Get_Name_Length(Id: NameId) -> int:
     Get the length of an identifier denoted by a ``NameId``.
 
     :param Id: NameId for the identifier to query.
-    :return:   Length of the identifier.
+    :returns:  Length of the identifier.
     """
     return 0  # pragma: no cover
 
@@ -73,8 +73,7 @@ def _Get_Name_Ptr(Id: NameId) -> c_char_p:
     Use :func:`Get_Name_Ptr` instead, which decodes it to a Python string.
 
     :param Id: The identifier to read.
-    :returns:   The identifier as a C string.
-
+    :returns:  The identifier as a C string.
     """
     """"""
     return ""  # pragma: no cover
@@ -88,7 +87,7 @@ def Get_Name_Ptr(Id: NameId) -> str:
     The string is NUL-terminated (this is done by get_identifier).
 
     :param Id: NameId for the identifier to query.
-    :return:   Identifier as string.
+    :returns:  Identifier as string.
     """
     return _Get_Name_Ptr(Id).decode(ENCODING)
 
@@ -102,8 +101,7 @@ def _Get_Character(Id: NameId) -> c_char:
     Use :func:`Get_Character` instead, which decodes it.
 
     :param Id: The identifier of the character literal.
-    :returns:   The character as a C string.
-
+    :returns:  The character as a C string.
     """
     """"""
     return 0  # pragma: no cover
@@ -119,7 +117,7 @@ def Get_Character(Id: NameId) -> str:
        This is used for character literals and enumeration literals.
 
     :param Id: NameId for the identifier to query.
-    :return:   Get the character of the identifier.
+    :returns:  Get the character of the identifier.
     """
     return _Get_Character(Id).decode(ENCODING)
 
@@ -134,7 +132,7 @@ def _Get_Identifier(string: c_char_p, length: int) -> NameId:
 
     :param string: The string to intern, encoded.
     :param length: The number of characters in ``string``.
-    :returns:                The identifier of the interned string.
+    :returns:      The identifier of the interned string.
     """
     """"""
     return 0  # pragma: no cover
@@ -152,7 +150,7 @@ def Get_Identifier(string: str) -> NameId:
          backslashes are simplified.
 
     :param string: String to create or lookup.
-    :return:       Id in name table.
+    :returns:      Id in name table.
     """
     string = string.encode(ENCODING)
     return _Get_Identifier(c_char_p(string), len(string))

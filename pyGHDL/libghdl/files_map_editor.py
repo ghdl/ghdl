@@ -60,14 +60,14 @@ def _Replace_Text(
 ) -> bool:
     """Replace [START; END) by TEXT.
 
-    :param File:         File where to replace a text section.
+    :param File: File where to replace a text section.
     :param Start_Line:
     :param Start_Offset:
     :param End_Line:
     :param End_Offset:
-    :param Text_Pointer: Type: ``File_Buffer_Ptr``
-    :param Text_Length:  Type: ``Source_Ptr``
-    :return:             Return True in case of success, False in case of failure (the gap is too small).
+    :param Text_Pointer:
+    :param Text_Length:
+    :returns: Return True in case of success, False in case of failure (the gap is too small).
     """
     return False  # pragma: no cover
 
@@ -84,12 +84,12 @@ def Replace_Text(
     """Replace [START; END) by TEXT.
 
     :param File:         File where to replace a text section.
-    :param Start_Line:   undocumented
-    :param Start_Offset: undocumented
-    :param End_Line:     undocumented
-    :param End_Offset:   undocumented
-    :param Text:         undocumented
-    :return:             Return True in case of success, False in case of failure (the gap is too small).
+    :param Start_Line:   The line the replaced range starts on.
+    :param Start_Offset: The character offset the replaced range starts at.
+    :param End_Line:     The line the replaced range ends on.
+    :param End_Offset:   The character offset the replaced range ends at.
+    :param Text:         The replacement text.
+    :returns:            Return True in case of success, False in case of failure (the gap is too small).
     """
     buffer = Text.encode(ENCODING)
     return _Replace_Text(
@@ -110,9 +110,9 @@ def Fill_Text(File: SourceFileEntry, Text_Pointer, Text_Length: int) -> None:
 
     .. todo:: Replace ``Text_Pointer`` and ``Text_Length`` with Python string
 
-    :param File:         File where to replace the content.
-    :param Text_Pointer: Type: ``File_Buffer_Ptr``
-    :param Text_Length:  Type: ``Source_Ptr``
+    :param File: File where to replace the content.
+    :param Text_Pointer:
+    :param Text_Length:
     """
     libghdl.files_map__editor__fill_text_ptr(File, Text_Pointer, Text_Length)
 
@@ -125,9 +125,9 @@ def Check_Buffer_Content(File: SourceFileEntry, String_Pointer: c_char_p, String
 
     .. todo:: Replace ``String_Pointer`` and ``String_Length`` with Python string
 
-    :param File:           File to check the content.
-    :param String_Pointer: Type: ``File_Buffer_Ptr``
-    :param String_Length:  Type: ``Source_Ptr``
+    :param File: File to check the content.
+    :param String_Pointer:
+    :param String_Length:
     """
     libghdl.files_map__editor__check_buffer_content(File, String_Pointer, String_Length)
 

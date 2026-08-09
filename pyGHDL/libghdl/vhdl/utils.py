@@ -50,7 +50,7 @@ def Get_Source_Identifier(Decl: Iir) -> NameId:
     Like ``Get_Identifier`` but return a ``NameId`` for the same casing as it appears in the source file.
     Not useful for analysis as VHDL is case insensitive, but could be useful for error messages or tooling.
 
-    :param Decl: Iir Node. Type: ``Iir``
+    :param Decl: Iir Node
     :returns:    The identifier as written in the source file.
     """
     return 0
@@ -67,7 +67,6 @@ def Get_Source_Identifier_Str(n: Iir) -> str:
 
     :param n: The IIR node of the declaration.
     :returns: The identifier as written.
-
     """
     loc = nodes.Get_Location(n)
     l = name_table.Get_Name_Length(nodes.Get_Identifier(n))

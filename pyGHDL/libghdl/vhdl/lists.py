@@ -70,7 +70,7 @@ def Iterate(List: int) -> Iterator:
          Next(It)
 
     :param List: List to create an iterator from.
-    :return:     Iterator structure.
+    :returns:    Iterator structure.
     """
 
 
@@ -81,7 +81,7 @@ def Is_Valid(it: Iterator) -> bool:
     Check if iterator reached the end.
 
     :param it: Iterator to check.
-    :return:   ``False``, if iterator has reached the end.
+    :returns:  ``False``, if iterator has reached the end.
     """
     func = libghdl.vhdl__lists__is_valid
     func.argstype = [POINTER(Iterator)]
@@ -97,7 +97,7 @@ def Next(it: Iterator) -> bool:
     Move iterator to the next element.
 
     :param it: Iterator to increment.
-    :return:   ``False``, if iterator has reached the end.
+    :returns:  ``False``, if iterator has reached the end.
     """
     func = libghdl.vhdl__lists__next
     func.argstype = [POINTER(Iterator)]
@@ -113,7 +113,7 @@ def Get_Element(it: Iterator) -> int:
     Get the current element from iterator.
 
     :param it: Iterator the get the element from.
-    :return:   The current element the iterator points to. Type: ``El_Type``
+    :returns:  The current element the iterator points to
     """
     func = libghdl.vhdl__lists__get_element
     func.argstype = [POINTER(Iterator)]
@@ -131,7 +131,7 @@ def Get_Nbr_Elements(List: int) -> int:
     .. hint:: This is also 1 + the position of the last element.
 
     :param List: The list to use.
-    :return:     Number of list elements.
+    :returns:    Number of list elements.
     """
     return 0  # pragma: no cover
 
@@ -142,7 +142,7 @@ def Create_Iir_List() -> int:
     """
     Create a list.
 
-    :return: undocumented; Type: ``List_Type``
+    :returns: The newly created list.
     """
     return 0  # pragma: no cover
 
