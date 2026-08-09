@@ -196,7 +196,7 @@ class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
 class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
         """
-        Initializes a bit string literal.
+        Initializes a binary bit string literal.
 
         :param node:     The IIR node this object was translated from.
         :param value:    The literal as written in the source, without the enclosing double quotes.
@@ -211,7 +211,7 @@ class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
 class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
         """
-        Initializes a bit string literal.
+        Initializes an octal bit string literal.
 
         :param node:     The IIR node this object was translated from.
         :param value:    The literal as written in the source, without the enclosing double quotes.
@@ -226,7 +226,7 @@ class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
 class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
         """
-        Initializes a bit string literal.
+        Initializes a decimal bit string literal.
 
         :param node:     The IIR node this object was translated from.
         :param value:    The literal as written in the source, without the enclosing double quotes.
@@ -241,7 +241,7 @@ class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
 class HexadecimalBitStringLiteral(VHDLModel_HexadecimalBitStringLiteral, DOMMixin):
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
         """
-        Initializes a bit string literal.
+        Initializes a hexadecimal bit string literal.
 
         :param node:     The IIR node this object was translated from.
         :param value:    The literal as written in the source, without the enclosing double quotes.

@@ -222,7 +222,7 @@ class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
 
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
         """
-        Initializes an object.
+        Initializes a shared variable.
 
         :param node:          The IIR node this object was translated from.
         :param identifiers:   A list of identifiers.
@@ -315,7 +315,7 @@ class File(VHDLModel_File, DOMMixin):
 
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
         """
-        Initializes an object.
+        Initializes a file object.
 
         :param node:          The IIR node this object was translated from.
         :param identifiers:   A list of identifiers.

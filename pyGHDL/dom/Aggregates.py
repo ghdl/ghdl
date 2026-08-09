@@ -58,7 +58,7 @@ from pyGHDL.dom import DOMMixin
 class SimpleAggregateElement(VHDLModel_SimpleAggregateElement, DOMMixin):
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
         """
-        Initializes an aggregate element.
+        Initializes a simple aggregate element.
 
         :param node:       The IIR node this object was translated from.
         :param expression: The expression this aggregate element supplies.
@@ -113,7 +113,7 @@ class NamedAggregateElement(VHDLModel_NamedAggregateElement, DOMMixin):
 class OthersAggregateElement(VHDLModel_OthersAggregateElement, DOMMixin):
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
         """
-        Initializes an aggregate element.
+        Initializes an others aggregate element.
 
         :param node:       The IIR node this object was translated from.
         :param expression: The expression this aggregate element supplies.

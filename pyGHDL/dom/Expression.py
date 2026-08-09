@@ -138,7 +138,7 @@ class _ParseBinaryExpressionMixin(metaclass=ExtendedType, mixin=True):
 class InverseExpression(VHDLModel_InverseExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
         """
-        Initializes a unary expression.
+        Initializes an inverse expression.
 
         :param node:    The IIR node this object was translated from.
         :param operand: The expression the operator is applied to.
@@ -151,7 +151,7 @@ class InverseExpression(VHDLModel_InverseExpression, DOMMixin, _ParseUnaryExpres
 class IdentityExpression(VHDLModel_IdentityExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
         """
-        Initializes a unary expression.
+        Initializes an identity expression.
 
         :param node:    The IIR node this object was translated from.
         :param operand: The expression the operator is applied to.
@@ -164,7 +164,7 @@ class IdentityExpression(VHDLModel_IdentityExpression, DOMMixin, _ParseUnaryExpr
 class NegationExpression(VHDLModel_NegationExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
         """
-        Initializes a unary expression.
+        Initializes a negation expression.
 
         :param node:    The IIR node this object was translated from.
         :param operand: The expression the operator is applied to.
@@ -177,7 +177,7 @@ class NegationExpression(VHDLModel_NegationExpression, DOMMixin, _ParseUnaryExpr
 class AbsoluteExpression(VHDLModel_AbsoluteExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
         """
-        Initializes a unary expression.
+        Initializes an absolute expression.
 
         :param node:    The IIR node this object was translated from.
         :param operand: The expression the operator is applied to.
@@ -190,7 +190,7 @@ class AbsoluteExpression(VHDLModel_AbsoluteExpression, DOMMixin, _ParseUnaryExpr
 class ParenthesisExpression(VHDLModel_ParenthesisExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
         """
-        Initializes a unary expression.
+        Initializes a parenthesis expression.
 
         :param node:    The IIR node this object was translated from.
         :param operand: The expression the operator is applied to.
@@ -272,7 +272,7 @@ class RangeExpression(VHDLModel_RangeExpression, DOMMixin):
 class AscendingRangeExpression(VHDLModel_AscendingRangeExpression, DOMMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes an ascending range expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -286,7 +286,7 @@ class AscendingRangeExpression(VHDLModel_AscendingRangeExpression, DOMMixin):
 class DescendingRangeExpression(VHDLModel_DescendingRangeExpression, DOMMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a descending range expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -300,7 +300,7 @@ class DescendingRangeExpression(VHDLModel_DescendingRangeExpression, DOMMixin):
 class AdditionExpression(VHDLModel_AdditionExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes an addition expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -314,7 +314,7 @@ class AdditionExpression(VHDLModel_AdditionExpression, DOMMixin, _ParseBinaryExp
 class SubtractionExpression(VHDLModel_SubtractionExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a subtraction expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -328,7 +328,7 @@ class SubtractionExpression(VHDLModel_SubtractionExpression, DOMMixin, _ParseBin
 class ConcatenationExpression(VHDLModel_ConcatenationExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a concatenation expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -342,7 +342,7 @@ class ConcatenationExpression(VHDLModel_ConcatenationExpression, DOMMixin, _Pars
 class MultiplyExpression(VHDLModel_MultiplyExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a multiply expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -356,7 +356,7 @@ class MultiplyExpression(VHDLModel_MultiplyExpression, DOMMixin, _ParseBinaryExp
 class DivisionExpression(VHDLModel_DivisionExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a division expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -370,7 +370,7 @@ class DivisionExpression(VHDLModel_DivisionExpression, DOMMixin, _ParseBinaryExp
 class RemainderExpression(VHDLModel_RemainderExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a remainder expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -384,7 +384,7 @@ class RemainderExpression(VHDLModel_RemainderExpression, DOMMixin, _ParseBinaryE
 class ModuloExpression(VHDLModel_ModuloExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a modulo expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -398,7 +398,7 @@ class ModuloExpression(VHDLModel_ModuloExpression, DOMMixin, _ParseBinaryExpress
 class ExponentiationExpression(VHDLModel_ExponentiationExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes an exponentiation expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -412,7 +412,7 @@ class ExponentiationExpression(VHDLModel_ExponentiationExpression, DOMMixin, _Pa
 class AndExpression(VHDLModel_AndExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes an and expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -426,7 +426,7 @@ class AndExpression(VHDLModel_AndExpression, DOMMixin, _ParseBinaryExpressionMix
 class NandExpression(VHDLModel_NandExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a nand expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -440,7 +440,7 @@ class NandExpression(VHDLModel_NandExpression, DOMMixin, _ParseBinaryExpressionM
 class OrExpression(VHDLModel_OrExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes an or expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -454,7 +454,7 @@ class OrExpression(VHDLModel_OrExpression, DOMMixin, _ParseBinaryExpressionMixin
 class NorExpression(VHDLModel_NorExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a nor expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -468,7 +468,7 @@ class NorExpression(VHDLModel_NorExpression, DOMMixin, _ParseBinaryExpressionMix
 class XorExpression(VHDLModel_XorExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a xor expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -482,7 +482,7 @@ class XorExpression(VHDLModel_XorExpression, DOMMixin, _ParseBinaryExpressionMix
 class XnorExpression(VHDLModel_XnorExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a xnor expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -496,7 +496,7 @@ class XnorExpression(VHDLModel_XnorExpression, DOMMixin, _ParseBinaryExpressionM
 class UnaryAndExpression(VHDLModel_UnaryAndExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
         """
-        Initializes a unary expression.
+        Initializes a unary and expression.
 
         :param node:    The IIR node this object was translated from.
         :param operand: The expression the operator is applied to.
@@ -509,7 +509,7 @@ class UnaryAndExpression(VHDLModel_UnaryAndExpression, DOMMixin, _ParseUnaryExpr
 class UnaryNandExpression(VHDLModel_UnaryNandExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
         """
-        Initializes a unary expression.
+        Initializes a unary nand expression.
 
         :param node:    The IIR node this object was translated from.
         :param operand: The expression the operator is applied to.
@@ -522,7 +522,7 @@ class UnaryNandExpression(VHDLModel_UnaryNandExpression, DOMMixin, _ParseUnaryEx
 class UnaryOrExpression(VHDLModel_UnaryOrExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
         """
-        Initializes a unary expression.
+        Initializes a unary or expression.
 
         :param node:    The IIR node this object was translated from.
         :param operand: The expression the operator is applied to.
@@ -535,7 +535,7 @@ class UnaryOrExpression(VHDLModel_UnaryOrExpression, DOMMixin, _ParseUnaryExpres
 class UnaryNorExpression(VHDLModel_UnaryNorExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
         """
-        Initializes a unary expression.
+        Initializes a unary nor expression.
 
         :param node:    The IIR node this object was translated from.
         :param operand: The expression the operator is applied to.
@@ -548,7 +548,7 @@ class UnaryNorExpression(VHDLModel_UnaryNorExpression, DOMMixin, _ParseUnaryExpr
 class UnaryXorExpression(VHDLModel_UnaryXorExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
         """
-        Initializes a unary expression.
+        Initializes a unary xor expression.
 
         :param node:    The IIR node this object was translated from.
         :param operand: The expression the operator is applied to.
@@ -561,7 +561,7 @@ class UnaryXorExpression(VHDLModel_UnaryXorExpression, DOMMixin, _ParseUnaryExpr
 class UnaryXnorExpression(VHDLModel_UnaryXnorExpression, DOMMixin, _ParseUnaryExpressionMixin):
     def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
         """
-        Initializes a unary expression.
+        Initializes a unary xnor expression.
 
         :param node:    The IIR node this object was translated from.
         :param operand: The expression the operator is applied to.
@@ -574,7 +574,7 @@ class UnaryXnorExpression(VHDLModel_UnaryXnorExpression, DOMMixin, _ParseUnaryEx
 class EqualExpression(VHDLModel_EqualExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes an equal expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -588,7 +588,7 @@ class EqualExpression(VHDLModel_EqualExpression, DOMMixin, _ParseBinaryExpressio
 class UnequalExpression(VHDLModel_UnequalExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes an unequal expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -602,7 +602,7 @@ class UnequalExpression(VHDLModel_UnequalExpression, DOMMixin, _ParseBinaryExpre
 class LessThanExpression(VHDLModel_LessThanExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a less than expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -616,7 +616,7 @@ class LessThanExpression(VHDLModel_LessThanExpression, DOMMixin, _ParseBinaryExp
 class LessEqualExpression(VHDLModel_LessEqualExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a less equal expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -630,7 +630,7 @@ class LessEqualExpression(VHDLModel_LessEqualExpression, DOMMixin, _ParseBinaryE
 class GreaterThanExpression(VHDLModel_GreaterThanExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a greater than expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -644,7 +644,7 @@ class GreaterThanExpression(VHDLModel_GreaterThanExpression, DOMMixin, _ParseBin
 class GreaterEqualExpression(VHDLModel_GreaterEqualExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a greater equal expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -658,7 +658,7 @@ class GreaterEqualExpression(VHDLModel_GreaterEqualExpression, DOMMixin, _ParseB
 class MatchingEqualExpression(VHDLModel_MatchingEqualExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a matching equal expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -672,7 +672,7 @@ class MatchingEqualExpression(VHDLModel_MatchingEqualExpression, DOMMixin, _Pars
 class MatchingUnequalExpression(VHDLModel_MatchingUnequalExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a matching unequal expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -686,7 +686,7 @@ class MatchingUnequalExpression(VHDLModel_MatchingUnequalExpression, DOMMixin, _
 class MatchingLessThanExpression(VHDLModel_MatchingLessThanExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a matching less than expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -700,7 +700,7 @@ class MatchingLessThanExpression(VHDLModel_MatchingLessThanExpression, DOMMixin,
 class MatchingLessEqualExpression(VHDLModel_MatchingLessEqualExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a matching less equal expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -714,7 +714,7 @@ class MatchingLessEqualExpression(VHDLModel_MatchingLessEqualExpression, DOMMixi
 class MatchingGreaterThanExpression(VHDLModel_MatchingGreaterThanExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a matching greater than expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -728,7 +728,7 @@ class MatchingGreaterThanExpression(VHDLModel_MatchingGreaterThanExpression, DOM
 class MatchingGreaterEqualExpression(VHDLModel_MatchingGreaterEqualExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a matching greater equal expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -742,7 +742,7 @@ class MatchingGreaterEqualExpression(VHDLModel_MatchingGreaterEqualExpression, D
 class ShiftRightLogicExpression(VHDLModel_ShiftRightLogicExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a shift right logic expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -756,7 +756,7 @@ class ShiftRightLogicExpression(VHDLModel_ShiftRightLogicExpression, DOMMixin, _
 class ShiftLeftLogicExpression(VHDLModel_ShiftLeftLogicExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a shift left logic expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -770,7 +770,7 @@ class ShiftLeftLogicExpression(VHDLModel_ShiftLeftLogicExpression, DOMMixin, _Pa
 class ShiftRightArithmeticExpression(VHDLModel_ShiftRightArithmeticExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a shift right arithmetic expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -784,7 +784,7 @@ class ShiftRightArithmeticExpression(VHDLModel_ShiftRightArithmeticExpression, D
 class ShiftLeftArithmeticExpression(VHDLModel_ShiftLeftArithmeticExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a shift left arithmetic expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -798,7 +798,7 @@ class ShiftLeftArithmeticExpression(VHDLModel_ShiftLeftArithmeticExpression, DOM
 class RotateRightExpression(VHDLModel_RotateRightExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a rotate right expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -812,7 +812,7 @@ class RotateRightExpression(VHDLModel_RotateRightExpression, DOMMixin, _ParseBin
 class RotateLeftExpression(VHDLModel_RotateLeftExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a binary expression.
+        Initializes a rotate left expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.

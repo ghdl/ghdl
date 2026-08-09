@@ -99,7 +99,7 @@ class IfBranch(VHDLModel_IfBranch, DOMMixin):
         Initializes an if branch.
 
         :param branchNode: The IIR node of the branch this object represents.
-        :param condition:  The condition guarding this statement.
+        :param condition:  The condition under which this branch's statements are executed.
         :param statements: List of all sequential statements in this construct.
         """
         super().__init__(condition, statements)
@@ -131,7 +131,7 @@ class ElsifBranch(VHDLModel_ElsifBranch, DOMMixin):
         Initializes an ``elsif`` branch of an if statement.
 
         :param branchNode: The IIR node of the branch this object represents.
-        :param condition:  The condition guarding this statement.
+        :param condition:  The condition under which this branch's statements are executed.
         :param statements: List of all sequential statements in this construct.
         """
         super().__init__(condition, statements)
@@ -285,7 +285,7 @@ class OthersCase(VHDLModel_OthersCase, DOMMixin):
         statements: Iterable[SequentialStatement] = None,
     ) -> None:
         """
-        Initializes a sequential case.
+        Initializes an others case.
 
         :param caseNode:   The IIR node of the case statement.
         :param statements: List of all sequential statements in this construct.
@@ -461,7 +461,7 @@ class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
         Initializes a while-loop statement.
 
         :param loopNode:   The IIR node of the loop statement.
-        :param condition:  The condition guarding this statement.
+        :param condition:  The condition tested before each iteration; the loop ends when it is false.
         :param statements: List of all sequential statements in this construct.
         :param label:      The label of the while-loop statement, or ``None`` if it has none.
         """
@@ -927,7 +927,7 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
         Initializes a sequential assertion statement.
 
         :param assertNode: The IIR node of the assertion.
-        :param condition:  The condition guarding this statement.
+        :param condition:  The condition that must hold; the report is issued when it is false.
         :param message:    The reported message, or ``None`` if none was given.
         :param severity:   The reported severity level, or ``None`` if none was given.
         :param label:      The label of the assertion statement, or ``None`` if it has none.
@@ -1011,7 +1011,7 @@ class NullStatement(VHDLModel_NullStatement, DOMMixin):
         label: str = None,
     ) -> None:
         """
-        Initializes a statement.
+        Initializes a null statement.
 
         :param waitNode: The IIR node of the wait statement.
         :param label:    The label of the null statement, or ``None`` if it has none.
@@ -1029,10 +1029,10 @@ class NextStatement(VHDLModel_NextStatement, DOMMixin):
         label: str = None,
     ) -> None:
         """
-        Initializes a loop control statement.
+        Initializes a next statement.
 
         :param exitNode:  The IIR node of the exit statement.
-        :param condition: The condition guarding this statement.
+        :param condition: The condition under which the iteration is skipped, or ``None`` if unconditional.
         :param label:     The label of the loop this statement applies to, or ``None`` for the enclosing loop.
         """
         super().__init__(condition, loopLabel=label)
@@ -1056,10 +1056,10 @@ class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
         label: str = None,
     ) -> None:
         """
-        Initializes a loop control statement.
+        Initializes an exit statement.
 
         :param exitNode:  The IIR node of the exit statement.
-        :param condition: The condition guarding this statement.
+        :param condition: The condition under which the loop is left, or ``None`` if unconditional.
         :param label:     The label of the loop this statement applies to, or ``None`` for the enclosing loop.
         """
         super().__init__(condition, loopLabel=label)
@@ -1088,9 +1088,9 @@ class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
         Initializes a wait statement.
 
         :param waitNode:        The IIR node of the wait statement.
-        :param sensitivityList: List of all signal names to wait on, or ``None`` if none was given.
-        :param condition:       The condition guarding this statement.
-        :param timeout:         The timeout expression, or ``None`` if none was given.
+        :param sensitivityList: List of all signal names of the ``on`` clause, or ``None`` if none was given.
+        :param condition:       The condition of the ``until`` clause, or ``None`` if none was given.
+        :param timeout:         The timeout expression of the ``for`` clause, or ``None`` if none was given.
         :param label:           The label of the wait statement, or ``None`` if it has none.
         """
         super().__init__(sensitivityList, condition, timeout, label)

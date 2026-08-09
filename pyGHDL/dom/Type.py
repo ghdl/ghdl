@@ -68,7 +68,7 @@ from pyGHDL.dom.Subprogram import Function, Procedure
 class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
     def __init__(self, node: Iir, identifier: str, documentation: str = None) -> None:
         """
-        Initializes underlying ``BaseType``.
+        Initializes an incomplete type declaration.
 
         :param node:          The IIR node this object was translated from.
         :param identifier:    Name of the type.

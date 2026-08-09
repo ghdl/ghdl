@@ -68,7 +68,7 @@ class SimpleName(VHDLModel_SimpleName, DOMMixin):
 
     def __init__(self, node: Iir, identifier: str) -> None:
         """
-        Initializes a name.
+        Initializes a simple name.
 
         :param node:       The IIR node this object was translated from.
         :param identifier: The name's identifier.
@@ -134,7 +134,7 @@ class SlicedName(VHDLModel_SlicedName, DOMMixin):
 
     def __init__(self, node: Iir, identifier: str) -> None:
         """
-        Initializes a name.
+        Initializes a sliced name.
 
         :param node:       The IIR node this object was translated from.
         :param identifier: The name's identifier.

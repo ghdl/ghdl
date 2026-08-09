@@ -95,7 +95,7 @@ from pyGHDL.dom.Symbol import (
 class GenericAssociationItem(VHDLModel_GenericAssociationItem, DOMMixin):
     def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
         """
-        Initializes an association item.
+        Initializes a generic association item.
 
         :param associationNode: The IIR node of the association element.
         :param formal:          Reference to the formal part, or ``None`` for a positional association.
@@ -109,7 +109,7 @@ class GenericAssociationItem(VHDLModel_GenericAssociationItem, DOMMixin):
 class PortAssociationItem(VHDLModel_PortAssociationItem, DOMMixin):
     def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
         """
-        Initializes an association item.
+        Initializes a port association item.
 
         :param associationNode: The IIR node of the association element.
         :param formal:          Reference to the formal part, or ``None`` for a positional association.
@@ -123,7 +123,7 @@ class PortAssociationItem(VHDLModel_PortAssociationItem, DOMMixin):
 class ParameterAssociationItem(VHDLModel_ParameterAssociationItem, DOMMixin):
     def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
         """
-        Initializes an association item.
+        Initializes a parameter association item.
 
         :param associationNode: The IIR node of the association element.
         :param formal:          Reference to the formal part, or ``None`` for a positional association.
@@ -378,7 +378,7 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch, DOMMixin):
         Initializes an if generate branch.
 
         :param branchNode:       The IIR node of the branch this object represents.
-        :param condition:        The condition guarding this statement.
+        :param condition:        The condition under which this branch's declarations and statements are elaborated.
         :param declaredItems:    List of all declared items in this concurrent declaration region.
         :param statements:       List of all concurrent statements in this construct.
         :param alternativeLabel: The branch's alternative label, if one was given.
@@ -419,7 +419,7 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch, DOMMixin):
         Initializes an elsif generate branch.
 
         :param branchNode:       The IIR node of the branch this object represents.
-        :param condition:        The condition guarding this statement.
+        :param condition:        The condition under which this branch's declarations and statements are elaborated.
         :param declaredItems:    List of all declared items in this concurrent declaration region.
         :param statements:       List of all concurrent statements in this construct.
         :param alternativeLabel: The branch's alternative label, if one was given.
@@ -602,7 +602,7 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
         alternativeLabel: str = None,
     ) -> None:
         """
-        Initializes a concurrent case.
+        Initializes an others generate case.
 
         :param caseNode:         The IIR node of the case statement.
         :param declaredItems:    List of all declared items in this concurrent declaration region.
@@ -643,7 +643,7 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
 
         :param generateNode: The IIR node of the generate statement.
         :param label:        The label of the case-generate statement.
-        :param expression:   The expression being tested; it must be static.
+        :param expression:   The expression selecting the alternative.
         :param cases:        List of all alternatives, in the order they were written.
         """
         super().__init__(label, expression, cases)
@@ -1093,7 +1093,7 @@ class ConcurrentAssertStatement(VHDLModel_ConcurrentAssertStatement, DOMMixin):
         Initializes a concurrent assertion statement.
 
         :param assertNode: The IIR node of the assertion.
-        :param condition:  The condition guarding this statement.
+        :param condition:  The condition that must hold; the report is issued when it is false.
         :param message:    The reported message, or ``None`` if none was given.
         :param severity:   The reported severity level, or ``None`` if none was given.
         :param label:      The label of the concurrent assertion statement, or ``None`` if it has none.

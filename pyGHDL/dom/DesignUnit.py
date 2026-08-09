@@ -85,7 +85,7 @@ from pyGHDL.dom.Configuration import BlockConfiguration
 class LibraryClause(VHDLModel_LibraryClause, DOMMixin):
     def __init__(self, libraryNode: Iir, symbols: Iterable[Symbol]) -> None:
         """
-        Initializes a reference by taking a list of symbols and a parent reference.
+        Initializes a library clause.
 
         :param libraryNode: The IIR node of the library clause.
         :param symbols:     A list of symbols this reference references to.
@@ -98,7 +98,7 @@ class LibraryClause(VHDLModel_LibraryClause, DOMMixin):
 class UseClause(VHDLModel_UseClause, DOMMixin):
     def __init__(self, useNode: Iir, symbols: Iterable[Symbol]) -> None:
         """
-        Initializes a reference by taking a list of symbols and a parent reference.
+        Initializes a use clause.
 
         :param useNode: The IIR node of the use clause.
         :param symbols: A list of symbols this reference references to.
@@ -139,7 +139,7 @@ class UseClause(VHDLModel_UseClause, DOMMixin):
 class ContextReference(VHDLModel_ContextReference, DOMMixin):
     def __init__(self, contextNode: Iir, symbols: Iterable[Symbol]) -> None:
         """
-        Initializes a reference by taking a list of symbols and a parent reference.
+        Initializes a context reference.
 
         :param contextNode: The IIR node of the context reference.
         :param symbols:     A list of symbols this reference references to.
