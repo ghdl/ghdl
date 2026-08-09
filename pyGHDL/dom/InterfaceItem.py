@@ -77,6 +77,16 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
         defaultExpression: ExpressionUnion,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a constant in a generic clause.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param mode:              The interface item's mode.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
@@ -98,6 +108,13 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
 @export
 class GenericTypeInterfaceItem(VHDLModel_GenericTypeInterfaceItem, DOMMixin):
     def __init__(self, node: Iir, identifier: str, documentation: str = None) -> None:
+        """
+        Initializes a type in a generic clause.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The generic type's identifier.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
 
@@ -112,6 +129,13 @@ class GenericTypeInterfaceItem(VHDLModel_GenericTypeInterfaceItem, DOMMixin):
 @export
 class GenericPackageInterfaceItem(VHDLModel_GenericPackageInterfaceItem, DOMMixin):
     def __init__(self, node: Iir, name: str, documentation: str = None) -> None:
+        """
+        Initializes a package in a generic clause.
+
+        :param node:          The IIR node this object was translated from.
+        :param name:          The generic package's identifier.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(name, documentation)
         DOMMixin.__init__(self, node)
 
@@ -126,6 +150,13 @@ class GenericPackageInterfaceItem(VHDLModel_GenericPackageInterfaceItem, DOMMixi
 @export
 class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOMMixin):
     def __init__(self, node: Iir, identifier: str, documentation: str = None) -> None:
+        """
+        Initializes a procedure in a generic clause.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The generic procedure's identifier.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
 
@@ -140,6 +171,14 @@ class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOM
 @export
 class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMixin):
     def __init__(self, node: Iir, identifier: str, returnType: Symbol, documentation: str = None) -> None:
+        """
+        Initializes a function in a generic clause.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The generic function's identifier.
+        :param returnType:    Reference to the subtype of the function's return value.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, returnType, documentation)
         DOMMixin.__init__(self, node)
 
@@ -166,6 +205,16 @@ class PortSimpleSignalInterfaceItem(VHDLModel_PortSimpleSignalInterfaceItem, DOM
         defaultExpression: ExpressionUnion = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a port declared with a simple mode.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param mode:              The interface item's mode.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
@@ -208,6 +257,14 @@ class PortViewSignalInterfaceItem(VHDLModel_PortViewSignalInterfaceItem, DOMMixi
         modeViewIndication: ModeViewSymbol,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a port declared with a mode view (VHDL-2019).
+
+        :param node:               The IIR node this object was translated from.
+        :param identifiers:        A list of identifiers.
+        :param modeViewIndication: Reference to the mode view applied to this port.
+        :param documentation:      The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, modeViewIndication, documentation=documentation)
         DOMMixin.__init__(self, node)
 
@@ -237,6 +294,16 @@ class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem, D
         defaultExpression: ExpressionUnion = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a constant parameter of a subprogram.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param mode:              The interface item's mode.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
@@ -267,6 +334,16 @@ class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem, D
         defaultExpression: ExpressionUnion = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a variable parameter of a subprogram.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param mode:              The interface item's mode.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
@@ -297,6 +374,16 @@ class ParameterSimpleSignalInterfaceItem(VHDLModel_ParameterSimpleSignalInterfac
         defaultExpression: ExpressionUnion = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a signal parameter declared with a simple mode.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param mode:              The interface item's mode.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
@@ -339,6 +426,14 @@ class ParameterViewSignalInterfaceItem(VHDLModel_ParameterViewSignalInterfaceIte
         modeViewIndication: ModeViewSymbol,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a signal parameter declared with a mode view (VHDL-2019).
+
+        :param node:               The IIR node this object was translated from.
+        :param identifiers:        A list of identifiers.
+        :param modeViewIndication: Reference to the mode view applied to this parameter.
+        :param documentation:      The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, modeViewIndication, documentation=documentation)
         DOMMixin.__init__(self, node)
 
@@ -360,6 +455,14 @@ class ParameterViewSignalInterfaceItem(VHDLModel_ParameterViewSignalInterfaceIte
 @export
 class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin):
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
+        """
+        Initializes a file parameter of a subprogram.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifiers:   A list of identifiers.
+        :param subtype:       Reference to the object's subtype.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 
@@ -388,6 +491,14 @@ class SimpleModeViewElement(VHDLModel_SimpleModeViewElement, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifiers: List[str], mode: Mode, documentation: str = None) -> None:
+        """
+        Initializes a simple mode view element.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifiers:   A list of identifiers.
+        :param mode:          The element's mode.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, mode, documentation)
         DOMMixin.__init__(self, node)
 
@@ -418,6 +529,14 @@ class CompositeModeViewElement(VHDLModel_CompositeModeViewElement, DOMMixin):
     def __init__(
         self, node: Iir, identifiers: List[str], modeViewName: ModeViewSymbol, documentation: str = None
     ) -> None:
+        """
+        Initializes a composite mode view element.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifiers:   A list of identifiers.
+        :param modeViewName:  Reference to the mode view applied to this element.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, modeViewName, documentation)
         DOMMixin.__init__(self, node)
 
@@ -456,6 +575,15 @@ class ModeViewDeclaration(VHDLModel_ModeViewDeclaration, DOMMixin):
         elements: List = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a mode view declaration (VHDL-2019).
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The mode view's identifier.
+        :param subtype:       Reference to the subtype this mode view applies to.
+        :param elements:      List of all mode view elements, in declaration order.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, subtype, elements, documentation)
         DOMMixin.__init__(self, node)
 

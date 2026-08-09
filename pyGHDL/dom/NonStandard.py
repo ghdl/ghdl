@@ -43,7 +43,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional as Nullable, List
 
-from pyTooling.Decorators import export, InheritDocString, readonly
+from pyTooling.Decorators import export, readonly
 from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel import VHDLVersion, IEEEFlavor
@@ -105,8 +105,13 @@ class Design(VHDLModel_Design):
         VHDLVersion.VHDL2019: "19",
     }
 
-    @InheritDocString(VHDLModel_Design)
     def __init__(self, name: str = None, vhdlVersion: VHDLVersion = VHDLVersion.VHDL2008) -> None:
+        """
+        Initialize a VHDL design.
+
+        :param name:        Name of the design.
+        :param vhdlVersion: The VHDL version used to analyze this design.
+        """
         super().__init__(name)
 
         if vhdlVersion not in self._SUPPORTED_VHDL_VERSIONS:
@@ -199,6 +204,15 @@ class Document(VHDLModel_Document):
         dontParse: bool = False,
         dontTranslate: bool = False,
     ) -> None:
+        """
+        Initializes a VHDL document.
+
+        :param path:          Path to the document. ``None`` if in-memory document.
+        :param sourceCode:    The source code to analyze, or ``None`` to read it from ``path``.
+        :param vhdlVersion:   VHDL version used for analyzing this source file.
+        :param dontParse:     ``True`` to skip parsing the source code.
+        :param dontTranslate: ``True`` to parse the source code, but skip translating it to the DOM.
+        """
         super().__init__(path, parent=None)
 
         self._filename = path

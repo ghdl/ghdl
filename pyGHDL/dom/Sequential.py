@@ -95,6 +95,13 @@ class IfBranch(VHDLModel_IfBranch, DOMMixin):
         condition: ExpressionUnion,
         statements: Iterable[SequentialStatement] = None,
     ) -> None:
+        """
+        Initializes an :vhdlkw:`if` branch.
+
+        :param branchNode: The IIR node of the branch this object represents.
+        :param condition:  The condition under which this branch's statements are executed.
+        :param statements: List of all sequential statements in this construct.
+        """
         super().__init__(condition, statements)
         DOMMixin.__init__(self, branchNode)
 
@@ -120,6 +127,13 @@ class ElsifBranch(VHDLModel_ElsifBranch, DOMMixin):
         condition: ExpressionUnion,
         statements: Iterable[SequentialStatement] = None,
     ) -> None:
+        """
+        Initializes an :vhdlkw:`elsif` branch of an :vhdlkw:`if` statement.
+
+        :param branchNode: The IIR node of the branch this object represents.
+        :param condition:  The condition under which this branch's statements are executed.
+        :param statements: List of all sequential statements in this construct.
+        """
         super().__init__(condition, statements)
         DOMMixin.__init__(self, branchNode)
 
@@ -144,6 +158,12 @@ class ElseBranch(VHDLModel_ElseBranch, DOMMixin):
         branchNode: Iir,
         statements: Iterable[SequentialStatement] = None,
     ) -> None:
+        """
+        Initializes an else branch.
+
+        :param branchNode: The IIR node of the branch this object represents.
+        :param statements: List of all sequential statements in this construct.
+        """
         super().__init__(statements)
         DOMMixin.__init__(self, branchNode)
 
@@ -169,6 +189,15 @@ class IfStatement(VHDLModel_IfStatement, DOMMixin):
         elseBranch: ElseBranch = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes an :vhdlkw:`if` statement.
+
+        :param ifNode:        The IIR node of the :vhdlkw:`if` statement.
+        :param ifBranch:      The mandatory :vhdlkw:`if` branch.
+        :param elsifBranches: List of all :vhdlkw:`elsif` branches, in the order they were written.
+        :param elseBranch:    The optional :vhdlkw:`else` branch, or ``None`` if none was given.
+        :param label:         The label of the :vhdlkw:`if` statement, or ``None`` if it has none.
+        """
         super().__init__(ifBranch, elsifBranches, elseBranch, label)
         DOMMixin.__init__(self, ifNode)
 
@@ -197,6 +226,12 @@ class IfStatement(VHDLModel_IfStatement, DOMMixin):
 @export
 class IndexedChoice(VHDLModel_IndexedChoice, DOMMixin):
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
+        """
+        Initializes a case choice given by a single value.
+
+        :param node:       The IIR node this object was translated from.
+        :param expression: The expression this choice selects on.
+        """
         super().__init__(expression)
         DOMMixin.__init__(self, node)
 
@@ -204,6 +239,12 @@ class IndexedChoice(VHDLModel_IndexedChoice, DOMMixin):
 @export
 class RangedChoice(VHDLModel_RangedChoice, DOMMixin):
     def __init__(self, node: Iir, rng: Range) -> None:
+        """
+        Initializes a case choice given by a range.
+
+        :param node: The IIR node this object was translated from.
+        :param rng:  The range this choice selects on.
+        """
         super().__init__(rng)
         DOMMixin.__init__(self, node)
 
@@ -216,6 +257,13 @@ class Case(VHDLModel_Case, DOMMixin):
         choices: Iterable[SequentialChoice],
         statements: Iterable[SequentialStatement] = None,
     ) -> None:
+        """
+        Initializes a case.
+
+        :param node:       The IIR node this object was translated from.
+        :param choices:    List of all choices selecting this alternative.
+        :param statements: List of all sequential statements in this construct.
+        """
         super().__init__(choices, statements)
         DOMMixin.__init__(self, node)
 
@@ -236,6 +284,12 @@ class OthersCase(VHDLModel_OthersCase, DOMMixin):
         caseNode: Iir,
         statements: Iterable[SequentialStatement] = None,
     ) -> None:
+        """
+        Initializes an :vhdlkw:`others` alternative.
+
+        :param caseNode:   The IIR node of the :vhdlkw:`case` statement.
+        :param statements: List of all sequential statements in this construct.
+        """
         super().__init__(statements)
         DOMMixin.__init__(self, caseNode)
 
@@ -262,6 +316,14 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
         expression: ExpressionUnion,
         cases: Iterable[SequentialCase],
     ) -> None:
+        """
+        Initializes a :vhdlkw:`case` statement.
+
+        :param caseNode:   The IIR node of the :vhdlkw:`case` statement.
+        :param label:      The label of the :vhdlkw:`case` statement, or ``None`` if it has none.
+        :param expression: The expression being tested.
+        :param cases:      List of all alternatives, in the order they were written.
+        """
         super().__init__(expression, cases, label)
         DOMMixin.__init__(self, caseNode)
 
@@ -355,6 +417,15 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
         statements: Iterable[SequentialStatement] = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a :vhdlkw:`for..loop` statement.
+
+        :param loopNode:   The IIR node of the :vhdlkw:`loop` statement.
+        :param loopIndex:  The name of the loop's index.
+        :param rng:        The range the loop iterates over.
+        :param statements: List of all sequential statements in this construct.
+        :param label:      The label of the :vhdlkw:`for..loop` statement, or ``None`` if it has none.
+        """
         super().__init__(loopIndex, rng, statements, label)
         DOMMixin.__init__(self, loopNode)
 
@@ -386,6 +457,14 @@ class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
         statements: Iterable[SequentialStatement] = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a :vhdlkw:`while..loop` statement.
+
+        :param loopNode:   The IIR node of the :vhdlkw:`loop` statement.
+        :param condition:  The condition tested before each iteration; the loop ends when it is false.
+        :param statements: List of all sequential statements in this construct.
+        :param label:      The label of the :vhdlkw:`while..loop` statement, or ``None`` if it has none.
+        """
         super().__init__(condition, statements, label)
         DOMMixin.__init__(self, loopNode)
 
@@ -434,6 +513,14 @@ class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignmen
         waveform: Iterable[WaveformElement],
         label: str = None,
     ) -> None:
+        """
+        Initializes a simple sequential signal assignment.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param target:         Reference to the assignment's destination.
+        :param waveform:       List of all waveform elements, in the order they were written.
+        :param label:          The label of the sequential signal assignment, or ``None`` if it has none.
+        """
         super().__init__(target, waveform, label)
         DOMMixin.__init__(self, assignmentNode)
 
@@ -525,6 +612,13 @@ def GetSelectedExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable:
 @export
 class ConditionalExpression(VHDLModel_ConditionalExpression, DOMMixin):
     def __init__(self, node: Iir, expression: ExpressionUnion, condition: ExpressionUnion = None) -> None:
+        """
+        Initializes a conditional expression.
+
+        :param node:       The IIR node this object was translated from.
+        :param expression: The value assigned when the condition holds.
+        :param condition:  The condition selecting this alternative.
+        """
         super().__init__(expression, condition)
         DOMMixin.__init__(self, node)
 
@@ -541,6 +635,13 @@ class ConditionalExpression(VHDLModel_ConditionalExpression, DOMMixin):
 @export
 class SelectedExpression(VHDLModel_SelectedExpression, DOMMixin):
     def __init__(self, node: Iir, choices: Iterable, expression: ExpressionUnion) -> None:
+        """
+        Initializes a selected expression.
+
+        :param node:       The IIR node this object was translated from.
+        :param choices:    List of all choices selecting this alternative.
+        :param expression: The value assigned for the matching choices.
+        """
         super().__init__(choices, expression)
         DOMMixin.__init__(self, node)
 
@@ -548,6 +649,12 @@ class SelectedExpression(VHDLModel_SelectedExpression, DOMMixin):
 @export
 class OthersSelectedExpression(VHDLModel_OthersSelectedExpression, DOMMixin):
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
+        """
+        Initializes an :vhdlkw:`others` selected expression.
+
+        :param node:       The IIR node this object was translated from.
+        :param expression: The value assigned for every unnamed choice.
+        """
         super().__init__(expression)
         DOMMixin.__init__(self, node)
 
@@ -561,6 +668,14 @@ class SequentialVariableAssignment(VHDLModel_SequentialVariableAssignment, DOMMi
         expression: ExpressionUnion,
         label: str = None,
     ) -> None:
+        """
+        Initializes a simple sequential variable assignment.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param target:         Reference to the assignment's destination.
+        :param expression:     The assigned expression.
+        :param label:          The label of the variable assignment, or ``None`` if it has none.
+        """
         super().__init__(target, expression, label)
         DOMMixin.__init__(self, assignmentNode)
 
@@ -584,6 +699,14 @@ class SequentialConditionalVariableAssignment(VHDLModel_SequentialConditionalVar
         conditionalExpressions: Iterable[ConditionalExpression],
         label: str = None,
     ) -> None:
+        """
+        Initializes a conditional sequential variable assignment.
+
+        :param assignmentNode:         The IIR node of the assignment statement.
+        :param target:                 Reference to the assignment's destination.
+        :param conditionalExpressions: List of all alternatives, in the order they were written.
+        :param label:                  The label of the conditional variable assignment, or ``None`` if it has none.
+        """
         super().__init__(target, conditionalExpressions, label)
         DOMMixin.__init__(self, assignmentNode)
 
@@ -609,6 +732,14 @@ class SequentialConditionalSignalAssignment(VHDLModel_SequentialConditionalSigna
         conditionalWaveforms: Iterable,
         label: str = None,
     ) -> None:
+        """
+        Initializes a conditional sequential signal assignment.
+
+        :param assignmentNode:       The IIR node of the assignment statement.
+        :param target:               Reference to the assignment's destination.
+        :param conditionalWaveforms: All alternatives, in order.
+        :param label:                The label of the conditional sequential signal assignment, or ``None`` if it has none.
+        """
         super().__init__(target, conditionalWaveforms, label)
         DOMMixin.__init__(self, assignmentNode)
 
@@ -635,6 +766,15 @@ class SequentialSelectedVariableAssignment(VHDLModel_SequentialSelectedVariableA
         selectedExpressions: Iterable,
         label: str = None,
     ) -> None:
+        """
+        Initializes a selected sequential variable assignment.
+
+        :param assignmentNode:      The IIR node of the assignment statement.
+        :param target:              Reference to the assignment's destination.
+        :param expression:          The selector expression.
+        :param selectedExpressions: All alternatives, in order.
+        :param label:               The label of the selected variable assignment, or ``None`` if it has none.
+        """
         super().__init__(target, expression, selectedExpressions, label)
         DOMMixin.__init__(self, assignmentNode)
 
@@ -662,6 +802,15 @@ class SequentialSelectedSignalAssignment(VHDLModel_SequentialSelectedSignalAssig
         selectedWaveforms: Iterable,
         label: str = None,
     ) -> None:
+        """
+        Initializes a selected sequential signal assignment.
+
+        :param assignmentNode:    The IIR node of the assignment statement.
+        :param target:            Reference to the assignment's destination.
+        :param expression:        The selector expression.
+        :param selectedWaveforms: All alternatives, in order.
+        :param label:             The label of the selected sequential signal assignment, or ``None`` if it has none.
+        """
         super().__init__(target, expression, selectedWaveforms, label)
         DOMMixin.__init__(self, assignmentNode)
 
@@ -686,6 +835,14 @@ class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
         expression: ExpressionUnion,
         label: str = None,
     ) -> None:
+        """
+        Initializes a signal force assignment.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param target:         Reference to the assignment's destination.
+        :param expression:     The value forced onto the signal.
+        :param label:          The label of the signal force assignment, or ``None`` if it has none.
+        """
         super().__init__(target, expression, label)
         DOMMixin.__init__(self, assignmentNode)
 
@@ -703,6 +860,13 @@ class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
 @export
 class SignalReleaseAssignment(VHDLModel_SignalReleaseAssignment, DOMMixin):
     def __init__(self, assignmentNode: Iir, target: SignalSymbol, label: str = None) -> None:
+        """
+        Initializes a signal release assignment.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param target:         Reference to the assignment's destination.
+        :param label:          The label of the signal release assignment, or ``None`` if it has none.
+        """
         super().__init__(target, label)
         DOMMixin.__init__(self, assignmentNode)
 
@@ -725,6 +889,14 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
         parameterAssociationItems: Iterable[ParameterAssociationItem],
         label: str = None,
     ) -> None:
+        """
+        Initializes a procedure call as a sequential statement.
+
+        :param callNode:                  The IIR node of the subprogram call.
+        :param procedureName:             Reference to the called procedure.
+        :param parameterAssociationItems: List of all parameter associations of the call.
+        :param label:                     The label of the procedure call, or ``None`` if it has none.
+        """
         super().__init__(procedureName, parameterAssociationItems, label)
         DOMMixin.__init__(self, callNode)
 
@@ -751,6 +923,15 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
         severity: ExpressionUnion = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a sequential assertion statement.
+
+        :param assertNode: The IIR node of the assertion.
+        :param condition:  The condition that must hold; the report is issued when it is false.
+        :param message:    The reported message, or ``None`` if none was given.
+        :param severity:   The reported severity level, or ``None`` if none was given.
+        :param label:      The label of the assertion statement, or ``None`` if it has none.
+        """
         super().__init__(condition, message, severity, label)
         DOMMixin.__init__(self, assertNode)
 
@@ -774,6 +955,14 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
         severity: ExpressionUnion = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a sequential :vhdlkw:`report` statement.
+
+        :param reportNode: The IIR node of the :vhdlkw:`report` statement.
+        :param message:    The reported message, or ``None`` if none was given.
+        :param severity:   The reported severity level, or ``None`` if none was given.
+        :param label:      The label of the :vhdlkw:`report` statement, or ``None`` if it has none.
+        """
         super().__init__(message, severity, label)
         DOMMixin.__init__(self, reportNode)
 
@@ -795,6 +984,13 @@ class ReturnStatement(VHDLModel_ReturnStatement, DOMMixin):
         returnValue: ExpressionUnion = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a :vhdlkw:`return` statement.
+
+        :param returnNode:  The IIR node of the :vhdlkw:`return` statement.
+        :param returnValue: The returned expression, or ``None`` for a procedure.
+        :param label:       The label of the :vhdlkw:`return` statement, or ``None`` if it has none.
+        """
         super().__init__(returnValue, label)
         DOMMixin.__init__(self, returnNode)
 
@@ -814,6 +1010,12 @@ class NullStatement(VHDLModel_NullStatement, DOMMixin):
         waitNode: Iir,
         label: str = None,
     ) -> None:
+        """
+        Initializes a :vhdlkw:`null` statement.
+
+        :param waitNode: The IIR node of the :vhdlkw:`wait` statement.
+        :param label:    The label of the :vhdlkw:`null` statement, or ``None`` if it has none.
+        """
         super().__init__(label)
         DOMMixin.__init__(self, waitNode)
 
@@ -826,6 +1028,13 @@ class NextStatement(VHDLModel_NextStatement, DOMMixin):
         condition: ExpressionUnion = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a :vhdlkw:`next` statement.
+
+        :param exitNode:  The IIR node of the :vhdlkw:`exit` statement.
+        :param condition: The condition under which the iteration is skipped, or ``None`` if unconditional.
+        :param label:     The label of the loop this statement applies to, or ``None`` for the enclosing loop.
+        """
         super().__init__(condition, loopLabel=label)
         DOMMixin.__init__(self, exitNode)
 
@@ -846,6 +1055,13 @@ class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
         condition: ExpressionUnion = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes an :vhdlkw:`exit` statement.
+
+        :param exitNode:  The IIR node of the :vhdlkw:`exit` statement.
+        :param condition: The condition under which the loop is left, or ``None`` if unconditional.
+        :param label:     The label of the loop this statement applies to, or ``None`` for the enclosing loop.
+        """
         super().__init__(condition, loopLabel=label)
         DOMMixin.__init__(self, exitNode)
 
@@ -868,6 +1084,15 @@ class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
         timeout: ExpressionUnion = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a :vhdlkw:`wait` statement.
+
+        :param waitNode:        The IIR node of the :vhdlkw:`wait` statement.
+        :param sensitivityList: List of all signal names of the :vhdlkw:`on` clause, or ``None`` if none was given.
+        :param condition:       The condition of the :vhdlkw:`until` clause, or ``None`` if none was given.
+        :param timeout:         The timeout expression of the :vhdlkw:`for` clause, or ``None`` if none was given.
+        :param label:           The label of the :vhdlkw:`wait` statement, or ``None`` if it has none.
+        """
         super().__init__(sensitivityList, condition, timeout, label)
         DOMMixin.__init__(self, waitNode)
 

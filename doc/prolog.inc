@@ -30,6 +30,7 @@
      span.colorgreen {color: #009933; }
      span.colorblue {color: #0066FF; }
      span.colorpurple {color: #9900CC; }
+     span.vhdlkw {font-style: italic; }
    </style>
 
 .. role:: bolditalic
@@ -57,6 +58,9 @@
    :class: colorred strike
 .. role:: addition
    :class: colorgreen
+
+.. role:: vhdlkw
+   :class: vhdlkw
 
 .. role:: pycode(code)
    :language: python

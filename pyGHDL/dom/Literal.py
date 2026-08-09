@@ -62,6 +62,11 @@ from pyGHDL.dom._Utils import GetNameOfNode
 @export
 class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
     def __init__(self, node: Iir) -> None:
+        """
+        Initializes a :vhdlkw:`null` literal.
+
+        :param node: The IIR node this object was translated from.
+        """
         super().__init__()
         DOMMixin.__init__(self, node)
 
@@ -73,6 +78,12 @@ class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
 @export
 class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
     def __init__(self, node: Iir, value: str) -> None:
+        """
+        Initializes an enumeration literal.
+
+        :param node:  The IIR node this object was translated from.
+        :param value: The enumeration literal's name.
+        """
         super().__init__(value)
         DOMMixin.__init__(self, node)
 
@@ -85,6 +96,12 @@ class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
 @export
 class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
     def __init__(self, node: Iir, value: int) -> None:
+        """
+        Initializes an integer literal.
+
+        :param node:  The IIR node this object was translated from.
+        :param value: The literal's integer value.
+        """
         super().__init__(value)
         DOMMixin.__init__(self, node)
 
@@ -97,6 +114,12 @@ class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
 @export
 class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
     def __init__(self, node: Iir, value: float) -> None:
+        """
+        Initializes a floating-point literal.
+
+        :param node:  The IIR node this object was translated from.
+        :param value: The literal's floating-point value.
+        """
         super().__init__(value)
         DOMMixin.__init__(self, node)
 
@@ -109,6 +132,13 @@ class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
 @export
 class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
     def __init__(self, node: Iir, value: int, unitName: str) -> None:
+        """
+        Initializes a physical literal with an integer value.
+
+        :param node:     The IIR node this object was translated from.
+        :param value:    The literal's integer value, in units of :attr:`_unitName`.
+        :param unitName: The name of the physical unit the value is given in.
+        """
         super().__init__(value, unitName)
         DOMMixin.__init__(self, node)
 
@@ -124,6 +154,13 @@ class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
 @export
 class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
     def __init__(self, node: Iir, value: int, unitName: float) -> None:
+        """
+        Initializes a physical literal with a floating-point value.
+
+        :param node:     The IIR node this object was translated from.
+        :param value:    The literal's floating-point value, in units of :attr:`_unitName`.
+        :param unitName: The name of the physical unit the value is given in.
+        """
         super().__init__(value, unitName)
         DOMMixin.__init__(self, node)
 
@@ -139,6 +176,12 @@ class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
 @export
 class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
     def __init__(self, node: Iir, value: str) -> None:
+        """
+        Initializes a character literal.
+
+        :param node:  The IIR node this object was translated from.
+        :param value: The literal's character value.
+        """
         super().__init__(value)
         DOMMixin.__init__(self, node)
 
@@ -152,6 +195,14 @@ class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
 @export
 class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
+        """
+        Initializes a binary bit string literal.
+
+        :param node:     The IIR node this object was translated from.
+        :param value:    The literal as written in the source, without the enclosing double quotes.
+        :param length:   The explicitly given length, or ``None`` if the literal has no length specification.
+        :param isSigned: ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
+        """
         super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
 
@@ -159,6 +210,14 @@ class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
 @export
 class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
+        """
+        Initializes an octal bit string literal.
+
+        :param node:     The IIR node this object was translated from.
+        :param value:    The literal as written in the source, without the enclosing double quotes.
+        :param length:   The explicitly given length, or ``None`` if the literal has no length specification.
+        :param isSigned: ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
+        """
         super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
 
@@ -166,6 +225,14 @@ class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
 @export
 class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
+        """
+        Initializes a decimal bit string literal.
+
+        :param node:     The IIR node this object was translated from.
+        :param value:    The literal as written in the source, without the enclosing double quotes.
+        :param length:   The explicitly given length, or ``None`` if the literal has no length specification.
+        :param isSigned: ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
+        """
         super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
 
@@ -173,6 +240,14 @@ class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
 @export
 class HexadecimalBitStringLiteral(VHDLModel_HexadecimalBitStringLiteral, DOMMixin):
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
+        """
+        Initializes a hexadecimal bit string literal.
+
+        :param node:     The IIR node this object was translated from.
+        :param value:    The literal as written in the source, without the enclosing double quotes.
+        :param length:   The explicitly given length, or ``None`` if the literal has no length specification.
+        :param isSigned: ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
+        """
         super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
 
@@ -180,6 +255,12 @@ class HexadecimalBitStringLiteral(VHDLModel_HexadecimalBitStringLiteral, DOMMixi
 @export
 class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
     def __init__(self, node: Iir, value: str) -> None:
+        """
+        Initializes a string literal.
+
+        :param node:  The IIR node this object was translated from.
+        :param value: The literal's string value, without the enclosing double quotes.
+        """
         super().__init__(value)
         DOMMixin.__init__(self, node)
 

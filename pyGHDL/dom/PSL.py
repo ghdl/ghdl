@@ -59,6 +59,12 @@ class VerificationUnit(VHDLModel_VerificationUnit, DOMMixin):
         node: Iir,
         identifier: str,
     ) -> None:
+        """
+        Initializes a PSL verification unit (:vhdlkw:`vunit`).
+
+        :param node:       The IIR node this object was translated from.
+        :param identifier: The verification unit's identifier.
+        """
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
@@ -78,6 +84,12 @@ class VerificationProperty(VHDLModel_VerificationProperty, DOMMixin):
         node: Iir,
         identifier: str,
     ) -> None:
+        """
+        Initializes a PSL verification property (:vhdlkw:`vprop`).
+
+        :param node:       The IIR node this object was translated from.
+        :param identifier: The verification property's identifier.
+        """
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
@@ -97,6 +109,12 @@ class VerificationMode(VHDLModel_VerificationMode, DOMMixin):
         node: Iir,
         identifier: str,
     ) -> None:
+        """
+        Initializes a PSL verification mode (:vhdlkw:`vmode`).
+
+        :param node:       The IIR node this object was translated from.
+        :param identifier: The verification mode's identifier.
+        """
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
@@ -117,6 +135,13 @@ class DefaultClock(VHDLModel_DefaultClock, DOMMixin):
         identifier: str,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a PSL default clock declaration.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The default clock's identifier.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
 

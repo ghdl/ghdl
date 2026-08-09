@@ -67,6 +67,13 @@ from pyGHDL.dom.Subprogram import Function, Procedure
 @export
 class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
     def __init__(self, node: Iir, identifier: str, documentation: str = None) -> None:
+        """
+        Initializes an incomplete type declaration.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    Name of the type.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
 
@@ -96,6 +103,14 @@ class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
     def __init__(
         self, node: Iir, identifier: str, literals: List[EnumerationLiteral], documentation: str = None
     ) -> None:
+        """
+        Initializes an enumerated type definition.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The enumeration type's identifier.
+        :param literals:      List of all enumeration literals, in declaration order.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, literals, documentation)
         DOMMixin.__init__(self, node)
 
@@ -133,6 +148,14 @@ class IntegerType(VHDLModel_IntegerType, DOMMixin):
     """
 
     def __init__(self, node: Iir, typeName: str, rng: Union[Range, "Name"], documentation: str = None) -> None:
+        """
+        Initializes an integer type definition.
+
+        :param node:          The IIR node this object was translated from.
+        :param typeName:      The type's identifier.
+        :param rng:           The range constraining this scalar type.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(typeName, rng, documentation)
         DOMMixin.__init__(self, node)
 
@@ -164,6 +187,16 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
         units: List[Tuple[str, PhysicalIntegerLiteral]],
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a physical type definition.
+
+        :param node:          The IIR node this object was translated from.
+        :param typeName:      The type's identifier.
+        :param rng:           The range constraining this scalar type.
+        :param primaryUnit:   The name of the type's primary unit.
+        :param units:         Iterable of the secondary units as (name, value) pairs.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(typeName, rng, primaryUnit, units, documentation)
         DOMMixin.__init__(self, node)
 
@@ -226,6 +259,15 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
     def __init__(
         self, node: Iir, identifier: str, indices: List, elementSubtype: Symbol, documentation: str = None
     ) -> None:
+        """
+        Initializes an array type definition.
+
+        :param node:           The IIR node this object was translated from.
+        :param identifier:     The array type's identifier.
+        :param indices:        List of all index ranges, one per dimension.
+        :param elementSubtype: Reference to the subtype of the array's elements.
+        :param documentation:  The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, indices, elementSubtype, documentation)
         DOMMixin.__init__(self, node)
 
@@ -281,6 +323,14 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
+        """
+        Initializes a record type element.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifiers:   A list of identifiers.
+        :param subtype:       Reference to the subtype shared by all identifiers of this element declaration.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 
@@ -326,6 +376,14 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
     def __init__(
         self, node: Iir, identifier: str, elements: List[RecordTypeElement] = None, documentation: str = None
     ) -> None:
+        """
+        Initializes a record type definition.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The record type's identifier.
+        :param elements:      List of all element declarations, in declaration order.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, elements, documentation)
         DOMMixin.__init__(self, node)
 
@@ -394,6 +452,14 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
     def __init__(
         self, node: Iir, identifier: str, methods: Union[List, Iterator] = None, documentation: str = None
     ) -> None:
+        """
+        Initializes a protected type declaration.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The protected type's identifier.
+        :param methods:       List of the protected type's methods, in declaration order.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, methods, documentation)
         DOMMixin.__init__(self, node)
 
@@ -440,6 +506,14 @@ class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
     def __init__(
         self, node: Iir, identifier: str, declaredItems: Union[List, Iterator] = None, documentation: str = None
     ) -> None:
+        """
+        Initializes a protected type body.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The protected type body's identifier.
+        :param declaredItems: Iterable of all items declared in this body.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, declaredItems, documentation)
         DOMMixin.__init__(self, node)
 
@@ -480,6 +554,14 @@ class AccessType(VHDLModel_AccessType, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, designatedSubtype: Symbol, documentation: str = None) -> None:
+        """
+        Initializes an access type definition.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifier:        The access type's identifier.
+        :param designatedSubtype: Reference to the subtype the access values designate.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, designatedSubtype, documentation)
         DOMMixin.__init__(self, node)
 
@@ -516,6 +598,14 @@ class FileType(VHDLModel_FileType, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifier: str, designatedSubtype: Symbol, documentation: str = None) -> None:
+        """
+        Initializes a file type definition.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifier:        The file type's identifier.
+        :param designatedSubtype: Reference to the subtype of the values stored in the file.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, designatedSubtype, documentation)
         DOMMixin.__init__(self, node)
 
@@ -549,5 +639,13 @@ class Subtype(VHDLModel_Subtype, DOMMixin):
     """
 
     def __init__(self, node: Iir, subtypeName: str, symbol: Symbol, documentation: str = None) -> None:
+        """
+        Initializes a subtype declaration.
+
+        :param node:          The IIR node this object was translated from.
+        :param subtypeName:   The subtype's identifier.
+        :param symbol:        Reference to the type or subtype this subtype is derived from.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(subtypeName, symbol, documentation)
         DOMMixin.__init__(self, node)

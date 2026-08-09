@@ -34,7 +34,7 @@
 This module implements derived range classes from :mod:`pyVHDLModel.Base`.
 """
 
-from pyTooling.Decorators import export, InheritDocString
+from pyTooling.Decorators import export
 
 from pyVHDLModel.Base import Direction, ExpressionUnion
 from pyVHDLModel.Base import RangeFromName as VHDLModel_RangeFromName
@@ -47,17 +47,29 @@ from pyGHDL.dom import DOMMixin
 
 @export
 class SimpleRange(VHDLModel_SimpleRange, DOMMixin):
-    @InheritDocString(VHDLModel_SimpleRange)
     def __init__(
         self, node: Iir, leftBound: ExpressionUnion, rightBound: ExpressionUnion, direction: Direction
     ) -> None:
+        """
+        Initialize a simple range.
+
+        :param node:       The IIR node this object was translated from.
+        :param leftBound:  The range's left bound.
+        :param rightBound: The range's right bound.
+        :param direction:  The range's direction (:vhdlkw:`to` or :vhdlkw:`downto`).
+        """
         super().__init__(leftBound, rightBound, direction)
         DOMMixin.__init__(self, node)
 
 
 @export
 class RangeFromName(VHDLModel_RangeFromName, DOMMixin):
-    @InheritDocString(VHDLModel_RangeFromName)
     def __init__(self, node: Iir, symbol: Symbol) -> None:
+        """
+        Initialize a range denoted by a name.
+
+        :param node:   The IIR node this object was translated from.
+        :param symbol: The symbol referencing the range attribute or discrete subtype.
+        """
         super().__init__(symbol)
         DOMMixin.__init__(self, node)
