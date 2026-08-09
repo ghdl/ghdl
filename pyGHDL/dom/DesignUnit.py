@@ -175,7 +175,7 @@ class Entity(VHDLModel_Entity, DOMMixin):
         Initializes an entity declaration.
 
         :param node:          The IIR node this object was translated from.
-        :param identifier:    The identifier of a model entity.
+        :param identifier:    The entity's identifier.
         :param contextItems:  List of all context items (library, use and context clauses).
         :param genericItems:  List of all generics, in declaration order.
         :param portItems:     List of all ports, in declaration order.
@@ -220,7 +220,7 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         Initializes an architecture declaration.
 
         :param node:          The IIR node this object was translated from.
-        :param identifier:    The identifier of a model entity.
+        :param identifier:    The architecture's identifier.
         :param entity:        Reference to the entity this architecture implements.
         :param contextItems:  List of all context items (library, use and context clauses).
         :param declaredItems: List of all declared items in this concurrent declaration region.
@@ -262,7 +262,7 @@ class Component(VHDLModel_Component, DOMMixin):
         Initializes a component declaration.
 
         :param node:          The IIR node this object was translated from.
-        :param identifier:    The identifier of a model entity.
+        :param identifier:    The component's identifier.
         :param genericItems:  List of all generics of this component, in declaration order.
         :param portItems:     List of all ports of this component, in declaration order.
         :param documentation: The documentation comment associated with this declaration.
@@ -373,7 +373,7 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         Initializes a package instantiation.
 
         :param node:                      The IIR node this object was translated from.
-        :param identifier:                The identifier of a model entity.
+        :param identifier:                The instantiated package's identifier.
         :param uninstantiatedPackageName: The name of the uninstantiated generic package.
         :param contextItems:              List of all context items (library, use and context clauses).
         :param genericAssociationItems:   List of all generic associations in the generic map aspect.
@@ -409,7 +409,7 @@ class Context(VHDLModel_Context, DOMMixin):
         Initializes a context declaration.
 
         :param node:          The IIR node this object was translated from.
-        :param identifier:    The identifier of a model entity.
+        :param identifier:    The context's identifier.
         :param references:    All context items, in declaration order.
         :param documentation: The documentation comment associated with this declaration.
         """
@@ -461,7 +461,7 @@ class Configuration(VHDLModel_Configuration, DOMMixin):
         Initializes a configuration declaration.
 
         :param node:               The IIR node this object was translated from.
-        :param identifier:         The identifier of a model entity.
+        :param identifier:         The configuration's identifier.
         :param entity:             Reference to the entity this configuration configures.
         :param blockConfiguration: The configuration of the entity's architecture.
         :param contextItems:       List of all context items (library, use and context clauses).

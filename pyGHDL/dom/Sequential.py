@@ -196,7 +196,7 @@ class IfStatement(VHDLModel_IfStatement, DOMMixin):
         :param ifBranch:      The mandatory ``if`` branch.
         :param elsifBranches: List of all ``elsif`` branches, in the order they were written.
         :param elseBranch:    The optional ``else`` branch, or ``None`` if none was given.
-        :param label:         The label of a model entity.
+        :param label:         The label of the if statement, or ``None`` if it has none.
         """
         super().__init__(ifBranch, elsifBranches, elseBranch, label)
         DOMMixin.__init__(self, ifNode)
@@ -320,7 +320,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
         Initializes a case statement.
 
         :param caseNode:   The IIR node of the case statement.
-        :param label:      The label of a model entity.
+        :param label:      The label of the case statement, or ``None`` if it has none.
         :param expression: The expression being tested.
         :param cases:      List of all alternatives, in the order they were written.
         """
@@ -424,7 +424,7 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
         :param loopIndex:  The name of the loop's index.
         :param rng:        The range the loop iterates over.
         :param statements: List of all sequential statements in this construct.
-        :param label:      The label of a model entity.
+        :param label:      The label of the for-loop statement, or ``None`` if it has none.
         """
         super().__init__(loopIndex, rng, statements, label)
         DOMMixin.__init__(self, loopNode)
@@ -463,7 +463,7 @@ class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
         :param loopNode:   The IIR node of the loop statement.
         :param condition:  The condition guarding this statement.
         :param statements: List of all sequential statements in this construct.
-        :param label:      The label of a model entity.
+        :param label:      The label of the while-loop statement, or ``None`` if it has none.
         """
         super().__init__(condition, statements, label)
         DOMMixin.__init__(self, loopNode)
@@ -519,7 +519,7 @@ class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignmen
         :param assignmentNode: The IIR node of the assignment statement.
         :param target:         Reference to the assignment's destination.
         :param waveform:       List of all waveform elements, in the order they were written.
-        :param label:          The label of a model entity.
+        :param label:          The label of the sequential signal assignment, or ``None`` if it has none.
         """
         super().__init__(target, waveform, label)
         DOMMixin.__init__(self, assignmentNode)
@@ -674,7 +674,7 @@ class SequentialVariableAssignment(VHDLModel_SequentialVariableAssignment, DOMMi
         :param assignmentNode: The IIR node of the assignment statement.
         :param target:         Reference to the assignment's destination.
         :param expression:     The assigned expression.
-        :param label:          The label of a model entity.
+        :param label:          The label of the variable assignment, or ``None`` if it has none.
         """
         super().__init__(target, expression, label)
         DOMMixin.__init__(self, assignmentNode)
@@ -705,7 +705,7 @@ class SequentialConditionalVariableAssignment(VHDLModel_SequentialConditionalVar
         :param assignmentNode:         The IIR node of the assignment statement.
         :param target:                 Reference to the assignment's destination.
         :param conditionalExpressions: List of all alternatives, in the order they were written.
-        :param label:                  The label of a model entity.
+        :param label:                  The label of the conditional variable assignment, or ``None`` if it has none.
         """
         super().__init__(target, conditionalExpressions, label)
         DOMMixin.__init__(self, assignmentNode)
@@ -738,7 +738,7 @@ class SequentialConditionalSignalAssignment(VHDLModel_SequentialConditionalSigna
         :param assignmentNode:       The IIR node of the assignment statement.
         :param target:               Reference to the assignment's destination.
         :param conditionalWaveforms: All alternatives, in order.
-        :param label:                The label of a model entity.
+        :param label:                The label of the conditional sequential signal assignment, or ``None`` if it has none.
         """
         super().__init__(target, conditionalWaveforms, label)
         DOMMixin.__init__(self, assignmentNode)
@@ -773,7 +773,7 @@ class SequentialSelectedVariableAssignment(VHDLModel_SequentialSelectedVariableA
         :param target:              Reference to the assignment's destination.
         :param expression:          The selector expression.
         :param selectedExpressions: All alternatives, in order.
-        :param label:               The label of a model entity.
+        :param label:               The label of the selected variable assignment, or ``None`` if it has none.
         """
         super().__init__(target, expression, selectedExpressions, label)
         DOMMixin.__init__(self, assignmentNode)
@@ -809,7 +809,7 @@ class SequentialSelectedSignalAssignment(VHDLModel_SequentialSelectedSignalAssig
         :param target:            Reference to the assignment's destination.
         :param expression:        The selector expression.
         :param selectedWaveforms: All alternatives, in order.
-        :param label:             The label of a model entity.
+        :param label:             The label of the selected sequential signal assignment, or ``None`` if it has none.
         """
         super().__init__(target, expression, selectedWaveforms, label)
         DOMMixin.__init__(self, assignmentNode)
@@ -841,7 +841,7 @@ class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
         :param assignmentNode: The IIR node of the assignment statement.
         :param target:         Reference to the assignment's destination.
         :param expression:     The value forced onto the signal.
-        :param label:          The label of a model entity.
+        :param label:          The label of the signal force assignment, or ``None`` if it has none.
         """
         super().__init__(target, expression, label)
         DOMMixin.__init__(self, assignmentNode)
@@ -865,7 +865,7 @@ class SignalReleaseAssignment(VHDLModel_SignalReleaseAssignment, DOMMixin):
 
         :param assignmentNode: The IIR node of the assignment statement.
         :param target:         Reference to the assignment's destination.
-        :param label:          The label of a model entity.
+        :param label:          The label of the signal release assignment, or ``None`` if it has none.
         """
         super().__init__(target, label)
         DOMMixin.__init__(self, assignmentNode)
@@ -895,7 +895,7 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
         :param callNode:                  The IIR node of the subprogram call.
         :param procedureName:             Reference to the called procedure.
         :param parameterAssociationItems: List of all parameter associations of the call.
-        :param label:                     The label of a model entity.
+        :param label:                     The label of the procedure call, or ``None`` if it has none.
         """
         super().__init__(procedureName, parameterAssociationItems, label)
         DOMMixin.__init__(self, callNode)
@@ -930,7 +930,7 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
         :param condition:  The condition guarding this statement.
         :param message:    The reported message, or ``None`` if none was given.
         :param severity:   The reported severity level, or ``None`` if none was given.
-        :param label:      The label of a model entity.
+        :param label:      The label of the assertion statement, or ``None`` if it has none.
         """
         super().__init__(condition, message, severity, label)
         DOMMixin.__init__(self, assertNode)
@@ -961,7 +961,7 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
         :param reportNode: The IIR node of the report statement.
         :param message:    The reported message, or ``None`` if none was given.
         :param severity:   The reported severity level, or ``None`` if none was given.
-        :param label:      The label of a model entity.
+        :param label:      The label of the report statement, or ``None`` if it has none.
         """
         super().__init__(message, severity, label)
         DOMMixin.__init__(self, reportNode)
@@ -989,7 +989,7 @@ class ReturnStatement(VHDLModel_ReturnStatement, DOMMixin):
 
         :param returnNode:  The IIR node of the return statement.
         :param returnValue: The returned expression, or ``None`` for a procedure.
-        :param label:       The label of a model entity.
+        :param label:       The label of the return statement, or ``None`` if it has none.
         """
         super().__init__(returnValue, label)
         DOMMixin.__init__(self, returnNode)
@@ -1014,7 +1014,7 @@ class NullStatement(VHDLModel_NullStatement, DOMMixin):
         Initializes a statement.
 
         :param waitNode: The IIR node of the wait statement.
-        :param label:    The label of a model entity.
+        :param label:    The label of the null statement, or ``None`` if it has none.
         """
         super().__init__(label)
         DOMMixin.__init__(self, waitNode)
@@ -1091,7 +1091,7 @@ class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
         :param sensitivityList: List of all signal names to wait on, or ``None`` if none was given.
         :param condition:       The condition guarding this statement.
         :param timeout:         The timeout expression, or ``None`` if none was given.
-        :param label:           The label of a model entity.
+        :param label:           The label of the wait statement, or ``None`` if it has none.
         """
         super().__init__(sensitivityList, condition, timeout, label)
         DOMMixin.__init__(self, waitNode)

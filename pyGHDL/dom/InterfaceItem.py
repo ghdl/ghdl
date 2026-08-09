@@ -112,7 +112,7 @@ class GenericTypeInterfaceItem(VHDLModel_GenericTypeInterfaceItem, DOMMixin):
         Initializes a type in a generic clause.
 
         :param node:          The IIR node this object was translated from.
-        :param identifier:    The identifier of a model entity.
+        :param identifier:    The generic type's identifier.
         :param documentation: The documentation comment associated with this declaration.
         """
         super().__init__(identifier, documentation)
@@ -154,7 +154,7 @@ class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOM
         Initializes a procedure in a generic clause.
 
         :param node:          The IIR node this object was translated from.
-        :param identifier:    The identifier of a model entity.
+        :param identifier:    The generic procedure's identifier.
         :param documentation: The documentation comment associated with this declaration.
         """
         super().__init__(identifier, documentation)
@@ -175,7 +175,7 @@ class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMi
         Initializes a function in a generic clause.
 
         :param node:          The IIR node this object was translated from.
-        :param identifier:    The identifier of a model entity.
+        :param identifier:    The generic function's identifier.
         :param returnType:    Reference to the subtype of the function's return value.
         :param documentation: The documentation comment associated with this declaration.
         """
@@ -579,7 +579,7 @@ class ModeViewDeclaration(VHDLModel_ModeViewDeclaration, DOMMixin):
         Initializes a mode view declaration (VHDL-2019).
 
         :param node:          The IIR node this object was translated from.
-        :param identifier:    The identifier of a model entity.
+        :param identifier:    The mode view's identifier.
         :param subtype:       Reference to the subtype this mode view applies to.
         :param elements:      List of all mode view elements, in declaration order.
         :param documentation: The documentation comment associated with this declaration.

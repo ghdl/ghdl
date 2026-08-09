@@ -62,7 +62,7 @@ class Attribute(VHDLModel_Attribute, DOMMixin):
         Initializes an attribute declaration.
 
         :param node:          The IIR node this object was translated from.
-        :param identifier:    The identifier of a model entity.
+        :param identifier:    The attribute's identifier.
         :param subtype:       Reference to the attribute's subtype.
         :param documentation: The documentation comment associated with this declaration.
         """

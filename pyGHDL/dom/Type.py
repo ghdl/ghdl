@@ -107,7 +107,7 @@ class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
         Initializes an enumerated type definition.
 
         :param node:          The IIR node this object was translated from.
-        :param identifier:    The identifier of a model entity.
+        :param identifier:    The enumeration type's identifier.
         :param literals:      List of all enumeration literals, in declaration order.
         :param documentation: The documentation comment associated with this declaration.
         """
@@ -263,7 +263,7 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
         Initializes an array type definition.
 
         :param node:           The IIR node this object was translated from.
-        :param identifier:     The identifier of a model entity.
+        :param identifier:     The array type's identifier.
         :param indices:        List of all index ranges, one per dimension.
         :param elementSubtype: Reference to the subtype of the array's elements.
         :param documentation:  The documentation comment associated with this declaration.
@@ -380,7 +380,7 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
         Initializes a record type definition.
 
         :param node:          The IIR node this object was translated from.
-        :param identifier:    The identifier of a model entity.
+        :param identifier:    The record type's identifier.
         :param elements:      List of all element declarations, in declaration order.
         :param documentation: The documentation comment associated with this declaration.
         """
@@ -456,7 +456,7 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
         Initializes a protected type declaration.
 
         :param node:          The IIR node this object was translated from.
-        :param identifier:    The identifier of a model entity.
+        :param identifier:    The protected type's identifier.
         :param methods:       List of the protected type's methods, in declaration order.
         :param documentation: The documentation comment associated with this declaration.
         """
@@ -510,7 +510,7 @@ class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
         Initializes a protected type body.
 
         :param node:          The IIR node this object was translated from.
-        :param identifier:    The identifier of a model entity.
+        :param identifier:    The protected type body's identifier.
         :param declaredItems: Iterable of all items declared in this body.
         :param documentation: The documentation comment associated with this declaration.
         """
@@ -558,7 +558,7 @@ class AccessType(VHDLModel_AccessType, DOMMixin):
         Initializes an access type definition.
 
         :param node:              The IIR node this object was translated from.
-        :param identifier:        The identifier of a model entity.
+        :param identifier:        The access type's identifier.
         :param designatedSubtype: Reference to the subtype the access values designate.
         :param documentation:     The documentation comment associated with this declaration.
         """
@@ -602,7 +602,7 @@ class FileType(VHDLModel_FileType, DOMMixin):
         Initializes a file type definition.
 
         :param node:              The IIR node this object was translated from.
-        :param identifier:        The identifier of a model entity.
+        :param identifier:        The file type's identifier.
         :param designatedSubtype: Reference to the subtype of the values stored in the file.
         :param documentation:     The documentation comment associated with this declaration.
         """

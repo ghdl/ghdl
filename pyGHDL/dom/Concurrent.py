@@ -147,7 +147,7 @@ class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
         Initializes a component instantiation.
 
         :param instantiationNode:       The IIR node of the instantiation statement.
-        :param label:                   The label of a model entity.
+        :param label:                   The label of the component instantiation statement.
         :param componentSymbol:         Reference to the instantiated component.
         :param genericAssociationItems: List of all generic associations in the generic map aspect.
         :param portAssociationItems:    List of all port associations in the port map aspect.
@@ -181,7 +181,7 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         Initializes a direct entity instantiation.
 
         :param instantiationNode:       The IIR node of the instantiation statement.
-        :param label:                   The label of a model entity.
+        :param label:                   The label of the entity instantiation statement.
         :param entitySymbol:            Reference to the directly instantiated entity.
         :param architectureSymbol:      Reference to the selected architecture, if one was given.
         :param genericAssociationItems: List of all generic associations in the generic map aspect.
@@ -224,7 +224,7 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
         Initializes a configuration instantiation.
 
         :param instantiationNode:       The IIR node of the instantiation statement.
-        :param label:                   The label of a model entity.
+        :param label:                   The label of the configuration instantiation statement.
         :param configurationSymbol:     Reference to the instantiated configuration.
         :param genericAssociationItems: List of all generic associations in the generic map aspect.
         :param portAssociationItems:    List of all port associations in the port map aspect.
@@ -262,7 +262,7 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         Initializes a block statement.
 
         :param blockNode:               The IIR node of the block statement.
-        :param label:                   The label of a model entity.
+        :param label:                   The label of the block statement.
         :param genericItems:            List of all generics, in declaration order.
         :param genericAssociationItems: List of all generic associations in the generic map aspect.
         :param portItems:               List of all ports, in declaration order.
@@ -334,7 +334,7 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
         Initializes a process statement.
 
         :param processNode:     The IIR node of the process statement.
-        :param label:           The label of a model entity.
+        :param label:           The label of the process statement, or ``None`` if it has none.
         :param declaredItems:   List of all declared items in this sequential declaration region.
         :param statements:      List of all sequential statements in this construct.
         :param sensitivityList: List of all signal names in the sensitivity list, or ``None`` if none was given.
@@ -497,7 +497,7 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
         Initializes an if-generate statement.
 
         :param generateNode:  The IIR node of the generate statement.
-        :param label:         The label of a model entity.
+        :param label:         The label of the if-generate statement.
         :param ifBranch:      The mandatory ``if`` branch.
         :param elsifBranches: List of all ``elsif`` branches, in the order they were written.
         :param elseBranch:    The optional ``else`` branch, or ``None`` if none was given.
@@ -642,7 +642,7 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
         Initializes a case-generate statement.
 
         :param generateNode: The IIR node of the generate statement.
-        :param label:        The label of a model entity.
+        :param label:        The label of the case-generate statement.
         :param expression:   The expression being tested; it must be static.
         :param cases:        List of all alternatives, in the order they were written.
         """
@@ -745,7 +745,7 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
         Initializes a for-generate statement.
 
         :param generateNode:  The IIR node of the generate statement.
-        :param label:         The label of a model entity.
+        :param label:         The label of the for-generate statement.
         :param loopIndex:     The name of the generate loop's index.
         :param rng:           The range the generate loop iterates over.
         :param declaredItems: List of all declared items in this concurrent declaration region.
@@ -960,7 +960,7 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
         Initializes a simple concurrent signal assignment.
 
         :param assignmentNode: The IIR node of the assignment statement.
-        :param label:          The label of a model entity.
+        :param label:          The label of the concurrent signal assignment, or ``None`` if it has none.
         :param target:         Reference to the assignment's destination.
         :param waveform:       List of all waveform elements, in the order they were written.
         """
@@ -992,7 +992,7 @@ class ConcurrentConditionalSignalAssignment(VHDLModel_ConcurrentConditionalSigna
         Initializes a conditional concurrent signal assignment.
 
         :param assignmentNode:       The IIR node of the assignment statement.
-        :param label:                The label of a model entity.
+        :param label:                The label of the conditional concurrent signal assignment, or ``None`` if it has none.
         :param target:               Reference to the assignment's destination.
         :param conditionalWaveforms: All alternatives, in order.
         """
@@ -1026,7 +1026,7 @@ class ConcurrentSelectedSignalAssignment(VHDLModel_ConcurrentSelectedSignalAssig
         Initializes a selected concurrent signal assignment.
 
         :param assignmentNode:    The IIR node of the assignment statement.
-        :param label:             The label of a model entity.
+        :param label:             The label of the selected concurrent signal assignment, or ``None`` if it has none.
         :param target:            Reference to the assignment's destination.
         :param expression:        The selector expression.
         :param selectedWaveforms: All alternatives, in order.
@@ -1059,7 +1059,7 @@ class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
         Initializes a concurrent procedure call.
 
         :param callNode:                  The IIR node of the subprogram call.
-        :param label:                     The label of a model entity.
+        :param label:                     The label of the concurrent procedure call, or ``None`` if it has none.
         :param procedureName:             Reference to the called procedure.
         :param parameterAssociationItems: List of all parameter associations of the call.
         """
@@ -1096,7 +1096,7 @@ class ConcurrentAssertStatement(VHDLModel_ConcurrentAssertStatement, DOMMixin):
         :param condition:  The condition guarding this statement.
         :param message:    The reported message, or ``None`` if none was given.
         :param severity:   The reported severity level, or ``None`` if none was given.
-        :param label:      The label of a model entity.
+        :param label:      The label of the concurrent assertion statement, or ``None`` if it has none.
         """
         super().__init__(condition, message, severity, label)
         DOMMixin.__init__(self, assertNode)
