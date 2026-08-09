@@ -57,6 +57,19 @@ __license__ = ""
 
 class SourceAttribute(Attribute):
     def __call__(self, func):
+        """
+        Attaches the source selection command line arguments to the decorated handler method.
+
+        The attribute bundles the four arguments that select what to analyze:
+
+        * ``-f`` / ``--file`` - the filename to parse, can be used multiple times.
+        * ``-F`` / ``--files`` - a list of filenames to parse.
+        * ``-D`` / ``--directory`` - the directory to parse.
+        * ``-L`` / ``--library`` - the default library for files in the root directory.
+
+        :param func: The handler method to attach the command line arguments to.
+        :returns:    The same handler method, with the arguments attached.
+        """
         self._AppendAttribute(
             func,
             CommandLineArgument(
