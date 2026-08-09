@@ -168,7 +168,10 @@ class Design(VHDLModel_Design):
 
     def LoadDefaultLibraries(self, flavor: Nullable[IEEEFlavor] = None):
         """
-        Loads the ``std`` and ``ieee`` libraries into the design and records how long it took.
+        Loads the ``std`` and ``ieee`` libraries into the design.
+
+        How long this took is measured and kept in :attr:`_loadDefaultLibraryTime`. There is no property to read it
+        with; :file:`pyGHDL/cli/dom.py` reads the field directly.
 
         :param flavor: The IEEE library flavor to load, or ``None`` for the default.
         """
@@ -181,9 +184,11 @@ class Design(VHDLModel_Design):
 
     def Analyze(self):
         """
-        Analyzes all documents of this design and records how long it took.
+        Analyzes all documents of this design.
 
-        Warnings raised by *libghdl* during the analysis are collected in :attr:`_warnings`.
+        How long this took is measured and kept in :attr:`_analyzeTime`, and the warnings *libghdl* raised during the
+        analysis are collected in :attr:`_warnings`. Neither has a property to read it with, so both are read as
+        fields today.
         """
         t1 = time.perf_counter()
 
@@ -284,7 +289,7 @@ class Document(VHDLModel_Document):
         """
         Hands the given source code to *libghdl* under the name in :attr:`_filename`.
 
-        The source file itself is not read, which is how a document can be analyzed from a string.
+        The source file itself is not read, which is how a document can be analyzed *in-memory* from a string.
 
         :param sourceCode: The source code to analyze.
         """
