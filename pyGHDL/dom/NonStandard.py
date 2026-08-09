@@ -287,7 +287,9 @@ class Document(VHDLModel_Document):
         """
         Hands the given source code to *libghdl* under the name in :attr:`_filename`.
 
-        The source file itself is not read, which is how a document can be analyzed *in-memory* from a string.
+        .. hint::
+
+           The source file itself is not read, which is how a document can be analyzed *in-memory* from a string.
 
         :param sourceCode: The source code to analyze.
         """
