@@ -63,7 +63,7 @@ from pyGHDL.dom._Utils import GetNameOfNode
 class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
     def __init__(self, node: Iir) -> None:
         """
-        Initializes a null literal.
+        Initializes a :vhdlkw:`null` literal.
 
         :param node: The IIR node this object was translated from.
         """

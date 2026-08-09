@@ -115,7 +115,7 @@ class EntityAspectConfiguration(VHDLModel_EntityAspectConfiguration, DOMMixin):
 class EntityAspectOpen(VHDLModel_EntityAspectOpen, DOMMixin):
     def __init__(self, node: Iir) -> None:
         """
-        Initializes an entity aspect denoting ``open``.
+        Initializes an entity aspect denoting :vhdlkw:`open`.
 
         :param node: The IIR node this object was translated from.
         """
@@ -184,7 +184,7 @@ class BindingIndication(VHDLModel_BindingIndication, DOMMixin):
 class AllInstantiationList(VHDLModel_AllInstantiationList, DOMMixin):
     def __init__(self, node: Iir) -> None:
         """
-        Initializes an instantiation list denoting ``all``.
+        Initializes an instantiation list denoting :vhdlkw:`all`.
 
         :param node: The IIR node this object was translated from.
         """
@@ -196,7 +196,7 @@ class AllInstantiationList(VHDLModel_AllInstantiationList, DOMMixin):
 class OthersInstantiationList(VHDLModel_OthersInstantiationList, DOMMixin):
     def __init__(self, node: Iir) -> None:
         """
-        Initializes an instantiation list denoting ``others``.
+        Initializes an instantiation list denoting :vhdlkw:`others`.
 
         :param node: The IIR node this object was translated from.
         """

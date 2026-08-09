@@ -96,7 +96,7 @@ class IfBranch(VHDLModel_IfBranch, DOMMixin):
         statements: Iterable[SequentialStatement] = None,
     ) -> None:
         """
-        Initializes an if branch.
+        Initializes an :vhdlkw:`if` branch.
 
         :param branchNode: The IIR node of the branch this object represents.
         :param condition:  The condition under which this branch's statements are executed.
@@ -128,7 +128,7 @@ class ElsifBranch(VHDLModel_ElsifBranch, DOMMixin):
         statements: Iterable[SequentialStatement] = None,
     ) -> None:
         """
-        Initializes an ``elsif`` branch of an if statement.
+        Initializes an :vhdlkw:`elsif` branch of an :vhdlkw:`if` statement.
 
         :param branchNode: The IIR node of the branch this object represents.
         :param condition:  The condition under which this branch's statements are executed.
@@ -190,13 +190,13 @@ class IfStatement(VHDLModel_IfStatement, DOMMixin):
         label: str = None,
     ) -> None:
         """
-        Initializes an if statement.
+        Initializes an :vhdlkw:`if` statement.
 
-        :param ifNode:        The IIR node of the if statement.
-        :param ifBranch:      The mandatory ``if`` branch.
-        :param elsifBranches: List of all ``elsif`` branches, in the order they were written.
-        :param elseBranch:    The optional ``else`` branch, or ``None`` if none was given.
-        :param label:         The label of the if statement, or ``None`` if it has none.
+        :param ifNode:        The IIR node of the :vhdlkw:`if` statement.
+        :param ifBranch:      The mandatory :vhdlkw:`if` branch.
+        :param elsifBranches: List of all :vhdlkw:`elsif` branches, in the order they were written.
+        :param elseBranch:    The optional :vhdlkw:`else` branch, or ``None`` if none was given.
+        :param label:         The label of the :vhdlkw:`if` statement, or ``None`` if it has none.
         """
         super().__init__(ifBranch, elsifBranches, elseBranch, label)
         DOMMixin.__init__(self, ifNode)
@@ -285,9 +285,9 @@ class OthersCase(VHDLModel_OthersCase, DOMMixin):
         statements: Iterable[SequentialStatement] = None,
     ) -> None:
         """
-        Initializes an others case.
+        Initializes an :vhdlkw:`others` alternative.
 
-        :param caseNode:   The IIR node of the case statement.
+        :param caseNode:   The IIR node of the :vhdlkw:`case` statement.
         :param statements: List of all sequential statements in this construct.
         """
         super().__init__(statements)
@@ -317,10 +317,10 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
         cases: Iterable[SequentialCase],
     ) -> None:
         """
-        Initializes a case statement.
+        Initializes a :vhdlkw:`case` statement.
 
-        :param caseNode:   The IIR node of the case statement.
-        :param label:      The label of the case statement, or ``None`` if it has none.
+        :param caseNode:   The IIR node of the :vhdlkw:`case` statement.
+        :param label:      The label of the :vhdlkw:`case` statement, or ``None`` if it has none.
         :param expression: The expression being tested.
         :param cases:      List of all alternatives, in the order they were written.
         """
@@ -418,13 +418,13 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
         label: str = None,
     ) -> None:
         """
-        Initializes a for-loop statement.
+        Initializes a :vhdlkw:`for..loop` statement.
 
-        :param loopNode:   The IIR node of the loop statement.
+        :param loopNode:   The IIR node of the :vhdlkw:`loop` statement.
         :param loopIndex:  The name of the loop's index.
         :param rng:        The range the loop iterates over.
         :param statements: List of all sequential statements in this construct.
-        :param label:      The label of the for-loop statement, or ``None`` if it has none.
+        :param label:      The label of the :vhdlkw:`for..loop` statement, or ``None`` if it has none.
         """
         super().__init__(loopIndex, rng, statements, label)
         DOMMixin.__init__(self, loopNode)
@@ -458,12 +458,12 @@ class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
         label: str = None,
     ) -> None:
         """
-        Initializes a while-loop statement.
+        Initializes a :vhdlkw:`while..loop` statement.
 
-        :param loopNode:   The IIR node of the loop statement.
+        :param loopNode:   The IIR node of the :vhdlkw:`loop` statement.
         :param condition:  The condition tested before each iteration; the loop ends when it is false.
         :param statements: List of all sequential statements in this construct.
-        :param label:      The label of the while-loop statement, or ``None`` if it has none.
+        :param label:      The label of the :vhdlkw:`while..loop` statement, or ``None`` if it has none.
         """
         super().__init__(condition, statements, label)
         DOMMixin.__init__(self, loopNode)
@@ -650,7 +650,7 @@ class SelectedExpression(VHDLModel_SelectedExpression, DOMMixin):
 class OthersSelectedExpression(VHDLModel_OthersSelectedExpression, DOMMixin):
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
         """
-        Initializes an others selected expression.
+        Initializes an :vhdlkw:`others` selected expression.
 
         :param node:       The IIR node this object was translated from.
         :param expression: The value assigned for every unnamed choice.
@@ -956,12 +956,12 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
         label: str = None,
     ) -> None:
         """
-        Initializes a sequential report statement.
+        Initializes a sequential :vhdlkw:`report` statement.
 
-        :param reportNode: The IIR node of the report statement.
+        :param reportNode: The IIR node of the :vhdlkw:`report` statement.
         :param message:    The reported message, or ``None`` if none was given.
         :param severity:   The reported severity level, or ``None`` if none was given.
-        :param label:      The label of the report statement, or ``None`` if it has none.
+        :param label:      The label of the :vhdlkw:`report` statement, or ``None`` if it has none.
         """
         super().__init__(message, severity, label)
         DOMMixin.__init__(self, reportNode)
@@ -985,11 +985,11 @@ class ReturnStatement(VHDLModel_ReturnStatement, DOMMixin):
         label: str = None,
     ) -> None:
         """
-        Initializes a return statement.
+        Initializes a :vhdlkw:`return` statement.
 
-        :param returnNode:  The IIR node of the return statement.
+        :param returnNode:  The IIR node of the :vhdlkw:`return` statement.
         :param returnValue: The returned expression, or ``None`` for a procedure.
-        :param label:       The label of the return statement, or ``None`` if it has none.
+        :param label:       The label of the :vhdlkw:`return` statement, or ``None`` if it has none.
         """
         super().__init__(returnValue, label)
         DOMMixin.__init__(self, returnNode)
@@ -1011,10 +1011,10 @@ class NullStatement(VHDLModel_NullStatement, DOMMixin):
         label: str = None,
     ) -> None:
         """
-        Initializes a null statement.
+        Initializes a :vhdlkw:`null` statement.
 
-        :param waitNode: The IIR node of the wait statement.
-        :param label:    The label of the null statement, or ``None`` if it has none.
+        :param waitNode: The IIR node of the :vhdlkw:`wait` statement.
+        :param label:    The label of the :vhdlkw:`null` statement, or ``None`` if it has none.
         """
         super().__init__(label)
         DOMMixin.__init__(self, waitNode)
@@ -1029,9 +1029,9 @@ class NextStatement(VHDLModel_NextStatement, DOMMixin):
         label: str = None,
     ) -> None:
         """
-        Initializes a next statement.
+        Initializes a :vhdlkw:`next` statement.
 
-        :param exitNode:  The IIR node of the exit statement.
+        :param exitNode:  The IIR node of the :vhdlkw:`exit` statement.
         :param condition: The condition under which the iteration is skipped, or ``None`` if unconditional.
         :param label:     The label of the loop this statement applies to, or ``None`` for the enclosing loop.
         """
@@ -1056,9 +1056,9 @@ class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
         label: str = None,
     ) -> None:
         """
-        Initializes an exit statement.
+        Initializes an :vhdlkw:`exit` statement.
 
-        :param exitNode:  The IIR node of the exit statement.
+        :param exitNode:  The IIR node of the :vhdlkw:`exit` statement.
         :param condition: The condition under which the loop is left, or ``None`` if unconditional.
         :param label:     The label of the loop this statement applies to, or ``None`` for the enclosing loop.
         """
@@ -1085,13 +1085,13 @@ class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
         label: str = None,
     ) -> None:
         """
-        Initializes a wait statement.
+        Initializes a :vhdlkw:`wait` statement.
 
-        :param waitNode:        The IIR node of the wait statement.
-        :param sensitivityList: List of all signal names of the ``on`` clause, or ``None`` if none was given.
-        :param condition:       The condition of the ``until`` clause, or ``None`` if none was given.
-        :param timeout:         The timeout expression of the ``for`` clause, or ``None`` if none was given.
-        :param label:           The label of the wait statement, or ``None`` if it has none.
+        :param waitNode:        The IIR node of the :vhdlkw:`wait` statement.
+        :param sensitivityList: List of all signal names of the :vhdlkw:`on` clause, or ``None`` if none was given.
+        :param condition:       The condition of the :vhdlkw:`until` clause, or ``None`` if none was given.
+        :param timeout:         The timeout expression of the :vhdlkw:`for` clause, or ``None`` if none was given.
+        :param label:           The label of the :vhdlkw:`wait` statement, or ``None`` if it has none.
         """
         super().__init__(sensitivityList, condition, timeout, label)
         DOMMixin.__init__(self, waitNode)

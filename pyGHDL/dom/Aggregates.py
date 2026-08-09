@@ -113,7 +113,7 @@ class NamedAggregateElement(VHDLModel_NamedAggregateElement, DOMMixin):
 class OthersAggregateElement(VHDLModel_OthersAggregateElement, DOMMixin):
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
         """
-        Initializes an others aggregate element.
+        Initializes an :vhdlkw:`others` aggregate element.
 
         :param node:       The IIR node this object was translated from.
         :param expression: The expression this aggregate element supplies.

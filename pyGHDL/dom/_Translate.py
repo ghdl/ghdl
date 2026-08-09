@@ -409,7 +409,7 @@ def GetSubtypeIndicationFromNode(node: Iir, entity: str, name: str) -> Symbol:
        subtype indication is return by another getter.
 
     :param node:   The IIR node to get the subtype indication from.
-    :param entity: The entity kind the subtype indication is extracted from (e.g. ``constant``). Used in exception messages.
+    :param entity: The entity kind the subtype indication is extracted from (e.g. :vhdlkw:`constant`). Used in exception messages.
     :param name:   The entity's name the subtype indication is extracted from (e.g. ``BITS``). Used in exception messages.
     :returns:      A symbol representing a reference to a type/subtype and possible array or record constraints.
     """
@@ -423,7 +423,7 @@ def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: s
     Translate a subtype indication to a :class:`~pyVHDLModel.Symbol.Symbol`.
 
     :param subtypeIndicationNode: The subtype indication IIR node.
-    :param entity:                The entity kind the subtype indication is extracted from (e.g. ``constant``).
+    :param entity:                The entity kind the subtype indication is extracted from (e.g. :vhdlkw:`constant`).
                                   Used in exception messages.
     :param name:                  The entity's name the subtype indication is extracted from (e.g. ``BITS``).
                                   Used in exception messages.
@@ -586,11 +586,11 @@ def GetDiscreteRangeFromNode(discreteRangeNode: Iir, entity: str) -> Range:
     Everything but the explicit-bounds form becomes a
     :class:`~pyVHDLModel.Base.RangeFromName` wrapping the referenced symbol.
 
-    Shared by ``for ... loop`` statements, ``for ... generate`` statements and aggregate choices, which
+    Shared by :vhdlkw:`for..loop` statements, :vhdlkw:`for..generate` statements and aggregate choices, which
     all use the same VHDL ``discrete_range`` grammar rule.
 
     :param discreteRangeNode: The IIR node representing a discrete range.
-    :param entity:            The construct the discrete range appears in (e.g. ``for...loop``). Used in exception messages.
+    :param entity:            The construct the discrete range appears in (e.g. :vhdlkw:`for..loop`). Used in exception messages.
     :returns:                 The translated range.
     :raises DOMException:     If the IIR node's kind isn't a known discrete range.
     """
@@ -707,7 +707,7 @@ def GetOptionalExpressionFromNode(node: Iir) -> Nullable[ExpressionUnion]:
     """
     Like :func:`GetExpressionFromNode`, but for fields that may legitimately be absent (e.g. an
     optional condition on the final branch of a conditional assignment, or on an unconditional
-    ``exit``/``next`` statement) - returns ``None`` instead of translating when ``node`` is
+    :vhdlkw:`exit`/:vhdlkw:`next` statement) - returns ``None`` instead of translating when ``node`` is
     ``Null_Iir``, rather than requiring every call site to repeat that check.
 
     :param node: The IIR node representing an expression, or ``Null_Iir`` if absent.
@@ -948,11 +948,11 @@ def GetMapAspect(mapAspect: Iir, cls: Type, entity: str) -> Generator[Associatio
     Translates a generic, port or parameter map aspect to association items.
 
     An association without a formal part is positional, so its formal is ``None``. An association to
-    ``open`` yields an :class:`~pyGHDL.dom.Name.OpenName` as the actual.
+    :vhdlkw:`open` yields an :class:`~pyGHDL.dom.Name.OpenName` as the actual.
 
     :param mapAspect:     The IIR node starting the association chain of the map aspect.
     :param cls:           The association item class to instantiate, e.g. :class:`~pyGHDL.dom.Concurrent.PortAssociationItem`.
-    :param entity:        The kind of map aspect (``generic``, ``port``, ``parameter``). Used in exception messages.
+    :param entity:        The kind of map aspect (:vhdlkw:`generic`, :vhdlkw:`port`, :vhdlkw:`parameter`). Used in exception messages.
     :returns:             Generator yielding the translated association items, in source order.
     :raises DOMException: If an association element is neither by expression nor open.
     """

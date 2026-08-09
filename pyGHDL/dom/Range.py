@@ -56,7 +56,7 @@ class SimpleRange(VHDLModel_SimpleRange, DOMMixin):
         :param node:       The IIR node this object was translated from.
         :param leftBound:  The range's left bound.
         :param rightBound: The range's right bound.
-        :param direction:  The range's direction (``to`` or ``downto``).
+        :param direction:  The range's direction (:vhdlkw:`to` or :vhdlkw:`downto`).
         """
         super().__init__(leftBound, rightBound, direction)
         DOMMixin.__init__(self, node)

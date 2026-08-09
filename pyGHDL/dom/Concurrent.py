@@ -261,8 +261,8 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         """
         Initializes a block statement.
 
-        :param blockNode:               The IIR node of the block statement.
-        :param label:                   The label of the block statement.
+        :param blockNode:               The IIR node of the :vhdlkw:`block` statement.
+        :param label:                   The label of the :vhdlkw:`block` statement.
         :param genericItems:            List of all generics, in declaration order.
         :param genericAssociationItems: List of all generic associations in the generic map aspect.
         :param portItems:               List of all ports, in declaration order.
@@ -331,10 +331,10 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
         sensitivityList: Iterable[Symbol] = None,
     ) -> None:
         """
-        Initializes a process statement.
+        Initializes a :vhdlkw:`process` statement.
 
-        :param processNode:     The IIR node of the process statement.
-        :param label:           The label of the process statement, or ``None`` if it has none.
+        :param processNode:     The IIR node of the :vhdlkw:`process` statement.
+        :param label:           The label of the :vhdlkw:`process` statement, or ``None`` if it has none.
         :param declaredItems:   List of all declared items in this sequential declaration region.
         :param statements:      List of all sequential statements in this construct.
         :param sensitivityList: List of all signal names in the sensitivity list, or ``None`` if none was given.
@@ -375,7 +375,7 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch, DOMMixin):
         alternativeLabel: str = None,
     ) -> None:
         """
-        Initializes an if generate branch.
+        Initializes an :vhdlkw:`if..generate` branch.
 
         :param branchNode:       The IIR node of the branch this object represents.
         :param condition:        The condition under which this branch's declarations and statements are elaborated.
@@ -416,7 +416,7 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch, DOMMixin):
         alternativeLabel: str = None,
     ) -> None:
         """
-        Initializes an elsif generate branch.
+        Initializes an :vhdlkw:`elsif` branch of an :vhdlkw:`if..generate` statement.
 
         :param branchNode:       The IIR node of the branch this object represents.
         :param condition:        The condition under which this branch's declarations and statements are elaborated.
@@ -494,13 +494,13 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
         elseBranch: ElseGenerateBranch = None,
     ) -> None:
         """
-        Initializes an if-generate statement.
+        Initializes an :vhdlkw:`if..generate` statement.
 
         :param generateNode:  The IIR node of the generate statement.
-        :param label:         The label of the if-generate statement.
-        :param ifBranch:      The mandatory ``if`` branch.
-        :param elsifBranches: List of all ``elsif`` branches, in the order they were written.
-        :param elseBranch:    The optional ``else`` branch, or ``None`` if none was given.
+        :param label:         The label of the :vhdlkw:`if..generate` statement.
+        :param ifBranch:      The mandatory :vhdlkw:`if` branch.
+        :param elsifBranches: List of all :vhdlkw:`elsif` branches, in the order they were written.
+        :param elseBranch:    The optional :vhdlkw:`else` branch, or ``None`` if none was given.
         """
         super().__init__(label, ifBranch, elsifBranches, elseBranch)
         DOMMixin.__init__(self, generateNode)
@@ -602,9 +602,9 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
         alternativeLabel: str = None,
     ) -> None:
         """
-        Initializes an others generate case.
+        Initializes an :vhdlkw:`others` generate alternative.
 
-        :param caseNode:         The IIR node of the case statement.
+        :param caseNode:         The IIR node of the :vhdlkw:`case` statement.
         :param declaredItems:    List of all declared items in this concurrent declaration region.
         :param statements:       List of all concurrent statements in this construct.
         :param alternativeLabel: The alternative's label.
@@ -639,10 +639,10 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
         cases: Iterable[ConcurrentCase],
     ) -> None:
         """
-        Initializes a case-generate statement.
+        Initializes a :vhdlkw:`case..generate` statement.
 
         :param generateNode: The IIR node of the generate statement.
-        :param label:        The label of the case-generate statement.
+        :param label:        The label of the :vhdlkw:`case..generate` statement.
         :param expression:   The expression selecting the alternative.
         :param cases:        List of all alternatives, in the order they were written.
         """
@@ -742,10 +742,10 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
         parent: Nullable[ModelEntity] = None,
     ) -> None:
         """
-        Initializes a for-generate statement.
+        Initializes a :vhdlkw:`for..generate` statement.
 
         :param generateNode:  The IIR node of the generate statement.
-        :param label:         The label of the for-generate statement.
+        :param label:         The label of the :vhdlkw:`for..generate` statement.
         :param loopIndex:     The name of the generate loop's index.
         :param rng:           The range the generate loop iterates over.
         :param declaredItems: List of all declared items in this concurrent declaration region.
@@ -938,7 +938,7 @@ class SelectedWaveform(VHDLModel_SelectedWaveform, DOMMixin):
 class OthersSelectedWaveform(VHDLModel_OthersSelectedWaveform, DOMMixin):
     def __init__(self, node: Iir, waveform: Iterable[WaveformElement]) -> None:
         """
-        Initializes an others selected waveform.
+        Initializes an :vhdlkw:`others` selected waveform.
 
         :param node:     The IIR node this object was translated from.
         :param waveform: List of all waveform elements, in the order they were written.

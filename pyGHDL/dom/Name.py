@@ -200,7 +200,7 @@ class AttributeName(VHDLModel_AttributeName, DOMMixin):
 @export
 class AllName(VHDLModel_AllName, DOMMixin):
     """
-    Represents a keyword ``all`` following a name in dot-notation.
+    Represents a keyword :vhdlkw:`all` following a name in dot-notation.
 
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Name.AllName`.
 
@@ -214,7 +214,7 @@ class AllName(VHDLModel_AllName, DOMMixin):
 
     def __init__(self, node: Iir, prefix: VHDLModel_Name) -> None:
         """
-        Initializes an ``all`` name.
+        Initializes an :vhdlkw:`all` name.
 
         :param node:   The IIR node this object was translated from.
         :param prefix: Reference to the name's prefix, or ``None`` for a simple name.
@@ -226,7 +226,7 @@ class AllName(VHDLModel_AllName, DOMMixin):
 @export
 class OpenName(VHDLModel_OpenName, DOMMixin):
     """
-    Represents the keyword ``open`` used as a special name.
+    Represents the keyword :vhdlkw:`open` used as a special name.
 
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Name.OpenName`.
 
@@ -239,7 +239,7 @@ class OpenName(VHDLModel_OpenName, DOMMixin):
 
     def __init__(self, node: Iir) -> None:
         """
-        Initializes an ``open`` name.
+        Initializes an :vhdlkw:`open` name.
 
         :param node: The IIR node this object was translated from.
         """

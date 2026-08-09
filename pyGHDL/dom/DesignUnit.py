@@ -87,7 +87,7 @@ class LibraryClause(VHDLModel_LibraryClause, DOMMixin):
         """
         Initializes a library clause.
 
-        :param libraryNode: The IIR node of the library clause.
+        :param libraryNode: The IIR node of the :vhdlkw:`library` clause.
         :param symbols:     A list of symbols this reference references to.
         """
         super().__init__(symbols, None)
@@ -100,7 +100,7 @@ class UseClause(VHDLModel_UseClause, DOMMixin):
         """
         Initializes a use clause.
 
-        :param useNode: The IIR node of the use clause.
+        :param useNode: The IIR node of the :vhdlkw:`use` clause.
         :param symbols: A list of symbols this reference references to.
         """
         super().__init__(symbols, None)

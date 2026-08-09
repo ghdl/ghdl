@@ -60,7 +60,7 @@ class VerificationUnit(VHDLModel_VerificationUnit, DOMMixin):
         identifier: str,
     ) -> None:
         """
-        Initializes a PSL verification unit (``vunit``).
+        Initializes a PSL verification unit (:vhdlkw:`vunit`).
 
         :param node:       The IIR node this object was translated from.
         :param identifier: The verification unit's identifier.
@@ -85,7 +85,7 @@ class VerificationProperty(VHDLModel_VerificationProperty, DOMMixin):
         identifier: str,
     ) -> None:
         """
-        Initializes a PSL verification property (``vprop``).
+        Initializes a PSL verification property (:vhdlkw:`vprop`).
 
         :param node:       The IIR node this object was translated from.
         :param identifier: The verification property's identifier.
@@ -110,7 +110,7 @@ class VerificationMode(VHDLModel_VerificationMode, DOMMixin):
         identifier: str,
     ) -> None:
         """
-        Initializes a PSL verification mode (``vmode``).
+        Initializes a PSL verification mode (:vhdlkw:`vmode`).
 
         :param node:       The IIR node this object was translated from.
         :param identifier: The verification mode's identifier.

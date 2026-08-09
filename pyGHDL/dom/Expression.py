@@ -468,7 +468,7 @@ class NorExpression(VHDLModel_NorExpression, DOMMixin, _ParseBinaryExpressionMix
 class XorExpression(VHDLModel_XorExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a xor expression.
+        Initializes an :vhdlkw:`xor` expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -482,7 +482,7 @@ class XorExpression(VHDLModel_XorExpression, DOMMixin, _ParseBinaryExpressionMix
 class XnorExpression(VHDLModel_XnorExpression, DOMMixin, _ParseBinaryExpressionMixin):
     def __init__(self, node: Iir, left: ExpressionUnion, right: ExpressionUnion) -> None:
         """
-        Initializes a xnor expression.
+        Initializes an :vhdlkw:`xnor` expression.
 
         :param node:  The IIR node this object was translated from.
         :param left:  The expression left of the operator.
@@ -849,7 +849,7 @@ class QualifiedExpression(VHDLModel_QualifiedExpression, DOMMixin):
 class SubtypeAllocation(VHDLModel_SubtypeAllocation, DOMMixin):
     def __init__(self, node: Iir, subtype: Symbol) -> None:
         """
-        Initializes an allocation of a subtype via ``new``.
+        Initializes an allocation of a subtype via :vhdlkw:`new`.
 
         :param node:    The IIR node this object was translated from.
         :param subtype: Reference to the subtype being allocated.
