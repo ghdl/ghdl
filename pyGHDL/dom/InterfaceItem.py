@@ -36,7 +36,7 @@ This module implements derived interface item classes from :mod:`pyVHDLModel.Int
 
 from typing import List, Iterable
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Base import Mode, ExpressionUnion
 from pyVHDLModel.Symbol import Symbol
@@ -67,7 +67,12 @@ from pyGHDL.dom.Symbol import ModeViewSymbol, SimpleSubtypeSymbol
 
 
 @export
+@InheritDocString(VHDLModel_GenericConstantInterfaceItem, merge=True)
 class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.GenericConstantInterfaceItem`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -106,7 +111,12 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
 
 
 @export
+@InheritDocString(VHDLModel_GenericTypeInterfaceItem, merge=True)
 class GenericTypeInterfaceItem(VHDLModel_GenericTypeInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.GenericTypeInterfaceItem`.
+    """
+
     def __init__(self, node: Iir, identifier: str, documentation: str = None) -> None:
         """
         Initializes a type in a generic clause.
@@ -127,7 +137,12 @@ class GenericTypeInterfaceItem(VHDLModel_GenericTypeInterfaceItem, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_GenericPackageInterfaceItem, merge=True)
 class GenericPackageInterfaceItem(VHDLModel_GenericPackageInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.GenericPackageInterfaceItem`.
+    """
+
     def __init__(self, node: Iir, name: str, documentation: str = None) -> None:
         """
         Initializes a package in a generic clause.
@@ -148,7 +163,12 @@ class GenericPackageInterfaceItem(VHDLModel_GenericPackageInterfaceItem, DOMMixi
 
 
 @export
+@InheritDocString(VHDLModel_GenericProcedureInterfaceItem, merge=True)
 class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.GenericProcedureInterfaceItem`.
+    """
+
     def __init__(self, node: Iir, identifier: str, documentation: str = None) -> None:
         """
         Initializes a procedure in a generic clause.
@@ -169,7 +189,12 @@ class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOM
 
 
 @export
+@InheritDocString(VHDLModel_GenericFunctionInterfaceItem, merge=True)
 class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.GenericFunctionInterfaceItem`.
+    """
+
     def __init__(self, node: Iir, identifier: str, returnType: Symbol, documentation: str = None) -> None:
         """
         Initializes a function in a generic clause.
@@ -195,7 +220,12 @@ class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMi
 
 
 @export
+@InheritDocString(VHDLModel_PortSimpleSignalInterfaceItem, merge=True)
 class PortSimpleSignalInterfaceItem(VHDLModel_PortSimpleSignalInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.PortSimpleSignalInterfaceItem`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -284,7 +314,12 @@ class PortViewSignalInterfaceItem(VHDLModel_PortViewSignalInterfaceItem, DOMMixi
 
 
 @export
+@InheritDocString(VHDLModel_ParameterConstantInterfaceItem, merge=True)
 class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.ParameterConstantInterfaceItem`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -324,7 +359,12 @@ class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem, D
 
 
 @export
+@InheritDocString(VHDLModel_ParameterVariableInterfaceItem, merge=True)
 class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.ParameterVariableInterfaceItem`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -364,7 +404,12 @@ class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem, D
 
 
 @export
+@InheritDocString(VHDLModel_ParameterSimpleSignalInterfaceItem, merge=True)
 class ParameterSimpleSignalInterfaceItem(VHDLModel_ParameterSimpleSignalInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.ParameterSimpleSignalInterfaceItem`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -453,7 +498,12 @@ class ParameterViewSignalInterfaceItem(VHDLModel_ParameterViewSignalInterfaceIte
 
 
 @export
+@InheritDocString(VHDLModel_ParameterFileInterfaceItem, merge=True)
 class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.ParameterFileInterfaceItem`.
+    """
+
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
         """
         Initializes a file parameter of a subprogram.

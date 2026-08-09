@@ -43,7 +43,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional as Nullable, List
 
-from pyTooling.Decorators import export, readonly
+from pyTooling.Decorators import export, InheritDocString, readonly
 from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel import VHDLVersion, IEEEFlavor
@@ -88,7 +88,12 @@ from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationM
 
 
 @export
+@InheritDocString(VHDLModel_Design, merge=True)
 class Design(VHDLModel_Design):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Design`.
+    """
+
     _loadDefaultLibraryTime: Nullable[float]  #: :meth:`LoadDefaultLibraries` duration in seconds, ``None`` if unused.
     _analyzeTime: Nullable[float]  #: :meth:`Analyze` duration in seconds, ``None`` if not called.
     _vhdlVersion: VHDLVersion  #: The VHDL version this design is analyzed with.
@@ -180,12 +185,22 @@ class Design(VHDLModel_Design):
 
 
 @export
+@InheritDocString(VHDLModel_Library, merge=True)
 class Library(VHDLModel_Library):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Library`.
+    """
+
     pass
 
 
 @export
+@InheritDocString(VHDLModel_Document, merge=True)
 class Document(VHDLModel_Document):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Document`.
+    """
+
     _filename: Path  #: The source file this document was read from.
     _warnings: List  #: Warnings collected from *libghdl* while this document is translated.
 

@@ -116,6 +116,13 @@ class Position(metaclass=ExtendedType):
 
 @export
 class DOMMixin(metaclass=ExtendedType, mixin=True):
+    """
+    Mixin adding the originating IIR node and its source code position to a :mod:`pyGHDL.dom` object.
+
+    Every class in :mod:`pyGHDL.dom` that mirrors a pyVHDLModel class inherits this mixin, so a model
+    object can always be traced back to the node in *libghdl*'s tree it was translated from.
+    """
+
     _iirNode: Iir  #: The IIR node in *libghdl*'s tree this DOM object was translated from.
     _position: Position  #: The IIR node's position in the source file, resolved on first access and then cached.
 

@@ -34,7 +34,7 @@
 This module implements derived range classes from :mod:`pyVHDLModel.Base`.
 """
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Base import Direction, ExpressionUnion
 from pyVHDLModel.Base import RangeFromName as VHDLModel_RangeFromName
@@ -46,7 +46,12 @@ from pyGHDL.dom import DOMMixin
 
 
 @export
+@InheritDocString(VHDLModel_SimpleRange, merge=True)
 class SimpleRange(VHDLModel_SimpleRange, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Base.SimpleRange`.
+    """
+
     def __init__(
         self, node: Iir, leftBound: ExpressionUnion, rightBound: ExpressionUnion, direction: Direction
     ) -> None:
@@ -63,7 +68,12 @@ class SimpleRange(VHDLModel_SimpleRange, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_RangeFromName, merge=True)
 class RangeFromName(VHDLModel_RangeFromName, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Base.RangeFromName`.
+    """
+
     def __init__(self, node: Iir, symbol: Symbol) -> None:
         """
         Initialize a range denoted by a name.
