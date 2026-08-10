@@ -57,6 +57,10 @@ DateType = TypeVar("DateType", bound=c_int32)
 @export
 @unique
 class Iir_Kind(IntEnum):
+    """
+    The kind of an IIR node, which decides what its physical fields mean.
+    """
+
     Unused = 0
     Error = 1
     Design_File = 2
@@ -397,6 +401,10 @@ class Iir_Kind(IntEnum):
 
 @export
 class Iir_Kinds:
+    """
+    The ``Iir_Kinds_*`` subtype ranges, each listing the consecutive node kinds it covers.
+    """
+
     Library_Unit = [
         Iir_Kind.Foreign_Module,
         Iir_Kind.Entity_Declaration,
@@ -1208,6 +1216,10 @@ class Iir_Kinds:
 @export
 @unique
 class Iir_Mode(IntEnum):
+    """
+    The mode of an interface object: ``in``, ``out``, ``inout``, ``buffer`` or ``linkage``.
+    """
+
     Unknown_Mode = 0
     Linkage_Mode = 1
     Buffer_Mode = 2
@@ -1219,6 +1231,10 @@ class Iir_Mode(IntEnum):
 @export
 @unique
 class ScalarSize(IntEnum):
+    """
+    The storage size of a scalar type.
+    """
+
     Scalar_8 = 0
     Scalar_16 = 1
     Scalar_32 = 2
@@ -1228,6 +1244,10 @@ class ScalarSize(IntEnum):
 @export
 @unique
 class Iir_Staticness(IntEnum):
+    """
+    How static an expression or a type is: unknown, none, globally or locally.
+    """
+
     Unknown = 0
     PNone = 1
     Globally = 2
@@ -1237,6 +1257,10 @@ class Iir_Staticness(IntEnum):
 @export
 @unique
 class Iir_Constraint(IntEnum):
+    """
+    How constrained a composite type is: unconstrained, partially or fully.
+    """
+
     Unconstrained = 0
     Partially_Constrained = 1
     Fully_Constrained = 2
@@ -1245,6 +1269,10 @@ class Iir_Constraint(IntEnum):
 @export
 @unique
 class Iir_Delay_Mechanism(IntEnum):
+    """
+    The delay mechanism of a signal assignment: ``inertial`` or ``transport``.
+    """
+
     Inertial_Delay = 0
     Transport_Delay = 1
 
@@ -1252,6 +1280,10 @@ class Iir_Delay_Mechanism(IntEnum):
 @export
 @unique
 class DateStateType(IntEnum):
+    """
+    How far a design unit has been processed: extern, disk, parse or analyze.
+    """
+
     Extern = 0
     Disk = 1
     Parse = 2
@@ -1261,6 +1293,10 @@ class DateStateType(IntEnum):
 @export
 @unique
 class NumberBaseType(IntEnum):
+    """
+    The base a literal was written in.
+    """
+
     Base_None = 0
     Base_2 = 1
     Base_8 = 2
@@ -1271,6 +1307,10 @@ class NumberBaseType(IntEnum):
 @export
 @unique
 class Iir_Predefined(IntEnum):
+    """
+    The predefined operation an implicit subprogram implements.
+    """
+
     Error = 0
     Boolean_And = 1
     Boolean_Or = 2
@@ -2238,5140 +2278,8583 @@ def Get_Kind(node: Iir) -> IirKind:
 @export
 @BindToLibGHDL("vhdl__nodes__get_location")
 def Get_Location(node: Iir) -> LocationType:
-    """"""
+    """
+    Get the source location of a node.
+
+    :param node: The node to read the location of.
+    :returns:    The node's location, to be resolved with :mod:`pyGHDL.libghdl.files_map`.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_first_design_unit")
 def Get_First_Design_Unit(obj: Iir) -> Iir:
-    """"""
+    """
+    Design units contained in a design file.
+
+    :param obj: The node to read the ``First_Design_Unit`` field of.
+    :returns:   The node's ``First_Design_Unit`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_first_design_unit")
 def Set_First_Design_Unit(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Design units contained in a design file.
+
+    :param obj:   The node to write the ``First_Design_Unit`` field of.
+    :param value: The value to write into the ``First_Design_Unit`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_last_design_unit")
 def Get_Last_Design_Unit(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Last_Design_Unit`` field of.
+    :returns:   The node's ``Last_Design_Unit`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_last_design_unit")
 def Set_Last_Design_Unit(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Last_Design_Unit`` field of.
+    :param value: The value to write into the ``Last_Design_Unit`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_library_declaration")
 def Get_Library_Declaration(obj: Iir) -> Iir:
-    """"""
+    """
+    Library declaration of a library clause.  This is Forward_Ref as the dependency of the unit on the library is not
+    tracked.
+
+    :param obj: The node to read the ``Library_Declaration`` field of.
+    :returns:   The node's ``Library_Declaration`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_library_declaration")
 def Set_Library_Declaration(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Library declaration of a library clause.  This is Forward_Ref as the dependency of the unit on the library is not
+    tracked.
+
+    :param obj:   The node to write the ``Library_Declaration`` field of.
+    :param value: The value to write into the ``Library_Declaration`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_file_checksum")
 def Get_File_Checksum(obj: Iir) -> FileChecksumId:
-    """"""
+    """
+    File time stamp is the system time of the file last modification.
+
+    :param obj: The node to read the ``File_Checksum`` field of.
+    :returns:   The node's ``File_Checksum`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_file_checksum")
 def Set_File_Checksum(obj: Iir, value: FileChecksumId) -> None:
-    """"""
+    """
+    File time stamp is the system time of the file last modification.
+
+    :param obj:   The node to write the ``File_Checksum`` field of.
+    :param value: The value to write into the ``File_Checksum`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_analysis_time_stamp")
 def Get_Analysis_Time_Stamp(obj: Iir) -> TimeStampId:
-    """"""
+    """
+    Time stamp of the last analysis system time.
+
+    :param obj: The node to read the ``Analysis_Time_Stamp`` field of.
+    :returns:   The node's ``Analysis_Time_Stamp`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_analysis_time_stamp")
 def Set_Analysis_Time_Stamp(obj: Iir, value: TimeStampId) -> None:
-    """"""
+    """
+    Time stamp of the last analysis system time.
+
+    :param obj:   The node to write the ``Analysis_Time_Stamp`` field of.
+    :param value: The value to write into the ``Analysis_Time_Stamp`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_design_file_source")
 def Get_Design_File_Source(obj: Iir) -> SourceFileEntry:
-    """"""
+    """
+    :param obj: The node to read the ``Design_File_Source`` field of.
+    :returns:   The node's ``Design_File_Source`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_design_file_source")
 def Set_Design_File_Source(obj: Iir, value: SourceFileEntry) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Design_File_Source`` field of.
+    :param value: The value to write into the ``Design_File_Source`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_library")
 def Get_Library(obj: Iir) -> Iir:
-    """"""
+    """
+    The library which FILE belongs to.
+
+    :param obj: The node to read the ``Library`` field of.
+    :returns:   The node's ``Library`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_library")
 def Set_Library(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The library which FILE belongs to.
+
+    :param obj:   The node to write the ``Library`` field of.
+    :param value: The value to write into the ``Library`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_design_file_filename")
 def Get_Design_File_Filename(obj: Iir) -> NameId:
-    """"""
+    """
+    Identifier for the design file file name.
+
+    :param obj: The node to read the ``Design_File_Filename`` field of.
+    :returns:   The node's ``Design_File_Filename`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_design_file_filename")
 def Set_Design_File_Filename(obj: Iir, value: NameId) -> None:
-    """"""
+    """
+    Identifier for the design file file name.
+
+    :param obj:   The node to write the ``Design_File_Filename`` field of.
+    :param value: The value to write into the ``Design_File_Filename`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_design_file_directory")
 def Get_Design_File_Directory(obj: Iir) -> NameId:
-    """"""
+    """
+    Directory of a design file.
+
+    :param obj: The node to read the ``Design_File_Directory`` field of.
+    :returns:   The node's ``Design_File_Directory`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_design_file_directory")
 def Set_Design_File_Directory(obj: Iir, value: NameId) -> None:
-    """"""
+    """
+    Directory of a design file.
+
+    :param obj:   The node to write the ``Design_File_Directory`` field of.
+    :param value: The value to write into the ``Design_File_Directory`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_design_file")
 def Get_Design_File(obj: Iir) -> Iir:
-    """"""
+    """
+    The parent of a design unit is a design file.
+
+    :param obj: The node to read the ``Design_File`` field of.
+    :returns:   The node's ``Design_File`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_design_file")
 def Set_Design_File(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The parent of a design unit is a design file.
+
+    :param obj:   The node to write the ``Design_File`` field of.
+    :param value: The value to write into the ``Design_File`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_design_file_chain")
 def Get_Design_File_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Design files of a library.
+
+    :param obj: The node to read the ``Design_File_Chain`` field of.
+    :returns:   The node's ``Design_File_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_design_file_chain")
 def Set_Design_File_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Design files of a library.
+
+    :param obj:   The node to write the ``Design_File_Chain`` field of.
+    :param value: The value to write into the ``Design_File_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_library_directory")
 def Get_Library_Directory(obj: Iir) -> NameId:
-    """"""
+    """
+    System directory where the library is stored.
+
+    :param obj: The node to read the ``Library_Directory`` field of.
+    :returns:   The node's ``Library_Directory`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_library_directory")
 def Set_Library_Directory(obj: Iir, value: NameId) -> None:
-    """"""
+    """
+    System directory where the library is stored.
+
+    :param obj:   The node to write the ``Library_Directory`` field of.
+    :param value: The value to write into the ``Library_Directory`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_date")
 def Get_Date(obj: Iir) -> DateType:
-    """"""
+    """
+    Symbolic date, used to order design units in a library.
+
+    :param obj: The node to read the ``Date`` field of.
+    :returns:   The node's ``Date`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_date")
 def Set_Date(obj: Iir, value: DateType) -> None:
-    """"""
+    """
+    Symbolic date, used to order design units in a library.
+
+    :param obj:   The node to write the ``Date`` field of.
+    :param value: The value to write into the ``Date`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_context_items")
 def Get_Context_Items(obj: Iir) -> Iir:
-    """"""
+    """
+    Chain of context clauses.
+
+    :param obj: The node to read the ``Context_Items`` field of.
+    :returns:   The node's ``Context_Items`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_context_items")
 def Set_Context_Items(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Chain of context clauses.
+
+    :param obj:   The node to write the ``Context_Items`` field of.
+    :param value: The value to write into the ``Context_Items`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_dependence_list")
 def Get_Dependence_List(obj: Iir) -> Iir:
-    """"""
+    """
+    List of design units on which the design unit depends. There is an exception: the architecture of an entity aspect
+    (of a component instantiation) may not have been analyzed.  The Entity_Aspect_Entity is added to this list (instead
+    of the non-existing design unit).
+
+    :param obj: The node to read the ``Dependence_List`` field of.
+    :returns:   The node's ``Dependence_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_dependence_list")
 def Set_Dependence_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    List of design units on which the design unit depends. There is an exception: the architecture of an entity aspect
+    (of a component instantiation) may not have been analyzed.  The Entity_Aspect_Entity is added to this list (instead
+    of the non-existing design unit).
+
+    :param obj:   The node to write the ``Dependence_List`` field of.
+    :param value: The value to write into the ``Dependence_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_analysis_checks_list")
 def Get_Analysis_Checks_List(obj: Iir) -> Iir:
-    """"""
+    """
+    List of functions or sensitized processes whose analysis checks are not complete. These elements have direct or
+    indirect calls to procedure whose body is not yet analyzed.  Therefore, purity or wait checks are not complete.
+
+    :param obj: The node to read the ``Analysis_Checks_List`` field of.
+    :returns:   The node's ``Analysis_Checks_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_analysis_checks_list")
 def Set_Analysis_Checks_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    List of functions or sensitized processes whose analysis checks are not complete. These elements have direct or
+    indirect calls to procedure whose body is not yet analyzed.  Therefore, purity or wait checks are not complete.
+
+    :param obj:   The node to write the ``Analysis_Checks_List`` field of.
+    :param value: The value to write into the ``Analysis_Checks_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_date_state")
 def Get_Date_State(obj: Iir) -> DateStateType:
-    """"""
+    """
+    Whether the unit is on disk, parsed or analyzed.
+
+    :param obj: The node to read the ``Date_State`` field of.
+    :returns:   The node's ``Date_State`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_date_state")
 def Set_Date_State(obj: Iir, value: DateStateType) -> None:
-    """"""
+    """
+    Whether the unit is on disk, parsed or analyzed.
+
+    :param obj:   The node to write the ``Date_State`` field of.
+    :param value: The value to write into the ``Date_State`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_guarded_target_state")
 def Get_Guarded_Target_State(obj: Iir) -> TriStateType:
-    """"""
+    """
+    If TRUE, the target of the signal assignment is guarded. If FALSE, the target is not guarded. This is determined
+    during sem by examining the declaration(s) of the target (there may be several declarations in the case of a
+    aggregate target). If UNKNOWN, this is not determined at compile time but at run-time. This is the case for formal
+    signal interfaces of subprograms.
+
+    :param obj: The node to read the ``Guarded_Target_State`` field of.
+    :returns:   The node's ``Guarded_Target_State`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_guarded_target_state")
 def Set_Guarded_Target_State(obj: Iir, value: TriStateType) -> None:
-    """"""
+    """
+    If TRUE, the target of the signal assignment is guarded. If FALSE, the target is not guarded. This is determined
+    during sem by examining the declaration(s) of the target (there may be several declarations in the case of a
+    aggregate target). If UNKNOWN, this is not determined at compile time but at run-time. This is the case for formal
+    signal interfaces of subprograms.
+
+    :param obj:   The node to write the ``Guarded_Target_State`` field of.
+    :param value: The value to write into the ``Guarded_Target_State`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_library_unit")
 def Get_Library_Unit(obj: Iir) -> Iir:
-    """"""
+    """
+    Library unit of a design unit.
+
+    :param obj: The node to read the ``Library_Unit`` field of.
+    :returns:   The node's ``Library_Unit`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_library_unit")
 def Set_Library_Unit(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Library unit of a design unit.
+
+    :param obj:   The node to write the ``Library_Unit`` field of.
+    :param value: The value to write into the ``Library_Unit`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_hash_chain")
 def Get_Hash_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Every design unit is put in an hash table to find quickly found by its name.  This field is a single chain for
+    collisions.
+
+    :param obj: The node to read the ``Hash_Chain`` field of.
+    :returns:   The node's ``Hash_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_hash_chain")
 def Set_Hash_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Every design unit is put in an hash table to find quickly found by its name.  This field is a single chain for
+    collisions.
+
+    :param obj:   The node to write the ``Hash_Chain`` field of.
+    :param value: The value to write into the ``Hash_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_design_unit_source_pos")
 def Get_Design_Unit_Source_Pos(obj: Iir) -> SourcePtr:
-    """"""
+    """
+    Set the line and the offset in the line, only for the library manager. This is valid until the file is really loaded
+    in memory.  On loading, location will contain all this information.
+
+    :param obj: The node to read the ``Design_Unit_Source_Pos`` field of.
+    :returns:   The node's ``Design_Unit_Source_Pos`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_design_unit_source_pos")
 def Set_Design_Unit_Source_Pos(obj: Iir, value: SourcePtr) -> None:
-    """"""
+    """
+    Set the line and the offset in the line, only for the library manager. This is valid until the file is really loaded
+    in memory.  On loading, location will contain all this information.
+
+    :param obj:   The node to write the ``Design_Unit_Source_Pos`` field of.
+    :param value: The value to write into the ``Design_Unit_Source_Pos`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_design_unit_source_line")
 def Get_Design_Unit_Source_Line(obj: Iir) -> Int32:
-    """"""
+    """
+    :param obj: The node to read the ``Design_Unit_Source_Line`` field of.
+    :returns:   The node's ``Design_Unit_Source_Line`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_design_unit_source_line")
 def Set_Design_Unit_Source_Line(obj: Iir, value: Int32) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Design_Unit_Source_Line`` field of.
+    :param value: The value to write into the ``Design_Unit_Source_Line`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_design_unit_source_col")
 def Get_Design_Unit_Source_Col(obj: Iir) -> Int32:
-    """"""
+    """
+    :param obj: The node to read the ``Design_Unit_Source_Col`` field of.
+    :returns:   The node's ``Design_Unit_Source_Col`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_design_unit_source_col")
 def Set_Design_Unit_Source_Col(obj: Iir, value: Int32) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Design_Unit_Source_Col`` field of.
+    :param value: The value to write into the ``Design_Unit_Source_Col`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_value")
 def Get_Value(obj: Iir) -> Int64:
-    """"""
+    """
+    Value of an integer/physical literal.
+
+    :param obj: The node to read the ``Value`` field of.
+    :returns:   The node's ``Value`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_value")
 def Set_Value(obj: Iir, value: Int64) -> None:
-    """"""
+    """
+    Value of an integer/physical literal.
+
+    :param obj:   The node to write the ``Value`` field of.
+    :param value: The value to write into the ``Value`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_enum_pos")
 def Get_Enum_Pos(obj: Iir) -> Iir:
-    """"""
+    """
+    Position (same as lit_type'pos) of an enumeration literal.
+
+    :param obj: The node to read the ``Enum_Pos`` field of.
+    :returns:   The node's ``Enum_Pos`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_enum_pos")
 def Set_Enum_Pos(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Position (same as lit_type'pos) of an enumeration literal.
+
+    :param obj:   The node to write the ``Enum_Pos`` field of.
+    :param value: The value to write into the ``Enum_Pos`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_physical_literal")
 def Get_Physical_Literal(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Physical_Literal`` field of.
+    :returns:   The node's ``Physical_Literal`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_physical_literal")
 def Set_Physical_Literal(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Physical_Literal`` field of.
+    :param value: The value to write into the ``Physical_Literal`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_fp_value")
 def Get_Fp_Value(obj: Iir) -> Fp64:
-    """"""
+    """
+    Value of a floating point literal.
+
+    :param obj: The node to read the ``Fp_Value`` field of.
+    :returns:   The node's ``Fp_Value`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_fp_value")
 def Set_Fp_Value(obj: Iir, value: Fp64) -> None:
-    """"""
+    """
+    Value of a floating point literal.
+
+    :param obj:   The node to write the ``Fp_Value`` field of.
+    :param value: The value to write into the ``Fp_Value`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_simple_aggregate_list")
 def Get_Simple_Aggregate_List(obj: Iir) -> Iir:
-    """"""
+    """
+    List of elements of a simple aggregate.
+
+    :param obj: The node to read the ``Simple_Aggregate_List`` field of.
+    :returns:   The node's ``Simple_Aggregate_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_simple_aggregate_list")
 def Set_Simple_Aggregate_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    List of elements of a simple aggregate.
+
+    :param obj:   The node to write the ``Simple_Aggregate_List`` field of.
+    :param value: The value to write into the ``Simple_Aggregate_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_string8_id")
 def Get_String8_Id(obj: Iir) -> String8Id:
-    """"""
+    """
+    For a string literal: the string identifier.
+
+    :param obj: The node to read the ``String8_Id`` field of.
+    :returns:   The node's ``String8_Id`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_string8_id")
 def Set_String8_Id(obj: Iir, value: String8Id) -> None:
-    """"""
+    """
+    For a string literal: the string identifier.
+
+    :param obj:   The node to write the ``String8_Id`` field of.
+    :param value: The value to write into the ``String8_Id`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_string_length")
 def Get_String_Length(obj: Iir) -> Int32:
-    """"""
+    """
+    For a string literal: the string length.
+
+    :param obj: The node to read the ``String_Length`` field of.
+    :returns:   The node's ``String_Length`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_string_length")
 def Set_String_Length(obj: Iir, value: Int32) -> None:
-    """"""
+    """
+    For a string literal: the string length.
+
+    :param obj:   The node to write the ``String_Length`` field of.
+    :param value: The value to write into the ``String_Length`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_bit_string_base")
 def Get_Bit_String_Base(obj: Iir) -> NumberBaseType:
-    """"""
+    """
+    Base of a bit string.  Base_None for a string literal.
+
+    :param obj: The node to read the ``Bit_String_Base`` field of.
+    :returns:   The node's ``Bit_String_Base`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_bit_string_base")
 def Set_Bit_String_Base(obj: Iir, value: NumberBaseType) -> None:
-    """"""
+    """
+    Base of a bit string.  Base_None for a string literal.
+
+    :param obj:   The node to write the ``Bit_String_Base`` field of.
+    :param value: The value to write into the ``Bit_String_Base`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_signed")
 def Get_Has_Signed(obj: Iir) -> Boolean:
-    """"""
+    """
+    Bit string is signed.
+
+    :param obj: The node to read the ``Has_Signed`` field of.
+    :returns:   The node's ``Has_Signed`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_signed")
 def Set_Has_Signed(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Bit string is signed.
+
+    :param obj:   The node to write the ``Has_Signed`` field of.
+    :param value: The value to write into the ``Has_Signed`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_sign")
 def Get_Has_Sign(obj: Iir) -> Boolean:
-    """"""
+    """
+    Bit string sign is explicit
+
+    :param obj: The node to read the ``Has_Sign`` field of.
+    :returns:   The node's ``Has_Sign`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_sign")
 def Set_Has_Sign(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Bit string sign is explicit
+
+    :param obj:   The node to write the ``Has_Sign`` field of.
+    :param value: The value to write into the ``Has_Sign`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_length")
 def Get_Has_Length(obj: Iir) -> Boolean:
-    """"""
+    """
+    Bit string length is explicit
+
+    :param obj: The node to read the ``Has_Length`` field of.
+    :returns:   The node's ``Has_Length`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_length")
 def Set_Has_Length(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Bit string length is explicit
+
+    :param obj:   The node to write the ``Has_Length`` field of.
+    :param value: The value to write into the ``Has_Length`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_literal_length")
 def Get_Literal_Length(obj: Iir) -> Int32:
-    """"""
+    """
+    Length of the literal in characters.  Used for pretty print.  Set to 0 when doesn't come from the sources.
+
+    :param obj: The node to read the ``Literal_Length`` field of.
+    :returns:   The node's ``Literal_Length`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_literal_length")
 def Set_Literal_Length(obj: Iir, value: Int32) -> None:
-    """"""
+    """
+    Length of the literal in characters.  Used for pretty print.  Set to 0 when doesn't come from the sources.
+
+    :param obj:   The node to write the ``Literal_Length`` field of.
+    :param value: The value to write into the ``Literal_Length`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_literal_origin")
 def Get_Literal_Origin(obj: Iir) -> Iir:
-    """"""
+    """
+    The origin of a literal can be null_iir for a literal generated by the parser, or a node which was statically
+    evaluated to this literal. Such nodes are created by eval_expr.
+
+    :param obj: The node to read the ``Literal_Origin`` field of.
+    :returns:   The node's ``Literal_Origin`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_literal_origin")
 def Set_Literal_Origin(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The origin of a literal can be null_iir for a literal generated by the parser, or a node which was statically
+    evaluated to this literal. Such nodes are created by eval_expr.
+
+    :param obj:   The node to write the ``Literal_Origin`` field of.
+    :param value: The value to write into the ``Literal_Origin`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_range_origin")
 def Get_Range_Origin(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Range_Origin`` field of.
+    :returns:   The node's ``Range_Origin`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_range_origin")
 def Set_Range_Origin(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Range_Origin`` field of.
+    :param value: The value to write into the ``Range_Origin`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_literal_subtype")
 def Get_Literal_Subtype(obj: Iir) -> Iir:
-    """"""
+    """
+    Same as Type, but not marked as Ref.  This is when a literal has a subtype (such as string or bit_string) created
+    specially for the literal.
+
+    :param obj: The node to read the ``Literal_Subtype`` field of.
+    :returns:   The node's ``Literal_Subtype`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_literal_subtype")
 def Set_Literal_Subtype(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Same as Type, but not marked as Ref.  This is when a literal has a subtype (such as string or bit_string) created
+    specially for the literal.
+
+    :param obj:   The node to write the ``Literal_Subtype`` field of.
+    :param value: The value to write into the ``Literal_Subtype`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_allocator_subtype")
 def Get_Allocator_Subtype(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Allocator_Subtype`` field of.
+    :returns:   The node's ``Allocator_Subtype`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_allocator_subtype")
 def Set_Allocator_Subtype(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Allocator_Subtype`` field of.
+    :param value: The value to write into the ``Allocator_Subtype`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_entity_class")
 def Get_Entity_Class(obj: Iir) -> Tok:
-    """"""
+    """
+    :param obj: The node to read the ``Entity_Class`` field of.
+    :returns:   The node's ``Entity_Class`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_entity_class")
 def Set_Entity_Class(obj: Iir, value: Tok) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Entity_Class`` field of.
+    :param value: The value to write into the ``Entity_Class`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_entity_name_list")
 def Get_Entity_Name_List(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Entity_Name_List`` field of.
+    :returns:   The node's ``Entity_Name_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_entity_name_list")
 def Set_Entity_Name_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Entity_Name_List`` field of.
+    :param value: The value to write into the ``Entity_Name_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_attribute_designator")
 def Get_Attribute_Designator(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Attribute_Designator`` field of.
+    :returns:   The node's ``Attribute_Designator`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_attribute_designator")
 def Set_Attribute_Designator(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Attribute_Designator`` field of.
+    :param value: The value to write into the ``Attribute_Designator`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_attribute_specification_chain")
 def Get_Attribute_Specification_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Chain of attribute specifications.  This is used only during sem, to check that no named entity of a given class
+    appear after an attr. spec. with the entity name list OTHERS or ALL.
+
+    :param obj: The node to read the ``Attribute_Specification_Chain`` field of.
+    :returns:   The node's ``Attribute_Specification_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_attribute_specification_chain")
 def Set_Attribute_Specification_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Chain of attribute specifications.  This is used only during sem, to check that no named entity of a given class
+    appear after an attr. spec. with the entity name list OTHERS or ALL.
+
+    :param obj:   The node to write the ``Attribute_Specification_Chain`` field of.
+    :param value: The value to write into the ``Attribute_Specification_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_attribute_specification")
 def Get_Attribute_Specification(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Attribute_Specification`` field of.
+    :returns:   The node's ``Attribute_Specification`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_attribute_specification")
 def Set_Attribute_Specification(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Attribute_Specification`` field of.
+    :param value: The value to write into the ``Attribute_Specification`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_static_attribute_flag")
 def Get_Static_Attribute_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    True for attributes on entity, configuration and architecture.  They are expected to be read from anywhere so the
+    value is expected to be locally static, but this is not followed by many users and implementations.
+
+    :param obj: The node to read the ``Static_Attribute_Flag`` field of.
+    :returns:   The node's ``Static_Attribute_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_static_attribute_flag")
 def Set_Static_Attribute_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True for attributes on entity, configuration and architecture.  They are expected to be read from anywhere so the
+    value is expected to be locally static, but this is not followed by many users and implementations.
+
+    :param obj:   The node to write the ``Static_Attribute_Flag`` field of.
+    :param value: The value to write into the ``Static_Attribute_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_signal_list")
 def Get_Signal_List(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Signal_List`` field of.
+    :returns:   The node's ``Signal_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_signal_list")
 def Set_Signal_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Signal_List`` field of.
+    :param value: The value to write into the ``Signal_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_quantity_list")
 def Get_Quantity_List(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Quantity_List`` field of.
+    :returns:   The node's ``Quantity_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_quantity_list")
 def Set_Quantity_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Quantity_List`` field of.
+    :param value: The value to write into the ``Quantity_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_designated_entity")
 def Get_Designated_Entity(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Designated_Entity`` field of.
+    :returns:   The node's ``Designated_Entity`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_designated_entity")
 def Set_Designated_Entity(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Designated_Entity`` field of.
+    :param value: The value to write into the ``Designated_Entity`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_formal")
 def Get_Formal(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Formal`` field of.
+    :returns:   The node's ``Formal`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_formal")
 def Set_Formal(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Formal`` field of.
+    :param value: The value to write into the ``Formal`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_actual")
 def Get_Actual(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Actual`` field of.
+    :returns:   The node's ``Actual`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_actual")
 def Set_Actual(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Actual`` field of.
+    :param value: The value to write into the ``Actual`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_open_actual")
 def Get_Open_Actual(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Open_Actual`` field of.
+    :returns:   The node's ``Open_Actual`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_open_actual")
 def Set_Open_Actual(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Open_Actual`` field of.
+    :param value: The value to write into the ``Open_Actual`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_actual_conversion")
 def Get_Actual_Conversion(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Actual_Conversion`` field of.
+    :returns:   The node's ``Actual_Conversion`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_actual_conversion")
 def Set_Actual_Conversion(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Actual_Conversion`` field of.
+    :param value: The value to write into the ``Actual_Conversion`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_formal_conversion")
 def Get_Formal_Conversion(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Formal_Conversion`` field of.
+    :returns:   The node's ``Formal_Conversion`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_formal_conversion")
 def Set_Formal_Conversion(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Formal_Conversion`` field of.
+    :param value: The value to write into the ``Formal_Conversion`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_whole_association_flag")
 def Get_Whole_Association_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    This flag is set when the formal is associated in whole (ie, not individually).
+
+    :param obj: The node to read the ``Whole_Association_Flag`` field of.
+    :returns:   The node's ``Whole_Association_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_whole_association_flag")
 def Set_Whole_Association_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    This flag is set when the formal is associated in whole (ie, not individually).
+
+    :param obj:   The node to write the ``Whole_Association_Flag`` field of.
+    :param value: The value to write into the ``Whole_Association_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_collapse_signal_flag")
 def Get_Collapse_Signal_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    This flag is set when the formal signal can be the actual signal.  In this case, the formal signal is not created,
+    and the actual is shared. This is the signal collapsing optimisation.
+
+    :param obj: The node to read the ``Collapse_Signal_Flag`` field of.
+    :returns:   The node's ``Collapse_Signal_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_collapse_signal_flag")
 def Set_Collapse_Signal_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    This flag is set when the formal signal can be the actual signal.  In this case, the formal signal is not created,
+    and the actual is shared. This is the signal collapsing optimisation.
+
+    :param obj:   The node to write the ``Collapse_Signal_Flag`` field of.
+    :param value: The value to write into the ``Collapse_Signal_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_artificial_flag")
 def Get_Artificial_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Set when the node was artificially created, eg by canon. Currently used only by association_element_open.
+
+    :param obj: The node to read the ``Artificial_Flag`` field of.
+    :returns:   The node's ``Artificial_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_artificial_flag")
 def Set_Artificial_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Set when the node was artificially created, eg by canon. Currently used only by association_element_open.
+
+    :param obj:   The node to write the ``Artificial_Flag`` field of.
+    :param value: The value to write into the ``Artificial_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_open_flag")
 def Get_Open_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    This flag is set for a very short time during the check that no in port is unconnected.
+
+    :param obj: The node to read the ``Open_Flag`` field of.
+    :returns:   The node's ``Open_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_open_flag")
 def Set_Open_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    This flag is set for a very short time during the check that no in port is unconnected.
+
+    :param obj:   The node to write the ``Open_Flag`` field of.
+    :param value: The value to write into the ``Open_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_after_drivers_flag")
 def Get_After_Drivers_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    This flag is set by trans_analyze if there is a projected waveform assignment in the process.
+
+    :param obj: The node to read the ``After_Drivers_Flag`` field of.
+    :returns:   The node's ``After_Drivers_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_after_drivers_flag")
 def Set_After_Drivers_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    This flag is set by trans_analyze if there is a projected waveform assignment in the process.
+
+    :param obj:   The node to write the ``After_Drivers_Flag`` field of.
+    :param value: The value to write into the ``After_Drivers_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_we_value")
 def Get_We_Value(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``We_Value`` field of.
+    :returns:   The node's ``We_Value`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_we_value")
 def Set_We_Value(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``We_Value`` field of.
+    :param value: The value to write into the ``We_Value`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_time")
 def Get_Time(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Time`` field of.
+    :returns:   The node's ``Time`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_time")
 def Set_Time(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Time`` field of.
+    :param value: The value to write into the ``Time`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_associated_expr")
 def Get_Associated_Expr(obj: Iir) -> Iir:
-    """"""
+    """
+    Node associated with a choice.
+
+    :param obj: The node to read the ``Associated_Expr`` field of.
+    :returns:   The node's ``Associated_Expr`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_associated_expr")
 def Set_Associated_Expr(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Node associated with a choice.
+
+    :param obj:   The node to write the ``Associated_Expr`` field of.
+    :param value: The value to write into the ``Associated_Expr`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_associated_block")
 def Get_Associated_Block(obj: Iir) -> Iir:
-    """"""
+    """
+    Node associated with a choice.
+
+    :param obj: The node to read the ``Associated_Block`` field of.
+    :returns:   The node's ``Associated_Block`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_associated_block")
 def Set_Associated_Block(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Node associated with a choice.
+
+    :param obj:   The node to write the ``Associated_Block`` field of.
+    :param value: The value to write into the ``Associated_Block`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_associated_chain")
 def Get_Associated_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Chain associated with a choice.
+
+    :param obj: The node to read the ``Associated_Chain`` field of.
+    :returns:   The node's ``Associated_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_associated_chain")
 def Set_Associated_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Chain associated with a choice.
+
+    :param obj:   The node to write the ``Associated_Chain`` field of.
+    :param value: The value to write into the ``Associated_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_choice_name")
 def Get_Choice_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Choice_Name`` field of.
+    :returns:   The node's ``Choice_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_choice_name")
 def Set_Choice_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Choice_Name`` field of.
+    :param value: The value to write into the ``Choice_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_choice_expression")
 def Get_Choice_Expression(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Choice_Expression`` field of.
+    :returns:   The node's ``Choice_Expression`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_choice_expression")
 def Set_Choice_Expression(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Choice_Expression`` field of.
+    :param value: The value to write into the ``Choice_Expression`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_choice_range")
 def Get_Choice_Range(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Choice_Range`` field of.
+    :returns:   The node's ``Choice_Range`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_choice_range")
 def Set_Choice_Range(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Choice_Range`` field of.
+    :param value: The value to write into the ``Choice_Range`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_same_alternative_flag")
 def Get_Same_Alternative_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Set when a choice belongs to the same alternative as the previous one.
+
+    :param obj: The node to read the ``Same_Alternative_Flag`` field of.
+    :returns:   The node's ``Same_Alternative_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_same_alternative_flag")
 def Set_Same_Alternative_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Set when a choice belongs to the same alternative as the previous one.
+
+    :param obj:   The node to write the ``Same_Alternative_Flag`` field of.
+    :param value: The value to write into the ``Same_Alternative_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_element_type_flag")
 def Get_Element_Type_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    For one-dimensional aggregates: the value associated of the type of the element (vs of the type of the aggregate).
+    Always true before vhdl-08.
+
+    :param obj: The node to read the ``Element_Type_Flag`` field of.
+    :returns:   The node's ``Element_Type_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_element_type_flag")
 def Set_Element_Type_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    For one-dimensional aggregates: the value associated of the type of the element (vs of the type of the aggregate).
+    Always true before vhdl-08.
+
+    :param obj:   The node to write the ``Element_Type_Flag`` field of.
+    :param value: The value to write into the ``Element_Type_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_architecture")
 def Get_Architecture(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Architecture`` field of.
+    :returns:   The node's ``Architecture`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_architecture")
 def Set_Architecture(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Architecture`` field of.
+    :param value: The value to write into the ``Architecture`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_block_specification")
 def Get_Block_Specification(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Block_Specification`` field of.
+    :returns:   The node's ``Block_Specification`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_block_specification")
 def Set_Block_Specification(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Block_Specification`` field of.
+    :param value: The value to write into the ``Block_Specification`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_prev_block_configuration")
 def Get_Prev_Block_Configuration(obj: Iir) -> Iir:
-    """"""
+    """
+    Return the link of the previous block_configuration of a block_configuration. This single linked list is used to
+    list all the block_configuration that configuration the same block (which can only be an iterative generate
+    statement). All elements of this list must belong to the same block configuration. The order is not important.
+
+    :param obj: The node to read the ``Prev_Block_Configuration`` field of.
+    :returns:   The node's ``Prev_Block_Configuration`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_prev_block_configuration")
 def Set_Prev_Block_Configuration(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Return the link of the previous block_configuration of a block_configuration. This single linked list is used to
+    list all the block_configuration that configuration the same block (which can only be an iterative generate
+    statement). All elements of this list must belong to the same block configuration. The order is not important.
+
+    :param obj:   The node to write the ``Prev_Block_Configuration`` field of.
+    :param value: The value to write into the ``Prev_Block_Configuration`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_configuration_item_chain")
 def Get_Configuration_Item_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Configuration_Item_Chain`` field of.
+    :returns:   The node's ``Configuration_Item_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_configuration_item_chain")
 def Set_Configuration_Item_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Configuration_Item_Chain`` field of.
+    :param value: The value to write into the ``Configuration_Item_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_attribute_value_chain")
 def Get_Attribute_Value_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Chain of attribute values for declared items. To be used with Get/Set_Value_Chain. There is no order, therefore, a
+    new attribute value may be always prepended.
+
+    :param obj: The node to read the ``Attribute_Value_Chain`` field of.
+    :returns:   The node's ``Attribute_Value_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_attribute_value_chain")
 def Set_Attribute_Value_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Chain of attribute values for declared items. To be used with Get/Set_Value_Chain. There is no order, therefore, a
+    new attribute value may be always prepended.
+
+    :param obj:   The node to write the ``Attribute_Value_Chain`` field of.
+    :param value: The value to write into the ``Attribute_Value_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_spec_chain")
 def Get_Spec_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Next attribute value in the attribute specification chain (of attribute value). FIXME: should be a Chain.
+
+    :param obj: The node to read the ``Spec_Chain`` field of.
+    :returns:   The node's ``Spec_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_spec_chain")
 def Set_Spec_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Next attribute value in the attribute specification chain (of attribute value). FIXME: should be a Chain.
+
+    :param obj:   The node to write the ``Spec_Chain`` field of.
+    :param value: The value to write into the ``Spec_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_value_chain")
 def Get_Value_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Next attribute value in the parent chain (of attribute value).
+
+    :param obj: The node to read the ``Value_Chain`` field of.
+    :returns:   The node's ``Value_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_value_chain")
 def Set_Value_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Next attribute value in the parent chain (of attribute value).
+
+    :param obj:   The node to write the ``Value_Chain`` field of.
+    :param value: The value to write into the ``Value_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_attribute_value_spec_chain")
 def Get_Attribute_Value_Spec_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Chain of attribute values for attribute specification. To be used with Get/Set_Spec_Chain.
+
+    :param obj: The node to read the ``Attribute_Value_Spec_Chain`` field of.
+    :returns:   The node's ``Attribute_Value_Spec_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_attribute_value_spec_chain")
 def Set_Attribute_Value_Spec_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Chain of attribute values for attribute specification. To be used with Get/Set_Spec_Chain.
+
+    :param obj:   The node to write the ``Attribute_Value_Spec_Chain`` field of.
+    :param value: The value to write into the ``Attribute_Value_Spec_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_entity_name")
 def Get_Entity_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    The entity name for an architecture or a configuration.
+
+    :param obj: The node to read the ``Entity_Name`` field of.
+    :returns:   The node's ``Entity_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_entity_name")
 def Set_Entity_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The entity name for an architecture or a configuration.
+
+    :param obj:   The node to write the ``Entity_Name`` field of.
+    :param value: The value to write into the ``Entity_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_package")
 def Get_Package(obj: Iir) -> Iir:
-    """"""
+    """
+    The package declaration corresponding to the body.
+
+    :param obj: The node to read the ``Package`` field of.
+    :returns:   The node's ``Package`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_package")
 def Set_Package(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The package declaration corresponding to the body.
+
+    :param obj:   The node to write the ``Package`` field of.
+    :param value: The value to write into the ``Package`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_package_body")
 def Get_Package_Body(obj: Iir) -> Iir:
-    """"""
+    """
+    The package body corresponding to the package declaration.
+
+    :param obj: The node to read the ``Package_Body`` field of.
+    :returns:   The node's ``Package_Body`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_package_body")
 def Set_Package_Body(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The package body corresponding to the package declaration.
+
+    :param obj:   The node to write the ``Package_Body`` field of.
+    :param value: The value to write into the ``Package_Body`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_instance_package_body")
 def Get_Instance_Package_Body(obj: Iir) -> Iir:
-    """"""
+    """
+    The package body corresponding to the package declaration.
+
+    :param obj: The node to read the ``Instance_Package_Body`` field of.
+    :returns:   The node's ``Instance_Package_Body`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_instance_package_body")
 def Set_Instance_Package_Body(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The package body corresponding to the package declaration.
+
+    :param obj:   The node to write the ``Instance_Package_Body`` field of.
+    :param value: The value to write into the ``Instance_Package_Body`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_owned_instance_package_body")
 def Get_Owned_Instance_Package_Body(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Owned_Instance_Package_Body`` field of.
+    :returns:   The node's ``Owned_Instance_Package_Body`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_owned_instance_package_body")
 def Set_Owned_Instance_Package_Body(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Owned_Instance_Package_Body`` field of.
+    :param value: The value to write into the ``Owned_Instance_Package_Body`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_instance_subprogram_body")
 def Get_Instance_Subprogram_Body(obj: Iir) -> Iir:
-    """"""
+    """
+    The subprogram body corresponding to the subprogram declaration.
+
+    :param obj: The node to read the ``Instance_Subprogram_Body`` field of.
+    :returns:   The node's ``Instance_Subprogram_Body`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_instance_subprogram_body")
 def Set_Instance_Subprogram_Body(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The subprogram body corresponding to the subprogram declaration.
+
+    :param obj:   The node to write the ``Instance_Subprogram_Body`` field of.
+    :param value: The value to write into the ``Instance_Subprogram_Body`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_need_body")
 def Get_Need_Body(obj: Iir) -> Boolean:
-    """"""
+    """
+    :param obj: The node to read the ``Need_Body`` field of.
+    :returns:   The node's ``Need_Body`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_need_body")
 def Set_Need_Body(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Need_Body`` field of.
+    :param value: The value to write into the ``Need_Body`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_immediate_body_flag")
 def Get_Immediate_Body_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    :param obj: The node to read the ``Immediate_Body_Flag`` field of.
+    :returns:   The node's ``Immediate_Body_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_immediate_body_flag")
 def Set_Immediate_Body_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Immediate_Body_Flag`` field of.
+    :param value: The value to write into the ``Immediate_Body_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_macro_expand_flag")
 def Get_Macro_Expand_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    :param obj: The node to read the ``Macro_Expand_Flag`` field of.
+    :returns:   The node's ``Macro_Expand_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_macro_expand_flag")
 def Set_Macro_Expand_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Macro_Expand_Flag`` field of.
+    :param value: The value to write into the ``Macro_Expand_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_need_instance_bodies")
 def Get_Need_Instance_Bodies(obj: Iir) -> Boolean:
-    """"""
+    """
+    :param obj: The node to read the ``Need_Instance_Bodies`` field of.
+    :returns:   The node's ``Need_Instance_Bodies`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_need_instance_bodies")
 def Set_Need_Instance_Bodies(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Need_Instance_Bodies`` field of.
+    :param value: The value to write into the ``Need_Instance_Bodies`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_hierarchical_name")
 def Get_Hierarchical_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Hierarchical_Name`` field of.
+    :returns:   The node's ``Hierarchical_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_hierarchical_name")
 def Set_Hierarchical_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Hierarchical_Name`` field of.
+    :param value: The value to write into the ``Hierarchical_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_vunit_item_chain")
 def Get_Vunit_Item_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Vunit_Item_Chain`` field of.
+    :returns:   The node's ``Vunit_Item_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_vunit_item_chain")
 def Set_Vunit_Item_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Vunit_Item_Chain`` field of.
+    :param value: The value to write into the ``Vunit_Item_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_bound_vunit_chain")
 def Get_Bound_Vunit_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Chain of vunit declarations bound to an entity or an architecture.
+
+    :param obj: The node to read the ``Bound_Vunit_Chain`` field of.
+    :returns:   The node's ``Bound_Vunit_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_bound_vunit_chain")
 def Set_Bound_Vunit_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Chain of vunit declarations bound to an entity or an architecture.
+
+    :param obj:   The node to write the ``Bound_Vunit_Chain`` field of.
+    :param value: The value to write into the ``Bound_Vunit_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_verification_block_configuration")
 def Get_Verification_Block_Configuration(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Verification_Block_Configuration`` field of.
+    :returns:   The node's ``Verification_Block_Configuration`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_verification_block_configuration")
 def Set_Verification_Block_Configuration(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Verification_Block_Configuration`` field of.
+    :param value: The value to write into the ``Verification_Block_Configuration`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_block_configuration")
 def Get_Block_Configuration(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Block_Configuration`` field of.
+    :returns:   The node's ``Block_Configuration`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_block_configuration")
 def Set_Block_Configuration(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Block_Configuration`` field of.
+    :param value: The value to write into the ``Block_Configuration`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_concurrent_statement_chain")
 def Get_Concurrent_Statement_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Concurrent_Statement_Chain`` field of.
+    :returns:   The node's ``Concurrent_Statement_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_concurrent_statement_chain")
 def Set_Concurrent_Statement_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Concurrent_Statement_Chain`` field of.
+    :param value: The value to write into the ``Concurrent_Statement_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_chain")
 def Get_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Chain`` field of.
+    :returns:   The node's ``Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_chain")
 def Set_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Chain`` field of.
+    :param value: The value to write into the ``Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_port_chain")
 def Get_Port_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Port_Chain`` field of.
+    :returns:   The node's ``Port_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_port_chain")
 def Set_Port_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Port_Chain`` field of.
+    :param value: The value to write into the ``Port_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_generic_chain")
 def Get_Generic_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Generic_Chain`` field of.
+    :returns:   The node's ``Generic_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_generic_chain")
 def Set_Generic_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Generic_Chain`` field of.
+    :param value: The value to write into the ``Generic_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_type")
 def Get_Type(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Type`` field of.
+    :returns:   The node's ``Type`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_type")
 def Set_Type(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Type`` field of.
+    :param value: The value to write into the ``Type`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_subtype_indication")
 def Get_Subtype_Indication(obj: Iir) -> Iir:
-    """"""
+    """
+    The subtype indication of a declaration.  If several declarations share the same subtype_indication like in:
+
+      variable a, b : integer := 5;
+    then only the first declaration is the owner of the subtype_indication.
+
+    :param obj: The node to read the ``Subtype_Indication`` field of.
+    :returns:   The node's ``Subtype_Indication`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_subtype_indication")
 def Set_Subtype_Indication(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The subtype indication of a declaration.  If several declarations share the same subtype_indication like in:
+
+      variable a, b : integer := 5;
+    then only the first declaration is the owner of the subtype_indication.
+
+    :param obj:   The node to write the ``Subtype_Indication`` field of.
+    :param value: The value to write into the ``Subtype_Indication`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_discrete_range")
 def Get_Discrete_Range(obj: Iir) -> Iir:
-    """"""
+    """
+    Discrete range of an iterator.  During analysis, a subtype indication is created from this range.
+
+    :param obj: The node to read the ``Discrete_Range`` field of.
+    :returns:   The node's ``Discrete_Range`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_discrete_range")
 def Set_Discrete_Range(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Discrete range of an iterator.  During analysis, a subtype indication is created from this range.
+
+    :param obj:   The node to write the ``Discrete_Range`` field of.
+    :param value: The value to write into the ``Discrete_Range`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_type_definition")
 def Get_Type_Definition(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Type_Definition`` field of.
+    :returns:   The node's ``Type_Definition`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_type_definition")
 def Set_Type_Definition(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Type_Definition`` field of.
+    :param value: The value to write into the ``Type_Definition`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_subtype_definition")
 def Get_Subtype_Definition(obj: Iir) -> Iir:
-    """"""
+    """
+    The subtype definition associated with the type declaration (if any).
+
+    :param obj: The node to read the ``Subtype_Definition`` field of.
+    :returns:   The node's ``Subtype_Definition`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_subtype_definition")
 def Set_Subtype_Definition(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The subtype definition associated with the type declaration (if any).
+
+    :param obj:   The node to write the ``Subtype_Definition`` field of.
+    :param value: The value to write into the ``Subtype_Definition`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_incomplete_type_declaration")
 def Get_Incomplete_Type_Declaration(obj: Iir) -> Iir:
-    """"""
+    """
+    Set if the type declaration completes an incomplete type declaration
+
+    :param obj: The node to read the ``Incomplete_Type_Declaration`` field of.
+    :returns:   The node's ``Incomplete_Type_Declaration`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_incomplete_type_declaration")
 def Set_Incomplete_Type_Declaration(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Set if the type declaration completes an incomplete type declaration
+
+    :param obj:   The node to write the ``Incomplete_Type_Declaration`` field of.
+    :param value: The value to write into the ``Incomplete_Type_Declaration`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_interface_type_subprograms")
 def Get_Interface_Type_Subprograms(obj: Iir) -> Iir:
-    """"""
+    """
+    Implicit operations of an interface type declaration.
+
+    :param obj: The node to read the ``Interface_Type_Subprograms`` field of.
+    :returns:   The node's ``Interface_Type_Subprograms`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_interface_type_subprograms")
 def Set_Interface_Type_Subprograms(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Implicit operations of an interface type declaration.
+
+    :param obj:   The node to write the ``Interface_Type_Subprograms`` field of.
+    :param value: The value to write into the ``Interface_Type_Subprograms`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_interface_type_definition")
 def Get_Interface_Type_Definition(obj: Iir) -> Iir:
-    """"""
+    """
+    Owner of the interface type definition.
+
+    :param obj: The node to read the ``Interface_Type_Definition`` field of.
+    :returns:   The node's ``Interface_Type_Definition`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_interface_type_definition")
 def Set_Interface_Type_Definition(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Owner of the interface type definition.
+
+    :param obj:   The node to write the ``Interface_Type_Definition`` field of.
+    :param value: The value to write into the ``Interface_Type_Definition`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_nature_definition")
 def Get_Nature_Definition(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Nature_Definition`` field of.
+    :returns:   The node's ``Nature_Definition`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_nature_definition")
 def Set_Nature_Definition(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Nature_Definition`` field of.
+    :param value: The value to write into the ``Nature_Definition`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_nature")
 def Get_Nature(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Nature`` field of.
+    :returns:   The node's ``Nature`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_nature")
 def Set_Nature(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Nature`` field of.
+    :param value: The value to write into the ``Nature`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_subnature_indication")
 def Get_Subnature_Indication(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Subnature_Indication`` field of.
+    :returns:   The node's ``Subnature_Indication`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_subnature_indication")
 def Set_Subnature_Indication(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Subnature_Indication`` field of.
+    :param value: The value to write into the ``Subnature_Indication`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_reference_terminal_flag")
 def Get_Reference_Terminal_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    :param obj: The node to read the ``Reference_Terminal_Flag`` field of.
+    :returns:   The node's ``Reference_Terminal_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_reference_terminal_flag")
 def Set_Reference_Terminal_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Reference_Terminal_Flag`` field of.
+    :param value: The value to write into the ``Reference_Terminal_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_mode")
 def Get_Mode(obj: Iir) -> Iir:
-    """"""
+    """
+    Mode of interfaces or file (v87).
+
+    :param obj: The node to read the ``Mode`` field of.
+    :returns:   The node's ``Mode`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_mode")
 def Set_Mode(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Mode of interfaces or file (v87).
+
+    :param obj:   The node to write the ``Mode`` field of.
+    :param value: The value to write into the ``Mode`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_guarded_signal_flag")
 def Get_Guarded_Signal_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    True if the signal is guarded (has a signal kind).
+
+    :param obj: The node to read the ``Guarded_Signal_Flag`` field of.
+    :returns:   The node's ``Guarded_Signal_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_guarded_signal_flag")
 def Set_Guarded_Signal_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True if the signal is guarded (has a signal kind).
+
+    :param obj:   The node to write the ``Guarded_Signal_Flag`` field of.
+    :param value: The value to write into the ``Guarded_Signal_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_signal_kind")
 def Get_Signal_Kind(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Signal_Kind`` field of.
+    :returns:   The node's ``Signal_Kind`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_signal_kind")
 def Set_Signal_Kind(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Signal_Kind`` field of.
+    :param value: The value to write into the ``Signal_Kind`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_base_name")
 def Get_Base_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    The base name of a name is the node at the origin of the name. The base name is a declaration (signal, object,
+    constant or interface), a selected_by_all name, an implicit_dereference name.
+
+    :param obj: The node to read the ``Base_Name`` field of.
+    :returns:   The node's ``Base_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_base_name")
 def Set_Base_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The base name of a name is the node at the origin of the name. The base name is a declaration (signal, object,
+    constant or interface), a selected_by_all name, an implicit_dereference name.
+
+    :param obj:   The node to write the ``Base_Name`` field of.
+    :param value: The value to write into the ``Base_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_interface_declaration_chain")
 def Get_Interface_Declaration_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Interface_Declaration_Chain`` field of.
+    :returns:   The node's ``Interface_Declaration_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_interface_declaration_chain")
 def Set_Interface_Declaration_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Interface_Declaration_Chain`` field of.
+    :param value: The value to write into the ``Interface_Declaration_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_default_subprogram")
 def Get_Default_Subprogram(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Default_Subprogram`` field of.
+    :returns:   The node's ``Default_Subprogram`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_default_subprogram")
 def Set_Default_Subprogram(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Default_Subprogram`` field of.
+    :param value: The value to write into the ``Default_Subprogram`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_associated_subprogram")
 def Get_Associated_Subprogram(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Associated_Subprogram`` field of.
+    :returns:   The node's ``Associated_Subprogram`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_associated_subprogram")
 def Set_Associated_Subprogram(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Associated_Subprogram`` field of.
+    :param value: The value to write into the ``Associated_Subprogram`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_subprogram_specification")
 def Get_Subprogram_Specification(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Subprogram_Specification`` field of.
+    :returns:   The node's ``Subprogram_Specification`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_subprogram_specification")
 def Set_Subprogram_Specification(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Subprogram_Specification`` field of.
+    :param value: The value to write into the ``Subprogram_Specification`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_sequential_statement_chain")
 def Get_Sequential_Statement_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Sequential_Statement_Chain`` field of.
+    :returns:   The node's ``Sequential_Statement_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_sequential_statement_chain")
 def Set_Sequential_Statement_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Sequential_Statement_Chain`` field of.
+    :param value: The value to write into the ``Sequential_Statement_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_simultaneous_statement_chain")
 def Get_Simultaneous_Statement_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Simultaneous_Statement_Chain`` field of.
+    :returns:   The node's ``Simultaneous_Statement_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_simultaneous_statement_chain")
 def Set_Simultaneous_Statement_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Simultaneous_Statement_Chain`` field of.
+    :param value: The value to write into the ``Simultaneous_Statement_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_subprogram_body")
 def Get_Subprogram_Body(obj: Iir) -> Iir:
-    """"""
+    """
+    The body of a subprogram (from the subprogram specification). Note that this field is only set when the body has
+    been analyzed (ok, that's obvious).  For subprogram specifications in instantiated package, this field is in general
+    not set because the package specification may be instantiated before the package body is analyzed and there is no
+    tracking of all instantiated packages.  So when the package body is analyzed, there is no way to set this field for
+    the subprograms in all instantiated specifications. You could use Get_Subprogram_Body_Origin to extract the body.
+    It uses the Origin link to find the original specification which has this field set.
+
+    :param obj: The node to read the ``Subprogram_Body`` field of.
+    :returns:   The node's ``Subprogram_Body`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_subprogram_body")
 def Set_Subprogram_Body(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The body of a subprogram (from the subprogram specification). Note that this field is only set when the body has
+    been analyzed (ok, that's obvious).  For subprogram specifications in instantiated package, this field is in general
+    not set because the package specification may be instantiated before the package body is analyzed and there is no
+    tracking of all instantiated packages.  So when the package body is analyzed, there is no way to set this field for
+    the subprograms in all instantiated specifications. You could use Get_Subprogram_Body_Origin to extract the body.
+    It uses the Origin link to find the original specification which has this field set.
+
+    :param obj:   The node to write the ``Subprogram_Body`` field of.
+    :param value: The value to write into the ``Subprogram_Body`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_overload_number")
 def Get_Overload_Number(obj: Iir) -> Iir:
-    """"""
+    """
+    Several subprograms in a declarative region may have the same identifier.  If the overload number is not 0, it is
+    the rank of the subprogram.  If the overload number is 0, then the identifier is not overloaded in the declarative
+    region.
+
+    :param obj: The node to read the ``Overload_Number`` field of.
+    :returns:   The node's ``Overload_Number`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_overload_number")
 def Set_Overload_Number(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Several subprograms in a declarative region may have the same identifier.  If the overload number is not 0, it is
+    the rank of the subprogram.  If the overload number is 0, then the identifier is not overloaded in the declarative
+    region.
+
+    :param obj:   The node to write the ``Overload_Number`` field of.
+    :param value: The value to write into the ``Overload_Number`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_subprogram_depth")
 def Get_Subprogram_Depth(obj: Iir) -> Iir:
-    """"""
+    """
+    Depth of a subprogram. For a subprogram declared immediately within an entity, architecture, package, process,
+    block, generate, the depth is 0. For a subprogram declared immediately within a subprogram of level N, the depth is
+    N + 1. Depth is used with depth of impure objects to check purity rules.
+
+    :param obj: The node to read the ``Subprogram_Depth`` field of.
+    :returns:   The node's ``Subprogram_Depth`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_subprogram_depth")
 def Set_Subprogram_Depth(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Depth of a subprogram. For a subprogram declared immediately within an entity, architecture, package, process,
+    block, generate, the depth is 0. For a subprogram declared immediately within a subprogram of level N, the depth is
+    N + 1. Depth is used with depth of impure objects to check purity rules.
+
+    :param obj:   The node to write the ``Subprogram_Depth`` field of.
+    :param value: The value to write into the ``Subprogram_Depth`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_subprogram_hash")
 def Get_Subprogram_Hash(obj: Iir) -> Iir:
-    """"""
+    """
+    Hash of a subprogram profile. This is used to speed up subprogram profile comparison, which is very often used by
+    overload.
+
+    :param obj: The node to read the ``Subprogram_Hash`` field of.
+    :returns:   The node's ``Subprogram_Hash`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_subprogram_hash")
 def Set_Subprogram_Hash(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Hash of a subprogram profile. This is used to speed up subprogram profile comparison, which is very often used by
+    overload.
+
+    :param obj:   The node to write the ``Subprogram_Hash`` field of.
+    :param value: The value to write into the ``Subprogram_Hash`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_impure_depth")
 def Get_Impure_Depth(obj: Iir) -> Iir:
-    """"""
+    """
+    Depth of the deepest impure object.
+
+    :param obj: The node to read the ``Impure_Depth`` field of.
+    :returns:   The node's ``Impure_Depth`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_impure_depth")
 def Set_Impure_Depth(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Depth of the deepest impure object.
+
+    :param obj:   The node to write the ``Impure_Depth`` field of.
+    :param value: The value to write into the ``Impure_Depth`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_return_type")
 def Get_Return_Type(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Return_Type`` field of.
+    :returns:   The node's ``Return_Type`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_return_type")
 def Set_Return_Type(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Return_Type`` field of.
+    :param value: The value to write into the ``Return_Type`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_implicit_definition")
 def Get_Implicit_Definition(obj: Iir) -> Iir:
-    """"""
+    """
+    Code of an implicit subprogram definition.
+
+    :param obj: The node to read the ``Implicit_Definition`` field of.
+    :returns:   The node's ``Implicit_Definition`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_implicit_definition")
 def Set_Implicit_Definition(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Code of an implicit subprogram definition.
+
+    :param obj:   The node to write the ``Implicit_Definition`` field of.
+    :param value: The value to write into the ``Implicit_Definition`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_uninstantiated_subprogram_name")
 def Get_Uninstantiated_Subprogram_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Uninstantiated_Subprogram_Name`` field of.
+    :returns:   The node's ``Uninstantiated_Subprogram_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_uninstantiated_subprogram_name")
 def Set_Uninstantiated_Subprogram_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Uninstantiated_Subprogram_Name`` field of.
+    :param value: The value to write into the ``Uninstantiated_Subprogram_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_default_value")
 def Get_Default_Value(obj: Iir) -> Iir:
-    """"""
+    """
+    Get the default value of an object declaration. Null_iir if no default value. Note that this node can be shared
+    between declarations if they are separated by comma, such as in:
+
+      variable a, b : integer := 5;
+      procedure p (a, b : natural := 7);
+
+    :param obj: The node to read the ``Default_Value`` field of.
+    :returns:   The node's ``Default_Value`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_default_value")
 def Set_Default_Value(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Get the default value of an object declaration. Null_iir if no default value. Note that this node can be shared
+    between declarations if they are separated by comma, such as in:
+
+      variable a, b : integer := 5;
+      procedure p (a, b : natural := 7);
+
+    :param obj:   The node to write the ``Default_Value`` field of.
+    :param value: The value to write into the ``Default_Value`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_mode_view_indication")
 def Get_Mode_View_Indication(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Mode_View_Indication`` field of.
+    :returns:   The node's ``Mode_View_Indication`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_mode_view_indication")
 def Set_Mode_View_Indication(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Mode_View_Indication`` field of.
+    :param value: The value to write into the ``Mode_View_Indication`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_deferred_declaration")
 def Get_Deferred_Declaration(obj: Iir) -> Iir:
-    """"""
+    """
+    The deferred_declaration field points to the deferred constant declaration for a full constant declaration, or is
+    null_iir for a usual or deferred constant declaration. Set only during sem.
+
+    :param obj: The node to read the ``Deferred_Declaration`` field of.
+    :returns:   The node's ``Deferred_Declaration`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_deferred_declaration")
 def Set_Deferred_Declaration(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The deferred_declaration field points to the deferred constant declaration for a full constant declaration, or is
+    null_iir for a usual or deferred constant declaration. Set only during sem.
+
+    :param obj:   The node to write the ``Deferred_Declaration`` field of.
+    :param value: The value to write into the ``Deferred_Declaration`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_deferred_declaration_flag")
 def Get_Deferred_Declaration_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    The deferred_declaration_flag must be set if the constant declaration is a deferred_constant declaration. Set only
+    during sem.
+
+    :param obj: The node to read the ``Deferred_Declaration_Flag`` field of.
+    :returns:   The node's ``Deferred_Declaration_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_deferred_declaration_flag")
 def Set_Deferred_Declaration_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    The deferred_declaration_flag must be set if the constant declaration is a deferred_constant declaration. Set only
+    during sem.
+
+    :param obj:   The node to write the ``Deferred_Declaration_Flag`` field of.
+    :param value: The value to write into the ``Deferred_Declaration_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_shared_flag")
 def Get_Shared_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    If true, the variable is declared shared.
+
+    :param obj: The node to read the ``Shared_Flag`` field of.
+    :returns:   The node's ``Shared_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_shared_flag")
 def Set_Shared_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    If true, the variable is declared shared.
+
+    :param obj:   The node to write the ``Shared_Flag`` field of.
+    :param value: The value to write into the ``Shared_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_design_unit")
 def Get_Design_Unit(obj: Iir) -> Iir:
-    """"""
+    """
+    Get the design unit in which the target is declared. For a library unit, this is to get the design unit node.
+
+    :param obj: The node to read the ``Design_Unit`` field of.
+    :returns:   The node's ``Design_Unit`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_design_unit")
 def Set_Design_Unit(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Get the design unit in which the target is declared. For a library unit, this is to get the design unit node.
+
+    :param obj:   The node to write the ``Design_Unit`` field of.
+    :param value: The value to write into the ``Design_Unit`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_block_statement")
 def Get_Block_Statement(obj: Iir) -> Iir:
-    """"""
+    """
+    Corresponding block statement for an implicit guard signal.
+
+    :param obj: The node to read the ``Block_Statement`` field of.
+    :returns:   The node's ``Block_Statement`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_block_statement")
 def Set_Block_Statement(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Corresponding block statement for an implicit guard signal.
+
+    :param obj:   The node to write the ``Block_Statement`` field of.
+    :param value: The value to write into the ``Block_Statement`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_signal_driver")
 def Get_Signal_Driver(obj: Iir) -> Iir:
-    """"""
+    """
+    For a non-resolved signal: null_iir if the signal has no driver, or a process/concurrent_statement for which the
+    signal should have a driver.  This is used to catch at analyse time unresolved signals with several drivers.
+
+    :param obj: The node to read the ``Signal_Driver`` field of.
+    :returns:   The node's ``Signal_Driver`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_signal_driver")
 def Set_Signal_Driver(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    For a non-resolved signal: null_iir if the signal has no driver, or a process/concurrent_statement for which the
+    signal should have a driver.  This is used to catch at analyse time unresolved signals with several drivers.
+
+    :param obj:   The node to write the ``Signal_Driver`` field of.
+    :param value: The value to write into the ``Signal_Driver`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_declaration_chain")
 def Get_Declaration_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Declaration_Chain`` field of.
+    :returns:   The node's ``Declaration_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_declaration_chain")
 def Set_Declaration_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Declaration_Chain`` field of.
+    :param value: The value to write into the ``Declaration_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_file_logical_name")
 def Get_File_Logical_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``File_Logical_Name`` field of.
+    :returns:   The node's ``File_Logical_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_file_logical_name")
 def Set_File_Logical_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``File_Logical_Name`` field of.
+    :param value: The value to write into the ``File_Logical_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_file_open_kind")
 def Get_File_Open_Kind(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``File_Open_Kind`` field of.
+    :returns:   The node's ``File_Open_Kind`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_file_open_kind")
 def Set_File_Open_Kind(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``File_Open_Kind`` field of.
+    :param value: The value to write into the ``File_Open_Kind`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_element_position")
 def Get_Element_Position(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Element_Position`` field of.
+    :returns:   The node's ``Element_Position`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_element_position")
 def Set_Element_Position(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Element_Position`` field of.
+    :param value: The value to write into the ``Element_Position`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_use_clause_chain")
 def Get_Use_Clause_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Selected names of an use_clause are chained.
+
+    :param obj: The node to read the ``Use_Clause_Chain`` field of.
+    :returns:   The node's ``Use_Clause_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_use_clause_chain")
 def Set_Use_Clause_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Selected names of an use_clause are chained.
+
+    :param obj:   The node to write the ``Use_Clause_Chain`` field of.
+    :param value: The value to write into the ``Use_Clause_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_context_reference_chain")
 def Get_Context_Reference_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Selected names of a context_reference are chained.
+
+    :param obj: The node to read the ``Context_Reference_Chain`` field of.
+    :returns:   The node's ``Context_Reference_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_context_reference_chain")
 def Set_Context_Reference_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Selected names of a context_reference are chained.
+
+    :param obj:   The node to write the ``Context_Reference_Chain`` field of.
+    :param value: The value to write into the ``Context_Reference_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_inherit_spec_chain")
 def Get_Inherit_Spec_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Inherit_Spec_Chain`` field of.
+    :returns:   The node's ``Inherit_Spec_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_inherit_spec_chain")
 def Set_Inherit_Spec_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Inherit_Spec_Chain`` field of.
+    :param value: The value to write into the ``Inherit_Spec_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_selected_name")
 def Get_Selected_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    Selected name of an use_clause or context_reference
+
+    :param obj: The node to read the ``Selected_Name`` field of.
+    :returns:   The node's ``Selected_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_selected_name")
 def Set_Selected_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Selected name of an use_clause or context_reference
+
+    :param obj:   The node to write the ``Selected_Name`` field of.
+    :param value: The value to write into the ``Selected_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_mode_view_name")
 def Get_Mode_View_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Mode_View_Name`` field of.
+    :returns:   The node's ``Mode_View_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_mode_view_name")
 def Set_Mode_View_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Mode_View_Name`` field of.
+    :param value: The value to write into the ``Mode_View_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_type_declarator")
 def Get_Type_Declarator(obj: Iir) -> Iir:
-    """"""
+    """
+    The type declarator which declares the type definition DEF.  Can also be a nature declarator for composite nature
+    definition.
+
+    :param obj: The node to read the ``Type_Declarator`` field of.
+    :returns:   The node's ``Type_Declarator`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_type_declarator")
 def Set_Type_Declarator(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The type declarator which declares the type definition DEF.  Can also be a nature declarator for composite nature
+    definition.
+
+    :param obj:   The node to write the ``Type_Declarator`` field of.
+    :param value: The value to write into the ``Type_Declarator`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_complete_type_definition")
 def Get_Complete_Type_Definition(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Complete_Type_Definition`` field of.
+    :returns:   The node's ``Complete_Type_Definition`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_complete_type_definition")
 def Set_Complete_Type_Definition(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Complete_Type_Definition`` field of.
+    :param value: The value to write into the ``Complete_Type_Definition`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_incomplete_type_ref_chain")
 def Get_Incomplete_Type_Ref_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Incomplete_Type_Ref_Chain`` field of.
+    :returns:   The node's ``Incomplete_Type_Ref_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_incomplete_type_ref_chain")
 def Set_Incomplete_Type_Ref_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Incomplete_Type_Ref_Chain`` field of.
+    :param value: The value to write into the ``Incomplete_Type_Ref_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_associated_type")
 def Get_Associated_Type(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Associated_Type`` field of.
+    :returns:   The node's ``Associated_Type`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_associated_type")
 def Set_Associated_Type(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Associated_Type`` field of.
+    :param value: The value to write into the ``Associated_Type`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_enumeration_literal_list")
 def Get_Enumeration_Literal_List(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Enumeration_Literal_List`` field of.
+    :returns:   The node's ``Enumeration_Literal_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_enumeration_literal_list")
 def Set_Enumeration_Literal_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Enumeration_Literal_List`` field of.
+    :param value: The value to write into the ``Enumeration_Literal_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_entity_class_entry_chain")
 def Get_Entity_Class_Entry_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Entity_Class_Entry_Chain`` field of.
+    :returns:   The node's ``Entity_Class_Entry_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_entity_class_entry_chain")
 def Set_Entity_Class_Entry_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Entity_Class_Entry_Chain`` field of.
+    :param value: The value to write into the ``Entity_Class_Entry_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_group_constituent_list")
 def Get_Group_Constituent_List(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Group_Constituent_List`` field of.
+    :returns:   The node's ``Group_Constituent_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_group_constituent_list")
 def Set_Group_Constituent_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Group_Constituent_List`` field of.
+    :param value: The value to write into the ``Group_Constituent_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_unit_chain")
 def Get_Unit_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Chain of physical type units. The first unit is the primary unit.  If you really need the primary unit (and not the
+    chain), you'd better to use Get_Primary_Unit.
+
+    :param obj: The node to read the ``Unit_Chain`` field of.
+    :returns:   The node's ``Unit_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_unit_chain")
 def Set_Unit_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Chain of physical type units. The first unit is the primary unit.  If you really need the primary unit (and not the
+    chain), you'd better to use Get_Primary_Unit.
+
+    :param obj:   The node to write the ``Unit_Chain`` field of.
+    :param value: The value to write into the ``Unit_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_primary_unit")
 def Get_Primary_Unit(obj: Iir) -> Iir:
-    """"""
+    """
+    Alias of Get_Unit_Chain. Return the primary unit of a physical type.
+
+    :param obj: The node to read the ``Primary_Unit`` field of.
+    :returns:   The node's ``Primary_Unit`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_primary_unit")
 def Set_Primary_Unit(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Alias of Get_Unit_Chain. Return the primary unit of a physical type.
+
+    :param obj:   The node to write the ``Primary_Unit`` field of.
+    :param value: The value to write into the ``Primary_Unit`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_identifier")
 def Get_Identifier(obj: Iir) -> NameId:
-    """"""
+    """
+    Get/Set the identifier of a declaration. Can also be used instead of get/set_label.
+
+    :param obj: The node to read the ``Identifier`` field of.
+    :returns:   The node's ``Identifier`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_identifier")
 def Set_Identifier(obj: Iir, value: NameId) -> None:
-    """"""
+    """
+    Get/Set the identifier of a declaration. Can also be used instead of get/set_label.
+
+    :param obj:   The node to write the ``Identifier`` field of.
+    :param value: The value to write into the ``Identifier`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_label")
 def Get_Label(obj: Iir) -> NameId:
-    """"""
+    """
+    :param obj: The node to read the ``Label`` field of.
+    :returns:   The node's ``Label`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_label")
 def Set_Label(obj: Iir, value: NameId) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Label`` field of.
+    :param value: The value to write into the ``Label`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_return_identifier")
 def Get_Return_Identifier(obj: Iir) -> Iir:
-    """"""
+    """
+    Return a subtype declaration for the return subtype (vhdl-19)
+
+    :param obj: The node to read the ``Return_Identifier`` field of.
+    :returns:   The node's ``Return_Identifier`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_return_identifier")
 def Set_Return_Identifier(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Return a subtype declaration for the return subtype (vhdl-19)
+
+    :param obj:   The node to write the ``Return_Identifier`` field of.
+    :param value: The value to write into the ``Return_Identifier`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_visible_flag")
 def Get_Visible_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Get/Set the visible flag of a declaration. The visible flag is true to make invalid the use of the identifier during
+    its declaration.  It is set to false when the identifier is added to the name table, and set to true when the
+    declaration is finished.
+
+    :param obj: The node to read the ``Visible_Flag`` field of.
+    :returns:   The node's ``Visible_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_visible_flag")
 def Set_Visible_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Get/Set the visible flag of a declaration. The visible flag is true to make invalid the use of the identifier during
+    its declaration.  It is set to false when the identifier is added to the name table, and set to true when the
+    declaration is finished.
+
+    :param obj:   The node to write the ``Visible_Flag`` field of.
+    :param value: The value to write into the ``Visible_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_range_constraint")
 def Get_Range_Constraint(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Range_Constraint`` field of.
+    :returns:   The node's ``Range_Constraint`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_range_constraint")
 def Set_Range_Constraint(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Range_Constraint`` field of.
+    :param value: The value to write into the ``Range_Constraint`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_direction")
 def Get_Direction(obj: Iir) -> DirectionType:
-    """"""
+    """
+    :param obj: The node to read the ``Direction`` field of.
+    :returns:   The node's ``Direction`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_direction")
 def Set_Direction(obj: Iir, value: DirectionType) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Direction`` field of.
+    :param value: The value to write into the ``Direction`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_left_limit")
 def Get_Left_Limit(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Left_Limit`` field of.
+    :returns:   The node's ``Left_Limit`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_left_limit")
 def Set_Left_Limit(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Left_Limit`` field of.
+    :param value: The value to write into the ``Left_Limit`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_right_limit")
 def Get_Right_Limit(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Right_Limit`` field of.
+    :returns:   The node's ``Right_Limit`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_right_limit")
 def Set_Right_Limit(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Right_Limit`` field of.
+    :param value: The value to write into the ``Right_Limit`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_left_limit_expr")
 def Get_Left_Limit_Expr(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Left_Limit_Expr`` field of.
+    :returns:   The node's ``Left_Limit_Expr`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_left_limit_expr")
 def Set_Left_Limit_Expr(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Left_Limit_Expr`` field of.
+    :param value: The value to write into the ``Left_Limit_Expr`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_right_limit_expr")
 def Get_Right_Limit_Expr(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Right_Limit_Expr`` field of.
+    :returns:   The node's ``Right_Limit_Expr`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_right_limit_expr")
 def Set_Right_Limit_Expr(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Right_Limit_Expr`` field of.
+    :param value: The value to write into the ``Right_Limit_Expr`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_parent_type")
 def Get_Parent_Type(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Parent_Type`` field of.
+    :returns:   The node's ``Parent_Type`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_parent_type")
 def Set_Parent_Type(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Parent_Type`` field of.
+    :param value: The value to write into the ``Parent_Type`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_simple_nature")
 def Get_Simple_Nature(obj: Iir) -> Iir:
-    """"""
+    """
+    Only for composite base nature: the simple nature.
+
+    :param obj: The node to read the ``Simple_Nature`` field of.
+    :returns:   The node's ``Simple_Nature`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_simple_nature")
 def Set_Simple_Nature(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Only for composite base nature: the simple nature.
+
+    :param obj:   The node to write the ``Simple_Nature`` field of.
+    :param value: The value to write into the ``Simple_Nature`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_base_nature")
 def Get_Base_Nature(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Base_Nature`` field of.
+    :returns:   The node's ``Base_Nature`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_base_nature")
 def Set_Base_Nature(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Base_Nature`` field of.
+    :param value: The value to write into the ``Base_Nature`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_resolution_indication")
 def Get_Resolution_Indication(obj: Iir) -> Iir:
-    """"""
+    """
+    Either a resolution function name, an array_element_resolution or a record_resolution
+
+    :param obj: The node to read the ``Resolution_Indication`` field of.
+    :returns:   The node's ``Resolution_Indication`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_resolution_indication")
 def Set_Resolution_Indication(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Either a resolution function name, an array_element_resolution or a record_resolution
+
+    :param obj:   The node to write the ``Resolution_Indication`` field of.
+    :param value: The value to write into the ``Resolution_Indication`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_record_element_resolution_chain")
 def Get_Record_Element_Resolution_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Record_Element_Resolution_Chain`` field of.
+    :returns:   The node's ``Record_Element_Resolution_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_record_element_resolution_chain")
 def Set_Record_Element_Resolution_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Record_Element_Resolution_Chain`` field of.
+    :param value: The value to write into the ``Record_Element_Resolution_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_tolerance")
 def Get_Tolerance(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Tolerance`` field of.
+    :returns:   The node's ``Tolerance`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_tolerance")
 def Set_Tolerance(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Tolerance`` field of.
+    :param value: The value to write into the ``Tolerance`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_plus_terminal_name")
 def Get_Plus_Terminal_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Plus_Terminal_Name`` field of.
+    :returns:   The node's ``Plus_Terminal_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_plus_terminal_name")
 def Set_Plus_Terminal_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Plus_Terminal_Name`` field of.
+    :param value: The value to write into the ``Plus_Terminal_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_minus_terminal_name")
 def Get_Minus_Terminal_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Minus_Terminal_Name`` field of.
+    :returns:   The node's ``Minus_Terminal_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_minus_terminal_name")
 def Set_Minus_Terminal_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Minus_Terminal_Name`` field of.
+    :param value: The value to write into the ``Minus_Terminal_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_plus_terminal")
 def Get_Plus_Terminal(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Plus_Terminal`` field of.
+    :returns:   The node's ``Plus_Terminal`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_plus_terminal")
 def Set_Plus_Terminal(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Plus_Terminal`` field of.
+    :param value: The value to write into the ``Plus_Terminal`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_minus_terminal")
 def Get_Minus_Terminal(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Minus_Terminal`` field of.
+    :returns:   The node's ``Minus_Terminal`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_minus_terminal")
 def Set_Minus_Terminal(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Minus_Terminal`` field of.
+    :param value: The value to write into the ``Minus_Terminal`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_magnitude_expression")
 def Get_Magnitude_Expression(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Magnitude_Expression`` field of.
+    :returns:   The node's ``Magnitude_Expression`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_magnitude_expression")
 def Set_Magnitude_Expression(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Magnitude_Expression`` field of.
+    :param value: The value to write into the ``Magnitude_Expression`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_phase_expression")
 def Get_Phase_Expression(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Phase_Expression`` field of.
+    :returns:   The node's ``Phase_Expression`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_phase_expression")
 def Set_Phase_Expression(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Phase_Expression`` field of.
+    :param value: The value to write into the ``Phase_Expression`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_power_expression")
 def Get_Power_Expression(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Power_Expression`` field of.
+    :returns:   The node's ``Power_Expression`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_power_expression")
 def Set_Power_Expression(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Power_Expression`` field of.
+    :param value: The value to write into the ``Power_Expression`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_simultaneous_left")
 def Get_Simultaneous_Left(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Simultaneous_Left`` field of.
+    :returns:   The node's ``Simultaneous_Left`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_simultaneous_left")
 def Set_Simultaneous_Left(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Simultaneous_Left`` field of.
+    :param value: The value to write into the ``Simultaneous_Left`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_simultaneous_right")
 def Get_Simultaneous_Right(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Simultaneous_Right`` field of.
+    :returns:   The node's ``Simultaneous_Right`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_simultaneous_right")
 def Set_Simultaneous_Right(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Simultaneous_Right`` field of.
+    :param value: The value to write into the ``Simultaneous_Right`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_text_file_flag")
 def Get_Text_File_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    True if ATYPE defines std.textio.text file type.
+
+    :param obj: The node to read the ``Text_File_Flag`` field of.
+    :returns:   The node's ``Text_File_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_text_file_flag")
 def Set_Text_File_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True if ATYPE defines std.textio.text file type.
+
+    :param obj:   The node to write the ``Text_File_Flag`` field of.
+    :param value: The value to write into the ``Text_File_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_only_characters_flag")
 def Get_Only_Characters_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    True if enumeration type ATYPE has only character literals.
+
+    :param obj: The node to read the ``Only_Characters_Flag`` field of.
+    :returns:   The node's ``Only_Characters_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_only_characters_flag")
 def Set_Only_Characters_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True if enumeration type ATYPE has only character literals.
+
+    :param obj:   The node to write the ``Only_Characters_Flag`` field of.
+    :param value: The value to write into the ``Only_Characters_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_is_character_type")
 def Get_Is_Character_Type(obj: Iir) -> Boolean:
-    """"""
+    """
+    True if enumeration type ATYPE is a character type (at least one literal is a character).
+
+    :param obj: The node to read the ``Is_Character_Type`` field of.
+    :returns:   The node's ``Is_Character_Type`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_is_character_type")
 def Set_Is_Character_Type(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True if enumeration type ATYPE is a character type (at least one literal is a character).
+
+    :param obj:   The node to write the ``Is_Character_Type`` field of.
+    :param value: The value to write into the ``Is_Character_Type`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_nature_staticness")
 def Get_Nature_Staticness(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Nature_Staticness`` field of.
+    :returns:   The node's ``Nature_Staticness`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_nature_staticness")
 def Set_Nature_Staticness(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Nature_Staticness`` field of.
+    :param value: The value to write into the ``Nature_Staticness`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_type_staticness")
 def Get_Type_Staticness(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Type_Staticness`` field of.
+    :returns:   The node's ``Type_Staticness`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_type_staticness")
 def Set_Type_Staticness(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Type_Staticness`` field of.
+    :param value: The value to write into the ``Type_Staticness`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_constraint_state")
 def Get_Constraint_State(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Constraint_State`` field of.
+    :returns:   The node's ``Constraint_State`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_constraint_state")
 def Set_Constraint_State(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Constraint_State`` field of.
+    :param value: The value to write into the ``Constraint_State`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_index_subtype_list")
 def Get_Index_Subtype_List(obj: Iir) -> Iir:
-    """"""
+    """
+    Reference either index_subtype_definition_list of array_type_definition or index_constraint_list of
+    array_subtype_definition.  Set only when the index_sutype is constrained (to differentiate with unconstrained index
+    type).
+
+    :param obj: The node to read the ``Index_Subtype_List`` field of.
+    :returns:   The node's ``Index_Subtype_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_index_subtype_list")
 def Set_Index_Subtype_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Reference either index_subtype_definition_list of array_type_definition or index_constraint_list of
+    array_subtype_definition.  Set only when the index_sutype is constrained (to differentiate with unconstrained index
+    type).
+
+    :param obj:   The node to write the ``Index_Subtype_List`` field of.
+    :param value: The value to write into the ``Index_Subtype_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_index_subtype_definition_list")
 def Get_Index_Subtype_Definition_List(obj: Iir) -> Iir:
-    """"""
+    """
+    List of type marks for indexes type of array types.
+
+    :param obj: The node to read the ``Index_Subtype_Definition_List`` field of.
+    :returns:   The node's ``Index_Subtype_Definition_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_index_subtype_definition_list")
 def Set_Index_Subtype_Definition_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    List of type marks for indexes type of array types.
+
+    :param obj:   The node to write the ``Index_Subtype_Definition_List`` field of.
+    :param value: The value to write into the ``Index_Subtype_Definition_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_element_subtype_indication")
 def Get_Element_Subtype_Indication(obj: Iir) -> Iir:
-    """"""
+    """
+    The subtype_indication as it appears in a array type declaration.
+
+    :param obj: The node to read the ``Element_Subtype_Indication`` field of.
+    :returns:   The node's ``Element_Subtype_Indication`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_element_subtype_indication")
 def Set_Element_Subtype_Indication(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The subtype_indication as it appears in a array type declaration.
+
+    :param obj:   The node to write the ``Element_Subtype_Indication`` field of.
+    :param value: The value to write into the ``Element_Subtype_Indication`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_element_subtype")
 def Get_Element_Subtype(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Element_Subtype`` field of.
+    :returns:   The node's ``Element_Subtype`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_element_subtype")
 def Set_Element_Subtype(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Element_Subtype`` field of.
+    :param value: The value to write into the ``Element_Subtype`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_element_subnature_indication")
 def Get_Element_Subnature_Indication(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Element_Subnature_Indication`` field of.
+    :returns:   The node's ``Element_Subnature_Indication`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_element_subnature_indication")
 def Set_Element_Subnature_Indication(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Element_Subnature_Indication`` field of.
+    :param value: The value to write into the ``Element_Subnature_Indication`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_element_subnature")
 def Get_Element_Subnature(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Element_Subnature`` field of.
+    :returns:   The node's ``Element_Subnature`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_element_subnature")
 def Set_Element_Subnature(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Element_Subnature`` field of.
+    :param value: The value to write into the ``Element_Subnature`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_index_constraint_list")
 def Get_Index_Constraint_List(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Index_Constraint_List`` field of.
+    :returns:   The node's ``Index_Constraint_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_index_constraint_list")
 def Set_Index_Constraint_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Index_Constraint_List`` field of.
+    :param value: The value to write into the ``Index_Constraint_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_array_element_constraint")
 def Get_Array_Element_Constraint(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Array_Element_Constraint`` field of.
+    :returns:   The node's ``Array_Element_Constraint`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_array_element_constraint")
 def Set_Array_Element_Constraint(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Array_Element_Constraint`` field of.
+    :param value: The value to write into the ``Array_Element_Constraint`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_array_constraint_flag")
 def Get_Has_Array_Constraint_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    :param obj: The node to read the ``Has_Array_Constraint_Flag`` field of.
+    :returns:   The node's ``Has_Array_Constraint_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_array_constraint_flag")
 def Set_Has_Array_Constraint_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Has_Array_Constraint_Flag`` field of.
+    :param value: The value to write into the ``Has_Array_Constraint_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_element_constraint_flag")
 def Get_Has_Element_Constraint_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    :param obj: The node to read the ``Has_Element_Constraint_Flag`` field of.
+    :returns:   The node's ``Has_Element_Constraint_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_element_constraint_flag")
 def Set_Has_Element_Constraint_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Has_Element_Constraint_Flag`` field of.
+    :param value: The value to write into the ``Has_Element_Constraint_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_elements_declaration_list")
 def Get_Elements_Declaration_List(obj: Iir) -> Iir:
-    """"""
+    """
+    List of elements of a record. For a record_type_definition: Is_Ref is false, as the elements
+
+     declaration are owned by the type definition.
+    For a record_subtype_definition: Is_Ref is false, as new constrained
+
+     elements are owned through the Owned_Elements_Chain list.
+
+    :param obj: The node to read the ``Elements_Declaration_List`` field of.
+    :returns:   The node's ``Elements_Declaration_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_elements_declaration_list")
 def Set_Elements_Declaration_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    List of elements of a record. For a record_type_definition: Is_Ref is false, as the elements
+
+     declaration are owned by the type definition.
+    For a record_subtype_definition: Is_Ref is false, as new constrained
+
+     elements are owned through the Owned_Elements_Chain list.
+
+    :param obj:   The node to write the ``Elements_Declaration_List`` field of.
+    :param value: The value to write into the ``Elements_Declaration_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_elements_definition_chain")
 def Get_Elements_Definition_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    For mode view elements.
+
+    :param obj: The node to read the ``Elements_Definition_Chain`` field of.
+    :returns:   The node's ``Elements_Definition_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_elements_definition_chain")
 def Set_Elements_Definition_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    For mode view elements.
+
+    :param obj:   The node to write the ``Elements_Definition_Chain`` field of.
+    :param value: The value to write into the ``Elements_Definition_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_elements_definition_list")
 def Get_Elements_Definition_List(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Elements_Definition_List`` field of.
+    :returns:   The node's ``Elements_Definition_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_elements_definition_list")
 def Set_Elements_Definition_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Elements_Definition_List`` field of.
+    :param value: The value to write into the ``Elements_Definition_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_owned_elements_chain")
 def Get_Owned_Elements_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Owned_Elements_Chain`` field of.
+    :returns:   The node's ``Owned_Elements_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_owned_elements_chain")
 def Set_Owned_Elements_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Owned_Elements_Chain`` field of.
+    :param value: The value to write into the ``Owned_Elements_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_designated_type")
 def Get_Designated_Type(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Designated_Type`` field of.
+    :returns:   The node's ``Designated_Type`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_designated_type")
 def Set_Designated_Type(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Designated_Type`` field of.
+    :param value: The value to write into the ``Designated_Type`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_designated_subtype_indication")
 def Get_Designated_Subtype_Indication(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Designated_Subtype_Indication`` field of.
+    :returns:   The node's ``Designated_Subtype_Indication`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_designated_subtype_indication")
 def Set_Designated_Subtype_Indication(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Designated_Subtype_Indication`` field of.
+    :param value: The value to write into the ``Designated_Subtype_Indication`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_index_list")
 def Get_Index_List(obj: Iir) -> Iir:
-    """"""
+    """
+    List of indexes for indexed name.
+
+    :param obj: The node to read the ``Index_List`` field of.
+    :returns:   The node's ``Index_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_index_list")
 def Set_Index_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    List of indexes for indexed name.
+
+    :param obj:   The node to write the ``Index_List`` field of.
+    :param value: The value to write into the ``Index_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_reference")
 def Get_Reference(obj: Iir) -> Iir:
-    """"""
+    """
+    The terminal declaration for the reference (ground) of a nature
+
+    :param obj: The node to read the ``Reference`` field of.
+    :returns:   The node's ``Reference`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_reference")
 def Set_Reference(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The terminal declaration for the reference (ground) of a nature
+
+    :param obj:   The node to write the ``Reference`` field of.
+    :param value: The value to write into the ``Reference`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_nature_declarator")
 def Get_Nature_Declarator(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Nature_Declarator`` field of.
+    :returns:   The node's ``Nature_Declarator`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_nature_declarator")
 def Set_Nature_Declarator(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Nature_Declarator`` field of.
+    :param value: The value to write into the ``Nature_Declarator`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_across_type_mark")
 def Get_Across_Type_Mark(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Across_Type_Mark`` field of.
+    :returns:   The node's ``Across_Type_Mark`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_across_type_mark")
 def Set_Across_Type_Mark(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Across_Type_Mark`` field of.
+    :param value: The value to write into the ``Across_Type_Mark`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_through_type_mark")
 def Get_Through_Type_Mark(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Through_Type_Mark`` field of.
+    :returns:   The node's ``Through_Type_Mark`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_through_type_mark")
 def Set_Through_Type_Mark(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Through_Type_Mark`` field of.
+    :param value: The value to write into the ``Through_Type_Mark`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_across_type_definition")
 def Get_Across_Type_Definition(obj: Iir) -> Iir:
-    """"""
+    """
+    For array and record nature: the owner of the across type.
+
+    :param obj: The node to read the ``Across_Type_Definition`` field of.
+    :returns:   The node's ``Across_Type_Definition`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_across_type_definition")
 def Set_Across_Type_Definition(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    For array and record nature: the owner of the across type.
+
+    :param obj:   The node to write the ``Across_Type_Definition`` field of.
+    :param value: The value to write into the ``Across_Type_Definition`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_through_type_definition")
 def Get_Through_Type_Definition(obj: Iir) -> Iir:
-    """"""
+    """
+    For array and record nature: the owner of the through type.
+
+    :param obj: The node to read the ``Through_Type_Definition`` field of.
+    :returns:   The node's ``Through_Type_Definition`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_through_type_definition")
 def Set_Through_Type_Definition(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    For array and record nature: the owner of the through type.
+
+    :param obj:   The node to write the ``Through_Type_Definition`` field of.
+    :param value: The value to write into the ``Through_Type_Definition`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_across_type")
 def Get_Across_Type(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Across_Type`` field of.
+    :returns:   The node's ``Across_Type`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_across_type")
 def Set_Across_Type(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Across_Type`` field of.
+    :param value: The value to write into the ``Across_Type`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_through_type")
 def Get_Through_Type(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Through_Type`` field of.
+    :returns:   The node's ``Through_Type`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_through_type")
 def Set_Through_Type(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Through_Type`` field of.
+    :param value: The value to write into the ``Through_Type`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_target")
 def Get_Target(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Target`` field of.
+    :returns:   The node's ``Target`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_target")
 def Set_Target(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Target`` field of.
+    :param value: The value to write into the ``Target`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_waveform_chain")
 def Get_Waveform_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Waveform_Chain`` field of.
+    :returns:   The node's ``Waveform_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_waveform_chain")
 def Set_Waveform_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Waveform_Chain`` field of.
+    :param value: The value to write into the ``Waveform_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_guard")
 def Get_Guard(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Guard`` field of.
+    :returns:   The node's ``Guard`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_guard")
 def Set_Guard(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Guard`` field of.
+    :param value: The value to write into the ``Guard`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_delay_mechanism")
 def Get_Delay_Mechanism(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Delay_Mechanism`` field of.
+    :returns:   The node's ``Delay_Mechanism`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_delay_mechanism")
 def Set_Delay_Mechanism(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Delay_Mechanism`` field of.
+    :param value: The value to write into the ``Delay_Mechanism`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_reject_time_expression")
 def Get_Reject_Time_Expression(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Reject_Time_Expression`` field of.
+    :returns:   The node's ``Reject_Time_Expression`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_reject_time_expression")
 def Set_Reject_Time_Expression(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Reject_Time_Expression`` field of.
+    :param value: The value to write into the ``Reject_Time_Expression`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_force_mode")
 def Get_Force_Mode(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Force_Mode`` field of.
+    :returns:   The node's ``Force_Mode`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_force_mode")
 def Set_Force_Mode(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Force_Mode`` field of.
+    :param value: The value to write into the ``Force_Mode`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_force_mode")
 def Get_Has_Force_Mode(obj: Iir) -> Boolean:
-    """"""
+    """
+    :param obj: The node to read the ``Has_Force_Mode`` field of.
+    :returns:   The node's ``Has_Force_Mode`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_force_mode")
 def Set_Has_Force_Mode(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Has_Force_Mode`` field of.
+    :param value: The value to write into the ``Has_Force_Mode`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_sensitivity_list")
 def Get_Sensitivity_List(obj: Iir) -> Iir:
-    """"""
+    """
+    The Is_Ref flag is set for extracted sensitivity lists.
+
+    :param obj: The node to read the ``Sensitivity_List`` field of.
+    :returns:   The node's ``Sensitivity_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_sensitivity_list")
 def Set_Sensitivity_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The Is_Ref flag is set for extracted sensitivity lists.
+
+    :param obj:   The node to write the ``Sensitivity_List`` field of.
+    :param value: The value to write into the ``Sensitivity_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_process_origin")
 def Get_Process_Origin(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Process_Origin`` field of.
+    :returns:   The node's ``Process_Origin`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_process_origin")
 def Set_Process_Origin(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Process_Origin`` field of.
+    :param value: The value to write into the ``Process_Origin`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_package_origin")
 def Get_Package_Origin(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Package_Origin`` field of.
+    :returns:   The node's ``Package_Origin`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_package_origin")
 def Set_Package_Origin(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Package_Origin`` field of.
+    :param value: The value to write into the ``Package_Origin`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_condition_clause")
 def Get_Condition_Clause(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Condition_Clause`` field of.
+    :returns:   The node's ``Condition_Clause`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_condition_clause")
 def Set_Condition_Clause(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Condition_Clause`` field of.
+    :param value: The value to write into the ``Condition_Clause`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_break_element")
 def Get_Break_Element(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Break_Element`` field of.
+    :returns:   The node's ``Break_Element`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_break_element")
 def Set_Break_Element(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Break_Element`` field of.
+    :param value: The value to write into the ``Break_Element`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_selector_quantity")
 def Get_Selector_Quantity(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Selector_Quantity`` field of.
+    :returns:   The node's ``Selector_Quantity`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_selector_quantity")
 def Set_Selector_Quantity(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Selector_Quantity`` field of.
+    :param value: The value to write into the ``Selector_Quantity`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_break_quantity")
 def Get_Break_Quantity(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Break_Quantity`` field of.
+    :returns:   The node's ``Break_Quantity`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_break_quantity")
 def Set_Break_Quantity(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Break_Quantity`` field of.
+    :param value: The value to write into the ``Break_Quantity`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_timeout_clause")
 def Get_Timeout_Clause(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Timeout_Clause`` field of.
+    :returns:   The node's ``Timeout_Clause`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_timeout_clause")
 def Set_Timeout_Clause(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Timeout_Clause`` field of.
+    :param value: The value to write into the ``Timeout_Clause`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_postponed_flag")
 def Get_Postponed_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    If set, the concurrent statement is postponed.
+
+    :param obj: The node to read the ``Postponed_Flag`` field of.
+    :returns:   The node's ``Postponed_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_postponed_flag")
 def Set_Postponed_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    If set, the concurrent statement is postponed.
+
+    :param obj:   The node to write the ``Postponed_Flag`` field of.
+    :param value: The value to write into the ``Postponed_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_callees_list")
 def Get_Callees_List(obj: Iir) -> Iir:
-    """"""
+    """
+    Returns the list of subprogram called in this subprogram or process. Note: implicit function (such as implicit
+    operators) are omitted from this list, since the purpose of this list is to correctly set flags for side effects
+    (purity_state, wait_state). Can return null_iir if there is no subprogram called.
+
+    :param obj: The node to read the ``Callees_List`` field of.
+    :returns:   The node's ``Callees_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_callees_list")
 def Set_Callees_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Returns the list of subprogram called in this subprogram or process. Note: implicit function (such as implicit
+    operators) are omitted from this list, since the purpose of this list is to correctly set flags for side effects
+    (purity_state, wait_state). Can return null_iir if there is no subprogram called.
+
+    :param obj:   The node to write the ``Callees_List`` field of.
+    :param value: The value to write into the ``Callees_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_passive_flag")
 def Get_Passive_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Get/Set the passive flag of a process.
+
+     TRUE if the process must be passive.
+     FALSE if the process may be not passive.
+    For a procedure declaration, set if it is passive.
+
+    :param obj: The node to read the ``Passive_Flag`` field of.
+    :returns:   The node's ``Passive_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_passive_flag")
 def Set_Passive_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Get/Set the passive flag of a process.
+
+     TRUE if the process must be passive.
+     FALSE if the process may be not passive.
+    For a procedure declaration, set if it is passive.
+
+    :param obj:   The node to write the ``Passive_Flag`` field of.
+    :param value: The value to write into the ``Passive_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_resolution_function_flag")
 def Get_Resolution_Function_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    True if the function is used as a resolution function.
+
+    :param obj: The node to read the ``Resolution_Function_Flag`` field of.
+    :returns:   The node's ``Resolution_Function_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_resolution_function_flag")
 def Set_Resolution_Function_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True if the function is used as a resolution function.
+
+    :param obj:   The node to write the ``Resolution_Function_Flag`` field of.
+    :param value: The value to write into the ``Resolution_Function_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_wait_state")
 def Get_Wait_State(obj: Iir) -> TriStateType:
-    """"""
+    """
+    Get/Set the wait state of the current subprogram or process. TRUE if it contains a wait statement, either directly
+    or
+
+     indirectly.
+    FALSE if it doesn't contain a wait statement. UNKNOWN if the wait status is not yet known.
+
+    :param obj: The node to read the ``Wait_State`` field of.
+    :returns:   The node's ``Wait_State`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_wait_state")
 def Set_Wait_State(obj: Iir, value: TriStateType) -> None:
-    """"""
+    """
+    Get/Set the wait state of the current subprogram or process. TRUE if it contains a wait statement, either directly
+    or
+
+     indirectly.
+    FALSE if it doesn't contain a wait statement. UNKNOWN if the wait status is not yet known.
+
+    :param obj:   The node to write the ``Wait_State`` field of.
+    :param value: The value to write into the ``Wait_State`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_all_sensitized_state")
 def Get_All_Sensitized_State(obj: Iir) -> Iir:
-    """"""
+    """
+    Get/Set whether the subprogram may be called by a sensitized process whose sensitivity list is ALL. FALSE if
+    declared in a package unit and reads a signal that is not
+
+      one of its interface, or if it calls such a subprogram.
+    TRUE if it doesn't call a subprogram whose state is False and
+
+      either doesn't read a signal or declared within an entity or
+      architecture.
+    UNKNOWN if the status is not yet known.
+
+    :param obj: The node to read the ``All_Sensitized_State`` field of.
+    :returns:   The node's ``All_Sensitized_State`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_all_sensitized_state")
 def Set_All_Sensitized_State(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Get/Set whether the subprogram may be called by a sensitized process whose sensitivity list is ALL. FALSE if
+    declared in a package unit and reads a signal that is not
+
+      one of its interface, or if it calls such a subprogram.
+    TRUE if it doesn't call a subprogram whose state is False and
+
+      either doesn't read a signal or declared within an entity or
+      architecture.
+    UNKNOWN if the status is not yet known.
+
+    :param obj:   The node to write the ``All_Sensitized_State`` field of.
+    :param value: The value to write into the ``All_Sensitized_State`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_seen_flag")
 def Get_Seen_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Get/Set the seen flag. Used when the graph of callees is walked, to avoid infinite loops, since the graph is not a
+    DAG (there may be cycles).
+
+    :param obj: The node to read the ``Seen_Flag`` field of.
+    :returns:   The node's ``Seen_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_seen_flag")
 def Set_Seen_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Get/Set the seen flag. Used when the graph of callees is walked, to avoid infinite loops, since the graph is not a
+    DAG (there may be cycles).
+
+    :param obj:   The node to write the ``Seen_Flag`` field of.
+    :param value: The value to write into the ``Seen_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_pure_flag")
 def Get_Pure_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Get/Set the pure flag of a function. TRUE if the function is declared pure. FALSE if the function is declared
+    impure.
+
+    :param obj: The node to read the ``Pure_Flag`` field of.
+    :returns:   The node's ``Pure_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_pure_flag")
 def Set_Pure_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Get/Set the pure flag of a function. TRUE if the function is declared pure. FALSE if the function is declared
+    impure.
+
+    :param obj:   The node to write the ``Pure_Flag`` field of.
+    :param value: The value to write into the ``Pure_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_foreign_flag")
 def Get_Foreign_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Get/Set the foreign flag of a declaration. TRUE if the declaration was decorated with the std.foreign attribute.
+
+    :param obj: The node to read the ``Foreign_Flag`` field of.
+    :returns:   The node's ``Foreign_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_foreign_flag")
 def Set_Foreign_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Get/Set the foreign flag of a declaration. TRUE if the declaration was decorated with the std.foreign attribute.
+
+    :param obj:   The node to write the ``Foreign_Flag`` field of.
+    :param value: The value to write into the ``Foreign_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_resolved_flag")
 def Get_Resolved_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Get/Set the resolved flag of a subtype definition. A subtype definition may be resolved either because a
+    resolution_indication is present in the subtype_indication, or because all elements type are resolved.
+
+    :param obj: The node to read the ``Resolved_Flag`` field of.
+    :returns:   The node's ``Resolved_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_resolved_flag")
 def Set_Resolved_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Get/Set the resolved flag of a subtype definition. A subtype definition may be resolved either because a
+    resolution_indication is present in the subtype_indication, or because all elements type are resolved.
+
+    :param obj:   The node to write the ``Resolved_Flag`` field of.
+    :param value: The value to write into the ``Resolved_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_signal_type_flag")
 def Get_Signal_Type_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Get/Set the signal_type flag of a type/subtype definition. This flags indicates whether the type can be used as a
+    signal type. Access types, file types and composite types whose a sub-element is an access type cannot be used as a
+    signal type.
+
+    :param obj: The node to read the ``Signal_Type_Flag`` field of.
+    :returns:   The node's ``Signal_Type_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_signal_type_flag")
 def Set_Signal_Type_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Get/Set the signal_type flag of a type/subtype definition. This flags indicates whether the type can be used as a
+    signal type. Access types, file types and composite types whose a sub-element is an access type cannot be used as a
+    signal type.
+
+    :param obj:   The node to write the ``Signal_Type_Flag`` field of.
+    :param value: The value to write into the ``Signal_Type_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_signal_flag")
 def Get_Has_Signal_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    True if ATYPE is used to declare a signal or to handle a signal
+
+     (such as slice or aliases).
+
+    :param obj: The node to read the ``Has_Signal_Flag`` field of.
+    :returns:   The node's ``Has_Signal_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_signal_flag")
 def Set_Has_Signal_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True if ATYPE is used to declare a signal or to handle a signal
+
+     (such as slice or aliases).
+
+    :param obj:   The node to write the ``Has_Signal_Flag`` field of.
+    :param value: The value to write into the ``Has_Signal_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_purity_state")
 def Get_Purity_State(obj: Iir) -> Iir:
-    """"""
+    """
+    Get/Set the purity status of a subprogram.
+
+    :param obj: The node to read the ``Purity_State`` field of.
+    :returns:   The node's ``Purity_State`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_purity_state")
 def Set_Purity_State(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Get/Set the purity status of a subprogram.
+
+    :param obj:   The node to write the ``Purity_State`` field of.
+    :param value: The value to write into the ``Purity_State`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_elab_flag")
 def Get_Elab_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Set during binding when DESIGN is added in a list of file to bind.
+
+    :param obj: The node to read the ``Elab_Flag`` field of.
+    :returns:   The node's ``Elab_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_elab_flag")
 def Set_Elab_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Set during binding when DESIGN is added in a list of file to bind.
+
+    :param obj:   The node to write the ``Elab_Flag`` field of.
+    :param value: The value to write into the ``Elab_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_vendor_library_flag")
 def Get_Vendor_Library_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    :param obj: The node to read the ``Vendor_Library_Flag`` field of.
+    :returns:   The node's ``Vendor_Library_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_vendor_library_flag")
 def Set_Vendor_Library_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Vendor_Library_Flag`` field of.
+    :param value: The value to write into the ``Vendor_Library_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_configuration_mark_flag")
 def Get_Configuration_Mark_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Used only by configuration to mark a design unit as already inserted in the list of units.  Used to avoid double
+    insertion.
+
+    :param obj: The node to read the ``Configuration_Mark_Flag`` field of.
+    :returns:   The node's ``Configuration_Mark_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_configuration_mark_flag")
 def Set_Configuration_Mark_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Used only by configuration to mark a design unit as already inserted in the list of units.  Used to avoid double
+    insertion.
+
+    :param obj:   The node to write the ``Configuration_Mark_Flag`` field of.
+    :param value: The value to write into the ``Configuration_Mark_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_configuration_done_flag")
 def Get_Configuration_Done_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Used only by configuration to flag units completely handled.  Used to detect recursion.
+
+    :param obj: The node to read the ``Configuration_Done_Flag`` field of.
+    :returns:   The node's ``Configuration_Done_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_configuration_done_flag")
 def Set_Configuration_Done_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Used only by configuration to flag units completely handled.  Used to detect recursion.
+
+    :param obj:   The node to write the ``Configuration_Done_Flag`` field of.
+    :param value: The value to write into the ``Configuration_Done_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_index_constraint_flag")
 def Get_Index_Constraint_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Set on an array_subtype if there is an index constraint. If not set, the subtype is unconstrained.
+
+    :param obj: The node to read the ``Index_Constraint_Flag`` field of.
+    :returns:   The node's ``Index_Constraint_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_index_constraint_flag")
 def Set_Index_Constraint_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Set on an array_subtype if there is an index constraint. If not set, the subtype is unconstrained.
+
+    :param obj:   The node to write the ``Index_Constraint_Flag`` field of.
+    :param value: The value to write into the ``Index_Constraint_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_hide_implicit_flag")
 def Get_Hide_Implicit_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    :param obj: The node to read the ``Hide_Implicit_Flag`` field of.
+    :returns:   The node's ``Hide_Implicit_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_hide_implicit_flag")
 def Set_Hide_Implicit_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Hide_Implicit_Flag`` field of.
+    :param value: The value to write into the ``Hide_Implicit_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_assertion_condition")
 def Get_Assertion_Condition(obj: Iir) -> Iir:
-    """"""
+    """
+    Condition of an assertion.
+
+    :param obj: The node to read the ``Assertion_Condition`` field of.
+    :returns:   The node's ``Assertion_Condition`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_assertion_condition")
 def Set_Assertion_Condition(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Condition of an assertion.
+
+    :param obj:   The node to write the ``Assertion_Condition`` field of.
+    :param value: The value to write into the ``Assertion_Condition`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_report_expression")
 def Get_Report_Expression(obj: Iir) -> Iir:
-    """"""
+    """
+    Report expression of an assertion or report statement.
+
+    :param obj: The node to read the ``Report_Expression`` field of.
+    :returns:   The node's ``Report_Expression`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_report_expression")
 def Set_Report_Expression(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Report expression of an assertion or report statement.
+
+    :param obj:   The node to write the ``Report_Expression`` field of.
+    :param value: The value to write into the ``Report_Expression`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_severity_expression")
 def Get_Severity_Expression(obj: Iir) -> Iir:
-    """"""
+    """
+    Severity expression of an assertion or report statement.
+
+    :param obj: The node to read the ``Severity_Expression`` field of.
+    :returns:   The node's ``Severity_Expression`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_severity_expression")
 def Set_Severity_Expression(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Severity expression of an assertion or report statement.
+
+    :param obj:   The node to write the ``Severity_Expression`` field of.
+    :param value: The value to write into the ``Severity_Expression`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_instantiated_unit")
 def Get_Instantiated_Unit(obj: Iir) -> Iir:
-    """"""
+    """
+    Instantiated unit of a component instantiation statement.
+
+    :param obj: The node to read the ``Instantiated_Unit`` field of.
+    :returns:   The node's ``Instantiated_Unit`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_instantiated_unit")
 def Set_Instantiated_Unit(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Instantiated unit of a component instantiation statement.
+
+    :param obj:   The node to write the ``Instantiated_Unit`` field of.
+    :param value: The value to write into the ``Instantiated_Unit`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_instantiated_header")
 def Get_Instantiated_Header(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Instantiated_Header`` field of.
+    :returns:   The node's ``Instantiated_Header`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_instantiated_header")
 def Set_Instantiated_Header(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Instantiated_Header`` field of.
+    :param value: The value to write into the ``Instantiated_Header`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_generic_map_aspect_chain")
 def Get_Generic_Map_Aspect_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Generic map aspect list.
+
+    :param obj: The node to read the ``Generic_Map_Aspect_Chain`` field of.
+    :returns:   The node's ``Generic_Map_Aspect_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_generic_map_aspect_chain")
 def Set_Generic_Map_Aspect_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Generic map aspect list.
+
+    :param obj:   The node to write the ``Generic_Map_Aspect_Chain`` field of.
+    :param value: The value to write into the ``Generic_Map_Aspect_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_port_map_aspect_chain")
 def Get_Port_Map_Aspect_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Port map aspect list.
+
+    :param obj: The node to read the ``Port_Map_Aspect_Chain`` field of.
+    :returns:   The node's ``Port_Map_Aspect_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_port_map_aspect_chain")
 def Set_Port_Map_Aspect_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Port map aspect list.
+
+    :param obj:   The node to write the ``Port_Map_Aspect_Chain`` field of.
+    :param value: The value to write into the ``Port_Map_Aspect_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_configuration_name")
 def Get_Configuration_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    Configuration of an entity_aspect_configuration.
+
+    :param obj: The node to read the ``Configuration_Name`` field of.
+    :returns:   The node's ``Configuration_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_configuration_name")
 def Set_Configuration_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Configuration of an entity_aspect_configuration.
+
+    :param obj:   The node to write the ``Configuration_Name`` field of.
+    :param value: The value to write into the ``Configuration_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_component_configuration")
 def Get_Component_Configuration(obj: Iir) -> Iir:
-    """"""
+    """
+    Component configuration for a component_instantiation_statement.
+
+    :param obj: The node to read the ``Component_Configuration`` field of.
+    :returns:   The node's ``Component_Configuration`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_component_configuration")
 def Set_Component_Configuration(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Component configuration for a component_instantiation_statement.
+
+    :param obj:   The node to write the ``Component_Configuration`` field of.
+    :param value: The value to write into the ``Component_Configuration`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_configuration_specification")
 def Get_Configuration_Specification(obj: Iir) -> Iir:
-    """"""
+    """
+    Configuration specification for a component_instantiation_statement.
+
+    :param obj: The node to read the ``Configuration_Specification`` field of.
+    :returns:   The node's ``Configuration_Specification`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_configuration_specification")
 def Set_Configuration_Specification(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Configuration specification for a component_instantiation_statement.
+
+    :param obj:   The node to write the ``Configuration_Specification`` field of.
+    :param value: The value to write into the ``Configuration_Specification`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_default_binding_indication")
 def Get_Default_Binding_Indication(obj: Iir) -> Iir:
-    """"""
+    """
+    Set/Get the default binding indication of a configuration specification or a component configuration.
+
+    :param obj: The node to read the ``Default_Binding_Indication`` field of.
+    :returns:   The node's ``Default_Binding_Indication`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_default_binding_indication")
 def Set_Default_Binding_Indication(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Set/Get the default binding indication of a configuration specification or a component configuration.
+
+    :param obj:   The node to write the ``Default_Binding_Indication`` field of.
+    :param value: The value to write into the ``Default_Binding_Indication`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_default_configuration_declaration")
 def Get_Default_Configuration_Declaration(obj: Iir) -> Iir:
-    """"""
+    """
+    Set/Get the default configuration of an architecture.
+
+    :param obj: The node to read the ``Default_Configuration_Declaration`` field of.
+    :returns:   The node's ``Default_Configuration_Declaration`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_default_configuration_declaration")
 def Set_Default_Configuration_Declaration(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Set/Get the default configuration of an architecture.
+
+    :param obj:   The node to write the ``Default_Configuration_Declaration`` field of.
+    :param value: The value to write into the ``Default_Configuration_Declaration`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_expression")
 def Get_Expression(obj: Iir) -> Iir:
-    """"""
+    """
+    Expression for an various nodes.
+
+    :param obj: The node to read the ``Expression`` field of.
+    :returns:   The node's ``Expression`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_expression")
 def Set_Expression(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Expression for an various nodes.
+
+    :param obj:   The node to write the ``Expression`` field of.
+    :param value: The value to write into the ``Expression`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_conditional_expression_chain")
 def Get_Conditional_Expression_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    A conditional expression. Node kind is a Iir_Kind_Conditional_Expression.
+
+    :param obj: The node to read the ``Conditional_Expression_Chain`` field of.
+    :returns:   The node's ``Conditional_Expression_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_conditional_expression_chain")
 def Set_Conditional_Expression_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    A conditional expression. Node kind is a Iir_Kind_Conditional_Expression.
+
+    :param obj:   The node to write the ``Conditional_Expression_Chain`` field of.
+    :param value: The value to write into the ``Conditional_Expression_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_allocator_designated_type")
 def Get_Allocator_Designated_Type(obj: Iir) -> Iir:
-    """"""
+    """
+    Set to the designated type (either the type of the expression or the subtype) when the expression is analyzed.
+
+    :param obj: The node to read the ``Allocator_Designated_Type`` field of.
+    :returns:   The node's ``Allocator_Designated_Type`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_allocator_designated_type")
 def Set_Allocator_Designated_Type(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Set to the designated type (either the type of the expression or the subtype) when the expression is analyzed.
+
+    :param obj:   The node to write the ``Allocator_Designated_Type`` field of.
+    :param value: The value to write into the ``Allocator_Designated_Type`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_selected_waveform_chain")
 def Get_Selected_Waveform_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Selected_Waveform_Chain`` field of.
+    :returns:   The node's ``Selected_Waveform_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_selected_waveform_chain")
 def Set_Selected_Waveform_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Selected_Waveform_Chain`` field of.
+    :param value: The value to write into the ``Selected_Waveform_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_selected_expressions_chain")
 def Get_Selected_Expressions_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Selected_Expressions_Chain`` field of.
+    :returns:   The node's ``Selected_Expressions_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_selected_expressions_chain")
 def Set_Selected_Expressions_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Selected_Expressions_Chain`` field of.
+    :param value: The value to write into the ``Selected_Expressions_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_conditional_waveform_chain")
 def Get_Conditional_Waveform_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Conditional_Waveform_Chain`` field of.
+    :returns:   The node's ``Conditional_Waveform_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_conditional_waveform_chain")
 def Set_Conditional_Waveform_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Conditional_Waveform_Chain`` field of.
+    :param value: The value to write into the ``Conditional_Waveform_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_guard_expression")
 def Get_Guard_Expression(obj: Iir) -> Iir:
-    """"""
+    """
+    Expression defining the value of the implicit guard signal.
+
+    :param obj: The node to read the ``Guard_Expression`` field of.
+    :returns:   The node's ``Guard_Expression`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_guard_expression")
 def Set_Guard_Expression(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Expression defining the value of the implicit guard signal.
+
+    :param obj:   The node to write the ``Guard_Expression`` field of.
+    :param value: The value to write into the ``Guard_Expression`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_guard_decl")
 def Get_Guard_Decl(obj: Iir) -> Iir:
-    """"""
+    """
+    The declaration (if any) of the implicit guard signal of a block statement.
+
+    :param obj: The node to read the ``Guard_Decl`` field of.
+    :returns:   The node's ``Guard_Decl`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_guard_decl")
 def Set_Guard_Decl(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The declaration (if any) of the implicit guard signal of a block statement.
+
+    :param obj:   The node to write the ``Guard_Decl`` field of.
+    :param value: The value to write into the ``Guard_Decl`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_guard_sensitivity_list")
 def Get_Guard_Sensitivity_List(obj: Iir) -> Iir:
-    """"""
+    """
+    Sensitivity list for the implicit guard signal.
+
+    :param obj: The node to read the ``Guard_Sensitivity_List`` field of.
+    :returns:   The node's ``Guard_Sensitivity_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_guard_sensitivity_list")
 def Set_Guard_Sensitivity_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Sensitivity list for the implicit guard signal.
+
+    :param obj:   The node to write the ``Guard_Sensitivity_List`` field of.
+    :param value: The value to write into the ``Guard_Sensitivity_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_attribute_implicit_chain")
 def Get_Attribute_Implicit_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Attribute_Implicit_Chain`` field of.
+    :returns:   The node's ``Attribute_Implicit_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_attribute_implicit_chain")
 def Set_Attribute_Implicit_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Attribute_Implicit_Chain`` field of.
+    :param value: The value to write into the ``Attribute_Implicit_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_block_block_configuration")
 def Get_Block_Block_Configuration(obj: Iir) -> Iir:
-    """"""
+    """
+    Block_Configuration that applies to this block statement.
+
+    :param obj: The node to read the ``Block_Block_Configuration`` field of.
+    :returns:   The node's ``Block_Block_Configuration`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_block_block_configuration")
 def Set_Block_Block_Configuration(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Block_Configuration that applies to this block statement.
+
+    :param obj:   The node to write the ``Block_Block_Configuration`` field of.
+    :param value: The value to write into the ``Block_Block_Configuration`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_package_header")
 def Get_Package_Header(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Package_Header`` field of.
+    :returns:   The node's ``Package_Header`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_package_header")
 def Set_Package_Header(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Package_Header`` field of.
+    :param value: The value to write into the ``Package_Header`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_block_header")
 def Get_Block_Header(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Block_Header`` field of.
+    :returns:   The node's ``Block_Header`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_block_header")
 def Set_Block_Header(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Block_Header`` field of.
+    :param value: The value to write into the ``Block_Header`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_uninstantiated_package_name")
 def Get_Uninstantiated_Package_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Uninstantiated_Package_Name`` field of.
+    :returns:   The node's ``Uninstantiated_Package_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_uninstantiated_package_name")
 def Set_Uninstantiated_Package_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Uninstantiated_Package_Name`` field of.
+    :param value: The value to write into the ``Uninstantiated_Package_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_uninstantiated_package_decl")
 def Get_Uninstantiated_Package_Decl(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Uninstantiated_Package_Decl`` field of.
+    :returns:   The node's ``Uninstantiated_Package_Decl`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_uninstantiated_package_decl")
 def Set_Uninstantiated_Package_Decl(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Uninstantiated_Package_Decl`` field of.
+    :param value: The value to write into the ``Uninstantiated_Package_Decl`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_associated_package")
 def Get_Associated_Package(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Associated_Package`` field of.
+    :returns:   The node's ``Associated_Package`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_associated_package")
 def Set_Associated_Package(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Associated_Package`` field of.
+    :param value: The value to write into the ``Associated_Package`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_instance_source_file")
 def Get_Instance_Source_File(obj: Iir) -> SourceFileEntry:
-    """"""
+    """
+    The created pseudo-file for relocating the instantiated nodes (generics and declarations).
+
+    :param obj: The node to read the ``Instance_Source_File`` field of.
+    :returns:   The node's ``Instance_Source_File`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_instance_source_file")
 def Set_Instance_Source_File(obj: Iir, value: SourceFileEntry) -> None:
-    """"""
+    """
+    The created pseudo-file for relocating the instantiated nodes (generics and declarations).
+
+    :param obj:   The node to write the ``Instance_Source_File`` field of.
+    :param value: The value to write into the ``Instance_Source_File`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_generate_block_configuration")
 def Get_Generate_Block_Configuration(obj: Iir) -> Iir:
-    """"""
+    """
+    Get/Set the block_configuration (there may be several block_configuration through the use of prev_configuration
+    singly linked list) that apply to this generate statement.
+
+    :param obj: The node to read the ``Generate_Block_Configuration`` field of.
+    :returns:   The node's ``Generate_Block_Configuration`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_generate_block_configuration")
 def Set_Generate_Block_Configuration(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Get/Set the block_configuration (there may be several block_configuration through the use of prev_configuration
+    singly linked list) that apply to this generate statement.
+
+    :param obj:   The node to write the ``Generate_Block_Configuration`` field of.
+    :param value: The value to write into the ``Generate_Block_Configuration`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_generate_statement_body")
 def Get_Generate_Statement_Body(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Generate_Statement_Body`` field of.
+    :returns:   The node's ``Generate_Statement_Body`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_generate_statement_body")
 def Set_Generate_Statement_Body(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Generate_Statement_Body`` field of.
+    :param value: The value to write into the ``Generate_Statement_Body`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_alternative_label")
 def Get_Alternative_Label(obj: Iir) -> NameId:
-    """"""
+    """
+    :param obj: The node to read the ``Alternative_Label`` field of.
+    :returns:   The node's ``Alternative_Label`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_alternative_label")
 def Set_Alternative_Label(obj: Iir, value: NameId) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Alternative_Label`` field of.
+    :param value: The value to write into the ``Alternative_Label`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_generate_else_clause")
 def Get_Generate_Else_Clause(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Generate_Else_Clause`` field of.
+    :returns:   The node's ``Generate_Else_Clause`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_generate_else_clause")
 def Set_Generate_Else_Clause(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Generate_Else_Clause`` field of.
+    :param value: The value to write into the ``Generate_Else_Clause`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_condition")
 def Get_Condition(obj: Iir) -> Iir:
-    """"""
+    """
+    Condition of a conditional_waveform, if_statement, elsif, while_loop_statement, next_statement or exit_statement.
+
+    :param obj: The node to read the ``Condition`` field of.
+    :returns:   The node's ``Condition`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_condition")
 def Set_Condition(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Condition of a conditional_waveform, if_statement, elsif, while_loop_statement, next_statement or exit_statement.
+
+    :param obj:   The node to write the ``Condition`` field of.
+    :param value: The value to write into the ``Condition`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_else_clause")
 def Get_Else_Clause(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Else_Clause`` field of.
+    :returns:   The node's ``Else_Clause`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_else_clause")
 def Set_Else_Clause(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Else_Clause`` field of.
+    :param value: The value to write into the ``Else_Clause`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_parameter_specification")
 def Get_Parameter_Specification(obj: Iir) -> Iir:
-    """"""
+    """
+    Iterator of a for_loop_statement.
+
+    :param obj: The node to read the ``Parameter_Specification`` field of.
+    :returns:   The node's ``Parameter_Specification`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_parameter_specification")
 def Set_Parameter_Specification(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Iterator of a for_loop_statement.
+
+    :param obj:   The node to write the ``Parameter_Specification`` field of.
+    :param value: The value to write into the ``Parameter_Specification`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_parent")
 def Get_Parent(obj: Iir) -> Iir:
-    """"""
+    """
+    Get/Set the statement in which TARGET appears.  This is used to check if next/exit is in a loop.
+
+    :param obj: The node to read the ``Parent`` field of.
+    :returns:   The node's ``Parent`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_parent")
 def Set_Parent(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Get/Set the statement in which TARGET appears.  This is used to check if next/exit is in a loop.
+
+    :param obj:   The node to write the ``Parent`` field of.
+    :param value: The value to write into the ``Parent`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_loop_label")
 def Get_Loop_Label(obj: Iir) -> Iir:
-    """"""
+    """
+    Loop label for an exit_statement or next_statement.
+
+    :param obj: The node to read the ``Loop_Label`` field of.
+    :returns:   The node's ``Loop_Label`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_loop_label")
 def Set_Loop_Label(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Loop label for an exit_statement or next_statement.
+
+    :param obj:   The node to write the ``Loop_Label`` field of.
+    :param value: The value to write into the ``Loop_Label`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_exit_flag")
 def Get_Exit_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    True if there is an exit statement targeting this loop statement.
+
+    :param obj: The node to read the ``Exit_Flag`` field of.
+    :returns:   The node's ``Exit_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_exit_flag")
 def Set_Exit_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True if there is an exit statement targeting this loop statement.
+
+    :param obj:   The node to write the ``Exit_Flag`` field of.
+    :param value: The value to write into the ``Exit_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_next_flag")
 def Get_Next_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    True if there is a next statement targeting this loop statement.
+
+    :param obj: The node to read the ``Next_Flag`` field of.
+    :returns:   The node's ``Next_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_next_flag")
 def Set_Next_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True if there is a next statement targeting this loop statement.
+
+    :param obj:   The node to write the ``Next_Flag`` field of.
+    :param value: The value to write into the ``Next_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_component_name")
 def Get_Component_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    Component name for a component_configuration or a configuration_specification.
+
+    :param obj: The node to read the ``Component_Name`` field of.
+    :returns:   The node's ``Component_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_component_name")
 def Set_Component_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Component name for a component_configuration or a configuration_specification.
+
+    :param obj:   The node to write the ``Component_Name`` field of.
+    :param value: The value to write into the ``Component_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_instantiation_list")
 def Get_Instantiation_List(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Instantiation_List`` field of.
+    :returns:   The node's ``Instantiation_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_instantiation_list")
 def Set_Instantiation_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Instantiation_List`` field of.
+    :param value: The value to write into the ``Instantiation_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_entity_aspect")
 def Get_Entity_Aspect(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Entity_Aspect`` field of.
+    :returns:   The node's ``Entity_Aspect`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_entity_aspect")
 def Set_Entity_Aspect(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Entity_Aspect`` field of.
+    :param value: The value to write into the ``Entity_Aspect`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_default_entity_aspect")
 def Get_Default_Entity_Aspect(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Default_Entity_Aspect`` field of.
+    :returns:   The node's ``Default_Entity_Aspect`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_default_entity_aspect")
 def Set_Default_Entity_Aspect(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Default_Entity_Aspect`` field of.
+    :param value: The value to write into the ``Default_Entity_Aspect`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_binding_indication")
 def Get_Binding_Indication(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Binding_Indication`` field of.
+    :returns:   The node's ``Binding_Indication`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_binding_indication")
 def Set_Binding_Indication(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Binding_Indication`` field of.
+    :param value: The value to write into the ``Binding_Indication`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_named_entity")
 def Get_Named_Entity(obj: Iir) -> Iir:
-    """"""
+    """
+    The named entity designated by a name.
+
+    :param obj: The node to read the ``Named_Entity`` field of.
+    :returns:   The node's ``Named_Entity`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_named_entity")
 def Set_Named_Entity(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The named entity designated by a name.
+
+    :param obj:   The node to write the ``Named_Entity`` field of.
+    :param value: The value to write into the ``Named_Entity`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_referenced_name")
 def Get_Referenced_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Referenced_Name`` field of.
+    :returns:   The node's ``Referenced_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_referenced_name")
 def Set_Referenced_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Referenced_Name`` field of.
+    :param value: The value to write into the ``Referenced_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_expr_staticness")
 def Get_Expr_Staticness(obj: Iir) -> Iir:
-    """"""
+    """
+    Expression staticness, defined by rules of LRM 7.4
+
+    :param obj: The node to read the ``Expr_Staticness`` field of.
+    :returns:   The node's ``Expr_Staticness`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_expr_staticness")
 def Set_Expr_Staticness(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Expression staticness, defined by rules of LRM 7.4
+
+    :param obj:   The node to write the ``Expr_Staticness`` field of.
+    :param value: The value to write into the ``Expr_Staticness`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_scalar_size")
 def Get_Scalar_Size(obj: Iir) -> ScalarSize:
-    """"""
+    """
+    :param obj: The node to read the ``Scalar_Size`` field of.
+    :returns:   The node's ``Scalar_Size`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_scalar_size")
 def Set_Scalar_Size(obj: Iir, value: ScalarSize) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Scalar_Size`` field of.
+    :param value: The value to write into the ``Scalar_Size`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_error_origin")
 def Get_Error_Origin(obj: Iir) -> Iir:
-    """"""
+    """
+    Node which couldn't be correctly analyzed.
+
+    :param obj: The node to read the ``Error_Origin`` field of.
+    :returns:   The node's ``Error_Origin`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_error_origin")
 def Set_Error_Origin(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Node which couldn't be correctly analyzed.
+
+    :param obj:   The node to write the ``Error_Origin`` field of.
+    :param value: The value to write into the ``Error_Origin`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_operand")
 def Get_Operand(obj: Iir) -> Iir:
-    """"""
+    """
+    Operand of a monadic operator.
+
+    :param obj: The node to read the ``Operand`` field of.
+    :returns:   The node's ``Operand`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_operand")
 def Set_Operand(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Operand of a monadic operator.
+
+    :param obj:   The node to write the ``Operand`` field of.
+    :param value: The value to write into the ``Operand`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_left")
 def Get_Left(obj: Iir) -> Iir:
-    """"""
+    """
+    Left operand of a dyadic operator.
+
+    :param obj: The node to read the ``Left`` field of.
+    :returns:   The node's ``Left`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_left")
 def Set_Left(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Left operand of a dyadic operator.
+
+    :param obj:   The node to write the ``Left`` field of.
+    :param value: The value to write into the ``Left`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_right")
 def Get_Right(obj: Iir) -> Iir:
-    """"""
+    """
+    Right operand of a dyadic operator.
+
+    :param obj: The node to read the ``Right`` field of.
+    :returns:   The node's ``Right`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_right")
 def Set_Right(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Right operand of a dyadic operator.
+
+    :param obj:   The node to write the ``Right`` field of.
+    :param value: The value to write into the ``Right`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_unit_name")
 def Get_Unit_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Unit_Name`` field of.
+    :returns:   The node's ``Unit_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_unit_name")
 def Set_Unit_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Unit_Name`` field of.
+    :param value: The value to write into the ``Unit_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_name")
 def Get_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Name`` field of.
+    :returns:   The node's ``Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_name")
 def Set_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Name`` field of.
+    :param value: The value to write into the ``Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_group_template_name")
 def Get_Group_Template_Name(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Group_Template_Name`` field of.
+    :returns:   The node's ``Group_Template_Name`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_group_template_name")
 def Set_Group_Template_Name(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Group_Template_Name`` field of.
+    :param value: The value to write into the ``Group_Template_Name`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_name_staticness")
 def Get_Name_Staticness(obj: Iir) -> Iir:
-    """"""
+    """
+    Staticness of a name, according to rules of LRM 6.1
+
+    :param obj: The node to read the ``Name_Staticness`` field of.
+    :returns:   The node's ``Name_Staticness`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_name_staticness")
 def Set_Name_Staticness(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Staticness of a name, according to rules of LRM 6.1
+
+    :param obj:   The node to write the ``Name_Staticness`` field of.
+    :param value: The value to write into the ``Name_Staticness`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_prefix")
 def Get_Prefix(obj: Iir) -> Iir:
-    """"""
+    """
+    Prefix of a name.
+
+    :param obj: The node to read the ``Prefix`` field of.
+    :returns:   The node's ``Prefix`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_prefix")
 def Set_Prefix(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Prefix of a name.
+
+    :param obj:   The node to write the ``Prefix`` field of.
+    :param value: The value to write into the ``Prefix`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_signature_prefix")
 def Get_Signature_Prefix(obj: Iir) -> Iir:
-    """"""
+    """
+    Prefix of a name signature
+
+    :param obj: The node to read the ``Signature_Prefix`` field of.
+    :returns:   The node's ``Signature_Prefix`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_signature_prefix")
 def Set_Signature_Prefix(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Prefix of a name signature
+
+    :param obj:   The node to write the ``Signature_Prefix`` field of.
+    :param value: The value to write into the ``Signature_Prefix`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_external_pathname")
 def Get_External_Pathname(obj: Iir) -> Iir:
-    """"""
+    """
+    External pathname for an external name.
+
+    :param obj: The node to read the ``External_Pathname`` field of.
+    :returns:   The node's ``External_Pathname`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_external_pathname")
 def Set_External_Pathname(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    External pathname for an external name.
+
+    :param obj:   The node to write the ``External_Pathname`` field of.
+    :param value: The value to write into the ``External_Pathname`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_pathname_suffix")
 def Get_Pathname_Suffix(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Pathname_Suffix`` field of.
+    :returns:   The node's ``Pathname_Suffix`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_pathname_suffix")
 def Set_Pathname_Suffix(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Pathname_Suffix`` field of.
+    :param value: The value to write into the ``Pathname_Suffix`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_pathname_expression")
 def Get_Pathname_Expression(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Pathname_Expression`` field of.
+    :returns:   The node's ``Pathname_Expression`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_pathname_expression")
 def Set_Pathname_Expression(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Pathname_Expression`` field of.
+    :param value: The value to write into the ``Pathname_Expression`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_in_formal_flag")
 def Get_In_Formal_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    True if the name appears in a formal_part.  In that case, some checks must be disabled (eg: the expression of a type
+    conversion can be a write-only interface).
+
+    :param obj: The node to read the ``In_Formal_Flag`` field of.
+    :returns:   The node's ``In_Formal_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_in_formal_flag")
 def Set_In_Formal_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True if the name appears in a formal_part.  In that case, some checks must be disabled (eg: the expression of a type
+    conversion can be a write-only interface).
+
+    :param obj:   The node to write the ``In_Formal_Flag`` field of.
+    :param value: The value to write into the ``In_Formal_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_inertial_flag")
 def Get_Inertial_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    True iff the association is an internal association.
+
+    :param obj: The node to read the ``Inertial_Flag`` field of.
+    :returns:   The node's ``Inertial_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_inertial_flag")
 def Set_Inertial_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True iff the association is an internal association.
+
+    :param obj:   The node to write the ``Inertial_Flag`` field of.
+    :param value: The value to write into the ``Inertial_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_slice_subtype")
 def Get_Slice_Subtype(obj: Iir) -> Iir:
-    """"""
+    """
+    The subtype of a slice.  Contrary to the Type field, this is not a reference.
+
+    :param obj: The node to read the ``Slice_Subtype`` field of.
+    :returns:   The node's ``Slice_Subtype`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_slice_subtype")
 def Set_Slice_Subtype(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The subtype of a slice.  Contrary to the Type field, this is not a reference.
+
+    :param obj:   The node to write the ``Slice_Subtype`` field of.
+    :param value: The value to write into the ``Slice_Subtype`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_suffix")
 def Get_Suffix(obj: Iir) -> Iir:
-    """"""
+    """
+    Suffix of a slice.
+
+    :param obj: The node to read the ``Suffix`` field of.
+    :returns:   The node's ``Suffix`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_suffix")
 def Set_Suffix(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Suffix of a slice.
+
+    :param obj:   The node to write the ``Suffix`` field of.
+    :param value: The value to write into the ``Suffix`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_index_subtype")
 def Get_Index_Subtype(obj: Iir) -> Iir:
-    """"""
+    """
+    Set the designated index subtype of an array attribute.
+
+    :param obj: The node to read the ``Index_Subtype`` field of.
+    :returns:   The node's ``Index_Subtype`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_index_subtype")
 def Set_Index_Subtype(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Set the designated index subtype of an array attribute.
+
+    :param obj:   The node to write the ``Index_Subtype`` field of.
+    :param value: The value to write into the ``Index_Subtype`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_parameter")
 def Get_Parameter(obj: Iir) -> Iir:
-    """"""
+    """
+    Parameter of an attribute.
+
+    :param obj: The node to read the ``Parameter`` field of.
+    :returns:   The node's ``Parameter`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_parameter")
 def Set_Parameter(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Parameter of an attribute.
+
+    :param obj:   The node to write the ``Parameter`` field of.
+    :param value: The value to write into the ``Parameter`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_parameter_2")
 def Get_Parameter_2(obj: Iir) -> Iir:
-    """"""
+    """
+    Second parameter of an attribute (for AMS VHDL).
+
+    :param obj: The node to read the ``Parameter_2`` field of.
+    :returns:   The node's ``Parameter_2`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_parameter_2")
 def Set_Parameter_2(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Second parameter of an attribute (for AMS VHDL).
+
+    :param obj:   The node to write the ``Parameter_2`` field of.
+    :param value: The value to write into the ``Parameter_2`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_parameter_3")
 def Get_Parameter_3(obj: Iir) -> Iir:
-    """"""
+    """
+    Third parameter of an attribute (for AMS VHDL).
+
+    :param obj: The node to read the ``Parameter_3`` field of.
+    :returns:   The node's ``Parameter_3`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_parameter_3")
 def Set_Parameter_3(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Third parameter of an attribute (for AMS VHDL).
+
+    :param obj:   The node to write the ``Parameter_3`` field of.
+    :param value: The value to write into the ``Parameter_3`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_parameter_4")
 def Get_Parameter_4(obj: Iir) -> Iir:
-    """"""
+    """
+    Fourth parameter of an attribute (for AMS VHDL).
+
+    :param obj: The node to read the ``Parameter_4`` field of.
+    :returns:   The node's ``Parameter_4`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_parameter_4")
 def Set_Parameter_4(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Fourth parameter of an attribute (for AMS VHDL).
+
+    :param obj:   The node to write the ``Parameter_4`` field of.
+    :param value: The value to write into the ``Parameter_4`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_attr_chain")
 def Get_Attr_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Attr_Chain`` field of.
+    :returns:   The node's ``Attr_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_attr_chain")
 def Set_Attr_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Attr_Chain`` field of.
+    :param value: The value to write into the ``Attr_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_actual_type")
 def Get_Actual_Type(obj: Iir) -> Iir:
-    """"""
+    """
+    Type of the actual for an association by individual.
+
+      Unless the formal is an unconstrained array type, this is the same as
+      the formal type.
+    Subtype indication for a type association.
+
+    :param obj: The node to read the ``Actual_Type`` field of.
+    :returns:   The node's ``Actual_Type`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_actual_type")
 def Set_Actual_Type(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Type of the actual for an association by individual.
+
+      Unless the formal is an unconstrained array type, this is the same as
+      the formal type.
+    Subtype indication for a type association.
+
+    :param obj:   The node to write the ``Actual_Type`` field of.
+    :param value: The value to write into the ``Actual_Type`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_actual_type_definition")
 def Get_Actual_Type_Definition(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Actual_Type_Definition`` field of.
+    :returns:   The node's ``Actual_Type_Definition`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_actual_type_definition")
 def Set_Actual_Type_Definition(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Actual_Type_Definition`` field of.
+    :param value: The value to write into the ``Actual_Type_Definition`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_association_chain")
 def Get_Association_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    List of individual associations for association_element_by_individual. Associations for parenthesis_name.
+
+    :param obj: The node to read the ``Association_Chain`` field of.
+    :returns:   The node's ``Association_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_association_chain")
 def Set_Association_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    List of individual associations for association_element_by_individual. Associations for parenthesis_name.
+
+    :param obj:   The node to write the ``Association_Chain`` field of.
+    :param value: The value to write into the ``Association_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_individual_association_chain")
 def Get_Individual_Association_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    List of choices for association_element_by_individual.
+
+    :param obj: The node to read the ``Individual_Association_Chain`` field of.
+    :returns:   The node's ``Individual_Association_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_individual_association_chain")
 def Set_Individual_Association_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    List of choices for association_element_by_individual.
+
+    :param obj:   The node to write the ``Individual_Association_Chain`` field of.
+    :param value: The value to write into the ``Individual_Association_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_subprogram_association_chain")
 def Get_Subprogram_Association_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Chain of implicit subprogram associations for a type association.
+
+    :param obj: The node to read the ``Subprogram_Association_Chain`` field of.
+    :returns:   The node's ``Subprogram_Association_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_subprogram_association_chain")
 def Set_Subprogram_Association_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Chain of implicit subprogram associations for a type association.
+
+    :param obj:   The node to write the ``Subprogram_Association_Chain`` field of.
+    :param value: The value to write into the ``Subprogram_Association_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_aggregate_info")
 def Get_Aggregate_Info(obj: Iir) -> Iir:
-    """"""
+    """
+    Get/Set info for the aggregate. There is one aggregate_info for for each dimension.
+
+    :param obj: The node to read the ``Aggregate_Info`` field of.
+    :returns:   The node's ``Aggregate_Info`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_aggregate_info")
 def Set_Aggregate_Info(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Get/Set info for the aggregate. There is one aggregate_info for for each dimension.
+
+    :param obj:   The node to write the ``Aggregate_Info`` field of.
+    :param value: The value to write into the ``Aggregate_Info`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_sub_aggregate_info")
 def Get_Sub_Aggregate_Info(obj: Iir) -> Iir:
-    """"""
+    """
+    Get/Set the info node for the next dimension.
+
+    :param obj: The node to read the ``Sub_Aggregate_Info`` field of.
+    :returns:   The node's ``Sub_Aggregate_Info`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_sub_aggregate_info")
 def Set_Sub_Aggregate_Info(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Get/Set the info node for the next dimension.
+
+    :param obj:   The node to write the ``Sub_Aggregate_Info`` field of.
+    :param value: The value to write into the ``Sub_Aggregate_Info`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_aggr_dynamic_flag")
 def Get_Aggr_Dynamic_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    TRUE when the length of the aggregate is not locally static.
+
+    :param obj: The node to read the ``Aggr_Dynamic_Flag`` field of.
+    :returns:   The node's ``Aggr_Dynamic_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_aggr_dynamic_flag")
 def Set_Aggr_Dynamic_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    TRUE when the length of the aggregate is not locally static.
+
+    :param obj:   The node to write the ``Aggr_Dynamic_Flag`` field of.
+    :param value: The value to write into the ``Aggr_Dynamic_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_aggr_min_length")
 def Get_Aggr_Min_Length(obj: Iir) -> Iir:
-    """"""
+    """
+    Get/Set the minimum number of elements for the lowest dimension of the aggregate or for the current dimension of a
+    sub-aggregate. The real number of elements may be greater than this number if there is an 'other' choice.
+
+    :param obj: The node to read the ``Aggr_Min_Length`` field of.
+    :returns:   The node's ``Aggr_Min_Length`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_aggr_min_length")
 def Set_Aggr_Min_Length(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Get/Set the minimum number of elements for the lowest dimension of the aggregate or for the current dimension of a
+    sub-aggregate. The real number of elements may be greater than this number if there is an 'other' choice.
+
+    :param obj:   The node to write the ``Aggr_Min_Length`` field of.
+    :param value: The value to write into the ``Aggr_Min_Length`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_aggr_low_limit")
 def Get_Aggr_Low_Limit(obj: Iir) -> Iir:
-    """"""
+    """
+    Highest index choice, if any.
+
+    :param obj: The node to read the ``Aggr_Low_Limit`` field of.
+    :returns:   The node's ``Aggr_Low_Limit`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_aggr_low_limit")
 def Set_Aggr_Low_Limit(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Highest index choice, if any.
+
+    :param obj:   The node to write the ``Aggr_Low_Limit`` field of.
+    :param value: The value to write into the ``Aggr_Low_Limit`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_aggr_high_limit")
 def Get_Aggr_High_Limit(obj: Iir) -> Iir:
-    """"""
+    """
+    Highest index choice, if any.
+
+    :param obj: The node to read the ``Aggr_High_Limit`` field of.
+    :returns:   The node's ``Aggr_High_Limit`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_aggr_high_limit")
 def Set_Aggr_High_Limit(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Highest index choice, if any.
+
+    :param obj:   The node to write the ``Aggr_High_Limit`` field of.
+    :param value: The value to write into the ``Aggr_High_Limit`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_aggr_others_flag")
 def Get_Aggr_Others_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    True if the aggregate has an 'others' choice.
+
+    :param obj: The node to read the ``Aggr_Others_Flag`` field of.
+    :returns:   The node's ``Aggr_Others_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_aggr_others_flag")
 def Set_Aggr_Others_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True if the aggregate has an 'others' choice.
+
+    :param obj:   The node to write the ``Aggr_Others_Flag`` field of.
+    :param value: The value to write into the ``Aggr_Others_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_aggr_named_flag")
 def Get_Aggr_Named_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    True if the aggregate have named associations.
+
+    :param obj: The node to read the ``Aggr_Named_Flag`` field of.
+    :returns:   The node's ``Aggr_Named_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_aggr_named_flag")
 def Set_Aggr_Named_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True if the aggregate have named associations.
+
+    :param obj:   The node to write the ``Aggr_Named_Flag`` field of.
+    :param value: The value to write into the ``Aggr_Named_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_aggregate_expand_flag")
 def Get_Aggregate_Expand_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    True if the aggregate can be statically built.
+
+    :param obj: The node to read the ``Aggregate_Expand_Flag`` field of.
+    :returns:   The node's ``Aggregate_Expand_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_aggregate_expand_flag")
 def Set_Aggregate_Expand_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True if the aggregate can be statically built.
+
+    :param obj:   The node to write the ``Aggregate_Expand_Flag`` field of.
+    :param value: The value to write into the ``Aggregate_Expand_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_determined_aggregate_flag")
 def Get_Determined_Aggregate_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    True if the bounds of the aggregated are determined by the context.
+
+    :param obj: The node to read the ``Determined_Aggregate_Flag`` field of.
+    :returns:   The node's ``Determined_Aggregate_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_determined_aggregate_flag")
 def Set_Determined_Aggregate_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    True if the bounds of the aggregated are determined by the context.
+
+    :param obj:   The node to write the ``Determined_Aggregate_Flag`` field of.
+    :param value: The value to write into the ``Determined_Aggregate_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_association_choices_chain")
 def Get_Association_Choices_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Chain of choices.
+
+    :param obj: The node to read the ``Association_Choices_Chain`` field of.
+    :returns:   The node's ``Association_Choices_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_association_choices_chain")
 def Set_Association_Choices_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Chain of choices.
+
+    :param obj:   The node to write the ``Association_Choices_Chain`` field of.
+    :param value: The value to write into the ``Association_Choices_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_case_statement_alternative_chain")
 def Get_Case_Statement_Alternative_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Chain of choices.
+
+    :param obj: The node to read the ``Case_Statement_Alternative_Chain`` field of.
+    :returns:   The node's ``Case_Statement_Alternative_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_case_statement_alternative_chain")
 def Set_Case_Statement_Alternative_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Chain of choices.
+
+    :param obj:   The node to write the ``Case_Statement_Alternative_Chain`` field of.
+    :param value: The value to write into the ``Case_Statement_Alternative_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_matching_flag")
 def Get_Matching_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Matching condition for case statement.
+
+    :param obj: The node to read the ``Matching_Flag`` field of.
+    :returns:   The node's ``Matching_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_matching_flag")
 def Set_Matching_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Matching condition for case statement.
+
+    :param obj:   The node to write the ``Matching_Flag`` field of.
+    :param value: The value to write into the ``Matching_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_choice_staticness")
 def Get_Choice_Staticness(obj: Iir) -> Iir:
-    """"""
+    """
+    Staticness of the choice.
+
+    :param obj: The node to read the ``Choice_Staticness`` field of.
+    :returns:   The node's ``Choice_Staticness`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_choice_staticness")
 def Set_Choice_Staticness(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Staticness of the choice.
+
+    :param obj:   The node to write the ``Choice_Staticness`` field of.
+    :param value: The value to write into the ``Choice_Staticness`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_procedure_call")
 def Get_Procedure_Call(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Procedure_Call`` field of.
+    :returns:   The node's ``Procedure_Call`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_procedure_call")
 def Set_Procedure_Call(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Procedure_Call`` field of.
+    :param value: The value to write into the ``Procedure_Call`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_implementation")
 def Get_Implementation(obj: Iir) -> Iir:
-    """"""
+    """
+    Subprogram to be called by a procedure, function call or operator.  This is the declaration of the subprogram (or a
+    list of during analysis).
+
+    :param obj: The node to read the ``Implementation`` field of.
+    :returns:   The node's ``Implementation`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_implementation")
 def Set_Implementation(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Subprogram to be called by a procedure, function call or operator.  This is the declaration of the subprogram (or a
+    list of during analysis).
+
+    :param obj:   The node to write the ``Implementation`` field of.
+    :param value: The value to write into the ``Implementation`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_parameter_association_chain")
 def Get_Parameter_Association_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Parameter associations for procedure and function call.
+
+    :param obj: The node to read the ``Parameter_Association_Chain`` field of.
+    :returns:   The node's ``Parameter_Association_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_parameter_association_chain")
 def Set_Parameter_Association_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Parameter associations for procedure and function call.
+
+    :param obj:   The node to write the ``Parameter_Association_Chain`` field of.
+    :param value: The value to write into the ``Parameter_Association_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_method_object")
 def Get_Method_Object(obj: Iir) -> Iir:
-    """"""
+    """
+    Object of a method call.  NULL_IIR if the subprogram is not a method.
+
+    :param obj: The node to read the ``Method_Object`` field of.
+    :returns:   The node's ``Method_Object`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_method_object")
 def Set_Method_Object(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Object of a method call.  NULL_IIR if the subprogram is not a method.
+
+    :param obj:   The node to write the ``Method_Object`` field of.
+    :param value: The value to write into the ``Method_Object`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_subtype_type_mark")
 def Get_Subtype_Type_Mark(obj: Iir) -> Iir:
-    """"""
+    """
+    The type_mark that appeared in the subtype indication.  This is a name. May be null_iir if there is no type mark (as
+    in an iterator).
+
+    :param obj: The node to read the ``Subtype_Type_Mark`` field of.
+    :returns:   The node's ``Subtype_Type_Mark`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_subtype_type_mark")
 def Set_Subtype_Type_Mark(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The type_mark that appeared in the subtype indication.  This is a name. May be null_iir if there is no type mark (as
+    in an iterator).
+
+    :param obj:   The node to write the ``Subtype_Type_Mark`` field of.
+    :param value: The value to write into the ``Subtype_Type_Mark`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_subnature_nature_mark")
 def Get_Subnature_Nature_Mark(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Subnature_Nature_Mark`` field of.
+    :returns:   The node's ``Subnature_Nature_Mark`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_subnature_nature_mark")
 def Set_Subnature_Nature_Mark(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Subnature_Nature_Mark`` field of.
+    :param value: The value to write into the ``Subnature_Nature_Mark`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_type_conversion_subtype")
 def Get_Type_Conversion_Subtype(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Type_Conversion_Subtype`` field of.
+    :returns:   The node's ``Type_Conversion_Subtype`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_type_conversion_subtype")
 def Set_Type_Conversion_Subtype(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Type_Conversion_Subtype`` field of.
+    :param value: The value to write into the ``Type_Conversion_Subtype`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_type_mark")
 def Get_Type_Mark(obj: Iir) -> Iir:
-    """"""
+    """
+    The type_mark that appeared in qualified expressions or type conversions.
+
+    :param obj: The node to read the ``Type_Mark`` field of.
+    :returns:   The node's ``Type_Mark`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_type_mark")
 def Set_Type_Mark(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The type_mark that appeared in qualified expressions or type conversions.
+
+    :param obj:   The node to write the ``Type_Mark`` field of.
+    :param value: The value to write into the ``Type_Mark`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_file_type_mark")
 def Get_File_Type_Mark(obj: Iir) -> Iir:
-    """"""
+    """
+    The type of values for a type file.
+
+    :param obj: The node to read the ``File_Type_Mark`` field of.
+    :returns:   The node's ``File_Type_Mark`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_file_type_mark")
 def Set_File_Type_Mark(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    The type of values for a type file.
+
+    :param obj:   The node to write the ``File_Type_Mark`` field of.
+    :param value: The value to write into the ``File_Type_Mark`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_return_type_mark")
 def Get_Return_Type_Mark(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Return_Type_Mark`` field of.
+    :returns:   The node's ``Return_Type_Mark`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_return_type_mark")
 def Set_Return_Type_Mark(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Return_Type_Mark`` field of.
+    :param value: The value to write into the ``Return_Type_Mark`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_disconnect_flag")
 def Get_Has_Disconnect_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    This flag is set on a signal_declaration, when a disconnection specification applies to the signal (or a subelement
+    of it). This is used to check 'others' and 'all' designators.
+
+    :param obj: The node to read the ``Has_Disconnect_Flag`` field of.
+    :returns:   The node's ``Has_Disconnect_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_disconnect_flag")
 def Set_Has_Disconnect_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    This flag is set on a signal_declaration, when a disconnection specification applies to the signal (or a subelement
+    of it). This is used to check 'others' and 'all' designators.
+
+    :param obj:   The node to write the ``Has_Disconnect_Flag`` field of.
+    :param value: The value to write into the ``Has_Disconnect_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_active_flag")
 def Get_Has_Active_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    This flag is set on a signal when its activity is read by the user. Some signals handling can be optimized when this
+    flag is set.
+
+    :param obj: The node to read the ``Has_Active_Flag`` field of.
+    :returns:   The node's ``Has_Active_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_active_flag")
 def Set_Has_Active_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    This flag is set on a signal when its activity is read by the user. Some signals handling can be optimized when this
+    flag is set.
+
+    :param obj:   The node to write the ``Has_Active_Flag`` field of.
+    :param value: The value to write into the ``Has_Active_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_is_within_flag")
 def Get_Is_Within_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    This flag is set is code being analyzed is textually within TARGET. This is used for selected by name rule.
+
+    :param obj: The node to read the ``Is_Within_Flag`` field of.
+    :returns:   The node's ``Is_Within_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_is_within_flag")
 def Set_Is_Within_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    This flag is set is code being analyzed is textually within TARGET. This is used for selected by name rule.
+
+    :param obj:   The node to write the ``Is_Within_Flag`` field of.
+    :param value: The value to write into the ``Is_Within_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_type_marks_list")
 def Get_Type_Marks_List(obj: Iir) -> Iir:
-    """"""
+    """
+    List of type_mark for an Iir_Kind_Signature
+
+    :param obj: The node to read the ``Type_Marks_List`` field of.
+    :returns:   The node's ``Type_Marks_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_type_marks_list")
 def Set_Type_Marks_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    List of type_mark for an Iir_Kind_Signature
+
+    :param obj:   The node to write the ``Type_Marks_List`` field of.
+    :param value: The value to write into the ``Type_Marks_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_implicit_alias_flag")
 def Get_Implicit_Alias_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    :param obj: The node to read the ``Implicit_Alias_Flag`` field of.
+    :returns:   The node's ``Implicit_Alias_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_implicit_alias_flag")
 def Set_Implicit_Alias_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Implicit_Alias_Flag`` field of.
+    :param value: The value to write into the ``Implicit_Alias_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_alias_signature")
 def Get_Alias_Signature(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Alias_Signature`` field of.
+    :returns:   The node's ``Alias_Signature`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_alias_signature")
 def Set_Alias_Signature(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Alias_Signature`` field of.
+    :param value: The value to write into the ``Alias_Signature`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_attribute_signature")
 def Get_Attribute_Signature(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Attribute_Signature`` field of.
+    :returns:   The node's ``Attribute_Signature`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_attribute_signature")
 def Set_Attribute_Signature(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Attribute_Signature`` field of.
+    :param value: The value to write into the ``Attribute_Signature`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_overload_list")
 def Get_Overload_List(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Overload_List`` field of.
+    :returns:   The node's ``Overload_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_overload_list")
 def Set_Overload_List(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Overload_List`` field of.
+    :param value: The value to write into the ``Overload_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_simple_name_identifier")
 def Get_Simple_Name_Identifier(obj: Iir) -> NameId:
-    """"""
+    """
+    Identifier of the simple_name attribute.
+
+    :param obj: The node to read the ``Simple_Name_Identifier`` field of.
+    :returns:   The node's ``Simple_Name_Identifier`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_simple_name_identifier")
 def Set_Simple_Name_Identifier(obj: Iir, value: NameId) -> None:
-    """"""
+    """
+    Identifier of the simple_name attribute.
+
+    :param obj:   The node to write the ``Simple_Name_Identifier`` field of.
+    :param value: The value to write into the ``Simple_Name_Identifier`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_simple_name_subtype")
 def Get_Simple_Name_Subtype(obj: Iir) -> Iir:
-    """"""
+    """
+    Subtype for Simple_Name attribute.
+
+    :param obj: The node to read the ``Simple_Name_Subtype`` field of.
+    :returns:   The node's ``Simple_Name_Subtype`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_simple_name_subtype")
 def Set_Simple_Name_Subtype(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Subtype for Simple_Name attribute.
+
+    :param obj:   The node to write the ``Simple_Name_Subtype`` field of.
+    :param value: The value to write into the ``Simple_Name_Subtype`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_protected_type_body")
 def Get_Protected_Type_Body(obj: Iir) -> Iir:
-    """"""
+    """
+    Body of a protected type declaration.
+
+    :param obj: The node to read the ``Protected_Type_Body`` field of.
+    :returns:   The node's ``Protected_Type_Body`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_protected_type_body")
 def Set_Protected_Type_Body(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Body of a protected type declaration.
+
+    :param obj:   The node to write the ``Protected_Type_Body`` field of.
+    :param value: The value to write into the ``Protected_Type_Body`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_protected_type_declaration")
 def Get_Protected_Type_Declaration(obj: Iir) -> Iir:
-    """"""
+    """
+    Corresponding protected type declaration of a protected type body.
+
+    :param obj: The node to read the ``Protected_Type_Declaration`` field of.
+    :returns:   The node's ``Protected_Type_Declaration`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_protected_type_declaration")
 def Set_Protected_Type_Declaration(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Corresponding protected type declaration of a protected type body.
+
+    :param obj:   The node to write the ``Protected_Type_Declaration`` field of.
+    :param value: The value to write into the ``Protected_Type_Declaration`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_use_flag")
 def Get_Use_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    For a declaration: true if the declaration is used somewhere.
+
+    :param obj: The node to read the ``Use_Flag`` field of.
+    :returns:   The node's ``Use_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_use_flag")
 def Set_Use_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    For a declaration: true if the declaration is used somewhere.
+
+    :param obj:   The node to write the ``Use_Flag`` field of.
+    :param value: The value to write into the ``Use_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_elaborated_flag")
 def Get_Elaborated_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    For a subprogram declaration, constant declaration or protected type. Set when it could be used because fully
+    elaborated.
+
+    :param obj: The node to read the ``Elaborated_Flag`` field of.
+    :returns:   The node's ``Elaborated_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_elaborated_flag")
 def Set_Elaborated_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    For a subprogram declaration, constant declaration or protected type. Set when it could be used because fully
+    elaborated.
+
+    :param obj:   The node to write the ``Elaborated_Flag`` field of.
+    :param value: The value to write into the ``Elaborated_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_end_has_reserved_id")
 def Get_End_Has_Reserved_Id(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag: true if 'end' is followed by the reserved identifier.
+
+    :param obj: The node to read the ``End_Has_Reserved_Id`` field of.
+    :returns:   The node's ``End_Has_Reserved_Id`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_end_has_reserved_id")
 def Set_End_Has_Reserved_Id(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag: true if 'end' is followed by the reserved identifier.
+
+    :param obj:   The node to write the ``End_Has_Reserved_Id`` field of.
+    :param value: The value to write into the ``End_Has_Reserved_Id`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_end_has_identifier")
 def Get_End_Has_Identifier(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag: true if 'end' is followed by the identifier.
+
+    :param obj: The node to read the ``End_Has_Identifier`` field of.
+    :returns:   The node's ``End_Has_Identifier`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_end_has_identifier")
 def Set_End_Has_Identifier(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag: true if 'end' is followed by the identifier.
+
+    :param obj:   The node to write the ``End_Has_Identifier`` field of.
+    :param value: The value to write into the ``End_Has_Identifier`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_end_has_postponed")
 def Get_End_Has_Postponed(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag: true if 'end' is followed by 'postponed'.
+
+    :param obj: The node to read the ``End_Has_Postponed`` field of.
+    :returns:   The node's ``End_Has_Postponed`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_end_has_postponed")
 def Set_End_Has_Postponed(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag: true if 'end' is followed by 'postponed'.
+
+    :param obj:   The node to write the ``End_Has_Postponed`` field of.
+    :param value: The value to write into the ``End_Has_Postponed`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_begin")
 def Get_Has_Begin(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag: true if 'begin' is present.
+
+    :param obj: The node to read the ``Has_Begin`` field of.
+    :returns:   The node's ``Has_Begin`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_begin")
 def Set_Has_Begin(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag: true if 'begin' is present.
+
+    :param obj:   The node to write the ``Has_Begin`` field of.
+    :param value: The value to write into the ``Has_Begin`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_end")
 def Get_Has_End(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag: true if 'end' is present (only for generate body).
+
+    :param obj: The node to read the ``Has_End`` field of.
+    :returns:   The node's ``Has_End`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_end")
 def Set_Has_End(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag: true if 'end' is present (only for generate body).
+
+    :param obj:   The node to write the ``Has_End`` field of.
+    :param value: The value to write into the ``Has_End`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_is")
 def Get_Has_Is(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag: true if 'is' is present.
+
+    :param obj: The node to read the ``Has_Is`` field of.
+    :returns:   The node's ``Has_Is`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_is")
 def Set_Has_Is(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag: true if 'is' is present.
+
+    :param obj:   The node to write the ``Has_Is`` field of.
+    :param value: The value to write into the ``Has_Is`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_pure")
 def Get_Has_Pure(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag: true if 'pure' or 'impure' is present.
+
+    :param obj: The node to read the ``Has_Pure`` field of.
+    :returns:   The node's ``Has_Pure`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_pure")
 def Set_Has_Pure(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag: true if 'pure' or 'impure' is present.
+
+    :param obj:   The node to write the ``Has_Pure`` field of.
+    :param value: The value to write into the ``Has_Pure`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_body")
 def Get_Has_Body(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag: true if body appears just after the specification.
+
+    :param obj: The node to read the ``Has_Body`` field of.
+    :returns:   The node's ``Has_Body`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_body")
 def Set_Has_Body(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag: true if body appears just after the specification.
+
+    :param obj:   The node to write the ``Has_Body`` field of.
+    :param value: The value to write into the ``Has_Body`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_parameter")
 def Get_Has_Parameter(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag: true if 'parameter' reserved identifier is present.
+
+    :param obj: The node to read the ``Has_Parameter`` field of.
+    :returns:   The node's ``Has_Parameter`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_parameter")
 def Set_Has_Parameter(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag: true if 'parameter' reserved identifier is present.
+
+    :param obj:   The node to write the ``Has_Parameter`` field of.
+    :param value: The value to write into the ``Has_Parameter`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_component")
 def Get_Has_Component(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag: true if 'component' reserved identifier is present.
+
+    :param obj: The node to read the ``Has_Component`` field of.
+    :returns:   The node's ``Has_Component`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_component")
 def Set_Has_Component(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag: true if 'component' reserved identifier is present.
+
+    :param obj:   The node to write the ``Has_Component`` field of.
+    :param value: The value to write into the ``Has_Component`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_identifier_list")
 def Get_Has_Identifier_List(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag for object declaration.  If True, the identifier of this declaration is followed by an identifier (and
+    separated by a comma). This flag is set on all but the last declarations. Eg: on 'signal A, B, C : Bit', the flag is
+    set on A and B (but not C).
+
+    :param obj: The node to read the ``Has_Identifier_List`` field of.
+    :returns:   The node's ``Has_Identifier_List`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_identifier_list")
 def Set_Has_Identifier_List(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag for object declaration.  If True, the identifier of this declaration is followed by an identifier (and
+    separated by a comma). This flag is set on all but the last declarations. Eg: on 'signal A, B, C : Bit', the flag is
+    set on A and B (but not C).
+
+    :param obj:   The node to write the ``Has_Identifier_List`` field of.
+    :param value: The value to write into the ``Has_Identifier_List`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_mode")
 def Get_Has_Mode(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag for object declaration.  If True, the mode is present.
+
+    :param obj: The node to read the ``Has_Mode`` field of.
+    :returns:   The node's ``Has_Mode`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_mode")
 def Set_Has_Mode(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag for object declaration.  If True, the mode is present.
+
+    :param obj:   The node to write the ``Has_Mode`` field of.
+    :param value: The value to write into the ``Has_Mode`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_class")
 def Get_Has_Class(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag for object declaration.  If True, the object class is present.
+
+    :param obj: The node to read the ``Has_Class`` field of.
+    :returns:   The node's ``Has_Class`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_class")
 def Set_Has_Class(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag for object declaration.  If True, the object class is present.
+
+    :param obj:   The node to write the ``Has_Class`` field of.
+    :param value: The value to write into the ``Has_Class`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_semicolon")
 def Get_Has_Semicolon(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag for interface declaration.  If True, ';' is present after the interface.  In case of multiple names
+    separated with colon, it cannot be set with Has_Identifier_List.
+
+    :param obj: The node to read the ``Has_Semicolon`` field of.
+    :returns:   The node's ``Has_Semicolon`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_semicolon")
 def Set_Has_Semicolon(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag for interface declaration.  If True, ';' is present after the interface.  In case of multiple names
+    separated with colon, it cannot be set with Has_Identifier_List.
+
+    :param obj:   The node to write the ``Has_Semicolon`` field of.
+    :param value: The value to write into the ``Has_Semicolon`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_has_delay_mechanism")
 def Get_Has_Delay_Mechanism(obj: Iir) -> Boolean:
-    """"""
+    """
+    Layout flag for signal assignment.  If True, the delay mechanism is present.  This is obviously true for transport
+    or inertial with reject, but the simple 'inertial' is optional.
+
+    :param obj: The node to read the ``Has_Delay_Mechanism`` field of.
+    :returns:   The node's ``Has_Delay_Mechanism`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_has_delay_mechanism")
 def Set_Has_Delay_Mechanism(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Layout flag for signal assignment.  If True, the delay mechanism is present.  This is obviously true for transport
+    or inertial with reject, but the simple 'inertial' is optional.
+
+    :param obj:   The node to write the ``Has_Delay_Mechanism`` field of.
+    :param value: The value to write into the ``Has_Delay_Mechanism`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_suspend_flag")
 def Get_Suspend_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Set on wait, procedure call and composite statements when there is a sub-statement that can suspend a procedure or a
+    process.  Also set on procedure declaration.  Note that the flag is conservative: it must be true if the node
+    contains directly or indirectly a wait statement, but need not to be false otherwise.
+
+    :param obj: The node to read the ``Suspend_Flag`` field of.
+    :returns:   The node's ``Suspend_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_suspend_flag")
 def Set_Suspend_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Set on wait, procedure call and composite statements when there is a sub-statement that can suspend a procedure or a
+    process.  Also set on procedure declaration.  Note that the flag is conservative: it must be true if the node
+    contains directly or indirectly a wait statement, but need not to be false otherwise.
+
+    :param obj:   The node to write the ``Suspend_Flag`` field of.
+    :param value: The value to write into the ``Suspend_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_covered_flag")
 def Get_Covered_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    Set during elaboration when the statement is executed.
+
+    :param obj: The node to read the ``Covered_Flag`` field of.
+    :returns:   The node's ``Covered_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_covered_flag")
 def Set_Covered_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Set during elaboration when the statement is executed.
+
+    :param obj:   The node to write the ``Covered_Flag`` field of.
+    :param value: The value to write into the ``Covered_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_stop_flag")
 def Get_Stop_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    :param obj: The node to read the ``Stop_Flag`` field of.
+    :returns:   The node's ``Stop_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_stop_flag")
 def Set_Stop_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Stop_Flag`` field of.
+    :param value: The value to write into the ``Stop_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_is_ref")
 def Get_Is_Ref(obj: Iir) -> Boolean:
-    """"""
+    """
+    Set to True if Maybe_Ref fields are references.  This cannot be shared with Has_Identifier_List as: Is_Ref is set to
+    True on all items but the first, while Has_Identifier_List is set to True on all items but the last.  Furthermore
+    Is_Ref appears in nodes where Has_Identifier_List is not present.
+
+    :param obj: The node to read the ``Is_Ref`` field of.
+    :returns:   The node's ``Is_Ref`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_is_ref")
 def Set_Is_Ref(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    Set to True if Maybe_Ref fields are references.  This cannot be shared with Has_Identifier_List as: Is_Ref is set to
+    True on all items but the first, while Has_Identifier_List is set to True on all items but the last.  Furthermore
+    Is_Ref appears in nodes where Has_Identifier_List is not present.
+
+    :param obj:   The node to write the ``Is_Ref`` field of.
+    :param value: The value to write into the ``Is_Ref`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_is_forward_ref")
 def Get_Is_Forward_Ref(obj: Iir) -> Boolean:
-    """"""
+    """
+    :param obj: The node to read the ``Is_Forward_Ref`` field of.
+    :returns:   The node's ``Is_Forward_Ref`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_is_forward_ref")
 def Set_Is_Forward_Ref(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Is_Forward_Ref`` field of.
+    :param value: The value to write into the ``Is_Forward_Ref`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_psl_property")
 def Get_Psl_Property(obj: Iir) -> PSLNode:
-    """"""
+    """
+    :param obj: The node to read the ``Psl_Property`` field of.
+    :returns:   The node's ``Psl_Property`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_psl_property")
 def Set_Psl_Property(obj: Iir, value: PSLNode) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Psl_Property`` field of.
+    :param value: The value to write into the ``Psl_Property`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_psl_sequence")
 def Get_Psl_Sequence(obj: Iir) -> PSLNode:
-    """"""
+    """
+    :param obj: The node to read the ``Psl_Sequence`` field of.
+    :returns:   The node's ``Psl_Sequence`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_psl_sequence")
 def Set_Psl_Sequence(obj: Iir, value: PSLNode) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Psl_Sequence`` field of.
+    :param value: The value to write into the ``Psl_Sequence`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_psl_declaration")
 def Get_Psl_Declaration(obj: Iir) -> PSLNode:
-    """"""
+    """
+    :param obj: The node to read the ``Psl_Declaration`` field of.
+    :returns:   The node's ``Psl_Declaration`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_psl_declaration")
 def Set_Psl_Declaration(obj: Iir, value: PSLNode) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Psl_Declaration`` field of.
+    :param value: The value to write into the ``Psl_Declaration`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_psl_expression")
 def Get_Psl_Expression(obj: Iir) -> PSLNode:
-    """"""
+    """
+    :param obj: The node to read the ``Psl_Expression`` field of.
+    :returns:   The node's ``Psl_Expression`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_psl_expression")
 def Set_Psl_Expression(obj: Iir, value: PSLNode) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Psl_Expression`` field of.
+    :param value: The value to write into the ``Psl_Expression`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_psl_boolean")
 def Get_Psl_Boolean(obj: Iir) -> PSLNode:
-    """"""
+    """
+    :param obj: The node to read the ``Psl_Boolean`` field of.
+    :returns:   The node's ``Psl_Boolean`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_psl_boolean")
 def Set_Psl_Boolean(obj: Iir, value: PSLNode) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Psl_Boolean`` field of.
+    :param value: The value to write into the ``Psl_Boolean`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_psl_clock")
 def Get_PSL_Clock(obj: Iir) -> PSLNode:
-    """"""
+    """
+    :param obj: The node to read the ``PSL_Clock`` field of.
+    :returns:   The node's ``PSL_Clock`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_psl_clock")
 def Set_PSL_Clock(obj: Iir, value: PSLNode) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``PSL_Clock`` field of.
+    :param value: The value to write into the ``PSL_Clock`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_psl_abort")
 def Get_PSL_Abort(obj: Iir) -> PSLNode:
-    """"""
+    """
+    :param obj: The node to read the ``PSL_Abort`` field of.
+    :returns:   The node's ``PSL_Abort`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_psl_abort")
 def Set_PSL_Abort(obj: Iir, value: PSLNode) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``PSL_Abort`` field of.
+    :param value: The value to write into the ``PSL_Abort`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_psl_nfa")
 def Get_PSL_NFA(obj: Iir) -> PSLNFA:
-    """"""
+    """
+    :param obj: The node to read the ``PSL_NFA`` field of.
+    :returns:   The node's ``PSL_NFA`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_psl_nfa")
 def Set_PSL_NFA(obj: Iir, value: PSLNFA) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``PSL_NFA`` field of.
+    :param value: The value to write into the ``PSL_NFA`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_psl_nbr_states")
 def Get_PSL_Nbr_States(obj: Iir) -> Int32:
-    """"""
+    """
+    :param obj: The node to read the ``PSL_Nbr_States`` field of.
+    :returns:   The node's ``PSL_Nbr_States`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_psl_nbr_states")
 def Set_PSL_Nbr_States(obj: Iir, value: Int32) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``PSL_Nbr_States`` field of.
+    :param value: The value to write into the ``PSL_Nbr_States`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_psl_clock_sensitivity")
 def Get_PSL_Clock_Sensitivity(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``PSL_Clock_Sensitivity`` field of.
+    :returns:   The node's ``PSL_Clock_Sensitivity`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_psl_clock_sensitivity")
 def Set_PSL_Clock_Sensitivity(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``PSL_Clock_Sensitivity`` field of.
+    :param value: The value to write into the ``PSL_Clock_Sensitivity`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_psl_eos_flag")
 def Get_PSL_EOS_Flag(obj: Iir) -> Boolean:
-    """"""
+    """
+    :param obj: The node to read the ``PSL_EOS_Flag`` field of.
+    :returns:   The node's ``PSL_EOS_Flag`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_psl_eos_flag")
 def Set_PSL_EOS_Flag(obj: Iir, value: Boolean) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``PSL_EOS_Flag`` field of.
+    :param value: The value to write into the ``PSL_EOS_Flag`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_count_expression")
 def Get_Count_Expression(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Count_Expression`` field of.
+    :returns:   The node's ``Count_Expression`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_count_expression")
 def Set_Count_Expression(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Count_Expression`` field of.
+    :param value: The value to write into the ``Count_Expression`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_clock_expression")
 def Get_Clock_Expression(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Clock_Expression`` field of.
+    :returns:   The node's ``Clock_Expression`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_clock_expression")
 def Set_Clock_Expression(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Clock_Expression`` field of.
+    :param value: The value to write into the ``Clock_Expression`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_default_clock")
 def Get_Default_Clock(obj: Iir) -> PSLNode:
-    """"""
+    """
+    Reference to the default_clock node.
+
+    :param obj: The node to read the ``Default_Clock`` field of.
+    :returns:   The node's ``Default_Clock`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_default_clock")
 def Set_Default_Clock(obj: Iir, value: PSLNode) -> None:
-    """"""
+    """
+    Reference to the default_clock node.
+
+    :param obj:   The node to write the ``Default_Clock`` field of.
+    :param value: The value to write into the ``Default_Clock`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_foreign_node")
 def Get_Foreign_Node(obj: Iir) -> Int32:
-    """"""
+    """
+    :param obj: The node to read the ``Foreign_Node`` field of.
+    :returns:   The node's ``Foreign_Node`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_foreign_node")
 def Set_Foreign_Node(obj: Iir, value: Int32) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Foreign_Node`` field of.
+    :param value: The value to write into the ``Foreign_Node`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_suspend_state_index")
 def Get_Suspend_State_Index(obj: Iir) -> Int32:
-    """"""
+    """
+    State index for the statement.
+
+    :param obj: The node to read the ``Suspend_State_Index`` field of.
+    :returns:   The node's ``Suspend_State_Index`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_suspend_state_index")
 def Set_Suspend_State_Index(obj: Iir, value: Int32) -> None:
-    """"""
+    """
+    State index for the statement.
+
+    :param obj:   The node to write the ``Suspend_State_Index`` field of.
+    :param value: The value to write into the ``Suspend_State_Index`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_suspend_state_chain")
 def Get_Suspend_State_Chain(obj: Iir) -> Iir:
-    """"""
+    """
+    Chain of suspend state statement.
+
+    :param obj: The node to read the ``Suspend_State_Chain`` field of.
+    :returns:   The node's ``Suspend_State_Chain`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_suspend_state_chain")
 def Set_Suspend_State_Chain(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    Chain of suspend state statement.
+
+    :param obj:   The node to write the ``Suspend_State_Chain`` field of.
+    :param value: The value to write into the ``Suspend_State_Chain`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_suspend_state_last")
 def Get_Suspend_State_Last(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Suspend_State_Last`` field of.
+    :returns:   The node's ``Suspend_State_Last`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_suspend_state_last")
 def Set_Suspend_State_Last(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Suspend_State_Last`` field of.
+    :param value: The value to write into the ``Suspend_State_Last`` field.
+    """
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__get_suspend_state_decl")
 def Get_Suspend_State_Decl(obj: Iir) -> Iir:
-    """"""
+    """
+    :param obj: The node to read the ``Suspend_State_Decl`` field of.
+    :returns:   The node's ``Suspend_State_Decl`` field.
+    """
     return 0  # pragma: no cover
 
 
 @export
 @BindToLibGHDL("vhdl__nodes__set_suspend_state_decl")
 def Set_Suspend_State_Decl(obj: Iir, value: Iir) -> None:
-    """"""
+    """
+    :param obj:   The node to write the ``Suspend_State_Decl`` field of.
+    :param value: The value to write into the ``Suspend_State_Decl`` field.
+    """

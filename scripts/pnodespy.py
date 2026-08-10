@@ -2,7 +2,7 @@
 
 """Like pnodes but output for Python."""
 
-from textwrap import dedent
+from textwrap import dedent, wrap
 
 try:
     import scripts.pnodes as pnodes
@@ -11,13 +11,89 @@ except ImportError:
 
 libname = "libghdl"
 
+#: Width the generated doc-strings are wrapped to, matching ``[tool.black] line-length``.
+LINE_LENGTH = 120
+
+
+def format_docstring(description, indent, **fields):
+    """
+    Render a comment block and a field list as a Python doc-string.
+
+    The description is the comment `pnodes` captured from :file:`vhdl-nodes.ads`. It is Ada prose rather
+    than ReST, so a paragraph is reflowed while a line that is indented further - the continuation of a
+    grammar production, for instance - is kept as written.
+
+    :param description: The captured comment lines, or an empty list.
+    :param indent:      Indentation to put in front of every emitted line.
+    :param fields:      The ``:param:``/``:returns:`` entries to append, in order.
+    :returns:           The doc-string, including its triple quotes, or ``\"\"\"\"\"\"`` if there is nothing to say.
+    """
+    body = []
+    paragraph = []
+
+    def flush():
+        if paragraph:
+            body.extend(wrap(" ".join(paragraph), width=LINE_LENGTH - len(indent)))
+            body.append("")
+            paragraph.clear()
+
+    for line in description:
+        if not line:
+            flush()
+        elif line.startswith(" "):
+            flush()
+            body.append(line)
+        else:
+            paragraph.append(line)
+    flush()
+
+    while body and not body[-1]:
+        body.pop()
+
+    if fields:
+        labels = {"returns": ":returns:"}
+        entries = [(labels.get(name, f":param {name}:"), text) for name, text in fields.items()]
+        width = max(len(label) for label, _ in entries)
+        if body:
+            body.append("")
+        body.extend(f"{label.ljust(width)} {text}" for label, text in entries)
+
+    if not body:
+        return indent + '"""' + '"""'
+
+    lines = ['"""'] + body + ['"""']
+    return "\n".join(indent + l if l else "" for l in lines)
+
+
+#: What each generated enumeration is, for its doc-string.
+ENUM_DESCRIPTIONS = {
+    "Iir_Kind": "The kind of an IIR node, which decides what its physical fields mean.",
+    "Iir_Kinds": "The ``Iir_Kinds_*`` subtype ranges, grouping consecutive node kinds.",
+    "Iir_Mode": "The mode of an interface object: ``in``, ``out``, ``inout``, ``buffer`` or ``linkage``.",
+    "ScalarSize": "The storage size of a scalar type.",
+    "Iir_Staticness": "How static an expression or a type is: unknown, none, globally or locally.",
+    "Iir_Constraint": "How constrained a composite type is: unconstrained, partially or fully.",
+    "Iir_Delay_Mechanism": "The delay mechanism of a signal assignment: ``inertial`` or ``transport``.",
+    "DateStateType": "How far a design unit has been processed: extern, disk, parse or analyze.",
+    "NumberBaseType": "The base a literal was written in.",
+    "Iir_Predefined": "The predefined operation an implicit subprogram implements.",
+    "types": "The types a field of the meta-model can have.",
+    "Attr": "The access attribute of a field: a reference, a chain, or owned.",
+    "fields": "Every field of the meta-model, as an enumeration.",
+}
+
 
 def print_enum(name, vals):
+    description = ENUM_DESCRIPTIONS.get(name, f"The ``{name}`` enumeration, generated from the Ada sources.")
     print(dedent(f"""
 
         @export
         @unique
         class {name}(IntEnum):
+            \"\"\"
+            {description}
+            \"\"\"
+
         """), end=''
     )
     for n, k in enumerate(vals):
@@ -44,6 +120,10 @@ def do_class_kinds():
 
         @export
         class Iir_Kinds:
+            \"\"\"
+            The ``Iir_Kinds_*`` subtype ranges, each listing the consecutive node kinds it covers.
+            \"\"\"
+
         """), end=''
     )
     for k, v in pnodes.kinds_ranges.items():
@@ -67,7 +147,12 @@ def do_iirs_subprg():
         @export
         @BindToLibGHDL("{classname}__get_location")
         def Get_Location(node: Iir) -> LocationType:
-            \"\"\"\"\"\"
+            \"\"\"
+            Get the source location of a node.
+
+            :param node: The node to read the location of.
+            :returns:    The node's location, to be resolved with :mod:`pyGHDL.libghdl.files_map`.
+            \"\"\"
             return 0  # pragma: no cover
         """)
     )
@@ -78,18 +163,27 @@ def do_iirs_subprg():
         if rtype == "TokenType":
             rtype = "Tok"
 
-        print(dedent(f"""
-            @export
-            @BindToLibGHDL("{classname}__get_{k.name.lower()}")
-            def Get_{k.name}(obj: Iir) -> {rtype}:
-                \"\"\"\"\"\"
-                return 0  # pragma: no cover
-            @export
-            @BindToLibGHDL("{classname}__set_{k.name.lower()}")
-            def Set_{k.name}(obj: Iir, value: {rtype}) -> None:
-                \"\"\"\"\"\"
-            """)
-        )
+        print()
+        print("@export")
+        print(f'@BindToLibGHDL("{classname}__get_{k.name.lower()}")')
+        print(f"def Get_{k.name}(obj: Iir) -> {rtype}:")
+        print(format_docstring(
+            k.description,
+            "    ",
+            obj=f"The node to read the ``{k.name}`` field of.",
+            returns=f"The node's ``{k.name}`` field.",
+        ))
+        print("    return 0  # pragma: no cover")
+        print("@export")
+        print(f'@BindToLibGHDL("{classname}__set_{k.name.lower()}")')
+        print(f"def Set_{k.name}(obj: Iir, value: {rtype}) -> None:")
+        print(format_docstring(
+            k.description,
+            "    ",
+            obj=f"The node to write the ``{k.name}`` field of.",
+            value=f"The value to write into the ``{k.name}`` field.",
+        ))
+        print()
 
 
 def do_libghdl_elocations():
@@ -118,6 +212,13 @@ def do_types_subprg():
     for k in pnodes.get_types():
         print(dedent(f"""
             def Get_{k}(node, field):
+                \"\"\"
+                Read a field of type ``{k}`` from a node, through the meta-model.
+
+                :param node:  The node to read the field of.
+                :param field: The field to read, from :class:`fields`.
+                :returns:     The field's value.
+                \"\"\"
                 return {libname}.vhdl__nodes_meta__get_{k.lower()}(node, field)
             """)
         )
@@ -130,7 +231,12 @@ def do_has_subprg():
             @export
             @BindToLibGHDL("vhdl__nodes_meta__has_{f.name.lower()}")
             def Has_{f.name}(kind: IirKind) -> bool:
-                \"\"\"\"\"\"
+                \"\"\"
+                Check whether a node of the given kind has a ``{f.name}`` field.
+
+                :param kind: The node kind to check.
+                :returns:    ``True`` if a node of that kind has the field.
+                \"\"\"
             """)
         )
 
@@ -256,15 +362,32 @@ def do_libghdl_meta():
         @export
         @BindToLibGHDL("vhdl__nodes_meta__get_field_by_index")
         def get_field_by_index(K: IirKind) -> int:
-            \"\"\"\"\"\"
+            \"\"\"
+            Get the field at a given index of the fields array.
+
+            :param K: The index into the fields array.
+            :returns: The field at that index.
+            \"\"\"
             return 0  # pragma: no cover
 
         @export
         def get_field_type(*args):
+            \"\"\"
+            Get the type of a field.
+
+            :param args: The field to query, from :class:`fields`.
+            :returns:    The field's type, from :class:`types`.
+            \"\"\"
             return libghdl.vhdl__nodes_meta__get_field_type(*args)
 
         @export
         def get_field_attribute(*args):
+            \"\"\"
+            Get the access attribute of a field.
+
+            :param args: The field to query, from :class:`fields`.
+            :returns:    The field's attribute, from :class:`Attr`.
+            \"\"\"
             return libghdl.vhdl__nodes_meta__get_field_attribute(*args)
         """), end=''
     )
@@ -305,7 +428,12 @@ def do_libghdl_errorout():
         @export
         @BindToLibGHDL("errorout__enable_warning")
         def Enable_Warning(Id: int, Enable: bool) -> None:
-            \"\"\"\"\"\"
+            \"\"\"
+            Enable or disable a warning.
+
+            :param Id:     The warning to change.
+            :param Enable: ``True`` to enable the warning, ``False`` to disable it.
+            \"\"\"
         """), end=''
     )
 
