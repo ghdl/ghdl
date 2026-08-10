@@ -1,6 +1,13 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+"""
+Python binding for the Ada package ``Vhdl.Nodes_Meta`` in *libghdl*.
+
+The meta-model: which fields a node kind has, of what type, and with what access attribute. It is what lets an
+algorithm walk any node without knowing its kind.
+"""
+
 from enum import IntEnum, unique
 
 from pyTooling.Decorators import export

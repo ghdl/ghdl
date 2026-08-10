@@ -1,6 +1,13 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+"""
+Python binding for the Ada package ``Vhdl.Nodes`` in *libghdl*.
+
+The IIR tree: the node kinds, the enumerations their fields use, and the accessor pair for every field.
+See :ref:`INT:AST` for what a node is and how the fields are addressed.
+"""
+
 from enum import IntEnum, unique
 
 from pyTooling.Decorators import export

@@ -1,6 +1,12 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+"""
+Python binding for the Ada package ``Vhdl.Tokens`` in *libghdl*.
+
+The tokens the VHDL scanner produces.
+"""
+
 from enum import IntEnum, unique
 
 from pyTooling.Decorators import export
@@ -9,6 +15,10 @@ from pyTooling.Decorators import export
 @export
 @unique
 class Tok(IntEnum):
+    """
+    The VHDL tokens the scanner produces.
+    """
+
     Invalid = 0
     Eof = 1
     Newline = 2
