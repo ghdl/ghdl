@@ -139,6 +139,22 @@ def BuildGroups(kinds: List[str], ranges: Dict[str, List[str]]) -> List[Group]:
 	return groups
 
 
+def EscapeReST(text: str) -> str:
+	"""
+	Escape the characters ReST would read as markup.
+
+	The text comes verbatim from an Ada comment, which is prose rather than ReST, so a stray backtick or a table drawn
+	with ``|`` would otherwise be parsed as an unterminated role or as substitution references. ``Iir_Kind_Entity_Class``
+	writes ``` `<>' ``` and ``Iir_Kind_Constant_Declaration`` draws a table with ``|``.
+
+	:param text: The comment text to escape.
+	:returns:    The same text, safe to place in a ReST document.
+	"""
+	for character in ("\\", "`", "|", "*"):
+		text = text.replace(character, "\\" + character)
+	return text
+
+
 def Reflow(lines: List[str], indent: str = "", width: int = 120) -> List[str]:
 	"""
 	Reflow a comment block into ReST paragraphs, keeping literal blocks literal.
@@ -279,7 +295,7 @@ def RenderNode(node, funcs, accessorDescriptions: Dict[str, List[str]]) -> List[
 		lines.extend(["   * - Accessor", "     - Field", "     - Type", "     - Access", "     - Description"])
 		for (accessor, field, rtype, access) in rows:
 			description = node.field_descriptions.get(accessor) or accessorDescriptions.get(accessor) or []
-			text = " ".join(l for l in description if l) or "—"
+			text = EscapeReST(" ".join(l for l in description if l)) or "—"
 			lines.extend([
 				f"   * - :ref:`{accessor} <INT:AST:field:{accessor}>`",
 				f"     - ``{field}``",
