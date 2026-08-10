@@ -1,4 +1,18 @@
 #!/usr/bin/env python3
+"""
+Parse the meta-model out of GHDL's Ada sources and generate the code that mirrors it.
+
+:file:`src/vhdl/vhdl-nodes.ads` describes every node kind of the IIR tree in a comment format that the
+file itself documents in its header: a kind and its format, the fields it uses, and the accessors that
+read and write them. This script reads that description and emits the Ada bodies and specifications
+of the accessors and of the meta-model, the Python bindings in :mod:`pyGHDL.libghdl`, and - through
+:file:`pnodesrs.py` - their Rust equivalents.
+
+The action to perform is the first command line argument; :data:`actions` lists them. The generated
+files are committed, so a user does not need Python to build GHDL; :file:`src/vhdl/Makefile`
+regenerates them.
+"""
+
 
 import re
 import sys
@@ -17,7 +31,24 @@ conversions = ["uc", "pos", "grp"]
 
 
 class FuncDesc:
-    def __init__(self, name, fields, conv, acc, pname, ptype, rname, rtype):
+    """
+    One ``Get_``/``Set_`` accessor pair, as declared in the methods section of the Ada source.
+    """
+    def __init__(self, name, fields, conv, acc, pname, ptype, rname, rtype, description=None):
+        """
+        Initializes an accessor description.
+
+        :param name:        The accessor's name, without the ``Get_``/``Set_`` prefix.
+        :param fields:      The physical fields the accessor reads and writes.
+        :param conv:        The conversion applied between the field and the value, or ``None``.
+        :param acc:         The access attribute: ``Chain``, ``Chain_Next``, ``Ref``, ``Of_Ref``, ``Maybe_Ref``,
+                            ``Forward_Ref``, ``Maybe_Forward_Ref``, or ``None`` for an owned field.
+        :param pname:       The name of the node parameter in the Ada declaration.
+        :param ptype:       The type of that parameter.
+        :param rname:       The name of the value parameter of the setter.
+        :param rtype:       The type of the value.
+        :param description: The comment block above the accessor's ``-- Field:`` line.
+        """
         self.name = name
         self.fields = fields  # List of physical fields used
         self.conv = conv
@@ -27,39 +58,91 @@ class FuncDesc:
         self.ptype = ptype  # Parameter type
         self.rname = rname  # value name (for procedure)
         self.rtype = rtype  # value type
+        self.description = description or []  # Comment lines above '-- Field:'
 
 
 class NodeDesc:
-    def __init__(self, name, format, fields, attrs):
+    """
+    One node kind, with the fields it uses and the accessors that address them.
+    """
+    def __init__(self, name, format, fields, attrs, description=None):
+        """
+        Initializes a node kind description.
+
+        :param name:        The kind's name, without the ``Iir_Kind_`` prefix.
+        :param format:      The node format, which decides how many physical fields the node has.
+        :param fields:      Mapping from a physical field to the accessor using it, defined for every field.
+        :param attrs:       Mapping from an accessor name to its :class:`FuncDesc`.
+        :param description: The comment block below the kind header.
+        """
         self.name = name
         self.format = format
         self.fields = fields  # {field: FuncDesc} dict, defined for all fields
         self.attrs = attrs  # A {attr: FuncDesc} dict
         self.order = []  # List of fields name, in order of appearance.
+        self.description = description or []  # Comment lines below the kind
+        self.field_descriptions = {}  # A {attr: comment lines} dict
+        self.disabled_fields = []  # (attr, comment lines) of commented out fields
 
 
 class line:
+    """
+    A source line together with its line number.
+    """
     def __init__(self, string, no):
+        """
+        Initializes a source line.
+
+        :param string: The text of the line, including its newline.
+        :param no:     The line number, counted from 1.
+        """
         self.l = string
         self.n = no
 
 
 class EndOfFile(Exception):
+    """
+    Raised by :meth:`linereader.get` when there is no line left to read.
+    """
     def __init__(self, filename):
+        """
+        Initializes the exception.
+
+        :param filename: The file that ended.
+        """
         self.filename = filename
 
     def __str__(self):
+        """
+        Formats the exception as a message naming the file.
+
+        :returns: A string representation of this exception.
+        """
         return "end of file " + self.filename
 
 
 class linereader:
+    """
+    Reads a file line by line, remembering the current line and its number.
+    """
     def __init__(self, filename):
+        """
+        Opens the file and positions the reader before its first line.
+
+        :param filename: The file to read.
+        """
         self.filename = filename
         self.f = open(filename)
         self.lineno = 0
         self.l = ""
 
     def get(self):
+        """
+        Read the next line and remember it.
+
+        :returns:          The line that was read, including its newline.
+        :raises EndOfFile: If the file has no line left.
+        """
         self.l = self.f.readline()
         if not self.l:
             raise EndOfFile(self.filename)
@@ -68,11 +151,25 @@ class linereader:
 
 
 class ParseError(Exception):
+    """
+    Raised when the Ada source does not follow the format the header describes.
+    """
     def __init__(self, lr, msg):
+        """
+        Initializes the exception with the position it was detected at.
+
+        :param lr:  The line reader, which carries the file name and the current line.
+        :param msg: What is wrong with the line.
+        """
         self.lr = lr
         self.msg = msg
 
     def __str__(self):
+        """
+        Formats the exception as ``file:line: message``.
+
+        :returns: A string representation of this exception.
+        """
         return f"Parse error at {self.lr.filename}:{self.lr.lineno}: {self.msg}"
 
 
@@ -81,6 +178,13 @@ class ParseError(Exception):
 # The values are dictionaries representing fields.  Keys are fields name, and
 # values are fields type.
 def read_fields(file):
+    """
+    Read the node formats and their physical fields from the Ada template.
+
+    :param file:        The template file declaring the formats.
+    :returns:           A tuple of the format names and a mapping from a format to its fields.
+    :raises ParseError: If the declarations do not follow the expected format.
+    """
     fields = {}
     formats = []
     lr = linereader(file)
@@ -158,6 +262,14 @@ def read_fields(file):
 
 # Read kinds and kinds ranges.
 def read_kinds(filename):
+    """
+    Read the ``Iir_Kind`` enumeration and its subtype ranges.
+
+    :param filename:    The Ada file declaring the enumeration.
+    :returns:           A tuple of the kind names, in declaration order, and a mapping from a range name to the
+                        kinds it covers.
+    :raises ParseError: If the enumeration or a range does not follow the expected format.
+    """
     lr = linereader(filename)
     kinds = []
     #  Search for 'type Iir_Kind is'
@@ -239,7 +351,89 @@ def read_kinds(filename):
 
 
 # Read functions
+def strip_comment(l):
+    """
+    Return the text of comment line L, or None if L is not a comment.
+
+    Only the standard two space prefix is removed, so a line indented further
+    than that - the continuation of a grammar production, for instance - keeps
+    its relative indentation.
+
+    :param l: The source line to strip.
+    :returns: The comment's text, or ``None`` if the line is not a comment.
+    """
+    if not l.startswith("   --"):
+        return None
+    text = l[5:].rstrip()
+    return text[2:] if text.startswith("  ") else text.lstrip()
+
+
+def trim_description(lines):
+    """
+    Drop the leading and trailing blank lines of a comment block.
+
+    :param lines: The comment lines to trim.
+    :returns:     The same lines without the leading and trailing blank ones.
+    """
+    while lines and not lines[0]:
+        lines = lines[1:]
+    while lines and not lines[-1]:
+        lines = lines[:-1]
+    return lines
+
+
+# A field that was disabled by commenting out its 'Get/Set_' line, e.g.
+#   --  -- Get/Set_Signal_Driver (Field7)
+pat_disabled_field = re.compile(r"-- Get/Set_(\w+) \((Alias )?([\w,]+)\)$")
+
+
+def split_last_block(lines):
+    """
+    Split a comment block at its last blank line.
+
+    :param lines: The comment lines to split.
+    :returns:     A tuple of everything before the last blank line and everything after it.
+    """
+    for i in range(len(lines) - 1, -1, -1):
+        if not lines[i]:
+            return (lines[:i], lines[i + 1 :])
+    return ([], lines)
+
+
+def split_disabled_fields(lines):
+    """
+    Split a comment block into (description, disabled fields).
+
+    A field can be disabled by commenting out its 'Get/Set_' line.  The comment
+    then still describes that field, so it must not be attributed to the field
+    that happens to follow it.
+
+    :param lines: The comment block to split.
+    :returns:     A tuple of the remaining description and the ``(field, description)`` pairs of the disabled fields.
+    """
+    description = []
+    disabled = []
+    for l in lines:
+        m = pat_disabled_field.match(l)
+        if m:
+            disabled.append((m.group(1), trim_description(description)))
+            description = []
+        else:
+            description.append(l)
+    return (trim_description(description), disabled)
+
+
 def read_methods(filename):
+    """
+    Read the accessor declarations from the methods section.
+
+    Each accessor is a ``--  Field:`` line followed by a function and a procedure, and the comment block above the
+    ``Field:`` line describes it.
+
+    :param filename:    The Ada file declaring the accessors.
+    :returns:           The accessors, in declaration order.
+    :raises ParseError: If a declaration is malformed, or a function and its procedure disagree.
+    """
     lr = linereader(filename)
     # Note: this is a list so that the output is deterministic.
     # Duplicates are not detected, but they will be by the Ada compiler.
@@ -255,11 +449,20 @@ def read_methods(filename):
         # Start of methods
         if l == "   -- General methods.\n":
             break
+    description = []
     while True:
         l = lr.get()
         if pat_end.match(l):
             break
         m = pat_field.match(l)
+        if not m:
+            # Comment lines preceding a '-- Field:' describe the accessor.  Any
+            # other line (a declaration, a pragma, a blank line) ends the block.
+            comment = strip_comment(l)
+            if comment is None:
+                description = []
+            else:
+                description.append(comment)
         if m:
             fields = m.group(1).split(",")
             # Extract access modifier
@@ -308,8 +511,10 @@ def read_methods(filename):
                     mp.group(3),
                     mp.group(4),
                     mp.group(5),
+                    description,
                 )
             )
+            description = []
 
     return funcs
 
@@ -319,6 +524,16 @@ def read_methods(filename):
 #  (one description may describe several nodes).
 # A comment start at column 2 or 4 or later.
 def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
+    """
+    Read the description of one or more node kinds and attach their fields.
+
+    :param lr:          The line reader, positioned on the line after the kind header.
+    :param names:       The ``(kind name, format)`` pairs the description applies to.
+    :param fields:      Mapping from a format to its physical fields.
+    :param nodes:       Mapping from a kind name to its :class:`NodeDesc`, extended by this function.
+    :param funcs_dict:  Mapping from an accessor name to its :class:`FuncDesc`.
+    :raises ParseError: If a field line is malformed, names an unknown accessor, or reuses a field.
+    """
     pat_only = re.compile(r"   -- Only for " + prefix_name + r"(\w+):\n")
     pat_only_bad = re.compile(r"   -- *Only for.*\n")
     pat_field = re.compile(r"   --   Get/Set_(\w+) \((Alias )?([\w,]+)\)\n")
@@ -333,15 +548,24 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
         nodes[nm] = n
         cur_nodes.append(n)
 
-    # Skip comments
+    # The comments before the first field describe the node(s), except for the
+    # block after the last blank line: a field's description directly precedes
+    # its 'Get/Set_' line, so that block belongs to the first field.
     l = lr.l
+    comments = []
     while pat_comment.match(l):
+        comments.append(strip_comment(l))
         l = lr.get()
+    (comments, description) = split_last_block(comments)
+    for n in cur_nodes:
+        (n.description, disabled) = split_disabled_fields(comments)
+        n.disabled_fields.extend(disabled)
 
     # Look for fields
     while l != "\n":
-        # Skip comments
+        # The comments before a field describe that field on this node.
         while pat_comment.match(l):
+            description.append(strip_comment(l))
             l = lr.get()
 
         # Handle 'Only ...'
@@ -364,8 +588,10 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
             # By default a field applies to all nodes.
             only_nodes = cur_nodes
 
-        # Skip comments
+        # A field can be preceded by an 'Only for' comment, so continue
+        # collecting after it.
         while pat_comment.match(l):
+            description.append(strip_comment(l))
             l = lr.get()
 
         # Handle field: '--  Get/Set_FUNC (Alias? FIELD)'
@@ -398,12 +624,26 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
                     c.fields[f] = func
                     c.order.append(f)
             c.attrs[func.name] = func
+            (text, disabled) = split_disabled_fields(description)
+            c.field_descriptions[func.name] = text
+            c.disabled_fields.extend(disabled)
 
+        description = []
         l = lr.get()
 
 
 def read_nodes(filename, kinds, kinds_ranges, fields, funcs):
-    """Read description for all nodes."""
+    """
+    Read description for all nodes.
+
+    :param filename:     The Ada file describing the node kinds.
+    :param kinds:        All node kinds, in declaration order.
+    :param kinds_ranges: Mapping from a subtype range name to the kinds it covers.
+    :param fields:       Mapping from a format to its physical fields.
+    :param funcs:        The accessors, as returned by :func:`read_methods`.
+    :returns:            Mapping from a kind name to its :class:`NodeDesc`.
+    :raises ParseError:  If a description is malformed, or a kind has none.
+    """
     lr = linereader(filename)
     funcs_dict = {x.name: x for x in funcs}
     nodes = {}
@@ -463,7 +703,11 @@ def read_nodes(filename, kinds, kinds_ranges, fields, funcs):
 
 
 def gen_choices(choices):
-    """Generate a choice 'when A | B ... Z =>' using elements of CHOICES."""
+    """
+    Generate a choice 'when A | B ... Z =>' using elements of CHOICES.
+
+    :param choices: The kind names to list.
+    """
     is_first = True
     for c in choices:
         ch = prefix_name + c
@@ -477,7 +721,13 @@ def gen_choices(choices):
 
 
 def gen_get_format(formats, nodes, kinds=None):
-    """Generate the Get_Format function."""
+    """
+    Generate the Get_Format function.
+
+    :param formats: The node formats, in declaration order.
+    :param nodes:   Mapping from a kind name to its :class:`NodeDesc`.
+    :param kinds:   The kind names to cover.
+    """
     print("   function Get_Format (Kind : " + type_name + ") " + "return Format_Type is")
     print("   begin")
     print("      case Kind is")
@@ -490,6 +740,11 @@ def gen_get_format(formats, nodes, kinds=None):
 
 
 def gen_subprg_header(decl):
+    """
+    Print a subprogram header, wrapping it if it does not fit on one line.
+
+    :param decl: The declaration to print, without the trailing ``is``.
+    """
     if len(decl) < 76:
         print(decl + " is")
     else:
@@ -499,6 +754,11 @@ def gen_subprg_header(decl):
 
 
 def gen_assert(func):
+    """
+    Print the precondition of an accessor: the node is not null and has the field.
+
+    :param func: The accessor to generate the assertion for.
+    """
     print("      pragma Assert (" + func.pname + " /= Null_" + node_type + ");")
     cond = "(Has_" + func.name + " (Get_Kind (" + func.pname + ")),"
     msg = '"no field ' + func.name + '");'
@@ -512,6 +772,13 @@ def gen_assert(func):
 
 
 def get_field_type(fields, f):
+    """
+    Look up the type of a physical field.
+
+    :param fields: Mapping from a format to its fields.
+    :param f:      The physical field to look up.
+    :returns:      The field's type, or ``None`` if no format declares it.
+    """
     for fld in list(fields.values()):
         if f in fld:
             return fld[f]
@@ -519,7 +786,13 @@ def get_field_type(fields, f):
 
 
 def gen_get_set(func, nodes, fields):
-    """Generate Get_XXX/Set_XXX subprograms for FUNC."""
+    """
+    Generate Get_XXX/Set_XXX subprograms for FUNC.
+
+    :param func:   The accessor to generate.
+    :param nodes:  Mapping from a kind name to its :class:`NodeDesc`.
+    :param fields: Mapping from a format to its physical fields.
+    """
     rtype = func.rtype
     # If the function needs several fields, it must be user defined
     if func.conv == "grp":
@@ -606,10 +879,22 @@ def gen_get_set(func, nodes, fields):
 
 
 def funcs_of_node(n):
+    """
+    Collect the accessors of a node kind, sorted by name.
+
+    :param n: The node kind to collect the accessors of.
+    :returns: The accessor names, sorted.
+    """
     return sorted([fv.name for fv in list(n.fields.values()) if fv])
 
 
 def gen_has_func_spec(name, suff):
+    """
+    Print the specification of a ``Has_*`` predicate, wrapping it if it does not fit.
+
+    :param name: The field the predicate answers for.
+    :param suff: What to append, e.g. ``;`` for a specification or ``is`` for a body.
+    """
     spec = "   function Has_" + name + " (K : " + type_name + ")"
     ret = " return Boolean" + suff
     if len(spec) < 60:
@@ -620,6 +905,9 @@ def gen_has_func_spec(name, suff):
 
 
 def do_disp_formats():
+    """
+    Display every node format with the physical fields it declares.
+    """
     for fmt in fields:
         print("Fields of Format_" + fmt)
         fld = fields[fmt]
@@ -628,12 +916,18 @@ def do_disp_formats():
 
 
 def do_disp_kinds():
+    """
+    Display every node kind, and the subtype ranges over them.
+    """
     print("Kinds are:")
     for k in kinds:
         print("  " + prefix_name + k)
 
 
 def do_disp_funcs():
+    """
+    Display every accessor with its fields, type and access attribute.
+    """
     print("Functions are:")
     for f in funcs:
         s = "{0} ({1}: {2}".format(f.name, f.fields, f.rtype)
@@ -646,6 +940,9 @@ def do_disp_funcs():
 
 
 def do_disp_types():
+    """
+    Display the value types used by the accessors.
+    """
     print("Types are:")
     s = set([])
     for f in funcs:
@@ -655,6 +952,9 @@ def do_disp_types():
 
 
 def do_disp_nodes():
+    """
+    Display every node kind with the fields it uses.
+    """
     for k in kinds:
         v = nodes[k]
         print(prefix_name + k + " (" + v.format + ")")
@@ -663,11 +963,39 @@ def do_disp_nodes():
             print("  " + fk + ": " + v.fields[fk].name)
 
 
+def do_disp_doc():
+    """
+    Display the comments attached to every node, field and accessor.
+    """
+    for f in funcs:
+        if f.description:
+            print("Get/Set_" + f.name + ":")
+            for l in f.description:
+                print("  " + l)
+    for k in kinds:
+        v = nodes[k]
+        print(prefix_name + k + " (" + v.format + ")")
+        for l in v.description:
+            print("  " + l)
+        for fk in v.order:
+            func = v.fields[fk]
+            for l in v.field_descriptions.get(func.name, []):
+                print("  " + func.name + ": " + l)
+        for name, desc in v.disabled_fields:
+            print("  (disabled) " + name + ": " + " ".join(desc))
+
+
 def do_get_format():
+    """
+    Generate the Ada ``Get_Format`` function, which maps a kind to its format.
+    """
     gen_get_format(formats, nodes)
 
 
 def do_body():
+    """
+    Generate the Ada body of the node package from its template.
+    """
     lr = linereader(template_file)
     while True:
         l = lr.get().rstrip()
@@ -682,6 +1010,11 @@ def do_body():
 
 
 def get_types():
+    """
+    Collect the value types of all accessors.
+
+    :returns: The type names, sorted.
+    """
     s = set([])
     for f in funcs:
         s |= {f.rtype}
@@ -689,6 +1022,11 @@ def get_types():
 
 
 def get_attributes():
+    """
+    Collect the access attributes used by the accessors.
+
+    :returns: The attribute names, sorted, with ``None`` for owned fields first.
+    """
     s = set([])
     for f in funcs:
         if f.acc:
@@ -699,6 +1037,12 @@ def get_attributes():
 
 
 def gen_enum(prefix, vals):
+    """
+    Print an Ada enumeration literal list, one literal per line.
+
+    :param prefix: The prefix to put in front of every literal.
+    :param vals:   The literal names, in declaration order.
+    """
     last = None
     for v in vals:
         if last:
@@ -708,6 +1052,9 @@ def gen_enum(prefix, vals):
 
 
 def do_meta_specs():
+    """
+    Generate the Ada specification of the meta-model package from its template.
+    """
     lr = linereader(meta_base_file + ".ads.in")
     types = get_types()
     while True:
@@ -735,6 +1082,9 @@ def do_meta_specs():
 
 
 def do_meta_body():
+    """
+    Generate the Ada body of the meta-model package from its template.
+    """
     lr = linereader(meta_base_file + ".adb.in")
     while True:
         l = lr.get().rstrip()
@@ -873,8 +1223,16 @@ def do_meta_body():
 
 
 def read_enum(filename, type_name, prefix, g=lambda m: m.group(1)):
-    """Read an enumeration declaration :param type_name:
-    from :param filename:."""
+    """
+    Read an enumeration declaration from an Ada file.
+
+    :param filename:    The Ada file declaring the enumeration.
+    :param type_name:   The name of the enumeration type.
+    :param prefix:      The prefix every literal carries.
+    :param g:           Applied to the match, to derive the literal's name.
+    :returns:           The literal names, in declaration order.
+    :raises ParseError: If the declaration does not follow the expected format.
+    """
     pat_decl = re.compile(r"   type {0} is$".format(type_name))
     pat_enum = re.compile(r"      {0}(\w+),?( *-- .*)?$".format(prefix))
     pat_comment = re.compile(r" *-- .*$")
@@ -906,6 +1264,14 @@ def read_enum(filename, type_name, prefix, g=lambda m: m.group(1)):
 
 
 def read_any_names(filename, prefix, type):
+    """
+    Read a series of named integer constants from an Ada file.
+
+    :param filename: The Ada file declaring the constants.
+    :param prefix:   The prefix every constant carries.
+    :param type:     The Ada type of the constants.
+    :returns:        The constant names, in declaration order.
+    """
     pat_name_first = re.compile(
         r"   {pfx}(\w+)\s+: constant {type} := (\d+);".format(
             pfx=prefix, type=type))
@@ -950,6 +1316,11 @@ def read_any_names(filename, prefix, type):
 
 
 def read_std_names():
+    """
+    Read the predefined names from :file:`std_names.ads`.
+
+    :returns: The predefined names, in declaration order.
+    """
     return read_any_names("../std_names.ads", "Name_", "Name_Id")
 
 
@@ -959,6 +1330,7 @@ actions = {
     "disp-formats": do_disp_formats,
     "disp-funcs": do_disp_funcs,
     "disp-types": do_disp_types,
+    "disp-doc": do_disp_doc,
     "get_format": do_get_format,
     "body": do_body,
     "meta_specs": do_meta_specs,
@@ -967,7 +1339,11 @@ actions = {
 
 
 def _generateCLIParser() -> ArgumentParser:
-    """"""
+    """
+    Build the command line parser.
+
+    :returns: The parser for this script's arguments.
+    """
     parser = ArgumentParser(description="Meta-grammar processor")
     parser.add_argument("action", choices=list(actions.keys()), default="disp-nodes")
     parser.add_argument(
@@ -1029,33 +1405,82 @@ def _generateCLIParser() -> ArgumentParser:
     return parser
 
 
-def main():
-    parser = _generateCLIParser()
-    args = parser.parse_args()
+def parse_files(
+    node_file_,
+    field_file_,
+    kind_file_,
+    template_file_="iirs.adb.in",
+    meta_basename="nodes_meta",
+    kind_type="Iir_Kind",
+    kind_prefix="Iir_Kind_",
+    kind_range_prefix="Iir_Kinds_",
+    node_type_="Iir",
+    keep_order=False,
+):
+    """
+    Read the Ada sources and return the parsed meta-model.
 
+    This is the entry point for other tools: it sets the module state the
+    generators rely on and returns (formats, fields, kinds, kinds_ranges, funcs,
+    nodes).  ParseError is raised on a malformed description; callers that want
+    the command line behaviour should catch it and report LR themselves.
+
+    :param node_file_:        The Ada file describing the node kinds and the accessors.
+    :param field_file_:       The Ada template declaring the formats and their physical fields.
+    :param kind_file_:        The Ada file declaring the kind enumeration.
+    :param template_file_:    The Ada template the body is generated from.
+    :param meta_basename:     The base name of the meta-model files.
+    :param kind_type:         The name of the kind type.
+    :param kind_prefix:       The prefix of every kind literal.
+    :param kind_range_prefix: The prefix of every kind subtype range.
+    :param node_type_:        The name of the node type.
+    :param keep_order:        Keep the field order of the nodes instead of sorting.
+    :returns:                 A tuple of the formats, fields, kinds, kind ranges, accessors and nodes.
+    :raises ParseError:       If any of the Ada sources is malformed.
+    """
     # At some point, it would be simpler to create a class...
     global formats, fields, nodes, kinds, kinds_ranges, funcs
 
     global type_name, prefix_name, template_file, node_type, meta_base_file
     global prefix_range_name, flag_keep_order, kind_file
 
-    type_name = args.kind_type
-    prefix_name = args.kind_prefix
-    prefix_range_name = args.kind_range_prefix
-    template_file = args.template_file
-    node_type = args.node_type
-    meta_base_file = args.meta_basename
-    flag_keep_order = args.flag_keep_order
+    type_name = kind_type
+    prefix_name = kind_prefix
+    prefix_range_name = kind_range_prefix
+    template_file = template_file_
+    node_type = node_type_
+    meta_base_file = meta_basename
+    flag_keep_order = keep_order
+    kind_file = kind_file_
 
-    field_file = args.field_file
-    kind_file = args.kind_file
-    node_file = args.node_file
+    (formats, fields) = read_fields(field_file_)
+    (kinds, kinds_ranges) = read_kinds(kind_file_)
+    funcs = read_methods(node_file_)
+    nodes = read_nodes(node_file_, kinds, kinds_ranges, fields, funcs)
+
+    return (formats, fields, kinds, kinds_ranges, funcs, nodes)
+
+
+def main():
+    """
+    Parse the command line, read the Ada sources and run the requested action.
+    """
+    parser = _generateCLIParser()
+    args = parser.parse_args()
 
     try:
-        (formats, fields) = read_fields(field_file)
-        (kinds, kinds_ranges) = read_kinds(kind_file)
-        funcs = read_methods(node_file)
-        nodes = read_nodes(node_file, kinds, kinds_ranges, fields, funcs)
+        parse_files(
+            args.node_file,
+            args.field_file,
+            args.kind_file,
+            args.template_file,
+            args.meta_basename,
+            args.kind_type,
+            args.kind_prefix,
+            args.kind_range_prefix,
+            args.node_type,
+            args.flag_keep_order,
+        )
 
     except ParseError as e:
         print(e, file=sys.stderr)
