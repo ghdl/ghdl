@@ -157,17 +157,38 @@ A node is a 32-bit index into a table, not a pointer, so ``Iir`` is an integer t
 tree relocatable, and lets the meta-model address any field of any node generically.
 
 Every node reserves a fixed set of physical slots, and the *format* says how many.  There are two
-formats:
+formats, and they differ only in the number of ``Field`` and ``State`` slots:
 
-* ``Short`` - **28 slots**: ``Field0`` .. ``Field5``, ``Flag1`` .. ``Flag18``, ``State1`` and
-  ``State2``, plus the node's kind and its source location.
-* ``Medium`` - **37 slots**: the same, with ``Field6`` .. ``Field12``, ``State3`` and ``State4``
-  added.  A ``Medium`` node occupies two node slots in the table, which is where the extra fields
-  come from.
+.. list-table::
+   :header-rows: 1
+   :widths: 12 8 10 16 20 18 16
 
-``Short`` is the common case; ``Medium`` is used by the kinds that need more fields.  There is no
-third format, so a kind needing more than a ``Medium`` node holds stores the surplus in a second
-node, which is why some accessors read a field of a node other than the one they were given.
+   * - Format
+     - Slots
+     - Kind
+     - Source location
+     - Fields
+     - Flags
+     - States
+   * - ``Short``
+     - 28
+     - ``Nkind``
+     - ``Location``
+     - ``Field0`` .. ``Field5``
+     - ``Flag1`` .. ``Flag18``
+     - ``State1`` .. ``State2``
+   * - ``Medium``
+     - 37
+     - ``Nkind``
+     - ``Location``
+     - ``Field0`` .. ``Field12``
+     - ``Flag1`` .. ``Flag18``
+     - ``State1`` .. ``State4``
+
+``Short`` is the common case; ``Medium`` is used by the kinds that need more fields, and occupies two
+node slots in the table, which is where the extra ones come from.  There is no third format, so a
+kind needing more than a ``Medium`` node holds stores the surplus in a second node, which is why some
+accessors read a field of a node other than the one they were given.
 
 The slots are untyped.  What gives them meaning is the kind: for
 :ref:`Iir_Kind_Signal_Declaration <INT:AST:Signal_Declaration>`, ``Field5`` is the subtype
