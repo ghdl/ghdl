@@ -156,17 +156,20 @@ A node is a 32-bit index into a table, not a pointer, so ``Iir`` is an integer t
 ``Null_Iir`` is ``0``.  Using an index rather than an address keeps a node small, makes the whole
 tree relocatable, and lets the meta-model address any field of any node generically.
 
-Every node reserves the same set of physical slots, and the *format* says how many.  There are two:
+Every node reserves a fixed set of physical slots, and the *format* says how many.  There are two
+formats:
 
-* ``Short`` - the common case, used by 227 of the described kinds.
-* ``Medium`` - twice the size, used by 65 kinds that need more fields.
+* ``Short`` - **28 slots**: ``Field0`` .. ``Field5``, ``Flag1`` .. ``Flag18``, ``State1`` and
+  ``State2``, plus the node's kind and its source location.
+* ``Medium`` - **37 slots**: the same, with ``Field6`` .. ``Field12``, ``State3`` and ``State4``
+  added.  A ``Medium`` node occupies two node slots in the table, which is where the extra fields
+  come from.
 
-The kinds that have more fields than a ``Medium`` node holds do not get a third format; they store
-the surplus in a second node, which is why some accessors read a field of a node that is not the one
-they were given.
+``Short`` is the common case; ``Medium`` is used by the kinds that need more fields.  There is no
+third format, so a kind needing more than a ``Medium`` node holds stores the surplus in a second
+node, which is why some accessors read a field of a node other than the one they were given.
 
-The slots are named ``Field0`` .. ``Field11``, ``Flag1`` .. ``Flag18``, ``State1`` .. ``State4`` and
-so on, and they are untyped.  What gives them meaning is the kind: for
+The slots are untyped.  What gives them meaning is the kind: for
 :ref:`Iir_Kind_Signal_Declaration <INT:AST:Signal_Declaration>`, ``Field5`` is the subtype
 indication, while for another kind the same slot holds something else entirely.  Two accessors can
 also share one slot when they are mutually exclusive, which the source marks with ``Alias``.
