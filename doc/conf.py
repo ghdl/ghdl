@@ -270,3 +270,19 @@ extlinks = {
 autoapi_modules = {
   'pyGHDL':  {'output': "pyGHDL", "override": True}
 }
+
+
+# ==============================================================================
+# AST node reference
+# ==============================================================================
+# The pages under doc/internals/ast/ are written when Sphinx starts, from the
+# meta-model in src/vhdl/vhdl-nodes.ads.  They are not committed, so they cannot
+# describe a node that no longer exists.
+from ASTReference import Generate as GenerateASTReference
+
+
+def setup(app):
+    app.connect(
+        "builder-inited",
+        lambda _: GenerateASTReference(ROOT.parent, ROOT / "internals" / "ast"),
+    )
