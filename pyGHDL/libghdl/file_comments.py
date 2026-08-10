@@ -108,5 +108,5 @@ def Get_Next_Comment(File: SourceFileEntry, Idx: Comment_Index) -> Comment_Index
     """
     Get the next comment
 
-    :returns: The index of the next comment, or ``No_Comment_Index``.
+    :returns: The index of the next comment, or :attr:`~pyGHDL.libghdl.file_comments.No_Comment_Index`.
     """

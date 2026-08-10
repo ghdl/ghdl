@@ -65,7 +65,8 @@ def Location_To_File(Location: LocationType) -> SourceFileEntry:
     Convert :obj:`Location` to a source file.
 
     :param Location: Location
-    :returns:        Source file. Return ``No_Source_File_Entry`` if location is incorrect.
+    :returns:        The source file, or :attr:`~pyGHDL.libghdl.files_map.No_Source_File_Entry` if the location is
+                 incorrect.
     """
     return 0  # pragma: no cover
 
@@ -130,7 +131,7 @@ def Location_File_Line_To_Col(Location: LocationType, File: SourceFileEntry, Lin
 def File_To_Location(File: SourceFileEntry) -> LocationType:
     """Convert a :obj:`File` into a location.
 
-    :param File: Source file
+    :param File: The source file to query.
     :returns:    Location.
     """
     return 0  # pragma: no cover
@@ -142,7 +143,7 @@ def File_Pos_To_Location(File: SourceFileEntry, Pos: int) -> LocationType:
     """
     Convert a :obj:`File` and an offset :obj:`Pos` in the file into a location.
 
-    :param File: Source file
+    :param File: The source file to query.
     :param Pos:  Offset in the file
     :returns:    Location.
     """
@@ -155,7 +156,7 @@ def File_Line_To_Position(File: SourceFileEntry, Line: int) -> int:
     """
     Convert a :obj:`File` and :obj:`Line` into a position.
 
-    :param File: Source file
+    :param File: The source file to query.
     :param Line: Line number
     :returns:    Return ``Source_Ptr_Bad`` in case of error (:obj:`Line` out of bounds).
     """
@@ -205,7 +206,7 @@ def Get_File_Buffer(File: SourceFileEntry) -> POINTER(c_char):
     Return a buffer (access to the contents of the file) for a file entry.
 
     :param File: Source file to get the buffer from.
-    :returns:
+    :returns:    A pointer to the file's contents.
     """
     return cast(Get_File_Buffer_voidp(File), POINTER(c_char))
 
@@ -216,8 +217,8 @@ def Get_File_Length(File: SourceFileEntry) -> int:
     """
     Get the position of the first EOT character.
 
-    :param File: Source file
-    :returns:
+    :param File: The source file to query.
+    :returns:    The position of the first EOT character, i.e. the length of the source text.
     """
     return 0  # pragma: no cover
 
@@ -242,8 +243,8 @@ def Get_Buffer_Length(File: SourceFileEntry) -> int:
     """
     Get the length of the buffer, including the gap and the two EOT.
 
-    :param File: Source file
-    :returns:
+    :param File: The source file to query.
+    :returns:    The length of the buffer.
     """
 
 
@@ -253,8 +254,8 @@ def Get_Buffer_Length(File: SourceFileEntry) -> int:
     """
     Get the length of the buffer, including the gap and the two EOT.
 
-    :param File: Source file
-    :returns:
+    :param File: The source file to query.
+    :returns:    The length of the buffer.
     """
 
 
@@ -264,9 +265,9 @@ def Find_Source_File(Directory: NameId, Name: NameId) -> SourceFileEntry:
     """
     Return an existing entry for a filename.
 
-    :param Directory: ``Null_Identifier`` for :obj:`DirectoryId` means current directory.
+    :param Directory: :attr:`~pyGHDL.libghdl.name_table.Null_Identifier` for :obj:`DirectoryId` means current directory.
     :param Name:      File name
-    :returns:         Return ``No_Source_File_Entry``, if the file is not already open.
+    :returns:         Return :attr:`~pyGHDL.libghdl.files_map.No_Source_File_Entry`, if the file is not already open.
     """
     return 0
 
@@ -279,9 +280,9 @@ def Read_Source_File(Directory: NameId, Name: NameId) -> SourceFileEntry:
 
     Load the filename if necessary.
 
-    :param Directory: ``Null_Identifier`` for :obj:`DirectoryId` means current directory.
+    :param Directory: :attr:`~pyGHDL.libghdl.name_table.Null_Identifier` for :obj:`DirectoryId` means current directory.
     :param Name:      File name
-    :returns:         Return ``No_Source_File_Entry``, if the file does not exist.
+    :returns:         Return :attr:`~pyGHDL.libghdl.files_map.No_Source_File_Entry`, if the file does not exist.
     """
     return 0  # pragma: no cover
 

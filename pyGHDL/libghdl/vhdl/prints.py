@@ -84,7 +84,7 @@ def Get_C_String(Handle: c_void_p) -> c_char_p:
     .. todo:: Undocumented in Ada code.
 
     :param Handle: The handle of the string buffer to append to.
-    :returns:
+    :returns:      The string buffer's contents as a C string.
     """
 
 

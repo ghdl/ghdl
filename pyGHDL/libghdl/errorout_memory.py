@@ -111,7 +111,7 @@ def Get_Error_Record(Idx: ErrorIndex) -> Error_Message:
     Get error messages by index :obj:`Idy` as structure :class:`Error_Message`.
 
     :param Idx: Index from 1 to ``Nbr_Messages`` See :func:`Get_Nbr_Messages`.
-    :returns:
+    :returns:   The message record at that index.
     """
 
 

@@ -87,6 +87,6 @@ def Get_Nth_Element(FList: int, N: int) -> int:
 
     :param FList: List to query.
     :param N:     The zero-based index of the element to read.
-    :returns:
+    :returns:     The element at index ``N``.
     """
     return 0  # pragma: no cover

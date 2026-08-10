@@ -100,7 +100,7 @@ def Add_Design_Unit_Into_Library(Unit: Iir_Design_Unit, Keep_Obsolete: bool) -> 
     Units are always appended to the design_file. Therefore, the order is kept.
 
     :param Unit:          The design unit to add.
-    :param Keep_Obsolete: If :obj:`Keep_Obsolete` is True, obsoleted units are
+    :param Keep_Obsolete: If ``Keep_Obsolete`` is ``True``, obsoleted units are
                           kept in the library.
 
                           This is used when a whole design file has to be added
@@ -128,7 +128,7 @@ def Find_Entity_For_Component(Name: NameId) -> Iir_Design_Unit:
     If there are several entities, return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`;
 
     :param Name: Entity name to search for.
-    :returns:    The entity's design unit, or ``Null_Iir`` if there is not exactly one.
+    :returns:    The entity's design unit, or :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if there is not exactly one.
     """
     return 0  # pragma: no cover
 
@@ -167,7 +167,7 @@ def Find_Primary_Unit(Library: Iir_Library_Declaration, Name: NameId) -> Iir_Des
 
     :param Library: Library to look in.
     :param Name:    Primary unit to search for.
-    :returns:       The primary unit's design unit, or ``Null_Iir`` if it was not found.
+    :returns:       The primary unit's design unit, or :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if it was not found.
     """
     return 0  # pragma: no cover
 

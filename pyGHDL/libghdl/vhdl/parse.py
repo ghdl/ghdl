@@ -59,6 +59,6 @@ def Parse_Design_File() -> Iir:
 
     ..note:: The scanner must have been initialized as for parse_design_unit.
 
-    :returns: Return :obj:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of error
+    :returns: Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of error
     """
     return 0

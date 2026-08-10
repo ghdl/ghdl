@@ -66,7 +66,7 @@ def name_image(Id: NameId) -> str:
 @EnumLookupTable(nodes_meta.fields)
 def fields_image(idx: int) -> str:
     """
-    String representation of Nodes_Meta.fields :obj:`idx`.
+    String representation of :class:`~pyGHDL.libghdl.vhdl.nodes_meta.fields` :obj:`idx`.
 
     :returns: The field's name.
     """
@@ -76,7 +76,7 @@ def fields_image(idx: int) -> str:
 @EnumLookupTable(nodes.Iir_Kind)
 def kind_image(k: int) -> str:
     """
-    String representation of Nodes.Iir_Kind :obj:`k`.
+    String representation of :class:`~pyGHDL.libghdl.vhdl.nodes.Iir_Kind` :obj:`k`.
 
     :returns: The node kind's name.
     """
@@ -86,7 +86,7 @@ def kind_image(k: int) -> str:
 @EnumLookupTable(nodes_meta.types)
 def types_image(t: int) -> str:
     """
-    String representation of Nodes_Meta.Types :obj:`t`.
+    String representation of :class:`~pyGHDL.libghdl.vhdl.nodes_meta.types` :obj:`t`.
 
     :returns: The field type's name.
     """
@@ -111,7 +111,8 @@ def leftest_location(n):
     not the first one written. This walks left until there is nothing further.
 
     :param n: The IIR node to locate.
-    :returns: The location of the leftmost token, or ``No_Location`` for ``Null_Iir``.
+    :returns: The location of the leftmost token, or :attr:`~pyGHDL.libghdl.files_map.No_Location` if ``n`` is
+              :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
     """
     while True:
         if n == nodes.Null_Iir:

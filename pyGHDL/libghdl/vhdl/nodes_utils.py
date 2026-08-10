@@ -61,7 +61,7 @@ def Strip_Denoting_Name(Name: Iir) -> Iir:
 def Get_Entity(Decl: Iir) -> Iir:
     """
     This is a wrapper around ``Get_Entity_Name`` to return the entity declaration
-    of the entity name of :obj:`Decl`, or ``Null_Iir`` in case of error.
+    of the entity name of :obj:`Decl`, or :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of error.
 
     :param Decl: Declaration
     :returns:    Entity
@@ -90,7 +90,7 @@ def Get_Entity_From_Entity_Aspect(Aspect: Iir) -> Iir:
     Extract the entity from :obj:`Aspect`.
 
     If :obj:`Aspect` is a component declaration, return :obj:`Aspect`. If it's
-    open, return ``Null_Iir``
+    open, return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`
 
     :param Aspect: Aspect
     :returns:      Entity
