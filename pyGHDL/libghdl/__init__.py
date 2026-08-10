@@ -71,11 +71,22 @@ class LibGHDLException(GHDLBaseException):
     _internalErrors: Nullable[List[str]]
 
     def __init__(self, message: str, errors: List[str] = None):
+        """
+        Initializes an exception raised by the ``libghdl`` binding.
+
+        :param message: The message describing what failed on the Python side.
+        :param errors:  Messages collected from *libghdl*'s error buffer, or ``None`` if there are none.
+        """
         super().__init__(message)
         self._internalErrors = errors
 
     @readonly
     def InternalErrors(self) -> Nullable[List[str]]:
+        """
+        Read-only property to access the errors reported by *libghdl* (:attr:`_internalErrors`).
+
+        :returns: The messages from *libghdl*'s error buffer, or ``None`` if none were collected.
+        """
         return self._internalErrors
 
 
@@ -104,12 +115,21 @@ def _get_libghdl_path() -> Path:
     4. Try within ``pyGHDL/lib`` Python package installation path.
     5. Try searching the ``ghdl`` binary via ``which``.
     6. Try ``../../lib`` when running from the build directory.
+
+    :returns: The path of the ``libghdl`` shared library.
     """
 
     libGHDLSharedLibraryFile = _get_libghdl_name()
     searchedAt = []
 
     def _check_libghdl_libdir(libDirectory: Path) -> Path:
+        """
+        Check whether the shared library is below ``<libdir>`` and return its path.
+
+        :param libDirectory:       The library directory to look in.
+        :returns:                  The path of the shared library.
+        :raises FileNotFoundError: If the shared library is not in that directory.
+        """
         libFile = libDirectory / libGHDLSharedLibraryFile
         if not libFile.exists():
             raise FileNotFoundError(f"{libFile}")
@@ -117,6 +137,13 @@ def _get_libghdl_path() -> Path:
         return libFile
 
     def _check_libghdl_bindir(binDirectory: Path) -> Path:
+        """
+        Check whether the shared library is below ``<bindir>/../lib`` and return its path.
+
+        :param binDirectory:       The binary directory to look next to.
+        :returns:                  The path of the shared library.
+        :raises FileNotFoundError: If the shared library is not below that directory.
+        """
         libDirectory = (binDirectory / "../lib").resolve()
         return _check_libghdl_libdir(libDirectory)
 
@@ -195,6 +222,12 @@ def _get_libghdl_path() -> Path:
 @export
 def _initialize():
     # Load the shared library
+    """
+    Locate and load the ``libghdl`` shared library.
+
+    :returns:                 The loaded shared library.
+    :raises LibGHDLException: If the shared library cannot be found.
+    """
     _libghdl_path = _get_libghdl_path()
 
     # Load libghdl shared object
@@ -235,10 +268,10 @@ def initialize() -> None:
 # @BindToLibGHDL("libghdl__set_option")
 def set_option(opt: str) -> bool:
     """\
-    Set option :obj:`opt`.
+    Set option ``opt``.
 
     :param opt: Option to set.
-    :return:    Return ``True``, if the option is known and handled.
+    :returns:   Return ``True``, if the option is known and handled.
     """
     opt = opt.encode(ENCODING)
     return libghdl.libghdl__set_option(c_char_p(opt), len(opt)) == 0
@@ -262,7 +295,7 @@ def analyze_init_status() -> int:
     """\
     Initialize the analyzer.
 
-    :return: Returns 0 in case of success.
+    :returns: Returns 0 in case of success.
     """
     return libghdl.libghdl__analyze_init_status()
 
@@ -271,10 +304,10 @@ def analyze_init_status() -> int:
 # @BindToLibGHDL("libghdl__analyze_file")
 def analyze_file(fname: str) -> Iir:
     """\
-    Analyze a given filename :obj:`fname`.
+    Analyze a given filename ``fname``.
 
     :param fname: File name
-    :return:      Internal Intermediate Representation (IIR)
+    :returns:     Internal Intermediate Representation (IIR)
     """
     fname = fname.encode(ENCODING)
     return libghdl.libghdl__analyze_file(c_char_p(fname), len(fname))

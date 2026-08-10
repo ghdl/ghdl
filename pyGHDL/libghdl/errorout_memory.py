@@ -31,6 +31,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Errorout.Memory`` in *libghdl*.
+
+Collects analysis messages in memory instead of printing them, so a caller can read them back with
+:func:`Get_Nbr_Messages` and :func:`Get_Error_Record`. :class:`~pyGHDL.dom.NonStandard.Design` installs this handler.
+"""
 
 from ctypes import c_int8, c_int32, c_char_p, Structure
 
@@ -93,7 +99,7 @@ def Get_Nbr_Messages() -> ErrorIndex:
     """
     Get number of error messages available.
 
-    :return: Number of messages available.
+    :returns: Number of messages available.
     """
     return 0  # pragma: no cover
 
@@ -102,26 +108,34 @@ def Get_Nbr_Messages() -> ErrorIndex:
 @BindToLibGHDL("errorout__memory__get_error_record")
 def Get_Error_Record(Idx: ErrorIndex) -> Error_Message:
     """
-    Get error messages by index :obj:`Idy` as structure :class:`Error_Message`.
+    Get error messages by index ``Idx`` as structure :class:`Error_Message`.
 
     :param Idx: Index from 1 to ``Nbr_Messages`` See :func:`Get_Nbr_Messages`.
-    :return:    Type: ``Error_Message``
+    :returns:   The message record at that index.
     """
 
 
 # @export
 @BindToLibGHDL("errorout__memory__get_error_message_addr")
 def _Get_Error_Message(Idx: ErrorIndex) -> c_char_p:
+    """
+    Raw binding returning the message text as a C string.
+
+    Use :func:`Get_Error_Message` instead, which decodes it.
+
+    :param Idx: The index of the message to read.
+    :returns:   The message as a C string.
+    """
     return ""  # pragma: no cover
 
 
 @export
 def Get_Error_Message(Idx: ErrorIndex) -> str:
     """
-    Get error messages by index :obj:`Idx` as string.
+    Get error messages by index ``Idx`` as string.
 
     :param Idx: Index from 1 to ``Nbr_Messages`` See :func:`Get_Nbr_Messages`.
-    :return:    Error message.
+    :returns:   Error message.
     """
     return _Get_Error_Message(Idx).decode(ENCODING)
 

@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Flags`` in *libghdl*.
+
+The analysis options, set before a file is parsed.
+"""
 
 from ctypes import c_bool, sizeof
 from enum import unique, IntEnum

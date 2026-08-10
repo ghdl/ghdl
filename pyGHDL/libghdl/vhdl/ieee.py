@@ -30,6 +30,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Ieee`` in *libghdl*.
+
+Recognizes the declarations of the ``ieee`` library, so the analyzer can treat the standard packages specially.
+"""
 
 from ctypes import c_int
 

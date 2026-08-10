@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Sem_Lib`` in *libghdl*.
+
+Loads and analyzes a design file, which is the entry point :class:`~pyGHDL.dom.NonStandard.Document` uses.
+"""
 
 from pyTooling.Decorators import export
 
@@ -45,7 +50,7 @@ def Load_File(File: SourceFileEntry) -> Iir_Design_File:
     Start to analyse a file (i.e. load and parse it).
 
     :param File: File to analyse.
-    :return:     Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of parse error. Type: ``Iir_Design_File``
+    :returns:    Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of parse error
     """
     return 0
 
@@ -54,7 +59,7 @@ def Load_File(File: SourceFileEntry) -> Iir_Design_File:
 @BindToLibGHDL("vhdl__sem_lib__finish_compilation")
 def Finish_Compilation(Unit: Iir_Design_Unit, Main: bool = False) -> None:
     """
-    Analyze :obj:`Unit`.
+    Analyze ``Unit``.
 
     :param Unit: Design unit to analyze.
     :param Main: Is main unit.
@@ -65,7 +70,7 @@ def Finish_Compilation(Unit: Iir_Design_Unit, Main: bool = False) -> None:
 @BindToLibGHDL("vhdl__sem_lib__free_dependence_list")
 def Free_Dependence_List(Design: Iir_Design_Unit) -> None:
     """
-    Free the dependence list of :obj:`Design`.
+    Free the dependence list of ``Design``.
 
     :param Design: Design unit to free dependencies for.
     """

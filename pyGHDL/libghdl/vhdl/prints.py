@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Prints`` in *libghdl*.
+
+Unparses a node back to VHDL source code.
+"""
 
 from ctypes import c_int32, c_char_p, c_void_p
 
@@ -44,12 +49,10 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 @BindToLibGHDL("vhdl__prints__print_string")
 def Print_String(File: int, Handle: c_void_p) -> None:
     """
-    Reindent all lines of F between [First_Line; Last_Line] to :obj:`Handle`.
+    Reindent all lines of F between [First_Line; Last_Line] to ``Handle``.
 
-    :param File:      File to indent lines within. Type: ``Iir_Design_File``
-    :param Handle:    undocumented. Type: ``Vstring_Acc``
-    :param FirstLine: undocumented.
-    :param LastLine:  undocumented.
+    :param File:   File to indent lines within
+    :param Handle: The handle of the string buffer to append to.
     """
 
 
@@ -59,7 +62,7 @@ def Allocate_Handle() -> c_void_p:
     """
     .. todo:: Undocumented in Ada code.
 
-    :return: undocumented. Type: ``Vstring_Acc``
+    :returns: The handle of a freshly allocated string buffer.
     """
 
 
@@ -69,8 +72,8 @@ def Get_Length(Handle: c_void_p) -> int:
     """
     .. todo:: Undocumented in Ada code.
 
-    :param Handle: undocumented. Type: ``Vstring_Acc``
-    :return:       undocumented.
+    :param Handle: The handle of the string buffer to append to.
+    :returns:      The number of characters in the string buffer.
     """
 
 
@@ -80,8 +83,8 @@ def Get_C_String(Handle: c_void_p) -> c_char_p:
     """
     .. todo:: Undocumented in Ada code.
 
-    :param Handle: undocumented. Type: ``Vstring_Acc``
-    :return:       Type: ``Grt.Types.Ghdl_C_String``
+    :param Handle: The handle of the string buffer to append to.
+    :returns:      The string buffer's contents as a C string.
     """
 
 
@@ -91,5 +94,5 @@ def Free_Handle(Handle: c_void_p) -> None:
     """
     .. todo:: Undocumented in Ada code.
 
-    :param Handle: undocumented. Type: ``Vstring_Acc``
+    :param Handle: The handle of the string buffer to append to.
     """

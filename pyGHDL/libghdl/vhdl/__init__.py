@@ -30,3 +30,9 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python bindings for the VHDL front-end of *libghdl*.
+
+The modules in this package mirror the Ada packages below ``Vhdl``: the AST in :mod:`~pyGHDL.libghdl.vhdl.nodes`, its
+meta-model in :mod:`~pyGHDL.libghdl.vhdl.nodes_meta`, and the passes that build and check it.
+"""

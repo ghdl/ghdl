@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Formatters`` in *libghdl*.
+
+Reformats VHDL source code, used by the language server.
+"""
 
 from ctypes import c_void_p
 
@@ -43,10 +48,10 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 @BindToLibGHDL("vhdl__formatters__indent_string")
 def Indent_String(File: int, Handle: c_void_p, FirstLine: int, LastLine: int) -> None:
     """
-    Reindent all lines of F between [First_Line; Last_Line] to :obj:`Handle`.
+    Reindent all lines of F between [First_Line; Last_Line] to ``Handle``.
 
-    :param File:      File to indent lines within. Type: ``Iir_Design_File``
-    :param Handle:    undocumented. Type: ``Vstring_Acc``
-    :param FirstLine: undocumented.
-    :param LastLine:  undocumented.
+    :param File:      File to indent lines within
+    :param Handle:    The handle of the string buffer to append to.
+    :param FirstLine: The first line to reindent.
+    :param LastLine:  The last line to reindent.
     """
