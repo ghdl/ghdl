@@ -38,11 +38,11 @@ class FuncDesc:
         """
         Initializes an accessor description.
 
-        :param name:   The accessor's name, without the ``Get_``/``Set_`` prefix.
-        :param fields: The physical fields the accessor reads and writes.
-        :param conv:   The conversion applied between the field and the value, or ``None``.
-        :param acc:    The access attribute: ``Chain``, ``Chain_Next``, ``Ref``, ``Of_Ref``, ``Maybe_Ref``,
-        ``Forward_Ref``, ``Maybe_Forward_Ref``, or ``None`` for an owned field.
+        :param name:        The accessor's name, without the ``Get_``/``Set_`` prefix.
+        :param fields:      The physical fields the accessor reads and writes.
+        :param conv:        The conversion applied between the field and the value, or ``None``.
+        :param acc:         The access attribute: ``Chain``, ``Chain_Next``, ``Ref``, ``Of_Ref``, ``Maybe_Ref``,
+                            ``Forward_Ref``, ``Maybe_Forward_Ref``, or ``None`` for an owned field.
         :param pname:       The name of the node parameter in the Ada declaration.
         :param ptype:       The type of that parameter.
         :param rname:       The name of the value parameter of the setter.
@@ -265,9 +265,9 @@ def read_kinds(filename):
     """
     Read the ``Iir_Kind`` enumeration and its subtype ranges.
 
-    :param filename: The Ada file declaring the enumeration.
-    :returns:        A tuple of the kind names, in declaration order, and a mapping from a range name to the
-    kinds it covers.
+    :param filename:    The Ada file declaring the enumeration.
+    :returns:           A tuple of the kind names, in declaration order, and a mapping from a range name to the
+                        kinds it covers.
     :raises ParseError: If the enumeration or a range does not follow the expected format.
     """
     lr = linereader(filename)
@@ -358,6 +358,9 @@ def strip_comment(l):
     Only the standard two space prefix is removed, so a line indented further
     than that - the continuation of a grammar production, for instance - keeps
     its relative indentation.
+
+    :param l: The source line to strip.
+    :returns: The comment's text, or ``None`` if the line is not a comment.
     """
     if not l.startswith("   --"):
         return None
@@ -368,6 +371,9 @@ def strip_comment(l):
 def trim_description(lines):
     """
     Drop the leading and trailing blank lines of a comment block.
+
+    :param lines: The comment lines to trim.
+    :returns:     The same lines without the leading and trailing blank ones.
     """
     while lines and not lines[0]:
         lines = lines[1:]
@@ -401,6 +407,9 @@ def split_disabled_fields(lines):
     A field can be disabled by commenting out its 'Get/Set_' line.  The comment
     then still describes that field, so it must not be attributed to the field
     that happens to follow it.
+
+    :param lines: The comment block to split.
+    :returns:     A tuple of the remaining description and the ``(field, description)`` pairs of the disabled fields.
     """
     description = []
     disabled = []
@@ -626,6 +635,14 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
 def read_nodes(filename, kinds, kinds_ranges, fields, funcs):
     """
     Read description for all nodes.
+
+    :param filename:     The Ada file describing the node kinds.
+    :param kinds:        All node kinds, in declaration order.
+    :param kinds_ranges: Mapping from a subtype range name to the kinds it covers.
+    :param fields:       Mapping from a format to its physical fields.
+    :param funcs:        The accessors, as returned by :func:`read_methods`.
+    :returns:            Mapping from a kind name to its :class:`NodeDesc`.
+    :raises ParseError:  If a description is malformed, or a kind has none.
     """
     lr = linereader(filename)
     funcs_dict = {x.name: x for x in funcs}
@@ -688,6 +705,8 @@ def read_nodes(filename, kinds, kinds_ranges, fields, funcs):
 def gen_choices(choices):
     """
     Generate a choice 'when A | B ... Z =>' using elements of CHOICES.
+
+    :param choices: The kind names to list.
     """
     is_first = True
     for c in choices:
@@ -704,6 +723,10 @@ def gen_choices(choices):
 def gen_get_format(formats, nodes, kinds=None):
     """
     Generate the Get_Format function.
+
+    :param formats: The node formats, in declaration order.
+    :param nodes:   Mapping from a kind name to its :class:`NodeDesc`.
+    :param kinds:   The kind names to cover.
     """
     print("   function Get_Format (Kind : " + type_name + ") " + "return Format_Type is")
     print("   begin")
@@ -765,6 +788,10 @@ def get_field_type(fields, f):
 def gen_get_set(func, nodes, fields):
     """
     Generate Get_XXX/Set_XXX subprograms for FUNC.
+
+    :param func:   The accessor to generate.
+    :param nodes:  Mapping from a kind name to its :class:`NodeDesc`.
+    :param fields: Mapping from a format to its physical fields.
     """
     rtype = func.rtype
     # If the function needs several fields, it must be user defined
@@ -1397,6 +1424,19 @@ def parse_files(
     generators rely on and returns (formats, fields, kinds, kinds_ranges, funcs,
     nodes).  ParseError is raised on a malformed description; callers that want
     the command line behaviour should catch it and report LR themselves.
+
+    :param node_file_:        The Ada file describing the node kinds and the accessors.
+    :param field_file_:       The Ada template declaring the formats and their physical fields.
+    :param kind_file_:        The Ada file declaring the kind enumeration.
+    :param template_file_:    The Ada template the body is generated from.
+    :param meta_basename:     The base name of the meta-model files.
+    :param kind_type:         The name of the kind type.
+    :param kind_prefix:       The prefix of every kind literal.
+    :param kind_range_prefix: The prefix of every kind subtype range.
+    :param node_type_:        The name of the node type.
+    :param keep_order:        Keep the field order of the nodes instead of sorting.
+    :returns:                 A tuple of the formats, fields, kinds, kind ranges, accessors and nodes.
+    :raises ParseError:       If any of the Ada sources is malformed.
     """
     # At some point, it would be simpler to create a class...
     global formats, fields, nodes, kinds, kinds_ranges, funcs
