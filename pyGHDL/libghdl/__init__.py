@@ -268,7 +268,7 @@ def initialize() -> None:
 # @BindToLibGHDL("libghdl__set_option")
 def set_option(opt: str) -> bool:
     """\
-    Set option :obj:`opt`.
+    Set option ``opt``.
 
     :param opt: Option to set.
     :returns:   Return ``True``, if the option is known and handled.
@@ -304,7 +304,7 @@ def analyze_init_status() -> int:
 # @BindToLibGHDL("libghdl__analyze_file")
 def analyze_file(fname: str) -> Iir:
     """\
-    Analyze a given filename :obj:`fname`.
+    Analyze a given filename ``fname``.
 
     :param fname: File name
     :returns:     Internal Intermediate Representation (IIR)

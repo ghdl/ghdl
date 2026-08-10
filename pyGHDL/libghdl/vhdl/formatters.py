@@ -48,7 +48,7 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 @BindToLibGHDL("vhdl__formatters__indent_string")
 def Indent_String(File: int, Handle: c_void_p, FirstLine: int, LastLine: int) -> None:
     """
-    Reindent all lines of F between [First_Line; Last_Line] to :obj:`Handle`.
+    Reindent all lines of F between [First_Line; Last_Line] to ``Handle``.
 
     :param File:      File to indent lines within
     :param Handle:    The handle of the string buffer to append to.

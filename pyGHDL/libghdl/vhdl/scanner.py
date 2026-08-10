@@ -56,7 +56,7 @@ Flag_Comment = c_bool.in_dll(libghdl, "vhdl__scanner__flag_comment")
 @BindToLibGHDL("vhdl__scanner__set_file")
 def Set_File(SourceFile: SourceFileEntry) -> None:
     """
-    Initialize the scanner with file :obj:`SourceFile`.
+    Initialize the scanner with file ``SourceFile``.
 
     :param SourceFile: File to scan.
     """

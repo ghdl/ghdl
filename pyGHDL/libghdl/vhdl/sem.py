@@ -47,7 +47,7 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 @BindToLibGHDL("vhdl__sem__semantic")
 def Semantic(DesignUnit: Iir_Design_Unit) -> None:
     """
-    Do the semantic analysis of design unit :obj:`DesignUnit`.
+    Do the semantic analysis of design unit ``DesignUnit``.
 
     Also add a few nodes or change some nodes, when for example an identifier is
     changed into an access to the type.

@@ -47,8 +47,8 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 @BindToLibGHDL("vhdl__utils__strip_denoting_name")
 def Strip_Denoting_Name(Name: Iir) -> Iir:
     """
-    If :obj:`Name` is a simple or an expanded name, return the denoted declaration.
-    Otherwise, return :obj:`Name`.
+    If ``Name`` is a simple or an expanded name, return the denoted declaration.
+    Otherwise, return ``Name``.
 
     :param Name: Simple or an expanded name.
     :returns:    Denoted declaration.
@@ -61,7 +61,7 @@ def Strip_Denoting_Name(Name: Iir) -> Iir:
 def Get_Entity(Decl: Iir) -> Iir:
     """
     This is a wrapper around ``Get_Entity_Name`` to return the entity declaration
-    of the entity name of :obj:`Decl`, or :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of error.
+    of the entity name of ``Decl``, or :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of error.
 
     :param Decl: Declaration
     :returns:    Entity
@@ -73,8 +73,8 @@ def Get_Entity(Decl: Iir) -> Iir:
 @BindToLibGHDL("vhdl__utils__is_second_subprogram_specification")
 def Is_Second_Subprogram_Specification(Spec: Iir) -> bool:
     """
-    Check if :obj:`Spec` is the subprogram specification of a subprogram body
-    which was previously declared. In that case, the only use of :obj:`Spec`
+    Check if ``Spec`` is the subprogram specification of a subprogram body
+    which was previously declared. In that case, the only use of ``Spec``
     is to match the body with its declaration.
 
     :param Spec: Specification
@@ -87,9 +87,9 @@ def Is_Second_Subprogram_Specification(Spec: Iir) -> bool:
 @BindToLibGHDL("vhdl__utils__get_entity_from_entity_aspect")
 def Get_Entity_From_Entity_Aspect(Aspect: Iir) -> Iir:
     """
-    Extract the entity from :obj:`Aspect`.
+    Extract the entity from ``Aspect``.
 
-    If :obj:`Aspect` is a component declaration, return :obj:`Aspect`. If it's
+    If ``Aspect`` is a component declaration, return ``Aspect``. If it's
     open, return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`
 
     :param Aspect: Aspect
@@ -102,7 +102,7 @@ def Get_Entity_From_Entity_Aspect(Aspect: Iir) -> Iir:
 @BindToLibGHDL("vhdl__utils__get_interface_of_formal")
 def Get_Interface_Of_Formal(Formal: Iir) -> Iir:
     """
-    Get the interface corresponding to the formal name :obj:`Formal`. This is
+    Get the interface corresponding to the formal name ``Formal``. This is
     always an interface, even if the formal is a name.
 
     :param Formal: The formal.

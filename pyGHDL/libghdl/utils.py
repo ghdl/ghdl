@@ -55,7 +55,7 @@ import pyGHDL.libghdl.vhdl.flists as flists
 @export
 def name_image(Id: NameId) -> str:
     """
-    Lookup a :obj:`Id` and return its string.
+    Lookup a ``Id`` and return its string.
 
     :returns: The identifier's text.
     """
@@ -66,7 +66,7 @@ def name_image(Id: NameId) -> str:
 @EnumLookupTable(nodes_meta.fields)
 def fields_image(idx: int) -> str:
     """
-    String representation of :class:`~pyGHDL.libghdl.vhdl.nodes_meta.fields` :obj:`idx`.
+    String representation of :class:`~pyGHDL.libghdl.vhdl.nodes_meta.fields` ``idx``.
 
     :returns: The field's name.
     """
@@ -76,7 +76,7 @@ def fields_image(idx: int) -> str:
 @EnumLookupTable(nodes.Iir_Kind)
 def kind_image(k: int) -> str:
     """
-    String representation of :class:`~pyGHDL.libghdl.vhdl.nodes.Iir_Kind` :obj:`k`.
+    String representation of :class:`~pyGHDL.libghdl.vhdl.nodes.Iir_Kind` ``k``.
 
     :returns: The node kind's name.
     """
@@ -86,7 +86,7 @@ def kind_image(k: int) -> str:
 @EnumLookupTable(nodes_meta.types)
 def types_image(t: int) -> str:
     """
-    String representation of :class:`~pyGHDL.libghdl.vhdl.nodes_meta.types` :obj:`t`.
+    String representation of :class:`~pyGHDL.libghdl.vhdl.nodes_meta.types` ``t``.
 
     :returns: The field type's name.
     """
@@ -96,7 +96,7 @@ def types_image(t: int) -> str:
 @EnumLookupTable(nodes_meta.Attr)
 def attr_image(a: int) -> str:
     """
-    String representation of Nodes_Meta.Attr :obj:`a`.
+    String representation of :class:`~pyGHDL.libghdl.vhdl.nodes_meta.Attr` ``a``.
 
     :returns: The attribute's name.
     """
@@ -127,7 +127,7 @@ def leftest_location(n):
 @export
 def fields_iter(n) -> Generator[Any, None, None]:
     """
-    Iterate on fields of node :obj:`n`.
+    Iterate on fields of node ``n``.
 
     :returns: Generator yielding the node's fields.
     """
@@ -143,7 +143,7 @@ def fields_iter(n) -> Generator[Any, None, None]:
 @export
 def chain_iter(n) -> Generator[Any, None, None]:
     """
-    Iterate of a chain headed by node :obj:`n`.
+    Iterate of a chain headed by node ``n``.
 
     :returns: Generator yielding the elements of the chain, in order.
     """
@@ -155,7 +155,7 @@ def chain_iter(n) -> Generator[Any, None, None]:
 @export
 def chain_to_list(n) -> List[Any]:
     """
-    Convert a chain headed by node :obj:`n` to a Python list.
+    Convert a chain headed by node ``n`` to a Python list.
 
     :returns: The elements of the chain, in order.
     """
@@ -165,7 +165,7 @@ def chain_to_list(n) -> List[Any]:
 @export
 def nodes_iter(n) -> Generator[Any, None, None]:
     """
-    Iterate all nodes of :obj:`n`, including :obj:`n`.
+    Iterate all nodes of ``n``, including ``n``.
     Nodes are returned only once.
 
     :returns: Generator yielding the node and all its sub-nodes.
@@ -210,7 +210,7 @@ def nodes_iter(n) -> Generator[Any, None, None]:
 @export
 def list_iter(lst) -> Generator[Any, None, None]:
     """
-    Iterate all element of Iir_List :obj:`lst`.
+    Iterate all element of Iir_List ``lst``.
 
     :returns: Generator yielding the elements of the list, in order.
     """
@@ -225,7 +225,7 @@ def list_iter(lst) -> Generator[Any, None, None]:
 @export
 def flist_iter(lst) -> Generator[Any, None, None]:
     """
-    Iterate all element of Iir_List :obj:`lst`.
+    Iterate all element of Iir_List ``lst``.
 
     :returns: Generator yielding the elements of the flist, in order.
     """
@@ -238,7 +238,7 @@ def flist_iter(lst) -> Generator[Any, None, None]:
 @export
 def declarations_iter(n) -> Generator[Any, None, None]:
     """
-    Iterate all declarations in node :obj:`n`.
+    Iterate all declarations in node ``n``.
 
     :returns: Generator yielding the declarations of the node.
     """
@@ -359,7 +359,7 @@ def declarations_iter(n) -> Generator[Any, None, None]:
 @export
 def concurrent_stmts_iter(n) -> Generator[Any, None, None]:
     """
-    Iterate concurrent statements in node :obj:`n`.
+    Iterate concurrent statements in node ``n``.
 
     :returns: Generator yielding the concurrent statements of the node.
     """

@@ -62,7 +62,7 @@ No_Location = 0
 @BindToLibGHDL("files_map__location_to_file")
 def Location_To_File(Location: LocationType) -> SourceFileEntry:
     """
-    Convert :obj:`Location` to a source file.
+    Convert ``Location`` to a source file.
 
     :param Location: Location
     :returns:        The source file, or :attr:`~pyGHDL.libghdl.files_map.No_Source_File_Entry` if the location is
@@ -75,7 +75,7 @@ def Location_To_File(Location: LocationType) -> SourceFileEntry:
 @BindToLibGHDL("files_map__location_file_to_pos")
 def Location_File_To_Pos(Location: LocationType, File: SourceFileEntry) -> int:
     """
-    Convert :obj:`Location` and :obj:`File` to a position (offset) into the source file.
+    Convert ``Location`` and ``File`` to a position (offset) into the source file.
 
     :param Location: Location
     :param File:     Source file
@@ -88,7 +88,7 @@ def Location_File_To_Pos(Location: LocationType, File: SourceFileEntry) -> int:
 @BindToLibGHDL("files_map__location_file_to_line")
 def Location_File_To_Line(Location: LocationType, File: SourceFileEntry) -> int:
     """
-    Convert :obj:`Location` and :obj:`File` to a line number.
+    Convert ``Location`` and ``File`` to a line number.
 
     :param Location: Location
     :param File:     Source file
@@ -101,7 +101,7 @@ def Location_File_To_Line(Location: LocationType, File: SourceFileEntry) -> int:
 @BindToLibGHDL("files_map__location_file_line_to_offset")
 def Location_File_Line_To_Offset(Location: LocationType, File: SourceFileEntry, Line: int) -> int:
     """
-    Get the offset in :obj:`Line` of :obj:`Location`.
+    Get the offset in ``Line`` of ``Location``.
 
     :param Location: Location
     :param File:     Source file
@@ -115,8 +115,8 @@ def Location_File_Line_To_Offset(Location: LocationType, File: SourceFileEntry, 
 @BindToLibGHDL("files_map__location_file_line_to_col")
 def Location_File_Line_To_Col(Location: LocationType, File: SourceFileEntry, Line: int) -> int:
     """
-    Get logical column (with HT expanded) from :obj:`Location`, :obj:`File` and
-    :obj:`Line`.
+    Get logical column (with HT expanded) from ``Location``, ``File`` and
+    ``Line``.
 
     :param Location: Location
     :param File:     Source file
@@ -129,7 +129,7 @@ def Location_File_Line_To_Col(Location: LocationType, File: SourceFileEntry, Lin
 @export
 @BindToLibGHDL("files_map__file_to_location")
 def File_To_Location(File: SourceFileEntry) -> LocationType:
-    """Convert a :obj:`File` into a location.
+    """Convert a ``File`` into a location.
 
     :param File: The source file to query.
     :returns:    Location.
@@ -141,7 +141,7 @@ def File_To_Location(File: SourceFileEntry) -> LocationType:
 @BindToLibGHDL("files_map__file_pos_to_location")
 def File_Pos_To_Location(File: SourceFileEntry, Pos: int) -> LocationType:
     """
-    Convert a :obj:`File` and an offset :obj:`Pos` in the file into a location.
+    Convert a ``File`` and an offset ``Pos`` in the file into a location.
 
     :param File: The source file to query.
     :param Pos:  Offset in the file
@@ -154,11 +154,11 @@ def File_Pos_To_Location(File: SourceFileEntry, Pos: int) -> LocationType:
 @BindToLibGHDL("files_map__file_line_to_position")
 def File_Line_To_Position(File: SourceFileEntry, Line: int) -> int:
     """
-    Convert a :obj:`File` and :obj:`Line` into a position.
+    Convert a ``File`` and ``Line`` into a position.
 
     :param File: The source file to query.
     :param Line: Line number
-    :returns:    Return ``Source_Ptr_Bad`` in case of error (:obj:`Line` out of bounds).
+    :returns:    Return ``Source_Ptr_Bad`` in case of error (``Line`` out of bounds).
     """
     return 0  # pragma: no cover
 
@@ -265,7 +265,7 @@ def Find_Source_File(Directory: NameId, Name: NameId) -> SourceFileEntry:
     """
     Return an existing entry for a filename.
 
-    :param Directory: :attr:`~pyGHDL.libghdl.name_table.Null_Identifier` for :obj:`DirectoryId` means current directory.
+    :param Directory: :attr:`~pyGHDL.libghdl.name_table.Null_Identifier` for ``DirectoryId`` means current directory.
     :param Name:      File name
     :returns:         Return :attr:`~pyGHDL.libghdl.files_map.No_Source_File_Entry`, if the file is not already open.
     """
@@ -280,7 +280,7 @@ def Read_Source_File(Directory: NameId, Name: NameId) -> SourceFileEntry:
 
     Load the filename if necessary.
 
-    :param Directory: :attr:`~pyGHDL.libghdl.name_table.Null_Identifier` for :obj:`DirectoryId` means current directory.
+    :param Directory: :attr:`~pyGHDL.libghdl.name_table.Null_Identifier` for ``DirectoryId`` means current directory.
     :param Name:      File name
     :returns:         Return :attr:`~pyGHDL.libghdl.files_map.No_Source_File_Entry`, if the file does not exist.
     """
@@ -307,7 +307,7 @@ def Reserve_Source_File(Directory: NameId, Name: NameId, Length: int) -> SourceF
 @BindToLibGHDL("files_map__discard_source_file")
 def Discard_Source_File(File: SourceFileEntry) -> None:
     """
-    Mark :obj:`File` as unavailable: clear the name and directory.
+    Mark ``File`` as unavailable: clear the name and directory.
 
     .. hint:: This is needed before creating a new source file with the same name.
 
@@ -319,7 +319,7 @@ def Discard_Source_File(File: SourceFileEntry) -> None:
 @BindToLibGHDL("files_map__free_source_file")
 def Free_Source_File(File: SourceFileEntry) -> None:
     """
-    Free resources used by :obj:`File`, but keep the entry.
+    Free resources used by ``File``, but keep the entry.
 
     .. note:: It could be recycled for files that could fit - not implemented.
 

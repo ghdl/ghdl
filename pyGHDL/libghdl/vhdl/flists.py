@@ -55,7 +55,7 @@ Ffirst = 0
 @BindToLibGHDL("vhdl__flists__flast")
 def Flast(FList: int) -> int:
     """
-    Last index of :obj:`FList`.
+    Last index of ``FList``.
 
     .. hint:: Could be used to iterate.
 
@@ -69,7 +69,7 @@ def Flast(FList: int) -> int:
 @BindToLibGHDL("vhdl__flists__length")
 def Length(FList: int) -> int:
     """
-    Get the length of :obj:`FList`.
+    Get the length of ``FList``.
 
     :param FList: List to query.
     :returns:     Number of elements in the list.
@@ -81,7 +81,7 @@ def Length(FList: int) -> int:
 @BindToLibGHDL("vhdl__flists__get_nth_element")
 def Get_Nth_Element(FList: int, N: int) -> int:
     """
-    Get the N-th element of :obj:`FList`.
+    Get the N-th element of ``FList``.
 
     First element has index 0.
 

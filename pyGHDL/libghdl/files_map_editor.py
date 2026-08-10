@@ -106,7 +106,7 @@ def Replace_Text(
 @export
 # @BindToLibGHDL("files_map__editor__fill_text_ptr")
 def Fill_Text(File: SourceFileEntry, Text_Pointer, Text_Length: int) -> None:
-    """Replace the content of :obj:`File` with TEXT.
+    """Replace the content of ``File`` with TEXT.
 
     .. todo:: Replace ``Text_Pointer`` and ``Text_Length`` with Python string
 
@@ -121,7 +121,7 @@ def Fill_Text(File: SourceFileEntry, Text_Pointer, Text_Length: int) -> None:
 # @BindToLibGHDL("files_map__editor__check_buffer_content")
 def Check_Buffer_Content(File: SourceFileEntry, String_Pointer: c_char_p, String_Length: c_uint32) -> None:
     """
-    Check that content of :obj:`File` is STR[1 .. STR_LEN].
+    Check that content of ``File`` is STR[1 .. STR_LEN].
 
     .. todo:: Replace ``String_Pointer`` and ``String_Length`` with Python string
 
@@ -136,9 +136,9 @@ def Check_Buffer_Content(File: SourceFileEntry, String_Pointer: c_char_p, String
 @BindToLibGHDL("files_map__editor__copy_source_file")
 def Copy_Source_File(Dest: SourceFileEntry, Src: SourceFileEntry) -> None:
     """
-    Copy content of :obj:`Src` to :obj:`Dest`.
+    Copy content of ``Src`` to ``Dest``.
 
-    .. warning:: The size of :obj:`Dest` must be large enough.
+    .. warning:: The size of ``Dest`` must be large enough.
 
-    Clear lines table of :obj:`Dest`.
+    Clear lines table of ``Dest``.
     """

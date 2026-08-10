@@ -59,7 +59,7 @@ def Load_File(File: SourceFileEntry) -> Iir_Design_File:
 @BindToLibGHDL("vhdl__sem_lib__finish_compilation")
 def Finish_Compilation(Unit: Iir_Design_Unit, Main: bool = False) -> None:
     """
-    Analyze :obj:`Unit`.
+    Analyze ``Unit``.
 
     :param Unit: Design unit to analyze.
     :param Main: Is main unit.
@@ -70,7 +70,7 @@ def Finish_Compilation(Unit: Iir_Design_Unit, Main: bool = False) -> None:
 @BindToLibGHDL("vhdl__sem_lib__free_dependence_list")
 def Free_Dependence_List(Design: Iir_Design_Unit) -> None:
     """
-    Free the dependence list of :obj:`Design`.
+    Free the dependence list of ``Design``.
 
     :param Design: Design unit to free dependencies for.
     """

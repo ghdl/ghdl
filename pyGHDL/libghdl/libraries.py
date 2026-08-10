@@ -113,7 +113,7 @@ def Add_Design_Unit_Into_Library(Unit: Iir_Design_Unit, Keep_Obsolete: bool) -> 
 @BindToLibGHDL("libraries__purge_design_file")
 def Purge_Design_File(Design_File: Iir_Design_File) -> None:
     """
-    Remove the same file as :obj:`Design_File` from work library and all of its units.
+    Remove the same file as ``Design_File`` from work library and all of its units.
 
     :param Design_File: The design file to add.
     """
@@ -123,7 +123,7 @@ def Purge_Design_File(Design_File: Iir_Design_File) -> None:
 @BindToLibGHDL("libraries__find_entity_for_component")
 def Find_Entity_For_Component(Name: NameId) -> Iir_Design_Unit:
     """
-    Find an entity whose name is :obj:`Name` in any library. |br|
+    Find an entity whose name is ``Name`` in any library. |br|
     If there is no such entity, return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`. |br|
     If there are several entities, return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`;
 
@@ -137,7 +137,7 @@ def Find_Entity_For_Component(Name: NameId) -> Iir_Design_Unit:
 @BindToLibGHDL("libraries__get_library_no_create")
 def Get_Library_No_Create(Ident: NameId) -> Iir_Library_Declaration:
     """
-    Get the library named :obj:`Ident`.
+    Get the library named ``Ident``.
 
     :param Ident: Library to look for.
     :returns:     Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if it doesn't exist.
@@ -149,7 +149,7 @@ def Get_Library_No_Create(Ident: NameId) -> Iir_Library_Declaration:
 @BindToLibGHDL("libraries__get_library")
 def Get_Library(Ident: NameId, Loc: LocationType, Force: bool) -> Iir_Library_Declaration:
     """
-    Get the library named :obj:`Ident`.
+    Get the library named ``Ident``.
 
     :param Ident: Library to look for.
     :param Loc:   Location in case of errors.
@@ -163,7 +163,7 @@ def Get_Library(Ident: NameId, Loc: LocationType, Force: bool) -> Iir_Library_De
 @BindToLibGHDL("libraries__find_primary_unit")
 def Find_Primary_Unit(Library: Iir_Library_Declaration, Name: NameId) -> Iir_Design_Unit:
     """
-    Just return the design_unit for :obj:`Name`, or ``NULL`` if not found.
+    Just return the design_unit for ``Name``, or ``NULL`` if not found.
 
     :param Library: Library to look in.
     :param Name:    Primary unit to search for.
