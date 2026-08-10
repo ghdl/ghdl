@@ -108,7 +108,7 @@ def Get_Nbr_Messages() -> ErrorIndex:
 @BindToLibGHDL("errorout__memory__get_error_record")
 def Get_Error_Record(Idx: ErrorIndex) -> Error_Message:
     """
-    Get error messages by index ``Idy`` as structure :class:`Error_Message`.
+    Get error messages by index ``Idx`` as structure :class:`Error_Message`.
 
     :param Idx: Index from 1 to ``Nbr_Messages`` See :func:`Get_Nbr_Messages`.
     :returns:   The message record at that index.

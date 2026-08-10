@@ -65,7 +65,7 @@ def Find_First_Comment(File: SourceFileEntry, N: c_uint32) -> Comment_Index:
     Get the first comment associated to a node.
     :param File: Source file for node
     :param N:    The node to find the first comment of.
-    :returns:    The first comment index, or No_Comment_Index if none.
+    :returns:    The first comment index, or ``No_Comment_Index`` if none.
     """
     return 0  # pragma: no cover
 
