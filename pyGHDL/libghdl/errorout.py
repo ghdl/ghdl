@@ -1,6 +1,12 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+"""
+Python binding for the Ada package ``Errorout`` in *libghdl*.
+
+The warnings and errors *libghdl* can report, and the subprograms to enable or disable them.
+"""
+
 from enum import IntEnum, unique
 
 from pyTooling.Decorators import export
@@ -11,12 +17,21 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 @export
 @BindToLibGHDL("errorout__enable_warning")
 def Enable_Warning(Id: int, Enable: bool) -> None:
-    """"""
+    """
+    Enable or disable a warning.
+
+    :param Id:     The warning to change.
+    :param Enable: ``True`` to enable the warning, ``False`` to disable it.
+    """
 
 
 @export
 @unique
 class Msgid(IntEnum):
+    """
+    The warnings and errors *libghdl* can report.
+    """
+
     Msgid_Note = 0
     Warnid_Library = 1
     Warnid_Deprecated_Option = 2

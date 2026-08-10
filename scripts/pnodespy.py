@@ -80,6 +80,9 @@ ENUM_DESCRIPTIONS = {
     "types": "The types a field of the meta-model can have.",
     "Attr": "The access attribute of a field: a reference, a chain, or owned.",
     "fields": "Every field of the meta-model, as an enumeration.",
+    "Tok": "The VHDL tokens the scanner produces.",
+    "Msgid": "The warnings and errors *libghdl* can report.",
+    "Name": "The predefined names *libghdl* interns at startup.",
 }
 
 
@@ -102,11 +105,12 @@ def print_enum(name, vals):
         print(f"    {k} = {n}")
 
 
-def print_file_header(includeIntEnumUnique: bool = True, includeBindToLibGHDL: bool = True):
+def print_file_header(includeIntEnumUnique: bool = True, includeBindToLibGHDL: bool = True, description: str = None):
     print(dedent(f"""\
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+{'\"\"\"\n' + description + '\n\"\"\"\n\n' if description else ''}\
 {'from enum import IntEnum, unique\n\n' if includeIntEnumUnique else ''}\
 from pyTooling.Decorators import export
 {'\nfrom pyGHDL.libghdl._decorator import BindToLibGHDL\n' if includeBindToLibGHDL else ''}\
@@ -188,19 +192,36 @@ def do_iirs_subprg():
 
 def do_libghdl_elocations():
     classname = "vhdl__elocations"
-    print_file_header(includeIntEnumUnique=False, includeBindToLibGHDL=False)
+    print_file_header(
+            includeIntEnumUnique=False,
+            includeBindToLibGHDL=False,
+            description="Python binding for the Ada package ``Vhdl.Elocations`` in *libghdl*.\n\n"
+            "The extended source locations of a node - the position of each keyword and delimiter - kept separately from the\n"
+            "node itself, so an ordinary node does not pay for them.",
+        )
     print("from pyGHDL.libghdl import libghdl")
     print()
     for k in pnodes.funcs:
-        print(dedent(f"""
-            @export
-            def Get_{k.name}(obj):
-                return {libname}.{classname}__get_{k.name.lower()}(obj)
-            @export
-            def Set_{k.name}(obj, value) -> None:
-                {libname}.{classname}__set_{k.name.lower()}(obj, value)
-            """)
-        )
+        print()
+        print("@export")
+        print(f"def Get_{k.name}(obj):")
+        print(format_docstring(
+            k.description,
+            "    ",
+            obj=f"The node to read the ``{k.name}`` location of.",
+            returns=f"The node's ``{k.name}`` location.",
+        ))
+        print(f"    return {libname}.{classname}__get_{k.name.lower()}(obj)")
+        print("@export")
+        print(f"def Set_{k.name}(obj, value) -> None:")
+        print(format_docstring(
+            k.description,
+            "    ",
+            obj=f"The node to write the ``{k.name}`` location of.",
+            value=f"The location to write into the ``{k.name}`` field.",
+        ))
+        print(f"    {libname}.{classname}__set_{k.name.lower()}(obj, value)")
+        print()
 
 
 def do_class_types():
@@ -256,7 +277,11 @@ def read_spec_enum(type_name, prefix, class_name):
 
 
 def do_libghdl_nodes():
-    print_file_header()
+    print_file_header(
+            description="Python binding for the Ada package ``Vhdl.Nodes`` in *libghdl*.\n\n"
+            "The IIR tree: the node kinds, the enumerations their fields use, and the accessor pair for every field.\n"
+            "See :ref:`INT:AST` for what a node is and how the fields are addressed.",
+        )
     print(dedent("""\
         from typing import TypeVar
         from ctypes import c_int32
@@ -319,7 +344,11 @@ def do_libghdl_nodes():
 
 
 def do_libghdl_meta():
-    print_file_header()
+    print_file_header(
+            description="Python binding for the Ada package ``Vhdl.Nodes_Meta`` in *libghdl*.\n\n"
+            "The meta-model: which fields a node kind has, of what type, and with what access attribute. It is what lets an\n"
+            "algorithm walk any node without knowing its kind.",
+        )
     print(dedent("""\
         from pyGHDL.libghdl import libghdl
         from pyGHDL.libghdl._types import IirKind
@@ -401,11 +430,20 @@ def do_libghdl_meta():
 
 def do_libghdl_names():
     res = pnodes.read_std_names()
-    print_file_header(includeIntEnumUnique=False, includeBindToLibGHDL=False)
+    print_file_header(
+            includeIntEnumUnique=False,
+            includeBindToLibGHDL=False,
+            description="Python binding for the Ada package ``Std_Names`` in *libghdl*.\n\n"
+            "The predefined names *libghdl* interns at startup, so they can be compared by identifier rather than by text.",
+        )
     print(dedent("""
 
         @export
         class Name:
+            \"\"\"
+            The predefined names *libghdl* interns at startup, as identifier values.
+            \"\"\"
+
         """), end=''
     )
 
@@ -417,13 +455,20 @@ def do_libghdl_names():
 
 
 def do_libghdl_tokens():
-    print_file_header(includeBindToLibGHDL=False)
+    print_file_header(
+            includeBindToLibGHDL=False,
+            description="Python binding for the Ada package ``Vhdl.Tokens`` in *libghdl*.\n\n"
+            "The tokens the VHDL scanner produces.",
+        )
     enum = pnodes.read_enum("vhdl-tokens.ads", "Token_Type", "Tok_")
     print_enum("Tok", enum)
 
 
 def do_libghdl_errorout():
-    print_file_header()
+    print_file_header(
+            description="Python binding for the Ada package ``Errorout`` in *libghdl*.\n\n"
+            "The warnings and errors *libghdl* can report, and the subprograms to enable or disable them.",
+        )
     print(dedent("""\
         @export
         @BindToLibGHDL("errorout__enable_warning")
