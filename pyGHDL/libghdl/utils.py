@@ -210,7 +210,7 @@ def nodes_iter(n) -> Generator[Any, None, None]:
 @export
 def list_iter(lst) -> Generator[Any, None, None]:
     """
-    Iterate all element of Iir_List ``lst``.
+    Iterate all elements of the Iir_List ``lst``.
 
     :returns: Generator yielding the elements of the list, in order.
     """
@@ -225,7 +225,7 @@ def list_iter(lst) -> Generator[Any, None, None]:
 @export
 def flist_iter(lst) -> Generator[Any, None, None]:
     """
-    Iterate all element of Iir_List ``lst``.
+    Iterate all elements of the Iir_Flist ``lst``.
 
     :returns: Generator yielding the elements of the flist, in order.
     """

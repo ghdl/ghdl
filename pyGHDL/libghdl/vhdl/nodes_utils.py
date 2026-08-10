@@ -63,7 +63,7 @@ def Get_Entity(Decl: Iir) -> Iir:
     This is a wrapper around ``Get_Entity_Name`` to return the entity declaration
     of the entity name of ``Decl``, or :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of error.
 
-    :param Decl: Declaration
+    :param Decl: The declaration to get the entity of.
     :returns:    Entity
     """
     return 0
@@ -77,7 +77,7 @@ def Is_Second_Subprogram_Specification(Spec: Iir) -> bool:
     which was previously declared. In that case, the only use of ``Spec``
     is to match the body with its declaration.
 
-    :param Spec: Specification
+    :param Spec: The subprogram specification to check.
     :returns:    ``True`` if subprogram specification and previously declared subprogram body match
     """
     return False
@@ -92,7 +92,7 @@ def Get_Entity_From_Entity_Aspect(Aspect: Iir) -> Iir:
     If ``Aspect`` is a component declaration, return ``Aspect``. If it's
     open, return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`
 
-    :param Aspect: Aspect
+    :param Aspect: The entity aspect to extract the entity from.
     :returns:      Entity
     """
     return 0

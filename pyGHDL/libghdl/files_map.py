@@ -64,9 +64,9 @@ def Location_To_File(Location: LocationType) -> SourceFileEntry:
     """
     Convert ``Location`` to a source file.
 
-    :param Location: Location
+    :param Location: The location to resolve.
     :returns:        The source file, or :attr:`~pyGHDL.libghdl.files_map.No_Source_File_Entry` if the location is
-                 incorrect.
+                     incorrect.
     """
     return 0  # pragma: no cover
 
@@ -77,7 +77,7 @@ def Location_File_To_Pos(Location: LocationType, File: SourceFileEntry) -> int:
     """
     Convert ``Location`` and ``File`` to a position (offset) into the source file.
 
-    :param Location: Location
+    :param Location: The location to resolve.
     :param File:     Source file
     :returns:        Offset
     """
@@ -90,7 +90,7 @@ def Location_File_To_Line(Location: LocationType, File: SourceFileEntry) -> int:
     """
     Convert ``Location`` and ``File`` to a line number.
 
-    :param Location: Location
+    :param Location: The location to resolve.
     :param File:     Source file
     :returns:        Line number
     """
@@ -103,7 +103,7 @@ def Location_File_Line_To_Offset(Location: LocationType, File: SourceFileEntry, 
     """
     Get the offset in ``Line`` of ``Location``.
 
-    :param Location: Location
+    :param Location: The location to resolve.
     :param File:     Source file
     :param Line:     Line number
     :returns:        Offset
@@ -118,7 +118,7 @@ def Location_File_Line_To_Col(Location: LocationType, File: SourceFileEntry, Lin
     Get logical column (with HT expanded) from ``Location``, ``File`` and
     ``Line``.
 
-    :param Location: Location
+    :param Location: The location to resolve.
     :param File:     Source file
     :param Line:     Line number
     :returns:        logical column (horizontal tabs are expanded)
