@@ -30,6 +30,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Generators and helpers on top of the raw ``libghdl`` bindings.
+
+Iterating a chain, a list or an flist, and resolving the leftmost source location of a node, are needed everywhere and
+are ugly against the raw API, so they live here.
+"""
 
 from ctypes import byref
 from typing import List, Any, Generator
@@ -48,36 +54,66 @@ import pyGHDL.libghdl.vhdl.flists as flists
 
 @export
 def name_image(Id: NameId) -> str:
-    """Lookup a :obj:`Id` and return its string."""
+    """
+    Lookup a ``Id`` and return its string.
+
+    :returns: The identifier's text.
+    """
     return name_table.Get_Name_Ptr(Id)
 
 
 @export
 @EnumLookupTable(nodes_meta.fields)
 def fields_image(idx: int) -> str:
-    """String representation of Nodes_Meta.fields :obj:`idx`."""
+    """
+    String representation of :class:`~pyGHDL.libghdl.vhdl.nodes_meta.fields` ``idx``.
+
+    :returns: The field's name.
+    """
 
 
 @export
 @EnumLookupTable(nodes.Iir_Kind)
 def kind_image(k: int) -> str:
-    """String representation of Nodes.Iir_Kind :obj:`k`."""
+    """
+    String representation of :class:`~pyGHDL.libghdl.vhdl.nodes.Iir_Kind` ``k``.
+
+    :returns: The node kind's name.
+    """
 
 
 @export
 @EnumLookupTable(nodes_meta.types)
 def types_image(t: int) -> str:
-    """String representation of Nodes_Meta.Types :obj:`t`."""
+    """
+    String representation of :class:`~pyGHDL.libghdl.vhdl.nodes_meta.types` ``t``.
+
+    :returns: The field type's name.
+    """
 
 
 @export
 @EnumLookupTable(nodes_meta.Attr)
 def attr_image(a: int) -> str:
-    """String representation of Nodes_Meta.Attr :obj:`a`."""
+    """
+    String representation of :class:`~pyGHDL.libghdl.vhdl.nodes_meta.Attr` ``a``.
+
+    :returns: The attribute's name.
+    """
 
 
 @export
 def leftest_location(n):
+    """
+    Return the location of the leftmost token of a node.
+
+    A node's own location is the token the parser considered characteristic, which for a subtype indication or a name is
+    not the first one written. This walks left until there is nothing further.
+
+    :param n: The IIR node to locate.
+    :returns: The location of the leftmost token, or :attr:`~pyGHDL.libghdl.files_map.No_Location` if ``n`` is
+              :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
+    """
     while True:
         if n == nodes.Null_Iir:
             return files_map.No_Location
@@ -90,7 +126,11 @@ def leftest_location(n):
 
 @export
 def fields_iter(n) -> Generator[Any, None, None]:
-    """Iterate on fields of node :obj:`n`."""
+    """
+    Iterate on fields of node ``n``.
+
+    :returns: Generator yielding the node's fields.
+    """
     if n == nodes.Null_Iir:
         return
     k = nodes.Get_Kind(n)
@@ -102,7 +142,11 @@ def fields_iter(n) -> Generator[Any, None, None]:
 
 @export
 def chain_iter(n) -> Generator[Any, None, None]:
-    """Iterate of a chain headed by node :obj:`n`."""
+    """
+    Iterate of a chain headed by node ``n``.
+
+    :returns: Generator yielding the elements of the chain, in order.
+    """
     while n != nodes.Null_Iir:
         yield n
         n = nodes.Get_Chain(n)
@@ -110,15 +154,21 @@ def chain_iter(n) -> Generator[Any, None, None]:
 
 @export
 def chain_to_list(n) -> List[Any]:
-    """Convert a chain headed by node :obj:`n` to a Python list."""
+    """
+    Convert a chain headed by node ``n`` to a Python list.
+
+    :returns: The elements of the chain, in order.
+    """
     return [e for e in chain_iter(n)]
 
 
 @export
 def nodes_iter(n) -> Generator[Any, None, None]:
     """
-    Iterate all nodes of :obj:`n`, including :obj:`n`.
+    Iterate all nodes of ``n``, including ``n``.
     Nodes are returned only once.
+
+    :returns: Generator yielding the node and all its sub-nodes.
     """
     if n == nodes.Null_Iir:
         return
@@ -159,7 +209,11 @@ def nodes_iter(n) -> Generator[Any, None, None]:
 
 @export
 def list_iter(lst) -> Generator[Any, None, None]:
-    """Iterate all element of Iir_List :obj:`lst`."""
+    """
+    Iterate all elements of the Iir_List ``lst``.
+
+    :returns: Generator yielding the elements of the list, in order.
+    """
     if lst <= nodes.Iir_List_All:
         return
     iter = lists.Iterate(lst)
@@ -170,7 +224,11 @@ def list_iter(lst) -> Generator[Any, None, None]:
 
 @export
 def flist_iter(lst) -> Generator[Any, None, None]:
-    """Iterate all element of Iir_List :obj:`lst`."""
+    """
+    Iterate all elements of the Iir_Flist ``lst``.
+
+    :returns: Generator yielding the elements of the flist, in order.
+    """
     if lst <= nodes.Iir_Flist_All:
         return
     for i in range(flists.Flast(lst) + 1):
@@ -179,7 +237,11 @@ def flist_iter(lst) -> Generator[Any, None, None]:
 
 @export
 def declarations_iter(n) -> Generator[Any, None, None]:
-    """Iterate all declarations in node :obj:`n`."""
+    """
+    Iterate all declarations in node ``n``.
+
+    :returns: Generator yielding the declarations of the node.
+    """
     k = nodes.Get_Kind(n)
     if nodes_meta.Has_Generic_Chain(k):
         for n1 in chain_iter(nodes.Get_Generic_Chain(n)):
@@ -296,7 +358,11 @@ def declarations_iter(n) -> Generator[Any, None, None]:
 
 @export
 def concurrent_stmts_iter(n) -> Generator[Any, None, None]:
-    """Iterate concurrent statements in node :obj:`n`."""
+    """
+    Iterate concurrent statements in node ``n``.
+
+    :returns: Generator yielding the concurrent statements of the node.
+    """
     k = nodes.Get_Kind(n)
     if k == nodes.Iir_Kind.Design_File:
         for n1 in chain_iter(nodes.Get_First_Design_Unit(n)):
@@ -336,6 +402,8 @@ def constructs_iter(n) -> Generator[Any, None, None]:
     """
     Iterate library units, concurrent statements and declarations
     that appear directly within a declarative part.
+
+    :returns: Generator yielding the declarations and concurrent statements of the node.
     """
     if n == nodes.Null_Iir:
         return
@@ -406,6 +474,8 @@ def sequential_iter(n) -> Generator[Any, None, None]:
     """
     Iterate sequential statements. The first node must be either
     a process or a subprogram body.
+
+    :returns: Generator yielding the sequential statements of the node.
     """
     if n == nodes.Null_Iir:
         return

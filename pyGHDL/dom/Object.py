@@ -75,6 +75,15 @@ class Constant(VHDLModel_Constant, DOMMixin):
         defaultExpression: ExpressionUnion,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a constant.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
@@ -82,6 +91,13 @@ class Constant(VHDLModel_Constant, DOMMixin):
     def parse(
         cls, constantNode: Iir, furtherIdentifiers: Iterable[str] = None
     ) -> Union["Constant", "DeferredConstant"]:
+        """
+        Translates the IIR node of the constant declaration to a :class:`Constant`.
+
+        :param constantNode:       The IIR node of the constant declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated constant declaration.
+        """
         from pyGHDL.dom._Translate import (
             GetSubtypeIndicationFromNode,
             GetExpressionFromNode,
@@ -117,11 +133,26 @@ class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
+        """
+        Initializes a deferred constant.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifiers:   A list of identifiers.
+        :param subtype:       Reference to the object's subtype.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, constantNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "DeferredConstant":
+        """
+        Translates the IIR node of the constant declaration to a :class:`DeferredConstant`.
+
+        :param constantNode:       The IIR node of the constant declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated constant declaration.
+        """
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(constantNode)
@@ -156,11 +187,27 @@ class Variable(VHDLModel_Variable, DOMMixin):
         defaultExpression: ExpressionUnion,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a variable.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, variableNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "Variable":
+        """
+        Translates the IIR node of the variable declaration to a :class:`Variable`.
+
+        :param variableNode:       The IIR node of the variable declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated variable declaration.
+        """
         from pyGHDL.dom._Translate import (
             GetSubtypeIndicationFromNode,
             GetExpressionFromNode,
@@ -195,11 +242,26 @@ class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
+        """
+        Initializes a shared variable.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifiers:   A list of identifiers.
+        :param subtype:       Reference to the object's subtype.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, variableNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "SharedVariable":
+        """
+        Translates the IIR node of the variable declaration to a :class:`SharedVariable`.
+
+        :param variableNode:       The IIR node of the variable declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated variable declaration.
+        """
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(variableNode)
@@ -234,11 +296,27 @@ class Signal(VHDLModel_Signal, DOMMixin):
         defaultExpression: ExpressionUnion,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a signal.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, signalNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "Signal":
+        """
+        Translates the IIR node of the signal declaration to a :class:`Signal`.
+
+        :param signalNode:         The IIR node of the signal declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated signal declaration.
+        """
         from pyGHDL.dom._Translate import (
             GetSubtypeIndicationFromNode,
             GetExpressionFromNode,
@@ -271,11 +349,26 @@ class File(VHDLModel_File, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
+        """
+        Initializes a file object.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifiers:   A list of identifiers.
+        :param subtype:       Reference to the object's subtype.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, fileNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "File":
+        """
+        Translates the IIR node of the file declaration to a :class:`File`.
+
+        :param fileNode:           The IIR node of the file declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated file declaration.
+        """
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(fileNode)

@@ -30,9 +30,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived concurrent statement classes from :mod:`pyVHDLModel.Concurrent`.
+"""
+
 from typing import Iterable, List, Optional as Nullable
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Base import ExpressionUnion, WaveformElement as VHDLModel_WaveformElement, ModelEntity, Range
 from pyVHDLModel.Common import (
@@ -88,28 +92,69 @@ from pyGHDL.dom.Symbol import (
 
 
 @export
+@InheritDocString(VHDLModel_GenericAssociationItem, merge=True)
 class GenericAssociationItem(VHDLModel_GenericAssociationItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Association.GenericAssociationItem`.
+    """
+
     def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        """
+        Initializes a generic association item.
+
+        :param associationNode: The IIR node of the association element.
+        :param formal:          Reference to the formal part, or ``None`` for a positional association.
+        :param actual:          The actual part of this association.
+        """
         super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
+@InheritDocString(VHDLModel_PortAssociationItem, merge=True)
 class PortAssociationItem(VHDLModel_PortAssociationItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Association.PortAssociationItem`.
+    """
+
     def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        """
+        Initializes a port association item.
+
+        :param associationNode: The IIR node of the association element.
+        :param formal:          Reference to the formal part, or ``None`` for a positional association.
+        :param actual:          The actual part of this association.
+        """
         super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
+@InheritDocString(VHDLModel_ParameterAssociationItem, merge=True)
 class ParameterAssociationItem(VHDLModel_ParameterAssociationItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Association.ParameterAssociationItem`.
+    """
+
     def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        """
+        Initializes a parameter association item.
+
+        :param associationNode: The IIR node of the association element.
+        :param formal:          Reference to the formal part, or ``None`` for a positional association.
+        :param actual:          The actual part of this association.
+        """
         super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
+@InheritDocString(VHDLModel_ComponentInstantiation, merge=True)
 class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.ComponentInstantiation`.
+    """
+
     def __init__(
         self,
         instantiationNode: Iir,
@@ -118,11 +163,28 @@ class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
         genericAssociationItems: Iterable[AssociationItem] = None,
         portAssociationItems: Iterable[AssociationItem] = None,
     ) -> None:
+        """
+        Initializes a component instantiation.
+
+        :param instantiationNode:       The IIR node of the instantiation statement.
+        :param label:                   The label of the component instantiation statement.
+        :param componentSymbol:         Reference to the instantiated component.
+        :param genericAssociationItems: List of all generic associations in the generic map aspect.
+        :param portAssociationItems:    List of all port associations in the port map aspect.
+        """
         super().__init__(label, componentSymbol, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ComponentInstantiation":
+        """
+        Translates the IIR node of the instantiation statement to a :class:`ComponentInstantiation`.
+
+        :param instantiationNode: The IIR node of the instantiation statement.
+        :param instantiatedUnit:  The IIR node of the instantiated unit.
+        :param label:             The statement's label, or ``None`` if it has none.
+        :returns:                 The translated instantiation statement.
+        """
         from pyGHDL.dom._Translate import GetName, GetGenericMapAspect, GetPortMapAspect
 
         componentSymbol = ComponentInstantiationSymbol(instantiatedUnit, GetName(instantiatedUnit))
@@ -133,7 +195,12 @@ class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_EntityInstantiation, merge=True)
 class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.EntityInstantiation`.
+    """
+
     def __init__(
         self,
         instantiationNode: Iir,
@@ -143,11 +210,29 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         genericAssociationItems: Iterable[AssociationItem] = None,
         portAssociationItems: Iterable[AssociationItem] = None,
     ) -> None:
+        """
+        Initializes a direct entity instantiation.
+
+        :param instantiationNode:       The IIR node of the instantiation statement.
+        :param label:                   The label of the entity instantiation statement.
+        :param entitySymbol:            Reference to the directly instantiated entity.
+        :param architectureSymbol:      Reference to the selected architecture, if one was given.
+        :param genericAssociationItems: List of all generic associations in the generic map aspect.
+        :param portAssociationItems:    List of all port associations in the port map aspect.
+        """
         super().__init__(label, entitySymbol, architectureSymbol, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "EntityInstantiation":
+        """
+        Translates the IIR node of the instantiation statement to an :class:`EntityInstantiation`.
+
+        :param instantiationNode: The IIR node of the instantiation statement.
+        :param instantiatedUnit:  The IIR node of the instantiated unit.
+        :param label:             The statement's label, or ``None`` if it has none.
+        :returns:                 The translated instantiation statement.
+        """
         from pyGHDL.dom._Translate import GetName, GetGenericMapAspect, GetPortMapAspect
 
         entityName = nodes.Get_Entity_Name(instantiatedUnit)
@@ -167,7 +252,12 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ConfigurationInstantiation, merge=True)
 class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.ConfigurationInstantiation`.
+    """
+
     def __init__(
         self,
         instantiationNode: Iir,
@@ -176,11 +266,28 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
         genericAssociationItems: Iterable[AssociationItem] = None,
         portAssociationItems: Iterable[AssociationItem] = None,
     ) -> None:
+        """
+        Initializes a configuration instantiation.
+
+        :param instantiationNode:       The IIR node of the instantiation statement.
+        :param label:                   The label of the configuration instantiation statement.
+        :param configurationSymbol:     Reference to the instantiated configuration.
+        :param genericAssociationItems: List of all generic associations in the generic map aspect.
+        :param portAssociationItems:    List of all port associations in the port map aspect.
+        """
         super().__init__(label, configurationSymbol, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
     def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ConfigurationInstantiation":
+        """
+        Translates the IIR node of the instantiation statement to a :class:`ConfigurationInstantiation`.
+
+        :param instantiationNode: The IIR node of the instantiation statement.
+        :param instantiatedUnit:  The IIR node of the instantiated unit.
+        :param label:             The statement's label, or ``None`` if it has none.
+        :returns:                 The translated instantiation statement.
+        """
         from pyGHDL.dom._Translate import GetName, GetGenericMapAspect, GetPortMapAspect
 
         configurationName = nodes.Get_Configuration_Name(instantiatedUnit)
@@ -193,7 +300,12 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
 
 
 @export
+@InheritDocString(VHDLModel_ConcurrentBlockStatement, merge=True)
 class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.ConcurrentBlockStatement`.
+    """
+
     def __init__(
         self,
         blockNode: Iir,
@@ -205,6 +317,18 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         declaredItems: Iterable = None,
         statements: Iterable["ConcurrentStatement"] = None,
     ) -> None:
+        """
+        Initializes a block statement.
+
+        :param blockNode:               The IIR node of the :vhdlkw:`block` statement.
+        :param label:                   The label of the :vhdlkw:`block` statement.
+        :param genericItems:            List of all generics, in declaration order.
+        :param genericAssociationItems: List of all generic associations in the generic map aspect.
+        :param portItems:               List of all ports, in declaration order.
+        :param portAssociationItems:    List of all port associations in the port map aspect.
+        :param declaredItems:           List of all declared items in this concurrent declaration region.
+        :param statements:              List of all concurrent statements in this construct.
+        """
         super().__init__(
             label,
             genericItems,
@@ -218,6 +342,13 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
 
     @classmethod
     def parse(cls, blockNode: Iir, label: str) -> "ConcurrentBlockStatement":
+        """
+        Translates the IIR node of the block statement to a :class:`ConcurrentBlockStatement`.
+
+        :param blockNode: The IIR node of the block statement.
+        :param label:     The statement's label, or ``None`` if it has none.
+        :returns:         The translated block statement.
+        """
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
@@ -256,7 +387,12 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ProcessStatement, merge=True)
 class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.ProcessStatement`.
+    """
+
     def __init__(
         self,
         processNode: Iir,
@@ -265,11 +401,28 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
         statements: Iterable[SequentialStatement] = None,
         sensitivityList: Iterable[Symbol] = None,
     ) -> None:
+        """
+        Initializes a :vhdlkw:`process` statement.
+
+        :param processNode:     The IIR node of the :vhdlkw:`process` statement.
+        :param label:           The label of the :vhdlkw:`process` statement, or ``None`` if it has none.
+        :param declaredItems:   List of all declared items in this sequential declaration region.
+        :param statements:      List of all sequential statements in this construct.
+        :param sensitivityList: List of all signal names in the sensitivity list, or ``None`` if none was given.
+        """
         super().__init__(label, declaredItems, statements, sensitivityList)
         DOMMixin.__init__(self, processNode)
 
     @classmethod
     def parse(cls, processNode: Iir, label: str, hasSensitivityList: bool) -> "ProcessStatement":
+        """
+        Translates the IIR node of the process statement to a :class:`ProcessStatement`.
+
+        :param processNode:        The IIR node of the process statement.
+        :param label:              The statement's label, or ``None`` if it has none.
+        :param hasSensitivityList: ``True`` if the process was declared with a sensitivity list.
+        :returns:                  The translated process statement.
+        """
         from pyGHDL.dom._Translate import (
             GetName,
             GetDeclaredItemsFromChainedNodes,
@@ -291,7 +444,12 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_IfGenerateBranch, merge=True)
 class IfGenerateBranch(VHDLModel_IfGenerateBranch, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.IfGenerateBranch`.
+    """
+
     def __init__(
         self,
         branchNode: Iir,
@@ -300,11 +458,26 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch, DOMMixin):
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
     ) -> None:
+        """
+        Initializes an :vhdlkw:`if..generate` branch.
+
+        :param branchNode:       The IIR node of the branch this object represents.
+        :param condition:        The condition under which this branch's declarations and statements are elaborated.
+        :param declaredItems:    List of all declared items in this concurrent declaration region.
+        :param statements:       List of all concurrent statements in this construct.
+        :param alternativeLabel: The branch's alternative label, if one was given.
+        """
         super().__init__(condition, declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
     def parse(cls, generateNode: Iir) -> "IfGenerateBranch":
+        """
+        Translates the IIR node of the generate statement to an :class:`IfGenerateBranch`.
+
+        :param generateNode: The IIR node of the generate statement.
+        :returns:            The translated generate statement.
+        """
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
@@ -323,7 +496,12 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ElsifGenerateBranch, merge=True)
 class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.ElsifGenerateBranch`.
+    """
+
     def __init__(
         self,
         branchNode: Iir,
@@ -332,11 +510,27 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch, DOMMixin):
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
     ) -> None:
+        """
+        Initializes an :vhdlkw:`elsif` branch of an :vhdlkw:`if..generate` statement.
+
+        :param branchNode:       The IIR node of the branch this object represents.
+        :param condition:        The condition under which this branch's declarations and statements are elaborated.
+        :param declaredItems:    List of all declared items in this concurrent declaration region.
+        :param statements:       List of all concurrent statements in this construct.
+        :param alternativeLabel: The branch's alternative label, if one was given.
+        """
         super().__init__(condition, declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
     def parse(cls, generateNode: Iir, condition: Iir) -> "ElsifGenerateBranch":
+        """
+        Translates the IIR node of the generate statement to an :class:`ElsifGenerateBranch`.
+
+        :param generateNode: The IIR node of the generate statement.
+        :param condition:    The condition guarding the branch.
+        :returns:            The translated generate statement.
+        """
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
@@ -355,7 +549,12 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ElseGenerateBranch, merge=True)
 class ElseGenerateBranch(VHDLModel_ElseGenerateBranch, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.ElseGenerateBranch`.
+    """
+
     def __init__(
         self,
         branchNode: Iir,
@@ -363,11 +562,25 @@ class ElseGenerateBranch(VHDLModel_ElseGenerateBranch, DOMMixin):
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
     ) -> None:
+        """
+        Initializes an else generate branch.
+
+        :param branchNode:       The IIR node of the branch this object represents.
+        :param declaredItems:    List of all declared items in this concurrent declaration region.
+        :param statements:       List of all concurrent statements in this construct.
+        :param alternativeLabel: The branch's alternative label, if one was given.
+        """
         super().__init__(declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
     def parse(cls, generateNode: Iir) -> "ElseGenerateBranch":
+        """
+        Translates the IIR node of the generate statement to an :class:`ElseGenerateBranch`.
+
+        :param generateNode: The IIR node of the generate statement.
+        :returns:            The translated generate statement.
+        """
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
@@ -384,7 +597,12 @@ class ElseGenerateBranch(VHDLModel_ElseGenerateBranch, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_IfGenerateStatement, merge=True)
 class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.IfGenerateStatement`.
+    """
+
     def __init__(
         self,
         generateNode: Iir,
@@ -393,11 +611,27 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
         elsifBranches: Iterable[ElsifGenerateBranch] = None,
         elseBranch: ElseGenerateBranch = None,
     ) -> None:
+        """
+        Initializes an :vhdlkw:`if..generate` statement.
+
+        :param generateNode:  The IIR node of the generate statement.
+        :param label:         The label of the :vhdlkw:`if..generate` statement.
+        :param ifBranch:      The mandatory :vhdlkw:`if` branch.
+        :param elsifBranches: List of all :vhdlkw:`elsif` branches, in the order they were written.
+        :param elseBranch:    The optional :vhdlkw:`else` branch, or ``None`` if none was given.
+        """
         super().__init__(label, ifBranch, elsifBranches, elseBranch)
         DOMMixin.__init__(self, generateNode)
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "IfGenerateStatement":
+        """
+        Translates the IIR node of the generate statement to an :class:`IfGenerateStatement`.
+
+        :param generateNode: The IIR node of the generate statement.
+        :param label:        The statement's label, or ``None`` if it has none.
+        :returns:            The translated generate statement.
+        """
         ifBranch = IfGenerateBranch.parse(generateNode)
         elsifBranches = []
         elseBranch = None
@@ -419,21 +653,48 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_IndexedGenerateChoice, merge=True)
 class IndexedGenerateChoice(VHDLModel_IndexedGenerateChoice, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.IndexedGenerateChoice`.
+    """
+
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
+        """
+        Initializes a case-generate choice given by a single value.
+
+        :param node:       The IIR node this object was translated from.
+        :param expression: The expression this choice selects on.
+        """
         super().__init__(expression)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_RangedGenerateChoice, merge=True)
 class RangedGenerateChoice(VHDLModel_RangedGenerateChoice, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.RangedGenerateChoice`.
+    """
+
     def __init__(self, node: Iir, rng: Range) -> None:
+        """
+        Initializes a case-generate choice given by a range.
+
+        :param node: The IIR node this object was translated from.
+        :param rng:  The range this choice selects on.
+        """
         super().__init__(rng)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_GenerateCase, merge=True)
 class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.GenerateCase`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -442,11 +703,27 @@ class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
     ) -> None:
+        """
+        Initializes a generate case.
+
+        :param node:             The IIR node this object was translated from.
+        :param choices:          List of all choices selecting this alternative.
+        :param declaredItems:    List of all declared items in this concurrent declaration region.
+        :param statements:       List of all concurrent statements in this construct.
+        :param alternativeLabel: The alternative's label.
+        """
         super().__init__(choices, declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, caseNode: Iir, choices: Iterable[ConcurrentChoice]) -> "GenerateCase":
+        """
+        Translates the IIR node of the alternative to a :class:`GenerateCase`.
+
+        :param caseNode: The IIR node of the alternative.
+        :param choices:  List of all choices selecting this alternative.
+        :returns:        The translated alternative.
+        """
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
@@ -463,7 +740,12 @@ class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_OthersGenerateCase, merge=True)
 class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.OthersGenerateCase`.
+    """
+
     def __init__(
         self,
         caseNode: Iir,
@@ -471,11 +753,25 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
         statements: Iterable[ConcurrentStatement] = None,
         alternativeLabel: str = None,
     ) -> None:
+        """
+        Initializes an :vhdlkw:`others` generate alternative.
+
+        :param caseNode:         The IIR node of the :vhdlkw:`case` statement.
+        :param declaredItems:    List of all declared items in this concurrent declaration region.
+        :param statements:       List of all concurrent statements in this construct.
+        :param alternativeLabel: The alternative's label.
+        """
         super().__init__(declaredItems, statements, alternativeLabel)
         DOMMixin.__init__(self, caseNode)
 
     @classmethod
     def parse(cls, caseNode: Iir) -> "OthersGenerateCase":
+        """
+        Translates the IIR node of the alternative to an :class:`OthersGenerateCase`.
+
+        :param caseNode: The IIR node of the alternative.
+        :returns:        The translated alternative.
+        """
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
@@ -492,7 +788,12 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_CaseGenerateStatement, merge=True)
 class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.CaseGenerateStatement`.
+    """
+
     def __init__(
         self,
         generateNode: Iir,
@@ -500,11 +801,26 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
         expression: ExpressionUnion,
         cases: Iterable[ConcurrentCase],
     ) -> None:
+        """
+        Initializes a :vhdlkw:`case..generate` statement.
+
+        :param generateNode: The IIR node of the generate statement.
+        :param label:        The label of the :vhdlkw:`case..generate` statement.
+        :param expression:   The expression selecting the alternative.
+        :param cases:        List of all alternatives, in the order they were written.
+        """
         super().__init__(label, expression, cases)
         DOMMixin.__init__(self, generateNode)
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "CaseGenerateStatement":
+        """
+        Translates the IIR node of the generate statement to a :class:`CaseGenerateStatement`.
+
+        :param generateNode: The IIR node of the generate statement.
+        :param label:        The statement's label, or ``None`` if it has none.
+        :returns:            The translated generate statement.
+        """
         from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetExpressionFromNode,
@@ -584,7 +900,12 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ForGenerateStatement, merge=True)
 class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.ForGenerateStatement`.
+    """
+
     def __init__(
         self,
         generateNode: Iir,
@@ -595,11 +916,29 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
         statements: Iterable[ConcurrentStatement] = None,
         parent: Nullable[ModelEntity] = None,
     ) -> None:
+        """
+        Initializes a :vhdlkw:`for..generate` statement.
+
+        :param generateNode:  The IIR node of the generate statement.
+        :param label:         The label of the :vhdlkw:`for..generate` statement.
+        :param loopIndex:     The name of the generate loop's index.
+        :param rng:           The range the generate loop iterates over.
+        :param declaredItems: List of all declared items in this concurrent declaration region.
+        :param statements:    List of all concurrent statements in this construct.
+        :param parent:        The parent model entity of this entity.
+        """
         super().__init__(label, loopIndex, rng, declaredItems, statements, parent=parent)
         DOMMixin.__init__(self, generateNode)
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "ForGenerateStatement":
+        """
+        Translates the IIR node of the generate statement to a :class:`ForGenerateStatement`.
+
+        :param generateNode: The IIR node of the generate statement.
+        :param label:        The statement's label, or ``None`` if it has none.
+        :returns:            The translated generate statement.
+        """
         from pyGHDL.dom._Utils import GetNameOfNode
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
@@ -620,13 +959,31 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_WaveformElement, merge=True)
 class WaveformElement(VHDLModel_WaveformElement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Base.WaveformElement`.
+    """
+
     def __init__(self, waveNode: Iir, expression: ExpressionUnion, after: ExpressionUnion) -> None:
+        """
+        Initializes a waveform element.
+
+        :param waveNode:   The IIR node of the waveform element.
+        :param expression: The value this waveform element assigns.
+        :param after:      The delay after which the value is assigned, or ``None`` if none was given.
+        """
         super().__init__(expression, after)
         DOMMixin.__init__(self, waveNode)
 
     @classmethod
     def parse(cls, waveNode: Iir):
+        """
+        Translates the IIR node of the waveform element to a :class:`WaveformElement`.
+
+        :param waveNode: The IIR node of the waveform element.
+        :returns:        The translated waveform element.
+        """
         from pyGHDL.dom._Translate import GetExpressionFromNode
 
         value = GetExpressionFromNode(nodes.Get_We_Value(waveNode))
@@ -641,15 +998,27 @@ class WaveformElement(VHDLModel_WaveformElement, DOMMixin):
 
 
 def GetWaveformElementsFromChainedNodes(nodeChain: Iir) -> List[WaveformElement]:
-    """Translates a chain of ``Waveform_Element`` nodes (used at multiple call sites: simple/
-    conditional/selected signal assignments, both concurrent and sequential) into a list of
-    :class:`WaveformElement`."""
+    """
+    Translates a chain of ``Waveform_Element`` nodes into a list of :class:`WaveformElement`.
+
+    The chain is used at multiple call sites: simple, conditional and selected signal assignments,
+    both concurrent and sequential.
+
+    :param nodeChain: The IIR node starting the chain of waveform elements.
+    :returns:         List of the translated waveform elements, in source order.
+    """
     return [WaveformElement.parse(wave) for wave in utils.chain_iter(nodeChain)]
 
 
 def GetConditionalWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable["ConditionalWaveform"]:
-    """Translates a chain of ``Conditional_Waveform`` nodes (shared by concurrent and sequential
-    conditional signal assignments) into a sequence of :class:`ConditionalWaveform`."""
+    """
+    Translates a chain of ``Conditional_Waveform`` nodes into a sequence of :class:`ConditionalWaveform`.
+
+    The chain is shared by concurrent and sequential conditional signal assignments.
+
+    :param nodeChain: The IIR node starting the chain of conditional waveforms.
+    :returns:         The translated conditional waveforms, in source order.
+    """
     return [ConditionalWaveform.parse(node) for node in utils.chain_iter(nodeChain)]
 
 
@@ -663,6 +1032,10 @@ def GetSelectedWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable:
     choice in a group owns the real content (``Get_Associated_Chain``, ``Same_Alternative_Flag=False``);
     later choices in the same group (``Same_Alternative_Flag=True``) have a null associated chain and
     are just additional choice values for that same, already-established alternative.
+
+    :param nodeChain:     The IIR node starting the chain of choices.
+    :returns:             The translated selected waveforms, in source order.
+    :raises DOMException: If a choice's kind is not handled.
     """
     from pyGHDL.dom._Utils import GetIirKindOfNode
     from pyGHDL.dom._Translate import GetExpressionFromNode, GetRangeFromNode
@@ -718,13 +1091,31 @@ def GetSelectedWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable:
 
 
 @export
+@InheritDocString(VHDLModel_ConditionalWaveform, merge=True)
 class ConditionalWaveform(VHDLModel_ConditionalWaveform, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Common.ConditionalWaveform`.
+    """
+
     def __init__(self, node: Iir, waveform: Iterable[WaveformElement], condition: ExpressionUnion = None) -> None:
+        """
+        Initializes a conditional waveform.
+
+        :param node:      The IIR node this object was translated from.
+        :param waveform:  List of all waveform elements, in the order they were written.
+        :param condition: The condition selecting this alternative.
+        """
         super().__init__(waveform, condition)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, node: Iir) -> "ConditionalWaveform":
+        """
+        Translates an IIR node to a :class:`ConditionalWaveform`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 
         waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Waveform_Chain(node))
@@ -734,21 +1125,49 @@ class ConditionalWaveform(VHDLModel_ConditionalWaveform, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_SelectedWaveform, merge=True)
 class SelectedWaveform(VHDLModel_SelectedWaveform, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Common.SelectedWaveform`.
+    """
+
     def __init__(self, node: Iir, choices: Iterable, waveform: Iterable[WaveformElement]) -> None:
+        """
+        Initializes a selected waveform.
+
+        :param node:     The IIR node this object was translated from.
+        :param choices:  List of all choices selecting this alternative.
+        :param waveform: List of all waveform elements, in the order they were written.
+        """
         super().__init__(choices, waveform)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_OthersSelectedWaveform, merge=True)
 class OthersSelectedWaveform(VHDLModel_OthersSelectedWaveform, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Common.OthersSelectedWaveform`.
+    """
+
     def __init__(self, node: Iir, waveform: Iterable[WaveformElement]) -> None:
+        """
+        Initializes an :vhdlkw:`others` selected waveform.
+
+        :param node:     The IIR node this object was translated from.
+        :param waveform: List of all waveform elements, in the order they were written.
+        """
         super().__init__(waveform)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_ConcurrentSimpleSignalAssignment, merge=True)
 class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.ConcurrentSimpleSignalAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -756,11 +1175,26 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
         target: SignalSymbol,
         waveform: Iterable[WaveformElement],
     ) -> None:
+        """
+        Initializes a simple concurrent signal assignment.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The label of the concurrent signal assignment, or ``None`` if it has none.
+        :param target:         Reference to the assignment's destination.
+        :param waveform:       List of all waveform elements, in the order they were written.
+        """
         super().__init__(label, target, waveform)
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentSimpleSignalAssignment":
+        """
+        Translates the IIR node of the assignment statement to a :class:`ConcurrentSimpleSignalAssignment`.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The statement's label, or ``None`` if it has none.
+        :returns:              The translated assignment statement.
+        """
         from pyGHDL.dom._Translate import GetName
 
         targetNode = nodes.Get_Target(assignmentNode)
@@ -772,7 +1206,12 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
 
 
 @export
+@InheritDocString(VHDLModel_ConcurrentConditionalSignalAssignment, merge=True)
 class ConcurrentConditionalSignalAssignment(VHDLModel_ConcurrentConditionalSignalAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.ConcurrentConditionalSignalAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -780,11 +1219,26 @@ class ConcurrentConditionalSignalAssignment(VHDLModel_ConcurrentConditionalSigna
         target: SignalSymbol,
         conditionalWaveforms: Iterable[ConditionalWaveform],
     ) -> None:
+        """
+        Initializes a conditional concurrent signal assignment.
+
+        :param assignmentNode:       The IIR node of the assignment statement.
+        :param label:                The label of the conditional concurrent signal assignment, or ``None`` if it has none.
+        :param target:               Reference to the assignment's destination.
+        :param conditionalWaveforms: All alternatives, in order.
+        """
         super().__init__(label, target, conditionalWaveforms)
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentConditionalSignalAssignment":
+        """
+        Translates the IIR node of the assignment statement to a :class:`ConcurrentConditionalSignalAssignment`.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The statement's label, or ``None`` if it has none.
+        :returns:              The translated assignment statement.
+        """
         from pyGHDL.dom._Translate import GetName
 
         targetNode = nodes.Get_Target(assignmentNode)
@@ -797,7 +1251,12 @@ class ConcurrentConditionalSignalAssignment(VHDLModel_ConcurrentConditionalSigna
 
 
 @export
+@InheritDocString(VHDLModel_ConcurrentSelectedSignalAssignment, merge=True)
 class ConcurrentSelectedSignalAssignment(VHDLModel_ConcurrentSelectedSignalAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.ConcurrentSelectedSignalAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -806,11 +1265,27 @@ class ConcurrentSelectedSignalAssignment(VHDLModel_ConcurrentSelectedSignalAssig
         expression: ExpressionUnion,
         selectedWaveforms: Iterable,
     ) -> None:
+        """
+        Initializes a selected concurrent signal assignment.
+
+        :param assignmentNode:    The IIR node of the assignment statement.
+        :param label:             The label of the selected concurrent signal assignment, or ``None`` if it has none.
+        :param target:            Reference to the assignment's destination.
+        :param expression:        The selector expression.
+        :param selectedWaveforms: All alternatives, in order.
+        """
         super().__init__(label, target, expression, selectedWaveforms)
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentSelectedSignalAssignment":
+        """
+        Translates the IIR node of the assignment statement to a :class:`ConcurrentSelectedSignalAssignment`.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The statement's label, or ``None`` if it has none.
+        :returns:              The translated assignment statement.
+        """
         from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
@@ -822,7 +1297,12 @@ class ConcurrentSelectedSignalAssignment(VHDLModel_ConcurrentSelectedSignalAssig
 
 
 @export
+@InheritDocString(VHDLModel_ConcurrentProcedureCall, merge=True)
 class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.ConcurrentProcedureCall`.
+    """
+
     def __init__(
         self,
         callNode: Iir,
@@ -830,11 +1310,26 @@ class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
         procedureName: Symbol,
         parameterAssociationItems: Iterable,
     ) -> None:
+        """
+        Initializes a concurrent procedure call.
+
+        :param callNode:                  The IIR node of the subprogram call.
+        :param label:                     The label of the concurrent procedure call, or ``None`` if it has none.
+        :param procedureName:             Reference to the called procedure.
+        :param parameterAssociationItems: List of all parameter associations of the call.
+        """
         super().__init__(label, procedureName, parameterAssociationItems)
         DOMMixin.__init__(self, callNode)
 
     @classmethod
     def parse(cls, concurrentCallNode: Iir, label: str) -> "ConcurrentProcedureCall":
+        """
+        Translates the IIR node of the concurrent procedure call to a :class:`ConcurrentProcedureCall`.
+
+        :param concurrentCallNode: The IIR node of the concurrent procedure call.
+        :param label:              The statement's label, or ``None`` if it has none.
+        :returns:                  The translated concurrent procedure call.
+        """
         from pyGHDL.dom._Translate import GetName, GetParameterMapAspect
 
         callNode = nodes.Get_Procedure_Call(concurrentCallNode)
@@ -847,7 +1342,12 @@ class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ConcurrentAssertStatement, merge=True)
 class ConcurrentAssertStatement(VHDLModel_ConcurrentAssertStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Concurrent.ConcurrentAssertStatement`.
+    """
+
     def __init__(
         self,
         assertNode: Iir,
@@ -856,11 +1356,27 @@ class ConcurrentAssertStatement(VHDLModel_ConcurrentAssertStatement, DOMMixin):
         severity: ExpressionUnion = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a concurrent assertion statement.
+
+        :param assertNode: The IIR node of the assertion.
+        :param condition:  The condition that must hold; the report is issued when it is false.
+        :param message:    The reported message, or ``None`` if none was given.
+        :param severity:   The reported severity level, or ``None`` if none was given.
+        :param label:      The label of the concurrent assertion statement, or ``None`` if it has none.
+        """
         super().__init__(condition, message, severity, label)
         DOMMixin.__init__(self, assertNode)
 
     @classmethod
     def parse(cls, assertNode: Iir, label: str) -> "ConcurrentAssertStatement":
+        """
+        Translates the IIR node of the assertion to a :class:`ConcurrentAssertStatement`.
+
+        :param assertNode: The IIR node of the assertion.
+        :param label:      The statement's label, or ``None`` if it has none.
+        :returns:          The translated assertion.
+        """
         from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 
         # FIXME: how to get the condition?

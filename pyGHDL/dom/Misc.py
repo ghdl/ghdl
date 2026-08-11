@@ -30,13 +30,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
 """
-.. todo::
-   Add a module documentation.
+This module implements derived classes for VHDL constructs not covered by another module, e.g. an alias.
 """
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Declaration import Alias as VHDLModel_Alias
 from pyVHDLModel.Symbol import Symbol, PossibleReference
@@ -48,7 +46,12 @@ from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetIirKindO
 
 
 @export
+@InheritDocString(VHDLModel_Alias, merge=True)
 class Alias(VHDLModel_Alias, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Declaration.Alias`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -57,11 +60,26 @@ class Alias(VHDLModel_Alias, DOMMixin):
         subtype: Symbol = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes an alias declaration.
+
+        :param node:          The IIR node this object was translated from.
+        :param aliasName:     The alias' identifier.
+        :param name:          Reference to the name being aliased.
+        :param subtype:       Reference to the alias' subtype, or ``None`` if none was given.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(aliasName, name, subtype, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, aliasNode: Iir):
+        """
+        Translates the IIR node of the alias declaration to an :class:`Alias`.
+
+        :param aliasNode: The IIR node of the alias declaration.
+        :returns:         The translated alias declaration.
+        """
         from pyGHDL.dom._Translate import GetName, GetSubtypeIndicationFromNode
         from pyGHDL.dom.Symbol import Symbol as DOMSymbol
 

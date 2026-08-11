@@ -30,9 +30,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived subprogram classes from :mod:`pyVHDLModel.Subprogram`.
+"""
+
 from typing import List
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Interface import GenericInterfaceItemMixin, ParameterInterfaceItemMixin
@@ -48,7 +52,12 @@ from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 
 
 @export
+@InheritDocString(VHDLModel_Function, merge=True)
 class Function(VHDLModel_Function, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Subprogram.Function`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -61,6 +70,19 @@ class Function(VHDLModel_Function, DOMMixin):
         statements: List["SequentialStatement"] = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a function.
+
+        :param node:           The IIR node this object was translated from.
+        :param functionName:   The function's identifier.
+        :param returnType:     Reference to the subtype of the function's return value.
+        :param isPure:         ``True`` if the subprogram was declared pure.
+        :param genericItems:   List of all generics, in declaration order.
+        :param parameterItems: List of all parameters, in declaration order.
+        :param declaredItems:  List of all declared items in this sequential declaration region.
+        :param statements:     List of all sequential statements in the subprogram's body.
+        :param documentation:  The documentation comment associated with this declaration.
+        """
         super().__init__(
             functionName,
             returnType,
@@ -75,6 +97,12 @@ class Function(VHDLModel_Function, DOMMixin):
 
     @classmethod
     def parse(cls, functionNode: Iir) -> "Function":
+        """
+        Translates the IIR node of the function declaration to a :class:`Function`.
+
+        :param functionNode: The IIR node of the function declaration.
+        :returns:            The translated function declaration.
+        """
         from pyGHDL.dom._Translate import (
             GetName,
             GetGenericsFromChainedNodes,
@@ -119,7 +147,12 @@ class Function(VHDLModel_Function, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_Procedure, merge=True)
 class Procedure(VHDLModel_Procedure, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Subprogram.Procedure`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -130,6 +163,17 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
         statements: List["SequentialStatement"] = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a procedure.
+
+        :param node:           The IIR node this object was translated from.
+        :param procedureName:  The procedure's identifier.
+        :param genericItems:   List of all generics, in declaration order.
+        :param parameterItems: List of all parameters, in declaration order.
+        :param declaredItems:  List of all declared items in this sequential declaration region.
+        :param statements:     List of all sequential statements in the subprogram's body.
+        :param documentation:  The documentation comment associated with this declaration.
+        """
         super().__init__(
             procedureName,
             genericItems,
@@ -142,6 +186,12 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
 
     @classmethod
     def parse(cls, procedureNode: Iir) -> "Procedure":
+        """
+        Translates the IIR node of the procedure declaration to a :class:`Procedure`.
+
+        :param procedureNode: The IIR node of the procedure declaration.
+        :returns:             The translated procedure declaration.
+        """
         from pyGHDL.dom._Translate import (
             GetGenericsFromChainedNodes,
             GetParameterFromChainedNodes,
@@ -195,6 +245,15 @@ class FunctionInstantiation(VHDLModel_FunctionInstantiation, DOMMixin):
         genericAssociationItems: List = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a function instantiation.
+
+        :param node:                    The IIR node this object was translated from.
+        :param functionName:            The function's identifier.
+        :param subprogramReference:     Reference to the instantiated generic subprogram.
+        :param genericAssociationItems: List of all generic associations in the generic map aspect.
+        :param documentation:           The documentation comment associated with this declaration.
+        """
         super().__init__(
             functionName,
             subprogramReference,
@@ -205,6 +264,12 @@ class FunctionInstantiation(VHDLModel_FunctionInstantiation, DOMMixin):
 
     @classmethod
     def parse(cls, functionNode: Iir) -> "FunctionInstantiation":
+        """
+        Translates the IIR node of the function declaration to a :class:`FunctionInstantiation`.
+
+        :param functionNode: The IIR node of the function declaration.
+        :returns:            The translated function declaration.
+        """
         from pyGHDL.dom._Translate import GetName, GetGenericMapAspect
         from pyGHDL.dom.Symbol import SubprogramReferenceSymbol
 
@@ -241,6 +306,15 @@ class ProcedureInstantiation(VHDLModel_ProcedureInstantiation, DOMMixin):
         genericAssociationItems: List = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a procedure instantiation.
+
+        :param node:                    The IIR node this object was translated from.
+        :param procedureName:           The procedure's identifier.
+        :param subprogramReference:     Reference to the instantiated generic subprogram.
+        :param genericAssociationItems: List of all generic associations in the generic map aspect.
+        :param documentation:           The documentation comment associated with this declaration.
+        """
         super().__init__(
             procedureName,
             subprogramReference,
@@ -251,6 +325,12 @@ class ProcedureInstantiation(VHDLModel_ProcedureInstantiation, DOMMixin):
 
     @classmethod
     def parse(cls, procedureNode: Iir) -> "ProcedureInstantiation":
+        """
+        Translates the IIR node of the procedure declaration to a :class:`ProcedureInstantiation`.
+
+        :param procedureNode: The IIR node of the procedure declaration.
+        :returns:             The translated procedure declaration.
+        """
         from pyGHDL.dom._Translate import GetName, GetGenericMapAspect
         from pyGHDL.dom.Symbol import SubprogramReferenceSymbol
 

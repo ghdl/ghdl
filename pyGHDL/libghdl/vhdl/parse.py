@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Parse`` in *libghdl*.
+
+The parser: builds the AST of a design file from its source code.
+"""
 
 from ctypes import c_bool
 
@@ -54,6 +59,6 @@ def Parse_Design_File() -> Iir:
 
     ..note:: The scanner must have been initialized as for parse_design_unit.
 
-    :return: Return :obj:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of error. Type: ``Iir_Design_File``
+    :returns: Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` in case of error
     """
     return 0

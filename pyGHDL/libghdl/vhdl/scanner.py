@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Scanner`` in *libghdl*.
+
+The lexer: turns a source buffer into the token stream the parser reads.
+"""
 
 from ctypes import c_int, c_bool
 
@@ -51,7 +56,7 @@ Flag_Comment = c_bool.in_dll(libghdl, "vhdl__scanner__flag_comment")
 @BindToLibGHDL("vhdl__scanner__set_file")
 def Set_File(SourceFile: SourceFileEntry) -> None:
     """
-    Initialize the scanner with file :obj:`SourceFile`.
+    Initialize the scanner with file ``SourceFile``.
 
     :param SourceFile: File to scan.
     """
@@ -78,7 +83,7 @@ def Get_Current_Line() -> int:
     Since a token cannot spread over lines, file and line of the current token are
     the same as those of the current position. The offset is the offset in the current line.
 
-    :return: Current token's line.
+    :returns: Current token's line.
     """
     return 0
 
@@ -89,7 +94,7 @@ def Get_Token_Offset() -> int:
     """
     Get the current token's offset in the current line.
 
-    :return: Current token's offset.
+    :returns: Current token's offset.
     """
     return 0
 
@@ -100,7 +105,7 @@ def Get_Token_Position() -> int:
     """
     Get the current token's position.
 
-    :return: Current token's position. Type: ``Source_Ptr``
+    :returns: Current token's position
     """
     return 0
 
@@ -111,7 +116,7 @@ def Get_Position() -> int:
     """
     Get the current position.
 
-    :return: Current position. Type: ``Source_Ptr``
+    :returns: Current position
     """
     return 0
 
@@ -124,6 +129,6 @@ def Current_Identifier() -> NameId:
     ``tok_identifier``, ``tok_char`` or ``tok_string``, its name_id can be
     retrieved via this function.
 
-    :return: NameId of the current token.
+    :returns: NameId of the current token.
     """
     return 0

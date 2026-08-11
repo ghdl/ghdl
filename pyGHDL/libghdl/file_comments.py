@@ -32,6 +32,12 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
+"""
+Python binding for the Ada package ``File_Comments`` in *libghdl*.
+
+Gives access to the comments *libghdl* gathered while parsing, which is how doc-comments reach the DOM. Comments are
+only recorded if :data:`~pyGHDL.libghdl.flags.Flag_Gather_Comments` was set before parsing.
+"""
 
 from ctypes import c_uint32
 from typing import TypeVar
@@ -57,9 +63,9 @@ No_Comment_Index = 0
 def Find_First_Comment(File: SourceFileEntry, N: c_uint32) -> Comment_Index:
     """
     Get the first comment associated to a node.
-    :param N:    Node
     :param File: Source file for node
-    :return:     The first comment index, or No_Comment_Index if none.
+    :param N:    The node to find the first comment of.
+    :returns:    The first comment index, or ``No_Comment_Index`` if none.
     """
     return 0  # pragma: no cover
 
@@ -69,6 +75,8 @@ def Find_First_Comment(File: SourceFileEntry, N: c_uint32) -> Comment_Index:
 def Get_Comment_Start(File: SourceFileEntry, Idx: Comment_Index) -> SourcePtr:
     """
     Get the start of comment
+
+    :returns: The position of the comment's first character.
     """
 
 
@@ -77,12 +85,16 @@ def Get_Comment_Start(File: SourceFileEntry, Idx: Comment_Index) -> SourcePtr:
 def Get_Comment_Last(File: SourceFileEntry, Idx: Comment_Index) -> SourcePtr:
     """
     Get the end of comment
+
+    :returns: The position of the comment's last character.
     """
 
 
 def Get_Comment(File: SourceFileEntry, Idx: Comment_Index) -> str:
     """
     Get a comment
+
+    :returns: The comment's text.
     """
     buf = files_map.Get_File_Buffer(File)
     s = Get_Comment_Start(File, Idx)
@@ -95,4 +107,6 @@ def Get_Comment(File: SourceFileEntry, Idx: Comment_Index) -> str:
 def Get_Next_Comment(File: SourceFileEntry, Idx: Comment_Index) -> Comment_Index:
     """
     Get the next comment
+
+    :returns: The index of the next comment, or :attr:`~pyGHDL.libghdl.file_comments.No_Comment_Index`.
     """

@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Libraries`` in *libghdl*.
+
+Manages the design libraries: which one is the work library, loading it, and adding a design unit to it.
+"""
 
 from ctypes import c_int32
 
@@ -78,7 +83,7 @@ def Get_Libraries_Chain() -> Iir_Library_Declaration:
     """
     Get the chain of libraries. Can be used only to read (it mustn't be modified).
 
-    :return: undocumented
+    :returns: The first library declaration of the chain.
     """
     return 0  # pragma: no cover
 
@@ -94,8 +99,8 @@ def Add_Design_Unit_Into_Library(Unit: Iir_Design_Unit, Keep_Obsolete: bool) -> 
 
     Units are always appended to the design_file. Therefore, the order is kept.
 
-    :param Unit:          undocumented
-    :param Keep_Obsolete: If :obj:`Keep_Obsolete` is True, obsoleted units are
+    :param Unit:          The design unit to add.
+    :param Keep_Obsolete: If ``Keep_Obsolete`` is ``True``, obsoleted units are
                           kept in the library.
 
                           This is used when a whole design file has to be added
@@ -108,9 +113,9 @@ def Add_Design_Unit_Into_Library(Unit: Iir_Design_Unit, Keep_Obsolete: bool) -> 
 @BindToLibGHDL("libraries__purge_design_file")
 def Purge_Design_File(Design_File: Iir_Design_File) -> None:
     """
-    Remove the same file as :obj:`Design_File` from work library and all of its units.
+    Remove the same file as ``Design_File`` from work library and all of its units.
 
-    :param Design_File: undocumented
+    :param Design_File: The design file to add.
     """
 
 
@@ -118,12 +123,12 @@ def Purge_Design_File(Design_File: Iir_Design_File) -> None:
 @BindToLibGHDL("libraries__find_entity_for_component")
 def Find_Entity_For_Component(Name: NameId) -> Iir_Design_Unit:
     """
-    Find an entity whose name is :obj:`Name` in any library. |br|
+    Find an entity whose name is ``Name`` in any library. |br|
     If there is no such entity, return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`. |br|
     If there are several entities, return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`;
 
     :param Name: Entity name to search for.
-    :return:     undocumented
+    :returns:    The entity's design unit, or :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if there is not exactly one.
     """
     return 0  # pragma: no cover
 
@@ -132,10 +137,10 @@ def Find_Entity_For_Component(Name: NameId) -> Iir_Design_Unit:
 @BindToLibGHDL("libraries__get_library_no_create")
 def Get_Library_No_Create(Ident: NameId) -> Iir_Library_Declaration:
     """
-    Get the library named :obj:`Ident`.
+    Get the library named ``Ident``.
 
     :param Ident: Library to look for.
-    :return:      Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if it doesn't exist.
+    :returns:     Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if it doesn't exist.
     """
     return 0  # pragma: no cover
 
@@ -144,11 +149,12 @@ def Get_Library_No_Create(Ident: NameId) -> Iir_Library_Declaration:
 @BindToLibGHDL("libraries__get_library")
 def Get_Library(Ident: NameId, Loc: LocationType, Force: bool) -> Iir_Library_Declaration:
     """
-    Get the library named :obj:`Ident`.
+    Get the library named ``Ident``.
 
     :param Ident: Library to look for.
-    :param Loc: Location in case of errors.
-    :return:      Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if it doesn't exist.
+    :param Loc:   Location in case of errors.
+    :param Force: ``True`` to load the library if it is not loaded yet.
+    :returns:     Return :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if it doesn't exist.
     """
     return 0  # pragma: no cover
 
@@ -157,11 +163,11 @@ def Get_Library(Ident: NameId, Loc: LocationType, Force: bool) -> Iir_Library_De
 @BindToLibGHDL("libraries__find_primary_unit")
 def Find_Primary_Unit(Library: Iir_Library_Declaration, Name: NameId) -> Iir_Design_Unit:
     """
-    Just return the design_unit for :obj:`Name`, or ``NULL`` if not found.
+    Just return the design_unit for ``Name``, or ``NULL`` if not found.
 
     :param Library: Library to look in.
     :param Name:    Primary unit to search for.
-    :return:        undocumented
+    :returns:       The primary unit's design unit, or :attr:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir` if it was not found.
     """
     return 0  # pragma: no cover
 

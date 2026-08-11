@@ -31,6 +31,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Flists`` in *libghdl*.
+
+Fixed-length lists of nodes, whose length is set when the list is created - the index constraints of an array subtype,
+for instance. See :func:`~pyGHDL.libghdl.utils.flist_iter` for iterating one.
+"""
+
 from ctypes import c_int32
 
 from pyTooling.Decorators import export
@@ -48,12 +55,12 @@ Ffirst = 0
 @BindToLibGHDL("vhdl__flists__flast")
 def Flast(FList: int) -> int:
     """
-    Last index of :obj:`FList`.
+    Last index of ``FList``.
 
     .. hint:: Could be used to iterate.
 
     :param FList: List to query.
-    :return:      Index of the last element in the list.
+    :returns:     Index of the last element in the list.
     """
     return 0  # pragma: no cover
 
@@ -62,10 +69,10 @@ def Flast(FList: int) -> int:
 @BindToLibGHDL("vhdl__flists__length")
 def Length(FList: int) -> int:
     """
-    Get the length of :obj:`FList`.
+    Get the length of ``FList``.
 
     :param FList: List to query.
-    :return:      Number of elements in the list.
+    :returns:     Number of elements in the list.
     """
     return 0  # pragma: no cover
 
@@ -74,11 +81,12 @@ def Length(FList: int) -> int:
 @BindToLibGHDL("vhdl__flists__get_nth_element")
 def Get_Nth_Element(FList: int, N: int) -> int:
     """
-    Get the N-th element of :obj:`FList`.
+    Get the N-th element of ``FList``.
 
     First element has index 0.
 
     :param FList: List to query.
-    :return:      Type: ``El_Type``
+    :param N:     The zero-based index of the element to read.
+    :returns:     The element at index ``N``.
     """
     return 0  # pragma: no cover

@@ -30,9 +30,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived attribute classes from :mod:`pyVHDLModel.Declaration`.
+"""
+
 from typing import List
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel.Name import Name
@@ -52,13 +56,32 @@ from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 
 
 @export
+@InheritDocString(VHDLModel_Attribute, merge=True)
 class Attribute(VHDLModel_Attribute, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Declaration.Attribute`.
+    """
+
     def __init__(self, node: Iir, identifier: str, subtype: Symbol, documentation: str = None) -> None:
+        """
+        Initializes an attribute declaration.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The attribute's identifier.
+        :param subtype:       Reference to the attribute's subtype.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, subtype, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, attributeNode: Iir) -> "Attribute":
+        """
+        Translates the IIR node of the attribute declaration to an :class:`Attribute`.
+
+        :param attributeNode: The IIR node of the attribute declaration.
+        :returns:             The translated attribute declaration.
+        """
         name = GetNameOfNode(attributeNode)
         documentation = GetDocumentationOfNode(attributeNode)
         subtypeMark = nodes.Get_Type_Mark(attributeNode)
@@ -91,10 +114,18 @@ _TOKEN_TRANSLATION = {
     #    Tok.View: EntityClass.View,
     Tok.Others: EntityClass.Others,
 }
+"""
+Translation table of *libghdl* tokens to pyVHDLModel entity class enumeration values.
+"""
 
 
 @export
+@InheritDocString(VHDLModel_AttributeSpecification, merge=True)
 class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Declaration.AttributeSpecification`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -104,11 +135,27 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
         expression: Expression,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes an attribute specification.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifiers:   List of all names the attribute is specified for.
+        :param attribute:     Reference to the specified attribute.
+        :param entityClass:   The entity class the named items belong to.
+        :param expression:    The value assigned to the attribute.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, attribute, entityClass, expression, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, attributeNode: Iir) -> "AttributeSpecification":
+        """
+        Translates the IIR node of the attribute declaration to an :class:`AttributeSpecification`.
+
+        :param attributeNode: The IIR node of the attribute declaration.
+        :returns:             The translated attribute declaration.
+        """
         attributeDesignator = nodes.Get_Attribute_Designator(attributeNode)
         attributeName = GetName(attributeDesignator)
         documentation = GetDocumentationOfNode(attributeNode)

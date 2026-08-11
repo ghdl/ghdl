@@ -30,17 +30,15 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
 """
 This module contains all DOM classes for VHDL's design units (:class:`context <Entity>`,
 :class:`architecture <Architecture>`, :class:`package <Package>`,
 :class:`package body <PackageBody>`, :class:`context <Context>` and
 :class:`configuration <Configuration>`.
 
-
 """
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.PSLModel import VerificationUnit as VHDLModel_VerificationUnit
 from pyVHDLModel.PSLModel import VerificationProperty as VHDLModel_VerificationProperty
@@ -53,17 +51,34 @@ from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
 
 
 @export
+@InheritDocString(VHDLModel_VerificationUnit, merge=True)
 class VerificationUnit(VHDLModel_VerificationUnit, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.PSLModel.VerificationUnit`.
+    """
+
     def __init__(
         self,
         node: Iir,
         identifier: str,
     ) -> None:
+        """
+        Initializes a PSL verification unit (:vhdlkw:`vunit`).
+
+        :param node:       The IIR node this object was translated from.
+        :param identifier: The verification unit's identifier.
+        """
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, vunitNode: Iir):
+        """
+        Translates the IIR node of the verification unit to a :class:`VerificationUnit`.
+
+        :param vunitNode: The IIR node of the verification unit.
+        :returns:         The translated verification unit.
+        """
         name = GetNameOfNode(vunitNode)
 
         # FIXME: needs an implementation
@@ -72,17 +87,34 @@ class VerificationUnit(VHDLModel_VerificationUnit, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_VerificationProperty, merge=True)
 class VerificationProperty(VHDLModel_VerificationProperty, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.PSLModel.VerificationProperty`.
+    """
+
     def __init__(
         self,
         node: Iir,
         identifier: str,
     ) -> None:
+        """
+        Initializes a PSL verification property (:vhdlkw:`vprop`).
+
+        :param node:       The IIR node this object was translated from.
+        :param identifier: The verification property's identifier.
+        """
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, vpropNode: Iir):
+        """
+        Translates the IIR node of the verification property to a :class:`VerificationProperty`.
+
+        :param vpropNode: The IIR node of the verification property.
+        :returns:         The translated verification property.
+        """
         name = GetNameOfNode(vpropNode)
 
         # FIXME: needs an implementation
@@ -91,17 +123,34 @@ class VerificationProperty(VHDLModel_VerificationProperty, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_VerificationMode, merge=True)
 class VerificationMode(VHDLModel_VerificationMode, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.PSLModel.VerificationMode`.
+    """
+
     def __init__(
         self,
         node: Iir,
         identifier: str,
     ) -> None:
+        """
+        Initializes a PSL verification mode (:vhdlkw:`vmode`).
+
+        :param node:       The IIR node this object was translated from.
+        :param identifier: The verification mode's identifier.
+        """
         super().__init__(identifier)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, vmodeNode: Iir):
+        """
+        Translates the IIR node of the verification mode to a :class:`VerificationMode`.
+
+        :param vmodeNode: The IIR node of the verification mode.
+        :returns:         The translated verification mode.
+        """
         name = GetNameOfNode(vmodeNode)
 
         # FIXME: needs an implementation
@@ -110,18 +159,36 @@ class VerificationMode(VHDLModel_VerificationMode, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_DefaultClock, merge=True)
 class DefaultClock(VHDLModel_DefaultClock, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.PSLModel.DefaultClock`.
+    """
+
     def __init__(
         self,
         node: Iir,
         identifier: str,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a PSL default clock declaration.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The default clock's identifier.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, defaultClockNode: Iir):
+        """
+        Translates the IIR node of the PSL default clock to a :class:`DefaultClock`.
+
+        :param defaultClockNode: The IIR node of the PSL default clock.
+        :returns:                The translated PSL default clock.
+        """
         name = GetNameOfNode(defaultClockNode)
         documentation = GetDocumentationOfNode(defaultClockNode)
 

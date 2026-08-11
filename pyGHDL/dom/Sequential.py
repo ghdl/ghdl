@@ -30,9 +30,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived sequential statement classes from :mod:`pyVHDLModel.Sequential`.
+"""
+
 from typing import Iterable
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Base import ExpressionUnion, Range
 from pyVHDLModel.Symbol import Symbol
@@ -84,18 +88,37 @@ from pyGHDL.dom.Concurrent import GetConditionalWaveformsFromChainedNodes, GetSe
 
 
 @export
+@InheritDocString(VHDLModel_IfBranch, merge=True)
 class IfBranch(VHDLModel_IfBranch, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.IfBranch`.
+    """
+
     def __init__(
         self,
         branchNode: Iir,
         condition: ExpressionUnion,
         statements: Iterable[SequentialStatement] = None,
     ) -> None:
+        """
+        Initializes an :vhdlkw:`if` branch.
+
+        :param branchNode: The IIR node of the branch this object represents.
+        :param condition:  The condition under which this branch's statements are executed.
+        :param statements: List of all sequential statements in this construct.
+        """
         super().__init__(condition, statements)
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
     def parse(cls, branchNode: Iir, label: str) -> "IfBranch":
+        """
+        Translates the IIR node of the branch to an :class:`IfBranch`.
+
+        :param branchNode: The IIR node of the branch.
+        :param label:      The statement's label, or ``None`` if it has none.
+        :returns:          The translated branch.
+        """
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
             GetExpressionFromNode,
@@ -109,18 +132,38 @@ class IfBranch(VHDLModel_IfBranch, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ElsifBranch, merge=True)
 class ElsifBranch(VHDLModel_ElsifBranch, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ElsifBranch`.
+    """
+
     def __init__(
         self,
         branchNode: Iir,
         condition: ExpressionUnion,
         statements: Iterable[SequentialStatement] = None,
     ) -> None:
+        """
+        Initializes an :vhdlkw:`elsif` branch of an :vhdlkw:`if` statement.
+
+        :param branchNode: The IIR node of the branch this object represents.
+        :param condition:  The condition under which this branch's statements are executed.
+        :param statements: List of all sequential statements in this construct.
+        """
         super().__init__(condition, statements)
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
     def parse(cls, branchNode: Iir, condition: Iir, label: str) -> "ElsifBranch":
+        """
+        Translates the IIR node of the branch to an :class:`ElsifBranch`.
+
+        :param branchNode: The IIR node of the branch.
+        :param condition:  The condition guarding the branch.
+        :param label:      The statement's label, or ``None`` if it has none.
+        :returns:          The translated branch.
+        """
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
             GetExpressionFromNode,
@@ -134,17 +177,35 @@ class ElsifBranch(VHDLModel_ElsifBranch, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ElseBranch, merge=True)
 class ElseBranch(VHDLModel_ElseBranch, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ElseBranch`.
+    """
+
     def __init__(
         self,
         branchNode: Iir,
         statements: Iterable[SequentialStatement] = None,
     ) -> None:
+        """
+        Initializes an else branch.
+
+        :param branchNode: The IIR node of the branch this object represents.
+        :param statements: List of all sequential statements in this construct.
+        """
         super().__init__(statements)
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
     def parse(cls, branchNode: Iir, label: str) -> "ElseBranch":
+        """
+        Translates the IIR node of the branch to an :class:`ElseBranch`.
+
+        :param branchNode: The IIR node of the branch.
+        :param label:      The statement's label, or ``None`` if it has none.
+        :returns:          The translated branch.
+        """
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
         )
@@ -156,7 +217,12 @@ class ElseBranch(VHDLModel_ElseBranch, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_IfStatement, merge=True)
 class IfStatement(VHDLModel_IfStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.IfStatement`.
+    """
+
     def __init__(
         self,
         ifNode: Iir,
@@ -165,11 +231,27 @@ class IfStatement(VHDLModel_IfStatement, DOMMixin):
         elseBranch: ElseBranch = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes an :vhdlkw:`if` statement.
+
+        :param ifNode:        The IIR node of the :vhdlkw:`if` statement.
+        :param ifBranch:      The mandatory :vhdlkw:`if` branch.
+        :param elsifBranches: List of all :vhdlkw:`elsif` branches, in the order they were written.
+        :param elseBranch:    The optional :vhdlkw:`else` branch, or ``None`` if none was given.
+        :param label:         The label of the :vhdlkw:`if` statement, or ``None`` if it has none.
+        """
         super().__init__(ifBranch, elsifBranches, elseBranch, label)
         DOMMixin.__init__(self, ifNode)
 
     @classmethod
     def parse(cls, ifNode: Iir, label: str) -> "IfStatement":
+        """
+        Translates the IIR node of the :vhdlkw:`if` statement to an :class:`IfStatement`.
+
+        :param ifNode: The IIR node of the :vhdlkw:`if` statement.
+        :param label:  The statement's label, or ``None`` if it has none.
+        :returns:      The translated :vhdlkw:`if` statement.
+        """
         ifBranch = IfBranch.parse(ifNode, label)
         elsifBranches = []
         elseBranch = None
@@ -191,32 +273,74 @@ class IfStatement(VHDLModel_IfStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_IndexedChoice, merge=True)
 class IndexedChoice(VHDLModel_IndexedChoice, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.IndexedChoice`.
+    """
+
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
+        """
+        Initializes a case choice given by a single value.
+
+        :param node:       The IIR node this object was translated from.
+        :param expression: The expression this choice selects on.
+        """
         super().__init__(expression)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_RangedChoice, merge=True)
 class RangedChoice(VHDLModel_RangedChoice, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.RangedChoice`.
+    """
+
     def __init__(self, node: Iir, rng: Range) -> None:
+        """
+        Initializes a case choice given by a range.
+
+        :param node: The IIR node this object was translated from.
+        :param rng:  The range this choice selects on.
+        """
         super().__init__(rng)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_Case, merge=True)
 class Case(VHDLModel_Case, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.Case`.
+    """
+
     def __init__(
         self,
         node: Iir,
         choices: Iterable[SequentialChoice],
         statements: Iterable[SequentialStatement] = None,
     ) -> None:
+        """
+        Initializes a case.
+
+        :param node:       The IIR node this object was translated from.
+        :param choices:    List of all choices selecting this alternative.
+        :param statements: List of all sequential statements in this construct.
+        """
         super().__init__(choices, statements)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, caseNode: Iir, choices: Iterable[SequentialChoice], label: str) -> "Case":
+        """
+        Translates the IIR node of the alternative to a :class:`Case`.
+
+        :param caseNode: The IIR node of the alternative.
+        :param choices:  List of all choices selecting this alternative.
+        :param label:    The statement's label, or ``None`` if it has none.
+        :returns:        The translated alternative.
+        """
         from pyGHDL.dom._Translate import GetSequentialStatementsFromChainedNodes
 
         statementChain = nodes.Get_Associated_Chain(caseNode)
@@ -226,17 +350,35 @@ class Case(VHDLModel_Case, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_OthersCase, merge=True)
 class OthersCase(VHDLModel_OthersCase, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.OthersCase`.
+    """
+
     def __init__(
         self,
         caseNode: Iir,
         statements: Iterable[SequentialStatement] = None,
     ) -> None:
+        """
+        Initializes an :vhdlkw:`others` alternative.
+
+        :param caseNode:   The IIR node of the :vhdlkw:`case` statement.
+        :param statements: List of all sequential statements in this construct.
+        """
         super().__init__(statements)
         DOMMixin.__init__(self, caseNode)
 
     @classmethod
     def parse(cls, caseNode: Iir, label: str = None) -> "OthersCase":
+        """
+        Translates the IIR node of the alternative to an :class:`OthersCase`.
+
+        :param caseNode: The IIR node of the alternative.
+        :param label:    The statement's label, or ``None`` if it has none.
+        :returns:        The translated alternative.
+        """
         from pyGHDL.dom._Translate import GetSequentialStatementsFromChainedNodes
 
         body = nodes.Get_Associated_Block(caseNode)
@@ -250,7 +392,12 @@ class OthersCase(VHDLModel_OthersCase, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_CaseStatement, merge=True)
 class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.CaseStatement`.
+    """
+
     def __init__(
         self,
         caseNode: Iir,
@@ -258,11 +405,26 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
         expression: ExpressionUnion,
         cases: Iterable[SequentialCase],
     ) -> None:
+        """
+        Initializes a :vhdlkw:`case` statement.
+
+        :param caseNode:   The IIR node of the :vhdlkw:`case` statement.
+        :param label:      The label of the :vhdlkw:`case` statement, or ``None`` if it has none.
+        :param expression: The expression being tested.
+        :param cases:      List of all alternatives, in the order they were written.
+        """
         super().__init__(expression, cases, label)
         DOMMixin.__init__(self, caseNode)
 
     @classmethod
     def parse(cls, caseNode: Iir, label: str) -> "CaseStatement":
+        """
+        Translates the IIR node of the alternative to a :class:`CaseStatement`.
+
+        :param caseNode: The IIR node of the alternative.
+        :param label:    The statement's label, or ``None`` if it has none.
+        :returns:        The translated alternative.
+        """
         from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetExpressionFromNode,
@@ -342,7 +504,12 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ForLoopStatement, merge=True)
 class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ForLoopStatement`.
+    """
+
     def __init__(
         self,
         loopNode: Iir,
@@ -351,11 +518,27 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
         statements: Iterable[SequentialStatement] = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a :vhdlkw:`for..loop` statement.
+
+        :param loopNode:   The IIR node of the :vhdlkw:`loop` statement.
+        :param loopIndex:  The name of the loop's index.
+        :param rng:        The range the loop iterates over.
+        :param statements: List of all sequential statements in this construct.
+        :param label:      The label of the :vhdlkw:`for..loop` statement, or ``None`` if it has none.
+        """
         super().__init__(loopIndex, rng, statements, label)
         DOMMixin.__init__(self, loopNode)
 
     @classmethod
     def parse(cls, loopNode: Iir, label: str) -> "ForLoopStatement":
+        """
+        Translates the IIR node of the loop statement to a :class:`ForLoopStatement`.
+
+        :param loopNode: The IIR node of the loop statement.
+        :param label:    The statement's label, or ``None`` if it has none.
+        :returns:        The translated loop statement.
+        """
         from pyGHDL.dom._Utils import GetNameOfNode
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
@@ -374,7 +557,12 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_WhileLoopStatement, merge=True)
 class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.WhileLoopStatement`.
+    """
+
     def __init__(
         self,
         loopNode: Iir,
@@ -382,11 +570,26 @@ class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
         statements: Iterable[SequentialStatement] = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a :vhdlkw:`while..loop` statement.
+
+        :param loopNode:   The IIR node of the :vhdlkw:`loop` statement.
+        :param condition:  The condition tested before each iteration; the loop ends when it is false.
+        :param statements: List of all sequential statements in this construct.
+        :param label:      The label of the :vhdlkw:`while..loop` statement, or ``None`` if it has none.
+        """
         super().__init__(condition, statements, label)
         DOMMixin.__init__(self, loopNode)
 
     @classmethod
     def parse(cls, loopNode: Iir, label: str) -> "WhileLoopStatement":
+        """
+        Translates the IIR node of the loop statement to a :class:`WhileLoopStatement`.
+
+        :param loopNode: The IIR node of the loop statement.
+        :param label:    The statement's label, or ``None`` if it has none.
+        :returns:        The translated loop statement.
+        """
         from pyGHDL.dom._Utils import GetNameOfNode, GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetSequentialStatementsFromChainedNodes,
@@ -422,7 +625,12 @@ class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_SequentialSimpleSignalAssignment, merge=True)
 class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialSimpleSignalAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -430,11 +638,26 @@ class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignmen
         waveform: Iterable[WaveformElement],
         label: str = None,
     ) -> None:
+        """
+        Initializes a simple sequential signal assignment.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param target:         Reference to the assignment's destination.
+        :param waveform:       List of all waveform elements, in the order they were written.
+        :param label:          The label of the sequential signal assignment, or ``None`` if it has none.
+        """
         super().__init__(target, waveform, label)
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialSimpleSignalAssignment":
+        """
+        Translates the IIR node of the assignment statement to a :class:`SequentialSimpleSignalAssignment`.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The statement's label, or ``None`` if it has none.
+        :returns:              The translated assignment statement.
+        """
         from pyGHDL.dom._Translate import GetName
 
         targetNode = nodes.Get_Target(assignmentNode)
@@ -446,7 +669,12 @@ class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignmen
 
 
 def GetConditionalExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable["ConditionalExpression"]:
-    """Translates a chain of ``Conditional_Expression`` nodes into a sequence of :class:`ConditionalExpression`."""
+    """
+    Translates a chain of ``Conditional_Expression`` nodes into a sequence of :class:`ConditionalExpression`.
+
+    :param nodeChain: The IIR node starting the chain of conditional expressions.
+    :returns:         The translated conditional expressions, in source order.
+    """
     return [ConditionalExpression.parse(node) for node in utils.chain_iter(nodeChain)]
 
 
@@ -456,6 +684,10 @@ def GetSelectedExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable:
     :class:`OthersSelectedExpression`. Same grouping algorithm as
     :func:`pyGHDL.dom.Concurrent.GetSelectedWaveformsFromChainedNodes`, but the associated content is
     a plain expression (``Get_Associated_Expr``) instead of a waveform chain.
+
+    :param nodeChain:     The IIR node starting the chain of choices.
+    :returns:             The translated selected expressions, in source order.
+    :raises DOMException: If a choice's kind is not handled.
     """
     from pyGHDL.dom._Utils import GetIirKindOfNode
     from pyGHDL.dom._Translate import GetExpressionFromNode, GetRangeFromNode
@@ -510,13 +742,31 @@ def GetSelectedExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable:
 
 
 @export
+@InheritDocString(VHDLModel_ConditionalExpression, merge=True)
 class ConditionalExpression(VHDLModel_ConditionalExpression, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Common.ConditionalExpression`.
+    """
+
     def __init__(self, node: Iir, expression: ExpressionUnion, condition: ExpressionUnion = None) -> None:
+        """
+        Initializes a conditional expression.
+
+        :param node:       The IIR node this object was translated from.
+        :param expression: The value assigned when the condition holds.
+        :param condition:  The condition selecting this alternative.
+        """
         super().__init__(expression, condition)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, node: Iir) -> "ConditionalExpression":
+        """
+        Translates an IIR node to a :class:`ConditionalExpression`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetExpressionFromNode, GetOptionalExpressionFromNode
 
         expression = GetExpressionFromNode(nodes.Get_Expression(node))
@@ -526,21 +776,49 @@ class ConditionalExpression(VHDLModel_ConditionalExpression, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_SelectedExpression, merge=True)
 class SelectedExpression(VHDLModel_SelectedExpression, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Common.SelectedExpression`.
+    """
+
     def __init__(self, node: Iir, choices: Iterable, expression: ExpressionUnion) -> None:
+        """
+        Initializes a selected expression.
+
+        :param node:       The IIR node this object was translated from.
+        :param choices:    List of all choices selecting this alternative.
+        :param expression: The value assigned for the matching choices.
+        """
         super().__init__(choices, expression)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_OthersSelectedExpression, merge=True)
 class OthersSelectedExpression(VHDLModel_OthersSelectedExpression, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Common.OthersSelectedExpression`.
+    """
+
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
+        """
+        Initializes an :vhdlkw:`others` selected expression.
+
+        :param node:       The IIR node this object was translated from.
+        :param expression: The value assigned for every unnamed choice.
+        """
         super().__init__(expression)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_SequentialVariableAssignment, merge=True)
 class SequentialVariableAssignment(VHDLModel_SequentialVariableAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialVariableAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -548,11 +826,26 @@ class SequentialVariableAssignment(VHDLModel_SequentialVariableAssignment, DOMMi
         expression: ExpressionUnion,
         label: str = None,
     ) -> None:
+        """
+        Initializes a simple sequential variable assignment.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param target:         Reference to the assignment's destination.
+        :param expression:     The assigned expression.
+        :param label:          The label of the variable assignment, or ``None`` if it has none.
+        """
         super().__init__(target, expression, label)
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialVariableAssignment":
+        """
+        Translates the IIR node of the assignment statement to a :class:`SequentialVariableAssignment`.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The statement's label, or ``None`` if it has none.
+        :returns:              The translated assignment statement.
+        """
         from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
@@ -563,7 +856,12 @@ class SequentialVariableAssignment(VHDLModel_SequentialVariableAssignment, DOMMi
 
 
 @export
+@InheritDocString(VHDLModel_SequentialConditionalVariableAssignment, merge=True)
 class SequentialConditionalVariableAssignment(VHDLModel_SequentialConditionalVariableAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialConditionalVariableAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -571,11 +869,26 @@ class SequentialConditionalVariableAssignment(VHDLModel_SequentialConditionalVar
         conditionalExpressions: Iterable[ConditionalExpression],
         label: str = None,
     ) -> None:
+        """
+        Initializes a conditional sequential variable assignment.
+
+        :param assignmentNode:         The IIR node of the assignment statement.
+        :param target:                 Reference to the assignment's destination.
+        :param conditionalExpressions: List of all alternatives, in the order they were written.
+        :param label:                  The label of the conditional variable assignment, or ``None`` if it has none.
+        """
         super().__init__(target, conditionalExpressions, label)
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialConditionalVariableAssignment":
+        """
+        Translates the IIR node of the assignment statement to a :class:`SequentialConditionalVariableAssignment`.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The statement's label, or ``None`` if it has none.
+        :returns:              The translated assignment statement.
+        """
         from pyGHDL.dom._Translate import GetName
 
         targetNode = nodes.Get_Target(assignmentNode)
@@ -588,7 +901,12 @@ class SequentialConditionalVariableAssignment(VHDLModel_SequentialConditionalVar
 
 
 @export
+@InheritDocString(VHDLModel_SequentialConditionalSignalAssignment, merge=True)
 class SequentialConditionalSignalAssignment(VHDLModel_SequentialConditionalSignalAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialConditionalSignalAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -596,11 +914,26 @@ class SequentialConditionalSignalAssignment(VHDLModel_SequentialConditionalSigna
         conditionalWaveforms: Iterable,
         label: str = None,
     ) -> None:
+        """
+        Initializes a conditional sequential signal assignment.
+
+        :param assignmentNode:       The IIR node of the assignment statement.
+        :param target:               Reference to the assignment's destination.
+        :param conditionalWaveforms: All alternatives, in order.
+        :param label:                The label of the conditional sequential signal assignment, or ``None`` if it has none.
+        """
         super().__init__(target, conditionalWaveforms, label)
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialConditionalSignalAssignment":
+        """
+        Translates the IIR node of the assignment statement to a :class:`SequentialConditionalSignalAssignment`.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The statement's label, or ``None`` if it has none.
+        :returns:              The translated assignment statement.
+        """
         from pyGHDL.dom._Translate import GetName
 
         targetNode = nodes.Get_Target(assignmentNode)
@@ -613,7 +946,12 @@ class SequentialConditionalSignalAssignment(VHDLModel_SequentialConditionalSigna
 
 
 @export
+@InheritDocString(VHDLModel_SequentialSelectedVariableAssignment, merge=True)
 class SequentialSelectedVariableAssignment(VHDLModel_SequentialSelectedVariableAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialSelectedVariableAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -622,11 +960,27 @@ class SequentialSelectedVariableAssignment(VHDLModel_SequentialSelectedVariableA
         selectedExpressions: Iterable,
         label: str = None,
     ) -> None:
+        """
+        Initializes a selected sequential variable assignment.
+
+        :param assignmentNode:      The IIR node of the assignment statement.
+        :param target:              Reference to the assignment's destination.
+        :param expression:          The selector expression.
+        :param selectedExpressions: All alternatives, in order.
+        :param label:               The label of the selected variable assignment, or ``None`` if it has none.
+        """
         super().__init__(target, expression, selectedExpressions, label)
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialSelectedVariableAssignment":
+        """
+        Translates the IIR node of the assignment statement to a :class:`SequentialSelectedVariableAssignment`.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The statement's label, or ``None`` if it has none.
+        :returns:              The translated assignment statement.
+        """
         from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
@@ -640,7 +994,12 @@ class SequentialSelectedVariableAssignment(VHDLModel_SequentialSelectedVariableA
 
 
 @export
+@InheritDocString(VHDLModel_SequentialSelectedSignalAssignment, merge=True)
 class SequentialSelectedSignalAssignment(VHDLModel_SequentialSelectedSignalAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialSelectedSignalAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -649,11 +1008,27 @@ class SequentialSelectedSignalAssignment(VHDLModel_SequentialSelectedSignalAssig
         selectedWaveforms: Iterable,
         label: str = None,
     ) -> None:
+        """
+        Initializes a selected sequential signal assignment.
+
+        :param assignmentNode:    The IIR node of the assignment statement.
+        :param target:            Reference to the assignment's destination.
+        :param expression:        The selector expression.
+        :param selectedWaveforms: All alternatives, in order.
+        :param label:             The label of the selected sequential signal assignment, or ``None`` if it has none.
+        """
         super().__init__(target, expression, selectedWaveforms, label)
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialSelectedSignalAssignment":
+        """
+        Translates the IIR node of the assignment statement to a :class:`SequentialSelectedSignalAssignment`.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The statement's label, or ``None`` if it has none.
+        :returns:              The translated assignment statement.
+        """
         from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
@@ -665,7 +1040,12 @@ class SequentialSelectedSignalAssignment(VHDLModel_SequentialSelectedSignalAssig
 
 
 @export
+@InheritDocString(VHDLModel_SignalForceAssignment, merge=True)
 class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SignalForceAssignment`.
+    """
+
     def __init__(
         self,
         assignmentNode: Iir,
@@ -673,11 +1053,26 @@ class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
         expression: ExpressionUnion,
         label: str = None,
     ) -> None:
+        """
+        Initializes a signal force assignment.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param target:         Reference to the assignment's destination.
+        :param expression:     The value forced onto the signal.
+        :param label:          The label of the signal force assignment, or ``None`` if it has none.
+        """
         super().__init__(target, expression, label)
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SignalForceAssignment":
+        """
+        Translates the IIR node of the assignment statement to a :class:`SignalForceAssignment`.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The statement's label, or ``None`` if it has none.
+        :returns:              The translated assignment statement.
+        """
         from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
@@ -688,13 +1083,32 @@ class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_SignalReleaseAssignment, merge=True)
 class SignalReleaseAssignment(VHDLModel_SignalReleaseAssignment, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SignalReleaseAssignment`.
+    """
+
     def __init__(self, assignmentNode: Iir, target: SignalSymbol, label: str = None) -> None:
+        """
+        Initializes a signal release assignment.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param target:         Reference to the assignment's destination.
+        :param label:          The label of the signal release assignment, or ``None`` if it has none.
+        """
         super().__init__(target, label)
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
     def parse(cls, assignmentNode: Iir, label: str = None) -> "SignalReleaseAssignment":
+        """
+        Translates the IIR node of the assignment statement to a :class:`SignalReleaseAssignment`.
+
+        :param assignmentNode: The IIR node of the assignment statement.
+        :param label:          The statement's label, or ``None`` if it has none.
+        :returns:              The translated assignment statement.
+        """
         from pyGHDL.dom._Translate import GetName
 
         targetNode = nodes.Get_Target(assignmentNode)
@@ -704,7 +1118,12 @@ class SignalReleaseAssignment(VHDLModel_SignalReleaseAssignment, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_SequentialProcedureCall, merge=True)
 class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialProcedureCall`.
+    """
+
     def __init__(
         self,
         callNode: Iir,
@@ -712,11 +1131,26 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
         parameterAssociationItems: Iterable[ParameterAssociationItem],
         label: str = None,
     ) -> None:
+        """
+        Initializes a procedure call as a sequential statement.
+
+        :param callNode:                  The IIR node of the subprogram call.
+        :param procedureName:             Reference to the called procedure.
+        :param parameterAssociationItems: List of all parameter associations of the call.
+        :param label:                     The label of the procedure call, or ``None`` if it has none.
+        """
         super().__init__(procedureName, parameterAssociationItems, label)
         DOMMixin.__init__(self, callNode)
 
     @classmethod
     def parse(cls, callNode: Iir, label: str) -> "SequentialProcedureCall":
+        """
+        Translates the IIR node of the procedure call to a :class:`SequentialProcedureCall`.
+
+        :param callNode: The IIR node of the procedure call.
+        :param label:    The statement's label, or ``None`` if it has none.
+        :returns:        The translated procedure call.
+        """
         from pyGHDL.dom._Translate import GetName, GetParameterMapAspect
 
         cNode = nodes.Get_Procedure_Call(callNode)
@@ -729,7 +1163,12 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_SequentialAssertStatement, merge=True)
 class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialAssertStatement`.
+    """
+
     def __init__(
         self,
         assertNode: Iir,
@@ -738,11 +1177,27 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
         severity: ExpressionUnion = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a sequential assertion statement.
+
+        :param assertNode: The IIR node of the assertion.
+        :param condition:  The condition that must hold; the report is issued when it is false.
+        :param message:    The reported message, or ``None`` if none was given.
+        :param severity:   The reported severity level, or ``None`` if none was given.
+        :param label:      The label of the assertion statement, or ``None`` if it has none.
+        """
         super().__init__(condition, message, severity, label)
         DOMMixin.__init__(self, assertNode)
 
     @classmethod
     def parse(cls, assertNode: Iir, label: str) -> "SequentialAssertStatement":
+        """
+        Translates the IIR node of the assertion to a :class:`SequentialAssertStatement`.
+
+        :param assertNode: The IIR node of the assertion.
+        :param label:      The statement's label, or ``None`` if it has none.
+        :returns:          The translated assertion.
+        """
         from pyGHDL.dom._Translate import GetExpressionFromNode, GetOptionalExpressionFromNode
 
         condition = GetExpressionFromNode(nodes.Get_Assertion_Condition(assertNode))
@@ -753,7 +1208,12 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_SequentialReportStatement, merge=True)
 class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialReportStatement`.
+    """
+
     def __init__(
         self,
         reportNode: Iir,
@@ -761,11 +1221,26 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
         severity: ExpressionUnion = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a sequential :vhdlkw:`report` statement.
+
+        :param reportNode: The IIR node of the :vhdlkw:`report` statement.
+        :param message:    The reported message, or ``None`` if none was given.
+        :param severity:   The reported severity level, or ``None`` if none was given.
+        :param label:      The label of the :vhdlkw:`report` statement, or ``None`` if it has none.
+        """
         super().__init__(message, severity, label)
         DOMMixin.__init__(self, reportNode)
 
     @classmethod
     def parse(cls, reportNode: Iir, label: str) -> "SequentialReportStatement":
+        """
+        Translates the IIR node of the :vhdlkw:`report` statement to a :class:`SequentialReportStatement`.
+
+        :param reportNode: The IIR node of the :vhdlkw:`report` statement.
+        :param label:      The statement's label, or ``None`` if it has none.
+        :returns:          The translated :vhdlkw:`report` statement.
+        """
         from pyGHDL.dom._Translate import GetExpressionFromNode, GetOptionalExpressionFromNode
 
         message = GetExpressionFromNode(nodes.Get_Report_Expression(reportNode))
@@ -775,18 +1250,37 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ReturnStatement, merge=True)
 class ReturnStatement(VHDLModel_ReturnStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ReturnStatement`.
+    """
+
     def __init__(
         self,
         returnNode: Iir,
         returnValue: ExpressionUnion = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a :vhdlkw:`return` statement.
+
+        :param returnNode:  The IIR node of the :vhdlkw:`return` statement.
+        :param returnValue: The returned expression, or ``None`` for a procedure.
+        :param label:       The label of the :vhdlkw:`return` statement, or ``None`` if it has none.
+        """
         super().__init__(returnValue, label)
         DOMMixin.__init__(self, returnNode)
 
     @classmethod
     def parse(cls, returnNode: Iir, label: str) -> "ReturnStatement":
+        """
+        Translates the IIR node of the :vhdlkw:`return` statement to a :class:`ReturnStatement`.
+
+        :param returnNode: The IIR node of the :vhdlkw:`return` statement.
+        :param label:      The statement's label, or ``None`` if it has none.
+        :returns:          The translated :vhdlkw:`return` statement.
+        """
         from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 
         returnValue = GetOptionalExpressionFromNode(nodes.Get_Expression(returnNode))
@@ -795,29 +1289,59 @@ class ReturnStatement(VHDLModel_ReturnStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_NullStatement, merge=True)
 class NullStatement(VHDLModel_NullStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.NullStatement`.
+    """
+
     def __init__(
         self,
         waitNode: Iir,
         label: str = None,
     ) -> None:
+        """
+        Initializes a :vhdlkw:`null` statement.
+
+        :param waitNode: The IIR node of the :vhdlkw:`wait` statement.
+        :param label:    The label of the :vhdlkw:`null` statement, or ``None`` if it has none.
+        """
         super().__init__(label)
         DOMMixin.__init__(self, waitNode)
 
 
 @export
+@InheritDocString(VHDLModel_NextStatement, merge=True)
 class NextStatement(VHDLModel_NextStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.NextStatement`.
+    """
+
     def __init__(
         self,
         exitNode: Iir,
         condition: ExpressionUnion = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a :vhdlkw:`next` statement.
+
+        :param exitNode:  The IIR node of the :vhdlkw:`exit` statement.
+        :param condition: The condition under which the iteration is skipped, or ``None`` if unconditional.
+        :param label:     The label of the loop this statement applies to, or ``None`` for the enclosing loop.
+        """
         super().__init__(condition, loopLabel=label)
         DOMMixin.__init__(self, exitNode)
 
     @classmethod
     def parse(cls, exitNode: Iir, label: str) -> "NextStatement":
+        """
+        Translates the IIR node of the exit statement to a :class:`NextStatement`.
+
+        :param exitNode: The IIR node of the exit statement.
+        :param label:    The statement's label, or ``None`` if it has none.
+        :returns:        The translated exit statement.
+        """
         from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 
         condition = GetOptionalExpressionFromNode(nodes.Get_Condition(exitNode))
@@ -826,18 +1350,37 @@ class NextStatement(VHDLModel_NextStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ExitStatement, merge=True)
 class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ExitStatement`.
+    """
+
     def __init__(
         self,
         exitNode: Iir,
         condition: ExpressionUnion = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes an :vhdlkw:`exit` statement.
+
+        :param exitNode:  The IIR node of the :vhdlkw:`exit` statement.
+        :param condition: The condition under which the loop is left, or ``None`` if unconditional.
+        :param label:     The label of the loop this statement applies to, or ``None`` for the enclosing loop.
+        """
         super().__init__(condition, loopLabel=label)
         DOMMixin.__init__(self, exitNode)
 
     @classmethod
     def parse(cls, exitNode: Iir, label: str) -> "ExitStatement":
+        """
+        Translates the IIR node of the exit statement to an :class:`ExitStatement`.
+
+        :param exitNode: The IIR node of the exit statement.
+        :param label:    The statement's label, or ``None`` if it has none.
+        :returns:        The translated exit statement.
+        """
         from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 
         condition = GetOptionalExpressionFromNode(nodes.Get_Condition(exitNode))
@@ -846,7 +1389,12 @@ class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_WaitStatement, merge=True)
 class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.WaitStatement`.
+    """
+
     def __init__(
         self,
         waitNode: Iir,
@@ -855,11 +1403,27 @@ class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
         timeout: ExpressionUnion = None,
         label: str = None,
     ) -> None:
+        """
+        Initializes a :vhdlkw:`wait` statement.
+
+        :param waitNode:        The IIR node of the :vhdlkw:`wait` statement.
+        :param sensitivityList: List of all signal names of the :vhdlkw:`on` clause, or ``None`` if none was given.
+        :param condition:       The condition of the :vhdlkw:`until` clause, or ``None`` if none was given.
+        :param timeout:         The timeout expression of the :vhdlkw:`for` clause, or ``None`` if none was given.
+        :param label:           The label of the :vhdlkw:`wait` statement, or ``None`` if it has none.
+        """
         super().__init__(sensitivityList, condition, timeout, label)
         DOMMixin.__init__(self, waitNode)
 
     @classmethod
     def parse(cls, waitNode: Iir, label: str) -> "WaitStatement":
+        """
+        Translates the IIR node of the :vhdlkw:`wait` statement to a :class:`WaitStatement`.
+
+        :param waitNode: The IIR node of the :vhdlkw:`wait` statement.
+        :param label:    The statement's label, or ``None`` if it has none.
+        :returns:        The translated :vhdlkw:`wait` statement.
+        """
         from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 

@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module offers helper functions to read an IIR node's kind, name, label, mode and documentation.
+"""
+
 from typing import Optional as Nullable
 
 from pyTooling.Decorators import export
@@ -85,8 +89,10 @@ def CheckForErrors() -> None:
 
 @export
 def GetIirKindOfNode(node: Iir) -> nodes.Iir_Kind:
-    """Return the kind of a node in the IIR tree.
+    """
+    Return the kind of a node in the IIR tree.
 
+    :param node:        The IIR node to read the kind of.
     :returns:           The IIR kind of a node.
     :raises ValueError: If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
     """
@@ -99,8 +105,11 @@ def GetIirKindOfNode(node: Iir) -> nodes.Iir_Kind:
 
 @export
 def GetNameOfNode(node: Iir) -> str:
-    """Return the Python string from node ``node`` identifier.
+    """
+    Return the Python string from node ``node`` identifier.
 
+    :param node:        The IIR node to read the identifier of.
+    :returns:           The node's identifier as written in the source file.
     :raises ValueError: If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
     """
     if node == Null_Iir:
@@ -112,13 +121,15 @@ def GetNameOfNode(node: Iir) -> str:
 
 @export
 def GetLabelOfNode(node: Iir) -> Nullable[str]:
-    """Return the Python string from node ``node``'s optional label.
+    """
+    Return the Python string from node ``node``'s optional label.
 
     A statement carries its label in ``Label``, while a generate-statement body - the branch of an
     if-generate or case-generate statement - carries it in ``Alternative_Label``. No node kind has
     both, so the field is chosen from the node's kind.
 
-    :returns:           The label, or ``None`` if the node has no label field or no label was given
+    :param node: The IIR node to read the label of.
+    :returns:    The label, or ``None`` if the node has no label field or no label was given
                         in the source.
     :raises ValueError: If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
     """
@@ -138,6 +149,15 @@ def GetLabelOfNode(node: Iir) -> Nullable[str]:
 
 @export
 def GetDocumentationOfNode(node: Iir) -> str:
+    """
+    Collects the doc-comment lines attached to an IIR node.
+
+    *libghdl* only gathers comments if :data:`~pyGHDL.libghdl.flags.Flag_Gather_Comments` was enabled
+    before parsing, which :class:`~pyGHDL.dom.NonStandard.Design` does.
+
+    :param node: The IIR node to read the comments of.
+    :returns:    The comment lines joined by newlines, or an empty string if the node has no comment.
+    """
     file = files_map.Location_To_File(nodes.Get_Location(node))
     idx = file_comments.Find_First_Comment(file, node)
     documentation = []
@@ -150,8 +170,11 @@ def GetDocumentationOfNode(node: Iir) -> str:
 
 @export
 def GetModeOfNode(node: Iir) -> Mode:
-    """Return the mode of a ``node``.
+    """
+    Return the mode of a ``node``.
 
+    :param node:          The IIR node to read the mode of.
+    :returns:             The node's mode as a pyVHDLModel enumeration value.
     :raises ValueError:   If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
     :raises DOMException: If mode returned by libghdl is not known by :data:`__MODE_TRANSLATION`.
     """

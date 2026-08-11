@@ -30,9 +30,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived literal classes from :mod:`pyVHDLModel.Expression`.
+"""
+
 from typing import Union, Optional as Nullable
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel.Expression import NullLiteral as VHDLModel_NullLiteral
@@ -56,60 +60,145 @@ from pyGHDL.dom._Utils import GetNameOfNode
 
 
 @export
+@InheritDocString(VHDLModel_NullLiteral, merge=True)
 class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.NullLiteral`.
+    """
+
     def __init__(self, node: Iir) -> None:
+        """
+        Initializes a :vhdlkw:`null` literal.
+
+        :param node: The IIR node this object was translated from.
+        """
         super().__init__()
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, node: Iir) -> "NullLiteral":
+        """
+        Translates an IIR node to a :class:`NullLiteral`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         return cls(node)
 
 
 @export
+@InheritDocString(VHDLModel_EnumerationLiteral, merge=True)
 class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.EnumerationLiteral`.
+    """
+
     def __init__(self, node: Iir, value: str) -> None:
+        """
+        Initializes an enumeration literal.
+
+        :param node:  The IIR node this object was translated from.
+        :param value: The enumeration literal's name.
+        """
         super().__init__(value)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, literalNode: Iir) -> "EnumerationLiteral":
+        """
+        Translates the IIR node of the literal to an :class:`EnumerationLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
         literalName = GetNameOfNode(literalNode)
         return cls(literalNode, literalName)
 
 
 @export
+@InheritDocString(VHDLModel_IntegerLiteral, merge=True)
 class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.IntegerLiteral`.
+    """
+
     def __init__(self, node: Iir, value: int) -> None:
+        """
+        Initializes an integer literal.
+
+        :param node:  The IIR node this object was translated from.
+        :param value: The literal's integer value.
+        """
         super().__init__(value)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, literalNode: Iir) -> "IntegerLiteral":
+        """
+        Translates the IIR node of the literal to an :class:`IntegerLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
         value = nodes.Get_Value(literalNode)
         return cls(literalNode, value)
 
 
 @export
+@InheritDocString(VHDLModel_FloatingPointLiteral, merge=True)
 class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.FloatingPointLiteral`.
+    """
+
     def __init__(self, node: Iir, value: float) -> None:
+        """
+        Initializes a floating-point literal.
+
+        :param node:  The IIR node this object was translated from.
+        :param value: The literal's floating-point value.
+        """
         super().__init__(value)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, literalNode: Iir) -> "FloatingPointLiteral":
+        """
+        Translates the IIR node of the literal to a :class:`FloatingPointLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
         value = nodes.Get_Fp_Value(literalNode)
         return cls(literalNode, value)
 
 
 @export
+@InheritDocString(VHDLModel_PhysicalIntegerLiteral, merge=True)
 class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.PhysicalIntegerLiteral`.
+    """
+
     def __init__(self, node: Iir, value: int, unitName: str) -> None:
+        """
+        Initializes a physical literal with an integer value.
+
+        :param node:     The IIR node this object was translated from.
+        :param value:    The literal's integer value, in units of :attr:`_unitName`.
+        :param unitName: The name of the physical unit the value is given in.
+        """
         super().__init__(value, unitName)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, literalNode: Iir) -> "PhysicalIntegerLiteral":
+        """
+        Translates the IIR node of the literal to a :class:`PhysicalIntegerLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
         value = nodes.Get_Value(literalNode)
         unit = nodes.Get_Unit_Name(literalNode)
         unitName = GetNameOfNode(unit)
@@ -118,13 +207,31 @@ class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_PhysicalFloatingLiteral, merge=True)
 class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.PhysicalFloatingLiteral`.
+    """
+
     def __init__(self, node: Iir, value: int, unitName: float) -> None:
+        """
+        Initializes a physical literal with a floating-point value.
+
+        :param node:     The IIR node this object was translated from.
+        :param value:    The literal's floating-point value, in units of :attr:`_unitName`.
+        :param unitName: The name of the physical unit the value is given in.
+        """
         super().__init__(value, unitName)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, literalNode: Iir) -> "PhysicalFloatingLiteral":
+        """
+        Translates the IIR node of the literal to a :class:`PhysicalFloatingLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
         value = nodes.Get_Fp_Value(literalNode)
         unit = nodes.Get_Unit_Name(literalNode)
         unitName = GetNameOfNode(unit)
@@ -133,49 +240,129 @@ class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_CharacterLiteral, merge=True)
 class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.CharacterLiteral`.
+    """
+
     def __init__(self, node: Iir, value: str) -> None:
+        """
+        Initializes a character literal.
+
+        :param node:  The IIR node this object was translated from.
+        :param value: The literal's character value.
+        """
         super().__init__(value)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, literalNode: Iir) -> "CharacterLiteral":
+        """
+        Translates the IIR node of the literal to a :class:`CharacterLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
         identifier = nodes.Get_Identifier(literalNode)
         value = name_table.Get_Character(identifier)
         return cls(literalNode, value)
 
 
 @export
+@InheritDocString(VHDLModel_BinaryBitStringLiteral, merge=True)
 class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.BinaryBitStringLiteral`.
+    """
+
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
+        """
+        Initializes a binary bit string literal.
+
+        :param node:     The IIR node this object was translated from.
+        :param value:    The literal as written in the source, without the enclosing double quotes.
+        :param length:   The explicitly given length, or ``None`` if the literal has no length specification.
+        :param isSigned: ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
+        """
         super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_OctalBitStringLiteral, merge=True)
 class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.OctalBitStringLiteral`.
+    """
+
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
+        """
+        Initializes an octal bit string literal.
+
+        :param node:     The IIR node this object was translated from.
+        :param value:    The literal as written in the source, without the enclosing double quotes.
+        :param length:   The explicitly given length, or ``None`` if the literal has no length specification.
+        :param isSigned: ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
+        """
         super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_DecimalBitStringLiteral, merge=True)
 class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.DecimalBitStringLiteral`.
+    """
+
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
+        """
+        Initializes a decimal bit string literal.
+
+        :param node:     The IIR node this object was translated from.
+        :param value:    The literal as written in the source, without the enclosing double quotes.
+        :param length:   The explicitly given length, or ``None`` if the literal has no length specification.
+        :param isSigned: ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
+        """
         super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_HexadecimalBitStringLiteral, merge=True)
 class HexadecimalBitStringLiteral(VHDLModel_HexadecimalBitStringLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.HexadecimalBitStringLiteral`.
+    """
+
     def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
+        """
+        Initializes a hexadecimal bit string literal.
+
+        :param node:     The IIR node this object was translated from.
+        :param value:    The literal as written in the source, without the enclosing double quotes.
+        :param length:   The explicitly given length, or ``None`` if the literal has no length specification.
+        :param isSigned: ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
+        """
         super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_StringLiteral, merge=True)
 class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.StringLiteral`.
+    """
+
     def __init__(self, node: Iir, value: str) -> None:
+        """
+        Initializes a string literal.
+
+        :param node:  The IIR node this object was translated from.
+        :param value: The literal's string value, without the enclosing double quotes.
+        """
         super().__init__(value)
         DOMMixin.__init__(self, node)
 
@@ -187,6 +374,12 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
         DecimalBitStringLiteral,
         HexadecimalBitStringLiteral,
     ]:
+        """
+        Translates the IIR node of the literal to a :class:`StringLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
         base = nodes.Get_Bit_String_Base(literalNode)
         isSigned = nodes.Get_Has_Signed(literalNode) if nodes.Get_Has_Sign(literalNode) else None
         length = nodes.Get_String_Length(literalNode) if nodes.Get_Has_Length(literalNode) else None

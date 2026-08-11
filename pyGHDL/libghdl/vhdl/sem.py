@@ -31,6 +31,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Sem`` in *libghdl*.
+
+Semantic analysis: resolves names, computes types and decorates the AST with the results.
+"""
 
 from pyTooling.Decorators import export
 
@@ -42,10 +47,10 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 @BindToLibGHDL("vhdl__sem__semantic")
 def Semantic(DesignUnit: Iir_Design_Unit) -> None:
     """
-    Do the semantic analysis of design unit :obj:`DesignUnit`.
+    Do the semantic analysis of design unit ``DesignUnit``.
 
     Also add a few nodes or change some nodes, when for example an identifier is
     changed into an access to the type.
 
-    :param DesignUnit: Design unit to semantically analyze. Type: ``Iir_Design_Unit``
+    :param DesignUnit: Design unit to semantically analyze
     """

@@ -30,9 +30,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived configuration classes from :mod:`pyVHDLModel.Configuration`.
+"""
+
 from typing import List, Generator, Union
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Symbol import Symbol, PossibleReference
 from pyVHDLModel.Name import Name
@@ -56,13 +60,31 @@ from pyGHDL.dom.Symbol import EntitySymbol, ArchitectureSymbol, ConfigurationSym
 
 
 @export
+@InheritDocString(VHDLModel_EntityAspectEntity, merge=True)
 class EntityAspectEntity(VHDLModel_EntityAspectEntity, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Configuration.EntityAspectEntity`.
+    """
+
     def __init__(self, node: Iir, entity: EntitySymbol, architecture: ArchitectureSymbol = None) -> None:
+        """
+        Initializes an entity aspect naming an entity, optionally with an architecture.
+
+        :param node:         The IIR node this object was translated from.
+        :param entity:       Reference to the named entity.
+        :param architecture: Reference to the selected architecture, or ``None`` if none was given.
+        """
         super().__init__(entity, architecture)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, entityAspectNode: Iir) -> "EntityAspectEntity":
+        """
+        Translates the IIR node of the entity aspect to an :class:`EntityAspectEntity`.
+
+        :param entityAspectNode: The IIR node of the entity aspect.
+        :returns:                The translated entity aspect.
+        """
         from pyGHDL.dom._Translate import GetName
 
         entityNameNode = nodes.Get_Entity_Name(entityAspectNode)
@@ -79,13 +101,30 @@ class EntityAspectEntity(VHDLModel_EntityAspectEntity, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_EntityAspectConfiguration, merge=True)
 class EntityAspectConfiguration(VHDLModel_EntityAspectConfiguration, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Configuration.EntityAspectConfiguration`.
+    """
+
     def __init__(self, node: Iir, configuration: ConfigurationSymbol) -> None:
+        """
+        Initializes an entity aspect naming a configuration.
+
+        :param node:          The IIR node this object was translated from.
+        :param configuration: Reference to the named configuration.
+        """
         super().__init__(configuration)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, entityAspectNode: Iir) -> "EntityAspectConfiguration":
+        """
+        Translates the IIR node of the entity aspect to an :class:`EntityAspectConfiguration`.
+
+        :param entityAspectNode: The IIR node of the entity aspect.
+        :returns:                The translated entity aspect.
+        """
         from pyGHDL.dom._Translate import GetName
 
         configurationNameNode = nodes.Get_Configuration_Name(entityAspectNode)
@@ -95,18 +134,40 @@ class EntityAspectConfiguration(VHDLModel_EntityAspectConfiguration, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_EntityAspectOpen, merge=True)
 class EntityAspectOpen(VHDLModel_EntityAspectOpen, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Configuration.EntityAspectOpen`.
+    """
+
     def __init__(self, node: Iir) -> None:
+        """
+        Initializes an entity aspect denoting :vhdlkw:`open`.
+
+        :param node: The IIR node this object was translated from.
+        """
         super().__init__()
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, entityAspectNode: Iir) -> "EntityAspectOpen":
+        """
+        Translates the IIR node of the entity aspect to an :class:`EntityAspectOpen`.
+
+        :param entityAspectNode: The IIR node of the entity aspect.
+        :returns:                The translated entity aspect.
+        """
         return cls(entityAspectNode)
 
 
 def GetEntityAspectFromNode(entityAspectNode: Iir) -> VHDLModel_EntityAspect:
-    """Translates an entity aspect (IIR node) to the matching pyVHDLModel.Configuration.EntityAspect subclass."""
+    """
+    Translates an entity aspect to the matching :class:`~pyVHDLModel.Configuration.EntityAspect` subclass.
+
+    :param entityAspectNode: The IIR node of the entity aspect.
+    :returns:                The translated entity aspect.
+    :raises DOMException:    If the entity aspect's kind is not handled.
+    """
     kind = GetIirKindOfNode(entityAspectNode)
     if kind == nodes.Iir_Kind.Entity_Aspect_Entity:
         return EntityAspectEntity.parse(entityAspectNode)
@@ -120,7 +181,12 @@ def GetEntityAspectFromNode(entityAspectNode: Iir) -> VHDLModel_EntityAspect:
 
 
 @export
+@InheritDocString(VHDLModel_BindingIndication, merge=True)
 class BindingIndication(VHDLModel_BindingIndication, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Configuration.BindingIndication`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -128,11 +194,25 @@ class BindingIndication(VHDLModel_BindingIndication, DOMMixin):
         genericAssociationItems: List[GenericAssociationItem] = None,
         portAssociationItems: List[PortAssociationItem] = None,
     ) -> None:
+        """
+        Initializes a binding indication.
+
+        :param node:                    The IIR node this object was translated from.
+        :param entityAspect:            The bound design entity, or ``None`` if not given.
+        :param genericAssociationItems: List of all generic associations in the generic map aspect.
+        :param portAssociationItems:    List of all port associations in the port map aspect.
+        """
         super().__init__(entityAspect, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, bindingIndicationNode: Iir) -> "BindingIndication":
+        """
+        Translates the IIR node of the binding indication to a :class:`BindingIndication`.
+
+        :param bindingIndicationNode: The IIR node of the binding indication.
+        :returns:                     The translated binding indication.
+        """
         from pyGHDL.dom._Translate import GetGenericMapAspect, GetPortMapAspect
 
         entityAspectNode = nodes.Get_Entity_Aspect(bindingIndicationNode)
@@ -145,15 +225,35 @@ class BindingIndication(VHDLModel_BindingIndication, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_AllInstantiationList, merge=True)
 class AllInstantiationList(VHDLModel_AllInstantiationList, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Configuration.AllInstantiationList`.
+    """
+
     def __init__(self, node: Iir) -> None:
+        """
+        Initializes an instantiation list denoting :vhdlkw:`all`.
+
+        :param node: The IIR node this object was translated from.
+        """
         super().__init__()
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_OthersInstantiationList, merge=True)
 class OthersInstantiationList(VHDLModel_OthersInstantiationList, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Configuration.OthersInstantiationList`.
+    """
+
     def __init__(self, node: Iir) -> None:
+        """
+        Initializes an instantiation list denoting :vhdlkw:`others`.
+
+        :param node: The IIR node this object was translated from.
+        """
         super().__init__()
         DOMMixin.__init__(self, node)
 
@@ -175,11 +275,25 @@ class ComponentConfiguration(VHDLModel_ComponentConfiguration, DOMMixin):
         componentName: ComponentInstantiationSymbol,
         bindingIndication: BindingIndication = None,
     ) -> None:
+        """
+        Initializes a component configuration.
+
+        :param node:              The IIR node this object was translated from.
+        :param instantiationList: The instances this configuration applies to.
+        :param componentName:     Reference to the component being configured.
+        :param bindingIndication: The binding indication, or ``None`` if none was given.
+        """
         super().__init__(instantiationList, componentName, bindingIndication)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, node: Iir) -> "ComponentConfiguration":
+        """
+        Translates an IIR node to a :class:`ComponentConfiguration`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetName
 
         instList = nodes.Get_Instantiation_List(node)
@@ -204,18 +318,36 @@ class ComponentConfiguration(VHDLModel_ComponentConfiguration, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_BlockConfiguration, merge=True)
 class BlockConfiguration(VHDLModel_BlockConfiguration, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Configuration.BlockConfiguration`.
+    """
+
     def __init__(
         self,
         node: Iir,
         blockSpecification: Symbol,
         items: List[Union["BlockConfiguration", ComponentConfiguration]] = None,
     ) -> None:
+        """
+        Initializes a block configuration.
+
+        :param node:               The IIR node this object was translated from.
+        :param blockSpecification: The configured block.
+        :param items:              Nested configurations.
+        """
         super().__init__(blockSpecification, items)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, node: Iir) -> "BlockConfiguration":
+        """
+        Translates an IIR node to a :class:`BlockConfiguration`.
+
+        :param node: The IIR node this object is translated from.
+        :returns:    The translated object.
+        """
         from pyGHDL.dom._Translate import GetName
         from pyGHDL.dom.Symbol import Symbol as DOMSymbol
 
@@ -234,7 +366,13 @@ class BlockConfiguration(VHDLModel_BlockConfiguration, DOMMixin):
 def GetConfigurationItemsFromChainedNodes(
     nodeChain: Iir,
 ) -> Generator[Union[BlockConfiguration, ComponentConfiguration], None, None]:
-    """Translates a chain of configuration items (component/block configurations) to pyVHDLModel objects."""
+    """
+    Translates a chain of configuration items to :class:`ComponentConfiguration` and :class:`BlockConfiguration`.
+
+    :param nodeChain:     The IIR node starting the chain of configuration items.
+    :returns:             Generator yielding the translated configuration items, in source order.
+    :raises DOMException: If a configuration item's kind is not handled.
+    """
     for item in utils.chain_iter(nodeChain):
         kind = GetIirKindOfNode(item)
         if kind == nodes.Iir_Kind.Component_Configuration:

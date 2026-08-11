@@ -30,19 +30,17 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
 """
 This module contains all DOM classes for VHDL's design units (:class:`context <Entity>`,
 :class:`architecture <Architecture>`, :class:`package <Package>`,
 :class:`package body <PackageBody>`, :class:`context <Context>` and
 :class:`configuration <Configuration>`.
 
-
 """
 
 from typing import Iterable
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Instantiation import PackageInstantiation as VHDLModel_PackageInstantiation
@@ -82,20 +80,48 @@ from pyGHDL.dom.Configuration import BlockConfiguration
 
 
 @export
+@InheritDocString(VHDLModel_LibraryClause, merge=True)
 class LibraryClause(VHDLModel_LibraryClause, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.LibraryClause`.
+    """
+
     def __init__(self, libraryNode: Iir, symbols: Iterable[Symbol]) -> None:
+        """
+        Initializes a library clause.
+
+        :param libraryNode: The IIR node of the :vhdlkw:`library` clause.
+        :param symbols:     A list of symbols this reference references to.
+        """
         super().__init__(symbols, None)
         DOMMixin.__init__(self, libraryNode)
 
 
 @export
+@InheritDocString(VHDLModel_UseClause, merge=True)
 class UseClause(VHDLModel_UseClause, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.UseClause`.
+    """
+
     def __init__(self, useNode: Iir, symbols: Iterable[Symbol]) -> None:
+        """
+        Initializes a use clause.
+
+        :param useNode: The IIR node of the :vhdlkw:`use` clause.
+        :param symbols: A list of symbols this reference references to.
+        """
         super().__init__(symbols, None)
         DOMMixin.__init__(self, useNode)
 
     @classmethod
     def parse(cls, useNode: Iir):
+        """
+        Translates the IIR node of the use clause to an :class:`UseClause`.
+
+        :param useNode: The IIR node of the use clause.
+        :returns:       The translated use clause.
+        """
         nameNode = nodes.Get_Selected_Name(useNode)
         name = GetName(nameNode)
 
@@ -124,13 +150,30 @@ class UseClause(VHDLModel_UseClause, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_ContextReference, merge=True)
 class ContextReference(VHDLModel_ContextReference, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.ContextReference`.
+    """
+
     def __init__(self, contextNode: Iir, symbols: Iterable[Symbol]) -> None:
+        """
+        Initializes a context reference.
+
+        :param contextNode: The IIR node of the context reference.
+        :param symbols:     A list of symbols this reference references to.
+        """
         super().__init__(symbols, None)
         DOMMixin.__init__(self, contextNode)
 
     @classmethod
     def parse(cls, contextNode: Iir):
+        """
+        Translates the IIR node of the context to a :class:`ContextReference`.
+
+        :param contextNode: The IIR node of the context.
+        :returns:           The translated context.
+        """
         nameNode = nodes.Get_Selected_Name(contextNode)
         contexts = [ContextReferenceSymbol(nameNode, GetName(nameNode))]
         for context in utils.chain_iter(nodes.Get_Context_Reference_Chain(contextNode)):
@@ -141,7 +184,12 @@ class ContextReference(VHDLModel_ContextReference, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_Entity, merge=True)
 class Entity(VHDLModel_Entity, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.Entity`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -153,6 +201,18 @@ class Entity(VHDLModel_Entity, DOMMixin):
         statements: Iterable["ConcurrentStatement"] = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes an entity declaration.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The entity's identifier.
+        :param contextItems:  List of all context items (library, use and context clauses).
+        :param genericItems:  List of all generics, in declaration order.
+        :param portItems:     List of all ports, in declaration order.
+        :param declaredItems: List of all declared items in this concurrent declaration region.
+        :param statements:    List of all concurrent statements in this construct.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(
             identifier, contextItems, genericItems, portItems, declaredItems, statements, documentation, None
         )
@@ -160,6 +220,13 @@ class Entity(VHDLModel_Entity, DOMMixin):
 
     @classmethod
     def parse(cls, entityNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion]):
+        """
+        Translates the IIR node of the entity declaration to an :class:`Entity`.
+
+        :param entityNode:   The IIR node of the entity declaration.
+        :param contextItems: List of all context items (library, use and context clauses) preceding the unit.
+        :returns:            The translated entity declaration.
+        """
         name = GetNameOfNode(entityNode)
         documentation = GetDocumentationOfNode(entityNode)
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(entityNode))
@@ -175,7 +242,12 @@ class Entity(VHDLModel_Entity, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_Architecture, merge=True)
 class Architecture(VHDLModel_Architecture, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.Architecture`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -186,11 +258,29 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         statements: Iterable["ConcurrentStatement"] = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes an architecture declaration.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The architecture's identifier.
+        :param entity:        Reference to the entity this architecture implements.
+        :param contextItems:  List of all context items (library, use and context clauses).
+        :param declaredItems: List of all declared items in this concurrent declaration region.
+        :param statements:    List of all concurrent statements in this construct.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, entity, contextItems, declaredItems, statements, documentation, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, architectureNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion]):
+        """
+        Translates the IIR node of the architecture body to an :class:`Architecture`.
+
+        :param architectureNode: The IIR node of the architecture body.
+        :param contextItems:     List of all context items (library, use and context clauses) preceding the unit.
+        :returns:                The translated architecture body.
+        """
         name = GetNameOfNode(architectureNode)
         documentation = GetDocumentationOfNode(architectureNode)
         entityNameNode = nodes.Get_Entity_Name(architectureNode)
@@ -208,7 +298,12 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_Component, merge=True)
 class Component(VHDLModel_Component, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.Component`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -217,11 +312,26 @@ class Component(VHDLModel_Component, DOMMixin):
         portItems: Iterable[PortInterfaceItemMixin] = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a component declaration.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The component's identifier.
+        :param genericItems:  List of all generics of this component, in declaration order.
+        :param portItems:     List of all ports of this component, in declaration order.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, genericItems, portItems, documentation, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, componentNode: Iir):
+        """
+        Translates the IIR node of the component declaration to a :class:`Component`.
+
+        :param componentNode: The IIR node of the component declaration.
+        :returns:             The translated component declaration.
+        """
         name = GetNameOfNode(componentNode)
         documentation = GetDocumentationOfNode(componentNode)
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(componentNode))
@@ -231,7 +341,12 @@ class Component(VHDLModel_Component, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_Package, merge=True)
 class Package(VHDLModel_Package, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.Package`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -241,11 +356,28 @@ class Package(VHDLModel_Package, DOMMixin):
         declaredItems: Iterable = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initialize a package.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    Name of the VHDL package.
+        :param contextItems:  List of all context items (library, use and context clauses).
+        :param genericItems:  List of all generics, in declaration order.
+        :param declaredItems: List of all declared items in this concurrent declaration region.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, contextItems, genericItems, declaredItems, documentation, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, packageNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion]):
+        """
+        Translates the IIR node of the package declaration to a :class:`Package`.
+
+        :param packageNode:  The IIR node of the package declaration.
+        :param contextItems: List of all context items (library, use and context clauses) preceding the unit.
+        :returns:            The translated package declaration.
+        """
         name = GetNameOfNode(packageNode)
         documentation = GetDocumentationOfNode(packageNode)
 
@@ -263,7 +395,12 @@ class Package(VHDLModel_Package, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_PackageBody, merge=True)
 class PackageBody(VHDLModel_PackageBody, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.PackageBody`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -272,11 +409,27 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
         declaredItems: Iterable = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a package body declaration.
+
+        :param node:          The IIR node this object was translated from.
+        :param packageSymbol: Reference to the package this body implements.
+        :param contextItems:  List of all context items (library, use and context clauses).
+        :param declaredItems: List of all declared items in this concurrent declaration region.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(packageSymbol, contextItems, declaredItems, documentation, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, packageBodyNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion]):
+        """
+        Translates the IIR node of the package body to a :class:`PackageBody`.
+
+        :param packageBodyNode: The IIR node of the package body.
+        :param contextItems:    List of all context items (library, use and context clauses) preceding the unit.
+        :returns:               The translated package body.
+        """
         packageIdentifier = GetNameOfNode(packageBodyNode)
         packageSymbol = PackageSymbol(packageBodyNode, SimpleName(packageBodyNode, packageIdentifier))
         documentation = GetDocumentationOfNode(packageBodyNode)
@@ -290,7 +443,12 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_PackageInstantiation, merge=True)
 class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Instantiation.PackageInstantiation`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -300,11 +458,28 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         genericAssociationItems: Iterable[VHDLModel_GenericAssociationItem] = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a package instantiation.
+
+        :param node:                      The IIR node this object was translated from.
+        :param identifier:                The instantiated package's identifier.
+        :param uninstantiatedPackageName: The name of the uninstantiated generic package.
+        :param contextItems:              List of all context items (library, use and context clauses).
+        :param genericAssociationItems:   List of all generic associations in the generic map aspect.
+        :param documentation:             The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, uninstantiatedPackageName, contextItems, genericAssociationItems, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, packageNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion] = None):
+        """
+        Translates the IIR node of the package declaration to a :class:`PackageInstantiation`.
+
+        :param packageNode:  The IIR node of the package declaration.
+        :param contextItems: List of all context items (library, use and context clauses) preceding the unit.
+        :returns:            The translated package declaration.
+        """
         name = GetNameOfNode(packageNode)
         documentation = GetDocumentationOfNode(packageNode)
         uninstantiatedPackageName = GetName(
@@ -318,7 +493,12 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_Context, merge=True)
 class Context(VHDLModel_Context, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.Context`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -326,11 +506,25 @@ class Context(VHDLModel_Context, DOMMixin):
         references: Iterable[VHDLModel_ContextUnion] = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a context declaration.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The context's identifier.
+        :param references:    All context items, in declaration order.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, references, documentation, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, contextNode: Iir):
+        """
+        Translates the IIR node of the context to a :class:`Context`.
+
+        :param contextNode: The IIR node of the context.
+        :returns:           The translated context.
+        """
         from pyGHDL.dom._Utils import GetIirKindOfNode
 
         name = GetNameOfNode(contextNode)
@@ -360,7 +554,12 @@ class Context(VHDLModel_Context, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_Configuration, merge=True)
 class Configuration(VHDLModel_Configuration, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.Configuration`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -370,11 +569,28 @@ class Configuration(VHDLModel_Configuration, DOMMixin):
         contextItems: Iterable[Context] = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a configuration declaration.
+
+        :param node:               The IIR node this object was translated from.
+        :param identifier:         The configuration's identifier.
+        :param entity:             Reference to the entity this configuration configures.
+        :param blockConfiguration: The configuration of the entity's architecture.
+        :param contextItems:       List of all context items (library, use and context clauses).
+        :param documentation:      The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, entity, blockConfiguration, contextItems, documentation, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, configurationNode: Iir, contextItems: Iterable[Context]) -> "Configuration":
+        """
+        Translates the IIR node of the configuration declaration to a :class:`Configuration`.
+
+        :param configurationNode: The IIR node of the configuration declaration.
+        :param contextItems:      List of all context items (library, use and context clauses) preceding the unit.
+        :returns:                 The translated configuration declaration.
+        """
         from pyGHDL.dom._Translate import GetName
 
         name = GetNameOfNode(configurationNode)

@@ -31,6 +31,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Disp_Tree`` in *libghdl*.
+
+Dumps a node and its sub-nodes for debugging. It is written against the meta-model, so it needs no change when a node
+kind is added.
+"""
 
 from ctypes import c_int32, c_char_p, c_void_p
 
@@ -46,7 +52,8 @@ def Disp_Tree(Tree: Iir, Flat: bool = False) -> None:
     """
     Disp a tree for debugging.
 
-    :param Tree:      The node to display.
+    :param Tree: The node to display.
+    :param Flat: ``True`` to print only the node itself, without its sub-nodes.
     """
 
 
@@ -57,8 +64,15 @@ def Disp_Iir(N: Iir, Indent: int, Depth: int) -> None:
     Disp a node for debugging.
 
     :param N:      The node to display.
+    :param Indent: The indentation level to print at.
+    :param Depth:  How many levels of sub-nodes to print.
     """
 
 
 def debug_iir(N: Iir) -> None:
+    """
+    Dump a node and one level of its sub-nodes, for use from a debugger.
+
+    :param N: The IIR node to dump.
+    """
     Disp_Iir(N, 0, 1)

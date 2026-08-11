@@ -30,10 +30,11 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
 """
-.. todo::
-   Add a module documentation.
+This module implements the non-standard classes :class:`Design`, :class:`Library` and :class:`Document`.
+
+These three are not VHDL language constructs, but the entry points of :mod:`pyGHDL.dom`: a document reads
+and parses a source file through *libghdl*, a library groups documents, and a design owns the libraries.
 """
 
 import ctypes
@@ -86,12 +87,17 @@ from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationM
 
 
 @export
+@InheritDocString(VHDLModel_Design, merge=True)
 class Design(VHDLModel_Design):
-    _loadDefaultLibraryTime: Nullable[float]
-    _analyzeTime: Nullable[float]
-    _vhdlVersion: VHDLVersion
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Design`.
+    """
 
-    _warnings: List
+    _loadDefaultLibraryTime: Nullable[float]  #: :meth:`LoadDefaultLibraries` duration in seconds, ``None`` if unused.
+    _analyzeTime: Nullable[float]  #: :meth:`Analyze` duration in seconds, ``None`` if not called.
+    _vhdlVersion: VHDLVersion  #: The VHDL version this design is analyzed with.
+
+    _warnings: List  #: Warnings collected from *libghdl* while the design's documents are analyzed.
 
     #: VHDL versions currently supported by this class. Older revisions (87, 93, 2000, 2002) are
     #: not planned to be supported for now.
@@ -103,8 +109,13 @@ class Design(VHDLModel_Design):
         VHDLVersion.VHDL2019: "19",
     }
 
-    @InheritDocString(VHDLModel_Design)
     def __init__(self, name: str = None, vhdlVersion: VHDLVersion = VHDLVersion.VHDL2008) -> None:
+        """
+        Initialize a VHDL design.
+
+        :param name:        Name of the design.
+        :param vhdlVersion: The VHDL version used to analyze this design.
+        """
         super().__init__(name)
 
         if vhdlVersion not in self._SUPPORTED_VHDL_VERSIONS:
@@ -124,6 +135,14 @@ class Design(VHDLModel_Design):
 
     @readonly
     def VHDLVersion(self) -> VHDLVersion:
+        """
+        Read-only property to access the VHDL version this design is analyzed with (:attr:`_vhdlVersion`).
+
+        The version is checked against :attr:`_SUPPORTED_VHDL_VERSIONS` when the design is created and is translated
+        to GHDL's ``--std=`` option value via :attr:`_VHDL_VERSION_TO_STD_OPTION`.
+
+        :returns: The design's VHDL version.
+        """
         return self._vhdlVersion
 
     def __ghdl_init(self):
@@ -148,6 +167,13 @@ class Design(VHDLModel_Design):
             )
 
     def LoadDefaultLibraries(self, flavor: Nullable[IEEEFlavor] = None):
+        """
+        Loads the ``std`` and ``ieee`` libraries into the design.
+
+        How long this took is measured and kept in :attr:`_loadDefaultLibraryTime`.
+
+        :param flavor: The IEEE library flavor to load, or ``None`` for the default.
+        """
         t1 = time.perf_counter()
 
         super().LoadStdLibrary()
@@ -156,6 +182,12 @@ class Design(VHDLModel_Design):
         self._loadDefaultLibraryTime = time.perf_counter() - t1
 
     def Analyze(self):
+        """
+        Analyzes all documents of this design.
+
+        How long this took is measured and kept in :attr:`_analyzeTime`, and the warnings *libghdl* raised during the
+        analysis are collected in :attr:`_warnings`.
+        """
         t1 = time.perf_counter()
 
         with WarningCollector(self._warnings) as warnings:
@@ -165,21 +197,31 @@ class Design(VHDLModel_Design):
 
 
 @export
+@InheritDocString(VHDLModel_Library, merge=True)
 class Library(VHDLModel_Library):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Library`.
+    """
+
     pass
 
 
 @export
+@InheritDocString(VHDLModel_Document, merge=True)
 class Document(VHDLModel_Document):
-    _filename: Path
-    _warnings: List
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Document`.
+    """
 
-    __ghdlFileID: Any
-    __ghdlSourceFileEntry: Any
-    __ghdlFile: Any
+    _filename: Path  #: The source file this document was read from.
+    _warnings: List  #: Warnings collected from *libghdl* while this document is translated.
 
-    __ghdlProcessingTime: float
-    __domTranslateTime: float
+    __ghdlFileID: Any  #: *libghdl*'s name table identifier for :attr:`_filename`.
+    __ghdlSourceFileEntry: Any  #: *libghdl*'s source file entry holding this document's source code.
+    __ghdlFile: Any  #: The IIR design file node returned by *libghdl* when the source code was parsed.
+
+    __ghdlProcessingTime: float  #: Duration of *libghdl*'s parsing in seconds, unset if ``dontParse`` was ``True``.
+    __domTranslateTime: float  #: Duration of the IIR to DOM translation in seconds, unset if it was skipped.
 
     def __init__(
         self,
@@ -189,6 +231,15 @@ class Document(VHDLModel_Document):
         dontParse: bool = False,
         dontTranslate: bool = False,
     ) -> None:
+        """
+        Initializes a VHDL document.
+
+        :param path:          Path to the document. ``None`` if in-memory document.
+        :param sourceCode:    The source code to analyze, or ``None`` to read it from ``path``.
+        :param vhdlVersion:   VHDL version used for analyzing this source file.
+        :param dontParse:     ``True`` to skip parsing the source code.
+        :param dontTranslate: ``True`` to parse the source code, but skip translating it to the DOM.
+        """
         super().__init__(path, parent=None)
 
         self._filename = path
@@ -221,6 +272,11 @@ class Document(VHDLModel_Document):
                 self.__domTranslateTime = time.perf_counter() - t1
 
     def __loadFromPath(self):
+        """
+        Reads the source file named by :attr:`_filename` and hands it to *libghdl*.
+
+        :raises DOMException: If the source file does not exist.
+        """
         try:
             with self._filename.open("r", encoding=ENCODING) as file:
                 self.__loadFromString(file.read())
@@ -228,6 +284,15 @@ class Document(VHDLModel_Document):
             raise DOMException(f"Sourcefile '{self._filename}' not found.") from ex
 
     def __loadFromString(self, sourceCode: str):
+        """
+        Hands the given source code to *libghdl* under the name in :attr:`_filename`.
+
+        .. hint::
+
+           The source file itself is not read, which is how a document can be analyzed *in-memory* from a string.
+
+        :param sourceCode: The source code to analyze.
+        """
         sourcesBytes = sourceCode.encode(ENCODING)
         sourceLength = len(sourcesBytes)
         bufferLength = sourceLength + 128
@@ -242,6 +307,11 @@ class Document(VHDLModel_Document):
             raise DOMException(f"Source file '{self._filename}' already loaded.")
 
     def translate(self):
+        """
+        Translates the design units of the parsed IIR tree to :mod:`pyGHDL.dom` objects.
+
+        :raises DOMException: If a design unit's kind is not handled.
+        """
         firstUnit = nodes.Get_First_Design_Unit(self.__ghdlFile)
         self._documentation = GetDocumentationOfNode(firstUnit)
 
@@ -318,8 +388,25 @@ class Document(VHDLModel_Document):
 
     @readonly
     def LibGHDLProcessingTime(self) -> float:
+        """
+        Read-only property to access the time *libghdl* spent parsing this document (:attr:`__ghdlProcessingTime`).
+
+        The duration is measured while the document is constructed, so it is set only if ``dontParse`` was ``False``.
+
+        :returns:               The parse duration in seconds.
+        :raises AttributeError: If the document was constructed with ``dontParse=True``.
+        """
         return self.__ghdlProcessingTime
 
     @readonly
     def DOMTranslationTime(self) -> float:
+        """
+        Read-only property to access the time spent translating the IIR tree to the DOM (:attr:`__domTranslateTime`).
+
+        The duration is measured while the document is constructed, so it is set only if neither ``dontParse`` nor
+        ``dontTranslate`` was ``True``.
+
+        :returns:               The translation duration in seconds.
+        :raises AttributeError: If the document was constructed with ``dontParse=True`` or ``dontTranslate=True``.
+        """
         return self.__domTranslateTime

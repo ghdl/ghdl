@@ -191,7 +191,7 @@ def GetName(node: Iir) -> Name:
     :attr:`~pyVHDLModel.Name.Name.Prefix` property.
 
     :param node: The name IIR node to translate.
-    :return:     A name object.
+    :returns:    A name object.
     """
     kind = GetIirKindOfNode(node)
     if kind == nodes.Iir_Kind.Simple_Name:
@@ -217,6 +217,17 @@ def GetName(node: Iir) -> Name:
 
 
 def GetAssociations(node: Iir) -> List:
+    """
+    Translates the association chain of an indexed name, a slice or a function call to a list of expressions.
+
+    Only the actual part of each association is translated; a formal part, if present, is discarded. The
+    three constructs this is used for cannot be told apart before the name is resolved, so they share one
+    translation.
+
+    :param node:          The IIR node carrying the association chain.
+    :returns:             List of the translated actual expressions, in source order.
+    :raises DOMException: If an association element is neither by expression nor by name.
+    """
     associations = []
     for item in utils.chain_iter(nodes.Get_Association_Chain(node)):
         kind = GetIirKindOfNode(item)
@@ -238,6 +249,16 @@ def GetAssociations(node: Iir) -> List:
 def GetArrayConstraintsFromSubtypeIndication(
     subtypeIndication: Iir,
 ) -> List:
+    """
+    Translates the index constraints of an array subtype indication to a list of ranges.
+
+    A constraint is either a range expression (``0 to 7``) or a name denoting a range
+    (``v'range``, ``my_range``).
+
+    :param subtypeIndication: The IIR node of the array subtype indication.
+    :returns:                 List of the translated index constraints, one per dimension.
+    :raises DOMException:     If a constraint is neither a range expression nor a name.
+    """
     constraints = []
     for constraint in utils.flist_iter(nodes.Get_Index_Constraint_List(subtypeIndication)):
         constraintKind = GetIirKindOfNode(constraint)
@@ -263,6 +284,16 @@ def GetArrayConstraintsFromSubtypeIndication(
 def GetRecordConstraintsFromSubtypeIndication(
     subtypeIndication: Iir,
 ) -> Dict:
+    """
+    Translates the element constraints of a record subtype indication to a dictionary.
+
+    The dictionary is keyed by a :class:`~pyGHDL.dom.Symbol.RecordElementSymbol` naming the constrained
+    element; the values are not translated yet.
+
+    :param subtypeIndication: The IIR node of the record subtype indication.
+    :returns:                 Mapping from record element symbol to its constraint.
+    :raises DOMException:     If an element of the chain is not a record element constraint.
+    """
     constraints = {}
     recordElementConstraint = nodes.Get_Owned_Elements_Chain(subtypeIndication)
     while recordElementConstraint != nodes.Null_Iir:
@@ -285,6 +316,17 @@ def GetRecordConstraintsFromSubtypeIndication(
 
 @export
 def GetTypeFromNode(node: Iir) -> BaseType:
+    """
+    Translates a type declaration to the matching :mod:`pyGHDL.dom.Type` class.
+
+    The doc-comment attaches to the type *declaration*, not to the type definition inside it, so it is
+    read here and handed to whichever class parses the definition. A declaration without a definition is
+    an incomplete type.
+
+    :param node:          The IIR node of the type declaration.
+    :returns:             The translated type.
+    :raises DOMException: If the type definition's kind is not handled.
+    """
     typeName = GetNameOfNode(node)
     # A doc comment attaches to the type *declaration*, not the type definition inside it, so it is read
     # here and handed to whichever class parses the definition.
@@ -315,6 +357,16 @@ def GetTypeFromNode(node: Iir) -> BaseType:
 
 @export
 def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
+    """
+    Translates an anonymous type declaration to the matching :mod:`pyGHDL.dom.Type` class.
+
+    GHDL creates an anonymous type declaration for the type definitions that have no name of their own -
+    an integer or physical type behind a subtype, for instance.
+
+    :param node:          The IIR node of the anonymous type declaration.
+    :returns:             The translated type.
+    :raises DOMException: If the type definition's kind is not handled.
+    """
     typeName = GetNameOfNode(node)
     documentation = GetDocumentationOfNode(node)
     typeDefinition = nodes.Get_Type_Definition(node)
@@ -357,7 +409,7 @@ def GetSubtypeIndicationFromNode(node: Iir, entity: str, name: str) -> Symbol:
        subtype indication is return by another getter.
 
     :param node:   The IIR node to get the subtype indication from.
-    :param entity: The entity kind the subtype indication is extracted from (e.g. ``constant``). Used in exception messages.
+    :param entity: The entity kind the subtype indication is extracted from (e.g. :vhdlkw:`constant`). Used in exception messages.
     :param name:   The entity's name the subtype indication is extracted from (e.g. ``BITS``). Used in exception messages.
     :returns:      A symbol representing a reference to a type/subtype and possible array or record constraints.
     """
@@ -371,9 +423,11 @@ def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: s
     Translate a subtype indication to a :class:`~pyVHDLModel.Symbol.Symbol`.
 
     :param subtypeIndicationNode: The subtype indication IIR node.
-    :param entity: The entity kind the subtype indication is extracted from (e.g. ``constant``). Used in exception messages.
-    :param name:   The entity's name the subtype indication is extracted from (e.g. ``BITS``). Used in exception messages.
-    :returns:      A symbol representing a reference to a type/subtype and possible array or record constraints.
+    :param entity:                The entity kind the subtype indication is extracted from (e.g. :vhdlkw:`constant`).
+                                  Used in exception messages.
+    :param name:                  The entity's name the subtype indication is extracted from (e.g. ``BITS``).
+                                  Used in exception messages.
+    :returns:                     A symbol referencing a type or subtype, with array or record constraints.
     """
     if subtypeIndicationNode is nodes.Null_Iir:
         raise ValueError("Parameter 'subtypeIndicationNode' is 'Null_Iir'.")
@@ -397,6 +451,12 @@ def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: s
 
 @export
 def GetSimpleTypeFromNode(subtypeIndicationNode: Iir) -> SimpleSubtypeSymbol:
+    """
+    Translates a subtype indication that is just a type mark to a simple subtype symbol.
+
+    :param subtypeIndicationNode: The IIR node of the subtype indication.
+    :returns:                     A subtype symbol referencing the type mark.
+    """
     subtypeName = GetName(subtypeIndicationNode)
     return SimpleSubtypeSymbol(subtypeIndicationNode, subtypeName)
 
@@ -450,6 +510,12 @@ def GetScalarConstrainedSubtypeFromNode(
 def GetArrayConstrainedSubtypeFromNode(
     subtypeIndicationNode: Iir,
 ) -> ConstrainedArraySubtypeSymbol:
+    """
+    Translates an array subtype indication with an index constraint to a constrained array subtype symbol.
+
+    :param subtypeIndicationNode: The IIR node of the array subtype indication.
+    :returns:                     A subtype symbol carrying the type mark and one range per dimension.
+    """
     typeMark = nodes.Get_Subtype_Type_Mark(subtypeIndicationNode)
     typeMarkName = GetNameOfNode(typeMark)
     simpleTypeMark = SimpleName(typeMark, typeMarkName)
@@ -462,6 +528,12 @@ def GetArrayConstrainedSubtypeFromNode(
 def GetRecordConstrainedSubtypeFromNode(
     subtypeIndicationNode: Iir,
 ) -> ConstrainedRecordSubtypeSymbol:
+    """
+    Translates a record subtype indication with an element constraint to a constrained record subtype symbol.
+
+    :param subtypeIndicationNode: The IIR node of the record subtype indication.
+    :returns:                     A subtype symbol carrying the type mark and the constrained elements.
+    """
     typeMark = nodes.Get_Subtype_Type_Mark(subtypeIndicationNode)
     typeMarkName = GetNameOfNode(typeMark)
     simpleTypeMark = SimpleName(typeMark, typeMarkName)
@@ -472,6 +544,12 @@ def GetRecordConstrainedSubtypeFromNode(
 
 @export
 def GetSubtypeFromNode(subtypeNode: Iir) -> Symbol:
+    """
+    Translates a subtype declaration to a :class:`~pyGHDL.dom.Type.Subtype`.
+
+    :param subtypeNode: The IIR node of the subtype declaration.
+    :returns:           The translated subtype, carrying the symbol of its subtype indication.
+    """
     subtypeName = GetNameOfNode(subtypeNode)
     symbol = GetSubtypeIndicationFromNode(subtypeNode, "subtype", subtypeName)
 
@@ -484,7 +562,7 @@ def GetRangeFromNode(node: Iir) -> SimpleRange:
     Translate a range IIR node to a :class:`~pyVHDLModel.Base.SimpleRange`.
 
     :param node: The IIR node representing a range.
-    :return:     The translated range object.
+    :returns:    The translated range object.
     """
     direction = nodes.Get_Direction(node)
     leftBound = nodes.Get_Left_Limit_Expr(node)
@@ -508,11 +586,11 @@ def GetDiscreteRangeFromNode(discreteRangeNode: Iir, entity: str) -> Range:
     Everything but the explicit-bounds form becomes a
     :class:`~pyVHDLModel.Base.RangeFromName` wrapping the referenced symbol.
 
-    Shared by ``for ... loop`` statements, ``for ... generate`` statements and aggregate choices, which
+    Shared by :vhdlkw:`for..loop` statements, :vhdlkw:`for..generate` statements and aggregate choices, which
     all use the same VHDL ``discrete_range`` grammar rule.
 
     :param discreteRangeNode: The IIR node representing a discrete range.
-    :param entity:            The construct the discrete range appears in (e.g. ``for...loop``). Used in exception messages.
+    :param entity:            The construct the discrete range appears in (e.g. :vhdlkw:`for..loop`). Used in exception messages.
     :returns:                 The translated range.
     :raises DOMException:     If the IIR node's kind isn't a known discrete range.
     """
@@ -612,7 +690,7 @@ def GetExpressionFromNode(node: Iir) -> ExpressionUnion:
     Translates an expression IIR node to an :class:`~pyVHDLModel.Expression.BaseExpression`.
 
     :param node: The IIR node representing an expression.
-    :return:     The translated expression.
+    :returns:    The translated expression.
     """
     kind = GetIirKindOfNode(node)
 
@@ -629,11 +707,11 @@ def GetOptionalExpressionFromNode(node: Iir) -> Nullable[ExpressionUnion]:
     """
     Like :func:`GetExpressionFromNode`, but for fields that may legitimately be absent (e.g. an
     optional condition on the final branch of a conditional assignment, or on an unconditional
-    ``exit``/``next`` statement) - returns ``None`` instead of translating when ``node`` is
+    :vhdlkw:`exit`/:vhdlkw:`next` statement) - returns ``None`` instead of translating when ``node`` is
     ``Null_Iir``, rather than requiring every call site to repeat that check.
 
     :param node: The IIR node representing an expression, or ``Null_Iir`` if absent.
-    :return:     The translated expression, or ``None``.
+    :returns:    The translated expression, or ``None``.
     """
     return None if node == nodes.Null_Iir else GetExpressionFromNode(node)
 
@@ -645,7 +723,7 @@ def GetModeViewElementsFromChainedNodes(nodeChain: Iir) -> Generator["ModeViewEl
     :class:`pyVHDLModel.Interface.ModeViewElement`.
 
     :param nodeChain: The IIR node representing the first mode view element in the chain.
-    :return:          A generator returning mode view elements.
+    :returns:         A generator returning mode view elements.
 
     .. note::
 
@@ -694,7 +772,7 @@ def GetGenericsFromChainedNodes(nodeChain: Iir) -> Generator[GenericInterfaceIte
     Translates a chain of generics (IIR nodes) to a sequence of :class:`pyVHDLModel.Interface.GenericInterfaceItem`.
 
     :param nodeChain: The IIR node representing the first generic in the chain.
-    :return:          A generator returning generic interface items.
+    :returns:         A generator returning generic interface items.
     """
     from pyGHDL.dom.InterfaceItem import (
         GenericTypeInterfaceItem,
@@ -757,7 +835,7 @@ def GetPortsFromChainedNodes(nodeChain: Iir) -> Generator[PortInterfaceItemMixin
     Translates a chain of ports (IIR nodes) to a sequence of :class:`pyVHDLModel.Interface.PortInterfaceItem`.
 
     :param nodeChain: The IIR node representing the first port in the chain.
-    :return:          A generator returning port interface items.
+    :returns:         A generator returning port interface items.
     """
     furtherIdentifiers = []
     port = nodeChain
@@ -807,7 +885,7 @@ def GetParameterFromChainedNodes(nodeChain: Iir) -> Generator[ParameterInterface
     Translates a chain of parameters (IIR nodes) to a sequence of :class:`pyVHDLModel.Interface.ParameterInterfaceItem`.
 
     :param nodeChain: The IIR node representing the first parameter in the chain.
-    :return:          A generator returning parameter interface items.
+    :returns:         A generator returning parameter interface items.
     """
     identifiers = []
     parameter = nodeChain
@@ -866,6 +944,18 @@ def GetParameterFromChainedNodes(nodeChain: Iir) -> Generator[ParameterInterface
 
 
 def GetMapAspect(mapAspect: Iir, cls: Type, entity: str) -> Generator[AssociationItem, None, None]:
+    """
+    Translates a generic, port or parameter map aspect to association items.
+
+    An association without a formal part is positional, so its formal is ``None``. An association to
+    :vhdlkw:`open` yields an :class:`~pyGHDL.dom.Name.OpenName` as the actual.
+
+    :param mapAspect:     The IIR node starting the association chain of the map aspect.
+    :param cls:           The association item class to instantiate, e.g. :class:`~pyGHDL.dom.Concurrent.PortAssociationItem`.
+    :param entity:        The kind of map aspect (:vhdlkw:`generic`, :vhdlkw:`port`, :vhdlkw:`parameter`). Used in exception messages.
+    :returns:             Generator yielding the translated association items, in source order.
+    :raises DOMException: If an association element is neither by expression nor open.
+    """
     for item in utils.chain_iter(mapAspect):
         kind = GetIirKindOfNode(item)
         if kind is nodes.Iir_Kind.Association_Element_By_Expression:
@@ -892,18 +982,48 @@ def GetMapAspect(mapAspect: Iir, cls: Type, entity: str) -> Generator[Associatio
 
 
 def GetGenericMapAspect(genericMapAspect: Iir) -> Generator[GenericAssociationItem, None, None]:
+    """
+    Translates a generic map aspect to generic association items.
+
+    :param genericMapAspect: The IIR node starting the generic map aspect's association chain.
+    :returns:                Generator yielding the translated generic associations, in source order.
+    """
     return GetMapAspect(genericMapAspect, GenericAssociationItem, "generic")
 
 
 def GetPortMapAspect(portMapAspect: Iir) -> Generator[PortAssociationItem, None, None]:
+    """
+    Translates a port map aspect to port association items.
+
+    :param portMapAspect: The IIR node starting the port map aspect's association chain.
+    :returns:             Generator yielding the translated port associations, in source order.
+    """
     return GetMapAspect(portMapAspect, PortAssociationItem, "port")
 
 
 def GetParameterMapAspect(parameterMapAspect: Iir) -> Generator[ParameterAssociationItem, None, None]:
+    """
+    Translates a subprogram call's parameter map to parameter association items.
+
+    :param parameterMapAspect: The IIR node starting the parameter map's association chain.
+    :returns:                  Generator yielding the translated parameter associations, in source order.
+    """
     return GetMapAspect(parameterMapAspect, ParameterAssociationItem, "parameter")
 
 
 def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> Generator[ModelEntity, None, None]:
+    """
+    Translates a chain of declarations to the matching :mod:`pyGHDL.dom` objects.
+
+    GHDL splits a declaration naming several identifiers (``signal a, b : bit;``) into one node per
+    identifier. They are collected here and yielded as a single object carrying all identifiers.
+
+    :param nodeChain:     The IIR node starting the chain of declarations.
+    :param entity:        The kind of declarative region the chain belongs to. Used in exception messages.
+    :param name:          The name of that declarative region. Used in exception messages.
+    :returns:             Generator yielding the translated declared items, in source order.
+    :raises DOMException: If a declaration's kind is not handled.
+    """
     furtherIdentifiers = []
     item = nodeChain
     lastKind = None
@@ -1071,6 +1191,15 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
 def GetConcurrentStatementsFromChainedNodes(
     nodeChain: Iir, entity: str, name: str
 ) -> Generator[ConcurrentStatement, None, None]:
+    """
+    Translates a chain of concurrent statements to the matching :mod:`pyGHDL.dom.Concurrent` objects.
+
+    :param nodeChain:     The IIR node starting the chain of concurrent statements.
+    :param entity:        The kind of statement region the chain belongs to. Used in exception messages.
+    :param name:          The name of that statement region. Used in exception messages.
+    :returns:             Generator yielding the translated statements, in source order.
+    :raises DOMException: If a statement's kind is not handled.
+    """
     for statement in utils.chain_iter(nodeChain):
         label = GetLabelOfNode(statement)
 
@@ -1135,6 +1264,15 @@ def GetConcurrentStatementsFromChainedNodes(
 def GetSequentialStatementsFromChainedNodes(
     nodeChain: Iir, entity: str, name: str
 ) -> Generator[SequentialStatement, None, None]:
+    """
+    Translates a chain of sequential statements to the matching :mod:`pyGHDL.dom.Sequential` objects.
+
+    :param nodeChain:     The IIR node starting the chain of sequential statements.
+    :param entity:        The kind of statement region the chain belongs to. Used in exception messages.
+    :param name:          The name of that statement region. Used in exception messages.
+    :returns:             Generator yielding the translated statements, in source order.
+    :raises DOMException: If a statement's kind is not handled.
+    """
     for statement in utils.chain_iter(nodeChain):
         label = GetLabelOfNode(statement)
 

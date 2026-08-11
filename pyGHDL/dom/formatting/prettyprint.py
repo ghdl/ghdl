@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module offers a formatter to render a design, document or design unit as an indented plain-text tree.
+"""
+
 from typing import List, Union
 
 from pyTooling.Common import getFullyQualifiedName
@@ -97,6 +101,9 @@ from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.PSL import DefaultClock
 
 StringBuffer = List[str]
+"""
+A list of already formatted lines, which the ``Format*`` methods append to and return.
+"""
 
 
 @export
@@ -110,12 +117,26 @@ class PrettyPrintException(GHDLBaseException):
 
 @export
 class PrettyPrint:
+    """
+    Renders a :mod:`pyGHDL.dom` design, document or design unit as an indented plain-text tree.
+
+    Each ``Format*`` method returns a list of lines and is given an indentation ``level``, so the
+    methods compose from a whole design down to the smallest model item.
+    """
+
     # _buffer: StringBuffer
     #
     # def __init__(self) -> None:
     #     self._buffer = []
 
     def CleanupDocumentationBlocks(self, documentationContent: str, level: int = 0):
+        """
+        Renders a documentation comment as its first line, indented to the given level.
+
+        :param documentationContent: The documentation comment, or ``None`` if the item has none.
+        :param level:                The indentation level, two spaces each.
+        :returns:                    The indented first line of the comment, or just the indentation.
+        """
         prefix = "  " * level
         if documentationContent is None:
             return prefix
@@ -124,6 +145,13 @@ class PrettyPrint:
         return f"{prefix}{documentationLines[0][2:].lstrip()}"
 
     def formatDesign(self, design: Design, level: int = 0) -> StringBuffer:
+        """
+        Renders a design's libraries and documents.
+
+        :param design: The design to render.
+        :param level:  The indentation level, two spaces each.
+        :returns:      The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
         buffer.append(f"{prefix}Libraries ({len(design.Libraries)}):")
@@ -140,6 +168,13 @@ class PrettyPrint:
         return buffer
 
     def formatLibrary(self, library: Library, level: int = 0) -> StringBuffer:
+        """
+        Renders a library's design units.
+
+        :param library: The library to render.
+        :param level:   The indentation level, two spaces each.
+        :returns:       The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
         buffer.append(f"{prefix}Contexts ({len(library.Contexts)}):")
@@ -163,6 +198,13 @@ class PrettyPrint:
         return buffer
 
     def formatDocument(self, document: Document, level: int = 0) -> StringBuffer:
+        """
+        Renders a document's design units.
+
+        :param document: The document to render.
+        :param level:    The indentation level, two spaces each.
+        :returns:        The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
         buffer.append(f"{prefix}Contexts ({len(document.Contexts)}):")
@@ -199,6 +241,13 @@ class PrettyPrint:
         return buffer
 
     def formatEntity(self, entity: Entity, level: int = 0) -> StringBuffer:
+        """
+        Renders an entity's generics, ports, declarations and statements.
+
+        :param entity: The entity to render.
+        :param level:  The indentation level, two spaces each.
+        :returns:      The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
         documentationFirstLine = self.CleanupDocumentationBlocks(entity.Documentation)
@@ -230,6 +279,13 @@ class PrettyPrint:
         return buffer
 
     def formatArchitecture(self, architecture: Architecture, level: int = 0) -> StringBuffer:
+        """
+        Renders an architecture's declarations and statements.
+
+        :param architecture: The architecture to render.
+        :param level:        The indentation level, two spaces each.
+        :returns:            The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
         documentationFirstLine = self.CleanupDocumentationBlocks(architecture.Documentation)
@@ -257,6 +313,13 @@ class PrettyPrint:
         return buffer
 
     def formatComponent(self, component: Component, level: int = 0) -> StringBuffer:
+        """
+        Renders a component's generics and ports.
+
+        :param component: The component to render.
+        :param level:     The indentation level, two spaces each.
+        :returns:         The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
         documentationFirstLine = self.CleanupDocumentationBlocks(component.Documentation)
@@ -273,6 +336,13 @@ class PrettyPrint:
         return buffer
 
     def formatPackage(self, package: Package, level: int = 0) -> StringBuffer:
+        """
+        Renders a package's generics and declarations.
+
+        :param package: The package to render.
+        :param level:   The indentation level, two spaces each.
+        :returns:       The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
         documentationFirstLine = self.CleanupDocumentationBlocks(package.Documentation)
@@ -290,6 +360,13 @@ class PrettyPrint:
         return buffer
 
     def formatPackageInstance(self, package: PackageInstantiation, level: int = 0) -> StringBuffer:
+        """
+        Renders a package instantiation's generic map.
+
+        :param package: The package instantiation to render.
+        :param level:   The indentation level, two spaces each.
+        :returns:       The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
         documentationFirstLine = self.CleanupDocumentationBlocks(package.Documentation)
@@ -303,6 +380,13 @@ class PrettyPrint:
         return buffer
 
     def formatPackageBody(self, packageBody: PackageBody, level: int = 0) -> StringBuffer:
+        """
+        Renders a package body's declarations.
+
+        :param packageBody: The package body to render.
+        :param level:       The indentation level, two spaces each.
+        :returns:           The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
         documentationFirstLine = self.CleanupDocumentationBlocks(packageBody.Documentation)
@@ -315,6 +399,13 @@ class PrettyPrint:
         return buffer
 
     def formatConfiguration(self, configuration: Configuration, level: int = 0) -> StringBuffer:
+        """
+        Renders a configuration.
+
+        :param configuration: The configuration to render.
+        :param level:         The indentation level, two spaces each.
+        :returns:             The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
         buffer.append(f"{prefix}- Name: {configuration.Identifier}")
@@ -322,6 +413,13 @@ class PrettyPrint:
         return buffer
 
     def formatContext(self, context: Context, level: int = 0) -> StringBuffer:
+        """
+        Renders a context's clauses.
+
+        :param context: The context to render.
+        :param level:   The indentation level, two spaces each.
+        :returns:       The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
         buffer.append(f"{prefix}- Name: {context.Identifier}")
@@ -331,6 +429,13 @@ class PrettyPrint:
     def formatGeneric(
         self, generic: Union[NamedEntityMixin, GenericInterfaceItemMixin], level: int = 0
     ) -> StringBuffer:
+        """
+        Renders a generic, dispatching on its kind.
+
+        :param generic: The generic interface item to render.
+        :param level:   The indentation level, two spaces each.
+        :returns:       The rendered lines.
+        """
         if isinstance(generic, GenericConstantInterfaceItem):
             return self.formatGenericConstant(generic, level)
         elif isinstance(generic, GenericTypeInterfaceItem):
@@ -341,6 +446,13 @@ class PrettyPrint:
             )
 
     def formatPort(self, port: Union[NamedEntityMixin, PortInterfaceItemMixin], level: int = 0) -> StringBuffer:
+        """
+        Renders a port, dispatching on its kind.
+
+        :param port:  The port interface item to render.
+        :param level: The indentation level, two spaces each.
+        :returns:     The rendered lines.
+        """
         if isinstance(port, PortSimpleSignalInterfaceItem):
             return self.formatPortSignal(port, level)
         elif isinstance(port, PortViewSignalInterfaceItem):
@@ -351,6 +463,13 @@ class PrettyPrint:
             )
 
     def formatGenericConstant(self, generic: GenericConstantInterfaceItem, level: int = 0) -> StringBuffer:
+        """
+        Renders a generic constant.
+
+        :param generic: The generic constant to render.
+        :param level:   The indentation level, two spaces each.
+        :returns:       The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
 
@@ -362,6 +481,13 @@ class PrettyPrint:
         return buffer
 
     def formatGenericType(self, generic: GenericConstantInterfaceItem, level: int = 0) -> StringBuffer:
+        """
+        Renders a generic type.
+
+        :param generic: The generic type to render.
+        :param level:   The indentation level, two spaces each.
+        :returns:       The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
 
@@ -370,6 +496,13 @@ class PrettyPrint:
         return buffer
 
     def formatPortSignal(self, port: PortSimpleSignalInterfaceItem, level: int = 0) -> StringBuffer:
+        """
+        Renders a port signal.
+
+        :param port:  The port signal to render.
+        :param level: The indentation level, two spaces each.
+        :returns:     The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
 
@@ -381,6 +514,13 @@ class PrettyPrint:
         return buffer
 
     def formatPortView(self, port: PortViewSignalInterfaceItem, level: int = 0) -> StringBuffer:
+        """
+        Renders a port declared with a mode view.
+
+        :param port:  The port mode view to render.
+        :param level: The indentation level, two spaces each.
+        :returns:     The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
 
@@ -390,6 +530,13 @@ class PrettyPrint:
         return buffer
 
     def formatDeclaredItems(self, item, level: int = 0) -> StringBuffer:
+        """
+        Renders the declared items of a declarative region.
+
+        :param item:  The declarative region to render.
+        :param level: The indentation level, two spaces each.
+        :returns:     The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
 
@@ -442,6 +589,12 @@ class PrettyPrint:
         return buffer
 
     def formatModeViewElement(self, element: ModeViewElement) -> str:
+        """
+        Renders a mode view element.
+
+        :param element: The mode view element to render.
+        :returns:       The rendered line.
+        """
         identifiers = ", ".join(element.Identifiers)
 
         if isinstance(element, SimpleModeViewElement):
@@ -452,6 +605,12 @@ class PrettyPrint:
         raise PrettyPrintException(f"Unhandled mode view element kind '{getFullyQualifiedName(element)}'.")
 
     def formatType(self, item: BaseType) -> str:
+        """
+        Renders an object's subtype indication.
+
+        :param item: The object to render.
+        :returns:    The rendered line.
+        """
         result = f"type {item.Identifier} is "
         if isinstance(item, IncompleteType):
             result += ""
@@ -479,6 +638,15 @@ class PrettyPrint:
         return result
 
     def formatSubtypeIndication(self, subtypeIndication, entity: str, name: str) -> str:
+        """
+        Renders a subtype indication.
+
+        :param subtypeIndication:     The subtype indication to render.
+        :param entity:                The kind of item the subtype indication belongs to. Used in exception messages.
+        :param name:                  The name of that item. Used in exception messages.
+        :returns:                     The rendered subtype indication.
+        :raises PrettyPrintException: If the subtype indication's kind is not handled.
+        """
         if isinstance(subtypeIndication, SimpleSubtypeSymbol):
             return f"{subtypeIndication.Name.Identifier}"
         elif isinstance(subtypeIndication, ConstrainedArraySubtypeSymbol):
@@ -494,9 +662,22 @@ class PrettyPrint:
             )
 
     def formatInitialValue(self, item: WithDefaultExpressionMixin) -> str:
+        """
+        Renders an object's default value, if it has one.
+
+        :param item: The object to render.
+        :returns:    The rendered line.
+        """
         return f" := {item.DefaultExpression}" if item.DefaultExpression is not None else ""
 
     def formatHierarchy(self, statement: ConcurrentStatement, level: int = 0) -> StringBuffer:
+        """
+        Renders a statement and the statements nested in it.
+
+        :param statement: The statement to render.
+        :param level:     The indentation level, two spaces each.
+        :returns:         The rendered lines.
+        """
         buffer = []
         prefix = "  " * level
 

@@ -32,6 +32,12 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
+"""
+Python binding for the Ada package ``Str_Table`` in *libghdl*.
+
+Holds the string literals found in the source code, addressed by a ``String8_Id``.
+"""
+
 from ctypes import c_char_p
 
 from pyTooling.Decorators import export
@@ -44,6 +50,13 @@ from pyGHDL.libghdl._decorator import BindToLibGHDL
 @export
 @BindToLibGHDL("str_table__string8_address")
 def _String8_Address(Id: String8Id) -> c_char_p:
+    """
+    Raw binding returning the address of the string table.
+
+    Use :func:`Get_String` instead, which reads a string out of it.
+
+    :returns: The address of the string table.
+    """
     """"""
     return ""  # pragma: no cover
 
@@ -55,7 +68,8 @@ def Get_String8_Ptr(Id: String8Id, Length: int) -> str:
     (using Append_String8) or a string8 is resized (using Resize_String8), an
     address previously returned is not valid anymore.
 
-    :param Id: String8Id for the string to query.
-    :return:   String8 as string.
+    :param Id:     String8Id for the string to query.
+    :param Length: The number of characters to read.
+    :returns:      String8 as string.
     """
     return _String8_Address(Id)[:Length].decode(ENCODING)

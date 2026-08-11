@@ -47,18 +47,31 @@ from pyGHDL.libghdl.vhdl import nodes
 class Position(metaclass=ExtendedType):
     """Represents the source code position of a IIR node in a source file."""
 
-    _filename: Path
-    _line: int
-    _column: int
+    _filename: Path  #: The source file this position refers to.
+    _line: int  #: The line number in the source file, starting at 1.
+    _column: int  #: The character offset within the line, starting at 0.
 
     def __init__(self, filename: Path, line: int, column: int) -> None:
+        """
+        Initializes a source code position.
+
+        :param filename: The source file this position refers to.
+        :param line:     The line number in the source file, starting at 1.
+        :param column:   The character offset within the line, starting at 0.
+        """
         self._filename = filename
         self._line = line
         self._column = column
 
     @classmethod
     def parse(cls, node: Iir) -> "Position":
-        """Return the source code position of a IIR node."""
+        """
+        Return the source code position of a IIR node.
+
+        :param node:        The IIR node to read the position of.
+        :returns:           The node's position in its source file.
+        :raises ValueError: If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
+        """
         if node == nodes.Null_Iir:
             raise ValueError("Position.parse(): Parameter 'node' must not be 'Null_iir'.")
 
@@ -74,7 +87,7 @@ class Position(metaclass=ExtendedType):
     @readonly
     def Filename(self) -> Path:
         """
-        Read-only property to access the filename this source code position referres to (:attr:`_filename`).
+        Read-only property to access the filename this source code position refers to (:attr:`_filename`).
 
         :returns: The source code position's filename.
         """
@@ -83,7 +96,7 @@ class Position(metaclass=ExtendedType):
     @readonly
     def Line(self) -> int:
         """
-        Read-only property to access the line number this source code position referres to (:attr:`_line`).
+        Read-only property to access the line number this source code position refers to (:attr:`_line`).
 
         :returns: The source code position's line.
         """
@@ -92,22 +105,41 @@ class Position(metaclass=ExtendedType):
     @readonly
     def Column(self) -> int:
         """
-        Read-only property to access the column this source code position referres to (:attr:`_column`).
+        Read-only property to access the column this source code position refers to (:attr:`_column`).
 
         :returns: The source code position's column.
         """
         return self._column
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """
+        Formats the source code position as ``<filename>:<line>:<column>``.
+
+        :returns: A string representation of this source code position.
+        """
         return f"{self._filename}:{self._line}:{self._column}"
 
 
 @export
 class DOMMixin(metaclass=ExtendedType, mixin=True):
-    _iirNode: Iir
-    _position: Position
+    """
+    Mixin adding the originating IIR node and its source code position to a :mod:`pyGHDL.dom` object.
+
+    Every class in :mod:`pyGHDL.dom` that mirrors a pyVHDLModel class inherits this mixin, so a model
+    object can always be traced back to the node in *libghdl*'s tree it was translated from.
+    """
+
+    _iirNode: Iir  #: The IIR node in *libghdl*'s tree this DOM object was translated from.
+    _position: Position  #: The IIR node's position in the source file, resolved on first access and then cached.
 
     def __init__(self, node: Iir) -> None:
+        """
+        Initializes the mixin with the IIR node a DOM object was translated from.
+
+        The source code position is not resolved here, but on first access of :attr:`Position`.
+
+        :param node: The IIR node in *libghdl*'s tree this DOM object was translated from.
+        """
         self._iirNode = node
         self._position = None
 

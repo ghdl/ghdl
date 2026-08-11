@@ -30,17 +30,15 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-
 """
 This module contains all DOM classes for VHDL's design units (:class:`context <Entity>`,
 :class:`architecture <Architecture>`, :class:`package <Package>`,
 :class:`package body <PackageBody>`, :class:`context <Context>` and
 :class:`configuration <Configuration>`.
 
-
 """
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Base import ExpressionUnion, Range
 from pyVHDLModel.Symbol import Symbol
@@ -55,35 +53,93 @@ from pyGHDL.dom import DOMMixin
 
 
 @export
+@InheritDocString(VHDLModel_SimpleAggregateElement, merge=True)
 class SimpleAggregateElement(VHDLModel_SimpleAggregateElement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.SimpleAggregateElement`.
+    """
+
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
+        """
+        Initializes a simple aggregate element.
+
+        :param node:       The IIR node this object was translated from.
+        :param expression: The expression this aggregate element supplies.
+        """
         super().__init__(expression)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_IndexedAggregateElement, merge=True)
 class IndexedAggregateElement(VHDLModel_IndexedAggregateElement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.IndexedAggregateElement`.
+    """
+
     def __init__(self, node: Iir, index: ExpressionUnion, expression: ExpressionUnion) -> None:
+        """
+        Initializes an aggregate element chosen by an index.
+
+        :param node:       The IIR node this object was translated from.
+        :param index:      The index selecting the element this value is assigned to.
+        :param expression: The expression this aggregate element supplies.
+        """
         super().__init__(index, expression)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_RangedAggregateElement, merge=True)
 class RangedAggregateElement(VHDLModel_RangedAggregateElement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.RangedAggregateElement`.
+    """
+
     def __init__(self, node: Iir, rng: Range, expression: ExpressionUnion) -> None:
+        """
+        Initializes an aggregate element chosen by a range.
+
+        :param node:       The IIR node this object was translated from.
+        :param rng:        The range selecting the elements this value is assigned to.
+        :param expression: The expression this aggregate element supplies.
+        """
         super().__init__(rng, expression)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_NamedAggregateElement, merge=True)
 class NamedAggregateElement(VHDLModel_NamedAggregateElement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.NamedAggregateElement`.
+    """
+
     def __init__(self, node: Iir, name: Symbol, expression: ExpressionUnion) -> None:
+        """
+        Initializes an aggregate element chosen by a name.
+
+        :param node:       The IIR node this object was translated from.
+        :param name:       Reference to the name selecting the element this value is assigned to.
+        :param expression: The expression this aggregate element supplies.
+        """
         super().__init__(name, expression)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_OthersAggregateElement, merge=True)
 class OthersAggregateElement(VHDLModel_OthersAggregateElement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.OthersAggregateElement`.
+    """
+
     def __init__(self, node: Iir, expression: ExpressionUnion) -> None:
+        """
+        Initializes an :vhdlkw:`others` aggregate element.
+
+        :param node:       The IIR node this object was translated from.
+        :param expression: The expression this aggregate element supplies.
+        """
         super().__init__(expression)
         DOMMixin.__init__(self, node)

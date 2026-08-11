@@ -30,9 +30,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived interface item classes from :mod:`pyVHDLModel.Interface`.
+"""
+
 from typing import List, Iterable
 
-from pyTooling.Decorators import export
+from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Base import Mode, ExpressionUnion
 from pyVHDLModel.Symbol import Symbol
@@ -63,7 +67,12 @@ from pyGHDL.dom.Symbol import ModeViewSymbol, SimpleSubtypeSymbol
 
 
 @export
+@InheritDocString(VHDLModel_GenericConstantInterfaceItem, merge=True)
 class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.GenericConstantInterfaceItem`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -73,11 +82,28 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
         defaultExpression: ExpressionUnion,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a constant in a generic clause.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param mode:              The interface item's mode.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, genericNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "GenericConstantInterfaceItem":
+        """
+        Translates the IIR node of the generic declaration to a :class:`GenericConstantInterfaceItem`.
+
+        :param genericNode:        The IIR node of the generic declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated generic declaration.
+        """
         name = GetNameOfNode(genericNode)
         documentation = GetDocumentationOfNode(genericNode)
         identifiers = [name]
@@ -92,13 +118,31 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
 
 
 @export
+@InheritDocString(VHDLModel_GenericTypeInterfaceItem, merge=True)
 class GenericTypeInterfaceItem(VHDLModel_GenericTypeInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.GenericTypeInterfaceItem`.
+    """
+
     def __init__(self, node: Iir, identifier: str, documentation: str = None) -> None:
+        """
+        Initializes a type in a generic clause.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The generic type's identifier.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, genericNode: Iir) -> "GenericTypeInterfaceItem":
+        """
+        Translates the IIR node of the generic declaration to a :class:`GenericTypeInterfaceItem`.
+
+        :param genericNode: The IIR node of the generic declaration.
+        :returns:           The translated generic declaration.
+        """
         name = GetNameOfNode(genericNode)
         documentation = GetDocumentationOfNode(genericNode)
 
@@ -106,13 +150,31 @@ class GenericTypeInterfaceItem(VHDLModel_GenericTypeInterfaceItem, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_GenericPackageInterfaceItem, merge=True)
 class GenericPackageInterfaceItem(VHDLModel_GenericPackageInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.GenericPackageInterfaceItem`.
+    """
+
     def __init__(self, node: Iir, name: str, documentation: str = None) -> None:
+        """
+        Initializes a package in a generic clause.
+
+        :param node:          The IIR node this object was translated from.
+        :param name:          The generic package's identifier.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(name, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, genericNode: Iir) -> "GenericPackageInterfaceItem":
+        """
+        Translates the IIR node of the generic declaration to a :class:`GenericPackageInterfaceItem`.
+
+        :param genericNode: The IIR node of the generic declaration.
+        :returns:           The translated generic declaration.
+        """
         name = GetNameOfNode(genericNode)
         documentation = GetDocumentationOfNode(genericNode)
 
@@ -120,13 +182,31 @@ class GenericPackageInterfaceItem(VHDLModel_GenericPackageInterfaceItem, DOMMixi
 
 
 @export
+@InheritDocString(VHDLModel_GenericProcedureInterfaceItem, merge=True)
 class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.GenericProcedureInterfaceItem`.
+    """
+
     def __init__(self, node: Iir, identifier: str, documentation: str = None) -> None:
+        """
+        Initializes a procedure in a generic clause.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The generic procedure's identifier.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, genericNode: Iir) -> "GenericProcedureInterfaceItem":
+        """
+        Translates the IIR node of the generic declaration to a :class:`GenericProcedureInterfaceItem`.
+
+        :param genericNode: The IIR node of the generic declaration.
+        :returns:           The translated generic declaration.
+        """
         name = GetNameOfNode(genericNode)
         documentation = GetDocumentationOfNode(genericNode)
 
@@ -134,13 +214,32 @@ class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOM
 
 
 @export
+@InheritDocString(VHDLModel_GenericFunctionInterfaceItem, merge=True)
 class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.GenericFunctionInterfaceItem`.
+    """
+
     def __init__(self, node: Iir, identifier: str, returnType: Symbol, documentation: str = None) -> None:
+        """
+        Initializes a function in a generic clause.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The generic function's identifier.
+        :param returnType:    Reference to the subtype of the function's return value.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, returnType, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, genericNode: Iir) -> "GenericFunctionInterfaceItem":
+        """
+        Translates the IIR node of the generic declaration to a :class:`GenericFunctionInterfaceItem`.
+
+        :param genericNode: The IIR node of the generic declaration.
+        :returns:           The translated generic declaration.
+        """
         name = GetNameOfNode(genericNode)
         documentation = GetDocumentationOfNode(genericNode)
 
@@ -152,7 +251,12 @@ class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMi
 
 
 @export
+@InheritDocString(VHDLModel_PortSimpleSignalInterfaceItem, merge=True)
 class PortSimpleSignalInterfaceItem(VHDLModel_PortSimpleSignalInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.PortSimpleSignalInterfaceItem`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -162,11 +266,28 @@ class PortSimpleSignalInterfaceItem(VHDLModel_PortSimpleSignalInterfaceItem, DOM
         defaultExpression: ExpressionUnion = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a port declared with a simple mode.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param mode:              The interface item's mode.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, portNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "PortSimpleSignalInterfaceItem":
+        """
+        Translates the IIR node of the port declaration to a :class:`PortSimpleSignalInterfaceItem`.
+
+        :param portNode:           The IIR node of the port declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated port declaration.
+        """
         name = GetNameOfNode(portNode)
         documentation = GetDocumentationOfNode(portNode)
         identifiers = [name]
@@ -204,11 +325,26 @@ class PortViewSignalInterfaceItem(VHDLModel_PortViewSignalInterfaceItem, DOMMixi
         modeViewIndication: ModeViewSymbol,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a port declared with a mode view (VHDL-2019).
+
+        :param node:               The IIR node this object was translated from.
+        :param identifiers:        A list of identifiers.
+        :param modeViewIndication: Reference to the mode view applied to this port.
+        :param documentation:      The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, modeViewIndication, documentation=documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, portNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "PortViewSignalInterfaceItem":
+        """
+        Translates the IIR node of the port declaration to a :class:`PortViewSignalInterfaceItem`.
+
+        :param portNode:           The IIR node of the port declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated port declaration.
+        """
         name = GetNameOfNode(portNode)
         documentation = GetDocumentationOfNode(portNode)
         identifiers = [name]
@@ -223,7 +359,12 @@ class PortViewSignalInterfaceItem(VHDLModel_PortViewSignalInterfaceItem, DOMMixi
 
 
 @export
+@InheritDocString(VHDLModel_ParameterConstantInterfaceItem, merge=True)
 class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.ParameterConstantInterfaceItem`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -233,11 +374,28 @@ class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem, D
         defaultExpression: ExpressionUnion = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a constant parameter of a subprogram.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param mode:              The interface item's mode.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterConstantInterfaceItem":
+        """
+        Translates the IIR node of the parameter declaration to a :class:`ParameterConstantInterfaceItem`.
+
+        :param parameterNode:      The IIR node of the parameter declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated parameter declaration.
+        """
         name = GetNameOfNode(parameterNode)
         documentation = GetDocumentationOfNode(parameterNode)
         identifiers = [name]
@@ -253,7 +411,12 @@ class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem, D
 
 
 @export
+@InheritDocString(VHDLModel_ParameterVariableInterfaceItem, merge=True)
 class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.ParameterVariableInterfaceItem`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -263,11 +426,28 @@ class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem, D
         defaultExpression: ExpressionUnion = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a variable parameter of a subprogram.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param mode:              The interface item's mode.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterVariableInterfaceItem":
+        """
+        Translates the IIR node of the parameter declaration to a :class:`ParameterVariableInterfaceItem`.
+
+        :param parameterNode:      The IIR node of the parameter declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated parameter declaration.
+        """
         name = GetNameOfNode(parameterNode)
         documentation = GetDocumentationOfNode(parameterNode)
         identifiers = [name]
@@ -283,7 +463,12 @@ class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem, D
 
 
 @export
+@InheritDocString(VHDLModel_ParameterSimpleSignalInterfaceItem, merge=True)
 class ParameterSimpleSignalInterfaceItem(VHDLModel_ParameterSimpleSignalInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.ParameterSimpleSignalInterfaceItem`.
+    """
+
     def __init__(
         self,
         node: Iir,
@@ -293,6 +478,16 @@ class ParameterSimpleSignalInterfaceItem(VHDLModel_ParameterSimpleSignalInterfac
         defaultExpression: ExpressionUnion = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a signal parameter declared with a simple mode.
+
+        :param node:              The IIR node this object was translated from.
+        :param identifiers:       A list of identifiers.
+        :param mode:              The interface item's mode.
+        :param subtype:           Reference to the object's subtype.
+        :param defaultExpression: The default value, or ``None`` if none was given.
+        :param documentation:     The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
 
@@ -300,6 +495,13 @@ class ParameterSimpleSignalInterfaceItem(VHDLModel_ParameterSimpleSignalInterfac
     def parse(
         cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None
     ) -> "ParameterSimpleSignalInterfaceItem":
+        """
+        Translates the IIR node of the parameter declaration to a :class:`ParameterSimpleSignalInterfaceItem`.
+
+        :param parameterNode:      The IIR node of the parameter declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated parameter declaration.
+        """
         name = GetNameOfNode(parameterNode)
         documentation = GetDocumentationOfNode(parameterNode)
         identifiers = [name]
@@ -335,11 +537,26 @@ class ParameterViewSignalInterfaceItem(VHDLModel_ParameterViewSignalInterfaceIte
         modeViewIndication: ModeViewSymbol,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a signal parameter declared with a mode view (VHDL-2019).
+
+        :param node:               The IIR node this object was translated from.
+        :param identifiers:        A list of identifiers.
+        :param modeViewIndication: Reference to the mode view applied to this parameter.
+        :param documentation:      The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, modeViewIndication, documentation=documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterViewSignalInterfaceItem":
+        """
+        Translates the IIR node of the parameter declaration to a :class:`ParameterViewSignalInterfaceItem`.
+
+        :param parameterNode:      The IIR node of the parameter declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated parameter declaration.
+        """
         name = GetNameOfNode(parameterNode)
         documentation = GetDocumentationOfNode(parameterNode)
         identifiers = [name]
@@ -354,13 +571,33 @@ class ParameterViewSignalInterfaceItem(VHDLModel_ParameterViewSignalInterfaceIte
 
 
 @export
+@InheritDocString(VHDLModel_ParameterFileInterfaceItem, merge=True)
 class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Interface.ParameterFileInterfaceItem`.
+    """
+
     def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
+        """
+        Initializes a file parameter of a subprogram.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifiers:   A list of identifiers.
+        :param subtype:       Reference to the object's subtype.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterFileInterfaceItem":
+        """
+        Translates the IIR node of the parameter declaration to a :class:`ParameterFileInterfaceItem`.
+
+        :param parameterNode:      The IIR node of the parameter declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated parameter declaration.
+        """
         name = GetNameOfNode(parameterNode)
         documentation = GetDocumentationOfNode(parameterNode)
         identifiers = [name]
@@ -384,11 +621,26 @@ class SimpleModeViewElement(VHDLModel_SimpleModeViewElement, DOMMixin):
     """
 
     def __init__(self, node: Iir, identifiers: List[str], mode: Mode, documentation: str = None) -> None:
+        """
+        Initializes a simple mode view element.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifiers:   A list of identifiers.
+        :param mode:          The element's mode.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, mode, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, elementNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "SimpleModeViewElement":
+        """
+        Translates the IIR node of the element declaration to a :class:`SimpleModeViewElement`.
+
+        :param elementNode:        The IIR node of the element declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated element declaration.
+        """
         name = GetNameOfNode(elementNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
@@ -414,11 +666,26 @@ class CompositeModeViewElement(VHDLModel_CompositeModeViewElement, DOMMixin):
     def __init__(
         self, node: Iir, identifiers: List[str], modeViewName: ModeViewSymbol, documentation: str = None
     ) -> None:
+        """
+        Initializes a composite mode view element.
+
+        :param node:          The IIR node this object was translated from.
+        :param identifiers:   A list of identifiers.
+        :param modeViewName:  Reference to the mode view applied to this element.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifiers, modeViewName, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, elementNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "CompositeModeViewElement":
+        """
+        Translates the IIR node of the element declaration to a :class:`CompositeModeViewElement`.
+
+        :param elementNode:        The IIR node of the element declaration.
+        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :returns:                  The translated element declaration.
+        """
         name = GetNameOfNode(elementNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
@@ -452,11 +719,26 @@ class ModeViewDeclaration(VHDLModel_ModeViewDeclaration, DOMMixin):
         elements: List = None,
         documentation: str = None,
     ) -> None:
+        """
+        Initializes a mode view declaration (VHDL-2019).
+
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The mode view's identifier.
+        :param subtype:       Reference to the subtype this mode view applies to.
+        :param elements:      List of all mode view elements, in declaration order.
+        :param documentation: The documentation comment associated with this declaration.
+        """
         super().__init__(identifier, subtype, elements, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, modeViewNode: Iir) -> "ModeViewDeclaration":
+        """
+        Translates the IIR node of the mode view declaration to a :class:`ModeViewDeclaration`.
+
+        :param modeViewNode: The IIR node of the mode view declaration.
+        :returns:            The translated mode view declaration.
+        """
         from pyGHDL.dom._Translate import GetModeViewElementsFromChainedNodes
 
         name = GetNameOfNode(modeViewNode)

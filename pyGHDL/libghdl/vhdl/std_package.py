@@ -31,6 +31,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Python binding for the Ada package ``Vhdl.Std_Package`` in *libghdl*.
+
+The nodes of the implicitly declared ``std.standard`` package, so the analyzer can refer to ``bit``, ``boolean`` and
+the other predefined types.
+"""
 
 from ctypes import c_int32
 

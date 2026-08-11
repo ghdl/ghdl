@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+This module implements derived range classes from :mod:`pyVHDLModel.Base`.
+"""
+
 from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Base import Direction, ExpressionUnion
@@ -42,18 +46,40 @@ from pyGHDL.dom import DOMMixin
 
 
 @export
+@InheritDocString(VHDLModel_SimpleRange, merge=True)
 class SimpleRange(VHDLModel_SimpleRange, DOMMixin):
-    @InheritDocString(VHDLModel_SimpleRange)
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Base.SimpleRange`.
+    """
+
     def __init__(
         self, node: Iir, leftBound: ExpressionUnion, rightBound: ExpressionUnion, direction: Direction
     ) -> None:
+        """
+        Initialize a simple range.
+
+        :param node:       The IIR node this object was translated from.
+        :param leftBound:  The range's left bound.
+        :param rightBound: The range's right bound.
+        :param direction:  The range's direction (:vhdlkw:`to` or :vhdlkw:`downto`).
+        """
         super().__init__(leftBound, rightBound, direction)
         DOMMixin.__init__(self, node)
 
 
 @export
+@InheritDocString(VHDLModel_RangeFromName, merge=True)
 class RangeFromName(VHDLModel_RangeFromName, DOMMixin):
-    @InheritDocString(VHDLModel_RangeFromName)
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Base.RangeFromName`.
+    """
+
     def __init__(self, node: Iir, symbol: Symbol) -> None:
+        """
+        Initialize a range denoted by a name.
+
+        :param node:   The IIR node this object was translated from.
+        :param symbol: The symbol referencing the range attribute or discrete subtype.
+        """
         super().__init__(symbol)
         DOMMixin.__init__(self, node)
