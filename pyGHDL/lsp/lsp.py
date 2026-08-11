@@ -61,7 +61,6 @@ class LSPConn:
 
     Messages are framed with a ``Content-Length`` header, which is what distinguishes this from a plain JSON
     stream: the reader has to consume the header to know how many bytes the body has.
-
     """
 
     def __init__(self, reader, writer):
@@ -170,7 +169,6 @@ class LanguageProtocolServer(object):
 
     It decodes a message from the connection, dispatches it to the handler named by its ``method`` on the server
     object it was given, and writes back a response or an error. Requests are answered in the order they arrive.
-
     """
 
     def __init__(self, handler, conn):

@@ -51,9 +51,8 @@ class VhdlLanguageServer(object):
     The VHDL side of the language server.
 
     Each ``lsp_*`` method implements one Language Server Protocol request, and
-    :class:`~pyGHDL.lsp.lsp.LanguageProtocolServer` dispatches to it by name. The answers come from the:
-    :class:`~pyGHDL.lsp.workspace.Workspace`, which holds the analyzed sources.:
-
+    :class:`~pyGHDL.lsp.lsp.LanguageProtocolServer` dispatches to it by name. The answers come from the
+    :class:`~pyGHDL.lsp.workspace.Workspace`, which holds the analyzed sources.
     """
 
     def __init__(self):
