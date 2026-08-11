@@ -65,7 +65,7 @@ _vests () {
   ( # Use a subshell, so old working directory can be properly restored. pushd/popd are too noisy.
     cd vests
 
-    startTime=$(date +%s%N)
+    startTime=$(now_nanoseconds)
 
     # 'set -e' is active, so the exit code has to be read from a condition.
     if ./testsuite.sh > vests.log 2>&1; then
@@ -74,7 +74,7 @@ _vests () {
       exitCode=$?
     fi
 
-    stopTime=$(date +%s%N)
+    stopTime=$(now_nanoseconds)
     elapsedTime=$(elapsed_seconds ${startTime} ${stopTime})
 
     # The result is written where the merge step looks for it: one '*.testresult' file inside the suite's
@@ -131,8 +131,10 @@ cd $(dirname "$0")
 
 # The shared helpers live next to this script.
 . ./lib.sh
-# Remove result files from previous runs, so a stale report is never mistaken for this run's.
-rm -f *.testresults *.testresults.xml *.failures testsuites.xml
+# Remove result files from previous runs, so a stale report is never mistaken for this run's. The per-testcase
+# snippets live in the suite directories.
+rm -f *.testresults *.testresults.xml testsuites.xml
+rm -f */*.testresult */*.failures
 rm -f test_ok
 
 failures=""
@@ -230,8 +232,8 @@ run_testsuite() {
   esac
 }
 
-globalTimestamp="$(date +"%Y-%m-%dT%H:%M:%S%:z")"
-totalStartTime=$(date +%s%N)
+globalTimestamp="$(now_timestamp)"
+totalStartTime=$(now_nanoseconds)
 totalTestCount=0
 totalFailedCount=0
 totalErroredCount=0
@@ -243,8 +245,8 @@ hostName="$(hostname 2> /dev/null || echo "")"
 # Each testsuite might run testcases in parallel.
 reportedTestsuites=""
 for testsuite in $testsuites; do
-  timestamp="$(date +"%Y-%m-%dT%H:%M:%S%:z")"
-  startTime=$(date +%s%N)
+  timestamp="$(now_timestamp)"
+  startTime=$(now_nanoseconds)
 
   # Run a testsuite. A failing suite must not end this script: the report is written below, and a run that
   # failed is the one whose report is worth having.
@@ -257,7 +259,7 @@ for testsuite in $testsuites; do
     overallExitCode=1
   fi
 
-  stopTime=$(date +%s%N)
+  stopTime=$(now_nanoseconds)
   elapsedTime=$(elapsed_seconds ${startTime} ${stopTime})
 
   # Not every testsuite reports testcases. 'pyunit' writes its own report, and 'ghdlversion' and 'ghdlhelp'
@@ -287,9 +289,13 @@ for testsuite in $testsuites; do
                                   > "${testsuite}.testresults.xml"
   cat "${testsuite}.testresults" >> "${testsuite}.testresults.xml"
   printf '  </testsuite>\n'      >> "${testsuite}.testresults.xml"
+
+  # The snippets have been merged, so they are of no further use. A full run writes one per testcase - over a
+  # thousand of them - and leaving them behind means the next run's glob and any artifact upload pick them up.
+  rm -f ${testsuite}/*.testresult "${testsuite}/${testsuite}.failures" "${testsuite}.testresults"
 done
 
-totalStopTime=$(date +%s%N)
+totalStopTime=$(now_nanoseconds)
 totalElapsedTime=$(elapsed_seconds ${totalStartTime} ${totalStopTime})
 
 # Create final testsuites XML file
