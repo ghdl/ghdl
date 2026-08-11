@@ -33,9 +33,13 @@
 """
 Implementation of GHDL's language server.
 
-The package is layered: :mod:`~pyGHDL.lsp.lsp` speaks the Language Server Protocol over stdin and stdout,
-:mod:`~pyGHDL.lsp.vhdl_ls` implements the VHDL-specific requests on top of it, and
-:mod:`~pyGHDL.lsp.workspace` and :mod:`~pyGHDL.lsp.document` hold the analyzed sources the requests are answered from.
+The package is layered, from the wire upwards:
+
+1. :mod:`pyGHDL.lsp.lsp` speaks the Language Server Protocol over stdin and stdout.
+2. :mod:`pyGHDL.lsp.vhdl_ls` implements the VHDL-specific requests on top of it.
+3. :mod:`pyGHDL.lsp.workspace` and :mod:`pyGHDL.lsp.document` hold the analyzed sources the requests are answered
+   from.
+
 The entry point is :mod:`pyGHDL.cli.lsp`.
 """
 
