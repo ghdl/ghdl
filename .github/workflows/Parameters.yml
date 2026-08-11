@@ -388,9 +388,9 @@ jobs:
           fi
 
           # Submodules
-          if [[ -f .gitsubmodules ]]; then
+          git_modules_file=.gitmodules   # $(git rev-parse --show-toplevel)/.gitmodules
+          if [[ -f "${git_modules_file}" ]]; then
             has_submodules="true"
-            git_modules_file=.gitmodules   # $(git rev-parse --show-toplevel)/.gitmodules
             git_submodule_count="$(grep -Po '(?<=\[submodule \")(.*)(?=\"\])' "${git_modules_file}" | wc -l)"
             git_submodule_names="$(grep -Po '(?<=\[submodule \")(.*)(?=\"\])' "${git_modules_file}" | paste -sd ':' -)"
             git_submodule_paths="$(git config --file "${git_modules_file}" --null --name-only --get-regexp '\.path$' | xargs -0 -n1 git config --file "${git_modules_file}" --get | paste -sd ':' -)"
@@ -422,7 +422,7 @@ jobs:
 
       - name: 🔁 Find merged PullRequest from second parent of current SHA (${{ github.sha }})
         id: FindPullRequest
-        if: steps.Classify.outputs.is_merge_commit == 'true'
+        if: steps.Classify.outputs.is_release_commit == 'true'
         run: |
           set +e
 
@@ -435,8 +435,8 @@ jobs:
           export GH_TOKEN=${{ github.token }}
 
           printf "Read second parent of current SHA (%s) ... " "${{ github.ref }}"
-          SECOND_PARENT_SHA=$(git rev-parse ${{ github.ref }}^2)
-          if [[ $? -ne 0 || "{SECOND_PARENT_SHA}" == "" ]]; then
+          SECOND_PARENT_SHA=$(git rev-parse ${{ github.ref }}^2 2> /dev/null)
+          if [[ $? -ne 0 || "${SECOND_PARENT_SHA}" == "" ]]; then
             printf "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}\n"
             printf "${ANSI_LIGHT_RED}Couldn't read second parent (father) of '%s'.${ANSI_NOCOLOR}\n" "${{ github.ref }}^2"
             printf "::error title=GitCommitHistoryError::Couldn't read second parent (father) of '%s'. -> %s\n" "${{ github.ref }}^2" "${SECOND_PARENT_SHA}"
@@ -445,20 +445,51 @@ jobs:
             printf "${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}\n"
           fi
 
-          printf "Search Pull Request to '%s' and branch containing SHA %s ... " "${{ inputs.release_branch }}" "${SECOND_PARENT_SHA}"
-          PULL_REQUESTS=$(gh pr list --base "${{ inputs.release_branch }}" --search "${SECOND_PARENT_SHA}" --state "merged" --json "title,number,mergedBy,mergedAt")
-          if [[ $? -ne 0 || "${PULL_REQUESTS}" == "[]" ]]; then
-            printf "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}\n"
-            printf "${ANSI_LIGHT_RED}Couldn't find a merged Pull Request to '%s'. -> %s${ANSI_NOCOLOR}\n" "${{ inputs.release_branch }}" "${PULL_REQUESTS}"
-            printf "::error title=PullRequest::Couldn't find a merged Pull Request to '%s'. -> %s\n" "${{ inputs.release_branch }}" "${PULL_REQUESTS}"
-            exit 1
-          else
-            printf "${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}\n"
+          PR_TITLE=""
+          PR_NUMBER=""
+          PR_MERGED_BY=""
+          PR_MERGED_AT=""
 
-            PR_TITLE="$(    printf "%s\n" "${PULL_REQUESTS}" | jq --raw-output ".[0].title")"
-            PR_NUMBER="$(   printf "%s\n" "${PULL_REQUESTS}" | jq --raw-output ".[0].number")"
-            PR_MERGED_BY="$(printf "%s\n" "${PULL_REQUESTS}" | jq --raw-output ".[0].mergedBy.login")"
-            PR_MERGED_AT="$(printf "%s\n" "${PULL_REQUESTS}" | jq --raw-output ".[0].mergedAt")"
+          printf "Search Pull Request to '%s' and branch containing SHA %s ... " "${{ inputs.release_branch }}" "${SECOND_PARENT_SHA}"
+          PULL_REQUESTS=$(gh pr list --base "${{ inputs.release_branch }}" --search "${SECOND_PARENT_SHA}" --state "merged" --json "title,number,headRefOid,mergedBy,mergedAt")
+          if [[ $? -ne 0 ]]; then
+            printf "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}\n"
+            printf "${ANSI_LIGHT_RED}Couldn't search Pull Requests to '%s'. -> %s${ANSI_NOCOLOR}\n" "${{ inputs.release_branch }}" "${PULL_REQUESTS}"
+            printf "::error title=PullRequest::Couldn't search Pull Requests to '%s'. -> %s\n" "${{ inputs.release_branch }}" "${PULL_REQUESTS}"
+            exit 1
+          fi
+          printf "${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}\n"
+
+          # The search lists every Pull Request *containing* that commit, so it can report more than one - for example
+          # an older Pull Request built from an ancestor. The second parent (father) of a merge commit is the head
+          # commit of the merged branch, so a Pull Request whose 'headRefOid' equals it is the one that created this
+          # merge commit. Newest first, in case a Pull Request was closed and redone from the same branch.
+          MATCHES=$(printf "%s\n" "${PULL_REQUESTS}" | jq --arg sha "${SECOND_PARENT_SHA}" '[.[] | select(.headRefOid == $sha)] | sort_by(.mergedAt) | reverse')
+          MATCH_COUNT=$(printf "%s\n" "${MATCHES}" | jq 'length')
+
+          printf "Select Pull Request with head commit %s ... " "${SECOND_PARENT_SHA}"
+          if [[ "${MATCH_COUNT}" -eq 0 ]]; then
+            # Not an error here: a merge commit can be created without a Pull Request at all - a branch merged locally,
+            # or a merge that came in through another forge. Such a commit simply carries no Pull Request metadata.
+            printf "${ANSI_LIGHT_YELLOW}[SKIPPED]${ANSI_NOCOLOR}\n"
+            printf "${ANSI_LIGHT_YELLOW}No merged Pull Request to '%s' has head commit '%s'.${ANSI_NOCOLOR}\n" "${{ inputs.release_branch }}" "${SECOND_PARENT_SHA}"
+            if [[ "$(printf "%s\n" "${PULL_REQUESTS}" | jq 'length')" -gt 0 ]]; then
+              printf "${ANSI_LIGHT_YELLOW}Candidates returned by the search: %s${ANSI_NOCOLOR}\n" "$(printf "%s\n" "${PULL_REQUESTS}" | jq --raw-output '[.[] | "#\(.number) (\(.headRefOid[0:7]))"] | join(", ")')"
+            fi
+          else
+            if [[ "${MATCH_COUNT}" -gt 1 ]]; then
+              # Rare, but possible: a Pull Request was closed and recreated from the same branch, so both share a head
+              # commit. The most recently merged one describes this merge.
+              printf "${ANSI_LIGHT_YELLOW}[AMBIGUOUS]${ANSI_NOCOLOR}\n"
+              printf "${ANSI_LIGHT_YELLOW}%s Pull Requests share head commit '%s': %s. Using the most recently merged one.${ANSI_NOCOLOR}\n" "${MATCH_COUNT}" "${SECOND_PARENT_SHA}" "$(printf "%s\n" "${MATCHES}" | jq --raw-output '[.[] | "#\(.number)"] | join(", ")')"
+            else
+              printf "${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}\n"
+            fi
+
+            PR_TITLE="$(    printf "%s\n" "${MATCHES}" | jq --raw-output ".[0].title")"
+            PR_NUMBER="$(   printf "%s\n" "${MATCHES}" | jq --raw-output ".[0].number")"
+            PR_MERGED_BY="$(printf "%s\n" "${MATCHES}" | jq --raw-output ".[0].mergedBy.login")"
+            PR_MERGED_AT="$(printf "%s\n" "${MATCHES}" | jq --raw-output ".[0].mergedAt")"
 
             printf "${ANSI_LIGHT_BLUE}Found Pull Request:${ANSI_NOCOLOR}\n"
             printf "  %s\n" "Title:    ${PR_TITLE}"
@@ -467,17 +498,22 @@ jobs:
             printf "  %s\n" "MergedAt: ${PR_MERGED_AT} ($(date -d"${PR_MERGED_AT}" '+%d.%m.%Y - %H:%M:%S'))"
           fi
 
+          # Every merge into 'master' is classified a release commit, because this repository develops on one branch
+          # and 'main_branch' and 'release_branch' are both 'master'. The title check therefore decides whether a merge
+          # is a release: it is not an error when an ordinary Pull Request title doesn't match.
           RELEASE_TAG_PATTERN='^${{ inputs.release_tag_pattern }}$'
-          printf "Check Pull Request title against regexp '%s' ... " "${RELEASE_TAG_PATTERN}"
-          if [[ "${PR_TITLE}" =~ $RELEASE_TAG_PATTERN ]]; then
-            printf "${ANSI_LIGHT_GREEN}[OK]${ANSI_NOCOLOR}\n"
-            RELEASE_VERSION="${PR_TITLE}"
+          RELEASE_VERSION=""
+          if [[ "${PR_TITLE}" == "" ]]; then
+            printf "Check Pull Request title against regexp '%s' ... ${ANSI_LIGHT_YELLOW}[SKIPPED]${ANSI_NOCOLOR}\n" "${RELEASE_TAG_PATTERN}"
           else
-            RELEASE_VERSION=""
-            printf "${ANSI_LIGHT_RED}[FAILED]${ANSI_NOCOLOR}\n"
-            printf "${ANSI_LIGHT_RED}Pull Request title '%s' doesn't conform to regexp '%s'.${ANSI_NOCOLOR}\n" "${PR_TITLE}" "${RELEASE_TAG_PATTERN}"
-            #printf "::error title=RexExpCheck::Pull Request title '%s' doesn't conform to regexp '%s'.\n" "${PR_TITLE}" "${RELEASE_TAG_PATTERN}"
-            #exit 1
+            printf "Check Pull Request title against regexp '%s' ... " "${RELEASE_TAG_PATTERN}"
+            if [[ "${PR_TITLE}" =~ $RELEASE_TAG_PATTERN ]]; then
+              printf "${ANSI_LIGHT_GREEN}[RELEASE]${ANSI_NOCOLOR}\n"
+              RELEASE_VERSION="${PR_TITLE}"
+            else
+              printf "${ANSI_LIGHT_YELLOW}[NO RELEASE]${ANSI_NOCOLOR}\n"
+              printf "${ANSI_LIGHT_YELLOW}Pull Request title '%s' doesn't conform to regexp '%s', so this merge isn't a release.${ANSI_NOCOLOR}\n" "${PR_TITLE}" "${RELEASE_TAG_PATTERN}"
+            fi
           fi
 
           printf "Release tag: ${ANSI_LIGHT_GREEN}%s${ANSI_NOCOLOR}\n" "${RELEASE_VERSION}"

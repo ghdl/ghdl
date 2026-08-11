@@ -4,6 +4,10 @@
 .. include:: <isonum.txt>
 .. include:: <mmlalias.txt>
 
+.. # workaround for Python 3.11 not supporting backslash-space as escape sequence in doc-strings
+.. |degree| unicode:: U+00B0
+   :trim:
+
 .. # define a hard line break for HTML
 .. |br| raw:: html
 

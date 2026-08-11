@@ -30,7 +30,7 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import Union
+from typing import Union, Optional as Nullable
 
 from pyTooling.Decorators import export
 from pyTooling.Warning import WarningCollector
@@ -147,29 +147,29 @@ class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
 
 @export
 class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str) -> None:
-        super().__init__(value)
+    def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
+        super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
 
 
 @export
 class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str) -> None:
-        super().__init__(value)
+    def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
+        super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
 
 
 @export
 class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str) -> None:
-        super().__init__(value)
+    def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
+        super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
 
 
 @export
 class HexadecimalBitStringLiteral(VHDLModel_HexadecimalBitStringLiteral, DOMMixin):
-    def __init__(self, node: Iir, value: str) -> None:
-        super().__init__(value)
+    def __init__(self, node: Iir, value: str, length: Nullable[int] = None, isSigned: Nullable[bool] = None) -> None:
+        super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
 
 
@@ -188,28 +188,26 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
         HexadecimalBitStringLiteral,
     ]:
         base = nodes.Get_Bit_String_Base(literalNode)
-        signed = nodes.Get_Has_Signed(literalNode) if nodes.Get_Has_Sign(literalNode) else None
+        isSigned = nodes.Get_Has_Signed(literalNode) if nodes.Get_Has_Sign(literalNode) else None
         length = nodes.Get_String_Length(literalNode) if nodes.Get_Has_Length(literalNode) else None
 
         # sourceIdentifier = utils.Get_Source_Identifier(literalNode)
         # test = name_table.Get_Name_Ptr(sourceIdentifier)
 
-        # TODO: add support for signed and unsigned BitStringLiteral
-        # TODO: add support for BitStringLiteral lengths
         if base is nodes.NumberBaseType.Base_None:
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return cls(literalNode, value)
         elif base is nodes.NumberBaseType.Base_2:
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
-            return BinaryBitStringLiteral(literalNode, value)
+            return BinaryBitStringLiteral(literalNode, value, length, isSigned)
         elif base is nodes.NumberBaseType.Base_8:
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
-            return OctalBitStringLiteral(literalNode, value)
+            return OctalBitStringLiteral(literalNode, value, length, isSigned)
         elif base is nodes.NumberBaseType.Base_10:
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
-            return DecimalBitStringLiteral(literalNode, value)
+            return DecimalBitStringLiteral(literalNode, value, length, isSigned)
         elif base is nodes.NumberBaseType.Base_16:
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
-            return HexadecimalBitStringLiteral(literalNode, value)
+            return HexadecimalBitStringLiteral(literalNode, value, length, isSigned)
         else:
             WarningCollector.Raise(NotImplementedError("Bit String Literal not supported yet"))

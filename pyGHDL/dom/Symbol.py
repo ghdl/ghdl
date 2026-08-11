@@ -40,8 +40,15 @@ from pyGHDL.dom.Name import SimpleName
 from pyTooling.Decorators import export, InheritDocString
 
 from pyVHDLModel.Name import Name
+from pyVHDLModel.Symbol import Symbol as VHDLModel_Symbol
+from pyVHDLModel.Symbol import PossibleReference
 from pyVHDLModel.Symbol import LibraryReferenceSymbol as VHDLModel_LibraryReferenceSymbol
 from pyVHDLModel.Symbol import PackageReferenceSymbol as VHDLModel_PackageReferenceSymbol
+from pyVHDLModel.Symbol import ModeViewSymbol as VHDLModel_ModeViewSymbol
+from pyVHDLModel.Symbol import SubprogramReferenceSymbol as VHDLModel_SubprogramReferenceSymbol
+from pyVHDLModel.Symbol import ConfigurationSymbol as VHDLModel_ConfigurationSymbol
+from pyVHDLModel.Symbol import SignalSymbol as VHDLModel_SignalSymbol
+from pyVHDLModel.Symbol import VariableSymbol as VHDLModel_VariableSymbol
 from pyVHDLModel.Symbol import PackageMemberReferenceSymbol as VHDLModel_PackageMemberReferenceSymbol
 from pyVHDLModel.Symbol import AllPackageMembersReferenceSymbol as VHDLModel_AllPackageMembersReferenceSymbol
 from pyVHDLModel.Symbol import ContextReferenceSymbol as VHDLModel_ContextReferenceSymbol
@@ -56,12 +63,29 @@ from pyVHDLModel.Symbol import ConstrainedScalarSubtypeSymbol as VHDLModel_Const
 from pyVHDLModel.Symbol import ConstrainedArraySubtypeSymbol as VHDLModel_ConstrainedArraySubtypeSymbol
 from pyVHDLModel.Symbol import ConstrainedRecordSubtypeSymbol as VHDLModel_ConstrainedRecordSubtypeSymbol
 from pyVHDLModel.Symbol import RecordElementSymbol as VHDLModel_RecordElementSymbol
+from pyVHDLModel.Symbol import RangeAttributeSymbol as VHDLModel_RangeAttributeSymbol
 from pyVHDLModel.Symbol import SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol
 from pyVHDLModel.Symbol import IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol
 
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
-from pyGHDL.dom.Range import Range
+from pyVHDLModel.Base import Range
+
+
+@export
+class Symbol(VHDLModel_Symbol, DOMMixin):
+    """
+    Generic reference (name) to a language entity where no single, fixed
+    :class:`~pyVHDLModel.Symbol.PossibleReference` value fits - e.g. an alias's target, which may or may not
+    be restricted to an object depending on whether a subtype indication is present.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.Symbol`.
+    """
+
+    @InheritDocString(VHDLModel_Symbol)
+    def __init__(self, identifierNode: Iir, name: Name, possibleReferences: PossibleReference) -> None:
+        super().__init__(name, possibleReferences)
+        DOMMixin.__init__(self, identifierNode)
 
 
 @export
@@ -101,6 +125,114 @@ class PackageReferenceSymbol(VHDLModel_PackageReferenceSymbol, DOMMixin):
     """
 
     @InheritDocString(VHDLModel_PackageReferenceSymbol)
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
+        super().__init__(name)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class ModeViewSymbol(VHDLModel_ModeViewSymbol, DOMMixin):
+    """
+    Represents a reference (name) to a mode view declaration.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.ModeViewSymbol`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          port (p : view MyView);
+          --          ^^^^^^
+    """
+
+    @InheritDocString(VHDLModel_ModeViewSymbol)
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
+        super().__init__(name)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class SubprogramReferenceSymbol(VHDLModel_SubprogramReferenceSymbol, DOMMixin):
+    """
+    Represents a reference (name) to a subprogram (procedure or function).
+
+    This class implements a :mod:`pyGHDL.dom` object derived from
+    :class:`pyVHDLModel.Symbol.SubprogramReferenceSymbol`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          function f is new g generic map (...);
+          --                  ^
+    """
+
+    @InheritDocString(VHDLModel_SubprogramReferenceSymbol)
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
+        super().__init__(name)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class ConfigurationSymbol(VHDLModel_ConfigurationSymbol, DOMMixin):
+    """
+    Represents a reference (name) to a configuration declaration, e.g. in an entity aspect of a
+    binding indication.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from
+    :class:`pyVHDLModel.Symbol.ConfigurationSymbol`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          for U1 : comp use configuration work.cfg;
+          --                              ^^^^^^^
+    """
+
+    @InheritDocString(VHDLModel_ConfigurationSymbol)
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
+        super().__init__(name)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class SignalSymbol(VHDLModel_SignalSymbol, DOMMixin):
+    """
+    Represents a reference (name) to a signal, e.g. the target of a signal assignment.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.SignalSymbol`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          s <= '1';
+          --^
+    """
+
+    @InheritDocString(VHDLModel_SignalSymbol)
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
+        super().__init__(name)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+class VariableSymbol(VHDLModel_VariableSymbol, DOMMixin):
+    """
+    Represents a reference (name) to a variable, e.g. the target of a variable assignment.
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.VariableSymbol`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          v := '1';
+          --^
+    """
+
+    @InheritDocString(VHDLModel_VariableSymbol)
     def __init__(self, identifierNode: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
@@ -300,19 +432,15 @@ class SimpleSubtypeSymbol(VHDLModel_SimpleSubtypeSymbol, DOMMixin):
 @export
 class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, DOMMixin):
     @InheritDocString(VHDLModel_ConstrainedScalarSubtypeSymbol)
-    def __init__(self, node: Iir, subtypeName: Name, rng: Range = None) -> None:
-        super().__init__(subtypeName)  # , rng)  # XXX: hacked
+    def __init__(self, node: Iir, subtypeName: Name, rng: Range) -> None:
+        super().__init__(subtypeName, rng)
         DOMMixin.__init__(self, node)
-
-    @classmethod
-    def parse(cls, node: Iir):
-        pass
 
 
 @export
 class ConstrainedArraySubtypeSymbol(VHDLModel_ConstrainedArraySubtypeSymbol, DOMMixin):
     @InheritDocString(VHDLModel_ConstrainedArraySubtypeSymbol)
-    def __init__(self, node: Iir, subtypeName: Name, constraints: List = None) -> None:
+    def __init__(self, node: Iir, subtypeName: Name, constraints: List) -> None:
         super().__init__(subtypeName, constraints)
         DOMMixin.__init__(self, node)
 
@@ -324,7 +452,7 @@ class ConstrainedArraySubtypeSymbol(VHDLModel_ConstrainedArraySubtypeSymbol, DOM
 @export
 class ConstrainedRecordSubtypeSymbol(VHDLModel_ConstrainedRecordSubtypeSymbol, DOMMixin):
     @InheritDocString(VHDLModel_ConstrainedRecordSubtypeSymbol)
-    def __init__(self, node: Iir, subtypeName: Name, constraints: Mapping = None) -> None:
+    def __init__(self, node: Iir, subtypeName: Name, constraints: Mapping) -> None:
         super().__init__(subtypeName, constraints)
         DOMMixin.__init__(self, node)
 
@@ -337,6 +465,14 @@ class ConstrainedRecordSubtypeSymbol(VHDLModel_ConstrainedRecordSubtypeSymbol, D
 class RecordElementSymbol(VHDLModel_RecordElementSymbol, DOMMixin):
     @InheritDocString(VHDLModel_RecordElementSymbol)
     def __init__(self, node: Iir, name: SimpleName) -> None:
+        super().__init__(name)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class RangeAttributeSymbol(VHDLModel_RangeAttributeSymbol, DOMMixin):
+    @InheritDocString(VHDLModel_RangeAttributeSymbol)
+    def __init__(self, node: Iir, name: Name) -> None:
         super().__init__(name)
         DOMMixin.__init__(self, node)
 

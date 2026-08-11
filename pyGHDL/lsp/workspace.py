@@ -1,3 +1,35 @@
+# =============================================================================
+#               ____ _   _ ____  _       _
+#  _ __  _   _ / ___| | | |  _ \| |     | |___ _ __
+# | '_ \| | | | |  _| |_| | | | | |     | / __| '_ \
+# | |_) | |_| | |_| |  _  | |_| | |___ _| \__ \ |_) |
+# | .__/ \__, |\____|_| |_|____/|_____(_)_|___/ .__/
+# |_|    |___/                                |_|
+# =============================================================================
+# Authors:
+#   Tristan Gingold
+#
+# Package module:   The workspace: the set of documents and the project file describing them.
+#
+# License:
+# ============================================================================
+#  Copyright (C) 2020-2026 Tristan Gingold
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <gnu.org/licenses>.
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+# ============================================================================
 import logging
 import os
 import json
@@ -17,21 +49,19 @@ import pyGHDL.libghdl.vhdl.sem_lib as sem_lib
 import pyGHDL.libghdl.utils as pyutils
 
 from . import lsp
+from pyGHDL.lsp import LSPException
+
 from . import document, symbols
 
 log = logging.getLogger(__name__)
 
 
-class ProjectError(Exception):
-    """Exception raised in case of unrecoverable error in the project file."""
-
-    def __init__(self, msg):
-        super().__init__()
-        self.msg = msg
+class ProjectError(LSPException):
+    """The exception is raised in case of an unrecoverable error in the project file."""
 
 
-class InitError(Exception):
-    pass
+class InitError(LSPException):
+    """The exception is raised when the workspace could not be initialized."""
 
 
 class Workspace(object):
@@ -209,7 +239,7 @@ class Workspace(object):
                 if not libghdl.set_option(opt):
                     self._server.show_message(lsp.MessageType.Error, f"error with option: {opt}")
         except ProjectError as e:
-            self._server.show_message(lsp.MessageType.Error, f"error in project file: {e.msg}")
+            self._server.show_message(lsp.MessageType.Error, f"error in project file: {e}")
 
     def read_files_from_project(self):
         try:
@@ -227,7 +257,7 @@ class Workspace(object):
                 if lang == "vhdl":
                     self.add_vhdl_file(name, lib)
         except ProjectError as e:
-            self._server.show_message(lsp.MessageType.Error, f"error in project file: {e.msg}")
+            self._server.show_message(lsp.MessageType.Error, f"error in project file: {e}")
 
     def get_configuration(self):
         self._server.configuration([{"scopeUri": "", "section": "vhdl.maxNumberOfProblems"}])

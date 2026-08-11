@@ -88,3 +88,45 @@ class Literals(TestCase):
 
         self.assertIsInstance(default, IntegerLiteral)
         self.assertEqual(expected[0], default.Value)
+
+    def test_BitStringLiteral_PlainHex(self):
+        """``x"F"`` - no sign, no explicit length. Regression test: Signed/Length were computed from
+        the IIR node but never forwarded to the constructed literal object - always silently None."""
+        from pyGHDL.dom.Literal import HexadecimalBitStringLiteral
+
+        _filename: Path = self._root / "{className}_PlainHex.vhdl".format(className=self.__class__.__name__)
+        default: ExpressionUnion = self.parse(_filename, 'constant c0 : bit_vector(3 downto 0) := x"F";')
+
+        self.assertIsInstance(default, HexadecimalBitStringLiteral)
+        self.assertIsNone(default.IsSigned)
+        self.assertIsNone(default.Length)
+
+    def test_BitStringLiteral_Signed(self):
+        """``sx"F"``"""
+        from pyGHDL.dom.Literal import HexadecimalBitStringLiteral
+
+        _filename: Path = self._root / "{className}_Signed.vhdl".format(className=self.__class__.__name__)
+        default: ExpressionUnion = self.parse(_filename, 'constant c0 : bit_vector(7 downto 0) := sx"F";')
+
+        self.assertIsInstance(default, HexadecimalBitStringLiteral)
+        self.assertTrue(default.IsSigned)
+
+    def test_BitStringLiteral_Unsigned(self):
+        """``ux"F"``"""
+        from pyGHDL.dom.Literal import HexadecimalBitStringLiteral
+
+        _filename: Path = self._root / "{className}_Unsigned.vhdl".format(className=self.__class__.__name__)
+        default: ExpressionUnion = self.parse(_filename, 'constant c0 : bit_vector(7 downto 0) := ux"F";')
+
+        self.assertIsInstance(default, HexadecimalBitStringLiteral)
+        self.assertFalse(default.IsSigned)
+
+    def test_BitStringLiteral_ExplicitLength(self):
+        """``4x"F"``"""
+        from pyGHDL.dom.Literal import HexadecimalBitStringLiteral
+
+        _filename: Path = self._root / "{className}_ExplicitLength.vhdl".format(className=self.__class__.__name__)
+        default: ExpressionUnion = self.parse(_filename, 'constant c0 : bit_vector(3 downto 0) := 4x"F";')
+
+        self.assertIsInstance(default, HexadecimalBitStringLiteral)
+        self.assertEqual(4, default.Length)

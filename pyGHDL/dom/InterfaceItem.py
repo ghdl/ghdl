@@ -42,16 +42,24 @@ from pyVHDLModel.Interface import GenericProcedureInterfaceItem as VHDLModel_Gen
 from pyVHDLModel.Interface import GenericFunctionInterfaceItem as VHDLModel_GenericFunctionInterfaceItem
 from pyVHDLModel.Interface import GenericPackageInterfaceItem as VHDLModel_GenericPackageInterfaceItem
 from pyVHDLModel.Interface import PortSignalInterfaceItem as VHDLModel_PortSignalInterfaceItem
+from pyVHDLModel.Interface import PortSimpleSignalInterfaceItem as VHDLModel_PortSimpleSignalInterfaceItem
+from pyVHDLModel.Interface import PortViewSignalInterfaceItem as VHDLModel_PortViewSignalInterfaceItem
 from pyVHDLModel.Interface import ParameterConstantInterfaceItem as VHDLModel_ParameterConstantInterfaceItem
 from pyVHDLModel.Interface import ParameterVariableInterfaceItem as VHDLModel_ParameterVariableInterfaceItem
 from pyVHDLModel.Interface import ParameterSignalInterfaceItem as VHDLModel_ParameterSignalInterfaceItem
+from pyVHDLModel.Interface import ParameterSimpleSignalInterfaceItem as VHDLModel_ParameterSimpleSignalInterfaceItem
+from pyVHDLModel.Interface import ParameterViewSignalInterfaceItem as VHDLModel_ParameterViewSignalInterfaceItem
 from pyVHDLModel.Interface import ParameterFileInterfaceItem as VHDLModel_ParameterFileInterfaceItem
+from pyVHDLModel.Interface import ModeViewDeclaration as VHDLModel_ModeViewDeclaration
+from pyVHDLModel.Interface import SimpleModeViewElement as VHDLModel_SimpleModeViewElement
+from pyVHDLModel.Interface import CompositeModeViewElement as VHDLModel_CompositeModeViewElement
 
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
 from pyGHDL.dom._Utils import GetNameOfNode, GetModeOfNode, GetDocumentationOfNode
-from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode, GetExpressionFromNode
+from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode, GetExpressionFromNode, GetName
+from pyGHDL.dom.Symbol import ModeViewSymbol, SimpleSubtypeSymbol
 
 
 @export
@@ -127,8 +135,8 @@ class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOM
 
 @export
 class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMixin):
-    def __init__(self, node: Iir, identifier: str, documentation: str = None) -> None:
-        super().__init__(identifier, documentation)
+    def __init__(self, node: Iir, identifier: str, returnType: Symbol, documentation: str = None) -> None:
+        super().__init__(identifier, returnType, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -136,11 +144,15 @@ class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMi
         name = GetNameOfNode(genericNode)
         documentation = GetDocumentationOfNode(genericNode)
 
-        return cls(genericNode, name, documentation)
+        returnType = nodes.Get_Return_Type_Mark(genericNode)
+        returnTypeName = GetName(returnType)
+        returnTypeSymbol = SimpleSubtypeSymbol(returnType, returnTypeName)
+
+        return cls(genericNode, name, returnTypeSymbol, documentation)
 
 
 @export
-class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
+class PortSimpleSignalInterfaceItem(VHDLModel_PortSimpleSignalInterfaceItem, DOMMixin):
     def __init__(
         self,
         node: Iir,
@@ -154,7 +166,7 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, portNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "PortSignalInterfaceItem":
+    def parse(cls, portNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "PortSimpleSignalInterfaceItem":
         name = GetNameOfNode(portNode)
         documentation = GetDocumentationOfNode(portNode)
         identifiers = [name]
@@ -167,6 +179,47 @@ class PortSignalInterfaceItem(VHDLModel_PortSignalInterfaceItem, DOMMixin):
         value = GetExpressionFromNode(defaultValue) if defaultValue != nodes.Null_Iir else None
 
         return cls(portNode, identifiers, mode, subtypeIndication, value, documentation)
+
+
+@export
+class PortViewSignalInterfaceItem(VHDLModel_PortViewSignalInterfaceItem, DOMMixin):
+    """
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          port (p : view MyView);
+
+    .. note::
+
+       ``Get_Subtype_Indication`` on an ``Interface_View_Declaration`` node is only populated after semantic
+       analysis has resolved the referenced mode view; since translation here is parse-only, ``Subtype``
+       stays ``None`` - the type is only implied by the referenced mode view.
+    """
+
+    def __init__(
+        self,
+        node: Iir,
+        identifiers: List[str],
+        modeViewIndication: ModeViewSymbol,
+        documentation: str = None,
+    ) -> None:
+        super().__init__(identifiers, modeViewIndication, documentation=documentation)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, portNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "PortViewSignalInterfaceItem":
+        name = GetNameOfNode(portNode)
+        documentation = GetDocumentationOfNode(portNode)
+        identifiers = [name]
+        if furtherIdentifiers is not None:
+            identifiers.extend(furtherIdentifiers)
+
+        modeViewIndicationNode = nodes.Get_Mode_View_Indication(portNode)
+        modeViewNameNode = nodes.Get_Name(modeViewIndicationNode)
+        modeViewIndication = ModeViewSymbol(modeViewNameNode, GetName(modeViewNameNode))
+
+        return cls(portNode, identifiers, modeViewIndication, documentation)
 
 
 @export
@@ -230,7 +283,7 @@ class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem, D
 
 
 @export
-class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMixin):
+class ParameterSimpleSignalInterfaceItem(VHDLModel_ParameterSimpleSignalInterfaceItem, DOMMixin):
     def __init__(
         self,
         node: Iir,
@@ -244,7 +297,9 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMi
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterSignalInterfaceItem":
+    def parse(
+        cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None
+    ) -> "ParameterSimpleSignalInterfaceItem":
         name = GetNameOfNode(parameterNode)
         documentation = GetDocumentationOfNode(parameterNode)
         identifiers = [name]
@@ -257,6 +312,45 @@ class ParameterSignalInterfaceItem(VHDLModel_ParameterSignalInterfaceItem, DOMMi
         value = GetExpressionFromNode(defaultValue) if defaultValue != nodes.Null_Iir else None
 
         return cls(parameterNode, identifiers, mode, subtypeIndication, value, documentation)
+
+
+@export
+class ParameterViewSignalInterfaceItem(VHDLModel_ParameterViewSignalInterfaceItem, DOMMixin):
+    """
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          procedure proc(signal s : view MyView);
+
+    .. note::
+
+       See :class:`PortViewSignalInterfaceItem` for why ``Subtype`` stays ``None`` here.
+    """
+
+    def __init__(
+        self,
+        node: Iir,
+        identifiers: List[str],
+        modeViewIndication: ModeViewSymbol,
+        documentation: str = None,
+    ) -> None:
+        super().__init__(identifiers, modeViewIndication, documentation=documentation)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterViewSignalInterfaceItem":
+        name = GetNameOfNode(parameterNode)
+        documentation = GetDocumentationOfNode(parameterNode)
+        identifiers = [name]
+        if furtherIdentifiers is not None:
+            identifiers.extend(furtherIdentifiers)
+
+        modeViewIndicationNode = nodes.Get_Mode_View_Indication(parameterNode)
+        modeViewNameNode = nodes.Get_Name(modeViewIndicationNode)
+        modeViewIndication = ModeViewSymbol(modeViewNameNode, GetName(modeViewNameNode))
+
+        return cls(parameterNode, identifiers, modeViewIndication, documentation)
 
 
 @export
@@ -275,3 +369,99 @@ class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin)
         subtypeIndication = GetSubtypeIndicationFromNode(parameterNode, "parameter", name)
 
         return cls(parameterNode, identifiers, subtypeIndication, documentation)
+
+
+@export
+class SimpleModeViewElement(VHDLModel_SimpleModeViewElement, DOMMixin):
+    """
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          view MyView of RecordType is
+            a, b : out;
+          end view;
+    """
+
+    def __init__(self, node: Iir, identifiers: List[str], mode: Mode, documentation: str = None) -> None:
+        super().__init__(identifiers, mode, documentation)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, elementNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "SimpleModeViewElement":
+        name = GetNameOfNode(elementNode)
+        identifiers = [name]
+        if furtherIdentifiers is not None:
+            identifiers.extend(furtherIdentifiers)
+        mode = GetModeOfNode(elementNode)
+        documentation = GetDocumentationOfNode(elementNode)
+
+        return cls(elementNode, identifiers, mode, documentation)
+
+
+@export
+class CompositeModeViewElement(VHDLModel_CompositeModeViewElement, DOMMixin):
+    """
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          view OuterView of OuterRecord is
+            b : view InnerView;
+          end view;
+    """
+
+    def __init__(
+        self, node: Iir, identifiers: List[str], modeViewName: ModeViewSymbol, documentation: str = None
+    ) -> None:
+        super().__init__(identifiers, modeViewName, documentation)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, elementNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "CompositeModeViewElement":
+        name = GetNameOfNode(elementNode)
+        identifiers = [name]
+        if furtherIdentifiers is not None:
+            identifiers.extend(furtherIdentifiers)
+
+        modeViewNameNode = nodes.Get_Mode_View_Name(elementNode)
+        modeViewName = ModeViewSymbol(modeViewNameNode, GetName(modeViewNameNode))
+        documentation = GetDocumentationOfNode(elementNode)
+
+        return cls(elementNode, identifiers, modeViewName, documentation)
+
+
+@export
+class ModeViewDeclaration(VHDLModel_ModeViewDeclaration, DOMMixin):
+    """
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          view MyView of RecordType is
+            a : out;
+            b : in;
+          end view;
+    """
+
+    def __init__(
+        self,
+        node: Iir,
+        identifier: str,
+        subtype: Symbol,
+        elements: List = None,
+        documentation: str = None,
+    ) -> None:
+        super().__init__(identifier, subtype, elements, documentation)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, modeViewNode: Iir) -> "ModeViewDeclaration":
+        from pyGHDL.dom._Translate import GetModeViewElementsFromChainedNodes
+
+        name = GetNameOfNode(modeViewNode)
+        documentation = GetDocumentationOfNode(modeViewNode)
+        subtypeIndication = GetSubtypeIndicationFromNode(modeViewNode, "mode view", name)
+        elements = GetModeViewElementsFromChainedNodes(nodes.Get_Elements_Definition_Chain(modeViewNode))
+
+        return cls(modeViewNode, name, subtypeIndication, elements, documentation)

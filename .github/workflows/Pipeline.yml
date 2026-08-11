@@ -3,6 +3,13 @@ name: Build, Package and Test GHDL
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+# A push and its pull-request run the same pipeline, so both share a group and the older one is canceled.
+# 'master' and tags are excluded: a release run must not be aborted by the next push.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.ref_type == 'branch' && github.ref_name != 'master' }}
 
 jobs:
 # Windows Standalone - ZIP
@@ -295,9 +302,23 @@ jobs:
 
   PublishToGitHubPages:
     uses: ./.github/workflows/Publish-GitHubPages.yml
+    if: >-
+      ${{ !failure() && !cancelled()
+       && needs.Sphinx.result == 'success'
+       && needs.PublishCoverageResults.result == 'success'
+       && needs.StaticTypeCheck.result == 'success'
+       && (needs.Params.outputs.on_main_branch == 'true'
+        || needs.Params.outputs.is_release_tag == 'true'
+        || needs.Params.outputs.is_nightly_tag == 'true'
+        || needs.Params.outputs.is_test_tag == 'true'
+        || startsWith(github.ref, format('refs/heads/{0}/', github.repository_owner))
+       )
+      }}
     needs:
+      - Params
       - Sphinx
       - PublishCoverageResults
+      - StaticTypeCheck
     with:
       documentation: 'documentation-HTML'
       coverage:      'pyGHDL-Coverage-HTML'
@@ -305,7 +326,10 @@ jobs:
 
   Nightly:
     uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r7
-    if: needs.Params.outputs.is_nightly_tag == 'true' || needs.Params.outputs.is_test_tag == 'true'
+    if: >-
+      ${{ !failure() && !cancelled()
+       && (needs.Params.outputs.is_nightly_tag == 'true' || needs.Params.outputs.is_test_tag == 'true')
+      }}
     needs:
       - Params
       - macOS
@@ -372,7 +396,10 @@ jobs:
 
   Release:
     uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r7
-    if: needs.Params.outputs.is_release_tag == 'true'
+    if: >-
+      ${{ !failure() && !cancelled()
+       && needs.Params.outputs.is_release_tag == 'true'
+      }}
     needs:
       - Params
       - macOS
@@ -433,7 +460,12 @@ jobs:
           - {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'mcode'}
           - {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm'}
           - {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', runtime: 'ucrt64',  backend: 'llvm-jit'}
-    if: (needs.Params.outputs.is_release_tag == 'true' || needs.Params.outputs.is_nightly_tag == 'true' || needs.Params.outputs.is_test_tag == 'true') && !failure() && !cancelled()
+    if: >-
+      ${{ !failure() && !cancelled()
+       && (needs.Params.outputs.is_release_tag == 'true'
+        || needs.Params.outputs.is_nightly_tag == 'true'
+        || needs.Params.outputs.is_test_tag == 'true')
+      }}
     with:
       os_image:              ${{ matrix.image }}
       os_name:               ${{ matrix.name }}

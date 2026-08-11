@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import sys
-from os import environ
 from os.path import abspath
 from pathlib import Path
 from json import loads as json_loads
@@ -86,27 +85,17 @@ ctx = ROOT / "context.json"
 if ctx.is_file():
     html_context.update(json_loads(ctx.open("r").read()))
 
-html_theme = "furo"
-
-html_css_files = [
-      "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/fontawesome.min.css",
-      "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/solid.min.css",
-      "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/brands.min.css",
-]
+html_theme = "sphinx_rtd_theme"
 
 html_theme_options = {
-    "source_repository": "https://github.com/ghdl/ghdl",
-    "source_branch": environ.get("GITHUB_REF_NAME", "main"),
-    "source_directory": "doc",
-    "footer_icons": [
-        {
-            "name": "GitHub ghdl/ghdl",
-            "url": "https://github.com/ghdl/ghdl",
-            "html": "",
-            "class": "fa-solid fa-brands fa-github",
-        },
-    ],
+    "logo_only": True,
+    "vcs_pageview_mode": 'blob',
+    "navigation_depth": 5,
 }
+
+html_css_files = [
+    'css/override.css',
+]
 
 html_title = release
 
@@ -116,6 +105,19 @@ html_extra_path = [str(Path(__file__).resolve().parent.parent / 'public')]   # F
 
 html_logo = str(Path(html_static_path[0]) / 'logo.png')
 html_favicon = str(Path(html_static_path[0]) / 'icon.png')
+
+# If not None, a 'Last updated on:' timestamp is inserted at every page
+# bottom, using the given strftime format.
+# The empty string is equivalent to '%b %d, %Y'.
+html_last_updated_fmt = "%d.%m.%Y"
+
+
+# ==============================================================================
+# Python settings
+# ==============================================================================
+modindex_common_prefix = [
+    "pyGHDL."
+]
 
 
 # ==============================================================================
@@ -194,9 +196,8 @@ extensions = [
     # Other extensions
     'exec',
     'myst_parser',
-    # 'sphinx_fontawesome',
     'sphinx_autodoc_typehints',
-#    'autoapi.sphinx',
+    'autoapi.sphinx',
 ]
 
 

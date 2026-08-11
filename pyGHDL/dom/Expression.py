@@ -100,7 +100,8 @@ from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom._Utils import GetIirKindOfNode
-from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
+from pyVHDLModel.Symbol import SubtypeSymbol
+from pyGHDL.dom.Symbol import SimpleSubtypeSymbol, RecordElementSymbol
 from pyGHDL.dom.Aggregates import (
     OthersAggregateElement,
     SimpleAggregateElement,
@@ -173,8 +174,23 @@ class ParenthesisExpression(VHDLModel_ParenthesisExpression, DOMMixin, _ParseUna
 
 @export
 class TypeConversion(VHDLModel_TypeConversion, DOMMixin):
-    def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
-        super().__init__(operand)
+    """
+    Represents a *type conversion*, e.g. ``integer(x)``.
+
+    .. note::
+
+       Not reachable from this translator today. GHDL's parser cannot tell a type conversion from an
+       indexed name or a function call - ``integer(x)``, ``arr(x)`` and ``f(x)`` are all parsed as
+       ``Parenthesis_Name`` - and only semantic analysis rewrites one into ``Type_Conversion``.
+       :mod:`pyGHDL.dom` parses without that pass, so a ``Type_Conversion`` node never arrives and
+       ``Parenthesis_Name`` is translated to
+       :class:`~pyVHDLModel.Symbol.IndexedObjectOrFunctionCallSymbol`, which carries the ambiguity.
+
+       The constructor is kept correct so this class works if semantic analysis is ever run.
+    """
+
+    def __init__(self, node: Iir, targetSubtype: SubtypeSymbol, operand: ExpressionUnion) -> None:
+        super().__init__(targetSubtype, operand)
         DOMMixin.__init__(self, node)
 
 
@@ -536,16 +552,32 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
     def parse(cls, node: Iir) -> "Aggregate":
         from pyGHDL.dom._Translate import (
             GetExpressionFromNode,
-            GetRangeFromNode,
+            GetDiscreteRangeFromNode,
             GetName,
         )
 
         choices = []
+        ownerNode = nodes.Null_Iir
 
         choicesChain = nodes.Get_Association_Choices_Chain(node)
         for item in utils.chain_iter(choicesChain):
             kind = GetIirKindOfNode(item)
-            value = GetExpressionFromNode(nodes.Get_Associated_Expr(item))
+
+            # A choice list (`b | c => '0'`) groups multiple choices onto one associated expression:
+            # the *first* choice in the group owns it (``Same_Alternative_Flag=False``), while the later
+            # ones have a null ``Associated_Expr``. Same grouping algorithm as case statement
+            # alternatives, see :func:`pyGHDL.dom.Concurrent.GetSelectedWaveformsFromChainedNodes`.
+            if not nodes.Get_Same_Alternative_Flag(item):
+                ownerNode = item
+            elif ownerNode is nodes.Null_Iir:
+                position = Position.parse(item)
+                raise DOMException(
+                    f"Aggregate choice at line {position.Line} continues a choice list that never started."
+                )
+
+            # Translated per element rather than once per group: each AggregateElement takes ownership of
+            # its expression by setting ``Parent``, so sharing one object across elements would misparent it.
+            value = GetExpressionFromNode(nodes.Get_Associated_Expr(ownerNode))
 
             if kind == nodes.Iir_Kind.Choice_By_None:
                 choices.append(SimpleAggregateElement(item, value))
@@ -553,22 +585,12 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
                 index = GetExpressionFromNode(nodes.Get_Choice_Expression(item))
                 choices.append(IndexedAggregateElement(item, index, value))
             elif kind == nodes.Iir_Kind.Choice_By_Range:
-                choiceRange = nodes.Get_Choice_Range(item)
-                rangeKind = GetIirKindOfNode(choiceRange)
-                if rangeKind == nodes.Iir_Kind.Range_Expression:
-                    rng = GetRangeFromNode(choiceRange)
-                elif rangeKind in (nodes.Iir_Kind.Attribute_Name, nodes.Iir_Kind.Parenthesis_Name):
-                    rng = GetName(choiceRange)
-                else:
-                    pos = Position.parse(item)
-                    raise DOMException(
-                        f"Unknown discrete range kind '{rangeKind.name}' in for...generate statement at line {pos.Line}."
-                    )
-
+                rng = GetDiscreteRangeFromNode(nodes.Get_Choice_Range(item), "aggregate choice")
                 choices.append(RangedAggregateElement(item, rng, value))
             elif kind == nodes.Iir_Kind.Choice_By_Name:
-                name = GetName(nodes.Get_Choice_Name(item))
-                symbol = Symbol(item, name)
+                # An aggregate choice name always denotes a record element, never an object.
+                choiceName = nodes.Get_Choice_Name(item)
+                symbol = RecordElementSymbol(choiceName, GetName(choiceName))
                 choices.append(NamedAggregateElement(item, symbol, value))
             elif kind == nodes.Iir_Kind.Choice_By_Others:
                 choices.append(OthersAggregateElement(item, value))

@@ -30,11 +30,16 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
-from typing import Iterable, Optional as Nullable
+from typing import Iterable, List, Optional as Nullable
 
 from pyTooling.Decorators import export
 
-from pyVHDLModel.Base import ExpressionUnion, WaveformElement as VHDLModel_WaveformElement, ModelEntity
+from pyVHDLModel.Base import ExpressionUnion, WaveformElement as VHDLModel_WaveformElement, ModelEntity, Range
+from pyVHDLModel.Common import (
+    ConditionalWaveform as VHDLModel_ConditionalWaveform,
+    SelectedWaveform as VHDLModel_SelectedWaveform,
+    OthersSelectedWaveform as VHDLModel_OthersSelectedWaveform,
+)
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Association import (
     AssociationItem,
@@ -59,6 +64,8 @@ from pyVHDLModel.Concurrent import (
     CaseGenerateStatement as VHDLModel_CaseGenerateStatement,
     ForGenerateStatement as VHDLModel_ForGenerateStatement,
     ConcurrentSimpleSignalAssignment as VHDLModel_ConcurrentSimpleSignalAssignment,
+    ConcurrentConditionalSignalAssignment as VHDLModel_ConcurrentConditionalSignalAssignment,
+    ConcurrentSelectedSignalAssignment as VHDLModel_ConcurrentSelectedSignalAssignment,
     ConcurrentAssertStatement as VHDLModel_ConcurrentAssertStatement,
     ConcurrentStatement,
     GenerateCase as VHDLModel_GenerateCase,
@@ -70,33 +77,34 @@ from pyVHDLModel.Concurrent import (
 from pyGHDL.libghdl import Iir, utils
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, DOMException, Position
-from pyGHDL.dom.Range import Range
+from pyGHDL.dom._Utils import GetLabelOfNode
 from pyGHDL.dom.Symbol import (
     ArchitectureSymbol,
     EntityInstantiationSymbol,
     ComponentInstantiationSymbol,
     ConfigurationInstantiationSymbol,
+    SignalSymbol,
 )
 
 
 @export
 class GenericAssociationItem(VHDLModel_GenericAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None) -> None:
-        super().__init__(actual, formal)
+    def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
 class PortAssociationItem(VHDLModel_PortAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None) -> None:
-        super().__init__(actual, formal)
+    def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
 
 @export
 class ParameterAssociationItem(VHDLModel_ParameterAssociationItem, DOMMixin):
-    def __init__(self, associationNode: Iir, actual: ExpressionUnion, formal: Symbol = None) -> None:
-        super().__init__(actual, formal)
+    def __init__(self, associationNode: Iir, formal: Symbol, actual: ExpressionUnion) -> None:
+        super().__init__(formal, actual)
         DOMMixin.__init__(self, associationNode)
 
 
@@ -107,10 +115,10 @@ class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
         instantiationNode: Iir,
         label: str,
         componentSymbol: ComponentInstantiationSymbol,
-        genericAssociations: Iterable[AssociationItem] = None,
-        portAssociations: Iterable[AssociationItem] = None,
+        genericAssociationItems: Iterable[AssociationItem] = None,
+        portAssociationItems: Iterable[AssociationItem] = None,
     ) -> None:
-        super().__init__(label, componentSymbol, genericAssociations, portAssociations)
+        super().__init__(label, componentSymbol, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
@@ -118,10 +126,10 @@ class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
         from pyGHDL.dom._Translate import GetName, GetGenericMapAspect, GetPortMapAspect
 
         componentSymbol = ComponentInstantiationSymbol(instantiatedUnit, GetName(instantiatedUnit))
-        genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
-        portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
+        genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
+        portAssociationItems = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
 
-        return cls(instantiationNode, label, componentSymbol, genericAssociations, portAssociations)
+        return cls(instantiationNode, label, componentSymbol, genericAssociationItems, portAssociationItems)
 
 
 @export
@@ -132,10 +140,10 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         label: str,
         entitySymbol: EntityInstantiationSymbol,
         architectureSymbol: ArchitectureSymbol = None,  # TODO: merge both symbols ?
-        genericAssociations: Iterable[AssociationItem] = None,
-        portAssociations: Iterable[AssociationItem] = None,
+        genericAssociationItems: Iterable[AssociationItem] = None,
+        portAssociationItems: Iterable[AssociationItem] = None,
     ) -> None:
-        super().__init__(label, entitySymbol, architectureSymbol, genericAssociations, portAssociations)
+        super().__init__(label, entitySymbol, architectureSymbol, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
@@ -150,10 +158,12 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         if architectureId != nodes.Null_Iir:
             architectureSymbol = ArchitectureSymbol(GetName(architectureId), entitySymbol)
 
-        genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
-        portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
+        genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
+        portAssociationItems = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
 
-        return cls(instantiationNode, label, entitySymbol, architectureSymbol, genericAssociations, portAssociations)
+        return cls(
+            instantiationNode, label, entitySymbol, architectureSymbol, genericAssociationItems, portAssociationItems
+        )
 
 
 @export
@@ -163,10 +173,10 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
         instantiationNode: Iir,
         label: str,
         configurationSymbol: ConfigurationInstantiationSymbol,
-        genericAssociations: Iterable[AssociationItem] = None,
-        portAssociations: Iterable[AssociationItem] = None,
+        genericAssociationItems: Iterable[AssociationItem] = None,
+        portAssociationItems: Iterable[AssociationItem] = None,
     ) -> None:
-        super().__init__(label, configurationSymbol, genericAssociations, portAssociations)
+        super().__init__(label, configurationSymbol, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
@@ -176,10 +186,10 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
         configurationName = nodes.Get_Configuration_Name(instantiatedUnit)
         configurationSymbol = ConfigurationInstantiationSymbol(configurationName, GetName(configurationName))
 
-        genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
-        portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
+        genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
+        portAssociationItems = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
 
-        return cls(instantiationNode, label, configurationSymbol, genericAssociations, portAssociations)
+        return cls(instantiationNode, label, configurationSymbol, genericAssociationItems, portAssociationItems)
 
 
 @export
@@ -188,25 +198,61 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         self,
         blockNode: Iir,
         label: str,
+        genericItems: Iterable = None,
+        genericAssociationItems: Iterable = None,
+        portItems: Iterable = None,
+        portAssociationItems: Iterable = None,
         declaredItems: Iterable = None,
         statements: Iterable["ConcurrentStatement"] = None,
     ) -> None:
-        super().__init__(label, None, declaredItems, statements)
+        super().__init__(
+            label,
+            genericItems,
+            genericAssociationItems,
+            portItems,
+            portAssociationItems,
+            declaredItems,
+            statements,
+        )
         DOMMixin.__init__(self, blockNode)
 
     @classmethod
     def parse(cls, blockNode: Iir, label: str) -> "ConcurrentBlockStatement":
-        from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetConcurrentStatementsFromChainedNodes
+        from pyGHDL.dom._Translate import (
+            GetDeclaredItemsFromChainedNodes,
+            GetConcurrentStatementsFromChainedNodes,
+            GetGenericsFromChainedNodes,
+            GetPortsFromChainedNodes,
+            GetGenericMapAspect,
+            GetPortMapAspect,
+        )
 
-        #        genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
-        #        portAssociations = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
+        # A block's generic/port clauses and their map aspects live on the block *header*, not on the
+        # block node itself. A block without a header has none of them.
+        blockHeader = nodes.Get_Block_Header(blockNode)
+        if blockHeader != nodes.Null_Iir:
+            genericItems = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(blockHeader))
+            genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(blockHeader))
+            portItems = GetPortsFromChainedNodes(nodes.Get_Port_Chain(blockHeader))
+            portAssociationItems = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(blockHeader))
+        else:
+            genericItems = genericAssociationItems = portItems = portAssociationItems = None
 
         declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(blockNode), "block", label)
         statements = GetConcurrentStatementsFromChainedNodes(
             nodes.Get_Concurrent_Statement_Chain(blockNode), "block", label
         )
 
-        return cls(blockNode, label, declaredItems, statements)
+        return cls(
+            blockNode,
+            label,
+            genericItems,
+            genericAssociationItems,
+            portItems,
+            portAssociationItems,
+            declaredItems,
+            statements,
+        )
 
 
 @export
@@ -267,14 +313,9 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch, DOMMixin):
 
         condition = GetExpressionFromNode(nodes.Get_Condition(generateNode))
         body = nodes.Get_Generate_Statement_Body(generateNode)
-
-        # TODO: alternative label
-        # alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = ""
-
+        alternativeLabel = GetLabelOfNode(body)
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "if-generate branch", alternativeLabel)
-
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
         statements = GetConcurrentStatementsFromChainedNodes(statementChain, "if-generate branch", alternativeLabel)
 
@@ -304,14 +345,9 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch, DOMMixin):
 
         condition = GetExpressionFromNode(condition)
         body = nodes.Get_Generate_Statement_Body(generateNode)
-
-        # TODO: alternative label
-        # alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = ""
-
+        alternativeLabel = GetLabelOfNode(body)
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "elsif-generate branch", alternativeLabel)
-
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
         statements = GetConcurrentStatementsFromChainedNodes(statementChain, "elsif-generate branch", alternativeLabel)
 
@@ -338,14 +374,9 @@ class ElseGenerateBranch(VHDLModel_ElseGenerateBranch, DOMMixin):
         )
 
         body = nodes.Get_Generate_Statement_Body(generateNode)
-
-        # TODO: alternative label
-        # alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = ""
-
+        alternativeLabel = GetLabelOfNode(body)
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "else-generate branch", alternativeLabel)
-
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
         statements = GetConcurrentStatementsFromChainedNodes(statementChain, "else-generate branch", alternativeLabel)
 
@@ -422,14 +453,9 @@ class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
         )
 
         body = nodes.Get_Associated_Block(caseNode)
-
-        # TODO: alternative label
-        # alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = ""
-
+        alternativeLabel = GetLabelOfNode(body)
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "generate case", alternativeLabel)
-
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
         statements = GetConcurrentStatementsFromChainedNodes(statementChain, "generate case", alternativeLabel)
 
@@ -456,14 +482,9 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
         )
 
         body = nodes.Get_Associated_Block(caseNode)
-
-        # TODO: alternative label
-        # alternativeLabelId = nodes.Get_Alternative_Label(body)
-        alternativeLabel = ""
-
+        alternativeLabel = GetLabelOfNode(body)
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "case-generate others", alternativeLabel)
-
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
         statements = GetConcurrentStatementsFromChainedNodes(statementChain, "case-generate others", alternativeLabel)
 
@@ -536,7 +557,7 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
                     continue
             elif choiceKind is nodes.Iir_Kind.Choice_By_Others:
                 if choices is not None:
-                    cases.append(GenerateCase.parse(alternative, choices))
+                    cases.append(GenerateCase.parse(caseNode, choices))
                     choices = None
                 cases.append(OthersGenerateCase.parse(alternative))
                 alternative = nodes.Get_Chain(alternative)
@@ -579,36 +600,19 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
 
     @classmethod
     def parse(cls, generateNode: Iir, label: str) -> "ForGenerateStatement":
-        from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
+        from pyGHDL.dom._Utils import GetNameOfNode
         from pyGHDL.dom._Translate import (
             GetDeclaredItemsFromChainedNodes,
             GetConcurrentStatementsFromChainedNodes,
-            GetRangeFromNode,
-            GetName,
+            GetDiscreteRangeFromNode,
         )
 
         spec = nodes.Get_Parameter_Specification(generateNode)
         loopIndex = GetNameOfNode(spec)
-
-        discreteRange = nodes.Get_Discrete_Range(spec)
-        rangeKind = GetIirKindOfNode(discreteRange)
-        if rangeKind == nodes.Iir_Kind.Range_Expression:
-            rng = GetRangeFromNode(discreteRange)
-        elif rangeKind in (
-            nodes.Iir_Kind.Attribute_Name,
-            nodes.Iir_Kind.Parenthesis_Name,
-        ):
-            rng = GetName(discreteRange)
-        else:
-            pos = Position.parse(generateNode)
-            raise DOMException(
-                f"Unknown discrete range kind '{rangeKind.name}' in for...generate statement at line {pos.Line}."
-            )
-
+        rng = GetDiscreteRangeFromNode(nodes.Get_Discrete_Range(spec), "for...generate statement")
         body = nodes.Get_Generate_Statement_Body(generateNode)
         declarationChain = nodes.Get_Declaration_Chain(body)
         declaredItems = GetDeclaredItemsFromChainedNodes(declarationChain, "for-generate", label)
-
         statementChain = nodes.Get_Concurrent_Statement_Chain(body)
         statements = GetConcurrentStatementsFromChainedNodes(statementChain, "for-generate", label)
 
@@ -636,13 +640,120 @@ class WaveformElement(VHDLModel_WaveformElement, DOMMixin):
         return cls(waveNode, value, time)
 
 
+def GetWaveformElementsFromChainedNodes(nodeChain: Iir) -> List[WaveformElement]:
+    """Translates a chain of ``Waveform_Element`` nodes (used at multiple call sites: simple/
+    conditional/selected signal assignments, both concurrent and sequential) into a list of
+    :class:`WaveformElement`."""
+    return [WaveformElement.parse(wave) for wave in utils.chain_iter(nodeChain)]
+
+
+def GetConditionalWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable["ConditionalWaveform"]:
+    """Translates a chain of ``Conditional_Waveform`` nodes (shared by concurrent and sequential
+    conditional signal assignments) into a sequence of :class:`ConditionalWaveform`."""
+    return [ConditionalWaveform.parse(node) for node in utils.chain_iter(nodeChain)]
+
+
+def GetSelectedWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable:
+    """
+    Translates a chain of choices (shared by concurrent and sequential selected signal assignments)
+    into a sequence of :class:`SelectedWaveform`/:class:`OthersSelectedWaveform`.
+
+    Mirrors the grouping algorithm already used for case-generate alternatives
+    (``Get_Same_Alternative_Flag`` groups e.g. ``when 0 | 1 =>`` into one alternative): the *first*
+    choice in a group owns the real content (``Get_Associated_Chain``, ``Same_Alternative_Flag=False``);
+    later choices in the same group (``Same_Alternative_Flag=True``) have a null associated chain and
+    are just additional choice values for that same, already-established alternative.
+    """
+    from pyGHDL.dom._Utils import GetIirKindOfNode
+    from pyGHDL.dom._Translate import GetExpressionFromNode, GetRangeFromNode
+    from pyGHDL.dom.Sequential import IndexedChoice, RangedChoice
+
+    alternatives = []
+    choices = None
+    ownerNode = None
+    choice = nodeChain
+    while choice != nodes.Null_Iir:
+        kind = GetIirKindOfNode(choice)
+        sameAlternative = nodes.Get_Same_Alternative_Flag(choice)
+
+        if kind == nodes.Iir_Kind.Choice_By_Expression:
+            choiceValue = IndexedChoice(choice, GetExpressionFromNode(nodes.Get_Choice_Expression(choice)))
+            if sameAlternative:
+                choices.append(choiceValue)
+                choice = nodes.Get_Chain(choice)
+                continue
+        elif kind == nodes.Iir_Kind.Choice_By_Range:
+            choiceValue = RangedChoice(choice, GetRangeFromNode(nodes.Get_Choice_Range(choice)))
+            if sameAlternative:
+                choices.append(choiceValue)
+                choice = nodes.Get_Chain(choice)
+                continue
+        elif kind == nodes.Iir_Kind.Choice_By_Others:
+            if choices is not None:
+                waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Associated_Chain(ownerNode))
+                alternatives.append(SelectedWaveform(ownerNode, choices, waveform))
+                choices = None
+
+            othersWaveform = GetWaveformElementsFromChainedNodes(nodes.Get_Associated_Chain(choice))
+            alternatives.append(OthersSelectedWaveform(choice, othersWaveform))
+            choice = nodes.Get_Chain(choice)
+            continue
+        else:
+            position = Position.parse(choice)
+            raise DOMException(f"Unknown choice kind '{kind.name}' in selected waveform at {position}.")
+
+        if choices is not None:
+            waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Associated_Chain(ownerNode))
+            alternatives.append(SelectedWaveform(ownerNode, choices, waveform))
+
+        ownerNode = choice
+        choices = [choiceValue]
+        choice = nodes.Get_Chain(choice)
+
+    if choices is not None:
+        waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Associated_Chain(ownerNode))
+        alternatives.append(SelectedWaveform(ownerNode, choices, waveform))
+
+    return alternatives
+
+
+@export
+class ConditionalWaveform(VHDLModel_ConditionalWaveform, DOMMixin):
+    def __init__(self, node: Iir, waveform: Iterable[WaveformElement], condition: ExpressionUnion = None) -> None:
+        super().__init__(waveform, condition)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, node: Iir) -> "ConditionalWaveform":
+        from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
+
+        waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Waveform_Chain(node))
+        condition = GetOptionalExpressionFromNode(nodes.Get_Condition(node))
+
+        return cls(node, waveform, condition)
+
+
+@export
+class SelectedWaveform(VHDLModel_SelectedWaveform, DOMMixin):
+    def __init__(self, node: Iir, choices: Iterable, waveform: Iterable[WaveformElement]) -> None:
+        super().__init__(choices, waveform)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class OthersSelectedWaveform(VHDLModel_OthersSelectedWaveform, DOMMixin):
+    def __init__(self, node: Iir, waveform: Iterable[WaveformElement]) -> None:
+        super().__init__(waveform)
+        DOMMixin.__init__(self, node)
+
+
 @export
 class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignment, DOMMixin):
     def __init__(
         self,
         assignmentNode: Iir,
         label: str,
-        target: Symbol,
+        target: SignalSymbol,
         waveform: Iterable[WaveformElement],
     ) -> None:
         super().__init__(label, target, waveform)
@@ -652,14 +763,62 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
     def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentSimpleSignalAssignment":
         from pyGHDL.dom._Translate import GetName
 
-        target = nodes.Get_Target(assignmentNode)
-        targetName = GetName(target)
+        targetNode = nodes.Get_Target(assignmentNode)
+        targetName = SignalSymbol(targetNode, GetName(targetNode))
 
-        waveform = []
-        for wave in utils.chain_iter(nodes.Get_Waveform_Chain(assignmentNode)):
-            waveform.append(WaveformElement.parse(wave))
+        waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Waveform_Chain(assignmentNode))
 
         return cls(assignmentNode, label, targetName, waveform)
+
+
+@export
+class ConcurrentConditionalSignalAssignment(VHDLModel_ConcurrentConditionalSignalAssignment, DOMMixin):
+    def __init__(
+        self,
+        assignmentNode: Iir,
+        label: str,
+        target: SignalSymbol,
+        conditionalWaveforms: Iterable[ConditionalWaveform],
+    ) -> None:
+        super().__init__(label, target, conditionalWaveforms)
+        DOMMixin.__init__(self, assignmentNode)
+
+    @classmethod
+    def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentConditionalSignalAssignment":
+        from pyGHDL.dom._Translate import GetName
+
+        targetNode = nodes.Get_Target(assignmentNode)
+        targetName = SignalSymbol(targetNode, GetName(targetNode))
+        conditionalWaveforms = GetConditionalWaveformsFromChainedNodes(
+            nodes.Get_Conditional_Waveform_Chain(assignmentNode)
+        )
+
+        return cls(assignmentNode, label, targetName, conditionalWaveforms)
+
+
+@export
+class ConcurrentSelectedSignalAssignment(VHDLModel_ConcurrentSelectedSignalAssignment, DOMMixin):
+    def __init__(
+        self,
+        assignmentNode: Iir,
+        label: str,
+        target: SignalSymbol,
+        expression: ExpressionUnion,
+        selectedWaveforms: Iterable,
+    ) -> None:
+        super().__init__(label, target, expression, selectedWaveforms)
+        DOMMixin.__init__(self, assignmentNode)
+
+    @classmethod
+    def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentSelectedSignalAssignment":
+        from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
+
+        targetNode = nodes.Get_Target(assignmentNode)
+        targetName = SignalSymbol(targetNode, GetName(targetNode))
+        expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
+        selectedWaveforms = GetSelectedWaveformsFromChainedNodes(nodes.Get_Selected_Waveform_Chain(assignmentNode))
+
+        return cls(assignmentNode, label, targetName, expression, selectedWaveforms)
 
 
 @export
@@ -669,9 +828,9 @@ class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
         callNode: Iir,
         label: str,
         procedureName: Symbol,
-        parameterMappings: Iterable,
+        parameterAssociationItems: Iterable,
     ) -> None:
-        super().__init__(label, procedureName, parameterMappings)
+        super().__init__(label, procedureName, parameterAssociationItems)
         DOMMixin.__init__(self, callNode)
 
     @classmethod
@@ -702,14 +861,12 @@ class ConcurrentAssertStatement(VHDLModel_ConcurrentAssertStatement, DOMMixin):
 
     @classmethod
     def parse(cls, assertNode: Iir, label: str) -> "ConcurrentAssertStatement":
-        from pyGHDL.dom._Translate import GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
 
         # FIXME: how to get the condition?
         # assertNode is a Psl_Assert_Directive
-        condition = None  # GetExpressionFromNode(nodes.Get_Assertion_Condition(assertNode))
-        messageNode = nodes.Get_Report_Expression(assertNode)
-        message = None if messageNode is nodes.Null_Iir else GetExpressionFromNode(messageNode)
-        severityNode = nodes.Get_Severity_Expression(assertNode)
-        severity = None if severityNode is nodes.Null_Iir else GetExpressionFromNode(severityNode)
+        condition = None  # GetOptionalExpressionFromNode(nodes.Get_Assertion_Condition(assertNode))
+        message = GetOptionalExpressionFromNode(nodes.Get_Report_Expression(assertNode))
+        severity = GetOptionalExpressionFromNode(nodes.Get_Severity_Expression(assertNode))
 
         return cls(assertNode, condition, message, severity, label)

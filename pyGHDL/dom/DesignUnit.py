@@ -59,13 +59,14 @@ from pyVHDLModel.DesignUnit import LibraryClause as VHDLModel_LibraryClause
 from pyVHDLModel.DesignUnit import UseClause as VHDLModel_UseClause
 from pyVHDLModel.DesignUnit import ContextReference as VHDLModel_ContextReference
 from pyVHDLModel.DesignUnit import ContextUnion as VHDLModel_ContextUnion
+from pyVHDLModel.Association import GenericAssociationItem as VHDLModel_GenericAssociationItem
 
 from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
 from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
-from pyGHDL.dom._Translate import GetGenericsFromChainedNodes, GetPortsFromChainedNodes, GetName
+from pyGHDL.dom._Translate import GetGenericsFromChainedNodes, GetPortsFromChainedNodes, GetName, GetGenericMapAspect
 from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetConcurrentStatementsFromChainedNodes
 from pyGHDL.dom.Name import SimpleName, AllName
 from pyGHDL.dom.Symbol import (
@@ -77,6 +78,7 @@ from pyGHDL.dom.Symbol import (
     PackageMemberReferenceSymbol,
     AllPackageMembersReferenceSymbol,
 )
+from pyGHDL.dom.Configuration import BlockConfiguration
 
 
 @export
@@ -294,14 +296,15 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         node: Iir,
         identifier: str,
         uninstantiatedPackageName: Symbol,
-        #        genericItems: List[GenericInterfaceItem] = None,
+        contextItems: Iterable[VHDLModel_ContextUnion] = None,
+        genericAssociationItems: Iterable[VHDLModel_GenericAssociationItem] = None,
         documentation: str = None,
     ) -> None:
-        super().__init__(identifier, uninstantiatedPackageName, documentation)
+        super().__init__(identifier, uninstantiatedPackageName, contextItems, genericAssociationItems, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, packageNode: Iir):
+    def parse(cls, packageNode: Iir, contextItems: Iterable[VHDLModel_ContextUnion] = None):
         name = GetNameOfNode(packageNode)
         documentation = GetDocumentationOfNode(packageNode)
         uninstantiatedPackageName = GetName(
@@ -309,12 +312,9 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         )
         uninstantiatedPackageSymbol = PackageReferenceSymbol(uninstantiatedPackageNode, uninstantiatedPackageName)
 
-        # FIXME: read use clauses (does it apply here too?)
-        # FIXME: read generics
-        # FIXME: read generic map
-        # genericAssociations = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
+        genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(packageNode))
 
-        return cls(packageNode, name, uninstantiatedPackageSymbol, documentation)
+        return cls(packageNode, name, uninstantiatedPackageSymbol, contextItems, genericAssociationItems, documentation)
 
 
 @export
@@ -362,17 +362,27 @@ class Context(VHDLModel_Context, DOMMixin):
 @export
 class Configuration(VHDLModel_Configuration, DOMMixin):
     def __init__(
-        self, node: Iir, identifier: str, contextItems: Iterable[Context] = None, documentation: str = None
+        self,
+        node: Iir,
+        identifier: str,
+        entity: EntitySymbol,
+        blockConfiguration: BlockConfiguration,
+        contextItems: Iterable[Context] = None,
+        documentation: str = None,
     ) -> None:
-        super().__init__(identifier, contextItems, documentation, None)
+        super().__init__(identifier, entity, blockConfiguration, contextItems, documentation, None)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, configurationNode: Iir, contextItems: Iterable[Context]):
+    def parse(cls, configurationNode: Iir, contextItems: Iterable[Context]) -> "Configuration":
+        from pyGHDL.dom._Translate import GetName
+
         name = GetNameOfNode(configurationNode)
         documentation = GetDocumentationOfNode(configurationNode)
 
-        # FIXME: read use clauses
-        # FIXME: read specifications
+        entityNameNode = nodes.Get_Entity_Name(configurationNode)
+        entity = EntitySymbol(entityNameNode, GetName(entityNameNode))
 
-        return cls(configurationNode, name, contextItems, documentation)
+        blockConfiguration = BlockConfiguration.parse(nodes.Get_Block_Configuration(configurationNode))
+
+        return cls(configurationNode, name, entity, blockConfiguration, contextItems, documentation)
