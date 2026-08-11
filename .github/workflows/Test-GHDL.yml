@@ -103,7 +103,7 @@ jobs:
       - name: Run tests in testsuite
         run: |
           [ '${{ inputs.runtime }}' != '' ] && export PATH=$(pwd)/install/bin:$PATH
-          [ ${{ startsWith(inputs.os_image, 'macos') }} ] && export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
+          [ '${{ startsWith(inputs.os_image, 'macos') }}' = 'true' ] && export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
           cd testsuite
 
           # no pyunit
