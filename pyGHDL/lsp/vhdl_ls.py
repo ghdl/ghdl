@@ -30,6 +30,14 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+The VHDL side of GHDL's language server.
+
+Each request of the Language Server Protocol is a ``lsp_*`` method on :class:`VhdlLanguageServer`, which
+:class:`~pyGHDL.lsp.lsp.LanguageProtocolServer` dispatches to by name. The answers are read from the
+:class:`~pyGHDL.lsp.workspace.Workspace`; nothing here parses VHDL itself.
+"""
+
 import logging
 
 from . import lsp
@@ -39,6 +47,15 @@ log = logging.getLogger(__name__)
 
 
 class VhdlLanguageServer(object):
+    """
+    The VHDL side of the language server.
+
+    Each ``lsp_*`` method implements one Language Server Protocol request, and
+    :class:`~pyGHDL.lsp.lsp.LanguageProtocolServer` dispatches to it by name. The answers come from the:
+    :class:`~pyGHDL.lsp.workspace.Workspace`, which holds the analyzed sources.:
+
+    """
+
     def __init__(self):
         self.workspace = None
         self.lsp = None

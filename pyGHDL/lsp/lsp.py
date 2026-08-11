@@ -30,6 +30,14 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+The transport and dispatch layer of the Language Server Protocol.
+
+:class:`LSPConn` reads and writes the ``Content-Length`` framed JSON-RPC messages on a pair of streams, and
+:class:`LanguageProtocolServer` runs the request loop: it decodes a message, calls the matching handler on the server
+object and writes the response. It knows nothing about VHDL - :mod:`pyGHDL.lsp.vhdl_ls` supplies the handlers.
+"""
+
 import os
 from pathlib import Path
 import logging
@@ -48,6 +56,14 @@ class ProtocolError(LSPException):
 
 
 class LSPConn:
+    """
+    The stream pair a language server talks over.
+
+    Messages are framed with a ``Content-Length`` header, which is what distinguishes this from a plain JSON
+    stream: the reader has to consume the header to know how many bytes the body has.
+
+    """
+
     def __init__(self, reader, writer):
         self.reader = reader
         self.writer = writer
@@ -103,6 +119,14 @@ def normalize_rpc_file_uris(rpc):
 
 
 class LanguageProtocolServer(object):
+    """
+    The request loop of the Language Server Protocol.
+
+    It decodes a message from the connection, dispatches it to the handler named by its ``method`` on the server
+    object it was given, and writes back a response or an error. Requests are answered in the order they arrive.
+
+    """
+
     def __init__(self, handler, conn):
         self.conn = conn
         self.handler = handler
@@ -246,6 +270,9 @@ class LanguageProtocolServer(object):
 
 class JSONErrorCodes(object):
     # Defined by JSON RPC
+    """
+    The JSON-RPC and Language Server Protocol error codes.
+    """
     ParseError = -32700
     InvalidRequest = -32600
     MethodNotFound = -32601
@@ -262,6 +289,10 @@ class JSONErrorCodes(object):
 
 
 class CompletionKind(object):
+    """
+    The kinds of completion item an editor can display, as the protocol numbers them.
+    """
+
     Text = 1
     Method = 2
     Function = 3
@@ -283,6 +314,10 @@ class CompletionKind(object):
 
 
 class DiagnosticSeverity(object):
+    """
+    The severity levels a diagnostic can carry.
+    """
+
     Error = 1
     Warning = 2
     Information = 3
@@ -290,12 +325,20 @@ class DiagnosticSeverity(object):
 
 
 class TextDocumentSyncKind(object):
+    """
+    How a client sends document changes: not at all, in full, or incrementally.
+    """
+
     NONE = (0,)
     FULL = 1
     INCREMENTAL = 2
 
 
 class MessageType(object):
+    """
+    The severity levels of a message shown to the user.
+    """
+
     Error = 1
     Warning = 2
     Info = 3
@@ -303,6 +346,10 @@ class MessageType(object):
 
 
 class SymbolKind(object):
+    """
+    The kinds of symbol an editor can display in its outline, as the protocol numbers them.
+    """
+
     File = 1
     Module = 2
     Namespace = 3

@@ -30,6 +30,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+A source file known to the language server.
+
+A :class:`Document` owns the source buffer *libghdl* analyzes and the IIR tree that came out of it, and applies the
+edits an editor sends without reloading the file from disk.
+"""
+
 import ctypes
 import logging
 import os
@@ -57,6 +64,13 @@ class Document(object):
     # back to bytes using this encoding.  And we hope the result would be
     # the same as the file.  Because VHDL uses the iso 8859-1 character
     # set, we use the same encoding.  The client should also use 8859-1.
+    """
+    A source file known to the language server.
+
+    The document owns the source buffer *libghdl* analyzes and the IIR tree of the last successful analysis. An
+    editor's edits are applied to the buffer in place, so the file on disk is never re-read.
+
+    """
     encoding = "iso-8859-1"
 
     initial_gap_size = 4096

@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Resolution of a source location to the declaration it refers to, for *go to definition*.
+"""
+
 import logging
 import pyGHDL.libghdl.vhdl.nodes as nodes
 import pyGHDL.libghdl.vhdl.nodes_meta as nodes_meta

@@ -30,6 +30,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+The set of source files the language server knows about.
+
+A :class:`Workspace` maps between the URIs an editor uses and the documents behind them, keeps the project
+configuration read from :file:`hdl-prj.json`, and re-analyzes what an edit invalidated.
+"""
+
 import logging
 import os
 import json
@@ -65,6 +72,15 @@ class InitError(LSPException):
 
 
 class Workspace(object):
+    """
+    The set of source files the language server knows about.
+
+    The workspace maps between the URIs an editor uses and the :class:`~pyGHDL.lsp.document.Document` objects behind
+    them, holds the project configuration read from :file:`hdl-prj.json`, and re-analyzes the documents an edit
+    invalidated.
+
+    """
+
     def __init__(self, root_uri, server):
         self._root_uri = root_uri
         self._server = server
