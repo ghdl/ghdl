@@ -36,7 +36,8 @@
 A terminal application to exercise :mod:`pyGHDL.dom`.
 
 It analyzes VHDL source files with *libghdl*, translates the result to the document object model and pretty-prints it,
-which makes it the quickest way to see what the model makes of a given file. Installed as ``pyghdl-dom``.
+which makes it the quickest way to see what the model makes of a given file. Installed as ``pyghdl-dom`` by
+:file:`setup.py`.
 """
 
 from argparse import RawDescriptionHelpFormatter
@@ -148,7 +149,7 @@ class Application(TerminalApplication, ArgParseHelperMixin):
 
     def __init__(self):
         """
-        Initializes the application with an empty design and the argument parser.
+        Initializes the application.
         """
         super().__init__()
 

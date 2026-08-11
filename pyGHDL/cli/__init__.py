@@ -34,6 +34,6 @@
 """
 Command line applications shipped with pyGHDL.
 
-:mod:`~pyGHDL.cli.dom` exercises :mod:`pyGHDL.dom` from a terminal, and :mod:`~pyGHDL.cli.lsp` starts the language
+:mod:`pyGHDL.cli.dom` exercises :mod:`pyGHDL.dom` from a terminal, and :mod:`pyGHDL.cli.lsp` starts the language
 server. Both are registered as console scripts by :file:`setup.py`.
 """
