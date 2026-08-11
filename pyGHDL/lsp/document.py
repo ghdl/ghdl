@@ -57,6 +57,13 @@ log = logging.getLogger(__name__)
 
 
 class Document(object):
+    """
+    A source file known to the language server.
+
+    The document owns the source buffer *libghdl* analyzes and the IIR tree of the last successful analysis. An
+    editor's edits are applied to the buffer in place, so the file on disk is never re-read.
+    """
+
     # The encoding used for the files.
     # Unfortunately this is not fully reliable.  The client can read the
     # file using its own view of the encoding.  It then pass the document
@@ -64,18 +71,19 @@ class Document(object):
     # back to bytes using this encoding.  And we hope the result would be
     # the same as the file.  Because VHDL uses the iso 8859-1 character
     # set, we use the same encoding.  The client should also use 8859-1.
-    """
-    A source file known to the language server.
-
-    The document owns the source buffer *libghdl* analyzes and the IIR tree of the last successful analysis. An
-    editor's edits are applied to the buffer in place, so the file on disk is never re-read.
-
-    """
     encoding = "iso-8859-1"
 
     initial_gap_size = 4096
 
     def __init__(self, uri, sfe=None, lib=None, version=None):
+        """
+        Initialize a document from the source file *libghdl* has reserved for it.
+
+        :param uri:     The URI the client identifies this document by.
+        :param sfe:     The source file entry holding the text, as returned by :meth:`load`.
+        :param lib:     The name of the library the units are analyzed into, or ``None`` for ``work``.
+        :param version: The version the client attached to the document, used to detect stale edits.
+        """
         self.uri = uri
         self.version = version
         self._fe = sfe
@@ -85,6 +93,17 @@ class Document(object):
 
     @staticmethod
     def load(src_bytes, dirname, filename):
+        """
+        Reserve a source file in *libghdl* and fill it with the given text.
+
+        The buffer is over-allocated by :attr:`initial_gap_size`, so the first edits an editor sends fit without
+        reallocating it.
+
+        :param src_bytes: The source text, already encoded with :attr:`encoding`.
+        :param dirname:   The directory the file lives in. It is ignored when ``filename`` is absolute.
+        :param filename:  The name of the file.
+        :returns:         The source file entry the text was written to.
+        """
         # Write text to file buffer.
         src_len = len(src_bytes)
         buf_len = src_len + Document.initial_gap_size
@@ -98,6 +117,14 @@ class Document(object):
         return sfe
 
     def __extend_source_buffer(self, new_size):
+        """
+        Move the source to a larger buffer, because an edit no longer fits in the current one.
+
+        The gap is doubled on every extension, so a document that keeps growing is not reallocated on every
+        keystroke. The old source file is copied and freed, which invalidates the previous source file entry.
+
+        :param new_size: The number of bytes the edit needs on top of the current file length.
+        """
         self.gap_size *= 2
         fileid = files_map.Get_File_Name(self._fe)
         dirid = files_map.Get_Directory_Name(self._fe)
@@ -109,7 +136,12 @@ class Document(object):
         self._fe = new_sfe
 
     def reload(self, source):
-        """Reload the source of a document."""
+        """
+        Replace the whole source of the document.
+
+        :param source: The new source text. It is encoded with :attr:`encoding`, replacing characters that cannot
+                       be represented.
+        """
         src_bytes = source.encode(Document.encoding, "replace")
         l = len(src_bytes)
         if l >= files_map.Get_Buffer_Length(self._fe):
@@ -125,7 +157,16 @@ class Document(object):
         return str(self.uri)
 
     def apply_change(self, change):
-        """Apply a change to the document."""
+        """
+        Apply one incremental edit to the source buffer.
+
+        The replacement is retried once against a larger buffer, because a text longer than the gap fails the first
+        time. Line numbers are converted from the protocol's 0-based counting to *libghdl*'s 1-based counting.
+
+        :param change:          A ``TextDocumentContentChangeEvent`` with a ``range`` and the replacing ``text``.
+        :raises AssertionError: If the change has no ``range``, which is how a client asking to replace the whole
+                                document is rejected.
+        """
         text = change["text"]
         change_range = change.get("range")
 
@@ -173,6 +214,13 @@ class Document(object):
         assert status
 
     def check_document(self, text):
+        """
+        Compare the server's buffer against the client's text, to catch edits that were applied differently.
+
+        A mismatch is reported by *libghdl* as an internal error; the buffer is left as it is.
+
+        :param text: The document contents as the client sees them.
+        """
         log.debug("Checking document: %s", self.uri)
 
         text_bytes = text.encode(Document.encoding, "replace")
@@ -181,6 +229,17 @@ class Document(object):
 
     @staticmethod
     def add_to_library(tree, library):
+        """
+        Move the design units of a parsed file into a library.
+
+        The units are detached from the design file and added one by one, because the library owns them afterwards
+        and may replace an older unit of the same name. A unit without a library unit or without an identifier is
+        dropped rather than added.
+
+        :param tree:    The design file the parser produced.
+        :param library: The name of the target library, or ``None`` for ``work``.
+        :returns:       The design file the library holds the units in, or ``Null_Iir`` if none were added.
+        """
         # Set the target library
         if library is None:
             library = "work"
@@ -205,7 +264,15 @@ class Document(object):
         return tree
 
     def parse_document(self):
-        """Parse a document and put the units in the library."""
+        """
+        Parse the source buffer and put the units it declares into the library.
+
+        The tree is left as ``Null_Iir`` when the file declares no unit, which is not an error - an empty file or a
+        file holding only comments reaches this point.
+
+        :raises AssertionError: If the document already has a tree, because a document must be flushed before it is
+                                parsed again.
+        """
         assert self._tree == nodes.Null_Iir
         tree = sem_lib.Load_File(self._fe)
         if tree == nodes.Null_Iir:
@@ -217,6 +284,12 @@ class Document(object):
         nodes.Set_Design_File_Source(self._tree, self._fe)
 
     def compute_diags(self):
+        """
+        Parse the document and analyze every unit in it, so the errors reported are semantic ones too.
+
+        The diagnostics themselves are not returned; they are collected by the error handler the workspace
+        installed while this runs.
+        """
         log.debug("parse doc %d %s", self._fe, self.uri)
         self.parse_document()
         if self._tree == nodes.Null_Iir:
@@ -230,6 +303,16 @@ class Document(object):
             unit = nodes.Get_Chain(unit)
 
     def flatten_symbols(self, syms, parent):
+        """
+        Turn the tree of ``DocumentSymbol`` into the flat list of ``SymbolInformation``.
+
+        The two shapes differ in more than nesting: a location replaces the range, ``detail`` has no counterpart,
+        and the nesting is expressed by naming the container. A client that asked for the flat form gets it here.
+
+        :param syms:   The symbols to flatten. They are modified in place.
+        :param parent: The symbol the given ones are nested in, or ``None`` at the top level.
+        :returns:      The symbols and all their children, in one list.
+        """
         res = []
         for s in syms:
             s["location"] = {"uri": self.uri, "range": s["range"]}
@@ -244,6 +327,12 @@ class Document(object):
         return res
 
     def document_symbols(self):
+        """
+        Answer ``textDocument/documentSymbol`` for this document.
+
+        :returns: The symbols declared in the file, flattened. An empty list if the document has no tree, which is
+                  how a file that failed to parse is answered.
+        """
         log.debug("document_symbols")
         if self._tree == nodes.Null_Iir:
             return []
@@ -251,14 +340,38 @@ class Document(object):
         return self.flatten_symbols(syms, None)
 
     def position_to_location(self, position):
+        """
+        Convert a position in the protocol's coordinates to a *libghdl* location.
+
+        The character offset is added to the location of the line, which assumes one byte per character - the same
+        assumption :attr:`encoding` makes.
+
+        :param position: A ``Position``, with its 0-based ``line`` and ``character``.
+        :returns:        The location in the source file.
+        """
         pos = files_map.File_Line_To_Position(self._fe, position["line"] + 1)
         return files_map.File_Pos_To_Location(self._fe, pos) + position["character"]
 
     def find_definition(self, position):
+        """
+        Find the declaration the name under a position refers to.
+
+        :param position: The position the client asked about.
+        :returns:        The declaration node, or ``None`` if the position is not on a name.
+        """
         loc = self.position_to_location(position)
         return references.find_definition_by_loc(self._tree, loc)
 
     def hover(self, position):
+        """
+        Answer ``textDocument/hover`` by reprinting the declaration under a position.
+
+        The comments written above the declaration are shown before it, separated by a rule, so the documentation
+        the author wrote is what the reader sees first.
+
+        :param position: The position the client asked about.
+        :returns:        A ``Hover`` holding markdown, or ``None`` if there is no declaration at that position.
+        """
         loc = self.position_to_location(position)
         t = references.find_definition_by_loc(self._tree, loc)
         if t is None:
@@ -295,6 +408,16 @@ class Document(object):
         return res
 
     def format_range(self, rng):
+        """
+        Re-indent a range of lines.
+
+        Only whole lines are formatted. A range ending at character 0 does not extend into the line it ends on,
+        which is how a client selecting whole lines is handled.
+
+        :param rng: The ``Range`` to format.
+        :returns:   A list holding the single ``TextEdit`` that replaces those lines, or ``None`` if the range is
+                    empty or the document has no tree.
+        """
         first_line = rng["start"]["line"] + 1
         last_line = rng["end"]["line"] + (1 if rng["end"]["character"] != 0 else 0)
         if last_line < first_line:
