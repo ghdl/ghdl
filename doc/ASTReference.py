@@ -350,6 +350,28 @@ def RenderGroup(group: Group, nodes, funcs, accessorDescriptions) -> str:
 	return "\n".join(lines) + "\n"
 
 
+def Legend() -> List[str]:
+	"""
+	Draw one edge of each access kind, so the colours on the node diagrams can be read.
+
+	:returns: The lines of a ``.. graphviz::`` directive.
+	"""
+	lines = [
+		".. graphviz::",
+		"",
+		"   digraph {",
+		'      rankdir="LR"',
+		"      nodesep=0.1",
+		'      node [shape=point width=0.06 color="#888a85"]',
+		'      edge [fontname="monospace" fontsize=10 minlen=3]',
+		"",
+	]
+	for (index, (access, (label, _, style))) in enumerate(ACCESS_KINDS.items()):
+		lines.append(f'      l{index}a -> l{index}b [label="{label}" {style}]')
+	lines.extend(["   }", ""])
+	return lines
+
+
 def RenderAccessors(funcs) -> str:
 	"""
 	Render the accessor reference: every ``Get_``/``Set_`` pair once, with its shared description.
@@ -382,6 +404,11 @@ def RenderAccessors(funcs) -> str:
 	for (access, (label, description, _)) in ACCESS_KINDS.items():
 		lines.append(f"* **{label}** - {description}")
 	lines.append("")
+	lines.extend(
+		Reflow(["The node diagrams use the same names, drawn as edge colours:"])
+	)
+	lines.append("")
+	lines.extend(Legend())
 
 	for func in sorted(funcs, key=lambda f: f.name):
 		(label, _, _) = ACCESS_KINDS.get(func.acc, (func.acc, "", ""))
