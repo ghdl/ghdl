@@ -99,7 +99,7 @@ singlerun() {
 
   ( # Use a subshell, so old working directory can be properly restored. pushd/popd are too noisy.
     cd "${testName}"
-    local startTime=$(date +%s%N)
+    local startTime=$(now_nanoseconds)
 
     printf -- "------------------------\n"
     # 'set -e' is active, so the exit code has to be read from a condition. Written as a plain assignment,
@@ -111,7 +111,7 @@ singlerun() {
     fi
     printf -- "========================\n"
 
-    local stopTime=$(date +%s%N)
+    local stopTime=$(now_nanoseconds)
     local elapsedTime=$(elapsed_seconds ${startTime} ${stopTime})
 
     if [ $exitCode -eq 0 ]; then
