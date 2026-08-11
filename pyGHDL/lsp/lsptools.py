@@ -66,6 +66,11 @@ def json2lsp():
 
 
 def main():
+    """
+    Run the tool named by the first argument.
+
+    :raises AttributeError: If no sub-command was given, as there is no default one.
+    """
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(help="sub-command help")
     parser_l2j = subparsers.add_parser("lsp2json", help="convert lsp dump to JSON")
