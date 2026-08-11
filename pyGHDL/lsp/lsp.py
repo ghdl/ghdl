@@ -49,18 +49,40 @@ class ProtocolError(LSPException):
 
 class LSPConn:
     def __init__(self, reader, writer):
+        """
+        Initializes the connection from a reader and a writer.
+
+        :param reader: The binary stream messages are read from.
+        :param writer: The binary stream messages are written to.
+        """
         self.reader = reader
         self.writer = writer
 
     def readline(self):
+        """
+        Read one line, which is how a header line is consumed.
+
+        :returns: The line, decoded as UTF-8.
+        """
         data = self.reader.readline()
         return data.decode("utf-8")
 
     def read(self, size):
+        """
+        Read a message body of a known length.
+
+        :param size: The number of bytes to read, from the ``Content-Length`` header.
+        :returns:    The body, decoded as UTF-8.
+        """
         data = self.reader.read(size)
         return data.decode("utf-8")
 
     def write(self, out):
+        """
+        Write a message and flush, so the client sees it immediately.
+
+        :param out: The text to write.
+        """
         self.writer.write(out.encode())
         self.writer.flush()
 
@@ -69,6 +91,15 @@ def path_from_uri(uri):
     # Convert file uri to path (strip html like head part)
     # This is needed to get the root path and to load a document when the
     # textual source is not present.
+    """
+    Convert a ``file:`` URI to a path.
+
+    A URI that does not name a local file is returned unchanged, which is how a client sending something else is
+    tolerated rather than crashing the server.
+
+    :param uri: The URI to convert.
+    :returns:   The path the URI names, or the URI itself if it is not a ``file:`` URI.
+    """
     if not uri.startswith("file://"):
         # No scheme
         return uri
@@ -85,6 +116,12 @@ def path_from_uri(uri):
 
 
 def path_to_uri(path):
+    """
+    Convert a path to a ``file:`` URI, resolving it first.
+
+    :param path: The path to convert.
+    :returns:    The absolute ``file:`` URI of that path.
+    """
     return Path(path).resolve().as_uri()
 
 
@@ -93,6 +130,15 @@ def normalize_rpc_file_uris(rpc):
     # Fixes a crash on windows where the underlying ada crashes
     # if paths to the same file are given with inconsistent
     # capitalization.
+    """
+    Normalize the capitalization of every ``file:`` URI in a message.
+
+    Clients differ in how they capitalize a drive letter on Windows, so the same document can arrive under two
+    spellings and be looked up as two different files.
+
+    :param rpc: The decoded message to normalize, modified in place.
+    :returns:   The same message.
+    """
     for key, val in rpc.items():
         # recurse into all leaf elements.
         if isinstance(val, dict):
@@ -104,6 +150,12 @@ def normalize_rpc_file_uris(rpc):
 
 class LanguageProtocolServer(object):
     def __init__(self, handler, conn):
+        """
+        Initializes the server with the object that handles the requests.
+
+        :param handler: The object whose ``lsp_*`` methods implement the protocol requests.
+        :param conn:    The connection to serve on, or ``None`` to build one from stdin and stdout.
+        """
         self.conn = conn
         self.handler = handler
         if handler is not None:
@@ -112,6 +164,12 @@ class LanguageProtocolServer(object):
         self._next_id = 0
 
     def read_request(self):
+        """
+        Read one message: the headers, then the body of the length they announce.
+
+        :returns:              The message body, or ``None`` at end of input.
+        :raises ProtocolError: If a header line is malformed or ``Content-Length`` is missing.
+        """
         headers = {}
         while True:
             # Read a line
@@ -136,6 +194,9 @@ class LanguageProtocolServer(object):
                 headers[key] = value
 
     def run(self):
+        """
+        Serve requests until the client disconnects or asks the server to exit.
+        """
         while self.running:
             body = self.read_request()
             if body is None:
@@ -151,6 +212,15 @@ class LanguageProtocolServer(object):
                 self.write_output(reply)
 
     def handle(self, msg):
+        """
+        Dispatch one decoded message to the handler named by its ``method``.
+
+        A request is answered with a response, a notification is not answered at all, and an unknown method is
+        reported as ``MethodNotFound`` rather than raising.
+
+        :param msg:            The decoded message.
+        :raises ProtocolError: If the message is not JSON-RPC 2.0.
+        """
         if msg.get("jsonrpc", None) != "2.0":
             raise ProtocolError("invalid jsonrpc version")
         tid = msg.get("id", None)
@@ -203,13 +273,23 @@ class LanguageProtocolServer(object):
         return rbody
 
     def write_output(self, body):
+        """
+        Encode a message and write it with its ``Content-Length`` header.
+
+        :param body: The message to send.
+        """
         output = json.dumps(body, separators=(",", ":"))
         self.conn.write(f"Content-Length: {len(output)}\r\n")
         self.conn.write("\r\n")
         self.conn.write(output)
 
     def notify(self, method, params):
-        """Send a notification."""
+        """
+        Send a notification, which the client does not answer.
+
+        :param method: The protocol method to notify.
+        :param params: The parameters of the notification.
+        """
         body = {
             "jsonrpc": "2.0",
             "method": method,
@@ -218,7 +298,13 @@ class LanguageProtocolServer(object):
         self.write_output(body)
 
     def send_request(self, method, params):
-        """Send a request."""
+        """
+        Send a request to the client and wait for its answer.
+
+        :param method: The protocol method to call.
+        :param params: The parameters of the request.
+        :returns:      The client's result.
+        """
         self._next_id += 1
         body = {
             "jsonrpc": "2.0",
@@ -233,9 +319,21 @@ class LanguageProtocolServer(object):
         self.running = False
 
     def show_message(self, typ, message):
+        """
+        Ask the client to show a message to the user.
+
+        :param typ:     The severity, from :class:`MessageType`.
+        :param message: The text to show.
+        """
         self.notify("window/showMessage", {"type": typ, "message": message})
 
     def configuration(self, items):
+        """
+        Ask the client for configuration values.
+
+        :param items: The configuration items to request.
+        :returns:     The client's answer.
+        """
         return self.send_request("workspace/configuration", {"items": items})
 
 
