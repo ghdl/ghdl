@@ -32,6 +32,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+A terminal application to exercise :mod:`pyGHDL.dom`.
+
+It analyzes VHDL source files with *libghdl*, translates the result to the document object model and pretty-prints it,
+which makes it the quickest way to see what the model makes of a given file. Installed as ``pyghdl-dom``.
+"""
+
 from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
 from platform import system as platform_system
@@ -56,6 +63,10 @@ __license__ = ""
 
 
 class SourceAttribute(Attribute):
+    """
+    Attribute attaching the source selection command line arguments to a handler method.
+    """
+
     def __call__(self, func):
         """
         Attaches the source selection command line arguments to the decorated handler method.
@@ -121,6 +132,13 @@ class SourceAttribute(Attribute):
 
 @export
 class Application(TerminalApplication, ArgParseHelperMixin):
+    """
+    The ``pyghdl-dom`` application.
+
+    It owns a :class:`~pyGHDL.dom.NonStandard.Design`, adds the requested source files to it, and dispatches the
+    sub-command the user asked for.
+    """
+
     HeadLine = "pyGHDL.dom - Test Application"
 
     # load platform information (Windows, Linux, Darwin, ...)
@@ -129,6 +147,9 @@ class Application(TerminalApplication, ArgParseHelperMixin):
     _design: Design
 
     def __init__(self):
+        """
+        Initializes the application with an empty design and the argument parser.
+        """
         super().__init__()
 
         # Initialize DOM with an empty design
@@ -152,7 +173,17 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         )
 
         class HelpFormatter(RawDescriptionHelpFormatter):
+            """
+            Help formatter widening argparse's output to the terminal.
+            """
+
             def __init__(self, *args, **kwargs):
+                """
+                Initializes the formatter with a wider help column and line width.
+
+                :param args:   Positional arguments passed on to :class:`~argparse.RawDescriptionHelpFormatter`.
+                :param kwargs: Keyword arguments passed on, with the width settings overridden.
+                """
                 kwargs["max_help_position"] = 30
                 kwargs["width"] = textWidth
                 super().__init__(*args, **kwargs)
@@ -176,9 +207,17 @@ class Application(TerminalApplication, ArgParseHelperMixin):
     # ============================================================================
     @readonly
     def Platform(self):
+        """
+        Read-only property to access the platform the application runs on (:attr:`__PLATFORM`).
+
+        :returns: The platform's name, as :func:`platform.system` reports it.
+        """
         return self.__PLATFORM
 
     def PrintHeadline(self):
+        """
+        Print the application's headline banner.
+        """
         self.WriteNormal(dedent("""\
                 {HEADLINE}{line}
                 {headline: ^80s}
@@ -193,10 +232,18 @@ class Application(TerminalApplication, ArgParseHelperMixin):
     @FlagArgument("-v", "--verbose", dest="verbose", help="Print out detailed messages.")
     @FlagArgument("-q", "--quiet", dest="quiet", help="Reduce messages to a minimum.")
     def Run(self):
+        """
+        Parse the command line and run the requested sub-command.
+        """
         ArgParseHelperMixin.Run(self)
 
     @DefaultHandler()
     def HandleDefault(self, _):
+        """
+        Handle an invocation with no sub-command by printing the help page.
+
+        :param _: The parsed arguments, unused.
+        """
         self.PrintHeadline()
         self.MainParser.print_help()
 
@@ -209,6 +256,11 @@ class Application(TerminalApplication, ArgParseHelperMixin):
     @CommandHandler("help", help="Display help page(s) for the given command name.")
     @StringArgument(metaName="Command", dest="Command", optional=True, help="Print help page(s) for a command.")
     def HandleHelp(self, args):
+        """
+        Handle the ``help`` sub-command: print the help page of a command, or the overview.
+
+        :param args: The parsed arguments, carrying the optional command name.
+        """
         self.PrintHeadline()
 
         if args.Command is None:
@@ -229,6 +281,11 @@ class Application(TerminalApplication, ArgParseHelperMixin):
     # ----------------------------------------------------------------------------
     @CommandHandler("version", help="Display tool and version information.")
     def HandleInfo(self, args):
+        """
+        Handle the ``version`` sub-command: print copyright, license and authors.
+
+        :param args: The parsed arguments, unused.
+        """
         self.PrintHeadline()
 
         copyrights = __copyright__.split("\n", 1)
@@ -253,6 +310,14 @@ class Application(TerminalApplication, ArgParseHelperMixin):
     )
     @SourceAttribute()
     def HandlePretty(self, args):
+        """
+        Handle the ``pretty`` sub-command: analyze the selected sources and pretty-print the resulting model.
+
+        A file is analyzed on its own; a directory is scanned, and each subdirectory is treated as a library of that
+        name. The time *libghdl* spent parsing and the time the translation took are reported per file.
+
+        :param args: The parsed arguments, carrying the selected files, directory and default library.
+        """
         self.PrintHeadline()
 
         if args.Files is not None:
@@ -336,6 +401,13 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         self.Exit()
 
     def addFile(self, filename: Path, library: str) -> Document:
+        """
+        Analyze a source file and add the resulting document to the design.
+
+        :param filename: The source file to analyze.
+        :param library:  The name of the library to add the document to.
+        :returns:        The analyzed document.
+        """
         lib = self._design.GetLibrary(library)
 
         document = Document(filename)

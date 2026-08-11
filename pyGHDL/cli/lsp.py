@@ -31,6 +31,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+The command line entry point of GHDL's language server.
+
+It parses the command line, sets up logging - including a rotating trace of the protocol traffic, which is what makes a
+misbehaving editor debuggable - and hands over to :class:`pyGHDL.lsp.vhdl_ls.VhdlLanguageServer`. Installed as
+``ghdl-ls``.
+"""
 
 from argparse import ArgumentParser
 from logging import getLogger, DEBUG, INFO, ERROR, basicConfig
@@ -58,7 +65,15 @@ __loggerName = "ghdl-ls"
 
 
 def __rotate_log_files(basename: str, num: int):
-    """Rotate existing log files."""
+    """
+    Rotate existing log files.
+
+    The oldest file is removed - on Windows renaming onto an existing file is an error - then each remaining file is
+    shifted up one number and the current log becomes ``.0``.
+
+    :param basename: The path of the current log file, without a rotation suffix.
+    :param num:      How many rotated files to keep.
+    """
     # Remove the oldest file.  This one will be lost.
     # Required on Windows as it is an error to rename a file to an existing
     # one.
@@ -79,7 +94,11 @@ def __rotate_log_files(basename: str, num: int):
 
 
 def _generateCLIParser() -> ArgumentParser:
-    """Creates an CLI argument parser based on ``argparse``."""
+    """
+    Creates an CLI argument parser based on ``argparse``.
+
+    :returns: The parser for the language server's arguments.
+    """
     parser = ArgumentParser(
         description="VHDL Language Protocol Server. Find info about clients in `ghdl/ghdl-language-server <https://github.com/ghdl/ghdl-language-server>`__."
     )
