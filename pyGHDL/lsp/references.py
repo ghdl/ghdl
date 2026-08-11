@@ -44,6 +44,13 @@ log = logging.getLogger(__name__)
 
 
 def find_def_chain(first, loc):
+    """
+    Search a chain of nodes for the one a location falls in.
+
+    :param first: The first node of the chain.
+    :param loc:   The location to look for.
+    :returns:     The node covering that location, or ``None`` if no node of the chain does.
+    """
     n1 = first
     while n1 != nodes.Null_Iir:
         res = find_def(n1, loc)
@@ -54,7 +61,21 @@ def find_def_chain(first, loc):
 
 
 def find_def(n, loc):
-    """Return the node at location :param loc:, or None if not under :param n:."""
+    """
+    Search a subtree for the name a location falls in.
+
+    A name is matched by its own location and the length of its identifier, as a node records where it starts but
+    not where it ends. An operator has no identifier to measure, so the kinds are grouped by the width of the
+    symbol that wrote them - ``+`` is one character, ``**`` two, ``and`` three, ``nand`` four.
+
+    The descent reads the fields from the node metadata rather than walking the node's children, which is much
+    faster. A field holding a reference is not followed: the node it names is reached through the field that owns
+    it, and following both would visit a node twice and could not terminate on a cycle.
+
+    :param n:   The node to search. ``Null_Iir`` searches nothing.
+    :param loc: The location to look for.
+    :returns:   The name covering that location, or ``None`` if no name in this subtree does.
+    """
     if n == nodes.Null_Iir:
         return None
     k = nodes.Get_Kind(n)
@@ -177,14 +198,31 @@ def find_def(n, loc):
 
 
 def find_node_by_loc(n, loc):
-    """Return the denoting node for :param loc: or None."""
+    """
+    Find the name written at a location.
+
+    :param n:   The tree to search, usually a design file.
+    :param loc: The location to look for.
+    :returns:   The name at that location, or ``None`` if there is no name there.
+    """
     ref = find_def(n, loc)
     log.debug("for loc %u found node %s", loc, ref)
     return ref
 
 
 def find_definition_by_loc(n, loc):
-    """Return the declaration (as a node) under :param loc: or None."""
+    """
+    Find the declaration the name at a location refers to.
+
+    This is the step from the name to what it denotes, which is what *go to definition* needs. A name resolves
+    through the entity it was bound to during analysis; anything else - an operator, for one - resolves through the
+    subprogram chosen to implement it.
+
+    :param n:   The tree to search, usually a design file.
+    :param loc: The location to look for.
+    :returns:   The declaration, or ``None`` if there is no name at that location or it was never resolved, which
+                is what an unanalyzed or erroneous unit leaves behind.
+    """
     ref = find_node_by_loc(n, loc)
     if ref is None:
         return None

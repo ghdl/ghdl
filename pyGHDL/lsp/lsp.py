@@ -175,7 +175,8 @@ class LanguageProtocolServer(object):
         """
         Initializes the server with the object that handles the requests.
 
-        :param handler: The object whose ``lsp_*`` methods implement the protocol requests.
+        :param handler: The object answering the requests. Its ``dispatcher`` maps a protocol method to the method
+                        implementing it.
         :param conn:    The connection to serve on, or ``None`` to build one from stdin and stdout.
         """
         self.conn = conn
@@ -241,6 +242,7 @@ class LanguageProtocolServer(object):
         reported as ``MethodNotFound`` rather than raising.
 
         :param msg:            The decoded message.
+        :returns:              The response to write back, or ``None`` for a notification, which is not answered.
         :raises ProtocolError: If the message is not JSON-RPC 2.0.
         """
         if msg.get("jsonrpc", None) != "2.0":
