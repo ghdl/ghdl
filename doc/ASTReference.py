@@ -227,45 +227,56 @@ def FieldRows(node, funcs) -> List[Tuple[str, str, str, str]]:
 
 def NodeDiagram(node, funcs) -> List[str]:
 	"""
-	Draw the node and the nodes reachable from it in one hop.
+	Draw the node as a record, with one port per field and an edge out of every field that is a link.
 
-	The Ada accessors return a bare ``Iir`` for 237 of the 395 fields, so the *kind* a field points at is
-	not knowable from the source. What is knowable, and what the diagram shows, is which fields are links
-	at all, and of what nature: owned, a reference, a forward reference resolved during semantic
-	analysis, or the head of a chain.
+	The node is drawn the way its storage is laid out: the fields in the order the Ada source declares
+	them, each one a port of a `record shaped <https://graphviz.org/doc/info/shapes.html>`__ node. A
+	field that holds a link gets an edge leaving *from its own port*, so it is visible which slot the
+	link lives in; a field holding a value - an identifier, a flag - is shown in place with no edge.
+
+	The Ada accessors return a bare ``Iir`` for 237 of the 395 fields, so the *kind* a field points at
+	is not knowable from the source. What is knowable, and what the edges carry, is the nature of the
+	link: owned, a reference, a forward reference resolved during semantic analysis, or the head of a
+	chain.
 
 	:param node:  The :class:`~scripts.pnodes.NodeDesc` to draw.
 	:param funcs: All accessors.
-	:returns:     The lines of a ``.. graphviz::`` directive, or an empty list if the node has no links.
+	:returns:     The lines of a ``.. graphviz::`` directive, or an empty list if the node has no fields.
 	"""
-	links = []
+	fields = []
 	seen = set()
 	for field in node.order:
 		func = node.fields[field]
-		if func is None or func.name in seen or func.rtype not in LINK_TYPES:
+		if func is None or func.name in seen:
 			continue
 		seen.add(func.name)
-		links.append(func)
+		fields.append(func)
 
-	if not links:
+	if not fields:
 		return []
+
+	# A record label separates its fields with '|', so a field's text must not contain one.
+	cells = "|".join(f"<{func.name}> {func.name}" for func in fields)
+	label = f"{{{node.name}|{{{cells}}}}}"
 
 	lines = [
 		".. graphviz::",
 		"",
 		"   digraph {",
 		'      rankdir="LR"',
-		'      node [shape=box fontname="monospace" fontsize=10]',
+		'      node [shape=record fontname="monospace" fontsize=10]',
 		'      edge [fontname="monospace" fontsize=9]',
 		"",
+		f'      "{node.name}" [style=filled fillcolor="#eeeeec" label="{label}"]',
 	]
-	lines.append(f'      "{node.name}" [shape=record style=filled fillcolor="#eeeeec" label="{node.name}"]')
-	for func in links:
-		(label, _, style) = ACCESS_KINDS.get(func.acc, (func.acc or "owned", "", ""))
+	for func in fields:
+		if func.rtype not in LINK_TYPES:
+			continue
+		(_, _, style) = ACCESS_KINDS.get(func.acc, (func.acc or "owned", "", ""))
 		target = f"{node.name}__{func.name}"
 		shape = "box3d" if func.rtype in ("Iir_List", "Iir_Flist") else "box"
 		lines.append(f'      "{target}" [shape={shape} label="{func.rtype}"]')
-		lines.append(f'      "{node.name}" -> "{target}" [label="{func.name}" {style}]')
+		lines.append(f'      "{node.name}":{func.name} -> "{target}" [{style}]')
 	lines.extend(["   }", ""])
 	return lines
 
@@ -339,6 +350,28 @@ def RenderGroup(group: Group, nodes, funcs, accessorDescriptions) -> str:
 	return "\n".join(lines) + "\n"
 
 
+def Legend() -> List[str]:
+	"""
+	Draw one edge of each access kind, so the colours on the node diagrams can be read.
+
+	:returns: The lines of a ``.. graphviz::`` directive.
+	"""
+	lines = [
+		".. graphviz::",
+		"",
+		"   digraph {",
+		'      rankdir="LR"',
+		"      nodesep=0.1",
+		'      node [shape=point width=0.06 color="#888a85"]',
+		'      edge [fontname="monospace" fontsize=10 minlen=3]',
+		"",
+	]
+	for (index, (access, (label, _, style))) in enumerate(ACCESS_KINDS.items()):
+		lines.append(f'      l{index}a -> l{index}b [label="{label}" {style}]')
+	lines.extend(["   }", ""])
+	return lines
+
+
 def RenderAccessors(funcs) -> str:
 	"""
 	Render the accessor reference: every ``Get_``/``Set_`` pair once, with its shared description.
@@ -371,6 +404,11 @@ def RenderAccessors(funcs) -> str:
 	for (access, (label, description, _)) in ACCESS_KINDS.items():
 		lines.append(f"* **{label}** - {description}")
 	lines.append("")
+	lines.extend(
+		Reflow(["The node diagrams use the same names, drawn as edge colours:"])
+	)
+	lines.append("")
+	lines.extend(Legend())
 
 	for func in sorted(funcs, key=lambda f: f.name):
 		(label, _, _) = ACCESS_KINDS.get(func.acc, (func.acc, "", ""))
