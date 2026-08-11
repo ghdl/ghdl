@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Translation of IIR declarations into the document symbols an editor displays in its outline.
+"""
+
 import pyGHDL.libghdl.name_table as name_table
 import pyGHDL.libghdl.files_map as files_map
 import pyGHDL.libghdl.vhdl.nodes as nodes
