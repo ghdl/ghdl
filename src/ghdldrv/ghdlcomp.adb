@@ -178,6 +178,93 @@ package body Ghdlcomp is
    end Perform_Action;
 
 
+   --  Command --flow: elaborate UNIT and dump the dataflow database,
+   --  then stop (no simulation).
+   type Command_Flow is new Command_Comp with record
+      Flow_File : String_Acc := null;
+   end record;
+   function Decode_Command (Cmd : Command_Flow; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Flow) return String;
+   procedure Decode_Option (Cmd : in out Command_Flow;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_State);
+   procedure Perform_Action (Cmd : in out Command_Flow;
+                             Args : String_Acc_Array;
+                             Success : out Boolean);
+
+   function Decode_Command (Cmd : Command_Flow; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "--flow" or else Name = "flow";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Flow) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "--flow [--out=FILE] UNIT [ARCH]"
+        & ASCII.LF & "  Elaborate UNIT and dump the dataflow database"
+        & ASCII.LF & "  (default file: ghdl.flow)";
+   end Get_Short_Help;
+
+   procedure Decode_Option (Cmd : in out Command_Flow;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_State) is
+   begin
+      if Option'Length > 6
+        and then Option (Option'First .. Option'First + 5) = "--out="
+      then
+         Cmd.Flow_File :=
+           new String'(Option (Option'First + 6 .. Option'Last));
+         Res := Option_Ok;
+      else
+         Decode_Option (Command_Comp (Cmd), Option, Arg, Res);
+      end if;
+   end Decode_Option;
+
+   procedure Perform_Action (Cmd : in out Command_Flow;
+                             Args : String_Acc_Array;
+                             Success : out Boolean)
+   is
+      Opt_Arg : Natural;
+      File : constant String :=
+        (if Cmd.Flow_File /= null then Cmd.Flow_File.all else "ghdl.flow");
+      New_Args : String_Acc_Array (1 .. Args'Length + 1);
+   begin
+      Success := False;
+
+      --  Append "--flow=FILE" so the elaboration step writes the
+      --  database (the dump happens after Compute_Sources); the
+      --  simulation itself is skipped.
+      for I in 1 .. Args'Length loop
+         New_Args (I) := Args (Args'First + I - 1);
+      end loop;
+      New_Args (Args'Length + 1) := new String'("--flow=" & File);
+
+      Hooks.Compile_Init.all (False);
+
+      Libraries.Load_Work_Library (False);
+      Flags.Flag_Elaborate_With_Outdated := False;
+      Flags.Flag_Only_Elab_Warnings := True;
+
+      Hooks.Compile_Elab.all ("--flow", New_Args, Opt_Arg);
+
+      --  Opt_Arg indexes the first arg after the unit; the trailing
+      --  entry is the injected "--flow=FILE", so anything at or before
+      --  Args'Length is a user option that is ignored (no simulation).
+      if Opt_Arg <= Args'Length then
+         Error_Msg_Option ("options after unit are ignored by --flow");
+      end if;
+
+      Success := True;
+   end Perform_Action;
+
+
    --  Command -c xx -r/-e
    type Command_Compile is new Command_Comp with null record;
    function Decode_Command (Cmd : Command_Compile; Name : String)
@@ -1063,6 +1150,7 @@ package body Ghdlcomp is
       Register_Command (new Command_Analyze);
       Register_Command (new Command_Elab);
       Register_Command (new Command_Run);
+      Register_Command (new Command_Flow);
       Register_Command (new Command_Compile);
       Register_Command (new Command_Make);
       Register_Command (new Command_Gen_Makefile);
