@@ -40,6 +40,7 @@ package Default_Paths is
      "@POST_PROCESSOR@";
 
    Shared_Library_Extension : constant String := "@SOEXT@";
+   Shared_Or_Import_Library_Extension : constant String := "@SOIMPEXT@";
    Executable_Extension : constant String := "@EXEEXT@";
    Default_Pie : constant Boolean := "@default_pic@" = String'("true");
 
