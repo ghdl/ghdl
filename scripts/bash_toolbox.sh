@@ -34,8 +34,9 @@
 VERBOSE=${VERBOSE:-0}
 DEBUG=${DEBUG:-0}
 
+ANSI_ESC=$'\x1b'
+
 enable_color() {
-	ANSI_ESC=$'\x1b'
 	ANSI_BLACK=$'\x1b[30m'
 	ANSI_RED=$'\x1b[31m'
 	ANSI_GREEN=$'\x1b[32m'
@@ -286,6 +287,12 @@ case "$(${DATE} +%:z)" in
 	*)                         TIMEZONE_FORMAT="%z"  ;;
 esac
 
+DeclareProcedure "now_timestamp" ""
+# Print the current time as an ISO 8601 timestamp, as the 'timestamp' attribute of a JUnit report takes.
+now_timestamp() {
+	${DATE} +"%Y-%m-%dT%H:%M:%S${TIMEZONE_FORMAT}"
+}
+
 DeclareProcedure "now_nanoseconds" ""
 # Read the clock, in nanoseconds.
 # Without '%N' the reading is a whole second, which keeps the arithmetic working rather than producing a
@@ -305,12 +312,6 @@ elapsed_seconds() {
 	local milliseconds=$((($2 - $1) / 1000000))
 
 	printf -- '%d.%03d' $((milliseconds / 1000)) $((milliseconds % 1000))
-}
-
-DeclareProcedure "now_timestamp" ""
-# Print the current time as an ISO 8601 timestamp, as the 'timestamp' attribute of a JUnit report takes.
-now_timestamp() {
-	${DATE} +"%Y-%m-%dT%H:%M:%S${TIMEZONE_FORMAT}"
 }
 
 

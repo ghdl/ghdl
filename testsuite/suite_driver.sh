@@ -7,7 +7,7 @@ set -e
 
 # BASH_SOURCE, not the working directory: this file is executed by testsuite.sh and sourced by the parallel
 # workers, and the two run from different places.
-. "$(dirname "${BASH_SOURCE[0]}")/../scripts/bash_toolbox.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../scripts/bash_toolbox.sh"
 
 # Parse command line options
 # $1 - Testsuite name (testsuite directory)
