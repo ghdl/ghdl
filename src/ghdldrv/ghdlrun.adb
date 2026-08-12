@@ -71,6 +71,7 @@ with Grt.Heap;
 
 with Grt.Vcd;
 with Grt.Vcdz;
+with Grt.Evcd;
 with Grt.Vpi;
 with Grt.Vhpi;
 with Grt.Waves;
@@ -314,6 +315,7 @@ package body Ghdlrun is
       Grt.Disp_Tree.Register;
       Grt.Vcd.Register;
       Grt.Vcdz.Register;
+      Grt.Evcd.Register;
       Grt.Waves.Register;
       Simul.Fst.Register;
       Grt.Vpi.Register;
