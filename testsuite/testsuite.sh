@@ -38,13 +38,13 @@ _vests () {
       wc -l vests.log
 
       printf -- '    <testcase classname="%s" name="%s" time="%s" />\n' \
-        "vests" "all" "$elapsedTime" > "all.testresult"
+        "${REPORT_PREFIX}vests" "all" "$elapsedTime" > "all.testresult"
     else
       cat vests.log
       printf -- "${ANSI_RED}Vests failure$ANSI_NOCOLOR\n"
 
       printf -- '    <testcase classname="%s" name="%s" time="%s">\n      <failure message="vests failed" type="failure">' \
-        "vests" "all" "$elapsedTime" > "all.testresult"
+        "${REPORT_PREFIX}vests" "all" "$elapsedTime" > "all.testresult"
       xml_escape vests.log          >> "all.testresult"
       printf -- '</failure>\n    </testcase>\n' >> "all.testresult"
     fi
@@ -240,7 +240,7 @@ for testsuite in $testsuites; do
 
   # Create a partial XML file for every testsuite
   printf -- '  <testsuite name="%s" tests="%s" failures="%s" errors="%s" skipped="%s" time="%s" timestamp="%s" hostname="%s">\n' \
-    "${testsuite}" "${testCount}" "${failedCount}" "${erroredCount}" "${skippedCount}" "${elapsedTime}" "${timestamp}" "${hostName}" \
+    "${REPORT_PREFIX}${testsuite}" "${testCount}" "${failedCount}" "${erroredCount}" "${skippedCount}" "${elapsedTime}" "${timestamp}" "${hostName}" \
                                   > "${testsuite}.testresults.xml"
   cat "${testsuite}.testresults" >> "${testsuite}.testresults.xml"
   printf -- '  </testsuite>\n'      >> "${testsuite}.testresults.xml"

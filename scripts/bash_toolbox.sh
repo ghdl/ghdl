@@ -317,6 +317,14 @@ now_timestamp() {
 # ==============================================================================
 # XML
 # ==============================================================================
+# An optional prefix for the names written into a test report.
+#
+# Merging the reports of several platforms collapses them when the names collide: 'sanity/000hello' from Ubuntu,
+# Windows and macOS are one testcase as far as a merge tool can tell. Setting GHDL_TEST_VARIANT to something
+# unique per platform - 'ubuntu-26.04-mcode' - keeps them apart.
+REPORT_PREFIX="${GHDL_TEST_VARIANT:+${GHDL_TEST_VARIANT}.}"
+
+
 DeclareProcedure "xml_escape" "<file>"
 # Read a file and write it as XML character data.
 #

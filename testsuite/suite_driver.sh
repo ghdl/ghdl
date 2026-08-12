@@ -85,10 +85,10 @@ singlerun() {
   # directory on the suite, where './testsuite.sh' is the suite's own launcher - the whole suite would run
   # again and be reported as one passing testcase.
   if [[ ! -d "${testName}" ]]; then
-    printf -- "%s %s: ${ANSI_RED}no such testcase${ANSI_NOCOLOR}\n" "${_suite}" "${testName}"
+    printf -- "%s %s: ${ANSI_RED}no such testcase${ANSI_NOCOLOR}\n" "${REPORT_PREFIX}${_suite}" "${testName}"
     printf -- '%s ' "${testName}" >> "${_suite}.failures"
     printf -- '    <testcase classname="%s" name="%s" time="0.000">\n      <error message="no such testcase" type="error" />\n    </testcase>\n' \
-      "${_suite}" "${testName}" > "${testName}.testresult"
+      "${REPORT_PREFIX}${_suite}" "${testName}" > "${testName}.testresult"
     return 0
   fi
 
@@ -110,19 +110,19 @@ singlerun() {
     local elapsedTime=$(elapsed_seconds ${startTime} ${stopTime})
 
     if [[ $exitCode -eq 0 ]]; then
-      printf -- "%s %s: ${ANSI_GREEN}ok${ANSI_NOCOLOR}\n" "${_suite}" "${testName}"
+      printf -- "%s %s: ${ANSI_GREEN}ok${ANSI_NOCOLOR}\n" "${REPORT_PREFIX}${_suite}" "${testName}"
 
       # Write JUnit testcase success result into a partial XML file
       printf -- '    <testcase classname="%s" name="%s" time="%s" />\n' \
-        "${_suite}" "${testName}" "${elapsedTime}"  > "../${testName}.testresult"
+        "${REPORT_PREFIX}${_suite}" "${testName}" "${elapsedTime}"  > "../${testName}.testresult"
       # Don't display log
     else
-      printf -- "%s %s: ${ANSI_RED}failed${ANSI_NOCOLOR}\n" "${_suite}" "${testName}"
+      printf -- "%s %s: ${ANSI_RED}failed${ANSI_NOCOLOR}\n" "${REPORT_PREFIX}${_suite}" "${testName}"
       printf -- '%s ' "${testName}" >> "../${_suite}.failures"
 
       # Write JUnit testcase failure result into a partial XML file and embed the log as the failure message
       printf -- '    <testcase classname="%s" name="%s" time="%s">\n      <failure message="testcase failed" type="failure">' \
-        "${_suite}" "${testName}" "${elapsedTime}"  > "../${testName}.testresult"
+        "${REPORT_PREFIX}${_suite}" "${testName}" "${elapsedTime}"  > "../${testName}.testresult"
       xml_escape test.log                          >> "../${testName}.testresult"
       printf -- '</failure>\n    </testcase>\n'        >> "../${testName}.testresult"
 
