@@ -4,7 +4,7 @@
 set -e
 
 # The colours, the log sections and the report helpers all come from the toolbox.
-. "$(dirname "${BASH_SOURCE[0]}")/../scripts/bash_toolbox.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../scripts/bash_toolbox.sh"
 
 # Display an error message in red and exit.
 # In case multiple arguments are given, display multiple error messages line-by-line.
