@@ -37,7 +37,7 @@ WorkingDir=$(pwd)
 ScriptDir="$($READLINK -f $(dirname $0))"
 RootDir="$($READLINK -f "$ScriptDir"/..)"
 
-source "$ScriptDir"/../ansi_color.sh
+source "$ScriptDir"/../bash_toolbox.sh
 if [[ $? -ne 0 ]]; then
 	printf "\x1b[31m[ERROR] %s\x1b[0m\n" "While loading Bash utilities." 1>&2
 	exit 1
