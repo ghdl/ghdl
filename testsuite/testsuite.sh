@@ -3,62 +3,16 @@
 # Stop in case of error
 set -e
 
-ANSI_RED=$'\x1b[31m'
-ANSI_GREEN=$'\x1b[32m'
-ANSI_YELLOW=$'\x1b[33m'
-ANSI_BLUE=$'\x1b[34m'
-ANSI_MAGENTA=$'\x1b[35m'
-ANSI_GRAY=$'\x1b[90m'
-ANSI_CYAN=$'\x1b[36;1m'
-ANSI_DARKCYAN=$'\x1b[36m'
-ANSI_NOCOLOR=$'\x1b[0m'
+# The colours, the log sections and the report helpers all come from the toolbox.
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/bash_toolbox.sh"
 
 # Display an error message in red and exit.
 # In case multiple arguments are given, display multiple error messages line-by-line.
 # $1 - error message
 die() {
-  printf "${ANSI_RED}%s${ANSI_NOCOLOR}\n" "$@" >&2
+  printf -- "${ANSI_RED}%s${ANSI_NOCOLOR}\n" "$@" >&2
   exit 1
 }
-
-# Print a section start
-# $1            - section title
-# $2 (optional) - color
-print_start() {
-  COLOR=${2:-$ANSI_YELLOW}
-  printf "${COLOR}%s$ANSI_NOCOLOR\n" "${1}"
-}
-
-# Start a section/group
-gstart () {
-  print_start "$@"
-}
-
-# Close a section/group
-gend () {
-  :
-}
-
-# Override functions with enhanced features for CI environments
-if [ -n "$GITHUB_ACTIONS" ]; then
-  printf "${ANSI_DARKCYAN}INFO:${ANSI_NOCOLOR} override 'gstart' and 'gend' for CI environments\n"
-
-  # Start a section/group
-  gstart () {
-    printf '::group::'
-    print_start "$@"
-    SECONDS=0
-  }
-
-  # Close a section/group
-  gend () {
-    duration=$SECONDS
-    echo '::endgroup::'
-    printf "${ANSI_GRAY}took $((duration / 60)) min $((duration % 60)) sec.${ANSI_NOCOLOR}\n"
-  }
-fi
-
-#---
 
 # The VESTS testsuite: compliance testsuite, from: https://github.com/nickg/vests.git 388250486a
 _vests () {
@@ -79,20 +33,20 @@ _vests () {
 
     # The result is written where the merge step looks for it: one '*.testresult' file inside the suite's
     # directory, the same convention suite_driver.sh follows.
-    if [ $exitCode -eq 0 ]; then
-      printf "${ANSI_GREEN}Vests is OK$ANSI_NOCOLOR\n"
+    if [[ $exitCode -eq 0 ]]; then
+      printf -- "${ANSI_GREEN}Vests is OK$ANSI_NOCOLOR\n"
       wc -l vests.log
 
-      printf '    <testcase classname="%s" name="%s" time="%s" />\n' \
+      printf -- '    <testcase classname="%s" name="%s" time="%s" />\n' \
         "vests" "all" "$elapsedTime" > "all.testresult"
     else
       cat vests.log
-      printf "${ANSI_RED}Vests failure$ANSI_NOCOLOR\n"
+      printf -- "${ANSI_RED}Vests failure$ANSI_NOCOLOR\n"
 
-      printf '    <testcase classname="%s" name="%s" time="%s">\n      <failure message="vests failed" type="failure">' \
+      printf -- '    <testcase classname="%s" name="%s" time="%s">\n      <failure message="vests failed" type="failure">' \
         "vests" "all" "$elapsedTime" > "all.testresult"
       xml_escape vests.log          >> "all.testresult"
-      printf '</failure>\n    </testcase>\n' >> "all.testresult"
+      printf -- '</failure>\n    </testcase>\n' >> "all.testresult"
     fi
 
     # The exit code has to leave the subshell, or a vests failure is invisible to the caller.
@@ -102,17 +56,17 @@ _vests () {
 
 #---
 
-if [ -z "$GHDL" ]; then
-  if [ -n "$prefix" ]; then
+if [[ -z "$GHDL" ]]; then
+  if [[ -n "$prefix" ]]; then
     export GHDL="$prefix/bin/ghdl"
-  elif [ -n "$(command -v which)" ]; then
+  elif [[ -n "$(command -v which)" ]]; then
     export GHDL="$(which ghdl)"
   else
     die "error: GHDL environment variable is not defined"
   fi
 fi
 
-if [ -z "$GHWDUMP" ]; then
+if [[ -z "$GHWDUMP" ]]; then
   case "$GHDL" in
     */*)
       export GHWDUMP=${GHDL%/*}/ghwdump
@@ -124,13 +78,16 @@ if [ -z "$GHWDUMP" ]; then
 fi
 
 command -v "$GHWDUMP" >/dev/null || die "ghwdump executable not found: $GHWDUMP"
+
+# The toolbox prints nothing when it is sourced, so the warning about a coarse clock is issued here, once.
+if [[ ${HAS_NANOSECONDS} -eq 0 ]]; then
+  printf -- "${ANSI_YELLOW}WARNING:${ANSI_NOCOLOR} %s has no nanosecond format, durations are rounded to whole seconds.\n" "${DATE}" >&2
+  printf -- "         Install GNU coreutils for real durations: brew install coreutils\n" >&2
+fi
 command -v "diff"     >/dev/null || die "diff executable not found"
 
 # Set working directory to directory of this script
 cd $(dirname "$0")
-
-# The shared helpers live next to this script.
-. ./lib.sh
 # Remove result files from previous runs, so a stale report is never mistaken for this run's. The per-testcase
 # snippets live in the suite directories.
 rm -f *.testresults *.testresults.xml testsuites.xml
@@ -150,81 +107,79 @@ for opt; do
       break
       ;;
     *)
-      printf "%s: unknown option '%s'\n" "$0" "$opt"
+      printf -- "%s: unknown option '%s'\n" "$0" "$opt"
       exit 2
       ;;
   esac
 done
 
-if [ -z "$testsuites" ]; then
+if [[ -z "$testsuites" ]]; then
   testsuites="ghdlversion ghdlhelp sanity pyunit gna vests synth vpi vhpi"
 fi
 
-printf "> tests:%s\n" "$testsuites"
-printf "> args: %s\n" "$@"
+printf -- "> tests:%s\n" "$testsuites"
+printf -- "> args: %s\n" "$@"
 
 # Run a testsuite
 run_testsuite() {
   case $1 in
     help)
-      printf "Usage:\n"
-      printf "  ./testsuite.sh                     run all testsuites\n"
-      printf "  ./testsuite.sh <suite>             run single testsuite\n"
-      printf "  ./testsuite.sh <suite> <suite> ... run multiple testsuites\n"
-      printf "  ./testsuite.sh <suite> -- <option> options after -- are passed to the suite\n"
-      printf "\n"
-      printf "Options:\n"
-      printf "  -j<N>                              run testcases using <N> parallel jobs\n"
-      printf "  -k  --keep-going                   continue after errors\n"
-      printf "\n"
-      printf "Supported testsuites:\n"
-      printf " * sanity\n"
-      printf " * gna\n"
-      printf " * synth\n"
-      printf " * vpi\n"
-      printf " * vhpi\n"
-      printf " * vests\n"
-      printf " * pyunit\n"
-      printf "\n"
+      printf -- "Usage:\n"
+      printf -- "  ./testsuite.sh                     run all testsuites\n"
+      printf -- "  ./testsuite.sh <suite>             run single testsuite\n"
+      printf -- "  ./testsuite.sh <suite> <suite> ... run multiple testsuites\n"
+      printf -- "  ./testsuite.sh <suite> -- <option> options after -- are passed to the suite\n"
+      printf -- "\n"
+      printf -- "Options:\n"
+      printf -- "  -j<N>                              run testcases using <N> parallel jobs\n"
+      printf -- "  -k  --keep-going                   continue after errors\n"
+      printf -- "\n"
+      printf -- "Supported testsuites:\n"
+      printf -- " * sanity\n"
+      printf -- " * gna\n"
+      printf -- " * synth\n"
+      printf -- " * vpi\n"
+      printf -- " * vhpi\n"
+      printf -- " * vests\n"
+      printf -- " * pyunit\n"
+      printf -- "\n"
       exit
       ;;
     sanity|gna|synth|vpi|vhpi)
-      gstart "[GHDL - test] $1"
+      section_start "[GHDL - test] $1"
       ( # Use a subshell, so old working directory can be properly restored. pushd/popd are too noisy.
         cd "$1"
         ../suite_driver.sh "$@"
       )
       local exitCode=$?
-      gend
-
+      section_end
       # The caller decides what a failing suite means. Exiting here would skip the report, which is exactly
       # what a failing run needs.
       return $exitCode
       ;;
     pyunit)
-      gstart "[GHDL - test] pyunit"
+      section_start "[GHDL - test] pyunit"
       PYTHONPATH=$(pwd)/.. ${PYTHON:-python3} -m pytest -vsrA pyunit
-      gend
+      section_end
       ;;
     vests)
-      gstart "[GHDL - test] vests"
+      section_start "[GHDL - test] vests"
       _vests
       local exitCode=$?
-      gend
-
+      section_end
       return $exitCode
       ;;
     ghdlversion)
-      gstart "GHDL is: $GHDL"
+      section_start "GHDL is: $GHDL"
       $GHDL version
-      printf "REF:  %s\n" "$($GHDL version ref)"
-      printf "HASH: %s\n" "$($GHDL version hash)"
-      gend
+      printf -- "REF:  %s\n" "$($GHDL version ref)"
+      printf -- "HASH: %s\n" "$($GHDL version hash)"
+      section_end
       ;;
     ghdlhelp)
-      gstart "GHDL help"
+      section_start "GHDL help"
       $GHDL help
-      gend
+      section_end
       ;;
     *)
       die "$0: test name '$1' is unknown"
@@ -255,7 +210,7 @@ for testsuite in $testsuites; do
   suiteExitCode=$?
   set -e
 
-  if [ ${suiteExitCode} -ne 0 ]; then
+  if [[ ${suiteExitCode} -ne 0 ]]; then
     overallExitCode=1
   fi
 
@@ -284,11 +239,11 @@ for testsuite in $testsuites; do
   totalSkippedCount=$((totalSkippedCount + skippedCount))
 
   # Create a partial XML file for every testsuite
-  printf '  <testsuite name="%s" tests="%s" failures="%s" errors="%s" skipped="%s" time="%s" timestamp="%s" hostname="%s">\n' \
+  printf -- '  <testsuite name="%s" tests="%s" failures="%s" errors="%s" skipped="%s" time="%s" timestamp="%s" hostname="%s">\n' \
     "${testsuite}" "${testCount}" "${failedCount}" "${erroredCount}" "${skippedCount}" "${elapsedTime}" "${timestamp}" "${hostName}" \
                                   > "${testsuite}.testresults.xml"
   cat "${testsuite}.testresults" >> "${testsuite}.testresults.xml"
-  printf '  </testsuite>\n'      >> "${testsuite}.testresults.xml"
+  printf -- '  </testsuite>\n'      >> "${testsuite}.testresults.xml"
 
   # The snippets have been merged, so they are of no further use. A full run writes one per testcase - over a
   # thousand of them - and leaving them behind means the next run's glob and any artifact upload pick them up.
@@ -299,23 +254,22 @@ totalStopTime=$(now_nanoseconds)
 totalElapsedTime=$(elapsed_seconds ${totalStartTime} ${totalStopTime})
 
 # Create final testsuites XML file
-gstart "Merge testreports"
-printf '<?xml version="1.0" encoding="utf-8"?>
+section_start "Merge testreports"
+printf -- '<?xml version="1.0" encoding="utf-8"?>
 <testsuites name="ghdl" tests="%s" failures="%s" errors="%s" skipped="%s" time="%s" timestamp="%s">\n' \
   "${totalTestCount}" "${totalFailedCount}" "${totalErroredCount}" "${totalSkippedCount}" "${totalElapsedTime}" "${globalTimestamp}" \
                                      >  "testsuites.xml"
 for testsuite in ${reportedTestsuites}; do
   cat "${testsuite}.testresults.xml" >> "testsuites.xml"
 done
-printf "</testsuites>\n"   >> "testsuites.xml"
-printf "Wrote %s: %s tests, %s failed, %s errored, %s skipped.\n" \
+printf -- "</testsuites>\n"   >> "testsuites.xml"
+printf -- "Wrote %s: %s tests, %s failed, %s errored, %s skipped.\n" \
   "testsuites.xml" "${totalTestCount}" "${totalFailedCount}" "${totalErroredCount}" "${totalSkippedCount}"
-gend
-
-if [ ${overallExitCode} -ne 0 ]; then
-  printf "${ANSI_RED}[GHDL - test] FAILED${ANSI_NOCOLOR}\n"
+section_end
+if [[ ${overallExitCode} -ne 0 ]]; then
+  printf -- "${ANSI_RED}[GHDL - test] FAILED${ANSI_NOCOLOR}\n"
   exit 1
 fi
 
-printf "${ANSI_GREEN}[GHDL - test] SUCCESSFUL${ANSI_NOCOLOR}\n"
+printf -- "${ANSI_GREEN}[GHDL - test] SUCCESSFUL${ANSI_NOCOLOR}\n"
 touch test_ok
