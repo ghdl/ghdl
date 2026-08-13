@@ -30,6 +30,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+A small command line helper to convert a captured protocol trace between its LSP and JSON forms.
+
+A trace recorded by :class:`~pyGHDL.lsp.LSPConnTrace` is a stream of ``Content-Length`` framed messages; ``lsp2json``
+turns it into plain JSON and ``json2lsp`` back again, which is what makes a recorded session replayable.
+"""
+
 import sys
 import argparse
 import json
@@ -59,6 +66,11 @@ def json2lsp():
 
 
 def main():
+    """
+    Run the tool named by the first argument.
+
+    :raises AttributeError: If no sub-command was given, as there is no default one.
+    """
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(help="sub-command help")
     parser_l2j = subparsers.add_parser("lsp2json", help="convert lsp dump to JSON")

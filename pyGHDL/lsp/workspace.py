@@ -30,6 +30,13 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+The set of source files the language server knows about.
+
+A :class:`Workspace` maps between the URIs an editor uses and the documents behind them, keeps the project
+configuration read from :file:`hdl-prj.json`, and re-analyzes what an edit invalidated.
+"""
+
 import logging
 import os
 import json
@@ -65,7 +72,28 @@ class InitError(LSPException):
 
 
 class Workspace(object):
+    """
+    The set of source files the language server knows about.
+
+    The workspace maps between the URIs an editor uses and the :class:`~pyGHDL.lsp.document.Document` objects behind
+    them, holds the project configuration read from :file:`hdl-prj.json`, and re-analyzes the documents an edit
+    invalidated.
+    """
+
     def __init__(self, root_uri, server):
+        """
+        Set up *libghdl* for interactive use and load the project.
+
+        The analysis flags differ from a batch run of GHDL: locations and comments are kept because the server
+        answers questions about them, and analysis continues past an error because a file being edited is
+        incomplete most of the time. The unused, missing-association and sensitivity warnings are enabled, as they
+        are the ones worth showing while typing.
+
+        :param root_uri:   The URI of the directory the client opened.
+        :param server:     The server the notifications are sent through.
+        :raises InitError: If *libghdl* could not be initialized, which leaves the server unable to analyze
+                           anything.
+        """
         self._root_uri = root_uri
         self._server = server
         self._root_path = lsp.path_from_uri(self._root_uri)
@@ -99,24 +127,55 @@ class Workspace(object):
 
     @property
     def documents(self):
+        """
+        Read-only: The documents of this workspace, indexed by their URI.
+        """
         return self._docs
 
     @property
     def root_path(self):
+        """
+        Read-only: The path of the directory the client opened.
+        """
         return self._root_path
 
     @property
     def root_uri(self):
+        """
+        Read-only: The URI of the directory the client opened.
+        """
         return self._root_uri
 
     def _create_document(self, doc_uri, sfe, lib, version=None):
-        """Create a document and put it in this workspace."""
+        """
+        Create a document and register it under both the URI and the source file it uses.
+
+        Both indices are needed: the client names a document by its URI, while *libghdl* reports an error against a
+        source file.
+
+        :param doc_uri: The URI the client identifies the document by.
+        :param sfe:     The source file entry holding the text.
+        :param lib:     The name of the library the units are analyzed into, or ``None`` for ``work``.
+        :param version: The version the client attached to the document.
+        :returns:       The new document.
+        """
         doc = document.Document(doc_uri, sfe, lib, version)
         self._docs[doc_uri] = doc
         self._fe_map[sfe] = doc
         return doc
 
     def create_document_from_sfe(self, sfe, abspath, lib):
+        """
+        Create a document for a source file *libghdl* already holds.
+
+        This is how a file that the client never opened becomes reportable: an error in it names a source file, and
+        a diagnostic can only be published against a URI.
+
+        :param sfe:     The source file entry the text is already in.
+        :param abspath: The absolute path of that file.
+        :param lib:     The name of the library the units are analyzed into, or ``None`` for ``work``.
+        :returns:       The new document.
+        """
         # A filename has been given without a corresponding document.
         # Create the document.
         # Common case: an error message was reported in a non-open document.
@@ -125,6 +184,15 @@ class Workspace(object):
         return self._create_document(doc_uri, sfe, lib)
 
     def create_document_from_uri(self, doc_uri, source=None, version=None):
+        """
+        Create a document for a URI the workspace does not know yet.
+
+        :param doc_uri:            The URI to load. It is assumed to name a readable local file.
+        :param source:             The text the client sent, or ``None`` to read the file from disk.
+        :param version:            The version the client attached to the document.
+        :returns:                  The new document. It is not parsed yet.
+        :raises FileNotFoundError: If no source was given and the file cannot be opened.
+        """
         # A document is referenced by an uri but not known.  Load it.
         # We assume the path is correct.
         path = lsp.path_from_uri(doc_uri)
@@ -136,6 +204,12 @@ class Workspace(object):
         return self._create_document(doc_uri, sfe, None)
 
     def get_or_create_document(self, doc_uri):
+        """
+        Get a document, loading and parsing it if the workspace does not know it yet.
+
+        :param doc_uri: The URI of the document.
+        :returns:       The document, parsed either now or earlier.
+        """
         res = self.get_document(doc_uri)
         if res is not None:
             return res
@@ -145,13 +219,25 @@ class Workspace(object):
 
     def get_document(self, doc_uri):
         """
-        Get a document from :param doc_uri:
+        Look up a document by its URI.
 
-        Note that the document may not exist, and this function may return None.
+        :param doc_uri: The URI of the document.
+        :returns:       The document, or ``None`` if the workspace does not know it.
         """
         return self._docs.get(doc_uri)
 
     def put_document(self, doc_uri, source, version=None):
+        """
+        Take the client's version of a document, creating it if needed.
+
+        A document loaded from the project is overwritten rather than kept, because the client has been editing it
+        and its buffer is the newer one.
+
+        :param doc_uri: The URI of the document.
+        :param source:  The text the client sent.
+        :param version: The version the client attached to the document.
+        :returns:       The document holding that text.
+        """
         doc = self.get_document(doc_uri)
         if doc is None:
             doc = self.create_document_from_uri(doc_uri, source=source, version=version)
@@ -164,9 +250,11 @@ class Workspace(object):
 
     def sfe_to_document(self, sfe):
         """
-        Get the document correspond to :param sfe: source file.
+        Find the document a source file belongs to, creating one if the file came from outside the workspace.
 
-        Can create the document if needed.
+        :param sfe:             The source file entry, as it appears in an error record.
+        :returns:               The document holding that source file.
+        :raises AssertionError: If the source file entry is 0, which is not a file.
         """
         assert sfe != 0
         doc = self._fe_map.get(sfe, None)
@@ -180,6 +268,15 @@ class Workspace(object):
         return doc
 
     def add_vhdl_file(self, name, lib):
+        """
+        Load and parse one VHDL file listed in the project.
+
+        A file that cannot be read is reported to the client and skipped, so one bad entry in the project does not
+        stop the rest of it from loading.
+
+        :param name: The file name, relative to the root path or absolute.
+        :param lib:  The name of the library the units are analyzed into, or ``None`` for ``work``.
+        """
         log.info("loading %s in library %s", name, lib)
         if os.path.isabs(name):
             absname = name
@@ -197,6 +294,12 @@ class Workspace(object):
         doc.parse_document()
 
     def read_project(self):
+        """
+        Read :file:`hdl-prj.json` from the root path, if there is one.
+
+        A missing project file is normal - the server then works on the open documents alone. A file that exists
+        but cannot be read or parsed is reported to the client, and the workspace keeps its empty configuration.
+        """
         prj_file = os.path.join(self.root_path, "hdl-prj.json")
         if not os.path.exists(prj_file):
             log.info("project file %s does not exist", prj_file)
@@ -221,6 +324,12 @@ class Workspace(object):
         f.close()
 
     def set_options_from_project(self):
+        """
+        Pass the ``options.ghdl_analysis`` entries of the project to *libghdl* as analysis options.
+
+        A malformed project or a rejected option is reported to the client rather than raised, because the server
+        stays useful with the options it did accept.
+        """
         try:
             if self._prj is None:
                 return
@@ -242,6 +351,12 @@ class Workspace(object):
             self._server.show_message(lsp.MessageType.Error, f"error in project file: {e}")
 
     def read_files_from_project(self):
+        """
+        Load every VHDL file the project lists.
+
+        Files of another language are skipped rather than rejected. A malformed ``files`` entry stops the loading
+        and is reported to the client.
+        """
         try:
             files = self._prj.get("files", [])
             if not isinstance(files, list):
@@ -260,9 +375,24 @@ class Workspace(object):
             self._server.show_message(lsp.MessageType.Error, f"error in project file: {e}")
 
     def get_configuration(self):
+        """
+        Ask the client for the ``vhdl.maxNumberOfProblems`` setting.
+
+        The reply arrives as a separate message, so nothing is returned here.
+        """
         self._server.configuration([{"scopeUri": "", "section": "vhdl.maxNumberOfProblems"}])
 
     def gather_diagnostics(self, doc):
+        """
+        Turn the messages *libghdl* collected into diagnostics and publish them, one notification per file.
+
+        A message belonging to a group beyond the main one is not a diagnostic of its own; it is attached to the
+        preceding one as related information, which is how the two halves of "declaration is here, use is there"
+        stay together. The messages are cleared once they have been read.
+
+        :param doc: The document that was analyzed, so an empty list can be published for it when its errors are
+                    gone. ``None`` when the whole project was analyzed.
+        """
         # Gather messages (per file)
         nbr_msgs = errorout_memory.Get_Nbr_Messages()
         diags = {}
@@ -317,7 +447,19 @@ class Workspace(object):
             self.publish_diagnostics(doc.uri, [])
 
     def obsolete_dependent_units(self, unit, antideps):
-        """Obsolete units that depends of :param unit:."""
+        """
+        Mark every unit that depends on the given one as no longer analyzed, transitively.
+
+        A unit is put back into the state it had before analysis, and its dependence list is freed. Its position in
+        the source is written into the node first, because that is what is left to find it by once its tree is
+        gone.
+
+        The recursion is broken by clearing the entry as it is taken, so a cycle between two units does not loop
+        forever.
+
+        :param unit:     The unit whose dependents are to be obsoleted.
+        :param antideps: The anti-dependencies, as returned by :meth:`compute_anti_dependences`. It is modified.
+        """
         udeps = antideps.get(unit, None)
         if udeps is None:
             # There are no units.
@@ -344,6 +486,15 @@ class Workspace(object):
             nodes.Set_Design_Unit_Source_Col(un, col)
 
     def obsolete_doc(self, doc):
+        """
+        Throw away the analysis of a document, and of everything that was analyzed against it.
+
+        Dropping the units of one file is not enough: another file that used a package from it holds references
+        into the tree being freed, so those units are obsoleted too. The design file is then purged from its
+        library, which leaves the document ready to be parsed again.
+
+        :param doc: The document to obsolete. A document without a tree is left alone.
+        """
         if doc._tree == nodes.Null_Iir:
             return
         # Free old tree
@@ -362,12 +513,29 @@ class Workspace(object):
         doc._tree = nodes.Null_Iir
 
     def lint(self, doc_uri):
+        """
+        Re-analyze a document from its current buffer and publish what that found.
+
+        :param doc_uri: The URI of the document to check.
+        """
         doc = self.get_document(doc_uri)
         self.obsolete_doc(doc)
         doc.compute_diags()
         self.gather_diagnostics(doc)
 
     def apply_changes(self, doc_uri, contentChanges, new_version):
+        """
+        Apply the edits of a ``textDocument/didChange`` and re-analyze the document.
+
+        An edit that does not fit moves the text to a new source file, so the map from source files to documents is
+        corrected afterwards.
+
+        :param doc_uri:         The URI of the document that changed.
+        :param contentChanges:  The edits, applied in the order the client sent them.
+        :param new_version:     The version the client attached to the document.
+        :raises AssertionError: If the document is not loaded, because an edit can only be applied to a buffer that
+                                exists.
+        """
         doc = self.get_document(doc_uri)
         assert doc is not None, "try to modify a non-loaded document"
         self.obsolete_doc(doc)
@@ -382,27 +550,69 @@ class Workspace(object):
         self.gather_diagnostics(doc)
 
     def check_document(self, doc_uri, source):
+        """
+        Compare the buffer of a document against the client's text.
+
+        :param doc_uri:   The URI of the document to check.
+        :param source:    The document contents as the client sees them.
+        :raises KeyError: If the workspace does not know that URI.
+        """
         self._docs[doc_uri].check_document(source)
 
     def rm_document(self, doc_uri):
+        """
+        Drop the diagnostics of a document the client closed.
+
+        The client does not discard them on its own, so an empty list has to be published.
+
+        :param doc_uri: The URI of the closed document.
+        """
         # Clear diagnostics as it's not done automatically.
         self.publish_diagnostics(doc_uri, [])
 
     def apply_edit(self, edit):
+        """
+        Ask the client to apply an edit to the workspace.
+
+        :param edit: The ``WorkspaceEdit`` to apply.
+        :returns:    The identifier of the request, which the reply will carry.
+        """
         return self._server.request("workspace/applyEdit", {"edit": edit})
 
     def publish_diagnostics(self, doc_uri, diagnostics):
+        """
+        Send the diagnostics of one document to the client.
+
+        :param doc_uri:     The URI the diagnostics belong to.
+        :param diagnostics: The diagnostics, replacing the ones sent before. An empty list clears them.
+        """
         self._server.notify(
             "textDocument/publishDiagnostics",
             params={"uri": doc_uri, "diagnostics": diagnostics},
         )
 
     def show_message(self, message, msg_type=lsp.MessageType.Info):
+        """
+        Show a message in the client's user interface.
+
+        :param message:  The text to show.
+        :param msg_type: How the client should present it.
+        """
         self._server.notify("window/showMessage", params={"type": msg_type, "message": message})
 
     def declaration_to_location(self, decl, decl_name):
-        """Convert declaration :param decl: to an LSP Location.
-        :param decl_name: holds the identifier (used by subprogram bodies)"""
+        """
+        Convert a declaration to a location the client can jump to.
+
+        The range covers the declared name, whose length comes from the identifier. The two nodes are separate
+        because a jump may target one node while naming another - going to the implementation of a subprogram
+        lands on the body but measures the name of the declaration.
+
+        :param decl:      The node whose location is used.
+        :param decl_name: The node holding the identifier.
+        :returns:         A ``Location``, or ``None`` for a declaration that has no place in a file - the ``std``
+                          library and the library declarations themselves are virtual.
+        """
         decl_loc = nodes.Get_Location(decl)
         if decl_loc == std_package.Std_Location.value:
             # There is no real file for the std.standard package.
@@ -421,6 +631,14 @@ class Workspace(object):
         return res
 
     def goto_definition(self, doc_uri, position):
+        """
+        Answer ``textDocument/definition``.
+
+        :param doc_uri:  The URI of the document the client asked from.
+        :param position: The position of the name to resolve.
+        :returns:        A list holding the single location of the declaration, or ``None`` if there is no name at
+                         that position or its declaration is virtual.
+        """
         decl = self._docs[doc_uri].find_definition(position)
         if decl is None:
             return None
@@ -430,6 +648,17 @@ class Workspace(object):
         return [decl_loc]
 
     def goto_implementation(self, doc_uri, position):
+        """
+        Answer ``textDocument/implementation``, which asks for the body behind a declaration.
+
+        A subprogram leads to its body, and a component to an entity of the same name. The component case is a
+        guess - a configuration may bind the component to something else - but it is the answer a reader expects.
+        Where no body is known yet, the declaration itself is returned rather than nothing.
+
+        :param doc_uri:  The URI of the document the client asked from.
+        :param position: The position of the name to resolve.
+        :returns:        A list holding the single location of the implementation, or ``None`` if there is none.
+        """
         decl = self._docs[doc_uri].find_definition(position)
         if decl is None:
             return None
@@ -456,9 +685,24 @@ class Workspace(object):
         return [decl_loc]
 
     def hover(self, doc_uri, position):
+        """
+        Answer ``textDocument/hover``.
+
+        :param doc_uri:  The URI of the document the client asked from.
+        :param position: The position the client is hovering over.
+        :returns:        A ``Hover``, or ``None`` if there is no declaration at that position.
+        """
         return self._docs[doc_uri].hover(position)
 
     def x_show_all_files(self):
+        """
+        List every source file *libghdl* holds, for the ``workspace/xShowAllFiles`` extension.
+
+        This is a debugging aid: it shows the files the server loaded, including the ones no client ever opened,
+        which is why the URI may be ``None``.
+
+        :returns: One entry per source file, with its entry number, URI, name and directory.
+        """
         res = []
         for fe in range(1, files_map.Get_Last_Source_File_Entry() + 1):
             doc = self._fe_map.get(fe, None)
@@ -473,6 +717,13 @@ class Workspace(object):
         return res
 
     def x_get_all_entities(self):
+        """
+        List every entity of every library, for the ``workspace/xGetAllEntities`` extension.
+
+        A client uses this to offer the entities that can be instantiated.
+
+        :returns: One entry per entity, with its name and the library it lives in.
+        """
         res = []
         lib = libraries.Get_Libraries_Chain()
         while lib != nodes.Null_Iir:
@@ -493,7 +744,24 @@ class Workspace(object):
         return res
 
     def x_get_entity_interface(self, library, name):
+        """
+        Report the generics and ports of one entity, for the ``workspace/xGetEntityInterface`` extension.
+
+        A client uses this to write the instantiation of an entity the user picked.
+
+        :param library: The name of the library the entity lives in.
+        :param name:    The name of the entity.
+        :returns:       The entity with its generics and ports, or ``None`` if either the library or the entity is
+                        unknown.
+        """
+
         def create_interfaces(inters):
+            """
+            Collect the names of an interface chain.
+
+            :param inters: The first interface of the chain.
+            :returns:      One entry per interface, holding its name.
+            """
             res = []
             while inters != nodes.Null_Iir:
                 res.append({"name": name_table.Get_Name_Ptr(nodes.Get_Identifier(inters))})
@@ -519,7 +787,18 @@ class Workspace(object):
         }
 
     def compute_anti_dependences(self):
-        """Return a dictionnary of anti dependencies for design unit."""
+        """
+        Build the reverse of the dependency graph: which units were analyzed against each unit.
+
+        A unit records what it depends on, and re-analysis needs the opposite question answered - editing a package
+        has to invalidate its users. Only analyzed units are walked, because that is when the dependence list is
+        filled in.
+
+        :returns:               A mapping from a design unit to the units depending on it. A unit nothing depends
+                                on is absent rather than mapped to an empty list.
+        :raises AssertionError: If a dependence is neither a design unit nor an entity aspect, which would mean the
+                                dependence list holds something this does not know how to follow.
+        """
         res = {}
         lib = libraries.Get_Libraries_Chain()
         while lib != nodes.Null_Iir:

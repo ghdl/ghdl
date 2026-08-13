@@ -30,6 +30,19 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Implementation of GHDL's language server.
+
+The package is layered, from the wire upwards:
+
+1. :mod:`pyGHDL.lsp.lsp` speaks the Language Server Protocol over stdin and stdout.
+2. :mod:`pyGHDL.lsp.vhdl_ls` implements the VHDL-specific requests on top of it.
+3. :mod:`pyGHDL.lsp.workspace` and :mod:`pyGHDL.lsp.document` hold the analyzed sources the requests are answered
+   from.
+
+The entry point is :mod:`pyGHDL.cli.lsp`.
+"""
+
 from pyTooling.Decorators import export
 
 from pyGHDL import GHDLBaseException
@@ -49,22 +62,44 @@ class LSPConnTrace(object):
     """Wrapper class to save in and out packets"""
 
     def __init__(self, basename, conn):
+        """
+        Initializes the trace by opening the two log files beside the connection.
+
+        :param basename: The path the traces are written to, with ``.in`` and ``.out`` appended.
+        :param conn:     The connection to wrap.
+        """
         self.conn = conn
         self.trace_in = open(basename + ".in", "w")
         self.trace_out = open(basename + ".out", "w")
 
     def readline(self):
+        """
+        Read a line from the wrapped connection and record it.
+
+        :returns: The line that was read.
+        """
         res = self.conn.readline()
         self.trace_in.write(res)
         return res
 
     def read(self, size):
+        """
+        Read from the wrapped connection and record what was read.
+
+        :param size: The number of characters to read.
+        :returns:    The characters that were read.
+        """
         res = self.conn.read(size)
         self.trace_in.write(res)
         self.trace_in.flush()
         return res
 
     def write(self, out):
+        """
+        Write to the wrapped connection and record what was written.
+
+        :param out: The text to write.
+        """
         self.conn.write(out)
         self.trace_out.write(out)
         self.trace_out.flush()

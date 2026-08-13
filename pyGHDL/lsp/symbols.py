@@ -30,6 +30,10 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+"""
+Translation of IIR declarations into the document symbols an editor displays in its outline.
+"""
+
 import pyGHDL.libghdl.name_table as name_table
 import pyGHDL.libghdl.files_map as files_map
 import pyGHDL.libghdl.vhdl.nodes as nodes
@@ -106,6 +110,14 @@ SYMBOLS_MAP = {
 
 
 def location_to_position(fe, loc):
+    """
+    Convert a *libghdl* location to a position in the protocol's coordinates.
+
+    :param fe:              The source file the location is in.
+    :param loc:             The location to convert.
+    :returns:               A ``Position``, with its 0-based ``line`` and ``character``.
+    :raises AssertionError: If the location is ``No_Location``, which does not name a place in a file.
+    """
     assert loc != files_map.No_Location
     line = files_map.Location_File_To_Line(loc, fe)
     off = files_map.Location_File_Line_To_Offset(loc, fe, line)
@@ -113,11 +125,38 @@ def location_to_position(fe, loc):
 
 
 def get_symbols_chain(fe, n):
+    """
+    Collect the symbols of a chain of nodes.
+
+    A node that is not a symbol - a use clause, or a declaration that is not worth showing - contributes nothing
+    rather than an empty entry.
+
+    :param fe: The source file the nodes are in.
+    :param n:  The first node of the chain.
+    :returns:  One ``DocumentSymbol`` per node that has one.
+    """
     res = [get_symbols(fe, el) for el in pyutils.chain_iter(n)]
     return [e for e in res if e is not None]
 
 
 def get_symbols(fe, n):
+    """
+    Build the symbol of one node, with the symbols declared inside it as its children.
+
+    The range covers the whole construct where the parser recorded its extent, so folding an architecture in an
+    editor folds all of it; elsewhere it covers the declared name alone. A construct whose end was never reached
+    is given an empty range rather than an invalid one, which is what a file with a syntax error leaves behind.
+
+    Two kinds of node are dropped: an implicit subprogram, which the user never wrote, and a subprogram
+    declaration whose body is in the same file, which would otherwise be listed twice. An anonymous construct is
+    kept only if it has children worth showing.
+
+    :param fe:              The source file the node is in.
+    :param n:               The node to describe.
+    :returns:               A ``DocumentSymbol``, or ``None`` if this node is not shown.
+    :raises AssertionError: If the kind of the node is not in :data:`SYMBOLS_MAP`, which means a construct was
+                            added to the parser without deciding how it should appear in an outline.
+    """
     if n == nodes.Null_Iir:
         return None
     k = nodes.Get_Kind(n)
