@@ -1,11 +1,21 @@
 # Auto generated Python source file from Ada sources
 # Call 'make' in 'src/vhdl' to regenerate:
 #
+"""
+Python binding for the Ada package ``Std_Names`` in *libghdl*.
+
+The predefined names *libghdl* interns at startup, so they can be compared by identifier rather than by text.
+"""
+
 from pyTooling.Decorators import export
 
 
 @export
 class Name:
+    """
+    The predefined names *libghdl* interns at startup, as identifier values.
+    """
+
     First_Character = 1
     Last_Character = 256
     First_Keyword = 257
