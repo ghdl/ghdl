@@ -502,6 +502,11 @@ class Workspace(object):
         into the tree being freed, so those units are obsoleted too. The design file is then purged from its
         library, which leaves the document ready to be parsed again.
 
+        Obsoleting the dependent units is skipped when this document was also the one analyzed last, as it is while
+        a file is being edited: they were obsoleted by that previous round and only an analysis of their own could
+        have brought them back, which would have made that document the last analyzed one instead. Semantic analysis
+        happens in :meth:`lint` and :meth:`apply_changes` alone, so this holds for every path into the workspace.
+
         :param doc: The document to obsolete. A document without a tree is left alone.
         """
         if doc._tree == nodes.Null_Iir:
@@ -530,6 +535,7 @@ class Workspace(object):
         doc = self.get_document(doc_uri)
         self.obsolete_doc(doc)
         doc.compute_diags()
+        self._last_linted_doc = doc
         self.gather_diagnostics(doc)
 
     def apply_changes(self, doc_uri, contentChanges, new_version):
@@ -556,6 +562,7 @@ class Workspace(object):
             self._fe_map[doc._fe] = doc
         # Like lint
         doc.compute_diags()
+        self._last_linted_doc = doc
         self.gather_diagnostics(doc)
 
     def check_document(self, doc_uri, source):
