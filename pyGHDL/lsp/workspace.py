@@ -121,7 +121,7 @@ class Workspace(object):
         if libghdl.analyze_init_status() != 0:
             log.error("cannot initialize libghdl")
             raise InitError
-        self._diags_set = set()  # Documents with at least one diagnostic.
+        self._diags_set = set()  # URIs of the documents diagnostics were last published for.
         self.read_files_from_project()
         self.gather_diagnostics(None)
 
@@ -390,6 +390,10 @@ class Workspace(object):
         preceding one as related information, which is how the two halves of "declaration is here, use is there"
         stay together. The messages are cleared once they have been read.
 
+        A client keeps the diagnostics of a file until it is sent new ones, so every document that had diagnostics
+        published for it and has none now is sent an empty list. The documents that carry diagnostics are tracked in
+        :attr:`_diags_set` for that, because analyzing one document can equally clear a diagnostic in another.
+
         :param doc: The document that was analyzed, so an empty list can be published for it when its errors are
                     gone. ``None`` when the whole project was analyzed.
         """
@@ -429,22 +433,27 @@ class Workspace(object):
                     fdiag.append(diag)
             else:
                 assert diag
-                if True:
-                    doc = self.sfe_to_document(hdr.file)
-                    diag["relatedInformation"].append(
-                        {
-                            "location": {"uri": doc.uri, "range": err_range},
-                            "message": msg,
-                        }
-                    )
+                relatedDocument = self.sfe_to_document(hdr.file)
+                diag["relatedInformation"].append(
+                    {
+                        "location": {"uri": relatedDocument.uri, "range": err_range},
+                        "message": msg,
+                    }
+                )
         errorout_memory.Clear_Errors()
         # Publish diagnostics
+        publishedURIs = set()
         for sfe, diag in diags.items():
-            doc = self.sfe_to_document(sfe)
-            self.publish_diagnostics(doc.uri, diag)
-        if doc is not None and doc._fe not in diags:
-            # Clear previous diagnostics for the doc.
-            self.publish_diagnostics(doc.uri, [])
+            diagnosedDocument = self.sfe_to_document(sfe)
+            self.publish_diagnostics(diagnosedDocument.uri, diag)
+            publishedURIs.add(diagnosedDocument.uri)
+        # Clear previous diagnostics of the analyzed document and of every document that has none left.
+        staleURIs = set(self._diags_set)
+        if doc is not None:
+            staleURIs.add(doc.uri)
+        for uri in staleURIs - publishedURIs:
+            self.publish_diagnostics(uri, [])
+        self._diags_set = publishedURIs
 
     def obsolete_dependent_units(self, unit, antideps):
         """
@@ -569,6 +578,7 @@ class Workspace(object):
         """
         # Clear diagnostics as it's not done automatically.
         self.publish_diagnostics(doc_uri, [])
+        self._diags_set.discard(doc_uri)
 
     def apply_edit(self, edit):
         """
