@@ -2,8 +2,9 @@
 
 . ../../testenv.sh
 
-analyze --std=08 mydesign.vhdl
-elab --std=08 myentity
+export GHDL_STD_FLAGS=--std=08
+analyze mydesign.vhdl
+elab myentity
 
 if c_compiler_is_available && ghdl_has_feature myentity vpi; then
   "$GHDL" --vpi-compile -v "$CC" -c vpi1.c
