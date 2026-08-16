@@ -1007,6 +1007,13 @@ package Grt.Avhpi is
 
    function Avhpi_Get_Address (Obj : VhpiHandleT) return Address;
 
+   --  Bounds of the element of an indexed name, when that element's own
+   --  subtype is unbounded (eg. an array of unconstrained
+   --  std_logic_vector, only fully constrained per elaborated instance).
+   --  Null_Address when the element is bounded (its size/bounds are then
+   --  fully described by its own static RTI) or when OBJ has no bounds.
+   function Avhpi_Get_Bounds (Obj : VhpiHandleT) return Address;
+
    function Avhpi_Get_Context (Obj : VhpiHandleT) return Rti_Context;
 
    function Vhpi_Get_Kind (Obj : VhpiHandleT) return VhpiClassKindT;
@@ -1030,6 +1037,10 @@ private
             N_Addr : Address;
             N_Type : Ghdl_Rti_Access;
             N_Idx : Ghdl_Index_Type;
+            --  Bounds of N_Type, when N_Type is an unbounded subtype
+            --  (element of an array-of-unconstrained-vector object).
+            --  Null_Address otherwise.
+            N_Bounds : Address;
             N_Obj : Ghdl_Rtin_Object_Acc;
          when VhpiSigDeclK
            | VhpiPortDeclK

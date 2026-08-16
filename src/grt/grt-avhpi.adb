@@ -131,6 +131,7 @@ package body Grt.Avhpi is
                           N_Addr => Avhpi_Get_Address (Ref),
                           N_Type => Ref.Obj.Obj_Type,
                           N_Idx => 0,
+                          N_Bounds => Null_Address,
                           N_Obj => Ref.Obj);
                when VhpiIndexedNameK =>
                   Res := (Kind => AvhpiNameIteratorK,
@@ -138,6 +139,7 @@ package body Grt.Avhpi is
                           N_Addr => Ref.N_Addr,
                           N_Type => Ref.N_Type,
                           N_Idx => 0,
+                          N_Bounds => Ref.N_Bounds,
                           N_Obj => Ref.N_Obj);
                when others =>
                   Error := AvhpiErrorNotImplemented;
@@ -171,11 +173,81 @@ package body Grt.Avhpi is
       Error := AvhpiErrorNotImplemented;
    end Vhpi_Iterator;
 
+   --  Return the address of the per-instance layout of the element of an
+   --  array object whose own (possibly constrained) subtype/type is
+   --  ARR_TYPE and whose bounds -- when ARR_TYPE is itself an unbounded
+   --  object type -- are ARR_BOUNDS (see Object_To_Base_Bounds).
+   --
+   --  This is only meaningful when the array's element is itself
+   --  unbounded (eg. array (natural range <>) of std_logic_vector): the
+   --  element then has no static size of its own, and that size is only
+   --  known from this particular object's own elaborated layout, which --
+   --  for the common case of a fully-constrained array object
+   --  (ARR_BOUNDS = Null_Address) -- is reachable from ARR_TYPE's own
+   --  static Layout field, mirroring the existing Ghdl_Rtik_Subtype_Array
+   --  case of Add_Index but resolving the *element's* size rather than
+   --  the whole array's.
+   --
+   --  Return Null_Address if it cannot be computed (caller must then fail
+   --  loud rather than guess -- see Add_Index's "add_index(3)").
+   function Array_Element_Layout (Ctxt : Rti_Context;
+                                  Arr_Type : Ghdl_Rti_Access;
+                                  Arr_Bounds : Address) return Address
+   is
+      Bt : Ghdl_Rtin_Type_Array_Acc;
+      Bounds : Address;
+      Rng : Ghdl_Range_Ptr;
+   begin
+      Bounds := Arr_Bounds;
+
+      case Arr_Type.Kind is
+         when Ghdl_Rtik_Type_Array =>
+            Bt := To_Ghdl_Rtin_Type_Array_Acc (Arr_Type);
+         when Ghdl_Rtik_Subtype_Array
+           | Ghdl_Rtik_Subtype_Unbounded_Array =>
+            declare
+               St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                 To_Ghdl_Rtin_Subtype_Composite_Acc (Arr_Type);
+            begin
+               Bt := To_Ghdl_Rtin_Type_Array_Acc (St.Basetype);
+               if Bounds = Null_Address then
+                  --  Constrained array object (the common case for a
+                  --  u_slv_vector-shaped port): the layout is described
+                  --  by the subtype's own static RTI.
+                  Bounds := Array_Layout_To_Bounds
+                    (Loc_To_Addr (St.Common.Depth, St.Layout, Ctxt));
+               end if;
+            end;
+         when others =>
+            return Null_Address;
+      end case;
+
+      if Bounds = Null_Address then
+         return Null_Address;
+      end if;
+
+      --  Skip the range of each dimension to reach the element's own
+      --  layout, stored right after them.
+      for I in 1 .. Bt.Nbr_Dim loop
+         Extract_Range (Bounds, Get_Base_Type (Bt.Indexes (I - 1)), Rng);
+         if Rng = null then
+            --  Unhandled index type: bounds are not known anymore.
+            return Null_Address;
+         end if;
+      end loop;
+
+      return Bounds;
+   end Array_Element_Layout;
+
    --  OBJ_RTI is the RTI for the base name.
+   --  EL_LAYOUT is the per-instance layout of the element (see
+   --  Array_Element_Layout above); only used, and required non-null, when
+   --  the element's subtype is itself unbounded.
    function Add_Index (Ctxt : Rti_Context;
                        Obj_Base : Address;
                        Obj_Rti : Ghdl_Rtin_Object_Acc;
                        El_Type : Ghdl_Rti_Access;
+                       El_Layout : Address;
                        Off : Ghdl_Index_Type) return Address
    is
       Is_Sig : Boolean;
@@ -238,6 +310,24 @@ package body Grt.Avhpi is
                   El_Size := Sizes.Value;
                end if;
             end;
+         when Ghdl_Rtik_Subtype_Unbounded_Array =>
+            --  The element's subtype is itself unbounded (eg. array
+            --  (natural range <>) of std_logic_vector): its size is not
+            --  static, it is part of the per-instance layout computed by
+            --  Array_Element_Layout and passed in by the caller.
+            if El_Layout = Null_Address then
+               Internal_Error ("add_index(3)");
+            end if;
+            declare
+               Sizes : constant Ghdl_Indexes_Ptr :=
+                 To_Ghdl_Indexes_Ptr (El_Layout);
+            begin
+               if Is_Sig then
+                  El_Size := Sizes.Signal;
+               else
+                  El_Size := Sizes.Value;
+               end if;
+            end;
          when others =>
             Internal_Error ("add_index(2)");
       end case;
@@ -249,6 +339,8 @@ package body Grt.Avhpi is
                                      Error : out AvhpiErrorT)
    is
       El_Type : Ghdl_Rti_Access;
+      El_Layout : Address := Null_Address;
+      El_Bounds : Address := Null_Address;
    begin
       if Iterator.N_Idx = 0 then
          Error := AvhpiErrorIteratorEnd;
@@ -258,16 +350,26 @@ package body Grt.Avhpi is
       El_Type := To_Ghdl_Rtin_Type_Array_Acc
         (Get_Base_Type (Iterator.N_Type)).Element;
 
+      if Is_Unbounded (El_Type) then
+         El_Layout := Array_Element_Layout
+           (Iterator.Ctxt, Iterator.N_Type, Iterator.N_Bounds);
+         if El_Layout /= Null_Address then
+            El_Bounds := Array_Layout_To_Element (El_Layout, El_Type);
+         end if;
+      end if;
+
       Res := (Kind => VhpiIndexedNameK,
               Ctxt => Iterator.Ctxt,
               N_Addr => Iterator.N_Addr,
               N_Type => El_Type,
               N_Idx => 0,
+              N_Bounds => El_Bounds,
               N_Obj => Iterator.N_Obj);
 
       --  Increment Address.
       Iterator.N_Addr := Add_Index
-        (Iterator.Ctxt, Iterator.N_Addr, Iterator.N_Obj, El_Type, 1);
+        (Iterator.Ctxt, Iterator.N_Addr, Iterator.N_Obj, El_Type,
+         El_Layout, 1);
 
       Iterator.N_Idx := Iterator.N_Idx - 1;
       Error := AvhpiErrorOk;
@@ -415,7 +517,14 @@ package body Grt.Avhpi is
             Res := (Kind => VhpiConstDeclK,
                     Ctxt => Ctxt,
                     Obj => To_Ghdl_Rtin_Object_Acc (Rti));
-         when Ghdl_Rtik_Subtype_Array =>
+         when Ghdl_Rtik_Subtype_Array
+           | Ghdl_Rtik_Subtype_Unbounded_Array =>
+            --  Ghdl_Rtik_Subtype_Unbounded_Array is a resolved element of
+            --  an array-of-unconstrained-vector port (eg. array (natural
+            --  range <>) of std_logic_vector): unlike an unresolved
+            --  element, it is always given its own distinct Type_Info,
+            --  so it needs to resolve here too, exactly like a regular
+            --  constrained array subtype.
             declare
                Atype : constant Ghdl_Rtin_Subtype_Composite_Acc :=
                  To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
@@ -1116,7 +1225,9 @@ package body Grt.Avhpi is
                                      Error : out AvhpiErrorT)
    is
       Base_Type, Atype, El_Type : VhpiHandleT;
+      Arr_Rti : Ghdl_Rti_Access;
       Obj, Addr, Bounds : Address;
+      El_Layout, El_Bounds : Address;
    begin
       --  Default error.
       Error := AvhpiErrorNotImplemented;
@@ -1138,20 +1249,36 @@ package body Grt.Avhpi is
          return;
       end if;
       Obj := Avhpi_Get_Address (Ref);
-      Object_To_Base_Bounds (Avhpi_Get_Rti (Atype), Obj, Addr, Bounds);
+      Arr_Rti := Avhpi_Get_Rti (Atype);
+      Object_To_Base_Bounds (Arr_Rti, Obj, Addr, Bounds);
       if Addr = Null_Address then
          Error := AvhpiErrorBadRel;
          return;
       end if;
+
+      --  When the element's own subtype is unbounded (eg. an array of
+      --  unconstrained std_logic_vector), neither its size nor its
+      --  bounds are static: they are part of the per-instance layout
+      --  reachable from this array object (Arr_Rti/Bounds).
+      El_Layout := Null_Address;
+      El_Bounds := Null_Address;
+      if Is_Unbounded (El_Type.Atype) then
+         El_Layout := Array_Element_Layout (Ref.Ctxt, Arr_Rti, Bounds);
+         if El_Layout /= Null_Address then
+            El_Bounds := Array_Layout_To_Element (El_Layout, El_Type.Atype);
+         end if;
+      end if;
+
       --  Note: the index is a flat index (ie an offset).
       --  TODO: check with length ?
-      Addr := Add_Index (Ref.Ctxt, Addr, Ref.Obj, El_Type.Atype,
+      Addr := Add_Index (Ref.Ctxt, Addr, Ref.Obj, El_Type.Atype, El_Layout,
                          Ghdl_Index_Type (Index));
       Res := (Kind => VhpiIndexedNameK,
               Ctxt => Ref.Ctxt,
               N_Addr => Addr,
               N_Type => El_Type.Atype,
               N_Idx => Ghdl_Index_Type (Index),
+              N_Bounds => El_Bounds,
               N_Obj => Ref.Obj);
    end Indexed_Names_By_Index;
 
@@ -1414,6 +1541,17 @@ package body Grt.Avhpi is
             return Null_Address;
       end case;
    end Avhpi_Get_Address;
+
+   function Avhpi_Get_Bounds (Obj : VhpiHandleT) return Address is
+   begin
+      case Obj.Kind is
+         when VhpiIndexedNameK
+           | AvhpiNameIteratorK =>
+            return Obj.N_Bounds;
+         when others =>
+            return Null_Address;
+      end case;
+   end Avhpi_Get_Bounds;
 
    function Avhpi_Get_Context (Obj : VhpiHandleT) return Rti_Context is
    begin
