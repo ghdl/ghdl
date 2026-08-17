@@ -181,7 +181,7 @@ function Invoke-PatchVersionFile
 		return $true
 	}
   $GHDLVersion =            Get-GHDLVersion $GHDLRootDir
-	$FileContent = $FileContent -Replace "\s@VER@\s", $GHDLVersion
+	$FileContent = $FileContent -Replace "@VER@", $GHDLVersion
 
 	$FileContent = $FileContent -Replace "\s\(tarball\)\s", " (commit: $GitCommitDataString;  git branch: $GitBranchName';  hash: $GitCommitHash) "
 
