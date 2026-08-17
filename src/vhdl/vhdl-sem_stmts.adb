@@ -123,14 +123,24 @@ package body Vhdl.Sem_Stmts is
    begin
       El := Chain;
       while El /= Null_Iir loop
-         Ass := Get_Associated_Expr (El);
-         if Get_Kind (Ass) = Iir_Kind_Aggregate then
-            Fill_Array_From_Aggregate_Associated
-              (Get_Association_Choices_Chain (Ass), Nbr, Arr);
-         else
-            Arr (Nbr) := Ass;
-            Nbr := Nbr + 1;
-         end if;
+         case Get_Kind (El) is
+            when Iir_Kind_Choice_By_Range
+              | Iir_Kind_Choice_By_Others =>
+               --  Already reported as an error by Check_Aggregate_Target,
+               --  which (unlike here) does not count these choices in NBR.
+               --  ARR is sized to that count, so they must be skipped here
+               --  too, or NBR overruns ARR'Last.
+               null;
+            when others =>
+               Ass := Get_Associated_Expr (El);
+               if Get_Kind (Ass) = Iir_Kind_Aggregate then
+                  Fill_Array_From_Aggregate_Associated
+                    (Get_Association_Choices_Chain (Ass), Nbr, Arr);
+               else
+                  Arr (Nbr) := Ass;
+                  Nbr := Nbr + 1;
+               end if;
+         end case;
          El := Get_Chain (El);
       end loop;
    end Fill_Array_From_Aggregate_Associated;
