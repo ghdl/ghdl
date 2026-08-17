@@ -1,0 +1,4 @@
+sig_o(0) size=5 value=00101
+sig_o(1) size=5 value=10101
+sig_o(0) after write = 11010
+sig_o(1) after write = 10101

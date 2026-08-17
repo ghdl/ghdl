@@ -421,7 +421,8 @@ package body Grt.Vcd is
 
       case Vhpi_Get_Kind (Sig) is
          when VhpiIndexedNameK =>
-            Bounds := Null_Address;
+            --  Non-null when Sig's element subtype is itself unbounded.
+            Bounds := Avhpi_Get_Bounds (Sig);
          when VhpiPortDeclK
             | VhpiSigDeclK
             | VhpiGenericDeclK
@@ -454,6 +455,16 @@ package body Grt.Vcd is
          when Ghdl_Rtik_Type_Array =>
             Arr_Rti := To_Ghdl_Rtin_Type_Array_Acc (Rti);
             Kind := Rti_Array_To_Vcd_Kind (Arr_Rti);
+         when Ghdl_Rtik_Subtype_Unbounded_Array =>
+            --  Bounds was already set above from Avhpi_Get_Bounds, not
+            --  recomputed here.
+            declare
+               St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                 To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
+            begin
+               Arr_Rti := To_Ghdl_Rtin_Type_Array_Acc (St.Basetype);
+               Kind := Rti_Array_To_Vcd_Kind (Arr_Rti);
+            end;
          when others =>
             Kind := Vcd_Bad;
       end case;
@@ -478,8 +489,8 @@ package body Grt.Vcd is
          begin
             Extract_Range (Bounds, Idx_Rti, Irange);
          end;
-         --  Do not allow null-array.
-         if Irange.I32.Len = 0 then
+         --  Do not allow unknown bounds or a null-array.
+         if Irange = null or else Irange.I32.Len = 0 then
             Kind := Vcd_Bad;
          end if;
       end if;
