@@ -51,6 +51,11 @@ package Trans is
 
    --  Node for the variable containing the current filename.
    Current_Filename_Node : O_Dnode := O_Dnode_Null;
+
+   --  Name of the file Current_Filename_Node holds, so that a location known
+   --  to be in that same file can reuse the node instead of creating another
+   --  identical string constant.
+   Current_Filename_Id : Name_Id := Null_Identifier;
    Current_Library_Unit  : Iir := Null_Iir;
 
    --  Global declarations.

@@ -174,6 +174,7 @@ package body Trans.Chap12 is
       Finish_Subprogram_Body;
 
       Current_Filename_Node := O_Dnode_Null;
+      Current_Filename_Id := Null_Identifier;
    end Gen_Main;
 
    procedure Gen_Last_Arch (Entity : Iir_Entity_Declaration)

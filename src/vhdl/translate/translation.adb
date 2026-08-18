@@ -81,6 +81,7 @@ package body Translation is
             Create_Uniq_Identifier, O_Storage_Private);
       end if;
       Current_Filename_Node := Info.Design_Filename;
+      Current_Filename_Id := Get_Design_File_Filename (Design_File);
    end Gen_Filename;
 
    procedure Push_Unit_Prefix (Lib_Unit : Iir; Mark : out Id_Mark_Type)
@@ -267,6 +268,7 @@ package body Translation is
       end case;
 
       Current_Filename_Node := O_Dnode_Null;
+      Current_Filename_Id := Null_Identifier;
       Current_Library_Unit := Null_Iir;
 
       Trans.Coverage.Coverage_On := Prev_Coverage_On;
@@ -2196,6 +2198,7 @@ package body Translation is
 
       Post_Initialize;
       Current_Filename_Node := O_Dnode_Null;
+      Current_Filename_Id := Null_Identifier;
       --Pop_Global_Factory;
    end Translate_Standard;
 

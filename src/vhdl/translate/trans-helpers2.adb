@@ -285,4 +285,31 @@ package body Trans.Helpers2 is
         (Assoc, New_Lit (New_Signed_Literal (Ghdl_I32_Type,
                                              Integer_64 (Line))));
    end Assoc_Filename_Line;
+
+   procedure Assoc_Filename_Line (Assoc : in out O_Assoc_List; Loc : Iir)
+   is
+      Name          : Name_Id;
+      Line, Col     : Natural;
+      Filename_Node : O_Dnode;
+   begin
+      Files_Map.Location_To_Position (Get_Location (Loc), Name, Line, Col);
+      if Name = Current_Filename_Id
+        and then Current_Filename_Node /= O_Dnode_Null
+      then
+         --  Same file as the unit being translated: reuse the string constant
+         --  already created for it.  This is by far the common case -- every
+         --  ordinary check is in the file it is generated for -- so creating
+         --  another identical constant per check would bloat the object for
+         --  no gain.
+         Filename_Node := Current_Filename_Node;
+      else
+         Filename_Node :=
+           Create_String (Name, Create_Uniq_Identifier, O_Storage_Private);
+      end if;
+      New_Association
+        (Assoc, New_Address (New_Obj (Filename_Node), Char_Ptr_Type));
+      New_Association
+        (Assoc, New_Lit (New_Signed_Literal (Ghdl_I32_Type,
+                                             Integer_64 (Line))));
+   end Assoc_Filename_Line;
 end Trans.Helpers2;
