@@ -123,9 +123,16 @@ jobs:
           printf "Docker image '%s' has %s\n" "${{ steps.build.outputs.ghdl_image }}" "$(docker image inspect ${{ steps.build.outputs.ghdl_image }} --format='{{.Size}}' | numfmt --to=iec --format '%.2f')"
           docker image push ${{ steps.build.outputs.ghdl_image }}
 
-      - name: 🚦 Testing GHDL image
+      # Smoke test only, on purpose.  The full 'testsuites' list has
+      # already been run natively by the 'Test' job, on the very same build artifact
+      # that was just copied into this image.  Running it a second time inside the
+      # container proves nothing new about the image, but used to account for roughly
+      # a third of the pipeline's Linux runner minutes, starving the remaining build
+      # jobs of runners.  'sanity' is enough to prove the image is well-formed.
+      - name: 🚦 Smoke testing GHDL image
+        if: inputs.testsuites != 'none'
         run: |
-          docker container run --rm -v $(pwd):/data ghdl:current /bin/bash -c 'cd /data/testsuite; ./testsuite.sh ${{ inputs.testsuites }}'
+          docker container run --rm -v $(pwd):/data ghdl:current /bin/bash -c 'cd /data/testsuite; ./testsuite.sh sanity'
 
   TestDocker:
     uses: ./.github/workflows/Test-Docker.yml
