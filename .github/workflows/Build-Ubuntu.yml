@@ -474,11 +474,14 @@ jobs:
       ghdl_artifact: ${{ needs.Build.outputs.ghdl_artifact }}
       testsuites:    ${{ inputs.testsuites }}
 
+  # Only package images where they can actually be used: on 'master' and on tags.
+  # On a topic branch these images are built, tested and then thrown away, while
+  # holding Linux runners the still-queued build jobs are waiting for.
   Docker:
     uses: ./.github/workflows/Package-Docker.yml
     needs:
       - Build
-    if: inputs.ubuntu_artifact != ''
+    if: inputs.ubuntu_artifact != '' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
     with:
       ubuntu_image:   ubuntu-${{ inputs.ubuntu_version }}
       ghdl_artifact:  ${{ needs.Build.outputs.ghdl_artifact }}
