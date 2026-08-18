@@ -487,10 +487,25 @@ libghdl_name=libghdl-$(libghdl_version)$(SOEXT)
 
 LIBGHDL_GRT_OBJS= pic/grt-cstdio.o pic/grt-cdynload.o
 
+#	gnatlink normally embeds an automatic rpath to the GNAT runtime
+#	(libgnat) directory.  On macOS this duplicates the rpath already
+#	supplied via SHLIB_FLAGS/LDFLAGS and ld rejects it as a "duplicate
+#	LC_RPATH" error (#2806), so -R (disable gnatlink's automatic rpath)
+#	is needed there.  On other platforms SHLIB_FLAGS/LDFLAGS carry no
+#	such rpath, so passing -R everywhere leaves libghdl's shared library
+#	with no working path to libgnat at all when it isn't on the default
+#	linker search path -- which is what makes testsuite/gna/issue2005
+#	fail with undefined GNAT symbols.  Restrict -R to macOS.
+ifeq ($(SOEXT),.dylib)
+LIBGHDL_LARGS_R=-R
+else
+LIBGHDL_LARGS_R=
+endif
+
 lib/$(libghdl_name): $(GRT_SRC_DEPS) $(LIBGHDL_GRT_OBJS) version.ads force
 #	Use -g for gnatlink so that the binder file is not removed.  We need
 #	it for libghdl.a
-	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ -gnat12 $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -R -g -shared $(SHLIB_FLAGS) $(filter-out -static,$(LDFLAGS)) $(LIBGHDL_GRT_OBJS)
+	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ -gnat12 $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs $(LIBGHDL_LARGS_R) -g -shared $(SHLIB_FLAGS) $(filter-out -static,$(LDFLAGS)) $(LIBGHDL_GRT_OBJS)
 #       On windows, gnatmake (via Osint.Executable_Name) always appends .exe
 #       Adjust.  (Other solution: use gnatmake for compilation and binding,
 #       then use gnatlink directly for linking).
