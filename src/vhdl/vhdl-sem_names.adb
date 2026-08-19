@@ -979,6 +979,11 @@ package body Vhdl.Sem_Names is
       if Get_Kind (Res) = Iir_Kind_Base_Attribute then
          Error_Msg_Sem
            (+Name, "'Base attribute cannot be used as a type mark");
+         --  Do not let the 'BASE node flow on as if it were a type mark:
+         --  callers would then hit it as a subtype indication and crash
+         --  (get_type_of_subtype_indication: cannot handle
+         --  IIR_KIND_BASE_ATTRIBUTE).
+         return Create_Error_Type (Res);
       end if;
 
       Atype := Name_To_Type_Definition (Res);
@@ -1061,7 +1066,20 @@ package body Vhdl.Sem_Names is
       --  See Sem_Array_Attribute_Name for comments about the prefix.
       Prefix_Name := Get_Prefix (Attr_Name);
       if Is_Type_Name (Prefix_Name) /= Null_Iir then
-         Prefix := Sem_Type_Mark (Prefix_Name);
+         if Get_Kind (Prefix_Name) = Iir_Kind_Attribute_Name
+           and then (Get_Kind (Get_Named_Entity (Prefix_Name))
+                       = Iir_Kind_Base_Attribute)
+         then
+            --  LRM08 16.2 Predefined attributes
+            --  T'BASE [...]
+            --  Restrictions: This attribute is allowed only as the prefix of
+            --  the name of another attribute; for example, T'BASE'LEFT.
+            --  So 'BASE is valid here, and it has already been analyzed;
+            --  don't use Sem_Type_Mark, which rejects it as a type mark.
+            Prefix := Finish_Sem_Name (Prefix_Name);
+         else
+            Prefix := Sem_Type_Mark (Prefix_Name);
+         end if;
       else
          Prefix := Finish_Sem_Name (Prefix_Name, Get_Prefix (Attr));
          --  Convert function declaration to call.
@@ -3298,6 +3316,13 @@ package body Vhdl.Sem_Names is
       Location_Copy (Res, Attr);
       Set_Prefix (Res, Prefix_Name);
       Set_Type (Res, Base_Type);
+
+      --  Like 'SUBTYPE and 'ELEMENT, 'BASE denotes a type and can be the
+      --  prefix of another name, so it needs the corresponding fields.
+      Set_Base_Name (Res, Res);
+      Set_Name_Staticness (Res, Get_Name_Staticness (Prefix_Name));
+      Set_Type_Staticness (Res, Get_Type_Staticness (Base_Type));
+
       return Res;
    end Sem_Base_Attribute;
 
