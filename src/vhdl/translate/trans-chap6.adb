@@ -48,27 +48,19 @@ package body Trans.Chap6 is
 
    procedure Gen_Bound_Error (Loc : Iir)
    is
-      Constr    : O_Assoc_List;
-      Name      : Name_Id;
-      Line, Col : Natural;
+      Constr : O_Assoc_List;
    begin
-      Files_Map.Location_To_Position (Get_Location (Loc), Name, Line, Col);
-
       Start_Association (Constr, Ghdl_Bound_Check_Failed);
-      Assoc_Filename_Line (Constr, Line);
+      Assoc_Filename_Line (Constr, Loc);
       New_Procedure_Call (Constr);
    end Gen_Bound_Error;
 
    procedure Gen_Direction_Error (Loc : Iir)
    is
-      Constr    : O_Assoc_List;
-      Name      : Name_Id;
-      Line, Col : Natural;
+      Constr : O_Assoc_List;
    begin
-      Files_Map.Location_To_Position (Get_Location (Loc), Name, Line, Col);
-
       Start_Association (Constr, Ghdl_Direction_Check_Failed);
-      Assoc_Filename_Line (Constr, Line);
+      Assoc_Filename_Line (Constr, Loc);
       New_Procedure_Call (Constr);
    end Gen_Direction_Error;
 
@@ -83,7 +75,7 @@ package body Trans.Chap6 is
          New_Association (Assoc,
                           New_Lit (New_Signed_Literal (Ghdl_I32_Type, 0)));
       else
-         Assoc_Filename_Line (Assoc, Get_Line_Number (Loc));
+         Assoc_Filename_Line (Assoc, Loc);
       end if;
       New_Association
         (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,

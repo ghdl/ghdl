@@ -69,4 +69,11 @@ package Trans.Helpers2 is
 
    procedure Assoc_Filename_Line (Assoc : in out O_Assoc_List;
                                   Line  : Natural);
+
+   --  Like Assoc_Filename_Line, but the filename comes from LOC's own
+   --  location instead of the design unit currently being translated.
+   --  Needed whenever LOC may belong to a different file -- e.g. a port's
+   --  default value, checked while generating code for the instantiating
+   --  architecture.
+   procedure Assoc_Filename_Line (Assoc : in out O_Assoc_List; Loc : Iir);
 end Trans.Helpers2;
