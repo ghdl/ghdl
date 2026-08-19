@@ -573,7 +573,12 @@ package body Ghdlxml is
          end if;
          Files (I).Fe := File;
          Files (I).Design_File := Load_File (File);
-         if Files (I).Design_File = Null_Iir then
+         if Files (I).Design_File = Null_Iir or else Errorout.Nbr_Errors > 0
+         then
+            --  Stop now in case of error (file not found or parse error).
+            --  A design unit created by parser error recovery may have a
+            --  Null_Iir Library_Unit, which Add_Design_File_Into_Library
+            --  (below) is not prepared to handle.
             return;
          end if;
          --  Put units in library.
