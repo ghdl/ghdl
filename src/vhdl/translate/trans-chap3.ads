@@ -351,6 +351,11 @@ package Trans.Chap3 is
    function Locally_Types_Match (L_Type : Iir; R_Type : Iir)
                                 return Tri_State_Type;
 
+   --  Whether the bounds of L_TYPE and R_TYPE are known to match at analysis
+   --  time.  When Unknown, the check has to be done at run time and the
+   --  bounds of both objects are needed.
+   function Types_Match (L_Type : Iir; R_Type : Iir) return Tri_State_Type;
+
    --  Check bounds of L match bounds of R.
    --  If L_TYPE (resp. R_TYPE) is not a thin composite type, then L_NODE
    --    (resp. R_NODE) are not used (and may be Mnode_Null).
@@ -358,6 +363,15 @@ package Trans.Chap3 is
    --    must designate the object.
    procedure Check_Composite_Match
      (L_Type : Iir; L_Node : Mnode; R_Type : Iir; R_Node : Mnode; Loc : Iir);
+
+   --  Likewise, but with the bounds already extracted from the objects.
+   --  Needed when the bounds of the two operands must be computed in
+   --  different environments (see the direct recursive instantiation case in
+   --  Chap5.Elab_Port_Map_Aspect_Assoc).  Only call it when Types_Match
+   --  returns Unknown.
+   procedure Check_Composite_Match_Bounds
+     (L_Type : Iir; L_Bounds : Mnode; R_Type : Iir; R_Bounds : Mnode;
+      Loc : Iir);
 
    --  Create a subtype range to be stored into RES from length LENGTH, which
    --  is of type INDEX_TYPE.
