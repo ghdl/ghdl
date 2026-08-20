@@ -1664,8 +1664,17 @@ package body Vhdl.Sem_Assocs is
       if Get_Generic_Map_Aspect_Chain (Inter) = Null_Iir then
          null;
       else
-         --  Other cases not yet handled.
-         raise Internal_Error;
+         --  LRM08 6.5.7.2 Generic map aspects
+         --  a) If the formal generic package declaration includes an
+         --     interface generic map aspect that is not in the form that
+         --     includes the box (<>) symbol, [the actual's generics must
+         --     match the ones computed from that aspect].
+         --  Other cases (i.e. this one) not yet handled: report a clean
+         --  error instead of crashing.
+         Error_Msg_Sem
+           (+Assoc, "matching a formal generic package with an explicit "
+              & "generic map aspect is not supported");
+         return;
       end if;
 
       Match := Fully_Compatible;
