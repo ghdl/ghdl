@@ -997,7 +997,13 @@ package body Trans.Chap6 is
       if Prefix_Tinfo.S.Rec_Fields /= null then
          F := Prefix_Tinfo.S.Rec_Fields (Pos).Fields (Kind);
          El_Tinfo := Prefix_Tinfo.S.Rec_Fields (Pos).Tinfo;
-         pragma Assert (El_Tinfo = Res_Tinfo);
+         --  EL_TINFO and RES_TINFO differ when EL is the element declaration
+         --  of the base record type while the prefix is of a record subtype
+         --  that constrains it (eg. a T_CONFIG(PARAM_A(31 downto 0)) port
+         --  whose element is declared as an unconstrained vector).  The code
+         --  below already handles that: the field is accessed through
+         --  EL_TINFO and the (unbounded) result is built from RES_TINFO,
+         --  with the bounds taken from the prefix layout.
       else
          --  Use the base element.
          declare
