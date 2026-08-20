@@ -1065,12 +1065,18 @@ package body Elab.Vhdl_Expr is
          when Iir_Kind_Subtype_Attribute =>
             return Exec_Name_Subtype (Syn_Inst, Get_Prefix (Name));
 
+         when Iir_Kind_Base_Attribute =>
+            --  Unlike 'SUBTYPE, this is the base type of the prefix and not
+            --  the prefix's own (possibly constrained) subtype.
+            return Get_Subtype_Object (Syn_Inst, Get_Type (Name));
+
          when Iir_Kind_Element_Attribute =>
             declare
                Pfx : Type_Acc;
             begin
                Pfx := Exec_Name_Subtype (Syn_Inst, Get_Prefix (Name));
-               return Pfx.Arr_El;
+               --  The prefix is unbounded for T'BASE'ELEMENT.
+               return Get_Array_Element (Pfx);
             end;
 
          when others => Error_Kind ("exec_name_subtype", Name);

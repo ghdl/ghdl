@@ -4912,6 +4912,12 @@ package Vhdl.Nodes is
    --   Get/Set_Prefix (Field0)
    --
    --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Base_Name (Field5)
+   --
+   --   Get/Set_Type_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
 
    -- Iir_Kind_Across_Attribute (Short)
    -- Iir_Kind_Through_Attribute (Short)
