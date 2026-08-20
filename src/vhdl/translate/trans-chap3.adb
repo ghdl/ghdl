@@ -730,7 +730,44 @@ package body Trans.Chap3 is
                      Open_Temp;
                      Rng := Bounds_To_Range (Targ, Def, I + 1);
                      if New_Indexes then
+                        --  Stabilize first: Rng is read several times
+                        --  below (Translate_Discrete_Range itself
+                        --  stabilizes internally, but only for its own
+                        --  writes; without stabilizing here first, its
+                        --  underlying address would already have been
+                        --  consumed once we try to read it back).
+                        Rng := Stabilize (Rng);
                         Chap7.Translate_Discrete_Range (Rng, Index);
+
+                        --  Check the bounds of this new index constraint
+                        --  fit within the corresponding index subtype of
+                        --  the unconstrained parent array type (e.g. a
+                        --  STRING's POSITIVE index).  A null range is
+                        --  always compatible, whatever its bounds are
+                        --  (LRM08 5.2.1), so only check non-null ranges.
+                        declare
+                           Parent_Index_Type : constant Iir :=
+                             Get_Index_Type
+                               (Get_Index_Subtype_List (Parent_Type), I);
+                           If_Blk : O_If_Block;
+                           Dummy  : O_Enode;
+                           pragma Unreferenced (Dummy);
+                        begin
+                           Start_If_Stmt
+                             (If_Blk,
+                              New_Compare_Op
+                                (ON_Neq,
+                                 M2E (Range_To_Length (Rng)),
+                                 New_Lit (Ghdl_Index_0),
+                                 Ghdl_Bool_Type));
+                           Dummy := Insert_Scalar_Check
+                             (M2E (Range_To_Left (Rng)), Null_Iir,
+                              Parent_Index_Type, Def);
+                           Dummy := Insert_Scalar_Check
+                             (M2E (Range_To_Right (Rng)), Null_Iir,
+                              Parent_Index_Type, Def);
+                           Finish_If_Stmt (If_Blk);
+                        end;
                      else
                         Gen_Memcpy
                           (M2Addr (Rng),
