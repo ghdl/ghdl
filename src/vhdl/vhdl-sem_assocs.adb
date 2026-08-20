@@ -1070,6 +1070,39 @@ package body Vhdl.Sem_Assocs is
                  (Get_Associated_Expr (El), El_Type);
                El := Get_Chain (El);
             end loop;
+
+            --  If the element is not constrained by the interface, it is
+            --  defined by the individual associations - like the elements of
+            --  a record, cf. Finish_Individual_Assoc_Record.  Take it from
+            --  the first association; they all have the same subtype.
+            --  Without this, ACTUAL_TYPE keeps the unconstrained element of
+            --  the base type although it has just been marked as fully
+            --  constrained, so the bounds of the element are never
+            --  elaborated.
+            if Get_Kind (El_Type) in Iir_Kinds_Composite_Type_Definition
+              and then Get_Constraint_State (El_Type) /= Fully_Constrained
+            then
+               declare
+                  Assoc_Expr : constant Iir := Get_Associated_Expr (Chain);
+                  Assoc_Type : Iir;
+               begin
+                  if (Get_Kind (Assoc_Expr)
+                        = Iir_Kind_Association_Element_By_Individual)
+                  then
+                     Assoc_Type := Get_Actual_Type (Assoc_Expr);
+                  else
+                     Assoc_Type := Get_Type (Get_Actual (Assoc_Expr));
+                  end if;
+                  if Assoc_Type /= Null_Iir
+                    and then (Get_Kind (Assoc_Type)
+                                in Iir_Kinds_Composite_Type_Definition)
+                    and then Get_Constraint_State (Assoc_Type)
+                               = Fully_Constrained
+                  then
+                     Set_Element_Subtype (Actual_Type, Assoc_Type);
+                  end if;
+               end;
+            end if;
          else
             El := Chain;
             while El /= Null_Node loop
