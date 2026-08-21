@@ -71,6 +71,7 @@ jobs:
     name: Build GHDL on 'ubuntu-${{ inputs.ubuntu_version }}'
     if: true
     runs-on: ubuntu-${{ inputs.ubuntu_version }}
+    timeout-minutes: 30
     outputs:
       ghdl_artifact: ${{ steps.artifact_name.outputs.ghdl_artifact }}
 
@@ -94,7 +95,15 @@ jobs:
           EOF
 
       - name: 🔧 Install dependencies
+        timeout-minutes: 10
         run: |
+          # Reduce waiting time for a potentially hanging 'azure.archive.ubuntu.com'
+          sudo tee /etc/apt/apt.conf.d/99-ci-timeouts >/dev/null <<'CONF'
+          Acquire::Retries "20";
+          Acquire::http::Timeout "15";
+          Acquire::https::Timeout "15";
+          CONF
+
           APT_ARGS="gcc g++ gnat"
           if ${{ startsWith(inputs.ghdl_backend, 'mcode') }}; then
             APT_ARGS="$APT_ARGS"
