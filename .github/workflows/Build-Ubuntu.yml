@@ -71,10 +71,7 @@ jobs:
     name: Build GHDL on 'ubuntu-${{ inputs.ubuntu_version }}'
     if: true
     runs-on: ubuntu-${{ inputs.ubuntu_version }}
-    # Backstop against a hung step.  Without it a job inherits the 360 minute
-    # default and can hold a runner for six hours.  The slowest legitimate build
-    # measured is gcc/26.04 at 16.2 minutes.
-    timeout-minutes: 45
+    timeout-minutes: 30
     outputs:
       ghdl_artifact: ${{ steps.artifact_name.outputs.ghdl_artifact }}
 
@@ -98,17 +95,13 @@ jobs:
           EOF
 
       - name: 🔧 Install dependencies
-        # Normally 33 s (median), 8.7 minutes at the observed worst.  The cap is
-        # what turns an unreachable mirror into a fast, retryable failure.
-        timeout-minutes: 15
+        timeout-minutes: 10
         run: |
-          # The runner's mirrorlist puts azure.archive.ubuntu.com first, and that
-          # mirror intermittently stalls instead of failing.  Bound every request
-          # so apt falls through to archive.ubuntu.com instead of hanging.
+          # Reduce waiting time for a potentially hanging 'azure.archive.ubuntu.com'
           sudo tee /etc/apt/apt.conf.d/99-ci-timeouts >/dev/null <<'CONF'
-          Acquire::Retries "3";
-          Acquire::http::Timeout "30";
-          Acquire::https::Timeout "30";
+          Acquire::Retries "20";
+          Acquire::http::Timeout "15";
+          Acquire::https::Timeout "15";
           CONF
 
           APT_ARGS="gcc g++ gnat"

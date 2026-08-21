@@ -87,9 +87,7 @@ jobs:
   Build:
     name: Build GHDL on Windows Server + MSYS2
     runs-on: windows-${{ inputs.windows_version }}
-    # See Build-Ubuntu.yml.  Slowest measured MSYS2 build: 7.5 minutes, but
-    # pacman and the MSYS2 setup make this the heaviest of the three.
-    timeout-minutes: 60
+    timeout-minutes: 30
     outputs:
       ghdl_artifact:    ${{ steps.artifact_name.outputs.ghdl_artifact }}
       pacman_artifact:  ${{ steps.artifact_name.outputs.pacman_artifact }}

@@ -69,8 +69,7 @@ jobs:
     name: Build GHDL on '${{ inputs.macos_image }}'
     if: true
     runs-on: ${{ inputs.macos_image }}
-    # See Build-Ubuntu.yml.  Slowest measured macOS build: 3.4 minutes.
-    timeout-minutes: 45
+    timeout-minutes: 30
     outputs:
       ghdl_artifact: ${{ steps.artifact_name.outputs.ghdl_artifact }}
 
