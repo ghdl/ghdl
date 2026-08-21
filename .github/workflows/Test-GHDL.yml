@@ -26,6 +26,11 @@ on:
         description: "List of GHDL testsuites to execute while testing (space separated). Alternatively: 'all' or 'none'"
         required: true
         type: string
+      testsuite_xml_artifact:
+        description: 'Name of the artifact containing the JUnit test report. If empty, no report is uploaded.'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   Test:
@@ -103,7 +108,7 @@ jobs:
       - name: Run tests in testsuite
         run: |
           [ '${{ inputs.runtime }}' != '' ] && export PATH=$(pwd)/install/bin:$PATH
-          [ ${{ startsWith(inputs.os_image, 'macos') }} ] && export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
+          [ '${{ startsWith(inputs.os_image, 'macos') }}' = 'true' ] && export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
           cd testsuite
 
           # no pyunit
@@ -113,3 +118,12 @@ jobs:
             TESTSUITES="${{ inputs.testsuites }}"
           fi
           ./testsuite.sh $TESTSUITES
+
+      - name: 📤 Upload test report
+        if: always() && inputs.testsuite_xml_artifact != ''
+        uses: pyTooling/upload-artifact@v7
+        with:
+          name: ${{ inputs.testsuite_xml_artifact }}
+          path: testsuite/testsuites.xml
+          if-no-files-found: error
+          retention-days: 1

@@ -54,6 +54,12 @@ e~*.lst
 # GHDLs testsuite
 /testsuite/get_entities
 /testsuite/test_ok
+# Test reports written by testsuite.sh and suite_driver.sh
+/testsuite/testsuites.xml
+/testsuite/**/*.testresult
+/testsuite/**/*.testresults
+/testsuite/**/*.testresults.xml
+/testsuite/**/*.failures
 /testsuite/gna/**/*.out
 /testsuite/vpi/**/*.out
 /testsuite/synth/**/*.out

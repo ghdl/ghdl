@@ -712,7 +712,7 @@ install.vhdllib: install.dirs
 	done
 #	ANSI color
 	$(INSTALL_DATA) -p \
-	    $(srcdir)/scripts/ansi_color.sh "$(DESTDIR)$(VHDL_LIB_DIR)/";
+	    $(srcdir)/scripts/bash_toolbox.sh "$(DESTDIR)$(VHDL_LIB_DIR)/";
 #	Vendors scripts
 	$(MKDIR) -p "$(DESTDIR)$(VHDL_LIB_DIR)/vendors"
 	$(INSTALL_DATA) -p \

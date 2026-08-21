@@ -10,6 +10,9 @@
 #  - Color codes
 #  - Printing and text formatting
 #  - Error handling
+#  - Log sections, grouped when running in a CI environment
+#  - Time measurement and timestamps
+#  - XML escaping, for writing test reports
 #
 # ==============================================================================
 #  Copyright (C) 2017-2026 Patrick Lehmann - Boetzingen, Germany
@@ -30,6 +33,8 @@
 # ==============================================================================
 VERBOSE=${VERBOSE:-0}
 DEBUG=${DEBUG:-0}
+
+ANSI_ESC=$'\x1b'
 
 enable_color() {
 	ANSI_BLACK=$'\x1b[30m'
@@ -212,4 +217,143 @@ CheckErrorOrContinue() {
 		PrintError "$3" "$4 ExitCode: $returnCode"
 		test $continueOnError -eq 0 && exit $exitCode
 	fi
+}
+
+# ==============================================================================
+# Log sections
+# ==============================================================================
+# A section groups the output of one step. In a CI environment the group is
+# collapsible and its duration is reported; elsewhere it is a coloured heading.
+#
+# The two variants are defined once, here, rather than being overridden by every
+# script that needs them.
+if [[ -n "${GITHUB_ACTIONS}" ]]; then
+	DeclareProcedure "section_start" "<title> [<color>]"
+	section_start() {
+		local color="${2:-${ANSI_YELLOW}}"
+
+		printf -- '::group::'
+		printf -- "${color}%s${ANSI_NOCOLOR}\n" "$1"
+		SECONDS=0
+	}
+
+	DeclareProcedure "section_end" ""
+	section_end() {
+		local duration=$SECONDS
+
+		printf -- '::endgroup::\n'
+		printf -- "${ANSI_DARK_GRAY}Took %d min %d sec.${ANSI_NOCOLOR}\n" "$((duration / 60))" "$((duration % 60))"
+	}
+else
+	DeclareProcedure "section_start" "<title> [<color>]"
+	section_start() {
+		local color="${2:-${ANSI_YELLOW}}"
+
+		printf -- "${color}%s${ANSI_NOCOLOR}\n" "$1"
+	}
+
+	DeclareProcedure "section_end" ""
+	section_end() {
+		:
+	}
+fi
+
+
+# ==============================================================================
+# Time measurement and timestamps
+# ==============================================================================
+# The date program to use.
+#
+# A nanosecond clock ('%N') and an ISO 8601 offset ('%:z') are needed, and BSD date has neither. On macOS,
+# install GNU coreutils - 'brew install coreutils' - which provides 'gdate'. The CI workflow additionally puts
+# the coreutils 'gnubin' directory on PATH, so that plain 'date' is the GNU one there.
+if command -v gdate > /dev/null 2>&1; then
+	DATE="gdate"
+else
+	DATE="date"
+fi
+
+# Whether that date program understands the two formats. Probed once, as probing per testcase would cost more
+# than the measurement is worth. A caller that wants to warn about it reads HAS_NANOSECONDS; this file prints
+# nothing, so that sourcing it can never contaminate a captured value.
+if [[ "$(${DATE} +%N)" == "N" ]]; then
+	HAS_NANOSECONDS=0
+else
+	HAS_NANOSECONDS=1
+fi
+
+case "$(${DATE} +%:z)" in
+	[+-][0-9][0-9]:[0-9][0-9]) TIMEZONE_FORMAT="%:z" ;;
+	*)                         TIMEZONE_FORMAT="%z"  ;;
+esac
+
+DeclareProcedure "now_timestamp" ""
+# Print the current time as an ISO 8601 timestamp, as the 'timestamp' attribute of a JUnit report takes.
+now_timestamp() {
+	${DATE} +"%Y-%m-%dT%H:%M:%S${TIMEZONE_FORMAT}"
+}
+
+DeclareProcedure "now_nanoseconds" ""
+# Read the clock, in nanoseconds.
+# Without '%N' the reading is a whole second, which keeps the arithmetic working rather than producing a
+# literal 'N' that would abort the caller.
+now_nanoseconds() {
+	if [[ ${HAS_NANOSECONDS} -eq 1 ]]; then
+		${DATE} +%s%N
+	else
+		printf -- '%s000000000' "$(${DATE} +%s)"
+	fi
+}
+
+DeclareProcedure "elapsed_seconds" "<startTime> <stopTime>"
+# Print a duration in seconds, from a start and a stop reading of now_nanoseconds.
+# The fraction is zero-padded: 8 ms is '0.008', not '0.8'.
+elapsed_seconds() {
+	local milliseconds=$((($2 - $1) / 1000000))
+
+	printf -- '%d.%03d' $((milliseconds / 1000)) $((milliseconds % 1000))
+}
+
+
+# ==============================================================================
+# XML
+# ==============================================================================
+# An optional prefix for the names written into a test report.
+#
+# Merging the reports of several platforms collapses them when the names collide: 'sanity/000hello' from Ubuntu,
+# Windows and macOS are one testcase as far as a merge tool can tell. Setting GHDL_TEST_VARIANT to something
+# unique per platform - 'ubuntu-26.04-mcode' - keeps them apart.
+REPORT_PREFIX="${GHDL_TEST_VARIANT:+${GHDL_TEST_VARIANT}.}"
+
+
+DeclareProcedure "xml_escape" "<file>"
+# Read a file and write it as XML character data.
+#
+# ANSI colour sequences are removed, the characters XML gives a meaning to are escaped, and the control
+# characters XML 1.0 forbids outright - the escape character among them - are dropped. Without this, a single
+# failing testcase makes a whole report unparsable, because a test log holds both markup characters and the
+# colour sequences GHDL writes.
+#
+# A log is not necessarily UTF-8 either. The VHDL sources under 'vests' are Latin-1, and GHDL echoes the
+# offending byte when it rejects a character, so a lone 0xAB reaches the log and would make the report invalid
+# against its own encoding declaration. Bytes that are not valid UTF-8 are dropped.
+xml_escape() {
+	local reencode="cat"
+	if command -v iconv > /dev/null 2>&1; then
+		reencode="iconv -f UTF-8 -t UTF-8 -c"
+	fi
+
+	sed -e "s/${ANSI_ESC}\[[0-9;?]*[a-zA-Z]//g" \
+	    -e 's/&/\&amp;/g' \
+	    -e 's/</\&lt;/g' \
+	    -e 's/>/\&gt;/g' \
+	    -e 's/"/\&quot;/g' \
+	    -e "s/'/\&apos;/g" \
+	    "$1" | tr -d '\000-\010\013\014\016-\037' | ${reencode}
+}
+
+DeclareProcedure "count_elements" "<file> <elementName>"
+# Count the occurrences of an XML element in a file, as assembling a report needs the numbers for its attributes.
+count_elements() {
+	grep -c -- "<$2" "$1" 2> /dev/null || true
 }

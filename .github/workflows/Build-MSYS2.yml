@@ -20,6 +20,11 @@ on:
         description: "List of GHDL testsuites to execute while testing (space separated). Alternatively: 'all' or 'none'"
         required: true
         type: string
+      testsuite_xml_artifact:
+        description: 'Name of the artifact containing the JUnit test report. If empty, no report is uploaded.'
+        required: false
+        default: ''
+        type: string
     # Parameters created build artifacts
       msys2_artifact:
         description: 'Name of the MSYS2 build artifact.'
@@ -476,11 +481,12 @@ jobs:
       - Build
     if: inputs.msys2_artifact != '' && inputs.testsuites != 'none'
     with:
-      os_image:      windows-${{ inputs.windows_version }}
-      runtime:       ${{ inputs.runtime }}
-      shell:         "msys2 {0}"
-      ghdl_artifact: ${{ needs.Build.outputs.ghdl_artifact }}
-      testsuites:    ${{ inputs.testsuites }}
+      os_image:               windows-${{ inputs.windows_version }}
+      runtime:                ${{ inputs.runtime }}
+      shell:                  "msys2 {0}"
+      ghdl_artifact:          ${{ needs.Build.outputs.ghdl_artifact }}
+      testsuites:             ${{ inputs.testsuites }}
+      testsuite_xml_artifact: ${{ inputs.testsuite_xml_artifact }}-Windows-${{ inputs.windows_version }}-${{ inputs.runtime }}
 
   InstallPackage:
     name: Install and Test GHDL on Windows Server + MSYS2
