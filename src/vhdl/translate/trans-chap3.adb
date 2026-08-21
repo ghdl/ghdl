@@ -689,6 +689,33 @@ package body Trans.Chap3 is
       end case;
    end Create_Static_Composite_Subtype_Layout;
 
+   --  Check that the bounds of index range RNG are within INDEX_TYPE, the
+   --  index subtype of the array type being constrained (eg the POSITIVE of
+   --  a STRING).  This is needed when the constraint creates new indexes,
+   --  ie when the parent type is unconstrained: the bounds then come from
+   --  the subtype indication and have not been checked anywhere else.
+   --  A null range is compatible with any index subtype (LRM08 5.2.1), so
+   --  it is left alone.
+   procedure Check_Index_Range_Bounds
+     (Rng : Mnode; Index_Type : Iir; Loc : Iir)
+   is
+      If_Blk : O_If_Block;
+      Dummy  : O_Enode;
+      pragma Unreferenced (Dummy);
+   begin
+      Start_If_Stmt
+        (If_Blk,
+         New_Compare_Op (ON_Neq,
+                         M2E (Range_To_Length (Rng)),
+                         New_Lit (Ghdl_Index_0),
+                         Ghdl_Bool_Type));
+      Dummy := Insert_Scalar_Check
+        (M2E (Range_To_Left (Rng)), Null_Iir, Index_Type, Loc);
+      Dummy := Insert_Scalar_Check
+        (M2E (Range_To_Right (Rng)), Null_Iir, Index_Type, Loc);
+      Finish_If_Stmt (If_Blk);
+   end Check_Index_Range_Bounds;
+
    procedure Elab_Composite_Subtype_Layout (Def : Iir; Target : Mnode)
    is
       Tinfo : constant Type_Info_Acc := Get_Info (Def);
@@ -738,36 +765,11 @@ package body Trans.Chap3 is
                         --  consumed once we try to read it back).
                         Rng := Stabilize (Rng);
                         Chap7.Translate_Discrete_Range (Rng, Index);
-
-                        --  Check the bounds of this new index constraint
-                        --  fit within the corresponding index subtype of
-                        --  the unconstrained parent array type (e.g. a
-                        --  STRING's POSITIVE index).  A null range is
-                        --  always compatible, whatever its bounds are
-                        --  (LRM08 5.2.1), so only check non-null ranges.
-                        declare
-                           Parent_Index_Type : constant Iir :=
-                             Get_Index_Type
-                               (Get_Index_Subtype_List (Parent_Type), I);
-                           If_Blk : O_If_Block;
-                           Dummy  : O_Enode;
-                           pragma Unreferenced (Dummy);
-                        begin
-                           Start_If_Stmt
-                             (If_Blk,
-                              New_Compare_Op
-                                (ON_Neq,
-                                 M2E (Range_To_Length (Rng)),
-                                 New_Lit (Ghdl_Index_0),
-                                 Ghdl_Bool_Type));
-                           Dummy := Insert_Scalar_Check
-                             (M2E (Range_To_Left (Rng)), Null_Iir,
-                              Parent_Index_Type, Def);
-                           Dummy := Insert_Scalar_Check
-                             (M2E (Range_To_Right (Rng)), Null_Iir,
-                              Parent_Index_Type, Def);
-                           Finish_If_Stmt (If_Blk);
-                        end;
+                        Check_Index_Range_Bounds
+                          (Rng,
+                           Get_Index_Type
+                             (Get_Index_Subtype_List (Parent_Type), I),
+                           Def);
                      else
                         Gen_Memcpy
                           (M2Addr (Rng),
