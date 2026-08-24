@@ -5348,6 +5348,21 @@ package body Trans.Chap7 is
                return New_Value (Get_Var (Info.Psl_Finish_Count_Var));
             end;
 
+         when Iir_Kinds_Psl_Builtin =>
+            --  PSL builtin functions (prev, stable, rose, fell, onehot,
+            --  onehot0) are handled for synthesis (src/synth) but are
+            --  not implemented in this translator, which is used for
+            --  ordinary simulation.  Report it instead of ending in
+            --  Error_Kind's internal error, and make the generated code
+            --  stop if it is ever reached: with the mcode backend the
+            --  translation happens while the simulation is already
+            --  running, so without this the assertion would silently be
+            --  evaluated on a made-up value.  See #1530.
+            Error_Msg_Elab
+              (Expr, "PSL builtin function not supported in simulation");
+            Chap6.Gen_Program_Error (Expr, Chap6.Prg_Err_Unsupported);
+            Res := New_Lit (Std_Boolean_False_Node);
+
          when others =>
             Error_Kind ("translate_expression", Expr);
       end case;
