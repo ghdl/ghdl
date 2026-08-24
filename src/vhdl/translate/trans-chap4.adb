@@ -3701,10 +3701,13 @@ package body Trans.Chap4 is
 
       --  Create a copy of SIG_OUT.
       if Out_Tinfo.Type_Mode in Type_Mode_Unbounded then
-         --  The only reason why the output is unbounded is type conversion
-         --  between two unbounded ports.
+         --  The output is unbounded either because both ports are unbounded,
+         --  or because the formal is unconstrained and gets its constraint
+         --  from the conversion (eg 'input => bv(s_result)' on a formal
+         --  declared as BIT_VECTOR).  In the latter case the input is
+         --  bounded; Get_Composite_Bounds then returns the bounds from its
+         --  static layout, so the conversion below works either way.
          --  Need to implicitly convert.
-         pragma Assert (In_Tinfo.Type_Mode in Type_Mode_Unbounded);
          Dest_Sig := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
                                                    Info.Out_Sig_Field),
                            Out_Tinfo, Mode_Signal);
