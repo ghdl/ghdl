@@ -561,9 +561,33 @@ package body Trans.Chap5 is
             --  Check length matches.
             Stabilize (Formal_Sig);
             Stabilize (Actual_Sig);
-            Chap3.Check_Composite_Match (Formal_Type, Formal_Sig,
-                                         Actual_Type, Actual_Sig,
-                                         Assoc);
+            if Chap3.Types_Match (Formal_Type, Actual_Type) = Unknown then
+               --  The check is done at run time, so the bounds of both sides
+               --  are needed.  They must each be computed in their own
+               --  environment: for a direct recursive instantiation the
+               --  formal and the actual environments differ, and the bounds
+               --  of a type that depends on a generic are read from the
+               --  instance.  Stabilize them so that they no longer depend on
+               --  the environment that is current when they are used.
+               declare
+                  Formal_Bounds : Mnode;
+                  Actual_Bounds : Mnode;
+               begin
+                  Formal_Bounds :=
+                    Stabilize (Chap3.Get_Composite_Bounds (Formal_Sig));
+                  Set_Map_Env (Actual_Env);
+                  Actual_Bounds :=
+                    Stabilize (Chap3.Get_Composite_Bounds (Actual_Sig));
+                  Set_Map_Env (Formal_Env);
+                  Chap3.Check_Composite_Match_Bounds
+                    (Formal_Type, Formal_Bounds,
+                     Actual_Type, Actual_Bounds, Assoc);
+               end;
+            else
+               Chap3.Check_Composite_Match (Formal_Type, Formal_Sig,
+                                            Actual_Type, Actual_Sig,
+                                            Assoc);
+            end if;
          end if;
 
          Data := (Actual_Sig => Actual_Sig,

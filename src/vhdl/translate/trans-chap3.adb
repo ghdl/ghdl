@@ -3796,9 +3796,7 @@ package body Trans.Chap3 is
                                     L_Node : Mnode;
                                     R_Type : Iir;
                                     R_Node : Mnode;
-                                    Loc    : Iir)
-   is
-      Res : O_Enode;
+                                    Loc    : Iir) is
    begin
       case Types_Match (L_Type, R_Type) is
          when True =>
@@ -3808,11 +3806,21 @@ package body Trans.Chap3 is
             Chap6.Gen_Bound_Error (Loc);
             return;
          when Unknown =>
-            Res := Check_Match_Cond (L_Type, Get_Composite_Bounds (L_Node),
-                                     R_Type, Get_Composite_Bounds (R_Node));
-            Chap6.Check_Bound_Error (Res, Loc);
+            Check_Composite_Match_Bounds (L_Type, Get_Composite_Bounds (L_Node),
+                                          R_Type, Get_Composite_Bounds (R_Node),
+                                          Loc);
       end case;
    end Check_Composite_Match;
+
+   procedure Check_Composite_Match_Bounds
+     (L_Type : Iir; L_Bounds : Mnode; R_Type : Iir; R_Bounds : Mnode;
+      Loc : Iir)
+   is
+      Res : O_Enode;
+   begin
+      Res := Check_Match_Cond (L_Type, L_Bounds, R_Type, R_Bounds);
+      Chap6.Check_Bound_Error (Res, Loc);
+   end Check_Composite_Match_Bounds;
 
    procedure Create_Range_From_Array_Attribute_And_Length
      (Array_Attr : Iir; Length : O_Dnode; Res : Mnode)
