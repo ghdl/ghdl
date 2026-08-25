@@ -1727,6 +1727,7 @@ package Vhdl.Nodes is
    -- Only for Iir_Kind_Procedure_Declaration:
    --   Get/Set_Passive_Flag (Flag14)
    --
+   -- Only for Iir_Kind_Procedure_Declaration:
    --   Get/Set_Wait_State (State1)
    --
    -- Only for Iir_Kind_Procedure_Declaration:

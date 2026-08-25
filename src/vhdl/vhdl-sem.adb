@@ -2836,8 +2836,10 @@ package body Vhdl.Sem is
                if J = 1
                  and then
                  ((Get_Kind (Callee) = Iir_Kind_Procedure_Declaration
-                     and then Get_Purity_State (Callee) = Unknown)
-                  or else Get_Wait_State (Callee) = Unknown
+                   and then Get_Purity_State (Callee) = Unknown)
+                  or else
+                   (Get_Kind (Callee) /= Iir_Kind_Function_Declaration
+                    and then Get_Wait_State (Callee) = Unknown)
                   or else Get_All_Sensitized_State (Callee) = Unknown)
                then
                   Res1 := Update_And_Check_Pure_Wait (Callee);
@@ -2878,6 +2880,7 @@ package body Vhdl.Sem is
 
             --  Check wait.
             if Has_Wait_Errors = False
+              and then Get_Kind (Callee) /= Iir_Kind_Function_Declaration
               and then Get_Wait_State (Callee) = True
             then
                if Kind = K_Procedure then
@@ -2925,7 +2928,8 @@ package body Vhdl.Sem is
                  and then Get_Purity_State (Callee) = Unknown
                  and then Depth /= Iir_Depth_Impure)
               or else
-              (Get_Wait_State (Callee) = Unknown
+              (Get_Kind (Callee) /= Iir_Kind_Function_Declaration
+                 and then Get_Wait_State (Callee) = Unknown
                  and then (Kind /= K_Procedure
                              or else Get_Wait_State (Subprg) = Unknown))
               or else
