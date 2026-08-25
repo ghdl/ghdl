@@ -1044,14 +1044,20 @@ package body Vhdl.Sem_Expr is
       case Get_Kind (Callee) is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Interface_Function_Declaration =>
-            if Get_Pure_Flag (Callee) then
-               --  Pure functions may be called anywhere.
+            if Is_Pure_Function (Callee) then
+               --  Pure functions may be called anywhere.  Not Pure_Flag: a
+               --  function declared pure whose body was found to break the
+               --  rule makes its callers impure too, and Pure_Flag still
+               --  says what the source declared.
                return;
             end if;
             --  CALLEE is impure.
             case Get_Kind (Subprg) is
                when Iir_Kind_Function_Declaration =>
                   Error_Pure (Semantic, Subprg, Callee, Loc);
+                  --  Calling an impure subprogram makes SUBPRG impure too,
+                  --  whatever it was declared.  See Sem_Check_Pure.
+                  Set_Purity_State (Subprg, Impure);
                when Iir_Kind_Procedure_Declaration =>
                   Set_Purity_State (Subprg, Impure);
                when others =>
@@ -1089,9 +1095,11 @@ package body Vhdl.Sem_Expr is
                   when Iir_Kind_Function_Declaration =>
                      if Depth = Iir_Depth_Impure then
                         Error_Pure (Semantic, Subprg, Callee, Loc);
+                        Set_Purity_State (Subprg, Impure);
                      else
                         if Depth < Get_Subprogram_Depth (Subprg) then
                            Error_Pure (Semantic, Subprg, Callee, Loc);
+                           Set_Purity_State (Subprg, Impure);
                         end if;
                      end if;
                   when Iir_Kind_Procedure_Declaration =>
@@ -1180,7 +1188,10 @@ package body Vhdl.Sem_Expr is
       case Get_Kind (Callee) is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Function_Instantiation_Declaration =>
-            if Get_Pure_Flag (Callee) then
+            --  Not Get_Pure_Flag: a function declared pure whose body was
+            --  found to read a signal does reference one, and the process
+            --  calling it has to be sensitive to it.
+            if Is_Pure_Function (Callee) then
                return;
             end if;
          when Iir_Kind_Procedure_Declaration =>
@@ -5116,10 +5127,10 @@ package body Vhdl.Sem_Expr is
 
             --  GHDL: likewise for external names: they cannot appear in
             --   pure functions.
+            Set_Purity_State (Subprg, Impure);
             if Get_Kind (Subprg) = Iir_Kind_Function_Declaration then
                Error_Pure (Subprg, Obj);
             else
-               Set_Purity_State (Subprg, Impure);
                Set_Impure_Depth (Get_Subprogram_Body (Subprg),
                                  Iir_Depth_Impure);
             end if;
@@ -5138,10 +5149,13 @@ package body Vhdl.Sem_Expr is
       --  Function.
       if Get_Kind (Subprg) = Iir_Kind_Function_Declaration then
          Error_Pure (Subprg, Obj);
-         --  The function is not pure, whatever it was declared.  Make it
-         --  impure.
-         --  FIXME: this violates reprint.
-         Set_Pure_Flag (Subprg, False);
+         --  The function is not pure, whatever it was declared.  Record it
+         --  like the procedure case below does, but leave Pure_Flag alone:
+         --  that one is what the source declared, and it is what reprint
+         --  prints.  As the rule is only relaxed (a warning), analysis
+         --  carries on and the rest of the compiler must not assume the
+         --  result of this function can be computed statically.
+         Set_Purity_State (Subprg, Impure);
          return;
       end if;
 

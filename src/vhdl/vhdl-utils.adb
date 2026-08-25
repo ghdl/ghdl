@@ -1613,6 +1613,18 @@ package body Vhdl.Utils is
                       Iir_Kind_Procedure_Instantiation_Declaration);
    end Is_Procedure_Declaration;
 
+   function Is_Pure_Function (Subprg : Iir) return Boolean is
+   begin
+      if not Get_Pure_Flag (Subprg) then
+         return False;
+      end if;
+      --  Only a function declaration carries the analysed purity; an
+      --  interface function has no body and an instantiation inherits
+      --  Pure_Flag from the uninstantiated function.
+      return Get_Kind (Subprg) /= Iir_Kind_Function_Declaration
+        or else Get_Purity_State (Subprg) /= Impure;
+   end Is_Pure_Function;
+
    function Is_Same_Profile (L, R: Iir) return Boolean
    is
       L1, R1 : Iir;

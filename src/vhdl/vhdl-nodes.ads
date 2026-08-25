@@ -1730,7 +1730,10 @@ package Vhdl.Nodes is
    -- Only for Iir_Kind_Procedure_Declaration:
    --   Get/Set_Wait_State (State1)
    --
-   -- Only for Iir_Kind_Procedure_Declaration:
+   --  For a procedure: the purity deduced from the body and the callees.
+   --  For a function: Unknown, or Impure once the body has been found to
+   --  break the pure rule.  Pure_Flag keeps what the source declared -- it is
+   --  what reprint prints -- so the two must not be confused.
    --   Get/Set_Purity_State (State2)
    --
    --   Get/Set_All_Sensitized_State (State3)
