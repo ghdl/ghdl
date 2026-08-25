@@ -953,6 +953,186 @@ package body Vhdl.Sem_Assocs is
       end if;
    end Finish_Individual_Assoc_Array_Subtype;
 
+   --  Subtype that the individual association element EL gives to one
+   --  element of the array.  Null_Iir when it gives none: an open actual, a
+   --  node left over by an earlier error, or an actual whose type is not
+   --  usable here.
+   function Get_Individual_El_Subtype (El : Iir) return Iir
+   is
+      Assoc : constant Iir := Get_Associated_Expr (El);
+      Conv : Iir;
+      Act : Iir;
+      Atype : Iir;
+   begin
+      if Assoc = Null_Iir then
+         return Null_Iir;
+      end if;
+      case Get_Kind (Assoc) is
+         when Iir_Kind_Association_Element_By_Individual =>
+            Atype := Get_Actual_Type (Assoc);
+         when Iir_Kind_Association_Element_By_Expression
+           | Iir_Kind_Association_Element_By_Name =>
+            if Get_Formal_Conversion (Assoc) /= Null_Iir then
+               --  LRM08 5.3.2.2 e) 3) names the *parameter* subtype of the
+               --  conversion as the constraint for an out formal, which is
+               --  not what the conversion node carries here (that is the
+               --  actual side).  Rather than take the wrong one, let this
+               --  association contribute nothing.
+               return Null_Iir;
+            end if;
+            --  LRM08 5.3.2.2 e) 3): with a conversion on the actual, the
+            --  constraint comes from the result type of the function or
+            --  from the type mark.
+            Conv := Get_Actual_Conversion (Assoc);
+            if Conv /= Null_Iir then
+               Atype := Get_Type (Conv);
+            else
+               Act := Get_Actual (Assoc);
+               if Act = Null_Iir or else Is_Error (Act) then
+                  return Null_Iir;
+               end if;
+               Atype := Get_Type (Act);
+            end if;
+         when others =>
+            return Null_Iir;
+      end case;
+      if Atype = Null_Iir or else Is_Error (Atype) then
+         return Null_Iir;
+      end if;
+      if Get_Kind (El) = Iir_Kind_Choice_By_Range then
+         --  The formal part is a slice, so the actual is a slice of the
+         --  array: what it gives is its own element subtype.
+         if Get_Kind (Atype) not in Iir_Kinds_Array_Type_Definition then
+            return Null_Iir;
+         end if;
+         return Get_Element_Subtype (Atype);
+      end if;
+      return Atype;
+   end Get_Individual_El_Subtype;
+
+   --  True when L and R are array subtypes whose bounds are both locally
+   --  static and do not have the same length, at any level: LRM08 5.3.2.2
+   --  makes it an error if the rules yield different index ranges for any
+   --  corresponding array subelement.  Only lengths are compared, like
+   --  Eval_Is_In_Bound does for an association whose formal is constrained;
+   --  bounds that are not locally static are left to the run-time check, and
+   --  a record subelement is not walked into.
+   function Are_Lengths_Static_Mismatch (L, R : Iir) return Boolean
+   is
+      L_Indexes, R_Indexes : Iir_Flist;
+      Nbr : Natural;
+   begin
+      if L = Null_Iir or else R = Null_Iir or else L = R then
+         return False;
+      end if;
+      if Get_Kind (L) not in Iir_Kinds_Array_Type_Definition
+        or else Get_Kind (R) not in Iir_Kinds_Array_Type_Definition
+      then
+         return False;
+      end if;
+      if not Are_Bounds_Locally_Static (L)
+        or else not Are_Bounds_Locally_Static (R)
+      then
+         return False;
+      end if;
+      L_Indexes := Get_Index_Subtype_List (L);
+      R_Indexes := Get_Index_Subtype_List (R);
+      if L_Indexes = Null_Iir_Flist or else R_Indexes = Null_Iir_Flist then
+         return False;
+      end if;
+      Nbr := Get_Nbr_Elements (L_Indexes);
+      if Nbr /= Get_Nbr_Elements (R_Indexes) then
+         return True;
+      end if;
+      for I in 0 .. Nbr - 1 loop
+         if Eval_Discrete_Type_Length (Get_Nth_Element (L_Indexes, I))
+           /= Eval_Discrete_Type_Length (Get_Nth_Element (R_Indexes, I))
+         then
+            return True;
+         end if;
+      end loop;
+      --  Same shape at this level: the elements must match too.
+      return Are_Lengths_Static_Mismatch (Get_Element_Subtype (L),
+                                          Get_Element_Subtype (R));
+   end Are_Lengths_Static_Mismatch;
+
+   --  Walk the whole choice tree of ASSOC, whose actual is an array of
+   --  DIM .. NBR_DIMS remaining dimensions, and collect in REF the element
+   --  subtype the individual associations define.  Every association must
+   --  define the same one, so the first constrained one wins and the others
+   --  are checked against it.  The walk covers the whole tree rather than
+   --  one chain, so that the rows of a multi-dimensional array are checked
+   --  against each other too.
+   procedure Collect_Individual_El_Subtype
+     (Assoc : Iir;
+      Dim : Natural;
+      Nbr_Dims : Natural;
+      Ref : in out Iir;
+      Ref_El : in out Iir)
+   is
+      El : Iir;
+      El_Type : Iir;
+   begin
+      El := Get_Individual_Association_Chain (Assoc);
+      while El /= Null_Iir loop
+         if Dim < Nbr_Dims then
+            Collect_Individual_El_Subtype
+              (Get_Associated_Expr (El), Dim + 1, Nbr_Dims, Ref, Ref_El);
+         else
+            El_Type := Get_Individual_El_Subtype (El);
+            if El_Type /= Null_Iir
+              and then (Get_Kind (El_Type)
+                          in Iir_Kinds_Composite_Type_Definition)
+              and then Get_Constraint_State (El_Type) = Fully_Constrained
+            then
+               if Ref = Null_Iir then
+                  Ref := El_Type;
+                  Ref_El := El;
+               elsif Are_Lengths_Static_Mismatch (Ref, El_Type) then
+                  Error_Msg_Sem
+                    (+El, "element subtype of individual association does "
+                       & "not match the one at %l", +Ref_El);
+               end if;
+            end if;
+         end if;
+         El := Get_Chain (El);
+      end loop;
+   end Collect_Individual_El_Subtype;
+
+   --  The element subtype of the actual built for an individual association
+   --  is not given by the interface: it is defined by the associations, like
+   --  the elements of a record in Finish_Individual_Assoc_Record.  LRM08
+   --  5.3.2.1 has all the elements of an array share one subtype, so they
+   --  must all define the same one.  Without this, ACTUAL_TYPE keeps the
+   --  unconstrained element of the base type although it has just been
+   --  marked as fully constrained, so the bounds of the element are never
+   --  elaborated.
+   procedure Finish_Individual_Assoc_Array_El_Subtype
+     (Actual_Type : Iir; Assoc : Iir)
+   is
+      El_Type : constant Iir := Get_Element_Subtype (Actual_Type);
+      Indexes : constant Iir_Flist := Get_Index_Subtype_List (Actual_Type);
+      Ref : Iir;
+      Ref_El : Iir;
+   begin
+      if Get_Kind (El_Type) not in Iir_Kinds_Composite_Type_Definition
+        or else Get_Constraint_State (El_Type) = Fully_Constrained
+      then
+         return;
+      end if;
+
+      Ref := Null_Iir;
+      Ref_El := Null_Iir;
+      Collect_Individual_El_Subtype
+        (Assoc, 1, Get_Nbr_Elements (Indexes), Ref, Ref_El);
+
+      if Ref /= Null_Iir then
+         --  Element_Subtype is a Ref field: this refers to the subtype of
+         --  the actual without taking ownership of it.
+         Set_Element_Subtype (Actual_Type, Ref);
+      end if;
+   end Finish_Individual_Assoc_Array_El_Subtype;
+
    procedure Finish_Individual_Assoc_Array
      (Actual : Iir; Assoc : Iir; Dim : Natural)
    is
@@ -1070,39 +1250,6 @@ package body Vhdl.Sem_Assocs is
                  (Get_Associated_Expr (El), El_Type);
                El := Get_Chain (El);
             end loop;
-
-            --  If the element is not constrained by the interface, it is
-            --  defined by the individual associations - like the elements of
-            --  a record, cf. Finish_Individual_Assoc_Record.  Take it from
-            --  the first association; they all have the same subtype.
-            --  Without this, ACTUAL_TYPE keeps the unconstrained element of
-            --  the base type although it has just been marked as fully
-            --  constrained, so the bounds of the element are never
-            --  elaborated.
-            if Get_Kind (El_Type) in Iir_Kinds_Composite_Type_Definition
-              and then Get_Constraint_State (El_Type) /= Fully_Constrained
-            then
-               declare
-                  Assoc_Expr : constant Iir := Get_Associated_Expr (Chain);
-                  Assoc_Type : Iir;
-               begin
-                  if (Get_Kind (Assoc_Expr)
-                        = Iir_Kind_Association_Element_By_Individual)
-                  then
-                     Assoc_Type := Get_Actual_Type (Assoc_Expr);
-                  else
-                     Assoc_Type := Get_Type (Get_Actual (Assoc_Expr));
-                  end if;
-                  if Assoc_Type /= Null_Iir
-                    and then (Get_Kind (Assoc_Type)
-                                in Iir_Kinds_Composite_Type_Definition)
-                    and then Get_Constraint_State (Assoc_Type)
-                               = Fully_Constrained
-                  then
-                     Set_Element_Subtype (Actual_Type, Assoc_Type);
-                  end if;
-               end;
-            end if;
          else
             El := Chain;
             while El /= Null_Node loop
@@ -1276,6 +1423,7 @@ package body Vhdl.Sem_Assocs is
                Set_Actual_Type (Assoc, Ntype);
                Set_Actual_Type_Definition (Assoc, Ntype);
                Finish_Individual_Assoc_Array (Assoc, Assoc, 1);
+               Finish_Individual_Assoc_Array_El_Subtype (Ntype, Assoc);
             end if;
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
