@@ -3806,9 +3806,10 @@ package body Trans.Chap3 is
             Chap6.Gen_Bound_Error (Loc);
             return;
          when Unknown =>
-            Check_Composite_Match_Bounds (L_Type, Get_Composite_Bounds (L_Node),
-                                          R_Type, Get_Composite_Bounds (R_Node),
-                                          Loc);
+            Check_Composite_Match_Bounds
+              (L_Type, Get_Composite_Bounds (L_Node),
+               R_Type, Get_Composite_Bounds (R_Node),
+               Loc);
       end case;
    end Check_Composite_Match;
 
