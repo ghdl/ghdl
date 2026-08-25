@@ -5138,11 +5138,9 @@ package body Vhdl.Sem_Expr is
       --  Function.
       if Get_Kind (Subprg) = Iir_Kind_Function_Declaration then
          Error_Pure (Subprg, Obj);
-         --  The function is not pure, whatever it was declared.  Record it,
-         --  like the procedure case below does with Purity_State: the rule
-         --  is only relaxed (a warning by default), so the rest of the
-         --  compiler keeps working on this subprogram and must not assume
-         --  that its result can be computed statically.
+         --  The function is not pure, whatever it was declared.  Make it
+         --  impure.
+         --  FIXME: this violates reprint.
          Set_Pure_Flag (Subprg, False);
          return;
       end if;
