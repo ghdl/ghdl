@@ -614,6 +614,20 @@ package body Trans.Chap5 is
             Chap9.Gen_Port_Init_Driving (Formal_Sig, Formal_Type, Init_Node);
          end if;
       else
+         --  A formal conversion allocates its result from the bounds of the
+         --  actual, but unlike an actual conversion -- which translates the
+         --  name of the actual, and that elaborates its subtype -- nothing
+         --  has elaborated them at that point.  Do it here, in the
+         --  environment of the actual.  Only a slice needs it: any other
+         --  name has its subtype elaborated with its declaration.
+         if Get_Formal_Conversion (Assoc) /= Null_Iir
+           and then Get_Kind (Actual) = Iir_Kind_Slice_Name
+         then
+            Set_Map_Env (Actual_Env);
+            Chap3.Elab_Array_Subtype (Actual_Type);
+            Set_Map_Env (Formal_Env);
+         end if;
+
          if Get_Actual_Conversion (Assoc) /= Null_Iir then
             Chap4.Elab_In_Conversion (Assoc, Formal, Actual_Sig);
             Set_Map_Env (Formal_Env);

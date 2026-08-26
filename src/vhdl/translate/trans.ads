@@ -1189,13 +1189,6 @@ package Trans is
       Out_Val_Field       : O_Fnode;
       Record_Type         : O_Tnode;
       Record_Ptr_Type     : O_Tnode;
-      --  True if the corresponding type (formal's or actual's) was
-      --  translated for the first time here (an anonymous subtype only
-      --  ever referenced through this conversion), and therefore needs
-      --  its layout elaborated here too, once per instance, instead of
-      --  by whatever code normally elaborates a named/pre-existing type.
-      In_Fresh            : Boolean;
-      Out_Fresh           : Boolean;
    end record;
 
    type Direct_Driver_Type is record

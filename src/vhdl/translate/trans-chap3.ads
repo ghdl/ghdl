@@ -75,13 +75,6 @@ package Trans.Chap3 is
    procedure Elab_Type_Declaration (Decl : Iir);
    procedure Elab_Subtype_Declaration (Decl : Iir_Subtype_Declaration);
 
-   --  Elaborate the layout (bounds/length/size) of a composite subtype
-   --  whose declaration was translated with With_Vars => True but whose
-   --  layout variable wasn't elaborated as part of a normal object/type
-   --  declaration (e.g. an anonymous subtype translated on demand from
-   --  Chap4.Translate_Association_Subprogram). No-op for a static type.
-   procedure Elab_Composite_Subtype_Layout (Def : Iir);
-
    --  Builders.
    --  A complex type is a type whose size is not locally static.
    --

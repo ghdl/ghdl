@@ -252,7 +252,12 @@ package body Trans.Chap9 is
                   Act_Type : constant Iir := Get_Type (Get_Actual (Assoc));
                   Form_Conv : constant Iir := Get_Formal_Conversion (Assoc);
                   Formal : constant Iir := Get_Formal (Assoc);
-                  Need_Actual : constant Boolean := Act_Conv /= Null_Iir
+                  --  The conversion subprogram references the subtype of
+                  --  the actual whichever side the conversion is on: it
+                  --  converts the actual to the formal, or the formal to
+                  --  the actual.
+                  Need_Actual : constant Boolean :=
+                    (Act_Conv /= Null_Iir or else Form_Conv /= Null_Iir)
                     and then Is_Anonymous_Type_Definition (Act_Type);
                   Need_Formal : constant Boolean := Form_Conv /= Null_Iir
                     and then Is_Anonymous_Type_Definition (Get_Type (Formal));

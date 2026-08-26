@@ -3127,7 +3127,6 @@ package body Trans.Chap4 is
       Mark2, Mark3      : Id_Mark_Type;
       Inter_List        : O_Inter_List;
       In_Type, Out_Type : Iir;
-      In_Fresh, Out_Fresh : Boolean;
       In_Info, Out_Info : Type_Info_Acc;
       El_List           : O_Element_List;
       Stmt_Info         : Block_Info_Acc;
@@ -3168,20 +3167,11 @@ package body Trans.Chap4 is
       --  Add interface name and a unique number in case of individual assoc.
       Push_Identifier_Prefix (Mark3, Get_Identifier (Inter), Num);
 
-      --  Handle anonymous subtypes.
-      --  These types may be touched here for the first time (this
-      --  formal/actual conversion may be the only place they're ever
-      --  referenced, e.g. the anonymous subtype of a slice actual used
-      --  only as a formal-conversion argument): With_Vars must be True
-      --  so their composite-layout variable actually gets allocated,
-      --  and (since Translate_Anonymous_Subtype_Definition is a no-op
-      --  when the type was already translated elsewhere) an explicit
-      --  elaboration is needed below for whichever of the two was
-      --  freshly created here, once this subprogram's own scope (which
-      --  bounds expressions like a generic-derived width need to
-      --  resolve against) is set up. See #3088/#827.
-      Out_Fresh := Get_Info (Out_Type) = null;
-      In_Fresh := Get_Info (In_Type) = null;
+      --  Handle anonymous subtypes.  Both are referenced below, so their
+      --  layout variable must exist.  For an instantiation it has already
+      --  been created, in the instance (see the CONVS record built by
+      --  Chap9.Translate_Component_Instantiation_Statement); for a block
+      --  header there is no such record, and a global one is created here.
       Chap3.Translate_Anonymous_Subtype_Definition (Out_Type, True);
       Chap3.Translate_Anonymous_Subtype_Definition (In_Type, True);
       Out_Info := Get_Info (Out_Type);
@@ -3308,15 +3298,6 @@ package body Trans.Chap4 is
                               Stmt_Info.Block_Parent_Field,
                               Get_Info (Block).Block_Scope'Access);
       end if;
-
-      --  Record which type(s) were freshly translated above: Elab_Conversion
-      --  (the true elaboration-time counterpart of this subprogram, which
-      --  runs once per instance before this subprogram body ever executes)
-      --  needs to elaborate their layout before it relies on it -- doing it
-      --  here instead would be too late, since this subprogram's body only
-      --  runs later, on demand, each time the conversion is invoked.
-      Conv_Info.Out_Fresh := Out_Fresh;
-      Conv_Info.In_Fresh := In_Fresh;
 
       --  Read signal value.
       case Mode is
@@ -3665,23 +3646,6 @@ package body Trans.Chap4 is
       Var_Data : O_Dnode;
       Data     : Elab_Signal_Data;
    begin
-      --  Elaborate the layout of whichever of IN_TYPE/OUT_TYPE was an
-      --  anonymous subtype only ever referenced through this conversion
-      --  association (e.g. the anonymous subtype of a slice actual):
-      --  Translate_Association_Subprogram allocated its layout variable
-      --  (with With_Vars => True) but couldn't fill it in, since at
-      --  translation time there's no instance/scope yet to resolve
-      --  bounds expressions (such as a generic-derived width) against.
-      --  This is the true elaboration-time counterpart, running once per
-      --  instance before anything below needs the real bounds. See
-      --  #3088/#827.
-      if Info.Out_Fresh and then Is_Composite (Out_Tinfo) then
-         Chap3.Elab_Composite_Subtype_Layout (Out_Type);
-      end if;
-      if Info.In_Fresh and then Is_Composite (In_Tinfo) then
-         Chap3.Elab_Composite_Subtype_Layout (In_Type);
-      end if;
-
       --  Allocate data for the subprogram.
       Var_Data := Create_Temp (Info.Record_Ptr_Type);
       New_Assign_Stmt
