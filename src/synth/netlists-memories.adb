@@ -1797,6 +1797,15 @@ package body Netlists.Memories is
       Inst : Instance;
       N : Net;
       Inp : Input;
+
+      --  Whether the chain from INSERT to the signal goes through a
+      --  register (Dff/Idff/Mdff/Midff).  A write port with no register
+      --  at all in its chain has no clock to synthesize a write-port gate
+      --  with (there is no asynchronous/unclocked write-port gate kind),
+      --  and would otherwise imply an invalid combinational feedback loop
+      --  (elements not written would have to combinationally hold their
+      --  previous value).  See #1722.
+      Has_Clock : Boolean := False;
    begin
       --  For each gate of the chain, starting from LAST and going forward
       --  until the signal.
@@ -1817,6 +1826,10 @@ package body Netlists.Memories is
                      --  There must be only one such gate per stage.
                      return No_Instance;
                   end if;
+                  if Get_Id (Inst) = Id_Dff or else Get_Id (Inst) = Id_Idff
+                  then
+                     Has_Clock := True;
+                  end if;
                   N := Get_Output (Inst, 0);
                when Id_Mdff
                  | Id_Midff =>
@@ -1826,6 +1839,7 @@ package body Netlists.Memories is
                         --  There must be only one such gate per stage.
                         return No_Instance;
                      end if;
+                     Has_Clock := True;
                      N := Get_Output (Inst, 0);
                   else
                      --  Ignore.
@@ -1835,6 +1849,17 @@ package body Netlists.Memories is
                   null;
                when Id_Isignal
                   | Id_Signal =>
+                  if not Has_Clock then
+                     --  Unclocked write port: there is no netlist gate
+                     --  kind to represent an asynchronous memory write,
+                     --  and (as this would be a combinational read of a
+                     --  signal's own previous value for the elements not
+                     --  written) it isn't valid combinational hardware
+                     --  either.  Reject this signal as a RAM candidate;
+                     --  it is reported as an ordinary unhandled signal
+                     --  assignment (combinational loop) instead.
+                     return No_Instance;
+                  end if;
                   return Inst;
                when others =>
                   return No_Instance;
