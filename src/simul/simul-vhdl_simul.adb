@@ -3598,7 +3598,8 @@ package body Simul.Vhdl_Simul is
    -- PORT is the formal, while SIG is the actual.
    procedure Connect (Dst : Memtyp;
                       Src : Memtyp;
-                      Mode : Connect_Mode) is
+                      Mode : Connect_Mode;
+                      Loc : Node) is
    begin
       pragma Assert (Dst.Typ.Kind = Src.Typ.Kind);
 
@@ -3610,13 +3611,20 @@ package body Simul.Vhdl_Simul is
                Etyp : constant Type_Acc := Dst.Typ.Arr_El;
             begin
                if Len /= Src.Typ.Abound.Len then
-                  raise Internal_Error;
+                  --  The formal and the actual do not have the same length.
+                  --  That is a bound check failure of the association, not
+                  --  an internal error: it happens for instance when the
+                  --  elements of an individual association do not all have
+                  --  the same subtype and the bounds are not locally static,
+                  --  so that Sem cannot report it.
+                  Error_Msg_Exec
+                    (Loc, "length of actual doesn't match length of formal");
                end if;
                for I in 1 .. Len loop
                   Connect ((Etyp, Sig_Index (Dst.Mem, (I - 1) * Etyp.W)),
                            (Src.Typ.Arr_El,
                             Sig_Index (Src.Mem, (I - 1) * Etyp.W)),
-                           Mode);
+                           Mode, Loc);
                end loop;
             end;
             return;
@@ -3628,7 +3636,7 @@ package body Simul.Vhdl_Simul is
                   Connect ((E.Typ, Sig_Index (Dst.Mem, E.Offs.Net_Off)),
                            (Src.Typ.Rec.E (I).Typ,
                             Sig_Index (Src.Mem, E.Offs.Net_Off)),
-                           Mode);
+                           Mode, Loc);
                end;
             end loop;
          when Type_Logic
@@ -3862,7 +3870,7 @@ package body Simul.Vhdl_Simul is
             --  LRM93 12.6.2
             --  A signal is said to be active [...] if one of its source
             --  is active.
-            Connect (To_Memtyp (C.Actual), Form2, Connect_Source);
+            Connect (To_Memtyp (C.Actual), Form2, Connect_Source, C.Assoc);
          end;
       end if;
 
@@ -3893,7 +3901,8 @@ package body Simul.Vhdl_Simul is
             else
                Act2 := Act;
             end if;
-            Connect (To_Memtyp (C.Formal), Act2, Connect_Effective);
+            Connect (To_Memtyp (C.Formal), Act2, Connect_Effective,
+                     C.Assoc);
          end;
       end if;
    end Create_Connect;
