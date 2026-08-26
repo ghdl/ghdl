@@ -336,6 +336,47 @@ package body Ghdldrv is
       Table_Low_Bound => 1,
       Table_Initial => 16);
 
+   --  Object files built from a source file, and the source file each one
+   --  was built from, so that two sources compiled to the same object file
+   --  can be reported.  See Check_Object_Collision.
+   package Objlist is new Tables
+     (Table_Component_Type => String_Acc,
+      Table_Index_Type => Natural,
+      Table_Low_Bound => 1,
+      Table_Initial => 16);
+
+   package Objsrclist is new Tables
+     (Table_Component_Type => String_Acc,
+      Table_Index_Type => Natural,
+      Table_Low_Bound => 1,
+      Table_Initial => 16);
+
+   --  The object file of a design file is named after the *base* name of its
+   --  source file, in the library directory.  So two design files with the
+   --  same base name in different directories (dir1/pkg.vhdl and
+   --  dir2/pkg.vhdl) are both compiled to the same pkg.o: the second
+   --  analysis overwrites the first object file, and the link then either
+   --  fails with a pile of "multiple definition" messages or silently uses
+   --  the wrong object.  Detect it here, where the link list is built, and
+   --  say what is wrong instead of leaving the user with linker errors
+   --  about symbols they never wrote.  See #539 and #1622.
+   procedure Check_Object_Collision (Obj : String; Src : String) is
+   begin
+      for I in Objlist.First .. Objlist.Last loop
+         if Objlist.Table (I).all = Obj
+           and then Objsrclist.Table (I).all /= Src
+         then
+            Error ("'" & Src & "' and '" & Objsrclist.Table (I).all
+                     & "' are both compiled to '" & Obj & "'");
+            Error ("(object files are named after the source file base name;"
+                     & " rename one of these files)");
+            raise Compile_Error;
+         end if;
+      end loop;
+      Objlist.Append (new String'(Obj));
+      Objsrclist.Append (new String'(Src));
+   end Check_Object_Collision;
+
    --  Read a list of files from file FILENAME.
    --  Lines starting with a '#' are ignored (comments)
    --  Lines starting with a '>' are directory lines
@@ -370,6 +411,13 @@ package body Ghdldrv is
       L : Natural;
       File : String_Acc;
    begin
+      if To_Obj then
+         --  Start from an empty state: this may be the second link done by
+         --  this process (libghdl runs several commands in one).
+         Objlist.Init;
+         Objsrclist.Init;
+      end if;
+
       Line (1 .. Filename'Length) := Filename;
       Line (Filename'Length + 1) := Ghdllocal.Nul;
       Stream := fopen (Line'Address, Mode'Address);
@@ -404,6 +452,7 @@ package body Ghdldrv is
                   File := new String'(Dir (1 .. Dir_Len)
                                       & Get_Base_Name (Line (1 .. L))
                                       & Obj_Suffix);
+                  Check_Object_Collision (File.all, Line (1 .. L));
                else
                   File := new String'(Substitute (Line (1 .. L)));
                end if;
