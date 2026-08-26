@@ -87,6 +87,7 @@ jobs:
   Build:
     name: Build GHDL on Windows Server + MSYS2
     runs-on: windows-${{ inputs.windows_version }}
+    timeout-minutes: 30
     outputs:
       ghdl_artifact:    ${{ steps.artifact_name.outputs.ghdl_artifact }}
       pacman_artifact:  ${{ steps.artifact_name.outputs.pacman_artifact }}

@@ -69,6 +69,7 @@ jobs:
     name: Build GHDL on '${{ inputs.macos_image }}'
     if: true
     runs-on: ${{ inputs.macos_image }}
+    timeout-minutes: 30
     outputs:
       ghdl_artifact: ${{ steps.artifact_name.outputs.ghdl_artifact }}
 
