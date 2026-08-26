@@ -178,6 +178,8 @@ package body Grt.Lib is
             Diag_C ("block already configured");
          when 3 =>
             Diag_C ("bad configuration");
+         when 7 =>
+            Diag_C ("unsupported construct");
          when others =>
             Diag_C ("unknown error code ");
             Diag_C (Integer (Code));
