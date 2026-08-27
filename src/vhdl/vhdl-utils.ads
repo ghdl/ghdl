@@ -318,6 +318,13 @@ package Vhdl.Utils is
    --  L and R must be subprograms specification (or spec_body).
    function Is_Same_Profile (L, R: Iir) return Boolean;
 
+   --  Return true iff SUBPRG is a function that really is pure: declared
+   --  pure and never found to break the pure rule during analysis.  Under
+   --  -frelaxed a violation is only a warning, so Pure_Flag alone -- which
+   --  is what the source declared, and what reprint prints -- is not enough
+   --  to know whether the result of a call can be computed statically.
+   function Is_Pure_Function (Subprg : Iir) return Boolean;
+
    --  Return true iff FUNC is an operation for ATYPE.
    --
    --  LRM08 5.1 Types

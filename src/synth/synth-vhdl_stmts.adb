@@ -3165,8 +3165,10 @@ package body Synth.Vhdl_Stmts is
       else
          --  If the subprogram is not pure, clear the const flag.
          if Is_Func then
-            --  For functions.
-            if Ctxt /= null and then not Get_Pure_Flag (Imp) then
+            --  For functions.  Not Get_Pure_Flag: a function declared pure
+            --  may have been found impure during analysis, which is only a
+            --  warning with -frelaxed.
+            if Ctxt /= null and then not Is_Pure_Function (Imp) then
                Set_Instance_Const (Sub_Inst, False);
             end if;
          else

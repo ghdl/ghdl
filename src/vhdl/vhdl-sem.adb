@@ -2861,6 +2861,10 @@ package body Vhdl.Sem is
                      if Kind = K_Function then
                         --  FIXME: report call location
                         Error_Pure (Elaboration, Subprg_Bod, Callee, Null_Iir);
+                        --  Like Sem_Check_Pure: record that the function is
+                        --  not pure without touching Pure_Flag, which is
+                        --  what the source declared.
+                        Set_Purity_State (Subprg, Impure);
                      end if;
                   end if;
 

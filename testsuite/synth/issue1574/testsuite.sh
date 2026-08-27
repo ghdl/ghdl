@@ -2,23 +2,30 @@
 
 . ../../testenv.sh
 
-# A function reading a signal from its enclosing architecture, called from
-# a clocked process, crashed --synth with an internal ASSERT_FAILURE
-# (synth-stmts.adb:2055).  The report attributed it to the case statement
-# having more than one return statement, but the maintainer identified the
-# actual cause on the thread: it is the function being impure -- "It is not
-# the number of return statements but the fact the function is impure.
-# Impure functions are not well handled."
+# A function that breaks the pure rule and is called from a clocked process
+# crashed --synth with an internal assertion failure: synthesis keeps the
+# instance const for a function whose Pure_Flag is set, which selects the
+# static call path, which then asserts that the result is static.  It is not,
+# because the function reads a signal.
 #
-# bug.vhdl is the report's design.  bug_pure.vhdl is the follow-up from the
-# thread ("Still crashes if it's marked as pure instead of impure"), which
-# is the same function declared pure while still reading the signal; GHDL
-# accepts it with a -Wpure warning.  See issue1574.
-synth bug.vhdl -e bug > syn_bug.vhdl
-analyze syn_bug.vhdl
-
-synth bug_pure.vhdl -e bug_pure > syn_bug_pure.vhdl
-analyze syn_bug_pure.vhdl
+# The pure rule is only relaxed here -- a warning, since --synth turns
+# -frelaxed on -- so analysis carries on, and the four designs below are the
+# four ways the AST ends up with a function that is not pure:
+#   bug.vhdl        the function is declared impure (the report's design)
+#   bug_pure.vhdl   declared pure (implicitly), reads a signal directly
+#                   ("Still crashes if it's marked as pure instead of impure")
+#   pure_call.vhdl  declared pure, calls an impure function
+#   pure_proc.vhdl  declared pure, calls a procedure that reads a signal
+#   pure_chain.vhdl declared pure, calls a function that is declared pure
+#                   and reads a signal -- the impurity has to propagate
+#   pure_via_proc.vhdl  a procedure calls such a function, so the procedure
+#                   is impure too and the process calling it must not be
+#                   const-folded either
+# See issue1574.
+for d in bug bug_pure pure_call pure_proc pure_chain pure_via_proc; do
+  synth $d.vhdl -e $d > syn_$d.vhdl
+  analyze syn_$d.vhdl
+done
 
 clean
 
