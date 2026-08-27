@@ -591,7 +591,9 @@ package body Vhdl.Sem_Names is
                return;
             end if;
             Set_Method_Object (Call, Obj);
-            Set_Use_Flag (Obj, True);
+            if Get_Kind (Obj_Alias) /= Iir_Kind_External_Variable_Name then
+               Set_Use_Flag (Obj, True);
+            end if;
          when others =>
             null;
       end case;
@@ -1779,15 +1781,19 @@ package body Vhdl.Sem_Names is
                         null;
                   end case;
 
-                  pragma Assert (Get_Kind (Prefix) in Iir_Kinds_Denoting_Name);
-                  Xref_Ref (Prefix, Res_Prefix);
+                  if Get_Kind (Prefix) in Iir_Kinds_Denoting_Name then
+                     Xref_Ref (Prefix, Res_Prefix);
 
-                  --  Cannot use Free_Old_Entity_Name as a prefix may not be
-                  --  the parent (for protected subprogram calls).
-                  Old_Res := Get_Named_Entity (Prefix);
-                  if Is_Overload_List (Old_Res) then
-                     Free_Iir (Old_Res);
-                     Set_Named_Entity (Prefix, Res_Prefix);
+                     --  Cannot use Free_Old_Entity_Name as a prefix may not
+                     --  be the parent (for protected subprogram calls).
+                     Old_Res := Get_Named_Entity (Prefix);
+                     if Is_Overload_List (Old_Res) then
+                        Free_Iir (Old_Res);
+                        Set_Named_Entity (Prefix, Res_Prefix);
+                     end if;
+                  else
+                     --  Could be an external name.
+                     null;
                   end if;
 
                   exit when Get_Kind (Prefix) /= Iir_Kind_Selected_Name;
