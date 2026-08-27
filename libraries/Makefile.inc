@@ -369,19 +369,19 @@ $(IEEE19_DIR)/ieee-obj19.cf: $(ANALYZE_DEP) $(IEEE19_SRCS) $(SYNOPSYS19_SRCS) $(
 
 ANALYZE_STD=$(GHDL) --bootstrap-standard $(GHDL_FLAGS)
 
-$(STD87_DIR)/std_standard.o: $(GHDL) std.v87
+$(STD87_DIR)/std_standard.vhdl.o: $(GHDL) std.v87
 	cd $(STD87_DIR); $(ANALYZE_STD) --std=87
 
-$(STD93_DIR)/std_standard.o: $(GHDL) std.v93
+$(STD93_DIR)/std_standard.vhdl.o: $(GHDL) std.v93
 	cd $(STD93_DIR); $(ANALYZE_STD) --std=93
 
-$(STD08_DIR)/std_standard.o: $(GHDL) std.v08
+$(STD08_DIR)/std_standard.vhdl.o: $(GHDL) std.v08
 	cd $(STD08_DIR); $(ANALYZE_STD) --std=08
 
-$(STD19_DIR)/std_standard.o: $(GHDL) std.v19
+$(STD19_DIR)/std_standard.vhdl.o: $(GHDL) std.v19
 	cd $(STD19_DIR); $(ANALYZE_STD) --std=19
 
-libs.vhdl.standard: $(STD87_DIR)/std_standard.o \
- $(STD93_DIR)/std_standard.o \
- $(STD08_DIR)/std_standard.o \
- $(STD19_DIR)/std_standard.o
+libs.vhdl.standard: $(STD87_DIR)/std_standard.vhdl.o \
+ $(STD93_DIR)/std_standard.vhdl.o \
+ $(STD08_DIR)/std_standard.vhdl.o \
+ $(STD19_DIR)/std_standard.vhdl.o
