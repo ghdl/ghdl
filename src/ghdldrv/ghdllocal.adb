@@ -593,6 +593,47 @@ package body Ghdllocal is
       return Filename (First .. Last);
    end Get_Base_Name;
 
+   --  A short number identifying the source file among the files of a
+   --  library.  This is a hash (fnv-1a) of the file name as it was written
+   --  on the command line: its relative path, its name and its extension,
+   --  which together are unique in a library.  It is computed on the path
+   --  as written, so it doesn't change when relative sources are moved.
+   function Get_File_Number (File : String) return String
+   is
+      Hash : Uns32 := 16#811c_9dc5#;
+      Img : String (1 .. 5);
+      Val : Uns32;
+   begin
+      for I in File'Range loop
+         Hash := Hash xor Uns32 (Character'Pos (File (I)));
+         Hash := Hash * 16#0100_0193#;
+      end loop;
+
+      --  Five decimal digits are enough to tell apart the files of a
+      --  design; Ghdldrv.Check_Object_Collision reports the rest.
+      Val := Hash mod 100_000;
+      for I in reverse Img'Range loop
+         Img (I) := Character'Val (Character'Pos ('0') + Val mod 10);
+         Val := Val / 10;
+      end loop;
+      return Img;
+   end Get_File_Number;
+
+   function Get_Object_Prefix (Dir : String; File : String) return String
+   is
+      Pos : constant Natural := Get_Basename_Pos (File);
+      --  The name of the source file, extension included.
+      Name : constant String := File (Pos + 1 .. File'Last);
+   begin
+      if Pos < File'First then
+         --  No directory: the name is enough to identify the file within
+         --  the library.  This is also the case of std_standard.
+         return Dir & Name;
+      else
+         return Dir & Name & '-' & Get_File_Number (File);
+      end if;
+   end Get_Object_Prefix;
+
    function Append_Suffix
      (File : String; Suffix : String; In_Work : Boolean := True)
      return String_Acc
@@ -600,8 +641,11 @@ package body Ghdllocal is
       use Name_Table;
    begin
       if In_Work then
-         return new String'(Image (Libraries.Work_Directory)
-                              & Get_Base_Name (File) & Suffix);
+         declare
+            Dir : constant String := Image (Libraries.Work_Directory);
+         begin
+            return new String'(Get_Object_Prefix (Dir, File) & Suffix);
+         end;
       else
          return new String'(File & Suffix);
       end if;

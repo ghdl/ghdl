@@ -92,8 +92,16 @@ package Ghdllocal is
    --  path (PATH).
    function Is_Basename (Pathname : String) return Boolean;
 
+   --  Return the path of the object file of source file FILE in library
+   --  directory DIR, without its suffix.  Two design files of a library
+   --  never share it: the object file keeps the name of the source file,
+   --  its extension included, and a unique number is added when
+   --  FILE has a directory part. See #539 and #1622.
+   function Get_Object_Prefix (Dir : String; File : String) return String;
+
    --  Build a filename based on FILE. If IN_WORK is true, the result is
-   --  the concatenation of the workdir, the basename of FILE and SUFFIX.
+   --  the object file name of FILE in the workdir (see Get_Object_Prefix)
+   --  with SUFFIX.
    --  If IN_WORK is false, the result is the concatenation of FILE and SUFFIX.
    function Append_Suffix
      (File : String; Suffix : String; In_Work : Boolean := True)
