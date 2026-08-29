@@ -323,6 +323,66 @@ Export hierarchy and references
   * ``port`` Like ``proc`` but display ports and signals too.
     If `KIND` is not specified, the hierarchy is displayed with the ``port`` mode.
 
+.. option:: --flow[=<FILENAME>]
+
+  .. index:: dataflow database
+
+  .. index:: flow
+
+  Dump a :dfn:`dataflow database` of the elaborated design as a JSON file
+  (extension ``.flow``).  If `FILENAME` is omitted, the file ``ghdl.flow`` is
+  written.  The dump is produced at elaboration time, so a zero-time run
+  (``--stop-time=0ns``) is enough; the option also composes with the waveform
+  options so a single run can produce both a ``.flow`` and, e.g., a ``.vcd``.
+
+  Unlike a waveform, the database records the *structure* of the design rather
+  than signal values over time.  It contains:
+
+  * ``entities`` -- per entity: ports (with direction and type), generics, and
+    the entity's ``library``/``use`` context clauses.
+
+  * ``architectures`` -- per architecture (with an ``entity`` back-reference):
+    signals, constants, the architecture's own context clauses, and the
+    read-set / drive-set / sensitivity of every process, concurrent assignment
+    and instantiation.
+
+  * ``hierarchy`` -- the elaborated instance tree (generates unrolled), with the
+    real port map binding each formal to its actual net.
+
+  * ``nets`` -- one entry per canonical net, with the signals that collapse into
+    it (a port and the net it binds to share one net), and the driving and
+    reading cells (fan-in / fan-out).
+
+  * ``cells`` -- one entry per elaborated process/assignment, classified as
+    combinational or clocked (with the clock net), and its driven and read nets.
+
+  To help source-scanning consumers (such as Perl lexers) locate constructs
+  without re-parsing, every position is a compact string of byte offsets,
+  ``"start:begin:end"``:
+
+  * *start* -- byte offset where the construct begins;
+  * *begin* -- byte offset of the ``begin`` keyword that ends the declarative
+    region (for a generate, its ``generate`` keyword) -- empty when there is
+    none;
+  * *end* -- byte offset of the closing ``end`` keyword or terminating ``;`` --
+    empty for a plain point.
+
+  So a port is ``"start::"``, an entity instantiation is ``"start::end"``, and an
+  architecture or process is ``"start:begin:end"``.  The ``library``/``use``
+  context clauses are reported per unit (on the entity and architecture
+  separately), recording each unit's linkage to the packages it uses.
+
+  This is intended for dataflow tracing and netlist-style analysis tools.
+  Only the interpreted / JIT-elaboration run path builds the required model.
+
+  There is also a dedicated command that elaborates and dumps the database
+  without running a simulation::
+
+    ghdl --flow [--out=FILE] UNIT [ARCH]
+
+  It writes ``ghdl.flow`` by default, or `FILE` with ``--out=FILE``.  It is
+  equivalent to ``ghdl -r UNIT --flow=FILE`` stopped at time zero.
+
 .. option:: --xref-html [options] files...
 
   To easily navigate through your sources, you may generate cross-references.

@@ -741,6 +741,12 @@ package Vhdl.Elocations is
    --  Allocate memory to store elocations for node N.  Must be called once.
    procedure Create_Elocations (N : Iir);
 
+   --  True if extended locations have been allocated for node N.  Nodes
+   --  synthesized after parsing (e.g. concurrent assignments turned into
+   --  processes by canon) have none, so the Get_*_Location accessors would
+   --  read garbage; check this first before calling them on such nodes.
+   function Has_Elocations (N : Iir) return Boolean;
+
    -- General methods.
 
    --  Field: Field1
