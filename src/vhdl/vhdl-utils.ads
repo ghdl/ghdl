@@ -57,7 +57,7 @@ package Vhdl.Utils is
    function Get_Operator_Name (Op : Iir) return Name_Id;
 
    -- Get the longest static prefix of EXPR.
-   -- See LRM93 8.1
+   -- See LRM93 8.1 Wait statement / LRM08 10.2 Wait statement.
    function Get_Longest_Static_Prefix (Expr: Iir) return Iir;
 
    --  Get the prefix of NAME, ie the declaration at the base of NAME.

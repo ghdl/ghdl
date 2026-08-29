@@ -215,14 +215,17 @@ package body Vhdl.Utils is
       loop
          case Get_Kind (Adecl) is
             when Iir_Kind_Variable_Declaration
-              | Iir_Kind_Interface_Variable_Declaration =>
+              | Iir_Kind_Interface_Variable_Declaration
+              | Iir_Kind_External_Variable_Name =>
                return Adecl;
             when Iir_Kind_Constant_Declaration
-              | Iir_Kind_Interface_Constant_Declaration =>
+              | Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_External_Constant_Name =>
                return Adecl;
             when Iir_Kind_Signal_Declaration
               | Iir_Kind_Guard_Signal_Declaration
-              | Iir_Kind_Interface_Signal_Declaration =>
+              | Iir_Kind_Interface_Signal_Declaration
+              | Iir_Kind_External_Signal_Name =>
                return Adecl;
             when Iir_Kind_Object_Alias_Declaration =>
                --  LRM 4.3.3.1 Object Aliases
