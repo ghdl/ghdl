@@ -309,6 +309,8 @@ class Document(object):
         The two shapes differ in more than nesting: a location replaces the range, ``detail`` has no counterpart,
         and the nesting is expressed by naming the container. A client that asked for the flat form gets it here.
 
+        ``containerName`` is the *name* of the enclosing symbol, as ``SymbolInformation`` declares it a string.
+
         :param syms:   The symbols to flatten. They are modified in place.
         :param parent: The symbol the given ones are nested in, or ``None`` at the top level.
         :returns:      The symbols and all their children, in one list.
@@ -319,7 +321,7 @@ class Document(object):
             del s["range"]
             s.pop("detail", None)
             if parent is not None:
-                s["containerName"] = parent
+                s["containerName"] = parent["name"]
             res.append(s)
             children = s.pop("children", None)
             if children is not None:
