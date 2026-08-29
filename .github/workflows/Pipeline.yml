@@ -65,6 +65,7 @@ jobs:
       gnat_version:             ${{ matrix.gnat_version }}
       backend:                  ${{ matrix.backend }}
       testsuites:               ${{ matrix.testsuites }}
+      testsuite_xml_artifact:   'GHDL-Testsuite-XML'
       macos_artifact:           ${{ needs.Params.outputs.ghdl_basename }}-${{ matrix.macos_image }}-${{ matrix.gnat_arch }}
       pyunit_testsuites:        'testsuite/pyunit/libghdl testsuite/pyunit/lsp'
       unittest_xml_artifact:    'pyGHDL-Unittest-XML'
@@ -89,6 +90,7 @@ jobs:
       ghdl_backend:             ${{ matrix.backend }}
       ghdl_version:             ${{ needs.Params.outputs.ghdl_version }}
       testsuites:               ${{ matrix.testsuites }}
+      testsuite_xml_artifact:   'GHDL-Testsuite-XML'
       ubuntu_artifact:          ${{ needs.Params.outputs.ghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
       libghdl_artifact:         ${{ needs.Params.outputs.libghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
       pyunit_testsuites:        'testsuite/pyunit/libghdl testsuite/pyunit/lsp'
@@ -121,6 +123,7 @@ jobs:
       ghdl_backend:             ${{ matrix.backend }}
       ghdl_version:             ${{ needs.Params.outputs.ghdl_version }}
       testsuites:               ${{ matrix.testsuites }}
+      testsuite_xml_artifact:   'GHDL-Testsuite-XML'
       ubuntu_artifact:          ${{ needs.Params.outputs.ghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
       libghdl_artifact:         ${{ needs.Params.outputs.libghdl_basename }}-ubuntu-${{ matrix.ubuntu_version }}-x86_64
       pyunit_testsuites:        'testsuite/pyunit/libghdl testsuite/pyunit/lsp'
@@ -143,6 +146,7 @@ jobs:
       runtime:                  ${{ matrix.runtime }}
       backend:                  ${{ matrix.backend }}
       testsuites:               ${{ matrix.testsuites }}
+      testsuite_xml_artifact:   'GHDL-Testsuite-XML'
       msys2_artifact:           ${{ needs.Params.outputs.ghdl_basename }}-MSYS2
       pacman_artifact:          ${{ needs.Params.outputs.ghdl_basename }}-Pacman
       windows_artifact:         ${{ needs.Params.outputs.ghdl_basename }}-Windows
@@ -170,6 +174,7 @@ jobs:
       runtime:                  ${{ matrix.runtime }}
       backend:                  ${{ matrix.backend }}
       testsuites:               ${{ matrix.testsuites }}
+      testsuite_xml_artifact:   'GHDL-Testsuite-XML'
       msys2_artifact:           ${{ needs.Params.outputs.ghdl_basename }}-MSYS2
       pacman_artifact:          ${{ needs.Params.outputs.ghdl_basename }}-Pacman
       windows_artifact:         ${{ needs.Params.outputs.ghdl_basename }}-Windows
@@ -240,6 +245,39 @@ jobs:
       unittest_xml_artifact: 'pyGHDL-Unittest-XML'
     secrets: inherit
 
+  PublishTestsuiteResults:
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r7
+    needs:
+      - macOS
+      - Ubuntu
+      - Ubuntu-fast
+      - Windows
+      - Windows-fast
+    if: always()
+    with:
+      unittest_artifacts_pattern: 'GHDL-Testsuite-XML-*'
+      merged_junit_artifact:      'GHDL-Unittest-XML-Premerged'
+#      merged_junit_filename:      'GHDL-Testsuite.xml'
+      merge-input-dialect:        'Any-JUnit'
+      merge-output-dialect:       'pyTest-JUnit'
+      additional_merge_args:      '-d "--render=tree"'
+      dorny:                      false
+
+  PublishPytestResults:
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r7
+    needs:
+      - pyGHDL
+      - PublishTestsuiteResults
+    if: always()
+    with:
+      unittest_artifacts_pattern: '*-Unittest-XML-*'
+      merged_junit_artifact:      'pyGHDL-Unittest-XML'
+      additional_merge_args:      '-d "--render=tree" "--name=pyGHDL" "--pytest=rewrite-dunder-init;reduce-depth:pytest.testsuite.pyunit;split:pytest"'
+      dorny:   true
+#      codecov: true
+#    secrets:
+#      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
   PublishCoverageResults:
     uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r7
     needs:
@@ -257,26 +295,15 @@ jobs:
 #      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 #      CODACY_TOKEN:  ${{ secrets.CODACY_TOKEN }}
 
-  PublishPytestResults:
-    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r7
-    needs:
-      - pyGHDL
-    with:
-      unittest_artifacts_pattern: '*-Unittest-XML-*'
-      merged_junit_artifact:      'pyGHDL-Unittest-XML'
-      additional_merge_args:      '-d "--render=tree" "--name=pyGHDL" "--pytest=rewrite-dunder-init;reduce-depth:pytest.testsuite.pyunit;split:pytest"'
-      dorny:   true
-#      codecov: true
-#    secrets:
-#      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
   IntermediateCleanUp:
     uses: pyTooling/Actions/.github/workflows/CleanupArtifacts.yml@r7
     needs:
-      - PublishCoverageResults
+      - PublishTestsuiteResults
       - PublishPytestResults
+      - PublishCoverageResults
     with:
       others: |
+        GHDL-Testsuite-XML-*
         pyGHDL-Coverage-SQLite-*
         pyGHDL-Unittest-XML-*
 
