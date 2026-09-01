@@ -83,6 +83,15 @@ static JMP_BUF run_env;
 #define NEED_SIGFPE_HANDLER
 #endif
 
+/* FreeBSD delivers SIGFPE for an integer overflow or a division by zero,
+   like Linux does.  Without a handler of our own the signal is turned into
+   an Ada CONSTRAINT_ERROR by the GNAT runtime, outside of the environment
+   set up by __ghdl_run_through_longjump, and escapes as an unhandled
+   exception -- which is what gna/bug16782 reported on FreeBSD.  */
+#if defined (__FreeBSD__) && defined (__x86_64__)
+#define NEED_SIGFPE_HANDLER
+#endif
+
 static struct sigaction prev_sigsegv_act;
 
 #ifdef NEED_SIGFPE_HANDLER
