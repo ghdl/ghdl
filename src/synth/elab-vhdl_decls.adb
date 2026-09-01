@@ -287,6 +287,17 @@ package body Elab.Vhdl_Decls is
            (Syn_Inst, Get_Expression (Spec), Val_Type);
          --  Check_Constraints (Instance, Val, Attr_Type, Decl);
 
+         if Val = No_Valtyp then
+            --  The expression could not be evaluated -- typically because
+            --  its value does not belong to the subtype of the attribute,
+            --  which is the error quoted just above.  It has already been
+            --  reported; carrying on would unshare a null type and turn a
+            --  clean diagnostic into an internal error.
+            Set_Error (Syn_Inst);
+            Release_Expr_Pool (Marker);
+            return;
+         end if;
+
          --  3. A new instance of the designated attribute is created
          --     and associated with each of the affected items.
          --
