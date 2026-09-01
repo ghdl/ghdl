@@ -393,11 +393,22 @@ package body Trans.Chap4 is
       end if;
 
       --  Allocate variable.
-      New_Assign_Stmt
-        (M2Lp (Var),
-         Gen_Alloc (Alloc_Kind,
-                    Chap3.Get_Subtype_Size (Obj_Type, Mnode_Null, Kind),
-                    Type_Info.Ortho_Ptr_Type (Kind)));
+      declare
+         Size : O_Enode;
+      begin
+         Size := Chap3.Get_Subtype_Size (Obj_Type, Mnode_Null, Kind);
+         if Alloc_Kind = Alloc_Stack then
+            --  One of the "more sources of stack allocation" listed above
+            --  Maybe_Check_Stack_Allocation: the temporary built for an
+            --  aggregate lands here, so "new string'(1 to length =>
+            --  character'low)" with a large LENGTH used to overflow the
+            --  stack with no diagnostic at all -- just SIGSEGV.  See #752.
+            Size := Maybe_Check_Stack_Allocation (Size);
+         end if;
+         New_Assign_Stmt
+           (M2Lp (Var),
+            Gen_Alloc (Alloc_Kind, Size, Type_Info.Ortho_Ptr_Type (Kind)));
+      end;
    end Allocate_Complex_Object;
 
    --  Note : OBJ can be a tree.
