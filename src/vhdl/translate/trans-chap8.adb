@@ -16,6 +16,7 @@
 
 with Simple_IO;
 with Std_Names;
+with Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Vhdl.Canon;
@@ -3300,8 +3301,20 @@ package body Trans.Chap8 is
             --  Individual association.
             if Dynamic_Individual_Assoc /= Null_Iir then
                --  With dynamic bounds.
-               --  FIXME: only records are supported.
-               pragma Assert (Get_Kind (Formal) = Iir_Kind_Selected_Element);
+               --  Only records are supported here: for an array formal the
+               --  index range of the whole object would first have to be
+               --  derived from the individual associations, and it is not.
+               --  Say so rather than fail an assertion; see #590.
+               if Get_Kind (Formal) /= Iir_Kind_Selected_Element then
+                  Error_Msg_Elab
+                    (Assoc, "individual association of an element of an "
+                       & "array with dynamic bounds is not supported");
+                  --  Stop here: the code below builds the object from the
+                  --  bounds of each element, and without them it would
+                  --  generate ortho code that does not verify (mcode ends
+                  --  in ORTHO_CODE.SYNTAX_ERROR).
+                  raise Errorout.Compilation_Error;
+               end if;
 
                --  Save the actual.
                Saved_Val (Pos) := E2M (Val, Ftype_Info, Mode_Value);
