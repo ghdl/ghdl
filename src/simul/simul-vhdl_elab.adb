@@ -888,12 +888,22 @@ package body Simul.Vhdl_Elab is
          Formal := Inter;
       end if;
       Synth_Object_Name (Port_Inst, Formal, Formal_Base, Typ, Off);
+      if Formal_Base = No_Valtyp then
+         --  The formal is in error (eg: a slice whose direction doesn't match
+         --  the one of the port).
+         return;
+      end if;
       Typ := Unshare (Typ, Global_Pool'Access);
       Formal_Sig := Formal_Base.Val.S;
       Formal_Ep := (Formal_Sig, Off, Typ);
 
       Synth_Object_Name
         (Assoc_Inst, Get_Actual (Assoc), Actual_Base, Typ, Off);
+      if Actual_Base = No_Valtyp then
+         --  The actual is in error (eg: a slice whose direction doesn't match
+         --  the one of the port).
+         return;
+      end if;
       Typ := Unshare (Typ, Global_Pool'Access);
       Actual_Sig := Actual_Base.Val.S;
       Actual_Ep := (Actual_Sig, Off, Typ);
@@ -966,6 +976,11 @@ package body Simul.Vhdl_Elab is
          Formal := Inter;
       end if;
       Formal_Ep := Compute_Sub_Signal (Port_Inst, Formal);
+      if Formal_Ep.Base = No_Signal_Index then
+         --  The formal is in error (eg: a slice whose direction doesn't match
+         --  the one of the port).
+         return;
+      end if;
 
       Actual_Ep := (No_Signal_Index, No_Value_Offsets, null);
 

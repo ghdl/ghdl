@@ -1159,7 +1159,6 @@ package body Vhdl.Sem_Assocs is
          declare
             Index_Constraint : Iir;
             Index_Subtype_Constraint : Iir;
-            Indiv_Assoc : Iir;
             Dir : Direction_Type;
          begin
             --  Create an index subtype.
@@ -1183,21 +1182,7 @@ package body Vhdl.Sem_Assocs is
             Set_Range_Constraint (Actual_Index, Index_Subtype_Constraint);
             Set_Type_Staticness (Actual_Index, Locally);
 
-            --  LRM08 5.3.2.2 Index constraints and discrete ranges
-            --  e) 2) If the subtype index range is undefed, and the interface
-            --  object or subelement [...] is associated by a single
-            --  association element in which the formal designator is a slice
-            --  name, then the direction of the index range of the object is
-            --  that of the corresponding index subtype of the interface
-            --  object.
-            Indiv_Assoc := Get_Individual_Association_Chain (Assoc);
-            if Get_Chain (Indiv_Assoc) = Null_Iir
-              and then Get_Kind (Indiv_Assoc) = Iir_Kind_Choice_By_Range
-            then
-               Dir := Get_Direction (Get_Choice_Range (Indiv_Assoc));
-            else
-               Dir := Get_Direction (Index_Constraint);
-            end if;
+            Dir := Get_Direction (Index_Constraint);
             Set_Direction (Index_Subtype_Constraint, Dir);
 
             --  For ownership purpose, the bounds must be copied otherwise

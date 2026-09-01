@@ -1075,6 +1075,13 @@ package body Synth.Vhdl_Insts is
          Synth_Individual_Formal
            (Syn_Inst, Inter_Typ, Get_Formal (Iassoc), Typ, Offs);
 
+         if Typ = null then
+            --  The formal is in error (eg: a slice whose direction doesn't
+            --  match the one of the port).
+            Value_Offset_Tables.Free (Els);
+            return No_Net;
+         end if;
+
          --   2. synth expression
          V := Synth_Single_Input_Assoc
            (Syn_Inst, Typ, Syn_Inst, Get_Actual (Iassoc), Iassoc);
@@ -1175,6 +1182,13 @@ package body Synth.Vhdl_Insts is
          --   1. compute type and offset
          Synth_Individual_Formal
            (Syn_Inst, Inter_Typ, Get_Formal (Iassoc), Typ, Offs);
+
+         if Typ = null then
+            --  The formal is in error (eg: a slice whose direction doesn't
+            --  match the one of the port).
+            Release_Expr_Pool (Marker);
+            exit;
+         end if;
 
          --   2. Extract the value.
          O := Build_Extract (Get_Build (Syn_Inst), Port, Offs.Net_Off, Typ.W);
