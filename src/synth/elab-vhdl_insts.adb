@@ -22,6 +22,7 @@ with Types; use Types;
 with Libraries;
 with Areapools;
 with Name_Table;
+with Flags; use Flags;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
@@ -828,6 +829,25 @@ package body Elab.Vhdl_Insts is
       end if;
 
       --  Check matching bounds.
+      --
+      --  LRM08 14.3.5 Port map aspect
+      --  If an actual signal is associated with a port of mode IN or INOUT,
+      --  and if the type of the formal is a scalar type, then it is an error
+      --  if [...] the subtype of the actual if not compatible with the subtype
+      --  of the formal. [...]
+      --
+      --  Similarly, if an actual signal is associated with a port of mode OUT,
+      --  INOUT, or BUFFER, and if the type of the actual is a scalar type,
+      --  then it is an error if [...] the subtype of the formal is not
+      --  compatible with the subtype of the actual.
+      --
+      --  LRM93 12.2.4 The port map aspect
+      --  If an actual signal is associated with a port of any mode, and if
+      --  the type of the formal is a scalar type, then it is an error if [...]
+      --  the bounds and direction of the subtype denoted by the subtype
+      --  indication of the formal are not identical to the bounds and
+      --  direction of the subtype denoted by the subtype indication of the
+      --  actual.
       if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Name
         and then Get_Formal_Conversion (Assoc) = Null_Node
         and then Get_Actual_Conversion (Assoc) = Null_Node
@@ -846,10 +866,31 @@ package body Elab.Vhdl_Insts is
             Synth_Object_Name
               (Syn_Inst, Actual, Actual_Base, Actual_Typ, Actual_Offs);
             case Inter_Typ.Kind is
-               when Type_All_Discrete =>
-                  Same := Inter_Typ.Drange = Actual_Typ.Drange;
-               when Type_Float =>
-                  Same := Inter_Typ.Frange = Actual_Typ.Frange;
+               when Type_All_Discrete
+                 | Type_Float =>
+                  Same := True;
+                  if Flags.Vhdl_Std >= Vhdl_08 then
+                     case Get_Mode (Inter) is
+                        when Iir_In_Mode | Iir_Inout_Mode =>
+                           Same := Same and Is_Scalar_Subtype_Compatible
+                             (Actual_Typ, Inter_Typ);
+                        when others =>
+                           null;
+                     end case;
+                     case Get_Mode (Inter) is
+                        when Iir_Inout_Mode | Iir_Out_Mode | Iir_Buffer_Mode =>
+                           Same := Same and Is_Scalar_Subtype_Compatible
+                             (Inter_Typ, Actual_Typ);
+                        when others =>
+                           null;
+                     end case;
+                  else
+                     if Inter_Typ.Kind = Type_Float then
+                        Same := Inter_Typ.Frange = Actual_Typ.Frange;
+                     else
+                        Same := Inter_Typ.Drange = Actual_Typ.Drange;
+                     end if;
+                  end if;
                when Type_Composite =>
                   if not Check_Matching_Bounds (Syn_Inst, Inter_Typ,
                     Actual_Typ, Assoc)
