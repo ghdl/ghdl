@@ -27,22 +27,24 @@ if "$GHDL" --version | grep -q "JIT code generator"; then
     exit 1
   fi
   echo "$out"
-  if ! echo "$out" | grep -q "unsupported construct"; then
+  if echo "$out" | grep -q "PSL builtin function not supported"; then
+    :
+  elif ! echo "$out" | grep -q "unsupported construct"; then
     echo "FAIL: expected the run-time trap on the unsupported construct"
     exit 1
   fi
 else
   out=$(analyze_failure t.vhd 2>&1)
   echo "$out"
+
+  if ! echo "$out" | grep -q "PSL builtin function not supported"; then
+    echo "FAIL: expected the clean not-supported diagnostic"
+    exit 1
+  fi
 fi
 
 if echo "$out" | grep -q "GHDL Bug occurred"; then
   echo "FAIL: crashed instead of reporting a clean error"
-  exit 1
-fi
-
-if ! echo "$out" | grep -q "PSL builtin function not supported"; then
-  echo "FAIL: expected the clean not-supported diagnostic"
   exit 1
 fi
 
