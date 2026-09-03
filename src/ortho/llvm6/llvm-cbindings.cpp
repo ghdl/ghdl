@@ -1747,7 +1747,8 @@ start_subprogram_body(ODnodeSubprg *Func)
         ParamsArr.push_back(Inter->Dtype->Dbg);
     }
 
-    DITypeRefArray Params = DBuilder->getOrCreateTypeArray(ParamsArr);
+    //  llvm 23 renamed DITypeRefArray to DITypeArray; 'auto' spells both.
+    auto Params = DBuilder->getOrCreateTypeArray(ParamsArr);
     Ty = DBuilder->createSubroutineType(Params);
 
 #if LLVM_VERSION_MAJOR >= 8
