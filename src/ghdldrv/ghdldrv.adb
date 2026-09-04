@@ -351,13 +351,15 @@ package body Ghdldrv is
       Table_Low_Bound => 1,
       Table_Initial => 16);
 
-   --  Two design files of a library are not supposed to share an object
-   --  file anymore, as Ghdllocal.Get_Object_Prefix identifies each one by
-   --  the name of its source file and a number.  Only that number may
-   --  collide.  Keep checking it here, where the link list is built:
-   --  otherwise one object file overwrites the other and the link either
-   --  fails with a pile of "multiple definition" messages or silently
-   --  uses the wrong object.  See #539 and #1622.
+   --  The object file of a design file is named after the *base* name of its
+   --  source file, in the library directory.  So two design files with the
+   --  same base name in different directories (dir1/pkg.vhdl and
+   --  dir2/pkg.vhdl) are both compiled to the same pkg.o: the second
+   --  analysis overwrites the first object file, and the link then either
+   --  fails with a pile of "multiple definition" messages or silently uses
+   --  the wrong object.  Detect it here, where the link list is built, and
+   --  say what is wrong instead of leaving the user with linker errors
+   --  about symbols they never wrote.  See #539 and #1622.
    procedure Check_Object_Collision (Obj : String; Src : String) is
    begin
       for I in Objlist.First .. Objlist.Last loop
@@ -366,7 +368,7 @@ package body Ghdldrv is
          then
             Error ("'" & Src & "' and '" & Objsrclist.Table (I).all
                      & "' are both compiled to '" & Obj & "'");
-            Error ("(the object file is named after the source file;"
+            Error ("(object files are named after the source file base name;"
                      & " rename one of these files)");
             raise Compile_Error;
          end if;
@@ -447,9 +449,9 @@ package body Ghdldrv is
                Filelist.Append (File);
             else
                if To_Obj then
-                  File := new String'
-                    (Get_Object_Prefix (Dir (1 .. Dir_Len), Line (1 .. L))
-                       & Obj_Suffix);
+                  File := new String'(Dir (1 .. Dir_Len)
+                                      & Get_Base_Name (Line (1 .. L))
+                                      & Obj_Suffix);
                   Check_Object_Collision (File.all, Line (1 .. L));
                else
                   File := new String'(Substitute (Line (1 .. L)));
@@ -473,7 +475,7 @@ package body Ghdldrv is
    begin
       Dir := Get_Library_Directory (Get_Library (File));
       Name := Get_Design_File_Filename (File);
-      return Get_Object_Prefix (Image (Dir), Image (Name)) & Obj_Suffix;
+      return Image (Dir) & Get_Base_Name (Image (Name)) & Obj_Suffix;
    end Get_Object_Filename;
 
    procedure Add_Argument (Inst : in out Instance; Arg : String_Acc) is
@@ -1182,7 +1184,7 @@ package body Ghdldrv is
               String'(Get_Machine_Path_Prefix & Get_Directory_Separator
                       & "std" & Get_Directory_Separator
                       & Get_Version_Path & Get_Directory_Separator
-                      & "std_standard.vhdl" & Obj_Suffix);
+                      & "std_standard" & Obj_Suffix);
             P := P + 1;
             Args (P) := Std_File;
          else
