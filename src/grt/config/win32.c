@@ -138,10 +138,11 @@ ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
       break;
     }
 
-  /* FIXME: is it correct?  */
   fprintf (stderr, "exception raised: %s\n", msg);
 
-  __ghdl_maybe_return_via_longjump (1);
+  /* Run_Error, like Grt.Errors.Fatal_Error does: this is a fatal error,
+     and 1 would be Run_None, which Grt.Main reads as a success.  */
+  __ghdl_maybe_return_via_longjump (-1);
   return 0; /* This is never reached, avoid compiler warning  */
 }
 
