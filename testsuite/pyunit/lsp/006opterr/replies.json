@@ -29,6 +29,10 @@
         "documentFormattingProvider": false,
         "documentRangeFormattingProvider": true,
         "renameProvider": false
+      },
+      "serverInfo": {
+        "name": "ghdl-ls",
+        "version": "7.0.0-dev"
       }
     }
   },
@@ -94,23 +98,7 @@
             }
           }
         },
-        "containerName": {
-          "kind": 2,
-          "name": "behaviour",
-          "location": {
-            "uri": "file://@ROOT@/files/heartbeat.vhdl",
-            "range": {
-              "start": {
-                "line": 8,
-                "character": 0
-              },
-              "end": {
-                "line": 20,
-                "character": 0
-              }
-            }
-          }
-        }
+        "containerName": "behaviour"
       }
     ]
   }
