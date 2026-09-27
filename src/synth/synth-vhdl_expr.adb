@@ -2251,6 +2251,31 @@ package body Synth.Vhdl_Expr is
       end if;
    end Synth_Type_Attribute;
 
+   --  If EXPR is (or is an alias of, or is a name rooted at) an external
+   --  name, return that external name; otherwise return Null_Node.
+   function Get_Base_External_Name (Expr : Node) return Node
+   is
+      N : Node;
+   begin
+      N := Expr;
+      loop
+         case Get_Kind (N) is
+            when Iir_Kinds_External_Name =>
+               return N;
+            when Iir_Kind_Object_Alias_Declaration =>
+               N := Get_Name (N);
+            when Iir_Kinds_Denoting_Name =>
+               N := Get_Named_Entity (N);
+            when Iir_Kind_Indexed_Name
+              | Iir_Kind_Slice_Name
+              | Iir_Kind_Selected_Element =>
+               N := Get_Prefix (N);
+            when others =>
+               return Null_Node;
+         end case;
+      end loop;
+   end Get_Base_External_Name;
+
    function Synth_Expression_With_Type (Syn_Inst : Synth_Instance_Acc;
                                         Expr : Node;
                                         Typ : Type_Acc) return Valtyp is
@@ -2408,6 +2433,18 @@ package body Synth.Vhdl_Expr is
                         --  Use its default value.
                         Base := (Base.Typ, Base.Val.Init);
                      end if;
+                  elsif Get_Base_External_Name (Expr) /= Null_Node then
+                     --  Reading through an external name is a different
+                     --  story: the signal it denotes exists, but synthesis
+                     --  has not turned it into a net that is reachable from
+                     --  here.  Saying "during elaboration" sends the user
+                     --  looking for a signal read in a declarative part,
+                     --  which is not what happened.
+                     Error_Msg_Synth
+                       (Syn_Inst, Expr,
+                        "external name denotes a signal that is not "
+                          & "synthesized at this point");
+                     return No_Valtyp;
                   else
                      --  See comment just above for Warning_Msg_Synth.
                      Error_Msg_Synth
