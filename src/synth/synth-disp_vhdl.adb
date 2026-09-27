@@ -72,21 +72,32 @@ package body Synth.Disp_Vhdl is
       Wr_Line (";");
    end Disp_Signal;
 
+   --  A scalar inout port's own net directly is the vhdl port (see
+   --  Disp_Vhdl_Wrapper), so it must not be declared as a signal.  A
+   --  record inout port is split into several leaf ports, none of which
+   --  is itself a whole vhdl port (only "pfx.field" is), so each needs
+   --  its own wrapping signal, like a plain in/out record port's fields.
+   --  Recognizable by its Sname having a prefix (the record port's own
+   --  Sname) -- a scalar port's Sname has none.
+   function Is_Inout_Record_Leaf (Desc : Port_Desc) return Boolean is
+   begin
+      return Desc.Dir = Port_Inout
+        and then Get_Sname_Prefix (Desc.Name) /= No_Sname;
+   end Is_Inout_Record_Leaf;
+
    procedure Disp_Ports_As_Signals (M : Module)
    is
       Desc : Port_Desc;
    begin
       for I in 1 .. Get_Nbr_Inputs (M) loop
          Desc := Get_Input_Desc (M, I - 1);
-         if Desc.Dir /= Port_Inout then
+         if Desc.Dir /= Port_Inout or else Is_Inout_Record_Leaf (Desc) then
             Disp_Signal (Desc);
          end if;
       end loop;
       for I in 1 .. Get_Nbr_Outputs (M) loop
          Desc := Get_Output_Desc (M, I - 1);
-         if Desc.Dir /= Port_Inout then
-            --  inout ports are not prefixed, so they must not be declared
-            --  as signals.
+         if Desc.Dir /= Port_Inout or else Is_Inout_Record_Leaf (Desc) then
             Disp_Signal (Desc);
          end if;
       end loop;
@@ -440,9 +451,13 @@ package body Synth.Disp_Vhdl is
 
    --  Disp conversion for output port (so in the form o <= wrap_o).
    --  Disp conversion for output port (so in the form wrap_i <= i).
+   --  Root_Id names the wrapping signal's root prefix; callers other than
+   --  the plain in/out port case use it to convert to a different signal
+   --  than the one Finalize_Signal_Wire drives (see Iir_Inout_Mode below).
    procedure Disp_Port_Converter (Inst : Synth_Instance_Acc;
                                   Port : Node;
-                                  Is_Out : Boolean)
+                                  Is_Out : Boolean;
+                                  Root_Id : Name_Id := Std_Names.Name_Wrap)
    is
       Port_Id : constant Name_Id := Get_Identifier (Port);
       Port_Name : constant String := Name_Table.Image (Port_Id);
@@ -450,7 +465,7 @@ package body Synth.Disp_Vhdl is
       Typ : constant Type_Acc := Get_Subtype_Object (Inst, Port_Type);
       Wname : Sname;
    begin
-      Wname := New_Sname_User (Std_Names.Name_Wrap, No_Sname);
+      Wname := New_Sname_User (Root_Id, No_Sname);
       Wname := New_Sname_User (Port_Id, Wname);
 
       if Get_Kind (Get_Base_Type (Port_Type)) = Iir_Kind_Record_Type_Definition
@@ -661,8 +676,10 @@ package body Synth.Disp_Vhdl is
          Name_Wrap := Name_Table.Get_Identifier ("wrap");
          Pfx_Wrap := New_Sname_User (Name_Wrap, No_Sname);
          for P of Ports_Desc (Main) loop
-            --  INOUT ports are handled specially.
-            if P.Dir /= Port_Inout then
+            --  A record INOUT port needs wrapping too, like plain
+            --  in/out record ports: there is no single vhdl identifier
+            --  for one leaf port.
+            if P.Dir /= Port_Inout or else Is_Inout_Record_Leaf (P) then
                Pfx := P.Name;
                loop
                   N_Pfx := Get_Sname_Prefix (Pfx);
@@ -711,6 +728,30 @@ package body Synth.Disp_Vhdl is
                      Disp_Port_Converter (Inst, Port, False);
                   when Iir_Out_Mode =>
                      Disp_Port_Converter (Inst, Port, True);
+                  when Iir_Inout_Mode =>
+                     --  Scalar inout ports need no converter: the netlist
+                     --  port directly is the vhdl port.  A record inout
+                     --  port was wrapped like an in/out port (see "Rename
+                     --  ports" above): its wrapping signal is driven only
+                     --  by the design's own logic (Finalize_Signal_Wire),
+                     --  so the "out" direction, printed here, drives the
+                     --  real port from it.
+                     --
+                     --  The wrapping signal is not also fed back from the
+                     --  real port (the "in" direction): looping it through
+                     --  the same signal it drives would deadlock at 'U'
+                     --  (std_logic's initial value dominates in the
+                     --  resolution function).  Instead, Finalize_Signal_Wire
+                     --  reads the port back through a second, independent
+                     --  "rd" signal, which only this "in" direction drives.
+                     if Get_Kind (Get_Base_Type (Get_Type (Port)))
+                       = Iir_Kind_Record_Type_Definition
+                     then
+                        Disp_Port_Converter (Inst, Port, True);
+                        Disp_Port_Converter
+                          (Inst, Port, False,
+                           Name_Table.Get_Identifier ("rd"));
+                     end if;
                   when others =>
                      --  TODO ?
                      null;

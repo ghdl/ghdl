@@ -20,9 +20,14 @@ with Types; use Types;
 with Areapools;
 with Errorout; use Errorout;
 
+with Std_Names;
+with Name_Table;
+
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Utils; use Netlists.Utils;
+with Netlists.Iterators; use Netlists.Iterators;
+with Netlists.Locations; use Netlists.Locations;
 with Netlists.Gates;
 
 with Vhdl.Errors;
@@ -985,6 +990,156 @@ package body Synth.Vhdl_Decls is
 
          --  The value of an undriven signal is its initial value.
          Connect (Get_Input (Gate, 0), Def_Val);
+      end if;
+
+      --  A composite (record) inout port's "port" input (index 1) is a
+      --  concat of its leaf ports, not a single real port.  Id_Inout /
+      --  Id_Iinout gates are printed on the assumption that this input
+      --  directly *is* a port; for a multi-field record that assumption
+      --  is false, so the leaf ports end up undriven.  (Id_Ioport is
+      --  unaffected: it is always printed as an ordinary component
+      --  instantiation, which already copes with a concat input.)
+      --
+      --  Build one small inout/iinout gate per leaf field instead, each
+      --  wired directly to its own leaf port and driven by the matching
+      --  slice of the value driving the port (by now always connected,
+      --  above, to either the design's own logic or a default value).
+      --  Keep the original gate (it still reads back the concat for
+      --  internal use), but disconnect its own input driving the port,
+      --  so it is no longer printed as driving the concat.
+      --
+      --  The concat's own inputs are also replaced, one per leaf, by a
+      --  fresh signal defaulting to a plain copy of the leaf port (so
+      --  hierarchy forwarding is unaffected).  Synth.Disp_Vhdl's -e
+      --  wrapper additionally drives this signal from the real,
+      --  preserved port -- see its Iir_Inout_Mode case -- so that a
+      --  record inout port both driven and read back by the entity that
+      --  owns it sees the port's true, externally-resolved value.  The
+      --  resulting two drivers resolve harmlessly to that same value
+      --  (std_logic resolution is idempotent).  A separate signal is
+      --  needed here instead of reusing the leaf port net directly,
+      --  because that net is also what the wrapper drives the real port
+      --  from, and feeding it back from the real port too would loop the
+      --  two through each other.
+      if Mid in Id_Inout | Id_Iinout then
+         declare
+            Port_Net : constant Net := Get_Input_Net (Gate, 1);
+            Concat_Inst : constant Instance := Get_Net_Parent (Port_Net);
+         begin
+            if Get_Id (Concat_Inst) in Concat_Module_Id then
+               declare
+                  Loc : constant Location_Type := Get_Location (Decl);
+                  Actual_Drv : constant Net := Get_Input_Net (Gate, 0);
+                  Total_W : Width;
+                  Off : Width;
+                  Leaf_Gate : Instance;
+                  Rd_Root : constant Sname :=
+                    New_Sname_User (Name_Table.Get_Identifier ("rd"),
+                                    No_Sname);
+
+                  --  Build an Sname with the same field/record structure
+                  --  as S (a leaf port's own Sname), but rooted under
+                  --  Rd_Root instead -- mirroring how Synth.Disp_Vhdl
+                  --  independently derives the same name from the port
+                  --  declaration for its "rd" glue, so both sides agree.
+                  function Rd_Sname (S : Sname) return Sname
+                  is
+                     Prefix : constant Sname := Get_Sname_Prefix (S);
+                     New_Prefix : constant Sname :=
+                       (if Prefix = No_Sname
+                        then Rd_Root
+                        else Rd_Sname (Prefix));
+                  begin
+                     case Get_Sname_Kind (S) is
+                        when Sname_User =>
+                           return New_Sname_User
+                             (Get_Sname_Suffix (S), New_Prefix);
+                        when Sname_Field =>
+                           return New_Sname_Field
+                             (Get_Sname_Suffix (S), New_Prefix);
+                        when others =>
+                           raise Internal_Error;
+                     end case;
+                  end Rd_Sname;
+               begin
+                  --  First pass: total width.
+                  Total_W := 0;
+                  for I of Inputs (Concat_Inst) loop
+                     Total_W := Total_W + Get_Width (Get_Driver (I));
+                  end loop;
+
+                  --  Second pass: one inout gate per leaf, from the
+                  --  highest offset (the first input) down to 0 (the
+                  --  last input) -- see Build2_Concat.
+                  Off := Total_W;
+                  for I of Inputs (Concat_Inst) loop
+                     declare
+                        Leaf_Net : constant Net := Get_Driver (I);
+                        Leaf_W : constant Width := Get_Width (Leaf_Net);
+                        Leaf_Drv : Net;
+                        --  Leaf_Net is one of Self_Inst's own outputs,
+                        --  i.e. (Self_Inst's ports have the module's
+                        --  ports' direction reversed) one of the module's
+                        --  own inputs -- hence Get_Input_Desc, not
+                        --  Get_Output_Desc.
+                        Leaf_Sname : constant Sname :=
+                          Get_Input_Desc
+                            (Get_Module (Get_Net_Parent (Leaf_Net)),
+                             Get_Output_Idx (Leaf_Net)).Name;
+                        Rd_Net : Net;
+                     begin
+                        Off := Off - Leaf_W;
+
+                        Leaf_Drv := Build2_Extract
+                          (Get_Build (Syn_Inst), Actual_Drv, Off, Leaf_W,
+                           Loc);
+
+                        if Def_Val = No_Net then
+                           Leaf_Gate := Build_Inout
+                             (Get_Build (Syn_Inst), Leaf_W);
+                        else
+                           Leaf_Gate := Build_Iinout
+                             (Get_Build (Syn_Inst), Leaf_W);
+                           Connect
+                             (Get_Input (Leaf_Gate, 2),
+                              Build2_Extract (Get_Build (Syn_Inst), Def_Val,
+                                             Off, Leaf_W, Loc));
+                        end if;
+
+                        Connect (Get_Input (Leaf_Gate, 0), Leaf_Drv);
+                        Connect (Get_Input (Leaf_Gate, 1), Leaf_Net);
+                        Set_Location (Leaf_Gate, Loc);
+
+                        Rd_Net := Build_Signal
+                          (Get_Build (Syn_Inst), Rd_Sname (Leaf_Sname),
+                           Leaf_W);
+                        Connect
+                          (Get_Input (Get_Net_Parent (Rd_Net), 0), Leaf_Net);
+                        Set_Location (Get_Net_Parent (Rd_Net), Loc);
+
+                        --  Nothing in the netlist reads this signal when
+                        --  the port isn't read internally (it exists only
+                        --  for Synth.Disp_Vhdl's -e wrapper to drive from
+                        --  the real port); mark it explicitly kept so
+                        --  Mark_And_Sweep does not remove it in that case.
+                        declare
+                           Keep_Pv : constant Pval := Create_Pval2 (1);
+                        begin
+                           Write_Pval (Keep_Pv, 0, (1, 0));
+                           Set_Instance_Attribute
+                             (Get_Net_Parent (Rd_Net), Std_Names.Name_Keep,
+                              Param_Pval_Boolean, Keep_Pv);
+                        end;
+
+                        Disconnect (I);
+                        Connect (I, Rd_Net);
+                     end;
+                  end loop;
+
+                  Disconnect (Get_Input (Gate, 0));
+               end;
+            end if;
+         end;
       end if;
    end Finalize_Signal_Wire;
 
