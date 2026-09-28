@@ -107,17 +107,29 @@ package body Netlists.Inference is
    is
       Inst : Instance;
       Noff : Uns32;
+      Nval : Net;
    begin
       Inst := Get_Net_Parent (Val);
       Noff := Off;
+      Nval := Val;
+
+      pragma Unreferenced (Off, Val);
 
       --  Skip extract (if any).
-      if Get_Id (Inst) = Id_Extract
-        and then Get_Param_Uns32 (Inst, 0) = Noff
-        and then Get_Width (Get_Input_Net (Inst, 0)) = Get_Width (Prev_Val)
-      then
-         Inst := Get_Net_Parent (Get_Input_Net (Inst, 0));
-         Noff := 0;
+      if Get_Id (Inst) = Id_Extract then
+         declare
+            E_Src : constant Net := Get_Input_Net (Inst, 0);
+            E_Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+            E_W : constant Width := Get_Width (E_Src);
+         begin
+            if E_Off = Noff
+              and then E_W = Get_Width (Prev_Val)
+            then
+               Nval := E_Src;
+               Inst := Get_Net_Parent (Nval);
+               Noff := 0;
+            end if;
+         end;
       end if;
 
       if Get_Id (Inst) = Id_Mux2 then
@@ -159,7 +171,8 @@ package body Netlists.Inference is
                end if;
             end if;
          end;
-      elsif Val = Prev_Val then
+      elsif Nval = Prev_Val and then Noff = 0 then
+         --  Found it!
          Res := No_Instance;
          Dist := 0;
       else
@@ -372,6 +385,7 @@ package body Netlists.Inference is
       Els_En   : Net;
       Els_Data : Net;
       Els_Els  : Net;
+      Els_Off  : Uns32;
    begin
       Els := Get_Driver (I0);
       if Is_Prev_FF_Value (Els, Prev_Val, Off) then
@@ -382,9 +396,9 @@ package body Netlists.Inference is
          --  DDR (not yet supported) or a true-dual-port RAM.
          Els_Inst := Get_Net_Parent (Els);
          if Get_Id (Els_Inst) = Id_Extract then
-            pragma Assert (Get_Param_Uns32 (Els_Inst, 0) = Off);
+            Els_Off := Get_Param_Uns32 (Els_Inst, 0);
             Els2 := Get_Input_Net (Els_Inst, 0);
-            Push_Extract (Ctxt, Els2, Off, Els_Inst, Get_Width (Els));
+            Push_Extract (Ctxt, Els2, Els_Off, Els_Inst, Get_Width (Els));
             Els_Inst := Get_Net_Parent (Els2);
          end if;
          if Get_Id (Els_Inst) = Id_Mux2 then
@@ -781,23 +795,44 @@ package body Netlists.Inference is
 
    --  Return 1 if INP is connected to input 1 (i0),
    --  return 2 if INP is connected to input 2 (i1).
-   function Get_Mux_Index (Mux : Instance; Inp : Net) return Port_Idx is
+   function Get_Mux_Index (Mux : Instance; Inp : Net; Off : Uns32; W : Width)
+                          return Port_Idx
+   is
+      Loff : Uns32;
+      N : Net;
+      Ninst : Instance;
    begin
-      if Get_Input_Net (Mux, 1) = Inp then
-         return 1;
-      else
-         pragma Assert (Get_Input_Net (Mux, 2) = Inp);
-         return 2;
-      end if;
+      for I in Port_Nbr range 1 .. 2 loop
+         N := Get_Input_Net (Mux, I);
+         if N = Inp then
+            pragma Assert (Off = 0);
+            pragma Assert (Get_Width (N) = W);
+            return I;
+         end if;
+
+         --  Handle one Id_Extract
+         Loff := Off;
+         Ninst := Get_Net_Parent (N);
+         if Get_Id (Ninst) = Id_Extract
+           and then Get_Param_Uns32 (Ninst, 0) = Loff
+           and then Get_Input_Net (Ninst, 0) = Inp
+         then
+            return I;
+         end if;
+      end loop;
+
+      raise Internal_Error;
    end Get_Mux_Index;
 
    --  Create a latch and merge all the mux2 above the last_mux.
    function Infere_Latch_Create (Ctxt : Context_Acc;
                                  Val : Net;
                                  Prev_Val : Net;
+                                 Off : Uns32;
                                  Last_Mux : Instance;
                                  Loc : Location_Type) return Net
    is
+      W : constant Width := Get_Width (Val);
       Idx : Port_Idx;
       Res_In : Net;
       Res_En : Net;
@@ -813,7 +848,7 @@ package body Netlists.Inference is
       --  One of the input is the target, will the other is kept for latch
       --  data input.
       Res_En := Disconnect_And_Get (Last_Mux, 0);
-      Idx := Get_Mux_Index (Last_Mux, Prev_Val);
+      Idx := Get_Mux_Index (Last_Mux, Prev_Val, Off, W);
       if Idx = 2 then
          --  prev_val on pin i1, so data on pin i0, inverted.
          Res_En := Build_Monadic (Ctxt, Id_Not, Res_En);
@@ -837,7 +872,7 @@ package body Netlists.Inference is
          pragma Assert (Get_Id (Last) = Id_Mux2);
 
          Sel := Get_Input_Net (Last, 0);
-         Idx := Get_Mux_Index (Last, Last_Out);
+         Idx := Get_Mux_Index (Last, Last_Out, Off, W);
          if Idx = 2 then
             --  Inverted
             Sel := Build_Monadic (Ctxt, Id_Not, Sel);
@@ -942,6 +977,7 @@ package body Netlists.Inference is
    function Infere_Latch (Ctxt : Context_Acc;
                           Val : Net;
                           Prev_Val : Net;
+                          Off : Uns32;
                           Last_Mux : Instance;
                           Last_Use : Boolean;
                           Loc : Location_Type) return Net
@@ -971,7 +1007,7 @@ package body Netlists.Inference is
            (Loc, "latch infered for net %n (use --latches)", (1 => +Name));
       end if;
 
-      return Infere_Latch_Create (Ctxt, Val, Prev_Val, Last_Mux, Loc);
+      return Infere_Latch_Create (Ctxt, Val, Prev_Val, Off, Last_Mux, Loc);
    end Infere_Latch;
 
    function Infere_Tri (Ctxt : Context_Acc;
@@ -1088,7 +1124,8 @@ package body Netlists.Inference is
       Extract_Clock (Get_Driver (Sel), Clk, Enable);
       if Clk = No_Net then
          --  No clock -> latch or combinational loop
-         Res := Infere_Latch (Ctxt, Val2, Prev_Val, Last_Mux, Last_Use, Loc);
+         Res := Infere_Latch
+           (Ctxt, Val2, Prev_Val, Off, Last_Mux, Last_Use, Loc);
       else
          --  Clock -> FF
          First_Mux := Get_Net_Parent (Val2);
