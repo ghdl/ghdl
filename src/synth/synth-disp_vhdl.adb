@@ -630,19 +630,19 @@ package body Synth.Disp_Vhdl is
    is
       Unit : constant Node := Get_Design_Unit (Ent);
       Main : constant Module := Netlists.Utils.Extract_Main_User_Module (Top);
-      Inter : Node;
+      Port : Node;
    begin
       --  Ports with a floating point type are not supported.
-      Inter := Get_Port_Chain (Ent);
-      while Inter /= Null_Node loop
-         if Has_Floating_Type (Get_Type (Inter)) then
+      Port := Get_Port_Chain (Ent);
+      while Port /= Null_Node loop
+         if Has_Floating_Type (Get_Type (Port)) then
             Error_Msg_Elab
-              (Inter, "cannot output vhdl: %n has a floating point type",
-               (1 => +Inter));
+              (Port, "cannot output vhdl: %n has a floating point type",
+               (1 => +Port));
             return;
          end if;
 
-         Inter := Get_Chain (Inter);
+         Port := Get_Chain (Port);
       end loop;
 
       --  Disp the original design unit.
@@ -698,27 +698,23 @@ package body Synth.Disp_Vhdl is
       end if;
 
       --  Add statements to convert between nets and ports.
-      declare
-         Port : Node;
-      begin
-         Port := Get_Port_Chain (Ent);
-         while Port /= Null_Node loop
-            if Get_Kind (Port) = Iir_Kind_Interface_View_Declaration then
-               Disp_View_Converter (Inst, Port);
-            else
-               case Get_Mode (Port) is
-                  when Iir_In_Mode =>
-                     Disp_Port_Converter (Inst, Port, False);
-                  when Iir_Out_Mode =>
-                     Disp_Port_Converter (Inst, Port, True);
-                  when others =>
-                     --  TODO ?
-                     null;
-               end case;
-            end if;
-            Port := Get_Chain (Port);
-         end loop;
-      end;
+      Port := Get_Port_Chain (Ent);
+      while Port /= Null_Node loop
+         if Get_Kind (Port) = Iir_Kind_Interface_View_Declaration then
+            Disp_View_Converter (Inst, Port);
+         else
+            case Get_Mode (Port) is
+               when Iir_In_Mode =>
+                  Disp_Port_Converter (Inst, Port, False);
+               when Iir_Out_Mode =>
+                  Disp_Port_Converter (Inst, Port, True);
+               when others =>
+                  --  TODO ?
+                  null;
+            end case;
+         end if;
+         Port := Get_Chain (Port);
+      end loop;
 
       Disp_Architecture_Statements (Main);
       Wr_Line ("end rtl;");
