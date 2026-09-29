@@ -940,17 +940,29 @@ package body Synth.Vhdl_Decls is
                --  For inout ports, consider them as driven if it is connected
                --  to an inout port of a sub-instance.
                declare
-                  Snk : Input;
+                  Snk, Next_Snk : Input;
                   Smod : Module;
+                  Sinst : Instance;
                begin
                   Snk := Get_First_Sink (Gate_Net);
                   while Snk /= No_Input loop
-                     Smod := Get_Module (Get_Input_Parent (Snk));
+                     Next_Snk := Get_Next_Sink (Snk);
+
+                     Sinst := Get_Input_Parent (Snk);
+                     Smod := Get_Module (Sinst);
+
+                     --  Skip extract gate (to handle ports of record).
+                     if Get_Id (Smod) = Id_Extract then
+                        Snk := Get_First_Sink (Get_Output (Sinst, 0));
+                        Sinst := Get_Input_Parent (Snk);
+                        Smod := Get_Module (Sinst);
+                     end if;
+
                      if Get_Inout_Flag (Smod, Get_Input_Idx (Snk)) then
                         --  The net is connected to an inout port.
                         return;
                      end if;
-                     Snk := Get_Next_Sink (Snk);
+                     Snk := Next_Snk;
                   end loop;
                end;
             when others =>
