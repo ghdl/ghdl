@@ -72,23 +72,51 @@ package body Synth.Disp_Vhdl is
       Wr_Line (";");
    end Disp_Signal;
 
+   procedure Disp_Record_Name (Name : Sname) is
+   begin
+      case Get_Sname_Kind (Name) is
+         when Sname_User =>
+            Put_Name (Name, Language_Vhdl);
+         when Sname_Field =>
+            Disp_Record_Name (Get_Sname_Prefix (Name));
+            Wr (".");
+            Put_Id (Get_Sname_Suffix (Name));
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Disp_Record_Name;
+
+   procedure Disp_Inout_Port (Desc : Port_Desc) is
+   begin
+      if Get_Sname_Kind (Desc.Name) = Sname_User then
+         --  A simple name, not a record.
+         return;
+      end if;
+      Wr ("  alias ");
+      Put_Name (Desc.Name, Language_Vhdl);
+      Wr (": ");
+      Put_Type (Desc.W);
+      Wr (" is ");
+      Disp_Record_Name (Desc.Name);
+      Wr_Line (";");
+   end Disp_Inout_Port;
+
    procedure Disp_Ports_As_Signals (M : Module)
    is
       Desc : Port_Desc;
    begin
       for I in 1 .. Get_Nbr_Inputs (M) loop
          Desc := Get_Input_Desc (M, I - 1);
-         if Desc.Dir /= Port_Inout then
+         if Desc.Dir = Port_Inout then
+            Disp_Inout_Port (Desc);
+         else
             Disp_Signal (Desc);
          end if;
       end loop;
       for I in 1 .. Get_Nbr_Outputs (M) loop
          Desc := Get_Output_Desc (M, I - 1);
-         if Desc.Dir /= Port_Inout then
-            --  inout ports are not prefixed, so they must not be declared
-            --  as signals.
-            Disp_Signal (Desc);
-         end if;
+         pragma Assert (Desc.Dir /= Port_Inout);
+         Disp_Signal (Desc);
       end loop;
    end Disp_Ports_As_Signals;
 
