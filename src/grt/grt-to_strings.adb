@@ -104,7 +104,7 @@ package body Grt.To_Strings is
       P : Natural := Str'First;
    begin
       --  Always work on negative values (to avoid overflow)
-      if Value > 0 then
+      if Value >= 0 then
          V := -Value;
       else
          V := Value;
@@ -117,7 +117,7 @@ package body Grt.To_Strings is
       --  also avoid overflow...)
       U := Unit;
       Nd := 1;
-      while U < 1e18 and then (-U) * 10 > V loop
+      while U < 1e18 and then (-U) * 10 >= V loop
          U := U * 10;
          Nd := Nd + 1;
       end loop;
@@ -125,7 +125,7 @@ package body Grt.To_Strings is
       loop
          R := V / U;  -- Negative
          V := V - R * U;
-         if U > 100 then
+         if U >= 100 then
             --  Shift divisor (as long as it is a multiple of 10, to avoid
             --  shifting from 36 to 3).
             U := U / 10;
