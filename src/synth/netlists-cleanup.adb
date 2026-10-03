@@ -20,7 +20,7 @@ with Std_Names;
 with Simple_IO;
 
 with Netlists.Utils; use Netlists.Utils;
-with Netlists.Gates;
+with Netlists.Gates; use Netlists.Gates;
 with Netlists.Locations; use Netlists.Locations;
 with Netlists.Concats;
 
@@ -30,7 +30,6 @@ with Synth.Flags;
 package body Netlists.Cleanup is
    procedure Remove_Output_Gate (Inst : Instance)
    is
-      use Netlists.Gates;
       Inp : constant Input := Get_Input (Inst, 0);
       In_Drv : constant Net := Get_Driver (Inp);
       O : constant Net := Get_Output (Inst, 0);
@@ -58,9 +57,66 @@ package body Netlists.Cleanup is
       Remove_Instance (Inst);
    end Remove_Output_Gate;
 
+   procedure Remove_Inout_Gate (Inst : Instance) is
+   begin
+      if Get_Id (Inst) = Id_Iinout then
+         --  Remove default value (not used).
+         --  The gate could be replaced with an Inout gate.
+         Disconnect (Get_Input (Inst, 2));
+      end if;
+
+      declare
+         Inp : constant Input := Get_Input (Inst, 1);
+         P : constant Net := Get_Driver (Inp);
+         Out0 : constant Net := Get_Output (Inst, 0);
+      begin
+         if Get_Id (Get_Net_Parent (P)) in Concat_Module_Id then
+            raise Internal_Error;
+         end if;
+
+         --  Redirect all the readers of the output of that inout
+         --  gate to the port.  This is important so that the inout
+         --  port of sub-instances are directly connected to the
+         --  inout port rather than going through this inout gate.
+         --  This allows a correct vhdl output (as it is difficult
+         --  to express a bidirectional assignment).
+         if Get_Input_Net (Inst, 0) = No_Net then
+            --  If there is no input, also remove the gate.
+            Disconnect (Inp);
+            Redirect_Inputs (Out0, P);
+            Remove_Instance (Inst);
+         else
+            Redirect_Inputs (Out0, P);
+         end if;
+      end;
+   end Remove_Inout_Gate;
+
+   procedure Remove_Ioport_Gate (Inst : Instance)
+   is
+      N : Net;
+      Inp : Input;
+   begin
+      --  Input 0 'i' is redirected to output 1 'oport'.
+      N := Disconnect_And_Get (Inst, 0);
+      if N /= No_Net then
+         Redirect_Inputs (Get_Output (Inst, 1), N);
+      end if;
+
+      --  Input 1 'iport' is redirected to output 0 'o'.
+      N := Disconnect_And_Get (Inst, 1);
+      Redirect_Inputs (Get_Output (Inst, 0), N);
+
+      --  Remove 'init' connection.
+      Inp := Get_Input (Inst, 2);
+      if Get_Driver (Inp) /= No_Net then
+         Disconnect (Inp);
+      end if;
+
+      Remove_Instance (Inst);
+   end Remove_Ioport_Gate;
+
    procedure Remove_Output_Gates (M : Module)
    is
-      use Netlists.Gates;
       Inst : Instance;
       Next_Inst : Instance;
       Mid : Module_Id;
@@ -82,55 +138,9 @@ package body Netlists.Cleanup is
                end if;
             when Id_Inout
               | Id_Iinout =>
-               if Mid = Id_Iinout then
-                  --  Remove default value (not used).
-                  --  The gate could be replaced with an Inout gate.
-                  Disconnect (Get_Input (Inst, 2));
-               end if;
-
-               declare
-                  Inp : constant Input := Get_Input (Inst, 1);
-                  P : constant Net := Get_Driver (Inp);
-                  Out0 : constant Net := Get_Output (Inst, 0);
-               begin
-                  --  Redirect all the readers of the output of that inout
-                  --  gate to the port.  This is important so that the inout
-                  --  port of sub-instances are directly connected to the
-                  --  inout port rather than going through this inout gate.
-                  --  This allows a correct vhdl output (as it is difficult
-                  --  to express a bidirectional assignment).
-                  if Get_Input_Net (Inst, 0) = No_Net then
-                     --  If there is no input, also remove the gate.
-                     Disconnect (Inp);
-                     Redirect_Inputs (Out0, P);
-                     Remove_Instance (Inst);
-                  else
-                     Redirect_Inputs (Out0, P);
-                  end if;
-               end;
+               Remove_Inout_Gate (Inst);
             when Id_Ioport =>
-               declare
-                  N : Net;
-                  Inp : Input;
-               begin
-                  --  Input 0 'i' is redirected to output 1 'oport'.
-                  N := Disconnect_And_Get (Inst, 0);
-                  if N /= No_Net then
-                     Redirect_Inputs (Get_Output (Inst, 1), N);
-                  end if;
-
-                  --  Input 1 'iport' is redirected to output 0 'o'.
-                  N := Disconnect_And_Get (Inst, 1);
-                  Redirect_Inputs (Get_Output (Inst, 0), N);
-
-                  --  Remove 'init' connection.
-                  Inp := Get_Input (Inst, 2);
-                  if Get_Driver (Inp) /= No_Net then
-                     Disconnect (Inp);
-                  end if;
-
-                  Remove_Instance (Inst);
-               end;
+               Remove_Ioport_Gate (Inst);
             when others =>
                null;
          end case;
@@ -207,7 +217,6 @@ package body Netlists.Cleanup is
 
    procedure Mark_And_Sweep (M : Module)
    is
-      use Netlists.Gates;
       --  Table of new gates to be inspected.
       Inspect : Instance_Tables.Instance;
 
