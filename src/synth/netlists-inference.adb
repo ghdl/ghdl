@@ -493,16 +493,19 @@ package body Netlists.Inference is
       Sig := Get_Net_Parent (Prev_Val);
       case Get_Id (Get_Module (Sig)) is
          when Id_Isignal
-           | Id_Ioutput
-           | Id_Iinout =>
+           | Id_Ioutput =>
             Init := Get_Input_Net (Sig, 1);
-            Init := Build2_Extract (Ctxt, Init, Off, Get_Width (O), Loc);
+         when Id_Iinout =>
+            Init := Get_Input_Net (Sig, 2);
          when Id_Signal
            | Id_Output
            | Id_Inout =>
             Init := No_Net;
          when others => raise Internal_Error;
       end case;
+      if Init /= No_Net then
+         Init := Build2_Extract (Ctxt, Init, Off, Get_Width (O), Loc);
+      end if;
 
       --  As an enable signal, start with the enable extracted from the clock
       --  to handle conditions like: `rising_edge(clk) and en`
