@@ -112,8 +112,8 @@ package body Synthesis is
          Netlists.Inference.Infere_Pass (Ctxt, M);
       end if;
 
-      if not Synth.Flags.Flag_Debug_Nocleanup then
-         Netlists.Cleanup.Remove_Output_Gates (M);
+      if not Synth.Flags.Flag_Debug_Noport then
+         Netlists.Cleanup.Remove_Output_Gates (Ctxt, M);
       end if;
 
       if not Synth.Flags.Flag_Debug_Nomemory2 then

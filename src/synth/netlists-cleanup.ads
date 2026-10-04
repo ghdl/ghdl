@@ -27,6 +27,6 @@ package Netlists.Cleanup is
    --  This will make all the null logic unconnected and ready to be cleaned.
    procedure Replace_Null_Inputs (Ctxt : Context_Acc; M : Module);
 
-   --  Remove Id_Output gates.
-   procedure Remove_Output_Gates (M : Module);
+   --  Remove Id_Output gates, adjust Id_Inout/Id_Iinout gates.
+   procedure Remove_Output_Gates (Ctxt : Context_Acc; M : Module);
 end Netlists.Cleanup;

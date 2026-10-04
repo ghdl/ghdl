@@ -23,6 +23,7 @@ with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Locations; use Netlists.Locations;
 with Netlists.Concats;
+with Netlists.Folds;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Flags;
@@ -57,7 +58,81 @@ package body Netlists.Cleanup is
       Remove_Instance (Inst);
    end Remove_Output_Gate;
 
-   procedure Remove_Inout_Gate (Inst : Instance) is
+   procedure Replace_Inout_Record_Gate (Ctxt : Context_Acc;
+                                        Inout_Inst : Instance;
+                                        Conc_Inst : Instance;
+                                        Drv_Val : Net;
+                                        Loc : Location_Type)
+   is
+      use Netlists.Folds;
+      Inout_O : constant Net := Get_Output (Inout_Inst, 0);
+      W : constant Width := Get_Width (Inout_O);
+      Inp : Input;
+      Inp_N : Net;
+      Inp_W : Width;
+      Off : Uns32;
+      Gate : Instance;
+      Gate_O : Net;
+      Conc_Inp : Input;
+   begin
+      --  Create one inout gate per port.
+      Off := W;
+      for I in Port_Nbr loop
+         Inp := Get_Input (Conc_Inst, I);
+         Inp_N := Get_Driver (Inp);
+         pragma Assert (Is_Self_Instance (Get_Net_Parent (Inp_N)));
+         pragma Assert (Has_One_Connection (Inp_N));
+         Inp_W := Get_Width (Inp_N);
+
+         Off := Off - Inp_W;
+
+         Gate := Build_Inout (Ctxt, Inp_W);
+         Set_Location (Gate, Loc);
+
+         --  Port
+         Disconnect (Inp);
+         Connect (Get_Input (Gate, 1), Inp_N);
+
+         --  Driving value.
+         if Drv_Val /= No_Net then
+            Connect (Get_Input (Gate, 0),
+                     Build2_Extract (Ctxt, Drv_Val, Off, Inp_W, Loc));
+         end if;
+
+         Gate_O := Get_Output (Gate, 0);
+
+         --  Connect the output of the inout gate.
+         --  By default, it is connected to the old concat gate.
+         --  But try to follow the net: directly connect the output to inputs
+         --  which were connected to an extract gate of the concat gate.
+         --  This simplifies the netlist, but also allow direct connections
+         --  to user sub-modules.
+         Conc_Inp := Get_First_Sink (Inout_O);
+         while Conc_Inp /= No_Input loop
+            declare
+               Sub_Inst : constant Instance := Get_Input_Parent (Conc_Inp);
+               Sub_Out : Net;
+            begin
+               if Get_Id (Sub_Inst) = Id_Extract
+                 and then Get_Param_Uns32 (Sub_Inst, 0) = Off
+               then
+                  Sub_Out := Get_Output (Sub_Inst, 0);
+                  if Get_Width (Sub_Out) = Inp_W then
+                     Redirect_Inputs (Sub_Out, Gate_O);
+                  end if;
+               end if;
+            end;
+            Conc_Inp := Get_Next_Sink (Conc_Inp);
+         end loop;
+
+         --  Connect the output of the inout to the concat gate.
+         Connect (Inp, Gate_O);
+
+         exit when Off = 0;
+      end loop;
+   end Replace_Inout_Record_Gate;
+
+   procedure Remove_Inout_Gate (Ctxt : Context_Acc; Inst : Instance) is
    begin
       if Get_Id (Inst) = Id_Iinout then
          --  Remove default value (not used).
@@ -69,9 +144,23 @@ package body Netlists.Cleanup is
          Inp : constant Input := Get_Input (Inst, 1);
          P : constant Net := Get_Driver (Inp);
          Out0 : constant Net := Get_Output (Inst, 0);
+         P_Parent : constant Instance := Get_Net_Parent (P);
+         Conc_Out : Net;
       begin
-         if Get_Id (Get_Net_Parent (P)) in Concat_Module_Id then
-            raise Internal_Error;
+         if Get_Id (P_Parent) in Concat_Module_Id then
+            --  If the input of the inout gate is a concat, it means the gate
+            --  is for a split record port.
+            --  Add one inout gate per single port.
+            Conc_Out := Disconnect_And_Get (Inst, 0);
+            Replace_Inout_Record_Gate
+              (Ctxt, Inst, P_Parent, Conc_Out, Get_Location (Inst));
+
+            --  Remove the inout gate (redirect output of the concat to
+            --  what was connected to the inout gate output).
+            Disconnect (Inp);
+            Redirect_Inputs (Out0, P);
+            Remove_Instance (Inst);
+            return;
          end if;
 
          --  Redirect all the readers of the output of that inout
@@ -91,6 +180,7 @@ package body Netlists.Cleanup is
       end;
    end Remove_Inout_Gate;
 
+   --  Remove the temporary ioport gate INST and directly connect nets.
    procedure Remove_Ioport_Gate (Inst : Instance)
    is
       N : Net;
@@ -115,7 +205,7 @@ package body Netlists.Cleanup is
       Remove_Instance (Inst);
    end Remove_Ioport_Gate;
 
-   procedure Remove_Output_Gates (M : Module)
+   procedure Remove_Output_Gates (Ctxt : Context_Acc; M : Module)
    is
       Inst : Instance;
       Next_Inst : Instance;
@@ -138,7 +228,7 @@ package body Netlists.Cleanup is
                end if;
             when Id_Inout
               | Id_Iinout =>
-               Remove_Inout_Gate (Inst);
+               Remove_Inout_Gate (Ctxt, Inst);
             when Id_Ioport =>
                Remove_Ioport_Gate (Inst);
             when others =>

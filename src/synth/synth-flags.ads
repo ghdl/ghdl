@@ -48,6 +48,8 @@ package Synth.Flags is
 
    Flag_Debug_Nocleanup : Boolean := False;
 
+   Flag_Debug_Noport : Boolean := False;
+
    --  Do not reduce muxes in dyn extract/insert chains.
    Flag_Debug_Nomemory1 : Boolean := False;
 

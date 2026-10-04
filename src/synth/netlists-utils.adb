@@ -202,7 +202,9 @@ package body Netlists.Utils is
       N : Net;
    begin
       N := Get_Driver (I);
-      Disconnect (I);
+      if N /= No_Net then
+         Disconnect (I);
+      end if;
       return N;
    end Disconnect_And_Get;
 
