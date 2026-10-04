@@ -11,11 +11,10 @@ clean
 TESTS="
 repro1
 repro2
+repro3
 repro4
 repro5
 "
-
-# repro3
 
 for t in $TESTS; do
   #  Check the original, unsynthesized design against the testbench first.
