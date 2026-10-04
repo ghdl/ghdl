@@ -86,6 +86,13 @@ package Netlists.Folds is
                             Off, W : Width;
                             Loc : Location_Type) return Net;
 
+   --  Same as Build2_Extract but also try to skip the concat if I is the
+   --  output of a concat.
+   function Build3_Extract (Ctxt : Context_Acc;
+                            I : Net;
+                            Off, W : Width;
+                            Loc : Location_Type) return Net;
+
    --  Return A -> B  ==  !A || B
    function Build2_Imp (Ctxt : Context_Acc; A, B : Net; Loc : Location_Type)
                        return Net;

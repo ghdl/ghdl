@@ -321,6 +321,39 @@ package body Netlists.Folds is
       return Res;
    end Build2_Extract;
 
+   function Build3_Extract (Ctxt : Context_Acc;
+                            I : Net;
+                            Off, W : Width;
+                            Loc : Location_Type) return Net
+   is
+      Concat_Inst : Instance;
+   begin
+      Concat_Inst := Get_Net_Parent (I);
+      if Get_Id (Concat_Inst) in Concat_Module_Id then
+         --  Try to find if this is an extraction of a single input.
+         --  Linear scan.
+         --  TODO: dichotomy ?
+         declare
+            Ioff : Uns32;
+            Drv : Net;
+            Dw : Width;
+         begin
+            Ioff := Get_Width (I);
+            for K in Port_Idx loop
+               Drv := Get_Input_Net (Concat_Inst, K);
+               Dw := Get_Width (Drv);
+               Ioff := Ioff - Dw;
+               if Ioff = Off and then Dw = W then
+                  return Drv;
+               end if;
+               exit when Ioff <= Off;
+            end loop;
+         end;
+      end if;
+
+      return Build2_Extract (Ctxt, I, Off, W, Loc);
+   end Build3_Extract;
+
    function Build2_Imp (Ctxt : Context_Acc; A, B : Net; Loc : Location_Type)
                        return Net
    is

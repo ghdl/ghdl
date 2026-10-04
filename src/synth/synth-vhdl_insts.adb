@@ -1113,7 +1113,6 @@ package body Synth.Vhdl_Insts is
          Append (Concat, Get_Net (Ctxt, V));
       end loop;
 
-      --   3. connect
       Build (Ctxt, Concat, Get_Location (Assoc), N);
 
       Value_Offset_Tables.Free (Els);
@@ -1270,8 +1269,10 @@ package body Synth.Vhdl_Insts is
                  (Syn_Inst, Inst, Port, El_Typ, N, El_Off);
             else
                if N /= No_Net then
+                  --  Use Build3_Extract to fold extract of concat, in order
+                  --  to directly connect to the port (for inout).
                   Connect (Get_Input (Inst, Port),
-                           Build2_Extract (Get_Build (Syn_Inst), N,
+                           Build3_Extract (Get_Build (Syn_Inst), N,
                                            El_Off,
                                            El_Typ.W,
                                            Get_Location (Inst)));
