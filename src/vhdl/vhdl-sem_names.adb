@@ -894,7 +894,8 @@ package body Vhdl.Sem_Names is
       Set_Slice_Subtype (Name, Expr_Type);
       Set_Index_Constraint_Flag (Expr_Type, True);
       Set_Constraint_State (Expr_Type, Fully_Constrained);
-      if Is_Signal_Object (Prefix) then
+      if Is_Signal_Object (Prefix, True) then
+         --  Signal or mode view.
          Sem_Types.Set_Type_Has_Signal (Expr_Type);
       end if;
    end Finish_Sem_Slice_Name;
