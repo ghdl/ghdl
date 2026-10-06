@@ -958,6 +958,12 @@ package body Synth.Vhdl_Decls is
                         Smod := Get_Module (Sinst);
                      end if;
 
+                     if Get_Id (Smod) in Concat_Module_Id then
+                        Snk := Get_First_Sink (Get_Output (Sinst, 0));
+                        Sinst := Get_Input_Parent (Snk);
+                        Smod := Get_Module (Sinst);
+                     end if;
+
                      if Get_Inout_Flag (Smod, Get_Input_Idx (Snk)) then
                         --  The net is connected to an inout port.
                         return;

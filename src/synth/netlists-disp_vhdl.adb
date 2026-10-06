@@ -31,6 +31,9 @@ package body Netlists.Disp_Vhdl is
    Flag_Merge_Lit : constant Boolean := True;
    Flag_Merge_Edge : constant Boolean := True;
 
+   procedure Disp_Extract (Inst : Instance);
+   procedure Disp_Slice (Off : Uns32; Wd : Width);
+
    procedure Put_Type (W : Width) is
    begin
       if W = 1 then
@@ -198,8 +201,6 @@ package body Netlists.Disp_Vhdl is
       end if;
    end Disp_X_Lit;
 
-   procedure Disp_Extract (Inst : Instance);
-
    --  If FORCE_ARR is set, use double quotes instead of quotes with width is
    --  1.  This is used for signed/unsigned type qualification.
    procedure Disp_Constant_Inline
@@ -272,17 +273,49 @@ package body Netlists.Disp_Vhdl is
       Wr (Bchar (Zx * 2 + Val));
    end Disp_Const_Bit;
 
+   procedure Disp_Instance_Input_Concat (Inp_Name : Sname; Conc : Instance)
+   is
+      Off : Uns32;
+      W : Width;
+      Inp : Net;
+      Drv_Inst : Instance;
+   begin
+      Off := Get_Width (Get_Output (Conc, 0));
+      for I in Port_Nbr loop
+         Inp := Get_Input_Net (Conc, I);
+         W := Get_Width (Inp);
+         Off := Off - W;
+         Wr ("    ");
+         Put_Interface_Name (Inp_Name, Language_Vhdl);
+         Disp_Slice (Off, W);
+         Wr (" => ");
+         Drv_Inst := Get_Net_Parent (Inp);
+         case Get_Id (Drv_Inst) is
+            when Constant_Module_Id =>
+               Disp_Constant_Inline (Drv_Inst);
+            when Id_Extract =>
+               Disp_Extract (Drv_Inst);
+            when others =>
+               Disp_Net_Name (Inp);
+         end case;
+         exit when Off = 0;
+         Wr_Line (",");
+      end loop;
+   end Disp_Instance_Input_Concat;
+
    procedure Disp_Instance_Input_Assoc (Inp : Input; Inp_Name : Sname)
    is
       Drv : constant Net := Get_Driver (Inp);
       Drv_Inst : Instance;
    begin
---      if Drv /= No_Net then
---         Drv_Inst := Get_Net_Parent (Drv);
---         if Get_Id (Drv_Inst) in Concat_Module_Id then
---            Disp_Instance_Input_Concat (Inp_Name, Drv_Inst);
---         end if;
---      end if;
+      if Drv /= No_Net then
+         Drv_Inst := Get_Net_Parent (Drv);
+         if Get_Id (Drv_Inst) in Concat_Module_Id then
+            Disp_Instance_Input_Concat (Inp_Name, Drv_Inst);
+            return;
+         end if;
+      end if;
+      Wr ("    ");
       if Inp_Name /= No_Sname then
          Put_Interface_Name (Inp_Name, Language_Vhdl);
          Wr (" => ");
@@ -378,7 +411,6 @@ package body Netlists.Disp_Vhdl is
             else
                Wr_Line (",");
             end if;
-            Wr ("    ");
             if Idx < Max_Inp_Idx then
                Name := Get_Input_Desc (Imod, Idx).Name;
             else
@@ -692,6 +724,18 @@ package body Netlists.Disp_Vhdl is
       end loop;
    end Disp_Template;
 
+   procedure Disp_Slice (Off : Uns32; Wd : Width) is
+   begin
+      if Wd > 1 then
+         Disp_Template (" (\n0 downto \n1)", No_Instance,
+           (0 => Off + Wd - 1, 1 => Off));
+      elsif Wd = 1 then
+         Disp_Template (" (\n0)", No_Instance, (0 => Off));
+      else
+         Disp_Template (" (-1 downto 0)", No_Instance);
+      end if;
+   end Disp_Slice;
+
    procedure Disp_Extract (Inst : Instance)
    is
       O : constant Net := Get_Output (Inst, 0);
@@ -703,14 +747,7 @@ package body Netlists.Disp_Vhdl is
       if Get_Width (I) > 1 then
          --  If width is 1, the signal is declared as a scalar and
          --  therefore cannot be indexed.
-         if Wd > 1 then
-            Disp_Template (" (\n0 downto \n1)", Inst,
-                           (0 => Off + Wd - 1, 1 => Off));
-         elsif Wd = 1 then
-            Disp_Template (" (\n0)", Inst, (0 => Off));
-         else
-            Disp_Template (" (-1 downto 0)", Inst);
-         end if;
+         Disp_Slice (Off, Wd);
       end if;
    end Disp_Extract;
 
