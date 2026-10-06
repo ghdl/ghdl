@@ -272,6 +272,34 @@ package body Netlists.Disp_Vhdl is
       Wr (Bchar (Zx * 2 + Val));
    end Disp_Const_Bit;
 
+   procedure Disp_Instance_Input_Assoc (Inp : Input; Inp_Name : Sname)
+   is
+      Drv : constant Net := Get_Driver (Inp);
+      Drv_Inst : Instance;
+   begin
+--      if Drv /= No_Net then
+--         Drv_Inst := Get_Net_Parent (Drv);
+--         if Get_Id (Drv_Inst) in Concat_Module_Id then
+--            Disp_Instance_Input_Concat (Inp_Name, Drv_Inst);
+--         end if;
+--      end if;
+      if Inp_Name /= No_Sname then
+         Put_Interface_Name (Inp_Name, Language_Vhdl);
+         Wr (" => ");
+      end if;
+
+      if Drv = No_Net then
+         Wr ("open");
+      else
+         Drv_Inst := Get_Net_Parent (Drv);
+         if Get_Id (Drv_Inst) in Constant_Module_Id then
+            Disp_Constant_Inline (Drv_Inst);
+         else
+            Disp_Net_Name (Drv);
+         end if;
+      end if;
+   end Disp_Instance_Input_Assoc;
+
    procedure Disp_Instance_Gate (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
@@ -283,8 +311,6 @@ package body Netlists.Disp_Vhdl is
       Name : Sname;
       First : Boolean;
       Param : Param_Desc;
-      Drv : Net;
-      Drv_Inst : Instance;
    begin
       Wr ("  ");
       Put_Instance_Name (Get_Instance_Name (Inst), Language_Vhdl);
@@ -354,22 +380,12 @@ package body Netlists.Disp_Vhdl is
             end if;
             Wr ("    ");
             if Idx < Max_Inp_Idx then
-               Put_Interface_Name
-                 (Get_Input_Desc (Imod, Idx).Name, Language_Vhdl);
-               Idx := Idx + 1;
-               Wr (" => ");
-            end if;
-            Drv := Get_Driver (I);
-            if Drv = No_Net then
-               Wr ("open");
+               Name := Get_Input_Desc (Imod, Idx).Name;
             else
-               Drv_Inst := Get_Net_Parent (Drv);
-               if Get_Id (Drv_Inst) in Constant_Module_Id then
-                  Disp_Constant_Inline (Drv_Inst);
-               else
-                  Disp_Net_Name (Drv);
-               end if;
+               Name := No_Sname;
             end if;
+            Disp_Instance_Input_Assoc (I, Name);
+            Idx := Idx + 1;
          end loop;
          --  Outputs
          Idx := 0;
