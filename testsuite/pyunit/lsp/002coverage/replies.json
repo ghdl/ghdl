@@ -21,6 +21,10 @@
         "documentFormattingProvider": false,
         "documentRangeFormattingProvider": true,
         "renameProvider": false
+      },
+      "serverInfo": {
+        "name": "ghdl-ls",
+        "version": "7.0.0-dev"
       }
     }
   },
@@ -134,23 +138,7 @@
             }
           }
         },
-        "containerName": {
-          "kind": 2,
-          "name": "behav",
-          "location": {
-            "uri": "file://@ROOT@/files/adder_tb.vhdl",
-            "range": {
-              "start": {
-                "line": 5,
-                "character": 0
-              },
-              "end": {
-                "line": 57,
-                "character": 0
-              }
-            }
-          }
-        }
+        "containerName": "behav"
       }
     ]
   },
