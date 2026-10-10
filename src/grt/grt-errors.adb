@@ -63,6 +63,12 @@ package body Grt.Errors is
       Internal_Error ("exit_simulation");
    end Exit_Simulation;
 
+   procedure Out_Of_Memory is
+   begin
+      Error ("out of memory -- the design requires more memory than is "
+               & "available on this machine");
+   end Out_Of_Memory;
+
    procedure Fatal_Error is
    begin
       Maybe_Return_Via_Longjump (-1);

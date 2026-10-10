@@ -65,6 +65,10 @@ package body Trans_Link is
            Grt.Lib.Ghdl_Malloc'Address);
       Def (Trans_Decls.Ghdl_Malloc0,
            Grt.Lib.Ghdl_Malloc0'Address);
+      Def (Trans_Decls.Ghdl_Index_Mul,
+           Grt.Lib.Ghdl_Index_Mul'Address);
+      Def (Trans_Decls.Ghdl_Index_Add,
+           Grt.Lib.Ghdl_Index_Add'Address);
       Def (Trans_Decls.Ghdl_Free_Mem,
            Grt.Lib.Ghdl_Free_Mem'Address);
 

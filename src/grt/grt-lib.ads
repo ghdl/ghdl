@@ -108,6 +108,17 @@ package Grt.Lib is
    --  Allocate and clear SIZE bytes.
    function Ghdl_Malloc0 (Size : Ghdl_Index_Type) return Ghdl_Ptr;
 
+   --  Multiply and add sizes, reporting an overflow instead of wrapping.
+   --  A size is held on 32 bits, so an object of 4 GB or more cannot be
+   --  described: the computation wraps, elaboration then asks for a block
+   --  far too small and writes past it, which silently corrupts the heap.
+   --  The generated code uses these for the size arithmetic it cannot check
+   --  itself.  See #2052.
+   function Ghdl_Index_Mul (L : Ghdl_Index_Type; R : Ghdl_Index_Type)
+                           return Ghdl_Index_Type;
+   function Ghdl_Index_Add (L : Ghdl_Index_Type; R : Ghdl_Index_Type)
+                           return Ghdl_Index_Type;
+
    procedure Ghdl_Free_Mem (Ptr : Ghdl_Ptr);
 
    type Ghdl_Std_Ulogic_Boolean_Array_Type is array (Ghdl_E8 range 0 .. 8)
@@ -168,6 +179,8 @@ private
 
    pragma Export (C, Ghdl_Malloc, "__ghdl_malloc");
    pragma Export (C, Ghdl_Malloc0, "__ghdl_malloc0");
+   pragma Export (C, Ghdl_Index_Mul, "__ghdl_index_mul");
+   pragma Export (C, Ghdl_Index_Add, "__ghdl_index_add");
    pragma Export (C, Ghdl_Free_Mem, "__ghdl_free_mem");
 
    pragma Export (C, Ghdl_I32_Exp_32, "__ghdl_i32_exp_32");

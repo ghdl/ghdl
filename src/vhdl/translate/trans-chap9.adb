@@ -2816,8 +2816,7 @@ package body Trans.Chap9 is
         (New_Obj (Var_Inst),
          Gen_Alloc
            (Alloc_System,
-            New_Dyadic_Op (ON_Mul_Ov,
-                           New_Value_Selected_Acc_Value
+            Gen_Index_Mul (New_Value_Selected_Acc_Value
                              (New_Obj (Range_Ptr),
                               Iter_Type_Info.B.Range_Length),
                            New_Lit (Get_Scope_Size (Info.Block_Scope))),

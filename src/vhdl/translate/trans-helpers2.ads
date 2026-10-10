@@ -33,6 +33,12 @@ package Trans.Helpers2 is
 
    procedure Gen_Memcpy (Dest : O_Enode; Src : O_Enode; Length : O_Enode);
 
+   --  Size arithmetic that reports an overflow instead of wrapping: sizes
+   --  are held on 32 bits, and a wrapped size makes elaboration allocate a
+   --  block far too small and then write past it.  See #2052.
+   function Gen_Index_Mul (L : O_Enode; R : O_Enode) return O_Enode;
+   function Gen_Index_Add (L : O_Enode; R : O_Enode) return O_Enode;
+
    --  Allocate SIZE bytes aligned on the biggest alignment and return a
    --  pointer of type PTYPE.
    function Gen_Alloc
