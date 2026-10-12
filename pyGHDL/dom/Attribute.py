@@ -153,8 +153,11 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
         """
         Translates the IIR node of the attribute declaration to an :class:`AttributeSpecification`.
 
-        :param attributeNode: The IIR node of the attribute declaration.
-        :returns:             The translated attribute declaration.
+        :param attributeNode:                The IIR node of the attribute declaration.
+        :returns:                            The translated attribute declaration.
+        :raises DOMException:                If a name's kind or the entity class is not handled.
+        :raises UnhandledExceptionException: If a name is a signature, which is not supported yet, and no
+                                             :class:`~pyTooling.Warning.WarningCollector` is active.
         """
         attributeDesignator = nodes.Get_Attribute_Designator(attributeNode)
         attributeName = GetName(attributeDesignator)
