@@ -310,9 +310,9 @@ class Document(VHDLModel_Document):
         """
         Translates the design units of the parsed IIR tree to :mod:`pyGHDL.dom` objects.
 
-        :raises DOMException:                If a design unit's kind is not handled.
-        :raises UnhandledExceptionException: If a construct is not supported yet and no
-                                             :class:`~pyTooling.Warning.WarningCollector` is active.
+        :raises DOMException:            If a design unit's kind is not handled.
+        :raises UnhandledExceptionError: If a construct is not supported yet and no
+                                         :class:`~pyTooling.Warning.WarningCollector` is active.
         """
         firstUnit = nodes.Get_First_Design_Unit(self.__ghdlFile)
         self._documentation = GetDocumentationOfNode(firstUnit)

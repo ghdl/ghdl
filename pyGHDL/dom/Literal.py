@@ -380,11 +380,11 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
         A bit string literal's value is the literal as written in the source, without length, signedness, base
         specifier and delimiters (``x"A_5"`` has the value ``A_5``).
 
-        :param literalNode:                  The IIR node of the literal.
-        :returns:                            The translated literal.
-        :raises DOMException:                If a bit string literal has no source text.
-        :raises UnhandledExceptionException: If the literal's base is not handled and no
-                                             :class:`~pyTooling.Warning.WarningCollector` is active.
+        :param literalNode:              The IIR node of the literal.
+        :returns:                        The translated literal.
+        :raises DOMException:            If a bit string literal has no source text.
+        :raises UnhandledExceptionError: If the literal's base is not handled and no
+                                         :class:`~pyTooling.Warning.WarningCollector` is active.
         """
         base = nodes.Get_Bit_String_Base(literalNode)
         isSigned = nodes.Get_Has_Signed(literalNode) if nodes.Get_Has_Sign(literalNode) else None

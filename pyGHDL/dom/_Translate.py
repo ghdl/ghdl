@@ -363,11 +363,11 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
     GHDL creates an anonymous type declaration for the type definitions that have no name of their own -
     an integer or physical type behind a subtype, for instance.
 
-    :param node:                         The IIR node of the anonymous type declaration.
-    :returns:                            The translated type.
-    :raises DOMException:                If the type definition's kind is not handled.
-    :raises UnhandledExceptionException: If the type definition is an array subtype definition, which is not supported
-                                         yet, and no :class:`~pyTooling.Warning.WarningCollector` is active.
+    :param node:                     The IIR node of the anonymous type declaration.
+    :returns:                        The translated type.
+    :raises DOMException:            If the type definition's kind is not handled.
+    :raises UnhandledExceptionError: If the type definition is an array subtype definition, which is not supported yet,
+                                     and no :class:`~pyTooling.Warning.WarningCollector` is active.
     """
     typeName = GetNameOfNode(node)
     documentation = GetDocumentationOfNode(node)
@@ -1020,14 +1020,13 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
     GHDL splits a declaration naming several identifiers (``signal a, b : bit;``) into one node per
     identifier. They are collected here and yielded as a single object carrying all identifiers.
 
-    :param nodeChain:                    The IIR node starting the chain of declarations.
-    :param entity:                       The kind of declarative region the chain belongs to. Used in exception
-                                         messages.
-    :param name:                         The name of that declarative region. Used in exception messages.
-    :returns:                            Generator yielding the translated declared items, in source order.
-    :raises DOMException:                If a declaration's kind is not handled.
-    :raises UnhandledExceptionException: If a declaration's kind is not supported yet (e.g. a group or nature
-                                         declaration) and no :class:`~pyTooling.Warning.WarningCollector` is active.
+    :param nodeChain:                The IIR node starting the chain of declarations.
+    :param entity:                   The kind of declarative region the chain belongs to. Used in exception messages.
+    :param name:                     The name of that declarative region. Used in exception messages.
+    :returns:                        Generator yielding the translated declared items, in source order.
+    :raises DOMException:            If a declaration's kind is not handled.
+    :raises UnhandledExceptionError: If a declaration's kind is not supported yet (e.g. a group or nature declaration)
+                                     and no :class:`~pyTooling.Warning.WarningCollector` is active.
     """
     furtherIdentifiers = []
     item = nodeChain
@@ -1199,13 +1198,13 @@ def GetConcurrentStatementsFromChainedNodes(
     """
     Translates a chain of concurrent statements to the matching :mod:`pyGHDL.dom.Concurrent` objects.
 
-    :param nodeChain:                    The IIR node starting the chain of concurrent statements.
-    :param entity:                       The kind of statement region the chain belongs to. Used in exception messages.
-    :param name:                         The name of that statement region. Used in exception messages.
-    :returns:                            Generator yielding the translated statements, in source order.
-    :raises DOMException:                If a statement's kind is not handled.
-    :raises UnhandledExceptionException: If a statement is a simple simultaneous statement, which is not supported yet,
-                                         and no :class:`~pyTooling.Warning.WarningCollector` is active.
+    :param nodeChain:                The IIR node starting the chain of concurrent statements.
+    :param entity:                   The kind of statement region the chain belongs to. Used in exception messages.
+    :param name:                     The name of that statement region. Used in exception messages.
+    :returns:                        Generator yielding the translated statements, in source order.
+    :raises DOMException:            If a statement's kind is not handled.
+    :raises UnhandledExceptionError: If a statement is a simple simultaneous statement, which is not supported yet, and
+                                     no :class:`~pyTooling.Warning.WarningCollector` is active.
     """
     for statement in utils.chain_iter(nodeChain):
         label = GetLabelOfNode(statement)
