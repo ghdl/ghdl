@@ -37,7 +37,6 @@ This module implements derived literal classes from :mod:`pyVHDLModel.Expression
 from typing import Union, Optional as Nullable
 
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
-from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel.Expression import NullLiteral as VHDLModel_NullLiteral
 from pyVHDLModel.Expression import EnumerationLiteral as VHDLModel_EnumerationLiteral
@@ -380,11 +379,10 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
         A bit string literal's value is the literal as written in the source, without length, signedness, base
         specifier and delimiters (``x"A_5"`` has the value ``A_5``).
 
-        :param literalNode:              The IIR node of the literal.
-        :returns:                        The translated literal.
-        :raises DOMException:            If a bit string literal has no source text.
-        :raises UnhandledExceptionError: If the literal's base is not handled and no
-                                         :class:`~pyTooling.Warning.WarningCollector` is active.
+        :param literalNode:   The IIR node of the literal.
+        :returns:             The translated literal.
+        :raises DOMException: If a bit string literal has no source text.
+        :raises DOMException: If the literal's base is not handled.
         """
         base = nodes.Get_Bit_String_Base(literalNode)
         isSigned = nodes.Get_Has_Signed(literalNode) if nodes.Get_Has_Sign(literalNode) else None
@@ -440,4 +438,5 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
         elif base is nodes.NumberBaseType.Base_16:
             return HexadecimalBitStringLiteral(literalNode, value, length, isSigned)
         else:
-            WarningCollector.Raise(NotImplementedError("Bit String Literal not supported yet"))
+            position = Position.parse(literalNode)
+            raise DOMException(f"Unknown bit string base '{base.name}' of literal at {position}.")

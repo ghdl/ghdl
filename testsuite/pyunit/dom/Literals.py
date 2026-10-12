@@ -32,13 +32,17 @@
 # ============================================================================
 from pathlib import Path
 from textwrap import dedent
+from types import SimpleNamespace
 from typing import TypeVar, Dict
 from unittest import TestCase
+from unittest.mock import patch
 
 from pyTooling.Common import firstValue
 
 from pyVHDLModel.Base import ExpressionUnion
 
+from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom import DOMException
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.Object import Constant
 from pyGHDL.dom.Literal import IntegerLiteral
@@ -213,3 +217,16 @@ class Literals(TestCase):
         self.assertIsInstance(default, HexadecimalBitStringLiteral)
         self.assertEqual("A_5", default.Value)
         self.assertEqual('x"A_5"', str(default))
+
+    def test_StringLiteral_UnknownBase(self):
+        """A literal with a base not handled by ``StringLiteral.parse`` raises :exc:`DOMException`."""
+        _filename: Path = self._root / "{className}_UnknownBase.vhdl".format(className=self.__class__.__name__)
+        sourceCode = self._packageTemplate.format(code='constant c0 : string := "F";')
+
+        document = Document(_filename, sourceCode, dontTranslate=True)
+        self._design.Documents.append(document)
+
+        unknownBase = SimpleNamespace(name="Base_Unknown")
+        with patch.object(nodes, "Get_Bit_String_Base", return_value=unknownBase):
+            with self.assertRaises(DOMException):
+                document.translate()
