@@ -103,17 +103,18 @@ package body Netlists.Inference is
                                 Prev_Val : Net;
                                 Off : Uns32;
                                 Res : out Instance;
+                                Res_Off : out Uns32;
                                 Dist : out Integer)
    is
       Inst : Instance;
-      Noff : Uns32;
       Nval : Net;
    begin
       Inst := Get_Net_Parent (Val);
-      Noff := Off;
       Nval := Val;
 
-      pragma Unreferenced (Off, Val);
+      pragma Unreferenced (Val);
+
+      Res_Off := Off;
 
       --  Skip extract (if any).
       if Get_Id (Inst) = Id_Extract then
@@ -121,13 +122,17 @@ package body Netlists.Inference is
             E_Src : constant Net := Get_Input_Net (Inst, 0);
             E_Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
             E_W : constant Width := Get_Width (E_Src);
+            V_W : constant Width := Get_Width (Nval);
          begin
-            if E_Off = Noff
-              and then E_W = Get_Width (Prev_Val)
+            --  Must contain enough bits for Val.
+            --  (but not wider than Prev_Val)
+            if E_Off <= Off
+              and then E_Off + E_W >= Off + V_W
+              and then E_W <= Get_Width (Prev_Val)
             then
                Nval := E_Src;
                Inst := Get_Net_Parent (Nval);
-               Noff := 0;
+               Res_Off := Off - E_Off;
             end if;
          end;
       end if;
@@ -135,6 +140,7 @@ package body Netlists.Inference is
       if Get_Id (Inst) = Id_Mux2 then
          declare
             Res0, Res1 : Instance;
+            Res_Off0, Res_Off1 : Uns32;
             Dist0, Dist1 : Integer;
          begin
             if Has_Clock (Get_Driver (Get_Mux2_Sel (Inst))) then
@@ -142,16 +148,17 @@ package body Netlists.Inference is
                Dist := 1;
             else
                Find_Longest_Loop
-                 (Get_Driver (Get_Mux2_I0 (Inst)), Prev_Val, Noff,
-                  Res0, Dist0);
+                 (Get_Driver (Get_Mux2_I0 (Inst)), Prev_Val, Off,
+                  Res0, Res_Off0, Dist0);
                Find_Longest_Loop
-                 (Get_Driver (Get_Mux2_I1 (Inst)), Prev_Val, Noff,
-                  Res1, Dist1);
+                 (Get_Driver (Get_Mux2_I1 (Inst)), Prev_Val, Off,
+                  Res1, Res_Off1, Dist1);
                --  Input1 has an higher priority than input0 in case
                --  the selector is a clock.
                --  FIXME: improve algorithm.
                if Dist1 > Dist0 then
                   Dist := Dist1 + 1;
+                  Res_Off := Res_Off1;
                   if Dist1 > 0 then
                      Res := Res1;
                   else
@@ -159,6 +166,7 @@ package body Netlists.Inference is
                   end if;
                elsif Dist0 >= 0 then
                   Dist := Dist0 + 1;
+                  Res_Off := Res_Off0;
                   if Dist0 > 0 then
                      Res := Res0;
                   else
@@ -171,7 +179,7 @@ package body Netlists.Inference is
                end if;
             end if;
          end;
-      elsif Nval = Prev_Val and then Noff = 0 then
+      elsif Nval = Prev_Val and then Res_Off = 0 then
          --  Found it!
          Res := No_Instance;
          Dist := 0;
@@ -344,6 +352,8 @@ package body Netlists.Inference is
    begin
       case Get_Id (Inst) is
          when Id_Mux2 =>
+            --  There is: extract(mux2(sel, A, B), off)
+            --  Create: mux2(sel, extract(A, off), extract(B, off))
             declare
                Res : Net;
                I0, I1 : Net;
@@ -372,6 +382,7 @@ package body Netlists.Inference is
                             Off : Uns32;
                             W : Width;
                             Last_Mux : Instance;
+                            Off_Mux : Uns32;
                             Els : out Net;
                             Data : out Net)
    is
@@ -388,7 +399,7 @@ package body Netlists.Inference is
       Els_Off  : Uns32;
    begin
       Els := Get_Driver (I0);
-      if Is_Prev_FF_Value (Els, Prev_Val, Off) then
+      if Is_Prev_FF_Value (Els, Prev_Val, Off_Mux) then
          --  The 'else' part of the mux2 is the logical loop.
          Els := No_Net;
       else
@@ -419,7 +430,7 @@ package body Netlists.Inference is
             --  1. Remove the mux that creates the loop (will be replaced by
             --     the dff).
             Infere_FF_Mux
-              (Ctxt, Prev_Val, Off, W, Els_Inst, Els_Els, Els_Data);
+              (Ctxt, Prev_Val, Off, W, Els_Inst, Els_Off, Els_Els, Els_Data);
 
             Els := Infere_FF_Create (Ctxt, Prev_Val, Off, Els_Inst, No_Net,
                                      No_Net, No_Net, Els_Data, Els_Els,
@@ -449,6 +460,7 @@ package body Netlists.Inference is
    --  CLOCK_MUX is the mux2 whose input 0 is the loop (so PREV_VAL)
    --  and clock for selector.  It is the last mux of the chain.
    --  There can be previous mux2 for asynchronous set/reset.
+   --  OFF_MUX is the offset used for the output of the mux.
    --
    --  The selector of CLOCK_MUX is divided into CLK and CLK_ENABLE.
    --  CLK is a posedge or a negedge, while CLK_ENABLE, if set, is a
@@ -464,6 +476,7 @@ package body Netlists.Inference is
                        Prev_Val : Net;
                        Off : Uns32;
                        Clock_Mux : Instance;
+                       Off_Mux : Uns32;
                        Clk : Net;
                        Clk_Enable : Net;
                        Loc : Location_Type) return Net
@@ -485,9 +498,9 @@ package body Netlists.Inference is
    begin
       --  Create and return the DFF.
 
-      --  1. Remove the mux CLOCK_MUX that creates the loop, and create
-      --     the DFF.
-      Infere_FF_Mux (Ctxt, Prev_Val, Off, W, Clock_Mux, Els, Data);
+      --  1. Remove the mux CLOCK_MUX that creates the loop.
+      --     Check the ELS branch (for multi-port DFF/RAM)
+      Infere_FF_Mux (Ctxt, Prev_Val, Off, W, Clock_Mux, Off_Mux, Els, Data);
 
       --  If the signal declaration has an initial value, get it.
       Sig := Get_Net_Parent (Prev_Val);
@@ -526,6 +539,7 @@ package body Netlists.Inference is
          Snk : Input;
          Loop_Off, Prev_Off : Uns32;
       begin
+         --  Start from the end (mux2 with clock).
          Loop_Off := Off;
          Prev_Mux := Clock_Mux;
 
@@ -544,6 +558,7 @@ package body Netlists.Inference is
                Mux := Get_Input_Parent (Snk);
                case Get_Id (Mux) is
                   when Id_Nop | Id_Mux2 =>
+                     --  End of the loop has been reached.
                      exit;
                   when Id_Extract =>
                      if Get_Param_Uns32 (Mux, 0) = Loop_Off then
@@ -1058,6 +1073,7 @@ package body Netlists.Inference is
       pragma Assert (Val /= No_Net);
       pragma Assert (Prev_Val /= No_Net);
       First_Mux, Last_Mux : Instance;
+      Last_Off : Uns32;
       Len : Integer;
       Sel : Input;
       Clk : Net;
@@ -1105,7 +1121,7 @@ package body Netlists.Inference is
          return Val;
       end if;
 
-      Find_Longest_Loop (Val, Prev_Val, Off, Last_Mux, Len);
+      Find_Longest_Loop (Val, Prev_Val, Off, Last_Mux, Last_Off, Len);
       if Len <= 0 then
          --  No logical loop or self assignment.
          return Val;
@@ -1116,6 +1132,7 @@ package body Netlists.Inference is
          pragma Assert (Get_Param_Uns32 (First_Mux, 0) = Off);
          Val2 := Get_Input_Net (First_Mux, 0);
          Push_Extract (Ctxt, Val2, Off, Last_Mux, Get_Width (Val));
+         Last_Off := Off;
       else
          Val2 := Val;
       end if;
@@ -1134,7 +1151,7 @@ package body Netlists.Inference is
          First_Mux := Get_Net_Parent (Val2);
          pragma Assert (Get_Id (First_Mux) = Id_Mux2);
 
-         Res := Infere_FF (Ctxt, Val2, Prev_Val, Off, Last_Mux,
+         Res := Infere_FF (Ctxt, Val2, Prev_Val, Off, Last_Mux, Last_Off,
                            Clk, Enable, Loc);
       end if;
 
