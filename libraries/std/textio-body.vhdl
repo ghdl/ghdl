@@ -751,6 +751,7 @@ package body textio is
   is
     variable val : integer;
     variable d : natural;
+    variable is_neg : boolean := false;
 
     type state_t is (leading, sign, digits);
     variable cur_state : state_t := leading;
@@ -768,6 +769,7 @@ package body textio is
 	      cur_state := sign;
 	    when '-' =>
 	      val := -1;
+	      is_neg := true;
 	      cur_state := sign;
 	    when '0' to '9' =>
 	      val := char_to_nat (l(i));
@@ -790,7 +792,7 @@ package body textio is
 	    when '0' to '9' =>
               d := char_to_nat (l(i));
 	      val := val * 10;
-              if val < 0 then
+              if is_neg then
                 val := val - d;
               else
                 val := val + d;
