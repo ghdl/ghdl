@@ -583,6 +583,9 @@ package body Netlists.Dump is
                   Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
                begin
                   Disp_Driver (Get_Input_Net (Inst, 0), Indent);
+                  Wr ("{extr:i");
+                  Wr_Trim (Instance'Image (Inst));
+                  Wr ('}');
                   Wr ('[');
                   if W > 1 then
                      Wr_Uns32 (Off + W - 1);
