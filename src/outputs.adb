@@ -42,6 +42,7 @@ package body Outputs is
       if Output /= NULL_Stream and Output /= stdout then
          fclose (Output);
       end if;
+      Output := NULL_Stream;
    end Close;
 
    procedure Wr (S : String)

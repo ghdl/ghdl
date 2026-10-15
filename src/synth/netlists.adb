@@ -1510,56 +1510,47 @@ package body Netlists is
       Unused : Natural;
       Nbr_Modules : Module_Counter_Type := (others => 0);
    begin
-      Put_Line_Err ("Statistics for netlists:");
-      Put_Line_Err
-        (" snames:    " & Sname'Image (Snames_Table.Last));
-      Put_Line_Err
-        (" modules:   " & Module'Image (Modules_Table.Last));
+      Put_Line ("Statistics for netlists:");
+      Put_Line (" snames:    " & Sname'Image (Snames_Table.Last));
+      Put_Line (" modules:   " & Module'Image (Modules_Table.Last));
 
-      Put_Err
-        (" instances: " & Instance'Image (Instances_Table.Last));
+      Put (" instances: " & Instance'Image (Instances_Table.Last));
       Unused := 0;
       for I in No_Instance + 1 .. Instances_Table.Last loop
          if Get_Module (I) = Free_Module then
             Unused := Unused + 1;
          end if;
       end loop;
-      Put_Line_Err
-        (" (free:" & Natural'Image (Unused) & ')');
+      Put_Line (" (free:" & Natural'Image (Unused) & ')');
 
-      Put_Err
-        (" nets:      " & Net'Image (Nets_Table.Last));
+      Put (" nets:      " & Net'Image (Nets_Table.Last));
       Unused := 0;
       for I in No_Net + 1 .. Nets_Table.Last loop
          if Get_Net_Parent (I) = No_Instance then
             Unused := Unused + 1;
          end if;
       end loop;
-      Put_Line_Err
-        (" (free:" & Natural'Image (Unused) & ')');
+      Put_Line (" (free:" & Natural'Image (Unused) & ')');
 
-      Put_Err
-        (" inputs:    " & Input'Image (Inputs_Table.Last));
+      Put (" inputs:    " & Input'Image (Inputs_Table.Last));
       Unused := 0;
       for I in No_Input + 1 .. Inputs_Table.Last loop
          if Get_Input_Parent (I) = No_Instance then
             Unused := Unused + 1;
          end if;
       end loop;
-      Put_Line_Err
-        (" (free:" & Natural'Image (Unused) & ')');
+      Put_Line (" (free:" & Natural'Image (Unused) & ')');
       for I in Free_Inputs'Range loop
          Unused := Count_Free_Inputs (Free_Inputs (I));
          if Unused /= 0 then
-            Put_Line_Err ("  free" & Port_Nbr'Image (I) & " inputs:"
-                          & Natural'Image (Unused)
-                          & " *" & Port_Nbr'Image (I)
-                          & " =" & Natural'Image (Unused * Natural (I)));
+            Put_Line ("  free" & Port_Nbr'Image (I) & " inputs:"
+                      & Natural'Image (Unused)
+                      & " *" & Port_Nbr'Image (I)
+                      & " =" & Natural'Image (Unused * Natural (I)));
          end if;
       end loop;
 
-      Put_Line_Err
-        (" params:    " & Param_Idx'Image (Params_Table.Last));
+      Put_Line (" params:    " & Param_Idx'Image (Params_Table.Last));
 
       for I in No_Instance + 1 .. Instances_Table.Last loop
          declare
@@ -1574,9 +1565,9 @@ package body Netlists is
       for J in 1 .. 2 loop
          case J is
             when 1 =>
-               Put_Line_Err (" Number of instances (per module):");
+               Put_Line (" Number of instances (per module):");
             when 2 =>
-               Put_Line_Err (" Number of freed instances (per module):");
+               Put_Line (" Number of freed instances (per module):");
          end case;
          for I in Module_Counter_Type'Range loop
             case J is
@@ -1593,13 +1584,13 @@ package body Netlists is
                   case Get_Sname_Kind (Name) is
                      when Sname_User
                         | Sname_System =>
-                        Put_Err
+                        Put
                           ("  " & Name_Table.Image (Get_Sname_Suffix (Name)));
                      when others =>
-                        Put_Err
+                        Put
                           ("  module " & Module_Id'Image (Get_Id (I)));
                   end case;
-                  Put_Line_Err (":" & Natural'Image (Unused));
+                  Put_Line (":" & Natural'Image (Unused));
                end;
             end if;
          end loop;
