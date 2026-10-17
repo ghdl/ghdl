@@ -236,9 +236,7 @@ jobs:
         run: |
           cd install
           ls -lAh
-          if [ '${{ inputs.runtime }}' == 'mingw64' ]; then
-            MSYS2_PREFIX=mingw64/mingw-w64-x86_64
-          elif [ '${{ inputs.runtime }}' == 'ucrt64' ]; then
+          if [ '${{ inputs.runtime }}' == 'ucrt64' ]; then
             MSYS2_PREFIX=ucrt64/mingw-w64-ucrt-x86_64
           fi
           echo "${MSYS2_PREFIX}-gcc-ada" >> ${{ inputs.runtime }}.requirements
@@ -311,7 +309,7 @@ jobs:
           retention-days: 7
 
       - name: ✂ Remove binaries, libraries and other files for libghdl
-        if: (inputs.runtime == 'mingw64' || inputs.runtime == 'ucrt64') && inputs.backend == 'mcode'
+        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
         run: |
           rm -Rf ./install/bin
           rm -Rf ./install/include
@@ -323,13 +321,13 @@ jobs:
           rm -Rf ./install/*.requirements
 
       - name: List './install' directory as tree
-        if: (inputs.runtime == 'mingw64' || inputs.runtime == 'ucrt64') && inputs.backend == 'mcode'
+        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
         run: |
           tree ./install
           ldd ./install/lib/*.dll
 
       - name: Copy and check dependency (MSYS2)
-        if: (inputs.runtime == 'mingw64' || inputs.runtime == 'ucrt64') && inputs.backend == 'mcode'
+        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
         run: |
           GetMinGWLibraries() {
             ldd "$1" | while IFS="" read -r dependency; do
@@ -353,7 +351,7 @@ jobs:
 
       - name: 📤 Upload '${{ steps.artifact_name.outputs.libghdl_artifact }}' artifact
         uses: pyTooling/upload-artifact@v7
-        if: (inputs.runtime == 'mingw64' || inputs.runtime == 'ucrt64') && inputs.backend == 'mcode'
+        if: inputs.runtime == 'ucrt64' && inputs.backend == 'mcode'
         with:
           name: ${{ steps.artifact_name.outputs.libghdl_artifact }}
           working-directory: install
