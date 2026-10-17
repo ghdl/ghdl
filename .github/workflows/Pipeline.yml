@@ -22,6 +22,7 @@ jobs:
 #     Python 3.13
 #     Python 3.14
 #     Python 3.15
+#     Python 3.16
 
 # cleanups
 #   libghdl-
@@ -216,13 +217,13 @@ jobs:
           - {icon: '🟡', version: '3.12'}
           - {icon: '🟢', version: '3.13'}
           - {icon: '🟢', version: '3.14'}
-          - {icon: '🟣', version: '3.15.0-alpha.1'}
+          - {icon: '🟢', version: '3.15'}
+#         - {icon: '🟣', version: '3.16.0-alpha.1'}
         other:
           - {runtime: ''}
         exclude:
           - {os: {image: 'ubuntu-26.04'}, py: {version: '3.11'}}
           - {os: {image: 'ubuntu-26.04'}, py: {version: '3.12'}}
-          - {os: {image: 'ubuntu-26.04'}, py: {version: '3.15.0-alpha.1'}}
         include:
           - {os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', libghdl_artifact: 'MSYS2-ucrt64',  pyghdl_artifact: 'Windows-ucrt64',  libgnat: ''}, py: {icon: '🟢', version: '3.14'}, other: {runtime: 'ucrt64' }}
     with:
@@ -396,14 +397,17 @@ jobs:
         pyGHDL-Ubuntu-24.04-x86_64-Python-3.12: pyghdl-%pyghdl%-cp312-cp312-linux_x86_64.whl:                 pyGHDL,ubuntu,24.04,x86-64,py3.12,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.12
         # pyGHDL-Ubuntu-24.04-x86_64-Python-3.13: pyghdl-%pyghdl%-cp313-cp313-linux_x86_64.whl:                 pyGHDL,ubuntu,24.04,x86-64,py3.13,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.13
         # pyGHDL-Ubuntu-24.04-x86_64-Python-3.14: pyghdl-%pyghdl%-cp314-cp314-linux_x86_64.whl:                 pyGHDL,ubuntu,24.04,x86-64,py3.14,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.14
+        # pyGHDL-Ubuntu-24.04-x86_64-Python-3.15: pyghdl-%pyghdl%-cp315-cp315-linux_x86_64.whl:                 pyGHDL,ubuntu,24.04,x86-64,py3.15,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.15
         # pyGHDL-Ubuntu-26.04-x86_64-Python-3.11: pyghdl-%pyghdl%-cp311-cp311-linux_x86_64.whl:                 pyGHDL,ubuntu,26.04,x86-64,py3.11,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 26.04 (x86-64, LTS) - Wheel for Python 3.11
         # pyGHDL-Ubuntu-26.04-x86_64-Python-3.12: pyghdl-%pyghdl%-cp312-cp312-linux_x86_64.whl:                 pyGHDL,ubuntu,26.04,x86-64,py3.12,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 26.04 (x86-64, LTS) - Wheel for Python 3.12
         pyGHDL-Ubuntu-26.04-x86_64-Python-3.13: pyghdl-%pyghdl%-cp313-cp313-linux_x86_64.whl:                 pyGHDL,ubuntu,26.04,x86-64,py3.13,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 26.04 (x86-64, LTS) - Wheel for Python 3.13
         pyGHDL-Ubuntu-26.04-x86_64-Python-3.14: pyghdl-%pyghdl%-cp314-cp314-linux_x86_64.whl:                 pyGHDL,ubuntu,26.04,x86-64,py3.14,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 26.04 (x86-64, LTS) - Wheel for Python 3.14
+        pyGHDL-Ubuntu-26.04-x86_64-Python-3.15: pyghdl-%pyghdl%-cp315-cp315-linux_x86_64.whl:                 pyGHDL,ubuntu,26.04,x86-64,py3.15,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 26.04 (x86-64, LTS) - Wheel for Python 3.15
         pyGHDL-Windows-x86_64-Python-3.11:      pyghdl-%pyghdl%-cp311-cp311-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.11,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.11
         pyGHDL-Windows-x86_64-Python-3.12:      pyghdl-%pyghdl%-cp312-cp312-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.12,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.12
         pyGHDL-Windows-x86_64-Python-3.13:      pyghdl-%pyghdl%-cp313-cp313-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.13,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.13
         pyGHDL-Windows-x86_64-Python-3.14:      pyghdl-%pyghdl%-cp314-cp314-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.14,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.14
+        pyGHDL-Windows-x86_64-Python-3.15:      pyghdl-%pyghdl%-cp315-cp315-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.15,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.15
         pyGHDL-Windows-ucrt64-Python-3.14:      pyghdl-%pyghdl%-cp314-cp314-mingw_x86_64_ucrt_gnu.whl:        pyGHDL,windows,2025,x86-64,py3.14,ucrt64,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) + MSYS2/UCRT64 - Wheel for Python 3.14
 
   Release:
