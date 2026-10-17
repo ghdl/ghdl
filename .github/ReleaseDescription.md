@@ -17,7 +17,6 @@ The following asset categories are provided for GHDL:
 * Ubuntu 24.04 LTS builds as TAR/GZ file
 * Ubuntu 26.04 LTS builds as TAR/GZ file
 * Windows builds for standalone usage (without MSYS2) as ZIP file
-* MSYS2/MinGW64 packages as TAR/ZST file
 * MSYS2/UCRT64 packages as TAR/ZST file
 
 
@@ -43,4 +42,4 @@ In addition to the low-level binding layer, pyGHDL offers:
 The following asset categories are provided for pyGHDL:
 * Platform specific Python wheel package for Ubuntu incl. `pyGHDL...so`
 * Platform specific Python wheel package for Windows incl. `pyGHDL...dll`
-* Platform specific Python wheel package for Windows + MSYS2 (MinGW64, UCRT64) incl. `pyGHDL...dll`
+* Platform specific Python wheel package for Windows + MSYS2 (UCRT64) incl. `pyGHDL...dll`
