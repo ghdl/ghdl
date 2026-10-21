@@ -37,6 +37,7 @@ with Errorout; use Errorout;
 with Errorout.Console;
 with Vhdl.Errors; use Vhdl.Errors;
 with Bug;
+with Simple_IO;
 with Options; use Options;
 
 package body Ortho_Front is
@@ -692,6 +693,11 @@ package body Ortho_Front is
          end if;
          return False;
       when Option_Error =>
+         return False;
+      when Storage_Error =>
+         Simple_IO.Put_Line_Err
+           ("ghdl:error: out of memory -- the design requires more "
+            & "memory than is available on this machine");
          return False;
       when E: others =>
          Bug.Disp_Bug_Box (E);
