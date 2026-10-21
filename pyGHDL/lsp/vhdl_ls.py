@@ -41,6 +41,8 @@ itself.
 
 import logging
 
+from pyGHDL import __version__ as pyGHDLVersion
+
 from . import lsp
 from .workspace import Workspace
 
@@ -178,7 +180,7 @@ class VhdlLanguageServer(object):
         :param rootUri:               The root as a URI.
         :param initializationOptions: Options from the client. They are logged, not read.
         :param _:                     Further members of the request, ignored.
-        :returns:                     The capabilities of this server.
+        :returns:                     The capabilities of this server, and the name and version it runs under.
         :raises InitError:            If *libghdl* could not be initialized.
         """
         log.debug(
@@ -193,7 +195,10 @@ class VhdlLanguageServer(object):
         self.workspace = Workspace(rootUri, self.lsp)
 
         # Get our capabilities
-        return {"capabilities": self.capabilities()}
+        return {
+            "capabilities": self.capabilities(),
+            "serverInfo": {"name": "ghdl-ls", "version": pyGHDLVersion},
+        }
 
     def initialized(self):
         """

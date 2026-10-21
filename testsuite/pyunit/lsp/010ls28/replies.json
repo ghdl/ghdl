@@ -21,6 +21,10 @@
         "documentFormattingProvider": false,
         "documentRangeFormattingProvider": true,
         "renameProvider": false
+      },
+      "serverInfo": {
+        "name": "ghdl-ls",
+        "version": "7.0.0-dev"
       }
     }
   },
@@ -86,23 +90,7 @@
             }
           }
         },
-        "containerName": {
-          "kind": 2,
-          "name": "rtl",
-          "location": {
-            "uri": "file://@ROOT@/top.vhdl",
-            "range": {
-              "start": {
-                "line": 10,
-                "character": 0
-              },
-              "end": {
-                "line": 21,
-                "character": 0
-              }
-            }
-          }
-        }
+        "containerName": "rtl"
       }
     ]
   },
@@ -168,23 +156,7 @@
             }
           }
         },
-        "containerName": {
-          "kind": 2,
-          "name": "rtl",
-          "location": {
-            "uri": "file://@ROOT@/top.vhdl",
-            "range": {
-              "start": {
-                "line": 10,
-                "character": 0
-              },
-              "end": {
-                "line": 21,
-                "character": 0
-              }
-            }
-          }
-        }
+        "containerName": "rtl"
       }
     ]
   }
