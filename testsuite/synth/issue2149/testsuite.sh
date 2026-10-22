@@ -4,7 +4,7 @@
 
 synth --out=verilog -gCONFIG="10111011" rom_test.vhdl -e > syn_rom_test.v
 
-if grep '"' syn_rom_test.v; then
+if sed -e 's/(\* src="[^"]*" \*) //g' syn_rom_test.v | grep '"'; then
   echo "failed"
   exit 1;
 fi

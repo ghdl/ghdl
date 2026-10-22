@@ -19,6 +19,7 @@
 with Outputs; use Outputs;
 with Types_Utils; use Types_Utils;
 with Files_Map;
+with Name_Table;
 
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Iterators; use Netlists.Iterators;
@@ -33,6 +34,11 @@ package body Netlists.Disp_Verilog is
    --  Wires/regs/parameters of size 0 are not possible in verilog.
    --  Do not display them.
    Flag_Null_Wires : constant Boolean := False;
+
+   --  Also display the location of instances as "src" attributes, in the
+   --  format used by yosys, so that tools reading the netlist can refer
+   --  to the original sources.
+   Flag_Src_Attribute : constant Boolean := True;
 
    procedure Put_Type (W : Width) is
    begin
@@ -225,6 +231,45 @@ package body Netlists.Disp_Verilog is
          Wr (" *) ");
    end Disp_Attributes;
 
+   --  Display the location of INST as a "src" attribute instance followed
+   --  by a space, or nothing if INST has no location.
+   --  The format is the one used by yosys: (* src="FILE:LINE.COL" *)
+   procedure Disp_Src_Attribute (Inst : Instance)
+   is
+      Loc : constant Location_Type := Locations.Get_Location (Inst);
+      File : Name_Id;
+      Line : Positive;
+      Col : Natural;
+   begin
+      if not Flag_Src_Attribute or else Loc = No_Location then
+         return;
+      end if;
+      Files_Map.Location_To_Position (Loc, File, Line, Col);
+      Wr ("(* src=""");
+      --  The file name is within a string literal.
+      for C of Name_Table.Image (File) loop
+         if C = '"' or C = '\' then
+            Wr ('\');
+         end if;
+         Wr (C);
+      end loop;
+      Wr (':');
+      Wr_Uns32 (Uns32 (Line));
+      Wr ('.');
+      Wr_Uns32 (Uns32 (Col));
+      Wr (""" *) ");
+   end Disp_Src_Attribute;
+
+   --  Display the location and the attributes of INST (if any).
+   --  The user attributes are last, so that a user "src" attribute wins.
+   procedure Disp_Instance_Attributes (Inst : Instance) is
+   begin
+      Disp_Src_Attribute (Inst);
+      if Has_Instance_Attribute (Inst) then
+         Disp_Attributes (Get_Instance_First_Attribute (Inst));
+      end if;
+   end Disp_Instance_Attributes;
+
    procedure Disp_Instance_Gate (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
@@ -239,9 +284,7 @@ package body Netlists.Disp_Verilog is
    begin
       Wr ("  ");
 
-      if Has_Instance_Attribute (Inst) then
-         Disp_Attributes (Get_Instance_First_Attribute (Inst));
-      end if;
+      Disp_Instance_Attributes (Inst);
 
       --  Gate name
       Name := Get_Module_Name (Imod);
@@ -527,6 +570,7 @@ package body Netlists.Disp_Verilog is
    --  \[C]AN
    --   C: conversion  u: unsigned, s: signed, f: force logic, C: const
    --   A: argument    o: output, i: input, n: value, p: parameter, l: label
+   --                  a: src attribute (location of INST)
    --   N: argument number (0-9)
    procedure Disp_Template
      (S : String; Inst : Instance; Val : Uns32_Array := No_Uns32_Arr)
@@ -587,6 +631,10 @@ package body Netlists.Disp_Verilog is
                   pragma Assert (Idx = 0);
                   pragma Assert (Conv = Conv_None);
                   Put_Name (Get_Instance_Name (Inst));
+               when 'a' =>
+                  pragma Assert (Idx = 0);
+                  pragma Assert (Conv = Conv_None);
+                  Disp_Src_Attribute (Inst);
                when others => raise Internal_Error;
             end case;
 
@@ -666,9 +714,7 @@ package body Netlists.Disp_Verilog is
 
       --  Declare the memory.
       Wr ("  ");
-      if Has_Instance_Attribute (Mem) then
-         Disp_Attributes (Get_Instance_First_Attribute (Mem));
-      end if;
+      Disp_Instance_Attributes (Mem);
       Wr ("reg ");
       Put_Type (Data_W);
       Put_Name (Get_Instance_Name (Mem));
@@ -701,7 +747,7 @@ package body Netlists.Disp_Verilog is
          case Get_Id (Port_Inst) is
             when Id_Mem_Wr_Sync =>
                Disp_Template
-                 ("  always @(\ei2)" & NL &
+                 ("  \a0always @(\ei2)" & NL &
                   "    if (\i3)" & NL, Port_Inst);
                Disp_Template
                  ("      \l0", Mem);
@@ -712,7 +758,7 @@ package body Netlists.Disp_Verilog is
                Disp_Template ("[\i1];" & NL, Port_Inst);
             when Id_Mem_Rd_Sync =>
                Disp_Template
-                 ("  always @(\ei2)" & NL &
+                 ("  \a0always @(\ei2)" & NL &
                   "    if (\i3)" & NL &
                   "      \o1 <= ", Port_Inst);
                Disp_Template ("\l0", Mem);
@@ -731,7 +777,7 @@ package body Netlists.Disp_Verilog is
       Def : constant Net := Get_Input_Net (Inst, 0);
       W : constant Width := Get_Width (Def);
    begin
-      Disp_Template ("  always @*" & NL &
+      Disp_Template ("  \a0always @*" & NL &
                        "    case (\i0)" & NL, Inst);
       for I in 1 .. W loop
          Wr ("      ");
@@ -809,10 +855,10 @@ package body Netlists.Disp_Verilog is
                Inet : constant Net := Get_Input_Net (Inst, 0);
             begin
                if Inet /= No_Net then
-                  Disp_Template ("  always @*" & NL &
+                  Disp_Template ("  \a0always @*" & NL &
                                  "    \o0 = \i0; // (isignal)" & NL, Inst);
                end if;
-               Disp_Template ("  initial" & NL &
+               Disp_Template ("  \a0initial" & NL &
                               "    \o0 = \Ci1;" & NL, Inst);
             end;
          when Id_Port =>
@@ -822,12 +868,12 @@ package body Netlists.Disp_Verilog is
          when Id_Enable =>
             Disp_Template ("  \o0 <= \i0; -- (enable)" & NL, Inst);
          when Id_Not =>
-            Disp_Template ("  assign \o0 = ~\i0;" & NL, Inst);
+            Disp_Template ("  assign \o0 = ~\a0\i0;" & NL, Inst);
          when Id_Neg =>
-            Disp_Template ("  assign \o0 = -\i0;" & NL, Inst);
+            Disp_Template ("  assign \o0 = -\a0\i0;" & NL, Inst);
          when Id_Abs=>
-            Disp_Template ("  assign \o0 = \si0 >= 0 ? \i0 : -\i0;" & NL,
-                           Inst);
+            Disp_Template
+              ("  assign \o0 = \si0 >= \a00 ? \a0\i0 : -\a0\i0;" & NL, Inst);
          when Id_Extract =>
             Disp_Template ("  assign \o0 = ", Inst);
             Disp_Extract (Inst);
@@ -836,7 +882,7 @@ package body Netlists.Disp_Verilog is
             declare
                Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
             begin
-               Disp_Template ("  assign \o0 = \i0 * \p0; // memidx" & NL,
+               Disp_Template ("  assign \o0 = \i0 * \a0\p0; // memidx" & NL,
                               Inst, (0 => Step));
             end;
          when Id_Addidx =>
@@ -858,7 +904,7 @@ package body Netlists.Disp_Verilog is
                --  P0: offset
                Iw : constant Width := Get_Width (Get_Input_Net (Inst, 1));
             begin
-               Wr ("  always @* begin // dyn_insert" & NL);
+               Disp_Template ("  \a0always @* begin // dyn_insert" & NL, Inst);
                Disp_Template ("    \o0 = \i0;" & NL, Inst);
                if Id = Id_Dyn_Insert_En then
                   --  TODO: fix indentation.
@@ -879,26 +925,26 @@ package body Netlists.Disp_Verilog is
             null;
          when Id_Adff
            | Id_Iadff =>
-            Disp_Template ("  always @(\ei0 or posedge \i2)" & NL &
+            Disp_Template ("  \a0always @(\ei0 or posedge \i2)" & NL &
                            "    if (\i2)" & NL &
                            "      \o0 <= \i3;" & NL &
                            "    else" & NL &
                            "      \o0 <= \i1;" & NL, Inst);
          when Id_Dff
             | Id_Idff =>
-            Disp_Template ("  always @(\ei0)" & NL &
+            Disp_Template ("  \a0always @(\ei0)" & NL &
                              "    \o0 <= \i1;" & NL, Inst);
             if Id = Id_Idff then
-               Disp_Template ("  initial" & NL &
+               Disp_Template ("  \a0initial" & NL &
                               "    \o0 = \Ci2;" & NL, Inst);
             end if;
          when Id_Dlatch =>
-            Disp_Template ("  always @(\i1)" & NL &
+            Disp_Template ("  \a0always @(\i1)" & NL &
                              "    \o0 <= \i0;" & NL, Inst);
          when Id_Mux2 =>
-            Disp_Template ("  assign \o0 = \i0 ? \i2 : \i1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 ? \a0\i2 : \i1;" & NL, Inst);
          when Id_Mux4 =>
-            Disp_Template ("  always @*" & NL &
+            Disp_Template ("  \a0always @*" & NL &
                            "    case (\i0)" & NL &
                            "      2'b00: \o0 = \i1;" & NL &
                            "      2'b01: \o0 = \i2;" & NL &
@@ -917,78 +963,80 @@ package body Netlists.Disp_Verilog is
                   Inst, (0 => Wd));
             end;
          when Id_Add =>
-            Disp_Template ("  assign \o0 = \i0 + \i1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 + \a0\i1;" & NL, Inst);
          when Id_Sub =>
-            Disp_Template ("  assign \o0 = \i0 - \i1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 - \a0\i1;" & NL, Inst);
          when Id_Umin =>
-            Disp_Template ("  assign \o0 = (\i0 < \i1) ? \i0 : \i1;" & NL,
-                           Inst);
+            Disp_Template
+              ("  assign \o0 = (\i0 < \a0\i1) ? \a0\i0 : \i1;" & NL, Inst);
          when Id_Smin =>
-            Disp_Template ("  assign \o0 = (\si0 < \si1) ? \i0 : \i1;" & NL,
-                           Inst);
+            Disp_Template
+              ("  assign \o0 = (\si0 < \a0\si1) ? \a0\i0 : \i1;" & NL, Inst);
          when Id_Umax =>
-            Disp_Template ("  assign \o0 = (\i0 > \i1) ? \i0 : \i1;" & NL,
-                           Inst);
+            Disp_Template
+              ("  assign \o0 = (\i0 > \a0\i1) ? \a0\i0 : \i1;" & NL, Inst);
          when Id_Smax =>
-            Disp_Template ("  assign \o0 = (\si0 > \si1) ? \i0 : \i1;" & NL,
-                           Inst);
+            Disp_Template
+              ("  assign \o0 = (\si0 > \a0\si1) ? \a0\i0 : \i1;" & NL, Inst);
          when Id_Umul =>
-            Disp_Template ("  assign \o0 = \i0 * \i1; // umul" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 * \a0\i1; // umul" & NL, Inst);
          when Id_Smul =>
-            Disp_Template ("  assign \o0 = \si0 * \si1; // smul" & NL, Inst);
+            Disp_Template
+              ("  assign \o0 = \si0 * \a0\si1; // smul" & NL, Inst);
          when Id_Smod =>
-            Disp_Template ("  assign \o0 = \i0 % \i1; // smod" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 % \a0\i1; // smod" & NL, Inst);
          when Id_Srem =>
-            Disp_Template ("  assign \o0 = \i0 % \i1; // srem" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 % \a0\i1; // srem" & NL, Inst);
          when Id_Umod =>
-            Disp_Template ("  assign \o0 = \i0 % \i1; // umod" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 % \a0\i1; // umod" & NL, Inst);
          when Id_Sdiv =>
-            Disp_Template ("  assign \o0 = \si0 / \si1; // sdiv" & NL, Inst);
+            Disp_Template
+              ("  assign \o0 = \si0 / \a0\si1; // sdiv" & NL, Inst);
          when Id_Udiv =>
-            Disp_Template ("  assign \o0 = \i0 / \i1; // udiv" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 / \a0\i1; // udiv" & NL, Inst);
          when Id_Lsl =>
-            Disp_Template ("  assign \o0 = \i0 << \i1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 << \a0\i1;" & NL, Inst);
          when Id_Lsr =>
-            Disp_Template ("  assign \o0 = \i0 >> \i1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 >> \a0\i1;" & NL, Inst);
          when Id_Asr =>
-            Disp_Template ("  assign \o0 = \si0 >>> \i1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \si0 >>> \a0\i1;" & NL, Inst);
          when Id_Rol =>
             Disp_Template
               ("  \o0 <= std_logic_vector "
                  & "(rotate_left (\ui0, to_integer (\ui1)));" & NL, Inst);
 
          when Id_Ult =>
-            Disp_Template ("  assign \o0 = \ui0 < \ui1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \ui0 < \a0\ui1;" & NL, Inst);
          when Id_Ule =>
-            Disp_Template ("  assign \o0 = \ui0 <= \ui1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \ui0 <= \a0\ui1;" & NL, Inst);
          when Id_Ugt =>
-            Disp_Template ("  assign \o0 = \ui0 > \ui1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \ui0 > \a0\ui1;" & NL, Inst);
          when Id_Uge =>
-            Disp_Template ("  assign \o0 = \ui0 >= \ui1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \ui0 >= \a0\ui1;" & NL, Inst);
          when Id_Slt =>
-            Disp_Template ("  assign \o0 = \si0 < \si1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \si0 < \a0\si1;" & NL, Inst);
          when Id_Sle =>
-            Disp_Template ("  assign \o0 = \si0 <= \si1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \si0 <= \a0\si1;" & NL, Inst);
          when Id_Sgt =>
-            Disp_Template ("  assign \o0 = \si0 > \si1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \si0 > \a0\si1;" & NL, Inst);
          when Id_Sge =>
-            Disp_Template ("  assign \o0 = \si0 >= \si1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \si0 >= \a0\si1;" & NL, Inst);
          when Id_Eq =>
-            Disp_Template ("  assign \o0 = \i0 == \i1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 == \a0\i1;" & NL, Inst);
          when Id_Ne =>
-            Disp_Template ("  assign \o0 = \i0 != \i1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 != \a0\i1;" & NL, Inst);
          when Id_Or =>
-            Disp_Template ("  assign \o0 = \i0 | \i1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 | \a0\i1;" & NL, Inst);
          when Id_And =>
-            Disp_Template ("  assign \o0 = \i0 & \i1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 & \a0\i1;" & NL, Inst);
          when Id_Xor =>
-            Disp_Template ("  assign \o0 = \i0 ^ \i1;" & NL, Inst);
+            Disp_Template ("  assign \o0 = \i0 ^ \a0\i1;" & NL, Inst);
          when Id_Nor =>
-            Disp_Template ("  assign \o0 = ~(\i0 | \i1);" & NL, Inst);
+            Disp_Template ("  assign \o0 = ~\a0(\i0 | \a0\i1);" & NL, Inst);
          when Id_Nand =>
-            Disp_Template ("  assign \o0 = ~(\i0 & \i1);" & NL, Inst);
+            Disp_Template ("  assign \o0 = ~\a0(\i0 & \a0\i1);" & NL, Inst);
          when Id_Xnor =>
-            Disp_Template ("  assign \o0 = ~(\i0 ^ \i1);" & NL, Inst);
+            Disp_Template ("  assign \o0 = ~\a0(\i0 ^ \a0\i1);" & NL, Inst);
 
          when Id_Concat2 =>
             Disp_Template ("  assign \o0 = {\i0, \i1};" & NL, Inst);
@@ -1046,22 +1094,22 @@ package body Netlists.Disp_Verilog is
                Disp_Template ("}}, \i0}; // sext" & NL, Inst);
             end;
          when Id_Red_Or =>
-            Disp_Template ("  assign \o0 = |(\i0);" & NL, Inst);
+            Disp_Template ("  assign \o0 = |\a0(\i0);" & NL, Inst);
          when Id_Red_And =>
-            Disp_Template ("  assign \o0 = &(\i0);" & NL, Inst);
+            Disp_Template ("  assign \o0 = &\a0(\i0);" & NL, Inst);
          when Id_Red_Xor =>
-            Disp_Template ("  assign \o0 = ^(\i0);" & NL, Inst);
+            Disp_Template ("  assign \o0 = ^\a0(\i0);" & NL, Inst);
 
          when Id_Posedge =>
             Disp_Template ("  assign \o0 = 1'b0; // posedge" & NL, Inst);
          when Id_Negedge =>
             Disp_Template ("  assign \o0 = 1'b0; // negedge" & NL, Inst);
          when Id_Tri =>
-            Disp_Template ("  assign \o0 = \i0 ? \i1 : \n0'bz;" & NL,
+            Disp_Template ("  assign \o0 = \i0 ? \a0\i1 : \n0'bz;" & NL,
                            Inst, (0 => Get_Width (Get_Output (Inst, 0))));
          when Id_Assert =>
             Disp_Template
-              ("  always @*" & NL &
+              ("  \a0always @*" & NL &
                "    if (!\i0)" & NL &
                "      $fatal(1, ""assertion failure \l0"");" & NL, Inst);
          when Id_Assume =>
@@ -1074,7 +1122,7 @@ package body Netlists.Disp_Verilog is
                Inst);
          when Id_Assert_Cover =>
             Disp_Template
-              ("  always @*" & NL &
+              ("  \a0always @*" & NL &
                "    if (!\i0)" & NL &
                "      $fatal(1, ""assertion(cover) failure \l0"");" & NL,
                Inst);
@@ -1125,15 +1173,18 @@ package body Netlists.Disp_Verilog is
             K := K_Wire;
       end case;
       Wr ("  ");
-      if Has_Instance_Attribute (Inst) then
-         Disp_Attributes (Get_Instance_First_Attribute (Inst));
-      end if;
       case K is
          when K_Reg =>
+            Disp_Instance_Attributes (Inst);
             Wr ("reg ");
          when K_Wire =>
+            Disp_Instance_Attributes (Inst);
             Wr ("wire ");
          when K_Localparam =>
+            --  Not a net, so the location is not displayed.
+            if Has_Instance_Attribute (Inst) then
+               Disp_Attributes (Get_Instance_First_Attribute (Inst));
+            end if;
             Wr ("localparam ");
       end case;
       Put_Type (W);
@@ -1165,10 +1216,12 @@ package body Netlists.Disp_Verilog is
                declare
                   N : constant Net := Get_Output (Inst, 1);
                begin
+                  Wr ("  ");
+                  Disp_Src_Attribute (Inst);
                   if Id = Id_Mem_Rd_Sync then
-                     Wr ("  reg ");
+                     Wr ("reg ");
                   else
-                     Wr ("  wire ");
+                     Wr ("wire ");
                   end if;
                   Put_Type (Get_Width (N));
                   Disp_Net_Name (N);
