@@ -571,7 +571,10 @@ package body Vhdl.Scanner is
          end case;
 
          --  Expand bit value.
-         if Vhdl_Std >= Vhdl_08 and V > Base then
+         --  In vhdl-08, a character that is not an extended digit of the
+         --  base is expanded as a graphic character, except a digit: a digit
+         --  not allowed by the base is an error (diagnosed below).
+         if Vhdl_Std >= Vhdl_08 and V >= Base and C not in '0' .. '9' then
             --  Expand as graphic character.
             for I in 1 .. Base_Log loop
                Str_Table.Append_String8_Char (C);
