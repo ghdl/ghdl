@@ -694,13 +694,17 @@ package body Synth.Vhdl_Expr is
                         Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
                         N : Net;
                      begin
-                        N := Get_Net (Ctxt, Vt);
-                        if Vtype.Drange.Is_Signed then
-                           N := Build2_Sresize
-                             (Ctxt, N, Dtype.W, Get_Location (Loc));
+                        if Dtype.W = 0 then
+                           N := Build_Const_UB32 (Ctxt, 0, 0);
                         else
-                           N := Build2_Uresize
-                             (Ctxt, N, Dtype.W, Get_Location (Loc));
+                           N := Get_Net (Ctxt, Vt);
+                           if Vtype.Drange.Is_Signed then
+                              N := Build2_Sresize
+                                (Ctxt, N, Dtype.W, Get_Location (Loc));
+                           else
+                              N := Build2_Uresize
+                                (Ctxt, N, Dtype.W, Get_Location (Loc));
+                           end if;
                         end if;
                         return Create_Value_Net (N, Dtype);
                      end;

@@ -257,27 +257,27 @@ package body Netlists.Folds is
    begin
       if Wn = W then
          return I;
-      else
-         if W <= 64 and then Is_Const_Net (I) then
-            declare
-               V : Uns64;
-               Sh : constant Natural := Natural (Width'Min (Wn, W));
-            begin
-               V := Get_Net_Uns64 (I);
-               V := Sext (V, Sh);
-               Res := Build2_Const_Int (Ctxt, To_Int64 (V), W);
-            end;
-         else
-            if Wn > W then
-               return Build2_Trunc (Ctxt, Id_Strunc, I, W, Loc);
-            else
-               pragma Assert (Wn < W);
-               Res := Build_Extend (Ctxt, Id_Sextend, I, W);
-            end if;
-         end if;
-         Set_Location (Res, Loc);
-         return Res;
       end if;
+
+      if W <= 64 and then Is_Const_Net (I) then
+         declare
+            V : Uns64;
+            Sh : constant Natural := Natural (Width'Min (Wn, W));
+         begin
+            V := Get_Net_Uns64 (I);
+            V := Sext (V, Sh);
+            Res := Build2_Const_Int (Ctxt, To_Int64 (V), W);
+         end;
+      else
+         if Wn > W then
+            return Build2_Trunc (Ctxt, Id_Strunc, I, W, Loc);
+         else
+            pragma Assert (Wn < W);
+            Res := Build_Extend (Ctxt, Id_Sextend, I, W);
+         end if;
+      end if;
+      Set_Location (Res, Loc);
+      return Res;
    end Build2_Sresize;
 
    function Build2_Resize (Ctxt : Context_Acc;
