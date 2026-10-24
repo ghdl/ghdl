@@ -1,3 +1,3 @@
 -r ../dom/requirements.txt
 
-pyTooling[terminal] ~= 8.19
+pyTooling[terminal] >= 10.0.0rc8, < 11.0
