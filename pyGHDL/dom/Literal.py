@@ -52,10 +52,10 @@ from pyVHDLModel.Expression import OctalBitStringLiteral as VHDLModel_OctalBitSt
 from pyVHDLModel.Expression import DecimalBitStringLiteral as VHDLModel_DecimalBitStringLiteral
 from pyVHDLModel.Expression import HexadecimalBitStringLiteral as VHDLModel_HexadecimalBitStringLiteral
 
-from pyGHDL.libghdl import name_table, str_table
+from pyGHDL.libghdl import ENCODING, name_table, str_table, files_map
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes, utils
-from pyGHDL.dom import DOMMixin
+from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom._Utils import GetNameOfNode
 
 
@@ -377,8 +377,12 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
         """
         Translates the IIR node of the literal to a :class:`StringLiteral`.
 
-        :param literalNode: The IIR node of the literal.
-        :returns:           The translated literal.
+        A bit string literal's value is the literal as written in the source, without length, signedness, base
+        specifier and delimiters (``x"A_5"`` has the value ``A_5``).
+
+        :param literalNode:   The IIR node of the literal.
+        :returns:             The translated literal.
+        :raises DOMException: If a bit string literal has no source text.
         """
         base = nodes.Get_Bit_String_Base(literalNode)
         isSigned = nodes.Get_Has_Signed(literalNode) if nodes.Get_Has_Sign(literalNode) else None
@@ -390,17 +394,25 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
         if base is nodes.NumberBaseType.Base_None:
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return cls(literalNode, value)
-        elif base is nodes.NumberBaseType.Base_2:
-            value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
+
+        literalLength = nodes.Get_Literal_Length(literalNode)
+        if literalLength == 0:
+            position = Position.parse(literalNode)
+            raise DOMException(f"Bit string literal at {position} has no source text.")
+
+        location = nodes.Get_Location(literalNode)
+        file = files_map.Location_To_File(location)
+        start = files_map.Location_File_To_Pos(location, file)
+        sourceText = files_map.Get_File_Buffer(file)[start : start + literalLength].decode(ENCODING)
+        value = sourceText[sourceText.index('"') + 1 : -1]
+
+        if base is nodes.NumberBaseType.Base_2:
             return BinaryBitStringLiteral(literalNode, value, length, isSigned)
         elif base is nodes.NumberBaseType.Base_8:
-            value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return OctalBitStringLiteral(literalNode, value, length, isSigned)
         elif base is nodes.NumberBaseType.Base_10:
-            value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return DecimalBitStringLiteral(literalNode, value, length, isSigned)
         elif base is nodes.NumberBaseType.Base_16:
-            value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return HexadecimalBitStringLiteral(literalNode, value, length, isSigned)
         else:
             WarningCollector.Raise(NotImplementedError("Bit String Literal not supported yet"))

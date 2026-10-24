@@ -130,3 +130,86 @@ class Literals(TestCase):
 
         self.assertIsInstance(default, HexadecimalBitStringLiteral)
         self.assertEqual(4, default.Length)
+
+    def test_BitStringLiteral_ValueAsWritten_Binary(self):
+        """``b"1010"`` - the value is the literal as written, not GHDL's expansion to base 2."""
+        from pyGHDL.dom.Literal import BinaryBitStringLiteral
+
+        _filename: Path = self._root / "{className}_AsWrittenBinary.vhdl".format(className=self.__class__.__name__)
+        default: ExpressionUnion = self.parse(_filename, 'constant c0 : bit_vector := b"1010";')
+
+        self.assertIsInstance(default, BinaryBitStringLiteral)
+        self.assertEqual("1010", default.Value)
+        self.assertIsNone(default.Length)
+        self.assertIsNone(default.IsSigned)
+        self.assertEqual('b"1010"', str(default))
+
+    def test_BitStringLiteral_ValueAsWritten_Octal(self):
+        """``o"17"`` (expanded: ``001111``)"""
+        from pyGHDL.dom.Literal import OctalBitStringLiteral
+
+        _filename: Path = self._root / "{className}_AsWrittenOctal.vhdl".format(className=self.__class__.__name__)
+        default: ExpressionUnion = self.parse(_filename, 'constant c0 : bit_vector := o"17";')
+
+        self.assertIsInstance(default, OctalBitStringLiteral)
+        self.assertEqual("17", default.Value)
+        self.assertEqual('o"17"', str(default))
+
+    def test_BitStringLiteral_ValueAsWritten_Hexadecimal(self):
+        """``x"A5"`` (expanded: ``10100101``)"""
+        from pyGHDL.dom.Literal import HexadecimalBitStringLiteral
+
+        _filename: Path = self._root / "{className}_AsWrittenHex.vhdl".format(className=self.__class__.__name__)
+        default: ExpressionUnion = self.parse(_filename, 'constant c0 : bit_vector := x"A5";')
+
+        self.assertIsInstance(default, HexadecimalBitStringLiteral)
+        self.assertEqual("A5", default.Value)
+        self.assertEqual('x"A5"', str(default))
+
+    def test_BitStringLiteral_ValueAsWritten_Length(self):
+        """``8x"A5"``"""
+        from pyGHDL.dom.Literal import HexadecimalBitStringLiteral
+
+        _filename: Path = self._root / "{className}_AsWrittenLength.vhdl".format(className=self.__class__.__name__)
+        default: ExpressionUnion = self.parse(_filename, 'constant c0 : bit_vector := 8x"A5";')
+
+        self.assertIsInstance(default, HexadecimalBitStringLiteral)
+        self.assertEqual("A5", default.Value)
+        self.assertEqual(8, default.Length)
+        self.assertIsNone(default.IsSigned)
+        self.assertEqual('8x"A5"', str(default))
+
+    def test_BitStringLiteral_ValueAsWritten_SignedLength(self):
+        """``12sx"F5"`` (expanded with sign extension: ``111111110101``)"""
+        from pyGHDL.dom.Literal import HexadecimalBitStringLiteral
+
+        _filename: Path = self._root / "{className}_AsWrittenSigned.vhdl".format(className=self.__class__.__name__)
+        default: ExpressionUnion = self.parse(_filename, 'constant c0 : bit_vector := 12sx"F5";')
+
+        self.assertIsInstance(default, HexadecimalBitStringLiteral)
+        self.assertEqual("F5", default.Value)
+        self.assertEqual(12, default.Length)
+        self.assertTrue(default.IsSigned)
+        self.assertEqual('12sx"F5"', str(default))
+
+    def test_BitStringLiteral_ValueAsWritten_Decimal(self):
+        """``d"160"`` (expanded: ``10100000``)"""
+        from pyGHDL.dom.Literal import DecimalBitStringLiteral
+
+        _filename: Path = self._root / "{className}_AsWrittenDecimal.vhdl".format(className=self.__class__.__name__)
+        default: ExpressionUnion = self.parse(_filename, 'constant c0 : bit_vector := d"160";')
+
+        self.assertIsInstance(default, DecimalBitStringLiteral)
+        self.assertEqual("160", default.Value)
+        self.assertEqual('d"160"', str(default))
+
+    def test_BitStringLiteral_ValueAsWritten_Underscore(self):
+        """``x"A_5"`` - underscores are part of the literal as written."""
+        from pyGHDL.dom.Literal import HexadecimalBitStringLiteral
+
+        _filename: Path = self._root / "{className}_AsWrittenUnderscore.vhdl".format(className=self.__class__.__name__)
+        default: ExpressionUnion = self.parse(_filename, 'constant c0 : bit_vector := x"A_5";')
+
+        self.assertIsInstance(default, HexadecimalBitStringLiteral)
+        self.assertEqual("A_5", default.Value)
+        self.assertEqual('x"A_5"', str(default))
