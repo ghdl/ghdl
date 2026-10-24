@@ -395,6 +395,29 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return cls(literalNode, value)
 
+        # GHDL's String8 of a bit string literal holds the *expanded* bit value: one character per bit, including the
+        # padding or sign extension to an explicit length (x"A5" is stored as "10100101"). pyVHDLModel's
+        # BitStringLiteral.Value is the literal *as written* (digits, letters and underscores between the quotes), and
+        # the class chosen by the base tells how to read it. Passing the expansion as the value of an octal, decimal or
+        # hexadecimal literal changed the literal: x"A5" became x"10100101" when written back.
+        # Therefore, the value is cut from the source text: the node's location and the literal length (the number of
+        # characters the scanner read, Get_Literal_Length) select the literal, the value is what stands between its
+        # quotes. Length and signedness are taken from the node as before.
+        #
+        # Original code, for comparison (each branch passed the expansion as the value):
+        #
+        # elif base is nodes.NumberBaseType.Base_2:
+        #     value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
+        #     return BinaryBitStringLiteral(literalNode, value, length, isSigned)
+        # elif base is nodes.NumberBaseType.Base_8:
+        #     value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
+        #     return OctalBitStringLiteral(literalNode, value, length, isSigned)
+        # elif base is nodes.NumberBaseType.Base_10:
+        #     value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
+        #     return DecimalBitStringLiteral(literalNode, value, length, isSigned)
+        # elif base is nodes.NumberBaseType.Base_16:
+        #     value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
+        #     return HexadecimalBitStringLiteral(literalNode, value, length, isSigned)
         literalLength = nodes.Get_Literal_Length(literalNode)
         if literalLength == 0:
             position = Position.parse(literalNode)
