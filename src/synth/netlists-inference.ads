@@ -27,19 +27,6 @@ package Netlists.Inference is
    --  If not found, CLK and ENABLE are set to No_Net.
    procedure Extract_Clock (N : Net; Clk : out Net; Enable : out Net);
 
-   --  To be called when there is an assignment to a signal/output of VAL and
-   --  the previous value is PREV_VAL (an Id_Signal or Id_Output).
-   --  If there is a loop, infere a dff or a latch or emit an error.
-   --  LAST_USE is true iff PREV_VAL won't be reused anywhere else.  So, if
-   --   PREV_VAL is only used in VAL, this is a closed logic that could be
-   --   ignored.
-   function Infere (Ctxt : Context_Acc;
-                    Val : Net;
-                    Off : Uns32;
-                    Prev_Val : Net;
-                    Loc : Location_Type;
-                    Last_Use : Boolean) return Net;
-
    --  Called when there is an assignment to a enable gate.
    function Infere_Assert (Ctxt : Context_Acc;
                            Val : Net;

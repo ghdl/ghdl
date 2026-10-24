@@ -95,100 +95,6 @@ package body Netlists.Inference is
       end case;
    end Has_Clock;
 
-   --  Find the longest chain of mux starting from VAL with a final input
-   --  of PREV_VAL (assigned at OFF).
-   --  Such a chain means this is a memorising element.
-   --  RES is the last mux in the chain, DIST the number of mux in the chain.
-   procedure Find_Longest_Loop (Val : Net;
-                                Prev_Val : Net;
-                                Off : Uns32;
-                                Res : out Instance;
-                                Res_Off : out Uns32;
-                                Dist : out Integer)
-   is
-      Inst : Instance;
-      Nval : Net;
-   begin
-      Inst := Get_Net_Parent (Val);
-      Nval := Val;
-
-      pragma Unreferenced (Val);
-
-      Res_Off := Off;
-
-      --  Skip extract (if any).
-      if Get_Id (Inst) = Id_Extract then
-         declare
-            E_Src : constant Net := Get_Input_Net (Inst, 0);
-            E_Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
-            E_W : constant Width := Get_Width (E_Src);
-            V_W : constant Width := Get_Width (Nval);
-         begin
-            --  Must contain enough bits for Val.
-            --  (but not wider than Prev_Val)
-            if E_Off <= Off
-              and then E_Off + E_W >= Off + V_W
-              and then E_W <= Get_Width (Prev_Val)
-            then
-               Nval := E_Src;
-               Inst := Get_Net_Parent (Nval);
-               Res_Off := Off - E_Off;
-            end if;
-         end;
-      end if;
-
-      if Get_Id (Inst) = Id_Mux2 then
-         declare
-            Res0, Res1 : Instance;
-            Res_Off0, Res_Off1 : Uns32;
-            Dist0, Dist1 : Integer;
-         begin
-            if Has_Clock (Get_Driver (Get_Mux2_Sel (Inst))) then
-               Res := Inst;
-               Dist := 1;
-            else
-               Find_Longest_Loop
-                 (Get_Driver (Get_Mux2_I0 (Inst)), Prev_Val, Off,
-                  Res0, Res_Off0, Dist0);
-               Find_Longest_Loop
-                 (Get_Driver (Get_Mux2_I1 (Inst)), Prev_Val, Off,
-                  Res1, Res_Off1, Dist1);
-               --  Input1 has an higher priority than input0 in case
-               --  the selector is a clock.
-               --  FIXME: improve algorithm.
-               if Dist1 > Dist0 then
-                  Dist := Dist1 + 1;
-                  Res_Off := Res_Off1;
-                  if Dist1 > 0 then
-                     Res := Res1;
-                  else
-                     Res := Inst;
-                  end if;
-               elsif Dist0 >= 0 then
-                  Dist := Dist0 + 1;
-                  Res_Off := Res_Off0;
-                  if Dist0 > 0 then
-                     Res := Res0;
-                  else
-                     Res := Inst;
-                  end if;
-               else
-                  pragma Assert (Dist1 < 0 and Dist0 < 0);
-                  Res := No_Instance;
-                  Dist := -1;
-               end if;
-            end if;
-         end;
-      elsif Nval = Prev_Val and then Res_Off = 0 then
-         --  Found it!
-         Res := No_Instance;
-         Dist := 0;
-      else
-         Res := No_Instance;
-         Dist := -1;
-      end if;
-   end Find_Longest_Loop;
-
    --  Walk the And-net N, and extract clock (posedge/negedge) if found.
    --  ENABLE is N without the clock.
    --  If not found, CLK and ENABLE are set to No_Net.
@@ -222,20 +128,6 @@ package body Netlists.Inference is
             null;
       end case;
    end Extract_Clock;
-
-   function Is_Prev_FF_Value (V : Net; Prev_Val : Net; Off : Uns32)
-                             return Boolean
-   is
-      Inst : Instance;
-   begin
-      if V = Prev_Val then
-         return True;
-      end if;
-      Inst := Get_Net_Parent (V);
-      return Get_Id (Inst) = Id_Extract
-        and then Get_Param_Uns32 (Inst, 0) = Off
-        and then Get_Input_Net (Inst, 0) = Prev_Val;
-   end Is_Prev_FF_Value;
 
    --  Build the FF or the RAM according to the inputs.
    function Infere_FF_Create (Ctxt       : Context_Acc;
@@ -375,6 +267,20 @@ package body Netlists.Inference is
             Val := Build2_Extract (Ctxt, Val, Off, W, Loc);
       end case;
    end Push_Extract;
+
+   function Is_Prev_FF_Value (V : Net; Prev_Val : Net; Off : Uns32)
+                             return Boolean
+   is
+      Inst : Instance;
+   begin
+      if V = Prev_Val then
+         return True;
+      end if;
+      Inst := Get_Net_Parent (V);
+      return Get_Id (Inst) = Id_Extract
+        and then Get_Param_Uns32 (Inst, 0) = Off
+        and then Get_Input_Net (Inst, 0) = Prev_Val;
+   end Is_Prev_FF_Value;
 
    --  Remove the Mux2 and handle the 'else' branch.
    procedure Infere_FF_Mux (Ctxt : Context_Acc;
@@ -997,14 +903,13 @@ package body Netlists.Inference is
                           Prev_Val : Net;
                           Off : Uns32;
                           Last_Mux : Instance;
-                          Last_Use : Boolean;
                           Loc : Location_Type) return Net
    is
       use Errorout;
       Name : Sname;
    begin
       --  In case of false loop, do not close the loop but assign X.
-      if Last_Use and then Is_False_Loop (Prev_Val) then
+      if Is_False_Loop (Prev_Val) then
          return Build_Const_X (Ctxt, Get_Width (Val));
       end if;
 
@@ -1061,14 +966,119 @@ package body Netlists.Inference is
       end if;
    end Infere_Tri;
 
+   --  Find the longest chain of mux starting from VAL with a final input
+   --  of PREV_VAL (assigned at OFF), or until a mux selected by a clock.
+   --  Such a chain means this is a memorising element.
+   --  RES is the last mux in the chain, DIST the number of mux in the chain.
+   procedure Find_Longest_Loop (Val : Net;
+                                Prev_Val : Net;
+                                Off : Uns32;
+                                Res : out Instance;
+                                Res_Off : out Uns32;
+                                Dist : out Integer)
+   is
+      Inst : Instance;
+      Nval : Net;
+   begin
+      Inst := Get_Net_Parent (Val);
+      Nval := Val;
+
+      pragma Unreferenced (Val);
+
+      Res_Off := Off;
+
+      --  Skip extract (if any).
+      if Get_Id (Inst) = Id_Extract then
+         declare
+            E_Src : constant Net := Get_Input_Net (Inst, 0);
+            E_Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+            E_W : constant Width := Get_Width (E_Src);
+            V_W : constant Width := Get_Width (Nval);
+         begin
+            --  Must contain enough bits for Val.
+            --  (but not wider than Prev_Val)
+            if E_Off <= Off
+              and then E_Off + E_W >= Off + V_W
+              and then E_W <= Get_Width (Prev_Val)
+            then
+               Nval := E_Src;
+               Inst := Get_Net_Parent (Nval);
+               --  Adjust the offset.
+               Res_Off := Off - E_Off;
+            end if;
+         end;
+      end if;
+
+      if Get_Id (Inst) = Id_Mux2 then
+         declare
+            Res0, Res1 : Instance;
+            Res_Off0, Res_Off1 : Uns32;
+            Dist0, Dist1 : Integer;
+         begin
+            if Has_Clock (Get_Driver (Get_Mux2_Sel (Inst))) then
+               --  Mux selected by a clock, stop here.
+               Res := Inst;
+               Dist := 1;
+            else
+               --  Get the minimum of both paths.
+               Find_Longest_Loop
+                 (Get_Driver (Get_Mux2_I0 (Inst)), Prev_Val, Off,
+                  Res0, Res_Off0, Dist0);
+               Find_Longest_Loop
+                 (Get_Driver (Get_Mux2_I1 (Inst)), Prev_Val, Off,
+                  Res1, Res_Off1, Dist1);
+               --  Input1 has an higher priority than input0 in case
+               --  the selector is a clock.
+               --  FIXME: improve algorithm.
+               if Dist1 > Dist0 then
+                  Dist := Dist1 + 1;
+                  Res_Off := Res_Off1;
+                  if Dist1 > 0 then
+                     Res := Res1;
+                  else
+                     Res := Inst;
+                  end if;
+               elsif Dist0 >= 0 then
+                  Dist := Dist0 + 1;
+                  Res_Off := Res_Off0;
+                  if Dist0 > 0 then
+                     Res := Res0;
+                  else
+                     Res := Inst;
+                  end if;
+               else
+                  pragma Assert (Dist1 < 0 and Dist0 < 0);
+                  Res := No_Instance;
+                  Dist := -1;
+               end if;
+            end if;
+         end;
+      elsif Nval = Prev_Val and then Res_Off = 0 then
+         --  Found it!
+         Res := No_Instance;
+         Dist := 0;
+      else
+         Res := No_Instance;
+         Dist := -1;
+      end if;
+   end Find_Longest_Loop;
+
+   --  To be called when there is an assignment to a signal/output of VAL and
+   --  the previous value is PREV_VAL (an Id_Signal or Id_Output).
+   --  If there is a loop, infere a dff or a latch or emit an error.
+   --
+   --  This function is called by Infere_Pass, when synthesis of the module
+   --  is complete.  So PREV_VAL won't be reused anywhere else.  If
+   --   PREV_VAL is only used in VAL, this is a closed logic that could be
+   --   ignored.
+   --
    --  VAL is the value to be assigned to a wire at offset OFF.
    --  Note: PREV_VAL is the wire gate, so with full width and no offset.
    function Infere (Ctxt : Context_Acc;
                     Val : Net;
                     Off : Uns32;
                     Prev_Val : Net;
-                    Loc : Location_Type;
-                    Last_Use : Boolean) return Net
+                    Loc : Location_Type) return Net
    is
       pragma Assert (Val /= No_Net);
       pragma Assert (Prev_Val /= No_Net);
@@ -1095,19 +1105,16 @@ package body Netlists.Inference is
 
       First_Mux := Get_Net_Parent (Val);
 
-      if Last_Use
-        and then Has_One_Connection (Prev_Val)
-        and then not Is_Connected (Val)
-      then
+      if Has_One_Connection (Prev_Val) and then not Is_Connected (Val) then
          --  Value is not used, to be removed.  Do not try to infere anything.
          --  Conditions:
-         --   * last_use must be true: the signal won't be use after the call
-         --     to infere (because it goes out of scope).
          --   * Prev_val must be connected once (to create a loop).
          --   * Val must not be connected (for variables).
          return Val;
       end if;
 
+      --  Detect latches in case.
+      --  TODO: too simple!
       if not Flag_Latches and then Get_Id (First_Mux) = Id_Pmux then
          if not Is_False_Loop (Prev_Val) then
             for I in 1 .. Get_Nbr_Inputs (First_Mux) - 1 loop
@@ -1121,12 +1128,18 @@ package body Netlists.Inference is
          return Val;
       end if;
 
+      --  Find memorizing elememt.
       Find_Longest_Loop (Val, Prev_Val, Off, Last_Mux, Last_Off, Len);
       if Len <= 0 then
          --  No logical loop or self assignment.
          return Val;
       end if;
 
+      --  Because of the extract gate, the muxes may be reused for
+      --  another DFF or latch, but maybe slightly different (more or
+      --  less async reset, ...).
+      --  Duplicate the muxes construct to do inference only for VAL.
+      --  The extract are pushed around this new construct.
       First_Mux := Get_Net_Parent (Val);
       if Get_Id (First_Mux) = Id_Extract then
          pragma Assert (Get_Param_Uns32 (First_Mux, 0) = Off);
@@ -1144,8 +1157,7 @@ package body Netlists.Inference is
       Extract_Clock (Get_Driver (Sel), Clk, Enable);
       if Clk = No_Net then
          --  No clock -> latch or combinational loop
-         Res := Infere_Latch
-           (Ctxt, Val2, Prev_Val, Off, Last_Mux, Last_Use, Loc);
+         Res := Infere_Latch (Ctxt, Val2, Prev_Val, Off, Last_Mux, Loc);
       else
          --  Clock -> FF
          First_Mux := Get_Net_Parent (Val2);
@@ -1326,7 +1338,7 @@ package body Netlists.Inference is
       Res : Net;
    begin
       Disconnect (Port);
-      Res := Infere (Ctxt, Drv, Off, Outp, Get_Location (Inst), True);
+      Res := Infere (Ctxt, Drv, Off, Outp, Get_Location (Inst));
       Connect (Port, Res);
    end Infere_On_Port;
 
