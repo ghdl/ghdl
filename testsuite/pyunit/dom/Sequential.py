@@ -86,3 +86,73 @@ class LoopConditions(TestCase):
         # appearing in loop.Statements at all.
         from pyGHDL.dom.Sequential import SequentialVariableAssignment
         self.assertIsInstance(variableAssignment, SequentialVariableAssignment)
+
+
+class CaseStatements(TestCase):
+    """
+    Regression tests for sequential case statements: the alternative written directly before ``when others =>`` was
+    built from the ``others`` choice node and got the ``others`` statements, and ``when others =>`` itself lost its
+    statements.
+    """
+
+    _root = Path(__file__).resolve().parent
+    _filename: Path = _root / "examples/CaseStatements.vhdl"
+
+    @staticmethod
+    def _process():
+        design = Design()
+        document = Document(CaseStatements._filename)
+        design.Documents.append(document)
+
+        architecture = document.Architectures["casestatements"]["rtl"]
+        return architecture.Statements[0]
+
+    def test_AlternativesBeforeOthers(self) -> None:
+        """``when 0 => ... when 1 | 2 => ... when others => ...``"""
+        from pyGHDL.dom.Sequential import CaseStatement, Case, OthersCase
+
+        statement = self._process().Statements[0]
+        self.assertIsInstance(statement, CaseStatement)
+
+        case0, case12, others = statement.Cases
+        self.assertIsInstance(case0, Case)
+        self.assertEqual(1, len(case0.Choices))
+        self.assertEqual(1, len(case0.Statements))
+
+        self.assertIsInstance(case12, Case)
+        self.assertEqual(2, len(case12.Choices))
+        self.assertEqual(2, len(case12.Statements))
+        self.assertEqual("b", case12.Statements[0].Target.Name.Identifier)
+        self.assertEqual("c", case12.Statements[1].Target.Name.Identifier)
+
+        self.assertIsInstance(others, OthersCase)
+        self.assertEqual(3, len(others.Statements))
+        self.assertEqual("d", others.Statements[0].Target.Name.Identifier)
+        self.assertEqual("f", others.Statements[2].Target.Name.Identifier)
+
+    def test_SingleAlternativeBeforeOthers(self) -> None:
+        """``when 0 => a := 1; when others => b := 2; c := 3;``"""
+        from pyGHDL.dom.Sequential import Case, OthersCase
+
+        statement = self._process().Statements[1]
+
+        case0, others = statement.Cases
+        self.assertIsInstance(case0, Case)
+        self.assertEqual(1, len(case0.Statements))
+        self.assertEqual("a", case0.Statements[0].Target.Name.Identifier)
+
+        self.assertIsInstance(others, OthersCase)
+        self.assertEqual(2, len(others.Statements))
+        self.assertEqual("b", others.Statements[0].Target.Name.Identifier)
+        self.assertEqual("c", others.Statements[1].Target.Name.Identifier)
+
+    def test_OthersWithNullStatement(self) -> None:
+        """``when others => null;``"""
+        from pyGHDL.dom.Sequential import OthersCase, NullStatement
+
+        statement = self._process().Statements[2]
+
+        others = statement.Cases[1]
+        self.assertIsInstance(others, OthersCase)
+        self.assertEqual(1, len(others.Statements))
+        self.assertIsInstance(others.Statements[0], NullStatement)

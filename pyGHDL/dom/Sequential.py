@@ -381,11 +381,7 @@ class OthersCase(VHDLModel_OthersCase, DOMMixin):
         """
         from pyGHDL.dom._Translate import GetSequentialStatementsFromChainedNodes
 
-        body = nodes.Get_Associated_Block(caseNode)
-        if body is nodes.Null_Iir:
-            return cls(caseNode)
-
-        statementChain = nodes.Get_Concurrent_Statement_Chain(body)
+        statementChain = nodes.Get_Associated_Chain(caseNode)
         statements = GetSequentialStatementsFromChainedNodes(statementChain, "case others", label)
 
         return cls(caseNode, statements)
@@ -477,7 +473,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
                     continue
             elif choiceKind is nodes.Iir_Kind.Choice_By_Others:
                 if choices is not None:
-                    cases.append(Case.parse(alternative, choices, label))
+                    cases.append(Case.parse(cNode, choices, label))
                     choices = None
                 cases.append(OthersCase.parse(alternative, label))
                 alternative = nodes.Get_Chain(alternative)
