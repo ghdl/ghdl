@@ -38,7 +38,7 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 """
 
-from pyTooling.Decorators import export, InheritDocString
+from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
 from pyVHDLModel.PSLModel import VerificationUnit as VHDLModel_VerificationUnit
 from pyVHDLModel.PSLModel import VerificationProperty as VHDLModel_VerificationProperty
@@ -51,7 +51,7 @@ from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
 
 
 @export
-@InheritDocString(VHDLModel_VerificationUnit, merge=True)
+@InheritDocString(VHDLModel_VerificationUnit, strategy=DocStringMergeStrategy.BaseFirst)
 class VerificationUnit(VHDLModel_VerificationUnit, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.PSLModel.VerificationUnit`.
@@ -87,7 +87,7 @@ class VerificationUnit(VHDLModel_VerificationUnit, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_VerificationProperty, merge=True)
+@InheritDocString(VHDLModel_VerificationProperty, strategy=DocStringMergeStrategy.BaseFirst)
 class VerificationProperty(VHDLModel_VerificationProperty, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.PSLModel.VerificationProperty`.
@@ -123,7 +123,7 @@ class VerificationProperty(VHDLModel_VerificationProperty, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_VerificationMode, merge=True)
+@InheritDocString(VHDLModel_VerificationMode, strategy=DocStringMergeStrategy.BaseFirst)
 class VerificationMode(VHDLModel_VerificationMode, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.PSLModel.VerificationMode`.
@@ -159,7 +159,7 @@ class VerificationMode(VHDLModel_VerificationMode, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_DefaultClock, merge=True)
+@InheritDocString(VHDLModel_DefaultClock, strategy=DocStringMergeStrategy.BaseFirst)
 class DefaultClock(VHDLModel_DefaultClock, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.PSLModel.DefaultClock`.

@@ -36,7 +36,7 @@ This module implements derived literal classes from :mod:`pyVHDLModel.Expression
 
 from typing import Union, Optional as Nullable
 
-from pyTooling.Decorators import export, InheritDocString
+from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel.Expression import NullLiteral as VHDLModel_NullLiteral
@@ -60,7 +60,7 @@ from pyGHDL.dom._Utils import GetNameOfNode
 
 
 @export
-@InheritDocString(VHDLModel_NullLiteral, merge=True)
+@InheritDocString(VHDLModel_NullLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.NullLiteral`.
@@ -87,7 +87,7 @@ class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_EnumerationLiteral, merge=True)
+@InheritDocString(VHDLModel_EnumerationLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.EnumerationLiteral`.
@@ -116,7 +116,7 @@ class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_IntegerLiteral, merge=True)
+@InheritDocString(VHDLModel_IntegerLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.IntegerLiteral`.
@@ -145,7 +145,7 @@ class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_FloatingPointLiteral, merge=True)
+@InheritDocString(VHDLModel_FloatingPointLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.FloatingPointLiteral`.
@@ -174,7 +174,7 @@ class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_PhysicalIntegerLiteral, merge=True)
+@InheritDocString(VHDLModel_PhysicalIntegerLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.PhysicalIntegerLiteral`.
@@ -207,7 +207,7 @@ class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_PhysicalFloatingLiteral, merge=True)
+@InheritDocString(VHDLModel_PhysicalFloatingLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.PhysicalFloatingLiteral`.
@@ -240,7 +240,7 @@ class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_CharacterLiteral, merge=True)
+@InheritDocString(VHDLModel_CharacterLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.CharacterLiteral`.
@@ -270,7 +270,7 @@ class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_BinaryBitStringLiteral, merge=True)
+@InheritDocString(VHDLModel_BinaryBitStringLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.BinaryBitStringLiteral`.
@@ -290,7 +290,7 @@ class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_OctalBitStringLiteral, merge=True)
+@InheritDocString(VHDLModel_OctalBitStringLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.OctalBitStringLiteral`.
@@ -310,7 +310,7 @@ class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_DecimalBitStringLiteral, merge=True)
+@InheritDocString(VHDLModel_DecimalBitStringLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.DecimalBitStringLiteral`.
@@ -330,7 +330,7 @@ class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_HexadecimalBitStringLiteral, merge=True)
+@InheritDocString(VHDLModel_HexadecimalBitStringLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class HexadecimalBitStringLiteral(VHDLModel_HexadecimalBitStringLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.HexadecimalBitStringLiteral`.
@@ -350,7 +350,7 @@ class HexadecimalBitStringLiteral(VHDLModel_HexadecimalBitStringLiteral, DOMMixi
 
 
 @export
-@InheritDocString(VHDLModel_StringLiteral, merge=True)
+@InheritDocString(VHDLModel_StringLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.StringLiteral`.

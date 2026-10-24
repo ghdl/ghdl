@@ -37,7 +37,7 @@ This module implements derived type classes from :mod:`pyVHDLModel.Type`.
 from typing import List, Union, Iterator, Tuple, Iterable
 
 from pyGHDL.dom.Name import SimpleName
-from pyTooling.Decorators import export, InheritDocString
+from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
 from pyVHDLModel.Name import Name
 from pyVHDLModel.Symbol import Symbol
@@ -65,7 +65,7 @@ from pyGHDL.dom.Subprogram import Function, Procedure
 
 
 @export
-@InheritDocString(VHDLModel_AnonymousType, merge=True)
+@InheritDocString(VHDLModel_AnonymousType, strategy=DocStringMergeStrategy.BaseFirst)
 class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.AnonymousType`.

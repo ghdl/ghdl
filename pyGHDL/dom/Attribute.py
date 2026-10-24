@@ -36,7 +36,7 @@ This module implements derived attribute classes from :mod:`pyVHDLModel.Declarat
 
 from typing import List
 
-from pyTooling.Decorators import export, InheritDocString
+from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel.Name import Name
@@ -56,7 +56,7 @@ from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 
 
 @export
-@InheritDocString(VHDLModel_Attribute, merge=True)
+@InheritDocString(VHDLModel_Attribute, strategy=DocStringMergeStrategy.BaseFirst)
 class Attribute(VHDLModel_Attribute, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Declaration.Attribute`.
@@ -120,7 +120,7 @@ Translation table of *libghdl* tokens to pyVHDLModel entity class enumeration va
 
 
 @export
-@InheritDocString(VHDLModel_AttributeSpecification, merge=True)
+@InheritDocString(VHDLModel_AttributeSpecification, strategy=DocStringMergeStrategy.BaseFirst)
 class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Declaration.AttributeSpecification`.

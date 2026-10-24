@@ -42,7 +42,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional as Nullable, List
 
-from pyTooling.Decorators import export, InheritDocString, readonly
+from pyTooling.Decorators import export, InheritDocString, readonly, DocStringMergeStrategy
 from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel import VHDLVersion, IEEEFlavor
@@ -87,7 +87,7 @@ from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationM
 
 
 @export
-@InheritDocString(VHDLModel_Design, merge=True)
+@InheritDocString(VHDLModel_Design, strategy=DocStringMergeStrategy.BaseFirst)
 class Design(VHDLModel_Design):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Design`.
@@ -197,7 +197,7 @@ class Design(VHDLModel_Design):
 
 
 @export
-@InheritDocString(VHDLModel_Library, merge=True)
+@InheritDocString(VHDLModel_Library, strategy=DocStringMergeStrategy.BaseFirst)
 class Library(VHDLModel_Library):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Library`.
@@ -207,7 +207,7 @@ class Library(VHDLModel_Library):
 
 
 @export
-@InheritDocString(VHDLModel_Document, merge=True)
+@InheritDocString(VHDLModel_Document, strategy=DocStringMergeStrategy.BaseFirst)
 class Document(VHDLModel_Document):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Document`.
