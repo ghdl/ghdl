@@ -438,7 +438,6 @@ def main():  # mccabe:disable=MC0001
         return
 
     try:
-        app.CheckPythonVersion((3, 8, 0))
         app.Run()
         app.Exit()
     except PrettyPrintException as ex:
