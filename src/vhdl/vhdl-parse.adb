@@ -6722,19 +6722,25 @@ package body Vhdl.Parse is
          --     length is the length of the bit string literal.  It is an error
          --     if any of the characters so deleted differs from the leftmost
          --     remaining character.
-         if Is_Signed then
-            C := Element_String8 (Id, 1 + Old_Len - Nlen);
+         if Is_Signed and Nlen = 0 then
+            --  No character remains to compare the deleted ones with.
+            Error_Msg_Parse
+              (+Lit, "cannot truncate a signed bit string to length 0");
          else
-            C := Character'Pos ('0');
-         end if;
-         for I in 1 .. Old_Len - Nlen loop
-            if Element_String8 (Id, I) /= C then
-               Error_Msg_Parse
-                 (+Lit, "truncation of bit string changes the value");
-               --  Avoid error storm.
-               exit;
+            if Is_Signed then
+               C := Element_String8 (Id, 1 + Old_Len - Nlen);
+            else
+               C := Character'Pos ('0');
             end if;
-         end loop;
+            for I in 1 .. Old_Len - Nlen loop
+               if Element_String8 (Id, I) /= C then
+                  Error_Msg_Parse
+                    (+Lit, "truncation of bit string changes the value");
+                  --  Avoid error storm.
+                  exit;
+               end if;
+            end loop;
+         end if;
          --  Shift (position 1 is the MSB).
          for I in 1 .. Nlen loop
             Set_Element_String8 (Id, I,
