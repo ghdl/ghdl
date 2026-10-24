@@ -78,6 +78,79 @@ package body Grt.To_Strings is
       Grt.Fcvt.Format_Digits (Str, Last, N, Natural (Nbr_Digits));
    end To_String;
 
+   --  According to ISO-C, the format should be:
+   --   "%[flags][width][.precision][length]conversion"
+   --   where flags is among "#0- +"
+   --   width and precision are decimal string or '*'
+   --
+   --  LRM08 5.2.6 Predefined operations on scalar types
+   --  A model is erroneous if it calls the operation with a valud for the
+   --  FORMAT parameter that is other than a conversion specificatio in
+   --  which the conversion specifier is one of e, E, f, F, g, G, a, or A.
+   --  Moreover, the model is errorneous is the conversion specification
+   --  contains a length modifier or uses an asterisk for the field width
+   --  or precision.
+   function Validate_Real_Format (Fmt : Ghdl_C_String) return Boolean
+   is
+      P : Positive;
+   begin
+      P := Fmt'First;
+      --  '%'
+      if Fmt (P) /= '%' then
+         return False;
+      end if;
+      P := P + 1;
+
+      --  Flag
+      loop
+         case Fmt (P) is
+            when '#' | '0' | '-' | ' '| '+' =>
+               P := P + 1;
+            when others =>
+               exit;
+         end case;
+      end loop;
+
+      --  Width
+      loop
+         case Fmt (P) is
+            when '0' .. '9' =>
+               P := P + 1;
+            when '*' =>
+               return False;
+            when others =>
+               exit;
+         end case;
+      end loop;
+
+      --  Precision
+      if Fmt (P) = '.' then
+         P := P + 1;
+         loop
+            case Fmt (P) is
+               when '0' .. '9' =>
+                  P := P + 1;
+               when '*' =>
+                  return False;
+               when others =>
+                  exit;
+            end case;
+         end loop;
+      end if;
+
+      --  No length modifier
+
+      --  Conversion
+      case Fmt (P) is
+         when 'e' | 'E' | 'f' | 'F' | 'g' | 'G' | 'a' | 'A' =>
+            P := P + 1;
+         when others =>
+            return False;
+      end case;
+
+      return Fmt (P) = NUL;
+   end Validate_Real_Format;
+
    procedure To_String (Str : out String_Real_Format;
                         Last : out Natural;
                         N : Ghdl_F64;
@@ -88,8 +161,16 @@ package body Grt.To_Strings is
                                Format : Ghdl_C_String;
                                V : Ghdl_F64);
       pragma Import (C, Snprintf_Fmtf, "__ghdl_snprintf_fmtf");
+
+      Err_Msg : constant String := "*BAD-FORMAT*";
    begin
-      --  FIXME: check format ('%', f/g/e/a)
+      --  Validate format.
+      if not Validate_Real_Format (Format) then
+         Last := Err_Msg'Length;
+         Str (1 .. Last) := Err_Msg;
+         return;
+      end if;
+
       Snprintf_Fmtf (Str, Str'Length, Format, N);
       Last := strlen (To_Ghdl_C_String (Str'Address));
    end To_String;
