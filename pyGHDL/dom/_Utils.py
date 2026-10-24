@@ -173,6 +173,8 @@ def GetModeOfNode(node: Iir) -> Mode:
     """
     Return the mode of a ``node``.
 
+    If the source text gives no mode (``generic (G : natural)``), the mode is :attr:`~pyVHDLModel.Base.Mode.Default`.
+
     :param node:          The IIR node to read the mode of.
     :returns:             The node's mode as a pyVHDLModel enumeration value.
     :raises ValueError:   If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
@@ -180,6 +182,9 @@ def GetModeOfNode(node: Iir) -> Mode:
     """
     if node == Null_Iir:
         raise ValueError("GetModeOfNode: Parameter 'node' must not be 'Null_Iir'.")
+
+    if nodes_meta.Has_Has_Mode(GetIirKindOfNode(node)) and not nodes.Get_Has_Mode(node):
+        return Mode.Default
 
     try:
         return __MODE_TRANSLATION[nodes.Get_Mode(node)]
