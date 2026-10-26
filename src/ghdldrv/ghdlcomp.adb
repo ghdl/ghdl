@@ -974,6 +974,20 @@ package body Ghdlcomp is
       end if;
       Files_List := Build_Dependence (Lib_Id, Prim_Id, Sec_Id);
 
+      Files_It := List_Iterate (Files_List);
+      while Is_Valid (Files_It) loop
+         File := Get_Element (Files_It);
+         if Is_Makeable_File (File)
+           and then not Is_Safe_Makefile_Filename
+             (Image (Get_Design_File_Filename (File)))
+         then
+            Error ("cannot generate Makefile: unsafe filename '"
+                     & Image (Get_Design_File_Filename (File)) & "'");
+            return;
+         end if;
+         Next (Files_It);
+      end loop;
+
       Ghdllocal.Gen_Makefile_Disp_Header;
 
       New_Line;

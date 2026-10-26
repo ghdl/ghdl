@@ -172,6 +172,10 @@ package Ghdllocal is
    --  option).
    procedure Expect_Filenames (Args : String_Acc_Array);
 
+   --  Return TRUE iff FILENAME can be emitted unquoted in a Makefile and in
+   --  one of its shell recipes.
+   function Is_Safe_Makefile_Filename (Filename : String) return Boolean;
+
    --  Used by --gen-makefile
    procedure Gen_Makefile_Disp_Header;
    procedure Gen_Makefile_Disp_Variables;

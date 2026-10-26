@@ -202,6 +202,40 @@ package body Ghdllocal is
       return Get_Basename_Pos (Pathname) < Pathname'First;
    end Is_Basename;
 
+   function Is_Safe_Makefile_Filename (Filename : String) return Boolean
+   is
+      function Is_Ascii_Letter (C : Character) return Boolean is
+      begin
+         return C in 'a' .. 'z' or else C in 'A' .. 'Z';
+      end Is_Ascii_Letter;
+   begin
+      if Filename'Length = 0 or else Filename (Filename'First) = '-' then
+         return False;
+      end if;
+
+      for I in Filename'Range loop
+         case Filename (I) is
+            when 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9'
+              | '_' | '-' | '.' | '/' | '+' | ',' | '@' =>
+               null;
+            when '\' =>
+               if Get_Directory_Separator /= '\' then
+                  return False;
+               end if;
+            when ':' =>
+               if Get_Directory_Separator /= '\'
+                 or else I /= Filename'First + 1
+                 or else not Is_Ascii_Letter (Filename (Filename'First))
+               then
+                  return False;
+               end if;
+            when others =>
+               return False;
+         end case;
+      end loop;
+      return True;
+   end Is_Safe_Makefile_Filename;
+
    procedure Set_Prefix_From_Program_Path (Prog_Path : String)
    is
       Last : Natural;
