@@ -377,6 +377,16 @@ package body Ghdldrv is
       Objsrclist.Append (new String'(Src));
    end Check_Object_Collision;
 
+   --  Do not let an object filename be interpreted as a linker option.
+   function Get_Object_Argument (Filename : String) return String is
+   begin
+      if Filename (Filename'First) = '-' then
+         return '.' & Get_Directory_Separator & Filename;
+      else
+         return Filename;
+      end if;
+   end Get_Object_Argument;
+
    --  Read a list of files from file FILENAME.
    --  Lines starting with a '#' are ignored (comments)
    --  Lines starting with a '>' are directory lines
@@ -449,9 +459,11 @@ package body Ghdldrv is
                Filelist.Append (File);
             else
                if To_Obj then
-                  File := new String'(Dir (1 .. Dir_Len)
-                                      & Get_Base_Name (Line (1 .. L))
-                                      & Obj_Suffix);
+                  File := new String'
+                    (Get_Object_Argument
+                       (Dir (1 .. Dir_Len)
+                        & Get_Base_Name (Line (1 .. L))
+                        & Obj_Suffix));
                   Check_Object_Collision (File.all, Line (1 .. L));
                else
                   File := new String'(Substitute (Line (1 .. L)));
