@@ -3640,9 +3640,6 @@ package body Vhdl.Sem_Expr is
               or else not Kind_In (El, Iir_Kind_Choice_By_None,
                                    Iir_Kind_Choice_By_Range)
               or else Get_Kind (El_Expr) = Iir_Kind_Aggregate
-              or else (Flag_Relaxed_Rules
-                         and then
-                         Get_Kind (El_Expr) = Iir_Kind_Concatenation_Operator)
             then
                Expr := Sem_Expression (El_Expr, Element_Type);
             else
@@ -3659,11 +3656,46 @@ package body Vhdl.Sem_Expr is
                      Set_Associated_Expr (El, Expr);
                      Expr := Null_Iir;
                   elsif Is_Overload_List (Res_Type) then
-                     Error_Msg_Sem
-                       (+Expr, "type of element is ambiguous");
-                     Free_Overload_List (Res_Type);
-                     Set_Type (El_Expr, Error_Type);
-                     Expr := Null_Iir;
+                     --  #2650: X"12" & X"34" can denote either the element
+                     --  type or the aggregate type.  With -frelaxed, prefer
+                     --  the element type when it is one of the
+                     --  interpretations.  Do not force that type when it is
+                     --  not possible: a concatenation whose only type is the
+                     --  aggregate type is legal (#3433).
+                     declare
+                        Prefer_Element : Boolean := False;
+                        It : List_Iterator;
+                     begin
+                        if Flag_Relaxed_Rules
+                          and then Get_Kind (El_Expr)
+                                     = Iir_Kind_Concatenation_Operator
+                        then
+                           It := List_Iterate
+                             (Get_Overload_List (Res_Type));
+                           while Is_Valid (It) loop
+                              if Get_Base_Type (Get_Element (It))
+                                = Get_Base_Type (Element_Type)
+                              then
+                                 Prefer_Element := True;
+                                 exit;
+                              end if;
+                              Next (It);
+                           end loop;
+                        end if;
+
+                        if Prefer_Element then
+                           Free_Overload_List (Res_Type);
+                           Res_Type := Get_Base_Type (Element_Type);
+                           Is_Array := False;
+                           Expr := Sem_Expression_Wildcard (Expr, Res_Type);
+                        else
+                           Error_Msg_Sem
+                             (+Expr, "type of element is ambiguous");
+                           Free_Overload_List (Res_Type);
+                           Set_Type (El_Expr, Error_Type);
+                           Expr := Null_Iir;
+                        end if;
+                     end;
                   else
                      pragma Assert (Is_Defined_Type (Res_Type));
                      Is_Array :=
