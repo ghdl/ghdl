@@ -4,7 +4,8 @@
 
 if "$GHDL" --help | grep -q -e --link; then
   cp repro.vhdl './-Wl,@linker-args.vhdl'
-  analyze './-Wl,@linker-args.vhdl'
+  # Prefix the assembler input, but use the default workdir for linking.
+  analyze --workdir=./ './-Wl,@linker-args.vhdl'
   "$GHDL" --bind response_option_poc
   "$GHDL" --list-link response_option_poc > link.txt
 
