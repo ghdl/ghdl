@@ -202,12 +202,7 @@ package body Ghdllocal is
       return Get_Basename_Pos (Pathname) < Pathname'First;
    end Is_Basename;
 
-   function Is_Safe_Makefile_Filename (Filename : String) return Boolean
-   is
-      function Is_Ascii_Letter (C : Character) return Boolean is
-      begin
-         return C in 'a' .. 'z' or else C in 'A' .. 'Z';
-      end Is_Ascii_Letter;
+   function Is_Safe_Makefile_Filename (Filename : String) return Boolean is
    begin
       if Filename'Length = 0 or else Filename (Filename'First) = '-' then
          return False;
@@ -216,25 +211,36 @@ package body Ghdllocal is
       for I in Filename'Range loop
          case Filename (I) is
             when 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9'
-              | '_' | '-' | '.' | '/' | '+' | ',' | '@' =>
+              | '_' | '-' | '.' | '/' | '\' | ':' | '+' | ',' | '@' =>
                null;
-            when '\' =>
-               if Get_Directory_Separator /= '\' then
-                  return False;
-               end if;
-            when ':' =>
-               if Get_Directory_Separator /= '\'
-                 or else I /= Filename'First + 1
-                 or else not Is_Ascii_Letter (Filename (Filename'First))
-               then
-                  return False;
-               end if;
             when others =>
                return False;
          end case;
       end loop;
       return True;
    end Is_Safe_Makefile_Filename;
+
+   function Check_Makefile_Filenames (Files : Iir_List) return Boolean
+   is
+      File : Iir_Design_File;
+      Files_It : List_Iterator;
+   begin
+      Files_It := List_Iterate (Files);
+      while Is_Valid (Files_It) loop
+         File := Get_Element (Files_It);
+         if File /= Vhdl.Std_Package.Std_Standard_File
+           and then not Is_Safe_Makefile_Filename
+             (Name_Table.Image (Get_Design_File_Filename (File)))
+         then
+            Error ("cannot generate Makefile: unsafe filename '"
+                     & Name_Table.Image (Get_Design_File_Filename (File))
+                     & "'");
+            return False;
+         end if;
+         Next (Files_It);
+      end loop;
+      return True;
+   end Check_Makefile_Filenames;
 
    procedure Set_Prefix_From_Program_Path (Prog_Path : String)
    is
