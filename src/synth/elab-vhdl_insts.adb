@@ -783,6 +783,7 @@ package body Elab.Vhdl_Insts is
       Inter_Typ : Type_Acc;
       Val : Valtyp;
       Res : Type_Acc;
+      Conv : Node;
    begin
       --  Elaborate subtype of the port.
       Inter_Typ := Elab_Declaration_Type (Sub_Inst, Inter);
@@ -812,7 +813,26 @@ package body Elab.Vhdl_Insts is
                   Res := Val.Typ;
                end if;
             when Iir_Kind_Association_Element_By_Name =>
-               Res := Exec_Name_Subtype (Syn_Inst, Get_Actual (Assoc));
+               --  LRM08 5.3.2.2 Index constraints and discrete ranges
+               --  e) [...]
+               --    3) [...]
+               --      -- For an interface object or subelement whose mode is
+               --         IN, INOUT or LINKAGE, if the actual part includes a
+               --         conversion function or a type conversion, then the
+               --         result type of that function or the type mark of the
+               --         type conversion shall define a constraint for the
+               --         index range corresponding to the index range of the
+               --         objet, [...]
+               --  So when there is a conversion on the actual, the bounds
+               --  come from the result of the conversion and not from the
+               --  actual: a conversion function may change the length.
+               Conv := Get_Actual_Conversion (Assoc);
+               if Conv /= Null_Node then
+                  Res := Get_Elaborated_Subtype_Indication
+                    (Syn_Inst, Get_Type (Conv));
+               else
+                  Res := Exec_Name_Subtype (Syn_Inst, Get_Actual (Assoc));
+               end if;
             when Iir_Kind_Association_Element_By_Individual =>
                Res := Elab_Individual_Subtype (Syn_Inst, Assoc);
             when Iir_Kind_Association_Element_Open =>
