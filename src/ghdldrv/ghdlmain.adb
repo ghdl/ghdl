@@ -701,6 +701,12 @@ package body Ghdlmain is
          Set_Exit_Status (Failure);
       when Exec_Error =>
          Set_Exit_Status (3);
+      when Storage_Error =>
+         --  Ran out of memory (eg elaborating an overly large design).
+         Simple_IO.Put_Line_Err
+           ("ghdl:error: out of memory -- the design requires more "
+            & "memory than is available on this machine");
+         Set_Exit_Status (Failure);
       when E: others =>
          Bug.Disp_Bug_Box (E);
          Set_Exit_Status (2);

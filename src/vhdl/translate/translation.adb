@@ -635,6 +635,30 @@ package body Translation is
       New_Interface_Decl (Interfaces, Param, Wki_Length, Ghdl_Index_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Malloc0);
 
+      --  function __ghdl_index_mul (l : ghdl_index_type;
+      --                               r : ghdl_index_type)
+      --     return ghdl_index_type;
+      Start_Function_Decl
+        (Interfaces, Get_Identifier ("__ghdl_index_mul"), O_Storage_External,
+         Ghdl_Index_Type);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("l"),
+                          Ghdl_Index_Type);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("r"),
+                          Ghdl_Index_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Index_Mul);
+
+      --  function __ghdl_index_add (l : ghdl_index_type;
+      --                               r : ghdl_index_type)
+      --     return ghdl_index_type;
+      Start_Function_Decl
+        (Interfaces, Get_Identifier ("__ghdl_index_add"), O_Storage_External,
+         Ghdl_Index_Type);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("l"),
+                          Ghdl_Index_Type);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("r"),
+                          Ghdl_Index_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Index_Add);
+
       --  procedure __ghdl_free_mem (ptr : ghdl_ptr_type);
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_free_mem"), O_Storage_External);
