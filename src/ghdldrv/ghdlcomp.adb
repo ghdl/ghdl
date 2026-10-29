@@ -974,6 +974,10 @@ package body Ghdlcomp is
       end if;
       Files_List := Build_Dependence (Lib_Id, Prim_Id, Sec_Id);
 
+      if not Check_Makefile_Filenames (Files_List) then
+         return;
+      end if;
+
       Ghdllocal.Gen_Makefile_Disp_Header;
 
       New_Line;

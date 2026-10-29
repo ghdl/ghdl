@@ -2033,6 +2033,10 @@ package body Ghdldrv is
       end if;
       Files_List := Build_Dependence (Library_Id, Primary_Id, Secondary_Id);
 
+      if not Check_Makefile_Filenames (Files_List) then
+         return;
+      end if;
+
       Ghdllocal.Gen_Makefile_Disp_Header;
 
       New_Line;

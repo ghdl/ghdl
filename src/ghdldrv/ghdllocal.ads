@@ -172,6 +172,13 @@ package Ghdllocal is
    --  option).
    procedure Expect_Filenames (Args : String_Acc_Array);
 
+   --  Return TRUE iff FILENAME cannot introduce Make expansion or shell
+   --  commands when emitted in a generated Makefile.
+   function Is_Safe_Makefile_Filename (Filename : String) return Boolean;
+
+   --  Check that all filenames in FILES are safe for a generated Makefile.
+   function Check_Makefile_Filenames (Files : Iir_List) return Boolean;
+
    --  Used by --gen-makefile
    procedure Gen_Makefile_Disp_Header;
    procedure Gen_Makefile_Disp_Variables;
