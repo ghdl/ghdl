@@ -212,3 +212,28 @@ class DocumentDurations(TestCase):
 
         self.assertIsNone(document.LibGHDLProcessingDuration)
         self.assertIsNone(document.DOMTranslationDuration)
+
+
+class DesignDurations(TestCase):
+    """
+    The durations a design measures are ``None`` until the step ran.
+    """
+
+    _root = Path(__file__).resolve().parent.parent
+    _filename: Path = _root / "dom/examples/ConstrainedArray.vhdl"
+
+    def test_NotCalled(self) -> None:
+        design = Design()
+
+        self.assertIsNone(design.LoadDefaultLibraryDuration)
+        self.assertIsNone(design.AnalyzeDuration)
+
+    def test_LoadAndAnalyze(self) -> None:
+        design = Design()
+        design.LoadDefaultLibraries()
+        document = Document(self._filename)
+        design.AddDocument(document, design.GetLibrary("work"))
+        design.Analyze()
+
+        self.assertIsInstance(design.LoadDefaultLibraryDuration, Duration)
+        self.assertIsInstance(design.AnalyzeDuration, Duration)

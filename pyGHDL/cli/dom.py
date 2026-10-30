@@ -380,11 +380,11 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         self._design.Analyze()
         self.WriteInfo(
             dedent("""\
-                  default library load time: {:5.3f} us
-                  dependency analysis time:  {:5.3f} us
+                  default library load time: {:%u} us
+                  dependency analysis time:  {:%u} us
                 """).format(
-                self._design._loadDefaultLibraryTime * 10**6,
-                self._design._analyzeTime * 10**6,
+                self._design.LoadDefaultLibraryDuration,
+                self._design.AnalyzeDuration,
             )
         )
 
