@@ -288,16 +288,31 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
         """
         Parses an *array type* IIR and returns an :class:`~pyVHDLModel.Type.ArrayType` instance.
 
+        An unconstrained array type (``array (natural range <>) of bit``) is an ``Array_Type_Definition``; a
+        constrained array type (``array (0 to 3) of bit``) is an ``Array_Subtype_Definition`` carrying an index
+        constraint per dimension.
+
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
         :param documentation:      The documentation comment on the type declaration.
         :returns:                  The array type instance.
+        :raises DOMException:      If an index of an unconstrained array type is not a type mark.
         """
         from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetSimpleTypeFromNode,
             GetSubtypeIndicationFromIndicationNode,
+            GetArrayConstraintsFromSubtypeIndication,
         )
+
+        if GetIirKindOfNode(typeDefinitionNode) == nodes.Iir_Kind.Array_Subtype_Definition:
+            indices = GetArrayConstraintsFromSubtypeIndication(typeDefinitionNode)
+            elementSubtypeIndication = nodes.Get_Array_Element_Constraint(typeDefinitionNode)
+            elementSubtype = GetSubtypeIndicationFromIndicationNode(
+                elementSubtypeIndication, "array declaration", typeName
+            )
+
+            return cls(typeDefinitionNode, typeName, indices, elementSubtype, documentation)
 
         indices = []
         indexDefinitions = nodes.Get_Index_Subtype_Definition_List(typeDefinitionNode)
