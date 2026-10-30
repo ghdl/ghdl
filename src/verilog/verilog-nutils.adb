@@ -59,7 +59,6 @@ package body Verilog.Nutils is
          Set_Chain (Constr.Last_Item, Item);
       end if;
       Constr.Last_Item := Item;
-      pragma Assert (Get_Parent (Item) = Null_Node);
       Set_Parent (Item, Constr.Parent);
    end Append_Node;
 

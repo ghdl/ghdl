@@ -76,8 +76,13 @@ package body Verilog.Sem_Utils is
               | N_Par_Block =>
                return Res;
             when N_If
-               | N_For
-               | Nkinds_Net_Port =>
+              | N_For
+              | N_Case
+              | N_Event_Control
+              | N_Delay_Control
+              | N_Always
+              | N_Initial
+              | Nkinds_Net_Port =>
                Res := Get_Parent (Res);
             when others =>
                Error_Kind ("get_attribute_parent", Res);

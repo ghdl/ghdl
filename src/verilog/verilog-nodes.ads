@@ -2618,6 +2618,8 @@ package Verilog.Nodes is
    --   Get/Set_Lifetime (Flag6)
    --
    --   Get/Set_Is_Automatic (Flag10)
+   --
+   --   Get/Set_Has_Attribute (Flag19)
 
    -- N_For (Short)
    --

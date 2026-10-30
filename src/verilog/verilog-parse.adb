@@ -5179,15 +5179,27 @@ package body Verilog.Parse is
             Stmt := Parse_Subroutine_Call_Stmt;
          when Tok_Sharp =>
             Stmt := Parse_Delay_Control;
+            --  Needed in case of inner attributes (the parent chain must be
+            --  present);
+            Set_Parent (Stmt, Parent);
             Set_Statement (Stmt, Parse_Statement_Or_Null (Stmt));
          when Tok_At =>
             Stmt := Parse_Event_Control;
+            --  Needed in case of inner attributes (the parent chain must be
+            --  present);
+            Set_Parent (Stmt, Parent);
             Set_Statement (Stmt, Parse_Statement_Or_Null (Stmt));
          when Tok_Sharp_Sharp =>
             Stmt := Parse_Cycle_Delay;
+            --  Needed in case of inner attributes (the parent chain must be
+            --  present);
+            Set_Parent (Stmt, Parent);
             Set_Statement (Stmt, Parse_Statement_Or_Null (Stmt));
          when Tok_Repeat =>
             Stmt := Parse_Delay_Or_Event_Control;
+            --  Needed in case of inner attributes (the parent chain must be
+            --  present);
+            Set_Parent (Stmt, Parent);
             if Get_Control (Stmt) = Null_Node then
                declare
                   N_Stmt : Node;
@@ -5285,6 +5297,7 @@ package body Verilog.Parse is
    begin
       Res := Create_Node (Kind);
       Set_Token_Location (Res);
+      Set_Parent (Res, Get_Parent (Constr));
 
       --  Skip 'always' or 'initial'.
       Scan;
