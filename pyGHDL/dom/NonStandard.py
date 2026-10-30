@@ -43,6 +43,7 @@ from pathlib import Path
 from typing import Any, Optional as Nullable, List
 
 from pyTooling.Decorators import export, InheritDocString, readonly, DocStringMergeStrategy
+from pyTooling.Stopwatch import Stopwatch, Duration
 from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel import VHDLVersion, IEEEFlavor
@@ -220,8 +221,8 @@ class Document(VHDLModel_Document):
     __ghdlSourceFileEntry: Any  #: *libghdl*'s source file entry holding this document's source code.
     __ghdlFile: Any  #: The IIR design file node returned by *libghdl* when the source code was parsed.
 
-    __ghdlProcessingDuration: Nullable[float]  #: *libghdl*'s parsing in seconds, ``None`` if it was skipped.
-    __domTranslationDuration: Nullable[float]  #: IIR to DOM translation in seconds, ``None`` if it was skipped.
+    __ghdlProcessingDuration: Nullable[Duration]  #: Duration of *libghdl*'s parsing, ``None`` if it was skipped.
+    __domTranslationDuration: Nullable[Duration]  #: Duration of the IIR to DOM translation, ``None`` if it was skipped.
 
     def __init__(
         self,
@@ -254,24 +255,23 @@ class Document(VHDLModel_Document):
 
         if not dontParse:
             # Parse input file
-            t1 = time.perf_counter()
+            with Stopwatch() as stopwatch:
+                if vhdlVersion.IsAMS:
+                    flags.AMS_Vhdl.value = True
 
-            if vhdlVersion.IsAMS:
-                flags.AMS_Vhdl.value = True
+                self.__ghdlFile = sem_lib.Load_File(self.__ghdlSourceFileEntry)
+                CheckForErrors()
 
-            self.__ghdlFile = sem_lib.Load_File(self.__ghdlSourceFileEntry)
-            CheckForErrors()
+                if vhdlVersion.IsAMS:
+                    flags.AMS_Vhdl.value = False
 
-            if vhdlVersion.IsAMS:
-                flags.AMS_Vhdl.value = False
-
-            self.__ghdlProcessingDuration = time.perf_counter() - t1
+            self.__ghdlProcessingDuration = stopwatch.Duration
 
             if not dontTranslate:
-                t1 = time.perf_counter()
-                with WarningCollector(self._warnings) as warnings:
+                with Stopwatch() as stopwatch, WarningCollector(self._warnings):
                     self.translate()
-                self.__domTranslationDuration = time.perf_counter() - t1
+
+                self.__domTranslationDuration = stopwatch.Duration
 
     def __loadFromPath(self):
         """
@@ -391,25 +391,25 @@ class Document(VHDLModel_Document):
                 raise DOMException(f"Unknown design unit kind '{nodeKind.name}'.")
 
     @readonly
-    def LibGHDLProcessingDuration(self) -> Nullable[float]:
+    def LibGHDLProcessingDuration(self) -> Nullable[Duration]:
         """
         Read-only property to access the duration of *libghdl*'s parsing (:attr:`__ghdlProcessingDuration`).
 
         The duration is measured while the document is constructed, so it is set only if ``dontParse`` was ``False``.
 
-        :returns: The parse duration in seconds, or ``None`` if the document was constructed with ``dontParse=True``.
+        :returns: The parse duration, or ``None`` if the document was constructed with ``dontParse=True``.
         """
         return self.__ghdlProcessingDuration
 
     @readonly
-    def DOMTranslationDuration(self) -> Nullable[float]:
+    def DOMTranslationDuration(self) -> Nullable[Duration]:
         """
         Read-only property to access the duration of the IIR to DOM translation (:attr:`__domTranslationDuration`).
 
         The duration is measured while the document is constructed, so it is set only if neither ``dontParse`` nor
         ``dontTranslate`` was ``True``.
 
-        :returns: The translation duration in seconds, or ``None`` if the document was constructed with
+        :returns: The translation duration, or ``None`` if the document was constructed with
                   ``dontParse=True`` or ``dontTranslate=True``.
         """
         return self.__domTranslationDuration
