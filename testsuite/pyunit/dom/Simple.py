@@ -34,6 +34,7 @@ from pathlib import Path
 from unittest import TestCase
 
 from pyTooling.Common import firstValue
+from pyTooling.Stopwatch import Duration
 
 from pyGHDL.dom.NonStandard import Design, Document
 
@@ -193,15 +194,15 @@ class DocumentDurations(TestCase):
         document = Document(self._filename)
         design.Documents.append(document)
 
-        self.assertIsInstance(document.LibGHDLProcessingDuration, float)
-        self.assertIsInstance(document.DOMTranslationDuration, float)
+        self.assertIsInstance(document.LibGHDLProcessingDuration, Duration)
+        self.assertIsInstance(document.DOMTranslationDuration, Duration)
 
     def test_DontTranslate(self) -> None:
         design = Design()
         document = Document(self._filename, dontTranslate=True)
         design.Documents.append(document)
 
-        self.assertIsInstance(document.LibGHDLProcessingDuration, float)
+        self.assertIsInstance(document.LibGHDLProcessingDuration, Duration)
         self.assertIsNone(document.DOMTranslationDuration)
 
     def test_DontParse(self) -> None:

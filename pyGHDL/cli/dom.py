@@ -331,11 +331,11 @@ class Application(TerminalApplication, ArgParseHelperMixin):
                 document = self.addFile(file, "pretty")
                 self.WriteInfo(
                     dedent("""\
-                          libghdl processing time: {: 5.3f} us
-                          DOM translation time:    {:5.3f} us
+                          libghdl processing time: {:%u} us
+                          DOM translation time:    {:%u} us
                         """).format(
-                        document.LibGHDLProcessingDuration * 10**6,
-                        document.DOMTranslationDuration * 10**6,
+                        document.LibGHDLProcessingDuration,
+                        document.DOMTranslationDuration,
                     )
                 )
         elif args.Directory is not None:
@@ -356,12 +356,8 @@ class Application(TerminalApplication, ArgParseHelperMixin):
                     for file in directoryItem.glob("**/*.vhd*"):
                         self.WriteNormal(f"  Reading file '{file!s}'")
                         document = self.addFile(file, libraryName)
-                        self.WriteInfo(
-                            f"    libghdl processing time: {document.LibGHDLProcessingDuration * 10**6: 5.3f} us"
-                        )
-                        self.WriteInfo(
-                            f"    DOM translation time:    {document.DOMTranslationDuration * 10**6:5.3f} us"
-                        )
+                        self.WriteInfo(f"    libghdl processing time: {document.LibGHDLProcessingDuration:%u} us")
+                        self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationDuration:%u} us")
                 elif directoryItem.is_file():
                     if directoryItem.suffix in (".vhd", ".vhdl"):
                         files.append(directoryItem)
@@ -374,10 +370,8 @@ class Application(TerminalApplication, ArgParseHelperMixin):
                 for file in files:
                     self.WriteNormal(f"  Reading file '{file!s}'")
                     document = self.addFile(file, libraryName)
-                    self.WriteInfo(
-                        f"    libghdl processing time: {document.LibGHDLProcessingDuration * 10**6: 5.3f} us"
-                    )
-                    self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationDuration * 10**6:5.3f} us")
+                    self.WriteInfo(f"    libghdl processing time: {document.LibGHDLProcessingDuration:%u} us")
+                    self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationDuration:%u} us")
 
         if not self._design.Documents:
             self.WriteFatal("No files processed at all.")
