@@ -38,7 +38,6 @@ and parses a source file through *libghdl*, a library groups documents, and a de
 """
 
 import ctypes
-import time
 from pathlib import Path
 from typing import Any, Optional as Nullable, List
 
@@ -94,8 +93,8 @@ class Design(VHDLModel_Design):
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Design`.
     """
 
-    _loadDefaultLibraryTime: Nullable[float]  #: :meth:`LoadDefaultLibraries` duration in seconds, ``None`` if unused.
-    _analyzeTime: Nullable[float]  #: :meth:`Analyze` duration in seconds, ``None`` if not called.
+    _loadDefaultLibraryDuration: Nullable[Duration]  #: :meth:`LoadDefaultLibraries`' duration, ``None`` if not called.
+    _analyzeDuration: Nullable[Duration]  #: Duration of :meth:`Analyze`, ``None`` if not called.
     _vhdlVersion: VHDLVersion  #: The VHDL version this design is analyzed with.
 
     _warnings: List  #: Warnings raised by :mod:`pyVHDLModel` while the design is analyzed.
@@ -127,8 +126,8 @@ class Design(VHDLModel_Design):
 
         self._vhdlVersion = vhdlVersion
 
-        self._loadDefaultLibraryTime = None
-        self._analyzeTime = None
+        self._loadDefaultLibraryDuration = None
+        self._analyzeDuration = None
 
         self._warnings = []
 
@@ -171,30 +170,45 @@ class Design(VHDLModel_Design):
         """
         Loads the ``std`` and ``ieee`` libraries into the design.
 
-        How long this took is measured and kept in :attr:`_loadDefaultLibraryTime`.
+        How long this took is measured and kept in :attr:`_loadDefaultLibraryDuration`.
 
         :param flavor: The IEEE library flavor to load, or ``None`` for the default.
         """
-        t1 = time.perf_counter()
+        with Stopwatch() as stopwatch:
+            super().LoadStdLibrary()
+            super().LoadIEEELibrary(flavor)
 
-        super().LoadStdLibrary()
-        super().LoadIEEELibrary(flavor)
-
-        self._loadDefaultLibraryTime = time.perf_counter() - t1
+        self._loadDefaultLibraryDuration = stopwatch.Duration
 
     def Analyze(self):
         """
         Analyzes all documents of this design.
 
-        How long this took is measured and kept in :attr:`_analyzeTime`, and the warnings :mod:`pyVHDLModel` raises
+        How long this took is measured and kept in :attr:`_analyzeDuration`, and the warnings :mod:`pyVHDLModel` raises
         during the analysis are collected in :attr:`_warnings`.
         """
-        t1 = time.perf_counter()
-
-        with WarningCollector(self._warnings) as warnings:
+        with Stopwatch() as stopwatch, WarningCollector(self._warnings):
             super().Analyze()
 
-        self._analyzeTime = time.perf_counter() - t1
+        self._analyzeDuration = stopwatch.Duration
+
+    @readonly
+    def LoadDefaultLibraryDuration(self) -> Nullable[Duration]:
+        """
+        Read-only property to access the duration of :meth:`LoadDefaultLibraries` (:attr:`_loadDefaultLibraryDuration`).
+
+        :returns: The duration of loading the ``std`` and ``ieee`` libraries, or ``None`` if they weren't loaded.
+        """
+        return self._loadDefaultLibraryDuration
+
+    @readonly
+    def AnalyzeDuration(self) -> Nullable[Duration]:
+        """
+        Read-only property to access the duration of :meth:`Analyze` (:attr:`_analyzeDuration`).
+
+        :returns: The duration of the design's analysis, or ``None`` if it wasn't analyzed.
+        """
+        return self._analyzeDuration
 
 
 @export

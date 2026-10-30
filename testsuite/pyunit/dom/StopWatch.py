@@ -151,8 +151,8 @@ class CompileOrder(Designs):
             pyGHDL:
               sum:                       {pyGHDLTime * 10**6:5.3f} us
             Analysis:
-              default library load time: {design._loadDefaultLibraryTime * 10**6:5.3f} us
-              dependency analysis time:  {design._analyzeTime * 10**6:5.3f} us
+              default library load time: {design.LoadDefaultLibraryDuration:%u} us
+              dependency analysis time:  {design.AnalyzeDuration:%u} us
             Toplevel:                    {", ".join(toplevel)}
             Compile order:\
             """
