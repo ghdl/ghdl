@@ -135,8 +135,8 @@ class CompileOrder(Designs):
             design.AddDocument(document, library)
             print(dedent(f"""\
                 file: {document.Path}
-                  libghdl processing time: {document.LibGHDLProcessingTime * 10**6:5.3f} us
-                  DOM translation time:    {document.DOMTranslationTime * 10**6:5.3f} us
+                  libghdl processing time: {document.LibGHDLProcessingDuration * 10**6:5.3f} us
+                  DOM translation time:    {document.DOMTranslationDuration * 10**6:5.3f} us
                 """
             ))
             for warning in document._warnings:

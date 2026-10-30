@@ -180,7 +180,7 @@ class SimplePackage(TestCase):
         self.assertEqual(0, len(packageBodies.Documentation.splitlines()))
 
 
-class DocumentTimings(TestCase):
+class DocumentDurations(TestCase):
     """
     The durations a document measures while it is constructed are ``None`` for the steps that were skipped.
     """
@@ -193,21 +193,21 @@ class DocumentTimings(TestCase):
         document = Document(self._filename)
         design.Documents.append(document)
 
-        self.assertIsInstance(document.LibGHDLProcessingTime, float)
-        self.assertIsInstance(document.DOMTranslationTime, float)
+        self.assertIsInstance(document.LibGHDLProcessingDuration, float)
+        self.assertIsInstance(document.DOMTranslationDuration, float)
 
     def test_DontTranslate(self) -> None:
         design = Design()
         document = Document(self._filename, dontTranslate=True)
         design.Documents.append(document)
 
-        self.assertIsInstance(document.LibGHDLProcessingTime, float)
-        self.assertIsNone(document.DOMTranslationTime)
+        self.assertIsInstance(document.LibGHDLProcessingDuration, float)
+        self.assertIsNone(document.DOMTranslationDuration)
 
     def test_DontParse(self) -> None:
         design = Design()
         document = Document(self._filename, dontParse=True)
         design.Documents.append(document)
 
-        self.assertIsNone(document.LibGHDLProcessingTime)
-        self.assertIsNone(document.DOMTranslationTime)
+        self.assertIsNone(document.LibGHDLProcessingDuration)
+        self.assertIsNone(document.DOMTranslationDuration)
