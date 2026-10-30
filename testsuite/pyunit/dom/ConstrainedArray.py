@@ -33,6 +33,8 @@
 from pathlib import Path
 from unittest import TestCase
 
+from pyVHDLModel.Formatting.VHDL import VHDLWriter
+
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.Expression import AscendingRangeExpression, DescendingRangeExpression
 from pyGHDL.dom.Name import SimpleName
@@ -72,6 +74,7 @@ class ConstrainedArrayTypes(TestCase):
         self.assertEqual(1, len(arrayType.Dimensions))
         self.assertIsInstance(arrayType.Dimensions[0], AscendingRangeExpression)
         self.assertIsInstance(arrayType.ElementType, SimpleSubtypeSymbol)
+        self.assertEqual("type ranged_t is array (0 to 3) of bit;\n", VHDLWriter().Format(arrayType))
 
     def test_TypeMark(self) -> None:
         """``type enumerated_t is array (state_t) of integer;`` - the index is constrained by a type mark, no box."""
@@ -82,6 +85,7 @@ class ConstrainedArrayTypes(TestCase):
         self.assertIsInstance(arrayType.Dimensions[0], SimpleName)
         self.assertEqual("state_t", arrayType.Dimensions[0].Identifier)
         self.assertIsInstance(arrayType.ElementType, SimpleSubtypeSymbol)
+        self.assertEqual("type enumerated_t is array (state_t) of integer;\n", VHDLWriter().Format(arrayType))
 
     def test_TwoDimensions(self) -> None:
         """``type matrix_t is array (7 downto 0, state_t) of bit_vector(1 downto 0);`` - two dimensions and a
@@ -93,6 +97,10 @@ class ConstrainedArrayTypes(TestCase):
         self.assertIsInstance(arrayType.Dimensions[0], DescendingRangeExpression)
         self.assertIsInstance(arrayType.Dimensions[1], SimpleName)
         self.assertIsInstance(arrayType.ElementType, ConstrainedArraySubtypeSymbol)
+        self.assertEqual(
+            "type matrix_t is array (7 downto 0, state_t) of bit_vector(1 downto 0);\n",
+            VHDLWriter().Format(arrayType),
+        )
 
     def test_SubtypeIndication(self) -> None:
         """``type subtyped_t is array (natural range 0 to 7) of bit;`` - the index is a subtype indication with a
@@ -103,3 +111,4 @@ class ConstrainedArrayTypes(TestCase):
         self.assertEqual(1, len(arrayType.Dimensions))
         self.assertIsInstance(arrayType.Dimensions[0], ConstrainedScalarSubtypeSymbol)
         self.assertIsInstance(arrayType.ElementType, SimpleSubtypeSymbol)
+        self.assertEqual("type subtyped_t is array (natural range 0 to 7) of bit;\n", VHDLWriter().Format(arrayType))
