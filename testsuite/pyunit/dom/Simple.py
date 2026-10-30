@@ -178,3 +178,36 @@ class SimplePackage(TestCase):
             print(f"    {line}")
         self.assertEqual("utilities", packageBodies.Identifier)
         self.assertEqual(0, len(packageBodies.Documentation.splitlines()))
+
+
+class DocumentTimings(TestCase):
+    """
+    The durations a document measures while it is constructed are ``None`` for the steps that were skipped.
+    """
+
+    _root = Path(__file__).resolve().parent.parent
+    _filename: Path = _root / "dom/examples/SimpleEntity.vhdl"
+
+    def test_ParseAndTranslate(self) -> None:
+        design = Design()
+        document = Document(self._filename)
+        design.Documents.append(document)
+
+        self.assertIsInstance(document.LibGHDLProcessingTime, float)
+        self.assertIsInstance(document.DOMTranslationTime, float)
+
+    def test_DontTranslate(self) -> None:
+        design = Design()
+        document = Document(self._filename, dontTranslate=True)
+        design.Documents.append(document)
+
+        self.assertIsInstance(document.LibGHDLProcessingTime, float)
+        self.assertIsNone(document.DOMTranslationTime)
+
+    def test_DontParse(self) -> None:
+        design = Design()
+        document = Document(self._filename, dontParse=True)
+        design.Documents.append(document)
+
+        self.assertIsNone(document.LibGHDLProcessingTime)
+        self.assertIsNone(document.DOMTranslationTime)
