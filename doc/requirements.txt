@@ -1,7 +1,7 @@
 -r ../pyGHDL/requirements.txt
 
 sphinx ~= 9.2
-python-dateutil ~= 2.9
+python-dateutil ~= 3.0
 
 # Sphinx Extenstions
 autoapi ~= 2.0
