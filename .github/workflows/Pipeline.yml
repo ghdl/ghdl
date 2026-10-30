@@ -184,7 +184,7 @@ jobs:
       - Params
 
   StaticTypeCheck:
-    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r7
+    uses: pyTooling/Actions/.github/workflows/StaticTypeCheck.yml@r9
     needs:
       - Params
     with:
@@ -192,7 +192,7 @@ jobs:
       html_artifact: 'pyGHDL-typing-HTML'
 
   DocCoverage:
-    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@r7
+    uses: pyTooling/Actions/.github/workflows/CheckDocumentation.yml@r9
     needs:
       - Params
     with:
@@ -239,7 +239,7 @@ jobs:
     secrets: inherit
 
   PublishTestsuiteResults:
-    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r7
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r9
     needs:
       - macOS
       - Ubuntu
@@ -257,7 +257,7 @@ jobs:
       dorny:                      false
 
   PublishPytestResults:
-    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r7
+    uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r9
     needs:
       - pyGHDL
       - PublishTestsuiteResults
@@ -272,7 +272,7 @@ jobs:
 #      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   PublishCoverageResults:
-    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r7
+    uses: pyTooling/Actions/.github/workflows/PublishCoverageResults.yml@r9
     needs:
       - macOS
       - Ubuntu-fast
@@ -289,7 +289,7 @@ jobs:
 #      CODACY_TOKEN:  ${{ secrets.CODACY_TOKEN }}
 
   IntermediateCleanUp:
-    uses: pyTooling/Actions/.github/workflows/CleanupArtifacts.yml@r7
+    uses: pyTooling/Actions/.github/workflows/CleanupArtifacts.yml@r9
     needs:
       - PublishTestsuiteResults
       - PublishPytestResults
@@ -345,7 +345,7 @@ jobs:
       typing:        'pyGHDL-typing-HTML'
 
   Nightly:
-    uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r7
+    uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r9
     if: >-
       ${{ !failure() && !cancelled()
        && (needs.Params.outputs.is_nightly_tag == 'true' || needs.Params.outputs.is_test_tag == 'true')
@@ -411,7 +411,7 @@ jobs:
         pyGHDL-Windows-ucrt64-Python-3.14:      pyghdl-%pyghdl%-cp314-cp314-mingw_x86_64_ucrt_gnu.whl:        pyGHDL,windows,2025,x86-64,py3.14,ucrt64,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) + MSYS2/UCRT64 - Wheel for Python 3.14
 
   Release:
-    uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r7
+    uses: pyTooling/Actions/.github/workflows/PublishReleaseNotes.yml@r9
     if: >-
       ${{ !failure() && !cancelled()
        && needs.Params.outputs.is_release_tag == 'true'
