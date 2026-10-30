@@ -252,18 +252,20 @@ def GetArrayConstraintsFromSubtypeIndication(
     """
     Translates the index constraints of an array subtype indication to a list of ranges.
 
-    A constraint is either a range expression (``0 to 7``) or a name denoting a range
-    (``v'range``, ``my_range``).
+    A constraint is a range expression (``0 to 7``), a name denoting a range (``v'range``, ``my_range``) or a
+    subtype indication with a range constraint (``natural range 0 to 7``).
 
     :param subtypeIndication: The IIR node of the array subtype indication.
     :returns:                 List of the translated index constraints, one per dimension.
-    :raises DOMException:     If a constraint is neither a range expression nor a name.
+    :raises DOMException:     If a constraint is neither a range expression, a name nor a subtype indication.
     """
     constraints = []
     for constraint in utils.flist_iter(nodes.Get_Index_Constraint_List(subtypeIndication)):
         constraintKind = GetIirKindOfNode(constraint)
         if constraintKind == nodes.Iir_Kind.Range_Expression:
             constraints.append(RangeExpression.parse(constraint))
+        elif constraintKind == nodes.Iir_Kind.Subtype_Definition:
+            constraints.append(GetScalarConstrainedSubtypeFromNode(constraint))
         elif constraintKind in (
             nodes.Iir_Kind.Simple_Name,
             nodes.Iir_Kind.Parenthesis_Name,
@@ -388,9 +390,7 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
         return PhysicalType.parse(typeName, typeDefinition, documentation)
 
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
-        WarningCollector.Raise(NotImplementedError("Array_Subtype_Definition"))
-
-        return ArrayType(typeDefinition, "????", [], None, documentation)
+        return ArrayType.parse(typeName, typeDefinition, documentation)
     else:
         position = Position.parse(typeDefinition)
         raise DOMException(
