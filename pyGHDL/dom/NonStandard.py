@@ -220,8 +220,8 @@ class Document(VHDLModel_Document):
     __ghdlSourceFileEntry: Any  #: *libghdl*'s source file entry holding this document's source code.
     __ghdlFile: Any  #: The IIR design file node returned by *libghdl* when the source code was parsed.
 
-    __ghdlProcessingTime: Nullable[float]  #: Duration of *libghdl*'s parsing in seconds, ``None`` if it was skipped.
-    __domTranslateTime: Nullable[float]  #: Duration of the IIR to DOM translation in seconds, ``None`` if skipped.
+    __ghdlProcessingDuration: Nullable[float]  #: *libghdl*'s parsing in seconds, ``None`` if it was skipped.
+    __domTranslationDuration: Nullable[float]  #: IIR to DOM translation in seconds, ``None`` if it was skipped.
 
     def __init__(
         self,
@@ -244,8 +244,8 @@ class Document(VHDLModel_Document):
 
         self._filename = path
         self._warnings = []
-        self.__ghdlProcessingTime = None
-        self.__domTranslateTime = None
+        self.__ghdlProcessingDuration = None
+        self.__domTranslationDuration = None
 
         if sourceCode is None:
             self.__loadFromPath()
@@ -265,13 +265,13 @@ class Document(VHDLModel_Document):
             if vhdlVersion.IsAMS:
                 flags.AMS_Vhdl.value = False
 
-            self.__ghdlProcessingTime = time.perf_counter() - t1
+            self.__ghdlProcessingDuration = time.perf_counter() - t1
 
             if not dontTranslate:
                 t1 = time.perf_counter()
                 with WarningCollector(self._warnings) as warnings:
                     self.translate()
-                self.__domTranslateTime = time.perf_counter() - t1
+                self.__domTranslationDuration = time.perf_counter() - t1
 
     def __loadFromPath(self):
         """
@@ -391,20 +391,20 @@ class Document(VHDLModel_Document):
                 raise DOMException(f"Unknown design unit kind '{nodeKind.name}'.")
 
     @readonly
-    def LibGHDLProcessingTime(self) -> Nullable[float]:
+    def LibGHDLProcessingDuration(self) -> Nullable[float]:
         """
-        Read-only property to access the time *libghdl* spent parsing this document (:attr:`__ghdlProcessingTime`).
+        Read-only property to access the duration of *libghdl*'s parsing (:attr:`__ghdlProcessingDuration`).
 
         The duration is measured while the document is constructed, so it is set only if ``dontParse`` was ``False``.
 
         :returns: The parse duration in seconds, or ``None`` if the document was constructed with ``dontParse=True``.
         """
-        return self.__ghdlProcessingTime
+        return self.__ghdlProcessingDuration
 
     @readonly
-    def DOMTranslationTime(self) -> Nullable[float]:
+    def DOMTranslationDuration(self) -> Nullable[float]:
         """
-        Read-only property to access the time spent translating the IIR tree to the DOM (:attr:`__domTranslateTime`).
+        Read-only property to access the duration of the IIR to DOM translation (:attr:`__domTranslationDuration`).
 
         The duration is measured while the document is constructed, so it is set only if neither ``dontParse`` nor
         ``dontTranslate`` was ``True``.
@@ -412,4 +412,4 @@ class Document(VHDLModel_Document):
         :returns: The translation duration in seconds, or ``None`` if the document was constructed with
                   ``dontParse=True`` or ``dontTranslate=True``.
         """
-        return self.__domTranslateTime
+        return self.__domTranslationDuration

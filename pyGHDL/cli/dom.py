@@ -334,8 +334,8 @@ class Application(TerminalApplication, ArgParseHelperMixin):
                           libghdl processing time: {: 5.3f} us
                           DOM translation time:    {:5.3f} us
                         """).format(
-                        document.LibGHDLProcessingTime * 10**6,
-                        document.DOMTranslationTime * 10**6,
+                        document.LibGHDLProcessingDuration * 10**6,
+                        document.DOMTranslationDuration * 10**6,
                     )
                 )
         elif args.Directory is not None:
@@ -357,9 +357,11 @@ class Application(TerminalApplication, ArgParseHelperMixin):
                         self.WriteNormal(f"  Reading file '{file!s}'")
                         document = self.addFile(file, libraryName)
                         self.WriteInfo(
-                            f"    libghdl processing time: {document.LibGHDLProcessingTime * 10**6: 5.3f} us"
+                            f"    libghdl processing time: {document.LibGHDLProcessingDuration * 10**6: 5.3f} us"
                         )
-                        self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationTime * 10**6:5.3f} us")
+                        self.WriteInfo(
+                            f"    DOM translation time:    {document.DOMTranslationDuration * 10**6:5.3f} us"
+                        )
                 elif directoryItem.is_file():
                     if directoryItem.suffix in (".vhd", ".vhdl"):
                         files.append(directoryItem)
@@ -372,8 +374,10 @@ class Application(TerminalApplication, ArgParseHelperMixin):
                 for file in files:
                     self.WriteNormal(f"  Reading file '{file!s}'")
                     document = self.addFile(file, libraryName)
-                    self.WriteInfo(f"    libghdl processing time: {document.LibGHDLProcessingTime * 10**6: 5.3f} us")
-                    self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationTime * 10**6:5.3f} us")
+                    self.WriteInfo(
+                        f"    libghdl processing time: {document.LibGHDLProcessingDuration * 10**6: 5.3f} us"
+                    )
+                    self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationDuration * 10**6:5.3f} us")
 
         if not self._design.Documents:
             self.WriteFatal("No files processed at all.")
