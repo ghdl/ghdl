@@ -220,8 +220,8 @@ class Document(VHDLModel_Document):
     __ghdlSourceFileEntry: Any  #: *libghdl*'s source file entry holding this document's source code.
     __ghdlFile: Any  #: The IIR design file node returned by *libghdl* when the source code was parsed.
 
-    __ghdlProcessingTime: float  #: Duration of *libghdl*'s parsing in seconds, unset if ``dontParse`` was ``True``.
-    __domTranslateTime: float  #: Duration of the IIR to DOM translation in seconds, unset if it was skipped.
+    __ghdlProcessingTime: Nullable[float]  #: Duration of *libghdl*'s parsing in seconds, ``None`` if it was skipped.
+    __domTranslateTime: Nullable[float]  #: Duration of the IIR to DOM translation in seconds, ``None`` if skipped.
 
     def __init__(
         self,
@@ -244,6 +244,8 @@ class Document(VHDLModel_Document):
 
         self._filename = path
         self._warnings = []
+        self.__ghdlProcessingTime = None
+        self.__domTranslateTime = None
 
         if sourceCode is None:
             self.__loadFromPath()
@@ -389,26 +391,25 @@ class Document(VHDLModel_Document):
                 raise DOMException(f"Unknown design unit kind '{nodeKind.name}'.")
 
     @readonly
-    def LibGHDLProcessingTime(self) -> float:
+    def LibGHDLProcessingTime(self) -> Nullable[float]:
         """
         Read-only property to access the time *libghdl* spent parsing this document (:attr:`__ghdlProcessingTime`).
 
         The duration is measured while the document is constructed, so it is set only if ``dontParse`` was ``False``.
 
-        :returns:               The parse duration in seconds.
-        :raises AttributeError: If the document was constructed with ``dontParse=True``.
+        :returns: The parse duration in seconds, or ``None`` if the document was constructed with ``dontParse=True``.
         """
         return self.__ghdlProcessingTime
 
     @readonly
-    def DOMTranslationTime(self) -> float:
+    def DOMTranslationTime(self) -> Nullable[float]:
         """
         Read-only property to access the time spent translating the IIR tree to the DOM (:attr:`__domTranslateTime`).
 
         The duration is measured while the document is constructed, so it is set only if neither ``dontParse`` nor
         ``dontTranslate`` was ``True``.
 
-        :returns:               The translation duration in seconds.
-        :raises AttributeError: If the document was constructed with ``dontParse=True`` or ``dontTranslate=True``.
+        :returns: The translation duration in seconds, or ``None`` if the document was constructed with
+                  ``dontParse=True`` or ``dontTranslate=True``.
         """
         return self.__domTranslateTime
