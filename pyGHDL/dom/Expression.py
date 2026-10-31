@@ -46,6 +46,7 @@ from pyVHDLModel.Expression import (
     NegationExpression as VHDLModel_NegationExpression,
     IdentityExpression as VHDLModel_IdentityExpression,
     InverseExpression as VHDLModel_InverseExpression,
+    ConditionExpression as VHDLModel_ConditionExpression,
     AbsoluteExpression as VHDLModel_AbsoluteExpression,
     TypeConversion as VHDLModel_TypeConversion,
     SubExpression as VHDLModel_ParenthesisExpression,
@@ -170,6 +171,24 @@ class InverseExpression(VHDLModel_InverseExpression, DOMMixin, _ParseUnaryExpres
     def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
         """
         Initializes an inverse expression.
+
+        :param node:    The IIR node this object was translated from.
+        :param operand: The expression the operator is applied to.
+        """
+        super().__init__(operand)
+        DOMMixin.__init__(self, node)
+
+
+@export
+@InheritDocString(VHDLModel_ConditionExpression, strategy=DocStringMergeStrategy.BaseLast)
+class ConditionExpression(VHDLModel_ConditionExpression, DOMMixin, _ParseUnaryExpressionMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.ConditionExpression`.
+    """
+
+    def __init__(self, node: Iir, operand: ExpressionUnion) -> None:
+        """
+        Initializes a condition expression.
 
         :param node:    The IIR node this object was translated from.
         :param operand: The expression the operator is applied to.

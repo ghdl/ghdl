@@ -654,10 +654,10 @@ class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignmen
         :param label:          The statement's label, or ``None`` if it has none.
         :returns:              The translated assignment statement.
         """
-        from pyGHDL.dom._Translate import GetName
+        from pyGHDL.dom._Translate import GetTargetFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
-        targetName = SignalSymbol(targetNode, GetName(targetNode))
+        targetName = GetTargetFromNode(targetNode, SignalSymbol)
 
         waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Waveform_Chain(assignmentNode))
 
@@ -842,10 +842,10 @@ class SequentialVariableAssignment(VHDLModel_SequentialVariableAssignment, DOMMi
         :param label:          The statement's label, or ``None`` if it has none.
         :returns:              The translated assignment statement.
         """
-        from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetTargetFromNode, GetExpressionFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
-        targetName = VariableSymbol(targetNode, GetName(targetNode))
+        targetName = GetTargetFromNode(targetNode, VariableSymbol)
         expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
 
         return cls(assignmentNode, targetName, expression, label)
@@ -885,10 +885,10 @@ class SequentialConditionalVariableAssignment(VHDLModel_SequentialConditionalVar
         :param label:          The statement's label, or ``None`` if it has none.
         :returns:              The translated assignment statement.
         """
-        from pyGHDL.dom._Translate import GetName
+        from pyGHDL.dom._Translate import GetTargetFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
-        targetName = VariableSymbol(targetNode, GetName(targetNode))
+        targetName = GetTargetFromNode(targetNode, VariableSymbol)
         conditionalExpressions = GetConditionalExpressionsFromChainedNodes(
             nodes.Get_Conditional_Expression_Chain(assignmentNode)
         )
@@ -930,10 +930,10 @@ class SequentialConditionalSignalAssignment(VHDLModel_SequentialConditionalSigna
         :param label:          The statement's label, or ``None`` if it has none.
         :returns:              The translated assignment statement.
         """
-        from pyGHDL.dom._Translate import GetName
+        from pyGHDL.dom._Translate import GetTargetFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
-        targetName = SignalSymbol(targetNode, GetName(targetNode))
+        targetName = GetTargetFromNode(targetNode, SignalSymbol)
         conditionalWaveforms = GetConditionalWaveformsFromChainedNodes(
             nodes.Get_Conditional_Waveform_Chain(assignmentNode)
         )
@@ -977,10 +977,10 @@ class SequentialSelectedVariableAssignment(VHDLModel_SequentialSelectedVariableA
         :param label:          The statement's label, or ``None`` if it has none.
         :returns:              The translated assignment statement.
         """
-        from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetTargetFromNode, GetExpressionFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
-        targetName = VariableSymbol(targetNode, GetName(targetNode))
+        targetName = GetTargetFromNode(targetNode, VariableSymbol)
         expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
         selectedExpressions = GetSelectedExpressionsFromChainedNodes(
             nodes.Get_Selected_Expressions_Chain(assignmentNode)
@@ -1025,10 +1025,10 @@ class SequentialSelectedSignalAssignment(VHDLModel_SequentialSelectedSignalAssig
         :param label:          The statement's label, or ``None`` if it has none.
         :returns:              The translated assignment statement.
         """
-        from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetTargetFromNode, GetExpressionFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
-        targetName = SignalSymbol(targetNode, GetName(targetNode))
+        targetName = GetTargetFromNode(targetNode, SignalSymbol)
         expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
         selectedWaveforms = GetSelectedWaveformsFromChainedNodes(nodes.Get_Selected_Waveform_Chain(assignmentNode))
 
@@ -1069,10 +1069,10 @@ class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
         :param label:          The statement's label, or ``None`` if it has none.
         :returns:              The translated assignment statement.
         """
-        from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetTargetFromNode, GetExpressionFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
-        targetName = SignalSymbol(targetNode, GetName(targetNode))
+        targetName = GetTargetFromNode(targetNode, SignalSymbol)
         expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
 
         return cls(assignmentNode, targetName, expression, label)
@@ -1105,10 +1105,10 @@ class SignalReleaseAssignment(VHDLModel_SignalReleaseAssignment, DOMMixin):
         :param label:          The statement's label, or ``None`` if it has none.
         :returns:              The translated assignment statement.
         """
-        from pyGHDL.dom._Translate import GetName
+        from pyGHDL.dom._Translate import GetTargetFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
-        targetName = SignalSymbol(targetNode, GetName(targetNode))
+        targetName = GetTargetFromNode(targetNode, SignalSymbol)
 
         return cls(assignmentNode, targetName, label)
 

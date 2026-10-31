@@ -44,7 +44,8 @@ from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.DesignUnit import Package
 from pyGHDL.dom.Symbol import SimpleObjectOrFunctionCallSymbol
 from pyGHDL.dom.Object import Constant
-from pyGHDL.dom.Expression import InverseExpression, AbsoluteExpression
+from pyGHDL.dom.Expression import InverseExpression, AbsoluteExpression, ConditionExpression
+from pyGHDL.dom.Literal import CharacterLiteral
 
 
 if __name__ == "__main__":
@@ -90,6 +91,16 @@ class Expressions(TestCase):
         self.assertIsInstance(default, InverseExpression)
         self.assertIsInstance(default.Operand, SimpleObjectOrFunctionCallSymbol)
         self.assertEqual("True", cast(SimpleObjectOrFunctionCallSymbol, default.Operand).Name.Identifier)
+
+    def test_ConditionExpression(self):
+        """``?? '1'`` - the condition operator was rejected as ``Unknown expression kind 'Condition_Operator'``."""
+        filename: Path = self._root / f"{self.__class__.__name__}_{currentframe().f_code.co_name[5:]}.vhdl"
+
+        default: Expression = self.parse(filename, "constant c0 : boolean := ?? '1';")
+
+        self.assertIsInstance(default, ConditionExpression)
+        self.assertIsInstance(default.Operand, CharacterLiteral)
+        self.assertEqual("1", default.Operand.Value)
 
     # def test_AbsExpression(self):
     #     filename: Path = self._root / "{className}_{funcName}.vhdl".format(

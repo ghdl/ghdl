@@ -34,7 +34,7 @@
 This module implements derived symbol classes from :mod:`pyVHDLModel.Symbol`.
 """
 
-from typing import List, Mapping
+from typing import Iterable, List, Mapping
 
 from pyGHDL.dom.Name import SimpleName
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
@@ -49,6 +49,7 @@ from pyVHDLModel.Symbol import SubprogramReferenceSymbol as VHDLModel_Subprogram
 from pyVHDLModel.Symbol import ConfigurationSymbol as VHDLModel_ConfigurationSymbol
 from pyVHDLModel.Symbol import SignalSymbol as VHDLModel_SignalSymbol
 from pyVHDLModel.Symbol import VariableSymbol as VHDLModel_VariableSymbol
+from pyVHDLModel.Symbol import AggregateSymbol as VHDLModel_AggregateSymbol
 from pyVHDLModel.Symbol import PackageMemberReferenceSymbol as VHDLModel_PackageMemberReferenceSymbol
 from pyVHDLModel.Symbol import AllPackageMembersReferenceSymbol as VHDLModel_AllPackageMembersReferenceSymbol
 from pyVHDLModel.Symbol import ContextReferenceSymbol as VHDLModel_ContextReferenceSymbol
@@ -277,6 +278,24 @@ class VariableSymbol(VHDLModel_VariableSymbol, DOMMixin):
         """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)
+
+
+@export
+@InheritDocString(VHDLModel_AggregateSymbol, strategy=DocStringMergeStrategy.BaseLast)
+class AggregateSymbol(VHDLModel_AggregateSymbol, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.AggregateSymbol`.
+    """
+
+    def __init__(self, aggregateNode: Iir, targets: Iterable[VHDLModel_Symbol]) -> None:
+        """
+        Initializes a group of assignment targets.
+
+        :param aggregateNode: The IIR node of the aggregate this symbol was translated from.
+        :param targets:       The targets, in source order.
+        """
+        super().__init__(targets)
+        DOMMixin.__init__(self, aggregateNode)
 
 
 @export
