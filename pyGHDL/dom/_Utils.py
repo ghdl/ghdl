@@ -108,12 +108,18 @@ def GetNameOfNode(node: Iir) -> str:
     """
     Return the Python string from node ``node`` identifier.
 
+    A character literal (``'0'``) is returned with its quotes.
+
     :param node:        The IIR node to read the identifier of.
     :returns:           The node's identifier as written in the source file.
     :raises ValueError: If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
     """
     if node == Null_Iir:
         raise ValueError("GetNameOfNode: Parameter 'node' must not be 'Null_Iir'.")
+
+    identifier = nodes.Get_Identifier(node)
+    if name_table.Is_Character(identifier):
+        return f"'{name_table.Get_Character(identifier)}'"
 
     identifier = utils.Get_Source_Identifier(node)
     return name_table.Get_Name_Ptr(identifier)
