@@ -52,7 +52,7 @@ from pyVHDLModel.Object import File as VHDLModel_File
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
-from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfIdentifierList
 
 
 @export
@@ -104,7 +104,7 @@ class Constant(VHDLModel_Constant, DOMMixin):
         )
 
         name = GetNameOfNode(constantNode)
-        documentation = GetDocumentationOfNode(constantNode)
+        documentation = GetDocumentationOfIdentifierList(constantNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)
@@ -156,7 +156,7 @@ class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(constantNode)
-        documentation = GetDocumentationOfNode(constantNode)
+        documentation = GetDocumentationOfIdentifierList(constantNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)
@@ -214,7 +214,7 @@ class Variable(VHDLModel_Variable, DOMMixin):
         )
 
         name = GetNameOfNode(variableNode)
-        documentation = GetDocumentationOfNode(variableNode)
+        documentation = GetDocumentationOfIdentifierList(variableNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)
@@ -265,7 +265,7 @@ class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(variableNode)
-        documentation = GetDocumentationOfNode(variableNode)
+        documentation = GetDocumentationOfIdentifierList(variableNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)
@@ -323,7 +323,7 @@ class Signal(VHDLModel_Signal, DOMMixin):
         )
 
         name = GetNameOfNode(signalNode)
-        documentation = GetDocumentationOfNode(signalNode)
+        documentation = GetDocumentationOfIdentifierList(signalNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)
@@ -372,7 +372,7 @@ class File(VHDLModel_File, DOMMixin):
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
 
         name = GetNameOfNode(fileNode)
-        documentation = GetDocumentationOfNode(fileNode)
+        documentation = GetDocumentationOfIdentifierList(fileNode)
         identifiers = [name]
         if furtherIdentifiers is not None:
             identifiers.extend(furtherIdentifiers)

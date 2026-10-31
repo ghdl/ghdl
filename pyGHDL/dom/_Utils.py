@@ -202,6 +202,32 @@ def GetDocumentationOfNode(node: Iir) -> str:
 
 
 @export
+def GetDocumentationOfIdentifierList(node: Iir) -> str:
+    """
+    Collects the doc-comment lines attached to an object declaration and to the further identifiers of its list.
+
+    *libghdl* creates one IIR node per identifier of ``signal s, t : bit;`` and attaches a comment to the node of the
+    identifier it follows: a comment before the declaration to ``s``, a comment on the same line to ``t``.
+
+    :param node: The IIR node of the declaration's first identifier.
+    :returns:    The comment lines of all identifiers in source order joined by newlines, or an empty string if no
+                 identifier has a comment.
+    """
+    documentation = []
+    while True:
+        identifierDocumentation = GetDocumentationOfNode(node)
+        if identifierDocumentation != "":
+            documentation.append(identifierDocumentation)
+
+        # The last identifier of a list has no Identifier_List flag.
+        if not nodes.Get_Has_Identifier_List(node):
+            break
+        node = nodes.Get_Chain(node)
+
+    return "\n".join(documentation)
+
+
+@export
 def GetModeOfNode(node: Iir) -> Mode:
     """
     Return the mode of a ``node``.
