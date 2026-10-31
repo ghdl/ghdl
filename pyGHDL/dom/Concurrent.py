@@ -83,7 +83,7 @@ from pyVHDLModel.Concurrent import (
 from pyGHDL.libghdl import Iir, utils
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, DOMException, Position
-from pyGHDL.dom._Utils import GetLabelOfNode
+from pyGHDL.dom._Utils import GetLabelOfNode, GetDocumentationOfNode
 from pyGHDL.dom.Symbol import (
     ArchitectureSymbol,
     EntityInstantiationSymbol,
@@ -318,6 +318,7 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         portAssociationItems: Iterable = None,
         declaredItems: Iterable = None,
         statements: Iterable[ConcurrentStatement] = None,
+        documentation: str = None,
     ) -> None:
         """
         Initializes a block statement.
@@ -330,6 +331,7 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         :param portAssociationItems:    List of all port associations in the port map aspect.
         :param declaredItems:           List of all declared items in this concurrent declaration region.
         :param statements:              List of all concurrent statements in this construct.
+        :param documentation:           The documentation comment associated with this statement.
         """
         super().__init__(
             label,
@@ -339,6 +341,7 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
             portAssociationItems,
             declaredItems,
             statements,
+            documentation,
         )
         DOMMixin.__init__(self, blockNode)
 
@@ -375,6 +378,7 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         statements = GetConcurrentStatementsFromChainedNodes(
             nodes.Get_Concurrent_Statement_Chain(blockNode), "block", label
         )
+        documentation = GetDocumentationOfNode(blockNode)
 
         return cls(
             blockNode,
@@ -385,6 +389,7 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
             portAssociationItems,
             declaredItems,
             statements,
+            documentation,
         )
 
 
@@ -402,6 +407,7 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
         declaredItems: Iterable = None,
         statements: Iterable[SequentialStatement] = None,
         sensitivityList: Iterable[Symbol] = None,
+        documentation: str = None,
     ) -> None:
         """
         Initializes a :vhdlkw:`process` statement.
@@ -411,8 +417,9 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
         :param declaredItems:   List of all declared items in this sequential declaration region.
         :param statements:      List of all sequential statements in this construct.
         :param sensitivityList: List of all signal names in the sensitivity list, or ``None`` if none was given.
+        :param documentation:   The documentation comment associated with this statement.
         """
-        super().__init__(label, declaredItems, statements, sensitivityList)
+        super().__init__(label, declaredItems, statements, sensitivityList, documentation)
         DOMMixin.__init__(self, processNode)
 
     @classmethod
@@ -441,8 +448,9 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
         statements = GetSequentialStatementsFromChainedNodes(
             nodes.Get_Sequential_Statement_Chain(processNode), "process", label
         )
+        documentation = GetDocumentationOfNode(processNode)
 
-        return cls(processNode, label, declaredItems, statements, sensitivityList)
+        return cls(processNode, label, declaredItems, statements, sensitivityList, documentation)
 
 
 @export
