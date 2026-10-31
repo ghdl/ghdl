@@ -40,6 +40,8 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 from __future__ import annotations
 
+from re import sub, fullmatch, IGNORECASE
+
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
 from pyVHDLModel.PSLModel import VerificationUnit as VHDLModel_VerificationUnit
@@ -47,8 +49,10 @@ from pyVHDLModel.PSLModel import VerificationProperty as VHDLModel_VerificationP
 from pyVHDLModel.PSLModel import VerificationMode as VHDLModel_VerificationMode
 from pyVHDLModel.PSLModel import DefaultClock as VHDLModel_DefaultClock
 
+from pyGHDL.libghdl import files_map
 from pyGHDL.libghdl._types import Iir
-from pyGHDL.dom import DOMMixin
+from pyGHDL.libghdl.vhdl import nodes
+from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
 
 
@@ -188,12 +192,26 @@ class DefaultClock(VHDLModel_DefaultClock, DOMMixin):
         """
         Translates the IIR node of the PSL default clock to a :class:`DefaultClock`.
 
+        A PSL default clock declaration (``default clock is rising_edge(clk);``) has no identifier. *libghdl* keeps the
+        clock expression as a PSL node, which has no Python binding, so the clock expression's source text (comments
+        removed, whitespace collapsed) becomes the identifier: ``rising_edge(clk)``.
+
         :param defaultClockNode: The IIR node of the PSL default clock.
         :returns:                The translated PSL default clock.
+        :raises DOMException:    If the source text at the node's location is no PSL default clock declaration.
         """
-        name = GetNameOfNode(defaultClockNode)
+        location = nodes.Get_Location(defaultClockNode)
+        sourceFile = files_map.Location_To_File(location)
+        start = files_map.Location_File_To_Pos(location, sourceFile)
+        buffer = files_map.Get_File_Buffer(sourceFile)
+        source = buffer[start : files_map.Get_File_Length(sourceFile)].decode("iso-8859-1")
+
+        declaration = sub(r"--[^\n]*", "", source[: source.find(";")])
+        match = fullmatch(r"default\s+clock\s+is\s+(.+)", " ".join(declaration.split()), IGNORECASE)
+        if match is None:
+            position = Position.parse(defaultClockNode)
+            raise DOMException(f"Unexpected source text of PSL default clock declaration at {position}.")
+
         documentation = GetDocumentationOfNode(defaultClockNode)
 
-        # FIXME: needs an implementation
-
-        return cls(defaultClockNode, name, documentation)
+        return cls(defaultClockNode, match.group(1), documentation)
