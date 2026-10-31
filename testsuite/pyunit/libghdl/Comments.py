@@ -323,6 +323,9 @@ class Association(Base):
     def test_ObjectListFirstIdentifier(self) -> None:
         self.checkFileAllAttached(self._root / "comments/objlist.vhdl")
 
+    def test_SameLineAfterDeclaration(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/samelinedecl.vhdl")
+
 
 class Association2019(Base):
     @classmethod

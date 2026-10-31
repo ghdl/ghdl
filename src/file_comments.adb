@@ -277,6 +277,25 @@ package body File_Comments is
       Ctxt.Line_Start := Pos;
    end Gather_Comments_Line;
 
+   procedure Gather_Comments_Line_End (Decl_Line_Start : Source_Ptr;
+                                       Line_Start : Source_Ptr;
+                                       N : Uns32) is
+   begin
+      if Decl_Line_Start /= Line_Start
+        and then Ctxt.Line_Start = Line_Start
+        and then Ctxt.Last_Node /= N
+      then
+         --  An inner node starts on this line, the comment is for it.
+         return;
+      end if;
+
+      Gather_Comments_Line (Line_Start, N);
+
+      --  N has been gathered before: its first comments may be before the
+      --  ones just gathered.
+      Ctxt.Node_First := No_Comment_Index + 1;
+   end Gather_Comments_Line_End;
+
    procedure Gather_Comments_End is
    begin
       case Ctxt.State is

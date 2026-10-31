@@ -42,6 +42,19 @@ package body Vhdl.Comments is
       Gather_Comments_Line (Coord.Line_Pos, Uns32 (N));
    end Gather_Comments_Line;
 
+   procedure Gather_Comments_Line_End (N : Iir; Loc : Location_Type)
+   is
+      Coord : Source_Coord_Type;
+      File : Source_File_Entry;
+      Decl_Line_Start : Source_Ptr;
+      Line : Positive;
+      Offset : Natural;
+   begin
+      Files_Map.Location_To_Coord (Loc, File, Decl_Line_Start, Line, Offset);
+      Coord := Scanner.Get_Current_Coord;
+      Gather_Comments_Line_End (Decl_Line_Start, Coord.Line_Pos, Uns32 (N));
+   end Gather_Comments_Line_End;
+
    procedure Replace_Comments_Node (Old_N, New_N : Iir) is
    begin
       Replace_Comments_Node (Uns32 (Old_N), Uns32 (New_N));

@@ -3536,6 +3536,12 @@ package body Vhdl.Parse is
             Def := Parse_Enumeration_Type_Definition (Parent);
             Set_Type_Definition (Decl, Def);
 
+            --  A comment after the ';' is for the type, not for the last
+            --  literal (unless it starts that line).
+            if Flag_Gather_Comments then
+               Gather_Comments_Line_End (Decl, Start_Loc);
+            end if;
+
          when Tok_Range =>
             --  This is a range definition.
             Decl := Create_Iir (Iir_Kind_Anonymous_Type_Declaration);
@@ -9232,6 +9238,13 @@ package body Vhdl.Parse is
       if Flag_Elocations then
          Create_Elocations (Subprg);
          Set_Start_Location (Subprg, Start_Loc);
+      end if;
+
+      --  A comment after the specification (';' or 'is') is for the
+      --  subprogram, not for the last parameter (unless it starts that
+      --  line).
+      if Flag_Gather_Comments then
+         Gather_Comments_Line_End (Subprg, Start_Loc);
       end if;
 
       case Current_Token is
