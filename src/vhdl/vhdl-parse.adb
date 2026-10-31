@@ -3435,7 +3435,14 @@ package body Vhdl.Parse is
    is
       Res : Iir;
       Decl : Iir;
+      Comments : Comments_Range;
    begin
+      --  Comments before 'protected' (and after it, until an empty line) are
+      --  attached to the type or to the body, like for a package.
+      if Flag_Gather_Comments then
+         File_Comments.Save_Comments (Comments);
+      end if;
+
       --  Skip 'protected'.
       Scan;
 
@@ -3455,6 +3462,10 @@ package body Vhdl.Parse is
       end if;
       Set_Identifier (Decl, Ident);
       Set_Location (Decl, Loc);
+
+      if Flag_Gather_Comments then
+         Gather_Comments_Block (Comments, Decl);
+      end if;
 
       Parse_Declarative_Part (Res, Res);
 
@@ -4901,6 +4912,12 @@ package body Vhdl.Parse is
          --  Eat 'is'.
          Scan;
       end if;
+
+      --  Comments attached to the component (like for an entity).
+      if Flag_Gather_Comments then
+         Gather_Comments_Block (Component);
+      end if;
+
       Parse_Generic_Port_Clauses (Component);
 
       if Flag_Elocations then
@@ -9842,6 +9859,11 @@ package body Vhdl.Parse is
       Set_Location (Res, Loc);
       Set_Label (Res, Label);
 
+      --  Comments attached to the block (like for a process).
+      if Flag_Gather_Comments then
+         Gather_Comments_Block (Res);
+      end if;
+
       --  Eat 'block'.
       Scan;
 
@@ -12085,6 +12107,7 @@ package body Vhdl.Parse is
    is
       Res : Iir;
       End_Loc : Location_Type;
+      Comments : Comments_Range;
    begin
       Res := Create_Iir (Iir_Kind_Package_Body);
       Set_Parent (Res, Parent);
@@ -12092,12 +12115,28 @@ package body Vhdl.Parse is
       -- Get identifier.
       Scan_Identifier (Res);
 
+      --  Comments before 'is' (and after it, until an empty line) are
+      --  attached to the package body, like for a package declaration.
+      if Flag_Gather_Comments then
+         File_Comments.Save_Comments (Comments);
+      end if;
+
       --  Skip 'is'.
       Expect_Scan (Tok_Is);
+
+      if Flag_Gather_Comments then
+         Gather_Comments_Block (Comments, Res);
+      end if;
 
       Parse_Declarative_Part (Res, Get_Package_Parent (Res));
 
       End_Loc := Get_Token_Location;
+
+      --  Comments just before the 'end' are attached to the last declaration
+      --  or the package body (if no declarations).
+      if Flag_Gather_Comments then
+         Gather_Comments_End;
+      end if;
 
       --  Skip 'end'
       Expect_Scan (Tok_End);
