@@ -81,7 +81,7 @@ package p2 is
 		elem2 : integer; -- :elem2: per element comment behind
 	end record;
 
-	--! :elem2: as functions are longer in definitions, it might be written before
+	--! :log2: as functions are longer in definitions, it might be written before
 	function log2(param : positive) return natural;
 
 	function log2(

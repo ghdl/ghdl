@@ -1,4 +1,5 @@
 from pathlib import Path
+from re import search
 from unittest import TestCase, expectedFailure
 
 import pyGHDL.libghdl as libghdl
@@ -43,6 +44,7 @@ class Base(TestCase):
             commentStart = file_comments.Get_Comment_Start(f, idx)
             commentEnd = file_comments.Get_Comment_Last(f, idx)
             self.assertTrue(commentText.find(':'+name+':') >= 0, f"no :{name}: in [{commentStart}..{commentEnd}] '{commentText}'({len(commentText)})")
+            self._attached.add(commentStart)
             idx = file_comments.Get_Next_Comment(f, idx)
 
     def checkFlist(self, flist) -> None:
@@ -80,6 +82,8 @@ class Base(TestCase):
             stmt = nodes.Get_Chain(stmt)
 
     def checkFile(self, filename) -> None:
+        self._attached = set()
+
         # Load the file
         file_id = name_table.Get_Identifier(str(filename))
         sfe = files_map.Read_Source_File(name_table.Null_Identifier, file_id)
@@ -126,6 +130,12 @@ class Base(TestCase):
                 self.fail("Unknown unit.")
 
             designUnit = nodes.Get_Chain(designUnit)
+
+    def checkFileAllAttached(self, filename) -> None:
+        """Like :meth:`checkFile`, and every comment with a ``:name:`` marker must be attached (to node *name*)."""
+        self.checkFile(filename)
+        markers = [line for line in filename.read_text().splitlines() if search(r"--.*:\w+:", line)]
+        self.assertEqual(len(markers), len(self._attached), "comments with a marker that are not attached")
 
 
 class CommentAssociation(Base):
@@ -298,6 +308,11 @@ class CommentAssociation(Base):
 
     def test_line1(self) -> None:
         self.checkFile(self._root / "comments/line1.vhdl")
+
+
+class Association(Base):
+    def test_LineContinuationEndsAtToken(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/linecont_token.vhdl")
 
 
 class SingleLine(Base):

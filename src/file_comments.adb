@@ -126,7 +126,8 @@ package body File_Comments is
    end Comment_Newline;
 
    procedure Add_Comment (Start, Last : Source_Ptr;
-                          Line_Start : Source_Ptr)
+                          Line_Start : Source_Ptr;
+                          Follows_Comment : Boolean)
    is
       pragma Assert (Ctxt.File /= No_Source_File_Entry);
       T : File_Comments_Table renames Comments_Table.Table (Ctxt.File);
@@ -179,12 +180,19 @@ package body File_Comments is
                Ctxt.State := State_Before;
             end if;
          when State_Line_Cont =>
-            --  Continue to associate with the last node.
             if Flag_Trace then
                Put ("line_cont");
             end if;
-            N := Ctxt.Last_Node;
-            Ctxt.Next := File_Comments_Tables.Last (T) + 2;
+            if Follows_Comment then
+               --  Continue to associate with the last node.
+               N := Ctxt.Last_Node;
+               Ctxt.Next := File_Comments_Tables.Last (T) + 2;
+            else
+               --  A token between the comments: the continuation is ended
+               --  and the comment is for the next node.
+               N := 0;
+               Ctxt.State := State_Before;
+            end if;
       end case;
 
       if Flag_Trace then

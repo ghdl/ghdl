@@ -37,7 +37,9 @@ package File_Comments is
    --  First, it associates previous comments to the node, and then if a
    --  comment appear on the same line as the node, all consecutive comments
    --  are associated with the node.  Consecutive comments mean comments
-   --  without empty lines.  Another declaration or statement will also
+   --  without empty lines and without tokens between them.  A comment that
+   --  follows a token interrupts this association: it is for the next
+   --  declaration or statement.  Another declaration or statement will also
    --  interrupt this association because the comments will be associated
    --  with this new declaration or statement.  After interruption, comments
    --  are not associated anymore; they will be associated by the next
@@ -70,8 +72,11 @@ package File_Comments is
    --  of the comment (before the new line).
    --  LINE_START is the start of the current line (to detect comments in
    --  the same line as a node).
+   --  FOLLOWS_COMMENT is true when only blanks and newlines separate the
+   --  comment from the previous comment (there is no token between them).
    procedure Add_Comment (Start, Last : Source_Ptr;
-                          Line_Start : Source_Ptr);
+                          Line_Start : Source_Ptr;
+                          Follows_Comment : Boolean);
 
    --  A newline *after a comment* has been scanned.
    --  If this is a blank line, comments before the blank line are attached
