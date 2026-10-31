@@ -52,6 +52,8 @@ from pyTooling.Attributes.ArgParse.Argument import StringArgument
 from pyTooling.Attributes.ArgParse.Flag import FlagArgument
 from pyTooling.TerminalUI import TerminalApplication, Severity
 
+from pyVHDLModel import VHDLVersion
+
 from pyGHDL import GHDLBaseException, __version__, __copyright__, __author__
 from pyGHDL.libghdl import LibGHDLException
 from pyGHDL.dom import DOMException
@@ -72,12 +74,13 @@ class SourceAttribute(Attribute):
         """
         Attaches the source selection command line arguments to the decorated handler method.
 
-        The attribute bundles the four arguments that select what to analyze:
+        The attribute bundles the five arguments that select what to analyze and how:
 
         * ``-f`` / ``--file`` - the filename to parse, can be used multiple times.
         * ``-F`` / ``--files`` - a list of filenames to parse.
         * ``-D`` / ``--directory`` - the directory to parse.
         * ``-L`` / ``--library`` - the default library for files in the root directory.
+        * ``--std`` - the VHDL version to analyze with (``08`` or ``19``); default VHDL-2008.
 
         :param func: The handler method to attach the command line arguments to.
         :returns:    The same handler method, with the arguments attached.
@@ -126,6 +129,16 @@ class SourceAttribute(Attribute):
                 dest="DefaultLibrary",
                 type=str,
                 help="Default library for files in the root directory.",
+            ),
+        )
+        self._AppendAttribute(
+            func,
+            CommandLineArgument(
+                "--std",
+                metavar="std",
+                dest="Std",
+                choices=("08", "19"),
+                help="VHDL version to analyze with: 08 (default) or 19.",
             ),
         )
         return func
@@ -317,9 +330,12 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         A file is analyzed on its own; a directory is scanned, and each subdirectory is treated as a library of that
         name. The time *libghdl* spent parsing and the time the translation took are reported per file.
 
-        :param args: The parsed arguments, carrying the selected files, directory and default library.
+        :param args: The parsed arguments, carrying the selected files, directory, default library and VHDL version.
         """
         self.PrintHeadline()
+
+        if args.Std is not None:
+            self._design = Design(vhdlVersion=VHDLVersion.Parse(args.Std))
 
         if args.Files is not None:
             for file in args.Files:
@@ -423,7 +439,7 @@ def main():  # mccabe:disable=MC0001
        All is wrapped in a big ``try..except`` block to catch every unhandled exception.
     3. Shutdown the script and return its exit code.
     """
-    from sys import argv as sys_argv
+    from sys import argv as sys_argv, exit as sys_exit, stderr
 
     # debug = "-d" in sys_argv
     # verbose = "-v" in sys_argv
@@ -432,8 +448,9 @@ def main():  # mccabe:disable=MC0001
     try:
         # handover to a class instance
         app = Application()  # debug, verbose, quiet)
-    except Exception:
-        return
+    except Exception as ex:
+        print(f"Can't create the application: {ex.__class__.__name__}: {ex}", file=stderr)
+        sys_exit(1)
 
     try:
         app.Run()
