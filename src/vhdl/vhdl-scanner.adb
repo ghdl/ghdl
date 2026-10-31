@@ -571,7 +571,19 @@ package body Vhdl.Scanner is
          end case;
 
          --  Expand bit value.
-         if Vhdl_Std >= Vhdl_08 and V > Base then
+         --  LRM08 15.8 Bit string literals
+         --  If the base specifier is B, UB, or SB, the digits 0 and 1 in the
+         --  bit value are interpreted as extended digits, and all other
+         --  graphic characters are not interpreted as extended digits.
+         --  [...]
+         --  For a character in the simplified value that is not interpreted
+         --  as an extended digit, each character in the replacement sequence
+         --  is the same as the character replaced.
+         --
+         --  A digit that is not an extended digit of the base (b"2", o"9")
+         --  has no use as a replicated character: diagnose it (below), as in
+         --  vhdl-93.
+         if Vhdl_Std >= Vhdl_08 and V >= Base and C not in '0' .. '9' then
             --  Expand as graphic character.
             for I in 1 .. Base_Log loop
                Str_Table.Append_String8_Char (C);
