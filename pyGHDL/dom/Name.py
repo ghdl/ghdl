@@ -34,6 +34,8 @@
 This module implements derived name classes from :mod:`pyVHDLModel.Name`.
 """
 
+from __future__ import annotations
+
 from typing import List
 
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy

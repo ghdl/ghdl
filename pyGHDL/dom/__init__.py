@@ -32,6 +32,11 @@
 Document object model (DOM) for :mod:`pyGHDL.libghdl` based on :doc:`pyVHDLModel <vhdlmodel:index>`.
 """
 
+from __future__ import annotations
+
+from typing import Self
+
+
 from pathlib import Path
 
 from pyTooling.Decorators import export, readonly
@@ -64,7 +69,7 @@ class Position(metaclass=ExtendedType):
         self._column = column
 
     @classmethod
-    def parse(cls, node: Iir) -> "Position":
+    def parse(cls, node: Iir) -> Self:
         """
         Return the source code position of a IIR node.
 

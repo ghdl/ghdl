@@ -34,7 +34,9 @@
 This module implements derived concurrent statement classes from :mod:`pyVHDLModel.Concurrent`.
 """
 
-from typing import Iterable, List, Optional as Nullable
+from __future__ import annotations
+
+from typing import Iterable, List, Optional as Nullable, Self
 
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
@@ -176,7 +178,7 @@ class ComponentInstantiation(VHDLModel_ComponentInstantiation, DOMMixin):
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
-    def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ComponentInstantiation":
+    def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> Self:
         """
         Translates the IIR node of the instantiation statement to a :class:`ComponentInstantiation`.
 
@@ -224,7 +226,7 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
-    def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "EntityInstantiation":
+    def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> Self:
         """
         Translates the IIR node of the instantiation statement to an :class:`EntityInstantiation`.
 
@@ -279,7 +281,7 @@ class ConfigurationInstantiation(VHDLModel_ConfigurationInstantiation, DOMMixin)
         DOMMixin.__init__(self, instantiationNode)
 
     @classmethod
-    def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> "ConfigurationInstantiation":
+    def parse(cls, instantiationNode: Iir, instantiatedUnit: Iir, label: str) -> Self:
         """
         Translates the IIR node of the instantiation statement to a :class:`ConfigurationInstantiation`.
 
@@ -315,7 +317,7 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         portItems: Iterable = None,
         portAssociationItems: Iterable = None,
         declaredItems: Iterable = None,
-        statements: Iterable["ConcurrentStatement"] = None,
+        statements: Iterable[ConcurrentStatement] = None,
     ) -> None:
         """
         Initializes a block statement.
@@ -341,7 +343,7 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         DOMMixin.__init__(self, blockNode)
 
     @classmethod
-    def parse(cls, blockNode: Iir, label: str) -> "ConcurrentBlockStatement":
+    def parse(cls, blockNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the block statement to a :class:`ConcurrentBlockStatement`.
 
@@ -414,7 +416,7 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
         DOMMixin.__init__(self, processNode)
 
     @classmethod
-    def parse(cls, processNode: Iir, label: str, hasSensitivityList: bool) -> "ProcessStatement":
+    def parse(cls, processNode: Iir, label: str, hasSensitivityList: bool) -> Self:
         """
         Translates the IIR node of the process statement to a :class:`ProcessStatement`.
 
@@ -471,7 +473,7 @@ class IfGenerateBranch(VHDLModel_IfGenerateBranch, DOMMixin):
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
-    def parse(cls, generateNode: Iir) -> "IfGenerateBranch":
+    def parse(cls, generateNode: Iir) -> Self:
         """
         Translates the IIR node of the generate statement to an :class:`IfGenerateBranch`.
 
@@ -523,7 +525,7 @@ class ElsifGenerateBranch(VHDLModel_ElsifGenerateBranch, DOMMixin):
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
-    def parse(cls, generateNode: Iir, condition: Iir) -> "ElsifGenerateBranch":
+    def parse(cls, generateNode: Iir, condition: Iir) -> Self:
         """
         Translates the IIR node of the generate statement to an :class:`ElsifGenerateBranch`.
 
@@ -574,7 +576,7 @@ class ElseGenerateBranch(VHDLModel_ElseGenerateBranch, DOMMixin):
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
-    def parse(cls, generateNode: Iir) -> "ElseGenerateBranch":
+    def parse(cls, generateNode: Iir) -> Self:
         """
         Translates the IIR node of the generate statement to an :class:`ElseGenerateBranch`.
 
@@ -624,7 +626,7 @@ class IfGenerateStatement(VHDLModel_IfGenerateStatement, DOMMixin):
         DOMMixin.__init__(self, generateNode)
 
     @classmethod
-    def parse(cls, generateNode: Iir, label: str) -> "IfGenerateStatement":
+    def parse(cls, generateNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the generate statement to an :class:`IfGenerateStatement`.
 
@@ -716,7 +718,7 @@ class GenerateCase(VHDLModel_GenerateCase, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, caseNode: Iir, choices: Iterable[ConcurrentChoice]) -> "GenerateCase":
+    def parse(cls, caseNode: Iir, choices: Iterable[ConcurrentChoice]) -> Self:
         """
         Translates the IIR node of the alternative to a :class:`GenerateCase`.
 
@@ -765,7 +767,7 @@ class OthersGenerateCase(VHDLModel_OthersGenerateCase, DOMMixin):
         DOMMixin.__init__(self, caseNode)
 
     @classmethod
-    def parse(cls, caseNode: Iir) -> "OthersGenerateCase":
+    def parse(cls, caseNode: Iir) -> Self:
         """
         Translates the IIR node of the alternative to an :class:`OthersGenerateCase`.
 
@@ -813,7 +815,7 @@ class CaseGenerateStatement(VHDLModel_CaseGenerateStatement, DOMMixin):
         DOMMixin.__init__(self, generateNode)
 
     @classmethod
-    def parse(cls, generateNode: Iir, label: str) -> "CaseGenerateStatement":
+    def parse(cls, generateNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the generate statement to a :class:`CaseGenerateStatement`.
 
@@ -931,7 +933,7 @@ class ForGenerateStatement(VHDLModel_ForGenerateStatement, DOMMixin):
         DOMMixin.__init__(self, generateNode)
 
     @classmethod
-    def parse(cls, generateNode: Iir, label: str) -> "ForGenerateStatement":
+    def parse(cls, generateNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the generate statement to a :class:`ForGenerateStatement`.
 
@@ -1010,7 +1012,7 @@ def GetWaveformElementsFromChainedNodes(nodeChain: Iir) -> List[WaveformElement]
     return [WaveformElement.parse(wave) for wave in utils.chain_iter(nodeChain)]
 
 
-def GetConditionalWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable["ConditionalWaveform"]:
+def GetConditionalWaveformsFromChainedNodes(nodeChain: Iir) -> Iterable[ConditionalWaveform]:
     """
     Translates a chain of ``Conditional_Waveform`` nodes into a sequence of :class:`ConditionalWaveform`.
 
@@ -1109,7 +1111,7 @@ class ConditionalWaveform(VHDLModel_ConditionalWaveform, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir) -> "ConditionalWaveform":
+    def parse(cls, node: Iir) -> Self:
         """
         Translates an IIR node to a :class:`ConditionalWaveform`.
 
@@ -1187,7 +1189,7 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
-    def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentSimpleSignalAssignment":
+    def parse(cls, assignmentNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the assignment statement to a :class:`ConcurrentSimpleSignalAssignment`.
 
@@ -1231,7 +1233,7 @@ class ConcurrentConditionalSignalAssignment(VHDLModel_ConcurrentConditionalSigna
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
-    def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentConditionalSignalAssignment":
+    def parse(cls, assignmentNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the assignment statement to a :class:`ConcurrentConditionalSignalAssignment`.
 
@@ -1278,7 +1280,7 @@ class ConcurrentSelectedSignalAssignment(VHDLModel_ConcurrentSelectedSignalAssig
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
-    def parse(cls, assignmentNode: Iir, label: str) -> "ConcurrentSelectedSignalAssignment":
+    def parse(cls, assignmentNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the assignment statement to a :class:`ConcurrentSelectedSignalAssignment`.
 
@@ -1322,7 +1324,7 @@ class ConcurrentProcedureCall(VHDLModel_ConcurrentProcedureCall, DOMMixin):
         DOMMixin.__init__(self, callNode)
 
     @classmethod
-    def parse(cls, concurrentCallNode: Iir, label: str) -> "ConcurrentProcedureCall":
+    def parse(cls, concurrentCallNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the concurrent procedure call to a :class:`ConcurrentProcedureCall`.
 
@@ -1369,7 +1371,7 @@ class ConcurrentAssertStatement(VHDLModel_ConcurrentAssertStatement, DOMMixin):
         DOMMixin.__init__(self, assertNode)
 
     @classmethod
-    def parse(cls, assertNode: Iir, label: str) -> "ConcurrentAssertStatement":
+    def parse(cls, assertNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the assertion to a :class:`ConcurrentAssertStatement`.
 

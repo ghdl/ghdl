@@ -34,7 +34,9 @@
 This module implements derived expression classes from :mod:`pyVHDLModel.Expression`.
 """
 
-from typing import List, Union
+from __future__ import annotations
+
+from typing import List, Union, Self
 
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 from pyTooling.MetaClasses import ExtendedType
@@ -269,7 +271,7 @@ class ParenthesisExpression(VHDLModel_ParenthesisExpression, DOMMixin, _ParseUna
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir) -> "ParenthesisExpression":
+    def parse(cls, node: Iir) -> Self:
         """
         Translates an IIR node to a :class:`ParenthesisExpression`.
 
@@ -341,7 +343,7 @@ class RangeExpression(VHDLModel_RangeExpression, DOMMixin):
     """
 
     @classmethod
-    def parse(cls, node: Iir) -> Union["AscendingRangeExpression", "DescendingRangeExpression"]:
+    def parse(cls, node: Iir) -> Union[AscendingRangeExpression, DescendingRangeExpression]:
         """
         Translates an IIR node to a :class:`RangeExpression`.
 
@@ -1133,7 +1135,7 @@ class QualifiedExpression(VHDLModel_QualifiedExpression, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir) -> "QualifiedExpression":
+    def parse(cls, node: Iir) -> Self:
         """
         Translates an IIR node to a :class:`QualifiedExpression`.
 
@@ -1166,7 +1168,7 @@ class SubtypeAllocation(VHDLModel_SubtypeAllocation, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir) -> "QualifiedExpressionAllocation":
+    def parse(cls, node: Iir) -> QualifiedExpressionAllocation:
         """
         Translates an IIR node to a :class:`SubtypeAllocation`.
 
@@ -1198,7 +1200,7 @@ class QualifiedExpressionAllocation(VHDLModel_QualifiedExpressionAllocation, DOM
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir) -> "QualifiedExpressionAllocation":
+    def parse(cls, node: Iir) -> Self:
         """
         Translates an IIR node to a :class:`QualifiedExpressionAllocation`.
 
@@ -1230,7 +1232,7 @@ class Aggregate(VHDLModel_Aggregate, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir) -> "Aggregate":
+    def parse(cls, node: Iir) -> Self:
         """
         Translates an IIR node to an :class:`Aggregate`.
 

@@ -33,3 +33,5 @@
 """
 This package offers formatters to render a :mod:`pyGHDL.dom` design in other representations.
 """
+
+from __future__ import annotations

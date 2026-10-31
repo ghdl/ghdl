@@ -34,7 +34,9 @@
 This module implements derived sequential statement classes from :mod:`pyVHDLModel.Sequential`.
 """
 
-from typing import Iterable
+from __future__ import annotations
+
+from typing import Iterable, Self
 
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
@@ -111,7 +113,7 @@ class IfBranch(VHDLModel_IfBranch, DOMMixin):
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
-    def parse(cls, branchNode: Iir, label: str) -> "IfBranch":
+    def parse(cls, branchNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the branch to an :class:`IfBranch`.
 
@@ -155,7 +157,7 @@ class ElsifBranch(VHDLModel_ElsifBranch, DOMMixin):
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
-    def parse(cls, branchNode: Iir, condition: Iir, label: str) -> "ElsifBranch":
+    def parse(cls, branchNode: Iir, condition: Iir, label: str) -> Self:
         """
         Translates the IIR node of the branch to an :class:`ElsifBranch`.
 
@@ -198,7 +200,7 @@ class ElseBranch(VHDLModel_ElseBranch, DOMMixin):
         DOMMixin.__init__(self, branchNode)
 
     @classmethod
-    def parse(cls, branchNode: Iir, label: str) -> "ElseBranch":
+    def parse(cls, branchNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the branch to an :class:`ElseBranch`.
 
@@ -244,7 +246,7 @@ class IfStatement(VHDLModel_IfStatement, DOMMixin):
         DOMMixin.__init__(self, ifNode)
 
     @classmethod
-    def parse(cls, ifNode: Iir, label: str) -> "IfStatement":
+    def parse(cls, ifNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the :vhdlkw:`if` statement to an :class:`IfStatement`.
 
@@ -332,7 +334,7 @@ class Case(VHDLModel_Case, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, caseNode: Iir, choices: Iterable[SequentialChoice], label: str) -> "Case":
+    def parse(cls, caseNode: Iir, choices: Iterable[SequentialChoice], label: str) -> Self:
         """
         Translates the IIR node of the alternative to a :class:`Case`.
 
@@ -371,7 +373,7 @@ class OthersCase(VHDLModel_OthersCase, DOMMixin):
         DOMMixin.__init__(self, caseNode)
 
     @classmethod
-    def parse(cls, caseNode: Iir, label: str = None) -> "OthersCase":
+    def parse(cls, caseNode: Iir, label: str = None) -> Self:
         """
         Translates the IIR node of the alternative to an :class:`OthersCase`.
 
@@ -413,7 +415,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
         DOMMixin.__init__(self, caseNode)
 
     @classmethod
-    def parse(cls, caseNode: Iir, label: str) -> "CaseStatement":
+    def parse(cls, caseNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the alternative to a :class:`CaseStatement`.
 
@@ -527,7 +529,7 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
         DOMMixin.__init__(self, loopNode)
 
     @classmethod
-    def parse(cls, loopNode: Iir, label: str) -> "ForLoopStatement":
+    def parse(cls, loopNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the loop statement to a :class:`ForLoopStatement`.
 
@@ -578,7 +580,7 @@ class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
         DOMMixin.__init__(self, loopNode)
 
     @classmethod
-    def parse(cls, loopNode: Iir, label: str) -> "WhileLoopStatement":
+    def parse(cls, loopNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the loop statement to a :class:`WhileLoopStatement`.
 
@@ -646,7 +648,7 @@ class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignmen
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
-    def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialSimpleSignalAssignment":
+    def parse(cls, assignmentNode: Iir, label: str = None) -> Self:
         """
         Translates the IIR node of the assignment statement to a :class:`SequentialSimpleSignalAssignment`.
 
@@ -664,7 +666,7 @@ class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignmen
         return cls(assignmentNode, targetName, waveform, label)
 
 
-def GetConditionalExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable["ConditionalExpression"]:
+def GetConditionalExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable[ConditionalExpression]:
     """
     Translates a chain of ``Conditional_Expression`` nodes into a sequence of :class:`ConditionalExpression`.
 
@@ -756,7 +758,7 @@ class ConditionalExpression(VHDLModel_ConditionalExpression, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir) -> "ConditionalExpression":
+    def parse(cls, node: Iir) -> Self:
         """
         Translates an IIR node to a :class:`ConditionalExpression`.
 
@@ -834,7 +836,7 @@ class SequentialVariableAssignment(VHDLModel_SequentialVariableAssignment, DOMMi
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
-    def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialVariableAssignment":
+    def parse(cls, assignmentNode: Iir, label: str = None) -> Self:
         """
         Translates the IIR node of the assignment statement to a :class:`SequentialVariableAssignment`.
 
@@ -877,7 +879,7 @@ class SequentialConditionalVariableAssignment(VHDLModel_SequentialConditionalVar
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
-    def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialConditionalVariableAssignment":
+    def parse(cls, assignmentNode: Iir, label: str = None) -> Self:
         """
         Translates the IIR node of the assignment statement to a :class:`SequentialConditionalVariableAssignment`.
 
@@ -922,7 +924,7 @@ class SequentialConditionalSignalAssignment(VHDLModel_SequentialConditionalSigna
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
-    def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialConditionalSignalAssignment":
+    def parse(cls, assignmentNode: Iir, label: str = None) -> Self:
         """
         Translates the IIR node of the assignment statement to a :class:`SequentialConditionalSignalAssignment`.
 
@@ -969,7 +971,7 @@ class SequentialSelectedVariableAssignment(VHDLModel_SequentialSelectedVariableA
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
-    def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialSelectedVariableAssignment":
+    def parse(cls, assignmentNode: Iir, label: str = None) -> Self:
         """
         Translates the IIR node of the assignment statement to a :class:`SequentialSelectedVariableAssignment`.
 
@@ -1017,7 +1019,7 @@ class SequentialSelectedSignalAssignment(VHDLModel_SequentialSelectedSignalAssig
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
-    def parse(cls, assignmentNode: Iir, label: str = None) -> "SequentialSelectedSignalAssignment":
+    def parse(cls, assignmentNode: Iir, label: str = None) -> Self:
         """
         Translates the IIR node of the assignment statement to a :class:`SequentialSelectedSignalAssignment`.
 
@@ -1061,7 +1063,7 @@ class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
-    def parse(cls, assignmentNode: Iir, label: str = None) -> "SignalForceAssignment":
+    def parse(cls, assignmentNode: Iir, label: str = None) -> Self:
         """
         Translates the IIR node of the assignment statement to a :class:`SignalForceAssignment`.
 
@@ -1097,7 +1099,7 @@ class SignalReleaseAssignment(VHDLModel_SignalReleaseAssignment, DOMMixin):
         DOMMixin.__init__(self, assignmentNode)
 
     @classmethod
-    def parse(cls, assignmentNode: Iir, label: str = None) -> "SignalReleaseAssignment":
+    def parse(cls, assignmentNode: Iir, label: str = None) -> Self:
         """
         Translates the IIR node of the assignment statement to a :class:`SignalReleaseAssignment`.
 
@@ -1139,7 +1141,7 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
         DOMMixin.__init__(self, callNode)
 
     @classmethod
-    def parse(cls, callNode: Iir, label: str) -> "SequentialProcedureCall":
+    def parse(cls, callNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the procedure call to a :class:`SequentialProcedureCall`.
 
@@ -1186,7 +1188,7 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
         DOMMixin.__init__(self, assertNode)
 
     @classmethod
-    def parse(cls, assertNode: Iir, label: str) -> "SequentialAssertStatement":
+    def parse(cls, assertNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the assertion to a :class:`SequentialAssertStatement`.
 
@@ -1229,7 +1231,7 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
         DOMMixin.__init__(self, reportNode)
 
     @classmethod
-    def parse(cls, reportNode: Iir, label: str) -> "SequentialReportStatement":
+    def parse(cls, reportNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the :vhdlkw:`report` statement to a :class:`SequentialReportStatement`.
 
@@ -1269,7 +1271,7 @@ class ReturnStatement(VHDLModel_ReturnStatement, DOMMixin):
         DOMMixin.__init__(self, returnNode)
 
     @classmethod
-    def parse(cls, returnNode: Iir, label: str) -> "ReturnStatement":
+    def parse(cls, returnNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the :vhdlkw:`return` statement to a :class:`ReturnStatement`.
 
@@ -1330,7 +1332,7 @@ class NextStatement(VHDLModel_NextStatement, DOMMixin):
         DOMMixin.__init__(self, exitNode)
 
     @classmethod
-    def parse(cls, exitNode: Iir, label: str) -> "NextStatement":
+    def parse(cls, exitNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the exit statement to a :class:`NextStatement`.
 
@@ -1369,7 +1371,7 @@ class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
         DOMMixin.__init__(self, exitNode)
 
     @classmethod
-    def parse(cls, exitNode: Iir, label: str) -> "ExitStatement":
+    def parse(cls, exitNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the exit statement to an :class:`ExitStatement`.
 
@@ -1412,7 +1414,7 @@ class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
         DOMMixin.__init__(self, waitNode)
 
     @classmethod
-    def parse(cls, waitNode: Iir, label: str) -> "WaitStatement":
+    def parse(cls, waitNode: Iir, label: str) -> Self:
         """
         Translates the IIR node of the :vhdlkw:`wait` statement to a :class:`WaitStatement`.
 

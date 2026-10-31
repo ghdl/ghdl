@@ -34,7 +34,9 @@
 This module implements derived subprogram classes from :mod:`pyVHDLModel.Subprogram`.
 """
 
-from typing import List
+from __future__ import annotations
+
+from typing import List, Self
 
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
@@ -67,7 +69,7 @@ class Function(VHDLModel_Function, DOMMixin):
         genericItems: List[GenericInterfaceItemMixin] = None,
         parameterItems: List[ParameterInterfaceItemMixin] = None,
         declaredItems: List = None,
-        statements: List["SequentialStatement"] = None,
+        statements: List[SequentialStatement] = None,
         documentation: str = None,
     ) -> None:
         """
@@ -96,7 +98,7 @@ class Function(VHDLModel_Function, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, functionNode: Iir) -> "Function":
+    def parse(cls, functionNode: Iir) -> Self:
         """
         Translates the IIR node of the function declaration to a :class:`Function`.
 
@@ -160,7 +162,7 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
         genericItems: List[GenericInterfaceItemMixin] = None,
         parameterItems: List[ParameterInterfaceItemMixin] = None,
         declaredItems: List = None,
-        statements: List["SequentialStatement"] = None,
+        statements: List[SequentialStatement] = None,
         documentation: str = None,
     ) -> None:
         """
@@ -185,7 +187,7 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, procedureNode: Iir) -> "Procedure":
+    def parse(cls, procedureNode: Iir) -> Self:
         """
         Translates the IIR node of the procedure declaration to a :class:`Procedure`.
 
@@ -263,7 +265,7 @@ class FunctionInstantiation(VHDLModel_FunctionInstantiation, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, functionNode: Iir) -> "FunctionInstantiation":
+    def parse(cls, functionNode: Iir) -> Self:
         """
         Translates the IIR node of the function declaration to a :class:`FunctionInstantiation`.
 
@@ -324,7 +326,7 @@ class ProcedureInstantiation(VHDLModel_ProcedureInstantiation, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, procedureNode: Iir) -> "ProcedureInstantiation":
+    def parse(cls, procedureNode: Iir) -> Self:
         """
         Translates the IIR node of the procedure declaration to a :class:`ProcedureInstantiation`.
 
