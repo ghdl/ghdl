@@ -281,7 +281,7 @@ class VariableSymbol(VHDLModel_VariableSymbol, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_AggregateSymbol, strategy=DocStringMergeStrategy.BaseFirst)
+@InheritDocString(VHDLModel_AggregateSymbol, strategy=DocStringMergeStrategy.BaseLast)
 class AggregateSymbol(VHDLModel_AggregateSymbol, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.AggregateSymbol`.

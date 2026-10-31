@@ -180,7 +180,7 @@ class InverseExpression(VHDLModel_InverseExpression, DOMMixin, _ParseUnaryExpres
 
 
 @export
-@InheritDocString(VHDLModel_ConditionExpression, strategy=DocStringMergeStrategy.BaseFirst)
+@InheritDocString(VHDLModel_ConditionExpression, strategy=DocStringMergeStrategy.BaseLast)
 class ConditionExpression(VHDLModel_ConditionExpression, DOMMixin, _ParseUnaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.ConditionExpression`.

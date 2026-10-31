@@ -116,7 +116,7 @@ class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_CharacterEnumerationLiteral, strategy=DocStringMergeStrategy.BaseFirst)
+@InheritDocString(VHDLModel_CharacterEnumerationLiteral, strategy=DocStringMergeStrategy.BaseLast)
 class CharacterEnumerationLiteral(VHDLModel_CharacterEnumerationLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from
