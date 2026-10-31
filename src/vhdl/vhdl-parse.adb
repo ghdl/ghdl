@@ -5074,6 +5074,12 @@ package body Vhdl.Parse is
       Res := Create_Iir (Iir_Kind_Mode_View_Declaration);
       Set_Location (Res);
 
+      --  Comments attached to the mode view (the elements gather their
+      --  own comments).
+      if Flag_Gather_Comments then
+         Gather_Comments_Line (Res);
+      end if;
+
       --  Skip 'view'
       Scan;
 
