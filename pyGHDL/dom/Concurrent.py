@@ -1195,10 +1195,10 @@ class ConcurrentSimpleSignalAssignment(VHDLModel_ConcurrentSimpleSignalAssignmen
         :param label:          The statement's label, or ``None`` if it has none.
         :returns:              The translated assignment statement.
         """
-        from pyGHDL.dom._Translate import GetName
+        from pyGHDL.dom._Translate import GetTargetFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
-        targetName = SignalSymbol(targetNode, GetName(targetNode))
+        targetName = GetTargetFromNode(targetNode, SignalSymbol)
 
         waveform = GetWaveformElementsFromChainedNodes(nodes.Get_Waveform_Chain(assignmentNode))
 
@@ -1239,10 +1239,10 @@ class ConcurrentConditionalSignalAssignment(VHDLModel_ConcurrentConditionalSigna
         :param label:          The statement's label, or ``None`` if it has none.
         :returns:              The translated assignment statement.
         """
-        from pyGHDL.dom._Translate import GetName
+        from pyGHDL.dom._Translate import GetTargetFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
-        targetName = SignalSymbol(targetNode, GetName(targetNode))
+        targetName = GetTargetFromNode(targetNode, SignalSymbol)
         conditionalWaveforms = GetConditionalWaveformsFromChainedNodes(
             nodes.Get_Conditional_Waveform_Chain(assignmentNode)
         )
@@ -1286,10 +1286,10 @@ class ConcurrentSelectedSignalAssignment(VHDLModel_ConcurrentSelectedSignalAssig
         :param label:          The statement's label, or ``None`` if it has none.
         :returns:              The translated assignment statement.
         """
-        from pyGHDL.dom._Translate import GetName, GetExpressionFromNode
+        from pyGHDL.dom._Translate import GetTargetFromNode, GetExpressionFromNode
 
         targetNode = nodes.Get_Target(assignmentNode)
-        targetName = SignalSymbol(targetNode, GetName(targetNode))
+        targetName = GetTargetFromNode(targetNode, SignalSymbol)
         expression = GetExpressionFromNode(nodes.Get_Expression(assignmentNode))
         selectedWaveforms = GetSelectedWaveformsFromChainedNodes(nodes.Get_Selected_Waveform_Chain(assignmentNode))
 

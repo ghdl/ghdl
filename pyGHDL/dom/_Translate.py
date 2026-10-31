@@ -86,6 +86,9 @@ from pyGHDL.dom.Symbol import (
     ConstrainedRecordSubtypeSymbol,
     RecordElementSymbol,
     RangeAttributeSymbol,
+    SignalSymbol,
+    VariableSymbol,
+    AggregateSymbol,
 )
 from pyGHDL.dom.Type import (
     IntegerType,
@@ -215,6 +218,35 @@ def GetName(node: Iir) -> Name:
         return AllName(node, prefixName)
     else:
         raise DOMException(f"Unknown name kind '{kind.name}'")
+
+
+@export
+def GetTargetFromNode(
+    node: Iir, symbolClass: Type[SignalSymbol] | Type[VariableSymbol]
+) -> SignalSymbol | VariableSymbol | AggregateSymbol:
+    """
+    Translates the target IIR node of an assignment to a symbol.
+
+    A name becomes a ``symbolClass`` symbol. An aggregate (``(carry, sum) := ...``) becomes an :class:`AggregateSymbol`
+    holding one target per element, each translated by this function again.
+
+    :param node:          The target IIR node of the assignment.
+    :param symbolClass:   The symbol class for a named target, e.g. :class:`SignalSymbol`.
+    :returns:             The target symbol.
+    :raises DOMException: If an element of an aggregate target has a choice (``(re => a, im => b)``).
+    """
+    if GetIirKindOfNode(node) != nodes.Iir_Kind.Aggregate:
+        return symbolClass(node, GetName(node))
+
+    targets = []
+    for item in utils.chain_iter(nodes.Get_Association_Choices_Chain(node)):
+        if GetIirKindOfNode(item) != nodes.Iir_Kind.Choice_By_None:
+            position = Position.parse(item)
+            raise DOMException(f"Aggregate target with a choice at {position} isn't supported.")
+
+        targets.append(GetTargetFromNode(nodes.Get_Associated_Expr(item), symbolClass))
+
+    return AggregateSymbol(node, targets)
 
 
 def GetAssociations(node: Iir) -> List:
