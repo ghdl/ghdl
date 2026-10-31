@@ -314,6 +314,9 @@ class Association(Base):
     def test_LineContinuationEndsAtToken(self) -> None:
         self.checkFileAllAttached(self._root / "comments/linecont_token.vhdl")
 
+    def test_ObjectListFirstIdentifier(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/objlist.vhdl")
+
 
 class SingleLine(Base):
     def test_Complex(self) -> None:

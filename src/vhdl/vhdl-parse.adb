@@ -4678,8 +4678,9 @@ package body Vhdl.Parse is
             Set_Shared_Flag (Object, Shared);
          end if;
 
-         --  Comments attached to the object.
-         if Flag_Gather_Comments then
+         --  Comments attached to the first object of the identifier list
+         --  (like interfaces and record elements).
+         if Flag_Gather_Comments and then First = Null_Iir then
             Gather_Comments_Line (Object);
          end if;
 
