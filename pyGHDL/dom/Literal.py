@@ -40,6 +40,7 @@ from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrateg
 
 from pyVHDLModel.Expression import NullLiteral as VHDLModel_NullLiteral
 from pyVHDLModel.Expression import EnumerationLiteral as VHDLModel_EnumerationLiteral
+from pyVHDLModel.Expression import CharacterEnumerationLiteral as VHDLModel_CharacterEnumerationLiteral
 from pyVHDLModel.Expression import IntegerLiteral as VHDLModel_IntegerLiteral
 from pyVHDLModel.Expression import FloatingPointLiteral as VHDLModel_FloatingPointLiteral
 from pyVHDLModel.Expression import PhysicalIntegerLiteral as VHDLModel_PhysicalIntegerLiteral
@@ -112,6 +113,37 @@ class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
         """
         literalName = GetNameOfNode(literalNode)
         return cls(literalNode, literalName)
+
+
+@export
+@InheritDocString(VHDLModel_CharacterEnumerationLiteral, strategy=DocStringMergeStrategy.BaseFirst)
+class CharacterEnumerationLiteral(VHDLModel_CharacterEnumerationLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from
+    :class:`pyVHDLModel.Expression.CharacterEnumerationLiteral`.
+    """
+
+    def __init__(self, node: Iir, value: str) -> None:
+        """
+        Initializes a character enumeration literal.
+
+        :param node:  The IIR node this object was translated from.
+        :param value: The enumeration literal's character, without quotes.
+        """
+        super().__init__(value)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, literalNode: Iir) -> "CharacterEnumerationLiteral":
+        """
+        Translates the IIR node of the literal to a :class:`CharacterEnumerationLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
+        identifier = nodes.Get_Identifier(literalNode)
+        value = name_table.Get_Character(identifier)
+        return cls(literalNode, value)
 
 
 @export

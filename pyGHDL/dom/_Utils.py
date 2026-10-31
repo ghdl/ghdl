@@ -108,7 +108,7 @@ def GetNameOfNode(node: Iir) -> str:
     """
     Return the Python string from node ``node`` identifier.
 
-    A character literal (``'0'``) is returned with its quotes.
+    A character literal (``'0'``) is returned as its character, without quotes (``0``).
 
     :param node:        The IIR node to read the identifier of.
     :returns:           The node's identifier as written in the source file.
@@ -119,7 +119,7 @@ def GetNameOfNode(node: Iir) -> str:
 
     identifier = nodes.Get_Identifier(node)
     if name_table.Is_Character(identifier):
-        return f"'{name_table.Get_Character(identifier)}'"
+        return name_table.Get_Character(identifier)
 
     identifier = utils.Get_Source_Identifier(node)
     return name_table.Get_Name_Ptr(identifier)

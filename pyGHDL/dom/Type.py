@@ -54,12 +54,12 @@ from pyVHDLModel.Type import ProtectedTypeBody as VHDLModel_ProtectedTypeBody
 from pyVHDLModel.Type import AccessType as VHDLModel_AccessType
 from pyVHDLModel.Type import FileType as VHDLModel_FileType
 
-from pyGHDL.libghdl import utils
+from pyGHDL.libghdl import name_table, utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes, flists
 from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
-from pyGHDL.dom.Literal import EnumerationLiteral, PhysicalIntegerLiteral
+from pyGHDL.dom.Literal import EnumerationLiteral, CharacterEnumerationLiteral, PhysicalIntegerLiteral
 from pyVHDLModel.Base import Range
 from pyGHDL.dom.Subprogram import Function, Procedure
 
@@ -139,7 +139,10 @@ class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
         literals = []
         enumerationLiterals = nodes.Get_Enumeration_Literal_List(typeDefinitionNode)
         for enumerationLiteral in utils.flist_iter(enumerationLiterals):
-            literal = EnumerationLiteral.parse(enumerationLiteral)
+            if name_table.Is_Character(nodes.Get_Identifier(enumerationLiteral)):
+                literal = CharacterEnumerationLiteral.parse(enumerationLiteral)
+            else:
+                literal = EnumerationLiteral.parse(enumerationLiteral)
             literals.append(literal)
 
         return cls(typeDefinitionNode, typeName, literals, documentation)
