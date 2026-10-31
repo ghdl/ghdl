@@ -439,7 +439,7 @@ def main():  # mccabe:disable=MC0001
        All is wrapped in a big ``try..except`` block to catch every unhandled exception.
     3. Shutdown the script and return its exit code.
     """
-    from sys import argv as sys_argv
+    from sys import argv as sys_argv, exit as sys_exit, stderr
 
     # debug = "-d" in sys_argv
     # verbose = "-v" in sys_argv
@@ -448,8 +448,9 @@ def main():  # mccabe:disable=MC0001
     try:
         # handover to a class instance
         app = Application()  # debug, verbose, quiet)
-    except Exception:
-        return
+    except Exception as ex:
+        print(f"Can't create the application: {ex.__class__.__name__}: {ex}", file=stderr)
+        sys_exit(1)
 
     try:
         app.Run()
