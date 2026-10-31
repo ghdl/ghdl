@@ -5,6 +5,7 @@ package assoc_pkg is
   view vw of rec is
     a: in;
   end view;
+  --  Comment for p1
   procedure p1 (
     x: out bit
   );
