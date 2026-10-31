@@ -1,0 +1,32 @@
+package assoc_pkg is
+  type rec is record
+    a: bit;
+  end record;
+  view vw of rec is
+    a: in;
+  end view;
+  procedure p1 (
+    x: out bit
+  );
+  procedure p2 (
+    --  Comment for y
+    y: out bit
+  );
+end package;
+use work.assoc_pkg.all;
+entity assoc is
+  port (
+    --  Comment for v
+    v: view vw;
+    --  Comment for q
+    q: out bit
+  );
+end entity;
+--  Comment for the architecture
+architecture arch of assoc
+is
+  --  Comment for s and t
+  signal s, t: bit;
+  signal u: bit;
+begin
+end architecture;
