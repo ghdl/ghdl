@@ -320,6 +320,9 @@ class Association(Base):
     def test_LineContinuationEndsAtToken(self) -> None:
         self.checkFileAllAttached(self._root / "comments/linecont_token.vhdl")
 
+    def test_LineContinuationIndented(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/linecont_column.vhdl")
+
     def test_ObjectListFirstIdentifier(self) -> None:
         self.checkFileAllAttached(self._root / "comments/objlist.vhdl")
 

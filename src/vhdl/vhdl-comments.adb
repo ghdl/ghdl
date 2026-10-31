@@ -39,7 +39,8 @@ package body Vhdl.Comments is
       Coord : Source_Coord_Type;
    begin
       Coord := Scanner.Get_Current_Coord;
-      Gather_Comments_Line (Coord.Line_Pos, Uns32 (N));
+      Gather_Comments_Line
+        (Coord.Line_Pos, Scanner.Get_Token_Position, Uns32 (N));
    end Gather_Comments_Line;
 
    procedure Gather_Comments_Line_End (N : Iir; Loc : Location_Type)
@@ -52,7 +53,8 @@ package body Vhdl.Comments is
    begin
       Files_Map.Location_To_Coord (Loc, File, Decl_Line_Start, Line, Offset);
       Coord := Scanner.Get_Current_Coord;
-      Gather_Comments_Line_End (Decl_Line_Start, Coord.Line_Pos, Uns32 (N));
+      Gather_Comments_Line_End (Decl_Line_Start, Coord.Line_Pos,
+                                Scanner.Get_Token_Position, Uns32 (N));
    end Gather_Comments_Line_End;
 
    procedure Replace_Comments_Node (Old_N, New_N : Iir) is

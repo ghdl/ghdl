@@ -16,6 +16,7 @@
 
 with Grt.Algos;
 
+with Files_Map;
 with Simple_IO; use Simple_IO;
 with Utils_IO; use Utils_IO;
 
@@ -32,7 +33,8 @@ package body File_Comments is
                Last_Node => 0,
                Node_First => No_Comment_Index + 1,
                Last_Newline => No_Comment_Index,
-               Line_Start => Source_Ptr_Bad);
+               Line_Start => Source_Ptr_Bad,
+               Col => 0);
 
       --  Create entry for FILE if not already created.
       if Comments_Table.Last < Ctxt.File then
@@ -126,6 +128,15 @@ package body File_Comments is
       end case;
    end Comment_Newline;
 
+   --  Column (tabs expanded) of POS, which is on the line starting at
+   --  LINE_START.
+   function Get_Column (Line_Start : Source_Ptr; Pos : Source_Ptr)
+                       return Natural is
+   begin
+      return Files_Map.Coord_To_Col
+        (Ctxt.File, Line_Start, Natural (Pos - Line_Start));
+   end Get_Column;
+
    procedure Add_Comment (Start, Last : Source_Ptr;
                           Line_Start : Source_Ptr;
                           Follows_Comment : Boolean)
@@ -184,13 +195,16 @@ package body File_Comments is
             if Flag_Trace then
                Put ("line_cont");
             end if;
-            if Follows_Comment then
+            if Follows_Comment
+              and then Get_Column (Line_Start, Start) > Ctxt.Col
+            then
                --  Continue to associate with the last node.
                N := Ctxt.Last_Node;
                Ctxt.Next := File_Comments_Tables.Last (T) + 2;
             else
-               --  A token between the comments: the continuation is ended
-               --  and the comment is for the next node.
+               --  A token between the comments, or a comment that is not
+               --  indented after the node: the continuation is ended and
+               --  the comment is for the next node.
                N := 0;
                Ctxt.State := State_Before;
             end if;
@@ -261,7 +275,8 @@ package body File_Comments is
       Ctxt.Node_First := Rng.First;
    end Gather_Comments_Block;
 
-   procedure Gather_Comments_Line (Pos : Source_Ptr;
+   procedure Gather_Comments_Line (Line_Start : Source_Ptr;
+                                   Tok_Pos : Source_Ptr;
                                    N : Uns32)
    is
       Rng : Comments_Range;
@@ -274,11 +289,13 @@ package body File_Comments is
       Ctxt.State := State_Line;
       Ctxt.Last_Node := N;
       Ctxt.Node_First := Rng.First;
-      Ctxt.Line_Start := Pos;
+      Ctxt.Line_Start := Line_Start;
+      Ctxt.Col := Get_Column (Line_Start, Tok_Pos);
    end Gather_Comments_Line;
 
    procedure Gather_Comments_Line_End (Decl_Line_Start : Source_Ptr;
                                        Line_Start : Source_Ptr;
+                                       Tok_Pos : Source_Ptr;
                                        N : Uns32) is
    begin
       if Decl_Line_Start /= Line_Start
@@ -289,7 +306,7 @@ package body File_Comments is
          return;
       end if;
 
-      Gather_Comments_Line (Line_Start, N);
+      Gather_Comments_Line (Line_Start, Tok_Pos, N);
 
       --  N has been gathered before: its first comments may be before the
       --  ones just gathered.

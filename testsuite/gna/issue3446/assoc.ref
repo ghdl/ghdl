@@ -15,6 +15,13 @@ package assoc_pkg is
 end package;
 use work.assoc_pkg.all;
 entity assoc is
+  generic (
+    --  Comment for g
+    --  More for g
+    g: natural := 1;
+    --  Comment for h
+    h: natural := 2
+  );
   port (
     --  Comment for v
     v: view vw;

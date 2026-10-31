@@ -18,6 +18,12 @@ end package;
 use work.assoc_pkg.all;
 
 entity assoc is
+  generic (
+    g : natural := 1;  --  Comment for g
+                       --  More for g
+    --  Comment for h
+    h : natural := 2
+  );
   port (
     --  Comment for v
     v : view vw;
