@@ -52,6 +52,8 @@ from pyTooling.Attributes.ArgParse.Argument import StringArgument
 from pyTooling.Attributes.ArgParse.Flag import FlagArgument
 from pyTooling.TerminalUI import TerminalApplication, Severity
 
+from pyVHDLModel import VHDLVersion
+
 from pyGHDL import GHDLBaseException, __version__, __copyright__, __author__
 from pyGHDL.libghdl import LibGHDLException
 from pyGHDL.dom import DOMException
@@ -72,12 +74,13 @@ class SourceAttribute(Attribute):
         """
         Attaches the source selection command line arguments to the decorated handler method.
 
-        The attribute bundles the four arguments that select what to analyze:
+        The attribute bundles the five arguments that select what to analyze and how:
 
         * ``-f`` / ``--file`` - the filename to parse, can be used multiple times.
         * ``-F`` / ``--files`` - a list of filenames to parse.
         * ``-D`` / ``--directory`` - the directory to parse.
         * ``-L`` / ``--library`` - the default library for files in the root directory.
+        * ``--std`` - the VHDL version to analyze with (``08`` or ``19``); default VHDL-2008.
 
         :param func: The handler method to attach the command line arguments to.
         :returns:    The same handler method, with the arguments attached.
@@ -126,6 +129,16 @@ class SourceAttribute(Attribute):
                 dest="DefaultLibrary",
                 type=str,
                 help="Default library for files in the root directory.",
+            ),
+        )
+        self._AppendAttribute(
+            func,
+            CommandLineArgument(
+                "--std",
+                metavar="std",
+                dest="Std",
+                choices=("08", "19"),
+                help="VHDL version to analyze with: 08 (default) or 19.",
             ),
         )
         return func
@@ -222,7 +235,7 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         self.WriteNormal(dedent("""\
                 {HEADLINE}{line}
                 {headline: ^80s}
-                {line}""").format(line="=" * 80, headline=self.HeadLine, **TerminalApplication.Foreground))
+                {line}""").format(line="=" * 80, headline=self.HeadLine, **TerminalApplication.FOREGROUND))
 
     # ============================================================================
     # Common commands
@@ -317,9 +330,12 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         A file is analyzed on its own; a directory is scanned, and each subdirectory is treated as a library of that
         name. The time *libghdl* spent parsing and the time the translation took are reported per file.
 
-        :param args: The parsed arguments, carrying the selected files, directory and default library.
+        :param args: The parsed arguments, carrying the selected files, directory, default library and VHDL version.
         """
         self.PrintHeadline()
+
+        if args.Std is not None:
+            self._design = Design(vhdlVersion=VHDLVersion.Parse(args.Std))
 
         if args.Files is not None:
             for file in args.Files:
@@ -331,11 +347,11 @@ class Application(TerminalApplication, ArgParseHelperMixin):
                 document = self.addFile(file, "pretty")
                 self.WriteInfo(
                     dedent("""\
-                          libghdl processing time: {: 5.3f} us
-                          DOM translation time:    {:5.3f} us
+                          libghdl processing time: {:%u} us
+                          DOM translation time:    {:%u} us
                         """).format(
-                        document.LibGHDLProcessingTime * 10**6,
-                        document.DOMTranslationTime * 10**6,
+                        document.LibGHDLProcessingDuration,
+                        document.DOMTranslationDuration,
                     )
                 )
         elif args.Directory is not None:
@@ -356,10 +372,8 @@ class Application(TerminalApplication, ArgParseHelperMixin):
                     for file in directoryItem.glob("**/*.vhd*"):
                         self.WriteNormal(f"  Reading file '{file!s}'")
                         document = self.addFile(file, libraryName)
-                        self.WriteInfo(
-                            f"    libghdl processing time: {document.LibGHDLProcessingTime * 10**6: 5.3f} us"
-                        )
-                        self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationTime * 10**6:5.3f} us")
+                        self.WriteInfo(f"    libghdl processing time: {document.LibGHDLProcessingDuration:%u} us")
+                        self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationDuration:%u} us")
                 elif directoryItem.is_file():
                     if directoryItem.suffix in (".vhd", ".vhdl"):
                         files.append(directoryItem)
@@ -372,8 +386,8 @@ class Application(TerminalApplication, ArgParseHelperMixin):
                 for file in files:
                     self.WriteNormal(f"  Reading file '{file!s}'")
                     document = self.addFile(file, libraryName)
-                    self.WriteInfo(f"    libghdl processing time: {document.LibGHDLProcessingTime * 10**6: 5.3f} us")
-                    self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationTime * 10**6:5.3f} us")
+                    self.WriteInfo(f"    libghdl processing time: {document.LibGHDLProcessingDuration:%u} us")
+                    self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationDuration:%u} us")
 
         if not self._design.Documents:
             self.WriteFatal("No files processed at all.")
@@ -382,11 +396,11 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         self._design.Analyze()
         self.WriteInfo(
             dedent("""\
-                  default library load time: {:5.3f} us
-                  dependency analysis time:  {:5.3f} us
+                  default library load time: {:%u} us
+                  dependency analysis time:  {:%u} us
                 """).format(
-                self._design._loadDefaultLibraryTime * 10**6,
-                self._design._analyzeTime * 10**6,
+                self._design.LoadDefaultLibraryDuration,
+                self._design.AnalyzeDuration,
             )
         )
 
@@ -425,7 +439,7 @@ def main():  # mccabe:disable=MC0001
        All is wrapped in a big ``try..except`` block to catch every unhandled exception.
     3. Shutdown the script and return its exit code.
     """
-    from sys import argv as sys_argv
+    from sys import argv as sys_argv, exit as sys_exit, stderr
 
     # debug = "-d" in sys_argv
     # verbose = "-v" in sys_argv
@@ -434,11 +448,11 @@ def main():  # mccabe:disable=MC0001
     try:
         # handover to a class instance
         app = Application()  # debug, verbose, quiet)
-    except Exception:
-        return
+    except Exception as ex:
+        print(f"Can't create the application: {ex.__class__.__name__}: {ex}", file=stderr)
+        sys_exit(1)
 
     try:
-        app.CheckPythonVersion((3, 8, 0))
         app.Run()
         app.Exit()
     except PrettyPrintException as ex:

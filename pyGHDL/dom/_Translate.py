@@ -252,18 +252,20 @@ def GetArrayConstraintsFromSubtypeIndication(
     """
     Translates the index constraints of an array subtype indication to a list of ranges.
 
-    A constraint is either a range expression (``0 to 7``) or a name denoting a range
-    (``v'range``, ``my_range``).
+    A constraint is a range expression (``0 to 7``), a name denoting a range (``v'range``, ``my_range``) or a
+    subtype indication with a range constraint (``natural range 0 to 7``).
 
     :param subtypeIndication: The IIR node of the array subtype indication.
     :returns:                 List of the translated index constraints, one per dimension.
-    :raises DOMException:     If a constraint is neither a range expression nor a name.
+    :raises DOMException:     If a constraint is neither a range expression, a name nor a subtype indication.
     """
     constraints = []
     for constraint in utils.flist_iter(nodes.Get_Index_Constraint_List(subtypeIndication)):
         constraintKind = GetIirKindOfNode(constraint)
         if constraintKind == nodes.Iir_Kind.Range_Expression:
             constraints.append(RangeExpression.parse(constraint))
+        elif constraintKind == nodes.Iir_Kind.Subtype_Definition:
+            constraints.append(GetScalarConstrainedSubtypeFromNode(constraint))
         elif constraintKind in (
             nodes.Iir_Kind.Simple_Name,
             nodes.Iir_Kind.Parenthesis_Name,
@@ -363,9 +365,11 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
     GHDL creates an anonymous type declaration for the type definitions that have no name of their own -
     an integer or physical type behind a subtype, for instance.
 
-    :param node:          The IIR node of the anonymous type declaration.
-    :returns:             The translated type.
-    :raises DOMException: If the type definition's kind is not handled.
+    :param node:                     The IIR node of the anonymous type declaration.
+    :returns:                        The translated type.
+    :raises DOMException:            If the type definition's kind is not handled.
+    :raises UnhandledExceptionError: If the type definition is an array subtype definition, which is not supported yet,
+                                     and no :class:`~pyTooling.Warning.WarningCollector` is active.
     """
     typeName = GetNameOfNode(node)
     documentation = GetDocumentationOfNode(node)
@@ -386,9 +390,7 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
         return PhysicalType.parse(typeName, typeDefinition, documentation)
 
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
-        WarningCollector.Raise(NotImplementedError("Array_Subtype_Definition"))
-
-        return ArrayType(typeDefinition, "????", [], None, documentation)
+        return ArrayType.parse(typeName, typeDefinition, documentation)
     else:
         position = Position.parse(typeDefinition)
         raise DOMException(
@@ -1018,11 +1020,13 @@ def GetDeclaredItemsFromChainedNodes(nodeChain: Iir, entity: str, name: str) -> 
     GHDL splits a declaration naming several identifiers (``signal a, b : bit;``) into one node per
     identifier. They are collected here and yielded as a single object carrying all identifiers.
 
-    :param nodeChain:     The IIR node starting the chain of declarations.
-    :param entity:        The kind of declarative region the chain belongs to. Used in exception messages.
-    :param name:          The name of that declarative region. Used in exception messages.
-    :returns:             Generator yielding the translated declared items, in source order.
-    :raises DOMException: If a declaration's kind is not handled.
+    :param nodeChain:                The IIR node starting the chain of declarations.
+    :param entity:                   The kind of declarative region the chain belongs to. Used in exception messages.
+    :param name:                     The name of that declarative region. Used in exception messages.
+    :returns:                        Generator yielding the translated declared items, in source order.
+    :raises DOMException:            If a declaration's kind is not handled.
+    :raises UnhandledExceptionError: If a declaration's kind is not supported yet (e.g. a group or nature declaration)
+                                     and no :class:`~pyTooling.Warning.WarningCollector` is active.
     """
     furtherIdentifiers = []
     item = nodeChain
@@ -1194,11 +1198,13 @@ def GetConcurrentStatementsFromChainedNodes(
     """
     Translates a chain of concurrent statements to the matching :mod:`pyGHDL.dom.Concurrent` objects.
 
-    :param nodeChain:     The IIR node starting the chain of concurrent statements.
-    :param entity:        The kind of statement region the chain belongs to. Used in exception messages.
-    :param name:          The name of that statement region. Used in exception messages.
-    :returns:             Generator yielding the translated statements, in source order.
-    :raises DOMException: If a statement's kind is not handled.
+    :param nodeChain:                The IIR node starting the chain of concurrent statements.
+    :param entity:                   The kind of statement region the chain belongs to. Used in exception messages.
+    :param name:                     The name of that statement region. Used in exception messages.
+    :returns:                        Generator yielding the translated statements, in source order.
+    :raises DOMException:            If a statement's kind is not handled.
+    :raises UnhandledExceptionError: If a statement is a simple simultaneous statement, which is not supported yet, and
+                                     no :class:`~pyTooling.Warning.WarningCollector` is active.
     """
     for statement in utils.chain_iter(nodeChain):
         label = GetLabelOfNode(statement)

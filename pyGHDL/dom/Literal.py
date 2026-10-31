@@ -36,8 +36,7 @@ This module implements derived literal classes from :mod:`pyVHDLModel.Expression
 
 from typing import Union, Optional as Nullable
 
-from pyTooling.Decorators import export, InheritDocString
-from pyTooling.Warning import WarningCollector
+from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
 from pyVHDLModel.Expression import NullLiteral as VHDLModel_NullLiteral
 from pyVHDLModel.Expression import EnumerationLiteral as VHDLModel_EnumerationLiteral
@@ -52,15 +51,15 @@ from pyVHDLModel.Expression import OctalBitStringLiteral as VHDLModel_OctalBitSt
 from pyVHDLModel.Expression import DecimalBitStringLiteral as VHDLModel_DecimalBitStringLiteral
 from pyVHDLModel.Expression import HexadecimalBitStringLiteral as VHDLModel_HexadecimalBitStringLiteral
 
-from pyGHDL.libghdl import name_table, str_table
+from pyGHDL.libghdl import ENCODING, name_table, str_table, files_map
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes, utils
-from pyGHDL.dom import DOMMixin
+from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom._Utils import GetNameOfNode
 
 
 @export
-@InheritDocString(VHDLModel_NullLiteral, merge=True)
+@InheritDocString(VHDLModel_NullLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.NullLiteral`.
@@ -87,7 +86,7 @@ class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_EnumerationLiteral, merge=True)
+@InheritDocString(VHDLModel_EnumerationLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.EnumerationLiteral`.
@@ -116,7 +115,7 @@ class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_IntegerLiteral, merge=True)
+@InheritDocString(VHDLModel_IntegerLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.IntegerLiteral`.
@@ -145,7 +144,7 @@ class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_FloatingPointLiteral, merge=True)
+@InheritDocString(VHDLModel_FloatingPointLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.FloatingPointLiteral`.
@@ -174,7 +173,7 @@ class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_PhysicalIntegerLiteral, merge=True)
+@InheritDocString(VHDLModel_PhysicalIntegerLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.PhysicalIntegerLiteral`.
@@ -207,7 +206,7 @@ class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_PhysicalFloatingLiteral, merge=True)
+@InheritDocString(VHDLModel_PhysicalFloatingLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.PhysicalFloatingLiteral`.
@@ -240,7 +239,7 @@ class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_CharacterLiteral, merge=True)
+@InheritDocString(VHDLModel_CharacterLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.CharacterLiteral`.
@@ -270,7 +269,7 @@ class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_BinaryBitStringLiteral, merge=True)
+@InheritDocString(VHDLModel_BinaryBitStringLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.BinaryBitStringLiteral`.
@@ -290,7 +289,7 @@ class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_OctalBitStringLiteral, merge=True)
+@InheritDocString(VHDLModel_OctalBitStringLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.OctalBitStringLiteral`.
@@ -310,7 +309,7 @@ class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_DecimalBitStringLiteral, merge=True)
+@InheritDocString(VHDLModel_DecimalBitStringLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.DecimalBitStringLiteral`.
@@ -330,7 +329,7 @@ class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_HexadecimalBitStringLiteral, merge=True)
+@InheritDocString(VHDLModel_HexadecimalBitStringLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class HexadecimalBitStringLiteral(VHDLModel_HexadecimalBitStringLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.HexadecimalBitStringLiteral`.
@@ -350,7 +349,7 @@ class HexadecimalBitStringLiteral(VHDLModel_HexadecimalBitStringLiteral, DOMMixi
 
 
 @export
-@InheritDocString(VHDLModel_StringLiteral, merge=True)
+@InheritDocString(VHDLModel_StringLiteral, strategy=DocStringMergeStrategy.BaseFirst)
 class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.StringLiteral`.
@@ -377,8 +376,13 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
         """
         Translates the IIR node of the literal to a :class:`StringLiteral`.
 
-        :param literalNode: The IIR node of the literal.
-        :returns:           The translated literal.
+        A bit string literal's value is the literal as written in the source, without length, signedness, base
+        specifier and delimiters (``x"A_5"`` has the value ``A_5``).
+
+        :param literalNode:   The IIR node of the literal.
+        :returns:             The translated literal.
+        :raises DOMException: If a bit string literal has no source text.
+        :raises DOMException: If the literal's base is not handled.
         """
         base = nodes.Get_Bit_String_Base(literalNode)
         isSigned = nodes.Get_Has_Signed(literalNode) if nodes.Get_Has_Sign(literalNode) else None
@@ -390,17 +394,49 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
         if base is nodes.NumberBaseType.Base_None:
             value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return cls(literalNode, value)
-        elif base is nodes.NumberBaseType.Base_2:
-            value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
+
+        # GHDL's String8 of a bit string literal holds the *expanded* bit value: one character per bit, including the
+        # padding or sign extension to an explicit length (x"A5" is stored as "10100101"). pyVHDLModel's
+        # BitStringLiteral.Value is the literal *as written* (digits, letters and underscores between the quotes), and
+        # the class chosen by the base tells how to read it. Passing the expansion as the value of an octal, decimal or
+        # hexadecimal literal changed the literal: x"A5" became x"10100101" when written back.
+        # Therefore, the value is cut from the source text: the node's location and the literal length (the number of
+        # characters the scanner read, Get_Literal_Length) select the literal, the value is what stands between its
+        # quotes. Length and signedness are taken from the node as before.
+        #
+        # Original code, for comparison (each branch passed the expansion as the value):
+        #
+        # elif base is nodes.NumberBaseType.Base_2:
+        #     value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
+        #     return BinaryBitStringLiteral(literalNode, value, length, isSigned)
+        # elif base is nodes.NumberBaseType.Base_8:
+        #     value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
+        #     return OctalBitStringLiteral(literalNode, value, length, isSigned)
+        # elif base is nodes.NumberBaseType.Base_10:
+        #     value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
+        #     return DecimalBitStringLiteral(literalNode, value, length, isSigned)
+        # elif base is nodes.NumberBaseType.Base_16:
+        #     value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
+        #     return HexadecimalBitStringLiteral(literalNode, value, length, isSigned)
+        literalLength = nodes.Get_Literal_Length(literalNode)
+        if literalLength == 0:
+            position = Position.parse(literalNode)
+            raise DOMException(f"Bit string literal at {position} has no source text.")
+
+        location = nodes.Get_Location(literalNode)
+        file = files_map.Location_To_File(location)
+        start = files_map.Location_File_To_Pos(location, file)
+        sourceText = files_map.Get_File_Buffer(file)[start : start + literalLength].decode(ENCODING)
+        value = sourceText[sourceText.index('"') + 1 : -1]
+
+        if base is nodes.NumberBaseType.Base_2:
             return BinaryBitStringLiteral(literalNode, value, length, isSigned)
         elif base is nodes.NumberBaseType.Base_8:
-            value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return OctalBitStringLiteral(literalNode, value, length, isSigned)
         elif base is nodes.NumberBaseType.Base_10:
-            value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return DecimalBitStringLiteral(literalNode, value, length, isSigned)
         elif base is nodes.NumberBaseType.Base_16:
-            value = str_table.Get_String8_Ptr(nodes.Get_String8_Id(literalNode), nodes.Get_String_Length(literalNode))
             return HexadecimalBitStringLiteral(literalNode, value, length, isSigned)
         else:
-            WarningCollector.Raise(NotImplementedError("Bit String Literal not supported yet"))
+            position = Position.parse(literalNode)
+            raise DOMException(f"Unknown bit string base '{base.name}' of literal at {position}.")
