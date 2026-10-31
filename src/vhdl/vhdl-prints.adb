@@ -4864,6 +4864,7 @@ package body Vhdl.Prints is
       Disp_Context_Items (Ctxt, Get_Context_Items (Unit));
 
       Decl := Get_Library_Unit (Unit);
+      Start_Node (Ctxt, Decl);
       case Iir_Kinds_Library_Unit (Get_Kind (Decl)) is
          when Iir_Kind_Entity_Declaration =>
             Disp_Entity_Declaration (Ctxt, Decl);
