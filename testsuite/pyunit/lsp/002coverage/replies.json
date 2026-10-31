@@ -134,23 +134,7 @@
             }
           }
         },
-        "containerName": {
-          "kind": 2,
-          "name": "behav",
-          "location": {
-            "uri": "file://@ROOT@/files/adder_tb.vhdl",
-            "range": {
-              "start": {
-                "line": 5,
-                "character": 0
-              },
-              "end": {
-                "line": 57,
-                "character": 0
-              }
-            }
-          }
-        }
+        "containerName": "behav"
       }
     ]
   },

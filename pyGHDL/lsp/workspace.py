@@ -121,7 +121,7 @@ class Workspace(object):
         if libghdl.analyze_init_status() != 0:
             log.error("cannot initialize libghdl")
             raise InitError
-        self._diags_set = set()  # Documents with at least one diagnostic.
+        self._diags_set = set()  # URIs of the documents diagnostics were last published for.
         self.read_files_from_project()
         self.gather_diagnostics(None)
 
@@ -390,6 +390,10 @@ class Workspace(object):
         preceding one as related information, which is how the two halves of "declaration is here, use is there"
         stay together. The messages are cleared once they have been read.
 
+        A client keeps the diagnostics of a file until it is sent new ones, so every document that had diagnostics
+        published for it and has none now is sent an empty list. The documents that carry diagnostics are tracked in
+        :attr:`_diags_set` for that, because analyzing one document can equally clear a diagnostic in another.
+
         :param doc: The document that was analyzed, so an empty list can be published for it when its errors are
                     gone. ``None`` when the whole project was analyzed.
         """
@@ -429,22 +433,27 @@ class Workspace(object):
                     fdiag.append(diag)
             else:
                 assert diag
-                if True:
-                    doc = self.sfe_to_document(hdr.file)
-                    diag["relatedInformation"].append(
-                        {
-                            "location": {"uri": doc.uri, "range": err_range},
-                            "message": msg,
-                        }
-                    )
+                relatedDocument = self.sfe_to_document(hdr.file)
+                diag["relatedInformation"].append(
+                    {
+                        "location": {"uri": relatedDocument.uri, "range": err_range},
+                        "message": msg,
+                    }
+                )
         errorout_memory.Clear_Errors()
         # Publish diagnostics
+        publishedURIs = set()
         for sfe, diag in diags.items():
-            doc = self.sfe_to_document(sfe)
-            self.publish_diagnostics(doc.uri, diag)
-        if doc is not None and doc._fe not in diags:
-            # Clear previous diagnostics for the doc.
-            self.publish_diagnostics(doc.uri, [])
+            diagnosedDocument = self.sfe_to_document(sfe)
+            self.publish_diagnostics(diagnosedDocument.uri, diag)
+            publishedURIs.add(diagnosedDocument.uri)
+        # Clear previous diagnostics of the analyzed document and of every document that has none left.
+        staleURIs = set(self._diags_set)
+        if doc is not None:
+            staleURIs.add(doc.uri)
+        for uri in staleURIs - publishedURIs:
+            self.publish_diagnostics(uri, [])
+        self._diags_set = publishedURIs
 
     def obsolete_dependent_units(self, unit, antideps):
         """
@@ -493,6 +502,11 @@ class Workspace(object):
         into the tree being freed, so those units are obsoleted too. The design file is then purged from its
         library, which leaves the document ready to be parsed again.
 
+        Obsoleting the dependent units is skipped when this document was also the one analyzed last, as it is while
+        a file is being edited: they were obsoleted by that previous round and only an analysis of their own could
+        have brought them back, which would have made that document the last analyzed one instead. Semantic analysis
+        happens in :meth:`lint` and :meth:`apply_changes` alone, so this holds for every path into the workspace.
+
         :param doc: The document to obsolete. A document without a tree is left alone.
         """
         if doc._tree == nodes.Null_Iir:
@@ -521,6 +535,7 @@ class Workspace(object):
         doc = self.get_document(doc_uri)
         self.obsolete_doc(doc)
         doc.compute_diags()
+        self._last_linted_doc = doc
         self.gather_diagnostics(doc)
 
     def apply_changes(self, doc_uri, contentChanges, new_version):
@@ -547,6 +562,7 @@ class Workspace(object):
             self._fe_map[doc._fe] = doc
         # Like lint
         doc.compute_diags()
+        self._last_linted_doc = doc
         self.gather_diagnostics(doc)
 
     def check_document(self, doc_uri, source):
@@ -569,6 +585,7 @@ class Workspace(object):
         """
         # Clear diagnostics as it's not done automatically.
         self.publish_diagnostics(doc_uri, [])
+        self._diags_set.discard(doc_uri)
 
     def apply_edit(self, edit):
         """
