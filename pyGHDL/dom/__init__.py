@@ -35,8 +35,6 @@ Document object model (DOM) for :mod:`pyGHDL.libghdl` based on :doc:`pyVHDLModel
 from __future__ import annotations
 
 from typing import Self
-
-
 from pathlib import Path
 
 from pyTooling.Decorators import export, readonly
