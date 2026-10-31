@@ -36,7 +36,7 @@ This module implements derived subprogram classes from :mod:`pyVHDLModel.Subprog
 
 from typing import List
 
-from pyTooling.Decorators import export, InheritDocString
+from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Interface import GenericInterfaceItemMixin, ParameterInterfaceItemMixin
@@ -52,7 +52,7 @@ from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 
 
 @export
-@InheritDocString(VHDLModel_Function, merge=True)
+@InheritDocString(VHDLModel_Function, strategy=DocStringMergeStrategy.BaseFirst)
 class Function(VHDLModel_Function, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Subprogram.Function`.
@@ -147,7 +147,7 @@ class Function(VHDLModel_Function, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_Procedure, merge=True)
+@InheritDocString(VHDLModel_Procedure, strategy=DocStringMergeStrategy.BaseFirst)
 class Procedure(VHDLModel_Procedure, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Subprogram.Procedure`.

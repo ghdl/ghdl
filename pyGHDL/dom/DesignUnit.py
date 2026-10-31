@@ -40,7 +40,7 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 from typing import Iterable
 
-from pyTooling.Decorators import export, InheritDocString
+from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Instantiation import PackageInstantiation as VHDLModel_PackageInstantiation
@@ -80,7 +80,7 @@ from pyGHDL.dom.Configuration import BlockConfiguration
 
 
 @export
-@InheritDocString(VHDLModel_LibraryClause, merge=True)
+@InheritDocString(VHDLModel_LibraryClause, strategy=DocStringMergeStrategy.BaseFirst)
 class LibraryClause(VHDLModel_LibraryClause, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.LibraryClause`.
@@ -98,7 +98,7 @@ class LibraryClause(VHDLModel_LibraryClause, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_UseClause, merge=True)
+@InheritDocString(VHDLModel_UseClause, strategy=DocStringMergeStrategy.BaseFirst)
 class UseClause(VHDLModel_UseClause, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.UseClause`.
@@ -150,7 +150,7 @@ class UseClause(VHDLModel_UseClause, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_ContextReference, merge=True)
+@InheritDocString(VHDLModel_ContextReference, strategy=DocStringMergeStrategy.BaseFirst)
 class ContextReference(VHDLModel_ContextReference, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.ContextReference`.
@@ -184,7 +184,7 @@ class ContextReference(VHDLModel_ContextReference, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_Entity, merge=True)
+@InheritDocString(VHDLModel_Entity, strategy=DocStringMergeStrategy.BaseFirst)
 class Entity(VHDLModel_Entity, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.Entity`.
@@ -242,7 +242,7 @@ class Entity(VHDLModel_Entity, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_Architecture, merge=True)
+@InheritDocString(VHDLModel_Architecture, strategy=DocStringMergeStrategy.BaseFirst)
 class Architecture(VHDLModel_Architecture, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.Architecture`.
@@ -298,7 +298,7 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_Component, merge=True)
+@InheritDocString(VHDLModel_Component, strategy=DocStringMergeStrategy.BaseFirst)
 class Component(VHDLModel_Component, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.Component`.
@@ -341,7 +341,7 @@ class Component(VHDLModel_Component, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_Package, merge=True)
+@InheritDocString(VHDLModel_Package, strategy=DocStringMergeStrategy.BaseFirst)
 class Package(VHDLModel_Package, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.Package`.
@@ -395,7 +395,7 @@ class Package(VHDLModel_Package, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_PackageBody, merge=True)
+@InheritDocString(VHDLModel_PackageBody, strategy=DocStringMergeStrategy.BaseFirst)
 class PackageBody(VHDLModel_PackageBody, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.PackageBody`.
@@ -443,7 +443,7 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_PackageInstantiation, merge=True)
+@InheritDocString(VHDLModel_PackageInstantiation, strategy=DocStringMergeStrategy.BaseFirst)
 class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Instantiation.PackageInstantiation`.
@@ -493,7 +493,7 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_Context, merge=True)
+@InheritDocString(VHDLModel_Context, strategy=DocStringMergeStrategy.BaseFirst)
 class Context(VHDLModel_Context, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.Context`.
@@ -554,7 +554,7 @@ class Context(VHDLModel_Context, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_Configuration, merge=True)
+@InheritDocString(VHDLModel_Configuration, strategy=DocStringMergeStrategy.BaseFirst)
 class Configuration(VHDLModel_Configuration, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.DesignUnit.Configuration`.

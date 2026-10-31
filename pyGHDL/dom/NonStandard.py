@@ -42,7 +42,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional as Nullable, List
 
-from pyTooling.Decorators import export, InheritDocString, readonly
+from pyTooling.Decorators import export, InheritDocString, readonly, DocStringMergeStrategy
 from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel import VHDLVersion, IEEEFlavor
@@ -87,7 +87,7 @@ from pyGHDL.dom.PSL import VerificationUnit, VerificationProperty, VerificationM
 
 
 @export
-@InheritDocString(VHDLModel_Design, merge=True)
+@InheritDocString(VHDLModel_Design, strategy=DocStringMergeStrategy.BaseFirst)
 class Design(VHDLModel_Design):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Design`.
@@ -97,7 +97,7 @@ class Design(VHDLModel_Design):
     _analyzeTime: Nullable[float]  #: :meth:`Analyze` duration in seconds, ``None`` if not called.
     _vhdlVersion: VHDLVersion  #: The VHDL version this design is analyzed with.
 
-    _warnings: List  #: Warnings collected from *libghdl* while the design's documents are analyzed.
+    _warnings: List  #: Warnings raised by :mod:`pyVHDLModel` while the design is analyzed.
 
     #: VHDL versions currently supported by this class. Older revisions (87, 93, 2000, 2002) are
     #: not planned to be supported for now.
@@ -185,8 +185,8 @@ class Design(VHDLModel_Design):
         """
         Analyzes all documents of this design.
 
-        How long this took is measured and kept in :attr:`_analyzeTime`, and the warnings *libghdl* raised during the
-        analysis are collected in :attr:`_warnings`.
+        How long this took is measured and kept in :attr:`_analyzeTime`, and the warnings :mod:`pyVHDLModel` raises
+        during the analysis are collected in :attr:`_warnings`.
         """
         t1 = time.perf_counter()
 
@@ -197,7 +197,7 @@ class Design(VHDLModel_Design):
 
 
 @export
-@InheritDocString(VHDLModel_Library, merge=True)
+@InheritDocString(VHDLModel_Library, strategy=DocStringMergeStrategy.BaseFirst)
 class Library(VHDLModel_Library):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Library`.
@@ -207,14 +207,14 @@ class Library(VHDLModel_Library):
 
 
 @export
-@InheritDocString(VHDLModel_Document, merge=True)
+@InheritDocString(VHDLModel_Document, strategy=DocStringMergeStrategy.BaseFirst)
 class Document(VHDLModel_Document):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Document`.
     """
 
     _filename: Path  #: The source file this document was read from.
-    _warnings: List  #: Warnings collected from *libghdl* while this document is translated.
+    _warnings: List  #: Warnings raised by :mod:`pyGHDL.dom` while this document is translated.
 
     __ghdlFileID: Any  #: *libghdl*'s name table identifier for :attr:`_filename`.
     __ghdlSourceFileEntry: Any  #: *libghdl*'s source file entry holding this document's source code.
@@ -310,7 +310,9 @@ class Document(VHDLModel_Document):
         """
         Translates the design units of the parsed IIR tree to :mod:`pyGHDL.dom` objects.
 
-        :raises DOMException: If a design unit's kind is not handled.
+        :raises DOMException:            If a design unit's kind is not handled.
+        :raises UnhandledExceptionError: If a construct is not supported yet and no
+                                         :class:`~pyTooling.Warning.WarningCollector` is active.
         """
         firstUnit = nodes.Get_First_Design_Unit(self.__ghdlFile)
         self._documentation = GetDocumentationOfNode(firstUnit)

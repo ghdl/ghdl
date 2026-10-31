@@ -36,7 +36,7 @@ This module implements derived expression classes from :mod:`pyVHDLModel.Express
 
 from typing import List, Union
 
-from pyTooling.Decorators import export, InheritDocString
+from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 from pyTooling.MetaClasses import ExtendedType
 
 from pyVHDLModel.Base import ExpressionUnion
@@ -161,7 +161,7 @@ class _ParseBinaryExpressionMixin(metaclass=ExtendedType, mixin=True):
 
 
 @export
-@InheritDocString(VHDLModel_InverseExpression, merge=True)
+@InheritDocString(VHDLModel_InverseExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class InverseExpression(VHDLModel_InverseExpression, DOMMixin, _ParseUnaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.InverseExpression`.
@@ -179,7 +179,7 @@ class InverseExpression(VHDLModel_InverseExpression, DOMMixin, _ParseUnaryExpres
 
 
 @export
-@InheritDocString(VHDLModel_IdentityExpression, merge=True)
+@InheritDocString(VHDLModel_IdentityExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class IdentityExpression(VHDLModel_IdentityExpression, DOMMixin, _ParseUnaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.IdentityExpression`.
@@ -197,7 +197,7 @@ class IdentityExpression(VHDLModel_IdentityExpression, DOMMixin, _ParseUnaryExpr
 
 
 @export
-@InheritDocString(VHDLModel_NegationExpression, merge=True)
+@InheritDocString(VHDLModel_NegationExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class NegationExpression(VHDLModel_NegationExpression, DOMMixin, _ParseUnaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.NegationExpression`.
@@ -215,7 +215,7 @@ class NegationExpression(VHDLModel_NegationExpression, DOMMixin, _ParseUnaryExpr
 
 
 @export
-@InheritDocString(VHDLModel_AbsoluteExpression, merge=True)
+@InheritDocString(VHDLModel_AbsoluteExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class AbsoluteExpression(VHDLModel_AbsoluteExpression, DOMMixin, _ParseUnaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.AbsoluteExpression`.
@@ -233,7 +233,7 @@ class AbsoluteExpression(VHDLModel_AbsoluteExpression, DOMMixin, _ParseUnaryExpr
 
 
 @export
-@InheritDocString(VHDLModel_ParenthesisExpression, merge=True)
+@InheritDocString(VHDLModel_ParenthesisExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class ParenthesisExpression(VHDLModel_ParenthesisExpression, DOMMixin, _ParseUnaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.SubExpression`.
@@ -293,7 +293,7 @@ class TypeConversion(VHDLModel_TypeConversion, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_FunctionCall, merge=True)
+@InheritDocString(VHDLModel_FunctionCall, strategy=DocStringMergeStrategy.BaseFirst)
 class FunctionCall(VHDLModel_FunctionCall, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.FunctionCall`.
@@ -315,7 +315,7 @@ class FunctionCall(VHDLModel_FunctionCall, DOMMixin):
         DOMMixin.__init__(self, node)
 
 
-@InheritDocString(VHDLModel_RangeExpression, merge=True)
+@InheritDocString(VHDLModel_RangeExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class RangeExpression(VHDLModel_RangeExpression, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.RangeExpression`.
@@ -342,7 +342,7 @@ class RangeExpression(VHDLModel_RangeExpression, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_AscendingRangeExpression, merge=True)
+@InheritDocString(VHDLModel_AscendingRangeExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class AscendingRangeExpression(VHDLModel_AscendingRangeExpression, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.AscendingRangeExpression`.
@@ -361,7 +361,7 @@ class AscendingRangeExpression(VHDLModel_AscendingRangeExpression, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_DescendingRangeExpression, merge=True)
+@InheritDocString(VHDLModel_DescendingRangeExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class DescendingRangeExpression(VHDLModel_DescendingRangeExpression, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.DescendingRangeExpression`.
@@ -380,7 +380,7 @@ class DescendingRangeExpression(VHDLModel_DescendingRangeExpression, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_AdditionExpression, merge=True)
+@InheritDocString(VHDLModel_AdditionExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class AdditionExpression(VHDLModel_AdditionExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.AdditionExpression`.
@@ -399,7 +399,7 @@ class AdditionExpression(VHDLModel_AdditionExpression, DOMMixin, _ParseBinaryExp
 
 
 @export
-@InheritDocString(VHDLModel_SubtractionExpression, merge=True)
+@InheritDocString(VHDLModel_SubtractionExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class SubtractionExpression(VHDLModel_SubtractionExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.SubtractionExpression`.
@@ -418,7 +418,7 @@ class SubtractionExpression(VHDLModel_SubtractionExpression, DOMMixin, _ParseBin
 
 
 @export
-@InheritDocString(VHDLModel_ConcatenationExpression, merge=True)
+@InheritDocString(VHDLModel_ConcatenationExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class ConcatenationExpression(VHDLModel_ConcatenationExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.ConcatenationExpression`.
@@ -437,7 +437,7 @@ class ConcatenationExpression(VHDLModel_ConcatenationExpression, DOMMixin, _Pars
 
 
 @export
-@InheritDocString(VHDLModel_MultiplyExpression, merge=True)
+@InheritDocString(VHDLModel_MultiplyExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class MultiplyExpression(VHDLModel_MultiplyExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.MultiplyExpression`.
@@ -456,7 +456,7 @@ class MultiplyExpression(VHDLModel_MultiplyExpression, DOMMixin, _ParseBinaryExp
 
 
 @export
-@InheritDocString(VHDLModel_DivisionExpression, merge=True)
+@InheritDocString(VHDLModel_DivisionExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class DivisionExpression(VHDLModel_DivisionExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.DivisionExpression`.
@@ -475,7 +475,7 @@ class DivisionExpression(VHDLModel_DivisionExpression, DOMMixin, _ParseBinaryExp
 
 
 @export
-@InheritDocString(VHDLModel_RemainderExpression, merge=True)
+@InheritDocString(VHDLModel_RemainderExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class RemainderExpression(VHDLModel_RemainderExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.RemainderExpression`.
@@ -494,7 +494,7 @@ class RemainderExpression(VHDLModel_RemainderExpression, DOMMixin, _ParseBinaryE
 
 
 @export
-@InheritDocString(VHDLModel_ModuloExpression, merge=True)
+@InheritDocString(VHDLModel_ModuloExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class ModuloExpression(VHDLModel_ModuloExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.ModuloExpression`.
@@ -513,7 +513,7 @@ class ModuloExpression(VHDLModel_ModuloExpression, DOMMixin, _ParseBinaryExpress
 
 
 @export
-@InheritDocString(VHDLModel_ExponentiationExpression, merge=True)
+@InheritDocString(VHDLModel_ExponentiationExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class ExponentiationExpression(VHDLModel_ExponentiationExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.ExponentiationExpression`.
@@ -532,7 +532,7 @@ class ExponentiationExpression(VHDLModel_ExponentiationExpression, DOMMixin, _Pa
 
 
 @export
-@InheritDocString(VHDLModel_AndExpression, merge=True)
+@InheritDocString(VHDLModel_AndExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class AndExpression(VHDLModel_AndExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.AndExpression`.
@@ -551,7 +551,7 @@ class AndExpression(VHDLModel_AndExpression, DOMMixin, _ParseBinaryExpressionMix
 
 
 @export
-@InheritDocString(VHDLModel_NandExpression, merge=True)
+@InheritDocString(VHDLModel_NandExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class NandExpression(VHDLModel_NandExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.NandExpression`.
@@ -570,7 +570,7 @@ class NandExpression(VHDLModel_NandExpression, DOMMixin, _ParseBinaryExpressionM
 
 
 @export
-@InheritDocString(VHDLModel_OrExpression, merge=True)
+@InheritDocString(VHDLModel_OrExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class OrExpression(VHDLModel_OrExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.OrExpression`.
@@ -589,7 +589,7 @@ class OrExpression(VHDLModel_OrExpression, DOMMixin, _ParseBinaryExpressionMixin
 
 
 @export
-@InheritDocString(VHDLModel_NorExpression, merge=True)
+@InheritDocString(VHDLModel_NorExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class NorExpression(VHDLModel_NorExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.NorExpression`.
@@ -608,7 +608,7 @@ class NorExpression(VHDLModel_NorExpression, DOMMixin, _ParseBinaryExpressionMix
 
 
 @export
-@InheritDocString(VHDLModel_XorExpression, merge=True)
+@InheritDocString(VHDLModel_XorExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class XorExpression(VHDLModel_XorExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.XorExpression`.
@@ -627,7 +627,7 @@ class XorExpression(VHDLModel_XorExpression, DOMMixin, _ParseBinaryExpressionMix
 
 
 @export
-@InheritDocString(VHDLModel_XnorExpression, merge=True)
+@InheritDocString(VHDLModel_XnorExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class XnorExpression(VHDLModel_XnorExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.XnorExpression`.
@@ -646,7 +646,7 @@ class XnorExpression(VHDLModel_XnorExpression, DOMMixin, _ParseBinaryExpressionM
 
 
 @export
-@InheritDocString(VHDLModel_UnaryAndExpression, merge=True)
+@InheritDocString(VHDLModel_UnaryAndExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class UnaryAndExpression(VHDLModel_UnaryAndExpression, DOMMixin, _ParseUnaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.UnaryAndExpression`.
@@ -664,7 +664,7 @@ class UnaryAndExpression(VHDLModel_UnaryAndExpression, DOMMixin, _ParseUnaryExpr
 
 
 @export
-@InheritDocString(VHDLModel_UnaryNandExpression, merge=True)
+@InheritDocString(VHDLModel_UnaryNandExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class UnaryNandExpression(VHDLModel_UnaryNandExpression, DOMMixin, _ParseUnaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.UnaryNandExpression`.
@@ -682,7 +682,7 @@ class UnaryNandExpression(VHDLModel_UnaryNandExpression, DOMMixin, _ParseUnaryEx
 
 
 @export
-@InheritDocString(VHDLModel_UnaryOrExpression, merge=True)
+@InheritDocString(VHDLModel_UnaryOrExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class UnaryOrExpression(VHDLModel_UnaryOrExpression, DOMMixin, _ParseUnaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.UnaryOrExpression`.
@@ -700,7 +700,7 @@ class UnaryOrExpression(VHDLModel_UnaryOrExpression, DOMMixin, _ParseUnaryExpres
 
 
 @export
-@InheritDocString(VHDLModel_UnaryNorExpression, merge=True)
+@InheritDocString(VHDLModel_UnaryNorExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class UnaryNorExpression(VHDLModel_UnaryNorExpression, DOMMixin, _ParseUnaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.UnaryNorExpression`.
@@ -718,7 +718,7 @@ class UnaryNorExpression(VHDLModel_UnaryNorExpression, DOMMixin, _ParseUnaryExpr
 
 
 @export
-@InheritDocString(VHDLModel_UnaryXorExpression, merge=True)
+@InheritDocString(VHDLModel_UnaryXorExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class UnaryXorExpression(VHDLModel_UnaryXorExpression, DOMMixin, _ParseUnaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.UnaryXorExpression`.
@@ -736,7 +736,7 @@ class UnaryXorExpression(VHDLModel_UnaryXorExpression, DOMMixin, _ParseUnaryExpr
 
 
 @export
-@InheritDocString(VHDLModel_UnaryXnorExpression, merge=True)
+@InheritDocString(VHDLModel_UnaryXnorExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class UnaryXnorExpression(VHDLModel_UnaryXnorExpression, DOMMixin, _ParseUnaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.UnaryXnorExpression`.
@@ -754,7 +754,7 @@ class UnaryXnorExpression(VHDLModel_UnaryXnorExpression, DOMMixin, _ParseUnaryEx
 
 
 @export
-@InheritDocString(VHDLModel_EqualExpression, merge=True)
+@InheritDocString(VHDLModel_EqualExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class EqualExpression(VHDLModel_EqualExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.EqualExpression`.
@@ -773,7 +773,7 @@ class EqualExpression(VHDLModel_EqualExpression, DOMMixin, _ParseBinaryExpressio
 
 
 @export
-@InheritDocString(VHDLModel_UnequalExpression, merge=True)
+@InheritDocString(VHDLModel_UnequalExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class UnequalExpression(VHDLModel_UnequalExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.UnequalExpression`.
@@ -792,7 +792,7 @@ class UnequalExpression(VHDLModel_UnequalExpression, DOMMixin, _ParseBinaryExpre
 
 
 @export
-@InheritDocString(VHDLModel_LessThanExpression, merge=True)
+@InheritDocString(VHDLModel_LessThanExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class LessThanExpression(VHDLModel_LessThanExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.LessThanExpression`.
@@ -811,7 +811,7 @@ class LessThanExpression(VHDLModel_LessThanExpression, DOMMixin, _ParseBinaryExp
 
 
 @export
-@InheritDocString(VHDLModel_LessEqualExpression, merge=True)
+@InheritDocString(VHDLModel_LessEqualExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class LessEqualExpression(VHDLModel_LessEqualExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.LessEqualExpression`.
@@ -830,7 +830,7 @@ class LessEqualExpression(VHDLModel_LessEqualExpression, DOMMixin, _ParseBinaryE
 
 
 @export
-@InheritDocString(VHDLModel_GreaterThanExpression, merge=True)
+@InheritDocString(VHDLModel_GreaterThanExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class GreaterThanExpression(VHDLModel_GreaterThanExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.GreaterThanExpression`.
@@ -849,7 +849,7 @@ class GreaterThanExpression(VHDLModel_GreaterThanExpression, DOMMixin, _ParseBin
 
 
 @export
-@InheritDocString(VHDLModel_GreaterEqualExpression, merge=True)
+@InheritDocString(VHDLModel_GreaterEqualExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class GreaterEqualExpression(VHDLModel_GreaterEqualExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.GreaterEqualExpression`.
@@ -868,7 +868,7 @@ class GreaterEqualExpression(VHDLModel_GreaterEqualExpression, DOMMixin, _ParseB
 
 
 @export
-@InheritDocString(VHDLModel_MatchingEqualExpression, merge=True)
+@InheritDocString(VHDLModel_MatchingEqualExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class MatchingEqualExpression(VHDLModel_MatchingEqualExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.MatchingEqualExpression`.
@@ -887,7 +887,7 @@ class MatchingEqualExpression(VHDLModel_MatchingEqualExpression, DOMMixin, _Pars
 
 
 @export
-@InheritDocString(VHDLModel_MatchingUnequalExpression, merge=True)
+@InheritDocString(VHDLModel_MatchingUnequalExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class MatchingUnequalExpression(VHDLModel_MatchingUnequalExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.MatchingUnequalExpression`.
@@ -906,7 +906,7 @@ class MatchingUnequalExpression(VHDLModel_MatchingUnequalExpression, DOMMixin, _
 
 
 @export
-@InheritDocString(VHDLModel_MatchingLessThanExpression, merge=True)
+@InheritDocString(VHDLModel_MatchingLessThanExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class MatchingLessThanExpression(VHDLModel_MatchingLessThanExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.MatchingLessThanExpression`.
@@ -925,7 +925,7 @@ class MatchingLessThanExpression(VHDLModel_MatchingLessThanExpression, DOMMixin,
 
 
 @export
-@InheritDocString(VHDLModel_MatchingLessEqualExpression, merge=True)
+@InheritDocString(VHDLModel_MatchingLessEqualExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class MatchingLessEqualExpression(VHDLModel_MatchingLessEqualExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.MatchingLessEqualExpression`.
@@ -944,7 +944,7 @@ class MatchingLessEqualExpression(VHDLModel_MatchingLessEqualExpression, DOMMixi
 
 
 @export
-@InheritDocString(VHDLModel_MatchingGreaterThanExpression, merge=True)
+@InheritDocString(VHDLModel_MatchingGreaterThanExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class MatchingGreaterThanExpression(VHDLModel_MatchingGreaterThanExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.MatchingGreaterThanExpression`.
@@ -963,7 +963,7 @@ class MatchingGreaterThanExpression(VHDLModel_MatchingGreaterThanExpression, DOM
 
 
 @export
-@InheritDocString(VHDLModel_MatchingGreaterEqualExpression, merge=True)
+@InheritDocString(VHDLModel_MatchingGreaterEqualExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class MatchingGreaterEqualExpression(VHDLModel_MatchingGreaterEqualExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.MatchingGreaterEqualExpression`.
@@ -982,7 +982,7 @@ class MatchingGreaterEqualExpression(VHDLModel_MatchingGreaterEqualExpression, D
 
 
 @export
-@InheritDocString(VHDLModel_ShiftRightLogicExpression, merge=True)
+@InheritDocString(VHDLModel_ShiftRightLogicExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class ShiftRightLogicExpression(VHDLModel_ShiftRightLogicExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.ShiftRightLogicExpression`.
@@ -1001,7 +1001,7 @@ class ShiftRightLogicExpression(VHDLModel_ShiftRightLogicExpression, DOMMixin, _
 
 
 @export
-@InheritDocString(VHDLModel_ShiftLeftLogicExpression, merge=True)
+@InheritDocString(VHDLModel_ShiftLeftLogicExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class ShiftLeftLogicExpression(VHDLModel_ShiftLeftLogicExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.ShiftLeftLogicExpression`.
@@ -1020,7 +1020,7 @@ class ShiftLeftLogicExpression(VHDLModel_ShiftLeftLogicExpression, DOMMixin, _Pa
 
 
 @export
-@InheritDocString(VHDLModel_ShiftRightArithmeticExpression, merge=True)
+@InheritDocString(VHDLModel_ShiftRightArithmeticExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class ShiftRightArithmeticExpression(VHDLModel_ShiftRightArithmeticExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.ShiftRightArithmeticExpression`.
@@ -1039,7 +1039,7 @@ class ShiftRightArithmeticExpression(VHDLModel_ShiftRightArithmeticExpression, D
 
 
 @export
-@InheritDocString(VHDLModel_ShiftLeftArithmeticExpression, merge=True)
+@InheritDocString(VHDLModel_ShiftLeftArithmeticExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class ShiftLeftArithmeticExpression(VHDLModel_ShiftLeftArithmeticExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.ShiftLeftArithmeticExpression`.
@@ -1058,7 +1058,7 @@ class ShiftLeftArithmeticExpression(VHDLModel_ShiftLeftArithmeticExpression, DOM
 
 
 @export
-@InheritDocString(VHDLModel_RotateRightExpression, merge=True)
+@InheritDocString(VHDLModel_RotateRightExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class RotateRightExpression(VHDLModel_RotateRightExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.RotateRightExpression`.
@@ -1077,7 +1077,7 @@ class RotateRightExpression(VHDLModel_RotateRightExpression, DOMMixin, _ParseBin
 
 
 @export
-@InheritDocString(VHDLModel_RotateLeftExpression, merge=True)
+@InheritDocString(VHDLModel_RotateLeftExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class RotateLeftExpression(VHDLModel_RotateLeftExpression, DOMMixin, _ParseBinaryExpressionMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.RotateLeftExpression`.
@@ -1096,7 +1096,7 @@ class RotateLeftExpression(VHDLModel_RotateLeftExpression, DOMMixin, _ParseBinar
 
 
 @export
-@InheritDocString(VHDLModel_QualifiedExpression, merge=True)
+@InheritDocString(VHDLModel_QualifiedExpression, strategy=DocStringMergeStrategy.BaseFirst)
 class QualifiedExpression(VHDLModel_QualifiedExpression, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.QualifiedExpression`.
@@ -1130,7 +1130,7 @@ class QualifiedExpression(VHDLModel_QualifiedExpression, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_SubtypeAllocation, merge=True)
+@InheritDocString(VHDLModel_SubtypeAllocation, strategy=DocStringMergeStrategy.BaseFirst)
 class SubtypeAllocation(VHDLModel_SubtypeAllocation, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.SubtypeAllocation`.
@@ -1162,7 +1162,7 @@ class SubtypeAllocation(VHDLModel_SubtypeAllocation, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_QualifiedExpressionAllocation, merge=True)
+@InheritDocString(VHDLModel_QualifiedExpressionAllocation, strategy=DocStringMergeStrategy.BaseFirst)
 class QualifiedExpressionAllocation(VHDLModel_QualifiedExpressionAllocation, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.QualifiedExpressionAllocation`.
@@ -1194,7 +1194,7 @@ class QualifiedExpressionAllocation(VHDLModel_QualifiedExpressionAllocation, DOM
 
 
 @export
-@InheritDocString(VHDLModel_Aggregate, merge=True)
+@InheritDocString(VHDLModel_Aggregate, strategy=DocStringMergeStrategy.BaseFirst)
 class Aggregate(VHDLModel_Aggregate, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.Aggregate`.
