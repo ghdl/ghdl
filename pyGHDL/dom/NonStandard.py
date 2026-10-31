@@ -70,7 +70,7 @@ from pyGHDL.libghdl.flags import Flag_Gather_Comments
 from pyGHDL.libghdl.vhdl import nodes, sem_lib
 from pyGHDL.libghdl.vhdl.parse import Flag_Parse_Parenthesis
 from pyGHDL.dom import DOMException, Position
-from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors, GetNameOfNode, GetDocumentationOfNode
+from pyGHDL.dom._Utils import GetIirKindOfNode, CheckForErrors, GetNameOfNode, GetDocumentationOfDesignUnit
 from pyGHDL.dom.Name import SimpleName
 from pyGHDL.dom.Symbol import LibraryReferenceSymbol
 from pyGHDL.dom.DesignUnit import (

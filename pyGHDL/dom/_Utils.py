@@ -36,7 +36,7 @@ This module offers helper functions to read an IIR node's kind, name, label, mod
 
 from __future__ import annotations
 
-from typing import Optional as Nullable
+from typing import Optional as Nullable, Tuple
 
 from pyTooling.Decorators import export
 
@@ -225,6 +225,97 @@ def GetDocumentationOfIdentifierList(node: Iir) -> str:
         node = nodes.Get_Chain(node)
 
     return "\n".join(documentation)
+
+
+@export
+def GetDocumentationOfDesignUnit(designUnit: Iir) -> Tuple[str, str]:
+    """
+    Splits the doc-comment lines attached to a design unit node into the file header and the unit's documentation.
+
+    *libghdl* attaches the comments before a unit's first token - its context clause or, without one, the unit's
+    keyword - to the design unit node, not to the library unit node (entity, architecture, ...). Only the first design
+    unit of a file has a file header:
+
+    * With a context clause, the comments before the context clause are the file header.
+    * Without a context clause, the comments before the last blank line in front of the unit's keyword are the file
+      header.
+
+    All other comments of a design unit node document the unit.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          -- File header.          <- file header (blank line follows)
+
+          -- Entity documentation. <- unit (no blank line before 'entity')
+          entity e is
+          end entity;
+
+          -- Architecture doc.     <- unit (not the first unit)
+          architecture rtl of e is
+          ...
+
+    :param designUnit: The IIR node of the design unit.
+    :returns:          A tuple of the file header and the unit's documentation, each the comment lines joined by
+                       newlines, or an empty string.
+    """
+    location = nodes.Get_Location(designUnit)
+    file = files_map.Location_To_File(location)
+
+    comments = []
+    idx = file_comments.Find_First_Comment(file, designUnit)
+    while idx != file_comments.No_Comment_Index:
+        comments.append(idx)
+        idx = file_comments.Get_Next_Comment(file, idx)
+
+    headerCount = 0
+    designFile = nodes.Get_Design_File(designUnit)
+    if nodes.Get_First_Design_Unit(designFile) == designUnit:
+        unitStart = files_map.Location_File_To_Pos(location, file)
+        leadingComments = [idx for idx in comments if file_comments.Get_Comment_Start(file, idx) < unitStart]
+        headerCount = len(leadingComments)
+
+        if nodes.Get_Context_Items(designUnit) == Null_Iir:
+            # Walk backwards from the unit's keyword until a blank line follows a comment.
+            buffer = files_map.Get_File_Buffer(file)
+            nextStart = unitStart
+            while headerCount > 0:
+                idx = leadingComments[headerCount - 1]
+                gap = buffer[file_comments.Get_Comment_Last(file, idx) + 1 : nextStart]
+                if gap.count(b"\n") > 1:
+                    break
+
+                headerCount -= 1
+                nextStart = file_comments.Get_Comment_Start(file, idx)
+
+    header = "\n".join(file_comments.Get_Comment(file, idx) for idx in comments[:headerCount])
+    documentation = "\n".join(file_comments.Get_Comment(file, idx) for idx in comments[headerCount:])
+
+    return header, documentation
+
+
+@export
+def GetDocumentationOfLibraryUnit(libraryUnit: Iir) -> str:
+    """
+    Collects the doc-comment lines of a library unit (entity, architecture, package, ...).
+
+    A library unit's documentation consists of the comments *libghdl* attached to its design unit node (see
+    :func:`GetDocumentationOfDesignUnit`), followed by the comments attached to the library unit node itself. A nested
+    package has no design unit node, so only its own comments are read.
+
+    :param libraryUnit: The IIR node of the library unit.
+    :returns:           The comment lines joined by newlines, or an empty string if the unit has no comment.
+    """
+    documentation = GetDocumentationOfNode(libraryUnit)
+
+    parent = nodes.Get_Parent(libraryUnit)
+    if GetIirKindOfNode(parent) is nodes.Iir_Kind.Design_Unit:
+        _, unitDocumentation = GetDocumentationOfDesignUnit(parent)
+        if unitDocumentation != "":
+            documentation = unitDocumentation if documentation == "" else f"{unitDocumentation}\n{documentation}"
+
+    return documentation
 
 
 @export

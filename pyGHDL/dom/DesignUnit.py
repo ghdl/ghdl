@@ -65,7 +65,7 @@ from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
-from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetDocumentationOfLibraryUnit
 from pyGHDL.dom._Translate import GetGenericsFromChainedNodes, GetPortsFromChainedNodes, GetName, GetGenericMapAspect
 from pyGHDL.dom._Translate import GetDeclaredItemsFromChainedNodes, GetConcurrentStatementsFromChainedNodes
 from pyGHDL.dom.Name import SimpleName, AllName
@@ -230,7 +230,7 @@ class Entity(VHDLModel_Entity, DOMMixin):
         :returns:            The translated entity declaration.
         """
         name = GetNameOfNode(entityNode)
-        documentation = GetDocumentationOfNode(entityNode)
+        documentation = GetDocumentationOfLibraryUnit(entityNode)
         generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(entityNode))
         ports = GetPortsFromChainedNodes(nodes.Get_Port_Chain(entityNode))
         declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(entityNode), "entity", name)
@@ -284,7 +284,7 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         :returns:                The translated architecture body.
         """
         name = GetNameOfNode(architectureNode)
-        documentation = GetDocumentationOfNode(architectureNode)
+        documentation = GetDocumentationOfLibraryUnit(architectureNode)
         entityNameNode = nodes.Get_Entity_Name(architectureNode)
         entitySymbol = EntitySymbol(entityNameNode, GetName(entityNameNode))
         declaredItems = GetDeclaredItemsFromChainedNodes(
@@ -381,7 +381,7 @@ class Package(VHDLModel_Package, DOMMixin):
         :returns:            The translated package declaration.
         """
         name = GetNameOfNode(packageNode)
-        documentation = GetDocumentationOfNode(packageNode)
+        documentation = GetDocumentationOfLibraryUnit(packageNode)
 
         packageHeader = nodes.Get_Package_Header(packageNode)
         if packageHeader is not nodes.Null_Iir:
@@ -434,7 +434,7 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
         """
         packageIdentifier = GetNameOfNode(packageBodyNode)
         packageSymbol = PackageSymbol(packageBodyNode, SimpleName(packageBodyNode, packageIdentifier))
-        documentation = GetDocumentationOfNode(packageBodyNode)
+        documentation = GetDocumentationOfLibraryUnit(packageBodyNode)
         declaredItems = GetDeclaredItemsFromChainedNodes(
             nodes.Get_Declaration_Chain(packageBodyNode), "package", packageIdentifier
         )
@@ -483,7 +483,7 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         :returns:            The translated package declaration.
         """
         name = GetNameOfNode(packageNode)
-        documentation = GetDocumentationOfNode(packageNode)
+        documentation = GetDocumentationOfLibraryUnit(packageNode)
         uninstantiatedPackageName = GetName(
             uninstantiatedPackageNode := nodes.Get_Uninstantiated_Package_Name(packageNode)
         )
@@ -530,7 +530,7 @@ class Context(VHDLModel_Context, DOMMixin):
         from pyGHDL.dom._Utils import GetIirKindOfNode
 
         name = GetNameOfNode(contextNode)
-        documentation = GetDocumentationOfNode(contextNode)
+        documentation = GetDocumentationOfLibraryUnit(contextNode)
 
         items = []
         names = []
@@ -596,7 +596,7 @@ class Configuration(VHDLModel_Configuration, DOMMixin):
         from pyGHDL.dom._Translate import GetName
 
         name = GetNameOfNode(configurationNode)
-        documentation = GetDocumentationOfNode(configurationNode)
+        documentation = GetDocumentationOfLibraryUnit(configurationNode)
 
         entityNameNode = nodes.Get_Entity_Name(configurationNode)
         entity = EntitySymbol(entityNameNode, GetName(entityNameNode))
