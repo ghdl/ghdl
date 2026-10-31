@@ -134,8 +134,11 @@ def GetLabelOfNode(node: Iir) -> Nullable[str]:
     if-generate or case-generate statement - carries it in ``Alternative_Label``. No node kind has
     both, so the field is chosen from the node's kind.
 
-    :param node: The IIR node to read the label of.
-    :returns:    The label, or ``None`` if the node has no label field or no label was given
+    The label is returned as written in the source file (``U1``), read at the node's location, which is
+    the label's.
+
+    :param node:        The IIR node to read the label of.
+    :returns:           The label, or ``None`` if the node has no label field or no label was given
                         in the source.
     :raises ValueError: If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
     """
@@ -149,8 +152,17 @@ def GetLabelOfNode(node: Iir) -> Nullable[str]:
 
     if label == name_table.Null_Identifier:
         return None
+
+    normalized = name_table.Get_Name_Ptr(label)
+    location = nodes.Get_Location(node)
+    sourceFile = files_map.Location_To_File(location)
+    position = files_map.Location_File_To_Pos(location, sourceFile)
+    buffer = files_map.Get_File_Buffer(sourceFile)
+    written = buffer[position : position + len(normalized)].decode("iso-8859-1")
+    if written.lower() == normalized.lower():
+        return written
     else:
-        return name_table.Get_Name_Ptr(label)
+        return normalized
 
 
 @export
