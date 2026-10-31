@@ -68,6 +68,8 @@ class Base(TestCase):
                     self.checkFlist(nodes.Get_Enumeration_Literal_List(tdef))
             elif k in nodes.Iir_Kinds.Subprogram_Declaration:
                 self.checkDecls(nodes.Get_Interface_Declaration_Chain(decl))
+            elif k == nodes.Iir_Kind.Mode_View_Declaration:
+                self.checkDecls(nodes.Get_Elements_Definition_Chain(decl))
             decl = nodes.Get_Chain(decl)
 
     def checkConc(self, first) -> None:
@@ -123,6 +125,10 @@ class Base(TestCase):
                 self.checkComments(unit, name)
 
             elif k == nodes.Iir_Kind.Configuration_Declaration:
+                self.checkComments(designUnit, name)
+                self.checkComments(unit, name)
+
+            elif k == nodes.Iir_Kind.Package_Instantiation_Declaration:
                 self.checkComments(designUnit, name)
                 self.checkComments(unit, name)
 
@@ -316,6 +322,20 @@ class Association(Base):
 
     def test_ObjectListFirstIdentifier(self) -> None:
         self.checkFileAllAttached(self._root / "comments/objlist.vhdl")
+
+
+class Association2019(Base):
+    @classmethod
+    def setUpClass(cls):
+        libghdl.initialize()
+        errorout_console.Install_Handler()
+        flags.Flag_Gather_Comments.value = True
+        libghdl.set_option("--std=19")
+        if libghdl.analyze_init_status() != 0:
+            cls.fail("libghdl initialization error")
+
+    def test_FreedNodes(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/freed.vhdl")
 
 
 class SingleLine(Base):

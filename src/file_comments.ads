@@ -104,6 +104,11 @@ package File_Comments is
    --  Assign last comments to the block (if any).
    procedure Gather_Comments_End;
 
+   --  Node OLD_N is replaced by node NEW_N (and OLD_N is about to be freed):
+   --  the comments of OLD_N are attached to NEW_N, and so will be the next
+   --  comments that would have been attached to OLD_N.
+   procedure Replace_Comments_Node (Old_N, New_N : Uns32);
+
    --  Sort comments; to be done once all comments have been gathered and
    --  before searching comments.
    --  Discard unassigned comments ?
@@ -184,6 +189,9 @@ private
 
       --  Node to attach for next comments.
       Last_Node : Uns32;
+
+      --  First comment that may be attached to LAST_NODE.
+      Node_First : Comment_Index;
 
       Line_Start : Source_Ptr;
    end record;

@@ -41,6 +41,9 @@ package Vhdl.Comments is
    procedure Gather_Comments_Block (N : Iir);
    procedure Gather_Comments_Line (N : Iir);
 
+   --  OLD_N is replaced by NEW_N: its comments are attached to NEW_N.
+   procedure Replace_Comments_Node (Old_N, New_N : Iir);
+
    --  Return the first comment attached to node N.  FILE must be the file
    --  of N.
    --  Use File_Comments to iterate on comments.

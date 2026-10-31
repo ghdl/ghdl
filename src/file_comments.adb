@@ -30,6 +30,7 @@ package body File_Comments is
                State => State_Before,
                Next => No_Comment_Index + 1,
                Last_Node => 0,
+               Node_First => No_Comment_Index + 1,
                Last_Newline => No_Comment_Index,
                Line_Start => Source_Ptr_Bad);
 
@@ -257,6 +258,7 @@ package body File_Comments is
       end if;
       Ctxt.State := State_Block;
       Ctxt.Last_Node := N;
+      Ctxt.Node_First := Rng.First;
    end Gather_Comments_Block;
 
    procedure Gather_Comments_Line (Pos : Source_Ptr;
@@ -271,6 +273,7 @@ package body File_Comments is
       --  Start Line mode.
       Ctxt.State := State_Line;
       Ctxt.Last_Node := N;
+      Ctxt.Node_First := Rng.First;
       Ctxt.Line_Start := Pos;
    end Gather_Comments_Line;
 
@@ -300,6 +303,27 @@ package body File_Comments is
       end case;
       Ctxt.State := State_Before;
    end Gather_Comments_End;
+
+   procedure Replace_Comments_Node (Old_N, New_N : Uns32)
+   is
+      pragma Assert (Ctxt.File /= No_Source_File_Entry);
+      Fc : File_Comments_Table renames Comments_Table.Table (Ctxt.File);
+      First : Comment_Index;
+   begin
+      if Old_N = Ctxt.Last_Node then
+         --  Only the comments since the gathering can be attached to it.
+         First := Ctxt.Node_First;
+         Ctxt.Last_Node := New_N;
+      else
+         First := No_Comment_Index + 1;
+      end if;
+
+      for I in First .. File_Comments_Tables.Last (Fc) loop
+         if Fc.Table (I).N = Old_N then
+            Fc.Table (I).N := New_N;
+         end if;
+      end loop;
+   end Replace_Comments_Node;
 
    procedure Gather_Comments (N : Uns32)
    is

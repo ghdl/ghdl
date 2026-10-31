@@ -1965,6 +1965,11 @@ package body Vhdl.Parse is
          end if;
 
          if Last = Null_Iir then
+            --  Comments are attached to the first interface.
+            if Flag_Gather_Comments then
+               Replace_Comments_Node (O_Interface, N_Interface);
+            end if;
+
             First := N_Interface;
          else
             Set_Chain (Last, N_Interface);
@@ -5105,6 +5110,11 @@ package body Vhdl.Parse is
                         --  Set name on the first.
                         if El = First then
                            Set_Mode_View_Name (N_El, Name);
+
+                           --  Comments are attached to the first element.
+                           if Flag_Gather_Comments then
+                              Replace_Comments_Node (El, N_El);
+                           end if;
                         end if;
 
                         --  Chain.
@@ -9108,6 +9118,10 @@ package body Vhdl.Parse is
       --  Skip ';'.
       Expect_Scan (Tok_Semi_Colon);
 
+      if Flag_Gather_Comments then
+         Replace_Comments_Node (Subprg, Res);
+      end if;
+
       Free_Iir (Subprg);
 
       return Res;
@@ -12039,8 +12053,11 @@ package body Vhdl.Parse is
    --  package_instantiation_declaration ::=
    --      PACKAGE identifier IS NEW uninstantiated_package_name
    --         [ generic_map_aspect ] ;
-   function Parse_Package_Instantiation_Declaration
-     (Parent : Iir; Id : Name_Id; Loc : Location_Type) return Iir
+   function Parse_Package_Instantiation_Declaration (Parent : Iir;
+                                                     Id : Name_Id;
+                                                     Loc : Location_Type;
+                                                     Comments : Comments_Range)
+                                                    return Iir
    is
       Res: Iir;
    begin
@@ -12048,6 +12065,12 @@ package body Vhdl.Parse is
       Set_Location (Res, Loc);
       Set_Identifier (Res, Id);
       Set_Parent (Res, Parent);
+
+      --  Comments before 'is' (saved by Parse_Package) are attached to the
+      --  instantiation, like for a package declaration.
+      if Flag_Gather_Comments then
+         Gather_Comments_Block (Comments, Res);
+      end if;
 
       --  Skip 'new'
       Scan;
@@ -12117,7 +12140,8 @@ package body Vhdl.Parse is
          Expect_Scan (Tok_Is);
 
          if Current_Token = Tok_New then
-            Res := Parse_Package_Instantiation_Declaration (Parent, Id, Loc);
+            Res := Parse_Package_Instantiation_Declaration
+              (Parent, Id, Loc, Comments);
             --  Note: there is no 'end' in instantiation.
          else
             Res := Parse_Package_Declaration (Parent, Id, Loc, Comments);

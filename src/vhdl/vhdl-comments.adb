@@ -42,6 +42,11 @@ package body Vhdl.Comments is
       Gather_Comments_Line (Coord.Line_Pos, Uns32 (N));
    end Gather_Comments_Line;
 
+   procedure Replace_Comments_Node (Old_N, New_N : Iir) is
+   begin
+      Replace_Comments_Node (Uns32 (Old_N), Uns32 (New_N));
+   end Replace_Comments_Node;
+
    function Find_First_Comment (File : Source_File_Entry; N : Node)
                                return Comment_Index
    is
