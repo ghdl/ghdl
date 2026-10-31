@@ -34,6 +34,8 @@
 This module implements derived classes for VHDL constructs not covered by another module, e.g. an alias.
 """
 
+from __future__ import annotations
+
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
 from pyVHDLModel.Declaration import Alias as VHDLModel_Alias

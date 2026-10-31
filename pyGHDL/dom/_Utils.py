@@ -34,6 +34,8 @@
 This module offers helper functions to read an IIR node's kind, name, label, mode and documentation.
 """
 
+from __future__ import annotations
+
 from typing import Optional as Nullable
 
 from pyTooling.Decorators import export

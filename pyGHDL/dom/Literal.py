@@ -34,7 +34,9 @@
 This module implements derived literal classes from :mod:`pyVHDLModel.Expression`.
 """
 
-from typing import Union, Optional as Nullable
+from __future__ import annotations
+
+from typing import Union, Optional as Nullable, Self
 
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
@@ -76,7 +78,7 @@ class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir) -> "NullLiteral":
+    def parse(cls, node: Iir) -> Self:
         """
         Translates an IIR node to a :class:`NullLiteral`.
 
@@ -104,7 +106,7 @@ class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, literalNode: Iir) -> "EnumerationLiteral":
+    def parse(cls, literalNode: Iir) -> Self:
         """
         Translates the IIR node of the literal to an :class:`EnumerationLiteral`.
 
@@ -134,7 +136,7 @@ class CharacterEnumerationLiteral(VHDLModel_CharacterEnumerationLiteral, DOMMixi
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, literalNode: Iir) -> "CharacterEnumerationLiteral":
+    def parse(cls, literalNode: Iir) -> Self:
         """
         Translates the IIR node of the literal to a :class:`CharacterEnumerationLiteral`.
 
@@ -164,7 +166,7 @@ class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, literalNode: Iir) -> "IntegerLiteral":
+    def parse(cls, literalNode: Iir) -> Self:
         """
         Translates the IIR node of the literal to an :class:`IntegerLiteral`.
 
@@ -193,7 +195,7 @@ class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, literalNode: Iir) -> "FloatingPointLiteral":
+    def parse(cls, literalNode: Iir) -> Self:
         """
         Translates the IIR node of the literal to a :class:`FloatingPointLiteral`.
 
@@ -223,7 +225,7 @@ class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, literalNode: Iir) -> "PhysicalIntegerLiteral":
+    def parse(cls, literalNode: Iir) -> Self:
         """
         Translates the IIR node of the literal to a :class:`PhysicalIntegerLiteral`.
 
@@ -256,7 +258,7 @@ class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, literalNode: Iir) -> "PhysicalFloatingLiteral":
+    def parse(cls, literalNode: Iir) -> Self:
         """
         Translates the IIR node of the literal to a :class:`PhysicalFloatingLiteral`.
 
@@ -288,7 +290,7 @@ class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, literalNode: Iir) -> "CharacterLiteral":
+    def parse(cls, literalNode: Iir) -> Self:
         """
         Translates the IIR node of the literal to a :class:`CharacterLiteral`.
 
@@ -399,7 +401,7 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
 
     @classmethod
     def parse(cls, literalNode: Iir) -> Union[
-        "StringLiteral",
+        StringLiteral,
         BinaryBitStringLiteral,
         OctalBitStringLiteral,
         DecimalBitStringLiteral,

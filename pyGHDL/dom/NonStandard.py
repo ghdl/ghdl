@@ -37,6 +37,8 @@ These three are not VHDL language constructs, but the entry points of :mod:`pyGH
 and parses a source file through *libghdl*, a library groups documents, and a design owns the libraries.
 """
 
+from __future__ import annotations
+
 import ctypes
 from pathlib import Path
 from typing import Any, Optional as Nullable, List

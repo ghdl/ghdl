@@ -38,7 +38,9 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 """
 
-from typing import Iterable
+from __future__ import annotations
+
+from typing import Iterable, Self
 
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
@@ -198,7 +200,7 @@ class Entity(VHDLModel_Entity, DOMMixin):
         genericItems: Iterable[GenericInterfaceItemMixin] = None,
         portItems: Iterable[PortInterfaceItemMixin] = None,
         declaredItems: Iterable = None,
-        statements: Iterable["ConcurrentStatement"] = None,
+        statements: Iterable[ConcurrentStatement] = None,
         documentation: str = None,
     ) -> None:
         """
@@ -255,7 +257,7 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         entity: EntitySymbol,
         contextItems: Iterable[VHDLModel_ContextUnion] = None,
         declaredItems: Iterable = None,
-        statements: Iterable["ConcurrentStatement"] = None,
+        statements: Iterable[ConcurrentStatement] = None,
         documentation: str = None,
     ) -> None:
         """
@@ -583,7 +585,7 @@ class Configuration(VHDLModel_Configuration, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, configurationNode: Iir, contextItems: Iterable[Context]) -> "Configuration":
+    def parse(cls, configurationNode: Iir, contextItems: Iterable[Context]) -> Self:
         """
         Translates the IIR node of the configuration declaration to a :class:`Configuration`.
 

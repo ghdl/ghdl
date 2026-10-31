@@ -34,6 +34,8 @@
 This module offers helper functions to translate often used IIR substructures to pyGHDL.dom (pyVHDLModel) constructs.
 """
 
+from __future__ import annotations
+
 from typing import List, Generator, Type, Dict, Union, Optional as Nullable
 
 from pyTooling.Decorators import export
@@ -753,7 +755,7 @@ def GetOptionalExpressionFromNode(node: Iir) -> Nullable[ExpressionUnion]:
 
 
 @export
-def GetModeViewElementsFromChainedNodes(nodeChain: Iir) -> Generator["ModeViewElement", None, None]:
+def GetModeViewElementsFromChainedNodes(nodeChain: Iir) -> Generator[ModeViewElement, None, None]:
     """
     Translates a chain of mode view elements (IIR nodes) to a sequence of
     :class:`pyVHDLModel.Interface.ModeViewElement`.

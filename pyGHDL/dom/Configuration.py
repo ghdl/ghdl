@@ -34,7 +34,9 @@
 This module implements derived configuration classes from :mod:`pyVHDLModel.Configuration`.
 """
 
-from typing import List, Generator, Union
+from __future__ import annotations
+
+from typing import List, Generator, Union, Self
 
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
@@ -78,7 +80,7 @@ class EntityAspectEntity(VHDLModel_EntityAspectEntity, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, entityAspectNode: Iir) -> "EntityAspectEntity":
+    def parse(cls, entityAspectNode: Iir) -> Self:
         """
         Translates the IIR node of the entity aspect to an :class:`EntityAspectEntity`.
 
@@ -118,7 +120,7 @@ class EntityAspectConfiguration(VHDLModel_EntityAspectConfiguration, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, entityAspectNode: Iir) -> "EntityAspectConfiguration":
+    def parse(cls, entityAspectNode: Iir) -> Self:
         """
         Translates the IIR node of the entity aspect to an :class:`EntityAspectConfiguration`.
 
@@ -150,7 +152,7 @@ class EntityAspectOpen(VHDLModel_EntityAspectOpen, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, entityAspectNode: Iir) -> "EntityAspectOpen":
+    def parse(cls, entityAspectNode: Iir) -> Self:
         """
         Translates the IIR node of the entity aspect to an :class:`EntityAspectOpen`.
 
@@ -206,7 +208,7 @@ class BindingIndication(VHDLModel_BindingIndication, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, bindingIndicationNode: Iir) -> "BindingIndication":
+    def parse(cls, bindingIndicationNode: Iir) -> Self:
         """
         Translates the IIR node of the binding indication to a :class:`BindingIndication`.
 
@@ -271,7 +273,7 @@ class ComponentConfiguration(VHDLModel_ComponentConfiguration, DOMMixin):
     def __init__(
         self,
         node: Iir,
-        instantiationList: Union[List[Name], "AllInstantiationList", "OthersInstantiationList"],
+        instantiationList: Union[List[Name], AllInstantiationList, OthersInstantiationList],
         componentName: ComponentInstantiationSymbol,
         bindingIndication: BindingIndication = None,
     ) -> None:
@@ -287,7 +289,7 @@ class ComponentConfiguration(VHDLModel_ComponentConfiguration, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir) -> "ComponentConfiguration":
+    def parse(cls, node: Iir) -> Self:
         """
         Translates an IIR node to a :class:`ComponentConfiguration`.
 
@@ -328,7 +330,7 @@ class BlockConfiguration(VHDLModel_BlockConfiguration, DOMMixin):
         self,
         node: Iir,
         blockSpecification: Symbol,
-        items: List[Union["BlockConfiguration", ComponentConfiguration]] = None,
+        items: List[Union[BlockConfiguration, ComponentConfiguration]] = None,
     ) -> None:
         """
         Initializes a block configuration.
@@ -341,7 +343,7 @@ class BlockConfiguration(VHDLModel_BlockConfiguration, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir) -> "BlockConfiguration":
+    def parse(cls, node: Iir) -> Self:
         """
         Translates an IIR node to a :class:`BlockConfiguration`.
 

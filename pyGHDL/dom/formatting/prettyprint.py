@@ -34,6 +34,8 @@
 This module offers a formatter to render a design, document or design unit as an indented plain-text tree.
 """
 
+from __future__ import annotations
+
 from typing import List, Union
 
 from pyTooling.Common import getFullyQualifiedName
