@@ -112,6 +112,9 @@ class Base(TestCase):
         # Parse
         file = sem_lib.Load_File(sfe)
 
+        # The header of the file is attached to the design file
+        self.checkComments(file, "header")
+
         # Display all design units
         designUnit = nodes.Get_First_Design_Unit(file)
         while designUnit != nodes.Null_Iir:
@@ -353,6 +356,18 @@ class Association(Base):
 
     def test_SameLineAfterDeclaration(self) -> None:
         self.checkFileAllAttached(self._root / "comments/samelinedecl.vhdl")
+
+    def test_FileHeader(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/header.vhdl")
+
+    def test_FileHeaderContextClause(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/header_context.vhdl")
+
+    def test_FileHeaderContextReference(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/header_context_ref.vhdl")
+
+    def test_FileHeaderContextDeclaration(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/header_context_decl.vhdl")
 
 
 class Continuation(Base):

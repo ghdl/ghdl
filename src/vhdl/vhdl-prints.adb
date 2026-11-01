@@ -4905,6 +4905,16 @@ package body Vhdl.Prints is
                end loop;
             end;
          when Iir_Kind_Design_Unit =>
+            --  The header of the file is displayed before its first unit.
+            declare
+               File : constant Iir := Get_Design_File (N);
+            begin
+               if File /= Null_Iir
+                 and then Get_First_Design_Unit (File) = N
+               then
+                  Start_Node (Ctxt, File);
+               end if;
+            end;
             Start_Node (Ctxt, N);
             Disp_Design_Unit (Ctxt, N);
          when Iir_Kind_Component_Declaration =>
