@@ -92,7 +92,7 @@ jobs:
       - name: 🖉 Assemble artifact name
         id: artifact_name
         run: |
-          tee "${GITHUB_OUTPUT}" <<EOF
+          tee -a "${GITHUB_OUTPUT}" <<EOF
           ghdl_artifact=${{ inputs.macos_artifact }}-${{ inputs.backend }}
           EOF
 
@@ -100,7 +100,7 @@ jobs:
         run: |
           brew install llvm coreutils
 
-          tee "${GITHUB_ENV}" <<EOF
+          tee -a "${GITHUB_ENV}" <<EOF
           LLVM_BINARY_PATH=$(brew --prefix llvm)/bin
           EOF
 
@@ -143,7 +143,7 @@ jobs:
             exit 1
           fi
 
-          tee "${GITHUB_OUTPUT}" <<EOF
+          tee -a "${GITHUB_OUTPUT}" <<EOF
           GNAT_MAJOR_VERSION=${GNAT_MAJOR_VERSION}
           EOF
 
@@ -151,7 +151,7 @@ jobs:
         run: |
           mkdir -p build/${{ inputs.backend }}
 
-          tee "${GITHUB_ENV}" <<EOF
+          tee -a "${GITHUB_ENV}" <<EOF
           PATH=${GNAT_BINARY_PATH}:${LLVM_BINARY_PATH}:${PATH}
           SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
           EOF
