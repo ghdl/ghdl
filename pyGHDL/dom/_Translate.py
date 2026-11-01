@@ -47,6 +47,7 @@ from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Association import AssociationItem
 from pyVHDLModel.Interface import GenericInterfaceItemMixin, PortInterfaceItemMixin, ParameterInterfaceItemMixin
 from pyVHDLModel.Type import BaseType
+from pyVHDLModel.Expression import UnaryExpression, BinaryExpression
 from pyVHDLModel.Sequential import SequentialStatement
 from pyVHDLModel.Concurrent import ConcurrentStatement
 
@@ -94,6 +95,7 @@ from pyGHDL.dom.Symbol import (
 )
 from pyGHDL.dom.Type import (
     IntegerType,
+    RealType,
     Subtype,
     ArrayType,
     RecordType,
@@ -392,13 +394,32 @@ def GetTypeFromNode(node: Iir) -> BaseType:
         )
 
 
+def _ContainsFloatingPointLiteral(expression: ExpressionUnion) -> bool:
+    """
+    Checks if an expression contains a floating-point literal outside of names and function calls.
+
+    :param expression: The translated expression to check.
+    :returns:          ``True``, if the expression or one of its operands is a floating-point literal.
+    """
+    if isinstance(expression, FloatingPointLiteral):
+        return True
+    elif isinstance(expression, UnaryExpression):
+        return _ContainsFloatingPointLiteral(expression.Operand)
+    elif isinstance(expression, BinaryExpression):
+        return _ContainsFloatingPointLiteral(expression.LeftOperand) or _ContainsFloatingPointLiteral(
+            expression.RightOperand
+        )
+
+    return False
+
+
 @export
 def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
     """
     Translates an anonymous type declaration to the matching :mod:`pyGHDL.dom.Type` class.
 
     GHDL creates an anonymous type declaration for the type definitions that have no name of their own -
-    an integer or physical type behind a subtype, for instance.
+    an integer, real or physical type behind a subtype, for instance.
 
     :param node:                     The IIR node of the anonymous type declaration.
     :returns:                        The translated type.
@@ -415,6 +436,10 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
     kind = GetIirKindOfNode(typeDefinition)
     if kind == nodes.Iir_Kind.Range_Expression:
         r = GetRangeFromNode(typeDefinition)
+        # Without semantic analysis, only a floating-point literal in a bound tells a real type from an integer type.
+        if _ContainsFloatingPointLiteral(r.LeftBound) or _ContainsFloatingPointLiteral(r.RightBound):
+            return RealType(node, typeName, r, documentation)
+
         return IntegerType(node, typeName, r, documentation)
 
     elif kind in (nodes.Iir_Kind.Attribute_Name, nodes.Iir_Kind.Parenthesis_Name):

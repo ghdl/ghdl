@@ -47,6 +47,7 @@ from pyVHDLModel.Type import Subtype as VHDLModel_Subtype
 from pyVHDLModel.Type import AnonymousType as VHDLModel_AnonymousType
 from pyVHDLModel.Type import EnumeratedType as VHDLModel_EnumeratedType
 from pyVHDLModel.Type import IntegerType as VHDLModel_IntegerType
+from pyVHDLModel.Type import RealType as VHDLModel_RealType
 from pyVHDLModel.Type import PhysicalType as VHDLModel_PhysicalType
 from pyVHDLModel.Type import ArrayType as VHDLModel_ArrayType
 from pyVHDLModel.Type import RecordTypeElement as VHDLModel_RecordTypeElement
@@ -167,6 +168,33 @@ class IntegerType(VHDLModel_IntegerType, DOMMixin):
     def __init__(self, node: Iir, typeName: str, rng: Union[Range, Name], documentation: str = None) -> None:
         """
         Initializes an integer type definition.
+
+        :param node:          The IIR node this object was translated from.
+        :param typeName:      The type's identifier.
+        :param rng:           The range constraining this scalar type.
+        :param documentation: The documentation comment associated with this declaration.
+        """
+        super().__init__(typeName, rng, documentation)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class RealType(VHDLModel_RealType, DOMMixin):
+    """
+    Represents a *real type* (floating-point type).
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.RealType`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          type real is range -1.79769313486232E308 to 1.79769313486232E308;
+    """
+
+    def __init__(self, node: Iir, typeName: str, rng: Range, documentation: str = None) -> None:
+        """
+        Initializes a real type definition.
 
         :param node:          The IIR node this object was translated from.
         :param typeName:      The type's identifier.
