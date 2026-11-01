@@ -54,11 +54,11 @@ from pyVHDLModel.Expression import OctalBitStringLiteral as VHDLModel_OctalBitSt
 from pyVHDLModel.Expression import DecimalBitStringLiteral as VHDLModel_DecimalBitStringLiteral
 from pyVHDLModel.Expression import HexadecimalBitStringLiteral as VHDLModel_HexadecimalBitStringLiteral
 
-from pyGHDL.libghdl import ENCODING, name_table, str_table, files_map
+from pyGHDL.libghdl import name_table, str_table
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes, utils
 from pyGHDL.dom import DOMMixin, DOMException, Position
-from pyGHDL.dom._Utils import GetNameOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetSourceTextOfNode
 
 
 @export
@@ -457,10 +457,7 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
             position = Position.parse(literalNode)
             raise DOMException(f"Bit string literal at {position} has no source text.")
 
-        location = nodes.Get_Location(literalNode)
-        file = files_map.Location_To_File(location)
-        start = files_map.Location_File_To_Pos(location, file)
-        sourceText = files_map.Get_File_Buffer(file)[start : start + literalLength].decode(ENCODING)
+        sourceText = GetSourceTextOfNode(literalNode, literalLength)
         value = sourceText[sourceText.index('"') + 1 : -1]
 
         if base is nodes.NumberBaseType.Base_2:

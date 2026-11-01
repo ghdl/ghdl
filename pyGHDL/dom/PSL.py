@@ -49,11 +49,9 @@ from pyVHDLModel.PSLModel import VerificationProperty as VHDLModel_VerificationP
 from pyVHDLModel.PSLModel import VerificationMode as VHDLModel_VerificationMode
 from pyVHDLModel.PSLModel import DefaultClock as VHDLModel_DefaultClock
 
-from pyGHDL.libghdl import files_map
 from pyGHDL.libghdl._types import Iir
-from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, DOMException, Position
-from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode, GetSourceTextOfNode
 
 
 @export
@@ -200,11 +198,7 @@ class DefaultClock(VHDLModel_DefaultClock, DOMMixin):
         :returns:                The translated PSL default clock.
         :raises DOMException:    If the source text at the node's location is no PSL default clock declaration.
         """
-        location = nodes.Get_Location(defaultClockNode)
-        sourceFile = files_map.Location_To_File(location)
-        start = files_map.Location_File_To_Pos(location, sourceFile)
-        buffer = files_map.Get_File_Buffer(sourceFile)
-        source = buffer[start : files_map.Get_File_Length(sourceFile)].decode("iso-8859-1")
+        source = GetSourceTextOfNode(defaultClockNode)
 
         declaration = sub(r"--[^\n]*", "", source[: source.find(";")])
         match = fullmatch(r"default\s+clock\s+is\s+(.+)", " ".join(declaration.split()), IGNORECASE)
