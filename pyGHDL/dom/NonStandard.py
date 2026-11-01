@@ -314,8 +314,9 @@ class Document(VHDLModel_Document):
         :raises UnhandledExceptionError: If a construct is not supported yet and no
                                          :class:`~pyTooling.Warning.WarningCollector` is active.
         """
+        self._documentation = GetDocumentationOfNode(self.__ghdlFile)
+
         firstUnit = nodes.Get_First_Design_Unit(self.__ghdlFile)
-        self._documentation = GetDocumentationOfNode(firstUnit)
 
         for unit in utils.chain_iter(firstUnit):
             libraryUnit = nodes.Get_Library_Unit(unit)
