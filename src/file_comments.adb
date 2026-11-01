@@ -16,6 +16,7 @@
 
 with Grt.Algos;
 
+with Files_Map;
 with Simple_IO; use Simple_IO;
 with Utils_IO; use Utils_IO;
 
@@ -30,8 +31,10 @@ package body File_Comments is
                State => State_Before,
                Next => No_Comment_Index + 1,
                Last_Node => 0,
+               Node_First => No_Comment_Index + 1,
                Last_Newline => No_Comment_Index,
-               Line_Start => Source_Ptr_Bad);
+               Line_Start => Source_Ptr_Bad,
+               Col => 0);
 
       --  Create entry for FILE if not already created.
       if Comments_Table.Last < Ctxt.File then
@@ -125,8 +128,17 @@ package body File_Comments is
       end case;
    end Comment_Newline;
 
+   --  Column (tabs expanded) of POS, which is on the line starting at
+   --  LINE_START.
+   function Get_Column (Line_Start, Pos : Source_Ptr) return Natural is
+   begin
+      return Files_Map.Coord_To_Col
+        (Ctxt.File, Line_Start, Natural (Pos - Line_Start));
+   end Get_Column;
+
    procedure Add_Comment (Start, Last : Source_Ptr;
-                          Line_Start : Source_Ptr)
+                          Line_Start : Source_Ptr;
+                          Follows_Comment : Boolean)
    is
       pragma Assert (Ctxt.File /= No_Source_File_Entry);
       T : File_Comments_Table renames Comments_Table.Table (Ctxt.File);
@@ -171,6 +183,8 @@ package body File_Comments is
                --  Yes, associate with the last node.
                N := Ctxt.Last_Node;
                Ctxt.Next := File_Comments_Tables.Last (T) + 2;
+               --  A continuation must start at the same column.
+               Ctxt.Col := Get_Column (Line_Start, Start);
                --  And continue to associate.
                Ctxt.State := State_Line_Cont;
             else
@@ -179,12 +193,23 @@ package body File_Comments is
                Ctxt.State := State_Before;
             end if;
          when State_Line_Cont =>
-            --  Continue to associate with the last node.
             if Flag_Trace then
                Put ("line_cont");
             end if;
-            N := Ctxt.Last_Node;
-            Ctxt.Next := File_Comments_Tables.Last (T) + 2;
+            if Follows_Comment
+              and then Get_Column (Line_Start, Start) = Ctxt.Col
+            then
+               --  Continue to associate with the last node.
+               N := Ctxt.Last_Node;
+               Ctxt.Next := File_Comments_Tables.Last (T) + 2;
+            else
+               --  A token between the comments, or a comment that does not
+               --  start at the column of the same-line comment: the
+               --  continuation is ended and the comment is for the next
+               --  node.
+               N := 0;
+               Ctxt.State := State_Before;
+            end if;
       end case;
 
       if Flag_Trace then
@@ -249,6 +274,7 @@ package body File_Comments is
       end if;
       Ctxt.State := State_Block;
       Ctxt.Last_Node := N;
+      Ctxt.Node_First := Rng.First;
    end Gather_Comments_Block;
 
    procedure Gather_Comments_Line (Pos : Source_Ptr;
@@ -263,8 +289,27 @@ package body File_Comments is
       --  Start Line mode.
       Ctxt.State := State_Line;
       Ctxt.Last_Node := N;
+      Ctxt.Node_First := Rng.First;
       Ctxt.Line_Start := Pos;
    end Gather_Comments_Line;
+
+   procedure Gather_Comments_Line_End
+     (Decl_Line_Start, Line_Start : Source_Ptr; N : Uns32) is
+   begin
+      if Decl_Line_Start /= Line_Start
+        and then Ctxt.Line_Start = Line_Start
+        and then Ctxt.Last_Node /= N
+      then
+         --  An inner node starts on this line, the comment is for it.
+         return;
+      end if;
+
+      Gather_Comments_Line (Line_Start, N);
+
+      --  N has been gathered before: its first comments may be before the
+      --  ones just gathered.
+      Ctxt.Node_First := No_Comment_Index + 1;
+   end Gather_Comments_Line_End;
 
    procedure Gather_Comments_End is
    begin
@@ -292,6 +337,27 @@ package body File_Comments is
       end case;
       Ctxt.State := State_Before;
    end Gather_Comments_End;
+
+   procedure Replace_Comments_Node (Old_N, New_N : Uns32)
+   is
+      pragma Assert (Ctxt.File /= No_Source_File_Entry);
+      Fc : File_Comments_Table renames Comments_Table.Table (Ctxt.File);
+      First : Comment_Index;
+   begin
+      if Old_N = Ctxt.Last_Node then
+         --  Only the comments since the gathering can be attached to it.
+         First := Ctxt.Node_First;
+         Ctxt.Last_Node := New_N;
+      else
+         First := No_Comment_Index + 1;
+      end if;
+
+      for I in First .. File_Comments_Tables.Last (Fc) loop
+         if Fc.Table (I).N = Old_N then
+            Fc.Table (I).N := New_N;
+         end if;
+      end loop;
+   end Replace_Comments_Node;
 
    procedure Gather_Comments (N : Uns32)
    is

@@ -40,7 +40,7 @@ entity e2 is
 		-- :FREQUENCY: might be multiline
 		constant FREQUENCY : positive;
 		constant BITS      : positive;   -- :BITS: comment after a generic are mostly single line,
-																		 -- :BITS: but could be multi line too
+						 -- :BITS: but could be multi line too
 
 		-- :DEBUG: in case comment is before and after
 		constant DEBUG     : boolean     -- :DEBUG: the after has presidency
@@ -81,7 +81,7 @@ package p2 is
 		elem2 : integer; -- :elem2: per element comment behind
 	end record;
 
-	--! :elem2: as functions are longer in definitions, it might be written before
+	--! :log2: as functions are longer in definitions, it might be written before
 	function log2(param : positive) return natural;
 
 	function log2(

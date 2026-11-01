@@ -1,4 +1,5 @@
 from pathlib import Path
+from re import search
 from unittest import TestCase, expectedFailure
 
 import pyGHDL.libghdl as libghdl
@@ -43,6 +44,7 @@ class Base(TestCase):
             commentStart = file_comments.Get_Comment_Start(f, idx)
             commentEnd = file_comments.Get_Comment_Last(f, idx)
             self.assertTrue(commentText.find(':'+name+':') >= 0, f"no :{name}: in [{commentStart}..{commentEnd}] '{commentText}'({len(commentText)})")
+            self._attached.add(commentStart)
             idx = file_comments.Get_Next_Comment(f, idx)
 
     def checkFlist(self, flist) -> None:
@@ -66,6 +68,8 @@ class Base(TestCase):
                     self.checkFlist(nodes.Get_Enumeration_Literal_List(tdef))
             elif k in nodes.Iir_Kinds.Subprogram_Declaration:
                 self.checkDecls(nodes.Get_Interface_Declaration_Chain(decl))
+            elif k == nodes.Iir_Kind.Mode_View_Declaration:
+                self.checkDecls(nodes.Get_Elements_Definition_Chain(decl))
             decl = nodes.Get_Chain(decl)
 
     def checkConc(self, first) -> None:
@@ -80,6 +84,8 @@ class Base(TestCase):
             stmt = nodes.Get_Chain(stmt)
 
     def checkFile(self, filename) -> None:
+        self._attached = set()
+
         # Load the file
         file_id = name_table.Get_Identifier(str(filename))
         sfe = files_map.Read_Source_File(name_table.Null_Identifier, file_id)
@@ -122,10 +128,20 @@ class Base(TestCase):
                 self.checkComments(designUnit, name)
                 self.checkComments(unit, name)
 
+            elif k == nodes.Iir_Kind.Package_Instantiation_Declaration:
+                self.checkComments(designUnit, name)
+                self.checkComments(unit, name)
+
             else:
                 self.fail("Unknown unit.")
 
             designUnit = nodes.Get_Chain(designUnit)
+
+    def checkFileAllAttached(self, filename) -> None:
+        """Like :meth:`checkFile`, and every comment with a ``:name:`` marker must be attached (to node *name*)."""
+        self.checkFile(filename)
+        markers = [line for line in filename.read_text().splitlines() if search(r"--.*:\w+:", line)]
+        self.assertEqual(len(markers), len(self._attached), "comments with a marker that are not attached")
 
 
 class CommentAssociation(Base):
@@ -298,6 +314,90 @@ class CommentAssociation(Base):
 
     def test_line1(self) -> None:
         self.checkFile(self._root / "comments/line1.vhdl")
+
+
+class Association(Base):
+    def test_LineContinuationEndsAtToken(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/linecont_token.vhdl")
+
+    def test_LineContinuationSameColumn(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/linecont_column.vhdl")
+
+    def test_ObjectListFirstIdentifier(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/objlist.vhdl")
+
+    def test_SameLineAfterDeclaration(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/samelinedecl.vhdl")
+
+
+class Continuation(Base):
+    """A same-line comment is continued by the comments that directly follow it at the same column."""
+
+    def getPortComments(self, filename) -> dict:
+        """Return the comments of each port of the entity in file :obj:`filename`, by port name."""
+        file_id = name_table.Get_Identifier(str(filename))
+        sfe = files_map.Read_Source_File(name_table.Null_Identifier, file_id)
+        if sfe == files_map.No_Source_File_Entry:
+            self.fail(f"Cannot read file '{filename!s}'")
+
+        file = sem_lib.Load_File(sfe)
+        entity = nodes.Get_Library_Unit(nodes.Get_First_Design_Unit(file))
+
+        comments = {}
+        port = nodes.Get_Port_Chain(entity)
+        while port != nodes.Null_Iir:
+            texts = []
+            idx = file_comments.Find_First_Comment(sfe, port)
+            while idx != file_comments.No_Comment_Index:
+                texts.append(file_comments.Get_Comment(sfe, idx))
+                idx = file_comments.Get_Next_Comment(sfe, idx)
+            comments[self.getIdentifier(port)] = texts
+            port = nodes.Get_Chain(port)
+
+        return comments
+
+    def test_SameColumn(self) -> None:
+        comments = self.getPortComments(self._root / "comments/linecont_same_column.vhdl")
+
+        self.assertEqual(["-- first documentation line", "-- second documentation line"], comments["a"])
+        self.assertEqual(["-- first documentation line"], comments["b"])
+        self.assertEqual(["-- not a continuation (another column)"], comments["c"])
+
+    def test_Consecutive(self) -> None:
+        comments = self.getPortComments(self._root / "comments/linecont_consecutive.vhdl")
+
+        self.assertEqual(["-- first documentation line"], comments["a"])
+        self.assertEqual(["-- not part of the documentation", "-- first documentation line"], comments["b"])
+        self.assertEqual(["-- some comment", "-- some other comment"], comments["c"])
+
+    def test_EmptyComment(self) -> None:
+        comments = self.getPortComments(self._root / "comments/linecont_empty_comment.vhdl")
+
+        self.assertEqual(
+            ["-- first documentation line", "--", "-- third documentation line"],
+            comments["a"],
+        )
+        self.assertEqual([], comments["b"])
+
+    def test_EmptyLine(self) -> None:
+        comments = self.getPortComments(self._root / "comments/linecont_empty_line.vhdl")
+
+        self.assertEqual(["-- first documentation line"], comments["a"])
+        self.assertEqual(["-- first documentation line for b"], comments["b"])
+
+
+class Association2019(Base):
+    @classmethod
+    def setUpClass(cls):
+        libghdl.initialize()
+        errorout_console.Install_Handler()
+        flags.Flag_Gather_Comments.value = True
+        libghdl.set_option("--std=19")
+        if libghdl.analyze_init_status() != 0:
+            cls.fail("libghdl initialization error")
+
+    def test_FreedNodes(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/freed.vhdl")
 
 
 class SingleLine(Base):

@@ -1,0 +1,25 @@
+entity continuation is
+  port (
+    -- first documentation line of a1
+    -- second documentation line of a1
+    a1: in bit;
+    -- first documentation line of b1
+    b1: in bit;
+    -- not part of the documentation of b1
+    -- first documentation line of c1
+    c1: in bit;
+    -- some comment
+    -- some other comment
+    -- first documentation line of d1
+    --
+    -- third documentation line of d1
+    d1: in bit;
+    -- first documentation line of e1
+    e1: in bit;
+    -- first documentation line for f1
+    -- first documentation line of f1
+    f1: in bit;
+    -- first documentation line of g1 (another column)
+    g1: in bit
+  );
+end entity;
