@@ -38,9 +38,10 @@ package File_Comments is
    --  comment appear on the same line as the node, all consecutive comments
    --  are associated with the node.  Consecutive comments mean comments
    --  without empty lines and without tokens between them, each one
-   --  starting at a column after the column of the node.  A comment that
-   --  follows a token, or that is not indented after the node, interrupts
-   --  this association: it is for the next declaration or statement.
+   --  starting at the column of the comment on the same line.  A comment
+   --  that follows a token, an empty line or a comment at another column,
+   --  or that starts at another column, interrupts this association: it is
+   --  for the next declaration or statement.
    --  Another declaration or statement will also interrupt this association
    --  because the comments will be associated with this new declaration or
    --  statement.  After interruption, comments are not associated anymore;
@@ -95,23 +96,21 @@ package File_Comments is
    --  annotated with a comment is parsed.
    procedure Gather_Comments_Block (Rng : Comments_Range;
                                     N : Uns32);
-   --  LINE_START is the start of the line of the current token and TOK_POS
-   --  its position: a comment on the same line is attached to N, and so are
-   --  the following comments indented after the token.
+   --  LINE_START is the start of the line of the current token: a comment
+   --  on the same line is attached to N, and so are the following comments
+   --  that start at the same column.
    procedure Gather_Comments_Line (Line_Start : Source_Ptr;
-                                   Tok_Pos : Source_Ptr;
                                    N : Uns32);
 
    --  To be called on the last token of the declaration N (like ';'), when
    --  N contains nodes gathered in line mode (like parameters or literals).
-   --  DECL_LINE_START is the start of the first line of N, LINE_START and
-   --  TOK_POS are like for Gather_Comments_Line.
+   --  DECL_LINE_START is the start of the first line of N, LINE_START is
+   --  like for Gather_Comments_Line.
    --  A comment on the same line is attached to N, unless N spans several
    --  lines and an inner node starts on this line (then the comment is
    --  attached to that inner node).
    procedure Gather_Comments_Line_End (Decl_Line_Start : Source_Ptr;
                                        Line_Start : Source_Ptr;
-                                       Tok_Pos : Source_Ptr;
                                        N : Uns32);
 
    --  Assign node N to the last comments scanned.
@@ -213,8 +212,8 @@ private
 
       Line_Start : Source_Ptr;
 
-      --  Column of the token of the node (for State_Line and
-      --  State_Line_Cont).  Continuation comments must start after it.
+      --  Column of the comment on the same line as the node (for
+      --  State_Line_Cont).  Continuation comments must start at it.
       Col : Natural;
    end record;
 

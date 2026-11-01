@@ -184,6 +184,8 @@ package body File_Comments is
                --  Yes, associate with the last node.
                N := Ctxt.Last_Node;
                Ctxt.Next := File_Comments_Tables.Last (T) + 2;
+               --  A continuation must start at the same column.
+               Ctxt.Col := Get_Column (Line_Start, Start);
                --  And continue to associate.
                Ctxt.State := State_Line_Cont;
             else
@@ -196,15 +198,16 @@ package body File_Comments is
                Put ("line_cont");
             end if;
             if Follows_Comment
-              and then Get_Column (Line_Start, Start) > Ctxt.Col
+              and then Get_Column (Line_Start, Start) = Ctxt.Col
             then
                --  Continue to associate with the last node.
                N := Ctxt.Last_Node;
                Ctxt.Next := File_Comments_Tables.Last (T) + 2;
             else
-               --  A token between the comments, or a comment that is not
-               --  indented after the node: the continuation is ended and
-               --  the comment is for the next node.
+               --  A token between the comments, or a comment that does not
+               --  start at the column of the same-line comment: the
+               --  continuation is ended and the comment is for the next
+               --  node.
                N := 0;
                Ctxt.State := State_Before;
             end if;
@@ -276,7 +279,6 @@ package body File_Comments is
    end Gather_Comments_Block;
 
    procedure Gather_Comments_Line (Line_Start : Source_Ptr;
-                                   Tok_Pos : Source_Ptr;
                                    N : Uns32)
    is
       Rng : Comments_Range;
@@ -290,12 +292,10 @@ package body File_Comments is
       Ctxt.Last_Node := N;
       Ctxt.Node_First := Rng.First;
       Ctxt.Line_Start := Line_Start;
-      Ctxt.Col := Get_Column (Line_Start, Tok_Pos);
    end Gather_Comments_Line;
 
    procedure Gather_Comments_Line_End (Decl_Line_Start : Source_Ptr;
                                        Line_Start : Source_Ptr;
-                                       Tok_Pos : Source_Ptr;
                                        N : Uns32) is
    begin
       if Decl_Line_Start /= Line_Start
@@ -306,7 +306,7 @@ package body File_Comments is
          return;
       end if;
 
-      Gather_Comments_Line (Line_Start, Tok_Pos, N);
+      Gather_Comments_Line (Line_Start, N);
 
       --  N has been gathered before: its first comments may be before the
       --  ones just gathered.

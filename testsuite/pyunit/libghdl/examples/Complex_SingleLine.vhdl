@@ -40,7 +40,7 @@ entity e2 is
 		-- :FREQUENCY: might be multiline
 		constant FREQUENCY : positive;
 		constant BITS      : positive;   -- :BITS: comment after a generic are mostly single line,
-																		 -- :BITS: but could be multi line too
+						 -- :BITS: but could be multi line too
 
 		-- :DEBUG: in case comment is before and after
 		constant DEBUG     : boolean     -- :DEBUG: the after has presidency

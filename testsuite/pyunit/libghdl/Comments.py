@@ -320,7 +320,7 @@ class Association(Base):
     def test_LineContinuationEndsAtToken(self) -> None:
         self.checkFileAllAttached(self._root / "comments/linecont_token.vhdl")
 
-    def test_LineContinuationIndented(self) -> None:
+    def test_LineContinuationSameColumn(self) -> None:
         self.checkFileAllAttached(self._root / "comments/linecont_column.vhdl")
 
     def test_ObjectListFirstIdentifier(self) -> None:
@@ -328,6 +328,62 @@ class Association(Base):
 
     def test_SameLineAfterDeclaration(self) -> None:
         self.checkFileAllAttached(self._root / "comments/samelinedecl.vhdl")
+
+
+class Continuation(Base):
+    """A same-line comment is continued by the comments that directly follow it at the same column."""
+
+    def getPortComments(self, filename) -> dict:
+        """Return the comments of each port of the entity in file :obj:`filename`, by port name."""
+        file_id = name_table.Get_Identifier(str(filename))
+        sfe = files_map.Read_Source_File(name_table.Null_Identifier, file_id)
+        if sfe == files_map.No_Source_File_Entry:
+            self.fail(f"Cannot read file '{filename!s}'")
+
+        file = sem_lib.Load_File(sfe)
+        entity = nodes.Get_Library_Unit(nodes.Get_First_Design_Unit(file))
+
+        comments = {}
+        port = nodes.Get_Port_Chain(entity)
+        while port != nodes.Null_Iir:
+            texts = []
+            idx = file_comments.Find_First_Comment(sfe, port)
+            while idx != file_comments.No_Comment_Index:
+                texts.append(file_comments.Get_Comment(sfe, idx))
+                idx = file_comments.Get_Next_Comment(sfe, idx)
+            comments[self.getIdentifier(port)] = texts
+            port = nodes.Get_Chain(port)
+
+        return comments
+
+    def test_SameColumn(self) -> None:
+        comments = self.getPortComments(self._root / "comments/linecont_same_column.vhdl")
+
+        self.assertEqual(["-- first documentation line", "-- second documentation line"], comments["a"])
+        self.assertEqual(["-- first documentation line"], comments["b"])
+        self.assertEqual(["-- not a continuation (another column)"], comments["c"])
+
+    def test_Consecutive(self) -> None:
+        comments = self.getPortComments(self._root / "comments/linecont_consecutive.vhdl")
+
+        self.assertEqual(["-- first documentation line"], comments["a"])
+        self.assertEqual(["-- not part of the documentation", "-- first documentation line"], comments["b"])
+        self.assertEqual(["-- some comment", "-- some other comment"], comments["c"])
+
+    def test_EmptyComment(self) -> None:
+        comments = self.getPortComments(self._root / "comments/linecont_empty_comment.vhdl")
+
+        self.assertEqual(
+            ["-- first documentation line", "--", "-- third documentation line"],
+            comments["a"],
+        )
+        self.assertEqual([], comments["b"])
+
+    def test_EmptyLine(self) -> None:
+        comments = self.getPortComments(self._root / "comments/linecont_empty_line.vhdl")
+
+        self.assertEqual(["-- first documentation line"], comments["a"])
+        self.assertEqual(["-- first documentation line for b"], comments["b"])
 
 
 class Association2019(Base):

@@ -7,6 +7,11 @@
 "$GHDL" --reprint --std=19 assoc.vhdl > assoc.out
 diff assoc.ref assoc.out
 
-rm -f assoc.out
+#  A same-line comment is continued by the comments that directly follow it
+#  at the same column.
+"$GHDL" --reprint --std=19 continuation.vhdl > continuation.out
+diff continuation.ref continuation.out
+
+rm -f assoc.out continuation.out
 
 echo "Test successful"
