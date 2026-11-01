@@ -5488,6 +5488,7 @@ package body Vhdl.Parse is
             if Flag_Gather_Comments then
                Gather_Comments_Line (Res);
             end if;
+
             Designator := Create_Iir (Iir_Kind_Simple_Name);
             Set_Location (Designator, Loc);
             Set_Identifier (Designator, Ident);
