@@ -20,6 +20,7 @@ with System;
 with Ada.Unchecked_Conversion;
 
 with Types; use Types;
+with Errorout;
 with Tables;
 with Libraries;
 
@@ -198,9 +199,26 @@ package body Simul.Vhdl_Compile is
 
    procedure Write_Length (Mem : Memory_Ptr; Len : Uns32) is
    begin
-      --  TODO: check ghdl_index_type size ?
       Write_U32 (Mem, Ghdl_U32 (Len));
    end Write_Length;
+
+   --  Sizes and offsets are computed on 64 bits while the design is
+   --  elaborated, but the compiled code holds them in a ghdl_index_type, ie
+   --  on 32 bits.  Report a design that does not fit instead of truncating
+   --  it: a truncated size makes the elaboration code allocate a block far
+   --  too small and then write past it, which corrupts the heap silently.
+   --  Unless checks are disabled, the conversion used to raise
+   --  Constraint_Error, ie the internal-error box.  See #2052.
+   function To_Index (Val : Uns64; Loc : Node) return Uns32 is
+   begin
+      if Val > Uns64 (Uns32'Last) then
+         Error_Msg_Elab
+           (Loc, "design is too large: a size does not fit on 32 bits, "
+              & "the largest object GHDL can describe is 4 GB");
+         raise Errorout.Compilation_Error;
+      end if;
+      return Uns32 (Val);
+   end To_Index;
 
    procedure Write_Bounds (Mem : Memory_Ptr; Bnd : Bound_Type; Btype : Node)
    is
@@ -220,9 +238,11 @@ package body Simul.Vhdl_Compile is
                          Def : Node;
                          Typ : Type_Acc) is
    begin
-      Write_Length (Mem, Uns32 (Typ.Sz));
+      Write_Length (Mem, To_Index (Uns64 (Typ.Sz), Def));
       if Get_Has_Signal_Flag (Def) then
-         Write_Length (Mem + 4, Typ.W * Uns32 (Vhdl_Simul.Sig_Size));
+         Write_Length
+           (Mem + 4,
+            To_Index (Uns64 (Typ.W) * Uns64 (Vhdl_Simul.Sig_Size), Def));
       end if;
    end Write_Size;
 
@@ -393,14 +413,18 @@ package body Simul.Vhdl_Compile is
                --  _OFF
                El_Mem := Add_Field_Offset
                  (Mem, El_Info.Field_Node (Mode_Value));
-               Write_Length (El_Mem, Uns32 (Typ.Rec.E (Idx).Offs.Mem_Off));
+               Write_Length
+                 (El_Mem,
+                  To_Index (Uns64 (Typ.Rec.E (Idx).Offs.Mem_Off), Def));
 
                --  _SIGOFF
                if Get_Has_Signal_Flag (Def) then
                   El_Mem := Add_Field_Offset
                     (Mem, El_Info.Field_Node (Mode_Signal));
-                  Write_Length (El_Mem, (Typ.Rec.E (Idx).Offs.Net_Off
-                                           * Uns32 (Vhdl_Simul.Sig_Size)));
+                  Write_Length
+                    (El_Mem,
+                     To_Index (Uns64 (Typ.Rec.E (Idx).Offs.Net_Off)
+                                 * Uns64 (Vhdl_Simul.Sig_Size), Def));
                end if;
 
                --  _BND (layout)

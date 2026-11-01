@@ -21,6 +21,7 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
+with System;
 with Grt.Errors; use Grt.Errors;
 with Grt.Errors_Exec; use Grt.Errors_Exec;
 with Grt.Options; use Grt.Options;
@@ -407,9 +408,25 @@ package body Grt.Lib is
    function C_Malloc (Size : Ghdl_Index_Type) return Ghdl_Ptr;
    pragma Import (C, C_Malloc, "malloc");
 
-   function Ghdl_Malloc (Size : Ghdl_Index_Type) return Ghdl_Ptr is
+   --  Report a failed allocation as an ordinary error. Without this the
+   --  null pointer is handed back to the generated code, which dereferences
+   --  it: the simulation then dies on SIGSEGV and blames "NULL access
+   --  dereferenced", pointing the user at their own design instead of at
+   --  the machine running out of memory.  See #812, #1111 and #2052.
+   procedure Check_Alloc (Ptr : Ghdl_Ptr; Size : Ghdl_Index_Type) is
    begin
-      return C_Malloc (Size);
+      if Size /= 0 and then Ptr = Ghdl_Ptr (System.Null_Address) then
+         Out_Of_Memory;
+      end if;
+   end Check_Alloc;
+
+   function Ghdl_Malloc (Size : Ghdl_Index_Type) return Ghdl_Ptr
+   is
+      Res : Ghdl_Ptr;
+   begin
+      Res := C_Malloc (Size);
+      Check_Alloc (Res, Size);
+      return Res;
    end Ghdl_Malloc;
 
    function Ghdl_Malloc0 (Size : Ghdl_Index_Type) return Ghdl_Ptr
@@ -420,9 +437,53 @@ package body Grt.Lib is
       Res : Ghdl_Ptr;
    begin
       Res := C_Malloc (Size);
+      Check_Alloc (Res, Size);
       Memset (Res, 0, Size);
       return Res;
    end Ghdl_Malloc0;
+
+   --  A size is held on 32 bits, so an object of 4 GB or more cannot be
+   --  described.  The generated code computes sizes with wrapping
+   --  arithmetic, and a wrapped size is worse than a large one: elaboration
+   --  asks for a block far too small (0 bytes, for a size that is a multiple
+   --  of 4 GB), gets it, and then writes past it.  The heap is corrupted
+   --  from that point on, and what happens next is up to the C library --
+   --  some carry on until an unrelated allocation fails, some abort with
+   --  "malloc(): unaligned tcache chunk detected".  Report it instead.
+   --  See #2052.
+   procedure Size_Overflow;
+   pragma No_Return (Size_Overflow);
+
+   procedure Size_Overflow is
+   begin
+      Error ("design is too large: a size does not fit on 32 bits, "
+               & "the largest object GHDL can describe is 4 GB");
+   end Size_Overflow;
+
+   function Ghdl_Index_Mul (L : Ghdl_Index_Type; R : Ghdl_Index_Type)
+                           return Ghdl_Index_Type
+   is
+      --  Widen rather than divide: this runs every time an object of an
+      --  unbounded type is created, and a 32 bit division is an order of
+      --  magnitude dearer than a 64 bit multiplication.
+      Res : constant Ghdl_U64 := Ghdl_U64 (L) * Ghdl_U64 (R);
+   begin
+      if Res > Ghdl_U64 (Ghdl_Index_Type'Last) then
+         Size_Overflow;
+      end if;
+      return Ghdl_Index_Type (Res);
+   end Ghdl_Index_Mul;
+
+   function Ghdl_Index_Add (L : Ghdl_Index_Type; R : Ghdl_Index_Type)
+                           return Ghdl_Index_Type
+   is
+      Res : constant Ghdl_Index_Type := L + R;
+   begin
+      if Res < L then
+         Size_Overflow;
+      end if;
+      return Res;
+   end Ghdl_Index_Add;
 
    procedure Ghdl_Free_Mem (Ptr : Ghdl_Ptr)
    is

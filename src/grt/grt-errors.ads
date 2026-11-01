@@ -98,6 +98,14 @@ package Grt.Errors is
    procedure Info_S (Str : String := "");
    procedure Info_E;
 
+   --  Report a failed memory allocation.  Central point, so that every
+   --  allocation (__ghdl_malloc, and the __gnat_malloc that every "new" in
+   --  grt goes through) calls it instead of handing back a null pointer
+   --  that is dereferenced a few instructions later.
+   procedure Out_Of_Memory;
+   pragma No_Return (Out_Of_Memory);
+   pragma Export (C, Out_Of_Memory, "__ghdl_out_of_memory");
+
    --  Called at end of error message.  Central point for failures.
    procedure Fatal_Error;
    pragma No_Return (Fatal_Error);
