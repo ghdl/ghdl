@@ -189,8 +189,8 @@ class InMemoryDocumentation(TestCase):
 
 class DesignUnitDocumentation(InMemoryDocumentation):
     """
-    Comments before a design unit's first token belong to libghdl's design unit node. Only the first unit of a file has
-    a file header; all other comments of a design unit node document the unit.
+    libghdl attaches the file header to the design file node and the other comments before a design unit to the design
+    unit node. Only the first unit of a file has a file header.
     """
 
     def test_FirstUnitBefore(self) -> None:
@@ -244,6 +244,31 @@ class DesignUnitDocumentation(InMemoryDocumentation):
 
         self.assertEqual("--! Header.", document.Documentation)
         self.assertEqual("--! E doc.", document.Entities["e"].Documentation)
+
+    def test_HeaderBeforeContextReference(self) -> None:
+        document = self.parse("""\
+            --! Header.
+            context work.ctx;
+
+            --! E doc.
+            entity e is
+            end entity;
+            """)
+
+        self.assertEqual("--! Header.", document.Documentation)
+        self.assertEqual("--! E doc.", document.Entities["e"].Documentation)
+
+    def test_FirstUnitContextDeclaration(self) -> None:
+        document = self.parse("""\
+            --! Header.
+
+            --! C doc.
+            context c is
+            end context;
+            """)
+
+        self.assertEqual("--! Header.", document.Documentation)
+        self.assertEqual("--! C doc.", document.Contexts["c"].Documentation)
 
     def test_AfterContextClauseBlankLine(self) -> None:
         document = self.parse("""\
@@ -352,7 +377,7 @@ class StatementDocumentation(InMemoryDocumentation):
 
 
 class ObjectDocumentation(InMemoryDocumentation):
-    """libghdl attaches a same-line comment of ``signal s, t : bit;`` to ``t``: the DOM reads every identifier."""
+    """libghdl attaches a same-line comment of ``signal s, t : bit;`` to the first identifier ``s``."""
 
     def test_SignalListSameLine(self) -> None:
         document = self.parse("""\
@@ -392,15 +417,11 @@ class ObjectDocumentation(InMemoryDocumentation):
         self.assertEqual("--! Before.\n--! Same line.", signal.Documentation)
 
 
-class GHDLLimitations(InMemoryDocumentation):
-    """
-    Documentation comments lost or misassigned by libghdl's comment association (``file_comments``, gathering calls in
-    ``vhdl-parse.adb``). Each test states the expected result and fails until GHDL gathers the comment.
-    """
+class CommentAssociation(InMemoryDocumentation):
+    """libghdl attaches a comment to the element it documents (ghdl/ghdl#3446)."""
 
-    @expectedFailure
     def test_TrailingThenNextUnit(self) -> None:
-        """GHDL: a same-line comment continues over code tokens and swallows the next unit's comment."""
+        """A same-line comment ends at the next code token; the next unit keeps its comment."""
         document = self.parse("""\
             entity e is
               port (
@@ -417,9 +438,8 @@ class GHDLLimitations(InMemoryDocumentation):
         self.assertEqual("--! Q doc.", document.Entities["e"].PortItems[0].Documentation)
         self.assertEqual("--! A doc.", document.Architectures["e"]["a"].Documentation)
 
-    @expectedFailure
     def test_SameLineThenBefore(self) -> None:
-        """GHDL: a same-line comment continues into the next line's comment."""
+        """A comment that is not indented after the same-line comment documents the next generic."""
         document = self.parse("""\
             entity e is
               generic (
@@ -434,9 +454,60 @@ class GHDLLimitations(InMemoryDocumentation):
         self.assertEqual("--! G doc.", g.Documentation)
         self.assertEqual("--! H doc.", h.Documentation)
 
-    @expectedFailure
+    def test_PortView(self) -> None:
+        """A port with a mode view keeps its comment when libghdl re-creates the interface node."""
+        document = self.parse("""\
+            entity e is
+              port (
+                --! V doc.
+                v : view work.p.mv
+              );
+            end entity;
+            """)
+
+        self.assertEqual("--! V doc.", document.Entities["e"].PortItems[0].Documentation)
+
+    def test_SubprogramInstantiation(self) -> None:
+        """A subprogram instantiation keeps its comment when libghdl replaces its node."""
+        document = self.parse("""\
+            package p is
+              --! FI doc.
+              function fi is new work.q.f generic map (T => bit);
+            end package;
+            """)
+
+        self.assertEqual("--! FI doc.", document.Packages["p"].DeclaredItems[0].Documentation)
+
+    def test_FunctionSameLine(self) -> None:
+        """A same-line comment after a function declaration documents the function, not its last parameter."""
+        document = self.parse("""\
+            package p is
+              function f(x : bit) return bit;  --! F doc.
+
+            end package;
+            """)
+        function = document.Packages["p"].DeclaredItems[0]
+
+        self.assertEqual("--! F doc.", function.Documentation)
+        self.assertEqual("", function.ParameterItems[0].Documentation)
+
+    def test_EnumSameLine(self) -> None:
+        """A same-line comment after an enumerated type documents the type, not its last literal."""
+        document = self.parse("""\
+            package p is
+              type t is (a, b);  --! T doc.
+
+            end package;
+            """)
+
+        self.assertEqual("--! T doc.", document.Packages["p"].DeclaredItems[0].Documentation)
+
+
+class CommentGathering(InMemoryDocumentation):
+    """Declarations and statements gather their own comments in libghdl (ghdl/ghdl#3447)."""
+
     def test_PackageBodyInside(self) -> None:
-        """GHDL: a package body gathers no comment."""
+        """A package body gathers its comment."""
         document = self.parse("""\
             package p is
             end package;
@@ -448,9 +519,8 @@ class GHDLLimitations(InMemoryDocumentation):
 
         self.assertEqual("--! Body doc.", document.PackageBodies["p"].Documentation)
 
-    @expectedFailure
     def test_Component(self) -> None:
-        """GHDL: a component gathers no comment, its first port receives it."""
+        """A component gathers its comment, not its first port."""
         document = self.parse("""\
             package p is
               --! C doc.
@@ -464,9 +534,8 @@ class GHDLLimitations(InMemoryDocumentation):
         self.assertEqual("--! C doc.", component.Documentation)
         self.assertEqual("", component.PortItems[0].Documentation)
 
-    @expectedFailure
     def test_AliasAttributeSubtype(self) -> None:
-        """GHDL: alias, attribute declaration and subtype gather no comment, the next declaration receives it."""
+        """Alias, attribute declaration and subtype gather their comments, not the next declaration."""
         document = self.parse("""\
             package p is
               constant c : bit := '0';
@@ -489,9 +558,8 @@ class GHDLLimitations(InMemoryDocumentation):
         for constant in (d1, d2, d3):
             self.assertEqual("", constant.Documentation)
 
-    @expectedFailure
     def test_RangeTypes(self) -> None:
-        """GHDL: integer, physical and incomplete type declarations gather no comment."""
+        """Integer, physical and incomplete type declarations gather their comments."""
         document = self.parse("""\
             package p is
               --! Integer doc.
@@ -517,9 +585,8 @@ class GHDLLimitations(InMemoryDocumentation):
         for constant in (d1, d2, d3):
             self.assertEqual("", constant.Documentation)
 
-    @expectedFailure
     def test_ProtectedType(self) -> None:
-        """GHDL: a protected type gathers no comment, its first method receives it."""
+        """A protected type gathers its comment, not its first method."""
         document = self.parse("""\
             package p is
               --! PT doc.
@@ -533,9 +600,8 @@ class GHDLLimitations(InMemoryDocumentation):
         self.assertEqual("--! PT doc.", protectedType.Documentation)
         self.assertEqual("", protectedType.Methods[0].Documentation)
 
-    @expectedFailure
     def test_ModeView(self) -> None:
-        """GHDL: a mode view's comment goes to its first element."""
+        """A mode view gathers its comment, not its first element."""
         document = self.parse("""\
             package p is
               type r is record
@@ -553,23 +619,8 @@ class GHDLLimitations(InMemoryDocumentation):
         self.assertEqual("--! MV doc.", modeView.Documentation)
         self.assertEqual("", modeView.Elements[0].Documentation)
 
-    @expectedFailure
-    def test_PortView(self) -> None:
-        """GHDL: a port with a mode view is re-created; the comment stays on the freed node."""
-        document = self.parse("""\
-            entity e is
-              port (
-                --! V doc.
-                v : view work.p.mv
-              );
-            end entity;
-            """)
-
-        self.assertEqual("--! V doc.", document.Entities["e"].PortItems[0].Documentation)
-
-    @expectedFailure
     def test_GenericTypeSubprogramPackage(self) -> None:
-        """GHDL: generic types, subprograms and packages gather no comment."""
+        """Generic types, subprograms and packages gather their comments."""
         document = self.parse("""\
             entity e is
               generic (
@@ -588,43 +639,29 @@ class GHDLLimitations(InMemoryDocumentation):
         self.assertEqual("--! F doc.", genericFunction.Documentation)
         self.assertEqual("--! GP doc.", genericPackage.Documentation)
 
-    @expectedFailure
-    def test_SubprogramInstantiation(self) -> None:
-        """GHDL: a subprogram instantiation frees the node the comment is attached to."""
+    def test_BlockStatement(self) -> None:
+        """A block statement gathers its comment."""
         document = self.parse("""\
-            package p is
-              --! FI doc.
-              function fi is new work.q.f generic map (T => bit);
-            end package;
+            entity e is
+            end entity;
+
+            architecture a of e is
+            begin
+              --! B doc.
+              b : block
+              begin
+              end block;
+            end architecture;
             """)
 
-        self.assertEqual("--! FI doc.", document.Packages["p"].DeclaredItems[0].Documentation)
+        self.assertEqual("--! B doc.", document.Architectures["e"]["a"].Statements[0].Documentation)
 
-    @expectedFailure
-    def test_FunctionSameLine(self) -> None:
-        """GHDL: a function's same-line comment goes to its last parameter."""
-        document = self.parse("""\
-            package p is
-              function f(x : bit) return bit;  --! F doc.
 
-            end package;
-            """)
-        function = document.Packages["p"].DeclaredItems[0]
-
-        self.assertEqual("--! F doc.", function.Documentation)
-        self.assertEqual("", function.ParameterItems[0].Documentation)
-
-    @expectedFailure
-    def test_EnumSameLine(self) -> None:
-        """GHDL: an enumerated type's same-line comment goes to its last literal."""
-        document = self.parse("""\
-            package p is
-              type t is (a, b);  --! T doc.
-
-            end package;
-            """)
-
-        self.assertEqual("--! T doc.", document.Packages["p"].DeclaredItems[0].Documentation)
+class GHDLLimitations(InMemoryDocumentation):
+    """
+    Documentation comments lost or misassigned by libghdl's comment association (``file_comments``, gathering calls in
+    ``vhdl-parse.adb``). Each test states the expected result and fails until GHDL gathers the comment.
+    """
 
     @expectedFailure
     def test_BlockComment(self) -> None:
@@ -642,21 +679,3 @@ class GHDLLimitations(InMemoryDocumentation):
 
         self.assertEqual("/* E doc. */", entity.Documentation)
         self.assertEqual("/* X doc. */", entity.PortItems[0].Documentation)
-
-    @expectedFailure
-    def test_BlockStatement(self) -> None:
-        """GHDL: a block statement gathers no comment."""
-        document = self.parse("""\
-            entity e is
-            end entity;
-
-            architecture a of e is
-            begin
-              --! B doc.
-              b : block
-              begin
-              end block;
-            end architecture;
-            """)
-
-        self.assertEqual("--! B doc.", document.Architectures["e"]["a"].Statements[0].Documentation)
