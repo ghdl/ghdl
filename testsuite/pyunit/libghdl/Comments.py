@@ -59,13 +59,26 @@ class Base(TestCase):
             if (k not in nodes.Iir_Kinds.Specification
                 and k not in nodes.Iir_Kinds.Clause):
                 self.checkComments(decl, self.getIdentifier(decl))
-            if k == nodes.Iir_Kind.Type_Declaration:
+            elif k == nodes.Iir_Kind.Attribute_Specification:
+                self.checkComments(decl, self.getIdentifier(nodes.Get_Attribute_Designator(decl)))
+            elif k == nodes.Iir_Kind.Configuration_Specification:
+                self.checkComments(decl, self.getIdentifier(nodes.Get_Component_Name(decl)))
+            if k in (nodes.Iir_Kind.Type_Declaration, nodes.Iir_Kind.Anonymous_Type_Declaration):
                 tdef = nodes.Get_Type_Definition(decl)
-                defk = nodes.Get_Kind(tdef)
+                defk = nodes.Get_Kind(tdef) if tdef != nodes.Null_Iir else None
                 if defk == nodes.Iir_Kind.Record_Type_Definition:
                     self.checkFlist(nodes.Get_Elements_Declaration_List(tdef))
                 elif defk == nodes.Iir_Kind.Enumeration_Type_Definition:
                     self.checkFlist(nodes.Get_Enumeration_Literal_List(tdef))
+                elif defk == nodes.Iir_Kind.Physical_Type_Definition:
+                    self.checkDecls(nodes.Get_Unit_Chain(tdef))
+                elif defk == nodes.Iir_Kind.Protected_Type_Declaration:
+                    self.checkDecls(nodes.Get_Declaration_Chain(tdef))
+            elif k == nodes.Iir_Kind.Protected_Type_Body:
+                self.checkDecls(nodes.Get_Declaration_Chain(decl))
+            elif k == nodes.Iir_Kind.Component_Declaration:
+                self.checkDecls(nodes.Get_Generic_Chain(decl))
+                self.checkDecls(nodes.Get_Port_Chain(decl))
             elif k in nodes.Iir_Kinds.Subprogram_Declaration:
                 self.checkDecls(nodes.Get_Interface_Declaration_Chain(decl))
             elif k == nodes.Iir_Kind.Mode_View_Declaration:
@@ -81,6 +94,10 @@ class Base(TestCase):
                 id = nodes.Get_Identifier(stmt)
                 if id != name_table.Null_Identifier:
                     self.checkComments(stmt, self.getIdentifier(stmt))
+            elif k == nodes.Iir_Kind.Block_Statement:
+                self.checkComments(stmt, self.getIdentifier(stmt))
+                self.checkDecls(nodes.Get_Declaration_Chain(stmt))
+                self.checkConc(nodes.Get_Concurrent_Statement_Chain(stmt))
             stmt = nodes.Get_Chain(stmt)
 
     def checkFile(self, filename) -> None:
@@ -116,6 +133,14 @@ class Base(TestCase):
                 self.checkConc(nodes.Get_Concurrent_Statement_Chain(unit))
 
             elif k == nodes.Iir_Kind.Package_Declaration:
+                self.checkComments(designUnit, name)
+                self.checkComments(unit, name)
+                header = nodes.Get_Package_Header(unit)
+                if header != nodes.Null_Iir:
+                    self.checkDecls(nodes.Get_Generic_Chain(header))
+                self.checkDecls(nodes.Get_Declaration_Chain(unit))
+
+            elif k == nodes.Iir_Kind.Package_Body:
                 self.checkComments(designUnit, name)
                 self.checkComments(unit, name)
                 self.checkDecls(nodes.Get_Declaration_Chain(unit))
@@ -398,6 +423,9 @@ class Association2019(Base):
 
     def test_FreedNodes(self) -> None:
         self.checkFileAllAttached(self._root / "comments/freed.vhdl")
+
+    def test_Gathering(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/gather.vhdl")
 
 
 class SingleLine(Base):

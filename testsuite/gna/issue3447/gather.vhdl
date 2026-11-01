@@ -1,0 +1,91 @@
+package gather_gen is
+  generic (
+    --  Comment for the generic type
+    type gt;
+    --  Comment for the generic function
+    function gf return bit
+  );
+end package;
+
+package gather is
+  --  Comment for the integer type
+  type int is range 0 to 7;
+  constant c1 : int := 1;
+
+  --  Comment for the physical type
+  type phys is range 0 to 1000
+    units
+      pu;
+      --  Comment for the unit pk
+      pk = 1000 pu;
+    end units;
+  constant c2 : int := 2;
+
+  --  Comment for the incomplete type
+  type node;
+  type node_acc is access node;
+  type node is record
+    nxt : node_acc;
+  end record;
+
+  --  Comment for the subtype
+  subtype sub is int range 0 to 3;
+
+  --  Comment for the alias
+  alias al : int is c1;
+
+  --  Comment for the attribute
+  attribute at : string;
+  --  Comment for the attribute specification
+  attribute at of c1 : constant is "x";
+
+  --  Comment for the protected type
+  type pt is protected
+    procedure m;
+  end protected;
+
+  --  Comment for the component
+  component comp is
+    port (
+      x : in bit
+    );
+  end component;
+
+  type rec is record
+    a : bit;
+  end record;
+
+  --  Comment for the mode view
+  view vw of rec is
+    a : in;
+  end view;
+  constant c3 : int := 3;
+end package;
+
+package body gather is
+  --  Comment for the package body
+
+  --  Comment for the protected type body
+  type pt is protected body
+    procedure m is
+    begin
+    end procedure;
+  end protected body;
+end package body;
+
+use work.gather.all;
+
+entity gather_ent is
+end entity;
+
+architecture arch of gather_ent is
+  --  Comment for the configuration specification
+  for all : comp use entity work.gather_ent;
+begin
+  --  Comment for the block
+  blk : block
+  begin
+  end block;
+
+  inst : comp port map (x => '0');
+end architecture;
