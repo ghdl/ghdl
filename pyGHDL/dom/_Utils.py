@@ -156,9 +156,9 @@ def GetLabelOfNode(node: Iir) -> Nullable[str]:
         return None
 
     normalized = name_table.Get_Name_Ptr(label)
-    written = GetSourceTextOfNode(node, len(normalized))
-    if written.lower() == normalized.lower():
-        return written
+    sourceText = GetSourceTextOfNode(node, len(normalized))
+    if sourceText.lower() == normalized.lower():
+        return sourceText
     else:
         return normalized
 

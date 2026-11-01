@@ -198,9 +198,9 @@ class DefaultClock(VHDLModel_DefaultClock, DOMMixin):
         :returns:                The translated PSL default clock.
         :raises DOMException:    If the source text at the node's location is no PSL default clock declaration.
         """
-        source = GetSourceTextOfNode(defaultClockNode)
+        sourceText = GetSourceTextOfNode(defaultClockNode)
 
-        declaration = sub(r"--[^\n]*", "", source[: source.find(";")])
+        declaration = sub(r"--[^\n]*", "", sourceText[: sourceText.find(";")])
         match = fullmatch(r"default\s+clock\s+is\s+(.+)", " ".join(declaration.split()), IGNORECASE)
         if match is None:
             position = Position.parse(defaultClockNode)
