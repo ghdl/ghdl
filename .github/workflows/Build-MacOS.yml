@@ -118,7 +118,7 @@ jobs:
           tar -zxf GNAT.tar.gz && rm GNAT.tar.gz
           test $? -ne 0 && printf -- "ERROR: Extracting 'GNAT.tar.gz'\n" && exit 1
 
-          printf -- "Renaming %s to './gnat ...\n" "${GNAT_NAME}"
+          printf -- "Renaming '%s' to './gnat' ...\n" "${GNAT_NAME}"
           mv ${GNAT_NAME} gnat
 
           tee -a "${GITHUB_ENV}" <<EOF
