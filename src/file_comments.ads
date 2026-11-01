@@ -96,22 +96,22 @@ package File_Comments is
    --  annotated with a comment is parsed.
    procedure Gather_Comments_Block (Rng : Comments_Range;
                                     N : Uns32);
-   --  LINE_START is the start of the line of the current token: a comment
-   --  on the same line is attached to N, and so are the following comments
-   --  that start at the same column.
-   procedure Gather_Comments_Line (Line_Start : Source_Ptr;
+
+   --  POS is the start of the line of the current token: a comment on the
+   --  same line is attached to N, and so are the following comments that
+   --  start at the same column.
+   procedure Gather_Comments_Line (Pos : Source_Ptr;
                                    N : Uns32);
 
    --  To be called on the last token of the declaration N (like ';'), when
    --  N contains nodes gathered in line mode (like parameters or literals).
    --  DECL_LINE_START is the start of the first line of N, LINE_START is
-   --  like for Gather_Comments_Line.
+   --  like POS for Gather_Comments_Line.
    --  A comment on the same line is attached to N, unless N spans several
    --  lines and an inner node starts on this line (then the comment is
    --  attached to that inner node).
-   procedure Gather_Comments_Line_End (Decl_Line_Start : Source_Ptr;
-                                       Line_Start : Source_Ptr;
-                                       N : Uns32);
+   procedure Gather_Comments_Line_End
+     (Decl_Line_Start, Line_Start : Source_Ptr; N : Uns32);
 
    --  Assign node N to the last comments scanned.
    --  Identical to Save_Comments followed by above Gather_Comments.

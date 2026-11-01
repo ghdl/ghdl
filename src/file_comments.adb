@@ -130,8 +130,7 @@ package body File_Comments is
 
    --  Column (tabs expanded) of POS, which is on the line starting at
    --  LINE_START.
-   function Get_Column (Line_Start : Source_Ptr; Pos : Source_Ptr)
-                       return Natural is
+   function Get_Column (Line_Start, Pos : Source_Ptr) return Natural is
    begin
       return Files_Map.Coord_To_Col
         (Ctxt.File, Line_Start, Natural (Pos - Line_Start));
@@ -278,7 +277,7 @@ package body File_Comments is
       Ctxt.Node_First := Rng.First;
    end Gather_Comments_Block;
 
-   procedure Gather_Comments_Line (Line_Start : Source_Ptr;
+   procedure Gather_Comments_Line (Pos : Source_Ptr;
                                    N : Uns32)
    is
       Rng : Comments_Range;
@@ -291,12 +290,11 @@ package body File_Comments is
       Ctxt.State := State_Line;
       Ctxt.Last_Node := N;
       Ctxt.Node_First := Rng.First;
-      Ctxt.Line_Start := Line_Start;
+      Ctxt.Line_Start := Pos;
    end Gather_Comments_Line;
 
-   procedure Gather_Comments_Line_End (Decl_Line_Start : Source_Ptr;
-                                       Line_Start : Source_Ptr;
-                                       N : Uns32) is
+   procedure Gather_Comments_Line_End
+     (Decl_Line_Start, Line_Start : Source_Ptr; N : Uns32) is
    begin
       if Decl_Line_Start /= Line_Start
         and then Ctxt.Line_Start = Line_Start

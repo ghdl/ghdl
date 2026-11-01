@@ -12066,11 +12066,12 @@ package body Vhdl.Parse is
    --  package_instantiation_declaration ::=
    --      PACKAGE identifier IS NEW uninstantiated_package_name
    --         [ generic_map_aspect ] ;
-   function Parse_Package_Instantiation_Declaration (Parent : Iir;
-                                                     Id : Name_Id;
-                                                     Loc : Location_Type;
-                                                     Comments : Comments_Range)
-                                                    return Iir
+   function Parse_Package_Instantiation_Declaration
+     (Parent : Iir;
+      Id : Name_Id;
+      Loc : Location_Type;
+      Comments : Comments_Range)
+     return Iir
    is
       Res: Iir;
    begin
