@@ -331,7 +331,7 @@ class ConcurrentBlockStatement(VHDLModel_ConcurrentBlockStatement, DOMMixin):
         :param portAssociationItems:    List of all port associations in the port map aspect.
         :param declaredItems:           List of all declared items in this concurrent declaration region.
         :param statements:              List of all concurrent statements in this construct.
-        :param documentation:           The documentation comment associated with this statement.
+        :param documentation:           Optional, the documentation comment associated with this statement.
         """
         super().__init__(
             label,
@@ -417,7 +417,7 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
         :param declaredItems:   List of all declared items in this sequential declaration region.
         :param statements:      List of all sequential statements in this construct.
         :param sensitivityList: List of all signal names in the sensitivity list, or ``None`` if none was given.
-        :param documentation:   The documentation comment associated with this statement.
+        :param documentation:   Optional, the documentation comment associated with this statement.
         """
         super().__init__(label, declaredItems, statements, sensitivityList, documentation)
         DOMMixin.__init__(self, processNode)

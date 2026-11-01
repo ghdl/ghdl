@@ -202,20 +202,22 @@ def GetDocumentationOfNode(node: Iir) -> str:
 
 
 @export
-def GetDocumentationOfLibraryUnit(libraryUnit: Iir) -> str:
+def GetDocumentationOfDesignUnit(unitNode: Iir) -> str:
     """
-    Collects the doc-comment lines of a library unit (entity, architecture, package, ...).
+    Collects the doc-comment lines of a design unit (entity, architecture, package, ...).
 
-    A library unit's documentation consists of the comments *libghdl* attached to its design unit node (the comments
-    before the unit, except the file header), followed by the comments attached to the library unit node itself. A
-    nested package has no design unit node, so only its own comments are read.
+    In IIR, a design unit is a ``Design_Unit`` node holding the context clause and the unit's declaration (the
+    ``Library_Unit``), as in IEEE Std 1076, 13.1. A design unit's documentation consists of the comments *libghdl*
+    attached to the ``Design_Unit`` node (the comments before the unit, except the file header), followed by the
+    comments attached to the declaration node itself. A nested package has no ``Design_Unit`` node, so only its own
+    comments are read.
 
-    :param libraryUnit: The IIR node of the library unit.
-    :returns:           The comment lines joined by newlines, or an empty string if the unit has no comment.
+    :param unitNode: The IIR node of the unit's declaration (entity declaration, architecture body, ...).
+    :returns:        The comment lines joined by newlines, or an empty string if the unit has no comment.
     """
-    documentation = GetDocumentationOfNode(libraryUnit)
+    documentation = GetDocumentationOfNode(unitNode)
 
-    parent = nodes.Get_Parent(libraryUnit)
+    parent = nodes.Get_Parent(unitNode)
     if GetIirKindOfNode(parent) is nodes.Iir_Kind.Design_Unit:
         unitDocumentation = GetDocumentationOfNode(parent)
         if unitDocumentation != "":
