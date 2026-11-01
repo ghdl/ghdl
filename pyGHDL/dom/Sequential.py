@@ -36,7 +36,7 @@ This module implements derived sequential statement classes from :mod:`pyVHDLMod
 
 from typing import Iterable
 
-from pyTooling.Decorators import export, InheritDocString
+from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
 from pyVHDLModel.Base import ExpressionUnion, Range
 from pyVHDLModel.Symbol import Symbol
@@ -88,7 +88,7 @@ from pyGHDL.dom.Concurrent import GetConditionalWaveformsFromChainedNodes, GetSe
 
 
 @export
-@InheritDocString(VHDLModel_IfBranch, merge=True)
+@InheritDocString(VHDLModel_IfBranch, strategy=DocStringMergeStrategy.BaseLast)
 class IfBranch(VHDLModel_IfBranch, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.IfBranch`.
@@ -132,7 +132,7 @@ class IfBranch(VHDLModel_IfBranch, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_ElsifBranch, merge=True)
+@InheritDocString(VHDLModel_ElsifBranch, strategy=DocStringMergeStrategy.BaseLast)
 class ElsifBranch(VHDLModel_ElsifBranch, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ElsifBranch`.
@@ -177,7 +177,7 @@ class ElsifBranch(VHDLModel_ElsifBranch, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_ElseBranch, merge=True)
+@InheritDocString(VHDLModel_ElseBranch, strategy=DocStringMergeStrategy.BaseLast)
 class ElseBranch(VHDLModel_ElseBranch, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ElseBranch`.
@@ -217,7 +217,7 @@ class ElseBranch(VHDLModel_ElseBranch, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_IfStatement, merge=True)
+@InheritDocString(VHDLModel_IfStatement, strategy=DocStringMergeStrategy.BaseLast)
 class IfStatement(VHDLModel_IfStatement, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.IfStatement`.
@@ -273,7 +273,7 @@ class IfStatement(VHDLModel_IfStatement, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_IndexedChoice, merge=True)
+@InheritDocString(VHDLModel_IndexedChoice, strategy=DocStringMergeStrategy.BaseLast)
 class IndexedChoice(VHDLModel_IndexedChoice, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.IndexedChoice`.
@@ -291,7 +291,7 @@ class IndexedChoice(VHDLModel_IndexedChoice, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_RangedChoice, merge=True)
+@InheritDocString(VHDLModel_RangedChoice, strategy=DocStringMergeStrategy.BaseLast)
 class RangedChoice(VHDLModel_RangedChoice, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.RangedChoice`.
@@ -309,7 +309,7 @@ class RangedChoice(VHDLModel_RangedChoice, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_Case, merge=True)
+@InheritDocString(VHDLModel_Case, strategy=DocStringMergeStrategy.BaseLast)
 class Case(VHDLModel_Case, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.Case`.
@@ -350,7 +350,7 @@ class Case(VHDLModel_Case, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_OthersCase, merge=True)
+@InheritDocString(VHDLModel_OthersCase, strategy=DocStringMergeStrategy.BaseLast)
 class OthersCase(VHDLModel_OthersCase, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.OthersCase`.
@@ -381,18 +381,14 @@ class OthersCase(VHDLModel_OthersCase, DOMMixin):
         """
         from pyGHDL.dom._Translate import GetSequentialStatementsFromChainedNodes
 
-        body = nodes.Get_Associated_Block(caseNode)
-        if body is nodes.Null_Iir:
-            return cls(caseNode)
-
-        statementChain = nodes.Get_Concurrent_Statement_Chain(body)
+        statementChain = nodes.Get_Associated_Chain(caseNode)
         statements = GetSequentialStatementsFromChainedNodes(statementChain, "case others", label)
 
         return cls(caseNode, statements)
 
 
 @export
-@InheritDocString(VHDLModel_CaseStatement, merge=True)
+@InheritDocString(VHDLModel_CaseStatement, strategy=DocStringMergeStrategy.BaseLast)
 class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.CaseStatement`.
@@ -477,7 +473,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
                     continue
             elif choiceKind is nodes.Iir_Kind.Choice_By_Others:
                 if choices is not None:
-                    cases.append(Case.parse(alternative, choices, label))
+                    cases.append(Case.parse(cNode, choices, label))
                     choices = None
                 cases.append(OthersCase.parse(alternative, label))
                 alternative = nodes.Get_Chain(alternative)
@@ -504,7 +500,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_ForLoopStatement, merge=True)
+@InheritDocString(VHDLModel_ForLoopStatement, strategy=DocStringMergeStrategy.BaseLast)
 class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ForLoopStatement`.
@@ -557,7 +553,7 @@ class ForLoopStatement(VHDLModel_ForLoopStatement, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_WhileLoopStatement, merge=True)
+@InheritDocString(VHDLModel_WhileLoopStatement, strategy=DocStringMergeStrategy.BaseLast)
 class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.WhileLoopStatement`.
@@ -625,7 +621,7 @@ class WhileLoopStatement(VHDLModel_WhileLoopStatement, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_SequentialSimpleSignalAssignment, merge=True)
+@InheritDocString(VHDLModel_SequentialSimpleSignalAssignment, strategy=DocStringMergeStrategy.BaseLast)
 class SequentialSimpleSignalAssignment(VHDLModel_SequentialSimpleSignalAssignment, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialSimpleSignalAssignment`.
@@ -742,7 +738,7 @@ def GetSelectedExpressionsFromChainedNodes(nodeChain: Iir) -> Iterable:
 
 
 @export
-@InheritDocString(VHDLModel_ConditionalExpression, merge=True)
+@InheritDocString(VHDLModel_ConditionalExpression, strategy=DocStringMergeStrategy.BaseLast)
 class ConditionalExpression(VHDLModel_ConditionalExpression, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Common.ConditionalExpression`.
@@ -776,7 +772,7 @@ class ConditionalExpression(VHDLModel_ConditionalExpression, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_SelectedExpression, merge=True)
+@InheritDocString(VHDLModel_SelectedExpression, strategy=DocStringMergeStrategy.BaseLast)
 class SelectedExpression(VHDLModel_SelectedExpression, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Common.SelectedExpression`.
@@ -795,7 +791,7 @@ class SelectedExpression(VHDLModel_SelectedExpression, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_OthersSelectedExpression, merge=True)
+@InheritDocString(VHDLModel_OthersSelectedExpression, strategy=DocStringMergeStrategy.BaseLast)
 class OthersSelectedExpression(VHDLModel_OthersSelectedExpression, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Common.OthersSelectedExpression`.
@@ -813,7 +809,7 @@ class OthersSelectedExpression(VHDLModel_OthersSelectedExpression, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_SequentialVariableAssignment, merge=True)
+@InheritDocString(VHDLModel_SequentialVariableAssignment, strategy=DocStringMergeStrategy.BaseLast)
 class SequentialVariableAssignment(VHDLModel_SequentialVariableAssignment, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialVariableAssignment`.
@@ -856,7 +852,7 @@ class SequentialVariableAssignment(VHDLModel_SequentialVariableAssignment, DOMMi
 
 
 @export
-@InheritDocString(VHDLModel_SequentialConditionalVariableAssignment, merge=True)
+@InheritDocString(VHDLModel_SequentialConditionalVariableAssignment, strategy=DocStringMergeStrategy.BaseLast)
 class SequentialConditionalVariableAssignment(VHDLModel_SequentialConditionalVariableAssignment, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialConditionalVariableAssignment`.
@@ -901,7 +897,7 @@ class SequentialConditionalVariableAssignment(VHDLModel_SequentialConditionalVar
 
 
 @export
-@InheritDocString(VHDLModel_SequentialConditionalSignalAssignment, merge=True)
+@InheritDocString(VHDLModel_SequentialConditionalSignalAssignment, strategy=DocStringMergeStrategy.BaseLast)
 class SequentialConditionalSignalAssignment(VHDLModel_SequentialConditionalSignalAssignment, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialConditionalSignalAssignment`.
@@ -946,7 +942,7 @@ class SequentialConditionalSignalAssignment(VHDLModel_SequentialConditionalSigna
 
 
 @export
-@InheritDocString(VHDLModel_SequentialSelectedVariableAssignment, merge=True)
+@InheritDocString(VHDLModel_SequentialSelectedVariableAssignment, strategy=DocStringMergeStrategy.BaseLast)
 class SequentialSelectedVariableAssignment(VHDLModel_SequentialSelectedVariableAssignment, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialSelectedVariableAssignment`.
@@ -994,7 +990,7 @@ class SequentialSelectedVariableAssignment(VHDLModel_SequentialSelectedVariableA
 
 
 @export
-@InheritDocString(VHDLModel_SequentialSelectedSignalAssignment, merge=True)
+@InheritDocString(VHDLModel_SequentialSelectedSignalAssignment, strategy=DocStringMergeStrategy.BaseLast)
 class SequentialSelectedSignalAssignment(VHDLModel_SequentialSelectedSignalAssignment, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialSelectedSignalAssignment`.
@@ -1040,7 +1036,7 @@ class SequentialSelectedSignalAssignment(VHDLModel_SequentialSelectedSignalAssig
 
 
 @export
-@InheritDocString(VHDLModel_SignalForceAssignment, merge=True)
+@InheritDocString(VHDLModel_SignalForceAssignment, strategy=DocStringMergeStrategy.BaseLast)
 class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SignalForceAssignment`.
@@ -1083,7 +1079,7 @@ class SignalForceAssignment(VHDLModel_SignalForceAssignment, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_SignalReleaseAssignment, merge=True)
+@InheritDocString(VHDLModel_SignalReleaseAssignment, strategy=DocStringMergeStrategy.BaseLast)
 class SignalReleaseAssignment(VHDLModel_SignalReleaseAssignment, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SignalReleaseAssignment`.
@@ -1118,7 +1114,7 @@ class SignalReleaseAssignment(VHDLModel_SignalReleaseAssignment, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_SequentialProcedureCall, merge=True)
+@InheritDocString(VHDLModel_SequentialProcedureCall, strategy=DocStringMergeStrategy.BaseLast)
 class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialProcedureCall`.
@@ -1163,7 +1159,7 @@ class SequentialProcedureCall(VHDLModel_SequentialProcedureCall, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_SequentialAssertStatement, merge=True)
+@InheritDocString(VHDLModel_SequentialAssertStatement, strategy=DocStringMergeStrategy.BaseLast)
 class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialAssertStatement`.
@@ -1208,7 +1204,7 @@ class SequentialAssertStatement(VHDLModel_SequentialAssertStatement, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_SequentialReportStatement, merge=True)
+@InheritDocString(VHDLModel_SequentialReportStatement, strategy=DocStringMergeStrategy.BaseLast)
 class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.SequentialReportStatement`.
@@ -1250,7 +1246,7 @@ class SequentialReportStatement(VHDLModel_SequentialReportStatement, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_ReturnStatement, merge=True)
+@InheritDocString(VHDLModel_ReturnStatement, strategy=DocStringMergeStrategy.BaseLast)
 class ReturnStatement(VHDLModel_ReturnStatement, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ReturnStatement`.
@@ -1289,7 +1285,7 @@ class ReturnStatement(VHDLModel_ReturnStatement, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_NullStatement, merge=True)
+@InheritDocString(VHDLModel_NullStatement, strategy=DocStringMergeStrategy.BaseLast)
 class NullStatement(VHDLModel_NullStatement, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.NullStatement`.
@@ -1311,7 +1307,7 @@ class NullStatement(VHDLModel_NullStatement, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_NextStatement, merge=True)
+@InheritDocString(VHDLModel_NextStatement, strategy=DocStringMergeStrategy.BaseLast)
 class NextStatement(VHDLModel_NextStatement, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.NextStatement`.
@@ -1350,7 +1346,7 @@ class NextStatement(VHDLModel_NextStatement, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_ExitStatement, merge=True)
+@InheritDocString(VHDLModel_ExitStatement, strategy=DocStringMergeStrategy.BaseLast)
 class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.ExitStatement`.
@@ -1389,7 +1385,7 @@ class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
 
 
 @export
-@InheritDocString(VHDLModel_WaitStatement, merge=True)
+@InheritDocString(VHDLModel_WaitStatement, strategy=DocStringMergeStrategy.BaseLast)
 class WaitStatement(VHDLModel_WaitStatement, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.WaitStatement`.

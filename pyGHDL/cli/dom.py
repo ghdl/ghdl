@@ -222,7 +222,7 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         self.WriteNormal(dedent("""\
                 {HEADLINE}{line}
                 {headline: ^80s}
-                {line}""").format(line="=" * 80, headline=self.HeadLine, **TerminalApplication.Foreground))
+                {line}""").format(line="=" * 80, headline=self.HeadLine, **TerminalApplication.FOREGROUND))
 
     # ============================================================================
     # Common commands
@@ -438,7 +438,6 @@ def main():  # mccabe:disable=MC0001
         return
 
     try:
-        app.CheckPythonVersion((3, 8, 0))
         app.Run()
         app.Exit()
     except PrettyPrintException as ex:
