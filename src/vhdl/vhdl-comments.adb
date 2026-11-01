@@ -60,6 +60,16 @@ package body Vhdl.Comments is
       Replace_Comments_Node (Uns32 (Old_N), Uns32 (New_N));
    end Replace_Comments_Node;
 
+   procedure Gather_Comments_Header (N : Iir; Rng : out Comments_Range) is
+   begin
+      Gather_Comments_Header (Uns32 (N), Rng);
+   end Gather_Comments_Header;
+
+   procedure Attach_Comments (Rng : Comments_Range; N : Iir) is
+   begin
+      Attach_Comments (Rng, Uns32 (N));
+   end Attach_Comments;
+
    function Find_First_Comment (File : Source_File_Entry; N : Node)
                                return Comment_Index
    is

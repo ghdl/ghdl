@@ -359,6 +359,30 @@ package body File_Comments is
       end loop;
    end Replace_Comments_Node;
 
+   procedure Gather_Comments_Header (N : Uns32; Rng : out Comments_Range)
+   is
+      pragma Assert (Ctxt.File /= No_Source_File_Entry);
+      pragma Assert (Ctxt.State = State_Before);
+      Fc : File_Comments_Table renames Comments_Table.Table (Ctxt.File);
+   begin
+      --  The comments up to the last empty line.
+      Gather_Comments_Before ((First => Ctxt.Next,
+                               Last => Ctxt.Last_Newline), N);
+
+      Rng := (First => Ctxt.Last_Newline + 1,
+              Last => File_Comments_Tables.Last (Fc));
+   end Gather_Comments_Header;
+
+   procedure Attach_Comments (Rng : Comments_Range; N : Uns32)
+   is
+      pragma Assert (Ctxt.File /= No_Source_File_Entry);
+      Fc : File_Comments_Table renames Comments_Table.Table (Ctxt.File);
+   begin
+      for I in Rng.First .. Rng.Last loop
+         Fc.Table (I).N := N;
+      end loop;
+   end Attach_Comments;
+
    procedure Gather_Comments (N : Uns32)
    is
       Rng : Comments_Range;

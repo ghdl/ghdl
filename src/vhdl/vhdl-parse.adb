@@ -12736,6 +12736,7 @@ package body Vhdl.Parse is
    is
       Res : Iir_Design_File;
       Design, Last_Design : Iir_Design_Unit;
+      Header : Comments_Range;
    begin
       if Flag_Gather_Comments then
          File_Comments.Comment_Init_Scan (Get_Current_Source_File);
@@ -12748,6 +12749,12 @@ package body Vhdl.Parse is
       Res := Create_Iir (Iir_Kind_Design_File);
       Set_Location (Res);
 
+      --  The comments before the last empty line are the header of the
+      --  file.  The comments after it are for the first design unit.
+      if Flag_Gather_Comments then
+         Gather_Comments_Header (Res, Header);
+      end if;
+
       Last_Design := Null_Iir;
       while Current_Token /= Tok_Eof loop
          Design := Parse_Design_Unit;
@@ -12756,6 +12763,13 @@ package body Vhdl.Parse is
          --  Append unit to the design file.
          if Last_Design = Null_Iir then
             Set_First_Design_Unit (Res, Design);
+
+            --  Comments before a context clause are all part of the header.
+            if Flag_Gather_Comments
+              and then Get_Context_Items (Design) /= Null_Iir
+            then
+               Attach_Comments (Header, Res);
+            end if;
          else
             Set_Chain (Last_Design, Design);
          end if;
