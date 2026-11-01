@@ -42,7 +42,7 @@ from pyTooling.Decorators import export
 
 from pyVHDLModel.Base import Mode
 
-from pyGHDL.libghdl import LibGHDLException, name_table, errorout_memory, files_map, file_comments
+from pyGHDL.libghdl import ENCODING, LibGHDLException, name_table, errorout_memory, files_map, file_comments
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes, nodes_meta, utils
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
@@ -156,15 +156,28 @@ def GetLabelOfNode(node: Iir) -> Nullable[str]:
         return None
 
     normalized = name_table.Get_Name_Ptr(label)
-    location = nodes.Get_Location(node)
-    sourceFile = files_map.Location_To_File(location)
-    position = files_map.Location_File_To_Pos(location, sourceFile)
-    buffer = files_map.Get_File_Buffer(sourceFile)
-    written = buffer[position : position + len(normalized)].decode("iso-8859-1")
-    if written.lower() == normalized.lower():
-        return written
+    sourceText = GetSourceTextOfNode(node, len(normalized))
+    if sourceText.lower() == normalized.lower():
+        return sourceText
     else:
         return normalized
+
+
+@export
+def GetSourceTextOfNode(node: Iir, length: Nullable[int] = None) -> str:
+    """
+    Reads the source text starting at an IIR node's location.
+
+    :param node:   The IIR node, whose location the text starts at.
+    :param length: Optional, number of bytes to read. Default: ``None``, up to the end of the source file.
+    :returns:      The source text, decoded with :data:`~pyGHDL.libghdl.ENCODING`.
+    """
+    location = nodes.Get_Location(node)
+    sourceFile = files_map.Location_To_File(location)
+    start = files_map.Location_File_To_Pos(location, sourceFile)
+    end = files_map.Get_File_Length(sourceFile) if length is None else start + length
+
+    return files_map.Get_File_Buffer(sourceFile)[start:end].decode(ENCODING)
 
 
 @export
