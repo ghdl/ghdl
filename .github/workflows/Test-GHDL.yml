@@ -65,21 +65,27 @@ jobs:
         if: startsWith(inputs.os_image, 'ubuntu')
         run: |
           sudo xargs --no-run-if-empty -a ./install/ubuntu.requirements -- apt-get install -y --no-install-recommends
-          echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
+          tee -a "${GITHUB_ENV}" <<EOF
+          PATH=$(pwd)/install/bin:${PATH}
+          EOF
           ls -lR install
 
       - name: Prepare test environment (macOS)
         if: startsWith(inputs.os_image, 'macos')
         run: |
           brew install coreutils
-          echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
+          tee -a "${GITHUB_ENV}" <<EOF
+          PATH=$(pwd)/install/bin:${PATH}
+          EOF
           cat $GITHUB_ENV
 
       - name: Prepare test environment (MSYS2)
         if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
         run: |
           xargs --no-run-if-empty -a ./install/${{ inputs.runtime }}.requirements -- pacman -S --noconfirm
-          echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
+          tee -a "${GITHUB_ENV}" <<EOF
+          PATH=$(pwd)/install/bin:${PATH}
+          EOF
           cat $GITHUB_ENV
 
       - name: Dependency check (Linux, MSYS2)
@@ -98,11 +104,11 @@ jobs:
 
       - name: Version check
         run: |
-          echo "PATH=$PATH"
+          printf -- 'PATH=%s\n' "${PATH}"
           [ '${{ inputs.runtime }}' != '' ] && export PATH=$(pwd)/install/bin:$PATH
-          echo "which ghdl: $(which ghdl)"
+          printf -- 'which ghdl: %s\n' "$(which ghdl)"
           ghdl version
-          echo "disp-config:"
+          printf -- 'disp-config:\n'
           ghdl --disp-config
 
       - name: Run tests in testsuite
