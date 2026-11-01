@@ -3053,6 +3053,26 @@ package body Vhdl.Sem_Decls is
       end loop;
    end Mark_Declarations_Elaborated;
 
+   procedure Check_Incomplete_Type_Declarations (Decls_Parent : Iir)
+   is
+      El : Iir;
+      Def : Iir;
+   begin
+      El := Get_Declaration_Chain (Decls_Parent);
+      while El /= Null_Iir loop
+         if Get_Kind (El) = Iir_Kind_Type_Declaration then
+            Def := Get_Type_Definition (El);
+            if Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition
+              and then Is_Null (Get_Complete_Type_Definition (Def))
+            then
+               Error_Msg_Sem
+                 (+El, "missing full type declaration for %n", +El);
+            end if;
+         end if;
+         El := Get_Chain (El);
+      end loop;
+   end Check_Incomplete_Type_Declarations;
+
    procedure Check_Full_Declaration (Decls_Parent : Iir; Decl: Iir)
    is
       procedure Warn_Unused (E : Iir) is
@@ -3149,8 +3169,14 @@ package body Vhdl.Sem_Decls is
                   if Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition
                     and then Is_Null (Get_Complete_Type_Definition (Def))
                   then
-                     Error_Msg_Sem
-                       (+El, "missing full type declaration for %n", +El);
+                     --  Already reported by Check_Incomplete_Type_Declarations
+                     --  when the package declaration was analyzed.
+                     if Get_Kind (Decls_Parent)
+                       /= Iir_Kind_Package_Declaration
+                     then
+                        Error_Msg_Sem
+                          (+El, "missing full type declaration for %n", +El);
+                     end if;
                   elsif Get_Kind (Def) = Iir_Kind_Protected_Type_Declaration
                     and then Get_Protected_Type_Body (Def) = Null_Iir
                   then

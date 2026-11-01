@@ -62,6 +62,12 @@ package Vhdl.Sem_Decls is
    --  of statements, if any.
    procedure Check_Full_Declaration (Decls_Parent : Iir; Decl: Iir);
 
+   --  Check all incomplete type declarations of DECLS_PARENT have a full
+   --  type declaration.  Used for package declarations, which are not
+   --  checked by Check_Full_Declaration (the other declarations of a
+   --  package declaration are completed in the package body).
+   procedure Check_Incomplete_Type_Declarations (Decls_Parent : Iir);
+
    procedure Sem_Iterator (Iterator : Iir_Iterator_Declaration;
                            Staticness : Iir_Staticness);
 
