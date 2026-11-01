@@ -68,11 +68,13 @@ jobs:
         run: |
           cp -r -v ./install/lib/* pyGHDL/lib
           sudo xargs --no-run-if-empty -a ./install/ubuntu.requirements -- apt-get install -y --no-install-recommends
-          echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
+          tee -a "${GITHUB_ENV}" <<EOF
+          PATH=$(pwd)/install/bin:${PATH}
+          EOF
 
       - name: Version check
         run: |
-          echo "which ghdl: $(which ghdl)"
+          printf -- 'which ghdl: %s\n' "$(which ghdl)"
           ghdl version
 
       - name: '🐍 Setup Python'
@@ -119,11 +121,13 @@ jobs:
         run: |
           cp -r -v ./install/lib/* pyGHDL/lib
           sudo xargs --no-run-if-empty -a ./install/ubuntu.requirements -- apt-get install -y --no-install-recommends
-          echo "PATH=$(pwd)/install/bin:$PATH" >> $GITHUB_ENV
+          tee -a "${GITHUB_ENV}" <<EOF
+          PATH=$(pwd)/install/bin:${PATH}
+          EOF
 
       - name: Version check
         run: |
-          echo "which ghdl: $(which ghdl)"
+          printf -- 'which ghdl: %s\n' "$(which ghdl)"
           ghdl version
 
       - name: '🐍 Setup Python'

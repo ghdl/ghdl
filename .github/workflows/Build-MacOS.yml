@@ -110,36 +110,38 @@ jobs:
           GNAT_NAME="gnat-${{ inputs.gnat_arch }}-darwin-${{ inputs.gnat_version }}"
           GNAT_URL="https://github.com/alire-project/GNAT-FSF-builds/releases/download/gnat-${{ inputs.gnat_version }}/${GNAT_NAME}.tar.gz"
 
-          echo "Downloading GNAT ${{ inputs.gnat_version }} (${{ inputs.gnat_arch }}) from '$GNAT_URL'"
+          printf -- "Downloading GNAT %s (%s) from '%s'\n" "${{ inputs.gnat_version }}" "${{ inputs.gnat_arch }}" "${GNAT_URL}"
           wget -q --show-progress --progress=bar:force:noscroll -O GNAT.tar.gz "$GNAT_URL"
-          test $? -ne 0 && echo -e "ERROR: Downloading '$GNAT_URL'" && exit 1
+          test $? -ne 0 && printf -- "ERROR: Downloading '%s'\n" "${GNAT_URL}" && exit 1
 
-          echo "Extracting GNAT.tar.gz ..."
+          printf -- 'Extracting GNAT.tar.gz ...\n'
           tar -zxf GNAT.tar.gz && rm GNAT.tar.gz
-          test $? -ne 0 && echo -e "ERROR: Extracting 'GNAT.tar.gz'" && exit 1
+          test $? -ne 0 && printf -- "ERROR: Extracting 'GNAT.tar.gz'\n" && exit 1
 
-          echo "Renaming ${GNAT_NAME} to './gnat ..."
+          printf -- "Renaming '%s' to './gnat' ...\n" "${GNAT_NAME}"
           mv ${GNAT_NAME} gnat
 
-          echo "GNAT_BINARY_PATH=$(pwd)/gnat/bin" >> $GITHUB_ENV
+          tee -a "${GITHUB_ENV}" <<EOF
+          GNAT_BINARY_PATH=$(pwd)/gnat/bin
+          EOF
 
-          echo ""
-          echo "Listing $(pwd)/gnat/lib/*.dylib ..."
+          printf -- '\n'
+          printf -- 'Listing %s/gnat/lib/*.dylib ...\n' "$(pwd)"
           ls -lAh $(pwd)/gnat/lib/*.dylib
-          echo ""
-          echo "Listing $(pwd)/gnat/lib/gcc/*/*/adalib/*.dylib ..."
+          printf -- '\n'
+          printf -- 'Listing %s/gnat/lib/gcc/*/*/adalib/*.dylib ...\n' "$(pwd)"
           ls -lAh $(pwd)/gnat/lib/gcc/*/*/adalib/*.dylib
-          echo ""
+          printf -- '\n'
 
           GNAT_VERSION="$(./gnat/bin/gnatls --version | grep GNATLS)"
-          echo "gnatls --version:      ${GNAT_VERSION}"
+          printf -- 'gnatls --version:      %s\n' "${GNAT_VERSION}"
           regex='GNATLS ([0-9]+)\.([0-9]+)\.([0-9]+)'
           if [[ "${GNAT_VERSION}" =~ $regex ]]; then
-            # echo "GNAT major version: ${BASH_REMATCH[1]}"
+            # printf -- 'GNAT major version: %s\n' "${BASH_REMATCH[1]}"
             GNAT_MAJOR_VERSION=${BASH_REMATCH[1]}
           else
-            echo "Can't parse GNAT's major version!"
-            echo "::error title=GNAT Version::Can't parse GNAT's major version."
+            printf -- "Can't parse GNAT's major version!\n"
+            printf -- '::error title=%s::%s\n' "GNAT Version" "Can't parse GNAT's major version."
             exit 1
           fi
 
@@ -158,10 +160,10 @@ jobs:
 
       - name: ☑ Check build environemnt
         run: |
-          echo $PATH
-          echo "which gnat:        $(which gnat) ($($(which gnat) --version))"
-          echo "which gnatmake:    $(which gnatmake) ($($(which gnatmake) --version))"
-          echo "which llvm-config: $(which llvm-config) ($($(which llvm-config) --version))"
+          printf -- '%s\n' "${PATH}"
+          printf -- 'which gnat:        %s (%s)\n' "$(which gnat)" "$($(which gnat) --version)"
+          printf -- 'which gnatmake:    %s (%s)\n' "$(which gnatmake)" "$($(which gnatmake) --version)"
+          printf -- 'which llvm-config: %s (%s)\n' "$(which llvm-config)" "$($(which llvm-config) --version)"
 
       - name: ⚙ Configure
         run: |
@@ -170,7 +172,7 @@ jobs:
           if [ '${{ inputs.macos_image }}' == 'macos-13' ]; then
             CONFIG_LDFLAGS="-Wl,-ld_classic"
           fi
-          echo "LDFLAGS=$CONFIG_LDFLAGS"
+          printf -- 'LDFLAGS=%s\n' "${CONFIG_LDFLAGS}"
 
           if ${{ startsWith(inputs.backend, 'llvm') }}; then
             CONFIG_ARGS="--with-llvm-config"
@@ -179,12 +181,12 @@ jobs:
             fi
             # CONFIG_ARGS="$CONFIG_ARGS CXX=clang++"
           fi
-          echo "CONFIG_ARGS=$CONFIG_ARGS"
+          printf -- 'CONFIG_ARGS=%s\n' "${CONFIG_ARGS}"
 
           # Use static libs (including libzstd) and dead-strip (to avoid libz3)
           libzstd=$(brew --prefix zstd)/lib/libzstd.a
           export LLVM_LDFLAGS="$(llvm-config --link-static --libfiles --system-libs | sed -e s@-lzstd@$libzstd@) -Wl,-dead_strip,-dead_strip_dylibs"
-          echo "LLVM_LDFLAGS=$LLVM_LDFLAGS"
+          printf -- 'LLVM_LDFLAGS=%s\n' "${LLVM_LDFLAGS}"
 
           # Use classic ld and not lld (which simply crashes)
           NPROC=$(sysctl -n hw.logicalcpu)
@@ -317,13 +319,13 @@ jobs:
 
           [ -n '${{ inputs.unittest_xml_artifact }}' ] && PYTEST_ARGS='--junitxml=report/unit/TestReportSummary.xml' || unset PYTEST_ARGS
           if ${{ inputs.coverage }}; then
-            echo "coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+            printf -- 'coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP %s --color=yes %s\n' "${PYTEST_ARGS}" "${{ inputs.pyunit_testsuites }}"
             coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
           elif ${{ inputs.unittesting }}; then
-            echo "python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+            printf -- 'python -m pytest -raP %s --color=yes %s\n' "${PYTEST_ARGS}" "${{ inputs.pyunit_testsuites }}"
             python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
           else
-            echo "::error title=InternalError::Reached impossible execution path."
+            printf -- '::error title=%s::%s\n' "InternalError" "Reached impossible execution path."
             exit 1
           fi
 

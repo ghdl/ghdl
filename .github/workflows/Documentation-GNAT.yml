@@ -29,7 +29,7 @@ jobs:
       - name: ⚙ Configure
         run: |
           GNATMAKE="gnatmake -j$(nproc)" MAKE="make -j$(nproc)" ./configure
-          echo "Check for generated *.gpr file:"
+          printf -- 'Check for generated *.gpr file:\n'
           ls -lAh *.gpr
 
       - name: 🔨 Make
@@ -38,11 +38,11 @@ jobs:
 
       - name: '📓 Run GNATdoc'
         run: |
-          echo "GNATdoc: $(which gnatdoc) ($($(which gnatdoc) --version))"
+          printf -- 'GNATdoc: %s (%s)\n' "$(which gnatdoc)" "$($(which gnatdoc) --version)"
 
           gnatdoc -P./ghdl.gpr
 
-          echo "Check for generated GNATdoc files/folders:"
+          printf -- 'Check for generated GNATdoc files/folders:\n'
           ls -lAh gnat*
 
       - name: "📤 Upload artifact: '${{ inputs.html_artifact }}'"
