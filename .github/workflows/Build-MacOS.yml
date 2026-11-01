@@ -151,8 +151,10 @@ jobs:
         run: |
           mkdir -p build/${{ inputs.backend }}
 
-          echo "PATH=$GNAT_BINARY_PATH:$LLVM_BINARY_PATH:$PATH" >> $GITHUB_ENV
-          printf -- 'SDKROOT=%s\n' "$(xcrun --sdk macosx --show-sdk-path)" >> "${GITHUB_ENV}"
+          tee "${GITHUB_ENV}" <<EOF
+          PATH=${GNAT_BINARY_PATH}:${LLVM_BINARY_PATH}:${PATH}
+          SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
+          EOF
 
       - name: ☑ Check build environemnt
         run: |
