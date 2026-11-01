@@ -84,7 +84,8 @@ GHDL can use multiple back-ends, i.e. code generators, (`GCC <http://gcc.gnu.org
 The current version of GHDL does not contain any built-in graphical viewer: signal waves cannot be seen through GHDL.
 However, the behavior of the designs can still be checked through test benches and verification frameworks.
 Moreover, :ref:`GHW`, :wikipedia:`VCD <Value_change_dump>` or `FST` files can be produced, which can be viewed with an
-external :wikipedia:`waveform viewer <Waveform_viewer>`, such as `GtkWave <http://gtkwave.sourceforge.net/>`__.
+external :wikipedia:`waveform viewer <Waveform_viewer>`, such as `GTKWave <http://gtkwave.sourceforge.net/>`__ and
+`Surfer <https://surfer-project.org/>`__.
 
 GHDL aims at implementing VHDL as defined by `IEEE 1076 <http://ieeexplore.ieee.org/document/4772740/>`__.
 It supports the
@@ -97,9 +98,8 @@ It supports the
 
 Several third party projects are supported:
 `Yosys <https://github.com/YosysHQ/yosys>`__
-(through the `ghdl-yosys-plugin <https://github.com/ghdl/ghdl-yosys-plugin>`__)
-`cocotb <https://github.com/potentialventures/cocotb>`__,
-(through the :wikipedia:`VPI interface <Verilog_Procedural_Interface>`),
+(through the `ghdl-yosys-plugin <https://github.com/ghdl/ghdl-yosys-plugin>`__),
+`cocotb <https://www.cocotb.org/>`__ (through the :wikipedia:`VPI interface <Verilog_Procedural_Interface>`),
 `VUnit <https://vunit.github.io/>`__,
 `OSVVM <http://osvvm.org/>`__,
 :doc:`vhdlmodel:index`,

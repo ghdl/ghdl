@@ -13,8 +13,10 @@ However, VCD/EVCD cannot handle certain signal types from the VHDL language.
 There is neither any equivalent in the VHDL LRM.
 So, the author of GHDL, Tristan Gingold, implemented an alternative format named GHW, for allowing all VHDL types to be
 dumped.
-He also contributed a reader to GTKWave based on libghw (see `gtkwave/gtkwave/search?q=libghw <https://github.com/gtkwave/gtkwave/search?q=libghw>`__ and `gtkwave/gtkwave: gtkwave3/src/ghw.c <https://github.com/gtkwave/gtkwave/blob/master/gtkwave3/src/ghw.c>`__),
+He also contributed a reader to GTKWave based on libghw (see `gtkwave/gtkwave: lib/libghw <https://github.com/gtkwave/gtkwave/tree/master/lib/libghw>`__ and `gtkwave/gtkwave: lib/libgtkwave/src/gw-ghw-loader.c <https://github.com/gtkwave/gtkwave/blob/master/lib/libgtkwave/src/gw-ghw-loader.c>`__),
 which allows visualizing GHW waves.
+
+GHW is also supported by `Surfer <https://surfer-project.org/>`__.
 
 The GHW format is not completely fixed, and it might change slightly as new language features are implemented in GHDL
 or as a result of internal tweaks.
