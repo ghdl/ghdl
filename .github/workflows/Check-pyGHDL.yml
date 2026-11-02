@@ -49,7 +49,7 @@ jobs:
       - name: '🚦 Check if Python bindings changed'
         run: |
           git diff --stat
-          echo "NOTE: Bindings can be updated by executing ./scripts/update_py_bindings.sh (see previous step)"
+          printf -- 'NOTE: Bindings can be updated by executing ./scripts/update_py_bindings.sh (see previous step)\n'
           git diff --exit-code
 
       - name: '🚦 Check if python follows code formatting standards'

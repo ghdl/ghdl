@@ -599,7 +599,7 @@ jobs:
             pacghdl_version="${ghdl_version/-rc/.rc}-${pacmanPackageRelease}"
             setup_version="${ghdl_version}"
           else
-            echo "::error title=%s::%s\n" "Parameters" "Unsupported GHDL version pattern '${ghdl_version}'."
+            printf -- '::error title=%s::%s\n' "Parameters" "Unsupported GHDL version pattern '${ghdl_version}'."
             exit 1
           fi
 

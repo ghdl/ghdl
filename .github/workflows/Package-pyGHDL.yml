@@ -261,11 +261,11 @@ jobs:
         if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
         shell: "msys2 {0}"
         run: |
-          echo "Testing Python module:"
+          printf -- 'Testing Python module:\n'
           python -m pyGHDL.cli.lsp --version
 
-          echo ""
-          echo "Testing entrypoint (executable):"
+          printf -- '\n'
+          printf -- 'Testing entrypoint (executable):\n'
           ghdl-ls --version
 
       - name: Sanity check ghdl-dom (Ubuntu, Windows)
@@ -282,11 +282,11 @@ jobs:
         if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
         shell: "msys2 {0}"
         run: |
-          echo "Testing Python module:"
+          printf -- 'Testing Python module:\n'
           python -m pyGHDL.cli.dom version
 
-          echo ""
-          echo "Testing entrypoint (executable):"
+          printf -- '\n'
+          printf -- 'Testing entrypoint (executable):\n'
           ghdl-dom version
 
       - name: 🧰 Install dependencies (Ubuntu, Windows)
@@ -355,7 +355,7 @@ jobs:
           export PYTHONPATH=$(pwd)
 
           [ -n '${{ inputs.unittest_xml_artifact }}' ] && PYTEST_ARGS='--junitxml=report/unit/TestReportSummary.xml' || unset PYTEST_ARGS
-          echo "python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+          printf -- 'python -m pytest -raP %s --color=yes %s\n' "${PYTEST_ARGS}" "${{ inputs.pyunit_testsuites }}"
           python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
 
       - name: '🚦 Testsuite: pyunit (Windows)'
@@ -374,7 +374,7 @@ jobs:
           export PYTHONPATH=$(pwd)
 
           [ -n '${{ inputs.unittest_xml_artifact }}' ] && PYTEST_ARGS='--junitxml=report/unit/TestReportSummary.xml' || unset PYTEST_ARGS
-          echo "python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+          printf -- 'python -m pytest -raP %s --color=yes %s\n' "${PYTEST_ARGS}" "${{ inputs.pyunit_testsuites }}"
           python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
 
 # Upload test result artifacts

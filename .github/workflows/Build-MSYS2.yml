@@ -156,10 +156,10 @@ jobs:
           EOF
       - name: ☑ Check build environemnt
         run: |
-          echo "which gnat:        $(which gnat) ($(gnat --version))"
-          echo "which gnatmake:    $(which gnatmake) ($(gnatmake --version))"
+          printf -- 'which gnat:        %s (%s)\n' "$(which gnat)" "$(gnat --version)"
+          printf -- 'which gnatmake:    %s (%s)\n' "$(which gnatmake)" "$(gnatmake --version)"
           if ${{ startsWith(inputs.runtime, 'llvm') }}; then
-            echo "which llvm-config: $(which llvm-config) ($(llvm-config --version))"
+            printf -- 'which llvm-config: %s (%s)\n' "$(which llvm-config)" "$(llvm-config --version)"
           fi
 
       - name: Prepare build environemnt
@@ -182,7 +182,7 @@ jobs:
               CONFIG_ARGS="$CONFIG_ARGS --with-backtrace-lib=${MINGW_PREFIX}/lib/libbacktrace.a"
             fi
           fi
-          echo "CONFIG_ARGS=$CONFIG_ARGS"
+          printf -- 'CONFIG_ARGS=%s\n' "${CONFIG_ARGS}"
 
           NPROC=$(nproc)
           GNATMAKE="gnatmake -j$NPROC" \
@@ -209,10 +209,10 @@ jobs:
           cd dist/msys2/${{ inputs.backend }}
           makepkg-mingw --noconfirm --noprogressbar -sCLf
 
-          echo "================================================================================"
-          echo "ls -lAh $(pwd)"
+          printf -- '================================================================================\n'
+          printf -- 'ls -lAh %s\n' "$(pwd)"
           ls -lAh $(pwd)
-          echo "================================================================================"
+          printf -- '================================================================================\n'
 
       - name: 📤 Upload '${{ steps.artifact_name.outputs.pacman_artifact }}' artifact
         uses: actions/upload-artifact@v7
@@ -239,9 +239,9 @@ jobs:
           if [ '${{ inputs.runtime }}' == 'ucrt64' ]; then
             MSYS2_PREFIX=ucrt64/mingw-w64-ucrt-x86_64
           fi
-          echo "${MSYS2_PREFIX}-gcc-ada" >> ${{ inputs.runtime }}.requirements
+          printf -- '%s-gcc-ada\n' "${MSYS2_PREFIX}" >> ${{ inputs.runtime }}.requirements
           if ${{ startsWith(inputs.backend, 'llvm') }}; then
-           echo "${MSYS2_PREFIX}-llvm-libs" >> ${{ inputs.runtime }}.requirements
+           printf -- '%s-llvm-libs\n' "${MSYS2_PREFIX}" >> ${{ inputs.runtime }}.requirements
           fi
 
       - name: List dependencies
@@ -269,25 +269,25 @@ jobs:
               fields=($dependency)
               dep="${fields[2]}"
               if [[ "$dep" == /"${MSYSTEM,,}"/* ]]; then
-                echo "$dep"
+                printf -- '%s\n' "${dep}"
                 GetMinGWLibraries "${MSYSTEM_PREFIX}/${dep#"/${MSYSTEM,,}/"}"
               fi
             done
           }
 
           for executable in ./standalone/bin/*.exe; do
-            echo "read dependencies of '${executable}'"
+            printf -- "read dependencies of '%s'\n" "${executable}"
             ldd ${executable}
-            echo "copy dependencies ..."
+            printf -- 'copy dependencies ...\n'
             for dependency in $(GetMinGWLibraries ${executable}); do
               cp -v "$dependency" ./standalone/bin
             done
           done
 
           for library in ./standalone/lib/*.dll; do
-            echo "read dependencies of '${library}'"
+            printf -- "read dependencies of '%s'\n" "${library}"
             ldd ${library}
-            echo "copy dependencies ..."
+            printf -- 'copy dependencies ...\n'
             for dependency in $(GetMinGWLibraries ${library}); do
               cp -v "$dependency" ./standalone/lib
             done
@@ -334,16 +334,16 @@ jobs:
               fields=($dependency)
               dep="${fields[2]}"
               if [[ "$dep" == /"${MSYSTEM,,}"/* ]]; then
-                echo "$dep"
+                printf -- '%s\n' "${dep}"
                 GetMinGWLibraries "${MSYSTEM_PREFIX}/${dep#"/${MSYSTEM,,}/"}"
               fi
             done
           }
 
           for library in ./install/lib/*.dll; do
-            echo "read dependencies of '${library}'"
+            printf -- "read dependencies of '%s'\n" "${library}"
             ldd ${library}
-            echo "copy dependencies ..."
+            printf -- 'copy dependencies ...\n'
             for dependency in $(GetMinGWLibraries ${library}); do
               cp -v "$dependency" ./install/lib
             done
@@ -432,13 +432,13 @@ jobs:
 
           [ -n '${{ inputs.unittest_xml_artifact }}' ] && PYTEST_ARGS='--junitxml=report/unit/TestReportSummary.xml' || unset PYTEST_ARGS
           if ${{ inputs.coverage }}; then
-            echo "coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+            printf -- 'coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP %s --color=yes %s\n' "${PYTEST_ARGS}" "${{ inputs.pyunit_testsuites }}"
             coverage run --data-file=.coverage --rcfile=pyproject.toml -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
           elif ${{ inputs.unittesting }}; then
-            echo "python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}"
+            printf -- 'python -m pytest -raP %s --color=yes %s\n' "${PYTEST_ARGS}" "${{ inputs.pyunit_testsuites }}"
             python -m pytest -raP $PYTEST_ARGS --color=yes ${{ inputs.pyunit_testsuites }}
           else
-            echo "::error title=InternalError::Reached impossible execution path."
+            printf -- '::error title=%s::%s\n' "InternalError" "Reached impossible execution path."
             exit 1
           fi
 
@@ -520,7 +520,7 @@ jobs:
 
       - name: Verify installation
         run: |
-          echo "which ghdl: $(which ghdl)"
+          printf -- 'which ghdl: %s\n' "$(which ghdl)"
           ghdl version
 
       - name: Run tests
