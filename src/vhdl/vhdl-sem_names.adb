@@ -4396,7 +4396,7 @@ package body Vhdl.Sem_Names is
       if Flags.Vhdl_Std > Vhdl_87
         and then Get_Identifier (Attr) in Name_Id_Name_Attributes
       then
-         Sem_Name (Prefix, True);
+         Sem_Name (Prefix, Keep_Alias => True);
       else
          Sem_Name (Prefix, False);
       end if;
