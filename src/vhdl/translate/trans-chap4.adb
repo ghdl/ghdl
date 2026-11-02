@@ -3716,18 +3716,42 @@ package body Trans.Chap4 is
                                                    Info.Out_Sig_Field),
                            Out_Tinfo, Mode_Signal);
          Stabilize (Dest_Sig);
-         --  Allocate bounds.
-         New_Assign_Stmt
-           (M2Lp (Chap3.Get_Composite_Bounds (Dest_Sig)),
-            Gen_Alloc (Alloc_System,
-                       New_Lit (New_Sizeof (Out_Tinfo.B.Bounds_Type,
-                                            Ghdl_Index_Type)),
-                       Out_Tinfo.B.Bounds_Ptr_Type));
-         --  Convert bounds.
-         Chap7.Translate_Type_Conversion_Array_Bounds
-           (Chap3.Get_Composite_Bounds (Dest_Sig),
-            Chap3.Get_Composite_Bounds (Src_Sig),
-            Out_Type, In_Type, Conv);
+         if Get_Kind (Conv) = Iir_Kind_Function_Call
+           and then Is_Fully_Constrained_Type (Get_Type (Conv))
+         then
+            --  LRM08 5.3.2.2 Index constraints and discrete ranges
+            --  e) [...]
+            --    3) [...]
+            --      -- For an interface object or subelement whose mode is
+            --         IN, INOUT or LINKAGE, if the actual part includes a
+            --         conversion function or a type conversion, then the
+            --         result type of that function or the type mark of the
+            --         type conversion shall define a constraint for the
+            --         index range corresponding to the index range of the
+            --         objet, [...]
+            --  A conversion function may change the length, so the bounds
+            --  of its input say nothing about the bounds of its result:
+            --  take them from the result subtype.  This is also what
+            --  Chap5.Get_Unconstrained_Port_Bounds gives to the formal, so
+            --  both ends of the connection agree.
+            Chap3.Create_Composite_Subtype (Get_Type (Conv));
+            New_Assign_Stmt
+              (M2Lp (Chap3.Get_Composite_Bounds (Dest_Sig)),
+               M2Addr (Chap3.Get_Composite_Type_Bounds (Get_Type (Conv))));
+         else
+            --  Allocate bounds.
+            New_Assign_Stmt
+              (M2Lp (Chap3.Get_Composite_Bounds (Dest_Sig)),
+               Gen_Alloc (Alloc_System,
+                          New_Lit (New_Sizeof (Out_Tinfo.B.Bounds_Type,
+                                               Ghdl_Index_Type)),
+                          Out_Tinfo.B.Bounds_Ptr_Type));
+            --  Convert bounds.
+            Chap7.Translate_Type_Conversion_Array_Bounds
+              (Chap3.Get_Composite_Bounds (Dest_Sig),
+               Chap3.Get_Composite_Bounds (Src_Sig),
+               Out_Type, In_Type, Conv);
+         end if;
          --  Allocate sig base
          Chap3.Allocate_Unbounded_Composite_Base
            (Alloc_System, Dest_Sig, Out_Type);
