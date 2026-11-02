@@ -1965,6 +1965,11 @@ package body Vhdl.Parse is
          end if;
 
          if Last = Null_Iir then
+            --  Comments are attached to the first interface.
+            if Flag_Gather_Comments then
+               Replace_Comments_Node (O_Interface, N_Interface);
+            end if;
+
             First := N_Interface;
          else
             Set_Chain (Last, N_Interface);
@@ -3531,6 +3536,12 @@ package body Vhdl.Parse is
             Def := Parse_Enumeration_Type_Definition (Parent);
             Set_Type_Definition (Decl, Def);
 
+            --  A comment after the ';' is for the type, not for the last
+            --  literal (unless it starts that line).
+            if Flag_Gather_Comments then
+               Gather_Comments_Line_End (Decl, Start_Loc);
+            end if;
+
          when Tok_Range =>
             --  This is a range definition.
             Decl := Create_Iir (Iir_Kind_Anonymous_Type_Declaration);
@@ -4678,8 +4689,9 @@ package body Vhdl.Parse is
             Set_Shared_Flag (Object, Shared);
          end if;
 
-         --  Comments attached to the object.
-         if Flag_Gather_Comments then
+         --  Comments attached to the first object of the identifier list
+         --  (like interfaces and record elements).
+         if Flag_Gather_Comments and then First = Null_Iir then
             Gather_Comments_Line (Object);
          end if;
 
@@ -5104,6 +5116,11 @@ package body Vhdl.Parse is
                         --  Set name on the first.
                         if El = First then
                            Set_Mode_View_Name (N_El, Name);
+
+                           --  Comments are attached to the first element.
+                           if Flag_Gather_Comments then
+                              Replace_Comments_Node (El, N_El);
+                           end if;
                         end if;
 
                         --  Chain.
@@ -9107,6 +9124,10 @@ package body Vhdl.Parse is
       --  Skip ';'.
       Expect_Scan (Tok_Semi_Colon);
 
+      if Flag_Gather_Comments then
+         Replace_Comments_Node (Subprg, Res);
+      end if;
+
       Free_Iir (Subprg);
 
       return Res;
@@ -9217,6 +9238,13 @@ package body Vhdl.Parse is
       if Flag_Elocations then
          Create_Elocations (Subprg);
          Set_Start_Location (Subprg, Start_Loc);
+      end if;
+
+      --  A comment after the specification (';' or 'is') is for the
+      --  subprogram, not for the last parameter (unless it starts that
+      --  line).
+      if Flag_Gather_Comments then
+         Gather_Comments_Line_End (Subprg, Start_Loc);
       end if;
 
       case Current_Token is
@@ -12039,7 +12067,11 @@ package body Vhdl.Parse is
    --      PACKAGE identifier IS NEW uninstantiated_package_name
    --         [ generic_map_aspect ] ;
    function Parse_Package_Instantiation_Declaration
-     (Parent : Iir; Id : Name_Id; Loc : Location_Type) return Iir
+     (Parent : Iir;
+      Id : Name_Id;
+      Loc : Location_Type;
+      Comments : Comments_Range)
+     return Iir
    is
       Res: Iir;
    begin
@@ -12047,6 +12079,12 @@ package body Vhdl.Parse is
       Set_Location (Res, Loc);
       Set_Identifier (Res, Id);
       Set_Parent (Res, Parent);
+
+      --  Comments before 'is' (saved by Parse_Package) are attached to the
+      --  instantiation, like for a package declaration.
+      if Flag_Gather_Comments then
+         Gather_Comments_Block (Comments, Res);
+      end if;
 
       --  Skip 'new'
       Scan;
@@ -12116,7 +12154,8 @@ package body Vhdl.Parse is
          Expect_Scan (Tok_Is);
 
          if Current_Token = Tok_New then
-            Res := Parse_Package_Instantiation_Declaration (Parent, Id, Loc);
+            Res := Parse_Package_Instantiation_Declaration
+              (Parent, Id, Loc, Comments);
             --  Note: there is no 'end' in instantiation.
          else
             Res := Parse_Package_Declaration (Parent, Id, Loc, Comments);

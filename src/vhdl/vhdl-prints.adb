@@ -2641,6 +2641,19 @@ package body Vhdl.Prints is
    begin
       Decl := Get_Declaration_Chain (Parent);
       while Decl /= Null_Iir loop
+         --  Comments of the declaration (objects display them).
+         case Get_Kind (Decl) is
+            when Iir_Kind_File_Declaration
+              | Iir_Kind_Signal_Declaration
+              | Iir_Kind_Constant_Declaration
+              | Iir_Kind_Variable_Declaration
+              | Iir_Kind_Free_Quantity_Declaration
+              | Iir_Kinds_Source_Quantity_Declaration =>
+               null;
+            when others =>
+               Start_Node (Ctxt, Decl);
+         end case;
+
          case Get_Kind (Decl) is
             when Iir_Kind_Type_Declaration =>
                Disp_Type_Declaration (Ctxt, Decl);
@@ -4504,6 +4517,8 @@ package body Vhdl.Prints is
 
    procedure Disp_Concurrent_Statement (Ctxt : in out Ctxt_Class; Stmt: Iir) is
    begin
+      Start_Node (Ctxt, Stmt);
+
       case Get_Kind (Stmt) is
          when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
             Disp_Concurrent_Simple_Signal_Assignment (Ctxt, Stmt);

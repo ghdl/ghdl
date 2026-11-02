@@ -1872,8 +1872,11 @@ package body Vhdl.Scanner is
                end loop;
 
                if Flag_Gather_Comments then
+                  --  Comment_Report_Newline is set only after a comment of
+                  --  this scan: no token between that comment and this one.
                   Add_Comment (Current_Context.Token_Pos, Pos - 1,
-                               Current_Context.Line_Pos);
+                               Current_Context.Line_Pos,
+                               Comment_Report_Newline);
                   --  Following newlines will be reported so that a blank
                   --  line is detected.
                   Comment_Report_Newline := True;

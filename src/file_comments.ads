@@ -37,12 +37,17 @@ package File_Comments is
    --  First, it associates previous comments to the node, and then if a
    --  comment appear on the same line as the node, all consecutive comments
    --  are associated with the node.  Consecutive comments mean comments
-   --  without empty lines.  Another declaration or statement will also
-   --  interrupt this association because the comments will be associated
-   --  with this new declaration or statement.  After interruption, comments
-   --  are not associated anymore; they will be associated by the next
-   --  call.  Finally, Gather_Comments_End will simply discard unassociated
-   --  comments that appears at an end (or before an 'end').
+   --  without empty lines and without tokens between them, each one
+   --  starting at the column of the comment on the same line.  A comment
+   --  that follows a token, an empty line or a comment at another column,
+   --  or that starts at another column, interrupts this association: it is
+   --  for the next declaration or statement.
+   --  Another declaration or statement will also interrupt this association
+   --  because the comments will be associated with this new declaration or
+   --  statement.  After interruption, comments are not associated anymore;
+   --  they will be associated by the next call.  Finally,
+   --  Gather_Comments_End will simply discard unassociated comments that
+   --  appears at an end (or before an 'end').
    --
    --  Block is the default mode.  Gathered but unassociated comments are
    --  simply associated with a node.  The following comments are also
@@ -70,8 +75,11 @@ package File_Comments is
    --  of the comment (before the new line).
    --  LINE_START is the start of the current line (to detect comments in
    --  the same line as a node).
+   --  FOLLOWS_COMMENT is true when only blanks and newlines separate the
+   --  comment from the previous comment (there is no token between them).
    procedure Add_Comment (Start, Last : Source_Ptr;
-                          Line_Start : Source_Ptr);
+                          Line_Start : Source_Ptr;
+                          Follows_Comment : Boolean);
 
    --  A newline *after a comment* has been scanned.
    --  If this is a blank line, comments before the blank line are attached
@@ -88,8 +96,22 @@ package File_Comments is
    --  annotated with a comment is parsed.
    procedure Gather_Comments_Block (Rng : Comments_Range;
                                     N : Uns32);
+
+   --  POS is the start of the line of the current token: a comment on the
+   --  same line is attached to N, and so are the following comments that
+   --  start at the same column.
    procedure Gather_Comments_Line (Pos : Source_Ptr;
                                    N : Uns32);
+
+   --  To be called on the last token of the declaration N (like ';'), when
+   --  N contains nodes gathered in line mode (like parameters or literals).
+   --  DECL_LINE_START is the start of the first line of N, LINE_START is
+   --  like POS for Gather_Comments_Line.
+   --  A comment on the same line is attached to N, unless N spans several
+   --  lines and an inner node starts on this line (then the comment is
+   --  attached to that inner node).
+   procedure Gather_Comments_Line_End
+     (Decl_Line_Start, Line_Start : Source_Ptr; N : Uns32);
 
    --  Assign node N to the last comments scanned.
    --  Identical to Save_Comments followed by above Gather_Comments.
@@ -98,6 +120,11 @@ package File_Comments is
    --  To be called at the end of a lexical block.
    --  Assign last comments to the block (if any).
    procedure Gather_Comments_End;
+
+   --  Node OLD_N is replaced by node NEW_N (and OLD_N is about to be freed):
+   --  the comments of OLD_N are attached to NEW_N, and so will be the next
+   --  comments that would have been attached to OLD_N.
+   procedure Replace_Comments_Node (Old_N, New_N : Uns32);
 
    --  Sort comments; to be done once all comments have been gathered and
    --  before searching comments.
@@ -180,7 +207,14 @@ private
       --  Node to attach for next comments.
       Last_Node : Uns32;
 
+      --  First comment that may be attached to LAST_NODE.
+      Node_First : Comment_Index;
+
       Line_Start : Source_Ptr;
+
+      --  Column of the comment on the same line as the node (for
+      --  State_Line_Cont).  Continuation comments must start at it.
+      Col : Natural;
    end record;
 
    package File_Comments_Tables is new Dyn_Tables
