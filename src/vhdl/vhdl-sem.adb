@@ -3304,6 +3304,16 @@ package body Vhdl.Sem is
       Mark_Declarations_Elaborated (Pkg, True);
       --  GHDL: subprogram bodies appear in package body.
 
+      --  LRM08 5.4.2 Incomplete type declarations
+      --  For each incomplete type declaration there shall be a corresponding
+      --  full type declaration with the same identifier.  This full type
+      --  declaration shall occur later and immediately within the same
+      --  declarative part as the incomplete type declaration to which it
+      --  corresponds.
+      --  GHDL: the package body is another declarative part, so check it
+      --  now: the package may not have a body.
+      Check_Incomplete_Type_Declarations (Pkg);
+
       Pop_Signals_Declarative_Part (Implicit);
       Close_Declarative_Region;
       Set_Is_Within_Flag (Pkg, False);
