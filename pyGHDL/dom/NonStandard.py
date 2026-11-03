@@ -98,6 +98,7 @@ class Design(VHDLModel_Design):
     _loadDefaultLibraryDuration: Nullable[Duration]  #: :meth:`LoadDefaultLibraries`' duration, ``None`` if not called.
     _analyzeDuration: Nullable[Duration]  #: Duration of :meth:`Analyze`, ``None`` if not called.
     _vhdlVersion: VHDLVersion  #: The VHDL version this design is analyzed with.
+    _tabSize: int  #: The number of columns between two tab stops.
 
     _warnings: List  #: Warnings raised by :mod:`pyVHDLModel` while the design is analyzed.
 
@@ -111,14 +112,29 @@ class Design(VHDLModel_Design):
         VHDLVersion.VHDL2019: "19",
     }
 
-    def __init__(self, name: str = None, vhdlVersion: VHDLVersion = VHDLVersion.VHDL2008) -> None:
+    def __init__(self, name: str = None, vhdlVersion: VHDLVersion = VHDLVersion.VHDL2008, *, tabSize: int = 8) -> None:
         """
         Initialize a VHDL design.
 
         :param name:        Name of the design.
         :param vhdlVersion: The VHDL version used to analyze this design.
+        :param tabSize:     Optional, the number of columns between two tab stops. Default: ``8``.
+        :raises ValueError: If parameter 'tabSize' is None.
+        :raises TypeError:  If parameter 'tabSize' is not of type :class:`int`.
+        :raises ValueError: If parameter 'tabSize' is out of range 1..120.
         """
         super().__init__(name)
+
+        if tabSize is None:
+            raise ValueError("Parameter 'tabSize' is None.")
+        elif not isinstance(tabSize, int) or isinstance(tabSize, bool):
+            ex = TypeError("Parameter 'tabSize' is not of type 'int'.")
+            ex.add_note(f"Got type '{tabSize.__class__.__name__}'.")
+            raise ex
+        elif not 1 <= tabSize <= 120:
+            ex = ValueError("Parameter 'tabSize' is out of range 1..120.")
+            ex.add_note(f"Got value '{tabSize}'.")
+            raise ex
 
         if vhdlVersion not in self._SUPPORTED_VHDL_VERSIONS:
             supported = ", ".join(str(v) for v in self._SUPPORTED_VHDL_VERSIONS)
@@ -127,6 +143,7 @@ class Design(VHDLModel_Design):
             raise ex
 
         self._vhdlVersion = vhdlVersion
+        self._tabSize = tabSize
 
         self._loadDefaultLibraryDuration = None
         self._analyzeDuration = None
@@ -147,6 +164,18 @@ class Design(VHDLModel_Design):
         """
         return self._vhdlVersion
 
+    @readonly
+    def TabSize(self) -> int:
+        """
+        Read-only property to access the number of columns between two tab stops (:attr:`_tabSize`).
+
+        *libghdl* expands tabs with it when it computes columns, like the ones of messages and of comment continuation
+        lines. The setting applies to *libghdl* as a whole, so to all documents loaded after this design was created.
+
+        :returns: The design's tab size.
+        """
+        return self._tabSize
+
     def __ghdl_init(self):
         """Initialization: set options and then load libraries."""
         # Initialize libghdl
@@ -158,6 +187,7 @@ class Design(VHDLModel_Design):
 
         stdOption = self._VHDL_VERSION_TO_STD_OPTION[self._vhdlVersion]
         libghdl_set_option(f"--std={stdOption}")
+        libghdl_set_option(f"-ftabstop={self._tabSize}")
 
         Flag_Gather_Comments.value = True
         Flag_Parse_Parenthesis.value = True
