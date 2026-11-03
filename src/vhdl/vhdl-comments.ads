@@ -50,6 +50,14 @@ package Vhdl.Comments is
    --  OLD_N is replaced by NEW_N: its comments are attached to NEW_N.
    procedure Replace_Comments_Node (Old_N, New_N : Iir);
 
+   --  To be called on the first token of a file: the comments followed by
+   --  an empty line (the header of the file) are attached to the design
+   --  file N.  RNG is set to the comments after the last empty line.
+   procedure Gather_Comments_Header (N : Iir; Rng : out Comments_Range);
+
+   --  Attach the comments of RNG to N.
+   procedure Attach_Comments (Rng : Comments_Range; N : Iir);
+
    --  Return the first comment attached to node N.  FILE must be the file
    --  of N.
    --  Use File_Comments to iterate on comments.

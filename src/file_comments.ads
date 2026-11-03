@@ -58,6 +58,11 @@ package File_Comments is
    --  declaration and package instantiation, or to distinguish process and
    --  sensitized process).
    --
+   --  The header of a file is made of the comments before the first token
+   --  that are followed by an empty line (see Gather_Comments_Header).  The
+   --  comments just before the first token are for the first node, unless
+   --  the parser attaches them to the header too (see Attach_Comments).
+   --
    --  Before use, Sort_Comments_By_Node must be called to sort comments.
    --  Then the iterator can be called to get the comments associated to a
    --  node.
@@ -125,6 +130,16 @@ package File_Comments is
    --  the comments of OLD_N are attached to NEW_N, and so will be the next
    --  comments that would have been attached to OLD_N.
    procedure Replace_Comments_Node (Old_N, New_N : Uns32);
+
+   --  To be called on the first token of the file.
+   --  The comments followed by an empty line (the header of the file) are
+   --  attached to N.  The comments after the last empty line are not
+   --  attached; RNG is set to them.
+   procedure Gather_Comments_Header (N : Uns32; Rng : out Comments_Range);
+
+   --  Attach the comments of RNG to N, even if they are already attached to
+   --  another node.  The state of the association is not changed.
+   procedure Attach_Comments (Rng : Comments_Range; N : Uns32);
 
    --  Sort comments; to be done once all comments have been gathered and
    --  before searching comments.

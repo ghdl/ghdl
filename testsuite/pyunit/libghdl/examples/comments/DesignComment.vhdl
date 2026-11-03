@@ -1,4 +1,4 @@
---  No copyright for :accum: design.
+--  No copyright for this design, the :header: of the file.
 
 library ieee;
 use ieee.std_logic_1164.all;
