@@ -81,6 +81,7 @@ class SourceAttribute(Attribute):
         * ``-D`` / ``--directory`` - the directory to parse.
         * ``-L`` / ``--library`` - the default library for files in the root directory.
         * ``--std`` - the VHDL version to analyze with (``08`` or ``19``); default VHDL-2008.
+        * ``--tab-size`` - the number of columns between two tab stops (``1`` to ``120``); default 8.
 
         :param func: The handler method to attach the command line arguments to.
         :returns:    The same handler method, with the arguments attached.
@@ -139,6 +140,16 @@ class SourceAttribute(Attribute):
                 dest="Std",
                 choices=("08", "19"),
                 help="VHDL version to analyze with: 08 (default) or 19.",
+            ),
+        )
+        self._AppendAttribute(
+            func,
+            CommandLineArgument(
+                "--tab-size",
+                metavar="columns",
+                dest="TabSize",
+                type=int,
+                help="Number of columns between two tab stops: 1..120 (default: 8).",
             ),
         )
         return func
@@ -330,12 +341,19 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         A file is analyzed on its own; a directory is scanned, and each subdirectory is treated as a library of that
         name. The time *libghdl* spent parsing and the time the translation took are reported per file.
 
-        :param args: The parsed arguments, carrying the selected files, directory, default library and VHDL version.
+        :param args: The parsed arguments, carrying the selected files, directory, default library, VHDL version and tab
+                     size.
         """
         self.PrintHeadline()
 
-        if args.Std is not None:
-            self._design = Design(vhdlVersion=VHDLVersion.Parse(args.Std))
+        if args.Std is not None or args.TabSize is not None:
+            try:
+                self._design = Design(
+                    vhdlVersion=VHDLVersion.VHDL2008 if args.Std is None else VHDLVersion.Parse(args.Std),
+                    tabSize=8 if args.TabSize is None else args.TabSize,
+                )
+            except ValueError as ex:
+                self.WriteFatal(f"Option '--tab-size': {ex}")
 
         if args.Files is not None:
             for file in args.Files:
