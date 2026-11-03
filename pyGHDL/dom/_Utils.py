@@ -34,13 +34,15 @@
 This module offers helper functions to read an IIR node's kind, name, label, mode and documentation.
 """
 
+from __future__ import annotations
+
 from typing import Optional as Nullable
 
 from pyTooling.Decorators import export
 
 from pyVHDLModel.Base import Mode
 
-from pyGHDL.libghdl import LibGHDLException, name_table, errorout_memory, files_map, file_comments
+from pyGHDL.libghdl import ENCODING, LibGHDLException, name_table, errorout_memory, files_map, file_comments
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes, nodes_meta, utils
 from pyGHDL.libghdl.vhdl.nodes import Null_Iir
@@ -108,12 +110,18 @@ def GetNameOfNode(node: Iir) -> str:
     """
     Return the Python string from node ``node`` identifier.
 
+    A character literal (``'0'``) is returned as its character, without quotes (``0``).
+
     :param node:        The IIR node to read the identifier of.
     :returns:           The node's identifier as written in the source file.
     :raises ValueError: If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
     """
     if node == Null_Iir:
         raise ValueError("GetNameOfNode: Parameter 'node' must not be 'Null_Iir'.")
+
+    identifier = nodes.Get_Identifier(node)
+    if name_table.Is_Character(identifier):
+        return name_table.Get_Character(identifier)
 
     identifier = utils.Get_Source_Identifier(node)
     return name_table.Get_Name_Ptr(identifier)
@@ -128,8 +136,11 @@ def GetLabelOfNode(node: Iir) -> Nullable[str]:
     if-generate or case-generate statement - carries it in ``Alternative_Label``. No node kind has
     both, so the field is chosen from the node's kind.
 
-    :param node: The IIR node to read the label of.
-    :returns:    The label, or ``None`` if the node has no label field or no label was given
+    The label is returned as written in the source file (``U1``), read at the node's location, which is
+    the label's.
+
+    :param node:        The IIR node to read the label of.
+    :returns:           The label, or ``None`` if the node has no label field or no label was given
                         in the source.
     :raises ValueError: If parameter ``node`` is :data:`~pyGHDL.libghdl.vhdl.nodes.Null_Iir`.
     """
@@ -143,8 +154,30 @@ def GetLabelOfNode(node: Iir) -> Nullable[str]:
 
     if label == name_table.Null_Identifier:
         return None
+
+    normalized = name_table.Get_Name_Ptr(label)
+    sourceText = GetSourceTextOfNode(node, len(normalized))
+    if sourceText.lower() == normalized.lower():
+        return sourceText
     else:
-        return name_table.Get_Name_Ptr(label)
+        return normalized
+
+
+@export
+def GetSourceTextOfNode(node: Iir, length: Nullable[int] = None) -> str:
+    """
+    Reads the source text starting at an IIR node's location.
+
+    :param node:   The IIR node, whose location the text starts at.
+    :param length: Optional, number of bytes to read. Default: ``None``, up to the end of the source file.
+    :returns:      The source text, decoded with :data:`~pyGHDL.libghdl.ENCODING`.
+    """
+    location = nodes.Get_Location(node)
+    sourceFile = files_map.Location_To_File(location)
+    start = files_map.Location_File_To_Pos(location, sourceFile)
+    end = files_map.Get_File_Length(sourceFile) if length is None else start + length
+
+    return files_map.Get_File_Buffer(sourceFile)[start:end].decode(ENCODING)
 
 
 @export

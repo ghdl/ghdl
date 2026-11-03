@@ -108,6 +108,18 @@ def _Get_Character(Id: NameId) -> c_char:
 
 
 @export
+@BindToLibGHDL("name_table__is_character")
+def Is_Character(Id: NameId) -> bool:
+    """
+    Check whether identifier ID is a character, i.e. the name of a character literal.
+
+    :param Id: NameId for the identifier to query.
+    :returns:  ``True`` if the identifier is a character.
+    """
+    return False  # pragma: no cover
+
+
+@export
 def Get_Character(Id: NameId) -> str:
     """
     Get the string corresponding to character identifier ID.

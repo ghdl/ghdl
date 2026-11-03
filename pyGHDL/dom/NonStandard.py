@@ -37,12 +37,14 @@ These three are not VHDL language constructs, but the entry points of :mod:`pyGH
 and parses a source file through *libghdl*, a library groups documents, and a design owns the libraries.
 """
 
+from __future__ import annotations
+
 import ctypes
-import time
 from pathlib import Path
 from typing import Any, Optional as Nullable, List
 
 from pyTooling.Decorators import export, InheritDocString, readonly, DocStringMergeStrategy
+from pyTooling.Stopwatch import Stopwatch, Duration
 from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel import VHDLVersion, IEEEFlavor
@@ -93,8 +95,8 @@ class Design(VHDLModel_Design):
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Design`.
     """
 
-    _loadDefaultLibraryTime: Nullable[float]  #: :meth:`LoadDefaultLibraries` duration in seconds, ``None`` if unused.
-    _analyzeTime: Nullable[float]  #: :meth:`Analyze` duration in seconds, ``None`` if not called.
+    _loadDefaultLibraryDuration: Nullable[Duration]  #: :meth:`LoadDefaultLibraries`' duration, ``None`` if not called.
+    _analyzeDuration: Nullable[Duration]  #: Duration of :meth:`Analyze`, ``None`` if not called.
     _vhdlVersion: VHDLVersion  #: The VHDL version this design is analyzed with.
 
     _warnings: List  #: Warnings raised by :mod:`pyVHDLModel` while the design is analyzed.
@@ -126,8 +128,8 @@ class Design(VHDLModel_Design):
 
         self._vhdlVersion = vhdlVersion
 
-        self._loadDefaultLibraryTime = None
-        self._analyzeTime = None
+        self._loadDefaultLibraryDuration = None
+        self._analyzeDuration = None
 
         self._warnings = []
 
@@ -170,30 +172,45 @@ class Design(VHDLModel_Design):
         """
         Loads the ``std`` and ``ieee`` libraries into the design.
 
-        How long this took is measured and kept in :attr:`_loadDefaultLibraryTime`.
+        How long this took is measured and kept in :attr:`_loadDefaultLibraryDuration`.
 
         :param flavor: The IEEE library flavor to load, or ``None`` for the default.
         """
-        t1 = time.perf_counter()
+        with Stopwatch() as stopwatch:
+            super().LoadStdLibrary()
+            super().LoadIEEELibrary(flavor)
 
-        super().LoadStdLibrary()
-        super().LoadIEEELibrary(flavor)
-
-        self._loadDefaultLibraryTime = time.perf_counter() - t1
+        self._loadDefaultLibraryDuration = stopwatch.Duration
 
     def Analyze(self):
         """
         Analyzes all documents of this design.
 
-        How long this took is measured and kept in :attr:`_analyzeTime`, and the warnings :mod:`pyVHDLModel` raises
+        How long this took is measured and kept in :attr:`_analyzeDuration`, and the warnings :mod:`pyVHDLModel` raises
         during the analysis are collected in :attr:`_warnings`.
         """
-        t1 = time.perf_counter()
-
-        with WarningCollector(self._warnings) as warnings:
+        with Stopwatch() as stopwatch, WarningCollector(self._warnings):
             super().Analyze()
 
-        self._analyzeTime = time.perf_counter() - t1
+        self._analyzeDuration = stopwatch.Duration
+
+    @readonly
+    def LoadDefaultLibraryDuration(self) -> Nullable[Duration]:
+        """
+        Read-only property to access the duration of :meth:`LoadDefaultLibraries` (:attr:`_loadDefaultLibraryDuration`).
+
+        :returns: The duration of loading the ``std`` and ``ieee`` libraries, or ``None`` if they weren't loaded.
+        """
+        return self._loadDefaultLibraryDuration
+
+    @readonly
+    def AnalyzeDuration(self) -> Nullable[Duration]:
+        """
+        Read-only property to access the duration of :meth:`Analyze` (:attr:`_analyzeDuration`).
+
+        :returns: The duration of the design's analysis, or ``None`` if it wasn't analyzed.
+        """
+        return self._analyzeDuration
 
 
 @export
@@ -220,8 +237,8 @@ class Document(VHDLModel_Document):
     __ghdlSourceFileEntry: Any  #: *libghdl*'s source file entry holding this document's source code.
     __ghdlFile: Any  #: The IIR design file node returned by *libghdl* when the source code was parsed.
 
-    __ghdlProcessingTime: float  #: Duration of *libghdl*'s parsing in seconds, unset if ``dontParse`` was ``True``.
-    __domTranslateTime: float  #: Duration of the IIR to DOM translation in seconds, unset if it was skipped.
+    __ghdlProcessingDuration: Nullable[Duration]  #: Duration of *libghdl*'s parsing, ``None`` if it was skipped.
+    __domTranslationDuration: Nullable[Duration]  #: Duration of the IIR to DOM translation, ``None`` if it was skipped.
 
     def __init__(
         self,
@@ -244,6 +261,8 @@ class Document(VHDLModel_Document):
 
         self._filename = path
         self._warnings = []
+        self.__ghdlProcessingDuration = None
+        self.__domTranslationDuration = None
 
         if sourceCode is None:
             self.__loadFromPath()
@@ -252,24 +271,23 @@ class Document(VHDLModel_Document):
 
         if not dontParse:
             # Parse input file
-            t1 = time.perf_counter()
+            with Stopwatch() as stopwatch:
+                if vhdlVersion.IsAMS:
+                    flags.AMS_Vhdl.value = True
 
-            if vhdlVersion.IsAMS:
-                flags.AMS_Vhdl.value = True
+                self.__ghdlFile = sem_lib.Load_File(self.__ghdlSourceFileEntry)
+                CheckForErrors()
 
-            self.__ghdlFile = sem_lib.Load_File(self.__ghdlSourceFileEntry)
-            CheckForErrors()
+                if vhdlVersion.IsAMS:
+                    flags.AMS_Vhdl.value = False
 
-            if vhdlVersion.IsAMS:
-                flags.AMS_Vhdl.value = False
-
-            self.__ghdlProcessingTime = time.perf_counter() - t1
+            self.__ghdlProcessingDuration = stopwatch.Duration
 
             if not dontTranslate:
-                t1 = time.perf_counter()
-                with WarningCollector(self._warnings) as warnings:
+                with Stopwatch() as stopwatch, WarningCollector(self._warnings):
                     self.translate()
-                self.__domTranslateTime = time.perf_counter() - t1
+
+                self.__domTranslationDuration = stopwatch.Duration
 
     def __loadFromPath(self):
         """
@@ -390,26 +408,25 @@ class Document(VHDLModel_Document):
                 raise DOMException(f"Unknown design unit kind '{nodeKind.name}'.")
 
     @readonly
-    def LibGHDLProcessingTime(self) -> float:
+    def LibGHDLProcessingDuration(self) -> Nullable[Duration]:
         """
-        Read-only property to access the time *libghdl* spent parsing this document (:attr:`__ghdlProcessingTime`).
+        Read-only property to access the duration of *libghdl*'s parsing (:attr:`__ghdlProcessingDuration`).
 
         The duration is measured while the document is constructed, so it is set only if ``dontParse`` was ``False``.
 
-        :returns:               The parse duration in seconds.
-        :raises AttributeError: If the document was constructed with ``dontParse=True``.
+        :returns: The parse duration, or ``None`` if the document was constructed with ``dontParse=True``.
         """
-        return self.__ghdlProcessingTime
+        return self.__ghdlProcessingDuration
 
     @readonly
-    def DOMTranslationTime(self) -> float:
+    def DOMTranslationDuration(self) -> Nullable[Duration]:
         """
-        Read-only property to access the time spent translating the IIR tree to the DOM (:attr:`__domTranslateTime`).
+        Read-only property to access the duration of the IIR to DOM translation (:attr:`__domTranslationDuration`).
 
         The duration is measured while the document is constructed, so it is set only if neither ``dontParse`` nor
         ``dontTranslate`` was ``True``.
 
-        :returns:               The translation duration in seconds.
-        :raises AttributeError: If the document was constructed with ``dontParse=True`` or ``dontTranslate=True``.
+        :returns: The translation duration, or ``None`` if the document was constructed with
+                  ``dontParse=True`` or ``dontTranslate=True``.
         """
-        return self.__domTranslateTime
+        return self.__domTranslationDuration

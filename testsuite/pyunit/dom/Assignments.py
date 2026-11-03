@@ -31,14 +31,18 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 from pathlib import Path
+from textwrap import dedent
 from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
-from pyGHDL.dom.Symbol import SignalSymbol, VariableSymbol
+from pyGHDL.dom import DOMException
+from pyGHDL.dom.Symbol import SignalSymbol, VariableSymbol, AggregateSymbol
+from pyGHDL.dom.Concurrent import ConcurrentSimpleSignalAssignment
 from pyGHDL.dom.Concurrent import ConcurrentConditionalSignalAssignment, ConcurrentSelectedSignalAssignment
 from pyGHDL.dom.Concurrent import SelectedWaveform, OthersSelectedWaveform
 from pyGHDL.dom.Sequential import (
     SequentialVariableAssignment,
+    SequentialSimpleSignalAssignment,
     SequentialConditionalVariableAssignment, SequentialConditionalSignalAssignment,
     SequentialSelectedVariableAssignment, SequentialSelectedSignalAssignment,
     SelectedExpression, OthersSelectedExpression,
@@ -160,3 +164,52 @@ class Assignments(TestCase):
 
         self.assertIsInstance(statement, SignalReleaseAssignment)
         self.assertIsInstance(statement.Target, SignalSymbol)
+
+    def test_SequentialVariableAssignment_Aggregate(self) -> None:
+        """``(v, v2) := bit_vector'("10");`` - the aggregate target was rejected as ``Unknown name kind 'Aggregate'``."""
+        process = self._architecture().Statements[2]
+        statement = process.Statements[7]
+
+        self.assertIsInstance(statement, SequentialVariableAssignment)
+        self.assertIsInstance(statement.Target, AggregateSymbol)
+        self.assertEqual(2, len(statement.Target.Targets))
+        for target in statement.Target.Targets:
+            self.assertIsInstance(target, VariableSymbol)
+        self.assertEqual(["v", "v2"], [target.Name.Identifier for target in statement.Target.Targets])
+
+    def test_SequentialSignalAssignment_Aggregate(self) -> None:
+        """``(s, s2) <= bit_vector'("01");`` (sequential)"""
+        process = self._architecture().Statements[2]
+        statement = process.Statements[8]
+
+        self.assertIsInstance(statement, SequentialSimpleSignalAssignment)
+        self.assertIsInstance(statement.Target, AggregateSymbol)
+        for target in statement.Target.Targets:
+            self.assertIsInstance(target, SignalSymbol)
+
+    def test_ConcurrentSignalAssignment_Aggregate(self) -> None:
+        """``(s, s2) <= bit_vector'("01");`` (concurrent)"""
+        statement = self._architecture().Statements[3]
+
+        self.assertIsInstance(statement, ConcurrentSimpleSignalAssignment)
+        self.assertIsInstance(statement.Target, AggregateSymbol)
+        for target in statement.Target.Targets:
+            self.assertIsInstance(target, SignalSymbol)
+
+    def test_Aggregate_Choice(self) -> None:
+        """``(0 => v, 1 => v2) := ...`` - a target aggregate with choices raises instead of losing the choices."""
+        sourceCode = dedent(
+            """\
+            architecture rtl of Choices is
+            begin
+              process is
+                variable v, v2 : bit;
+              begin
+                (0 => v, 1 => v2) := bit_vector'("10");
+              end process;
+            end architecture;
+            """
+        )
+        with self.assertRaises(DOMException):
+            Document(self._root / "Assignments_AggregateChoice.vhdl", sourceCode)
+

@@ -38,6 +38,8 @@ This module contains all DOM classes for VHDL's design units (:class:`context <E
 
 """
 
+from __future__ import annotations
+
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
 from pyVHDLModel.Base import ExpressionUnion, Range

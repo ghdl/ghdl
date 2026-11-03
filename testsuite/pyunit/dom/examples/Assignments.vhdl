@@ -40,5 +40,12 @@ begin
 		-- force/release (VHDL-2008)
 		s <= force '1';
 		s <= release;
+
+		-- aggregate targets
+		(v, v2) := bit_vector'("10");
+		(s, s2) <= bit_vector'("01");
 	end process;
+
+	-- concurrent signal assignment to an aggregate target
+	(s, s2) <= bit_vector'("01");
 end architecture rtl;

@@ -34,6 +34,8 @@
 This module offers a formatter to render a design, document or design unit as an indented plain-text tree.
 """
 
+from __future__ import annotations
+
 from typing import List, Union
 
 from pyTooling.Common import getFullyQualifiedName
@@ -73,6 +75,7 @@ from pyGHDL.dom.DesignUnit import (
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol, ConstrainedArraySubtypeSymbol
 from pyGHDL.dom.Type import (
     IntegerType,
+    RealType,
     Subtype,
     ArrayType,
     RecordType,
@@ -614,7 +617,7 @@ class PrettyPrint:
         result = f"type {item.Identifier} is "
         if isinstance(item, IncompleteType):
             result += ""
-        elif isinstance(item, IntegerType):
+        elif isinstance(item, (IntegerType, RealType)):
             result += f"range {item.Range!s}"
         elif isinstance(item, EnumeratedType):
             result += "(........)"

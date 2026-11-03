@@ -135,8 +135,8 @@ class CompileOrder(Designs):
             design.AddDocument(document, library)
             print(dedent(f"""\
                 file: {document.Path}
-                  libghdl processing time: {document.LibGHDLProcessingTime * 10**6:5.3f} us
-                  DOM translation time:    {document.DOMTranslationTime * 10**6:5.3f} us
+                  libghdl processing time: {document.LibGHDLProcessingDuration:%u} us
+                  DOM translation time:    {document.DOMTranslationDuration:%u} us
                 """
             ))
             for warning in document._warnings:
@@ -151,8 +151,8 @@ class CompileOrder(Designs):
             pyGHDL:
               sum:                       {pyGHDLTime * 10**6:5.3f} us
             Analysis:
-              default library load time: {design._loadDefaultLibraryTime * 10**6:5.3f} us
-              dependency analysis time:  {design._analyzeTime * 10**6:5.3f} us
+              default library load time: {design.LoadDefaultLibraryDuration:%u} us
+              dependency analysis time:  {design.AnalyzeDuration:%u} us
             Toplevel:                    {", ".join(toplevel)}
             Compile order:\
             """

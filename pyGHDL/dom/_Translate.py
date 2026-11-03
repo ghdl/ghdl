@@ -34,6 +34,8 @@
 This module offers helper functions to translate often used IIR substructures to pyGHDL.dom (pyVHDLModel) constructs.
 """
 
+from __future__ import annotations
+
 from typing import List, Generator, Type, Dict, Union, Optional as Nullable
 
 from pyTooling.Decorators import export
@@ -45,6 +47,7 @@ from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Association import AssociationItem
 from pyVHDLModel.Interface import GenericInterfaceItemMixin, PortInterfaceItemMixin, ParameterInterfaceItemMixin
 from pyVHDLModel.Type import BaseType
+from pyVHDLModel.Expression import UnaryExpression, BinaryExpression
 from pyVHDLModel.Sequential import SequentialStatement
 from pyVHDLModel.Concurrent import ConcurrentStatement
 
@@ -86,9 +89,13 @@ from pyGHDL.dom.Symbol import (
     ConstrainedRecordSubtypeSymbol,
     RecordElementSymbol,
     RangeAttributeSymbol,
+    SignalSymbol,
+    VariableSymbol,
+    AggregateSymbol,
 )
 from pyGHDL.dom.Type import (
     IntegerType,
+    RealType,
     Subtype,
     ArrayType,
     RecordType,
@@ -117,6 +124,7 @@ from pyGHDL.dom.Expression import (
     MultiplyExpression,
     DivisionExpression,
     InverseExpression,
+    ConditionExpression,
     ExponentiationExpression,
     Aggregate,
     NegationExpression,
@@ -216,6 +224,35 @@ def GetName(node: Iir) -> Name:
         raise DOMException(f"Unknown name kind '{kind.name}'")
 
 
+@export
+def GetTargetFromNode(
+    node: Iir, symbolClass: Type[SignalSymbol] | Type[VariableSymbol]
+) -> SignalSymbol | VariableSymbol | AggregateSymbol:
+    """
+    Translates the target IIR node of an assignment to a symbol.
+
+    A name becomes a ``symbolClass`` symbol. An aggregate (``(carry, sum) := ...``) becomes an :class:`AggregateSymbol`
+    holding one target per element, each translated by this function again.
+
+    :param node:          The target IIR node of the assignment.
+    :param symbolClass:   The symbol class for a named target, e.g. :class:`SignalSymbol`.
+    :returns:             The target symbol.
+    :raises DOMException: If an element of an aggregate target has a choice (``(re => a, im => b)``).
+    """
+    if GetIirKindOfNode(node) != nodes.Iir_Kind.Aggregate:
+        return symbolClass(node, GetName(node))
+
+    targets = []
+    for item in utils.chain_iter(nodes.Get_Association_Choices_Chain(node)):
+        if GetIirKindOfNode(item) != nodes.Iir_Kind.Choice_By_None:
+            position = Position.parse(item)
+            raise DOMException(f"Aggregate target with a choice at {position} isn't supported.")
+
+        targets.append(GetTargetFromNode(nodes.Get_Associated_Expr(item), symbolClass))
+
+    return AggregateSymbol(node, targets)
+
+
 def GetAssociations(node: Iir) -> List:
     """
     Translates the association chain of an indexed name, a slice or a function call to a list of expressions.
@@ -252,18 +289,20 @@ def GetArrayConstraintsFromSubtypeIndication(
     """
     Translates the index constraints of an array subtype indication to a list of ranges.
 
-    A constraint is either a range expression (``0 to 7``) or a name denoting a range
-    (``v'range``, ``my_range``).
+    A constraint is a range expression (``0 to 7``), a name denoting a range (``v'range``, ``my_range``) or a
+    subtype indication with a range constraint (``natural range 0 to 7``).
 
     :param subtypeIndication: The IIR node of the array subtype indication.
     :returns:                 List of the translated index constraints, one per dimension.
-    :raises DOMException:     If a constraint is neither a range expression nor a name.
+    :raises DOMException:     If a constraint is neither a range expression, a name nor a subtype indication.
     """
     constraints = []
     for constraint in utils.flist_iter(nodes.Get_Index_Constraint_List(subtypeIndication)):
         constraintKind = GetIirKindOfNode(constraint)
         if constraintKind == nodes.Iir_Kind.Range_Expression:
             constraints.append(RangeExpression.parse(constraint))
+        elif constraintKind == nodes.Iir_Kind.Subtype_Definition:
+            constraints.append(GetScalarConstrainedSubtypeFromNode(constraint))
         elif constraintKind in (
             nodes.Iir_Kind.Simple_Name,
             nodes.Iir_Kind.Parenthesis_Name,
@@ -355,13 +394,32 @@ def GetTypeFromNode(node: Iir) -> BaseType:
         )
 
 
+def _ContainsFloatingPointLiteral(expression: ExpressionUnion) -> bool:
+    """
+    Checks if an expression contains a floating-point literal outside of names and function calls.
+
+    :param expression: The translated expression to check.
+    :returns:          ``True``, if the expression or one of its operands is a floating-point literal.
+    """
+    if isinstance(expression, FloatingPointLiteral):
+        return True
+    elif isinstance(expression, UnaryExpression):
+        return _ContainsFloatingPointLiteral(expression.Operand)
+    elif isinstance(expression, BinaryExpression):
+        return _ContainsFloatingPointLiteral(expression.LeftOperand) or _ContainsFloatingPointLiteral(
+            expression.RightOperand
+        )
+
+    return False
+
+
 @export
 def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
     """
     Translates an anonymous type declaration to the matching :mod:`pyGHDL.dom.Type` class.
 
     GHDL creates an anonymous type declaration for the type definitions that have no name of their own -
-    an integer or physical type behind a subtype, for instance.
+    an integer, real or physical type behind a subtype, for instance.
 
     :param node:                     The IIR node of the anonymous type declaration.
     :returns:                        The translated type.
@@ -378,6 +436,10 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
     kind = GetIirKindOfNode(typeDefinition)
     if kind == nodes.Iir_Kind.Range_Expression:
         r = GetRangeFromNode(typeDefinition)
+        # Without semantic analysis, only a floating-point literal in a bound tells a real type from an integer type.
+        if _ContainsFloatingPointLiteral(r.LeftBound) or _ContainsFloatingPointLiteral(r.RightBound):
+            return RealType(node, typeName, r, documentation)
+
         return IntegerType(node, typeName, r, documentation)
 
     elif kind in (nodes.Iir_Kind.Attribute_Name, nodes.Iir_Kind.Parenthesis_Name):
@@ -388,9 +450,7 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
         return PhysicalType.parse(typeName, typeDefinition, documentation)
 
     elif kind == nodes.Iir_Kind.Array_Subtype_Definition:
-        WarningCollector.Raise(NotImplementedError("Array_Subtype_Definition"))
-
-        return ArrayType(typeDefinition, "????", [], None, documentation)
+        return ArrayType.parse(typeName, typeDefinition, documentation)
     else:
         position = Position.parse(typeDefinition)
         raise DOMException(
@@ -642,6 +702,7 @@ __EXPRESSION_TRANSLATION = {
     nodes.Iir_Kind.Addition_Operator: AdditionExpression,
     nodes.Iir_Kind.Concatenation_Operator: ConcatenationExpression,
     nodes.Iir_Kind.Not_Operator: InverseExpression,
+    nodes.Iir_Kind.Condition_Operator: ConditionExpression,
     nodes.Iir_Kind.Parenthesis_Expression: ParenthesisExpression,
     nodes.Iir_Kind.Substraction_Operator: SubtractionExpression,
     nodes.Iir_Kind.Multiplication_Operator: MultiplyExpression,
@@ -719,7 +780,7 @@ def GetOptionalExpressionFromNode(node: Iir) -> Nullable[ExpressionUnion]:
 
 
 @export
-def GetModeViewElementsFromChainedNodes(nodeChain: Iir) -> Generator["ModeViewElement", None, None]:
+def GetModeViewElementsFromChainedNodes(nodeChain: Iir) -> Generator[ModeViewElement, None, None]:
     """
     Translates a chain of mode view elements (IIR nodes) to a sequence of
     :class:`pyVHDLModel.Interface.ModeViewElement`.

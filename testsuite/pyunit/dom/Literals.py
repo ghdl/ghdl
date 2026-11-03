@@ -45,7 +45,7 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMException
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.Object import Constant
-from pyGHDL.dom.Literal import IntegerLiteral
+from pyGHDL.dom.Literal import IntegerLiteral, CharacterEnumerationLiteral
 from pyGHDL.dom.DesignUnit import Package
 
 
@@ -230,3 +230,18 @@ class Literals(TestCase):
         with patch.object(nodes, "Get_Bit_String_Base", return_value=unknownBase):
             with self.assertRaises(DOMException):
                 document.translate()
+
+    def test_EnumerationLiteral_Character(self):
+        """``type logic_t is ('0', '1', 'Z', Idle);`` - a character literal becomes a character enumeration literal
+        holding its character without quotes."""
+        _filename: Path = self._root / "{className}_EnumerationCharacter.vhdl".format(className=self.__class__.__name__)
+        document = Document(_filename, self._packageTemplate.format(code="type logic_t is ('0', '1', 'Z', Idle);"))
+        self._design.Documents.append(document)
+
+        enumeration = firstValue(document.Packages).DeclaredItems[0]
+
+        self.assertEqual(["0", "1", "Z", "Idle"], [literal.Value for literal in enumeration.Literals])
+        for literal in enumeration.Literals[:3]:
+            self.assertIsInstance(literal, CharacterEnumerationLiteral)
+        self.assertNotIsInstance(enumeration.Literals[3], CharacterEnumerationLiteral)
+        self.assertEqual("'Z'", str(enumeration.Literals[2]))

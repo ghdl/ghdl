@@ -34,7 +34,9 @@
 This module implements derived interface item classes from :mod:`pyVHDLModel.Interface`.
 """
 
-from typing import List, Iterable
+from __future__ import annotations
+
+from typing import List, Iterable, Self
 
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
@@ -96,7 +98,7 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, genericNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "GenericConstantInterfaceItem":
+    def parse(cls, genericNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the generic declaration to a :class:`GenericConstantInterfaceItem`.
 
@@ -136,7 +138,7 @@ class GenericTypeInterfaceItem(VHDLModel_GenericTypeInterfaceItem, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, genericNode: Iir) -> "GenericTypeInterfaceItem":
+    def parse(cls, genericNode: Iir) -> Self:
         """
         Translates the IIR node of the generic declaration to a :class:`GenericTypeInterfaceItem`.
 
@@ -168,7 +170,7 @@ class GenericPackageInterfaceItem(VHDLModel_GenericPackageInterfaceItem, DOMMixi
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, genericNode: Iir) -> "GenericPackageInterfaceItem":
+    def parse(cls, genericNode: Iir) -> Self:
         """
         Translates the IIR node of the generic declaration to a :class:`GenericPackageInterfaceItem`.
 
@@ -200,7 +202,7 @@ class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOM
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, genericNode: Iir) -> "GenericProcedureInterfaceItem":
+    def parse(cls, genericNode: Iir) -> Self:
         """
         Translates the IIR node of the generic declaration to a :class:`GenericProcedureInterfaceItem`.
 
@@ -233,7 +235,7 @@ class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMi
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, genericNode: Iir) -> "GenericFunctionInterfaceItem":
+    def parse(cls, genericNode: Iir) -> Self:
         """
         Translates the IIR node of the generic declaration to a :class:`GenericFunctionInterfaceItem`.
 
@@ -280,7 +282,7 @@ class PortSimpleSignalInterfaceItem(VHDLModel_PortSimpleSignalInterfaceItem, DOM
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, portNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "PortSimpleSignalInterfaceItem":
+    def parse(cls, portNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the port declaration to a :class:`PortSimpleSignalInterfaceItem`.
 
@@ -337,7 +339,7 @@ class PortViewSignalInterfaceItem(VHDLModel_PortViewSignalInterfaceItem, DOMMixi
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, portNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "PortViewSignalInterfaceItem":
+    def parse(cls, portNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the port declaration to a :class:`PortViewSignalInterfaceItem`.
 
@@ -388,7 +390,7 @@ class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem, D
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterConstantInterfaceItem":
+    def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the parameter declaration to a :class:`ParameterConstantInterfaceItem`.
 
@@ -440,7 +442,7 @@ class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem, D
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterVariableInterfaceItem":
+    def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the parameter declaration to a :class:`ParameterVariableInterfaceItem`.
 
@@ -492,9 +494,7 @@ class ParameterSimpleSignalInterfaceItem(VHDLModel_ParameterSimpleSignalInterfac
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(
-        cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None
-    ) -> "ParameterSimpleSignalInterfaceItem":
+    def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the parameter declaration to a :class:`ParameterSimpleSignalInterfaceItem`.
 
@@ -549,7 +549,7 @@ class ParameterViewSignalInterfaceItem(VHDLModel_ParameterViewSignalInterfaceIte
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterViewSignalInterfaceItem":
+    def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the parameter declaration to a :class:`ParameterViewSignalInterfaceItem`.
 
@@ -590,7 +590,7 @@ class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin)
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "ParameterFileInterfaceItem":
+    def parse(cls, parameterNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the parameter declaration to a :class:`ParameterFileInterfaceItem`.
 
@@ -633,7 +633,7 @@ class SimpleModeViewElement(VHDLModel_SimpleModeViewElement, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, elementNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "SimpleModeViewElement":
+    def parse(cls, elementNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the element declaration to a :class:`SimpleModeViewElement`.
 
@@ -678,7 +678,7 @@ class CompositeModeViewElement(VHDLModel_CompositeModeViewElement, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, elementNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "CompositeModeViewElement":
+    def parse(cls, elementNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the element declaration to a :class:`CompositeModeViewElement`.
 
@@ -732,7 +732,7 @@ class ModeViewDeclaration(VHDLModel_ModeViewDeclaration, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, modeViewNode: Iir) -> "ModeViewDeclaration":
+    def parse(cls, modeViewNode: Iir) -> Self:
         """
         Translates the IIR node of the mode view declaration to a :class:`ModeViewDeclaration`.
 

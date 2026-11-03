@@ -34,7 +34,9 @@
 This module implements derived attribute classes from :mod:`pyVHDLModel.Declaration`.
 """
 
-from typing import List
+from __future__ import annotations
+
+from typing import List, Self
 
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 from pyTooling.Warning import WarningCollector
@@ -75,7 +77,7 @@ class Attribute(VHDLModel_Attribute, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, attributeNode: Iir) -> "Attribute":
+    def parse(cls, attributeNode: Iir) -> Self:
         """
         Translates the IIR node of the attribute declaration to an :class:`Attribute`.
 
@@ -149,7 +151,7 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, attributeNode: Iir) -> "AttributeSpecification":
+    def parse(cls, attributeNode: Iir) -> Self:
         """
         Translates the IIR node of the attribute declaration to an :class:`AttributeSpecification`.
 

@@ -34,7 +34,9 @@
 This module implements derived object classes from :mod:`pyVHDLModel.Object`.
 """
 
-from typing import Union, List, Iterable
+from __future__ import annotations
+
+from typing import Union, List, Iterable, Self
 
 from pyTooling.Decorators import export
 
@@ -88,9 +90,7 @@ class Constant(VHDLModel_Constant, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(
-        cls, constantNode: Iir, furtherIdentifiers: Iterable[str] = None
-    ) -> Union["Constant", "DeferredConstant"]:
+    def parse(cls, constantNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Union[Constant, DeferredConstant]:
         """
         Translates the IIR node of the constant declaration to a :class:`Constant`.
 
@@ -145,7 +145,7 @@ class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, constantNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "DeferredConstant":
+    def parse(cls, constantNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the constant declaration to a :class:`DeferredConstant`.
 
@@ -200,7 +200,7 @@ class Variable(VHDLModel_Variable, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, variableNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "Variable":
+    def parse(cls, variableNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the variable declaration to a :class:`Variable`.
 
@@ -254,7 +254,7 @@ class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, variableNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "SharedVariable":
+    def parse(cls, variableNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the variable declaration to a :class:`SharedVariable`.
 
@@ -309,7 +309,7 @@ class Signal(VHDLModel_Signal, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, signalNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "Signal":
+    def parse(cls, signalNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the signal declaration to a :class:`Signal`.
 
@@ -361,7 +361,7 @@ class File(VHDLModel_File, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, fileNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "File":
+    def parse(cls, fileNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Translates the IIR node of the file declaration to a :class:`File`.
 

@@ -34,12 +34,15 @@
 This module implements derived literal classes from :mod:`pyVHDLModel.Expression`.
 """
 
-from typing import Union, Optional as Nullable
+from __future__ import annotations
+
+from typing import Union, Optional as Nullable, Self
 
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
 from pyVHDLModel.Expression import NullLiteral as VHDLModel_NullLiteral
 from pyVHDLModel.Expression import EnumerationLiteral as VHDLModel_EnumerationLiteral
+from pyVHDLModel.Expression import CharacterEnumerationLiteral as VHDLModel_CharacterEnumerationLiteral
 from pyVHDLModel.Expression import IntegerLiteral as VHDLModel_IntegerLiteral
 from pyVHDLModel.Expression import FloatingPointLiteral as VHDLModel_FloatingPointLiteral
 from pyVHDLModel.Expression import PhysicalIntegerLiteral as VHDLModel_PhysicalIntegerLiteral
@@ -51,11 +54,11 @@ from pyVHDLModel.Expression import OctalBitStringLiteral as VHDLModel_OctalBitSt
 from pyVHDLModel.Expression import DecimalBitStringLiteral as VHDLModel_DecimalBitStringLiteral
 from pyVHDLModel.Expression import HexadecimalBitStringLiteral as VHDLModel_HexadecimalBitStringLiteral
 
-from pyGHDL.libghdl import ENCODING, name_table, str_table, files_map
+from pyGHDL.libghdl import name_table, str_table
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes, utils
 from pyGHDL.dom import DOMMixin, DOMException, Position
-from pyGHDL.dom._Utils import GetNameOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetSourceTextOfNode
 
 
 @export
@@ -75,7 +78,7 @@ class NullLiteral(VHDLModel_NullLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir) -> "NullLiteral":
+    def parse(cls, node: Iir) -> Self:
         """
         Translates an IIR node to a :class:`NullLiteral`.
 
@@ -103,7 +106,7 @@ class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, literalNode: Iir) -> "EnumerationLiteral":
+    def parse(cls, literalNode: Iir) -> Self:
         """
         Translates the IIR node of the literal to an :class:`EnumerationLiteral`.
 
@@ -112,6 +115,37 @@ class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
         """
         literalName = GetNameOfNode(literalNode)
         return cls(literalNode, literalName)
+
+
+@export
+@InheritDocString(VHDLModel_CharacterEnumerationLiteral, strategy=DocStringMergeStrategy.BaseLast)
+class CharacterEnumerationLiteral(VHDLModel_CharacterEnumerationLiteral, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from
+    :class:`pyVHDLModel.Expression.CharacterEnumerationLiteral`.
+    """
+
+    def __init__(self, node: Iir, value: str) -> None:
+        """
+        Initializes a character enumeration literal.
+
+        :param node:  The IIR node this object was translated from.
+        :param value: The enumeration literal's character, without quotes.
+        """
+        super().__init__(value)
+        DOMMixin.__init__(self, node)
+
+    @classmethod
+    def parse(cls, literalNode: Iir) -> Self:
+        """
+        Translates the IIR node of the literal to a :class:`CharacterEnumerationLiteral`.
+
+        :param literalNode: The IIR node of the literal.
+        :returns:           The translated literal.
+        """
+        identifier = nodes.Get_Identifier(literalNode)
+        value = name_table.Get_Character(identifier)
+        return cls(literalNode, value)
 
 
 @export
@@ -132,7 +166,7 @@ class IntegerLiteral(VHDLModel_IntegerLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, literalNode: Iir) -> "IntegerLiteral":
+    def parse(cls, literalNode: Iir) -> Self:
         """
         Translates the IIR node of the literal to an :class:`IntegerLiteral`.
 
@@ -161,7 +195,7 @@ class FloatingPointLiteral(VHDLModel_FloatingPointLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, literalNode: Iir) -> "FloatingPointLiteral":
+    def parse(cls, literalNode: Iir) -> Self:
         """
         Translates the IIR node of the literal to a :class:`FloatingPointLiteral`.
 
@@ -191,7 +225,7 @@ class PhysicalIntegerLiteral(VHDLModel_PhysicalIntegerLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, literalNode: Iir) -> "PhysicalIntegerLiteral":
+    def parse(cls, literalNode: Iir) -> Self:
         """
         Translates the IIR node of the literal to a :class:`PhysicalIntegerLiteral`.
 
@@ -224,7 +258,7 @@ class PhysicalFloatingLiteral(VHDLModel_PhysicalFloatingLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, literalNode: Iir) -> "PhysicalFloatingLiteral":
+    def parse(cls, literalNode: Iir) -> Self:
         """
         Translates the IIR node of the literal to a :class:`PhysicalFloatingLiteral`.
 
@@ -256,7 +290,7 @@ class CharacterLiteral(VHDLModel_CharacterLiteral, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, literalNode: Iir) -> "CharacterLiteral":
+    def parse(cls, literalNode: Iir) -> Self:
         """
         Translates the IIR node of the literal to a :class:`CharacterLiteral`.
 
@@ -367,7 +401,7 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
 
     @classmethod
     def parse(cls, literalNode: Iir) -> Union[
-        "StringLiteral",
+        StringLiteral,
         BinaryBitStringLiteral,
         OctalBitStringLiteral,
         DecimalBitStringLiteral,
@@ -423,10 +457,7 @@ class StringLiteral(VHDLModel_StringLiteral, DOMMixin):
             position = Position.parse(literalNode)
             raise DOMException(f"Bit string literal at {position} has no source text.")
 
-        location = nodes.Get_Location(literalNode)
-        file = files_map.Location_To_File(location)
-        start = files_map.Location_File_To_Pos(location, file)
-        sourceText = files_map.Get_File_Buffer(file)[start : start + literalLength].decode(ENCODING)
+        sourceText = GetSourceTextOfNode(literalNode, literalLength)
         value = sourceText[sourceText.index('"') + 1 : -1]
 
         if base is nodes.NumberBaseType.Base_2:

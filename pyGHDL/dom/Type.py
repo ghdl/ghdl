@@ -34,7 +34,9 @@
 This module implements derived type classes from :mod:`pyVHDLModel.Type`.
 """
 
-from typing import List, Union, Iterator, Tuple, Iterable
+from __future__ import annotations
+
+from typing import List, Union, Iterator, Tuple, Iterable, Self
 
 from pyGHDL.dom.Name import SimpleName
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
@@ -45,6 +47,7 @@ from pyVHDLModel.Type import Subtype as VHDLModel_Subtype
 from pyVHDLModel.Type import AnonymousType as VHDLModel_AnonymousType
 from pyVHDLModel.Type import EnumeratedType as VHDLModel_EnumeratedType
 from pyVHDLModel.Type import IntegerType as VHDLModel_IntegerType
+from pyVHDLModel.Type import RealType as VHDLModel_RealType
 from pyVHDLModel.Type import PhysicalType as VHDLModel_PhysicalType
 from pyVHDLModel.Type import ArrayType as VHDLModel_ArrayType
 from pyVHDLModel.Type import RecordTypeElement as VHDLModel_RecordTypeElement
@@ -54,12 +57,12 @@ from pyVHDLModel.Type import ProtectedTypeBody as VHDLModel_ProtectedTypeBody
 from pyVHDLModel.Type import AccessType as VHDLModel_AccessType
 from pyVHDLModel.Type import FileType as VHDLModel_FileType
 
-from pyGHDL.libghdl import utils
+from pyGHDL.libghdl import name_table, utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes, flists
 from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
-from pyGHDL.dom.Literal import EnumerationLiteral, PhysicalIntegerLiteral
+from pyGHDL.dom.Literal import EnumerationLiteral, CharacterEnumerationLiteral, PhysicalIntegerLiteral
 from pyVHDLModel.Base import Range
 from pyGHDL.dom.Subprogram import Function, Procedure
 
@@ -83,7 +86,7 @@ class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, node: Iir, documentation: str = None) -> "IncompleteType":
+    def parse(cls, node: Iir, documentation: str = None) -> Self:
         """
         Translates an IIR node to an :class:`IncompleteType`.
 
@@ -127,7 +130,7 @@ class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, typeName: str, typeDefinitionNode: Iir, documentation: str = None) -> "EnumeratedType":
+    def parse(cls, typeName: str, typeDefinitionNode: Iir, documentation: str = None) -> Self:
         """
         Parses an *enumerated type* IIR and returns an :class:`~pyVHDLModel.Type.EnumeratedType` instance.
 
@@ -139,7 +142,10 @@ class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
         literals = []
         enumerationLiterals = nodes.Get_Enumeration_Literal_List(typeDefinitionNode)
         for enumerationLiteral in utils.flist_iter(enumerationLiterals):
-            literal = EnumerationLiteral.parse(enumerationLiteral)
+            if name_table.Is_Character(nodes.Get_Identifier(enumerationLiteral)):
+                literal = CharacterEnumerationLiteral.parse(enumerationLiteral)
+            else:
+                literal = EnumerationLiteral.parse(enumerationLiteral)
             literals.append(literal)
 
         return cls(typeDefinitionNode, typeName, literals, documentation)
@@ -159,9 +165,36 @@ class IntegerType(VHDLModel_IntegerType, DOMMixin):
           type integer is range -2147483648 to 2147483647;
     """
 
-    def __init__(self, node: Iir, typeName: str, rng: Union[Range, "Name"], documentation: str = None) -> None:
+    def __init__(self, node: Iir, typeName: str, rng: Union[Range, Name], documentation: str = None) -> None:
         """
         Initializes an integer type definition.
+
+        :param node:          The IIR node this object was translated from.
+        :param typeName:      The type's identifier.
+        :param rng:           The range constraining this scalar type.
+        :param documentation: The documentation comment associated with this declaration.
+        """
+        super().__init__(typeName, rng, documentation)
+        DOMMixin.__init__(self, node)
+
+
+@export
+class RealType(VHDLModel_RealType, DOMMixin):
+    """
+    Represents a *real type* (floating-point type).
+
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.RealType`.
+
+    .. admonition:: Example
+
+       .. code-block:: VHDL
+
+          type real is range -1.79769313486232E308 to 1.79769313486232E308;
+    """
+
+    def __init__(self, node: Iir, typeName: str, rng: Range, documentation: str = None) -> None:
+        """
+        Initializes a real type definition.
 
         :param node:          The IIR node this object was translated from.
         :param typeName:      The type's identifier.
@@ -213,7 +246,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, typeName: str, typeDefinitionNode: Iir, documentation: str = None) -> "PhysicalType":
+    def parse(cls, typeName: str, typeDefinitionNode: Iir, documentation: str = None) -> Self:
         """
         Parses an *physical type* IIR and returns an :class:`~pyVHDLModel.Type.PhysicalType` instance.
 
@@ -284,20 +317,35 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, typeName: str, typeDefinitionNode: Iir, documentation: str = None) -> "ArrayType":
+    def parse(cls, typeName: str, typeDefinitionNode: Iir, documentation: str = None) -> Self:
         """
         Parses an *array type* IIR and returns an :class:`~pyVHDLModel.Type.ArrayType` instance.
+
+        An unconstrained array type (``array (natural range <>) of bit``) is an ``Array_Type_Definition``; a
+        constrained array type (``array (0 to 3) of bit``) is an ``Array_Subtype_Definition`` carrying an index
+        constraint per dimension.
 
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
         :param documentation:      The documentation comment on the type declaration.
         :returns:                  The array type instance.
+        :raises DOMException:      If an index of an unconstrained array type is not a type mark.
         """
         from pyGHDL.dom._Utils import GetIirKindOfNode
         from pyGHDL.dom._Translate import (
             GetSimpleTypeFromNode,
             GetSubtypeIndicationFromIndicationNode,
+            GetArrayConstraintsFromSubtypeIndication,
         )
+
+        if GetIirKindOfNode(typeDefinitionNode) == nodes.Iir_Kind.Array_Subtype_Definition:
+            indices = GetArrayConstraintsFromSubtypeIndication(typeDefinitionNode)
+            elementSubtypeIndication = nodes.Get_Array_Element_Constraint(typeDefinitionNode)
+            elementSubtype = GetSubtypeIndicationFromIndicationNode(
+                elementSubtypeIndication, "array declaration", typeName
+            )
+
+            return cls(typeDefinitionNode, typeName, indices, elementSubtype, documentation)
 
         indices = []
         indexDefinitions = nodes.Get_Index_Subtype_Definition_List(typeDefinitionNode)
@@ -347,7 +395,7 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, elementDeclarationNode: Iir, furtherIdentifiers: Iterable[str] = None) -> "RecordTypeElement":
+    def parse(cls, elementDeclarationNode: Iir, furtherIdentifiers: Iterable[str] = None) -> Self:
         """
         Parses a *record element* IIR and returns an :class:`~pyVHDLModel.Type.RecordTypeElement` instance.
 
@@ -400,7 +448,7 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, typeName: str, typeDefinitionNode: Iir, documentation: str = None) -> "RecordType":
+    def parse(cls, typeName: str, typeDefinitionNode: Iir, documentation: str = None) -> Self:
         """
         Parses a *record type* IIR and returns an :class:`~pyVHDLModel.Type.RecordType` instance.
 
@@ -476,7 +524,7 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, typeName: str, typeDefinitionNode: Iir, documentation: str = None) -> "ProtectedType":
+    def parse(cls, typeName: str, typeDefinitionNode: Iir, documentation: str = None) -> Self:
         """
         Parses a *protected type* IIR and returns an :class:`~pyVHDLModel.Type.ProtectedType` instance.
 
@@ -530,7 +578,7 @@ class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, protectedBodyNode: Iir) -> "ProtectedTypeBody":
+    def parse(cls, protectedBodyNode: Iir) -> Self:
         """
         Parses a *protected type body* IIR and returns an :class:`~pyVHDLModel.Type.ProtectedTypeBody` instance.
 
@@ -578,7 +626,7 @@ class AccessType(VHDLModel_AccessType, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, typeName: str, typeDefinitionNode: Iir, documentation: str = None) -> "AccessType":
+    def parse(cls, typeName: str, typeDefinitionNode: Iir, documentation: str = None) -> Self:
         """
         Parses an *access type* IIR and returns an :class:`~pyVHDLModel.Type.AccessType` instance.
 
@@ -622,7 +670,7 @@ class FileType(VHDLModel_FileType, DOMMixin):
         DOMMixin.__init__(self, node)
 
     @classmethod
-    def parse(cls, typeName: str, typeDefinitionNode: Iir, documentation: str = None) -> "FileType":
+    def parse(cls, typeName: str, typeDefinitionNode: Iir, documentation: str = None) -> Self:
         """
         Parses a *file type* IIR and returns an :class:`~pyVHDLModel.Type.FileType` instance.
 
