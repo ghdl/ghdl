@@ -2416,6 +2416,11 @@ package body Vhdl.Parse is
    begin
       Inter := Create_Iir (Iir_Kind_Interface_Package_Declaration);
 
+      --  Comments attached to the interface.
+      if Flag_Gather_Comments then
+         Gather_Comments_Line (Inter);
+      end if;
+
       --  Skip 'package'.
       Scan;
 
@@ -2627,6 +2632,11 @@ package body Vhdl.Parse is
       Subprg := Create_Iir (Kind);
       Set_Location (Subprg);
 
+      --  Comments attached to the interface.
+      if Flag_Gather_Comments then
+         Gather_Comments_Line (Subprg);
+      end if;
+
       case Current_Token is
          when Tok_Procedure =>
             --  Skip 'procedure'.
@@ -2733,6 +2743,11 @@ package body Vhdl.Parse is
                   Check_Vhdl_At_Least_2008 ("type interface");
                end if;
                Inters := Create_Iir (Iir_Kind_Interface_Type_Declaration);
+
+               --  Comments attached to the interface.
+               if Flag_Gather_Comments then
+                  Gather_Comments_Line (Inters);
+               end if;
 
                -- Skip 'type'.
                Scan;
@@ -3177,6 +3192,11 @@ package body Vhdl.Parse is
       Unit := Create_Iir (Iir_Kind_Unit_Declaration);
       Set_Parent (Unit, Parent);
 
+      --  Comments attached to the unit.
+      if Flag_Gather_Comments then
+         Gather_Comments_Line (Unit);
+      end if;
+
       Scan_Identifier (Unit);
 
       Scan_Semi_Colon ("primary physical unit");
@@ -3188,6 +3208,11 @@ package body Vhdl.Parse is
       while Current_Token = Tok_Identifier loop
          Unit := Create_Iir (Iir_Kind_Unit_Declaration);
          Set_Parent (Unit, Parent);
+
+         --  Comments attached to the unit.
+         if Flag_Gather_Comments then
+            Gather_Comments_Line (Unit);
+         end if;
 
          Scan_Identifier (Unit);
 
@@ -3410,7 +3435,14 @@ package body Vhdl.Parse is
    is
       Res : Iir;
       Decl : Iir;
+      Comments : Comments_Range;
    begin
+      --  Comments before 'protected' (and after it, until an empty line) are
+      --  attached to the type or to the body, like for a package.
+      if Flag_Gather_Comments then
+         File_Comments.Save_Comments (Comments);
+      end if;
+
       --  Skip 'protected'.
       Scan;
 
@@ -3430,6 +3462,10 @@ package body Vhdl.Parse is
       end if;
       Set_Identifier (Decl, Ident);
       Set_Location (Decl, Loc);
+
+      if Flag_Gather_Comments then
+         Gather_Comments_Block (Comments, Decl);
+      end if;
 
       Parse_Declarative_Part (Res, Res);
 
@@ -3505,11 +3541,17 @@ package body Vhdl.Parse is
 
       if Current_Token = Tok_Semi_Colon then
          --  If there is a ';', this is an incomplete type declaration.
-         Scan;
-
          Decl := Create_Iir (Iir_Kind_Type_Declaration);
          Set_Identifier (Decl, Ident);
          Set_Location (Decl, Loc);
+
+         --  Comments attached to the type.
+         if Flag_Gather_Comments then
+            Gather_Comments_Line (Decl);
+         end if;
+
+         --  Skip ';'.
+         Scan;
 
          if Flag_Elocations then
             Create_Elocations (Decl);
@@ -3547,6 +3589,11 @@ package body Vhdl.Parse is
             Decl := Create_Iir (Iir_Kind_Anonymous_Type_Declaration);
             Set_Identifier (Decl, Ident);
             Set_Location (Decl, Loc);
+
+            --  Comments attached to the type.
+            if Flag_Gather_Comments then
+               Gather_Comments_Line (Decl);
+            end if;
 
             --  Skip 'range'
             Scan;
@@ -3945,6 +3992,11 @@ package body Vhdl.Parse is
       Decl := Create_Iir (Iir_Kind_Subtype_Declaration);
       Set_Parent (Decl, Parent);
       Start_Loc := Get_Token_Location;
+
+      --  Comments attached to the subtype.
+      if Flag_Gather_Comments then
+         Gather_Comments_Line (Decl);
+      end if;
 
       --  Eat 'subtype'.
       Scan;
@@ -4860,6 +4912,12 @@ package body Vhdl.Parse is
          --  Eat 'is'.
          Scan;
       end if;
+
+      --  Comments attached to the component (like for an entity).
+      if Flag_Gather_Comments then
+         Gather_Comments_Block (Component);
+      end if;
+
       Parse_Generic_Port_Clauses (Component);
 
       if Flag_Elocations then
@@ -4945,6 +5003,11 @@ package body Vhdl.Parse is
       Res := Create_Iir (Iir_Kind_Object_Alias_Declaration);
       Set_Location (Res);
 
+      --  Comments attached to the alias.
+      if Flag_Gather_Comments then
+         Gather_Comments_Line (Res);
+      end if;
+
       case Current_Token is
          when Tok_Identifier
            | Tok_Character =>
@@ -5010,6 +5073,12 @@ package body Vhdl.Parse is
 
       Res := Create_Iir (Iir_Kind_Mode_View_Declaration);
       Set_Location (Res);
+
+      --  Comments attached to the mode view (the elements gather their
+      --  own comments).
+      if Flag_Gather_Comments then
+         Gather_Comments_Line (Res);
+      end if;
 
       --  Skip 'view'
       Scan;
@@ -5185,6 +5254,11 @@ package body Vhdl.Parse is
    begin
       Res := Create_Iir (Iir_Kind_Configuration_Specification);
       Set_Location (Res);
+
+      --  Comments attached to the specification.
+      if Flag_Gather_Comments then
+         Gather_Comments_Line (Res);
+      end if;
 
       --  Eat 'for'.
       Expect_Scan (Tok_For);
@@ -5395,6 +5469,11 @@ package body Vhdl.Parse is
             Set_Location (Res, Loc);
             Set_Identifier (Res, Ident);
 
+            --  Comments attached to the attribute.
+            if Flag_Gather_Comments then
+               Gather_Comments_Line (Res);
+            end if;
+
             --  Skip ':'.
             Scan;
 
@@ -5404,6 +5483,12 @@ package body Vhdl.Parse is
          when Tok_Of =>
             Res := Create_Iir (Iir_Kind_Attribute_Specification);
             Set_Location (Res, Loc);
+
+            --  Comments attached to the specification.
+            if Flag_Gather_Comments then
+               Gather_Comments_Line (Res);
+            end if;
+
             Designator := Create_Iir (Iir_Kind_Simple_Name);
             Set_Location (Designator, Loc);
             Set_Identifier (Designator, Ident);
@@ -5474,6 +5559,11 @@ package body Vhdl.Parse is
                Set_Location (Res, Loc);
                Set_Identifier (Res, Ident);
 
+               --  Comments attached to the group.
+               if Flag_Gather_Comments then
+                  Gather_Comments_Line (Res);
+               end if;
+
                --  Skip 'is'.
                Scan;
 
@@ -5519,6 +5609,11 @@ package body Vhdl.Parse is
                Res := Create_Iir (Iir_Kind_Group_Declaration);
                Set_Location (Res, Loc);
                Set_Identifier (Res, Ident);
+
+               --  Comments attached to the group.
+               if Flag_Gather_Comments then
+                  Gather_Comments_Line (Res);
+               end if;
 
                --  Skip ':'.
                Scan;
@@ -9771,6 +9866,11 @@ package body Vhdl.Parse is
       Set_Location (Res, Loc);
       Set_Label (Res, Label);
 
+      --  Comments attached to the block (like for a process).
+      if Flag_Gather_Comments then
+         Gather_Comments_Block (Res);
+      end if;
+
       --  Eat 'block'.
       Scan;
 
@@ -12014,6 +12114,7 @@ package body Vhdl.Parse is
    is
       Res : Iir;
       End_Loc : Location_Type;
+      Comments : Comments_Range;
    begin
       Res := Create_Iir (Iir_Kind_Package_Body);
       Set_Parent (Res, Parent);
@@ -12021,12 +12122,28 @@ package body Vhdl.Parse is
       -- Get identifier.
       Scan_Identifier (Res);
 
+      --  Comments before 'is' (and after it, until an empty line) are
+      --  attached to the package body, like for a package declaration.
+      if Flag_Gather_Comments then
+         File_Comments.Save_Comments (Comments);
+      end if;
+
       --  Skip 'is'.
       Expect_Scan (Tok_Is);
+
+      if Flag_Gather_Comments then
+         Gather_Comments_Block (Comments, Res);
+      end if;
 
       Parse_Declarative_Part (Res, Get_Package_Parent (Res));
 
       End_Loc := Get_Token_Location;
+
+      --  Comments just before the 'end' are attached to the last declaration
+      --  or the package body (if no declarations).
+      if Flag_Gather_Comments then
+         Gather_Comments_End;
+      end if;
 
       --  Skip 'end'
       Expect_Scan (Tok_End);
