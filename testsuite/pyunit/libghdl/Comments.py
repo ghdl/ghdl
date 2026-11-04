@@ -1,5 +1,5 @@
 from pathlib import Path
-from re import search
+from re import DOTALL, findall, search
 from unittest import TestCase, expectedFailure
 
 import pyGHDL.libghdl as libghdl
@@ -237,7 +237,8 @@ class Base(TestCase):
     def checkFileAllAttached(self, filename) -> None:
         """Like :meth:`checkFile`, and every comment with a ``:name:`` marker must be attached (to node *name*)."""
         self.checkFile(filename)
-        markers = [line for line in filename.read_text().splitlines() if search(r"--.*:\w+:", line)]
+        comments = findall(r"--[^\n]*|/\*.*?\*/", filename.read_text(), DOTALL)
+        markers = [comment for comment in comments if search(r":\w+:", comment)]
         self.assertEqual(len(markers), len(self._attached), "comments with a marker that are not attached")
 
 
@@ -578,6 +579,67 @@ class Association2019(Base):
 
     def test_Gathering(self) -> None:
         self.checkFileAllAttached(self._root / "comments/gather.vhdl")
+
+
+class Delimited(Base):
+    """A delimited comment is one comment, the line where it starts decides the same-line rule."""
+
+    def load(self, name) -> tuple:
+        """Load file :obj:`name` and return its source file entry and its first library unit."""
+        filename = self._root / "comments" / name
+        file_id = name_table.Get_Identifier(str(filename))
+        sfe = files_map.Read_Source_File(name_table.Null_Identifier, file_id)
+        if sfe == files_map.No_Source_File_Entry:
+            self.fail(f"Cannot read file '{filename!s}'")
+
+        file = sem_lib.Load_File(sfe)
+        return sfe, file, nodes.Get_Library_Unit(nodes.Get_First_Design_Unit(file))
+
+    def test_Association(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/delimited.vhdl")
+
+    def test_Text(self) -> None:
+        """The text of a delimited comment is as written, also over several lines."""
+        sfe, file, entity = self.load("delimited_text.vhdl")
+
+        self.assertEqual(["/* The header,\n   over two lines. */"], self.getComments(sfe, file))
+        self.assertEqual(["/* doc of e */"], self.getComments(sfe, nodes.Get_Design_Unit(entity)))
+
+        port = nodes.Get_Port_Chain(entity)
+        self.assertEqual(["/* doc of a,\n       over two lines */", "/* line of a,\n       over two lines */"], self.getComments(sfe, port))
+
+        port = nodes.Get_Chain(port)
+        self.assertEqual(["/* */"], self.getComments(sfe, port))
+
+    def test_LineNumbers(self) -> None:
+        """The newlines inside a delimited comment are counted."""
+        sfe, file, entity = self.load("delimited_text.vhdl")
+
+        port = nodes.Get_Chain(nodes.Get_Port_Chain(entity))
+        self.assertEqual(11, files_map.Location_File_To_Line(nodes.Get_Location(port), sfe))
+
+    def test_Continuation(self) -> None:
+        """The column rule uses the start column of the comment."""
+        sfe, file, entity = self.load("delimited_continuation.vhdl")
+
+        comments = {}
+        port = nodes.Get_Port_Chain(entity)
+        while port != nodes.Null_Iir:
+            comments[self.getIdentifier(port)] = self.getComments(sfe, port)
+            port = nodes.Get_Chain(port)
+
+        self.assertEqual(["/* first */", "/* second */", "-- third"], comments["a"])
+        self.assertEqual(["/* first,\n                 on two lines */", "/* second */"], comments["b"])
+        self.assertEqual(["/* first */"], comments["c"])
+        self.assertEqual(["/* another column */", "/* first */"], comments["d"])
+        self.assertEqual(["/* empty line after */"], comments["e"])
+        self.assertEqual([], comments["f"])
+        self.assertEqual(
+            ["/* not a continuation */", "/* inside */", "/* after the token */", "/* and its continuation */"],
+            comments["g"],
+        )
+        self.assertEqual(["/* first */", "/* same line */", "-- also the same line"], comments["h"])
+        self.assertEqual(["/* ends on the line\n    */", "/* of the next one */"], comments["i"])
 
 
 class SingleLine(Base):

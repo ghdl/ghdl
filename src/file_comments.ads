@@ -38,10 +38,12 @@ package File_Comments is
    --  comment appear on the same line as the node, all consecutive comments
    --  are associated with the node.  Consecutive comments mean comments
    --  without empty lines and without tokens between them, each one
-   --  starting at the column of the comment on the same line.  A comment
-   --  that follows a token, an empty line or a comment at another column,
-   --  or that starts at another column, interrupts this association: it is
-   --  for the next declaration or statement.
+   --  starting at the column of the comment on the same line, or on the line
+   --  where the previous one ends.  A delimited comment can also be followed
+   --  by another comment on the same line as the node, after a token.
+   --  A comment that follows a token, an empty line or a comment at another
+   --  column, or that starts at another column, interrupts this association:
+   --  it is for the next declaration or statement.
    --  Another declaration or statement will also interrupt this association
    --  because the comments will be associated with this new declaration or
    --  statement.  After interruption, comments are not associated anymore;
@@ -80,13 +82,20 @@ package File_Comments is
    --  For a line comment, START is the position of the token that starts the
    --  comment (the '--' in vhdl).  LAST is the position of the last character
    --  of the comment (before the new line).
-   --  LINE_START is the start of the current line (to detect comments in
+   --  A delimited comment (the '/* */' in vhdl) is one comment, even over
+   --  several lines: START is the position of its first character, LAST the
+   --  position of its last character.
+   --  LINE_START is the start of the line of START (to detect comments in
    --  the same line as a node).
    --  FOLLOWS_COMMENT is true when only blanks and newlines separate the
    --  comment from the previous comment (there is no token between them).
+   --  BEFORE_TOKEN is true when the previous token ends a declaration or a
+   --  statement and a token follows the comment on its last line: the comment
+   --  is for the next node, even on the same line as the previous node.
    procedure Add_Comment (Start, Last : Source_Ptr;
                           Line_Start : Source_Ptr;
-                          Follows_Comment : Boolean);
+                          Follows_Comment : Boolean;
+                          Before_Token : Boolean);
 
    --  A newline *after a comment* has been scanned.
    --  If this is a blank line, comments before the blank line are attached

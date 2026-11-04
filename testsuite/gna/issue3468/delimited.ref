@@ -1,0 +1,50 @@
+/* The header of the file, :header:
+   over two lines. */
+/* doc of :e: */
+/* line of the header of :e: */
+entity e is
+  port (
+    /* before :a: */
+    /* line of :a: */
+    /* continuation of :a: */
+    a: in bit;
+    /* before :b:, over
+       two lines */
+    /* line of :b:, over
+                    two lines */
+    -- continuation of :b:
+    b: in bit;
+    /* before the token of :c: */
+    /* line of :c: */
+    -- again on the line of :c:
+    c: in bit;
+    d: in bit;
+    /* before the token of :d2: */
+    d2: in bit;
+    /* inside :f: */
+    f: in bit;
+    /* inside :g: */
+    g: in bit;
+    h: in bit
+  );
+end entity;
+/* doc of :a1: */
+/* doc of :a1: followed by an empty line */
+architecture a1 of e
+is
+  /* before the token of :s: */
+  signal s: bit;
+  /* inside :t: */
+  /* line of :t: */
+  signal t: bit;
+  /* over two lines,
+     before the token of :u: */
+  signal u: bit;
+  --  mixed with a line comment for :v:
+  /* and a delimited comment for :v: */
+  signal v: bit;
+  -- line comment for :w:
+  /* and a continuation of :w: */
+  signal w: bit;
+begin
+end architecture;

@@ -1757,6 +1757,22 @@ package body Vhdl.Scanner is
       end loop;
    end Scan_Block_Comment;
 
+   --  Return True if a token follows on the current line.
+   function Is_Token_On_Line return Boolean
+   is
+      P : Source_Ptr;
+   begin
+      P := Pos;
+      while Source (P) = ' ' or Source (P) = HT loop
+         P := P + 1;
+      end loop;
+      if Is_EOL (Source (P)) then
+         return False;
+      end if;
+      return not ((Source (P) = '-' and Source (P + 1) = '-')
+                    or (Source (P) = '/' and Source (P + 1) = '*'));
+   end Is_Token_On_Line;
+
    -- Get a new token.
    procedure Scan
    is
@@ -1876,7 +1892,7 @@ package body Vhdl.Scanner is
                   --  this scan: no token between that comment and this one.
                   Add_Comment (Current_Context.Token_Pos, Pos - 1,
                                Current_Context.Line_Pos,
-                               Comment_Report_Newline);
+                               Comment_Report_Newline, False);
                   --  Following newlines will be reported so that a blank
                   --  line is detected.
                   Comment_Report_Newline := True;
@@ -1932,11 +1948,34 @@ package body Vhdl.Scanner is
                   return;
                end if;
 
-               loop
-                  Scan_Block_Comment;
-                  exit when Current_Token = Tok_Block_Comment_End
-                    or else Current_Token = Tok_Eof;
-               end loop;
+               declare
+                  Comment_Pos : constant Source_Ptr :=
+                    Current_Context.Token_Pos;
+                  Comment_Line_Pos : constant Source_Ptr :=
+                    Current_Context.Line_Pos;
+                  Prev_Pos : constant Source_Ptr := Current_Context.Prev_Pos;
+               begin
+                  loop
+                     Scan_Block_Comment;
+                     exit when Current_Token = Tok_Block_Comment_End
+                       or else Current_Token = Tok_Eof;
+                  end loop;
+                  Current_Context.Prev_Pos := Prev_Pos;
+
+                  if Flag_Gather_Comments
+                    and then Current_Token = Tok_Block_Comment_End
+                    and then Vhdl_Std >= Vhdl_08
+                  then
+                     Add_Comment
+                       (Comment_Pos, Pos - 1, Comment_Line_Pos,
+                        Comment_Report_Newline,
+                        Current_Context.Prev_Token = Tok_Semi_Colon
+                          and then Is_Token_On_Line);
+                     --  Following newlines will be reported so that a blank
+                     --  line is detected.
+                     Comment_Report_Newline := True;
+                  end if;
+               end;
                goto Again;
             else
                Current_Token := Tok_Slash;

@@ -138,7 +138,8 @@ package body File_Comments is
 
    procedure Add_Comment (Start, Last : Source_Ptr;
                           Line_Start : Source_Ptr;
-                          Follows_Comment : Boolean)
+                          Follows_Comment : Boolean;
+                          Before_Token : Boolean)
    is
       pragma Assert (Ctxt.File /= No_Source_File_Entry);
       T : File_Comments_Table renames Comments_Table.Table (Ctxt.File);
@@ -178,8 +179,8 @@ package body File_Comments is
                Put_Uns32 (Uns32 (Line_Start));
                Put (")");
             end if;
-            --  Is it on the same line ?
-            if Line_Start = Ctxt.Line_Start then
+            --  Is it on the same line (and not before the next node) ?
+            if Line_Start = Ctxt.Line_Start and not Before_Token then
                --  Yes, associate with the last node.
                N := Ctxt.Last_Node;
                Ctxt.Next := File_Comments_Tables.Last (T) + 2;
@@ -196,8 +197,18 @@ package body File_Comments is
             if Flag_Trace then
                Put ("line_cont");
             end if;
-            if Follows_Comment
-              and then Get_Column (Line_Start, Start) = Ctxt.Col
+            if Line_Start = Ctxt.Line_Start and not Before_Token then
+               --  Another comment on the same line as the node (only after a
+               --  delimited comment).  A continuation must start at its
+               --  column.
+               N := Ctxt.Last_Node;
+               Ctxt.Next := File_Comments_Tables.Last (T) + 2;
+               Ctxt.Col := Get_Column (Line_Start, Start);
+            elsif Follows_Comment
+              and then not Before_Token
+              and then (Get_Column (Line_Start, Start) = Ctxt.Col
+                          or else T.Table (File_Comments_Tables.Last (T)).Last
+                                    >= Line_Start)
             then
                --  Continue to associate with the last node.
                N := Ctxt.Last_Node;

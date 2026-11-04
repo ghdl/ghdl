@@ -33,7 +33,7 @@
 from inspect import currentframe
 from pathlib import Path
 from textwrap import dedent
-from unittest import TestCase, expectedFailure
+from unittest import TestCase
 
 from pyVHDLModel import VHDLVersion
 
@@ -656,16 +656,8 @@ class CommentGathering(InMemoryDocumentation):
 
         self.assertEqual("--! B doc.", document.Architectures["e"]["a"].Statements[0].Documentation)
 
-
-class GHDLLimitations(InMemoryDocumentation):
-    """
-    Documentation comments lost or misassigned by libghdl's comment association (``file_comments``, gathering calls in
-    ``vhdl-parse.adb``). Each test states the expected result and fails until GHDL gathers the comment.
-    """
-
-    @expectedFailure
-    def test_BlockComment(self) -> None:
-        """GHDL: ``/* */`` comments are never gathered."""
+    def test_DelimitedComment(self) -> None:
+        """Delimited comments (``/* */``) are gathered like ``--`` comments."""
         document = self.parse("""\
             /* E doc. */
             entity e is
