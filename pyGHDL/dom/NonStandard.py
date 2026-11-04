@@ -112,18 +112,25 @@ class Design(VHDLModel_Design):
         VHDLVersion.VHDL2019: "19",
     }
 
-    def __init__(self, name: str = None, vhdlVersion: VHDLVersion = VHDLVersion.VHDL2008, *, tabSize: int = 8) -> None:
+    def __init__(self, name: str = None, vhdlVersion: VHDLVersion = VHDLVersion.VHDL2008, tabSize: int = 8) -> None:
         """
         Initialize a VHDL design.
 
-        :param name:        Name of the design.
-        :param vhdlVersion: The VHDL version used to analyze this design.
-        :param tabSize:     Optional, the number of columns between two tab stops. Default: ``8``.
-        :raises ValueError: If parameter 'tabSize' is None.
-        :raises TypeError:  If parameter 'tabSize' is not of type :class:`int`.
-        :raises ValueError: If parameter 'tabSize' is out of range 1..120.
+        :param name:          Name of the design.
+        :param vhdlVersion:   The VHDL version used to analyze this design.
+        :param tabSize:       Optional, the number of columns between two tab stops. Default: ``8``.
+        :raises DOMException: If parameter 'vhdlVersion' is not supported.
+        :raises ValueError:   If parameter 'tabSize' is None.
+        :raises TypeError:    If parameter 'tabSize' is not of type :class:`int`.
+        :raises ValueError:   If parameter 'tabSize' is out of range 1..120.
         """
         super().__init__(name)
+
+        if vhdlVersion not in self._SUPPORTED_VHDL_VERSIONS:
+            supported = ", ".join(str(v) for v in self._SUPPORTED_VHDL_VERSIONS)
+            ex = DOMException(f"VHDL version '{vhdlVersion}' is not supported by pyGHDL.dom.")
+            ex.add_note(f"Supported versions: {supported}.")
+            raise ex
 
         if tabSize is None:
             raise ValueError("Parameter 'tabSize' is None.")
@@ -134,12 +141,6 @@ class Design(VHDLModel_Design):
         elif not 1 <= tabSize <= 120:
             ex = ValueError("Parameter 'tabSize' is out of range 1..120.")
             ex.add_note(f"Got value '{tabSize}'.")
-            raise ex
-
-        if vhdlVersion not in self._SUPPORTED_VHDL_VERSIONS:
-            supported = ", ".join(str(v) for v in self._SUPPORTED_VHDL_VERSIONS)
-            ex = DOMException(f"VHDL version '{vhdlVersion}' is not supported by pyGHDL.dom.")
-            ex.add_note(f"Supported versions: {supported}.")
             raise ex
 
         self._vhdlVersion = vhdlVersion

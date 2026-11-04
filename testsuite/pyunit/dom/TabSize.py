@@ -33,6 +33,9 @@
 from pathlib import Path
 from unittest import TestCase
 
+from pyVHDLModel import VHDLVersion
+
+from pyGHDL.dom import DOMException
 from pyGHDL.dom.NonStandard import Design, Document
 
 
@@ -120,6 +123,10 @@ class TabSize(TestCase):
                 self.assertEqual("Parameter 'tabSize' is out of range 1..120.", str(context.exception))
                 self.assertListEqual([f"Got value '{value}'."], context.exception.__notes__)
 
-    def test_Keyword(self) -> None:
-        with self.assertRaises(TypeError):
-            Design("name", None, 4)
+    def test_Positional(self) -> None:
+        self.assertEqual(4, Design("name", VHDLVersion.VHDL2008, 4).TabSize)
+
+    def test_CheckOrder(self) -> None:
+        """The VHDL version is checked before the tab size, in parameter order."""
+        with self.assertRaises(DOMException):
+            Design(vhdlVersion=VHDLVersion.VHDL93, tabSize=0)
