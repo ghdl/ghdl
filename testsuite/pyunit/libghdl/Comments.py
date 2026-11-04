@@ -446,6 +446,14 @@ class BlockHeader(Base):
     def test_Header(self) -> None:
         self.checkFileAllAttached(self._root / "comments/block_header.vhdl")
 
+    def test_End(self) -> None:
+        """A comment on the line of the end of a block construct belongs to it, not to the next node."""
+        self.checkFileAllAttached(self._root / "comments/block_end.vhdl")
+
+    def test_End_NoNewline(self) -> None:
+        """The comment on the last line of a file without a final newline."""
+        self.checkFileAllAttached(self._root / "comments/block_end_no_newline.vhdl")
+
     def test_FollowingComments(self) -> None:
         """The continuation rule applies to the header line, the following comments keep the block rule."""
         filename = self._root / "comments/block_header_following.vhdl"

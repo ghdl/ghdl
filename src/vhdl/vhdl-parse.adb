@@ -3353,6 +3353,11 @@ package body Vhdl.Parse is
          Set_End_Location (Res, Get_Token_Location);
       end if;
 
+      --  Comments just before the 'end' are not for the next node.
+      if Flag_Gather_Comments then
+         Gather_Comments_End;
+      end if;
+
       --  Skip 'end'
       Expect_Scan (Tok_End);
       Expect_Scan (Tok_Record);
@@ -3709,6 +3714,11 @@ package body Vhdl.Parse is
 
       -- ';' is expected after end of type declaration
       Scan_Semi_Colon_Declaration ("type declaration");
+
+      --  A comment on the line of the ';' is for the type.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Decl);
+      end if;
 
       if Flag_Elocations then
          Create_Elocations (Decl);
@@ -4929,6 +4939,11 @@ package body Vhdl.Parse is
 
       Parse_Generic_Port_Clauses (Component);
 
+      --  Comments just before the 'end' are not for the next node.
+      if Flag_Gather_Comments then
+         Gather_Comments_End;
+      end if;
+
       if Flag_Elocations then
          Set_End_Location (Component, Get_Token_Location);
       end if;
@@ -4937,6 +4952,11 @@ package body Vhdl.Parse is
 
       --  Skip ';'.
       Expect_Scan (Tok_Semi_Colon);
+
+      --  A comment on the line of the ';' is for the component.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Component);
+      end if;
 
       return Component;
    end Parse_Component_Declaration;
@@ -6458,6 +6478,11 @@ package body Vhdl.Parse is
       end if;
       Check_End_Name (Res);
       Scan_Semi_Colon_Unit ("entity");
+
+      --  A comment on the line of the ';' is for the entity.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
 
       Set_Library_Unit (Unit, Res);
 
@@ -9181,6 +9206,11 @@ package body Vhdl.Parse is
             null;
       end case;
       Scan_Semi_Colon_Declaration ("subprogram body");
+
+      --  A comment on the line of the ';' is for the subprogram.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Subprg);
+      end if;
    end Parse_Subprogram_Body;
 
    --  precond : NEW
@@ -11510,6 +11540,11 @@ package body Vhdl.Parse is
       Check_End_Name (Res);
       Scan_Semi_Colon_Unit ("architecture");
 
+      --  A comment on the line of the ';' is for the architecture.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
+
       Set_Library_Unit (Unit, Res);
 
       if Flag_Elocations then
@@ -12005,6 +12040,11 @@ package body Vhdl.Parse is
       Check_End_Name (Res);
       Scan_Semi_Colon_Unit ("configuration");
 
+      --  A comment on the line of the ';' is for the configuration.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
+
       Set_Library_Unit (Unit, Res);
 
       if Flag_Elocations then
@@ -12122,6 +12162,11 @@ package body Vhdl.Parse is
       Check_End_Name (Res);
       Scan_Semi_Colon_Unit ("package declaration");
 
+      --  A comment on the line of the ';' is for the package.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
+
       if Flag_Elocations then
          Create_Elocations (Res);
          Set_End_Location (Res, End_Loc);
@@ -12199,6 +12244,11 @@ package body Vhdl.Parse is
       Check_End_Name (Res);
       Scan_Semi_Colon_Unit ("package body");
 
+      --  A comment on the line of the ';' is for the package body.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
+
       if Flag_Elocations then
          Create_Elocations (Res);
          Set_End_Location (Res, End_Loc);
@@ -12253,6 +12303,11 @@ package body Vhdl.Parse is
       end if;
 
       Scan_Semi_Colon_Unit ("package instantiation");
+
+      --  A comment on the line of the ';' is for the package.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
 
       return Res;
    end Parse_Package_Instantiation_Declaration;
@@ -12618,6 +12673,11 @@ package body Vhdl.Parse is
 
       Check_End_Name (Decl);
       Scan_Semi_Colon_Unit ("context declaration");
+
+      --  A comment on the line of the ';' is for the context.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Decl);
+      end if;
 
       if Flag_Elocations then
          Create_Elocations (Decl);

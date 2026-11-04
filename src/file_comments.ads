@@ -57,8 +57,8 @@ package File_Comments is
    --  continued before building a node (eg: to distinguish package
    --  declaration and package instantiation, or to distinguish process and
    --  sensitized process).
-   --  A comment on the line of the header of a block construct is attached
-   --  like in line mode, by Gather_Comments_After.
+   --  A comment on the line of the header or of the end of a block construct
+   --  is attached like in line mode, by Gather_Comments_After.
    --
    --  The header of a file is made of the comments before the first token
    --  that are followed by an empty line (see Gather_Comments_Header).  The

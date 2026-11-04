@@ -7,6 +7,10 @@
 "$GHDL" --reprint --std=19 header.vhdl > header.out
 diff header.ref header.out
 
-rm -f header.out
+#  So is a comment on the line of its end.
+"$GHDL" --reprint --std=19 end.vhdl > end.out
+diff end.ref end.out
+
+rm -f header.out end.out
 
 echo "Test successful"
