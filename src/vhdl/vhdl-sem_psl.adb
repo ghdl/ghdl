@@ -16,6 +16,7 @@
 
 with Types; use Types;
 with Errorout; use Errorout;
+with Flags; use Flags;
 with Libraries;
 
 with PSL.Types; use PSL.Types;
@@ -38,6 +39,7 @@ with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Xrefs; use Vhdl.Xrefs;
+with Vhdl.Comments; use Vhdl.Comments;
 
 package body Vhdl.Sem_Psl is
    procedure Sem_Psl_Directive_Clock (Stmt : Iir; Prop : in out PSL_Node);
@@ -1039,6 +1041,9 @@ package body Vhdl.Sem_Psl is
          --  This is a simple assertion.  Convert to a non-PSL statement, as
          --  the handling is simpler (and the assertion doesn't need a clock).
          Res := Rewrite_As_Concurrent_Assertion (Stmt);
+         if Flag_Gather_Comments then
+            Replace_Comments_Node_Sorted (Stmt, Res);
+         end if;
          Free_Iir (Stmt);
          return Res;
       end if;
