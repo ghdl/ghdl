@@ -6399,6 +6399,13 @@ package body Vhdl.Parse is
             exit when Decl = Null_Iir;
          end loop;
       end loop;
+
+      --  Comments just before the 'begin' or the 'end' are attached to the
+      --  last declaration or to PARENT (if no declarations), if they are not
+      --  discarded.  They are not for the next node.
+      if Flag_Gather_Comments then
+         Gather_Comments_End;
+      end if;
    end Parse_Declarative_Part;
 
    --  precond : ENTITY
@@ -6459,6 +6466,11 @@ package body Vhdl.Parse is
 
          --  Skip 'begin'.
          Scan;
+
+         --  A comment on the line of 'begin' is not for the first statement.
+         if Flag_Gather_Comments then
+            Gather_Comments_After (Res);
+         end if;
 
          Parse_Concurrent_Statements (Res);
       else
@@ -8201,6 +8213,11 @@ package body Vhdl.Parse is
          --  Eat 'then'.
          Expect_Scan (Tok_Then, "'then' is expected here");
 
+         --  The comments up to 'then' are for the clause.
+         if Flag_Gather_Comments then
+            Gather_Comments_After (Clause);
+         end if;
+
          Set_Sequential_Statement_Chain
            (Clause, Parse_Sequential_Statements (Res));
 
@@ -8224,6 +8241,11 @@ package body Vhdl.Parse is
 
             --  Skip 'else'.
             Scan;
+
+            --  The comments up to 'else' are for the clause.
+            if Flag_Gather_Comments then
+               Gather_Comments_After (Clause);
+            end if;
 
             Set_Sequential_Statement_Chain
               (Clause, Parse_Sequential_Statements (Res));
@@ -8624,6 +8646,11 @@ package body Vhdl.Parse is
       --  Skip 'is'.
       Expect_Scan (Tok_Is);
 
+      --  The comments up to 'is' are for the statement.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Stmt);
+      end if;
+
       if Current_Token = Tok_End then
          Error_Msg_Parse ("missing alternative in case statement");
       end if;
@@ -8639,6 +8666,11 @@ package body Vhdl.Parse is
 
          --  Skip '=>'.
          Expect_Scan (Tok_Double_Arrow);
+
+         --  The comments up to '=>' are for its first choice.
+         if Flag_Gather_Comments then
+            Gather_Comments_After (Assoc);
+         end if;
 
          Set_Associated_Chain (Assoc, Parse_Sequential_Statements (Stmt));
          Chain_Append_Subchain (First_Assoc, Last_Assoc, Assoc);
@@ -8700,6 +8732,11 @@ package body Vhdl.Parse is
       Expect (Tok_Loop);
       Scan;
 
+      --  The comments up to 'loop' are for the statement.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Stmt);
+      end if;
+
       Set_Sequential_Statement_Chain
         (Stmt, Parse_Sequential_Statements (Stmt));
 
@@ -8751,6 +8788,11 @@ package body Vhdl.Parse is
       --  Skip 'loop'.
       Loop_Loc := Get_Token_Location;
       Scan;
+
+      --  The comments up to 'loop' are for the statement.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Stmt);
+      end if;
 
       Set_Sequential_Statement_Chain
         (Stmt, Parse_Sequential_Statements (Stmt));
@@ -9083,6 +9125,10 @@ package body Vhdl.Parse is
                goto Again;
 
             when others =>
+               --  Comments just before the 'end' are not for the next node.
+               if Flag_Gather_Comments and then Current_Token = Tok_End then
+                  Gather_Comments_End;
+               end if;
                return First_Stmt;
          end case;
          << Has_Stmt >> null;
@@ -9107,6 +9153,11 @@ package body Vhdl.Parse is
                --  Skip ';'.
                Scan;
             end if;
+         end if;
+
+         --  The comments up to the ';' are for the statement.
+         if Flag_Gather_Comments then
+            Gather_Comments_After (Stmt);
          end if;
 
          --  Append it to the chain.
@@ -9145,6 +9196,11 @@ package body Vhdl.Parse is
       --  Skip 'begin'.
       Begin_Loc := Get_Token_Location;
       Expect_Scan (Tok_Begin);
+
+      --  A comment on the line of 'begin' is not for the first statement.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Subprg);
+      end if;
 
       Set_Sequential_Statement_Chain
         (Subprg_Body, Parse_Sequential_Statements (Subprg_Body));
@@ -9503,6 +9559,11 @@ package body Vhdl.Parse is
       --  Skip 'begin'.
       Begin_Loc := Get_Token_Location;
       Expect_Scan (Tok_Begin);
+
+      --  A comment on the line of 'begin' is not for the first statement.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
 
       Set_Sequential_Statement_Chain (Res, Parse_Sequential_Statements (Res));
 
@@ -9951,14 +10012,17 @@ package body Vhdl.Parse is
       if Current_Token = Tok_Generic or Current_Token = Tok_Port then
          Set_Block_Header (Res, Parse_Block_Header (Res));
       end if;
-      if Current_Token /= Tok_Begin then
-         Parse_Declarative_Part (Res, Res);
-      end if;
+      Parse_Declarative_Part (Res, Res);
 
       Begin_Loc := Get_Token_Location;
 
       --  Eat 'begin'.
       Expect_Scan (Tok_Begin);
+
+      --  A comment on the line of 'begin' is not for the first statement.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
 
       Parse_Concurrent_Statements (Res);
 
@@ -10077,6 +10141,11 @@ package body Vhdl.Parse is
 
             --  Skip 'begin'
             Scan;
+
+            --  A comment on the line of 'begin' is not for a statement.
+            if Flag_Gather_Comments then
+               Gather_Comments_After (Bod);
+            end if;
          when others =>
             null;
       end case;
@@ -10163,6 +10232,11 @@ package body Vhdl.Parse is
       Expect (Tok_Generate);
       Generate_Loc := Get_Token_Location;
       Scan;
+
+      --  The comments up to 'generate' are for the statement.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
 
       Parse_Generate_Statement_Body (Res, Null_Identifier, Bod, End_Loc);
       Set_Generate_Statement_Body (Res, Bod);
@@ -10286,6 +10360,11 @@ package body Vhdl.Parse is
                Expect_Error (Tok_Generate);
          end case;
 
+         --  The comments up to 'generate' are for the alternative.
+         if Flag_Gather_Comments then
+            Gather_Comments_After (Clause);
+         end if;
+
          Parse_Generate_Statement_Body (Res, Alt_Label, Bod, End_Loc);
 
          if Alt_Label /= Null_Identifier then
@@ -10347,6 +10426,11 @@ package body Vhdl.Parse is
          --  Skip 'generate'
          Generate_Loc := Get_Token_Location;
          Expect_Scan (Tok_Generate);
+
+         --  The comments up to 'generate' are for the alternative.
+         if Flag_Gather_Comments then
+            Gather_Comments_After (Clause);
+         end if;
 
          Parse_Generate_Statement_Body (Res, Alt_Label, Bod, End_Loc);
          if Alt_Label /= Null_Identifier then
@@ -10446,6 +10530,11 @@ package body Vhdl.Parse is
       --  Eat '=>'
       Expect_Scan (Tok_Double_Arrow);
 
+      --  The comments up to '=>' are for its first choice.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Assoc);
+      end if;
+
       Parse_Generate_Statement_Body (Parent, Alt_Label, Bod, End_Loc);
       Set_Associated_Block (Assoc, Bod);
       if Alt_Label /= Null_Identifier then
@@ -10498,6 +10587,11 @@ package body Vhdl.Parse is
 
       --  Skip 'generate'
       Expect_Scan (Tok_Generate);
+
+      --  The comments up to 'generate' are for the statement.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
 
       if Current_Token = Tok_End then
          Error_Msg_Parse ("no generate alternative");
@@ -11213,6 +11307,12 @@ package body Vhdl.Parse is
                if Label /= Null_Identifier then
                   Error_Msg_Parse ("label is not allowed here");
                end if;
+
+               --  Comments just before the 'end' are not for the next node.
+               if Flag_Gather_Comments and then Current_Token = Tok_End then
+                  Gather_Comments_End;
+               end if;
+
                return Null_Iir;
             when Tok_Identifier
               | Tok_Double_Less =>
@@ -11347,6 +11447,12 @@ package body Vhdl.Parse is
             if Postponed then
                Set_Postponed_Flag (Stmt, True);
             end if;
+
+            --  The comments up to the ';' are for the statement.
+            if Flag_Gather_Comments then
+               Gather_Comments_After (Stmt);
+            end if;
+
             return Stmt;
          end if;
       end loop;
@@ -11510,15 +11616,14 @@ package body Vhdl.Parse is
 
       Parse_Declarative_Part (Res, Res);
 
-      --  Comments just before the 'begin' are attached to the last declaration
-      --  or the architecture (if no declarations).
-      if Flag_Gather_Comments then
-         Gather_Comments_End;
-      end if;
-
       --  Skip 'begin'.
       Begin_Loc := Get_Token_Location;
       Expect_Scan (Tok_Begin);
+
+      --  A comment on the line of 'begin' is not for the first statement.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
 
       Parse_Concurrent_Statements (Res);
       -- end was scanned.
@@ -12140,12 +12245,6 @@ package body Vhdl.Parse is
 
       End_Loc := Get_Token_Location;
 
-      --  Comments just before the 'end' are attached to the last declaration
-      --  or the package (if no declarations).
-      if Flag_Gather_Comments then
-         Gather_Comments_End;
-      end if;
-
       --  Skip 'end'
       Expect_Scan (Tok_End);
 
@@ -12214,12 +12313,6 @@ package body Vhdl.Parse is
       Parse_Declarative_Part (Res, Get_Package_Parent (Res));
 
       End_Loc := Get_Token_Location;
-
-      --  Comments just before the 'end' are attached to the last declaration
-      --  or the package body (if no declarations).
-      if Flag_Gather_Comments then
-         Gather_Comments_End;
-      end if;
 
       --  Skip 'end'
       Expect_Scan (Tok_End);

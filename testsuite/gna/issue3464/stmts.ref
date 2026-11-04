@@ -1,0 +1,150 @@
+-- line of 'begin' of e
+entity e is
+  port (
+    a: in bit
+  );
+begin
+  -- before ea
+  -- line of ea
+  ea: assert a = '1';
+end entity;
+-- line of 'begin' of arch
+architecture arch of e
+is
+  constant k: bit := '1';
+  signal s, t: bit;
+  component comp is
+  end component;
+  -- line of 'begin' of pr
+  procedure pr (
+    x: bit
+  )
+  is
+    variable v: bit;
+  begin
+    -- before s1
+    -- line of s1
+    -- continuation of s1
+    s1: v := x;
+    -- before an unlabeled statement
+    -- line of the unlabeled statement
+    v := x;
+    -- before i
+    -- line of the header of i
+    -- line of the end of i
+    i: if x = '1'
+    then
+      -- before i1
+      i1: null;
+    -- before the elsif
+    -- inside the elsif
+    -- line of the elsif
+    elsif x = '0' or x = '1'
+    then
+      -- before i2
+      i2: null;
+    -- before the else
+    -- line of the else
+    else
+      i3: null;
+    end if;
+    -- before cs
+    -- line of the header of cs
+    cs: case x
+    is
+      -- before the first alternative
+      -- line of the first alternative
+      when '0' =>
+        -- before c1
+        c1: null;
+      -- before the second alternative
+      when others =>
+        -- before fl
+        -- line of the header of fl
+        fl: for j in 0 to 1 loop
+          -- before e1
+          e1: exit;
+        end loop;
+        -- before wl
+        -- line of the header of wl
+        wl: while true
+        loop
+          -- before n1
+          n1: next;
+        end loop;
+    end case;
+  end pr;
+begin
+  -- before sa
+  -- line of sa
+  -- continuation of sa
+  sa: s <= t;
+  -- before ca
+  -- inside ca
+  -- line of the end of ca
+  ca: s <= '1' when t = '1' else '0';
+  -- before ie
+  -- inside ie
+  -- inside ie, again
+  -- line of the end of ie
+  ie: entity work.e
+    port map (a => s);
+  -- before ic, replaced by the analysis
+  -- line of ic
+  ic: comp;
+  -- before pc
+  -- line of pc
+  pc: pr (s);
+  -- before asrt, replaced by the analysis
+  -- line of asrt
+  asrt: assert s = '1' report "message";
+  -- before p
+  -- line of the header of p
+  -- line of 'begin' of p
+  -- line of the end of p
+  p: process (s)
+    variable v: bit;
+  begin
+    -- before st
+    -- line of st
+    st: v := '1';
+  end process;
+  -- before fg
+  -- line of the header of fg
+  -- line of the end of fg
+  fg: for j in 0 to 3 generate
+  -- line of 'begin' of fg
+    -- before x
+    signal x: bit;
+  begin
+    -- before s1
+    -- line of s1
+    s1: x <= s;
+  end generate;
+  -- before ig
+  -- line of the header of ig
+  ig: if a1: k = '1' generate
+    -- before s2
+    s2: t <= s;
+  -- before the elsif generate
+  -- line of the elsif generate
+  elsif a2: k = '0' generate
+    s3: t <= s;
+  -- before the else generate
+  -- line of the else generate
+  else a3: generate
+    s4: t <= s;
+  end a3;
+  end generate;
+  -- before cg
+  -- line of the header of cg
+  cg: case k generate
+    -- before the first generate alternative
+    -- line of the first generate alternative
+    when c0: '0' =>
+      s5: t <= s;
+    -- before the second generate alternative
+    when others =>
+      s6: t <= s;
+  end generate;
+end architecture;
