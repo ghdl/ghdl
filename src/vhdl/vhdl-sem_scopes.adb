@@ -476,6 +476,9 @@ package body Vhdl.Sem_Scopes is
          return;
       end if;
 
+      --  Starting from here, there is already a (potentially) visible
+      --  declaration with the same identifier.
+
       if Is_Conflict_Declaration (Raw_Inter) then
          --  The current declaration for RAW_INTER is a conflict: there are
          --  multiple *potentially* visible declarations for the identifier.
@@ -887,7 +890,7 @@ package body Vhdl.Sem_Scopes is
             --  Each of two declarations is said to be a homograph of the
             --  other if and only if both declarations have the same
             --  designator; and they denote different named entities, [...]
-            if Flags.Vhdl_Std >= Vhdl_08 then
+            if Flag_Relaxed_Rules and then Flags.Vhdl_Std >= Vhdl_08 then
                if Strip_Non_Object_Alias (Decl)
                  = Strip_Non_Object_Alias (Current_Decl)
                then
