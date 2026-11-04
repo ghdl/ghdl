@@ -1,0 +1,55 @@
+-- line of the end of :e:
+-- continuation of :e:
+entity e is
+end entity;
+-- line of the end of :a:
+architecture a of e
+is
+  -- line of the end of :c:
+  component c is
+    port (
+      p: bit
+    );
+  end component;
+  -- for :s:
+  signal s: bit;
+begin
+end architecture;
+-- line of the end of :p:
+package p is
+  -- line of the end of :r:
+  type r is record
+    x: bit;
+  end record;
+  -- for :r2:
+  -- line of the end of :r2:
+  type r2 is record
+    y: bit;
+  end record r2;
+  -- line of the end of :pt:
+  type pt is protected
+    procedure m;
+  end protected;
+  function f return bit;
+  -- for :k:
+  constant k: bit := '0';
+end package;
+-- line of the end of :p:
+package body p is
+  -- line of the end of :pt:
+  type pt is protected body
+    -- line of the end of :m:
+    procedure m
+    is
+    begin
+    end procedure;
+  end protected body;
+  -- line of the end of :f:
+  function f return bit
+  is
+  begin
+    return '0';
+  end function;
+  -- for :k2:
+  constant k2: bit := '0';
+end package body;

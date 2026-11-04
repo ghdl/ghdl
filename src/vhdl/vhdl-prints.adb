@@ -775,6 +775,7 @@ package body Vhdl.Prints is
       for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
          if Reindent then
+            Start_Node (Ctxt, El);
             El_Subtype := Get_Subtype_Indication (El);
             Start_Hbox (Ctxt);
          end if;

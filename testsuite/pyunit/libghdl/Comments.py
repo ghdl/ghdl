@@ -47,6 +47,16 @@ class Base(TestCase):
             self._attached.add(commentStart)
             idx = file_comments.Get_Next_Comment(f, idx)
 
+    def getComments(self, sfe, node) -> list:
+        """Return the comments of node :obj:`node`."""
+        texts = []
+        idx = file_comments.Find_First_Comment(sfe, node)
+        while idx != file_comments.No_Comment_Index:
+            texts.append(file_comments.Get_Comment(sfe, idx))
+            idx = file_comments.Get_Next_Comment(sfe, idx)
+
+        return texts
+
     def checkFlist(self, flist) -> None:
         for i in range(flists.Length(flist)):
             e = flists.Get_Nth_Element(flist, i)
@@ -56,6 +66,10 @@ class Base(TestCase):
         decl = first
         while decl != nodes.Null_Iir:
             k = nodes.Get_Kind(decl)
+            if k in nodes.Iir_Kinds.Subprogram_Body:
+                self.checkDecls(nodes.Get_Declaration_Chain(decl))
+                decl = nodes.Get_Chain(decl)
+                continue
             if (k not in nodes.Iir_Kinds.Specification
                 and k not in nodes.Iir_Kinds.Clause):
                 self.checkComments(decl, self.getIdentifier(decl))
@@ -424,6 +438,57 @@ class Continuation(Base):
 
         self.assertEqual(["-- first documentation line"], comments["a"])
         self.assertEqual(["-- first documentation line for b"], comments["b"])
+
+
+class BlockHeader(Base):
+    """A comment on the line of the header of a block construct belongs to the construct."""
+
+    def test_Header(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/block_header.vhdl")
+
+    def test_End(self) -> None:
+        """A comment on the line of the end of a block construct belongs to it, not to the next node."""
+        self.checkFileAllAttached(self._root / "comments/block_end.vhdl")
+
+    def test_End_NoNewline(self) -> None:
+        """The comment on the last line of a file without a final newline."""
+        self.checkFileAllAttached(self._root / "comments/block_end_no_newline.vhdl")
+
+    def test_FollowingComments(self) -> None:
+        """The continuation rule applies to the header line, the following comments keep the block rule."""
+        filename = self._root / "comments/block_header_following.vhdl"
+        file_id = name_table.Get_Identifier(str(filename))
+        sfe = files_map.Read_Source_File(name_table.Null_Identifier, file_id)
+        if sfe == files_map.No_Source_File_Entry:
+            self.fail(f"Cannot read file '{filename!s}'")
+
+        file = sem_lib.Load_File(sfe)
+        package = nodes.Get_Library_Unit(nodes.Get_First_Design_Unit(file))
+
+        types = {}
+        elements = {}
+        decl = nodes.Get_Declaration_Chain(package)
+        while decl != nodes.Null_Iir:
+            name = self.getIdentifier(decl)
+            types[name] = self.getComments(sfe, decl)
+            element = flists.Get_Nth_Element(nodes.Get_Elements_Declaration_List(nodes.Get_Type_Definition(decl)), 0)
+            elements[name] = self.getComments(sfe, element)
+            decl = nodes.Get_Chain(decl)
+
+        self.assertEqual(["-- first line"], types["another_column"])
+        self.assertEqual(["-- for x"], elements["another_column"])
+
+        self.assertEqual(["-- first line", "--", "-- third line"], types["empty_comment"])
+        self.assertEqual([], elements["empty_comment"])
+
+        self.assertEqual(["-- first line"], types["empty_line"])
+        self.assertEqual(["-- for x"], elements["empty_line"])
+
+        self.assertEqual(["-- first line", "-- followed by an empty line"], types["block_rule"])
+        self.assertEqual(["-- for x"], elements["block_rule"])
+
+        self.assertEqual(["-- first line"], types["interrupted"])
+        self.assertEqual(["-- another column", "-- not a continuation"], elements["interrupted"])
 
 
 class Association2019(Base):
