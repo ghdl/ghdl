@@ -3290,6 +3290,7 @@ package body Vhdl.Prints is
       Start_Vbox (Ctxt);
       Assoc := Get_Case_Statement_Alternative_Chain (Stmt);
       while Assoc /= Null_Iir loop
+         Start_Node (Ctxt, Assoc);
          Start_Hbox (Ctxt);
          Disp_Token (Ctxt, Tok_When);
          Sel_Stmt := Get_Associated_Chain (Assoc);
@@ -3357,6 +3358,7 @@ package body Vhdl.Prints is
          Close_Vbox (Ctxt);
          Clause := Get_Else_Clause (Clause);
          exit when Clause = Null_Iir;
+         Start_Node (Ctxt, Clause);
          Start_Hbox (Ctxt);
          Expr := Get_Condition (Clause);
          if Expr /= Null_Iir then
@@ -3431,6 +3433,7 @@ package body Vhdl.Prints is
    begin
       Stmt := First;
       while Stmt /= Null_Iir loop
+         Start_Node (Ctxt, Stmt);
          case Iir_Kinds_Sequential_Statement_Ext (Get_Kind (Stmt)) is
             when Iir_Kind_Null_Statement =>
                Start_Hbox (Ctxt);
@@ -4156,6 +4159,8 @@ package body Vhdl.Prints is
       Has_Beg : constant Boolean := Get_Has_Begin (Bod);
       Has_End : constant Boolean := Get_Has_End (Bod);
    begin
+      Start_Node (Ctxt, Bod);
+
       Start_Vbox (Ctxt);
       Disp_Declaration_Chain (Ctxt, Bod);
       Close_Vbox (Ctxt);
@@ -4225,6 +4230,7 @@ package body Vhdl.Prints is
          Clause := Get_Generate_Else_Clause (Clause);
          exit when Clause = Null_Iir;
 
+         Start_Node (Ctxt, Clause);
          Start_Hbox (Ctxt);
          Cond := Get_Condition (Clause);
          if Cond = Null_Iir then
@@ -4252,6 +4258,7 @@ package body Vhdl.Prints is
       Start_Vbox (Ctxt);
       Assoc := Get_Case_Statement_Alternative_Chain (Stmt);
       while Assoc /= Null_Iir loop
+         Start_Node (Ctxt, Assoc);
          Start_Hbox (Ctxt);
          Disp_Token (Ctxt, Tok_When);
          Bod := Get_Associated_Block (Assoc);

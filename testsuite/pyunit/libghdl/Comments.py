@@ -68,10 +68,12 @@ class Base(TestCase):
             k = nodes.Get_Kind(decl)
             if k in nodes.Iir_Kinds.Subprogram_Body:
                 self.checkDecls(nodes.Get_Declaration_Chain(decl))
+                self.checkSeq(nodes.Get_Sequential_Statement_Chain(decl))
                 decl = nodes.Get_Chain(decl)
                 continue
             if (k not in nodes.Iir_Kinds.Specification
-                and k not in nodes.Iir_Kinds.Clause):
+                and k not in nodes.Iir_Kinds.Clause
+                and k != nodes.Iir_Kind.Psl_Default_Clock):
                 self.checkComments(decl, self.getIdentifier(decl))
             elif k == nodes.Iir_Kind.Attribute_Specification:
                 self.checkComments(decl, self.getIdentifier(nodes.Get_Attribute_Designator(decl)))
@@ -99,19 +101,71 @@ class Base(TestCase):
                 self.checkDecls(nodes.Get_Elements_Definition_Chain(decl))
             decl = nodes.Get_Chain(decl)
 
+    def getLabel(self, stmt) -> str:
+        """Return the label of statement :obj:`stmt`, or ``nolabel``."""
+        if nodes.Get_Identifier(stmt) == name_table.Null_Identifier:
+            return "nolabel"
+
+        return self.getIdentifier(stmt)
+
+    def checkSeq(self, first) -> None:
+        stmt = first
+        while stmt != nodes.Null_Iir:
+            k = nodes.Get_Kind(stmt)
+            name = self.getLabel(stmt)
+            self.checkComments(stmt, name)
+            if k == nodes.Iir_Kind.If_Statement:
+                self.checkSeq(nodes.Get_Sequential_Statement_Chain(stmt))
+                clause = nodes.Get_Else_Clause(stmt)
+                while clause != nodes.Null_Iir:
+                    self.checkComments(clause, f"{name}_else")
+                    self.checkSeq(nodes.Get_Sequential_Statement_Chain(clause))
+                    clause = nodes.Get_Else_Clause(clause)
+            elif k == nodes.Iir_Kind.Case_Statement:
+                assoc = nodes.Get_Case_Statement_Alternative_Chain(stmt)
+                while assoc != nodes.Null_Iir:
+                    self.checkComments(assoc, f"{name}_when")
+                    self.checkSeq(nodes.Get_Associated_Chain(assoc))
+                    assoc = nodes.Get_Chain(assoc)
+            elif k in (nodes.Iir_Kind.For_Loop_Statement, nodes.Iir_Kind.While_Loop_Statement):
+                self.checkSeq(nodes.Get_Sequential_Statement_Chain(stmt))
+            stmt = nodes.Get_Chain(stmt)
+
+    def checkBody(self, body, name) -> None:
+        """Check the comments of a generate statement body, its comments are for :obj:`name`."""
+        self.checkComments(body, name)
+        self.checkDecls(nodes.Get_Declaration_Chain(body))
+        self.checkConc(nodes.Get_Concurrent_Statement_Chain(body))
+
     def checkConc(self, first) -> None:
         stmt = first
         while stmt != nodes.Null_Iir:
             k = nodes.Get_Kind(stmt)
+            name = self.getLabel(stmt)
+            self.checkComments(stmt, name)
             if k in nodes.Iir_Kinds.Process_Statement:
                 self.checkDecls(nodes.Get_Declaration_Chain(stmt))
-                id = nodes.Get_Identifier(stmt)
-                if id != name_table.Null_Identifier:
-                    self.checkComments(stmt, self.getIdentifier(stmt))
+                self.checkSeq(nodes.Get_Sequential_Statement_Chain(stmt))
             elif k == nodes.Iir_Kind.Block_Statement:
-                self.checkComments(stmt, self.getIdentifier(stmt))
                 self.checkDecls(nodes.Get_Declaration_Chain(stmt))
                 self.checkConc(nodes.Get_Concurrent_Statement_Chain(stmt))
+            elif k == nodes.Iir_Kind.For_Generate_Statement:
+                self.checkBody(nodes.Get_Generate_Statement_Body(stmt), name)
+            elif k == nodes.Iir_Kind.If_Generate_Statement:
+                self.checkBody(nodes.Get_Generate_Statement_Body(stmt), name)
+                clause = nodes.Get_Generate_Else_Clause(stmt)
+                while clause != nodes.Null_Iir:
+                    self.checkComments(clause, f"{name}_else")
+                    self.checkBody(nodes.Get_Generate_Statement_Body(clause), name)
+                    clause = nodes.Get_Generate_Else_Clause(clause)
+            elif k == nodes.Iir_Kind.Case_Generate_Statement:
+                assoc = nodes.Get_Case_Statement_Alternative_Chain(stmt)
+                while assoc != nodes.Null_Iir:
+                    self.checkComments(assoc, f"{name}_when")
+                    body = nodes.Get_Associated_Block(assoc)
+                    if body != nodes.Null_Iir:
+                        self.checkBody(body, name)
+                    assoc = nodes.Get_Chain(assoc)
             stmt = nodes.Get_Chain(stmt)
 
     def checkFile(self, filename) -> None:
@@ -142,6 +196,7 @@ class Base(TestCase):
                 self.checkComments(unit, name)
                 self.checkDecls(nodes.Get_Generic_Chain(unit))
                 self.checkDecls(nodes.Get_Port_Chain(unit))
+                self.checkConc(nodes.Get_Concurrent_Statement_Chain(unit))
 
             elif k == nodes.Iir_Kind.Architecture_Body:
                 self.checkComments(designUnit, name)
@@ -489,6 +544,23 @@ class BlockHeader(Base):
 
         self.assertEqual(["-- first line"], types["interrupted"])
         self.assertEqual(["-- another column", "-- not a continuation"], elements["interrupted"])
+
+
+class Statements(Base):
+    """Statements collect comments like declarations in line mode: before them, and on their last line."""
+
+    def test_Concurrent(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/stmt_concurrent.vhdl")
+
+    def test_Generate(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/stmt_generate.vhdl")
+
+    def test_Sequential(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/stmt_sequential.vhdl")
+
+    def test_NoLeak(self) -> None:
+        """Comments before an 'end' or a 'begin' are not for the next node, and a comment on 'begin' for no statement."""
+        self.checkFileAllAttached(self._root / "comments/stmt_noleak.vhdl")
 
 
 class Association2019(Base):
