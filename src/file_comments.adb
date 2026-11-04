@@ -440,10 +440,10 @@ package body File_Comments is
       Gather_Comments_Block (Rng, N);
    end Gather_Comments;
 
-   procedure Sort_Comments_By_Node
+   --  Sort the comments of FILE.
+   procedure Sort_Comments (File : Source_File_Entry)
    is
-      pragma Assert (Ctxt.File /= No_Source_File_Entry);
-      Fc : File_Comments_Table renames Comments_Table.Table (Ctxt.File);
+      Fc : File_Comments_Table renames Comments_Table.Table (File);
 
       function Lt (L, R : Positive) return Boolean
       is
@@ -473,6 +473,13 @@ package body File_Comments is
         (Lt => Lt, Swap => Swap);
    begin
       Sort (Natural (File_Comments_Tables.Last (Fc)));
+   end Sort_Comments;
+
+   procedure Sort_Comments_By_Node
+   is
+      pragma Assert (Ctxt.File /= No_Source_File_Entry);
+   begin
+      Sort_Comments (Ctxt.File);
    end Sort_Comments_By_Node;
 
    function Find_First_Comment (File : Source_File_Entry; N : Uns32)
@@ -510,6 +517,31 @@ package body File_Comments is
          return No_Comment_Index;
       end;
    end Find_First_Comment;
+
+   procedure Replace_Comments_Node_Sorted
+     (File : Source_File_Entry; Old_N, New_N : Uns32)
+   is
+      Idx : Comment_Index;
+      Next : Comment_Index;
+   begin
+      Idx := Find_First_Comment (File, Old_N);
+      if Idx = No_Comment_Index then
+         return;
+      end if;
+
+      declare
+         Fc : File_Comments_Table renames Comments_Table.Table (File);
+      begin
+         loop
+            Next := Get_Next_Comment (File, Idx);
+            Fc.Table (Idx).N := New_N;
+            exit when Next = No_Comment_Index;
+            Idx := Next;
+         end loop;
+      end;
+
+      Sort_Comments (File);
+   end Replace_Comments_Node_Sorted;
 
    procedure Get_Comment (File : Source_File_Entry;
                           Idx : Comment_Index;

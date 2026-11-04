@@ -33,6 +33,7 @@ with Vhdl.Sem_Psl;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Xrefs; use Vhdl.Xrefs;
+with Vhdl.Comments; use Vhdl.Comments;
 with Vhdl.Sensitivity_Checks;
 
 package body Vhdl.Sem_Stmts is
@@ -2344,6 +2345,9 @@ package body Vhdl.Sem_Stmts is
                Sem_Scopes.Replace_Name (Label, Stmt, N_Stmt);
             end if;
 
+            if Flag_Gather_Comments then
+               Replace_Comments_Node_Sorted (Stmt, N_Stmt);
+            end if;
             Free_Iir (Stmt);
             Free_Iir (Call);
 

@@ -143,6 +143,11 @@ package File_Comments is
    --  comments that would have been attached to OLD_N.
    procedure Replace_Comments_Node (Old_N, New_N : Uns32);
 
+   --  Like Replace_Comments_Node, but once the comments of FILE are sorted (so
+   --  for a node replaced during the analysis).
+   procedure Replace_Comments_Node_Sorted
+     (File : Source_File_Entry; Old_N, New_N : Uns32);
+
    --  To be called on the first token of the file.
    --  The comments followed by an empty line (the header of the file) are
    --  attached to N.  The comments after the last empty line are not

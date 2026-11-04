@@ -70,6 +70,13 @@ package body Vhdl.Comments is
       Replace_Comments_Node (Uns32 (Old_N), Uns32 (New_N));
    end Replace_Comments_Node;
 
+   procedure Replace_Comments_Node_Sorted (Old_N, New_N : Iir) is
+   begin
+      Replace_Comments_Node_Sorted
+        (Files_Map.Location_To_File (Get_Location (Old_N)),
+         Uns32 (Old_N), Uns32 (New_N));
+   end Replace_Comments_Node_Sorted;
+
    procedure Gather_Comments_Header (N : Iir; Rng : out Comments_Range) is
    begin
       Gather_Comments_Header (Uns32 (N), Rng);
