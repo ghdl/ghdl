@@ -47,6 +47,12 @@ package Vhdl.Comments is
    --  unless N spans several lines and an inner node starts on that line.
    procedure Gather_Comments_Line_End (N : Iir; Loc : Location_Type);
 
+   --  To be called just after the last token of N or of a part of N has been
+   --  skipped (like the 'is' of a package).  The comments inside N and the
+   --  comment on the line of that token are attached to N, and so are the
+   --  following comments that start at the same column.
+   procedure Gather_Comments_After (N : Iir);
+
    --  OLD_N is replaced by NEW_N: its comments are attached to NEW_N.
    procedure Replace_Comments_Node (Old_N, New_N : Iir);
 

@@ -57,6 +57,8 @@ package File_Comments is
    --  continued before building a node (eg: to distinguish package
    --  declaration and package instantiation, or to distinguish process and
    --  sensitized process).
+   --  A comment on the line of the header of a block construct is attached
+   --  like in line mode, by Gather_Comments_After.
    --
    --  The header of a file is made of the comments before the first token
    --  that are followed by an empty line (see Gather_Comments_Header).  The
@@ -117,6 +119,16 @@ package File_Comments is
    --  attached to that inner node).
    procedure Gather_Comments_Line_End
      (Decl_Line_Start, Line_Start : Source_Ptr; N : Uns32);
+
+   --  To be called on the token after the last token of N or of a part of N
+   --  (like the token after the 'is' of a package), so when the comments up to
+   --  this token have been scanned.  PREV_POS is the position just after that
+   --  last token.
+   --  The comments before PREV_POS are inside N: they are attached to N.  So
+   --  is the comment on the line of PREV_POS, and the comments that continue
+   --  it (like for Gather_Comments_Line).  The state of the association is not
+   --  changed: the next comments are handled like before this call.
+   procedure Gather_Comments_After (Prev_Pos : Source_Ptr; N : Uns32);
 
    --  Assign node N to the last comments scanned.
    --  Identical to Save_Comments followed by above Gather_Comments.

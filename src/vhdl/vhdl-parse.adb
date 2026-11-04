@@ -3277,7 +3277,8 @@ package body Vhdl.Parse is
    --      identifier_list : element_subtype_definition
    --
    --  element_subtype_definition ::= subtype_indication
-   function Parse_Record_Type_Definition return Iir_Record_Type_Definition
+   function Parse_Record_Type_Definition (Decl : Iir)
+                                         return Iir_Record_Type_Definition
    is
       Res: Iir_Record_Type_Definition;
       El_List : Iir_List;
@@ -3292,6 +3293,11 @@ package body Vhdl.Parse is
 
       --  Skip 'record'
       Scan;
+
+      --  A comment on the line of 'record' is for the type.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Decl);
+      end if;
 
       if Current_Token = Tok_End then
          Error_Msg_Parse ("empty records are not allowed");
@@ -3465,6 +3471,9 @@ package body Vhdl.Parse is
 
       if Flag_Gather_Comments then
          Gather_Comments_Block (Comments, Decl);
+
+         --  A comment on the line of 'protected' (or 'body') is for it too.
+         Gather_Comments_After (Decl);
       end if;
 
       Parse_Declarative_Part (Res, Res);
@@ -3634,7 +3643,7 @@ package body Vhdl.Parse is
                Gather_Comments_Block (Decl);
             end if;
 
-            Def := Parse_Record_Type_Definition;
+            Def := Parse_Record_Type_Definition (Decl);
             Set_Type_Definition (Decl, Def);
             Set_Type_Declarator (Def, Decl);
             if Current_Token = Tok_Identifier then
@@ -9453,6 +9462,11 @@ package body Vhdl.Parse is
          Scan;
       end if;
 
+      --  A comment on the line of the end of the header is for the process.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
+
       --  Declarative part.
       Parse_Declarative_Part (Res, Res);
 
@@ -9898,6 +9912,12 @@ package body Vhdl.Parse is
          --  Eat 'is'.
          Scan;
       end if;
+
+      --  A comment on the line of the end of the header is for the block.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
+
       if Current_Token = Tok_Generic or Current_Token = Tok_Port then
          Set_Block_Header (Res, Parse_Block_Header (Res));
       end if;
@@ -11453,6 +11473,11 @@ package body Vhdl.Parse is
       --  Skip 'is'.
       Expect_Scan (Tok_Is);
 
+      --  A comment on the line of 'is' is for the architecture.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
+
       Parse_Declarative_Part (Res, Res);
 
       --  Comments just before the 'begin' are attached to the last declaration
@@ -12061,6 +12086,9 @@ package body Vhdl.Parse is
       --  attached to the package.
       if Flag_Gather_Comments then
          Gather_Comments_Block (Comments, Res);
+
+         --  A comment on the line of 'is' is for the package too.
+         Gather_Comments_After (Res);
       end if;
 
       if Current_Token = Tok_Generic then
@@ -12133,6 +12161,9 @@ package body Vhdl.Parse is
 
       if Flag_Gather_Comments then
          Gather_Comments_Block (Comments, Res);
+
+         --  A comment on the line of 'is' is for the package body too.
+         Gather_Comments_After (Res);
       end if;
 
       Parse_Declarative_Part (Res, Get_Package_Parent (Res));
