@@ -92,7 +92,7 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
         :param mode:              The interface item's mode.
         :param subtype:           Reference to the object's subtype.
         :param defaultExpression: The default value, or ``None`` if none was given.
-        :param documentation:     The documentation comment associated with this declaration.
+        :param documentation:     Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
@@ -103,7 +103,7 @@ class GenericConstantInterfaceItem(VHDLModel_GenericConstantInterfaceItem, DOMMi
         Translates the IIR node of the generic declaration to a :class:`GenericConstantInterfaceItem`.
 
         :param genericNode:        The IIR node of the generic declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated generic declaration.
         """
         name = GetNameOfNode(genericNode)
@@ -132,7 +132,7 @@ class GenericTypeInterfaceItem(VHDLModel_GenericTypeInterfaceItem, DOMMixin):
 
         :param node:          The IIR node this object was translated from.
         :param identifier:    The generic type's identifier.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
@@ -164,7 +164,7 @@ class GenericPackageInterfaceItem(VHDLModel_GenericPackageInterfaceItem, DOMMixi
 
         :param node:          The IIR node this object was translated from.
         :param name:          The generic package's identifier.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(name, documentation)
         DOMMixin.__init__(self, node)
@@ -196,7 +196,7 @@ class GenericProcedureInterfaceItem(VHDLModel_GenericProcedureInterfaceItem, DOM
 
         :param node:          The IIR node this object was translated from.
         :param identifier:    The generic procedure's identifier.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
@@ -229,7 +229,7 @@ class GenericFunctionInterfaceItem(VHDLModel_GenericFunctionInterfaceItem, DOMMi
         :param node:          The IIR node this object was translated from.
         :param identifier:    The generic function's identifier.
         :param returnType:    Reference to the subtype of the function's return value.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, returnType, documentation)
         DOMMixin.__init__(self, node)
@@ -275,8 +275,8 @@ class PortSimpleSignalInterfaceItem(VHDLModel_PortSimpleSignalInterfaceItem, DOM
         :param identifiers:       A list of identifiers.
         :param mode:              The interface item's mode.
         :param subtype:           Reference to the object's subtype.
-        :param defaultExpression: The default value, or ``None`` if none was given.
-        :param documentation:     The documentation comment associated with this declaration.
+        :param defaultExpression: Optional, the default value, or ``None`` if none was given.
+        :param documentation:     Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
@@ -287,7 +287,7 @@ class PortSimpleSignalInterfaceItem(VHDLModel_PortSimpleSignalInterfaceItem, DOM
         Translates the IIR node of the port declaration to a :class:`PortSimpleSignalInterfaceItem`.
 
         :param portNode:           The IIR node of the port declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated port declaration.
         """
         name = GetNameOfNode(portNode)
@@ -333,7 +333,7 @@ class PortViewSignalInterfaceItem(VHDLModel_PortViewSignalInterfaceItem, DOMMixi
         :param node:               The IIR node this object was translated from.
         :param identifiers:        A list of identifiers.
         :param modeViewIndication: Reference to the mode view applied to this port.
-        :param documentation:      The documentation comment associated with this declaration.
+        :param documentation:      Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, modeViewIndication, documentation=documentation)
         DOMMixin.__init__(self, node)
@@ -344,7 +344,7 @@ class PortViewSignalInterfaceItem(VHDLModel_PortViewSignalInterfaceItem, DOMMixi
         Translates the IIR node of the port declaration to a :class:`PortViewSignalInterfaceItem`.
 
         :param portNode:           The IIR node of the port declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated port declaration.
         """
         name = GetNameOfNode(portNode)
@@ -383,8 +383,8 @@ class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem, D
         :param identifiers:       A list of identifiers.
         :param mode:              The interface item's mode.
         :param subtype:           Reference to the object's subtype.
-        :param defaultExpression: The default value, or ``None`` if none was given.
-        :param documentation:     The documentation comment associated with this declaration.
+        :param defaultExpression: Optional, the default value, or ``None`` if none was given.
+        :param documentation:     Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
@@ -395,7 +395,7 @@ class ParameterConstantInterfaceItem(VHDLModel_ParameterConstantInterfaceItem, D
         Translates the IIR node of the parameter declaration to a :class:`ParameterConstantInterfaceItem`.
 
         :param parameterNode:      The IIR node of the parameter declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated parameter declaration.
         """
         name = GetNameOfNode(parameterNode)
@@ -435,8 +435,8 @@ class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem, D
         :param identifiers:       A list of identifiers.
         :param mode:              The interface item's mode.
         :param subtype:           Reference to the object's subtype.
-        :param defaultExpression: The default value, or ``None`` if none was given.
-        :param documentation:     The documentation comment associated with this declaration.
+        :param defaultExpression: Optional, the default value, or ``None`` if none was given.
+        :param documentation:     Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
@@ -447,7 +447,7 @@ class ParameterVariableInterfaceItem(VHDLModel_ParameterVariableInterfaceItem, D
         Translates the IIR node of the parameter declaration to a :class:`ParameterVariableInterfaceItem`.
 
         :param parameterNode:      The IIR node of the parameter declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated parameter declaration.
         """
         name = GetNameOfNode(parameterNode)
@@ -487,8 +487,8 @@ class ParameterSimpleSignalInterfaceItem(VHDLModel_ParameterSimpleSignalInterfac
         :param identifiers:       A list of identifiers.
         :param mode:              The interface item's mode.
         :param subtype:           Reference to the object's subtype.
-        :param defaultExpression: The default value, or ``None`` if none was given.
-        :param documentation:     The documentation comment associated with this declaration.
+        :param defaultExpression: Optional, the default value, or ``None`` if none was given.
+        :param documentation:     Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, mode, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
@@ -499,7 +499,7 @@ class ParameterSimpleSignalInterfaceItem(VHDLModel_ParameterSimpleSignalInterfac
         Translates the IIR node of the parameter declaration to a :class:`ParameterSimpleSignalInterfaceItem`.
 
         :param parameterNode:      The IIR node of the parameter declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated parameter declaration.
         """
         name = GetNameOfNode(parameterNode)
@@ -543,7 +543,7 @@ class ParameterViewSignalInterfaceItem(VHDLModel_ParameterViewSignalInterfaceIte
         :param node:               The IIR node this object was translated from.
         :param identifiers:        A list of identifiers.
         :param modeViewIndication: Reference to the mode view applied to this parameter.
-        :param documentation:      The documentation comment associated with this declaration.
+        :param documentation:      Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, modeViewIndication, documentation=documentation)
         DOMMixin.__init__(self, node)
@@ -554,7 +554,7 @@ class ParameterViewSignalInterfaceItem(VHDLModel_ParameterViewSignalInterfaceIte
         Translates the IIR node of the parameter declaration to a :class:`ParameterViewSignalInterfaceItem`.
 
         :param parameterNode:      The IIR node of the parameter declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated parameter declaration.
         """
         name = GetNameOfNode(parameterNode)
@@ -584,7 +584,7 @@ class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin)
         :param node:          The IIR node this object was translated from.
         :param identifiers:   A list of identifiers.
         :param subtype:       Reference to the object's subtype.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
@@ -595,7 +595,7 @@ class ParameterFileInterfaceItem(VHDLModel_ParameterFileInterfaceItem, DOMMixin)
         Translates the IIR node of the parameter declaration to a :class:`ParameterFileInterfaceItem`.
 
         :param parameterNode:      The IIR node of the parameter declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated parameter declaration.
         """
         name = GetNameOfNode(parameterNode)
@@ -627,7 +627,7 @@ class SimpleModeViewElement(VHDLModel_SimpleModeViewElement, DOMMixin):
         :param node:          The IIR node this object was translated from.
         :param identifiers:   A list of identifiers.
         :param mode:          The element's mode.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, mode, documentation)
         DOMMixin.__init__(self, node)
@@ -638,7 +638,7 @@ class SimpleModeViewElement(VHDLModel_SimpleModeViewElement, DOMMixin):
         Translates the IIR node of the element declaration to a :class:`SimpleModeViewElement`.
 
         :param elementNode:        The IIR node of the element declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated element declaration.
         """
         name = GetNameOfNode(elementNode)
@@ -672,7 +672,7 @@ class CompositeModeViewElement(VHDLModel_CompositeModeViewElement, DOMMixin):
         :param node:          The IIR node this object was translated from.
         :param identifiers:   A list of identifiers.
         :param modeViewName:  Reference to the mode view applied to this element.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, modeViewName, documentation)
         DOMMixin.__init__(self, node)
@@ -683,7 +683,7 @@ class CompositeModeViewElement(VHDLModel_CompositeModeViewElement, DOMMixin):
         Translates the IIR node of the element declaration to a :class:`CompositeModeViewElement`.
 
         :param elementNode:        The IIR node of the element declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated element declaration.
         """
         name = GetNameOfNode(elementNode)
@@ -725,8 +725,8 @@ class ModeViewDeclaration(VHDLModel_ModeViewDeclaration, DOMMixin):
         :param node:          The IIR node this object was translated from.
         :param identifier:    The mode view's identifier.
         :param subtype:       Reference to the subtype this mode view applies to.
-        :param elements:      List of all mode view elements, in declaration order.
-        :param documentation: The documentation comment associated with this declaration.
+        :param elements:      Optional, list of all mode view elements, in declaration order.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, subtype, elements, documentation)
         DOMMixin.__init__(self, node)

@@ -68,8 +68,8 @@ class Alias(VHDLModel_Alias, DOMMixin):
         :param node:          The IIR node this object was translated from.
         :param aliasName:     The alias' identifier.
         :param name:          Reference to the name being aliased.
-        :param subtype:       Reference to the alias' subtype, or ``None`` if none was given.
-        :param documentation: The documentation comment associated with this declaration.
+        :param subtype:       Optional, reference to the alias' subtype, or ``None`` if none was given.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(aliasName, name, subtype, documentation)
         DOMMixin.__init__(self, node)

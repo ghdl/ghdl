@@ -84,7 +84,7 @@ class Constant(VHDLModel_Constant, DOMMixin):
         :param identifiers:       A list of identifiers.
         :param subtype:           Reference to the object's subtype.
         :param defaultExpression: The default value, or ``None`` if none was given.
-        :param documentation:     The documentation comment associated with this declaration.
+        :param documentation:     Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
@@ -95,7 +95,7 @@ class Constant(VHDLModel_Constant, DOMMixin):
         Translates the IIR node of the constant declaration to a :class:`Constant`.
 
         :param constantNode:       The IIR node of the constant declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated constant declaration.
         """
         from pyGHDL.dom._Translate import (
@@ -139,7 +139,7 @@ class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
         :param node:          The IIR node this object was translated from.
         :param identifiers:   A list of identifiers.
         :param subtype:       Reference to the object's subtype.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
@@ -150,7 +150,7 @@ class DeferredConstant(VHDLModel_DeferredConstant, DOMMixin):
         Translates the IIR node of the constant declaration to a :class:`DeferredConstant`.
 
         :param constantNode:       The IIR node of the constant declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated constant declaration.
         """
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
@@ -194,7 +194,7 @@ class Variable(VHDLModel_Variable, DOMMixin):
         :param identifiers:       A list of identifiers.
         :param subtype:           Reference to the object's subtype.
         :param defaultExpression: The default value, or ``None`` if none was given.
-        :param documentation:     The documentation comment associated with this declaration.
+        :param documentation:     Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
@@ -205,7 +205,7 @@ class Variable(VHDLModel_Variable, DOMMixin):
         Translates the IIR node of the variable declaration to a :class:`Variable`.
 
         :param variableNode:       The IIR node of the variable declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated variable declaration.
         """
         from pyGHDL.dom._Translate import (
@@ -248,7 +248,7 @@ class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
         :param node:          The IIR node this object was translated from.
         :param identifiers:   A list of identifiers.
         :param subtype:       Reference to the object's subtype.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
@@ -259,7 +259,7 @@ class SharedVariable(VHDLModel_SharedVariable, DOMMixin):
         Translates the IIR node of the variable declaration to a :class:`SharedVariable`.
 
         :param variableNode:       The IIR node of the variable declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated variable declaration.
         """
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
@@ -303,7 +303,7 @@ class Signal(VHDLModel_Signal, DOMMixin):
         :param identifiers:       A list of identifiers.
         :param subtype:           Reference to the object's subtype.
         :param defaultExpression: The default value, or ``None`` if none was given.
-        :param documentation:     The documentation comment associated with this declaration.
+        :param documentation:     Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, subtype, defaultExpression, documentation)
         DOMMixin.__init__(self, node)
@@ -314,7 +314,7 @@ class Signal(VHDLModel_Signal, DOMMixin):
         Translates the IIR node of the signal declaration to a :class:`Signal`.
 
         :param signalNode:         The IIR node of the signal declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated signal declaration.
         """
         from pyGHDL.dom._Translate import (
@@ -355,7 +355,7 @@ class File(VHDLModel_File, DOMMixin):
         :param node:          The IIR node this object was translated from.
         :param identifiers:   A list of identifiers.
         :param subtype:       Reference to the object's subtype.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
@@ -366,7 +366,7 @@ class File(VHDLModel_File, DOMMixin):
         Translates the IIR node of the file declaration to a :class:`File`.
 
         :param fileNode:           The IIR node of the file declaration.
-        :param furtherIdentifiers: The remaining identifiers, when one declaration names several.
+        :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated file declaration.
         """
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode

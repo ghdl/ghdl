@@ -116,8 +116,8 @@ class Design(VHDLModel_Design):
         """
         Initialize a VHDL design.
 
-        :param name:          Name of the design.
-        :param vhdlVersion:   The VHDL version used to analyze this design.
+        :param name:          Optional, name of the design.
+        :param vhdlVersion:   Optional, the VHDL version used to analyze this design.
         :param tabSize:       Optional, the number of columns between two tab stops. Default: ``8``.
         :raises DOMException: If parameter 'vhdlVersion' is not supported.
         :raises ValueError:   If parameter 'tabSize' is None.
@@ -205,7 +205,7 @@ class Design(VHDLModel_Design):
 
         How long this took is measured and kept in :attr:`_loadDefaultLibraryDuration`.
 
-        :param flavor: The IEEE library flavor to load, or ``None`` for the default.
+        :param flavor: Optional, the IEEE library flavor to load, or ``None`` for the default.
         """
         with Stopwatch() as stopwatch:
             super().LoadStdLibrary()
@@ -283,10 +283,10 @@ class Document(VHDLModel_Document):
         Initializes a VHDL document.
 
         :param path:          Path to the document. ``None`` if in-memory document.
-        :param sourceCode:    The source code to analyze, or ``None`` to read it from ``path``.
-        :param vhdlVersion:   VHDL version used for analyzing this source file.
-        :param dontParse:     ``True`` to skip parsing the source code.
-        :param dontTranslate: ``True`` to parse the source code, but skip translating it to the DOM.
+        :param sourceCode:    Optional, the source code to analyze, or ``None`` to read it from ``path``.
+        :param vhdlVersion:   Optional, VHDL version used for analyzing this source file.
+        :param dontParse:     Optional, ``True`` to skip parsing the source code.
+        :param dontTranslate: Optional, ``True`` to parse the source code, but skip translating it to the DOM.
         """
         super().__init__(path, parent=None)
 
