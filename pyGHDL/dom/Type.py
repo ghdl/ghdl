@@ -80,7 +80,7 @@ class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
 
         :param node:          The IIR node this object was translated from.
         :param identifier:    Name of the type.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)
@@ -91,7 +91,7 @@ class IncompleteType(VHDLModel_AnonymousType, DOMMixin):
         Translates an IIR node to an :class:`IncompleteType`.
 
         :param node:          The IIR node this object is translated from.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         :returns:             The translated object.
         """
         from pyGHDL.dom._Utils import GetNameOfNode
@@ -124,7 +124,7 @@ class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
         :param node:          The IIR node this object was translated from.
         :param identifier:    The enumeration type's identifier.
         :param literals:      List of all enumeration literals, in declaration order.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, literals, documentation)
         DOMMixin.__init__(self, node)
@@ -136,7 +136,7 @@ class EnumeratedType(VHDLModel_EnumeratedType, DOMMixin):
 
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
-        :param documentation:      The documentation comment on the type declaration.
+        :param documentation:      Optional, the documentation comment on the type declaration.
         :returns:                  The enumerated type instance.
         """
         literals = []
@@ -172,7 +172,7 @@ class IntegerType(VHDLModel_IntegerType, DOMMixin):
         :param node:          The IIR node this object was translated from.
         :param typeName:      The type's identifier.
         :param rng:           The range constraining this scalar type.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(typeName, rng, documentation)
         DOMMixin.__init__(self, node)
@@ -199,7 +199,7 @@ class RealType(VHDLModel_RealType, DOMMixin):
         :param node:          The IIR node this object was translated from.
         :param typeName:      The type's identifier.
         :param rng:           The range constraining this scalar type.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(typeName, rng, documentation)
         DOMMixin.__init__(self, node)
@@ -240,7 +240,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
         :param rng:           The range constraining this scalar type.
         :param primaryUnit:   The name of the type's primary unit.
         :param units:         Iterable of the secondary units as (name, value) pairs.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(typeName, rng, primaryUnit, units, documentation)
         DOMMixin.__init__(self, node)
@@ -252,7 +252,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
 
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
-        :param documentation:      The documentation comment on the type declaration.
+        :param documentation:      Optional, the documentation comment on the type declaration.
         :returns:                  The physical type instance.
         """
         from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
@@ -311,7 +311,7 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
         :param identifier:     The array type's identifier.
         :param indices:        List of all index ranges, one per dimension.
         :param elementSubtype: Reference to the subtype of the array's elements.
-        :param documentation:  The documentation comment associated with this declaration.
+        :param documentation:  Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, indices, elementSubtype, documentation)
         DOMMixin.__init__(self, node)
@@ -327,7 +327,7 @@ class ArrayType(VHDLModel_ArrayType, DOMMixin):
 
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
-        :param documentation:      The documentation comment on the type declaration.
+        :param documentation:      Optional, the documentation comment on the type declaration.
         :returns:                  The array type instance.
         :raises DOMException:      If an index of an unconstrained array type is not a type mark.
         """
@@ -389,7 +389,7 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
         :param node:          The IIR node this object was translated from.
         :param identifiers:   A list of identifiers.
         :param subtype:       Reference to the subtype shared by all identifiers of this element declaration.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, subtype, documentation)
         DOMMixin.__init__(self, node)
@@ -400,7 +400,7 @@ class RecordTypeElement(VHDLModel_RecordTypeElement, DOMMixin):
         Parses a *record element* IIR and returns an :class:`~pyVHDLModel.Type.RecordTypeElement` instance.
 
         :param elementDeclarationNode: The IIR node to parse.
-        :param furtherIdentifiers:     The list of record element identifiers.
+        :param furtherIdentifiers:     Optional, the list of record element identifiers.
         :returns:                      The record element instance.
         """
         from pyGHDL.dom._Utils import GetNameOfNode, GetDocumentationOfNode
@@ -441,8 +441,8 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
 
         :param node:          The IIR node this object was translated from.
         :param identifier:    The record type's identifier.
-        :param elements:      List of all element declarations, in declaration order.
-        :param documentation: The documentation comment associated with this declaration.
+        :param elements:      Optional, list of all element declarations, in declaration order.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, elements, documentation)
         DOMMixin.__init__(self, node)
@@ -454,7 +454,7 @@ class RecordType(VHDLModel_RecordType, DOMMixin):
 
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
-        :param documentation:      The documentation comment on the type declaration.
+        :param documentation:      Optional, the documentation comment on the type declaration.
         :returns:                  The record type instance.
         """
         from pyGHDL.dom._Utils import GetNameOfNode
@@ -517,8 +517,8 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
 
         :param node:          The IIR node this object was translated from.
         :param identifier:    The protected type's identifier.
-        :param methods:       List of the protected type's methods, in declaration order.
-        :param documentation: The documentation comment associated with this declaration.
+        :param methods:       Optional, list of the protected type's methods, in declaration order.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, methods, documentation)
         DOMMixin.__init__(self, node)
@@ -530,7 +530,7 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
 
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
-        :param documentation:      The documentation comment on the type declaration.
+        :param documentation:      Optional, the documentation comment on the type declaration.
         :returns:                  The protected type instance.
         """
         from pyGHDL.dom._Utils import GetIirKindOfNode
@@ -571,8 +571,8 @@ class ProtectedTypeBody(VHDLModel_ProtectedTypeBody, DOMMixin):
 
         :param node:          The IIR node this object was translated from.
         :param identifier:    The protected type body's identifier.
-        :param declaredItems: Iterable of all items declared in this body.
-        :param documentation: The documentation comment associated with this declaration.
+        :param declaredItems: Optional, iterable of all items declared in this body.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, declaredItems, documentation)
         DOMMixin.__init__(self, node)
@@ -620,7 +620,7 @@ class AccessType(VHDLModel_AccessType, DOMMixin):
         :param node:              The IIR node this object was translated from.
         :param identifier:        The access type's identifier.
         :param designatedSubtype: Reference to the subtype the access values designate.
-        :param documentation:     The documentation comment associated with this declaration.
+        :param documentation:     Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, designatedSubtype, documentation)
         DOMMixin.__init__(self, node)
@@ -632,7 +632,7 @@ class AccessType(VHDLModel_AccessType, DOMMixin):
 
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
-        :param documentation:      The documentation comment on the type declaration.
+        :param documentation:      Optional, the documentation comment on the type declaration.
         :returns:                  The access type instance.
         """
         from pyGHDL.dom._Translate import GetSubtypeIndicationFromIndicationNode
@@ -664,7 +664,7 @@ class FileType(VHDLModel_FileType, DOMMixin):
         :param node:              The IIR node this object was translated from.
         :param identifier:        The file type's identifier.
         :param designatedSubtype: Reference to the subtype of the values stored in the file.
-        :param documentation:     The documentation comment associated with this declaration.
+        :param documentation:     Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, designatedSubtype, documentation)
         DOMMixin.__init__(self, node)
@@ -676,7 +676,7 @@ class FileType(VHDLModel_FileType, DOMMixin):
 
         :param typeName:           The identifier of the type.
         :param typeDefinitionNode: The IIR node to parse.
-        :param documentation:      The documentation comment on the type declaration.
+        :param documentation:      Optional, the documentation comment on the type declaration.
         :returns:                  The file type instance.
         """
         from pyGHDL.dom._Utils import GetNameOfNode
@@ -705,7 +705,7 @@ class Subtype(VHDLModel_Subtype, DOMMixin):
         :param node:          The IIR node this object was translated from.
         :param subtypeName:   The subtype's identifier.
         :param symbol:        Reference to the type or subtype this subtype is derived from.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(subtypeName, symbol, documentation)
         DOMMixin.__init__(self, node)

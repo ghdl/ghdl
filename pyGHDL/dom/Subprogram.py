@@ -78,12 +78,12 @@ class Function(VHDLModel_Function, DOMMixin):
         :param node:           The IIR node this object was translated from.
         :param functionName:   The function's identifier.
         :param returnType:     Reference to the subtype of the function's return value.
-        :param isPure:         ``True`` if the subprogram was declared pure.
-        :param genericItems:   List of all generics, in declaration order.
-        :param parameterItems: List of all parameters, in declaration order.
-        :param declaredItems:  List of all declared items in this sequential declaration region.
-        :param statements:     List of all sequential statements in the subprogram's body.
-        :param documentation:  The documentation comment associated with this declaration.
+        :param isPure:         Optional, ``True`` if the subprogram was declared pure.
+        :param genericItems:   Optional, list of all generics, in declaration order.
+        :param parameterItems: Optional, list of all parameters, in declaration order.
+        :param declaredItems:  Optional, list of all declared items in this sequential declaration region.
+        :param statements:     Optional, list of all sequential statements in the subprogram's body.
+        :param documentation:  Optional, the documentation comment associated with this declaration.
         """
         super().__init__(
             functionName,
@@ -170,11 +170,11 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
 
         :param node:           The IIR node this object was translated from.
         :param procedureName:  The procedure's identifier.
-        :param genericItems:   List of all generics, in declaration order.
-        :param parameterItems: List of all parameters, in declaration order.
-        :param declaredItems:  List of all declared items in this sequential declaration region.
-        :param statements:     List of all sequential statements in the subprogram's body.
-        :param documentation:  The documentation comment associated with this declaration.
+        :param genericItems:   Optional, list of all generics, in declaration order.
+        :param parameterItems: Optional, list of all parameters, in declaration order.
+        :param declaredItems:  Optional, list of all declared items in this sequential declaration region.
+        :param statements:     Optional, list of all sequential statements in the subprogram's body.
+        :param documentation:  Optional, the documentation comment associated with this declaration.
         """
         super().__init__(
             procedureName,
@@ -253,8 +253,8 @@ class FunctionInstantiation(VHDLModel_FunctionInstantiation, DOMMixin):
         :param node:                    The IIR node this object was translated from.
         :param functionName:            The function's identifier.
         :param subprogramReference:     Reference to the instantiated generic subprogram.
-        :param genericAssociationItems: List of all generic associations in the generic map aspect.
-        :param documentation:           The documentation comment associated with this declaration.
+        :param genericAssociationItems: Optional, list of all generic associations in the generic map aspect.
+        :param documentation:           Optional, the documentation comment associated with this declaration.
         """
         super().__init__(
             functionName,
@@ -314,8 +314,8 @@ class ProcedureInstantiation(VHDLModel_ProcedureInstantiation, DOMMixin):
         :param node:                    The IIR node this object was translated from.
         :param procedureName:           The procedure's identifier.
         :param subprogramReference:     Reference to the instantiated generic subprogram.
-        :param genericAssociationItems: List of all generic associations in the generic map aspect.
-        :param documentation:           The documentation comment associated with this declaration.
+        :param genericAssociationItems: Optional, list of all generic associations in the generic map aspect.
+        :param documentation:           Optional, the documentation comment associated with this declaration.
         """
         super().__init__(
             procedureName,

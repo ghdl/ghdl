@@ -208,12 +208,12 @@ class Entity(VHDLModel_Entity, DOMMixin):
 
         :param node:          The IIR node this object was translated from.
         :param identifier:    The entity's identifier.
-        :param contextItems:  List of all context items (library, use and context clauses).
-        :param genericItems:  List of all generics, in declaration order.
-        :param portItems:     List of all ports, in declaration order.
-        :param declaredItems: List of all declared items in this concurrent declaration region.
-        :param statements:    List of all concurrent statements in this construct.
-        :param documentation: The documentation comment associated with this declaration.
+        :param contextItems:  Optional, list of all context items (library, use and context clauses).
+        :param genericItems:  Optional, list of all generics, in declaration order.
+        :param portItems:     Optional, list of all ports, in declaration order.
+        :param declaredItems: Optional, list of all declared items in this concurrent declaration region.
+        :param statements:    Optional, list of all concurrent statements in this construct.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(
             identifier, contextItems, genericItems, portItems, declaredItems, statements, documentation, None
@@ -266,10 +266,10 @@ class Architecture(VHDLModel_Architecture, DOMMixin):
         :param node:          The IIR node this object was translated from.
         :param identifier:    The architecture's identifier.
         :param entity:        Reference to the entity this architecture implements.
-        :param contextItems:  List of all context items (library, use and context clauses).
-        :param declaredItems: List of all declared items in this concurrent declaration region.
-        :param statements:    List of all concurrent statements in this construct.
-        :param documentation: The documentation comment associated with this declaration.
+        :param contextItems:  Optional, list of all context items (library, use and context clauses).
+        :param declaredItems: Optional, list of all declared items in this concurrent declaration region.
+        :param statements:    Optional, list of all concurrent statements in this construct.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, entity, contextItems, declaredItems, statements, documentation, None)
         DOMMixin.__init__(self, node)
@@ -319,9 +319,9 @@ class Component(VHDLModel_Component, DOMMixin):
 
         :param node:          The IIR node this object was translated from.
         :param identifier:    The component's identifier.
-        :param genericItems:  List of all generics of this component, in declaration order.
-        :param portItems:     List of all ports of this component, in declaration order.
-        :param documentation: The documentation comment associated with this declaration.
+        :param genericItems:  Optional, list of all generics of this component, in declaration order.
+        :param portItems:     Optional, list of all ports of this component, in declaration order.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, genericItems, portItems, documentation, None)
         DOMMixin.__init__(self, node)
@@ -363,10 +363,10 @@ class Package(VHDLModel_Package, DOMMixin):
 
         :param node:          The IIR node this object was translated from.
         :param identifier:    Name of the VHDL package.
-        :param contextItems:  List of all context items (library, use and context clauses).
-        :param genericItems:  List of all generics, in declaration order.
-        :param declaredItems: List of all declared items in this concurrent declaration region.
-        :param documentation: The documentation comment associated with this declaration.
+        :param contextItems:  Optional, list of all context items (library, use and context clauses).
+        :param genericItems:  Optional, list of all generics, in declaration order.
+        :param declaredItems: Optional, list of all declared items in this concurrent declaration region.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, contextItems, genericItems, declaredItems, documentation, None)
         DOMMixin.__init__(self, node)
@@ -416,9 +416,9 @@ class PackageBody(VHDLModel_PackageBody, DOMMixin):
 
         :param node:          The IIR node this object was translated from.
         :param packageSymbol: Reference to the package this body implements.
-        :param contextItems:  List of all context items (library, use and context clauses).
-        :param declaredItems: List of all declared items in this concurrent declaration region.
-        :param documentation: The documentation comment associated with this declaration.
+        :param contextItems:  Optional, list of all context items (library, use and context clauses).
+        :param declaredItems: Optional, list of all declared items in this concurrent declaration region.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(packageSymbol, contextItems, declaredItems, documentation, None)
         DOMMixin.__init__(self, node)
@@ -466,9 +466,9 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         :param node:                      The IIR node this object was translated from.
         :param identifier:                The instantiated package's identifier.
         :param uninstantiatedPackageName: The name of the uninstantiated generic package.
-        :param contextItems:              List of all context items (library, use and context clauses).
-        :param genericAssociationItems:   List of all generic associations in the generic map aspect.
-        :param documentation:             The documentation comment associated with this declaration.
+        :param contextItems:              Optional, list of all context items (library, use and context clauses).
+        :param genericAssociationItems:   Optional, list of all generic associations in the generic map aspect.
+        :param documentation:             Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, uninstantiatedPackageName, contextItems, genericAssociationItems, documentation)
         DOMMixin.__init__(self, node)
@@ -479,7 +479,7 @@ class PackageInstantiation(VHDLModel_PackageInstantiation, DOMMixin):
         Translates the IIR node of the package declaration to a :class:`PackageInstantiation`.
 
         :param packageNode:  The IIR node of the package declaration.
-        :param contextItems: List of all context items (library, use and context clauses) preceding the unit.
+        :param contextItems: Optional, list of all context items (library, use and context clauses) preceding the unit.
         :returns:            The translated package declaration.
         """
         name = GetNameOfNode(packageNode)
@@ -513,8 +513,8 @@ class Context(VHDLModel_Context, DOMMixin):
 
         :param node:          The IIR node this object was translated from.
         :param identifier:    The context's identifier.
-        :param references:    All context items, in declaration order.
-        :param documentation: The documentation comment associated with this declaration.
+        :param references:    Optional, all context items, in declaration order.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, references, documentation, None)
         DOMMixin.__init__(self, node)
@@ -578,8 +578,8 @@ class Configuration(VHDLModel_Configuration, DOMMixin):
         :param identifier:         The configuration's identifier.
         :param entity:             Reference to the entity this configuration configures.
         :param blockConfiguration: The configuration of the entity's architecture.
-        :param contextItems:       List of all context items (library, use and context clauses).
-        :param documentation:      The documentation comment associated with this declaration.
+        :param contextItems:       Optional, list of all context items (library, use and context clauses).
+        :param documentation:      Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, entity, blockConfiguration, contextItems, documentation, None)
         DOMMixin.__init__(self, node)

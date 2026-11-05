@@ -315,8 +315,8 @@ class BinaryBitStringLiteral(VHDLModel_BinaryBitStringLiteral, DOMMixin):
 
         :param node:     The IIR node this object was translated from.
         :param value:    The literal as written in the source, without the enclosing double quotes.
-        :param length:   The explicitly given length, or ``None`` if the literal has no length specification.
-        :param isSigned: ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
+        :param length:   Optional, the explicitly given length, or ``None`` if the literal has no length specification.
+        :param isSigned: Optional, ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
         """
         super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
@@ -335,8 +335,8 @@ class OctalBitStringLiteral(VHDLModel_OctalBitStringLiteral, DOMMixin):
 
         :param node:     The IIR node this object was translated from.
         :param value:    The literal as written in the source, without the enclosing double quotes.
-        :param length:   The explicitly given length, or ``None`` if the literal has no length specification.
-        :param isSigned: ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
+        :param length:   Optional, the explicitly given length, or ``None`` if the literal has no length specification.
+        :param isSigned: Optional, ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
         """
         super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
@@ -355,8 +355,8 @@ class DecimalBitStringLiteral(VHDLModel_DecimalBitStringLiteral, DOMMixin):
 
         :param node:     The IIR node this object was translated from.
         :param value:    The literal as written in the source, without the enclosing double quotes.
-        :param length:   The explicitly given length, or ``None`` if the literal has no length specification.
-        :param isSigned: ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
+        :param length:   Optional, the explicitly given length, or ``None`` if the literal has no length specification.
+        :param isSigned: Optional, ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
         """
         super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
@@ -375,8 +375,8 @@ class HexadecimalBitStringLiteral(VHDLModel_HexadecimalBitStringLiteral, DOMMixi
 
         :param node:     The IIR node this object was translated from.
         :param value:    The literal as written in the source, without the enclosing double quotes.
-        :param length:   The explicitly given length, or ``None`` if the literal has no length specification.
-        :param isSigned: ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
+        :param length:   Optional, the explicitly given length, or ``None`` if the literal has no length specification.
+        :param isSigned: Optional, ``True`` if signed, ``False`` if unsigned, ``None`` if unspecified.
         """
         super().__init__(value, length, isSigned)
         DOMMixin.__init__(self, node)
