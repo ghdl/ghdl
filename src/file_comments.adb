@@ -311,6 +311,55 @@ package body File_Comments is
       Ctxt.Node_First := No_Comment_Index + 1;
    end Gather_Comments_Line_End;
 
+   procedure Gather_Comments_After (Prev_Pos : Source_Ptr; N : Uns32)
+   is
+      pragma Assert (Ctxt.File /= No_Source_File_Entry);
+      Fc : File_Comments_Table renames Comments_Table.Table (Ctxt.File);
+      Last : constant Comment_Index := File_Comments_Tables.Last (Fc);
+      Idx : Comment_Index;
+      Prev_Line_Pos, Line_Pos : Source_Ptr;
+      Prev_Line, Line : Positive;
+      Offset : Natural;
+      Col : Natural;
+   begin
+      --  The comments inside N.
+      Idx := Ctxt.Next;
+      while Idx <= Last and then Fc.Table (Idx).Start < Prev_Pos loop
+         Fc.Table (Idx).N := N;
+         Idx := Idx + 1;
+      end loop;
+      Ctxt.Next := Idx;
+
+      if Idx > Last then
+         return;
+      end if;
+
+      --  The comment on the line of the last token.
+      Files_Map.File_Pos_To_Coord
+        (Ctxt.File, Prev_Pos, Prev_Line_Pos, Prev_Line, Offset);
+      Files_Map.File_Pos_To_Coord
+        (Ctxt.File, Fc.Table (Idx).Start, Line_Pos, Line, Offset);
+      if Line_Pos /= Prev_Line_Pos then
+         return;
+      end if;
+
+      --  And the comments that continue it.
+      Col := Files_Map.Coord_To_Col (Ctxt.File, Line_Pos, Offset);
+      loop
+         Fc.Table (Idx).N := N;
+         Idx := Idx + 1;
+         Ctxt.Next := Idx;
+         exit when Idx > Last;
+
+         Files_Map.File_Pos_To_Coord
+           (Ctxt.File, Fc.Table (Idx - 1).Last, Line_Pos, Prev_Line, Offset);
+         Files_Map.File_Pos_To_Coord
+           (Ctxt.File, Fc.Table (Idx).Start, Line_Pos, Line, Offset);
+         exit when Line /= Prev_Line + 1;
+         exit when Files_Map.Coord_To_Col (Ctxt.File, Line_Pos, Offset) /= Col;
+      end loop;
+   end Gather_Comments_After;
+
    procedure Gather_Comments_End is
    begin
       case Ctxt.State is

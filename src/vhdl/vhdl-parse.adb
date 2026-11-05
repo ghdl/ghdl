@@ -3277,7 +3277,8 @@ package body Vhdl.Parse is
    --      identifier_list : element_subtype_definition
    --
    --  element_subtype_definition ::= subtype_indication
-   function Parse_Record_Type_Definition return Iir_Record_Type_Definition
+   function Parse_Record_Type_Definition (Decl : Iir)
+                                         return Iir_Record_Type_Definition
    is
       Res: Iir_Record_Type_Definition;
       El_List : Iir_List;
@@ -3292,6 +3293,11 @@ package body Vhdl.Parse is
 
       --  Skip 'record'
       Scan;
+
+      --  A comment on the line of 'record' is for the type.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Decl);
+      end if;
 
       if Current_Token = Tok_End then
          Error_Msg_Parse ("empty records are not allowed");
@@ -3345,6 +3351,11 @@ package body Vhdl.Parse is
       if Flag_Elocations then
          Create_Elocations (Res);
          Set_End_Location (Res, Get_Token_Location);
+      end if;
+
+      --  Comments just before the 'end' are not for the next node.
+      if Flag_Gather_Comments then
+         Gather_Comments_End;
       end if;
 
       --  Skip 'end'
@@ -3465,6 +3476,9 @@ package body Vhdl.Parse is
 
       if Flag_Gather_Comments then
          Gather_Comments_Block (Comments, Decl);
+
+         --  A comment on the line of 'protected' (or 'body') is for it too.
+         Gather_Comments_After (Decl);
       end if;
 
       Parse_Declarative_Part (Res, Res);
@@ -3634,7 +3648,7 @@ package body Vhdl.Parse is
                Gather_Comments_Block (Decl);
             end if;
 
-            Def := Parse_Record_Type_Definition;
+            Def := Parse_Record_Type_Definition (Decl);
             Set_Type_Definition (Decl, Def);
             Set_Type_Declarator (Def, Decl);
             if Current_Token = Tok_Identifier then
@@ -3700,6 +3714,11 @@ package body Vhdl.Parse is
 
       -- ';' is expected after end of type declaration
       Scan_Semi_Colon_Declaration ("type declaration");
+
+      --  A comment on the line of the ';' is for the type.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Decl);
+      end if;
 
       if Flag_Elocations then
          Create_Elocations (Decl);
@@ -4920,6 +4939,11 @@ package body Vhdl.Parse is
 
       Parse_Generic_Port_Clauses (Component);
 
+      --  Comments just before the 'end' are not for the next node.
+      if Flag_Gather_Comments then
+         Gather_Comments_End;
+      end if;
+
       if Flag_Elocations then
          Set_End_Location (Component, Get_Token_Location);
       end if;
@@ -4928,6 +4952,11 @@ package body Vhdl.Parse is
 
       --  Skip ';'.
       Expect_Scan (Tok_Semi_Colon);
+
+      --  A comment on the line of the ';' is for the component.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Component);
+      end if;
 
       return Component;
    end Parse_Component_Declaration;
@@ -6449,6 +6478,11 @@ package body Vhdl.Parse is
       end if;
       Check_End_Name (Res);
       Scan_Semi_Colon_Unit ("entity");
+
+      --  A comment on the line of the ';' is for the entity.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
 
       Set_Library_Unit (Unit, Res);
 
@@ -9172,6 +9206,11 @@ package body Vhdl.Parse is
             null;
       end case;
       Scan_Semi_Colon_Declaration ("subprogram body");
+
+      --  A comment on the line of the ';' is for the subprogram.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Subprg);
+      end if;
    end Parse_Subprogram_Body;
 
    --  precond : NEW
@@ -9451,6 +9490,11 @@ package body Vhdl.Parse is
 
          --  Skip 'is'
          Scan;
+      end if;
+
+      --  A comment on the line of the end of the header is for the process.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
       end if;
 
       --  Declarative part.
@@ -9898,6 +9942,12 @@ package body Vhdl.Parse is
          --  Eat 'is'.
          Scan;
       end if;
+
+      --  A comment on the line of the end of the header is for the block.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
+
       if Current_Token = Tok_Generic or Current_Token = Tok_Port then
          Set_Block_Header (Res, Parse_Block_Header (Res));
       end if;
@@ -11453,6 +11503,11 @@ package body Vhdl.Parse is
       --  Skip 'is'.
       Expect_Scan (Tok_Is);
 
+      --  A comment on the line of 'is' is for the architecture.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
+
       Parse_Declarative_Part (Res, Res);
 
       --  Comments just before the 'begin' are attached to the last declaration
@@ -11484,6 +11539,11 @@ package body Vhdl.Parse is
       end if;
       Check_End_Name (Res);
       Scan_Semi_Colon_Unit ("architecture");
+
+      --  A comment on the line of the ';' is for the architecture.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
 
       Set_Library_Unit (Unit, Res);
 
@@ -11980,6 +12040,11 @@ package body Vhdl.Parse is
       Check_End_Name (Res);
       Scan_Semi_Colon_Unit ("configuration");
 
+      --  A comment on the line of the ';' is for the configuration.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
+
       Set_Library_Unit (Unit, Res);
 
       if Flag_Elocations then
@@ -12061,6 +12126,9 @@ package body Vhdl.Parse is
       --  attached to the package.
       if Flag_Gather_Comments then
          Gather_Comments_Block (Comments, Res);
+
+         --  A comment on the line of 'is' is for the package too.
+         Gather_Comments_After (Res);
       end if;
 
       if Current_Token = Tok_Generic then
@@ -12093,6 +12161,11 @@ package body Vhdl.Parse is
 
       Check_End_Name (Res);
       Scan_Semi_Colon_Unit ("package declaration");
+
+      --  A comment on the line of the ';' is for the package.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
 
       if Flag_Elocations then
          Create_Elocations (Res);
@@ -12133,6 +12206,9 @@ package body Vhdl.Parse is
 
       if Flag_Gather_Comments then
          Gather_Comments_Block (Comments, Res);
+
+         --  A comment on the line of 'is' is for the package body too.
+         Gather_Comments_After (Res);
       end if;
 
       Parse_Declarative_Part (Res, Get_Package_Parent (Res));
@@ -12167,6 +12243,11 @@ package body Vhdl.Parse is
 
       Check_End_Name (Res);
       Scan_Semi_Colon_Unit ("package body");
+
+      --  A comment on the line of the ';' is for the package body.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
 
       if Flag_Elocations then
          Create_Elocations (Res);
@@ -12222,6 +12303,11 @@ package body Vhdl.Parse is
       end if;
 
       Scan_Semi_Colon_Unit ("package instantiation");
+
+      --  A comment on the line of the ';' is for the package.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Res);
+      end if;
 
       return Res;
    end Parse_Package_Instantiation_Declaration;
@@ -12587,6 +12673,11 @@ package body Vhdl.Parse is
 
       Check_End_Name (Decl);
       Scan_Semi_Colon_Unit ("context declaration");
+
+      --  A comment on the line of the ';' is for the context.
+      if Flag_Gather_Comments then
+         Gather_Comments_After (Decl);
+      end if;
 
       if Flag_Elocations then
          Create_Elocations (Decl);
