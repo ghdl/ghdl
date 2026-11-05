@@ -613,9 +613,10 @@ def GetSubtypeFromNode(subtypeNode: Iir) -> Symbol:
     :returns:           The translated subtype, carrying the symbol of its subtype indication.
     """
     subtypeName = GetNameOfNode(subtypeNode)
+    documentation = GetDocumentationOfNode(subtypeNode)
     symbol = GetSubtypeIndicationFromNode(subtypeNode, "subtype", subtypeName)
 
-    return Subtype(subtypeNode, subtypeName, symbol)
+    return Subtype(subtypeNode, subtypeName, symbol, documentation)
 
 
 @export
