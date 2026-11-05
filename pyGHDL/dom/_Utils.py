@@ -181,7 +181,7 @@ def GetSourceTextOfNode(node: Iir, length: Nullable[int] = None) -> str:
 
 
 @export
-def GetDocumentationOfNode(node: Iir) -> str:
+def GetDocumentationOfNode(node: Iir) -> Nullable[str]:
     """
     Collects the doc-comment lines attached to an IIR node.
 
@@ -189,7 +189,7 @@ def GetDocumentationOfNode(node: Iir) -> str:
     before parsing, which :class:`~pyGHDL.dom.NonStandard.Design` does.
 
     :param node: The IIR node to read the comments of.
-    :returns:    The comment lines joined by newlines, or an empty string if the node has no comment.
+    :returns:    The comment lines joined by newlines, or ``None`` if the node has no comment.
     """
     file = files_map.Location_To_File(nodes.Get_Location(node))
     idx = file_comments.Find_First_Comment(file, node)
@@ -198,11 +198,14 @@ def GetDocumentationOfNode(node: Iir) -> str:
         documentation.append(file_comments.Get_Comment(file, idx))
         idx = file_comments.Get_Next_Comment(file, idx)
 
+    if len(documentation) == 0:
+        return None
+
     return "\n".join(documentation)
 
 
 @export
-def GetDocumentationOfDesignUnit(unitNode: Iir) -> str:
+def GetDocumentationOfDesignUnit(unitNode: Iir) -> Nullable[str]:
     """
     Collects the doc-comment lines of a design unit (entity, architecture, package, ...).
 
@@ -213,15 +216,15 @@ def GetDocumentationOfDesignUnit(unitNode: Iir) -> str:
     comments are read.
 
     :param unitNode: The IIR node of the unit's declaration (entity declaration, architecture body, ...).
-    :returns:        The comment lines joined by newlines, or an empty string if the unit has no comment.
+    :returns:        The comment lines joined by newlines, or ``None`` if the unit has no comment.
     """
     documentation = GetDocumentationOfNode(unitNode)
 
     parent = nodes.Get_Parent(unitNode)
     if GetIirKindOfNode(parent) is nodes.Iir_Kind.Design_Unit:
         unitDocumentation = GetDocumentationOfNode(parent)
-        if unitDocumentation != "":
-            documentation = unitDocumentation if documentation == "" else f"{unitDocumentation}\n{documentation}"
+        if unitDocumentation is not None:
+            documentation = unitDocumentation if documentation is None else f"{unitDocumentation}\n{documentation}"
 
     return documentation
 
