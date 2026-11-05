@@ -137,7 +137,7 @@ class PrettyPrint:
         Renders a documentation comment as its first line, indented to the given level.
 
         :param documentationContent: The documentation comment, or ``None`` if the item has none.
-        :param level:                The indentation level, two spaces each.
+        :param level:                Optional, the indentation level, two spaces each.
         :returns:                    The indented first line of the comment, or just the indentation.
         """
         prefix = "  " * level
@@ -152,7 +152,7 @@ class PrettyPrint:
         Renders a design's libraries and documents.
 
         :param design: The design to render.
-        :param level:  The indentation level, two spaces each.
+        :param level:  Optional, the indentation level, two spaces each.
         :returns:      The rendered lines.
         """
         buffer = []
@@ -175,7 +175,7 @@ class PrettyPrint:
         Renders a library's design units.
 
         :param library: The library to render.
-        :param level:   The indentation level, two spaces each.
+        :param level:   Optional, the indentation level, two spaces each.
         :returns:       The rendered lines.
         """
         buffer = []
@@ -205,7 +205,7 @@ class PrettyPrint:
         Renders a document's design units.
 
         :param document: The document to render.
-        :param level:    The indentation level, two spaces each.
+        :param level:    Optional, the indentation level, two spaces each.
         :returns:        The rendered lines.
         """
         buffer = []
@@ -248,7 +248,7 @@ class PrettyPrint:
         Renders an entity's generics, ports, declarations and statements.
 
         :param entity: The entity to render.
-        :param level:  The indentation level, two spaces each.
+        :param level:  Optional, the indentation level, two spaces each.
         :returns:      The rendered lines.
         """
         buffer = []
@@ -286,7 +286,7 @@ class PrettyPrint:
         Renders an architecture's declarations and statements.
 
         :param architecture: The architecture to render.
-        :param level:        The indentation level, two spaces each.
+        :param level:        Optional, the indentation level, two spaces each.
         :returns:            The rendered lines.
         """
         buffer = []
@@ -320,7 +320,7 @@ class PrettyPrint:
         Renders a component's generics and ports.
 
         :param component: The component to render.
-        :param level:     The indentation level, two spaces each.
+        :param level:     Optional, the indentation level, two spaces each.
         :returns:         The rendered lines.
         """
         buffer = []
@@ -343,7 +343,7 @@ class PrettyPrint:
         Renders a package's generics and declarations.
 
         :param package: The package to render.
-        :param level:   The indentation level, two spaces each.
+        :param level:   Optional, the indentation level, two spaces each.
         :returns:       The rendered lines.
         """
         buffer = []
@@ -367,7 +367,7 @@ class PrettyPrint:
         Renders a package instantiation's generic map.
 
         :param package: The package instantiation to render.
-        :param level:   The indentation level, two spaces each.
+        :param level:   Optional, the indentation level, two spaces each.
         :returns:       The rendered lines.
         """
         buffer = []
@@ -387,7 +387,7 @@ class PrettyPrint:
         Renders a package body's declarations.
 
         :param packageBody: The package body to render.
-        :param level:       The indentation level, two spaces each.
+        :param level:       Optional, the indentation level, two spaces each.
         :returns:           The rendered lines.
         """
         buffer = []
@@ -406,7 +406,7 @@ class PrettyPrint:
         Renders a configuration.
 
         :param configuration: The configuration to render.
-        :param level:         The indentation level, two spaces each.
+        :param level:         Optional, the indentation level, two spaces each.
         :returns:             The rendered lines.
         """
         buffer = []
@@ -420,7 +420,7 @@ class PrettyPrint:
         Renders a context's clauses.
 
         :param context: The context to render.
-        :param level:   The indentation level, two spaces each.
+        :param level:   Optional, the indentation level, two spaces each.
         :returns:       The rendered lines.
         """
         buffer = []
@@ -436,7 +436,7 @@ class PrettyPrint:
         Renders a generic, dispatching on its kind.
 
         :param generic: The generic interface item to render.
-        :param level:   The indentation level, two spaces each.
+        :param level:   Optional, the indentation level, two spaces each.
         :returns:       The rendered lines.
         """
         if isinstance(generic, GenericConstantInterfaceItem):
@@ -453,7 +453,7 @@ class PrettyPrint:
         Renders a port, dispatching on its kind.
 
         :param port:  The port interface item to render.
-        :param level: The indentation level, two spaces each.
+        :param level: Optional, the indentation level, two spaces each.
         :returns:     The rendered lines.
         """
         if isinstance(port, PortSimpleSignalInterfaceItem):
@@ -470,7 +470,7 @@ class PrettyPrint:
         Renders a generic constant.
 
         :param generic: The generic constant to render.
-        :param level:   The indentation level, two spaces each.
+        :param level:   Optional, the indentation level, two spaces each.
         :returns:       The rendered lines.
         """
         buffer = []
@@ -488,7 +488,7 @@ class PrettyPrint:
         Renders a generic type.
 
         :param generic: The generic type to render.
-        :param level:   The indentation level, two spaces each.
+        :param level:   Optional, the indentation level, two spaces each.
         :returns:       The rendered lines.
         """
         buffer = []
@@ -503,7 +503,7 @@ class PrettyPrint:
         Renders a port signal.
 
         :param port:  The port signal to render.
-        :param level: The indentation level, two spaces each.
+        :param level: Optional, the indentation level, two spaces each.
         :returns:     The rendered lines.
         """
         buffer = []
@@ -521,7 +521,7 @@ class PrettyPrint:
         Renders a port declared with a mode view.
 
         :param port:  The port mode view to render.
-        :param level: The indentation level, two spaces each.
+        :param level: Optional, the indentation level, two spaces each.
         :returns:     The rendered lines.
         """
         buffer = []
@@ -537,7 +537,7 @@ class PrettyPrint:
         Renders the declared items of a declarative region.
 
         :param item:  The declarative region to render.
-        :param level: The indentation level, two spaces each.
+        :param level: Optional, the indentation level, two spaces each.
         :returns:     The rendered lines.
         """
         buffer = []
@@ -678,7 +678,7 @@ class PrettyPrint:
         Renders a statement and the statements nested in it.
 
         :param statement: The statement to render.
-        :param level:     The indentation level, two spaces each.
+        :param level:     Optional, the indentation level, two spaces each.
         :returns:         The rendered lines.
         """
         buffer = []

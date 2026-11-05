@@ -74,7 +74,7 @@ class EntityAspectEntity(VHDLModel_EntityAspectEntity, DOMMixin):
 
         :param node:         The IIR node this object was translated from.
         :param entity:       Reference to the named entity.
-        :param architecture: Reference to the selected architecture, or ``None`` if none was given.
+        :param architecture: Optional, reference to the selected architecture, or ``None`` if none was given.
         """
         super().__init__(entity, architecture)
         DOMMixin.__init__(self, node)
@@ -200,9 +200,9 @@ class BindingIndication(VHDLModel_BindingIndication, DOMMixin):
         Initializes a binding indication.
 
         :param node:                    The IIR node this object was translated from.
-        :param entityAspect:            The bound design entity, or ``None`` if not given.
-        :param genericAssociationItems: List of all generic associations in the generic map aspect.
-        :param portAssociationItems:    List of all port associations in the port map aspect.
+        :param entityAspect:            Optional, the bound design entity, or ``None`` if not given.
+        :param genericAssociationItems: Optional, list of all generic associations in the generic map aspect.
+        :param portAssociationItems:    Optional, list of all port associations in the port map aspect.
         """
         super().__init__(entityAspect, genericAssociationItems, portAssociationItems)
         DOMMixin.__init__(self, node)
@@ -283,7 +283,7 @@ class ComponentConfiguration(VHDLModel_ComponentConfiguration, DOMMixin):
         :param node:              The IIR node this object was translated from.
         :param instantiationList: The instances this configuration applies to.
         :param componentName:     Reference to the component being configured.
-        :param bindingIndication: The binding indication, or ``None`` if none was given.
+        :param bindingIndication: Optional, the binding indication, or ``None`` if none was given.
         """
         super().__init__(instantiationList, componentName, bindingIndication)
         DOMMixin.__init__(self, node)
@@ -337,7 +337,7 @@ class BlockConfiguration(VHDLModel_BlockConfiguration, DOMMixin):
 
         :param node:               The IIR node this object was translated from.
         :param blockSpecification: The configured block.
-        :param items:              Nested configurations.
+        :param items:              Optional, nested configurations.
         """
         super().__init__(blockSpecification, items)
         DOMMixin.__init__(self, node)

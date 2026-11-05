@@ -180,7 +180,7 @@ class DefaultClock(VHDLModel_DefaultClock, DOMMixin):
 
         :param node:          The IIR node this object was translated from.
         :param identifier:    The default clock's identifier.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, documentation)
         DOMMixin.__init__(self, node)

@@ -71,7 +71,7 @@ class Attribute(VHDLModel_Attribute, DOMMixin):
         :param node:          The IIR node this object was translated from.
         :param identifier:    The attribute's identifier.
         :param subtype:       Reference to the attribute's subtype.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifier, subtype, documentation)
         DOMMixin.__init__(self, node)
@@ -145,7 +145,7 @@ class AttributeSpecification(VHDLModel_AttributeSpecification, DOMMixin):
         :param attribute:     Reference to the specified attribute.
         :param entityClass:   The entity class the named items belong to.
         :param expression:    The value assigned to the attribute.
-        :param documentation: The documentation comment associated with this declaration.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
         super().__init__(identifiers, attribute, entityClass, expression, documentation)
         DOMMixin.__init__(self, node)
