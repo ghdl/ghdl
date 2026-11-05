@@ -59,7 +59,7 @@ class InterfaceDocumentation(TestCase):
         cls._entity = cls._document.Entities["interfacedocumentation"]
 
     def test_Entity(self) -> None:
-        self.assertEqual("", self._entity.Documentation)
+        self.assertIsNone(self._entity.Documentation)
 
     def test_Generics(self) -> None:
         expected = [
@@ -117,7 +117,7 @@ class DeclarationDocumentation(TestCase):
         expected = [
             (("X",), "--! Parameter before."),
             (("Y",), "--! Parameter same line."),
-            (("Z",), ""),
+            (("Z",), None),
         ]
         self.assertEqual(len(expected), len(function.ParameterItems))
         for parameter, (identifiers, documentation) in zip(function.ParameterItems, expected):
@@ -134,7 +134,7 @@ class DeclarationDocumentation(TestCase):
     def test_RecordAndElements(self) -> None:
         record = self._package.DeclaredItems[5]
 
-        self.assertEqual("", record.Documentation)
+        self.assertIsNone(record.Documentation)
         a, b = record.Elements
         self.assertEqual("--! Element before.", a.Documentation)
         self.assertEqual("--! Element same line.", b.Documentation)
@@ -214,7 +214,7 @@ class DesignUnitDocumentation(InMemoryDocumentation):
             end entity;
             """)
 
-        self.assertEqual("", document.Documentation)
+        self.assertIsNone(document.Documentation)
         self.assertEqual("--! E doc 1.\n--\n--! E doc 2.", document.Entities["e"].Documentation)
 
     def test_FirstUnitHeaderBlocks(self) -> None:
@@ -294,8 +294,8 @@ class DesignUnitDocumentation(InMemoryDocumentation):
             end architecture;
             """)
 
-        self.assertEqual("", document.Documentation)
-        self.assertEqual("", document.Entities["e"].Documentation)
+        self.assertIsNone(document.Documentation)
+        self.assertIsNone(document.Entities["e"].Documentation)
         self.assertEqual("--! A doc.", document.Architectures["e"]["a"].Documentation)
 
     def test_EveryUnitKind(self) -> None:
@@ -489,7 +489,7 @@ class CommentAssociation(InMemoryDocumentation):
         function = document.Packages["p"].DeclaredItems[0]
 
         self.assertEqual("--! F doc.", function.Documentation)
-        self.assertEqual("", function.ParameterItems[0].Documentation)
+        self.assertIsNone(function.ParameterItems[0].Documentation)
 
     def test_EnumSameLine(self) -> None:
         """A same-line comment after an enumerated type documents the type, not its last literal."""
@@ -532,7 +532,7 @@ class CommentGathering(InMemoryDocumentation):
         component = document.Packages["p"].DeclaredItems[0]
 
         self.assertEqual("--! C doc.", component.Documentation)
-        self.assertEqual("", component.PortItems[0].Documentation)
+        self.assertIsNone(component.PortItems[0].Documentation)
 
     def test_AliasAttributeSubtype(self) -> None:
         """Alias, attribute declaration and subtype gather their comments, not the next declaration."""
@@ -556,7 +556,7 @@ class CommentGathering(InMemoryDocumentation):
         self.assertEqual("--! Attribute doc.", attribute.Documentation)
         self.assertEqual("--! Subtype doc.", subtype.Documentation)
         for constant in (d1, d2, d3):
-            self.assertEqual("", constant.Documentation)
+            self.assertIsNone(constant.Documentation)
 
     def test_RangeTypes(self) -> None:
         """Integer, physical and incomplete type declarations gather their comments."""
@@ -583,7 +583,7 @@ class CommentGathering(InMemoryDocumentation):
         self.assertEqual("--! Physical doc.", physicalType.Documentation)
         self.assertEqual("--! Incomplete doc.", incompleteType.Documentation)
         for constant in (d1, d2, d3):
-            self.assertEqual("", constant.Documentation)
+            self.assertIsNone(constant.Documentation)
 
     def test_ProtectedType(self) -> None:
         """A protected type gathers its comment, not its first method."""
@@ -598,7 +598,7 @@ class CommentGathering(InMemoryDocumentation):
         protectedType = document.Packages["p"].DeclaredItems[0]
 
         self.assertEqual("--! PT doc.", protectedType.Documentation)
-        self.assertEqual("", protectedType.Methods[0].Documentation)
+        self.assertIsNone(protectedType.Methods[0].Documentation)
 
     def test_ModeView(self) -> None:
         """A mode view gathers its comment, not its first element."""
@@ -617,7 +617,7 @@ class CommentGathering(InMemoryDocumentation):
         modeView = document.Packages["p"].DeclaredItems[1]
 
         self.assertEqual("--! MV doc.", modeView.Documentation)
-        self.assertEqual("", modeView.Elements[0].Documentation)
+        self.assertIsNone(modeView.Elements[0].Documentation)
 
     def test_GenericTypeSubprogramPackage(self) -> None:
         """Generic types, subprograms and packages gather their comments."""

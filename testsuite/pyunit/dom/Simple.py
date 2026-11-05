@@ -174,11 +174,8 @@ class SimplePackage(TestCase):
         self.assertEqual(1, len(design.Documents[0].PackageBodies))
 
         packageBodies = firstValue(design.Documents[0].PackageBodies)
-        print("  Package Body documentation:")
-        for line in packageBodies.Documentation.splitlines():
-            print(f"    {line}")
         self.assertEqual("utilities", packageBodies.Identifier)
-        self.assertEqual(0, len(packageBodies.Documentation.splitlines()))
+        self.assertIsNone(packageBodies.Documentation)
 
 
 class DocumentDurations(TestCase):
