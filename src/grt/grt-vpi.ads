@@ -79,6 +79,11 @@ package Grt.Vpi is
    vpiRegArray :        constant Integer := 116;
    vpiNamedEventArray : constant Integer := 129;
 
+   --  Object types and methods from IEEE Std 1800 (for VHDL records).
+   vpiStructNet :       constant Integer := 683;
+   vpiMember :          constant Integer := 742;
+   vpiPacked :          constant Integer := 630;
+
    --  vpi_control constants.
    vpiStop :          constant := 66;
    vpiFinish :        constant := 67;
