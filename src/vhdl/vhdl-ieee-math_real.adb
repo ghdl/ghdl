@@ -19,6 +19,12 @@ with Std_Names; use Std_Names;
 with Vhdl.Std_Package;
 
 package body Vhdl.Ieee.Math_Real is
+   --  True if function DECL has at least two parameters.
+   function Has_Second_Interface (Decl : Iir) return Boolean is
+   begin
+      return Get_Chain (Get_Interface_Declaration_Chain (Decl)) /= Null_Iir;
+   end Has_Second_Interface;
+
    procedure Extract_Declarations (Pkg : Iir_Package_Declaration)
    is
       Decl : Iir;
@@ -63,7 +69,12 @@ package body Vhdl.Ieee.Math_Real is
                   when Name_Exp =>
                      Def := Iir_Predefined_Ieee_Math_Real_Exp;
                   when Name_Log =>
-                     Def := Iir_Predefined_Ieee_Math_Real_Log;
+                     --  LOG (X) or LOG (X, BASE).
+                     if Has_Second_Interface (Decl) then
+                        Def := Iir_Predefined_Ieee_Math_Real_Log_Real_Real;
+                     else
+                        Def := Iir_Predefined_Ieee_Math_Real_Log;
+                     end if;
                   when Name_Log2 =>
                      Def := Iir_Predefined_Ieee_Math_Real_Log2;
                   when Name_Log10 =>
@@ -79,7 +90,12 @@ package body Vhdl.Ieee.Math_Real is
                   when Name_Arccos =>
                      Def := Iir_Predefined_Ieee_Math_Real_Arccos;
                   when Name_Arctan =>
-                     Def := Iir_Predefined_Ieee_Math_Real_Arctan;
+                     --  ARCTAN (Y) or ARCTAN (Y, X).
+                     if Has_Second_Interface (Decl) then
+                        Def := Iir_Predefined_Ieee_Math_Real_Arctan_Real_Real;
+                     else
+                        Def := Iir_Predefined_Ieee_Math_Real_Arctan;
+                     end if;
                   when Name_Sinh =>
                      Def := Iir_Predefined_Ieee_Math_Real_Sinh;
                   when Name_Cosh =>
