@@ -3497,6 +3497,15 @@ package body Synth.Vhdl_Eval is
             begin
                return Create_Memory_Fp64 (Log (Read_Fp64 (Param1)), Res_Typ);
             end;
+         when Iir_Predefined_Ieee_Math_Real_Log_Real_Real =>
+            declare
+               function Log (Arg : Fp64) return Fp64;
+               pragma Import (C, Log);
+            begin
+               return Create_Memory_Fp64
+                 (Log (Read_Fp64 (Param1)) / Log (Read_Fp64 (Param2)),
+                  Res_Typ);
+            end;
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
                function Log2 (Arg : Fp64) return Fp64;
@@ -3580,6 +3589,14 @@ package body Synth.Vhdl_Eval is
                pragma Import (C, Atan);
             begin
                return Create_Memory_Fp64 (Atan (Read_Fp64 (Param1)), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Math_Real_Arctan_Real_Real =>
+            declare
+               function Atan2 (Y, X : Fp64) return Fp64;
+               pragma Import (C, Atan2);
+            begin
+               return Create_Memory_Fp64
+                 (Atan2 (Read_Fp64 (Param1), Read_Fp64 (Param2)), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Math_Real_Sinh =>
             declare
