@@ -1,5 +1,6 @@
 from pathlib import Path
 from re import DOTALL, findall, search
+from tempfile import TemporaryDirectory
 from unittest import TestCase, expectedFailure
 
 import pyGHDL.libghdl as libghdl
@@ -586,7 +587,10 @@ class Delimited(Base):
 
     def load(self, name) -> tuple:
         """Load file :obj:`name` and return its source file entry and its first library unit."""
-        filename = self._root / "comments" / name
+        return self.loadPath(self._root / "comments" / name)
+
+    def loadPath(self, filename: Path) -> tuple:
+        """Load file :obj:`filename` and return its source file entry and its first library unit."""
         file_id = name_table.Get_Identifier(str(filename))
         sfe = files_map.Read_Source_File(name_table.Null_Identifier, file_id)
         if sfe == files_map.No_Source_File_Entry:
@@ -610,6 +614,25 @@ class Delimited(Base):
 
         port = nodes.Get_Chain(port)
         self.assertEqual(["/* */"], self.getComments(sfe, port))
+
+    def test_LineEndings(self) -> None:
+        """A line break inside a delimited comment is a LF, whether the file stores it as CR+LF, CR or LF+CR."""
+        source = (self._root / "comments" / "delimited_text.vhdl").read_bytes().replace(b"\r\n", b"\n")
+        with TemporaryDirectory() as directory:
+            for name, lineEnding in (("crlf", b"\r\n"), ("cr", b"\r"), ("lfcr", b"\n\r")):
+                with self.subTest(lineEnding=name):
+                    path = Path(directory) / f"delimited_{name}.vhdl"
+                    path.write_bytes(source.replace(b"\n", lineEnding))
+                    sfe, file, entity = self.loadPath(path)
+
+                    self.assertEqual(["/* The header,\n   over two lines. */"], self.getComments(sfe, file))
+                    port = nodes.Get_Port_Chain(entity)
+                    self.assertEqual(
+                        ["/* doc of a,\n       over two lines */", "/* line of a,\n       over two lines */"],
+                        self.getComments(sfe, port),
+                    )
+                    port = nodes.Get_Chain(port)
+                    self.assertEqual(11, files_map.Location_File_To_Line(nodes.Get_Location(port), sfe))
 
     def test_LineNumbers(self) -> None:
         """The newlines inside a delimited comment are counted."""
