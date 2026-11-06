@@ -377,7 +377,8 @@ package body Grt.Vcd is
          when VhpiGenericDeclK
            | VhpiConstDeclK =>
             return Vcd_Variable;
-         when VhpiIndexedNameK =>
+         when VhpiIndexedNameK
+           | VhpiSelectedNameK =>
             declare
                Base : VhpiHandleT;
                Err : AvhpiErrorT;
@@ -420,7 +421,8 @@ package body Grt.Vcd is
       Sig_Addr := Avhpi_Get_Address (Sig);
 
       case Vhpi_Get_Kind (Sig) is
-         when VhpiIndexedNameK =>
+         when VhpiIndexedNameK
+           | VhpiSelectedNameK =>
             --  Non-null when Sig's element subtype is itself unbounded.
             Bounds := Avhpi_Get_Bounds (Sig);
          when VhpiPortDeclK
@@ -440,6 +442,19 @@ package body Grt.Vcd is
            | Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Subtype_Scalar =>
             Kind := Rti_To_Vcd_Kind (Rti);
+         when Ghdl_Rtik_Type_Record
+           | Ghdl_Rtik_Subtype_Record
+           | Ghdl_Rtik_Type_Unbounded_Record
+           | Ghdl_Rtik_Subtype_Unbounded_Record =>
+            --  Only signals and ports have record elements to iterate on.
+            case Vhpi_Get_Kind (Sig) is
+               when VhpiPortDeclK
+                 | VhpiSigDeclK
+                 | VhpiSelectedNameK =>
+                  Kind := Vcd_Struct;
+               when others =>
+                  Kind := Vcd_Bad;
+            end case;
          when Ghdl_Rtik_Subtype_Array =>
             declare
                St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
@@ -469,6 +484,12 @@ package body Grt.Vcd is
             Kind := Vcd_Bad;
       end case;
 
+      --  Arrays of non-scalar elements that are inside a record cannot be
+      --  indexed yet.
+      if Kind = Vcd_Array and then Vhpi_Get_Kind (Sig) = VhpiSelectedNameK then
+         Kind := Vcd_Bad;
+      end if;
+
       if Kind = Vcd_Bad then
          Info := (Vtype => Vcd_Bad, Val => Vcd_Effective, Ptr => Null_Address);
          return;
@@ -497,9 +518,10 @@ package body Grt.Vcd is
 
       --  Build the info.
       case Kind is
-         when Vcd_Bad
-           | Vcd_Struct =>
+         when Vcd_Bad =>
             Info := (Vcd_Bad, Vcd_Effective, Null_Address);
+         when Vcd_Struct =>
+            Info := (Vcd_Struct, Val, Sig_Addr);
          when Vcd_Enum8 =>
             Info := (Vcd_Enum8, Val, Sig_Addr, Rti);
          when Vcd_Bool =>
