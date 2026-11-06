@@ -167,7 +167,10 @@ package Grt.Avhpi is
 
       --  Root scope that contains the top entity.  For vpi.
       AvhpiRootScopeK,
-      AvhpiRootScopeIteratorK
+      AvhpiRootScopeIteratorK,
+
+      --  Iterator on the elements of a record.
+      AvhpiRecordIteratorK
      );
 
    for VhpiClassKindT use
@@ -302,7 +305,10 @@ package Grt.Avhpi is
 
       --  Root scope that contains the top entity.  For vpi.
       AvhpiRootScopeK => 2002,
-      AvhpiRootScopeIteratorK => 2003
+      AvhpiRootScopeIteratorK => 2003,
+
+      --  Iterator on the elements of a record.
+      AvhpiRecordIteratorK => 2004
     );
 
    type VhpiOneToOneT is
@@ -1007,9 +1013,10 @@ package Grt.Avhpi is
 
    function Avhpi_Get_Address (Obj : VhpiHandleT) return Address;
 
-   --  Bounds of the element of an indexed name, when that element's own
-   --  subtype is unbounded (only fully constrained per elaborated
-   --  instance). Null_Address otherwise, or if OBJ has no bounds.
+   --  Bounds of the element of an indexed or selected name, when that
+   --  element's own subtype is unbounded (only fully constrained per
+   --  elaborated instance). Null_Address otherwise, or if OBJ has no
+   --  bounds.
    function Avhpi_Get_Bounds (Obj : VhpiHandleT) return Address;
 
    function Avhpi_Get_Context (Obj : VhpiHandleT) return Rti_Context;
@@ -1039,6 +1046,28 @@ private
             --  Null_Address otherwise.
             N_Bounds : Address;
             N_Obj : Ghdl_Rtin_Object_Acc;
+         when VhpiSelectedNameK =>
+            --  Address of the element.
+            R_Addr : Address;
+            --  Type of the element.
+            R_Type : Ghdl_Rti_Access;
+            --  Layout of the element, or bounds of the array, when the type
+            --  is unbounded or complex (see Record_To_Element).
+            R_Layout : Address;
+            --  The base object.
+            R_Obj : Ghdl_Rtin_Object_Acc;
+            --  The element.  The path from the base object is found by
+            --  searching R_El at R_Addr.
+            R_El : Ghdl_Rtin_Element_Acc;
+         when AvhpiRecordIteratorK =>
+            --  Address, type and layout of the record.
+            I_Addr : Address;
+            I_Type : Ghdl_Rti_Access;
+            I_Layout : Address;
+            --  The base object.
+            I_Obj : Ghdl_Rtin_Object_Acc;
+            --  Next element to return.
+            I_Idx : Ghdl_Index_Type;
          when VhpiSigDeclK
            | VhpiPortDeclK
            | VhpiGenericDeclK
