@@ -423,7 +423,7 @@ package body Netlists.Inference is
          when others => raise Internal_Error;
       end case;
       if Init /= No_Net then
-         Init := Build2_Extract (Ctxt, Init, Off, Get_Width (O), Loc);
+         Init := Build2_Extract (Ctxt, Init, Off, W, Loc);
       end if;
 
       --  As an enable signal, start with the enable extracted from the clock
