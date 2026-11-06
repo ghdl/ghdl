@@ -5585,12 +5585,25 @@ package body Vhdl.Prints is
                Buf : constant File_Buffer_Acc :=
                  Files_Map.Get_File_Source (Sfe);
                Start, Last : Source_Ptr;
+               I : Source_Ptr;
             begin
                --  TODO: indent
                Get_Comment (Sfe, Idx, Start, Last);
                Start_Hbox (Ctxt);
-               for I in Start .. Last loop
-                  Disp_Char (Ctxt, Buf (I));
+               I := Start;
+               while I <= Last loop
+                  case Buf (I) is
+                     when ASCII.CR =>
+                        --  A line break inside a delimited comment stored as
+                        --  CR+LF or CR is displayed as LF.
+                        if I < Last and then Buf (I + 1) = ASCII.LF then
+                           I := I + 1;
+                        end if;
+                        Disp_Char (Ctxt, ASCII.LF);
+                     when others =>
+                        Disp_Char (Ctxt, Buf (I));
+                  end case;
+                  I := I + 1;
                end loop;
                Close_Hbox (Ctxt);
             end;

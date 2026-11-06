@@ -94,12 +94,14 @@ def Get_Comment(File: SourceFileEntry, Idx: Comment_Index) -> str:
     """
     Get a comment
 
+    A line break inside a delimited comment is returned as LF, whether the file stores it as LF, CR+LF or CR.
+
     :returns: The comment's text.
     """
     buf = files_map.Get_File_Buffer(File)
     s = Get_Comment_Start(File, Idx)
     l = Get_Comment_Last(File, Idx)
-    return buf[s : l + 1].decode("iso-8859-1")
+    return buf[s : l + 1].decode("iso-8859-1").replace("\r\n", "\n").replace("\r", "\n")
 
 
 @export
