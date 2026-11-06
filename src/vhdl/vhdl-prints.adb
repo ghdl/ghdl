@@ -5593,14 +5593,10 @@ package body Vhdl.Prints is
                I := Start;
                while I <= Last loop
                   case Buf (I) is
-                     when ASCII.CR | ASCII.LF =>
-                        --  A line break inside a delimited comment: LF, CR+LF,
-                        --  CR or LF+CR (as accepted by the scanner) is
-                        --  displayed as LF.
-                        if I < Last
-                          and then Buf (I + 1) /= Buf (I)
-                          and then Buf (I + 1) in ASCII.CR | ASCII.LF
-                        then
+                     when ASCII.CR =>
+                        --  A line break inside a delimited comment stored as
+                        --  CR+LF or CR is displayed as LF.
+                        if I < Last and then Buf (I + 1) = ASCII.LF then
                            I := I + 1;
                         end if;
                         Disp_Char (Ctxt, ASCII.LF);

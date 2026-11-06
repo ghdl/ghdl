@@ -616,10 +616,10 @@ class Delimited(Base):
         self.assertEqual(["/* */"], self.getComments(sfe, port))
 
     def test_LineEndings(self) -> None:
-        """A line break inside a delimited comment is a LF, whether the file stores it as CR+LF, CR or LF+CR."""
+        """A line break inside a delimited comment is a LF, whether the file stores it as CR+LF or CR."""
         source = (self._root / "comments" / "delimited_text.vhdl").read_bytes().replace(b"\r\n", b"\n")
         with TemporaryDirectory() as directory:
-            for name, lineEnding in (("crlf", b"\r\n"), ("cr", b"\r"), ("lfcr", b"\n\r")):
+            for name, lineEnding in (("crlf", b"\r\n"), ("cr", b"\r")):
                 with self.subTest(lineEnding=name):
                     path = Path(directory) / f"delimited_{name}.vhdl"
                     path.write_bytes(source.replace(b"\n", lineEnding))
