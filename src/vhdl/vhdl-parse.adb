@@ -191,6 +191,8 @@ package body Vhdl.Parse is
       end if;
    end Expect_Scan;
 
+   --  Wrappers for comments gathering.
+   --  Those small functions are inlined to reduce the cost of the if.
    procedure Gather_Comments_Line_Maybe (N : Iir) is
    begin
       if Flag_Gather_Comments then
@@ -198,6 +200,30 @@ package body Vhdl.Parse is
       end if;
    end Gather_Comments_Line_Maybe;
    pragma Inline (Gather_Comments_Line_Maybe);
+
+   procedure Gather_Comments_End_Maybe is
+   begin
+      if Flag_Gather_Comments then
+         Gather_Comments_End;
+      end if;
+   end Gather_Comments_End_Maybe;
+   pragma Inline (Gather_Comments_End_Maybe);
+
+   procedure Gather_Comments_After_Maybe (N : Iir) is
+   begin
+      if Flag_Gather_Comments then
+         Gather_Comments_After (N);
+      end if;
+   end Gather_Comments_After_Maybe;
+   pragma Inline (Gather_Comments_After_Maybe);
+
+   procedure Gather_Comments_Block_Maybe (N : Iir) is
+   begin
+      if Flag_Gather_Comments then
+         Gather_Comments_Block (N);
+      end if;
+   end Gather_Comments_Block_Maybe;
+   pragma Inline (Gather_Comments_Block_Maybe);
 
    --  Expect the identifier for node RES.
    procedure Scan_Identifier (Res : Iir) is
@@ -3289,9 +3315,7 @@ package body Vhdl.Parse is
       Scan;
 
       --  A comment on the line of 'record' is for the type.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Decl);
-      end if;
+      Gather_Comments_After_Maybe (Decl);
 
       if Current_Token = Tok_End then
          Error_Msg_Parse ("empty records are not allowed");
@@ -3346,9 +3370,7 @@ package body Vhdl.Parse is
       end if;
 
       --  Comments just before the 'end' are not for the next node.
-      if Flag_Gather_Comments then
-         Gather_Comments_End;
-      end if;
+      Gather_Comments_End_Maybe;
 
       --  Skip 'end'
       Expect_Scan (Tok_End);
@@ -3630,9 +3652,7 @@ package body Vhdl.Parse is
             Set_Location (Decl, Loc);
 
             --  Comments attached to the record.
-            if Flag_Gather_Comments then
-               Gather_Comments_Block (Decl);
-            end if;
+            Gather_Comments_Block_Maybe (Decl);
 
             Def := Parse_Record_Type_Definition (Decl);
             Set_Type_Definition (Decl, Def);
@@ -3700,9 +3720,7 @@ package body Vhdl.Parse is
       Scan_Semi_Colon_Declaration ("type declaration");
 
       --  A comment on the line of the ';' is for the type.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Decl);
-      end if;
+      Gather_Comments_After_Maybe (Decl);
 
       if Flag_Elocations then
          Create_Elocations (Decl);
@@ -4915,16 +4933,12 @@ package body Vhdl.Parse is
       end if;
 
       --  Comments attached to the component (like for an entity).
-      if Flag_Gather_Comments then
-         Gather_Comments_Block (Component);
-      end if;
+      Gather_Comments_Block_Maybe (Component);
 
       Parse_Generic_Port_Clauses (Component);
 
       --  Comments just before the 'end' are not for the next node.
-      if Flag_Gather_Comments then
-         Gather_Comments_End;
-      end if;
+      Gather_Comments_End_Maybe;
 
       if Flag_Elocations then
          Set_End_Location (Component, Get_Token_Location);
@@ -4936,9 +4950,7 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_Semi_Colon);
 
       --  A comment on the line of the ';' is for the component.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Component);
-      end if;
+      Gather_Comments_After_Maybe (Component);
 
       return Component;
    end Parse_Component_Declaration;
@@ -6369,9 +6381,7 @@ package body Vhdl.Parse is
       --  Comments just before the 'begin' or the 'end' are attached to the
       --  last declaration or to PARENT (if no declarations), if they are not
       --  discarded.  They are not for the next node.
-      if Flag_Gather_Comments then
-         Gather_Comments_End;
-      end if;
+      Gather_Comments_End_Maybe;
    end Parse_Declarative_Part;
 
    --  precond : ENTITY
@@ -6418,9 +6428,7 @@ package body Vhdl.Parse is
 
       --  Comments after 'entity' but before the first generic or port are
       --  attached to the entity.
-      if Flag_Gather_Comments then
-         Gather_Comments_Block (Res);
-      end if;
+      Gather_Comments_Block_Maybe (Res);
 
       Parse_Generic_Port_Clauses (Res);
 
@@ -6434,9 +6442,7 @@ package body Vhdl.Parse is
          Scan;
 
          --  A comment on the line of 'begin' is not for the first statement.
-         if Flag_Gather_Comments then
-            Gather_Comments_After (Res);
-         end if;
+         Gather_Comments_After_Maybe (Res);
 
          Parse_Concurrent_Statements (Res);
       else
@@ -6458,9 +6464,7 @@ package body Vhdl.Parse is
       Scan_Semi_Colon_Unit ("entity");
 
       --  A comment on the line of the ';' is for the entity.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Res);
-      end if;
+      Gather_Comments_After_Maybe (Res);
 
       Set_Library_Unit (Unit, Res);
 
@@ -8180,9 +8184,7 @@ package body Vhdl.Parse is
          Expect_Scan (Tok_Then, "'then' is expected here");
 
          --  The comments up to 'then' are for the clause.
-         if Flag_Gather_Comments then
-            Gather_Comments_After (Clause);
-         end if;
+         Gather_Comments_After_Maybe (Clause);
 
          Set_Sequential_Statement_Chain
            (Clause, Parse_Sequential_Statements (Res));
@@ -8209,9 +8211,7 @@ package body Vhdl.Parse is
             Scan;
 
             --  The comments up to 'else' are for the clause.
-            if Flag_Gather_Comments then
-               Gather_Comments_After (Clause);
-            end if;
+            Gather_Comments_After_Maybe (Clause);
 
             Set_Sequential_Statement_Chain
               (Clause, Parse_Sequential_Statements (Res));
@@ -8613,9 +8613,7 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_Is);
 
       --  The comments up to 'is' are for the statement.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Stmt);
-      end if;
+      Gather_Comments_After_Maybe (Stmt);
 
       if Current_Token = Tok_End then
          Error_Msg_Parse ("missing alternative in case statement");
@@ -8634,9 +8632,7 @@ package body Vhdl.Parse is
          Expect_Scan (Tok_Double_Arrow);
 
          --  The comments up to '=>' are for its first choice.
-         if Flag_Gather_Comments then
-            Gather_Comments_After (Assoc);
-         end if;
+         Gather_Comments_After_Maybe (Assoc);
 
          Set_Associated_Chain (Assoc, Parse_Sequential_Statements (Stmt));
          Chain_Append_Subchain (First_Assoc, Last_Assoc, Assoc);
@@ -8699,9 +8695,7 @@ package body Vhdl.Parse is
       Scan;
 
       --  The comments up to 'loop' are for the statement.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Stmt);
-      end if;
+      Gather_Comments_After_Maybe (Stmt);
 
       Set_Sequential_Statement_Chain
         (Stmt, Parse_Sequential_Statements (Stmt));
@@ -8756,9 +8750,7 @@ package body Vhdl.Parse is
       Scan;
 
       --  The comments up to 'loop' are for the statement.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Stmt);
-      end if;
+      Gather_Comments_After_Maybe (Stmt);
 
       Set_Sequential_Statement_Chain
         (Stmt, Parse_Sequential_Statements (Stmt));
@@ -9122,9 +9114,7 @@ package body Vhdl.Parse is
          end if;
 
          --  The comments up to the ';' are for the statement.
-         if Flag_Gather_Comments then
-            Gather_Comments_After (Stmt);
-         end if;
+         Gather_Comments_After_Maybe (Stmt);
 
          --  Append it to the chain.
          if First_Stmt = Null_Iir then
@@ -9164,9 +9154,7 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_Begin);
 
       --  A comment on the line of 'begin' is not for the first statement.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Subprg);
-      end if;
+      Gather_Comments_After_Maybe (Subprg);
 
       Set_Sequential_Statement_Chain
         (Subprg_Body, Parse_Sequential_Statements (Subprg_Body));
@@ -9230,9 +9218,7 @@ package body Vhdl.Parse is
       Scan_Semi_Colon_Declaration ("subprogram body");
 
       --  A comment on the line of the ';' is for the subprogram.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Subprg);
-      end if;
+      Gather_Comments_After_Maybe (Subprg);
    end Parse_Subprogram_Body;
 
    --  precond : NEW
@@ -9513,9 +9499,7 @@ package body Vhdl.Parse is
       end if;
 
       --  A comment on the line of the end of the header is for the process.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Res);
-      end if;
+      Gather_Comments_After_Maybe (Res);
 
       --  Declarative part.
       Parse_Declarative_Part (Res, Res);
@@ -9525,9 +9509,7 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_Begin);
 
       --  A comment on the line of 'begin' is not for the first statement.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Res);
-      end if;
+      Gather_Comments_After_Maybe (Res);
 
       Set_Sequential_Statement_Chain (Res, Parse_Sequential_Statements (Res));
 
@@ -9936,9 +9918,7 @@ package body Vhdl.Parse is
       Set_Label (Res, Label);
 
       --  Comments attached to the block (like for a process).
-      if Flag_Gather_Comments then
-         Gather_Comments_Block (Res);
-      end if;
+      Gather_Comments_Block_Maybe (Res);
 
       --  Eat 'block'.
       Scan;
@@ -9969,9 +9949,7 @@ package body Vhdl.Parse is
       end if;
 
       --  A comment on the line of the end of the header is for the block.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Res);
-      end if;
+      Gather_Comments_After_Maybe (Res);
 
       if Current_Token = Tok_Generic or Current_Token = Tok_Port then
          Set_Block_Header (Res, Parse_Block_Header (Res));
@@ -9984,9 +9962,7 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_Begin);
 
       --  A comment on the line of 'begin' is not for the first statement.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Res);
-      end if;
+      Gather_Comments_After_Maybe (Res);
 
       Parse_Concurrent_Statements (Res);
 
@@ -10107,9 +10083,7 @@ package body Vhdl.Parse is
             Scan;
 
             --  A comment on the line of 'begin' is not for a statement.
-            if Flag_Gather_Comments then
-               Gather_Comments_After (Bod);
-            end if;
+            Gather_Comments_After_Maybe (Bod);
          when others =>
             null;
       end case;
@@ -10198,9 +10172,7 @@ package body Vhdl.Parse is
       Scan;
 
       --  The comments up to 'generate' are for the statement.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Res);
-      end if;
+      Gather_Comments_After_Maybe (Res);
 
       Parse_Generate_Statement_Body (Res, Null_Identifier, Bod, End_Loc);
       Set_Generate_Statement_Body (Res, Bod);
@@ -10325,9 +10297,7 @@ package body Vhdl.Parse is
          end case;
 
          --  The comments up to 'generate' are for the alternative.
-         if Flag_Gather_Comments then
-            Gather_Comments_After (Clause);
-         end if;
+         Gather_Comments_After_Maybe (Clause);
 
          Parse_Generate_Statement_Body (Res, Alt_Label, Bod, End_Loc);
 
@@ -10392,9 +10362,7 @@ package body Vhdl.Parse is
          Expect_Scan (Tok_Generate);
 
          --  The comments up to 'generate' are for the alternative.
-         if Flag_Gather_Comments then
-            Gather_Comments_After (Clause);
-         end if;
+         Gather_Comments_After_Maybe (Clause);
 
          Parse_Generate_Statement_Body (Res, Alt_Label, Bod, End_Loc);
          if Alt_Label /= Null_Identifier then
@@ -10495,9 +10463,7 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_Double_Arrow);
 
       --  The comments up to '=>' are for its first choice.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Assoc);
-      end if;
+      Gather_Comments_After_Maybe (Assoc);
 
       Parse_Generate_Statement_Body (Parent, Alt_Label, Bod, End_Loc);
       Set_Associated_Block (Assoc, Bod);
@@ -10553,9 +10519,7 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_Generate);
 
       --  The comments up to 'generate' are for the statement.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Res);
-      end if;
+      Gather_Comments_After_Maybe (Res);
 
       if Current_Token = Tok_End then
          Error_Msg_Parse ("no generate alternative");
@@ -11413,9 +11377,7 @@ package body Vhdl.Parse is
             end if;
 
             --  The comments up to the ';' are for the statement.
-            if Flag_Gather_Comments then
-               Gather_Comments_After (Stmt);
-            end if;
+            Gather_Comments_After_Maybe (Stmt);
 
             return Stmt;
          end if;
@@ -11558,9 +11520,7 @@ package body Vhdl.Parse is
 
       --  Comments after 'architecture' but before the first declaration are
       --  attached to the architecture.
-      if Flag_Gather_Comments then
-         Gather_Comments_Block (Res);
-      end if;
+      Gather_Comments_Block_Maybe (Res);
 
       --  Identifier.
       Scan_Identifier (Res);
@@ -11574,9 +11534,7 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_Is);
 
       --  A comment on the line of 'is' is for the architecture.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Res);
-      end if;
+      Gather_Comments_After_Maybe (Res);
 
       Parse_Declarative_Part (Res, Res);
 
@@ -11585,9 +11543,7 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_Begin);
 
       --  A comment on the line of 'begin' is not for the first statement.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Res);
-      end if;
+      Gather_Comments_After_Maybe (Res);
 
       Parse_Concurrent_Statements (Res);
       -- end was scanned.
@@ -11610,9 +11566,7 @@ package body Vhdl.Parse is
       Scan_Semi_Colon_Unit ("architecture");
 
       --  A comment on the line of the ';' is for the architecture.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Res);
-      end if;
+      Gather_Comments_After_Maybe (Res);
 
       Set_Library_Unit (Unit, Res);
 
@@ -12080,9 +12034,7 @@ package body Vhdl.Parse is
 
       --  Comments after 'context' but before the first clause are attached
       --  to the context.
-      if Flag_Gather_Comments then
-         Gather_Comments_Block (Res);
-      end if;
+      Gather_Comments_Block_Maybe (Res);
 
       Parse_Configuration_Declarative_Part (Res);
 
@@ -12110,9 +12062,7 @@ package body Vhdl.Parse is
       Scan_Semi_Colon_Unit ("configuration");
 
       --  A comment on the line of the ';' is for the configuration.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Res);
-      end if;
+      Gather_Comments_After_Maybe (Res);
 
       Set_Library_Unit (Unit, Res);
 
@@ -12226,9 +12176,7 @@ package body Vhdl.Parse is
       Scan_Semi_Colon_Unit ("package declaration");
 
       --  A comment on the line of the ';' is for the package.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Res);
-      end if;
+      Gather_Comments_After_Maybe (Res);
 
       if Flag_Elocations then
          Create_Elocations (Res);
@@ -12302,9 +12250,7 @@ package body Vhdl.Parse is
       Scan_Semi_Colon_Unit ("package body");
 
       --  A comment on the line of the ';' is for the package body.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Res);
-      end if;
+      Gather_Comments_After_Maybe (Res);
 
       if Flag_Elocations then
          Create_Elocations (Res);
@@ -12325,8 +12271,7 @@ package body Vhdl.Parse is
      (Parent : Iir;
       Id : Name_Id;
       Loc : Location_Type;
-      Comments : Comments_Range)
-     return Iir
+      Comments : Comments_Range) return Iir
    is
       Res: Iir;
    begin
@@ -12362,9 +12307,7 @@ package body Vhdl.Parse is
       Scan_Semi_Colon_Unit ("package instantiation");
 
       --  A comment on the line of the ';' is for the package.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Res);
-      end if;
+      Gather_Comments_After_Maybe (Res);
 
       return Res;
    end Parse_Package_Instantiation_Declaration;
@@ -12709,9 +12652,7 @@ package body Vhdl.Parse is
 
       --  Comments after 'context' but before the first clause are attached
       --  to the context.
-      if Flag_Gather_Comments then
-         Gather_Comments_Block (Decl);
-      end if;
+      Gather_Comments_Block_Maybe (Decl);
 
       Parse_Context_Clause (Decl);
 
@@ -12732,9 +12673,7 @@ package body Vhdl.Parse is
       Scan_Semi_Colon_Unit ("context declaration");
 
       --  A comment on the line of the ';' is for the context.
-      if Flag_Gather_Comments then
-         Gather_Comments_After (Decl);
-      end if;
+      Gather_Comments_After_Maybe (Decl);
 
       if Flag_Elocations then
          Create_Elocations (Decl);
@@ -12837,9 +12776,7 @@ package body Vhdl.Parse is
       Set_Date_State (Res, Date_Extern);
 
       --  Attach comments to the design unit.
-      if Flag_Gather_Comments then
-         Gather_Comments_Block (Res);
-      end if;
+      Gather_Comments_Block_Maybe (Res);
 
       Parse_Context_Clause (Res);
 
