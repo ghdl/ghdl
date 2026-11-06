@@ -4,6 +4,7 @@
 
 export GHDL_STD_FLAGS="--std=08 -Werror=sensitivity"
 analyze test_rec.vhdl
+analyze test_rec_idx.vhdl
 
 analyze_failure test.vhdl
 
