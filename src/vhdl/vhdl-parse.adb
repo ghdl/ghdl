@@ -191,6 +191,14 @@ package body Vhdl.Parse is
       end if;
    end Expect_Scan;
 
+   procedure Gather_Comments_Line_Maybe (N : Iir) is
+   begin
+      if Flag_Gather_Comments then
+         Gather_Comments_Line (N);
+      end if;
+   end Gather_Comments_Line_Maybe;
+   pragma Inline (Gather_Comments_Line_Maybe);
+
    --  Expect the identifier for node RES.
    procedure Scan_Identifier (Res : Iir) is
    begin
@@ -2098,9 +2106,7 @@ package body Vhdl.Parse is
       end if;
 
       --  Comments for the interface.
-      if Flag_Gather_Comments then
-         Gather_Comments_Line (First);
-      end if;
+      Gather_Comments_Line_Maybe (First);
 
       if Current_Token = Tok_Identifier then
          Is_Default := True;
@@ -2417,9 +2423,7 @@ package body Vhdl.Parse is
       Inter := Create_Iir (Iir_Kind_Interface_Package_Declaration);
 
       --  Comments attached to the interface.
-      if Flag_Gather_Comments then
-         Gather_Comments_Line (Inter);
-      end if;
+      Gather_Comments_Line_Maybe (Inter);
 
       --  Skip 'package'.
       Scan;
@@ -2633,9 +2637,7 @@ package body Vhdl.Parse is
       Set_Location (Subprg);
 
       --  Comments attached to the interface.
-      if Flag_Gather_Comments then
-         Gather_Comments_Line (Subprg);
-      end if;
+      Gather_Comments_Line_Maybe (Subprg);
 
       case Current_Token is
          when Tok_Procedure =>
@@ -2745,9 +2747,7 @@ package body Vhdl.Parse is
                Inters := Create_Iir (Iir_Kind_Interface_Type_Declaration);
 
                --  Comments attached to the interface.
-               if Flag_Gather_Comments then
-                  Gather_Comments_Line (Inters);
-               end if;
+               Gather_Comments_Line_Maybe (Inters);
 
                -- Skip 'type'.
                Scan;
@@ -2971,9 +2971,7 @@ package body Vhdl.Parse is
                Set_Enum_Pos (Enum_Lit, Pos);
 
                --  Comments for the enumeration literal.
-               if Flag_Gather_Comments then
-                  Gather_Comments_Line (Enum_Lit);
-               end if;
+               Gather_Comments_Line_Maybe (Enum_Lit);
 
                --  LRM93 3.1.1
                --  the position number for each additional enumeration literal
@@ -3193,9 +3191,7 @@ package body Vhdl.Parse is
       Set_Parent (Unit, Parent);
 
       --  Comments attached to the unit.
-      if Flag_Gather_Comments then
-         Gather_Comments_Line (Unit);
-      end if;
+      Gather_Comments_Line_Maybe (Unit);
 
       Scan_Identifier (Unit);
 
@@ -3210,9 +3206,7 @@ package body Vhdl.Parse is
          Set_Parent (Unit, Parent);
 
          --  Comments attached to the unit.
-         if Flag_Gather_Comments then
-            Gather_Comments_Line (Unit);
-         end if;
+         Gather_Comments_Line_Maybe (Unit);
 
          Scan_Identifier (Unit);
 
@@ -3329,9 +3323,7 @@ package body Vhdl.Parse is
             end loop;
 
             --  Comments attached to the first element.
-            if Flag_Gather_Comments then
-               Gather_Comments_Line (First);
-            end if;
+            Gather_Comments_Line_Maybe (First);
 
             --  Scan ':'.
             Expect_Scan (Tok_Colon);
@@ -3451,7 +3443,7 @@ package body Vhdl.Parse is
       --  Comments before 'protected' (and after it, until an empty line) are
       --  attached to the type or to the body, like for a package.
       if Flag_Gather_Comments then
-         File_Comments.Save_Comments (Comments);
+         Save_Comments (Comments);
       end if;
 
       --  Skip 'protected'.
@@ -3560,9 +3552,7 @@ package body Vhdl.Parse is
          Set_Location (Decl, Loc);
 
          --  Comments attached to the type.
-         if Flag_Gather_Comments then
-            Gather_Comments_Line (Decl);
-         end if;
+         Gather_Comments_Line_Maybe (Decl);
 
          --  Skip ';'.
          Scan;
@@ -3585,9 +3575,7 @@ package body Vhdl.Parse is
             Decl := Create_Iir (Iir_Kind_Type_Declaration);
 
             --  Comments attached to the type.
-            if Flag_Gather_Comments then
-               Gather_Comments_Line (Decl);
-            end if;
+            Gather_Comments_Line_Maybe (Decl);
 
             Def := Parse_Enumeration_Type_Definition (Parent);
             Set_Type_Definition (Decl, Def);
@@ -3605,9 +3593,7 @@ package body Vhdl.Parse is
             Set_Location (Decl, Loc);
 
             --  Comments attached to the type.
-            if Flag_Gather_Comments then
-               Gather_Comments_Line (Decl);
-            end if;
+            Gather_Comments_Line_Maybe (Decl);
 
             --  Skip 'range'
             Scan;
@@ -3705,9 +3691,7 @@ package body Vhdl.Parse is
          Set_Type_Definition (Decl, Def);
 
          --  Comments attached to the type.
-         if Flag_Gather_Comments then
-            Gather_Comments_Line (Decl);
-         end if;
+         Gather_Comments_Line_Maybe (Decl);
       end if;
       Set_Identifier (Decl, Ident);
       Set_Location (Decl, Loc);
@@ -4013,9 +3997,7 @@ package body Vhdl.Parse is
       Start_Loc := Get_Token_Location;
 
       --  Comments attached to the subtype.
-      if Flag_Gather_Comments then
-         Gather_Comments_Line (Decl);
-      end if;
+      Gather_Comments_Line_Maybe (Decl);
 
       --  Eat 'subtype'.
       Scan;
@@ -5033,9 +5015,7 @@ package body Vhdl.Parse is
       Set_Location (Res);
 
       --  Comments attached to the alias.
-      if Flag_Gather_Comments then
-         Gather_Comments_Line (Res);
-      end if;
+      Gather_Comments_Line_Maybe (Res);
 
       case Current_Token is
          when Tok_Identifier
@@ -5105,9 +5085,7 @@ package body Vhdl.Parse is
 
       --  Comments attached to the mode view (the elements gather their
       --  own comments).
-      if Flag_Gather_Comments then
-         Gather_Comments_Line (Res);
-      end if;
+      Gather_Comments_Line_Maybe (Res);
 
       --  Skip 'view'
       Scan;
@@ -5162,9 +5140,7 @@ package body Vhdl.Parse is
             end loop;
 
             --  Comments attached to the first element.
-            if Flag_Gather_Comments then
-               Gather_Comments_Line (First);
-            end if;
+            Gather_Comments_Line_Maybe (First);
 
             --  Scan ':'.
             Expect_Scan (Tok_Colon);
@@ -5285,9 +5261,7 @@ package body Vhdl.Parse is
       Set_Location (Res);
 
       --  Comments attached to the specification.
-      if Flag_Gather_Comments then
-         Gather_Comments_Line (Res);
-      end if;
+      Gather_Comments_Line_Maybe (Res);
 
       --  Eat 'for'.
       Expect_Scan (Tok_For);
@@ -5499,9 +5473,7 @@ package body Vhdl.Parse is
             Set_Identifier (Res, Ident);
 
             --  Comments attached to the attribute.
-            if Flag_Gather_Comments then
-               Gather_Comments_Line (Res);
-            end if;
+            Gather_Comments_Line_Maybe (Res);
 
             --  Skip ':'.
             Scan;
@@ -5514,9 +5486,7 @@ package body Vhdl.Parse is
             Set_Location (Res, Loc);
 
             --  Comments attached to the specification.
-            if Flag_Gather_Comments then
-               Gather_Comments_Line (Res);
-            end if;
+            Gather_Comments_Line_Maybe (Res);
 
             Designator := Create_Iir (Iir_Kind_Simple_Name);
             Set_Location (Designator, Loc);
@@ -5589,9 +5559,7 @@ package body Vhdl.Parse is
                Set_Identifier (Res, Ident);
 
                --  Comments attached to the group.
-               if Flag_Gather_Comments then
-                  Gather_Comments_Line (Res);
-               end if;
+               Gather_Comments_Line_Maybe (Res);
 
                --  Skip 'is'.
                Scan;
@@ -5640,9 +5608,7 @@ package body Vhdl.Parse is
                Set_Identifier (Res, Ident);
 
                --  Comments attached to the group.
-               if Flag_Gather_Comments then
-                  Gather_Comments_Line (Res);
-               end if;
+               Gather_Comments_Line_Maybe (Res);
 
                --  Skip ':'.
                Scan;
@@ -9378,9 +9344,7 @@ package body Vhdl.Parse is
       Set_Implicit_Definition (Subprg, Iir_Predefined_None);
 
       --  Comments for the subprogram.
-      if Flag_Gather_Comments then
-         Gather_Comments_Line (Subprg);
-      end if;
+      Gather_Comments_Line_Maybe (Subprg);
 
       case Current_Token is
          when Tok_Procedure =>
@@ -9496,7 +9460,7 @@ package body Vhdl.Parse is
       --  Attach comments now, as 'process' may appear alone, followed
       --  by a comment for the next declaration.
       if Flag_Gather_Comments then
-         File_Comments.Save_Comments (Comments);
+         Save_Comments (Comments);
       end if;
 
       --  Skip 'process'
@@ -12297,7 +12261,7 @@ package body Vhdl.Parse is
       --  Comments before 'is' (and after it, until an empty line) are
       --  attached to the package body, like for a package declaration.
       if Flag_Gather_Comments then
-         File_Comments.Save_Comments (Comments);
+         Save_Comments (Comments);
       end if;
 
       --  Skip 'is'.
@@ -12443,7 +12407,7 @@ package body Vhdl.Parse is
          if Flag_Gather_Comments then
             --  Save existing comments (before the 'is').  Those comments will
             --  be associated with this package.
-            File_Comments.Save_Comments (Comments);
+            Save_Comments (Comments);
          end if;
 
          --  Skip 'is'.
@@ -12923,7 +12887,7 @@ package body Vhdl.Parse is
       Header : Comments_Range;
    begin
       if Flag_Gather_Comments then
-         File_Comments.Comment_Init_Scan (Get_Current_Source_File);
+         Comment_Init_Scan (Get_Current_Source_File);
       end if;
 
       --  The first token.
@@ -12962,8 +12926,8 @@ package body Vhdl.Parse is
       end loop;
 
       if Flag_Gather_Comments then
-         File_Comments.Sort_Comments_By_Node;
-         File_Comments.Comment_Close_Scan;
+         Sort_Comments_By_Node;
+         Comment_Close_Scan;
       end if;
 
       if Last_Design = Null_Iir then
