@@ -65,6 +65,44 @@ package body Grt.Avhpi is
       return Res;
    end Ranges_To_Length;
 
+   --  Return the base type of the record type RTI, or null if RTI is not a
+   --  record type.
+   function Get_Record_Base_Type (Rti : Ghdl_Rti_Access)
+                                 return Ghdl_Rtin_Type_Record_Acc is
+   begin
+      case Rti.Kind is
+         when Ghdl_Rtik_Type_Record
+           | Ghdl_Rtik_Type_Unbounded_Record =>
+            return To_Ghdl_Rtin_Type_Record_Acc (Rti);
+         when Ghdl_Rtik_Subtype_Record
+           | Ghdl_Rtik_Subtype_Unbounded_Record =>
+            return To_Ghdl_Rtin_Type_Record_Acc
+              (To_Ghdl_Rtin_Subtype_Composite_Acc (Rti).Basetype);
+         when others =>
+            return null;
+      end case;
+   end Get_Record_Base_Type;
+
+   --  Layout of the record of type RTI.  LAYOUT is the layout from the
+   --  enclosing object, used when RTI is unbounded.
+   function Get_Record_Layout (Ctxt : Rti_Context;
+                               Rti : Ghdl_Rti_Access;
+                               Layout : Address) return Address is
+   begin
+      case Rti.Kind is
+         when Ghdl_Rtik_Type_Record =>
+            return Loc_To_Addr (Rti.Depth,
+                                To_Ghdl_Rtin_Type_Record_Acc (Rti).Layout,
+                                Ctxt);
+         when Ghdl_Rtik_Subtype_Record =>
+            return Loc_To_Addr
+              (Rti.Depth,
+               To_Ghdl_Rtin_Subtype_Composite_Acc (Rti).Layout, Ctxt);
+         when others =>
+            return Layout;
+      end case;
+   end Get_Record_Layout;
+
    procedure Vhpi_Iterator (Rel : VhpiOneToManyT;
                             Ref : VhpiHandleT;
                             Res : out VhpiHandleT;
@@ -165,6 +203,47 @@ package body Grt.Avhpi is
                   Error := AvhpiErrorBadRel;
             end case;
             return;
+         when VhpiSelectedNames =>
+            case Ref.Kind is
+               when VhpiSigDeclK
+                 | VhpiPortDeclK =>
+                  declare
+                     Rti : constant Ghdl_Rti_Access := Ref.Obj.Obj_Type;
+                     Addr, Layout : Address;
+                  begin
+                     if Get_Record_Base_Type (Rti) = null then
+                        Error := AvhpiErrorBadRel;
+                        return;
+                     end if;
+                     Object_To_Base_Bounds
+                       (Rti, Avhpi_Get_Address (Ref), Addr, Layout);
+                     Res := (Kind => AvhpiRecordIteratorK,
+                             Ctxt => Ref.Ctxt,
+                             I_Addr => Addr,
+                             I_Type => Rti,
+                             I_Layout => Get_Record_Layout
+                               (Ref.Ctxt, Rti, Layout),
+                             I_Obj => Ref.Obj,
+                             I_Idx => 0);
+                  end;
+                  return;
+               when VhpiSelectedNameK =>
+                  if Get_Record_Base_Type (Ref.R_Type) = null then
+                     Error := AvhpiErrorBadRel;
+                     return;
+                  end if;
+                  Res := (Kind => AvhpiRecordIteratorK,
+                          Ctxt => Ref.Ctxt,
+                          I_Addr => Ref.R_Addr,
+                          I_Type => Ref.R_Type,
+                          I_Layout => Get_Record_Layout
+                            (Ref.Ctxt, Ref.R_Type, Ref.R_Layout),
+                          I_Obj => Ref.R_Obj,
+                          I_Idx => 0);
+                  return;
+               when others =>
+                  null;
+            end case;
          when others =>
             null;
       end case;
@@ -361,6 +440,36 @@ package body Grt.Avhpi is
       Iterator.N_Idx := Iterator.N_Idx - 1;
       Error := AvhpiErrorOk;
    end Vhpi_Scan_Indexed_Name;
+
+   procedure Vhpi_Scan_Selected_Name (Iterator : in out VhpiHandleT;
+                                      Res : out VhpiHandleT;
+                                      Error : out AvhpiErrorT)
+   is
+      Rec : constant Ghdl_Rtin_Type_Record_Acc :=
+        Get_Record_Base_Type (Iterator.I_Type);
+      El : Ghdl_Rtin_Element_Acc;
+      El_Addr, El_Layout : Address;
+   begin
+      if Iterator.I_Idx >= Rec.Nbrel then
+         Error := AvhpiErrorIteratorEnd;
+         return;
+      end if;
+
+      El := To_Ghdl_Rtin_Element_Acc (Rec.Elements (Iterator.I_Idx));
+      Iterator.I_Idx := Iterator.I_Idx + 1;
+
+      Record_To_Element (Iterator.I_Addr, El, True, Iterator.I_Layout,
+                         El_Addr, El_Layout);
+
+      Res := (Kind => VhpiSelectedNameK,
+              Ctxt => Iterator.Ctxt,
+              R_Addr => El_Addr,
+              R_Type => El.Eltype,
+              R_Layout => El_Layout,
+              R_Obj => Iterator.I_Obj,
+              R_El => El);
+      Error := AvhpiErrorOk;
+   end Vhpi_Scan_Selected_Name;
 
    procedure Vhpi_Scan_Internal_Regions (Iterator : in out VhpiHandleT;
                                          Res : out VhpiHandleT;
@@ -665,6 +774,8 @@ package body Grt.Avhpi is
                   Error := AvhpiErrorHandle;
                   Res := Null_Handle;
             end case;
+         when AvhpiRecordIteratorK =>
+            Vhpi_Scan_Selected_Name (Iterator, Res, Error);
          when VhpiIteratorK =>
             case Iterator.Rel is
                when VhpiPackInsts =>
@@ -726,6 +837,8 @@ package body Grt.Avhpi is
             return Obj.Obj.Name;
          when VhpiSubtypeDeclK =>
             return To_Ghdl_Rtin_Subtype_Scalar_Acc (Obj.Atype).Name;
+         when VhpiSelectedNameK =>
+            return Obj.R_El.Name;
          when others =>
             return null;
       end case;
@@ -799,6 +912,55 @@ package body Grt.Avhpi is
             Add (Str (I));
          end loop;
       end Add;
+
+      --  Add the names of the elements from the base object of the selected
+      --  name OBJ to OBJ, each preceded by a dot.
+      procedure Add_Selected_Path (Obj : VhpiHandleT)
+      is
+         Base : constant Ghdl_Rtin_Object_Acc := Obj.R_Obj;
+         Addr, Layout : Address;
+
+         --  Search OBJ in the record of type RTI at ADDR.  On success, the
+         --  path has been added.
+         function Search (Rti : Ghdl_Rti_Access;
+                          Addr : Address;
+                          Layout : Address) return Boolean
+         is
+            Rec : constant Ghdl_Rtin_Type_Record_Acc :=
+              Get_Record_Base_Type (Rti);
+            Lay : constant Address :=
+              Get_Record_Layout (Obj.Ctxt, Rti, Layout);
+            El : Ghdl_Rtin_Element_Acc;
+            El_Addr, El_Layout : Address;
+            Prev_Len : Natural;
+         begin
+            for I in 1 .. Rec.Nbrel loop
+               El := To_Ghdl_Rtin_Element_Acc (Rec.Elements (I - 1));
+               Record_To_Element (Addr, El, True, Lay, El_Addr, El_Layout);
+               Prev_Len := Len;
+               Add ('.');
+               Add (El.Name);
+               if El = Obj.R_El and then El_Addr = Obj.R_Addr then
+                  return True;
+               end if;
+               if Get_Record_Base_Type (El.Eltype) /= null
+                 and then Search (El.Eltype, El_Addr, El_Layout)
+               then
+                  return True;
+               end if;
+               Len := Prev_Len;
+            end loop;
+            return False;
+         end Search;
+      begin
+         Object_To_Base_Bounds
+           (Base.Obj_Type,
+            Loc_To_Addr (Obj.Ctxt.Block.Depth, Base.Loc, Obj.Ctxt),
+            Addr, Layout);
+         if not Search (Base.Obj_Type, Addr, Layout) then
+            Internal_Error ("add_selected_path");
+         end if;
+      end Add_Selected_Path;
    begin
       Len := 0;
 
@@ -841,6 +1003,8 @@ package body Grt.Avhpi is
                  | VhpiGenericDeclK
                  | VhpiConstDeclK =>
                   Add (Obj.Obj.Name);
+               when VhpiSelectedNameK =>
+                  Add (Obj.R_El.Name);
                when VhpiIfGenerateK =>
                   Add (To_Ghdl_Rtin_Generate_Acc
                          (To_Ghdl_Rtin_Block_Acc
@@ -945,6 +1109,10 @@ package body Grt.Avhpi is
                     | VhpiSigDeclK =>
                      Add (':');
                      Add (Obj.Obj.Name);
+                  when VhpiSelectedNameK =>
+                     Add (':');
+                     Add (Obj.R_Obj.Name);
+                     Add_Selected_Path (Obj);
                   when others =>
                      null;
                end case;
@@ -1046,6 +1214,11 @@ package body Grt.Avhpi is
                           Ctxt => Ref.Ctxt,
                           Atype => Ref.N_Type);
                   Error := AvhpiErrorOk;
+               when VhpiSelectedNameK =>
+                  Res := (Kind => VhpiSubtypeIndicK,
+                          Ctxt => Ref.Ctxt,
+                          Atype => Ref.R_Type);
+                  Error := AvhpiErrorOk;
                when others =>
                   return;
             end case;
@@ -1134,6 +1307,12 @@ package body Grt.Avhpi is
                when VhpiIndexedNameK =>
                   Rti_To_Handle
                     (To_Ghdl_Rti_Access (Ref.N_Obj), Ref.Ctxt, Res);
+                  if Res.Kind /= VhpiUndefined then
+                     Error := AvhpiErrorOk;
+                  end if;
+               when VhpiSelectedNameK =>
+                  Rti_To_Handle
+                    (To_Ghdl_Rti_Access (Ref.R_Obj), Ref.Ctxt, Res);
                   if Res.Kind /= VhpiUndefined then
                      Error := AvhpiErrorOk;
                   end if;
@@ -1468,24 +1647,30 @@ package body Grt.Avhpi is
       return Obj.Kind;
    end Vhpi_Get_Kind;
 
-   function Vhpi_Get_Mode (Obj : VhpiHandleT) return VhpiModeT is
+   function Vhpi_Get_Mode (Obj : VhpiHandleT) return VhpiModeT
+   is
+      Port : Ghdl_Rtin_Object_Acc;
    begin
       case Obj.Kind is
          when VhpiPortDeclK =>
-            case Obj.Obj.Common.Mode and Ghdl_Rti_Signal_Mode_Mask is
-               when Ghdl_Rti_Signal_Mode_In =>
-                  return VhpiInMode;
-               when Ghdl_Rti_Signal_Mode_Out =>
-                  return VhpiOutMode;
-               when Ghdl_Rti_Signal_Mode_Inout =>
-                  return VhpiInoutMode;
-               when Ghdl_Rti_Signal_Mode_Buffer =>
-                  return VhpiBufferMode;
-               when Ghdl_Rti_Signal_Mode_Linkage =>
-                  return VhpiLinkageMode;
-               when others =>
-                  return VhpiErrorMode;
-            end case;
+            Port := Obj.Obj;
+         when VhpiSelectedNameK =>
+            --  The mode of an element is the mode of its port.
+            Port := Obj.R_Obj;
+         when others =>
+            return VhpiErrorMode;
+      end case;
+      case Port.Common.Mode and Ghdl_Rti_Signal_Mode_Mask is
+         when Ghdl_Rti_Signal_Mode_In =>
+            return VhpiInMode;
+         when Ghdl_Rti_Signal_Mode_Out =>
+            return VhpiOutMode;
+         when Ghdl_Rti_Signal_Mode_Inout =>
+            return VhpiInoutMode;
+         when Ghdl_Rti_Signal_Mode_Buffer =>
+            return VhpiBufferMode;
+         when Ghdl_Rti_Signal_Mode_Linkage =>
+            return VhpiLinkageMode;
          when others =>
             return VhpiErrorMode;
       end case;
@@ -1519,6 +1704,8 @@ package body Grt.Avhpi is
                                 Obj.Ctxt);
          when VhpiIndexedNameK =>
             return Obj.N_Addr;
+         when VhpiSelectedNameK =>
+            return Obj.R_Addr;
          when others =>
             return Null_Address;
       end case;
@@ -1530,6 +1717,8 @@ package body Grt.Avhpi is
          when VhpiIndexedNameK
            | AvhpiNameIteratorK =>
             return Obj.N_Bounds;
+         when VhpiSelectedNameK =>
+            return Obj.R_Layout;
          when others =>
             return Null_Address;
       end case;
