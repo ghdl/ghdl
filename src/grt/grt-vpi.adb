@@ -222,6 +222,10 @@ package body Grt.Vpi is
             Trace ("vpiNet");
          when vpiNetArray =>
             Trace ("vpiNetArray");
+         when vpiStructNet =>
+            Trace ("vpiStructNet");
+         when vpiMember =>
+            Trace ("vpiMember");
          when vpiPort =>
             Trace ("vpiPort");
          when vpiDirection =>
@@ -445,6 +449,8 @@ package body Grt.Vpi is
             end if;
          when vpiInternalScope =>
             Rel := VhpiInternalRegions;
+         when vpiMember =>
+            Rel := VhpiSelectedNames;
          when others =>
             return null;
       end case;
@@ -603,6 +609,9 @@ package body Grt.Vpi is
             Res := Boolean'Pos (Vpi_Get_Vector (Ref));
          when vpiSigned =>
             Res := Boolean'Pos (Vpi_Get_Signed (Ref));
+         when vpiPacked =>
+            --  VHDL records are never packed.
+            Res := 0;
          when vpiDirection =>
             case Vhpi_Get_Mode (Ref.Ref) is
                when VhpiInMode =>
@@ -660,8 +669,9 @@ package body Grt.Vpi is
             return vpiNet;
          when Vcd_Array =>
             return vpiNetArray;
-         when Vcd_Bad
-           | Vcd_Struct =>
+         when Vcd_Struct =>
+            return vpiStructNet;
+         when Vcd_Bad =>
             return vpiUndefined;
       end case;
    end Vhpi_Handle_To_Vpi_Net;
@@ -690,7 +700,8 @@ package body Grt.Vpi is
             else
                return Vhpi_Handle_To_Vpi_Net (Res);
             end if;
-         when VhpiSigDeclK =>
+         when VhpiSigDeclK
+           | VhpiSelectedNameK =>
             return Vhpi_Handle_To_Vpi_Net (Res);
          when VhpiGenericDeclK =>
             declare
@@ -728,6 +739,9 @@ package body Grt.Vpi is
                                          Ref => Res);
          when vpiNetArray =>
             return new struct_vpiHandle'(mType => vpiNetArray,
+                                         Ref => Res);
+         when vpiStructNet =>
+            return new struct_vpiHandle'(mType => vpiStructNet,
                                          Ref => Res);
          when vpiPort =>
             return new struct_vpiHandle'(mType => vpiPort,
@@ -812,7 +826,9 @@ package body Grt.Vpi is
          Kind := Vhpi_Handle_To_Vpi_Prop (Res, Iter.mType);
          if Kind /= vpiUndefined
            and then (Kind = Expected_Kind
-                       or (Kind = vpiPort and Expected_Kind = vpiNet))
+                       or (Kind = vpiPort and Expected_Kind = vpiNet)
+                       or (Kind = vpiStructNet and Expected_Kind = vpiNet)
+                       or Iter.mType = vpiMember)
          then
             return Build_vpiHandle (Res, Kind);
          end if;
@@ -905,6 +921,8 @@ package body Grt.Vpi is
                Add ("vpiNet");
             when vpiNetArray =>
                Add ("vpiNetArray");
+            when vpiStructNet =>
+               Add ("vpiStructNet");
             when vpiPort =>
                Add ("vpiPort");
             when vpiDirection =>
@@ -1091,7 +1109,8 @@ package body Grt.Vpi is
             | VhpiSigDeclK
             | VhpiGenericDeclK
             | VhpiConstDeclK
-            | VhpiIndexedNameK =>
+            | VhpiIndexedNameK
+            | VhpiSelectedNameK =>
             Get_Verilog_Wire (Obj, Info);
             return Info;
          when others =>
@@ -1888,7 +1907,8 @@ package body Grt.Vpi is
       case Vhpi_Get_Kind (aObj.Ref) is
          when VhpiPortDeclK
            | VhpiSigDeclK
-           | VhpiIndexedNameK =>
+           | VhpiIndexedNameK
+           | VhpiSelectedNameK =>
             null;
          when others =>
             return null;
@@ -2230,9 +2250,15 @@ package body Grt.Vpi is
             Append_Callback (g_cbEndOfSimulation, Res);
          when cbValueChange =>
             Get_Verilog_Wire (Data.Obj.Ref, Res.Cb_Wire);
-            Register_Callback
-              (Cb_Signals_Updated, Res.Cb_Handle, Repeat,
-               Call_Valuechange_Callback'Access, To_Address (Res));
+            if Res.Cb_Wire.Vtype = Vcd_Struct then
+               --  There is no event on a record: use its elements.
+               dbgPut_Line ("vpi_register_cb: cbValueChange on a record");
+               Free (Res);
+            else
+               Register_Callback
+                 (Cb_Signals_Updated, Res.Cb_Handle, Repeat,
+                  Call_Valuechange_Callback'Access, To_Address (Res));
+            end if;
          when cbReadOnlySynch
            | cbReadWriteSynch =>
             T := Vpi_Time_To_Time (Data.Time.all);
@@ -2500,6 +2526,10 @@ package body Grt.Vpi is
          Find_By_Name (Base, VhpiDecls, Name (B .. E), El, Err);
          if Err /= AvhpiErrorOk then
             Find_By_Name (Base, VhpiInternalRegions, Name (B .. E), El, Err);
+         end if;
+         if Err /= AvhpiErrorOk then
+            --  Then as an element of a record.
+            Find_By_Name (Base, VhpiSelectedNames, Name (B .. E), El, Err);
          end if;
 
          if Err = AvhpiErrorOk then

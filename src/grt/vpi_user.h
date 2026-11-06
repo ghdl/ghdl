@@ -217,6 +217,12 @@ typedef PLI_UINT32 *vpiHandle;
 #define vpiGenScope          134   /* A generated scope */
 #define vpiGenVar            135   /* Object used to instantiate gen scopes */
 
+/*************** object types added with 1800 (VHDL records) ***************/
+
+#define vpiStructNet         683   /* net of struct type (VHDL record signal) */
+#define vpiMember            742   /* member of a struct */
+#define vpiPacked            630   /* packed struct or union (Boolean) */
+
 /*********************************** METHODS **********************************/
 /**************** methods used to traverse 1 to 1 relationships ***************/
 
