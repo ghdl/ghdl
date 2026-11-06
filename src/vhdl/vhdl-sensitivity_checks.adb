@@ -44,18 +44,26 @@ package body Vhdl.Sensitivity_Checks is
    --  same object.
    function Same_Selected_Element (Ref : Iir; Name : Iir) return Boolean
    is
+      N : Iir;
       Pfx_Name, Pfx_Ref : Iir;
    begin
+      --  An indexed or slice name of the element (like R.A(0)) reads
+      --  a part of that element.
+      N := Name;
+      while Get_Kind (N) in Iir_Kind_Indexed_Name | Iir_Kind_Slice_Name loop
+         N := Get_Prefix (N);
+      end loop;
+
       --  Just one level of selected elements.
       --  TODO: multi-level ?
-      if Get_Kind (Name) /= Iir_Kind_Selected_Element then
+      if Get_Kind (N) /= Iir_Kind_Selected_Element then
          return False;
       end if;
-      if Get_Named_Entity (Name) /= Get_Named_Entity (Ref) then
+      if Get_Named_Entity (N) /= Get_Named_Entity (Ref) then
          return False;
       end if;
 
-      Pfx_Name := Get_Prefix (Name);
+      Pfx_Name := Get_Prefix (N);
       Pfx_Ref := Get_Prefix (Ref);
       return Get_Named_Entity (Pfx_Name) = Get_Named_Entity (Pfx_Ref);
    end Same_Selected_Element;
