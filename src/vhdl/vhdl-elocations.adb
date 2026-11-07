@@ -128,6 +128,18 @@ package body Vhdl.Elocations is
       Elocations_Table.Table (Idx .. Idx + Len - 1) := (others => No_Location);
    end Create_Elocations;
 
+   function Has_Elocations (N : Iir) return Boolean
+   is
+      use Vhdl.Nodes_Priv;
+   begin
+      if N < Elocations_Index_Table.First
+        or else N > Elocations_Index_Table.Last
+      then
+         return False;
+      end if;
+      return Elocations_Index_Table.Table (N) /= No_Location_Index;
+   end Has_Elocations;
+
    procedure Delete_Elocations (N : Iir)
    is
       use Vhdl.Nodes_Priv;
