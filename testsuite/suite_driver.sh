@@ -96,7 +96,6 @@ singlerun() {
     cd "${testName}"
     local startTime=$(now_nanoseconds)
 
-    printf -- "------------------------\n"
     # 'set -e' is active, so the exit code has to be read from a condition. Written as a plain assignment,
     # a failing testcase would end this script before the failure could be recorded.
     if ./testsuite.sh > test.log 2>&1; then
@@ -104,7 +103,6 @@ singlerun() {
     else
       exitCode=$?
     fi
-    printf -- "========================\n"
 
     local stopTime=$(now_nanoseconds)
     local elapsedTime=$(elapsed_seconds ${startTime} ${stopTime})
