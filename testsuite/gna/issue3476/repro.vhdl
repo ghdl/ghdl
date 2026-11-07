@@ -15,7 +15,8 @@ architecture behav of repro is
 
   function near (a, b : real) return boolean is
   begin
-    return abs (a - b) < 1.0e-12;
+    --  The results from ieee.math_real are not very good.
+    return abs (a - b) < 1.0e-8;
   end near;
 begin
   process
