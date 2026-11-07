@@ -24,6 +24,7 @@ with System.Storage_Elements; --  Work around GNAT bug.
 pragma Unreferenced (System.Storage_Elements);
 with Grt.Vcd;
 with Grt.Vcdz;
+with Grt.Evcd;
 with Grt.Vpi;
 with Grt.Vhpi;
 with Grt.Fst;
@@ -41,6 +42,7 @@ package body Grt.Modules is
       Grt.Disp_Tree.Register;
       Grt.Vcd.Register;
       Grt.Vcdz.Register;
+      Grt.Evcd.Register;
       Grt.Waves.Register;
       Grt.Fst.Register;
       Grt.Vpi.Register;
