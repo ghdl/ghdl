@@ -3257,6 +3257,14 @@ package body Trans.Chap3 is
    begin
       --  Compute array size.
       Length := Get_Object_Size (Res, Arr_Type);
+      if Alloc_Kind = Alloc_Stack then
+         --  This is one of the "more sources of stack allocation" listed
+         --  above Chap4.Maybe_Check_Stack_Allocation: a temporary built for
+         --  an unbounded aggregate lands here, and a large one used to
+         --  overflow the stack with no diagnostic at all -- just SIGSEGV.
+         --  See #752.
+         Length := Chap4.Maybe_Check_Stack_Allocation (Length);
+      end if;
       --  Allocate the storage for the elements.
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Composite_Base (Res)),
