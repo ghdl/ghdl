@@ -109,9 +109,9 @@ package Grt.To_Strings is
 
    --  Increase POS to skip leading whitespace characters, decrease LEN to
    --  skip trailing whitespaces in string S.
-   procedure Remove_Whitespaces (S     : Std_String_Basep;
-                                 Len   : in out Ghdl_Index_Type;
-                                 Pos   : in out Ghdl_Index_Type);
+   procedure Remove_Whitespaces (S : Std_String_Basep;
+                                 Len : in out Ghdl_Index_Type;
+                                 Pos : in out Ghdl_Index_Type);
 
    --  Extract position of numeric literal and unit in string STR.
    --  Set IS_REAL if the unit is a real number (presence of '.').
@@ -119,9 +119,15 @@ package Grt.To_Strings is
    --  Set LIT_POS to the position of the first character of the numeric
    --  literal (after whitespaces are skipped).
    --  Set LIT_END to the position of the next character of the numeric lit.
+   --
+   --  LIT_END set to 0 means there is no abstract literal (which is valid).
+   --  UNIT_POS set to LEN means there is no unit (which is not valid).
+   --  HAS_SPACE means there is at least one space between the abstract literal
+   --   and the unit name.
    procedure Ghdl_Value_Physical_Split (Str : Std_String_Basep;
                                         Len : Ghdl_Index_Type;
                                         Is_Real : out Boolean;
+                                        Has_Space : out Boolean;
                                         Lit_Pos : out Ghdl_Index_Type;
                                         Lit_End : out Ghdl_Index_Type;
                                         Unit_Pos : out Ghdl_Index_Type);

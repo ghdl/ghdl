@@ -227,6 +227,7 @@ package body Grt.Values is
       Lit_End  : Ghdl_Index_Type;
 
       Found_Real : Boolean;
+      Has_Space : Boolean;
 
       Phys_Rti : constant Ghdl_Rtin_Type_Physical_Acc :=
         To_Ghdl_Rtin_Type_Physical_Acc (Rti);
@@ -240,7 +241,11 @@ package body Grt.Values is
 
       --  Extract literal and unit
       Ghdl_Value_Physical_Split
-        (Base, Len, Found_Real, Lit_Pos, Lit_End, Unit_Pos);
+        (Base, Len, Found_Real, Has_Space, Lit_Pos, Lit_End, Unit_Pos);
+
+      if Lit_End > 0 and then not Has_Space then
+         Error_E ("'value: missing space before unit name");
+      end if;
 
       --  Find unit value
       Multiple := null;

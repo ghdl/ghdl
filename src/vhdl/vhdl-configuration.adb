@@ -1304,9 +1304,13 @@ package body Vhdl.Configuration is
    begin
       case Get_Kind (Formal_Btype) is
          when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Enumeration_Type_Definition =>
-            Res := Eval_Value_Attribute (Value.all, Formal_Type, Gen);
-            if not Eval_Is_In_Bound (Res, Formal_Type) then
+            Res := Eval_Value_Attribute (Value.all, Formal_Type, Gen, True);
+            if Get_Kind (Res) = Iir_Kind_Overflow_Literal then
+               Error_Msg_Elab ("invalid override for %n", +Gen);
+               return;
+            elsif not Eval_Is_In_Bound (Res, Formal_Type) then
                Error_Msg_Elab ("override for %n is out of bounds", +Gen);
                return;
             end if;

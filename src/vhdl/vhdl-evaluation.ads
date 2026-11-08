@@ -192,8 +192,9 @@ package Vhdl.Evaluation is
 
    --  Compute ATYPE'value (VALUE) using origin ORIG, but without checking
    --  bounds.
+   --  If RELAXED is true, whitespace is optional before physical unit name.
    function Eval_Value_Attribute
-     (Value : String; Atype : Iir; Orig : Iir) return Iir;
+     (Value : String; Atype : Iir; Orig : Iir; Relaxed : Boolean) return Iir;
 
    --  From one-dimensional array expression PREFIX extract element at
    --  offset OFF (from 0 to length - 1).  Note that the element is directly

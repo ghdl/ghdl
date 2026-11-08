@@ -2984,57 +2984,94 @@ package body Vhdl.Evaluation is
       return Build_String (Image_Id, Length, Expr);
    end Eval_Physical_Image;
 
-   function Build_Physical_Value (Val: String; Phys_Type, Expr: Iir) return Iir
+   function Build_Physical_Value
+     (Val: String; Phys_Type : Iir; Expr: Iir; Relaxed : Boolean) return Iir
    is
-      UnitName : String (Val'range);
+      use Grt.Types;
+      use Grt.Vhdl_Types;
+      use Grt.To_Strings;
+      Valb : constant Std_String_Basep := To_Std_String_Basep (Val'Address);
+      Len : Ghdl_Index_Type;
+      Is_Real : Boolean;
+      Has_Space : Boolean;
+      Lit_Pos, Lit_End, Unit_Pos : Ghdl_Index_Type;
       Mult : Int64;
-      Sep : Natural;
-      Found_Unit : Boolean := false;
-      Found_Real : Boolean := false;
       Unit : Iir;
+      Id : Name_Id;
    begin
-      -- Separate string into numeric value and make lowercase unit.
-      for I in reverse Val'range loop
-         UnitName (I) := Ada.Characters.Handling.To_Lower (Val (I));
-         if Vhdl.Chars.Is_Whitespace (Val (I)) and Found_Unit then
-            Sep := I;
-            exit;
-         else
-            Found_Unit := true;
-         end if;
+      --  Compute length without trailing spaces.
+      Len := Val'Length;
+      pragma Unreferenced (Val);
+      while Len > 0 and Vhdl.Chars.Is_Whitespace (Valb (Len - 1)) loop
+         Len := Len - 1;
       end loop;
 
-      -- Unit name  is UnitName(Sep+1..Unit'Last)
-      for I in Val'First .. Sep loop
-         if Val (I) = '.' then
-            Found_Real := true;
-         end if;
-      end loop;
+      Grt.To_Strings.Ghdl_Value_Physical_Split
+        (Valb, Len, Is_Real, Has_Space, Lit_Pos, Lit_End, Unit_Pos);
 
-      -- Chain down the units looking for matching one
-      Unit := Get_Primary_Unit (Phys_Type);
-      while Unit /= Null_Iir loop
-         exit when (UnitName (Sep + 1 .. UnitName'Last)
-                      = Image_Identifier (Unit));
-         Unit := Get_Chain (Unit);
-      end loop;
-      if Unit = Null_Iir then
+      if not Relaxed and then Lit_End > 0 and then not Has_Space then
          Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
-                          "Unit """ & UnitName (Sep + 1 .. UnitName'Last)
-                            & """ not in physical type");
+                          "missing space before unit name");
          return Build_Overflow (Expr);
       end if;
 
-      Mult := Get_Value (Get_Physical_Literal (Unit));
-      if Found_Real then
-         return Build_Physical
-           (Int64 (Fp64'Value (Val (Val'First .. Sep))
-                         * Fp64 (Mult)),
-            Expr);
-      else
-         return Build_Physical
-           (Int64'Value (Val (Val'First .. Sep)) * Mult, Expr);
+      --  Find unit.
+      Unit := Get_Primary_Unit (Phys_Type);
+      declare
+         Unit_Len : constant Natural := Natural (Len - Unit_Pos);
+         Lower_Val : String (1 .. Unit_Len);
+         C : Character;
+      begin
+         for I in Unit_Pos .. Len - 1 loop
+            --  Convert to lower case.
+            C := Valb (I);
+            C := Vhdl.Chars.To_Lower_Map (C);
+            if C = NUL then
+               C := Valb (I);
+            end if;
+            Lower_Val (Natural (I - Unit_Pos + 1)) := C;
+         end loop;
+         Id := Get_Identifier_No_Create (Lower_Val);
+
+         while Unit /= Null_Iir loop
+            exit when Id = Get_Identifier (Unit);
+            Unit := Get_Chain (Unit);
+         end loop;
+      end;
+
+      if Unit = Null_Iir then
+         Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
+                          "unknown physical unit name");
+         return Build_Overflow (Expr);
       end if;
+
+      --  Convert
+      Mult := Get_Value (Get_Physical_Literal (Unit));
+      if Lit_End = 0 then
+         --  No abstract literal.
+         return Build_Physical (Mult, Expr);
+      elsif Is_Real then
+         declare
+            Res : Value_F64_Result;
+         begin
+            Res := Value_F64 (Valb, Lit_End, Lit_Pos);
+            if Res.Status = Value_Ok then
+               return Build_Physical (Int64 (Res.Val * Ghdl_F64 (Mult)), Expr);
+            end if;
+         end;
+      else
+         declare
+            Res : Value_I64_Result;
+         begin
+            Res := Value_I64 (Valb, Lit_End, Lit_Pos);
+            if Res.Status = Value_Ok then
+               return Build_Physical (Int64 (Res.Val) * Mult, Expr);
+            end if;
+         end;
+      end if;
+
+      Warning_Msg_Sem (Warnid_Runtime_Error, +Expr, "Invalid literal");
+      return Build_Overflow (Expr);
    end Build_Physical_Value;
 
    function Eval_Enum_To_String (Lit : Iir; Orig : Iir) return Iir
@@ -3288,7 +3325,7 @@ package body Vhdl.Evaluation is
    end Eval_Physical_Literal;
 
    function Eval_Value_Attribute
-     (Value : String; Atype : Iir; Orig : Iir) return Iir
+     (Value : String; Atype : Iir; Orig : Iir; Relaxed : Boolean) return Iir
    is
       Base_Type : constant Iir := Get_Base_Type (Atype);
       First, Last : Positive;
@@ -3334,7 +3371,7 @@ package body Vhdl.Evaluation is
             when Iir_Kind_Floating_Type_Definition =>
                return Build_Floating (Fp64'Value (Value1), Orig);
             when Iir_Kind_Physical_Type_Definition =>
-               return Build_Physical_Value (Value1, Base_Type, Orig);
+               return Build_Physical_Value (Value1, Base_Type, Orig, Relaxed);
             when others =>
                Error_Kind ("eval_value_attribute", Base_Type);
          end case;
@@ -3960,7 +3997,7 @@ package body Vhdl.Evaluation is
                   return Build_Overflow (Expr);
                else
                   return Eval_Value_Attribute
-                    (Image_String_Lit (Param), Get_Type (Expr), Expr);
+                    (Image_String_Lit (Param), Get_Type (Expr), Expr, False);
                end if;
             end;
 

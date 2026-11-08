@@ -762,6 +762,7 @@ package body Elab.Vhdl_Expr is
                use Grt.Vhdl_Types;
                use Grt.To_Strings;
                Is_Real : Boolean;
+               Has_Space : Boolean;
                Lit_Pos : Ghdl_Index_Type;
                Lit_End : Ghdl_Index_Type;
                Unit_Pos : Ghdl_Index_Type;
@@ -775,8 +776,12 @@ package body Elab.Vhdl_Expr is
             begin
                Grt.To_Strings.Ghdl_Value_Physical_Split
                  (To_Std_String_Basep (To_Address (M)), Ghdl_Index_Type (L),
-                  Is_Real, Lit_Pos, Lit_End, Unit_Pos);
+                  Is_Real, Has_Space, Lit_Pos, Lit_End, Unit_Pos);
                Unit_F := Size_Type (Unit_Pos);
+
+               if Lit_End > 0 and then not Has_Space then
+                  return No_Valtyp;
+               end if;
 
                --  Find unit.
                Unit_Len := 0;

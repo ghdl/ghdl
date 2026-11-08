@@ -614,42 +614,175 @@ package body Grt.To_Strings is
       end loop;
    end Remove_Whitespaces;
 
+   function Is_Digit (C : Character; Is_Extended : Boolean) return Boolean is
+   begin
+      case C is
+         when '0' .. '9' =>
+            return True;
+         when 'a' .. 'f'
+           | 'A' .. 'F' =>
+            return Is_Extended;
+         when others =>
+            return False;
+      end case;
+   end Is_Digit;
+
+   --  Return the position of the next character after an integer.
+   --  Return 0 in case of error.
+   --
+   --  LRM08 15.5.2 Decimal literals
+   --   integer ::= digit { [underline] digit }
+   --
+   --   based_integer ::= extended_digit { [underline] extended_digit }
+   function Skip_Integer (Str : Std_String_Basep;
+                          Len : Ghdl_Index_Type;
+                          Is_Extended : Boolean;
+                          Start : Ghdl_Index_Type) return Ghdl_Index_Type
+   is
+      P : Ghdl_Index_Type;
+   begin
+      P := Start;
+
+      --  Must start with a digit.
+      if P >= Len then
+         return 0;
+      end if;
+      if not Is_Digit (Str (P), Is_Extended) then
+         return 0;
+      end if;
+
+      while Is_Digit (Str (P), Is_Extended) loop
+         P := P + 1;
+         if P >= Len then
+            return P;
+         end if;
+         --  Optional underline.
+         if Str (P) = '_' then
+            P := P + 1;
+            if P >= Len then
+               return 0;
+            end if;
+         end if;
+      end loop;
+
+      return P;
+   end Skip_Integer;
+
    procedure Ghdl_Value_Physical_Split (Str : Std_String_Basep;
                                         Len : Ghdl_Index_Type;
                                         Is_Real : out Boolean;
+                                        Has_Space : out Boolean;
                                         Lit_Pos : out Ghdl_Index_Type;
                                         Lit_End : out Ghdl_Index_Type;
                                         Unit_Pos : out Ghdl_Index_Type)
    is
-      L : Ghdl_Index_Type;
+      P : Ghdl_Index_Type;
    begin
+      --  Default values.
+      Lit_Pos := 0;
+      Lit_End := 0;
+      Is_Real := False;
+      Has_Space := False;
+      Unit_Pos := Len;
+
       --  LRM 14.1
       --  Leading and trailing whitespace is allowed and ignored.
-      Lit_Pos := 0;
-      L := Len;
-      Remove_Whitespaces (Str, L, Lit_Pos);
-      pragma Unreferenced (Len);
-
-      --  Split between abstract literal (optionnal) and unit name.
-      Lit_End := Lit_Pos;
-      Is_Real := False;
-      while Lit_End < L loop
-         exit when Is_Whitespace (Str (Lit_End));
-         if Str (Lit_End) = '.' then
-            Is_Real := True;
+      P := 0;
+      loop
+         if P >= Len then
+            return;
          end if;
-         Lit_End := Lit_End + 1;
+         exit when not Is_Whitespace (Str (P));
+         P := P + 1;
       end loop;
-      if Lit_End = L then
-         --  No literal
-         Unit_Pos := Lit_Pos;
-         Lit_End := 0;
-      else
-         Unit_Pos := Lit_End + 1;
-         while Unit_Pos < L loop
-            exit when not Is_Whitespace (Str (Unit_Pos));
-            Unit_Pos := Unit_Pos + 1;
-         end loop;
+
+      Lit_Pos := P;
+
+      --  Previously, the abstract literal was extracted by finding the
+      --  whitespace separator.
+      --  Scan now the based number to handle missing whitespace.
+
+      if Str (P) = '+' or Str (P) = '-' then
+         P := P + 1;
+         if P >= Len then
+            return;
+         end if;
       end if;
+
+      P := Skip_Integer (Str, Len, False, P);
+      if P >= Len then
+         --  Error: empty string or only an integer.
+         return;
+      end if;
+
+      if P /= 0 then
+         if Str (P) = '.' then
+            --  Real literal.
+            Is_Real := True;
+            P := P + 1;
+            if P >= Len then
+               return;
+            end if;
+            P := Skip_Integer (Str, Len, False, P);
+            if P = 0 or else P >= Len then
+               return;
+            end if;
+         elsif Str (P) = '#' then
+            --  Based literal.
+            P := Skip_Integer (Str, Len, True, P);
+            if P = 0 or P >= Len then
+               return;
+            end if;
+            if Str (P) = '.' then
+               Is_Real := True;
+               P := P + 1;
+               if P >= Len then
+                  return;
+               end if;
+               P := Skip_Integer (Str, Len, True, P);
+               if P = 0 or else P >= Len then
+                  return;
+               end if;
+            end if;
+            if Str (P) /= '#' then
+               return;
+            end if;
+            P := P + 1;
+            if P >= Len then
+               return;
+            end if;
+         end if;
+
+         --  Exponent
+         if Str (P) = 'e' or Str (P) = 'E' then
+            P := P + 1;
+            if P >= Len then
+               return;
+            end if;
+            if Str (P) = '+' or Str (P) = '-' then
+               P := P + 1;
+               if P >= Len then
+                  return;
+               end if;
+            end if;
+            P := Skip_Integer (Str, Len, False, P);
+            if P = 0 or else P >= Len then
+               return;
+            end if;
+         end if;
+      end if;
+
+      Lit_End := P;
+
+      --  Past the abstract literal.
+      while Is_Whitespace (Str (P)) loop
+         P := P + 1;
+         Has_Space := True;
+         if P >= Len then
+            return;
+         end if;
+      end loop;
+
+      Unit_Pos := P;
    end Ghdl_Value_Physical_Split;
 end Grt.To_Strings;
