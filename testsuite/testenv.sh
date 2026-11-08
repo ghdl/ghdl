@@ -96,14 +96,14 @@ simulate_failure ()
 # Elaborate and simulate a design (no error expected)
 elab_simulate ()
 {
-  echo "elaborate and simulate $@"
-  "$GHDL" --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $@
+  echo "elaborate and simulate $@" >&2
+  "$GHDL" --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS "$@"
 }
 
 # Elaborate and simulate a design (failure expected)
 elab_simulate_failure ()
 {
-  echo "elaborate and simulate (failure expected) $@"
+  echo "elaborate and simulate (failure expected) $@" >&2
   "$GHDL" --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $@ --expect-failure
 }
 

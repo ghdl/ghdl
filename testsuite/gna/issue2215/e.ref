@@ -1,4 +1,3 @@
-elaborate and simulate e
 e.vhdl:15:9:@0ms:(report note): exp: -1.7976931348623157e308, act: -1.7976931348623157e308
 e.vhdl:16:9:@0ms:(report note): exp: ???,                     act: -inf
 e.vhdl:19:9:@0ms:(report note): exp: 2.0,                     act: 2.0
