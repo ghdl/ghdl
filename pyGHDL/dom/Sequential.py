@@ -85,7 +85,7 @@ from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, Position, DOMException
 from pyGHDL.dom.Concurrent import WaveformElement, ParameterAssociationItem  # TODO: move out from concurrent?
 from pyGHDL.dom.Concurrent import GetWaveformElementsFromChainedNodes
-from pyGHDL.dom.Symbol import SignalSymbol, VariableSymbol
+from pyGHDL.dom.Symbol import SignalSymbol, VariableSymbol, LoopSymbol
 from pyGHDL.dom.Concurrent import GetConditionalWaveformsFromChainedNodes, GetSelectedWaveformsFromChainedNodes
 
 
@@ -1320,19 +1320,21 @@ class NextStatement(VHDLModel_NextStatement, DOMMixin):
 
     def __init__(
         self,
-        exitNode: Iir,
+        node: Iir,
         condition: ExpressionUnion = None,
+        loopLabel: LoopSymbol = None,
         label: str = None,
     ) -> None:
         """
         Initializes a :vhdlkw:`next` statement.
 
-        :param exitNode:  The IIR node of the :vhdlkw:`exit` statement.
+        :param node:      The IIR node of the :vhdlkw:`next` statement.
         :param condition: Optional, the condition under which the iteration is skipped, or ``None`` if unconditional.
-        :param label:     Optional, the label of the loop this statement applies to, or ``None`` for the enclosing loop.
+        :param loopLabel: Optional, the label of the loop this statement applies to, or ``None`` for the enclosing loop.
+        :param label:     Optional, the statement's own label.
         """
-        super().__init__(condition, loopLabel=label)
-        DOMMixin.__init__(self, exitNode)
+        super().__init__(condition, loopLabel=loopLabel, label=label)
+        DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, exitNode: Iir, label: str) -> Self:
@@ -1343,11 +1345,16 @@ class NextStatement(VHDLModel_NextStatement, DOMMixin):
         :param label:    The statement's label, or ``None`` if it has none.
         :returns:        The translated exit statement.
         """
-        from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
+        from pyGHDL.dom._Translate import GetOptionalExpressionFromNode, GetName
 
         condition = GetOptionalExpressionFromNode(nodes.Get_Condition(exitNode))
 
-        return cls(exitNode, condition, label)
+        loopLabel = None
+        loopLabelNode = nodes.Get_Loop_Label(exitNode)
+        if loopLabelNode != nodes.Null_Iir:
+            loopLabel = LoopSymbol(loopLabelNode, GetName(loopLabelNode))
+
+        return cls(exitNode, condition, loopLabel, label)
 
 
 @export
@@ -1359,19 +1366,21 @@ class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
 
     def __init__(
         self,
-        exitNode: Iir,
+        node: Iir,
         condition: ExpressionUnion = None,
+        loopLabel: LoopSymbol = None,
         label: str = None,
     ) -> None:
         """
         Initializes an :vhdlkw:`exit` statement.
 
-        :param exitNode:  The IIR node of the :vhdlkw:`exit` statement.
+        :param node:      The IIR node of the :vhdlkw:`exit` statement.
         :param condition: Optional, the condition under which the loop is left, or ``None`` if unconditional.
-        :param label:     Optional, the label of the loop this statement applies to, or ``None`` for the enclosing loop.
+        :param loopLabel: Optional, the label of the loop this statement applies to, or ``None`` for the enclosing loop.
+        :param label:     Optional, the statement's own label.
         """
-        super().__init__(condition, loopLabel=label)
-        DOMMixin.__init__(self, exitNode)
+        super().__init__(condition, loopLabel=loopLabel, label=label)
+        DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, exitNode: Iir, label: str) -> Self:
@@ -1382,11 +1391,16 @@ class ExitStatement(VHDLModel_ExitStatement, DOMMixin):
         :param label:    The statement's label, or ``None`` if it has none.
         :returns:        The translated exit statement.
         """
-        from pyGHDL.dom._Translate import GetOptionalExpressionFromNode
+        from pyGHDL.dom._Translate import GetOptionalExpressionFromNode, GetName
 
         condition = GetOptionalExpressionFromNode(nodes.Get_Condition(exitNode))
 
-        return cls(exitNode, condition, label)
+        loopLabel = None
+        loopLabelNode = nodes.Get_Loop_Label(exitNode)
+        if loopLabelNode != nodes.Null_Iir:
+            loopLabel = LoopSymbol(loopLabelNode, GetName(loopLabelNode))
+
+        return cls(exitNode, condition, loopLabel, label)
 
 
 @export

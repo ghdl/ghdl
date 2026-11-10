@@ -35,6 +35,7 @@ from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.Sequential import WhileLoopStatement, ExitStatement, NextStatement
+from pyGHDL.dom.Symbol import LoopSymbol
 
 
 if __name__ == "__main__":
@@ -86,6 +87,54 @@ class LoopConditions(TestCase):
         # appearing in loop.Statements at all.
         from pyGHDL.dom.Sequential import SequentialVariableAssignment
         self.assertIsInstance(variableAssignment, SequentialVariableAssignment)
+
+
+class LoopLabels(TestCase):
+    """
+    Next and exit statements passed their own label as the loop label and as a string; the loop label is a
+    ``LoopSymbol``, the statement keeps its own label.
+    """
+
+    _root = Path(__file__).resolve().parent
+
+    def test_NextAndExitLoopLabels(self):
+        sourceCode = """\
+entity LoopLabels is
+end entity LoopLabels;
+
+architecture rtl of LoopLabels is
+begin
+	process is
+	begin
+		outer : for i in 0 to 3 loop
+			inner : for j in 0 to 3 loop
+				skip : next outer when j = 2;
+				exit inner;
+			end loop;
+		end loop;
+		wait;
+	end process;
+end architecture rtl;
+"""
+        design = Design()
+        document = Document(self._root / "LoopLabels_test.vhdl", sourceCode)
+        design.Documents.append(document)
+
+        architecture = document.Architectures["looplabels"]["rtl"]
+        process = architecture.Statements[0]
+        outerLoop = process.Statements[0]
+        innerLoop = outerLoop.Statements[0]
+        nextStatement, exitStatement = innerLoop.Statements
+
+        self.assertIsInstance(nextStatement, NextStatement)
+        self.assertIsInstance(nextStatement.LoopReference, LoopSymbol)
+        self.assertEqual("outer", nextStatement.LoopReference.Name.Identifier)
+        self.assertEqual("skip", nextStatement.Label)
+
+        self.assertIsInstance(exitStatement, ExitStatement)
+        self.assertIsInstance(exitStatement.LoopReference, LoopSymbol)
+        self.assertEqual("inner", exitStatement.LoopReference.Name.Identifier)
+        self.assertIsNone(exitStatement.Label)
 
 
 class CaseStatements(TestCase):

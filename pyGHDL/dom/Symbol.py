@@ -57,6 +57,7 @@ from pyVHDLModel.Symbol import AllPackageMembersReferenceSymbol as VHDLModel_All
 from pyVHDLModel.Symbol import ContextReferenceSymbol as VHDLModel_ContextReferenceSymbol
 from pyVHDLModel.Symbol import EntitySymbol as VHDLModel_EntitySymbol
 from pyVHDLModel.Symbol import ArchitectureSymbol as VHDLModel_ArchitectureSymbol
+from pyVHDLModel.Symbol import LoopSymbol as VHDLModel_LoopSymbol
 from pyVHDLModel.Symbol import PackageSymbol as VHDLModel_PackageSymbol
 from pyVHDLModel.Symbol import EntityInstantiationSymbol as VHDLModel_EntityInstantiationSymbol
 from pyVHDLModel.Symbol import ComponentInstantiationSymbol as VHDLModel_ComponentInstantiationSymbol
@@ -497,6 +498,24 @@ class ArchitectureSymbol(VHDLModel_ArchitectureSymbol, DOMMixin):
 
         :param identifierNode: The IIR node of the name this symbol was translated from.
         :param name:           The name referencing the architecture.
+        """
+        super().__init__(name)
+        DOMMixin.__init__(self, identifierNode)
+
+
+@export
+@InheritDocString(VHDLModel_LoopSymbol, strategy=DocStringMergeStrategy.BaseLast)
+class LoopSymbol(VHDLModel_LoopSymbol, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.LoopSymbol`.
+    """
+
+    def __init__(self, identifierNode: Iir, name: Name) -> None:
+        """
+        Initializes a reference to a loop statement by its label.
+
+        :param identifierNode: The IIR node of the name this symbol was translated from.
+        :param name:           The name referencing the loop statement.
         """
         super().__init__(name)
         DOMMixin.__init__(self, identifierNode)

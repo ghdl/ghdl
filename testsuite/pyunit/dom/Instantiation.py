@@ -35,6 +35,8 @@ from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.DesignUnit import LibraryClause, UseClause
+from pyGHDL.dom.Concurrent import EntityInstantiation
+from pyGHDL.dom.Symbol import ArchitectureSymbol
 
 
 if __name__ == "__main__":
@@ -130,3 +132,41 @@ class PackageInstantiation(TestCase):
 
         self.assertEqual("GenericPackage", package.Identifier)
         self.assertEqual(0, len(package.ContextItems))
+
+
+class EntityInstantiations(TestCase):
+    """
+    ``inst : entity work.e(arch)``: the architecture symbol got the architecture's name as its IIR node and the entity
+    symbol as its name.
+    """
+
+    _root = Path(__file__).resolve().parent
+
+    def test_ArchitectureSymbol(self) -> None:
+        sourceCode = """\
+entity Sub is
+end entity Sub;
+
+architecture rtl of Sub is
+begin
+end architecture rtl;
+
+entity Top is
+end entity Top;
+
+architecture rtl of Top is
+begin
+	inst : entity work.Sub(rtl);
+end architecture rtl;
+"""
+        design = Design()
+        document = Document(self._root / "EntityInstantiations_test.vhdl", sourceCode)
+        design.Documents.append(document)
+
+        instantiation = document.Architectures["top"]["rtl"].Statements[0]
+
+        self.assertIsInstance(instantiation, EntityInstantiation)
+        self.assertEqual("Sub", instantiation.Entity.Name.Identifier)
+        self.assertIsInstance(instantiation.Architecture, ArchitectureSymbol)
+        self.assertEqual("rtl", instantiation.Architecture.Name.Identifier)
+        self.assertIs(instantiation, instantiation.Architecture.Parent)
