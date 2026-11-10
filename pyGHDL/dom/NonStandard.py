@@ -60,7 +60,6 @@ from pyGHDL.libghdl import (
     analyze_init_status as libghdl_analyze_init_status,
     name_table,
     files_map,
-    errorout_memory,
     LibGHDLException,
     flags,
     utils,
@@ -182,9 +181,6 @@ class Design(VHDLModel_Design):
         # Initialize libghdl
         libghdl_finalize()
         libghdl_initialize()
-
-        # Collect error messages in memory
-        errorout_memory.Install_Handler()
 
         stdOption = self._VHDL_VERSION_TO_STD_OPTION[self._vhdlVersion]
         libghdl_set_option(f"--std={stdOption}")
