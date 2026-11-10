@@ -17,7 +17,7 @@ entity sync_Bits is
 		Clock     : in  std_logic;
 
 		Input     : in  std_logic_vector(BITS - 1 downto 0);
-		output    : in  std_logic_vector(BITS - 1 downto 0)
+		Output    : out std_logic_vector(BITS - 1 downto 0)
 	);
 end entity;
 
@@ -31,7 +31,7 @@ architecture rtl of sync_Bits is
 			Clock     : in  std_logic;
 
 			Input     : in  std_logic;
-			output    : in  std_logic
+			Output    : out std_logic
 		);
 	end component;
 begin
@@ -43,7 +43,7 @@ begin
 			port map (
 				Clock => Clock,
 				Input => Input(i),
-				Input => Output(i)
+				Output => Output(i)
 			);
 	end generate;
 end architecture;
@@ -60,7 +60,7 @@ entity sync_Bit is
 		Clock     : in  std_logic_1164.std_logic;
 
 		Input     : in  std_logic_1164.std_logic;
-		output    : in  std_logic_1164.std_logic
+		Output    : out std_logic_1164.std_logic
 	);
 end entity;
 
