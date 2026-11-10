@@ -238,6 +238,8 @@ def _initialize():
     libghdl.libghdl_init()
     # Then 'normal' initialization (set hooks)
     libghdl.libghdl__set_hooks_for_analysis()
+    # Then install the report handler, which collects messages in memory (errorout_memory)
+    libghdl.errorout__memory__install_handler()
 
     # Set the prefix in order to locate the VHDL libraries.
     prefix = str(_libghdl_path.parent.parent).encode(ENCODING)
