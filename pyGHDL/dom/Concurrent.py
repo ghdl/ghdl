@@ -243,7 +243,7 @@ class EntityInstantiation(VHDLModel_EntityInstantiation, DOMMixin):
         architectureSymbol = None
         architectureId = nodes.Get_Architecture(instantiatedUnit)
         if architectureId != nodes.Null_Iir:
-            architectureSymbol = ArchitectureSymbol(GetName(architectureId), entitySymbol)
+            architectureSymbol = ArchitectureSymbol(architectureId, GetName(architectureId))
 
         genericAssociationItems = GetGenericMapAspect(nodes.Get_Generic_Map_Aspect_Chain(instantiationNode))
         portAssociationItems = GetPortMapAspect(nodes.Get_Port_Map_Aspect_Chain(instantiationNode))
