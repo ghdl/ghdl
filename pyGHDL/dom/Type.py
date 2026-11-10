@@ -36,7 +36,7 @@ This module implements derived type classes from :mod:`pyVHDLModel.Type`.
 
 from __future__ import annotations
 
-from typing import List, Union, Iterator, Tuple, Iterable, Self
+from typing import List, Union, Iterator, Iterable, Self
 
 from pyGHDL.dom.Name import SimpleName
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
@@ -48,6 +48,7 @@ from pyVHDLModel.Type import AnonymousType as VHDLModel_AnonymousType
 from pyVHDLModel.Type import EnumeratedType as VHDLModel_EnumeratedType
 from pyVHDLModel.Type import IntegerType as VHDLModel_IntegerType
 from pyVHDLModel.Type import RealType as VHDLModel_RealType
+from pyVHDLModel.Type import PhysicalUnit as VHDLModel_PhysicalUnit
 from pyVHDLModel.Type import PhysicalType as VHDLModel_PhysicalType
 from pyVHDLModel.Type import ArrayType as VHDLModel_ArrayType
 from pyVHDLModel.Type import RecordTypeElement as VHDLModel_RecordTypeElement
@@ -206,6 +207,25 @@ class RealType(VHDLModel_RealType, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_PhysicalUnit, strategy=DocStringMergeStrategy.BaseLast)
+class PhysicalUnit(VHDLModel_PhysicalUnit, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.PhysicalUnit`.
+    """
+
+    def __init__(self, node: Iir, identifier: str, value: PhysicalIntegerLiteral = None) -> None:
+        """
+        Initializes a unit declaration of a physical type.
+
+        :param node:       The IIR node this object was translated from.
+        :param identifier: The unit's identifier.
+        :param value:      Optional, the unit's value in a smaller unit, ``None`` for the primary unit.
+        """
+        super().__init__(identifier, value)
+        DOMMixin.__init__(self, node)
+
+
+@export
 class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
     """
     Represents a *physical type*.
@@ -228,21 +248,21 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
         node: Iir,
         typeName: str,
         rng: Union[Range, Name],
-        primaryUnit: str,
-        units: List[Tuple[str, PhysicalIntegerLiteral]],
+        primaryUnit: PhysicalUnit,
+        secondaryUnits: List[PhysicalUnit],
         documentation: str = None,
     ) -> None:
         """
         Initializes a physical type definition.
 
-        :param node:          The IIR node this object was translated from.
-        :param typeName:      The type's identifier.
-        :param rng:           The range constraining this scalar type.
-        :param primaryUnit:   The name of the type's primary unit.
-        :param units:         Iterable of the secondary units as (name, value) pairs.
-        :param documentation: Optional, the documentation comment associated with this declaration.
+        :param node:           The IIR node this object was translated from.
+        :param typeName:       The type's identifier.
+        :param rng:            The range constraining this scalar type.
+        :param primaryUnit:    The type's primary unit.
+        :param secondaryUnits: The type's secondary units.
+        :param documentation:  Optional, the documentation comment associated with this declaration.
         """
-        super().__init__(typeName, rng, primaryUnit, units, documentation)
+        super().__init__(typeName, rng, primaryUnit, secondaryUnits, documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -271,20 +291,19 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
             pos = Position.parse(typeDefinitionNode)
             raise DOMException(f"Unknown range kind '{rangeKind.name}' in physical type definition at line {pos.Line}.")
 
-        primaryUnit = nodes.Get_Primary_Unit(typeDefinitionNode)
-        primaryUnitName = GetNameOfNode(primaryUnit)
+        primaryUnitNode = nodes.Get_Primary_Unit(typeDefinitionNode)
+        primaryUnit = PhysicalUnit(primaryUnitNode, GetNameOfNode(primaryUnitNode))
 
-        units = []
-        for secondaryUnit in utils.chain_iter(nodes.Get_Unit_Chain(typeDefinitionNode)):
-            secondaryUnitName = GetNameOfNode(secondaryUnit)
-            if secondaryUnit == primaryUnit:
+        secondaryUnits = []
+        for secondaryUnitNode in utils.chain_iter(nodes.Get_Unit_Chain(typeDefinitionNode)):
+            if secondaryUnitNode == primaryUnitNode:
                 continue
 
-            physicalLiteral = PhysicalIntegerLiteral.parse(nodes.Get_Physical_Literal(secondaryUnit))
+            physicalLiteral = PhysicalIntegerLiteral.parse(nodes.Get_Physical_Literal(secondaryUnitNode))
 
-            units.append((secondaryUnitName, physicalLiteral))
+            secondaryUnits.append(PhysicalUnit(secondaryUnitNode, GetNameOfNode(secondaryUnitNode), physicalLiteral))
 
-        return cls(typeDefinitionNode, typeName, rng, primaryUnitName, units, documentation)
+        return cls(typeDefinitionNode, typeName, rng, primaryUnit, secondaryUnits, documentation)
 
 
 @export

@@ -37,7 +37,7 @@ from textwrap import dedent
 from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
-from pyGHDL.dom.Type import IntegerType, RealType
+from pyGHDL.dom.Type import IntegerType, RealType, PhysicalType, PhysicalUnit
 
 if __name__ == "__main__":  # pragma: no cover
     print("ERROR: you called a testcase declaration file as an executable module.")
@@ -119,3 +119,25 @@ class RangeTypes(TestCase):
 
         self.assertIsInstance(realType, RealType)
         self.assertIsInstance(namesOnly, IntegerType)
+
+    def test_PhysicalType(self) -> None:
+        (physicalType,) = self.parse(
+            "\n".join(
+                [
+                    "  type distance is range 0 to 1000000 units",
+                    "    um;",
+                    "    mm = 1000 um;",
+                    "    m  = 1000 mm;",
+                    "  end units;",
+                ]
+            )
+        )
+
+        self.assertIsInstance(physicalType, PhysicalType)
+        self.assertIsInstance(physicalType.PrimaryUnit, PhysicalUnit)
+        self.assertEqual("um", physicalType.PrimaryUnit.Identifier)
+        self.assertIsNone(physicalType.PrimaryUnit.Value)
+        self.assertEqual(["mm", "m"], [unit.Identifier for unit in physicalType.SecondaryUnits])
+        for unit in physicalType.SecondaryUnits:
+            self.assertIsInstance(unit, PhysicalUnit)
+        self.assertEqual("1000 um", str(physicalType.SecondaryUnits[0].Value))
