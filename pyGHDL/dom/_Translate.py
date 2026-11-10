@@ -88,6 +88,8 @@ from pyGHDL.dom.Symbol import (
     ConstrainedScalarSubtypeSymbol,
     ConstrainedRecordSubtypeSymbol,
     RecordElementSymbol,
+    ArrayElementConstraint,
+    RecordElementConstraint,
     RangeAttributeSymbol,
     SignalSymbol,
     VariableSymbol,
@@ -327,11 +329,13 @@ def GetRecordConstraintsFromSubtypeIndication(
     Translates the element constraints of a record subtype indication to a dictionary.
 
     The dictionary is keyed by a :class:`~pyGHDL.dom.Symbol.RecordElementSymbol` naming the constrained
-    element; the values are not translated yet.
+    element. Its value is the element constraint: an :class:`~pyGHDL.dom.Symbol.ArrayElementConstraint` with one
+    range per dimension, or a :class:`~pyGHDL.dom.Symbol.RecordElementConstraint` for a nested record constraint.
 
     :param subtypeIndication: The IIR node of the record subtype indication.
-    :returns:                 Mapping from record element symbol to its constraint.
+    :returns:                 Mapping from record element symbol to its element constraint.
     :raises DOMException:     If an element of the chain is not a record element constraint.
+    :raises DOMException:     If an element constraint is neither an array constraint nor a record constraint.
     """
     constraints = {}
     recordElementConstraint = nodes.Get_Owned_Elements_Chain(subtypeIndication)
@@ -341,7 +345,21 @@ def GetRecordConstraintsFromSubtypeIndication(
             recordElementName = GetNameOfNode(recordElementConstraint)
             sym = RecordElementSymbol(recordElementConstraint, SimpleName(recordElementConstraint, recordElementName))
 
-            constraints[sym] = None
+            elementConstraint = nodes.Get_Subtype_Indication(recordElementConstraint)
+            elementConstraintKind = GetIirKindOfNode(elementConstraint)
+            if elementConstraintKind == nodes.Iir_Kind.Array_Subtype_Definition:
+                constraints[sym] = ArrayElementConstraint(
+                    elementConstraint, GetArrayConstraintsFromSubtypeIndication(elementConstraint)
+                )
+            elif elementConstraintKind == nodes.Iir_Kind.Record_Subtype_Definition:
+                constraints[sym] = RecordElementConstraint(
+                    elementConstraint, GetRecordConstraintsFromSubtypeIndication(elementConstraint)
+                )
+            else:
+                position = Position.parse(elementConstraint)
+                raise DOMException(
+                    f"Unknown element constraint kind '{elementConstraintKind.name}' for record element '{recordElementName}' in subtype indication '{subtypeIndication}' at {position}."
+                )
         else:
             position = Position.parse(recordElementConstraint)
             raise DOMException(

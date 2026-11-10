@@ -66,6 +66,8 @@ from pyVHDLModel.Symbol import SimpleSubtypeSymbol as VHDLModel_SimpleSubtypeSym
 from pyVHDLModel.Symbol import ConstrainedScalarSubtypeSymbol as VHDLModel_ConstrainedScalarSubtypeSymbol
 from pyVHDLModel.Symbol import ConstrainedArraySubtypeSymbol as VHDLModel_ConstrainedArraySubtypeSymbol
 from pyVHDLModel.Symbol import ConstrainedRecordSubtypeSymbol as VHDLModel_ConstrainedRecordSubtypeSymbol
+from pyVHDLModel.Symbol import ArrayElementConstraint as VHDLModel_ArrayElementConstraint
+from pyVHDLModel.Symbol import RecordElementConstraint as VHDLModel_RecordElementConstraint
 from pyVHDLModel.Symbol import RecordElementSymbol as VHDLModel_RecordElementSymbol
 from pyVHDLModel.Symbol import RangeAttributeSymbol as VHDLModel_RangeAttributeSymbol
 from pyVHDLModel.Symbol import SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol
@@ -625,7 +627,7 @@ class ConstrainedRecordSubtypeSymbol(VHDLModel_ConstrainedRecordSubtypeSymbol, D
 
         :param node:        The IIR node this object was translated from.
         :param subtypeName: The name of the referenced subtype.
-        :param constraints: Dictionary of the constraint per constrained record element.
+        :param constraints: Dictionary of the element constraint per constrained record element.
         """
         super().__init__(subtypeName, constraints)
         DOMMixin.__init__(self, node)
@@ -639,6 +641,42 @@ class ConstrainedRecordSubtypeSymbol(VHDLModel_ConstrainedRecordSubtypeSymbol, D
         :returns:    The translated object.
         """
         pass
+
+
+@export
+@InheritDocString(VHDLModel_ArrayElementConstraint, strategy=DocStringMergeStrategy.BaseLast)
+class ArrayElementConstraint(VHDLModel_ArrayElementConstraint, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.ArrayElementConstraint`.
+    """
+
+    def __init__(self, node: Iir, constraints: List) -> None:
+        """
+        Initializes the constraint of an array element.
+
+        :param node:        The IIR node this object was translated from.
+        :param constraints: List of all index ranges, one per dimension.
+        """
+        super().__init__(constraints)
+        DOMMixin.__init__(self, node)
+
+
+@export
+@InheritDocString(VHDLModel_RecordElementConstraint, strategy=DocStringMergeStrategy.BaseLast)
+class RecordElementConstraint(VHDLModel_RecordElementConstraint, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.RecordElementConstraint`.
+    """
+
+    def __init__(self, node: Iir, constraints: Mapping) -> None:
+        """
+        Initializes the constraint of a record element.
+
+        :param node:        The IIR node this object was translated from.
+        :param constraints: Dictionary of the element constraint per constrained record element.
+        """
+        super().__init__(constraints)
+        DOMMixin.__init__(self, node)
 
 
 @export
