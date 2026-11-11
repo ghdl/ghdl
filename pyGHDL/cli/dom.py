@@ -35,8 +35,8 @@
 """
 A terminal application to exercise :mod:`pyGHDL.dom`.
 
-It analyzes VHDL source files with *libghdl*, translates the result to the document object model and pretty-prints it,
-which makes it the quickest way to see what the model makes of a given file. Installed as ``pyghdl-dom`` by
+It parses VHDL source files with *libghdl*, translates the result to the document object model and writes each document
+as VHDL code, which makes it the quickest way to see what the model makes of a given file. Installed as ``ghdl-dom`` by
 :file:`setup.py`.
 """
 
@@ -53,12 +53,12 @@ from pyTooling.Attributes.ArgParse.Flag import FlagArgument
 from pyTooling.TerminalUI import TerminalApplication, Severity
 
 from pyVHDLModel import VHDLVersion
+from pyVHDLModel.Formatting.VHDL import VHDLWriter
 
 from pyGHDL import GHDLBaseException, __version__, __copyright__, __author__
 from pyGHDL.libghdl import LibGHDLException
 from pyGHDL.dom import DOMException
 from pyGHDL.dom.NonStandard import Design, Document
-from pyGHDL.dom.formatting.prettyprint import PrettyPrint, PrettyPrintException
 
 __maintainer__ = "Tristan Gingold"
 __status__ = "Alpha"
@@ -330,16 +330,21 @@ class Application(TerminalApplication, ArgParseHelperMixin):
     # ----------------------------------------------------------------------------
     @CommandHandler(
         "pretty",
-        help="Pretty-print the DOM to console.",
-        description="Translate a source file into a DOM and pretty-print the DOM.",
+        help="Write the DOM of each source file as VHDL code to console.",
+        description="Translate each source file into a DOM document and write the document as VHDL code.",
     )
     @SourceAttribute()
     def HandlePretty(self, args):
         """
-        Handle the ``pretty`` sub-command: analyze the selected sources and pretty-print the resulting model.
+        Handle the ``pretty`` sub-command: translate the selected sources and write each document as VHDL code.
 
-        A file is analyzed on its own; a directory is scanned, and each subdirectory is treated as a library of that
-        name. The time *libghdl* spent parsing and the time the translation took are reported per file.
+        A file is translated on its own; a directory is scanned, and each subdirectory is reported as a library of that
+        name. The documents aren't added to the design, nor analyzed. Each document is written by
+        :class:`~pyVHDLModel.Formatting.VHDL.VHDLWriter`: its design units with their context items, in source order.
+        The time *libghdl* spent parsing and the time the translation took are reported per file.
+
+        A file, that can't be translated or written, is reported as an error; the remaining files are written. The
+        application exits with an error, if an error was reported.
 
         :param args: The parsed arguments, carrying the selected files, directory, default library, VHDL version and tab
                      size.
@@ -355,6 +360,7 @@ class Application(TerminalApplication, ArgParseHelperMixin):
             except ValueError as ex:
                 self.WriteFatal(f"Option '--tab-size': {ex}")
 
+        fileCount = 0
         if args.Files is not None:
             for file in args.Files:
                 if not file.exists():
@@ -362,90 +368,75 @@ class Application(TerminalApplication, ArgParseHelperMixin):
                     continue
 
                 self.WriteNormal(f"Parsing file '{file!s}'")
-                document = self.addFile(file, "pretty")
-                self.WriteInfo(
-                    dedent("""\
-                          libghdl processing time: {:%u} us
-                          DOM translation time:    {:%u} us
-                        """).format(
-                        document.LibGHDLProcessingDuration,
-                        document.DOMTranslationDuration,
-                    )
-                )
+                self.writeFile(file, 1)
+                fileCount += 1
         elif args.Directory is not None:
             d: Path = args.Directory.resolve()
             if not d.exists():
-                self.WriteError(f"Directory '{d!s}' does not exist.")
+                self.WriteFatal(f"Directory '{d!s}' does not exist.")
             elif not d.is_dir():
-                self.WriteError(f"Path '{d!s}' is not a directory.")
+                self.WriteFatal(f"Path '{d!s}' is not a directory.")
 
             if args.DefaultLibrary is None:
                 self.WriteWarning(f"Default library is not set.")
 
             files = []
-            for directoryItem in d.iterdir():
+            for directoryItem in sorted(d.iterdir()):
                 if directoryItem.is_dir():
                     libraryName = directoryItem.name
                     self.WriteNormal(f"Scanning library '{libraryName}' ...")
-                    for file in directoryItem.glob("**/*.vhd*"):
+                    for file in sorted(directoryItem.glob("**/*.vhd*")):
                         self.WriteNormal(f"  Reading file '{file!s}'")
-                        document = self.addFile(file, libraryName)
-                        self.WriteInfo(f"    libghdl processing time: {document.LibGHDLProcessingDuration:%u} us")
-                        self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationDuration:%u} us")
+                        self.writeFile(file, 2)
+                        fileCount += 1
                 elif directoryItem.is_file():
                     if directoryItem.suffix in (".vhd", ".vhdl"):
                         files.append(directoryItem)
 
             if len(files) > 0 and args.DefaultLibrary is None:
-                self.WriteFatal(f"Files in root directory can't ne read, due to missing default library.")
+                self.WriteFatal("Files in root directory can't be read, due to missing default library.")
             else:
                 libraryName = args.DefaultLibrary
                 self.WriteNormal(f"Processing files in root directory for library '{libraryName}' ...")
                 for file in files:
                     self.WriteNormal(f"  Reading file '{file!s}'")
-                    document = self.addFile(file, libraryName)
-                    self.WriteInfo(f"    libghdl processing time: {document.LibGHDLProcessingDuration:%u} us")
-                    self.WriteInfo(f"    DOM translation time:    {document.DOMTranslationDuration:%u} us")
+                    self.writeFile(file, 2)
+                    fileCount += 1
 
-        if not self._design.Documents:
+        if fileCount == 0:
             self.WriteFatal("No files processed at all.")
 
-        self._design.LoadDefaultLibraries()
-        self._design.Analyze()
-        self.WriteInfo(
-            dedent("""\
-                  default library load time: {:%u} us
-                  dependency analysis time:  {:%u} us
-                """).format(
-                self._design.LoadDefaultLibraryDuration,
-                self._design.AnalyzeDuration,
-            )
-        )
-
-        PP = PrettyPrint()
-
-        buffer = []
-        buffer.append("Design:")
-        for line in PP.formatDesign(self._design, 1):
-            buffer.append(line)
-
-        print("\n".join(buffer))
-
+        self.ExitOnPreviousErrors()
         self.Exit()
 
-    def addFile(self, filename: Path, library: str) -> Document:
+    def writeFile(self, filename: Path, indent: int) -> None:
         """
-        Analyze a source file and add the resulting document to the design.
+        Translate a source file into a document and write the document as VHDL code.
 
-        :param filename: The source file to analyze.
-        :param library:  The name of the library to add the document to.
-        :returns:        The analyzed document.
+        An error is reported, if the file can't be translated or the document can't be written.
+
+        :param filename: The source file to translate.
+        :param indent:   The indentation level of the timing messages.
         """
-        lib = self._design.GetLibrary(library)
+        try:
+            document = Document(filename)
+        except DOMException as ex:
+            self.WriteError(f"File '{filename!s}' can't be translated: {ex!s}")
+            if isinstance(ex.__cause__, LibGHDLException):
+                for message in ex.__cause__.InternalErrors:
+                    self.WriteErrorNote(f"libghdl: {message}")
+            return
 
-        document = Document(filename)
-        self._design.AddDocument(document, lib)
-        return document
+        self.WriteInfo(f"libghdl processing time: {document.LibGHDLProcessingDuration:%u} us", indent=indent)
+        self.WriteInfo(f"DOM translation time:    {document.DOMTranslationDuration:%u} us", indent=indent)
+
+        try:
+            code = VHDLWriter().Format(document)
+        except Exception as ex:
+            self.WriteError(f"Document '{filename!s}' can't be written as VHDL code: {ex.__class__.__name__}: {ex}")
+            return
+
+        print(code)
 
 
 # main program
@@ -473,10 +464,6 @@ def main():  # mccabe:disable=MC0001
     try:
         app.Run()
         app.Exit()
-    except PrettyPrintException as ex:
-        print(f"PP: {ex!s}")
-        app.Exit()
-
     except DOMException as ex:
         print(f"DOM: {ex!s}")
         ex2: LibGHDLException = ex.__cause__
