@@ -278,6 +278,7 @@ package body Ortho_Code.Disps is
                      --Put ("*");
                      Disp_Expr (Op);
                end case;
+               Put (".all");
             end;
          when OE_Addrl
            | OE_Addrd =>
@@ -289,7 +290,8 @@ package body Ortho_Code.Disps is
             Put ("alloca (");
             Disp_Expr (Get_Expr_Operand (Expr));
             Put (")");
-         when OE_Conv_Ov =>
+         when OE_Conv_Ov
+           | OE_Conv =>
             Disp_Type (Get_Conv_Type (Expr));
             Put ("'conv (");
             Disp_Expr (Get_Expr_Operand (Expr));
@@ -345,6 +347,8 @@ package body Ortho_Code.Disps is
          Put (": ");
          Disp_Type (Get_Field_Type (F));
          Put (";");
+         Put (" -- @");
+         Put_Trim (Uns32'Image (Get_Field_Offset (F)));
          New_Line;
          F := Get_Field_Chain (F);
       end loop;
