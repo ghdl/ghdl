@@ -1931,7 +1931,15 @@ package body Trans.Chap4 is
       if Get_Kind (Name) in Iir_Kinds_External_Name
         and then Get_Kind (Get_Parent (Decl)) not in Iir_Kinds_Subprogram_Body
       then
-         --  Not supported or set by pre-elaboration.
+         --  Either the design is pre-elaborated, and Simul.Vhdl_Compile has
+         --  already filled the alias variable in the instance memory (see
+         --  Build_Object_Alias), or it is elaborated by the code generated
+         --  here -- and then nothing fills that variable, because external
+         --  names are not implemented on this path.  Leaving it null makes
+         --  every use of the alias dereference a null pointer, which ends as
+         --  a bare "NULL access dereferenced" or, when the name is in a
+         --  sensitivity list, an abort with no message at all.  Report it.
+         Chap6.Gen_Program_Error (Decl, Chap6.Prg_Err_Unsupported);
          return;
       end if;
 
@@ -3021,6 +3029,12 @@ package body Trans.Chap4 is
                            Elab_Signal_Delayed_Attribute (Sig);
                         when Iir_Kinds_External_Name =>
                            Chap3.Elab_External_Name_Subtype_Indication (Sig);
+                           --  Same as in Elab_Object_Alias_Declaration: the
+                           --  variable holding the object is only filled by
+                           --  pre-elaboration, so on this path it stays null
+                           --  and every use of the name dereferences it.
+                           Chap6.Gen_Program_Error
+                             (Sig, Chap6.Prg_Err_Unsupported);
                         when others =>
                            null;
                      end case;
