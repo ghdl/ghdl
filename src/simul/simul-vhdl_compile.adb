@@ -1441,6 +1441,35 @@ package body Simul.Vhdl_Compile is
          To_Memory_Ptr (Get_Address (Info.Block_Rti_Const)));
    end Link_Component;
 
+   procedure Build_Generic_Types (Mem : Memory_Ptr;
+                                  Inst : Synth_Instance_Acc;
+                                  Assocs : Node;
+                                  Inters : Node)
+   is
+      Assoc, Assoc_Inter, Inter : Node;
+   begin
+      Assoc := Assocs;
+      Assoc_Inter := Inters;
+      while Assoc /= Null_Node loop
+         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+
+         if Get_Kind (Inter) = Iir_Kind_Interface_Type_Declaration then
+            declare
+               Def : constant Node := Get_Actual (Assoc);
+            begin
+               if Is_Proper_Subtype_Indication (Def) then
+                  Build_Subtype_Definition
+                    (Inst, Mem, Def,
+                     Get_Subtype_Object
+                      (Inst, Get_Interface_Type_Definition (Inter)));
+               end if;
+            end;
+         end if;
+
+         Next_Association_Interface (Assoc, Assoc_Inter);
+      end loop;
+   end Build_Generic_Types;
+
    procedure Build_Instantiation_Instance (Mem : Memory_Ptr;
                                            Base_Mem : Memory_Ptr;
                                            Inst : Synth_Instance_Acc;
@@ -1497,6 +1526,17 @@ package body Simul.Vhdl_Compile is
          end if;
 
          Link_Component (Link, Stmt, Ptr);
+      end if;
+
+      --  Build types for type interface (when the actual is a real subtype
+      --  indication).
+      --  This is a little bit convoluted as the actual is part of the
+      --  instantiating block but the annotation is directly visible by
+      --  the instance.
+      if Hdr /= Null_Node then
+         Build_Generic_Types
+           (Base_Mem, Sub_Inst,
+            Get_Generic_Map_Aspect_Chain (Stmt), Get_Generic_Chain (Hdr));
       end if;
 
       Build_Port_Map_Aspect (Base_Mem, Inst, Stmt);
