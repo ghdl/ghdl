@@ -264,8 +264,8 @@ class PrettyCommand(TestCase):
 
         files = sorted(self._sourceDirectory.glob("*.vhdl"))
         self.assertEqual(15, len(files))
-        for file in files:
-            self.assertIn(f"Reading file '{file!s}'", stdout)
+        readFiles = {Path(line.split("'")[1]).name for line in stdout.splitlines() if "Reading file '" in line}
+        self.assertEqual({file.name for file in files}, readFiles, output)
 
         self.assertEqual(3, stdout.count("\nend entity toplevel;\n"), output)
         self.assertIn("\nend package body Utilities_pkg;\n", stdout)
