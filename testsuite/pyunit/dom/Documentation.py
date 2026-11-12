@@ -671,3 +671,40 @@ class CommentGathering(InMemoryDocumentation):
 
         self.assertEqual("/* E doc. */", entity.Documentation)
         self.assertEqual("/* X doc. */", entity.PortItems[0].Documentation)
+
+
+class TypeElementDocumentation(InMemoryDocumentation):
+    """Enumeration literals are declarations too; libghdl attaches their comments."""
+
+    def test_EnumerationLiterals(self) -> None:
+        """A literal keeps its comment before and on the same line; the type keeps its own."""
+        document = self.parse("""\
+            package p is
+              --! T doc.
+              type t is (
+                --! A before.
+                a,  --! A same line.
+                b,  --! B doc.
+                'c'  --! C doc.
+              );
+            end package;
+            """)
+        enumeration = document.Packages["p"].DeclaredItems[0]
+        a, b, c = enumeration.Literals
+
+        self.assertEqual("--! T doc.", enumeration.Documentation)
+        self.assertEqual("--! A before.\n--! A same line.", a.Documentation)
+        self.assertEqual("--! B doc.", b.Documentation)
+        self.assertEqual("--! C doc.", c.Documentation)
+
+    def test_EnumerationLiteralsWithoutComment(self) -> None:
+        """A literal without a comment has no documentation."""
+        document = self.parse("""\
+            package p is
+              type t is (a, 'b');
+            end package;
+            """)
+        a, b = document.Packages["p"].DeclaredItems[0].Literals
+
+        self.assertIsNone(a.Documentation)
+        self.assertIsNone(b.Documentation)
