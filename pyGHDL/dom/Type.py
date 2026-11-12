@@ -213,15 +213,18 @@ class PhysicalUnit(VHDLModel_PhysicalUnit, DOMMixin):
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Type.PhysicalUnit`.
     """
 
-    def __init__(self, node: Iir, identifier: str, value: PhysicalIntegerLiteral = None) -> None:
+    def __init__(
+        self, node: Iir, identifier: str, value: PhysicalIntegerLiteral = None, documentation: str = None
+    ) -> None:
         """
         Initializes a unit declaration of a physical type.
 
-        :param node:       The IIR node this object was translated from.
-        :param identifier: The unit's identifier.
-        :param value:      Optional, the unit's value in a smaller unit, ``None`` for the primary unit.
+        :param node:          The IIR node this object was translated from.
+        :param identifier:    The unit's identifier.
+        :param value:         Optional, the unit's value in a smaller unit, ``None`` for the primary unit.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
-        super().__init__(identifier, value)
+        super().__init__(identifier, value, documentation=documentation)
         DOMMixin.__init__(self, node)
 
 
@@ -275,7 +278,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
         :param documentation:      Optional, the documentation comment on the type declaration.
         :returns:                  The physical type instance.
         """
-        from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode
+        from pyGHDL.dom._Utils import GetIirKindOfNode, GetNameOfNode, GetDocumentationOfNode
         from pyGHDL.dom._Translate import GetRangeFromNode, GetName
 
         rangeConstraint = nodes.Get_Range_Constraint(typeDefinitionNode)
@@ -292,7 +295,11 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
             raise DOMException(f"Unknown range kind '{rangeKind.name}' in physical type definition at line {pos.Line}.")
 
         primaryUnitNode = nodes.Get_Primary_Unit(typeDefinitionNode)
-        primaryUnit = PhysicalUnit(primaryUnitNode, GetNameOfNode(primaryUnitNode))
+        primaryUnit = PhysicalUnit(
+            primaryUnitNode,
+            GetNameOfNode(primaryUnitNode),
+            documentation=GetDocumentationOfNode(primaryUnitNode),
+        )
 
         secondaryUnits = []
         for secondaryUnitNode in utils.chain_iter(nodes.Get_Unit_Chain(typeDefinitionNode)):
@@ -301,7 +308,14 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
 
             physicalLiteral = PhysicalIntegerLiteral.parse(nodes.Get_Physical_Literal(secondaryUnitNode))
 
-            secondaryUnits.append(PhysicalUnit(secondaryUnitNode, GetNameOfNode(secondaryUnitNode), physicalLiteral))
+            secondaryUnits.append(
+                PhysicalUnit(
+                    secondaryUnitNode,
+                    GetNameOfNode(secondaryUnitNode),
+                    physicalLiteral,
+                    GetDocumentationOfNode(secondaryUnitNode),
+                )
+            )
 
         return cls(typeDefinitionNode, typeName, rng, primaryUnit, secondaryUnits, documentation)
 

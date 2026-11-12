@@ -674,7 +674,7 @@ class CommentGathering(InMemoryDocumentation):
 
 
 class TypeElementDocumentation(InMemoryDocumentation):
-    """Enumeration literals are declarations too; libghdl attaches their comments."""
+    """Enumeration literals and physical units are declarations too; libghdl attaches their comments."""
 
     def test_EnumerationLiterals(self) -> None:
         """A literal keeps its comment before and on the same line; the type keeps its own."""
@@ -708,3 +708,27 @@ class TypeElementDocumentation(InMemoryDocumentation):
 
         self.assertIsNone(a.Documentation)
         self.assertIsNone(b.Documentation)
+
+    def test_PhysicalUnits(self) -> None:
+        """The primary unit and each secondary unit keep their comments before and on the same line."""
+        document = self.parse("""\
+            package p is
+              --! Frequency doc.
+              type frequency is range 0 to 1000000 units
+                --! Hz before.
+                Hz;  --! Hz same line.
+                kHz = 1000 Hz;  --! kHz doc.
+                --! MHz doc.
+                MHz = 1000 kHz;
+                GHz = 1000 MHz;
+              end units;
+            end package;
+            """)
+        physical = document.Packages["p"].DeclaredItems[0]
+        kHz, MHz, GHz = physical.SecondaryUnits
+
+        self.assertEqual("--! Frequency doc.", physical.Documentation)
+        self.assertEqual("--! Hz before.\n--! Hz same line.", physical.PrimaryUnit.Documentation)
+        self.assertEqual("--! kHz doc.", kHz.Documentation)
+        self.assertEqual("--! MHz doc.", MHz.Documentation)
+        self.assertIsNone(GHz.Documentation)
