@@ -84,6 +84,7 @@ from pyGHDL.libghdl import Iir, utils
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom._Utils import GetLabelOfNode, GetDocumentationOfNode
+from pyGHDL.dom.Name import AllName
 from pyGHDL.dom.Symbol import (
     ArchitectureSymbol,
     EntityInstantiationSymbol,
@@ -441,9 +442,14 @@ class ProcessStatement(VHDLModel_ProcessStatement, DOMMixin):
 
         sensitivityList = None
         if hasSensitivityList:
-            sensitivityList = []
-            for item in utils.list_iter(nodes.Get_Sensitivity_List(processNode)):
-                sensitivityList.append(GetName(item))
+            sensitivityListNode = nodes.Get_Sensitivity_List(processNode)
+            if sensitivityListNode == nodes.Iir_List_All:
+                # 'process (all)' has a single 'all' name without prefix in its sensitivity list.
+                sensitivityList = [AllName(processNode, None)]
+            else:
+                sensitivityList = []
+                for item in utils.list_iter(sensitivityListNode):
+                    sensitivityList.append(GetName(item))
 
         declaredItems = GetDeclaredItemsFromChainedNodes(nodes.Get_Declaration_Chain(processNode), "process", label)
         statements = GetSequentialStatementsFromChainedNodes(
