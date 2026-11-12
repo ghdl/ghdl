@@ -110,7 +110,8 @@ def GetNameOfNode(node: Iir) -> str:
     """
     Return the Python string from node ``node`` identifier.
 
-    A character literal (``'0'``) is returned as its character, without quotes (``0``).
+    A character literal (``'0'``) is returned as its character, without quotes (``0``). An operator symbol (``"and"``)
+    is returned with its quotation marks.
 
     :param node:        The IIR node to read the identifier of.
     :returns:           The node's identifier as written in the source file.
@@ -122,6 +123,22 @@ def GetNameOfNode(node: Iir) -> str:
     identifier = nodes.Get_Identifier(node)
     if name_table.Is_Character(identifier):
         return name_table.Get_Character(identifier)
+
+    location = nodes.Get_Location(node)
+    sourceFile = files_map.Location_To_File(location)
+    start = files_map.Location_File_To_Pos(location, sourceFile)
+    if GetIirKindOfNode(node) in (
+        nodes.Iir_Kind.Function_Declaration,
+        nodes.Iir_Kind.Interface_Function_Declaration,
+        nodes.Iir_Kind.Function_Instantiation_Declaration,
+    ):
+        # libghdl locates the operator symbol of a function designator after its opening quotation mark.
+        start -= 1
+
+    buffer = files_map.Get_File_Buffer(sourceFile)
+    if buffer[start] == b'"':
+        end = start + name_table.Get_Name_Length(identifier) + 2
+        return buffer[start:end].decode(ENCODING)
 
     identifier = utils.Get_Source_Identifier(node)
     return name_table.Get_Name_Ptr(identifier)

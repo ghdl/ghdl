@@ -30,8 +30,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from inspect import currentframe
 from pathlib import Path
+from textwrap import dedent
 from unittest import TestCase
+
+from pyVHDLModel.Formatting.VHDL import VHDLWriter
 
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.Subprogram import Function, Procedure
@@ -188,3 +192,60 @@ class GenericSubprograms(TestCase):
 
         self.assertIsInstance(generic, GenericProcedureInterfaceItem)
         self.assertEqual("log", generic.Identifier)
+
+
+class OperatorSymbolDesignators(TestCase):
+    """
+    A function designated by an operator symbol keeps the quotation marks in its identifier (``"+"``), as in
+    pyVHDLModel's :attr:`~pyVHDLModel.Name.Name.IsOperatorSymbol`. It was ``+``, which the VHDL writer wrote as
+    ``function + (...)``.
+    """
+
+    _root = Path(__file__).resolve().parent
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls._design = Design()
+
+    def parse(self, sourceCode: str) -> Document:
+        testName = currentframe().f_back.f_code.co_name[5:]
+        filename = self._root / f"{self.__class__.__name__}_{testName}.vhdl"
+
+        document = Document(filename, dedent(sourceCode))
+        self._design.Documents.append(document)
+
+        return document
+
+    def test_Function(self) -> None:
+        document = self.parse("""\
+            package p is
+              function "+" (a, b : bit) return bit;
+              function "AND" (a, b : bit) return bit;
+              function "??" (a : bit) return boolean;
+              function plus (a, b : bit) return bit;
+            end package;
+            """)
+        plus, andFunction, condition, named = document.Packages["p"].DeclaredItems
+
+        self.assertIsInstance(plus, Function)
+        self.assertEqual('"+"', plus.Identifier)
+        self.assertEqual('"AND"', andFunction.Identifier)
+        self.assertEqual('"??"', condition.Identifier)
+        self.assertEqual("plus", named.Identifier)
+        self.assertEqual('function "+" (constant a, b : bit) return bit;\n', VHDLWriter().Format(plus))
+
+    def test_GenericFunction(self) -> None:
+        document = self.parse("""\
+            package p is
+              generic (
+                type T;
+                function "<" (l, r : T) return boolean is <>;
+                function less (l, r : T) return boolean is "<"
+              );
+            end package;
+            """)
+        _, operator, named = document.Packages["p"].GenericItems
+
+        self.assertIsInstance(operator, GenericFunctionInterfaceItem)
+        self.assertEqual('"<"', operator.Identifier)
+        self.assertEqual("less", named.Identifier)
