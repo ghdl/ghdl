@@ -36,9 +36,11 @@ from textwrap import dedent
 from unittest import TestCase
 
 from pyVHDLModel.Formatting.VHDL import VHDLWriter
+from pyVHDLModel.Subprogram import MethodMixin
 
 from pyGHDL.dom.NonStandard import Design, Document
-from pyGHDL.dom.Subprogram import Function, Procedure
+from pyGHDL.dom.Subprogram import Function, FunctionMethod, Procedure, ProcedureMethod
+from pyGHDL.dom.Type import ProtectedType
 from pyGHDL.dom.InterfaceItem import GenericFunctionInterfaceItem, GenericProcedureInterfaceItem
 
 
@@ -249,3 +251,76 @@ class OperatorSymbolDesignators(TestCase):
         self.assertIsInstance(operator, GenericFunctionInterfaceItem)
         self.assertEqual('"<"', operator.Identifier)
         self.assertEqual("less", named.Identifier)
+
+
+class ProtectedTypeMethods(TestCase):
+    """
+    The subprograms declared by a protected type are its methods: ``ProcedureMethod`` and ``FunctionMethod``, not
+    ``Procedure`` and ``Function``.
+    """
+
+    _root = Path(__file__).resolve().parent
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls._design = Design()
+
+    def parse(self, declarations: str) -> list:
+        testName = currentframe().f_back.f_code.co_name[5:]
+        filename = self._root / f"{self.__class__.__name__}_{testName}.vhdl"
+        sourceCode = dedent("""\
+            package p is
+            {declarations}
+            end package;
+            """).format(declarations=declarations)
+
+        document = Document(filename, sourceCode)
+        self._design.Documents.append(document)
+
+        return document.Packages["p"].DeclaredItems
+
+    def test_Methods(self) -> None:
+        (protectedType,) = self.parse(
+            "\n".join(
+                [
+                    "  type counter is protected",
+                    "    --! Increment doc.",
+                    "    procedure increment (step : in natural);",
+                    "    impure function value return natural;",
+                    "  end protected;",
+                ]
+            )
+        )
+
+        self.assertIsInstance(protectedType, ProtectedType)
+        procedure, function = protectedType.Methods
+
+        self.assertIsInstance(procedure, ProcedureMethod)
+        self.assertIsInstance(procedure, MethodMixin)
+        self.assertEqual("increment", procedure.Identifier)
+        self.assertEqual(1, len(procedure.ParameterItems))
+        self.assertEqual("--! Increment doc.", procedure.Documentation)
+        self.assertIs(protectedType, procedure.Parent)
+
+        self.assertIsInstance(function, FunctionMethod)
+        self.assertIsInstance(function, MethodMixin)
+        self.assertEqual("value", function.Identifier)
+        self.assertFalse(function.IsPure)
+        self.assertEqual("natural", str(function.ReturnType.Name))
+        self.assertIs(protectedType, function.Parent)
+
+    def test_SubprogramsOutsideAProtectedType(self) -> None:
+        """A subprogram declared in a package is no method."""
+        procedure, function = self.parse(
+            "\n".join(
+                [
+                    "  procedure increment (step : in natural);",
+                    "  impure function value return natural;",
+                ]
+            )
+        )
+
+        self.assertIsInstance(procedure, Procedure)
+        self.assertNotIsInstance(procedure, MethodMixin)
+        self.assertIsInstance(function, Function)
+        self.assertNotIsInstance(function, MethodMixin)

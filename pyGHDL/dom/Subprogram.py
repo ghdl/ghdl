@@ -39,10 +39,13 @@ from __future__ import annotations
 from typing import List, Self
 
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
+from pyTooling.MetaClasses import ExtendedType
 
 from pyVHDLModel.Symbol import Symbol
 from pyVHDLModel.Interface import GenericInterfaceItemMixin, ParameterInterfaceItemMixin
 from pyVHDLModel.Subprogram import Procedure as VHDLModel_Procedure, Function as VHDLModel_Function
+from pyVHDLModel.Subprogram import ProcedureMethod as VHDLModel_ProcedureMethod
+from pyVHDLModel.Subprogram import FunctionMethod as VHDLModel_FunctionMethod
 from pyVHDLModel.Instantiation import FunctionInstantiation as VHDLModel_FunctionInstantiation
 from pyVHDLModel.Instantiation import ProcedureInstantiation as VHDLModel_ProcedureInstantiation
 
@@ -54,53 +57,15 @@ from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 
 
 @export
-@InheritDocString(VHDLModel_Function, strategy=DocStringMergeStrategy.BaseLast)
-class Function(VHDLModel_Function, DOMMixin):
+class FunctionParserMixin(metaclass=ExtendedType, mixin=True):
     """
-    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Subprogram.Function`.
+    Mixin translating the IIR node of a function declaration, shared by :class:`Function` and :class:`FunctionMethod`.
     """
-
-    def __init__(
-        self,
-        node: Iir,
-        functionName: str,
-        returnType: Symbol,
-        isPure: bool = True,
-        genericItems: List[GenericInterfaceItemMixin] = None,
-        parameterItems: List[ParameterInterfaceItemMixin] = None,
-        declaredItems: List = None,
-        statements: List[SequentialStatement] = None,
-        documentation: str = None,
-    ) -> None:
-        """
-        Initializes a function.
-
-        :param node:           The IIR node this object was translated from.
-        :param functionName:   The function's identifier.
-        :param returnType:     Reference to the subtype of the function's return value.
-        :param isPure:         Optional, ``True`` if the subprogram was declared pure.
-        :param genericItems:   Optional, list of all generics, in declaration order.
-        :param parameterItems: Optional, list of all parameters, in declaration order.
-        :param declaredItems:  Optional, list of all declared items in this sequential declaration region.
-        :param statements:     Optional, list of all sequential statements in the subprogram's body.
-        :param documentation:  Optional, the documentation comment associated with this declaration.
-        """
-        super().__init__(
-            functionName,
-            returnType,
-            isPure,
-            genericItems,
-            parameterItems,
-            declaredItems,
-            statements,
-            documentation=documentation,
-        )
-        DOMMixin.__init__(self, node)
 
     @classmethod
     def parse(cls, functionNode: Iir) -> Self:
         """
-        Translates the IIR node of the function declaration to a :class:`Function`.
+        Translates the IIR node of the function declaration to an object of this class.
 
         :param functionNode: The IIR node of the function declaration.
         :returns:            The translated function declaration.
@@ -149,8 +114,140 @@ class Function(VHDLModel_Function, DOMMixin):
 
 
 @export
+@InheritDocString(VHDLModel_Function, strategy=DocStringMergeStrategy.BaseLast)
+class Function(VHDLModel_Function, FunctionParserMixin, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Subprogram.Function`.
+    """
+
+    def __init__(
+        self,
+        node: Iir,
+        functionName: str,
+        returnType: Symbol,
+        isPure: bool = True,
+        genericItems: List[GenericInterfaceItemMixin] = None,
+        parameterItems: List[ParameterInterfaceItemMixin] = None,
+        declaredItems: List = None,
+        statements: List[SequentialStatement] = None,
+        documentation: str = None,
+    ) -> None:
+        """
+        Initializes a function.
+
+        :param node:           The IIR node this object was translated from.
+        :param functionName:   The function's identifier.
+        :param returnType:     Reference to the subtype of the function's return value.
+        :param isPure:         Optional, ``True`` if the subprogram was declared pure.
+        :param genericItems:   Optional, list of all generics, in declaration order.
+        :param parameterItems: Optional, list of all parameters, in declaration order.
+        :param declaredItems:  Optional, list of all declared items in this sequential declaration region.
+        :param statements:     Optional, list of all sequential statements in the subprogram's body.
+        :param documentation:  Optional, the documentation comment associated with this declaration.
+        """
+        super().__init__(
+            functionName,
+            returnType,
+            isPure,
+            genericItems,
+            parameterItems,
+            declaredItems,
+            statements,
+            documentation=documentation,
+        )
+        DOMMixin.__init__(self, node)
+
+
+@export
+@InheritDocString(VHDLModel_FunctionMethod, strategy=DocStringMergeStrategy.BaseLast)
+class FunctionMethod(VHDLModel_FunctionMethod, FunctionParserMixin, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Subprogram.FunctionMethod`.
+    """
+
+    def __init__(
+        self,
+        node: Iir,
+        functionName: str,
+        returnType: Symbol,
+        isPure: bool = True,
+        genericItems: List[GenericInterfaceItemMixin] = None,
+        parameterItems: List[ParameterInterfaceItemMixin] = None,
+        declaredItems: List = None,
+        statements: List[SequentialStatement] = None,
+        documentation: str = None,
+    ) -> None:
+        """
+        Initializes a function declared as a method of a protected type.
+
+        :param node:           The IIR node this object was translated from.
+        :param functionName:   The function's identifier.
+        :param returnType:     Reference to the subtype of the function's return value.
+        :param isPure:         Optional, ``True`` if the subprogram was declared pure.
+        :param genericItems:   Optional, list of all generics, in declaration order.
+        :param parameterItems: Optional, list of all parameters, in declaration order.
+        :param declaredItems:  Optional, list of all declared items in this sequential declaration region.
+        :param statements:     Optional, list of all sequential statements in the subprogram's body.
+        :param documentation:  Optional, the documentation comment associated with this declaration.
+        """
+        super().__init__(
+            functionName,
+            returnType,
+            isPure,
+            genericItems,
+            parameterItems,
+            declaredItems,
+            statements,
+            documentation=documentation,
+        )
+        DOMMixin.__init__(self, node)
+
+
+@export
+class ProcedureParserMixin(metaclass=ExtendedType, mixin=True):
+    """
+    Mixin translating the IIR node of a procedure declaration, shared by :class:`Procedure` and
+    :class:`ProcedureMethod`.
+    """
+
+    @classmethod
+    def parse(cls, procedureNode: Iir) -> Self:
+        """
+        Translates the IIR node of the procedure declaration to an object of this class.
+
+        :param procedureNode: The IIR node of the procedure declaration.
+        :returns:             The translated procedure declaration.
+        """
+        from pyGHDL.dom._Translate import (
+            GetGenericsFromChainedNodes,
+            GetParameterFromChainedNodes,
+            GetDeclaredItemsFromChainedNodes,
+            GetSequentialStatementsFromChainedNodes,
+        )
+
+        procedureName = GetNameOfNode(procedureNode)
+        documentation = GetDocumentationOfNode(procedureNode)
+
+        generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(procedureNode))
+        parameters = GetParameterFromChainedNodes(nodes.Get_Interface_Declaration_Chain(procedureNode))
+
+        declaredItems = []
+        statements = []
+        bodyNode = nodes.Get_Subprogram_Body(procedureNode)
+        if bodyNode != nodes.Null_Iir:
+            declaredItems = GetDeclaredItemsFromChainedNodes(
+                nodes.Get_Declaration_Chain(bodyNode), "procedure", procedureName
+            )
+            statements = GetSequentialStatementsFromChainedNodes(
+                nodes.Get_Sequential_Statement_Chain(bodyNode), "procedure", procedureName
+            )
+
+        return cls(procedureNode, procedureName, generics, parameters, declaredItems, statements, documentation)
+
+
+@export
 @InheritDocString(VHDLModel_Procedure, strategy=DocStringMergeStrategy.BaseLast)
-class Procedure(VHDLModel_Procedure, DOMMixin):
+class Procedure(VHDLModel_Procedure, ProcedureParserMixin, DOMMixin):
     """
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Subprogram.Procedure`.
     """
@@ -186,39 +283,44 @@ class Procedure(VHDLModel_Procedure, DOMMixin):
         )
         DOMMixin.__init__(self, node)
 
-    @classmethod
-    def parse(cls, procedureNode: Iir) -> Self:
-        """
-        Translates the IIR node of the procedure declaration to a :class:`Procedure`.
 
-        :param procedureNode: The IIR node of the procedure declaration.
-        :returns:             The translated procedure declaration.
+@export
+@InheritDocString(VHDLModel_ProcedureMethod, strategy=DocStringMergeStrategy.BaseLast)
+class ProcedureMethod(VHDLModel_ProcedureMethod, ProcedureParserMixin, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Subprogram.ProcedureMethod`.
+    """
+
+    def __init__(
+        self,
+        node: Iir,
+        procedureName: str,
+        genericItems: List[GenericInterfaceItemMixin] = None,
+        parameterItems: List[ParameterInterfaceItemMixin] = None,
+        declaredItems: List = None,
+        statements: List[SequentialStatement] = None,
+        documentation: str = None,
+    ) -> None:
         """
-        from pyGHDL.dom._Translate import (
-            GetGenericsFromChainedNodes,
-            GetParameterFromChainedNodes,
-            GetDeclaredItemsFromChainedNodes,
-            GetSequentialStatementsFromChainedNodes,
+        Initializes a procedure declared as a method of a protected type.
+
+        :param node:           The IIR node this object was translated from.
+        :param procedureName:  The procedure's identifier.
+        :param genericItems:   Optional, list of all generics, in declaration order.
+        :param parameterItems: Optional, list of all parameters, in declaration order.
+        :param declaredItems:  Optional, list of all declared items in this sequential declaration region.
+        :param statements:     Optional, list of all sequential statements in the subprogram's body.
+        :param documentation:  Optional, the documentation comment associated with this declaration.
+        """
+        super().__init__(
+            procedureName,
+            genericItems,
+            parameterItems,
+            declaredItems,
+            statements,
+            documentation=documentation,
         )
-
-        procedureName = GetNameOfNode(procedureNode)
-        documentation = GetDocumentationOfNode(procedureNode)
-
-        generics = GetGenericsFromChainedNodes(nodes.Get_Generic_Chain(procedureNode))
-        parameters = GetParameterFromChainedNodes(nodes.Get_Interface_Declaration_Chain(procedureNode))
-
-        declaredItems = []
-        statements = []
-        bodyNode = nodes.Get_Subprogram_Body(procedureNode)
-        if bodyNode != nodes.Null_Iir:
-            declaredItems = GetDeclaredItemsFromChainedNodes(
-                nodes.Get_Declaration_Chain(bodyNode), "procedure", procedureName
-            )
-            statements = GetSequentialStatementsFromChainedNodes(
-                nodes.Get_Sequential_Statement_Chain(bodyNode), "procedure", procedureName
-            )
-
-        return cls(procedureNode, procedureName, generics, parameters, declaredItems, statements, documentation)
+        DOMMixin.__init__(self, node)
 
 
 @export

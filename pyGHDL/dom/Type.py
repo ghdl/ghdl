@@ -65,7 +65,7 @@ from pyGHDL.dom import DOMMixin, DOMException, Position
 from pyGHDL.dom.Symbol import SimpleSubtypeSymbol
 from pyGHDL.dom.Literal import EnumerationLiteral, CharacterEnumerationLiteral, PhysicalIntegerLiteral
 from pyVHDLModel.Base import Range
-from pyGHDL.dom.Subprogram import Function, Procedure
+from pyGHDL.dom.Subprogram import FunctionMethod, ProcedureMethod
 
 
 @export
@@ -573,9 +573,9 @@ class ProtectedType(VHDLModel_ProtectedType, DOMMixin):
         for item in utils.chain_iter(nodes.Get_Declaration_Chain(typeDefinitionNode)):
             kind = GetIirKindOfNode(item)
             if kind == nodes.Iir_Kind.Function_Declaration:
-                methods.append(Function.parse(item))
+                methods.append(FunctionMethod.parse(item))
             elif kind == nodes.Iir_Kind.Procedure_Declaration:
-                methods.append(Procedure.parse(item))
+                methods.append(ProcedureMethod.parse(item))
 
         return cls(typeDefinitionNode, typeName, methods, documentation)
 
