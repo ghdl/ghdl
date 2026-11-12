@@ -1090,9 +1090,14 @@ package body Vhdl.Scanner is
             when Name_Id_Vhdl19_Reserved_Words =>
                if Vhdl_Std < Vhdl_19 then
                   if Is_Warning_Enabled (Warnid_Reserved_Word) then
+                     --  1076-2008 15.10 already reserves fairness and strong,
+                     --  but they were never rejected: keep accepting them.
                      Warning_Msg_Scan
                        (Warnid_Reserved_Word,
-                        "using %i vhdl-2019 reserved word as an identifier",
+                        "using %i vhdl-"
+                        & (if Current_Identifier in Name_Fairness | Name_Strong
+                           then "2008" else "2019")
+                        & " reserved word as an identifier",
                         +Current_Identifier);
                   end if;
                   Current_Token := Tok_Identifier;
@@ -1144,12 +1149,23 @@ package body Vhdl.Scanner is
                   end if;
                   if Is_Warning_Enabled (Warnid_Reserved_Word)
                     and then Current_Token = Tok_Identifier
+                    and then Current_Identifier /= Name_Inherit
                   then
                      Warning_Msg_Scan
                        (Warnid_Reserved_Word,
                         "using %i vhdl-2008 reserved word as an identifier",
                         +Current_Identifier);
                   end if;
+               elsif not Flag_Psl
+                 and then (Current_Identifier = Name_Inherit
+                             or else (Vhdl_Std >= Vhdl_19
+                                        and then Current_Identifier
+                                          = Name_Restrict_Guarantee))
+               then
+                  --  1076-2008 15.10 does not reserve inherit, and 1076-2019
+                  --  15.10 no longer reserves restrict_guarantee.  They are
+                  --  still PSL keywords, so only recognize them in PSL.
+                  Current_Token := Tok_Identifier;
                end if;
             when Name_Id_Vhdl00_Reserved_Words =>
                if Vhdl_Std < Vhdl_00 then

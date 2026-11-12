@@ -451,6 +451,12 @@ package body Vhdl.Tokens is
             return "private";
          when Tok_View =>
             return "view";
+         when Tok_Vpkg =>
+            return "vpkg";
+         when Tok_Fairness =>
+            return "fairness";
+         when Tok_Strong =>
+            return "strong";
 
          --  PSL keywords
          when Tok_Psl_Clock =>
