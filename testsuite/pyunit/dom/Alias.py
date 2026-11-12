@@ -110,8 +110,9 @@ class Aliases(TestCase):
 
 class OperatorSymbolAliases(TestCase):
     """
-    An operator symbol as alias designator keeps its quotation marks. The alias designator ``"+"`` was read as ``"``
-    (one character at the opening quotation mark).
+    An operator symbol keeps its quotation marks, as alias designator and as aliased name. The alias designator
+    ``"+"`` was read as ``"`` (one character at the opening quotation mark), and an aliased operator symbol raised
+    a ``DOMException``.
     """
 
     _root = Path(__file__).resolve().parent
@@ -149,3 +150,19 @@ class OperatorSymbolAliases(TestCase):
         self.assertEqual('"+"', plus.Identifier)
         self.assertEqual('"AND"', andAlias.Identifier)
         self.assertEqual('alias "+" is add;\n', VHDLWriter().Format(plus))
+
+    def test_AliasedName(self) -> None:
+        plus, minus = self.parse(
+            "\n".join(
+                [
+                    '  alias plus is "and" [bit, bit return bit];',
+                    '  alias "-" is "and" [bit, bit return bit];',
+                ]
+            )
+        )
+
+        self.assertEqual("plus", plus.Identifier)
+        self.assertEqual('"and"', plus.Name.Name.Identifier)
+        self.assertTrue(plus.Name.Name.IsOperatorSymbol)
+        self.assertEqual('"-"', minus.Identifier)
+        self.assertEqual('"and"', minus.Name.Name.Identifier)
