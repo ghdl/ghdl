@@ -56,6 +56,7 @@ from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom.Sequential import (
     IfStatement,
+    EndlessLoopStatement,
     ForLoopStatement,
     WhileLoopStatement,
     CaseStatement,
@@ -1371,7 +1372,10 @@ def GetSequentialStatementsFromChainedNodes(
         elif kind == nodes.Iir_Kind.For_Loop_Statement:
             yield ForLoopStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.While_Loop_Statement:
-            yield WhileLoopStatement.parse(statement, label)
+            if nodes.Get_Condition(statement) == nodes.Null_Iir:
+                yield EndlessLoopStatement.parse(statement, label)
+            else:
+                yield WhileLoopStatement.parse(statement, label)
         elif kind == nodes.Iir_Kind.Simple_Signal_Assignment_Statement:
             yield SequentialSimpleSignalAssignment.parse(statement, label)
         elif kind == nodes.Iir_Kind.Variable_Assignment_Statement:
