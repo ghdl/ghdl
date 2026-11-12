@@ -169,6 +169,9 @@ package body Std_Names is
 
       Def ("private",            Name_Private);
       Def ("view",               Name_View);
+      Def ("vpkg",               Name_Vpkg);
+      Def ("fairness",           Name_Fairness);
+      Def ("strong",             Name_Strong);
 
       Def ("across",     Name_Across);
       Def ("break",      Name_Break);
@@ -897,7 +900,6 @@ package body Std_Names is
       Def ("ex",                 Name_Ex);
       Def ("endpoint",           Name_Endpoint);
       Def ("eventually",         Name_Eventually);
-      Def ("fairness",           Name_Fairness);
       Def ("fell",               Name_Fell);
       Def ("forall",             Name_Forall);
       Def ("g",                  Name_G);
@@ -913,7 +915,6 @@ package body Std_Names is
       Def ("property",           Name_Property);
       Def ("prev",               Name_Prev);
       Def ("rose",               Name_Rose);
-      Def ("strong",             Name_Strong);
       Def ("sync_abort",         Name_Sync_Abort);
       Def ("union",              Name_Union);
       Def ("w",                  Name_W);
