@@ -52,9 +52,10 @@ done
 
 # -Wreserved-word warns about the use of future reserved words.
 for w in fairness strong vpkg; do
+  case $w in vpkg) v=2019;; *) v=2008;; esac
   mk $w
   "$GHDL" -a --std=93 -Wreserved-word w_$w.vhdl 2> log.txt
-  grep "using \"$w\" vhdl-20.. reserved word as an identifier" log.txt
+  grep "using \"$w\" vhdl-$v reserved word as an identifier" log.txt
   "$GHDL" -a --std=93 -Wreserved-word -Wno-reserved-word w_$w.vhdl 2> log.txt
   if test -s log.txt; then
     echo "-Wno-reserved-word did not disable the warning for $w"
