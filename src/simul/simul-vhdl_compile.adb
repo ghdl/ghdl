@@ -1197,7 +1197,16 @@ package body Simul.Vhdl_Compile is
                        (Mem, Inst, Get_Subtype_Indication (Name));
                      External_Names_Table.Append ((Mem, Inst, Decl));
                   when others =>
-                     Build_Object_Alias (Mem, Inst, Decl);
+                     if Get_Kind (Get_Object_Prefix (Name))
+                       in Iir_Kind_External_Signal_Name
+                        | Iir_Kind_External_Variable_Name
+                     then
+                        --  An alias of a part of an external name: like the
+                        --  external name, it is built at the end.
+                        External_Names_Table.Append ((Mem, Inst, Decl));
+                     else
+                        Build_Object_Alias (Mem, Inst, Decl);
+                     end if;
                end case;
             end;
          when Iir_Kind_Attribute_Implicit_Declaration =>
