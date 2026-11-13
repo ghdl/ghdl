@@ -576,7 +576,7 @@ package body Grt.Vcd is
          when Vcd_Driving =>
             return To_Signal_Arr_Ptr (Info.Ptr)(Idx).Driving_Value'Access;
          when Vcd_Variable =>
-            --  Elements of bit and std_logic vectors take one byte.
+            --  Bit, std_logic and character arrays: elements take one byte.
             return To_Ghdl_Value_Ptr (Info.Ptr + Storage_Offset (Idx));
       end case;
    end Verilog_Wire_Val;

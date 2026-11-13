@@ -12,6 +12,14 @@ myentity:
   g_bool (myentity.g_bool) type=vpiParameter size=1
     int=1
     bin=1
+  g_empty (myentity.g_empty) type=vpiParameter size=1
+    str=
+  g_asc (myentity.g_asc) type=vpiParameter size=8
+    int=240
+    bin=11110000
+  g_ofs (myentity.g_ofs) type=vpiParameter size=8
+    int=150
+    bin=10010110
 myentity.u_sub:
   g_int (myentity.u_sub.g_int) type=vpiParameter size=32
     int=7
@@ -26,3 +34,33 @@ myentity.u_sub:
   g_bool (myentity.u_sub.g_bool) type=vpiParameter size=1
     int=0
     bin=0
+  g_empty (myentity.u_sub.g_empty) type=vpiParameter size=1
+    str=
+  g_asc (myentity.u_sub.g_asc) type=vpiParameter size=8
+    int=129
+    bin=10000001
+  g_ofs (myentity.u_sub.g_ofs) type=vpiParameter size=8
+    int=60
+    bin=00111100
+myentity.u_ovr:
+  g_int (myentity.u_ovr.g_int) type=vpiParameter size=32
+    int=-3
+    bin=11111111111111111111111111111101
+  g_slv (myentity.u_ovr.g_slv) type=vpiParameter size=4
+    int=6
+    bin=0110
+  g_str (myentity.u_ovr.g_str) type=vpiParameter size=1
+    str=ovr
+  g_real (myentity.u_ovr.g_real) type=vpiParameter size=0
+    real=0.25
+  g_bool (myentity.u_ovr.g_bool) type=vpiParameter size=1
+    int=1
+    bin=1
+  g_empty (myentity.u_ovr.g_empty) type=vpiParameter size=1
+    str=
+  g_asc (myentity.u_ovr.g_asc) type=vpiParameter size=8
+    int=129
+    bin=10000001
+  g_ofs (myentity.u_ovr.g_ofs) type=vpiParameter size=8
+    int=60
+    bin=00111100
