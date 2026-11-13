@@ -514,12 +514,18 @@ package body Grt.Vpi is
 --       end case;
 --    end ii_vpi_get_type;
 
-   --  True for an array of characters (a VHDL string).
-   function Is_String (Info : Verilog_Wire_Info) return Boolean is
+   --  True for an array of characters (a VHDL string).  Character is the
+   --  only enumeration type with 256 literals.
+   function Is_String (Info : Verilog_Wire_Info) return Boolean
+   is
+      Elem : Ghdl_Rti_Access;
    begin
-      return Info.Vtype = Vcd_Array
-        and then Grt.Rtis_Addr.Get_Base_Array_Type (Info.Arr_Rti).Element.Kind
-        = Ghdl_Rtik_Type_E8;
+      if Info.Vtype /= Vcd_Array then
+         return False;
+      end if;
+      Elem := Grt.Rtis_Addr.Get_Base_Array_Type (Info.Arr_Rti).Element;
+      return Elem.Kind = Ghdl_Rtik_Type_E8
+        and then To_Ghdl_Rtin_Type_Enum_Acc (Elem).Nbr = 256;
    end Is_String;
 
    function Vpi_Get_Size (Ref : vpiHandle) return Integer
@@ -1563,9 +1569,10 @@ package body Grt.Vpi is
       Bound_To_Range (Info.Arr_Bounds, Get_Base_Array_Type (Info.Arr_Rti),
                       Rngs);
       Reset (Buf_Value);
-      for J in 0 .. Rngs (0).I32.Len - 1 loop
+      for J in 1 .. Rngs (0).I32.Len loop
          Append (Buf_Value,
-                 Character'Val (Ghdl_E8'Pos (Verilog_Wire_Val (Info, J).E8)));
+                 Character'Val
+                   (Ghdl_E8'Pos (Verilog_Wire_Val (Info, J - 1).E8)));
       end loop;
       Append (Buf_Value, NUL);
       return Get_C_String (Buf_Value);
