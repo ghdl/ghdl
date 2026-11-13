@@ -1106,7 +1106,9 @@ package body Grt.Avhpi is
                   when VhpiCompInstStmtK =>
                      null;
                   when VhpiPortDeclK
-                    | VhpiSigDeclK =>
+                    | VhpiSigDeclK
+                    | VhpiGenericDeclK
+                    | VhpiConstDeclK =>
                      Add (':');
                      Add (Obj.Obj.Name);
                   when VhpiSelectedNameK =>

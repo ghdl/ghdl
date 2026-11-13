@@ -35,6 +35,7 @@
 --      (Same issue with FST waves.)
 
 with System; use System;
+with System.Storage_Elements; use System.Storage_Elements;
 with Interfaces;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Errors; use Grt.Errors;
@@ -575,8 +576,8 @@ package body Grt.Vcd is
          when Vcd_Driving =>
             return To_Signal_Arr_Ptr (Info.Ptr)(Idx).Driving_Value'Access;
          when Vcd_Variable =>
-            --  TODO
-            Internal_Error ("verilog_wire_val");
+            --  Elements of bit and std_logic vectors take one byte.
+            return To_Ghdl_Value_Ptr (Info.Ptr + Storage_Offset (Idx));
       end case;
    end Verilog_Wire_Val;
 
