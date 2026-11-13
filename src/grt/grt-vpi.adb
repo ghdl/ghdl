@@ -514,6 +514,14 @@ package body Grt.Vpi is
 --       end case;
 --    end ii_vpi_get_type;
 
+   --  True for an array of characters (a VHDL string).
+   function Is_String (Info : Verilog_Wire_Info) return Boolean is
+   begin
+      return Info.Vtype = Vcd_Array
+        and then Grt.Rtis_Addr.Get_Base_Array_Type (Info.Arr_Rti).Element.Kind
+        = Ghdl_Rtik_Type_E8;
+   end Is_String;
+
    function Vpi_Get_Size (Ref : vpiHandle) return Integer
    is
       Info : Verilog_Wire_Info;
@@ -612,6 +620,19 @@ package body Grt.Vpi is
          when vpiPacked =>
             --  VHDL records are never packed.
             Res := 0;
+         when vpiConstType =>
+            declare
+               Info : Verilog_Wire_Info;
+            begin
+               Get_Verilog_Wire (Ref.Ref, Info);
+               if Info.Vtype = Vcd_Float64 then
+                  Res := vpiRealConst;
+               elsif Is_String (Info) then
+                  Res := vpiStringConst;
+               else
+                  Res := vpiDecConst;
+               end if;
+            end;
          when vpiDirection =>
             case Vhpi_Get_Mode (Ref.Ref) is
                when VhpiInMode =>
@@ -1529,6 +1550,27 @@ package body Grt.Vpi is
       return Get_C_String (Buf_Value);
    end Vpi_Get_Value_Based;
 
+   function Vpi_Get_Value_String (Obj : VhpiHandleT) return Ghdl_C_String
+   is
+      use Grt.Rtis_Addr;
+      Info : Verilog_Wire_Info;
+      Rngs : Ghdl_Range_Array (0 .. 0);
+   begin
+      Info := Get_Value_Obj (Obj);
+      if not Is_String (Info) then
+         return null;
+      end if;
+      Bound_To_Range (Info.Arr_Bounds, Get_Base_Array_Type (Info.Arr_Rti),
+                      Rngs);
+      Reset (Buf_Value);
+      for J in 0 .. Rngs (0).I32.Len - 1 loop
+         Append (Buf_Value,
+                 Character'Val (Ghdl_E8'Pos (Verilog_Wire_Val (Info, J).E8)));
+      end loop;
+      Append (Buf_Value, NUL);
+      return Get_C_String (Buf_Value);
+   end Vpi_Get_Value_String;
+
    function Vpi_Get_Value_Range (Expr : vpiHandle) return Integer
    is
       Info : Verilog_Wire_Info;
@@ -1602,7 +1644,8 @@ package body Grt.Vpi is
             end case;
          when vpiRealVal =>
             Value.Real_m := Vpi_Get_Value_Real (Expr.Ref);
-         when vpiStringVal =>   dbgPut_Line ("vpi_get_value: vpiStringVal");
+         when vpiStringVal =>
+            Value.Str := Vpi_Get_Value_String (Expr.Ref);
          when vpiTimeVal =>     dbgPut_Line ("vpi_get_value: vpiTimeVal");
          when vpiVectorVal =>
             Value.Vector := Vpi_Get_Vecval_Buf (Vpi_Get_Size (Expr));
