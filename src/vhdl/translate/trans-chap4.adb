@@ -1931,7 +1931,11 @@ package body Trans.Chap4 is
       if Get_Kind (Name) in Iir_Kinds_External_Name
         and then Get_Kind (Get_Parent (Decl)) not in Iir_Kinds_Subprogram_Body
       then
-         --  Not supported or set by pre-elaboration.
+         --  Set by pre-elaboration, or not supported.
+         if Flag_Elaboration then
+            --  The alias would stay null and crash when used.
+            Chap6.Gen_Program_Error (Name, Chap6.Prg_Err_External_Name);
+         end if;
          return;
       end if;
 
@@ -3021,6 +3025,11 @@ package body Trans.Chap4 is
                            Elab_Signal_Delayed_Attribute (Sig);
                         when Iir_Kinds_External_Name =>
                            Chap3.Elab_External_Name_Subtype_Indication (Sig);
+                           if Flag_Elaboration then
+                              --  Not supported: set only by pre-elaboration.
+                              Chap6.Gen_Program_Error
+                                (Sig, Chap6.Prg_Err_External_Name);
+                           end if;
                         when others =>
                            null;
                      end case;

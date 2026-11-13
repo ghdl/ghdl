@@ -180,6 +180,8 @@ package body Grt.Lib is
             Diag_C ("bad configuration");
          when 7 =>
             Diag_C ("unsupported construct");
+         when 8 =>
+            Diag_C ("external names are not supported by this backend");
          when others =>
             Diag_C ("unknown error code ");
             Diag_C (Integer (Code));
