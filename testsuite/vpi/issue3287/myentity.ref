@@ -1,0 +1,28 @@
+myentity:
+  g_int (myentity.g_int) type=vpiParameter size=32
+    int=42
+    bin=00000000000000000000000000101010
+  g_slv (myentity.g_slv) type=vpiParameter size=8
+    int=165
+    bin=10100101
+  g_str (myentity.g_str) type=vpiParameter size=1
+    str=hello
+  g_real (myentity.g_real) type=vpiParameter size=0
+    real=1.5
+  g_bool (myentity.g_bool) type=vpiParameter size=1
+    int=1
+    bin=1
+myentity.u_sub:
+  g_int (myentity.u_sub.g_int) type=vpiParameter size=32
+    int=7
+    bin=00000000000000000000000000000111
+  g_slv (myentity.u_sub.g_slv) type=vpiParameter size=4
+    int=10
+    bin=1010
+  g_str (myentity.u_sub.g_str) type=vpiParameter size=1
+    str=inner
+  g_real (myentity.u_sub.g_real) type=vpiParameter size=0
+    real=2.5
+  g_bool (myentity.u_sub.g_bool) type=vpiParameter size=1
+    int=0
+    bin=0
