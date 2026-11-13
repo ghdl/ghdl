@@ -1949,8 +1949,15 @@ finish_subprogram_body (void)
   /* Initialize the RTL code for the function.  */
   allocate_struct_function (func, false);
 
-  /* Store the end of the function.  */
-  cfun->function_end_locus = input_location;
+  /* Store the end of the function.  The lines of a function may come from
+     several units (like in the elaboration code), so the last line can be
+     before the first one, which is rejected by gcov
+     (-Wcoverage-invalid-line-number).  */
+  if (LOCATION_LINE (input_location)
+      < LOCATION_LINE (DECL_SOURCE_LOCATION (func)))
+    cfun->function_end_locus = DECL_SOURCE_LOCATION (func);
+  else
+    cfun->function_end_locus = input_location;
 
   parent = DECL_CONTEXT (func);
 
