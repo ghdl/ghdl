@@ -166,7 +166,7 @@ jobs:
         include:
 ###       - {icon: '🪟', runtime: 'ucrt64',  backend: 'mcode',    testsuites: '${{ needs.Params.outputs.testsuites }}'}   # used by Windows-fast
           - {icon: '🪟', runtime: 'ucrt64',  backend: 'llvm',     testsuites: 'sanity gna synth vpi vhpi'}                # no vests (too slow)
-          - {icon: '🪟', runtime: 'ucrt64',  backend: 'llvm-jit', testsuites: 'sanity vpi vhpi'}                          # gna and synth fail (#2726); no vests (too slow)
+          - {icon: '🪟', runtime: 'ucrt64',  backend: 'llvm-jit', testsuites: 'sanity gna synth vpi vhpi'}                # no vests (too slow)
     with:
       runtime:                  ${{ matrix.runtime }}
       backend:                  ${{ matrix.backend }}

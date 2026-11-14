@@ -67,6 +67,9 @@
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
+#if defined (_WIN64)
+#include <llvm/ExecutionEngine/SectionMemoryManager.h>
+#endif
 #include <llvm/IR/Mangler.h>
 
 #if LLVM_VERSION_MAJOR >= 4
@@ -2947,6 +2950,55 @@ new_debug_line_stmt (unsigned Line)
 
 static ExecutionEngine *EE;
 
+#if defined (_WIN64)
+/* On Windows x64, the stack can be unwound (by longjmp, or for an
+   exception) only through functions whose unwind data is known: the .pdata
+   of the JIT code must be registered with RtlAddFunctionTable (like mcode
+   does).  RuntimeDyld passes .pdata to registerEHFrames, but the default
+   memory manager handles it as a DWARF .eh_frame.  The entries of .pdata are
+   relative to the lowest address of the sections (the fake __ImageBase of
+   RuntimeDyldCOFFX86_64).  */
+extern "C" __declspec(dllimport) unsigned char __stdcall
+RtlAddFunctionTable (void *FunctionTable, unsigned long EntryCount,
+                     unsigned long long BaseAddress);
+
+class GhdlJitMemoryManager : public llvm::SectionMemoryManager {
+  uint64_t ImageBase = ~(uint64_t)0;
+
+  void noteSection(uint8_t *Addr) {
+    if (Addr != nullptr && (uint64_t)(uintptr_t)Addr < ImageBase)
+      ImageBase = (uint64_t)(uintptr_t)Addr;
+  }
+
+public:
+  uint8_t *allocateCodeSection(uintptr_t Size, unsigned Alignment,
+                               unsigned SectionID,
+                               llvm::StringRef SectionName) override {
+    uint8_t *Res = SectionMemoryManager::allocateCodeSection
+      (Size, Alignment, SectionID, SectionName);
+    noteSection(Res);
+    return Res;
+  }
+
+  uint8_t *allocateDataSection(uintptr_t Size, unsigned Alignment,
+                               unsigned SectionID, llvm::StringRef SectionName,
+                               bool IsReadOnly) override {
+    uint8_t *Res = SectionMemoryManager::allocateDataSection
+      (Size, Alignment, SectionID, SectionName, IsReadOnly);
+    noteSection(Res);
+    return Res;
+  }
+
+  void registerEHFrames(uint8_t *Addr, uint64_t LoadAddr,
+                        size_t Size) override {
+    /* A RUNTIME_FUNCTION entry is 3 x 32-bit RVAs.  */
+    RtlAddFunctionTable(Addr, Size / 12, ImageBase);
+  }
+
+  void deregisterEHFrames() override {}
+};
+#endif
+
 extern "C" int
 llvm_jit_init(void)
 {
@@ -2955,6 +3007,9 @@ llvm_jit_init(void)
   EE = llvm::EngineBuilder(std::unique_ptr<Module>(unwrap(TheModule)))
     .setErrorStr(&error)
     .setEngineKind(llvm::EngineKind::JIT)
+#if defined (_WIN64)
+    .setMCJITMemoryManager(std::make_unique<GhdlJitMemoryManager>())
+#endif
      .create();
   EE->setProcessAllSections(true);
 
