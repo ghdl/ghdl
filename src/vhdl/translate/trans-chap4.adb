@@ -1914,6 +1914,263 @@ package body Trans.Chap4 is
       end if;
    end Translate_Object_Alias_Declaration;
 
+   --  Return the node whose RTI context is used as the starting point of a
+   --  relative pathname in REGION (the declarative region of an external
+   --  name), or Null_Iir if not within a concurrent region.
+   function Get_External_Name_Context (Region : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Region;
+      while Res /= Null_Iir loop
+         case Get_Kind (Res) is
+            when Iir_Kinds_Process_Statement
+              | Iir_Kind_Block_Statement
+              | Iir_Kind_Generate_Statement_Body
+              | Iir_Kind_Architecture_Body =>
+               return Res;
+            when Iir_Kind_Function_Body
+              | Iir_Kind_Procedure_Body
+              | Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration
+              | Iir_Kind_Protected_Type_Body
+              | Iir_Kind_Protected_Type_Declaration =>
+               Res := Get_Parent (Res);
+            when others =>
+               return Null_Iir;
+         end case;
+      end loop;
+      return Null_Iir;
+   end Get_External_Name_Context;
+
+   --  Mode of resolution of external names (see grt-external_names.ads):
+   --  0: an object not yet elaborated is an error.
+   --  1: a component instance not yet elaborated (as it is bound after the
+   --     elaboration of the declarations of its parent) is not an error,
+   --     the resolution is retried at the end of the elaboration.
+   --  2: likewise for any object not yet elaborated.
+   Extname_Soft : Unsigned_64 := 0;
+
+   --  True if the RTI of the base type BTYPE can be compared with the RTI of
+   --  the type of the object.  Not for types declared in an instantiated
+   --  package, as their RTI is not unique.
+   function Can_Check_Type_Rti (Btype : Iir) return Boolean
+   is
+      N : Iir;
+   begin
+      if Get_Kind (Btype) = Iir_Kind_Interface_Type_Definition then
+         return False;
+      end if;
+      N := Get_Type_Declarator (Btype);
+      while N /= Null_Iir loop
+         case Get_Kind (N) is
+            when Iir_Kind_Package_Instantiation_Declaration
+              | Iir_Kind_Interface_Package_Declaration =>
+               return False;
+            when Iir_Kind_Package_Declaration =>
+               if Is_Uninstantiated_Package (N) then
+                  return False;
+               end if;
+            when Iir_Kind_Design_Unit =>
+               return True;
+            when others =>
+               null;
+         end case;
+         N := Get_Parent (N);
+      end loop;
+      return True;
+   end Can_Check_Type_Rti;
+
+   --  Generate code to resolve external name NAME (at elaboration, using the
+   --  RTIs) and to set the alias variables of INFO.  ATYPE is the subtype
+   --  of the alias, REGION the declarative region that contains it.
+   procedure Elab_External_Name
+     (Name : Iir; Info : Alias_Info_Acc; Atype : Iir; Region : Iir)
+   is
+      Tinfo : constant Type_Info_Acc := Get_Info (Atype);
+      Btype_Info : constant Type_Info_Acc :=
+        Get_Info (Get_Base_Type (Atype));
+      St : O_Dnode;
+      Res : O_Dnode;
+      Path : Iir;
+      Ctxt : Iir;
+      Assoc : O_Assoc_List;
+      Kind : Unsigned_64;
+      Class : Unsigned_64;
+
+      function New_Name_String (Id : Name_Id) return O_Enode is
+      begin
+         return New_Address
+           (New_Obj (Create_String (Id, Create_Uniq_Identifier,
+                                    O_Storage_Private)),
+            Char_Ptr_Type);
+      end New_Name_String;
+
+      procedure Start_Extname_Call (Subprg : O_Dnode) is
+      begin
+         Start_Association (Assoc, Subprg);
+         New_Association
+           (Assoc, New_Address (New_Obj (St), Ghdl_Extname_State_Ptr));
+      end Start_Extname_Call;
+
+      procedure Gen_Elem (Id : Name_Id; Expr : Iir) is
+      begin
+         Start_Extname_Call (Ghdl_Extname_Elem);
+         New_Association (Assoc, New_Name_String (Id));
+         if Expr = Null_Iir then
+            New_Association (Assoc, New_Lit (Ghdl_Index_0));
+            New_Association
+              (Assoc, New_Lit (New_Signed_Literal (Ghdl_I64_Type, 0)));
+         else
+            New_Association (Assoc, New_Lit (Ghdl_Index_1));
+            New_Association
+              (Assoc, New_Convert_Ov (Chap7.Translate_Expression (Expr),
+                                      Ghdl_I64_Type));
+         end if;
+         New_Procedure_Call (Assoc);
+      end Gen_Elem;
+   begin
+      Open_Temp;
+      St := Create_Temp (Ghdl_Extname_State_Type);
+      Res := Create_Temp (Ghdl_Extname_Result_Type);
+
+      Path := Get_External_Pathname (Name);
+      case Iir_Kinds_Pathname (Get_Kind (Path)) is
+         when Iir_Kind_Absolute_Pathname =>
+            Kind := 0;
+            Ctxt := Null_Iir;
+         when Iir_Kind_Relative_Pathname
+           | Iir_Kind_Pathname_Element =>
+            Kind := 1;
+            Ctxt := Get_External_Name_Context (Region);
+         when Iir_Kind_Package_Pathname =>
+            Kind := 2;
+            Ctxt := Null_Iir;
+      end case;
+
+      Start_Extname_Call (Ghdl_Extname_Start);
+      New_Association
+        (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type, Kind)));
+      if Ctxt = Null_Iir then
+         Rtis.Associate_Null_Rti_Context (Assoc);
+      else
+         Rtis.Associate_Rti_Context (Assoc, Ctxt);
+      end if;
+      Assoc_Filename_Line (Assoc, Name);
+      New_Association
+        (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
+                                               Extname_Soft)));
+      New_Procedure_Call (Assoc);
+
+      case Iir_Kinds_Pathname (Get_Kind (Path)) is
+         when Iir_Kind_Absolute_Pathname =>
+            Path := Get_Pathname_Suffix (Path);
+         when Iir_Kind_Relative_Pathname =>
+            while Get_Kind (Path) = Iir_Kind_Relative_Pathname loop
+               Start_Extname_Call (Ghdl_Extname_Up);
+               New_Procedure_Call (Assoc);
+               Path := Get_Pathname_Suffix (Path);
+            end loop;
+         when Iir_Kind_Pathname_Element =>
+            null;
+         when Iir_Kind_Package_Pathname =>
+            declare
+               Lib : constant Iir := Get_Named_Entity (Path);
+            begin
+               if Lib /= Null_Iir
+                 and then Get_Kind (Lib) = Iir_Kind_Library_Declaration
+               then
+                  Gen_Elem (Get_Identifier (Lib), Null_Iir);
+               else
+                  Gen_Elem (Get_Identifier (Path), Null_Iir);
+               end if;
+            end;
+            Path := Get_Pathname_Suffix (Path);
+      end case;
+
+      while Get_Pathname_Suffix (Path) /= Null_Iir loop
+         Gen_Elem (Get_Identifier (Path), Get_Pathname_Expression (Path));
+         Path := Get_Pathname_Suffix (Path);
+      end loop;
+
+      case Iir_Kinds_External_Name (Get_Kind (Name)) is
+         when Iir_Kind_External_Constant_Name =>
+            Class := 0;
+         when Iir_Kind_External_Signal_Name =>
+            Class := 1;
+         when Iir_Kind_External_Variable_Name =>
+            Class := 2;
+      end case;
+
+      Start_Extname_Call (Ghdl_Extname_Object);
+      New_Association (Assoc, New_Name_String (Get_Identifier (Path)));
+      New_Association
+        (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type, Class)));
+      if Flag_Rti
+        and then Btype_Info /= null
+        and then Btype_Info.Type_Rti /= O_Dnode_Null
+        and then Can_Check_Type_Rti (Get_Base_Type (Atype))
+      then
+         New_Association (Assoc, Rtis.New_Rti_Address (Btype_Info.Type_Rti));
+      else
+         New_Association
+           (Assoc, New_Lit (New_Null_Access (Rtis.Ghdl_Rti_Access)));
+      end if;
+      if Tinfo.Type_Mode in Type_Mode_Bounded_Arrays then
+         New_Association
+           (Assoc,
+            New_Convert_Ov (M2Addr (Chap3.Get_Composite_Type_Bounds (Atype)),
+                            Ghdl_Ptr_Type));
+      elsif Tinfo.Type_Mode in Type_Mode_Scalar
+        and then Tinfo.S.Range_Var /= Null_Var
+      then
+         New_Association
+           (Assoc, New_Convert_Ov (M2Addr (Chap3.Type_To_Range (Atype)),
+                                   Ghdl_Ptr_Type));
+      else
+         New_Association (Assoc, New_Lit (New_Null_Access (Ghdl_Ptr_Type)));
+      end if;
+      New_Association
+        (Assoc, New_Address (New_Obj (Res), Ghdl_Extname_Result_Ptr));
+      New_Procedure_Call (Assoc);
+
+      for Mode in Mode_Value .. Info.Alias_Kind loop
+         declare
+            A : Var_Type renames Info.Alias_Var (Mode);
+            Field : O_Fnode;
+            Src : O_Enode;
+         begin
+            case Mode is
+               when Mode_Value =>
+                  Field := Ghdl_Extname_Result_Val;
+               when Mode_Signal =>
+                  Field := Ghdl_Extname_Result_Sig;
+            end case;
+            Src := New_Value (New_Selected_Element (New_Obj (Res), Field));
+            case Tinfo.Type_Mode is
+               when Type_Mode_Unbounded =>
+                  New_Assign_Stmt
+                    (New_Selected_Element (Get_Var (A),
+                                           Tinfo.B.Base_Field (Mode)),
+                     New_Convert_Ov (Src, Tinfo.B.Base_Ptr_Type (Mode)));
+                  New_Assign_Stmt
+                    (New_Selected_Element (Get_Var (A),
+                                           Tinfo.B.Bounds_Field (Mode)),
+                     New_Convert_Ov
+                       (New_Value
+                          (New_Selected_Element
+                             (New_Obj (Res), Ghdl_Extname_Result_Bounds)),
+                        Tinfo.B.Bounds_Ptr_Type));
+               when others =>
+                  New_Assign_Stmt
+                    (Get_Var (A),
+                     New_Convert_Ov (Src, Get_Alias_Ortho_Type (Tinfo, Mode)));
+            end case;
+         end;
+      end loop;
+      Close_Temp;
+   end Elab_External_Name;
+
    procedure Elab_Object_Alias_Declaration
      (Decl : Iir_Object_Alias_Declaration)
    is
@@ -1931,7 +2188,14 @@ package body Trans.Chap4 is
       if Get_Kind (Name) in Iir_Kinds_External_Name
         and then Get_Kind (Get_Parent (Decl)) not in Iir_Kinds_Subprogram_Body
       then
-         --  Not supported or set by pre-elaboration.
+         --  Set by pre-elaboration, or resolved now using the RTIs.
+         if Flag_Elaboration then
+            if Get_Subtype_Indication (Decl) = Null_Iir then
+               Chap3.Elab_External_Name_Subtype_Indication (Name);
+            end if;
+            Elab_External_Name
+              (Name, Alias_Info, Decl_Type, Get_Parent (Decl));
+         end if;
          return;
       end if;
 
@@ -2922,13 +3186,128 @@ package body Trans.Chap4 is
       end loop;
    end Translate_Declaration_Chain_Subprograms;
 
+   function Is_Deferred_External_Name_Decl (Decl : Iir) return Boolean
+   is
+      Attr : Iir;
+   begin
+      case Get_Kind (Decl) is
+         when Iir_Kind_Object_Alias_Declaration =>
+            --  Alias of an external name or of a part of it.
+            return Get_Kind (Get_Object_Prefix (Get_Name (Decl)))
+              in Iir_Kinds_External_Name;
+         when Iir_Kind_Attribute_Implicit_Declaration =>
+            Attr := Get_Attribute_Implicit_Chain (Decl);
+            while Is_Valid (Attr) loop
+               if Get_Kind (Attr) in Iir_Kinds_External_Name then
+                  return True;
+               end if;
+               Attr := Get_Attr_Chain (Attr);
+            end loop;
+            return False;
+         when others =>
+            return False;
+      end case;
+   end Is_Deferred_External_Name_Decl;
+
+   function Has_Deferred_External_Names (Parent : Iir) return Boolean
+   is
+      Decl : Iir;
+   begin
+      Decl := Get_Declaration_Chain (Parent);
+      while Decl /= Null_Iir loop
+         if Is_Deferred_External_Name_Decl (Decl) then
+            return True;
+         end if;
+         Decl := Get_Chain (Decl);
+      end loop;
+      return False;
+   end Has_Deferred_External_Names;
+
+   --  Elaborate DECL, an alias of an external name (or of a part of it) or
+   --  an implicit declaration with external names.  For an implicit
+   --  declaration, only the external names are elaborated.
+   procedure Elab_Deferred_External_Name (Decl : Iir; Parent : Iir)
+   is
+      Attr : Iir;
+   begin
+      case Get_Kind (Decl) is
+         when Iir_Kind_Object_Alias_Declaration =>
+            Elab_Object_Alias_Declaration (Decl);
+         when Iir_Kind_Attribute_Implicit_Declaration =>
+            Attr := Get_Attribute_Implicit_Chain (Decl);
+            while Is_Valid (Attr) loop
+               if Get_Kind (Attr) in Iir_Kinds_External_Name then
+                  Chap3.Elab_External_Name_Subtype_Indication (Attr);
+                  Elab_External_Name
+                    (Attr, Get_Info (Attr), Get_Type (Attr), Parent);
+               end if;
+               Attr := Get_Attr_Chain (Attr);
+            end loop;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Elab_Deferred_External_Name;
+
+   procedure Elab_Deferred_External_Names (Parent : Iir)
+   is
+      Decl : Iir;
+   begin
+      Decl := Get_Declaration_Chain (Parent);
+      while Decl /= Null_Iir loop
+         if Is_Deferred_External_Name_Decl (Decl) then
+            Elab_Deferred_External_Name (Decl, Parent);
+         end if;
+         Decl := Get_Chain (Decl);
+      end loop;
+   end Elab_Deferred_External_Names;
+
    procedure Elab_Declaration_Chain (Parent : Iir; Need_Final : out Boolean)
    is
+      --  True if the region declares external names.  They are resolved in
+      --  soft mode: if a component instance is not yet elaborated, their
+      --  elaboration is retried at the end (by Elab_Deferred_External_Names,
+      --  see Chap9.Elab_Block_Declarations).
+      Defer_Extnames : constant Boolean :=
+        Flag_Elaboration
+        and then Get_Kind (Parent) in Iir_Kind_Architecture_Body
+                                    | Iir_Kind_Block_Statement
+                                    | Iir_Kind_Generate_Statement_Body
+        and then Get_Info (Parent).Block_Extname_Subprg /= O_Dnode_Null;
       Decl : Iir;
    begin
       Decl := Get_Declaration_Chain (Parent);
       Need_Final := False;
       while Decl /= Null_Iir loop
+         if Defer_Extnames
+           and then Is_Deferred_External_Name_Decl (Decl)
+         then
+            --  Elaborate only if the resolution of previous external names
+            --  has not failed.
+            declare
+               If_Blk : O_If_Block;
+               Assoc : O_Assoc_List;
+            begin
+               Start_Association (Assoc, Ghdl_Extname_Failed);
+               Start_If_Stmt
+                 (If_Blk,
+                  New_Compare_Op (ON_Eq,
+                                  New_Function_Call (Assoc),
+                                  New_Lit (Ghdl_Index_0),
+                                  Ghdl_Bool_Type));
+               if Get_Kind (Decl) = Iir_Kind_Object_Alias_Declaration then
+                  Extname_Soft := 1;
+               else
+                  --  External names used in concurrent statements: they are
+                  --  evaluated when the statement is elaborated.
+                  Extname_Soft := 2;
+               end if;
+               Elab_Deferred_External_Name (Decl, Parent);
+               Extname_Soft := 0;
+               Finish_If_Stmt (If_Blk);
+            end;
+            goto Next;
+         end if;
+
          case Get_Kind (Decl) is
             when Iir_Kind_Use_Clause =>
                null;
@@ -3021,6 +3400,11 @@ package body Trans.Chap4 is
                            Elab_Signal_Delayed_Attribute (Sig);
                         when Iir_Kinds_External_Name =>
                            Chap3.Elab_External_Name_Subtype_Indication (Sig);
+                           if Flag_Elaboration then
+                              --  Otherwise set by pre-elaboration.
+                              Elab_External_Name
+                                (Sig, Get_Info (Sig), Get_Type (Sig), Parent);
+                           end if;
                         when others =>
                            null;
                      end case;
@@ -3066,6 +3450,7 @@ package body Trans.Chap4 is
                Error_Kind ("elab_declaration_chain", Decl);
          end case;
 
+         <<Next>> null;
          Decl := Get_Chain (Decl);
       end loop;
    end Elab_Declaration_Chain;

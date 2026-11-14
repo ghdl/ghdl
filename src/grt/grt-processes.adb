@@ -249,12 +249,74 @@ package body Grt.Processes is
       return Get_Current_Process;
    end Ghdl_Register_Foreign_Process;
 
+   --  Process whose elaboration was deferred and is being completed, or null.
+   Deferred_Process : Process_Acc := null;
+
    procedure Ghdl_Process_Add_Sensitivity (Sig : Ghdl_Signal_Ptr)
    is
+      Proc : Process_Acc;
    begin
-      Resume_Process_If_Event
-        (Sig, Process_Table.Table (Process_Table.Last));
+      if Deferred_Process /= null then
+         Proc := Deferred_Process;
+      else
+         Proc := Process_Table.Table (Process_Table.Last);
+      end if;
+      Resume_Process_If_Event (Sig, Proc);
    end Ghdl_Process_Add_Sensitivity;
+
+   type Deferred_Elab_Type is record
+      --  Subprogram to call.
+      Subprg : Proc_Acc;
+
+      --  Instance (THIS parameter) for the subprogram.
+      This : Instance_Acc;
+
+      --  The process.
+      Proc : Process_Acc;
+   end record;
+
+   package Deferred_Elab_Table is new Grt.Table
+     (Table_Component_Type => Deferred_Elab_Type,
+      Table_Index_Type => Natural,
+      Table_Low_Bound => 1,
+      Table_Initial => 2);
+
+   procedure Ghdl_Elab_Defer (Proc : Proc_Acc; This : Instance_Acc)
+   is
+      P : Process_Acc;
+   begin
+      if Process_Table.Last < Process_Table.First then
+         P := null;
+      else
+         P := Process_Table.Table (Process_Table.Last);
+      end if;
+      Deferred_Elab_Table.Append ((Subprg => Proc, This => This, Proc => P));
+   end Ghdl_Elab_Defer;
+
+   procedure Run_Deferred_Elab
+   is
+      Prev : constant Process_Acc := Get_Current_Process;
+   begin
+      for I in Deferred_Elab_Table.First .. Deferred_Elab_Table.Last loop
+         declare
+            E : constant Deferred_Elab_Type := Deferred_Elab_Table.Table (I);
+         begin
+            --  Drivers and sensitivity are added to the current process.
+            --  For external names declared in a block, the process is
+            --  meaningless (but drivers are not created).
+            if E.Proc /= null then
+               Set_Current_Process (E.Proc);
+            else
+               Set_Current_Process (Prev);
+            end if;
+            Deferred_Process := E.Proc;
+            E.Subprg.all (E.This);
+         end;
+      end loop;
+      Deferred_Process := null;
+      Set_Current_Process (Prev);
+      Deferred_Elab_Table.Free;
+   end Run_Deferred_Elab;
 
    procedure Ghdl_Finalize_Register (Instance : Instance_Acc;
                                      Proc : Proc_Acc)

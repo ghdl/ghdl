@@ -1939,6 +1939,149 @@ package body Translation is
         (Interfaces, Param, Wki_Instance, Ghdl_Ptr_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Rti_Add_Top);
 
+      --  External names (see grt-external_names.ads).
+      declare
+         Constr : O_Element_List;
+         Fld : O_Fnode;
+      begin
+         --  type __ghdl_extname_state is record
+         --    base : ghdl_ptr; block : ghdl_rti_access; lib : char_ptr;
+         --    filename : char_ptr; line : ghdl_i32; step : ghdl_i32;
+         --  end record;
+         Start_Record_Type (Constr);
+         New_Record_Field
+           (Constr, Fld, Get_Identifier ("base"), Ghdl_Ptr_Type);
+         New_Record_Field
+           (Constr, Fld, Get_Identifier ("block"), Rtis.Ghdl_Rti_Access);
+         New_Record_Field
+           (Constr, Fld, Get_Identifier ("lib"), Char_Ptr_Type);
+         New_Record_Field
+           (Constr, Fld, Wki_Filename, Char_Ptr_Type);
+         New_Record_Field
+           (Constr, Fld, Wki_Line, Ghdl_I32_Type);
+         New_Record_Field
+           (Constr, Fld, Get_Identifier ("step"), Ghdl_I32_Type);
+         New_Record_Field
+           (Constr, Fld, Get_Identifier ("soft"), Ghdl_I32_Type);
+         Finish_Record_Type (Constr, Ghdl_Extname_State_Type);
+         New_Type_Decl (Get_Identifier ("__ghdl_extname_state"),
+                        Ghdl_Extname_State_Type);
+         Ghdl_Extname_State_Ptr := New_Access_Type (Ghdl_Extname_State_Type);
+         New_Type_Decl (Get_Identifier ("__ghdl_extname_state_ptr"),
+                        Ghdl_Extname_State_Ptr);
+
+         --  type __ghdl_extname_result is record
+         --    sig : ghdl_ptr; val : ghdl_ptr; bounds : ghdl_ptr;
+         --  end record;
+         Start_Record_Type (Constr);
+         New_Record_Field (Constr, Ghdl_Extname_Result_Sig,
+                           Get_Identifier ("sig"), Ghdl_Ptr_Type);
+         New_Record_Field (Constr, Ghdl_Extname_Result_Val,
+                           Get_Identifier ("val"), Ghdl_Ptr_Type);
+         New_Record_Field (Constr, Ghdl_Extname_Result_Bounds,
+                           Get_Identifier ("bounds"), Ghdl_Ptr_Type);
+         Finish_Record_Type (Constr, Ghdl_Extname_Result_Type);
+         New_Type_Decl (Get_Identifier ("__ghdl_extname_result"),
+                        Ghdl_Extname_Result_Type);
+         Ghdl_Extname_Result_Ptr :=
+           New_Access_Type (Ghdl_Extname_Result_Type);
+         New_Type_Decl (Get_Identifier ("__ghdl_extname_result_ptr"),
+                        Ghdl_Extname_Result_Ptr);
+      end;
+
+      --  procedure __ghdl_extname_start (st : __ghdl_extname_state_ptr;
+      --                                  kind : ghdl_index_type;
+      --                                  ctxt_rti : ghdl_rti_access;
+      --                                  ctxt_base : ghdl_ptr;
+      --                                  filename : char_ptr;
+      --                                  line : ghdl_i32;
+      --                                  soft : ghdl_index_type);
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_extname_start"),
+         O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("st"),
+                          Ghdl_Extname_State_Ptr);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("kind"),
+                          Ghdl_Index_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Rti, Rtis.Ghdl_Rti_Access);
+      New_Interface_Decl (Interfaces, Param, Wki_Instance, Ghdl_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("soft"),
+                          Ghdl_Index_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Extname_Start);
+
+      --  function __ghdl_extname_failed return ghdl_index_type;
+      Start_Function_Decl
+        (Interfaces, Get_Identifier ("__ghdl_extname_failed"),
+         O_Storage_External, Ghdl_Index_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Extname_Failed);
+
+      --  procedure __ghdl_extname_defer_failed (proc : ghdl_ptr;
+      --                                         this : ghdl_ptr);
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_extname_defer_failed"),
+         O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("proc"),
+                          Ghdl_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_This, Ghdl_Ptr_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Extname_Defer_Failed);
+
+      --  procedure __ghdl_extname_up (st : __ghdl_extname_state_ptr);
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_extname_up"),
+         O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("st"),
+                          Ghdl_Extname_State_Ptr);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Extname_Up);
+
+      --  procedure __ghdl_extname_elem (st : __ghdl_extname_state_ptr;
+      --                                 name : char_ptr;
+      --                                 has_index : ghdl_index_type;
+      --                                 index : ghdl_i64);
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_extname_elem"),
+         O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("st"),
+                          Ghdl_Extname_State_Ptr);
+      New_Interface_Decl (Interfaces, Param, Wki_Name, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("has_index"),
+                          Ghdl_Index_Type);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("index"),
+                          Ghdl_I64_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Extname_Elem);
+
+      --  procedure __ghdl_extname_object (st : __ghdl_extname_state_ptr;
+      --                                   name : char_ptr;
+      --                                   class : ghdl_index_type;
+      --                                   base_type : ghdl_rti_access;
+      --                                   exp_bounds : ghdl_ptr;
+      --                                   res : __ghdl_extname_result_ptr);
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_extname_object"),
+         O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("st"),
+                          Ghdl_Extname_State_Ptr);
+      New_Interface_Decl (Interfaces, Param, Wki_Name, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("class"),
+                          Ghdl_Index_Type);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("base_type"),
+                          Rtis.Ghdl_Rti_Access);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("exp_bounds"),
+                          Ghdl_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Res,
+                          Ghdl_Extname_Result_Ptr);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Extname_Object);
+
+      --  procedure __ghdl_elab_defer (proc : ghdl_ptr; this : ghdl_ptr);
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_elab_defer"),
+         O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("proc"),
+                          Ghdl_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_This, Ghdl_Ptr_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Elab_Defer);
+
       --  procedure __ghdl_init_top_generics();
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_init_top_generics"),

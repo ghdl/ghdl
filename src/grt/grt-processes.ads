@@ -159,6 +159,16 @@ package Grt.Processes is
    --  (sensitized) process.
    procedure Ghdl_Process_Add_Sensitivity (Sig : Ghdl_Signal_Ptr);
 
+   --  Defer the end of the elaboration of the last registered process: PROC
+   --  will be called with THIS once the whole design has been elaborated
+   --  (by Run_Deferred_Elab).  Used for processes that have external names
+   --  in their declarative part, as the object denoted by an external name
+   --  may be elaborated after the process.
+   procedure Ghdl_Elab_Defer (Proc : Proc_Acc; This : Instance_Acc);
+
+   --  Call the deferred elaborations, in order.
+   procedure Run_Deferred_Elab;
+
    --  Resume a process.
    procedure Resume_Process (Proc : Process_Acc);
 
@@ -287,6 +297,7 @@ private
 
    pragma Export (C, Ghdl_Process_Add_Sensitivity,
                   "__ghdl_process_add_sensitivity");
+   pragma Export (C, Ghdl_Elab_Defer, "__ghdl_elab_defer");
 
    pragma Export (C, Ghdl_Process_Wait_Exit,
                   "__ghdl_process_wait_exit");
