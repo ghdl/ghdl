@@ -3083,6 +3083,7 @@ package body Vhdl.Sem_Names is
             end if;
 
          when Iir_Kinds_Object_Declaration
+            | Iir_Kinds_External_Name
             | Iir_Kind_Indexed_Name
             | Iir_Kind_Slice_Name
             | Iir_Kind_Dereference
