@@ -9,14 +9,12 @@ elab_simulate_failure blk1
 analyze blk2.vhdl
 elab_simulate_failure blk2
 
-if ghdl_is_preelaboration; then
-    analyze repro.vhdl
-    elab_simulate_failure repro
+analyze repro.vhdl
+elab_simulate_failure repro
 
-    analyze repro2.vhdl
-    elab_simulate repro2
+analyze repro2.vhdl
+elab_simulate repro2
 
-    clean
-fi
+clean
 
 echo "Test successful"

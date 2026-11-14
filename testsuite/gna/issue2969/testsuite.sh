@@ -2,15 +2,13 @@
 
 . ../../testenv.sh
 
-if ghdl_is_preelaboration; then
-    export GHDL_STD_FLAGS=--std=08
-    analyze test1.vhdl
-    elab_simulate test
+export GHDL_STD_FLAGS=--std=08
+analyze test1.vhdl
+elab_simulate test
 
-    analyze repro1.vhdl
-    elab_simulate repro
+analyze repro1.vhdl
+elab_simulate repro
 
-    clean
-fi
+clean
 
 echo "Test successful"
