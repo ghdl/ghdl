@@ -141,6 +141,14 @@ package Libraries is
    --  a new one is created).
    procedure Add_Design_File_Into_Library (File : in out Iir_Design_File);
 
+   --  Return the time stamp to set as the analysis time stamp of FILE, which
+   --  has just been analyzed: the current time, but not before the analysis
+   --  time stamps of the design files its units depend on.  The clock can
+   --  go backward (when it is adjusted), and a file must not look older than
+   --  the files it depends on, as it would then be obsolete.
+   function Get_Analysis_Time_Stamp_Now (File : Iir_Design_File)
+                                        return Time_Stamp_Id;
+
    -- Return the latest architecture analysed for entity ENTITY.
    function Get_Latest_Architecture (Entity: Iir_Entity_Declaration)
                                     return Iir_Architecture_Body;

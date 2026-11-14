@@ -1878,7 +1878,8 @@ package body Ghdldrv is
             Has_Compiled := True;
             --  Set the analysis time stamp since the file has just been
             --  analyzed.
-            Set_Analysis_Time_Stamp (File, Files_Map.Get_Os_Time_Stamp);
+            Set_Analysis_Time_Stamp
+              (File, Libraries.Get_Analysis_Time_Stamp_Now (File));
          end if;
          Next (Files_It);
       end loop;
