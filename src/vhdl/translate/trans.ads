@@ -1934,6 +1934,11 @@ package Trans is
             --  Subprogram for the process.
             Process_Subprg : O_Dnode;
 
+            --  Subprogram to complete the elaboration of the process, when
+            --  it is deferred (because of external names).  Null if not
+            --  deferred.
+            Process_Elab_Subprg : O_Dnode := O_Dnode_Null;
+
             --  Union containing local declarations for statements.
             Process_Locvar_Scope : aliased Var_Scope_Type;
 
@@ -1997,6 +2002,13 @@ package Trans is
          when Kind_Block =>
             --  Access to declarations of this block.
             Block_Scope : aliased Var_Scope_Type;
+
+            --  For architecture, block statement and generate statement
+            --  body: subprogram that elaborates the external names declared
+            --  in the block (and the aliases of them).  Its call is deferred
+            --  until the whole design is elaborated.  Null if no external
+            --  names.
+            Block_Extname_Subprg : O_Dnode := O_Dnode_Null;
 
             --  Instance type (ortho record) for declarations contained in the
             --  block/entity/architecture.

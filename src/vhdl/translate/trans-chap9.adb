@@ -149,6 +149,100 @@ package body Trans.Chap9 is
       Finish_Subprogram_Body;
    end Translate_Process_Statement;
 
+   procedure Elab_Process_Body (Proc : Iir);
+
+   --  Return True if the elaboration of PROC has to be deferred: if it
+   --  declares external names or if it is in a block that declares external
+   --  names (as their elaboration is deferred too).
+   function Has_External_Names (Proc : Iir) return Boolean
+   is
+      N : Iir;
+   begin
+      if Chap4.Has_Deferred_External_Names (Proc) then
+         return True;
+      end if;
+      N := Get_Parent (Proc);
+      loop
+         case Get_Kind (N) is
+            when Iir_Kind_Architecture_Body
+              | Iir_Kind_Block_Statement
+              | Iir_Kind_Generate_Statement_Body =>
+               if Get_Info (N).Block_Extname_Subprg /= O_Dnode_Null then
+                  return True;
+               end if;
+               if Get_Kind (N) = Iir_Kind_Architecture_Body then
+                  return False;
+               end if;
+            when Iir_Kind_For_Generate_Statement
+              | Iir_Kind_If_Generate_Statement
+              | Iir_Kind_If_Generate_Else_Clause
+              | Iir_Kind_Case_Generate_Statement =>
+               null;
+            when others =>
+               return False;
+         end case;
+         N := Get_Parent (N);
+      end loop;
+   end Has_External_Names;
+
+   --  Create the subprogram that elaborates the external names declared in
+   --  BLOCK, whose call is deferred until the whole design is elaborated.
+   procedure Translate_Block_Extname_Elab (Block : Iir; Base : Block_Info_Acc)
+   is
+      Info       : constant Block_Info_Acc := Get_Info (Block);
+      Inter_List : O_Inter_List;
+      Instance   : O_Dnode;
+   begin
+      New_Debug_Line_Decl (Get_Line_Number (Block));
+
+      Start_Procedure_Decl (Inter_List, Create_Identifier ("EXTNAME_ELAB"),
+                            O_Storage_Private);
+      New_Interface_Decl (Inter_List, Instance, Wki_Instance,
+                          Base.Block_Decls_Ptr_Type);
+      Finish_Subprogram_Decl (Inter_List, Info.Block_Extname_Subprg);
+
+      Start_Subprogram_Body (Info.Block_Extname_Subprg);
+      Push_Local_Factory;
+      Set_Scope_Via_Param_Ptr (Base.Block_Scope, Instance);
+
+      Chap4.Elab_Deferred_External_Names (Block);
+
+      Clear_Scope (Base.Block_Scope);
+      Pop_Local_Factory;
+      Finish_Subprogram_Body;
+   end Translate_Block_Extname_Elab;
+
+   --  Create the subprogram that completes the elaboration of PROC, whose
+   --  call is deferred until the whole design is elaborated (because the
+   --  objects denoted by external names may be elaborated after the
+   --  process).
+   procedure Translate_Process_Elab (Proc : Iir; Base : Block_Info_Acc)
+   is
+      Info       : constant Proc_Info_Acc := Get_Info (Proc);
+      Inter_List : O_Inter_List;
+      Instance   : O_Dnode;
+   begin
+      --  The code is for the declarations of the process, which follow the
+      --  process (gcov wants a function to end after its start).
+      New_Debug_Line_Decl (Get_Line_Number (Proc));
+
+      Start_Procedure_Decl (Inter_List, Create_Identifier ("PROC_ELAB"),
+                            O_Storage_Private);
+      New_Interface_Decl (Inter_List, Instance, Wki_Instance,
+                          Base.Block_Decls_Ptr_Type);
+      Finish_Subprogram_Decl (Inter_List, Info.Process_Elab_Subprg);
+
+      Start_Subprogram_Body (Info.Process_Elab_Subprg);
+      Push_Local_Factory;
+      Set_Scope_Via_Param_Ptr (Base.Block_Scope, Instance);
+
+      Elab_Process_Body (Proc);
+
+      Clear_Scope (Base.Block_Scope);
+      Pop_Local_Factory;
+      Finish_Subprogram_Body;
+   end Translate_Process_Elab;
+
    procedure Translate_Implicit_Guard_Signal
      (Guard : Iir; Base : Block_Info_Acc)
    is
@@ -1331,6 +1425,15 @@ package body Trans.Chap9 is
       Chap4.Translate_Declaration_Chain_Subprograms
         (Block, Subprg_Translate_Spec_And_Body);
 
+      if Flag_Elaboration
+        and then Get_Kind (Block) in Iir_Kind_Architecture_Body
+                                   | Iir_Kind_Block_Statement
+                                   | Iir_Kind_Generate_Statement_Body
+        and then Chap4.Has_Deferred_External_Names (Block)
+      then
+         Translate_Block_Extname_Elab (Block, Base_Info);
+      end if;
+
       Stmt := Get_Concurrent_Statement_Chain (Block);
       while Stmt /= Null_Iir loop
          Kind := Get_Kind (Stmt);
@@ -1354,6 +1457,10 @@ package body Trans.Chap9 is
 
                if Flag_Direct_Drivers then
                   Chap9.Reset_Direct_Drivers (Stmt);
+               end if;
+
+               if Flag_Elaboration and then Has_External_Names (Stmt) then
+                  Translate_Process_Elab (Stmt, Base_Info);
                end if;
             when Iir_Kind_Psl_Default_Clock
                | Iir_Kind_Psl_Restrict_Directive
@@ -1913,47 +2020,17 @@ package body Trans.Chap9 is
    --       New_Procedure_Call (Constr);
    --    end Register_Scalar_Direct_Driver;
 
-   --  PROC: the process to be elaborated
-   --  BASE_INFO: info for the global block
-   procedure Elab_Process (Proc : Iir; Base_Info : Block_Info_Acc)
+   --  Elaborate the declarations of process PROC, and register its drivers
+   --  and its sensitivity.
+   procedure Elab_Process_Body (Proc : Iir)
    is
       Info          : constant Proc_Info_Acc := Get_Info (Proc);
       Is_Sensitized : constant Boolean :=
         Get_Kind (Proc) = Iir_Kind_Sensitized_Process_Statement;
-      Subprg        : O_Dnode;
-      Constr        : O_Assoc_List;
       List          : Iir_List;
       List_Orig     : Iir_List;
       Final         : Boolean;
    begin
-      New_Debug_Line_Stmt (Get_Line_Number (Proc));
-
-      --  Register process.
-      if Is_Sensitized then
-         if Get_Postponed_Flag (Proc) then
-            Subprg := Ghdl_Postponed_Sensitized_Process_Register;
-         else
-            Subprg := Ghdl_Sensitized_Process_Register;
-         end if;
-      else
-         if Get_Postponed_Flag (Proc) then
-            Subprg := Ghdl_Postponed_Process_Register;
-         else
-            Subprg := Ghdl_Process_Register;
-         end if;
-      end if;
-
-      Start_Association (Constr, Subprg);
-      New_Association
-        (Constr, New_Unchecked_Address
-           (Get_Instance_Ref (Base_Info.Block_Scope), Ghdl_Ptr_Type));
-      New_Association
-        (Constr,
-         New_Lit (New_Subprogram_Address (Info.Process_Subprg,
-                                          Ghdl_Ptr_Type)));
-      Rtis.Associate_Rti_Context (Constr, Proc);
-      New_Procedure_Call (Constr);
-
       --  First elaborate declarations since a driver may depend on
       --  an alias declaration.
       --  Also, with vhdl 08 a sensitivity element may depend on an alias.
@@ -2058,7 +2135,64 @@ package body Trans.Chap9 is
          if List_Orig = Iir_List_All then
             Destroy_Iir_List (List);
          end if;
+      end if;
+   end Elab_Process_Body;
+
+   --  PROC: the process to be elaborated
+   --  BASE_INFO: info for the global block
+   procedure Elab_Process (Proc : Iir; Base_Info : Block_Info_Acc)
+   is
+      Info          : constant Proc_Info_Acc := Get_Info (Proc);
+      Is_Sensitized : constant Boolean :=
+        Get_Kind (Proc) = Iir_Kind_Sensitized_Process_Statement;
+      Subprg        : O_Dnode;
+      Constr        : O_Assoc_List;
+   begin
+      New_Debug_Line_Stmt (Get_Line_Number (Proc));
+
+      --  Register process.
+      if Is_Sensitized then
+         if Get_Postponed_Flag (Proc) then
+            Subprg := Ghdl_Postponed_Sensitized_Process_Register;
+         else
+            Subprg := Ghdl_Sensitized_Process_Register;
+         end if;
       else
+         if Get_Postponed_Flag (Proc) then
+            Subprg := Ghdl_Postponed_Process_Register;
+         else
+            Subprg := Ghdl_Process_Register;
+         end if;
+      end if;
+
+      Start_Association (Constr, Subprg);
+      New_Association
+        (Constr, New_Unchecked_Address
+           (Get_Instance_Ref (Base_Info.Block_Scope), Ghdl_Ptr_Type));
+      New_Association
+        (Constr,
+         New_Lit (New_Subprogram_Address (Info.Process_Subprg,
+                                          Ghdl_Ptr_Type)));
+      Rtis.Associate_Rti_Context (Constr, Proc);
+      New_Procedure_Call (Constr);
+
+      if Info.Process_Elab_Subprg /= O_Dnode_Null then
+         --  The process has external names, which may denote objects that
+         --  are not yet elaborated: complete the elaboration at the end.
+         Start_Association (Constr, Ghdl_Elab_Defer);
+         New_Association
+           (Constr,
+            New_Lit (New_Subprogram_Address (Info.Process_Elab_Subprg,
+                                             Ghdl_Ptr_Type)));
+         New_Association
+           (Constr, New_Unchecked_Address
+              (Get_Instance_Ref (Base_Info.Block_Scope), Ghdl_Ptr_Type));
+         New_Procedure_Call (Constr);
+      else
+         Elab_Process_Body (Proc);
+      end if;
+
+      if not Is_Sensitized then
          --  Initialize state.
          declare
             State_Info : constant Object_Info_Acc :=
@@ -3071,6 +3205,28 @@ package body Trans.Chap9 is
       Open_Temp;
       Chap4.Elab_Declaration_Chain (Block, Final);
       Close_Temp;
+
+      if Get_Kind (Block) /= Iir_Kind_Entity_Declaration
+        and then Get_Info (Block).Block_Extname_Subprg /= O_Dnode_Null
+      then
+         --  If the resolution of an external name has failed (because it
+         --  denotes an object that is not yet elaborated, see
+         --  Chap4.Elab_Declaration_Chain), elaborate them again at the end.
+         declare
+            Constr : O_Assoc_List;
+         begin
+            Start_Association (Constr, Ghdl_Extname_Defer_Failed);
+            New_Association
+              (Constr,
+               New_Lit (New_Subprogram_Address
+                          (Get_Info (Block).Block_Extname_Subprg,
+                           Ghdl_Ptr_Type)));
+            New_Association
+              (Constr, New_Unchecked_Address
+                 (Get_Instance_Ref (Base_Info.Block_Scope), Ghdl_Ptr_Type));
+            New_Procedure_Call (Constr);
+         end;
+      end if;
 
       Stmt := Get_Concurrent_Statement_Chain (Block);
       while Stmt /= Null_Iir loop

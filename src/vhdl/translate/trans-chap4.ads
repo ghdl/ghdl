@@ -80,6 +80,13 @@ package Trans.Chap4 is
    procedure Elab_Out_Conversion
      (Assoc : Iir; Formal : Iir; Ndest : out Mnode);
 
+   --  True if PARENT declares external names (or aliases of them).
+   function Has_Deferred_External_Names (Parent : Iir) return Boolean;
+
+   --  Elaborate the external names (and aliases of them) declared in PARENT,
+   --  when their elaboration is deferred.
+   procedure Elab_Deferred_External_Names (Parent : Iir);
+
    --  Create code to elaborate declarations.
    --  NEED_FINAL is set when at least one declaration needs to be
    --  finalized (eg: file declaration, protected objects).

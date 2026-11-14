@@ -41,6 +41,7 @@ with Grt.Shadow_Ieee;
 with Grt.Images;
 with Grt.Values;
 with Grt.Names;
+with Grt.External_Names;
 pragma Warnings (On);
 
 package body Grt.Main is
@@ -51,6 +52,8 @@ package body Grt.Main is
    function Ghdl_Elaborate_Wrapper return Integer is
    begin
       Ghdl_Elaborate;
+      --  Complete the elaboration of processes with external names.
+      Grt.Processes.Run_Deferred_Elab;
       return 0;
    end Ghdl_Elaborate_Wrapper;
 

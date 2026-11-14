@@ -297,6 +297,22 @@ package Trans_Decls is
    Ghdl_Rti_Add_Package : O_Dnode;
    Ghdl_Rti_Add_Top : O_Dnode;
 
+   --  External names.
+   Ghdl_Extname_State_Type : O_Tnode;
+   Ghdl_Extname_State_Ptr : O_Tnode;
+   Ghdl_Extname_Result_Type : O_Tnode;
+   Ghdl_Extname_Result_Ptr : O_Tnode;
+   Ghdl_Extname_Result_Sig : O_Fnode;
+   Ghdl_Extname_Result_Val : O_Fnode;
+   Ghdl_Extname_Result_Bounds : O_Fnode;
+   Ghdl_Extname_Start : O_Dnode;
+   Ghdl_Extname_Failed : O_Dnode;
+   Ghdl_Extname_Defer_Failed : O_Dnode;
+   Ghdl_Extname_Up : O_Dnode;
+   Ghdl_Extname_Elem : O_Dnode;
+   Ghdl_Extname_Object : O_Dnode;
+   Ghdl_Elab_Defer : O_Dnode;
+
    Ghdl_Init_Top_Generics : O_Dnode;
 
    Ghdl_Elaborate : O_Dnode;

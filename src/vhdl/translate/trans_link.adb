@@ -33,6 +33,7 @@ with Grt.Vhdl_Types; use Grt.Vhdl_Types;
 with Grt.Images;
 with Grt.Values;
 with Grt.Names;
+with Grt.External_Names;
 with Grt.Std_Logic_1164;
 
 package body Trans_Link is
@@ -350,6 +351,20 @@ package body Trans_Link is
            Grt.Rtis.Ghdl_Rti_Add_Package'Address);
       Def (Trans_Decls.Ghdl_Rti_Add_Top,
            Grt.Rtis.Ghdl_Rti_Add_Top'Address);
+      Def (Trans_Decls.Ghdl_Extname_Start,
+           Grt.External_Names.Ghdl_Extname_Start'Address);
+      Def (Trans_Decls.Ghdl_Extname_Failed,
+           Grt.External_Names.Ghdl_Extname_Failed'Address);
+      Def (Trans_Decls.Ghdl_Extname_Defer_Failed,
+           Grt.External_Names.Ghdl_Extname_Defer_Failed'Address);
+      Def (Trans_Decls.Ghdl_Extname_Up,
+           Grt.External_Names.Ghdl_Extname_Up'Address);
+      Def (Trans_Decls.Ghdl_Extname_Elem,
+           Grt.External_Names.Ghdl_Extname_Elem'Address);
+      Def (Trans_Decls.Ghdl_Extname_Object,
+           Grt.External_Names.Ghdl_Extname_Object'Address);
+      Def (Trans_Decls.Ghdl_Elab_Defer,
+           Grt.Processes.Ghdl_Elab_Defer'Address);
 
       Def (Trans_Decls.Ghdl_Init_Top_Generics,
            Grt.Main.Ghdl_Init_Top_Generics'Address);
