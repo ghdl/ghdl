@@ -290,11 +290,14 @@ package body Vhdl.Sem_Lib is
                                       return Boolean
    is
       List : constant Iir_List := Get_Dependence_List (Design_Unit);
-      Du_Ts : constant Time_Stamp_Id :=
-        Get_Analysis_Time_Stamp (Get_Design_File (Design_Unit));
+      Du_File : constant Iir := Get_Design_File (Design_Unit);
+      Du_Ts : constant Time_Stamp_Id := Get_Analysis_Time_Stamp (Du_File);
+      Du_Date : constant Date_Type := Get_Date (Design_Unit);
+      U_File : Iir;
       U_Ts : Time_Stamp_Id;
       El : Iir;
       It : List_Iterator;
+      Is_Obsolete : Boolean;
    begin
       if List = Null_Iir_List then
          return False;
@@ -304,10 +307,20 @@ package body Vhdl.Sem_Lib is
       while Is_Valid (It) loop
          El := Get_Element (It);
          if Get_Kind (El) = Iir_Kind_Design_Unit then
-            --  TODO: If both units are in the same library, a better check
-            --  would be comparing dates.
-            U_Ts := Get_Analysis_Time_Stamp (Get_Design_File (El));
-            if Files_Map.Is_Gt (U_Ts, Du_Ts) then
+            U_File := Get_Design_File (El);
+            if Get_Library (U_File) = Get_Library (Du_File)
+              and then Du_Date in Date_Valid
+              and then Get_Date (El) in Date_Valid
+            then
+               --  Both units are in the same library: use the order of
+               --  analysis.  The time stamps come from the clock, which can
+               --  go backward (when it is adjusted).
+               Is_Obsolete := Get_Date (El) > Du_Date;
+            else
+               U_Ts := Get_Analysis_Time_Stamp (U_File);
+               Is_Obsolete := Files_Map.Is_Gt (U_Ts, Du_Ts);
+            end if;
+            if Is_Obsolete then
                Error_Obsolete
                  (Loc, "%n is obsoleted by %n", (+Design_Unit, +El));
                return True;
