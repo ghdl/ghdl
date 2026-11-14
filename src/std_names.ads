@@ -185,7 +185,9 @@ package Std_Names is
    Name_Vmode :              constant Name_Id := Name_First_Keyword + 110;
    Name_Vprop :              constant Name_Id := Name_First_Keyword + 111;
    Name_Vunit :              constant Name_Id := Name_First_Keyword + 112;
-   Name_Last_Vhdl08 :        constant Name_Id := Name_Vunit;
+   Name_Fairness :           constant Name_Id := Name_First_Keyword + 113;
+   Name_Strong :             constant Name_Id := Name_First_Keyword + 114;
+   Name_Last_Vhdl08 :        constant Name_Id := Name_Strong;
 
    subtype Name_Id_Vhdl08_Reserved_Words is
      Name_Id range Name_Assume .. Name_Last_Vhdl08;
@@ -194,11 +196,7 @@ package Std_Names is
    Name_Private :            constant Name_Id := Name_First_Vhdl19 + 0;
    Name_View :               constant Name_Id := Name_First_Vhdl19 + 1;
    Name_Vpkg :               constant Name_Id := Name_First_Vhdl19 + 2;
-   --  fairness and strong are reserved since vhdl-08 (and are also PSL
-   --  keywords), but are only enforced since vhdl-19 for compatibility.
-   Name_Fairness :           constant Name_Id := Name_First_Vhdl19 + 3;
-   Name_Strong :             constant Name_Id := Name_First_Vhdl19 + 4;
-   Name_Last_Vhdl19 :        constant Name_Id := Name_First_Vhdl19 + 4;
+   Name_Last_Vhdl19 :        constant Name_Id := Name_First_Vhdl19 + 2;
 
    subtype Name_Id_Vhdl19_Reserved_Words is
      Name_Id range Name_First_Vhdl19 .. Name_Last_Vhdl19;

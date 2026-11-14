@@ -166,12 +166,12 @@ package body Std_Names is
       Def ("vmode",              Name_Vmode);
       Def ("vprop",              Name_Vprop);
       Def ("vunit",              Name_Vunit);
+      Def ("fairness",           Name_Fairness);
+      Def ("strong",             Name_Strong);
 
       Def ("private",            Name_Private);
       Def ("view",               Name_View);
       Def ("vpkg",               Name_Vpkg);
-      Def ("fairness",           Name_Fairness);
-      Def ("strong",             Name_Strong);
 
       Def ("across",     Name_Across);
       Def ("break",      Name_Break);

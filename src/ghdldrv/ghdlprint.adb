@@ -419,8 +419,8 @@ package body Ghdlprint is
               | Tok_Access .. Tok_Nor
               | Tok_Xnor .. Tok_Ror
               | Tok_Protected
-              | Tok_Assume .. Tok_Vunit
-              | Tok_Private .. Tok_Strong =>
+              | Tok_Assume .. Tok_Strong
+              | Tok_Private .. Tok_Vpkg =>
                Disp_Reserved;
             when Tok_Semi_Colon =>
                Disp_Spaces;
