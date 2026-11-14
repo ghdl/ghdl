@@ -197,11 +197,11 @@ class Tok(IntEnum):
     Vmode = 175
     Vprop = 176
     Vunit = 177
-    Private = 178
-    View = 179
-    Vpkg = 180
-    Fairness = 181
-    Strong = 182
+    Fairness = 178
+    Strong = 179
+    Private = 180
+    View = 181
+    Vpkg = 182
     Across = 183
     Break = 184
     Limit = 185

@@ -1090,14 +1090,9 @@ package body Vhdl.Scanner is
             when Name_Id_Vhdl19_Reserved_Words =>
                if Vhdl_Std < Vhdl_19 then
                   if Is_Warning_Enabled (Warnid_Reserved_Word) then
-                     --  1076-2008 15.10 already reserves fairness and strong,
-                     --  but they were never rejected: keep accepting them.
                      Warning_Msg_Scan
                        (Warnid_Reserved_Word,
-                        "using %i vhdl-"
-                        & (if Current_Identifier in Name_Fairness | Name_Strong
-                           then "2008" else "2019")
-                        & " reserved word as an identifier",
+                        "using %i vhdl-2019 reserved word as an identifier",
                         +Current_Identifier);
                   end if;
                   Current_Token := Tok_Identifier;

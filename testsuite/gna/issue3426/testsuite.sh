@@ -26,19 +26,19 @@ for w in inherit restrict_guarantee assume_guarantee; do
   GHDL_STD_FLAGS=--std=19 analyze w_$w.vhdl
 done
 
-# 1076-2008 15.10 does not reserve inherit.  The words reserved by 1076-2008
-# remain accepted as identifiers in 2008, for backward compatibility.
+# 1076-2008 15.10 reserves fairness, strong and restrict_guarantee but
+# not inherit.
 mk inherit
 GHDL_STD_FLAGS=--std=08 analyze w_inherit.vhdl
-for w in fairness strong assume_guarantee; do
+for w in fairness strong restrict_guarantee; do
   mk $w
-  GHDL_STD_FLAGS=--std=08 analyze w_$w.vhdl
+  GHDL_STD_FLAGS=--std=08 analyze_failure w_$w.vhdl
 done
-mk restrict_guarantee
-GHDL_STD_FLAGS=--std=08 analyze_failure w_restrict_guarantee.vhdl
+mk assume_guarantee
+GHDL_STD_FLAGS=--std=08 analyze w_assume_guarantee.vhdl
 
-# Older standards still accept the 2019 words, without a warning by default.
-for std in 93 02 08; do
+# Older standards still accept the newer words, without a warning by default.
+for std in 93 02; do
   for w in fairness strong vpkg; do
     mk $w
     "$GHDL" -a --std=$std w_$w.vhdl 2> log.txt
@@ -49,6 +49,13 @@ for std in 93 02 08; do
     fi
   done
 done
+mk vpkg
+"$GHDL" -a --std=08 w_vpkg.vhdl 2> log.txt
+if test -s log.txt; then
+  echo "unexpected output for vpkg (--std=08)"
+  cat log.txt
+  exit 1
+fi
 
 # -Wreserved-word warns about the use of future reserved words.
 for w in fairness strong vpkg; do
@@ -63,9 +70,10 @@ for w in fairness strong vpkg; do
   fi
 done
 
-# inherit remains usable in a verification unit.
-GHDL_STD_FLAGS=--std=08 analyze vunit.vhdl
-GHDL_STD_FLAGS=--std=19 analyze vunit.vhdl
+# inherit remains usable in a verification unit (syntax check only: the
+# code generator does not handle vunit).
+"$GHDL" -s --std=08 vunit.vhdl
+"$GHDL" -s --std=19 vunit.vhdl
 
 clean
 rm -f work-obj*.cf w_*.vhdl log.txt

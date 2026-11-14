@@ -388,6 +388,10 @@ package body Vhdl.Tokens is
             return "vprop";
          when Tok_Vunit =>
             return "vunit";
+         when Tok_Fairness =>
+            return "fairness";
+         when Tok_Strong =>
+            return "strong";
 
          --  AMS-VHDL
          when Tok_Across =>
@@ -453,10 +457,6 @@ package body Vhdl.Tokens is
             return "view";
          when Tok_Vpkg =>
             return "vpkg";
-         when Tok_Fairness =>
-            return "fairness";
-         when Tok_Strong =>
-            return "strong";
 
          --  PSL keywords
          when Tok_Psl_Clock =>

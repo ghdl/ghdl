@@ -257,13 +257,13 @@ package Vhdl.Tokens is
       Tok_Vmode,
       Tok_Vprop,
       Tok_Vunit,
+      Tok_Fairness,
+      Tok_Strong,
 
    --  Added by vhdl 2019
       Tok_Private,
       Tok_View,
       Tok_Vpkg,
-      Tok_Fairness,
-      Tok_Strong,
 
    --  AMS reserved words
       Tok_Across,
