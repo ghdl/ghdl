@@ -1316,8 +1316,51 @@ package body Libraries is
       Unit_Hash_Table (Id) := Unit;
 
       --  Update the analyzed time stamp.
-      Set_Analysis_Time_Stamp (Design_File, Files_Map.Get_Os_Time_Stamp);
+      Set_Analysis_Time_Stamp
+        (Design_File, Get_Analysis_Time_Stamp_Now (Design_File));
    end Add_Design_Unit_Into_Library;
+
+   function Get_Analysis_Time_Stamp_Now (File : Iir_Design_File)
+                                        return Time_Stamp_Id
+   is
+      Res : Time_Stamp_Id;
+      Unit : Iir;
+      List : Iir_List;
+      It : List_Iterator;
+      El : Iir;
+      Dep_File : Iir;
+      Dep_Ts : Time_Stamp_Id;
+   begin
+      Res := Files_Map.Get_Os_Time_Stamp;
+
+      Unit := Get_First_Design_Unit (File);
+      while Unit /= Null_Iir loop
+         if Get_Kind (Unit) = Iir_Kind_Design_Unit then
+            List := Get_Dependence_List (Unit);
+            if List /= Null_Iir_List then
+               It := List_Iterate (List);
+               while Is_Valid (It) loop
+                  El := Get_Element (It);
+                  if Get_Kind (El) = Iir_Kind_Design_Unit then
+                     Dep_File := Get_Design_File (El);
+                     if Dep_File /= File then
+                        Dep_Ts := Get_Analysis_Time_Stamp (Dep_File);
+                        if Dep_Ts /= Null_Time_Stamp
+                          and then Files_Map.Is_Gt (Dep_Ts, Res)
+                        then
+                           Res := Dep_Ts;
+                        end if;
+                     end if;
+                  end if;
+                  Next (It);
+               end loop;
+            end if;
+         end if;
+         Unit := Get_Chain (Unit);
+      end loop;
+
+      return Res;
+   end Get_Analysis_Time_Stamp_Now;
 
    procedure Add_Design_File_Into_Library (File : in out Iir_Design_File)
    is

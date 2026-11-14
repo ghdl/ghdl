@@ -850,7 +850,8 @@ package body Ghdlcomp is
             Date := Get_Date (Lib);
 
             --  Mark this file as analyzed.
-            Set_Analysis_Time_Stamp (File, Files_Map.Get_Os_Time_Stamp);
+            Set_Analysis_Time_Stamp
+              (File, Libraries.Get_Analysis_Time_Stamp_Now (File));
 
             Unit := Get_First_Design_Unit (File);
             while Unit /= Null_Iir loop
