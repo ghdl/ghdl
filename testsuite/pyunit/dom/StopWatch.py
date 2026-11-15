@@ -171,10 +171,3 @@ class CompileOrder(Designs):
         graphML = Path("compileorder.graphml")
         compileOrderFormatter = CompileOrderGraphFormatter(design.CompileOrderGraph)
         compileOrderFormatter.WriteGraphML(graphML)
-
-        # PP = PrettyPrint()
-        # buffer = []
-        # buffer.append("Design:")
-        # for line in PP.formatDesign(design, 1):
-        #     buffer.append(line)
-        # print("\n".join(buffer))
