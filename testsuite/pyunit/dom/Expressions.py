@@ -42,7 +42,7 @@ from pyTooling.Common import firstValue
 from pyGHDL.dom import Expression
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.DesignUnit import Package
-from pyGHDL.dom.Symbol import SimpleObjectOrFunctionCallSymbol
+from pyGHDL.dom.Symbol import SimpleObjectOrFunctionCallSymbol, IndexedObjectOrFunctionCallSymbol
 from pyGHDL.dom.Object import Constant
 from pyGHDL.dom.Expression import InverseExpression, AbsoluteExpression, ConditionExpression
 from pyGHDL.dom.Literal import CharacterLiteral
@@ -101,6 +101,16 @@ class Expressions(TestCase):
         self.assertIsInstance(default, ConditionExpression)
         self.assertIsInstance(default.Operand, CharacterLiteral)
         self.assertEqual("1", default.Operand.Value)
+
+    def test_OperatorSymbolCall(self):
+        """``"and"('0', '1')`` - an operator symbol as function name was rejected as ``Unknown name kind``."""
+        filename: Path = self._root / f"{self.__class__.__name__}_{currentframe().f_code.co_name[5:]}.vhdl"
+
+        default: Expression = self.parse(filename, "constant c0 : bit := \"and\"('0', '1');")
+
+        self.assertIsInstance(default, IndexedObjectOrFunctionCallSymbol)
+        self.assertEqual('"and"', default.Name.Prefix.Identifier)
+        self.assertTrue(default.Name.Prefix.IsOperatorSymbol)
 
     # def test_AbsExpression(self):
     #     filename: Path = self._root / "{className}_{funcName}.vhdl".format(

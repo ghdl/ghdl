@@ -30,8 +30,12 @@
 #
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
+from inspect import currentframe
 from pathlib import Path
+from textwrap import dedent
 from unittest import TestCase
+
+from pyVHDLModel.Formatting.VHDL import VHDLWriter
 
 from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.Misc import Alias
@@ -100,4 +104,65 @@ class Aliases(TestCase):
         alias = pkg.DeclaredItems[6]
 
         self.assertIsInstance(alias, Alias)
-        self.assertIsNotNone(alias.Name)
+        self.assertEqual('"+"', alias.Identifier)
+        self.assertEqual("add", alias.Name.Name.Identifier)
+
+
+class OperatorSymbolAliases(TestCase):
+    """
+    An operator symbol keeps its quotation marks, as alias designator and as aliased name. The alias designator
+    ``"+"`` was read as ``"`` (one character at the opening quotation mark), and an aliased operator symbol raised
+    a ``DOMException``.
+    """
+
+    _root = Path(__file__).resolve().parent
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls._design = Design()
+
+    def parse(self, declarations: str) -> list:
+        testName = currentframe().f_back.f_code.co_name[5:]
+        filename = self._root / f"{self.__class__.__name__}_{testName}.vhdl"
+        sourceCode = dedent("""\
+            package p is
+              function add (a, b : bit) return bit;
+              function "and" (a, b : bit) return bit;
+            {declarations}
+            end package;
+            """).format(declarations=declarations)
+
+        document = Document(filename, sourceCode)
+        self._design.Documents.append(document)
+
+        return document.Packages["p"].DeclaredItems[2:]
+
+    def test_Designator(self) -> None:
+        plus, andAlias = self.parse(
+            "\n".join(
+                [
+                    '  alias "+" is add [bit, bit return bit];',
+                    '  alias "AND" is add [bit, bit return bit];',
+                ]
+            )
+        )
+
+        self.assertEqual('"+"', plus.Identifier)
+        self.assertEqual('"AND"', andAlias.Identifier)
+        self.assertEqual('alias "+" is add;\n', VHDLWriter().Format(plus))
+
+    def test_AliasedName(self) -> None:
+        plus, minus = self.parse(
+            "\n".join(
+                [
+                    '  alias plus is "and" [bit, bit return bit];',
+                    '  alias "-" is "and" [bit, bit return bit];',
+                ]
+            )
+        )
+
+        self.assertEqual("plus", plus.Identifier)
+        self.assertEqual('"and"', plus.Name.Name.Identifier)
+        self.assertTrue(plus.Name.Name.IsOperatorSymbol)
+        self.assertEqual('"-"', minus.Identifier)
+        self.assertEqual('"and"', minus.Name.Name.Identifier)
