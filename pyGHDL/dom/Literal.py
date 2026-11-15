@@ -58,7 +58,7 @@ from pyGHDL.libghdl import name_table, str_table
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes, utils
 from pyGHDL.dom import DOMMixin, DOMException, Position
-from pyGHDL.dom._Utils import GetNameOfNode, GetSourceTextOfNode
+from pyGHDL.dom._Utils import GetNameOfNode, GetSourceTextOfNode, GetDocumentationOfNode
 
 
 @export
@@ -95,14 +95,15 @@ class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Expression.EnumerationLiteral`.
     """
 
-    def __init__(self, node: Iir, value: str) -> None:
+    def __init__(self, node: Iir, value: str, documentation: str = None) -> None:
         """
         Initializes an enumeration literal.
 
-        :param node:  The IIR node this object was translated from.
-        :param value: The enumeration literal's name.
+        :param node:          The IIR node this object was translated from.
+        :param value:         The enumeration literal's name.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
-        super().__init__(value)
+        super().__init__(value, documentation=documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -114,7 +115,8 @@ class EnumerationLiteral(VHDLModel_EnumerationLiteral, DOMMixin):
         :returns:           The translated literal.
         """
         literalName = GetNameOfNode(literalNode)
-        return cls(literalNode, literalName)
+        documentation = GetDocumentationOfNode(literalNode)
+        return cls(literalNode, literalName, documentation)
 
 
 @export
@@ -125,14 +127,15 @@ class CharacterEnumerationLiteral(VHDLModel_CharacterEnumerationLiteral, DOMMixi
     :class:`pyVHDLModel.Expression.CharacterEnumerationLiteral`.
     """
 
-    def __init__(self, node: Iir, value: str) -> None:
+    def __init__(self, node: Iir, value: str, documentation: str = None) -> None:
         """
         Initializes a character enumeration literal.
 
-        :param node:  The IIR node this object was translated from.
-        :param value: The enumeration literal's character, without quotes.
+        :param node:          The IIR node this object was translated from.
+        :param value:         The enumeration literal's character, without quotes.
+        :param documentation: Optional, the documentation comment associated with this declaration.
         """
-        super().__init__(value)
+        super().__init__(value, documentation=documentation)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -145,7 +148,8 @@ class CharacterEnumerationLiteral(VHDLModel_CharacterEnumerationLiteral, DOMMixi
         """
         identifier = nodes.Get_Identifier(literalNode)
         value = name_table.Get_Character(identifier)
-        return cls(literalNode, value)
+        documentation = GetDocumentationOfNode(literalNode)
+        return cls(literalNode, value, documentation)
 
 
 @export
