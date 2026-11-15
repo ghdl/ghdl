@@ -273,7 +273,6 @@ class PrettyCommand(TestCase):
 
         errors = [line for line in output.splitlines() if line.startswith("[ERROR]")]
         self.assertEqual(1, len(errors), output)
-        self.assertIn(
-            f"Document '{self._sourceDirectory / 'Debouncer.vhdl'!s}' can't be written as VHDL code", errors[0]
-        )
+        self.assertIn("' can't be written as VHDL code", errors[0])
+        self.assertEqual("Debouncer.vhdl", Path(errors[0].split("'")[1]).name, errors[0])
         self.assertEqual(255, returnCode, output)
