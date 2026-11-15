@@ -32,7 +32,7 @@
       },
       "serverInfo": {
         "name": "ghdl-ls",
-        "version": "7.0.0-dev"
+        "version": "@VERSION@"
       }
     }
   }
