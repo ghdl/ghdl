@@ -204,7 +204,7 @@ def GetName(node: Iir) -> Name:
     :returns:    A name object.
     """
     kind = GetIirKindOfNode(node)
-    if kind in (nodes.Iir_Kind.Simple_Name, nodes.Iir_Kind.Operator_Symbol):
+    if kind == nodes.Iir_Kind.Simple_Name or kind == nodes.Iir_Kind.Operator_Symbol:
         name = GetNameOfNode(node)
         return SimpleName(node, name)
     elif kind == nodes.Iir_Kind.Selected_Name:
