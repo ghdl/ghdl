@@ -9,6 +9,7 @@ from typing import Optional
 from unittest import TestCase
 from pytest import mark
 
+from pyGHDL import __version__ as pyGHDLVersion
 from pyGHDL.lsp.lsp import LanguageProtocolServer, LSPConn
 
 
@@ -61,7 +62,9 @@ def root_subst(obj, path, uri):
     hard absolute path would make the test suite not portable.  So we use
     the metaname @ROOT@ which should be replaced by the root path of the
     test suite.  Also we need to deal with the windows particularity
-    about URI."""
+    about URI.
+    Likewise, the metaname @VERSION@ of a ``version`` is replaced by pyGHDL's
+    version, which the server reports in its ``serverInfo``."""
     if isinstance(obj, dict):
         for k, v in obj.items():
             if isinstance(v, str):
@@ -70,6 +73,8 @@ def root_subst(obj, path, uri):
                     obj[k] = "file://" + uri + v[13:]
                 elif k in ("rootPath", "message"):
                     obj[k] = v.replace("@ROOT@", path)
+                elif k == "version" and v == "@VERSION@":
+                    obj[k] = pyGHDLVersion
             else:
                 obj[k] = root_subst(v, path, uri)
         return obj
