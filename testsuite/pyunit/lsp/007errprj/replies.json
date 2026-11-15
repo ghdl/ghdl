@@ -29,6 +29,10 @@
         "documentFormattingProvider": false,
         "documentRangeFormattingProvider": true,
         "renameProvider": false
+      },
+      "serverInfo": {
+        "name": "ghdl-ls",
+        "version": "@VERSION@"
       }
     }
   }
