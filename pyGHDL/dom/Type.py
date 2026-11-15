@@ -285,7 +285,7 @@ class PhysicalType(VHDLModel_PhysicalType, DOMMixin):
         rangeKind = GetIirKindOfNode(rangeConstraint)
         if rangeKind == nodes.Iir_Kind.Range_Expression:
             rng = GetRangeFromNode(rangeConstraint)
-        elif rangeKind == nodes.Iir_Kind.Attribute_Name or rangeKind == nodes.Iir_Kind.Parenthesis_Name:
+        elif rangeKind is nodes.Iir_Kind.Attribute_Name or rangeKind is nodes.Iir_Kind.Parenthesis_Name:
             rng = GetName(rangeConstraint)
         else:
             pos = Position.parse(typeDefinitionNode)
