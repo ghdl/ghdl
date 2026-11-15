@@ -127,10 +127,11 @@ def GetNameOfNode(node: Iir) -> str:
     location = nodes.Get_Location(node)
     sourceFile = files_map.Location_To_File(location)
     start = files_map.Location_File_To_Pos(location, sourceFile)
-    if GetIirKindOfNode(node) in (
-        nodes.Iir_Kind.Function_Declaration,
-        nodes.Iir_Kind.Interface_Function_Declaration,
-        nodes.Iir_Kind.Function_Instantiation_Declaration,
+    kind = GetIirKindOfNode(node)
+    if (
+        kind == nodes.Iir_Kind.Function_Declaration
+        or kind == nodes.Iir_Kind.Interface_Function_Declaration
+        or kind == nodes.Iir_Kind.Function_Instantiation_Declaration
     ):
         # libghdl locates the operator symbol of a function designator after its opening quotation mark.
         start -= 1
