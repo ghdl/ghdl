@@ -491,6 +491,24 @@ class CommentAssociation(InMemoryDocumentation):
         self.assertEqual("--! F doc.", function.Documentation)
         self.assertIsNone(function.ParameterItems[0].Documentation)
 
+    def test_GenericSubprogramSameLine(self) -> None:
+        """A same-line comment after a generic subprogram documents it, not its last parameter or the next generic."""
+        document = self.parse("""\
+            package p is
+              generic (
+                type T;
+                function f (x : T) return boolean is <>;  --! F doc.
+                procedure q (y : T) is <>;  --! Q doc.
+                function g (z : T) return boolean is <>  --! G doc.
+              );
+            end package;
+            """)
+        _, f, q, g = document.Packages["p"].GenericItems
+
+        self.assertEqual("--! F doc.", f.Documentation)
+        self.assertEqual("--! Q doc.", q.Documentation)
+        self.assertEqual("--! G doc.", g.Documentation)
+
     def test_EnumSameLine(self) -> None:
         """A same-line comment after an enumerated type documents the type, not its last literal."""
         document = self.parse("""\

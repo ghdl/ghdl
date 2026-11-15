@@ -96,7 +96,7 @@ class Base(TestCase):
             elif k == nodes.Iir_Kind.Component_Declaration:
                 self.checkDecls(nodes.Get_Generic_Chain(decl))
                 self.checkDecls(nodes.Get_Port_Chain(decl))
-            elif k in nodes.Iir_Kinds.Subprogram_Declaration:
+            elif k in nodes.Iir_Kinds.Subprogram_Declaration or k in nodes.Iir_Kinds.Interface_Subprogram_Declaration:
                 self.checkDecls(nodes.Get_Interface_Declaration_Chain(decl))
             elif k == nodes.Iir_Kind.Mode_View_Declaration:
                 self.checkDecls(nodes.Get_Elements_Definition_Chain(decl))
@@ -427,6 +427,9 @@ class Association(Base):
 
     def test_SameLineAfterDeclaration(self) -> None:
         self.checkFileAllAttached(self._root / "comments/samelinedecl.vhdl")
+
+    def test_SameLineAfterInterfaceSubprogram(self) -> None:
+        self.checkFileAllAttached(self._root / "comments/samelineintersubprg.vhdl")
 
     def test_FileHeader(self) -> None:
         self.checkFileAllAttached(self._root / "comments/header.vhdl")

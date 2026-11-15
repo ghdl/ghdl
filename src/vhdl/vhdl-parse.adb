@@ -2642,6 +2642,7 @@ package body Vhdl.Parse is
    --     /subprogram/_name | <>
    function Parse_Interface_Subprogram_Declaration return Iir
    is
+      Start_Loc : constant Location_Type := Get_Token_Location;
       Kind : Iir_Kind;
       Subprg: Iir;
       Old : Iir;
@@ -2696,6 +2697,13 @@ package body Vhdl.Parse is
 
       Parse_Subprogram_Parameters_And_Return
         (Subprg, Kind = Iir_Kind_Interface_Function_Declaration, True);
+
+      --  A comment after the specification (and the default) is for the
+      --  interface subprogram, not for its last parameter (unless it starts
+      --  that line).
+      if Flag_Gather_Comments then
+         Gather_Comments_Line_End (Subprg, Start_Loc);
+      end if;
 
       --  TODO: interface_subprogram_default
       if Current_Token = Tok_Is then
