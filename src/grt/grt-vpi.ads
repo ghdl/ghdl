@@ -69,7 +69,9 @@ package Grt.Vpi is
    vpiRealConst :     constant Integer := 2;
    vpiStringConst :   constant Integer := 6;
 
+   vpiHighConn :      constant Integer := 76;
    vpiLeftRange :     constant Integer := 79;
+   vpiLowConn :       constant Integer := 80;
    vpiRightRange :    constant Integer := 83;
    vpiScope :         constant Integer := 84;
    vpiInternalScope : constant Integer := 92;
