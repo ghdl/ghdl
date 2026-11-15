@@ -34,7 +34,9 @@ from pathlib import Path
 from unittest import TestCase
 
 from pyGHDL.dom.NonStandard import Design, Document
-from pyGHDL.dom.Sequential import WhileLoopStatement, ExitStatement, NextStatement
+from pyVHDLModel.Formatting.VHDL import VHDLWriter
+
+from pyGHDL.dom.Sequential import EndlessLoopStatement, WhileLoopStatement, ExitStatement, NextStatement
 from pyGHDL.dom.Symbol import LoopSymbol
 
 
@@ -135,6 +137,51 @@ end architecture rtl;
         self.assertIsInstance(exitStatement.LoopReference, LoopSymbol)
         self.assertEqual("inner", exitStatement.LoopReference.Name.Identifier)
         self.assertIsNone(exitStatement.Label)
+
+
+class EndlessLoops(TestCase):
+    """
+    A loop statement without iteration scheme is an ``EndlessLoopStatement``; libghdl represents it as a while loop
+    without condition.
+    """
+
+    _root = Path(__file__).resolve().parent
+
+    def test_EndlessLoop(self) -> None:
+        sourceCode = """\
+entity EndlessLoops is
+end entity EndlessLoops;
+
+architecture rtl of EndlessLoops is
+begin
+	process is
+	begin
+		loop
+			exit;
+		end loop;
+		forever : loop
+			wait;
+		end loop;
+	end process;
+end architecture rtl;
+"""
+        design = Design()
+        document = Document(self._root / "EndlessLoops_test.vhdl", sourceCode)
+        design.Documents.append(document)
+
+        process = document.Architectures["endlessloops"]["rtl"].Statements[0]
+        unlabelled, labelled = process.Statements
+
+        self.assertIsInstance(unlabelled, EndlessLoopStatement)
+        self.assertNotIsInstance(unlabelled, WhileLoopStatement)
+        self.assertIsNone(unlabelled.Label)
+        self.assertEqual(1, len(unlabelled.Statements))
+        self.assertIsInstance(unlabelled.Statements[0], ExitStatement)
+        self.assertEqual("loop\n  exit;\nend loop;\n", VHDLWriter().Format(unlabelled))
+
+        self.assertIsInstance(labelled, EndlessLoopStatement)
+        self.assertEqual("forever", labelled.Label)
+        self.assertEqual(1, len(labelled.Statements))
 
 
 class CaseStatements(TestCase):

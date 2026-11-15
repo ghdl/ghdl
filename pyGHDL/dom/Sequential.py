@@ -52,6 +52,7 @@ from pyVHDLModel.Sequential import Case as VHDLModel_Case
 from pyVHDLModel.Sequential import OthersCase as VHDLModel_OthersCase
 from pyVHDLModel.Sequential import IfStatement as VHDLModel_IfStatement
 from pyVHDLModel.Sequential import CaseStatement as VHDLModel_CaseStatement
+from pyVHDLModel.Sequential import EndlessLoopStatement as VHDLModel_EndlessLoopStatement
 from pyVHDLModel.Sequential import ForLoopStatement as VHDLModel_ForLoopStatement
 from pyVHDLModel.Sequential import WhileLoopStatement as VHDLModel_WhileLoopStatement
 from pyVHDLModel.Sequential import NullStatement as VHDLModel_NullStatement
@@ -499,6 +500,49 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
             cases.append(Case.parse(cNode, choices, label))
 
         return cls(caseNode, label, expression, cases)
+
+
+@export
+@InheritDocString(VHDLModel_EndlessLoopStatement, strategy=DocStringMergeStrategy.BaseLast)
+class EndlessLoopStatement(VHDLModel_EndlessLoopStatement, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Sequential.EndlessLoopStatement`.
+    """
+
+    def __init__(
+        self,
+        loopNode: Iir,
+        statements: Iterable[SequentialStatement] = None,
+        label: str = None,
+    ) -> None:
+        """
+        Initializes a :vhdlkw:`loop` statement without iteration scheme.
+
+        :param loopNode:   The IIR node of the :vhdlkw:`loop` statement.
+        :param statements: Optional, list of all sequential statements in this construct.
+        :param label:      Optional, the label of the :vhdlkw:`loop` statement, or ``None`` if it has none.
+        """
+        super().__init__(statements, label)
+        DOMMixin.__init__(self, loopNode)
+
+    @classmethod
+    def parse(cls, loopNode: Iir, label: str) -> Self:
+        """
+        Translates the IIR node of the loop statement to an :class:`EndlessLoopStatement`.
+
+        libghdl represents a :vhdlkw:`loop` statement without iteration scheme as a ``While_Loop_Statement`` without
+        condition.
+
+        :param loopNode: The IIR node of the loop statement.
+        :param label:    The statement's label, or ``None`` if it has none.
+        :returns:        The translated loop statement.
+        """
+        from pyGHDL.dom._Translate import GetSequentialStatementsFromChainedNodes
+
+        statementChain = nodes.Get_Sequential_Statement_Chain(loopNode)
+        statements = GetSequentialStatementsFromChainedNodes(statementChain, "loop", label)
+
+        return cls(loopNode, statements, label)
 
 
 @export
