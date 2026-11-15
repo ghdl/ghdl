@@ -1,0 +1,86 @@
+myentity:
+  port .myentity.top_in lowConn=myentity.top_in highConn=(null)
+  port .myentity.top_out lowConn=myentity.top_out highConn=(null)
+myentity.u1:
+  port .myentity.u1.clk lowConn=myentity.u1.clk highConn=myentity.clk
+  port .myentity.u1.a lowConn=myentity.u1.a highConn=myentity.x
+  port .myentity.u1.b lowConn=myentity.u1.b highConn=myentity.y
+  port .myentity.u1.v lowConn=myentity.u1.v highConn=(null)
+  port .myentity.u1.sum lowConn=myentity.u1.sum highConn=myentity.s1
+myentity.u2:
+  port .myentity.u2.clk lowConn=myentity.u2.clk highConn=myentity.clk
+  port .myentity.u2.a lowConn=myentity.u2.a highConn=myentity.x
+  port .myentity.u2.b lowConn=myentity.u2.b highConn=(null)
+  port .myentity.u2.v lowConn=myentity.u2.v highConn=myentity.nvec
+  port .myentity.u2.sum lowConn=myentity.u2.sum highConn=myentity.s2
+myentity.u3:
+  port .myentity.u3.clk lowConn=myentity.u3.clk highConn=myentity.clk
+  port .myentity.u3.a lowConn=myentity.u3.a highConn=myentity.x
+  port .myentity.u3.b lowConn=myentity.u3.b highConn=myentity.y
+  port .myentity.u3.v lowConn=myentity.u3.v highConn=(null)
+  port .myentity.u3.sum lowConn=myentity.u3.sum highConn=(null)
+myentity.u_wrap:
+  port .myentity.u_wrap.clk lowConn=myentity.u_wrap.clk highConn=myentity.clk
+  port .myentity.u_wrap.x lowConn=myentity.u_wrap.x highConn=myentity.x
+  port .myentity.u_wrap.y lowConn=myentity.u_wrap.y highConn=myentity.y
+  port .myentity.u_wrap.s lowConn=myentity.u_wrap.s highConn=myentity.s3
+myentity.u_wrap.u_in:
+  port .myentity.u_wrap.u_in.clk lowConn=myentity.u_wrap.u_in.clk highConn=myentity.u_wrap.clk
+  port .myentity.u_wrap.u_in.a lowConn=myentity.u_wrap.u_in.a highConn=myentity.u_wrap.x
+  port .myentity.u_wrap.u_in.b lowConn=myentity.u_wrap.u_in.b highConn=myentity.u_wrap.y
+  port .myentity.u_wrap.u_in.v lowConn=myentity.u_wrap.u_in.v highConn=myentity.u_wrap.vec
+  port .myentity.u_wrap.u_in.sum lowConn=myentity.u_wrap.u_in.sum highConn=myentity.u_wrap.s
+myentity.u_inner:
+myentity.u_inner.uc1:
+  port .myentity.u_inner.uc1.r lowConn=myentity.u_inner.uc1.r highConn=(null)
+  port .myentity.u_inner.uc1.r2 lowConn=myentity.u_inner.uc1.r2 highConn=(null)
+  port .myentity.u_inner.uc1.sp lowConn=myentity.u_inner.uc1.sp highConn=(null)
+  port .myentity.u_inner.uc1.sw lowConn=myentity.u_inner.uc1.sw highConn=myentity.u_inner.sbig
+  port .myentity.u_inner.uc1.io lowConn=myentity.u_inner.uc1.io highConn=myentity.u_inner.sio
+  port .myentity.u_inner.uc1.bf lowConn=myentity.u_inner.uc1.bf highConn=myentity.u_inner.sbf
+myentity.u_inner.uc2:
+  port .myentity.u_inner.uc2.r lowConn=myentity.u_inner.uc2.r highConn=myentity.u_inner.rs
+  port .myentity.u_inner.uc2.r2 lowConn=myentity.u_inner.uc2.r2 highConn=myentity.u_inner.rs2
+  port .myentity.u_inner.uc2.sp lowConn=myentity.u_inner.uc2.sp highConn=myentity.u_inner.ssm
+  port .myentity.u_inner.uc2.sw lowConn=myentity.u_inner.uc2.sw highConn=myentity.u_inner.sbig
+  port .myentity.u_inner.uc2.io lowConn=myentity.u_inner.uc2.io highConn=myentity.u_inner.sio
+  port .myentity.u_inner.uc2.bf lowConn=myentity.u_inner.uc2.bf highConn=myentity.u_inner.sbf
+myentity.u_inner.blk:
+myentity.u_inner.blk.ub1:
+  port .myentity.u_inner.blk.ub1.r lowConn=myentity.u_inner.blk.ub1.r highConn=myentity.u_inner.rs
+  port .myentity.u_inner.blk.ub1.r2 lowConn=myentity.u_inner.blk.ub1.r2 highConn=myentity.u_inner.blk.lrs
+  port .myentity.u_inner.blk.ub1.sp lowConn=myentity.u_inner.blk.ub1.sp highConn=myentity.u_inner.ssm
+  port .myentity.u_inner.blk.ub1.sw lowConn=myentity.u_inner.blk.ub1.sw highConn=myentity.u_inner.blk.lsb
+  port .myentity.u_inner.blk.ub1.io lowConn=myentity.u_inner.blk.ub1.io highConn=myentity.u_inner.blk.lio
+  port .myentity.u_inner.blk.ub1.bf lowConn=myentity.u_inner.blk.ub1.bf highConn=myentity.u_inner.sbf
+myentity.u_inner.blk.ub2:
+  port .myentity.u_inner.blk.ub2.r lowConn=myentity.u_inner.blk.ub2.r highConn=myentity.u_inner.blk.lrs
+  port .myentity.u_inner.blk.ub2.r2 lowConn=myentity.u_inner.blk.ub2.r2 highConn=myentity.u_inner.rs2
+  port .myentity.u_inner.blk.ub2.sp lowConn=myentity.u_inner.blk.ub2.sp highConn=myentity.u_inner.ssm
+  port .myentity.u_inner.blk.ub2.sw lowConn=myentity.u_inner.blk.ub2.sw highConn=myentity.u_inner.sbig
+  port .myentity.u_inner.blk.ub2.io lowConn=myentity.u_inner.blk.ub2.io highConn=myentity.u_inner.sio
+  port .myentity.u_inner.blk.ub2.bf lowConn=myentity.u_inner.blk.ub2.bf highConn=myentity.u_inner.blk.lbf
+myentity.u_inner.gen(0):
+myentity.u_inner.gen(0).ug:
+  port .myentity.u_inner.gen(0).ug.r lowConn=myentity.u_inner.gen(0).ug.r highConn=myentity.u_inner.gen(0).lg
+  port .myentity.u_inner.gen(0).ug.r2 lowConn=myentity.u_inner.gen(0).ug.r2 highConn=myentity.u_inner.rs2
+  port .myentity.u_inner.gen(0).ug.sp lowConn=myentity.u_inner.gen(0).ug.sp highConn=myentity.u_inner.ssm
+  port .myentity.u_inner.gen(0).ug.sw lowConn=myentity.u_inner.gen(0).ug.sw highConn=myentity.u_inner.sbig
+  port .myentity.u_inner.gen(0).ug.io lowConn=myentity.u_inner.gen(0).ug.io highConn=myentity.u_inner.sio
+  port .myentity.u_inner.gen(0).ug.bf lowConn=myentity.u_inner.gen(0).ug.bf highConn=myentity.u_inner.gen(0).lbf
+myentity.u_inner.gen(1):
+myentity.u_inner.gen(1).ug:
+  port .myentity.u_inner.gen(1).ug.r lowConn=myentity.u_inner.gen(1).ug.r highConn=myentity.u_inner.gen(1).lg
+  port .myentity.u_inner.gen(1).ug.r2 lowConn=myentity.u_inner.gen(1).ug.r2 highConn=myentity.u_inner.rs2
+  port .myentity.u_inner.gen(1).ug.sp lowConn=myentity.u_inner.gen(1).ug.sp highConn=myentity.u_inner.ssm
+  port .myentity.u_inner.gen(1).ug.sw lowConn=myentity.u_inner.gen(1).ug.sw highConn=myentity.u_inner.sbig
+  port .myentity.u_inner.gen(1).ug.io lowConn=myentity.u_inner.gen(1).ug.io highConn=myentity.u_inner.sio
+  port .myentity.u_inner.gen(1).ug.bf lowConn=myentity.u_inner.gen(1).ug.bf highConn=myentity.u_inner.gen(1).lbf
+myentity.u_inner.ig:
+myentity.u_inner.ig.ui:
+  port .myentity.u_inner.ig.ui.r lowConn=myentity.u_inner.ig.ui.r highConn=myentity.u_inner.rs
+  port .myentity.u_inner.ig.ui.r2 lowConn=myentity.u_inner.ig.ui.r2 highConn=myentity.u_inner.rs2
+  port .myentity.u_inner.ig.ui.sp lowConn=myentity.u_inner.ig.ui.sp highConn=myentity.u_inner.ssm
+  port .myentity.u_inner.ig.ui.sw lowConn=myentity.u_inner.ig.ui.sw highConn=myentity.u_inner.sbig
+  port .myentity.u_inner.ig.ui.io lowConn=myentity.u_inner.ig.ui.io highConn=myentity.u_inner.sio
+  port .myentity.u_inner.ig.ui.bf lowConn=myentity.u_inner.ig.ui.bf highConn=myentity.u_inner.sbf
