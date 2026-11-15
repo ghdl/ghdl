@@ -381,11 +381,11 @@ class Application(TerminalApplication, ArgParseHelperMixin):
                 self.WriteWarning(f"Default library is not set.")
 
             files = []
-            for directoryItem in sorted(d.iterdir()):
+            for directoryItem in d.iterdir():
                 if directoryItem.is_dir():
                     libraryName = directoryItem.name
                     self.WriteNormal(f"Scanning library '{libraryName}' ...")
-                    for file in sorted(directoryItem.glob("**/*.vhd*")):
+                    for file in directoryItem.glob("**/*.vhd*"):
                         self.WriteNormal(f"  Reading file '{file!s}'")
                         self.writeFile(file, 2)
                         fileCount += 1
