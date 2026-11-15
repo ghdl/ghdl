@@ -152,10 +152,7 @@ def find_def(n, loc):
         n_loc = nodes.Get_Location(n)
         if n_loc <= loc <= n_loc + 2:
             return n
-    elif k in (
-        nodes.Iir_Kind.Nand_Operator,
-        nodes.Iir_Kind.Xnor_Operator,
-    ):
+    elif k == nodes.Iir_Kind.Nand_Operator or k == nodes.Iir_Kind.Xnor_Operator:
         # Four characters operators
         n_loc = nodes.Get_Location(n)
         if n_loc <= loc <= n_loc + 3:

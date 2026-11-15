@@ -272,7 +272,10 @@ def GetAssociations(node: Iir) -> List:
     for item in utils.chain_iter(nodes.Get_Association_Chain(node)):
         kind = GetIirKindOfNode(item)
 
-        if kind in (nodes.Iir_Kind.Association_Element_By_Expression, nodes.Iir_Kind.Association_Element_By_Name):
+        if (
+            kind is nodes.Iir_Kind.Association_Element_By_Expression
+            or kind is nodes.Iir_Kind.Association_Element_By_Name
+        ):
             actual = nodes.Get_Actual(item)
             expr = GetExpressionFromNode(actual)
 
@@ -461,7 +464,7 @@ def GetAnonymousTypeFromNode(node: Iir) -> BaseType:
 
         return IntegerType(node, typeName, r, documentation)
 
-    elif kind in (nodes.Iir_Kind.Attribute_Name, nodes.Iir_Kind.Parenthesis_Name):
+    elif kind is nodes.Iir_Kind.Attribute_Name or kind is nodes.Iir_Kind.Parenthesis_Name:
         n = GetName(typeDefinition)
 
         return IntegerType(node, typeName, n, documentation)
@@ -514,10 +517,10 @@ def GetSubtypeIndicationFromIndicationNode(subtypeIndicationNode: Iir, entity: s
         raise ValueError("Parameter 'subtypeIndicationNode' is 'Null_Iir'.")
 
     kind = GetIirKindOfNode(subtypeIndicationNode)
-    if kind in (
-        nodes.Iir_Kind.Simple_Name,
-        nodes.Iir_Kind.Selected_Name,
-        nodes.Iir_Kind.Attribute_Name,
+    if (
+        kind is nodes.Iir_Kind.Simple_Name
+        or kind is nodes.Iir_Kind.Selected_Name
+        or kind is nodes.Iir_Kind.Attribute_Name
     ):
         return GetSimpleTypeFromNode(subtypeIndicationNode)
     elif kind == nodes.Iir_Kind.Subtype_Definition:
@@ -570,10 +573,7 @@ def GetScalarConstrainedSubtypeFromNode(
     rangeKind = GetIirKindOfNode(rangeConstraint)
     if rangeKind == nodes.Iir_Kind.Range_Expression:
         constraint = GetRangeFromNode(rangeConstraint)
-    elif rangeKind in (
-        nodes.Iir_Kind.Attribute_Name,
-        nodes.Iir_Kind.Parenthesis_Name,
-    ):
+    elif rangeKind is nodes.Iir_Kind.Attribute_Name or rangeKind is nodes.Iir_Kind.Parenthesis_Name:
         # A range attribute like `natural range vector'range`.
         constraint = RangeFromName(rangeConstraint, RangeAttributeSymbol(rangeConstraint, GetName(rangeConstraint)))
     else:
@@ -683,16 +683,10 @@ def GetDiscreteRangeFromNode(discreteRangeNode: Iir, entity: str) -> Range:
         # A subtype indication like `integer range 0 to 7`, which keeps its type mark alongside the
         # range constraint.
         return RangeFromName(discreteRangeNode, GetScalarConstrainedSubtypeFromNode(discreteRangeNode))
-    elif rangeKind in (
-        nodes.Iir_Kind.Simple_Name,
-        nodes.Iir_Kind.Selected_Name,
-    ):
+    elif rangeKind is nodes.Iir_Kind.Simple_Name or rangeKind is nodes.Iir_Kind.Selected_Name:
         # A bare type mark like `bit` or `work.pkg.sub`.
         return RangeFromName(discreteRangeNode, GetSimpleTypeFromNode(discreteRangeNode))
-    elif rangeKind in (
-        nodes.Iir_Kind.Attribute_Name,
-        nodes.Iir_Kind.Parenthesis_Name,
-    ):
+    elif rangeKind is nodes.Iir_Kind.Attribute_Name or rangeKind is nodes.Iir_Kind.Parenthesis_Name:
         # A range attribute like `vector'range`.
         return RangeFromName(discreteRangeNode, RangeAttributeSymbol(discreteRangeNode, GetName(discreteRangeNode)))
 
@@ -826,7 +820,7 @@ def GetModeViewElementsFromChainedNodes(nodeChain: Iir) -> Generator[ModeViewEle
         kind = GetIirKindOfNode(element)
         if kind == nodes.Iir_Kind.Simple_Mode_View_Element:
             parseMethod = SimpleModeViewElement.parse
-        elif kind in (nodes.Iir_Kind.Array_Mode_View_Element, nodes.Iir_Kind.Record_Mode_View_Element):
+        elif kind is nodes.Iir_Kind.Array_Mode_View_Element or kind is nodes.Iir_Kind.Record_Mode_View_Element:
             parseMethod = CompositeModeViewElement.parse
         else:
             position = Position.parse(element)

@@ -442,10 +442,7 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
             choiceKind = GetIirKindOfNode(alternative)
             sameAlternative = nodes.Get_Same_Alternative_Flag(alternative)
 
-            if choiceKind in (
-                nodes.Iir_Kind.Choice_By_Name,
-                nodes.Iir_Kind.Choice_By_Expression,
-            ):
+            if choiceKind is nodes.Iir_Kind.Choice_By_Name or choiceKind is nodes.Iir_Kind.Choice_By_Expression:
                 choiceExpression = GetExpressionFromNode(nodes.Get_Choice_Expression(alternative))
 
                 choice = IndexedChoice(alternative, choiceExpression)
@@ -458,9 +455,9 @@ class CaseStatement(VHDLModel_CaseStatement, DOMMixin):
                 choiceRangeKind = GetIirKindOfNode(choiceRange)
                 if choiceRangeKind == nodes.Iir_Kind.Range_Expression:
                     rng = GetRangeFromNode(choiceRange)
-                elif choiceRangeKind in (
-                    nodes.Iir_Kind.Attribute_Name,
-                    nodes.Iir_Kind.Parenthesis_Name,
+                elif (
+                    choiceRangeKind is nodes.Iir_Kind.Attribute_Name
+                    or choiceRangeKind is nodes.Iir_Kind.Parenthesis_Name
                 ):
                     rng = GetName(choiceRange)
                 else:

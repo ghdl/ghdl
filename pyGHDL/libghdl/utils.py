@@ -261,10 +261,7 @@ def declarations_iter(n) -> Generator[Any, None, None]:
             elif k1 == nodes.Iir_Kind.Signal_Attribute_Declaration:
                 # Not a declaration
                 pass
-            elif k1 in (
-                nodes.Iir_Kind.Type_Declaration,
-                nodes.Iir_Kind.Anonymous_Type_Declaration,
-            ):
+            elif k1 == nodes.Iir_Kind.Type_Declaration or k1 == nodes.Iir_Kind.Anonymous_Type_Declaration:
                 yield n1
                 # Handle nested declarations: record elements, physical units,
                 # enumeration literals...
@@ -371,10 +368,10 @@ def concurrent_stmts_iter(n) -> Generator[Any, None, None]:
     elif k == nodes.Iir_Kind.Design_Unit:
         for n1 in concurrent_stmts_iter(nodes.Get_Library_Unit(n)):
             yield n1
-    elif k in (
-        nodes.Iir_Kind.Entity_Declaration,
-        nodes.Iir_Kind.Architecture_Body,
-        nodes.Iir_Kind.Block_Statement,
+    elif (
+        k == nodes.Iir_Kind.Entity_Declaration
+        or k == nodes.Iir_Kind.Architecture_Body
+        or k == nodes.Iir_Kind.Block_Statement
     ):
         for n1 in chain_iter(nodes.Get_Concurrent_Statement_Chain(n)):
             yield n1

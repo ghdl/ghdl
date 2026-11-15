@@ -224,7 +224,7 @@ def get_symbols(fe, n):
     #    children.extend(get_symbols_chain(fe, nodes.Get_Port_Chain(n)))
     # if nodes_meta.Has_Interface_Declaration_Chain(k):
     #    children.extend(get_symbols_chain(fe, nodes.Get_Interface_Declaration_Chain(n)))
-    if k in (nodes.Iir_Kind.Package_Declaration, nodes.Iir_Kind.Package_Body):
+    if k == nodes.Iir_Kind.Package_Declaration or k == nodes.Iir_Kind.Package_Body:
         children.extend(get_symbols_chain(fe, nodes.Get_Declaration_Chain(n)))
     if nodes_meta.Has_Concurrent_Statement_Chain(k):
         children.extend(get_symbols_chain(fe, nodes.Get_Concurrent_Statement_Chain(n)))
