@@ -55,14 +55,14 @@ from pyTooling.TerminalUI import TerminalApplication, Severity
 from pyVHDLModel import VHDLVersion
 from pyVHDLModel.Formatting.VHDL import VHDLWriter
 
-from pyGHDL import GHDLBaseException, __version__, __copyright__, __author__
+import pyGHDL
+from pyGHDL import GHDLBaseException
 from pyGHDL.libghdl import LibGHDLException
 from pyGHDL.dom import DOMException
 from pyGHDL.dom.NonStandard import Design, Document
 
 __maintainer__ = "Tristan Gingold"
 __status__ = "Alpha"
-__license__ = ""
 
 
 class SourceAttribute(Attribute):
@@ -164,7 +164,8 @@ class Application(TerminalApplication, ArgParseHelperMixin):
     sub-command the user asked for.
     """
 
-    HeadLine = "pyGHDL.dom - Test Application"
+    HEADLINE = "pyGHDL.dom - Test Application"
+    DUNDER_MODULE = pyGHDL
 
     # load platform information (Windows, Linux, Darwin, ...)
     __PLATFORM = platform_system()
@@ -239,15 +240,6 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         """
         return self.__PLATFORM
 
-    def PrintHeadline(self):
-        """
-        Print the application's headline banner.
-        """
-        self.WriteNormal(dedent("""\
-                {HEADLINE}{line}
-                {headline: ^80s}
-                {line}""").format(line="=" * 80, headline=self.HeadLine, **TerminalApplication.FOREGROUND))
-
     # ============================================================================
     # Common commands
     # ============================================================================
@@ -269,8 +261,8 @@ class Application(TerminalApplication, ArgParseHelperMixin):
 
         :param _: The parsed arguments, unused.
         """
-        self.PrintHeadline()
-        self.MainParser.print_help()
+        self._PrintHeadline()
+        self._PrintHelp()
 
         self.WriteNormal("")
         self.Exit()
@@ -286,17 +278,8 @@ class Application(TerminalApplication, ArgParseHelperMixin):
 
         :param args: The parsed arguments, carrying the optional command name.
         """
-        self.PrintHeadline()
-
-        if args.Command is None:
-            self.MainParser.print_help()
-        elif args.Command == "help":
-            self.WriteError("This is a recursion ...")
-        else:
-            try:
-                self.SubParsers[args.Command].print_help()
-            except KeyError:
-                self.WriteError(f"Command {args.Command} is unknown.")
+        self._PrintHeadline()
+        self._PrintHelp(args.Command)
 
         self.WriteNormal("")
         self.Exit()
@@ -305,24 +288,14 @@ class Application(TerminalApplication, ArgParseHelperMixin):
     # create the sub-parser for the "version" command
     # ----------------------------------------------------------------------------
     @CommandHandler("version", help="Display tool and version information.")
-    def HandleInfo(self, args):
+    def HandleVersion(self, args):
         """
-        Handle the ``version`` sub-command: print copyright, license and authors.
+        Handle the ``version`` sub-command: print the headline, copyright, license, authors and version.
 
         :param args: The parsed arguments, unused.
         """
-        self.PrintHeadline()
-
-        copyrights = __copyright__.split("\n", 1)
-        self.WriteNormal(f"Copyright:  {copyrights[0]}")
-        for copyright in copyrights[1:]:
-            self.WriteNormal(f"            {copyright}")
-        self.WriteNormal(f"License:    {__license__}")
-        authors = __author__.split(", ")
-        self.WriteNormal(f"Authors:    {authors[0]}")
-        for author in authors[1:]:
-            self.WriteNormal(f"            {author}")
-        self.WriteNormal(f"Version:    {__version__}")
+        self._PrintHeadline()
+        self._PrintVersion()
         self.Exit()
 
     # ----------------------------------------------------------------------------
@@ -349,7 +322,7 @@ class Application(TerminalApplication, ArgParseHelperMixin):
         :param args: The parsed arguments, carrying the selected files, directory, default library, VHDL version and tab
                      size.
         """
-        self.PrintHeadline()
+        self._PrintHeadline()
 
         if args.Std is not None or args.TabSize is not None:
             try:
