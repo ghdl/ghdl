@@ -17,8 +17,10 @@ show_ports (vpiHandle scope)
   while (iter != NULL && (port = vpi_scan (iter)) != NULL) {
     vpiHandle low = vpi_handle (vpiLowConn, port);
     vpiHandle high = vpi_handle (vpiHighConn, port);
-    vpi_printf ("  port %s lowConn=%s", vpi_get_str (vpiName, port),
-                fullname (low));
+    /* One vpi_get_str per call: the returned string is in a buffer that
+       the next call reuses.  */
+    vpi_printf ("  port %s", vpi_get_str (vpiName, port));
+    vpi_printf (" lowConn=%s", fullname (low));
     vpi_printf (" highConn=%s\n", fullname (high));
   }
 
