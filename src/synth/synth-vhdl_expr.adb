@@ -1398,6 +1398,9 @@ package body Synth.Vhdl_Expr is
            (Ctxt, Inp, Step * El_Typ.W, Max,
             Inp_W + Width (Clog2 (Uns64 (Step * El_Typ.W))));
          Set_Location (Inp, Name);
+         --  The static part of the offset was computed in elements (like
+         --  STEP); the offsets of a value are in bits.
+         Off.Net_Off := Off.Net_Off * El_Typ.W;
          Error := False;
       end if;
    end Synth_Slice_Suffix;
