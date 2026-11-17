@@ -1684,26 +1684,22 @@ package body Synth.Environment is
            and then Same_Net (Get_Driver (Get_Mux2_I0 (N1_Inst)), N (0))
          then
             declare
-               N1_Net : Net;
-               N1_Sel : Input;
                N1_Sel_Net : Net;
             begin
-               N1_Net := Get_Output (N1_Inst, 0);
-               N1_Sel := Get_Input (N1_Inst, 0);
-               N1_Sel_Net := Get_Driver (N1_Sel);
-               if not Is_Connected (N1_Net) then
-                  --  If the previous mux2 is not used, just modify it.
-                  Res := N1_Net;
-                  Disconnect (N1_Sel);
-                  N1_Sel_Net := Build2_Canon_And (Ctxt, Sel, N1_Sel_Net, True);
-                  Set_Location (N1_Sel_Net, Loc);
-                  Connect (N1_Sel, N1_Sel_Net);
-               else
-                  Res := Build2_Canon_And (Ctxt, Sel, N1_Sel_Net, True);
-                  Set_Location (Res, Loc);
-                  Res := Build_Mux2
-                    (Ctxt, Res, N (0), Get_Driver (Get_Mux2_I1 (N1_Inst)));
-               end if;
+               --  Always build a new mux2.  The previous mux2 must not be
+               --  modified in place: having no sink (not Is_Connected) does
+               --  not mean it is unused, as its output can still be the
+               --  current value of another wire (variable or signal) of the
+               --  environment, eg:
+               --    g := (s1 ? x : y);  c := (s2 ? g : y);  o1 <= g;
+               --  Modifying the mux of G in place would also change G.
+               --  If the previous mux2 is really unused, it will be removed
+               --  by the cleanup pass.
+               N1_Sel_Net := Get_Driver (Get_Mux2_Sel (N1_Inst));
+               Res := Build2_Canon_And (Ctxt, Sel, N1_Sel_Net, True);
+               Set_Location (Res, Loc);
+               Res := Build_Mux2
+                 (Ctxt, Res, N (0), Get_Driver (Get_Mux2_I1 (N1_Inst)));
             end;
          elsif not Flags.Flag_Debug_Nomemory1
            and then Get_Id (N1_Inst) = Id_Dyn_Insert
