@@ -1,0 +1,3 @@
+clk rising at 5000000 fs
+cbReadOnlySynch at 5000000 fs: x=0
+x changed to 1 at 6000000 fs
