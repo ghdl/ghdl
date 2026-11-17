@@ -33,6 +33,7 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # ============================================================================
 #
+from os                       import environ
 from pathlib                  import Path
 from setuptools               import setup, Distribution
 
@@ -68,34 +69,37 @@ if libGHDLDirectory.exists():
     additional["include_package_data"] = True
     additional["distclass"] = BinaryDistribution
 
-setup(
-    **DescribePythonPackageHostedOnGitHub(
-        packageName=packageName,
-        description="Python binding for GHDL and high-level APIs (incl. LSP).",
-        license=GPL_2_0_or_later,
-        gitHubNamespace=gitHubNamespace,
-        sourceFileWithVersion=packageInformationFile,
-        requirementsFile=requirementsFile,
-        pythonVersions=("3.11", "3.12", "3.13", "3.14", "3.15"),
-        developmentStatus="beta",
-        classifiers=[
-            "Operating System :: MacOS",
-            "Operating System :: Microsoft :: Windows :: Windows 11",
-            "Operating System :: POSIX :: Linux",
-            "Intended Audience :: Developers",
-            "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
-            "Topic :: Software Development :: Code Generators",
-            "Topic :: Software Development :: Compilers",
-            "Topic :: Software Development :: Testing",
-            "Topic :: Utilities",
-        ],
-        consoleScripts={
-            "ghdl-ls":  "pyGHDL.cli.lsp:main",
-            "ghdl-dom": "pyGHDL.cli.dom:main"
-        },
-        dataFiles={
-            packageName: [str(file.relative_to(sourceDirectory)) for file in dataFiles]
-        }
-    ),
-    **additional,
+packageDescription = DescribePythonPackageHostedOnGitHub(
+    packageName=packageName,
+    description="Python binding for GHDL and high-level APIs (incl. LSP).",
+    license=GPL_2_0_or_later,
+    gitHubNamespace=gitHubNamespace,
+    sourceFileWithVersion=packageInformationFile,
+    requirementsFile=requirementsFile,
+    pythonVersions=("3.11", "3.12", "3.13", "3.14", "3.15"),
+    developmentStatus="beta",
+    classifiers=[
+        "Operating System :: MacOS",
+        "Operating System :: Microsoft :: Windows :: Windows 11",
+        "Operating System :: POSIX :: Linux",
+        "Intended Audience :: Developers",
+        "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+        "Topic :: Software Development :: Code Generators",
+        "Topic :: Software Development :: Compilers",
+        "Topic :: Software Development :: Testing",
+        "Topic :: Utilities",
+    ],
+    consoleScripts={
+        "ghdl-ls":  "pyGHDL.cli.lsp:main",
+        "ghdl-dom": "pyGHDL.cli.dom:main"
+    },
+    dataFiles={
+        packageName: [str(file.relative_to(sourceDirectory)) for file in dataFiles]
+    }
 )
+
+# Distribution version computed by the CI pipeline (e.g. a nightly build); '__version__' stays GHDL's version.
+if (distributionVersion := environ.get("PYGHDL_DISTRIBUTION_VERSION", "")) != "":
+    packageDescription["version"] = distributionVersion
+
+setup(**packageDescription, **additional)

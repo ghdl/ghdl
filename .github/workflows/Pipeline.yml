@@ -211,10 +211,10 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - {icon: '🐧', name: 'Ubuntu',  image: 'ubuntu-24.04', libgnat: '13', libghdl_artifact: 'ubuntu-24.04-x86_64', pyghdl_artifact: 'Ubuntu-24.04-x86_64'}
-          - {icon: '🐧', name: 'Ubuntu',  image: 'ubuntu-26.04', libgnat: '14', libghdl_artifact: 'ubuntu-26.04-x86_64', pyghdl_artifact: 'Ubuntu-26.04-x86_64'}
-###       - {icon: '🍏', name: 'macOS',   image: 'macos-15',     libgnat: '',   libghdl_artifact: 'macos-15-aarch64',    pyghdl_artifact: 'macOS-15-aarch64'   }
-          - {icon: '🪟', name: 'Windows', image: 'windows-2025', libgnat: '',   libghdl_artifact: 'MSYS2-ucrt64',        pyghdl_artifact: 'Windows-x86_64'     }
+          - {icon: '🐧', name: 'Ubuntu',  image: 'ubuntu-24.04', libgnat: '13', libghdl_artifact: 'ubuntu-24.04-x86_64', pyghdl_artifact: 'Ubuntu-24.04-x86_64', manylinux: true }
+          - {icon: '🐧', name: 'Ubuntu',  image: 'ubuntu-26.04', libgnat: '14', libghdl_artifact: 'ubuntu-26.04-x86_64', pyghdl_artifact: 'Ubuntu-26.04-x86_64', manylinux: false}
+###       - {icon: '🍏', name: 'macOS',   image: 'macos-15',     libgnat: '',   libghdl_artifact: 'macos-15-aarch64',    pyghdl_artifact: 'macOS-15-aarch64',    manylinux: false}
+          - {icon: '🪟', name: 'Windows', image: 'windows-2025', libgnat: '',   libghdl_artifact: 'MSYS2-ucrt64',        pyghdl_artifact: 'Windows-x86_64',      manylinux: false}
         py:
           - {icon: '🟠', version: '3.11'}
           - {icon: '🟡', version: '3.12'}
@@ -228,7 +228,7 @@ jobs:
           - {os: {image: 'ubuntu-26.04'}, py: {version: '3.11'}}
           - {os: {image: 'ubuntu-26.04'}, py: {version: '3.12'}}
         include:
-          - {os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', libghdl_artifact: 'MSYS2-ucrt64',  pyghdl_artifact: 'Windows-ucrt64',  libgnat: ''}, py: {icon: '🟢', version: '3.14'}, other: {runtime: 'ucrt64' }}
+          - {os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', libghdl_artifact: 'MSYS2-ucrt64',  pyghdl_artifact: 'Windows-ucrt64',  libgnat: '', manylinux: false}, py: {icon: '🟢', version: '3.14'}, other: {runtime: 'ucrt64' }}
     with:
       os_name:               ${{ matrix.os.name }}
       os_image:              ${{ matrix.os.image }}
@@ -238,6 +238,8 @@ jobs:
       python_version:        ${{ matrix.py.version }}
       libghdl_artifact:      ${{ needs.Params.outputs.libghdl_basename }}-${{ matrix.os.libghdl_artifact }}
       pyghdl_artifact:       ${{ needs.Params.outputs.pyghdl_basename }}-${{ matrix.os.pyghdl_artifact }}-Python-${{ matrix.py.version }}
+      pyghdl_version:        ${{ needs.Params.outputs.pyghdl_version }}
+      manylinux:             ${{ matrix.os.manylinux }}
       unittest_xml_artifact: 'pyGHDL-Unittest-XML'
     secrets: inherit
 
@@ -448,6 +450,85 @@ jobs:
       inventory-version:    ${{ needs.Params.outputs.ghdl_version }}
       inventory-categories: *categories
       assets:               *assetList
+
+  PublishOnPyPI:
+    name: 📤 Publish pyGHDL ${{ needs.Params.outputs.pyghdl_version }} on PyPI
+    runs-on: ubuntu-24.04
+    needs:
+      - Params
+      - pyGHDL
+      - Nightly
+      - Release
+    if: >-
+      ${{ !failure() && !cancelled()
+       && github.repository == 'ghdl/ghdl'
+       && (needs.Params.outputs.is_release_tag == 'true' || needs.Params.outputs.is_nightly_tag == 'true')
+      }}
+    environment:
+      name: pypi
+      url:  https://pypi.org/project/pyGHDL/${{ needs.Params.outputs.pyghdl_version }}/
+    permissions:
+      id-token: write
+
+    steps:
+      - name: 📥 Download manylinux wheels (Ubuntu 24.04)
+        uses: pyTooling/download-artifact@v8
+        with:
+          pattern:        ${{ needs.Params.outputs.pyghdl_basename }}-Ubuntu-24.04-x86_64-Python-*-manylinux
+          merge-multiple: true
+          path:           dist
+
+      - name: 📥 Download Windows wheels
+        uses: pyTooling/download-artifact@v8
+        with:
+          pattern:        ${{ needs.Params.outputs.pyghdl_basename }}-Windows-x86_64-Python-*
+          merge-multiple: true
+          path:           dist
+
+      - name: 🔍 Check wheels
+        run: |
+          ls -lAh dist
+          python -m pip install --disable-pip-version-check twine packaging
+
+          python - "${{ needs.Params.outputs.pyghdl_version }}" "${{ needs.Params.outputs.is_release_tag }}" "${{ needs.Params.outputs.version }}" <<'PYEOF'
+          import sys
+          from pathlib            import Path
+          from packaging.utils    import parse_wheel_filename
+          from packaging.version  import Version
+
+          expected = Version(sys.argv[1])
+          if sys.argv[2] == "true" and Version(sys.argv[3]) != expected:
+              print(f"::error title=Version::Release tag '{sys.argv[3]}' doesn't match pyGHDL version '{expected}'.")
+              sys.exit(1)
+
+          wheels = sorted(Path("dist").glob("*.whl"))
+          if len(wheels) == 0:
+              print("::error title=Wheels::No wheels downloaded.")
+              sys.exit(1)
+
+          errors = 0
+          for wheel in wheels:
+              _, version, _, tags = parse_wheel_filename(wheel.name)
+              platforms = {tag.platform for tag in tags}
+              if version != expected:
+                  print(f"::error title=Version::Wheel '{wheel.name}' has version '{version}', expected '{expected}'.")
+                  errors += 1
+              elif not all(platform.startswith("manylinux") or platform == "win_amd64" for platform in platforms):
+                  print(f"::error title=Platform::Wheel '{wheel.name}' has platform tags {sorted(platforms)} not accepted by PyPI.")
+                  errors += 1
+              else:
+                  print(f"OK  {wheel.name}")
+
+          sys.exit(1 if errors > 0 else 0)
+          PYEOF
+
+          twine check --strict dist/*.whl
+
+      - name: 📤 Upload wheels to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir:  dist/
+          skip-existing: true
 
   Test-SetupGHDL:
 #    name: ${{ matrix.icon }} Setup GHDL ${{ matrix.backend }} on ${{ matrix.os_name }}
