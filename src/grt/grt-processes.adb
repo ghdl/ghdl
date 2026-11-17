@@ -1200,6 +1200,7 @@ package body Grt.Processes is
 
          if Has_Callbacks (Hooks.Cb_End_Of_Time_Step) then
             Call_Callbacks (Hooks.Cb_End_Of_Time_Step);
+            Flush_Active_Chain;
             Tn := Compute_Next_Time;
          end if;
 
