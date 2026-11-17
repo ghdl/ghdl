@@ -227,6 +227,13 @@ package body Synth.Vhdl_Stmts is
                Error_Msg_Synth (Syn_Inst, Pfx, "nested memory not supported");
             end if;
 
+            --  Keep the static part of the slice offset (the remainder of
+            --  the constant term modulo the step, computed by
+            --  Synth_Extract_Dyn_Suffix).  Without it, a dynamic slice
+            --  like V(Idx)(K*I+C+W-1 downto K*I+C) with C mod K /= 0 is
+            --  read/written at V(Idx)(K*I+W-1 downto K*I).
+            Dest_Off := Dest_Off + Sl_Off;
+
             Dest_Dyn.Voff := Build_Addidx
               (Get_Build (Syn_Inst), Sl_Voff, Dest_Dyn.Voff);
             Set_Location (Dest_Dyn.Voff, Pfx);
