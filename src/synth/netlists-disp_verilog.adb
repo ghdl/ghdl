@@ -668,11 +668,32 @@ package body Netlists.Disp_Verilog is
       end if;
    end Disp_Extract;
 
+   --  Return True if synchronous memory ports A and B (Id_Mem_Rd_Sync or
+   --  Id_Mem_Wr_Sync) are clocked by the same edge of the same clock.
+   function Same_Mem_Clock (A, B : Instance) return Boolean
+   is
+      Ca : constant Net := Get_Input_Net (A, 2);
+      Cb : constant Net := Get_Input_Net (B, 2);
+      Ea, Eb : Instance;
+   begin
+      if Ca = Cb then
+         return True;
+      end if;
+      Ea := Get_Net_Parent (Ca);
+      Eb := Get_Net_Parent (Cb);
+      return Get_Id (Ea) in Edge_Module_Id
+        and then Get_Id (Ea) = Get_Id (Eb)
+        and then Get_Input_Net (Ea, 0) = Get_Input_Net (Eb, 0);
+   end Same_Mem_Clock;
+
    procedure Disp_Memory (Mem : Instance)
    is
       Ports : constant Net := Get_Output (Mem, 0);
       Port : Net;
       Port_Inst : Instance;
+      Port2 : Net;
+      Port2_Inst : Instance;
+      Seen : Boolean;
       S : Net;
       Data_W : Width;
       Depth : Uns32;
@@ -741,28 +762,77 @@ package body Netlists.Disp_Verilog is
          end;
       end if;
 
+      --  The order of the ports in the chain is the order of action (see
+      --  Id_Memory in netlists-gates.ads), as in the VHDL writer where all
+      --  the ports are statements of one process acting on a variable:
+      --  a write port before a read port on the same edge means the read
+      --  returns the new data (write-first), a read port before a write
+      --  port means it returns the old data (read-first).
+      --  Emitting one always block per port with non-blocking assignments
+      --  loses that order: every synchronous read then returns the old
+      --  data.  So put all the synchronous ports clocked by the same edge
+      --  in one always block, in chain order, use blocking assignments for
+      --  the writes to the memory (so that following reads in the block see
+      --  them) and non-blocking assignments for the read registers.
       Port := Ports;
       loop
          Port_Inst := Get_Input_Parent (Get_First_Sink (Port));
          case Get_Id (Port_Inst) is
-            when Id_Mem_Wr_Sync =>
-               Disp_Template
-                 ("  \a0always @(\ei2)" & NL &
-                  "    if (\i3)" & NL, Port_Inst);
-               Disp_Template
-                 ("      \l0", Mem);
-               Disp_Template ("[\i1] <= \i4;" & NL, Port_Inst);
             when Id_Mem_Rd =>
                Disp_Template ("  assign \o1 = ", Port_Inst);
                Disp_Template ("\l0", Mem);
                Disp_Template ("[\i1];" & NL, Port_Inst);
-            when Id_Mem_Rd_Sync =>
-               Disp_Template
-                 ("  \a0always @(\ei2)" & NL &
-                  "    if (\i3)" & NL &
-                  "      \o1 <= ", Port_Inst);
-               Disp_Template ("\l0", Mem);
-               Disp_Template ("[\i1];" & NL, Port_Inst);
+            when Id_Mem_Wr_Sync
+              | Id_Mem_Rd_Sync =>
+               --  Already displayed if an earlier port has the same clock.
+               Seen := False;
+               Port2 := Ports;
+               while Port2 /= Port loop
+                  Port2_Inst := Get_Input_Parent (Get_First_Sink (Port2));
+                  if Get_Id (Port2_Inst) /= Id_Mem_Rd
+                    and then Same_Mem_Clock (Port2_Inst, Port_Inst)
+                  then
+                     Seen := True;
+                     exit;
+                  end if;
+                  Port2 := Get_Output (Port2_Inst, 0);
+               end loop;
+
+               if not Seen then
+                  Disp_Template
+                    ("  \a0always @(\ei2)" & NL &
+                     "    begin" & NL, Port_Inst);
+                  Port2 := Port;
+                  loop
+                     Port2_Inst := Get_Input_Parent (Get_First_Sink (Port2));
+                     case Get_Id (Port2_Inst) is
+                        when Id_Mem_Wr_Sync =>
+                           if Same_Mem_Clock (Port2_Inst, Port_Inst) then
+                              Disp_Template
+                                ("      if (\i3)" & NL, Port2_Inst);
+                              Disp_Template ("        \l0", Mem);
+                              Disp_Template
+                                ("[\i1] = \i4;" & NL, Port2_Inst);
+                           end if;
+                        when Id_Mem_Rd_Sync =>
+                           if Same_Mem_Clock (Port2_Inst, Port_Inst) then
+                              Disp_Template
+                                ("      if (\i3)" & NL &
+                                 "        \o1 <= ", Port2_Inst);
+                              Disp_Template ("\l0", Mem);
+                              Disp_Template ("[\i1];" & NL, Port2_Inst);
+                           end if;
+                        when Id_Mem_Rd =>
+                           null;
+                        when Id_Memory
+                          | Id_Memory_Init =>
+                           exit;
+                        when others => raise Internal_Error;
+                     end case;
+                     Port2 := Get_Output (Port2_Inst, 0);
+                  end loop;
+                  Wr_Line ("    end");
+               end if;
             when Id_Memory
               | Id_Memory_Init =>
                exit;
