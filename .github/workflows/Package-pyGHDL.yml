@@ -44,11 +44,6 @@ on:
         description: 'Version of the pyGHDL distribution (wheel).'
         required: true
         type: string
-      manylinux:
-        description: 'Repair the Linux wheel to a manylinux wheel (libgnat included) and upload it as an additional artifact.'
-        required: false
-        default: false
-        type: boolean
       pyunit_testsuites:
         description: 'Name of the pyunit testsuites.'
         required: false
@@ -102,8 +97,14 @@ jobs:
           name: ${{ inputs.libghdl_artifact }}-${{ inputs.backend }}
           path: install
 
-      - name: Copy libghdl files (Ubuntu, MSYS2)
-        if: startsWith(inputs.os_image, 'ubuntu') || (startsWith(inputs.os_image, 'windows') && inputs.runtime != '')
+      - name: Copy libghdl files (Ubuntu)
+        if: startsWith(inputs.os_image, 'ubuntu')
+        run: |
+          cp -r -v install/lib/* pyGHDL/lib
+          rm -v pyGHDL/lib/libgnat-*.so
+
+      - name: Copy libghdl files (MSYS2)
+        if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
         run: |
           cp -r -v install/lib/* pyGHDL/lib
 
@@ -115,46 +116,34 @@ jobs:
       - name: 📦 Build Python package (binary distribution - wheel) (MSYS2)
         if: inputs.runtime != ''
         shell: "msys2 {0}"
-        run: PYGHDL_DISTRIBUTION_VERSION="${{ inputs.pyghdl_version }}" python setup.py bdist_wheel
+        env:
+          PYGHDL_DISTRIBUTION_VERSION: "${{ inputs.pyghdl_version }}"
+        run: python setup.py bdist_wheel
 
       - name: 📦 Build Python package (binary distribution - wheel) (Linux, Windows)
         if: inputs.runtime == ''
         shell: bash
-        run: PYGHDL_DISTRIBUTION_VERSION="${{ inputs.pyghdl_version }}" python setup.py bdist_wheel
+        env:
+          PYGHDL_DISTRIBUTION_VERSION: "${{ inputs.pyghdl_version }}"
+        run: python setup.py bdist_wheel
 
-      - name: '📤 Upload artifact: ${{ inputs.pyghdl_artifact }}'
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ inputs.pyghdl_artifact }}
-          path: dist/pyghdl*.whl
-          if-no-files-found: error
-
-      - name: 🔧 Repair wheel to a manylinux wheel (Linux)
-        if: inputs.manylinux && startsWith(inputs.os_image, 'ubuntu')
+      - name: 🔧 Repair wheel to a manylinux wheel (Ubuntu)
+        if: startsWith(inputs.os_image, 'ubuntu')
         run: |
           sudo apt-get install -y --no-install-recommends libgnat-${{ inputs.libgnat }}
           python -m pip install --disable-pip-version-check auditwheel patchelf
 
           auditwheel show dist/pyghdl-*.whl
           auditwheel repair --wheel-dir wheelhouse dist/pyghdl-*.whl
-          ls -lAh wheelhouse
+          rm -v dist/pyghdl-*.whl
+          mv -v wheelhouse/pyghdl-*.whl dist/
+          ls -lAh dist
 
-      - name: 🧪 Import the manylinux wheel without libgnat installed (Linux)
-        if: inputs.manylinux && startsWith(inputs.os_image, 'ubuntu')
-        run: |
-          sudo apt-get remove -y libgnat-${{ inputs.libgnat }}
-
-          python -m venv "${RUNNER_TEMP}/manylinux"
-          "${RUNNER_TEMP}/manylinux/bin/python" -m pip install --disable-pip-version-check wheelhouse/pyghdl-*.whl
-          cd "${RUNNER_TEMP}"
-          "${RUNNER_TEMP}/manylinux/bin/python" -c "import pyGHDL.libghdl; print(f'libghdl loaded from: {pyGHDL.libghdl._get_libghdl_path()}')"
-
-      - name: '📤 Upload artifact: ${{ inputs.pyghdl_artifact }}-manylinux'
-        if: inputs.manylinux && startsWith(inputs.os_image, 'ubuntu')
+      - name: '📤 Upload artifact: ${{ inputs.pyghdl_artifact }}'
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ inputs.pyghdl_artifact }}-manylinux
-          path: wheelhouse/pyghdl*.whl
+          name: ${{ inputs.pyghdl_artifact }}
+          path: dist/pyghdl*.whl
           if-no-files-found: error
 
   Test:
@@ -250,7 +239,6 @@ jobs:
       - name: 🔧 Install dependencies (Ubuntu)
         if: startsWith(inputs.os_image, 'ubuntu')
         run: |
-          sudo apt-get install -y --no-install-recommends libgnat-${{ inputs.libgnat }}
           python -m pip install -v --disable-pip-version-check ./wheels/pyghdl-*.whl
           python -m pip install --disable-pip-version-check -r testsuite/requirements.txt
 
