@@ -168,7 +168,7 @@ if [[ $COMMAND -le 1 ]]; then
 	printf "\n"
 	printf "%s\n" "Libraries:"
 	printf "%s\n" "  -a --all                     Compile all Intel simulation libraries."
-	printf "%s\n" "     --intel                   Compile the Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim."
+	printf "%s\n" "     --altera                  Compile the Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim."
 	printf "%s\n" "     --max                     Compile the Intel Max device libraries."
 	printf "%s\n" "     --cyclone                 Compile the Intel Cyclone device libraries."
 	printf "%s\n" "     --arria                   Compile the Intel Arria device libraries."
