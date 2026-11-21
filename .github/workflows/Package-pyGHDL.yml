@@ -44,6 +44,11 @@ on:
         description: 'Version of the pyGHDL distribution (wheel).'
         required: true
         type: string
+      package:
+        description: 'Build the pyghdl artifact. If false, test the pyghdl artifact built by another job.'
+        required: false
+        default: true
+        type: boolean
       pyunit_testsuites:
         description: 'Name of the pyunit testsuites.'
         required: false
@@ -59,6 +64,7 @@ jobs:
   Package:
     name: '🐍${{ inputs.python_icon }} Package pyGHDL for ${{ inputs.os_name }} and Python ${{ inputs.python_version }}'
     runs-on: ${{ inputs.os_image }}
+    if: inputs.package
     outputs:
       pyghdl_artifact: ${{ inputs.pyghdl_artifact }}
 
@@ -151,6 +157,8 @@ jobs:
     runs-on: ${{ inputs.os_image }}
     needs:
       - Package
+    if: >-
+      !failure() && !cancelled()
 
     steps:
       - name: '⏬ Checkout'
@@ -410,7 +418,7 @@ jobs:
         if: inputs.unittest_xml_artifact != ''
         continue-on-error: true
         with:
-          name: ${{ inputs.unittest_xml_artifact }}-${{ inputs.os_name }}-${{ inputs.python_version }}
+          name: ${{ inputs.unittest_xml_artifact }}-${{ inputs.os_image }}-${{ inputs.runtime || 'native' }}-${{ inputs.python_version }}
           working-directory: report/unit
           path: TestReportSummary.xml
           if-no-files-found: error
