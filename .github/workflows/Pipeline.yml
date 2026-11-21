@@ -31,8 +31,8 @@ jobs:
 #   pyGHDL-typing-
 
 # after PyPI upload
-#   pyGHDL-PyPI-
 #   pyGHDL-Windows-
+#   pyGHDL-Ubuntu-
 
   Params:
     uses: ./.github/workflows/Parameters.yml
@@ -42,7 +42,6 @@ jobs:
       package_name:   'ghdl'
       library_name:   'libghdl'
       pyghdl_name:    'pyGHDL'
-      pypi_name:      'pyGHDL-PyPI'
 #      testsuites:     'sanity'         # disable parameter to fall back to 'all'
 
   macOS:
@@ -212,9 +211,9 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - {icon: '🐧', name: 'Ubuntu',  image: 'ubuntu-24.04', libgnat: '13', libghdl_artifact: 'ubuntu-24.04-x86_64', pyghdl_artifact: 'Linux-x86_64',     pypi: true }  # build with an older Ubuntu 24.04, thus glibc 2.38 is used for manylinux_2_38 wheels
-###       - {icon: '🍏', name: 'macOS',   image: 'macos-15',     libgnat: '',   libghdl_artifact: 'macos-15-aarch64',    pyghdl_artifact: 'macOS-15-aarch64', pypi: false}
-          - {icon: '🪟', name: 'Windows', image: 'windows-2025', libgnat: '',   libghdl_artifact: 'MSYS2-ucrt64',        pyghdl_artifact: 'Windows-x86_64',   pypi: true }
+          - {icon: '🐧', name: 'Ubuntu',  image: 'ubuntu-24.04', libgnat: '13', libghdl_artifact: 'ubuntu-24.04-x86_64', pyghdl_artifact: 'Ubuntu-24.04-x86_64'}  # build with an older Ubuntu 24.04, thus glibc 2.38 is used for manylinux_2_38 wheels
+###       - {icon: '🍏', name: 'macOS',   image: 'macos-15',     libgnat: '',   libghdl_artifact: 'macos-15-aarch64',    pyghdl_artifact: 'macOS-15-aarch64'   }
+          - {icon: '🪟', name: 'Windows', image: 'windows-2025', libgnat: '',   libghdl_artifact: 'MSYS2-ucrt64',        pyghdl_artifact: 'Windows-x86_64'     }
         py:
           - {icon: '🟠', version: '3.11'}
           - {icon: '🟡', version: '3.12'}
@@ -225,7 +224,7 @@ jobs:
         other:
           - {runtime: ''}
         include:
-          - {os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', libghdl_artifact: 'MSYS2-ucrt64',  pyghdl_artifact: 'Windows-ucrt64',  libgnat: '', pypi: false}, py: {icon: '🟢', version: '3.14'}, other: {runtime: 'ucrt64' }}
+          - {os: {icon: '🪟🟨', name: 'Windows', image: 'windows-2025', libghdl_artifact: 'MSYS2-ucrt64',  pyghdl_artifact: 'Windows-ucrt64',  libgnat: ''}, py: {icon: '🟢', version: '3.14'}, other: {runtime: 'ucrt64' }}
     with:
       os_name:               ${{ matrix.os.name }}
       os_image:              ${{ matrix.os.image }}
@@ -234,36 +233,10 @@ jobs:
       python_icon:           ${{ matrix.py.icon }}
       python_version:        ${{ matrix.py.version }}
       libghdl_artifact:      ${{ needs.Params.outputs.libghdl_basename }}-${{ matrix.os.libghdl_artifact }}
-      pyghdl_artifact:       ${{ matrix.os.pypi && needs.Params.outputs.pypi_basename || needs.Params.outputs.pyghdl_basename }}-${{ matrix.os.pyghdl_artifact }}-Python-${{ matrix.py.version }}
+      pyghdl_artifact:       ${{ needs.Params.outputs.pyghdl_basename }}-${{ matrix.os.pyghdl_artifact }}-Python-${{ matrix.py.version }}
       pyghdl_version:        ${{ needs.Params.outputs.pyghdl_version }}
-      unittest_xml_artifact: 'pyGHDL-Unittest-XML'
-    secrets: inherit
-
-  pyGHDL-Compatibility:
-    uses: ./.github/workflows/Package-pyGHDL.yml
-    needs:
-      - Params
-      - pyGHDL
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - {icon: '🐧', name: 'Ubuntu 26.04', image: 'ubuntu-26.04', libgnat: '14', libghdl_artifact: 'ubuntu-26.04-x86_64', pyghdl_artifact: 'Linux-x86_64'}
-        py:
-          - {icon: '🟢', version: '3.13'}
-          - {icon: '🟢', version: '3.14'}
-          - {icon: '🟢', version: '3.15'}
-    with:
-      os_name:               ${{ matrix.os.name }}
-      os_image:              ${{ matrix.os.image }}
-      libgnat:               ${{ matrix.os.libgnat }}
-      runtime:               ''
-      python_icon:           ${{ matrix.py.icon }}
-      python_version:        ${{ matrix.py.version }}
-      libghdl_artifact:      ${{ needs.Params.outputs.libghdl_basename }}-${{ matrix.os.libghdl_artifact }}
-      pyghdl_artifact:       ${{ needs.Params.outputs.pypi_basename }}-${{ matrix.os.pyghdl_artifact }}-Python-${{ matrix.py.version }}
-      pyghdl_version:        ${{ needs.Params.outputs.pyghdl_version }}
-      package:               false
+      # Ubuntu 24.04 wheels are also tested on Ubuntu 26.04 (Python 3.13 and newer)
+      test_images:           ${{ (matrix.os.image == 'ubuntu-24.04' && contains(fromJson('["3.13", "3.14", "3.15"]'), matrix.py.version)) && '["ubuntu-24.04", "ubuntu-26.04"]' || '' }}
       unittest_xml_artifact: 'pyGHDL-Unittest-XML'
     secrets: inherit
 
@@ -289,7 +262,6 @@ jobs:
     uses: pyTooling/Actions/.github/workflows/PublishTestResults.yml@r9
     needs:
       - pyGHDL
-      - pyGHDL-Compatibility
       - PublishTestsuiteResults
     if: always()
     with:
@@ -425,16 +397,16 @@ jobs:
         ghdl-Pacman-ucrt64-llvm-jit:            mingw-w64-ucrt-x86_64-ghdl-llvm-jit-%pacghdl%-any.pkg.tar.zst:ghdl,windows,2025,x86-64,ucrt64,llvm-jit:        GHDL - v%ghdl% - MSYS2/UCRT64 - LLVM-JIT backend
         ghdl-Pacman-ucrt64-mcode:               mingw-w64-ucrt-x86_64-ghdl-mcode-%pacghdl%-any.pkg.tar.zst:   ghdl,windows,2025,x86-64,ucrt64,mcode:           GHDL - v%ghdl% - MSYS2/UCRT64 - mcode backend
         ghdl-Windows-ucrt64-mcode:             !ghdl-mcode-%ghdl%-ucrt64.zip:                                 ghdl,windows,2025,x86-64,native,mcode:           GHDL - v%ghdl% - Windows (x86-64, UCRT64, standalone) - mcode backend
-        pyGHDL-PyPI-Linux-x86_64-Python-3.11:   pyghdl-%pyghdl%-cp311-cp311-manylinux_2_38_x86_64.whl:        pyGHDL,ubuntu,24.04,x86-64,py3.11,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.11
-        pyGHDL-PyPI-Linux-x86_64-Python-3.12:   pyghdl-%pyghdl%-cp312-cp312-manylinux_2_38_x86_64.whl:        pyGHDL,ubuntu,24.04,x86-64,py3.12,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.12
-        pyGHDL-PyPI-Linux-x86_64-Python-3.13:   pyghdl-%pyghdl%-cp313-cp313-manylinux_2_38_x86_64.whl:        pyGHDL,ubuntu,24.04,x86-64,py3.13,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.13
-        pyGHDL-PyPI-Linux-x86_64-Python-3.14:   pyghdl-%pyghdl%-cp314-cp314-manylinux_2_38_x86_64.whl:        pyGHDL,ubuntu,24.04,x86-64,py3.14,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.14
-        pyGHDL-PyPI-Linux-x86_64-Python-3.15:   pyghdl-%pyghdl%-cp315-cp315-manylinux_2_38_x86_64.whl:        pyGHDL,ubuntu,24.04,x86-64,py3.15,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.15
-        pyGHDL-PyPI-Windows-x86_64-Python-3.11: pyghdl-%pyghdl%-cp311-cp311-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.11,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.11
-        pyGHDL-PyPI-Windows-x86_64-Python-3.12: pyghdl-%pyghdl%-cp312-cp312-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.12,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.12
-        pyGHDL-PyPI-Windows-x86_64-Python-3.13: pyghdl-%pyghdl%-cp313-cp313-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.13,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.13
-        pyGHDL-PyPI-Windows-x86_64-Python-3.14: pyghdl-%pyghdl%-cp314-cp314-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.14,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.14
-        pyGHDL-PyPI-Windows-x86_64-Python-3.15: pyghdl-%pyghdl%-cp315-cp315-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.15,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.15
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.11: pyghdl-%pyghdl%-cp311-cp311-manylinux_2_38_x86_64.whl:        pyGHDL,ubuntu,24.04,x86-64,py3.11,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.11
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.12: pyghdl-%pyghdl%-cp312-cp312-manylinux_2_38_x86_64.whl:        pyGHDL,ubuntu,24.04,x86-64,py3.12,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.12
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.13: pyghdl-%pyghdl%-cp313-cp313-manylinux_2_38_x86_64.whl:        pyGHDL,ubuntu,24.04,x86-64,py3.13,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.13
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.14: pyghdl-%pyghdl%-cp314-cp314-manylinux_2_38_x86_64.whl:        pyGHDL,ubuntu,24.04,x86-64,py3.14,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.14
+        pyGHDL-Ubuntu-24.04-x86_64-Python-3.15: pyghdl-%pyghdl%-cp315-cp315-manylinux_2_38_x86_64.whl:        pyGHDL,ubuntu,24.04,x86-64,py3.15,native,mcode:  pyGHDL - v%ghdl% - Ubuntu 24.04 (x86-64, LTS) - Wheel for Python 3.15
+        pyGHDL-Windows-x86_64-Python-3.11:      pyghdl-%pyghdl%-cp311-cp311-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.11,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.11
+        pyGHDL-Windows-x86_64-Python-3.12:      pyghdl-%pyghdl%-cp312-cp312-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.12,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.12
+        pyGHDL-Windows-x86_64-Python-3.13:      pyghdl-%pyghdl%-cp313-cp313-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.13,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.13
+        pyGHDL-Windows-x86_64-Python-3.14:      pyghdl-%pyghdl%-cp314-cp314-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.14,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.14
+        pyGHDL-Windows-x86_64-Python-3.15:      pyghdl-%pyghdl%-cp315-cp315-win_amd64.whl:                    pyGHDL,windows,2025,x86-64,py3.15,native,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) - Wheel for Python 3.15
         pyGHDL-Windows-ucrt64-Python-3.14:      pyghdl-%pyghdl%-cp314-cp314-mingw_x86_64_ucrt_gnu.whl:        pyGHDL,windows,2025,x86-64,py3.14,ucrt64,mcode:  pyGHDL - v%ghdl% - Windows (x86-64) + MSYS2/UCRT64 - Wheel for Python 3.14
 
   Release:
@@ -477,7 +449,6 @@ jobs:
     needs:
       - Params
       - pyGHDL
-      - pyGHDL-Compatibility
       - Nightly
       - Release
     if: >-
@@ -492,10 +463,10 @@ jobs:
       id-token: write
 
     steps:
-      - name: 📥 Download wheels '${{ needs.Params.outputs.pypi_basename }}-*'
+      - name: 📥 Download wheels '${{ needs.Params.outputs.pyghdl_basename }}-*-Python-*'
         uses: pyTooling/download-artifact@v8
         with:
-          pattern:        ${{ needs.Params.outputs.pypi_basename }}-*
+          pattern:        ${{ needs.Params.outputs.pyghdl_basename }}-*-Python-*
           merge-multiple: true
           path:           dist
 
@@ -526,6 +497,9 @@ jobs:
               if version != expected:
                   print(f"::error title=Version::Wheel '{wheel.name}' has version '{version}', expected '{expected}'.")
                   errors += 1
+              elif all(platform.startswith("mingw_") for platform in platforms):
+                  print(f"::notice title=Platform::Wheel '{wheel.name}' is not uploaded: PyPI doesn't accept platform tags {sorted(platforms)}.")
+                  wheel.unlink()
               elif not all(platform.startswith("manylinux") or platform == "win_amd64" for platform in platforms):
                   print(f"::error title=Platform::Wheel '{wheel.name}' has platform tags {sorted(platforms)} not accepted by PyPI.")
                   errors += 1
