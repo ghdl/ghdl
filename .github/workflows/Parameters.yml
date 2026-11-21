@@ -57,6 +57,10 @@ on:
         description: 'Base-name of all pyghdl artifacts.'
         required: true
         type: string
+      pypi_name:
+        description: 'Base-name of all pyghdl artifacts published on PyPI.'
+        required: true
+        type: string
       testsuites:
         description: "List of GHDL testsuites to execute while testing (space separated). Alternatively: 'all' or 'none'"
         required: false
@@ -154,6 +158,9 @@ on:
       pyghdl_basename:
         description: "Artifact basename for pyghdl."
         value: ${{ inputs.pyghdl_name }}
+      pypi_basename:
+        description: "Artifact basename for pyghdl wheels published on PyPI."
+        value: ${{ inputs.pypi_name }}
       testsuites:
         description: "List of GHDL testsuites to execute while testing (space separated)."
         value: ${{ jobs.Parameters.outputs.testsuites }}
