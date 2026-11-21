@@ -57,6 +57,10 @@ on:
         description: 'Base-name of all pyghdl artifacts.'
         required: true
         type: string
+      pypi_name:
+        description: 'Base-name of all pyghdl artifacts published on PyPI.'
+        required: true
+        type: string
       testsuites:
         description: "List of GHDL testsuites to execute while testing (space separated). Alternatively: 'all' or 'none'"
         required: false
@@ -154,6 +158,9 @@ on:
       pyghdl_basename:
         description: "Artifact basename for pyghdl."
         value: ${{ inputs.pyghdl_name }}
+      pypi_basename:
+        description: "Artifact basename for pyghdl wheels published on PyPI."
+        value: ${{ inputs.pypi_name }}
       testsuites:
         description: "List of GHDL testsuites to execute while testing (space separated)."
         value: ${{ jobs.Parameters.outputs.testsuites }}
@@ -568,6 +575,8 @@ jobs:
     steps:
       - name: '⏬ Checkout'
         uses: actions/checkout@v7
+        with:
+          fetch-tags: true
 
       - name: Generate 'params' and 'python_jobs'
         id: params
@@ -591,7 +600,14 @@ jobs:
             pacghdl_version="${ghdl_version}-${pacmanPackageRelease}"
             setup_version="${ghdl_version}"
           elif [[ "${ghdl_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-dev$ ]]; then
-            pyghdl_version="${ghdl_version/-dev/.dev0}"
+            # pyGHDL development version: newest release, UTC commit time as 4th number, marked as development release.
+            latestRelease="$(git tag --list 'v[0-9]*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
+            if [[ -z "${latestRelease}" ]]; then
+              printf -- '::error title=%s::%s\n' "Parameters" "No release tag 'vX.Y.Z' found to derive the pyGHDL development version."
+              exit 1
+            fi
+            commitTime="$(TZ=UTC0 git log -1 --format='%cd' --date='format-local:%Y%m%d%H%M')"
+            pyghdl_version="${latestRelease#v}.${commitTime}.dev0"
             pacghdl_version="${ghdl_version/-dev/.dev}-${pacmanPackageRelease}"
             setup_version="nightly"
           elif [[ "${ghdl_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+$ ]]; then

@@ -40,6 +40,15 @@ on:
         description: 'Name of the pyghdl artifact.'
         required: true
         type: string
+      pyghdl_version:
+        description: 'Version of the pyGHDL distribution (wheel).'
+        required: true
+        type: string
+      package:
+        description: 'Build the pyghdl artifact. If false, test the pyghdl artifact built by another job.'
+        required: false
+        default: true
+        type: boolean
       pyunit_testsuites:
         description: 'Name of the pyunit testsuites.'
         required: false
@@ -55,6 +64,7 @@ jobs:
   Package:
     name: '🐍${{ inputs.python_icon }} Package pyGHDL for ${{ inputs.os_name }} and Python ${{ inputs.python_version }}'
     runs-on: ${{ inputs.os_image }}
+    if: inputs.package
     outputs:
       pyghdl_artifact: ${{ inputs.pyghdl_artifact }}
 
@@ -93,8 +103,14 @@ jobs:
           name: ${{ inputs.libghdl_artifact }}-${{ inputs.backend }}
           path: install
 
-      - name: Copy libghdl files (Ubuntu, MSYS2)
-        if: startsWith(inputs.os_image, 'ubuntu') || (startsWith(inputs.os_image, 'windows') && inputs.runtime != '')
+      - name: Copy libghdl files (Ubuntu)
+        if: startsWith(inputs.os_image, 'ubuntu')
+        run: |
+          cp -r -v install/lib/* pyGHDL/lib
+          rm -v pyGHDL/lib/libgnat-*.so
+
+      - name: Copy libghdl files (MSYS2)
+        if: startsWith(inputs.os_image, 'windows') && inputs.runtime != ''
         run: |
           cp -r -v install/lib/* pyGHDL/lib
 
@@ -106,11 +122,28 @@ jobs:
       - name: 📦 Build Python package (binary distribution - wheel) (MSYS2)
         if: inputs.runtime != ''
         shell: "msys2 {0}"
+        env:
+          PYGHDL_DISTRIBUTION_VERSION: "${{ inputs.pyghdl_version }}"
         run: python setup.py bdist_wheel
 
       - name: 📦 Build Python package (binary distribution - wheel) (Linux, Windows)
         if: inputs.runtime == ''
+        shell: bash
+        env:
+          PYGHDL_DISTRIBUTION_VERSION: "${{ inputs.pyghdl_version }}"
         run: python setup.py bdist_wheel
+
+      - name: 🔧 Repair wheel to a manylinux wheel (Ubuntu)
+        if: startsWith(inputs.os_image, 'ubuntu')
+        run: |
+          sudo apt-get install -y --no-install-recommends libgnat-${{ inputs.libgnat }}
+          python -m pip install --disable-pip-version-check auditwheel patchelf
+
+          auditwheel show dist/pyghdl-*.whl
+          auditwheel repair --wheel-dir wheelhouse dist/pyghdl-*.whl
+          rm -v dist/pyghdl-*.whl
+          mv -v wheelhouse/pyghdl-*.whl dist/
+          ls -lAh dist
 
       - name: '📤 Upload artifact: ${{ inputs.pyghdl_artifact }}'
         uses: actions/upload-artifact@v7
@@ -124,6 +157,8 @@ jobs:
     runs-on: ${{ inputs.os_image }}
     needs:
       - Package
+    if: >-
+      !failure() && !cancelled()
 
     steps:
       - name: '⏬ Checkout'
@@ -212,7 +247,6 @@ jobs:
       - name: 🔧 Install dependencies (Ubuntu)
         if: startsWith(inputs.os_image, 'ubuntu')
         run: |
-          sudo apt-get install -y --no-install-recommends libgnat-${{ inputs.libgnat }}
           python -m pip install -v --disable-pip-version-check ./wheels/pyghdl-*.whl
           python -m pip install --disable-pip-version-check -r testsuite/requirements.txt
 
@@ -384,7 +418,7 @@ jobs:
         if: inputs.unittest_xml_artifact != ''
         continue-on-error: true
         with:
-          name: ${{ inputs.unittest_xml_artifact }}-${{ inputs.os_name }}-${{ inputs.python_version }}
+          name: ${{ inputs.unittest_xml_artifact }}-${{ inputs.os_image }}-${{ inputs.runtime || 'native' }}-${{ inputs.python_version }}
           working-directory: report/unit
           path: TestReportSummary.xml
           if-no-files-found: error
