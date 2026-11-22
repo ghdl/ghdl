@@ -720,6 +720,7 @@ package body Elab.Vhdl_Objtypes is
       Sz : Size_Type;
       Res : Type_Acc;
       Is_Static : Boolean;
+      Need_Pass2 : Boolean;
    begin
       --  Layout the record.
       if Parent_Typ = null then
@@ -733,40 +734,45 @@ package body Elab.Vhdl_Objtypes is
       Al := 0;
       Sz := 0;
       Is_Static := True;
+      Need_Pass2 := False;
       --  First elements with static types...
       for I in Els.E'Range loop
          declare
             El : Rec_El_Type renames Els.E (I);
             El_Static : Boolean;
+            Base_Static : Boolean;
          begin
+            El_Static := El.Typ.Is_Static;
+            Is_Static := Is_Static and El_Static;
+
             if Base_Els = null then
-               El_Static := El.Typ.Is_Static;
+               Base_Static := El_Static;
             else
-               El_Static := Base_Els.E (I).Typ.Is_Static;
+               Base_Static := Base_Els.E (I).Typ.Is_Static;
             end if;
 
-            if El_Static then
+            if Base_Static then
                Layout_Element_Mem (El, Sz, Al);
             else
-               Is_Static := False;
+               Need_Pass2 := True;
             end if;
          end;
       end loop;
 
       --  ... then the others.
-      if not Is_Static then
+      if Need_Pass2 then
          for I in Els.E'Range loop
             declare
                El : Rec_El_Type renames Els.E (I);
-               El_Static : Boolean;
+               Base_Static : Boolean;
             begin
                if Base_Els = null then
-                  El_Static := El.Typ.Is_Static;
+                  Base_Static := El.Typ.Is_Static;
                else
-                  El_Static := Base_Els.E (I).Typ.Is_Static;
+                  Base_Static := Base_Els.E (I).Typ.Is_Static;
                end if;
 
-               if not El_Static then
+               if not Base_Static then
                   Layout_Element_Mem (El, Sz, Al);
                end if;
             end;
