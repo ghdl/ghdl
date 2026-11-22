@@ -1009,8 +1009,8 @@ package body Netlists.Disp_Verilog is
                               "    \o0 = \Ci2;" & NL, Inst);
             end if;
          when Id_Dlatch =>
-            Disp_Template ("  \a0always @(\i1)" & NL &
-                             "    \o0 <= \i0;" & NL, Inst);
+            Disp_Template ("  \a0always @*" & NL &
+                           "    if (\i1) \o0 <= \i0;" & NL, Inst);
          when Id_Mux2 =>
             Disp_Template ("  assign \o0 = \i0 ? \a0\i2 : \i1;" & NL, Inst);
          when Id_Mux4 =>
