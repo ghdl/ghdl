@@ -26,8 +26,8 @@ traditionally, hardware designs are continuously running devices which do not ha
 context, inspection and verification of the behaviour is done through :wikipedia:`waveforms <Waveform_viewer>`,
 which is supported by `GHDL` (see :ref:`export_waves`). You can use either :option:`--wave`, :option:`--vcd`,
 :option:`--vcdgz` or :option:`--fst` to save the signals of the simulation to a file. Then, terminate the execution
-(:kbd:`C-c`) and you can inspect the wave with a viewer, such as `GtkWave <http://gtkwave.sourceforge.net/>`_. As
-explained in the `manual <http://gtkwave.sourceforge.net/gtkwave.pdf>`_, GtkWave *'relies on a post-mortem approach
+(:kbd:`C-c`) and you can inspect the wave with a viewer, such as `GTKWave <http://gtkwave.sourceforge.net/>`_. As
+explained in the `manual <http://gtkwave.sourceforge.net/gtkwave.pdf>`_, GTKWave *'relies on a post-mortem approach
 through the use of dumpfiles'*. Therefore, you should first simulate your design and dump a waveform file, say GHW:
 
 .. code-block:: shell
