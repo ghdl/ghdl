@@ -805,9 +805,9 @@ package body textio is
 	  end case;
       end case;
     end loop;
-    deallocate (l);
-    l := new string'("");
-    if cur_state /= leading then
+    if cur_state = digits then
+      deallocate (l);
+      l := new string'("");
       good := true;
       value := val;
     else
