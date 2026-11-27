@@ -1,3 +1,7 @@
+## [2026-11-27] 6.1
+
+- Major update in pyGHDL
+
 ## [2026-03-07] 6.0
 
 - Initial support of vhdl2019 (with --std=19)
