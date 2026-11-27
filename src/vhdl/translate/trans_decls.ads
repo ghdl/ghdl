@@ -186,6 +186,8 @@ package Trans_Decls is
    Ghdl_Deref : O_Dnode;
    Ghdl_Malloc : O_Dnode;
    Ghdl_Malloc0 : O_Dnode;
+   Ghdl_Index_Mul : O_Dnode;
+   Ghdl_Index_Add : O_Dnode;
    Ghdl_Free_Mem : O_Dnode;
    Ghdl_Real_Exp : O_Dnode;
    Ghdl_I32_Exp : O_Dnode;

@@ -1206,10 +1206,9 @@ package body Trans.Chap3 is
          El_Size := Get_Subtype_Size (El_Type, Mnode_Null, Kind);
       end if;
 
-      --  Compute size.
-      Size := New_Dyadic_Op
-        (ON_Mul_Ov,
-         El_Size,
+      --  Compute size (reported if it reaches 4 GB, see #2052).
+      Size := Gen_Index_Mul
+        (El_Size,
          Get_Bounds_Length (Layout_To_Bounds (Layout), Def));
 
       --  Set size.
@@ -1666,8 +1665,7 @@ package body Trans.Chap3 is
                end if;
 
                New_Assign_Stmt (New_Obj (Off_Var),
-                                New_Dyadic_Op (ON_Add_Ov,
-                                               New_Obj_Value (Off_Var),
+                                Gen_Index_Add (New_Obj_Value (Off_Var),
                                                El_Size));
             end if;
          end;
@@ -2994,7 +2992,7 @@ package body Trans.Chap3 is
          if Dim = 1 then
             Res := Dim_Length;
          else
-            Res := New_Dyadic_Op (ON_Mul_Ov, Res, Dim_Length);
+            Res := Gen_Index_Mul (Res, Dim_Length);
          end if;
       end loop;
       return Res;
@@ -3373,8 +3371,8 @@ package body Trans.Chap3 is
                   Bounds1 := Bounds;
                   El_Sz := Get_Subtype_Size (El_Type, Mnode_Null, Kind);
                end if;
-               return New_Dyadic_Op
-                 (ON_Mul_Ov, Chap3.Get_Bounds_Length (Bounds1, Atype), El_Sz);
+               return Gen_Index_Mul
+                 (Chap3.Get_Bounds_Length (Bounds1, Atype), El_Sz);
             end;
          when Type_Mode_Unbounded_Record =>
             return New_Value (Sizes_To_Size (Layout_To_Sizes (Bounds), Kind));

@@ -23,11 +23,21 @@ __gnat_last_chance_handler (void)
   abort ();
 }
 
+/* Defined in grt-errors.adb: report the failure and exit.  Does not
+   return.  Without this, a failed allocation returns a null pointer that
+   the caller stores through straight away, and the simulation dies on
+   SIGSEGV blaming "NULL access dereferenced" -- pointing the user at
+   their design rather than at the machine running out of memory.
+   See #812, #1111 and #2052.  */
+extern void __ghdl_out_of_memory (void);
+
 void *
 __gnat_malloc (size_t size)
 {
   void *res;
   res = malloc (size);
+  if (res == NULL && size != 0)
+    __ghdl_out_of_memory ();
   return res;
 }
 
@@ -40,7 +50,11 @@ __gnat_free (void *ptr)
 void *
 __gnat_realloc (void *ptr, size_t size)
 {
-  return realloc (ptr, size);
+  void *res;
+  res = realloc (ptr, size);
+  if (res == NULL && size != 0)
+    __ghdl_out_of_memory ();
+  return res;
 }
 
 /* Unused imported symbols with gcc 8.1. */

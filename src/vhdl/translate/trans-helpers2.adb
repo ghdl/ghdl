@@ -123,6 +123,26 @@ package body Trans.Helpers2 is
       New_Procedure_Call (Constr);
    end Gen_Memcpy;
 
+   function Gen_Index_Mul (L : O_Enode; R : O_Enode) return O_Enode
+   is
+      Constr : O_Assoc_List;
+   begin
+      Start_Association (Constr, Ghdl_Index_Mul);
+      New_Association (Constr, L);
+      New_Association (Constr, R);
+      return New_Function_Call (Constr);
+   end Gen_Index_Mul;
+
+   function Gen_Index_Add (L : O_Enode; R : O_Enode) return O_Enode
+   is
+      Constr : O_Assoc_List;
+   begin
+      Start_Association (Constr, Ghdl_Index_Add);
+      New_Association (Constr, L);
+      New_Association (Constr, R);
+      return New_Function_Call (Constr);
+   end Gen_Index_Add;
+
    function Gen_Alloc
      (Kind : Allocation_Kind; Size : O_Enode; Ptype : O_Tnode) return O_Enode
    is

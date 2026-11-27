@@ -23,6 +23,7 @@ with Name_Table;
 with Types_Utils;
 
 with Bug;
+with Simple_IO;
 
 with Netlists.Errors;
 with Netlists.Disp_Common;
@@ -126,6 +127,11 @@ package body Libghdl_Synth is
    exception
       when Option_Error
         | Errorout.Compilation_Error =>
+         return No_Module;
+      when Storage_Error =>
+         Simple_IO.Put_Line_Err
+           ("ghdl:error: out of memory -- the design requires more "
+            & "memory than is available on this machine");
          return No_Module;
       when E: others =>
          --  Avoid possible issues with exceptions...
