@@ -15,6 +15,11 @@
 --  along with this program.  If not, see <gnu.org/licenses>.
 
 package Trans.Chap4 is
+   --  If SIZE is larger than the compile-time threshold, generate a call to
+   --  __ghdl_check_stack_allocation so that a run-time error is reported for
+   --  an object too large to sit on the stack.  Returns SIZE.
+   function Maybe_Check_Stack_Allocation (Size : O_Enode) return O_Enode;
+
    --  Translate of a type declaration corresponds to the translation of
    --  its definition.
    procedure Translate_Type_Declaration (Decl : Iir);
