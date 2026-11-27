@@ -41,7 +41,6 @@ from pyGHDL.dom.NonStandard import Design, Document
 from pyGHDL.dom.Misc import Alias
 from pyGHDL.dom.Symbol import Symbol
 
-
 if __name__ == "__main__":  # pragma: no cover
     print("ERROR: you called a testcase declaration file as an executable module.")
     print("Use: 'python -m unitest <testcase module>'")
@@ -99,13 +98,20 @@ class Aliases(TestCase):
 
     def test_OperatorAliasWithSignature(self) -> None:
         """``alias "+" is add[integer, integer return integer];`` - Name is extracted from the
-        Signature node's prefix; the parameter/return type marks are not captured (documented FIXME)."""
+        Signature node's prefix; the signature keeps the parameter and return type marks."""
         pkg = self._package()
         alias = pkg.DeclaredItems[6]
 
         self.assertIsInstance(alias, Alias)
         self.assertEqual('"+"', alias.Identifier)
         self.assertEqual("add", alias.Name.Name.Identifier)
+        self.assertEqual(("integer", "integer"), alias.Signature.ParameterTypeNames)
+        self.assertEqual("integer", alias.Signature.ReturnTypeName)
+        self.assertIs(alias, alias.Signature.Parent)
+
+    def test_NoSignature(self) -> None:
+        """``alias b is s;`` has no signature."""
+        self.assertIsNone(self._package().DeclaredItems[2].Signature)
 
 
 class OperatorSymbolAliases(TestCase):
@@ -149,7 +155,7 @@ class OperatorSymbolAliases(TestCase):
 
         self.assertEqual('"+"', plus.Identifier)
         self.assertEqual('"AND"', andAlias.Identifier)
-        self.assertEqual('alias "+" is add;\n', VHDLWriter().Format(plus))
+        self.assertEqual('alias "+" is add [bit, bit return bit];\n', VHDLWriter().Format(plus))
 
     def test_AliasedName(self) -> None:
         plus, minus = self.parse(
@@ -166,3 +172,19 @@ class OperatorSymbolAliases(TestCase):
         self.assertTrue(plus.Name.Name.IsOperatorSymbol)
         self.assertEqual('"-"', minus.Identifier)
         self.assertEqual('"and"', minus.Name.Name.Identifier)
+
+    def test_Signature_ReturnOnly(self) -> None:
+        """``alias f is g [return bit];``: a signature without parameter type marks."""
+        (alias,) = self.parse("  function g return bit;\n  alias f is g [return bit];")[1:]
+
+        self.assertEqual((), alias.Signature.ParameterTypeNames)
+        self.assertEqual("bit", alias.Signature.ReturnTypeName)
+        self.assertEqual("alias f is g [return bit];\n", VHDLWriter().Format(alias))
+
+    def test_Signature_Procedure(self) -> None:
+        """``alias q is p [bit, bit];``: a procedure's signature has no return type mark."""
+        (alias,) = self.parse("  procedure p (a, b : bit);\n  alias q is p [bit, bit];")[1:]
+
+        self.assertEqual(("bit", "bit"), alias.Signature.ParameterTypeNames)
+        self.assertIsNone(alias.Signature.ReturnTypeName)
+        self.assertEqual("alias q is p [bit, bit];\n", VHDLWriter().Format(alias))
