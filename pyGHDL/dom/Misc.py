@@ -39,8 +39,10 @@ from __future__ import annotations
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
 
 from pyVHDLModel.Declaration import Alias as VHDLModel_Alias
+from pyVHDLModel.Subprogram import SubprogramSignature
 from pyVHDLModel.Symbol import Symbol, PossibleReference
 
+from pyGHDL.libghdl import utils
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.libghdl.vhdl import nodes
 from pyGHDL.dom import DOMMixin
@@ -61,6 +63,7 @@ class Alias(VHDLModel_Alias, DOMMixin):
         name: Symbol,
         subtype: Symbol = None,
         documentation: str = None,
+        signature: SubprogramSignature = None,
     ) -> None:
         """
         Initializes an alias declaration.
@@ -70,8 +73,9 @@ class Alias(VHDLModel_Alias, DOMMixin):
         :param name:          Reference to the name being aliased.
         :param subtype:       Optional, reference to the alias' subtype, or ``None`` if none was given.
         :param documentation: Optional, the documentation comment associated with this declaration.
+        :param signature:     Optional, the signature selecting an overload of the aliased subprogram, or ``None``.
         """
-        super().__init__(aliasName, name, subtype, documentation)
+        super().__init__(aliasName, name, subtype, documentation, signature=signature)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -83,16 +87,25 @@ class Alias(VHDLModel_Alias, DOMMixin):
         :returns:         The translated alias declaration.
         """
         from pyGHDL.dom._Translate import GetName, GetSubtypeIndicationFromNode
-        from pyGHDL.dom.Symbol import Symbol as DOMSymbol
+        from pyGHDL.dom.Symbol import Symbol as DOMSymbol, SimpleSubtypeSymbol
 
         aliasName = GetNameOfNode(aliasNode)
         documentation = GetDocumentationOfNode(aliasNode)
 
+        signature = None
         nameNode = nodes.Get_Name(aliasNode)
         if GetIirKindOfNode(nameNode) == nodes.Iir_Kind.Signature:
-            # FIXME: the parameter/return type marks of the signature (used to disambiguate between
-            #        overloaded subprograms/operators, e.g. 'add[integer, integer return integer]')
-            #        are not captured - only the aliased name itself (the signature's prefix).
+            parameterTypes = [
+                SimpleSubtypeSymbol(typeMark, GetName(typeMark))
+                for typeMark in utils.flist_iter(nodes.Get_Type_Marks_List(nameNode))
+            ]
+            returnTypeNode = nodes.Get_Return_Type_Mark(nameNode)
+            if returnTypeNode == nodes.Null_Iir:
+                returnType = None
+            else:
+                returnType = SimpleSubtypeSymbol(returnTypeNode, GetName(returnTypeNode))
+
+            signature = SubprogramSignature(parameterTypes, returnType)
             nameNode = nodes.Get_Signature_Prefix(nameNode)
 
         subtypeIndicationNode = nodes.Get_Subtype_Indication(aliasNode)
@@ -107,4 +120,4 @@ class Alias(VHDLModel_Alias, DOMMixin):
 
         name = DOMSymbol(nameNode, GetName(nameNode), possibleReferences)
 
-        return cls(aliasNode, aliasName, name, subtype, documentation)
+        return cls(aliasNode, aliasName, name, subtype, documentation, signature)

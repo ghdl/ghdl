@@ -205,7 +205,7 @@ class Design(VHDLModel_Design):
         """
         with Stopwatch() as stopwatch:
             super().LoadStdLibrary()
-            super().LoadIEEELibrary(flavor)
+            super().LoadIEEELibrary(flavor=flavor)
 
         self._loadDefaultLibraryDuration = stopwatch.Duration
 
