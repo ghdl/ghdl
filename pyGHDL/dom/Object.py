@@ -345,10 +345,18 @@ class File(VHDLModel_File, DOMMixin):
 
        .. code-block:: VHDL
 
-          file INPUT : TEXT;
+          file INPUT : TEXT open READ_MODE is "STD_INPUT";
     """
 
-    def __init__(self, node: Iir, identifiers: List[str], subtype: Symbol, documentation: str = None) -> None:
+    def __init__(
+        self,
+        node: Iir,
+        identifiers: List[str],
+        subtype: Symbol,
+        documentation: str = None,
+        openKind: ExpressionUnion = None,
+        logicalName: ExpressionUnion = None,
+    ) -> None:
         """
         Initializes a file object.
 
@@ -356,8 +364,10 @@ class File(VHDLModel_File, DOMMixin):
         :param identifiers:   A list of identifiers.
         :param subtype:       Reference to the object's subtype.
         :param documentation: Optional, the documentation comment associated with this declaration.
+        :param openKind:      Optional, the file open kind expression, or ``None``.
+        :param logicalName:   Optional, the file logical name expression, or ``None`` if the file isn't opened.
         """
-        super().__init__(identifiers, subtype, documentation)
+        super().__init__(identifiers, subtype, documentation, openKind=openKind, logicalName=logicalName)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -369,7 +379,7 @@ class File(VHDLModel_File, DOMMixin):
         :param furtherIdentifiers: Optional, the remaining identifiers, when one declaration names several.
         :returns:                  The translated file declaration.
         """
-        from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode
+        from pyGHDL.dom._Translate import GetSubtypeIndicationFromNode, GetExpressionFromNode
 
         name = GetNameOfNode(fileNode)
         documentation = GetDocumentationOfNode(fileNode)
@@ -378,6 +388,9 @@ class File(VHDLModel_File, DOMMixin):
             identifiers.extend(furtherIdentifiers)
         subtypeIndication = GetSubtypeIndicationFromNode(fileNode, "file", name)
 
-        # FIXME: handle file open stuff
+        openKindNode = nodes.Get_File_Open_Kind(fileNode)
+        openKind = None if openKindNode == nodes.Null_Iir else GetExpressionFromNode(openKindNode)
+        logicalNameNode = nodes.Get_File_Logical_Name(fileNode)
+        logicalName = None if logicalNameNode == nodes.Null_Iir else GetExpressionFromNode(logicalNameNode)
 
-        return cls(fileNode, identifiers, subtypeIndication, documentation)
+        return cls(fileNode, identifiers, subtypeIndication, documentation, openKind, logicalName)
