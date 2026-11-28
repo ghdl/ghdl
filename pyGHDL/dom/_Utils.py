@@ -140,6 +140,14 @@ def GetNameOfNode(node: Iir) -> str:
     if buffer[start] == b'"':
         end = start + name_table.Get_Name_Length(identifier) + 2
         return buffer[start:end].decode(ENCODING)
+    elif kind == nodes.Iir_Kind.Record_Element_Resolution and buffer[start] == b"(":
+        # libghdl locates the first element of a record resolution at the record resolution's opening parenthesis.
+        start += 1
+        while buffer[start].isspace():
+            start += 1
+
+        end = start + name_table.Get_Name_Length(identifier)
+        return buffer[start:end].decode(ENCODING)
 
     identifier = utils.Get_Source_Identifier(node)
     return name_table.Get_Name_Ptr(identifier)

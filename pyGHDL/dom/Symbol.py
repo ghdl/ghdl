@@ -36,7 +36,7 @@ This module implements derived symbol classes from :mod:`pyVHDLModel.Symbol`.
 
 from __future__ import annotations
 
-from typing import Iterable, List, Mapping
+from typing import Iterable, List, Mapping, Optional as Nullable
 
 from pyGHDL.dom.Name import SimpleName
 from pyTooling.Decorators import export, InheritDocString, DocStringMergeStrategy
@@ -72,6 +72,11 @@ from pyVHDLModel.Symbol import RecordElementSymbol as VHDLModel_RecordElementSym
 from pyVHDLModel.Symbol import RangeAttributeSymbol as VHDLModel_RangeAttributeSymbol
 from pyVHDLModel.Symbol import SimpleObjectOrFunctionCallSymbol as VHDLModel_SimpleObjectOrFunctionCallSymbol
 from pyVHDLModel.Symbol import IndexedObjectOrFunctionCallSymbol as VHDLModel_IndexedObjectOrFunctionCallSymbol
+from pyVHDLModel.Symbol import ResolutionIndicationMixin
+from pyVHDLModel.Symbol import ResolutionFunctionSymbol as VHDLModel_ResolutionFunctionSymbol
+from pyVHDLModel.Symbol import ArrayElementResolution as VHDLModel_ArrayElementResolution
+from pyVHDLModel.Symbol import RecordResolution as VHDLModel_RecordResolution
+from pyVHDLModel.Symbol import RecordElementResolution as VHDLModel_RecordElementResolution
 
 from pyGHDL.libghdl._types import Iir
 from pyGHDL.dom import DOMMixin
@@ -561,14 +566,15 @@ class SimpleSubtypeSymbol(VHDLModel_SimpleSubtypeSymbol, DOMMixin):
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.SimpleSubtypeSymbol`.
     """
 
-    def __init__(self, node: Iir, subtypeName: Name) -> None:
+    def __init__(self, node: Iir, subtypeName: Name, *, resolution: Nullable[ResolutionIndicationMixin] = None) -> None:
         """
         Initializes a simple subtype symbol.
 
         :param node:        The IIR node this object was translated from.
         :param subtypeName: The name of the referenced subtype.
+        :param resolution:  Optional, the resolution indication. Default: ``None``, no resolution indication.
         """
-        super().__init__(subtypeName)
+        super().__init__(subtypeName, resolution=resolution)
         DOMMixin.__init__(self, node)
 
 
@@ -579,15 +585,18 @@ class ConstrainedScalarSubtypeSymbol(VHDLModel_ConstrainedScalarSubtypeSymbol, D
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.ConstrainedScalarSubtypeSymbol`.
     """
 
-    def __init__(self, node: Iir, subtypeName: Name, rng: Range) -> None:
+    def __init__(
+        self, node: Iir, subtypeName: Name, rng: Range, *, resolution: Nullable[ResolutionIndicationMixin] = None
+    ) -> None:
         """
         Initializes a reference to a scalar subtype narrowed by a range.
 
         :param node:        The IIR node this object was translated from.
         :param subtypeName: The name of the referenced subtype.
         :param rng:         The range constraining the scalar subtype.
+        :param resolution:  Optional, the resolution indication. Default: ``None``, no resolution indication.
         """
-        super().__init__(subtypeName, rng)
+        super().__init__(subtypeName, rng, resolution=resolution)
         DOMMixin.__init__(self, node)
 
 
@@ -598,15 +607,18 @@ class ConstrainedArraySubtypeSymbol(VHDLModel_ConstrainedArraySubtypeSymbol, DOM
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.ConstrainedArraySubtypeSymbol`.
     """
 
-    def __init__(self, node: Iir, subtypeName: Name, constraints: List) -> None:
+    def __init__(
+        self, node: Iir, subtypeName: Name, constraints: List, *, resolution: Nullable[ResolutionIndicationMixin] = None
+    ) -> None:
         """
         Initializes a reference to an array subtype narrowed by index ranges.
 
         :param node:        The IIR node this object was translated from.
         :param subtypeName: The name of the referenced subtype.
         :param constraints: List of all index ranges, one per dimension.
+        :param resolution:  Optional, the resolution indication. Default: ``None``, no resolution indication.
         """
-        super().__init__(subtypeName, constraints)
+        super().__init__(subtypeName, constraints, resolution=resolution)
         DOMMixin.__init__(self, node)
 
     # @classmethod
@@ -621,15 +633,23 @@ class ConstrainedRecordSubtypeSymbol(VHDLModel_ConstrainedRecordSubtypeSymbol, D
     This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.ConstrainedRecordSubtypeSymbol`.
     """
 
-    def __init__(self, node: Iir, subtypeName: Name, constraints: Mapping) -> None:
+    def __init__(
+        self,
+        node: Iir,
+        subtypeName: Name,
+        constraints: Mapping,
+        *,
+        resolution: Nullable[ResolutionIndicationMixin] = None,
+    ) -> None:
         """
         Initializes a reference to a record subtype with constrained elements.
 
         :param node:        The IIR node this object was translated from.
         :param subtypeName: The name of the referenced subtype.
         :param constraints: Dictionary of the element constraint per constrained record element.
+        :param resolution:  Optional, the resolution indication. Default: ``None``, no resolution indication.
         """
-        super().__init__(subtypeName, constraints)
+        super().__init__(subtypeName, constraints, resolution=resolution)
         DOMMixin.__init__(self, node)
 
     @classmethod
@@ -694,6 +714,81 @@ class RecordElementSymbol(VHDLModel_RecordElementSymbol, DOMMixin):
         :param name: The name referencing the record element.
         """
         super().__init__(name)
+        DOMMixin.__init__(self, node)
+
+
+@export
+@InheritDocString(VHDLModel_ResolutionFunctionSymbol, strategy=DocStringMergeStrategy.BaseLast)
+class ResolutionFunctionSymbol(VHDLModel_ResolutionFunctionSymbol, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.ResolutionFunctionSymbol`.
+    """
+
+    def __init__(self, node: Iir, name: Name) -> None:
+        """
+        Initializes a resolution indication by the name of a resolution function.
+
+        :param node: The IIR node this object was translated from.
+        :param name: The name of the resolution function.
+        """
+        super().__init__(name)
+        DOMMixin.__init__(self, node)
+
+
+@export
+@InheritDocString(VHDLModel_ArrayElementResolution, strategy=DocStringMergeStrategy.BaseLast)
+class ArrayElementResolution(VHDLModel_ArrayElementResolution, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.ArrayElementResolution`.
+    """
+
+    def __init__(self, node: Iir, resolution: ResolutionIndicationMixin) -> None:
+        """
+        Initializes an array element resolution.
+
+        :param node:       The IIR node this object was translated from.
+        :param resolution: The resolution indication of the array's elements.
+        """
+        super().__init__(resolution)
+        DOMMixin.__init__(self, node)
+
+
+@export
+@InheritDocString(VHDLModel_RecordResolution, strategy=DocStringMergeStrategy.BaseLast)
+class RecordResolution(VHDLModel_RecordResolution, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.RecordResolution`.
+    """
+
+    def __init__(self, node: Iir, elements: Iterable[VHDLModel_RecordElementResolution]) -> None:
+        """
+        Initializes a record resolution.
+
+        :param node:     The IIR node this object was translated from.
+        :param elements: The record element resolutions, in source order.
+        """
+        super().__init__(elements)
+        DOMMixin.__init__(self, node)
+
+
+@export
+@InheritDocString(VHDLModel_RecordElementResolution, strategy=DocStringMergeStrategy.BaseLast)
+class RecordElementResolution(VHDLModel_RecordElementResolution, DOMMixin):
+    """
+    This class implements a :mod:`pyGHDL.dom` object derived from :class:`pyVHDLModel.Symbol.RecordElementResolution`.
+    """
+
+    def __init__(
+        self, node: Iir, element: VHDLModel_RecordElementSymbol, resolution: ResolutionIndicationMixin
+    ) -> None:
+        """
+        Initializes the resolution indication of a record element.
+
+        :param node:       The IIR node this object was translated from.
+        :param element:    The record element.
+        :param resolution: The resolution indication of the record element.
+        """
+        super().__init__(element, resolution)
         DOMMixin.__init__(self, node)
 
 
