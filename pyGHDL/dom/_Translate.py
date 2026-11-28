@@ -43,7 +43,7 @@ from pyTooling.Warning import WarningCollector
 
 from pyVHDLModel.Base import ModelEntity, Direction, ExpressionUnion, Range
 from pyVHDLModel.Name import Name
-from pyVHDLModel.Symbol import Symbol
+from pyVHDLModel.Symbol import Symbol, ResolutionIndicationMixin
 from pyVHDLModel.Association import AssociationItem
 from pyVHDLModel.Interface import GenericInterfaceItemMixin, PortInterfaceItemMixin, ParameterInterfaceItemMixin
 from pyVHDLModel.Type import BaseType
@@ -95,6 +95,10 @@ from pyGHDL.dom.Symbol import (
     SignalSymbol,
     VariableSymbol,
     AggregateSymbol,
+    ResolutionFunctionSymbol,
+    ArrayElementResolution,
+    RecordResolution,
+    RecordElementResolution,
 )
 from pyGHDL.dom.Type import (
     IntegerType,
@@ -546,6 +550,41 @@ def GetSimpleTypeFromNode(subtypeIndicationNode: Iir) -> SimpleSubtypeSymbol:
 
 
 @export
+def GetResolutionIndicationFromNode(resolutionNode: Iir) -> Nullable[ResolutionIndicationMixin]:
+    """
+    Translates the resolution indication of a subtype indication.
+
+    A resolution indication is a resolution function name (``resolved std_ulogic``), an array element resolution
+    (``(resolved) std_ulogic_vector``) or a record resolution (``(a resolved, b (resolved)) pair_t``); an element
+    resolution holds a resolution indication itself.
+
+    :param resolutionNode: The IIR node of the resolution indication (``Get_Resolution_Indication``), or ``Null_Iir``.
+    :returns:              The translated resolution indication, or ``None`` if the subtype indication has none.
+    :raises DOMException:  If the node is neither a name nor an element resolution.
+    """
+    if resolutionNode == nodes.Null_Iir:
+        return None
+
+    kind = GetIirKindOfNode(resolutionNode)
+    if kind is nodes.Iir_Kind.Simple_Name or kind is nodes.Iir_Kind.Selected_Name:
+        return ResolutionFunctionSymbol(resolutionNode, GetName(resolutionNode))
+    elif kind is nodes.Iir_Kind.Array_Element_Resolution:
+        resolution = GetResolutionIndicationFromNode(nodes.Get_Resolution_Indication(resolutionNode))
+        return ArrayElementResolution(resolutionNode, resolution)
+    elif kind is nodes.Iir_Kind.Record_Resolution:
+        elements = []
+        for elementNode in utils.chain_iter(nodes.Get_Record_Element_Resolution_Chain(resolutionNode)):
+            element = RecordElementSymbol(elementNode, SimpleName(elementNode, GetNameOfNode(elementNode)))
+            resolution = GetResolutionIndicationFromNode(nodes.Get_Resolution_Indication(elementNode))
+            elements.append(RecordElementResolution(elementNode, element, resolution))
+
+        return RecordResolution(resolutionNode, elements)
+
+    position = Position.parse(resolutionNode)
+    raise DOMException(f"Unknown resolution indication kind '{kind.name}' at {position}.")
+
+
+@export
 def GetScalarConstrainedSubtypeFromNode(
     subtypeIndicationNode: Iir,
 ) -> Union[SimpleSubtypeSymbol, ConstrainedScalarSubtypeSymbol]:
@@ -556,7 +595,8 @@ def GetScalarConstrainedSubtypeFromNode(
     node is also used for a subtype indication that only adds a resolution indication
     (``subtype resolvedBit is resolveBit myBit;``). Without a range constraint the result is a
     :class:`~pyVHDLModel.Symbol.SimpleSubtypeSymbol`; with one it is a
-    :class:`~pyVHDLModel.Symbol.ConstrainedScalarSubtypeSymbol`, whose constraint is mandatory.
+    :class:`~pyVHDLModel.Symbol.ConstrainedScalarSubtypeSymbol`, whose constraint is mandatory. Both carry the
+    resolution indication (:func:`GetResolutionIndicationFromNode`).
 
     :param subtypeIndicationNode: The subtype indication IIR node.
     :returns:                     The translated subtype symbol.
@@ -567,8 +607,10 @@ def GetScalarConstrainedSubtypeFromNode(
     simpleTypeMark = SimpleName(typeMark, typeMarkName)
     rangeConstraint = nodes.Get_Range_Constraint(subtypeIndicationNode)
 
+    resolution = GetResolutionIndicationFromNode(nodes.Get_Resolution_Indication(subtypeIndicationNode))
+
     if rangeConstraint == nodes.Null_Iir:
-        return SimpleSubtypeSymbol(subtypeIndicationNode, simpleTypeMark)
+        return SimpleSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, resolution=resolution)
 
     rangeKind = GetIirKindOfNode(rangeConstraint)
     if rangeKind == nodes.Iir_Kind.Range_Expression:
@@ -584,7 +626,7 @@ def GetScalarConstrainedSubtypeFromNode(
         ex.add_note("Supported: a range expression or a range attribute name.")
         raise ex
 
-    return ConstrainedScalarSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraint)
+    return ConstrainedScalarSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraint, resolution=resolution)
 
 
 @export
@@ -602,7 +644,8 @@ def GetArrayConstrainedSubtypeFromNode(
     simpleTypeMark = SimpleName(typeMark, typeMarkName)
 
     constraints = GetArrayConstraintsFromSubtypeIndication(subtypeIndicationNode)
-    return ConstrainedArraySubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraints)
+    resolution = GetResolutionIndicationFromNode(nodes.Get_Resolution_Indication(subtypeIndicationNode))
+    return ConstrainedArraySubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraints, resolution=resolution)
 
 
 @export
@@ -620,7 +663,8 @@ def GetRecordConstrainedSubtypeFromNode(
     simpleTypeMark = SimpleName(typeMark, typeMarkName)
 
     constraints = GetRecordConstraintsFromSubtypeIndication(subtypeIndicationNode)
-    return ConstrainedRecordSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraints)
+    resolution = GetResolutionIndicationFromNode(nodes.Get_Resolution_Indication(subtypeIndicationNode))
+    return ConstrainedRecordSubtypeSymbol(subtypeIndicationNode, simpleTypeMark, constraints, resolution=resolution)
 
 
 @export
